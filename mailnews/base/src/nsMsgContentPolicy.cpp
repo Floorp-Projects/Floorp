@@ -70,6 +70,7 @@ static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remot
 static const char kRemoteImagesUseWhiteList[] = "mailnews.message_display.disable_remote_images.useWhitelist";
 static const char kRemoteImagesWhiteListURI[] = "mailnews.message_display.disable_remote_images.whiteListAbURI";
 static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
+static const char kTrustedDomains[] =  "mail.trusteddomains";
 
 // Per message headder flags to keep track of whether the user is allowing remote
 // content for a particular message. 
@@ -126,6 +127,7 @@ nsresult nsMsgContentPolicy::Init()
   prefInternal->GetBoolPref(kAllowPlugins, &mAllowPlugins);
   prefInternal->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
   prefInternal->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
+  prefInternal->GetCharPref(kTrustedDomains, getter_Copies(mTrustedMailDomains));
   return prefInternal->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
 }
 
@@ -163,6 +165,63 @@ nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool *
   
   return rv;
 }
+
+nsresult nsMsgContentPolicy::IsTrustedDomain(nsIURI * aContentLocation, PRBool * aTrustedDomain)
+{
+  *aTrustedDomain = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aContentLocation); 
+  nsresult rv = NS_OK;
+
+  // get the host name of the server hosting the remote image
+  nsCAutoString host;
+  aContentLocation->GetHost(host);
+
+  if (!mTrustedMailDomains.IsEmpty()) 
+  {
+    const char *domain, *domainEnd, *end;
+    PRUint32 hostLen, domainLen;
+
+    domain = mTrustedMailDomains.BeginReading();
+    domainEnd = mTrustedMailDomains.EndReading(); 
+    nsACString::const_iterator hostStart;
+
+    host.BeginReading(hostStart);
+    hostLen = host.Length();
+
+    do {
+      // skip any whitespace
+      while (*domain == ' ' || *domain == '\t')
+        ++domain;
+      
+      // find end of this domain in the string
+      end = strchr(domain, ',');
+      if (!end)
+        end = domainEnd;
+
+      // to see if the hostname is in the domain, check if the domain
+      // matches the end of the hostname.
+      domainLen = end - domain;
+      if (domainLen && hostLen >= domainLen) {
+        const char *hostTail = hostStart.get() + hostLen - domainLen;
+        if (PL_strncasecmp(domain, hostTail, domainLen) == 0) 
+        {
+          // now, make sure either that the hostname is a direct match or
+          // that the hostname begins with a dot.
+          if (hostLen == domainLen || *hostTail == '.' || *(hostTail - 1) == '.')
+          {
+            *aTrustedDomain = PR_TRUE;
+            break;
+          }
+        }
+      }
+      
+      domain = end + 1;
+    } while (*end);
+  }
+
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
@@ -272,10 +331,14 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
       // Case #3, author is in our white list..
       PRBool authorInWhiteList = PR_FALSE;
       IsSenderInWhiteList(msgHdr, &authorInWhiteList);
+
+      // Case #4, the domain for the remote image is in our white list
+      PRBool trustedDomain = PR_FALSE;
+      IsTrustedDomain(aContentLocation, &trustedDomain);
         
       // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
       // Honor the message specific remote content policy
-      if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList)
+      if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain)
         *aDecision = nsIContentPolicy::ACCEPT;
       else if (mBlockRemoteImages) 
       {
