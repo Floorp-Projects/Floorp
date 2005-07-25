@@ -12,3 +12,9 @@
 
 <!ENTITY manageSubscriptions.label "Manage Subscriptions..."> 
 <!ENTITY manageSubscriptions.accesskey "M">
+
+<!-- entities from defaults/isp/rss.rdf -->
+<!ENTITY rss.accountName            "News &amp; Blogs">
+<!ENTITY rss.wizardShortName        "RSS">  
+<!ENTITY rss.wizardLongName         "RSS News &amp; Blogs">
+<!ENTITY rss.hostName               "News &amp; Blogs">

@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE RDF 
- [
-  <!ENTITY rss.accountName            "News &amp; Blogs">
-  <!ENTITY rss.wizardShortName        "RSS">  
-  <!ENTITY rss.wizardLongName         "RSS News &amp; Blogs">
-  <!ENTITY rss.hostName               "News &amp; Blogs">
- ]
->
+<!DOCTYPE RDF SYSTEM "chrome://messenger-newsblog/locale/am-newsblog.dtd">  
 
 <RDF:RDF
     xmlns:NC="http://home.netscape.com/NC-rdf#"
