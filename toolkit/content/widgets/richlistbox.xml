@@ -319,6 +319,17 @@
             listBox.goDown();  // Ensure viable initial focus position
         ]]>
       </constructor>
+
+      <deconstructor>
+        <![CDATA[
+          // when we are destructed and we are selected, unselect ourselves so
+          // that richlistbox's selection doesn't point to something not in the DOM.
+          if (this.selected) {
+            this.control.clearSelection();
+          }
+        ]]>
+      </deconstructor>
+
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
       <property name="accessible">
         <getter>

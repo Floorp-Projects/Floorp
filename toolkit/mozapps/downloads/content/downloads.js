@@ -220,6 +220,11 @@ var gDownloadObserver = {
       // Add this download to the percentage average tally
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
       gActiveDownloads.push(dl);
+
+      // now reset the richlistbox since the template was rebuilt
+      gDownloadsView.clearSelection();
+      gDownloadsView.focus();
+
       break;
     case "xpinstall-download-started":
       var windowArgs = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -279,7 +284,17 @@ function onDownloadResume(aEvent)
 function onDownloadRemove(aEvent)
 {
   if (aEvent.target.removable) {
+    var selectedIndex = gDownloadsView.selectedIndex;
     gDownloadManager.removeDownload(aEvent.target.id);
+
+    // now reset the richlistbox since the template was rebuilt
+    gDownloadsView.clearSelection();
+    if (selectedIndex >= gDownloadsView.getRowCount())
+      gDownloadsView.selectedIndex = selectedIndex - 1;
+    else
+      gDownloadsView.selectedIndex = selectedIndex;
+
+    gDownloadsView.focus();
 
     gDownloadViewController.onCommandUpdate();
   }
