@@ -54,6 +54,7 @@
 #include "nsSupportsArray.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsINetUtil.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -71,12 +72,14 @@ class nsIPrefBranch2;
 
 class nsIOService : public nsIIOService
                   , public nsIObserver
+                  , public nsINetUtil
                   , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIIOSERVICE
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSINETUTIL
 
     nsIOService() NS_HIDDEN;
     ~nsIOService() NS_HIDDEN;

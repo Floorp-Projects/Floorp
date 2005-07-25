@@ -114,6 +114,7 @@ XPIDLSRCS	= \
 		nsPIProtocolProxyService.idl \
 		nsPISocketTransportService.idl \
 		nsIChannelEventSink.idl \
+		nsINetUtil.idl \
 		$(NULL)
 
 EXPORTS		= \

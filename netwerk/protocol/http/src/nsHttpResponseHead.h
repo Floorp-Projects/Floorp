@@ -132,7 +132,6 @@ public:
 
 private:
     void     ParseVersion(const char *);
-    void     ParseContentType(char *);
     void     ParseCacheControl(const char *);
     void     ParsePragma(const char *);
 

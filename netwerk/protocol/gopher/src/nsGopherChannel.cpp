@@ -423,6 +423,7 @@ nsGopherChannel::SetContentType(const nsACString &aContentType)
     // from the charset part of this.
 
     nsCString *contentType = mIsPending ? &mContentType : &mContentTypeHint;
+    // Not in libnecko, so can't use net_ParseContentType
     NS_ParseContentType(aContentType, *contentType, mContentCharset);
     return NS_OK;
 }

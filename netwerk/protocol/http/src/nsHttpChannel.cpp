@@ -3161,16 +3161,19 @@ nsHttpChannel::SetContentType(const nsACString &value)
             return NS_ERROR_NOT_AVAILABLE;
 
         nsCAutoString contentTypeBuf, charsetBuf;
-        NS_ParseContentType(value, contentTypeBuf, charsetBuf);
+        PRBool hadCharset;
+        net_ParseContentType(value, contentTypeBuf, charsetBuf, &hadCharset);
 
         mResponseHead->SetContentType(contentTypeBuf);
 
         // take care not to stomp on an existing charset
-        if (!charsetBuf.IsEmpty())
+        if (hadCharset)
             mResponseHead->SetContentCharset(charsetBuf);
     } else {
         // We are being given a content-type hint.
-        NS_ParseContentType(value, mContentTypeHint, mContentCharsetHint);
+        PRBool dummy;
+        net_ParseContentType(value, mContentTypeHint, mContentCharsetHint,
+                             &dummy);
     }
     
     return NS_OK;
