@@ -110,7 +110,7 @@ InspectorApp.prototype =
     //this.initSearch();
 
     var el = document.getElementById("bxBrowser");
-    el.addEventListener("PageShow", BrowserPageShowListener, true);
+    el.addEventListener("pageshow", BrowserPageShowListener, true);
 
     this.setBrowser(false, true);
     //this.setSearch(false, true);
@@ -578,7 +578,7 @@ InspectorApp.prototype =
 
 function BrowserPageShowListener(aEvent) 
 {
-  // since we will also get PageShow events for frame documents,
+  // since we will also get pageshow events for frame documents,
   // make sure we respond to the top-level document load
   if (aEvent.target.defaultView == _content)
     inspector.documentLoaded();

@@ -746,7 +746,7 @@ function delayedStartup()
   // loads the services
   initServices();
   initBMService();
-  gBrowser.addEventListener("PageShow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
+  gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
 

@@ -212,8 +212,8 @@ LAYOUT_ATOM(onDOMAttrModified, "onDOMAttrModified")
 LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
 
 // pagetransition events
-LAYOUT_ATOM(onPageShow, "onPageShow")
-LAYOUT_ATOM(onPageHide, "onPageHide")
+LAYOUT_ATOM(onpageshow, "onpageshow")
+LAYOUT_ATOM(onpagehide, "onpagehide")
 
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")

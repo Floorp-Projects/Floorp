@@ -287,11 +287,11 @@ nsresult nsRootAccessible::AddEventListeners()
   GetChromeEventHandler(getter_AddRefs(target));
   NS_ASSERTION(target, "No chrome event handler for document");
   if (target) {
-    nsresult rv = target->AddEventListener(NS_LITERAL_STRING("PageHide"), 
+    nsresult rv = target->AddEventListener(NS_LITERAL_STRING("pagehide"), 
                                            NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                            PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
-    target->AddEventListener(NS_LITERAL_STRING("PageShow"), 
+    target->AddEventListener(NS_LITERAL_STRING("pageshow"), 
                              NS_STATIC_CAST(nsIDOMXULListener*, this), 
                              PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -334,10 +334,10 @@ nsresult nsRootAccessible::RemoveEventListeners()
 
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
-    target->RemoveEventListener(NS_LITERAL_STRING("PageHide"), 
+    target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), 
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("PageShow"), 
+    target->RemoveEventListener(NS_LITERAL_STRING("pageshow"), 
                                 NS_STATIC_CAST(nsIDOMXULListener*, this), 
                                 PR_TRUE);
   }
@@ -710,7 +710,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.EqualsIgnoreCase("PageShow")) {
+  if (eventType.EqualsIgnoreCase("pageshow")) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(targetNode));
     if (htmlDoc) {
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, 

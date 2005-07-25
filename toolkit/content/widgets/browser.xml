@@ -567,8 +567,8 @@
           }
 
           // Listen for first load for lazy attachment to form fill controller
-          this.addEventListener("PageShow", this.onPageShow, true);
-          this.addEventListener("PageHide", this.onPageHide, true);
+          this.addEventListener("pageshow", this.onPageShow, true);
+          this.addEventListener("pagehide", this.onPageHide, true);
           this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
         ]]>
       </constructor>
@@ -607,8 +607,8 @@
           this._fastFind = null;
           this._webBrowserFind = null;
 
-          this.removeEventListener("PageShow", this.onPageShow, true);
-          this.removeEventListener("PageHide", this.onPageHide, true);
+          this.removeEventListener("pageshow", this.onPageShow, true);
+          this.removeEventListener("pagehide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           ]]>
         </body>

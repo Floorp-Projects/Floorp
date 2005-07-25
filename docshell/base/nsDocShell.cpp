@@ -5035,7 +5035,7 @@ nsDocShell::FinishRestore()
         if (doc) {
             // Finally, we remove the request from the loadgroup.  This will
             // cause onStateChange(STATE_STOP) to fire, which will fire the
-            // PageShow event to the chrome.
+            // pageshow event to the chrome.
 
             nsIChannel *channel = doc->GetChannel();
             if (channel) {

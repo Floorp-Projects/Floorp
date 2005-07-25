@@ -564,7 +564,7 @@ function Startup()
   // (rjc note: not the entire window, otherwise we'll get sidebar pane loads too!)
   //  so we'll be notified when onloads complete.
   var contentArea = document.getElementById("appcontent");
-  contentArea.addEventListener("PageShow", pageShowEventHandlers, true);
+  contentArea.addEventListener("pageshow", pageShowEventHandlers, true);
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
   var turboMode = false;
