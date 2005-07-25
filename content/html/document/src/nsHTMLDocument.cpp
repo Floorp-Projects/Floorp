@@ -1017,6 +1017,7 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
   nsAutoString name;
   PRUint32 i, n = mImageMaps.Count();
+  nsIDOMHTMLMapElement *firstMatch = nsnull;
 
   for (i = 0; i < n; ++i) {
     nsIDOMHTMLMapElement *map = mImageMaps[i];
@@ -1036,11 +1037,27 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
     }
 
     if (match && NS_SUCCEEDED(rv)) {
+      // Quirk: if the first matching map is empty, remember it, but keep
+      // searching for a non-empty one, only use it if none was found (bug 264624).
+      if (mCompatMode == eCompatibility_NavQuirks) {
+        nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+        rv = map->GetAreas(getter_AddRefs(mapAreas));
+        if (NS_SUCCEEDED(rv) && mapAreas) {
+          PRUint32 length = 0;
+          mapAreas->GetLength(&length);
+          if (length == 0) {
+            if (!firstMatch) {
+              firstMatch = map;
+            }
+            continue;
+          }
+        }
+      }
       return map;
     }
   }
 
-  return nsnull;
+  return firstMatch;
 }
 
 nsCompatibility
@@ -3125,8 +3142,6 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
                "Entry w/o content list passed to FindNamedItems()!");
   NS_ASSERTION(aEntry.mContentList != NAME_NOT_VALID,
                "Entry that should never have a list passed to FindNamedItems()!");
-
-  nsIAtom *tag = aContent->Tag();
 
   if (aContent->IsContentOfType(nsIContent::eTEXT)) {
     // Text nodes are not named items nor can they have children.
