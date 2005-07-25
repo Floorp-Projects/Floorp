@@ -161,6 +161,7 @@ public:
   NS_IMETHOD GetName(nsAString& aName);
   nsIFrame*  GetBoundsFrame();
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
+  static void SelectionChangedIfOption(nsIContent *aPossibleOption);
 };
 
 /*

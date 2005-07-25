@@ -56,7 +56,9 @@
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
+#include "nsIEventStateManager.h"
 #include "nsIFrame.h"
+#include "nsHTMLSelectAccessible.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIObserverService.h"
@@ -713,7 +715,6 @@ NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic
 NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsDocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsDocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsDocAccessible)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsDocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 
 void
@@ -837,10 +838,23 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
   // can't do unless the node is visible. The right thing happens there so
   // no need for an extra visibility check here.
   PRUint32 childCount = aContainer->GetChildCount();
-  for (PRInt32 index = aNewIndexInContainer; index < childCount; index ++) {
+  for (PRUint32 index = aNewIndexInContainer; index < childCount; index ++) {
     InvalidateCacheSubtree(aContainer->GetChildAt(index),
                            nsIAccessibleEvent::EVENT_SHOW);
   }
+}
+
+void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
+                                           nsIContent* aContent1,
+                                           nsIContent* aContent2,
+                                           PRInt32 aStateMask)
+{
+  if (0 == (aStateMask & NS_EVENT_STATE_CHECKED)) {
+    return;
+  }
+
+  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent1);
+  nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
 }
 
 void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,

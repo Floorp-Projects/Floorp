@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibilityService.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
@@ -714,6 +715,40 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   }
 
   return rv;
+}
+
+void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOption)
+{
+  if (!aPossibleOption || aPossibleOption->Tag() != nsAccessibilityAtoms::option ||
+      !aPossibleOption->IsContentOfType(nsIContent::eHTML)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMNode> optionNode(do_QueryInterface(aPossibleOption));
+  NS_ASSERTION(optionNode, "No option node for nsIContent with option tag!");
+
+  nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(optionNode);
+  nsCOMPtr<nsPIAccessible> privateMultiSelect = do_QueryInterface(multiSelect);
+  if (!privateMultiSelect) {
+    return;
+  }
+
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  nsCOMPtr<nsIAccessible> optionAccessible;
+  accService->GetAccessibleFor(optionNode, getter_AddRefs(optionAccessible));
+  if (!optionAccessible) {
+    return;
+  }
+
+  privateMultiSelect->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                      multiSelect, nsnull);
+  PRUint32 state;
+  optionAccessible->GetFinalState(&state);
+  PRUint32 eventType = (state & STATE_SELECTED) ?
+                       nsIAccessibleEvent::EVENT_SELECTION_ADD :
+                       nsIAccessibleEvent::EVENT_SELECTION_REMOVE; 
+  privateMultiSelect->FireToolkitEvent(eventType, optionAccessible, nsnull);
 }
 
 /** ----- nsHTMLSelectOptGroupAccessible ----- */
