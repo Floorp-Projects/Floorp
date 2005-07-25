@@ -68,9 +68,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 
 /**
  * Implementation of &lt;option&gt;
@@ -130,11 +127,6 @@ protected:
    * @param aSelectElement the select element (out param)
    */
   void GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const;
-
-  /**
-   * Fire a DOM event for this option node
-   */
-  void DispatchDOMEvent(const nsAString& aName);
 
   PRPackedBool mIsInitialized;
   PRPackedBool mIsSelected;
@@ -213,31 +205,6 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-void
-nsHTMLOptionElement::DispatchDOMEvent(const nsAString& aName)
-{
-  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(GetOwnerDoc());
-  if (domDoc) {
-    nsCOMPtr<nsIDOMEvent> selectEvent;
-    domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                        getter_AddRefs(selectEvent));
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(selectEvent));
-
-    if (privateEvent) {
-      nsresult rv = selectEvent->InitEvent(aName, PR_TRUE, PR_TRUE);
-      if (NS_SUCCEEDED(rv)) {
-        privateEvent->SetTrusted(PR_TRUE);
-
-        nsCOMPtr<nsIDOMEventTarget> target =
-          do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
-        PRBool defaultActionEnabled;
-        target->DispatchEvent(selectEvent, &defaultActionEnabled);
-      }
-    }
-  }
-}
-
 NS_IMETHODIMP
 nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 {
@@ -250,14 +217,6 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
       mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
     }
-  }
-
-  // Dispatch an event to notify the subcontent that the selected item has changed
-  if (aValue) {
-    DispatchDOMEvent(NS_LITERAL_STRING("DOMItemSelected"));
-  }
-  else {
-    DispatchDOMEvent(NS_LITERAL_STRING("DOMItemUnselected"));
   }
 
   return NS_OK;
