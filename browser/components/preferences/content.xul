@@ -86,8 +86,9 @@
                         onsyncfrompreference="return gContentPane.updateButtons('popupPolicyButton', 
                                                                             'dom.disable_open_during_load');"/>
             </vbox>
-            <button id="popupPolicyButton" label="&allowedSites.label;"
-                    oncommand="gContentPane.showExceptions('popup');"/>
+            <button id="popupPolicyButton" label="&allowedSitesPopup.label;"
+                    oncommand="gContentPane.showExceptions('popup');"
+                    accesskey="&allowedSitesPopup.accesskey;"/>
           </row>
           <row id="enableSoftwareInstallRow">
             <vbox align="start">
@@ -96,8 +97,9 @@
                         onsyncfrompreference="return gContentPane.updateButtons('enableSoftwareInstallButton', 
                                                                             'xpinstall.enabled');"/>
             </vbox>
-            <button id="enableSoftwareInstallButton" label="&allowedSites.label;"
-                    oncommand="gContentPane.showExceptions('install');"/>
+            <button id="enableSoftwareInstallButton" label="&allowedSitesSoftware.label;"
+                    oncommand="gContentPane.showExceptions('install');"
+                    accesskey="&allowedSitesSoftware.accesskey;"/>
           </row>
           <row id="enableImagesRow">
             <vbox align="start">
@@ -116,6 +118,7 @@
             </vbox>
             <vbox>
               <button id="manageImages" label="&exceptions.label;"
+                      accesskey="&exceptions.accesskey;"
                       oncommand="gContentPane.showExceptions('image');"
                       preference="pref.advanced.images.disable_button.view_image"/>
             </vbox>

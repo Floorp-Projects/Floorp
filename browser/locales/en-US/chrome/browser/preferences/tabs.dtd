@@ -1,14 +1,23 @@
 
-<!ENTITY tabsTab.label                  "Tabs">
-<!ENTITY openExternalLinksIn.label      "Open links from other applications in:">
-<!ENTITY newWindow.label                "a new window">
-<!ENTITY newTabInRecentWindow.label     "a new tab in the most recent window">
-<!ENTITY recentWindowOrTab.label        "the most recent tab/window">
-<!ENTITY forceNewWindowLinks.label      "Force links that open new windows to open in:">
-<!ENTITY sameTabOrWindow.label          "the same tab/window as the link">
-<!ENTITY newTab.label                   "a new tab">
-<!ENTITY hideTabBar.label               "Hide the tab bar when only one web site is open">
-<!ENTITY loadInBackground.label         "Select new tabs opened from links">
-<!ENTITY loadBookmarksInBackground.label  "Select new tabs opened from bookmarks or history">
-<!ENTITY warnOnClose.label              "Warn when closing multiple tabs">
-
+<!ENTITY tabsTab.label                       "Tabs">
+<!ENTITY openExternalLinksIn.label           "Open links from other applications in:">
+<!ENTITY newWindow.label                     "a new window">
+<!ENTITY newWindow.accesskey                 "w">
+<!ENTITY newTabInRecentWindow.label          "a new tab in the most recent window">
+<!ENTITY newTabInRecentWindow.accesskey      "t">
+<!ENTITY recentWindowOrTab.label             "the most recent tab/window">
+<!ENTITY recentWindowOrTab.accesskey         "r">
+<!ENTITY forceNewWindowLinks.label           "Force links that open new windows to open in:">
+<!ENTITY forceNewWindowLinks.accesskey       "F">
+<!ENTITY sameTabOrWindow.label               "the same tab/window as the link">
+<!ENTITY sameTabOrWindow.accesskey           "s">
+<!ENTITY newTab.label                        "a new tab">
+<!ENTITY newTab.accesskey                    "n">
+<!ENTITY hideTabBar.label                    "Hide the tab bar when only one web site is open">
+<!ENTITY hideTabBar.accesskey                "d">
+<!ENTITY loadInBackground.label              "Select new tabs opened from links">
+<!ENTITY loadInBackground.accesskey          "l">
+<!ENTITY loadBookmarksInBackground.label     "Select new tabs opened from bookmarks or history">
+<!ENTITY loadBookmarksInBackground.accesskey "b">
+<!ENTITY warnOnClose.label                   "Warn when closing multiple tabs">
+<!ENTITY warnOnClose.accesskey               "m">

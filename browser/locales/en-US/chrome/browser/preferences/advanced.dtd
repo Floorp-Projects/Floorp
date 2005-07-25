@@ -2,9 +2,9 @@
 <!ENTITY generalTab.label               "General">
 <!ENTITY accessibility.label            "Accessibility">
 <!ENTITY moveSystemCaret.label          "Allow text to be selected with the keyboard">
-<!ENTITY moveSystemCaret.accesskey      "k">
+<!ENTITY moveSystemCaret.accesskey      "b">
 <!ENTITY useTypeAheadFind.label         "Begin finding when you begin typing">
-<!ENTITY useTypeAheadFind.accesskey     "f">
+<!ENTITY useTypeAheadFind.accesskey     "g">
 <!ENTITY browsing.label                 "Browsing">
 <!ENTITY enableAutoImageResizing.label  "Resize large images to fit in the browser window">
 <!ENTITY enableAutoImageResizing.accesskey "z">
@@ -25,8 +25,8 @@
 <!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
 <!ENTITY enableExtensionUpdate.accesskey "x">
 <!ENTITY checkNow.label                 "Check Now...">
-<!ENTITY appCheckNow.accesskey          "C">
-<!ENTITY extensionsCheckNow.accesskey   "h">
+<!ENTITY appCheckNow.accesskey          "N">
+<!ENTITY extensionsCheckNow.accesskey   "w">
 <!ENTITY showUpdates.label              "Show Update History">
 <!ENTITY showUpdates.accesskey          "U">
 
@@ -51,7 +51,7 @@
 <!ENTITY viewOCSP.label                 "Verification">
 <!ENTITY viewOCSP.accesskey             "V">
 <!ENTITY viewSecurityDevices.label      "Security Devices">
-<!ENTITY viewSecurityDevices.accesskey  "S">
+<!ENTITY viewSecurityDevices.accesskey  "y">
 
 <!ENTITY languages.caption                  "Languages">
 <!ENTITY languagesInfo.label                "Choose Languages web pages are displayed in.">

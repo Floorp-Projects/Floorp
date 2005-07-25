@@ -5,11 +5,16 @@
 <!ENTITY treehead.status.label        "Status">
 <!ENTITY addpermission.label          "New Site">
 <!ENTITY removepermission.label       "Remove Site">
+<!ENTITY removepermission.accesskey   "R">
 <!ENTITY removeallpermissions.label   "Remove All Sites">
+<!ENTITY removeallpermissions.accesskey "e">
 <!ENTITY address.label                "Address of web site:">
 <!ENTITY block.label                  "Block">
+<!ENTITY block.accesskey              "B">
 <!ENTITY session.label                "Allow for Session">
+<!ENTITY session.accesskey            "S">
 <!ENTITY allow.label                  "Allow">
+<!ENTITY allow.accesskey              "A">
 <!ENTITY windowClose.key              "w">
 
 <!ENTITY button.close.label           "Close">

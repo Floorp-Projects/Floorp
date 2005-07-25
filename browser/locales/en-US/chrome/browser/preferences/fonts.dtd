@@ -3,9 +3,11 @@
 <!ENTITY  window.macWidth                         "43em">
 
 <!ENTITY  language.label                          "Fonts for:">
-<!ENTITY  language.accesskey                      "t">
+<!ENTITY  language.accesskey                      "F">
 
-<!ENTITY  sizes.label                             "Size:">
+<!ENTITY  size.label                              "Size:">
+<!ENTITY  size.accesskey1                         "z">
+<!ENTITY  size.accesskey2                         "e">
 
 <!ENTITY  proportional.label                      "Proportional:">
 <!ENTITY  proportional.accesskey                  "P">
@@ -53,7 +55,7 @@
 <!ENTITY  font.langGroup.malayalam                "Malayalam">
 <!-- Minimum font size -->
 <!ENTITY minSize.label                            "Minimum font size:">
-<!ENTITY minSize.accesskey                        "z">
+<!ENTITY minSize.accesskey                        "o">
 <!ENTITY minSize.none                             "None">
 
 <!-- default font type -->
@@ -61,12 +63,12 @@
 <!ENTITY  useDefaultFontSansSerif.label           "Sans Serif">
 
 <!ENTITY  resolution.label                        "Display resolution:">
-<!ENTITY  resolution.accesskey                    "r">
+<!ENTITY  resolution.accesskey                    "D">
 <!ENTITY  resolution.system.label                 "System setting">
 <!ENTITY  resolution.other                        "Other...">
 
 <!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
-<!ENTITY  allowPagesToUse.accesskey               "h">
+<!ENTITY  allowPagesToUse.accesskey               "A">
 
 <!ENTITY languages.customize.Charset.grouplabel         "Character Encoding">
 <!ENTITY languages.customize.DefaultCharset.label       "Default Character Encoding:">

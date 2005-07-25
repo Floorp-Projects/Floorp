@@ -14,23 +14,23 @@
 <!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
 <!ENTITY  configAutoconfigText.accesskey "u">
 <!ENTITY  reload.label                  "Reload">
-<!ENTITY  reload.accesskey              "l">
+<!ENTITY  reload.accesskey              "e">
 <!ENTITY  ftp.label                     "FTP Proxy:">
-<!ENTITY  ftp.accesskey                 "f">
+<!ENTITY  ftp.accesskey                 "F">
 <!ENTITY  gopher.label                  "Gopher Proxy:">
-<!ENTITY  gopher.accesskey              "g">
+<!ENTITY  gopher.accesskey              "G">
 <!ENTITY  http.label                    "HTTP Proxy:">
-<!ENTITY  http.accesskey                "h">
+<!ENTITY  http.accesskey                "y">
 <!ENTITY  ssl.label                     "SSL Proxy:">
-<!ENTITY  ssl.accesskey                 "s">
+<!ENTITY  ssl.accesskey                 "S">
 <!ENTITY  socks.label                   "SOCKS Host:">
-<!ENTITY  socks.accesskey               "c">
+<!ENTITY  socks.accesskey               "C">
 <!ENTITY  socks4.label                  "SOCKS v4">
-<!ENTITY  socks4.accesskey              "k">
+<!ENTITY  socks4.accesskey              "K">
 <!ENTITY  socks5.label                  "SOCKS v5">
 <!ENTITY  socks5.accesskey              "v">
 <!ENTITY  port.label                    "Port:">
-<!ENTITY  HTTPport.accesskey            "p">
+<!ENTITY  HTTPport.accesskey            "P">
 <!ENTITY  SSLport.accesskey             "o">
 <!ENTITY  FTPport.accesskey             "r">
 <!-- No accesskey for gopher (':' doesn't go well) - mpt's going to redesign the window -->
