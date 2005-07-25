@@ -84,7 +84,7 @@ if ($action eq 'search') {
 
     if (Param('usevisibilitygroups')) {
         # Show only users in visible groups.
-        $visibleGroups = visibleGroupsAsString();
+        $visibleGroups = $user->visible_groups_as_string();
 
         if ($visibleGroups) {
             $query .= qq{, user_group_map AS ugm
@@ -183,9 +183,9 @@ if ($action eq 'search') {
     trick_taint($disabledtext);
 
     insert_new_user($login, $realname, $password, $disabledtext);
-    my $userid = $dbh->bz_last_key('profiles', 'userid');
+    $otherUserID = $dbh->bz_last_key('profiles', 'userid');
     $dbh->bz_unlock_tables();
-    userDataToVars($userid);
+    userDataToVars($otherUserID);
 
     $vars->{'message'} = 'account_created';
     $template->process('admin/users/edit.html.tmpl', $vars)
@@ -196,7 +196,7 @@ if ($action eq 'search') {
     $otherUser 
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
 
-    canSeeUser($otherUserID)
+    $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});
@@ -227,7 +227,7 @@ if ($action eq 'search') {
                          'group_group_map READ',
                          'group_group_map AS ggm READ');
  
-    canSeeUser($otherUserID)
+    $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});
@@ -395,10 +395,10 @@ if ($action eq 'search') {
     $editusers || ThrowUserError('auth_failure', {group  => "editusers",
                                                   action => "delete",
                                                   object => "users"});
-    canSeeUser($otherUserID) || ThrowUserError('auth_failure',
-                                               {reason => "not_visible",
-                                                action => "delete",
-                                                object => "user"});
+    $user->can_see_user($otherUser)
+        || ThrowUserError('auth_failure', {reason => "not_visible",
+                                           action => "delete",
+                                           object => "user"});
 
     $vars->{'otheruser'}      = $otherUser;
     $vars->{'editcomponents'} = UserInGroup('editcomponents');
@@ -495,10 +495,10 @@ if ($action eq 'search') {
                                  {group  => "editusers",
                                   action => "delete",
                                   object => "users"});
-    canSeeUser($otherUserID) || ThrowUserError('auth_failure',
-                                               {reason => "not_visible",
-                                                action => "delete",
-                                                object => "user"});
+    $user->can_see_user($otherUser)
+        || ThrowUserError('auth_failure', {reason => "not_visible",
+                                           action => "delete",
+                                           object => "user"});
     @{$otherUser->product_responsibilities()}
         && ThrowUserError('user_has_responsibility');
 
@@ -597,11 +597,6 @@ sub mirrorListSelectionValues {
     }
 }
 
-# Give a list of IDs of groups the user can see.
-sub visibleGroupsAsString {
-    return join(', ', @{$user->visible_groups_direct()});
-}
-
 # Give a list of IDs of groups the user may bless.
 sub groupsUserMayBless {
     my $user = shift;
@@ -633,7 +628,7 @@ sub groupsUserMayBless {
     # If visibilitygroups are used, restrict the set of groups.
     if (Param('usevisibilitygroups')) {
         # Users need to see a group in order to bless it.
-        my $visibleGroups = visibleGroupsAsString() || return {};
+        my $visibleGroups = $user->visible_groups_as_string() || return {};
         $query .= " $connector id in ($visibleGroups)";
     }
 
@@ -642,45 +637,18 @@ sub groupsUserMayBless {
     return $dbh->selectall_arrayref($query, {'Slice' => {}}, @bindValues);
 }
 
-# Determine whether the user can see a user. (Checks for existence, too.)
-sub canSeeUser {
-    my $otherUserID = shift;
-    my $query;
-
-    if (Param('usevisibilitygroups')) {
-        # If the user can see no groups, then no users are visible either.
-        my $visibleGroups = visibleGroupsAsString() || return 0;
-
-        $query = qq{SELECT COUNT(DISTINCT userid)
-                    FROM profiles, user_group_map
-                    WHERE userid = ?
-                    AND user_id = userid
-                    AND isbless = 0
-                    AND group_id IN ($visibleGroups)
-                   };
-    } else {
-        $query = qq{SELECT COUNT(userid)
-                    FROM profiles
-                    WHERE userid = ?
-                   };
-    }
-    return $dbh->selectrow_array($query, undef, $otherUserID);
-}
-
 # Retrieve user data for the user editing form. User creation and user
 # editing code rely on this to call derive_groups().
 sub userDataToVars {
-    my $userid = shift;
-    my $user = new Bugzilla::User($userid);
+    my $otheruserid = shift;
+    my $otheruser = new Bugzilla::User($otheruserid);
     my $query;
     my $dbh = Bugzilla->dbh;
 
-    $user->derive_groups();
+    $otheruser->derive_groups();
 
-    $vars->{'otheruser'} = $user;
+    $vars->{'otheruser'} = $otheruser;
     $vars->{'groups'} = groupsUserMayBless($user, 'id', 'name', 'description');
-    $vars->{'disabledtext'} = $dbh->selectrow_array(
-        'SELECT disabledtext FROM profiles WHERE userid = ?', undef, $userid);
 
     $vars->{'permissions'} = $dbh->selectall_hashref(
         qq{SELECT id,
@@ -711,10 +679,10 @@ sub userDataToVars {
                  AND directbless.grant_type = ?
           } . $dbh->sql_group_by('id'),
         'id', undef,
-        ($userid, GRANT_DIRECT,
-         $userid, GRANT_REGEXP,
-         $userid, GRANT_DERIVED,
-         $userid, GRANT_DIRECT));
+        ($otheruserid, GRANT_DIRECT,
+         $otheruserid, GRANT_REGEXP,
+         $otheruserid, GRANT_DERIVED,
+         $otheruserid, GRANT_DIRECT));
 
     # Find indirect bless permission.
     $query = qq{SELECT groups.id
@@ -725,7 +693,8 @@ sub userDataToVars {
                   AND ugm.isbless = 0
                   AND ggm.grant_type = ?
                } . $dbh->sql_group_by('id');
-    foreach (@{$dbh->selectall_arrayref($query, undef, ($userid, GROUP_BLESS))}) {
+    foreach (@{$dbh->selectall_arrayref($query, undef,
+                                        ($otheruserid, GROUP_BLESS))}) {
         # Merge indirect bless permissions into permission variable.
         $vars->{'permissions'}{${$_}[0]}{'indirectbless'} = 1;
     }

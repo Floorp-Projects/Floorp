@@ -344,6 +344,29 @@ sub in_group {
     return defined($res);
 }
 
+sub can_see_user {
+    my ($self, $otherUser) = @_;
+    my $query;
+
+    if (Param('usevisibilitygroups')) {
+        # If the user can see no groups, then no users are visible either.
+        my $visibleGroups = $self->visible_groups_as_string() || return 0;
+        $query = qq{SELECT COUNT(DISTINCT userid)
+                    FROM profiles, user_group_map
+                    WHERE userid = ?
+                    AND user_id = userid
+                    AND isbless = 0
+                    AND group_id IN ($visibleGroups)
+                   };
+    } else {
+        $query = qq{SELECT COUNT(userid)
+                    FROM profiles
+                    WHERE userid = ?
+                   };
+    }
+    return Bugzilla->dbh->selectrow_array($query, undef, $otherUser->id);
+}
+
 sub can_see_bug {
     my ($self, $bugid) = @_;
     my $dbh = Bugzilla->dbh;
@@ -453,6 +476,11 @@ sub visible_groups_direct {
     $self->{visible_groups_direct} = \@visgroups;
 
     return $self->{visible_groups_direct};
+}
+
+sub visible_groups_as_string {
+    my $self = shift;
+    return join(', ', @{$self->visible_groups_inherited()});
 }
 
 sub derive_groups {
@@ -1403,6 +1431,11 @@ are the names of the groups, whilst the values are the respective group ids.
 (This is so that a set of all groupids for groups the user can bless can be
 obtained by C<values(%{$user-E<gt>bless_groups})>.)
 
+=item C<can_see_user(user)>
+
+Returns 1 if the specified user account exists and is visible to the user,
+0 otherwise.
+
 =item C<can_see_bug(bug_id)>
 
 Determines if the user can see the specified bug.
@@ -1445,6 +1478,11 @@ be have derived groups up-to-date to select the users meeting this criteria.
 =item C<visible_groups_direct>
 
 Returns a list of groups that the user is aware of.
+
+=item C<visible_groups_as_string>
+
+Returns the result of C<visible_groups_direct> as a string (a comma-separated
+list).
 
 =begin undocumented
 
