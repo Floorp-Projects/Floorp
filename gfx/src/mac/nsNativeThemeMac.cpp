@@ -163,24 +163,26 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
                                   PRInt32 inState )
 {
   ThemeButtonDrawInfo info;
-  if ( inDisabled )
-    info.state = kThemeStateUnavailableInactive;
-  else
-    info.state = ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER)) ? 
-                    kThemeStatePressed : kThemeStateActive;
+
   info.value = inValue;
   info.adornment = inAdornment;
-  if ( inState & NS_EVENT_STATE_FOCUS ) {
-    // There is a bug in OS 10.2.x-10.3.x where if we are in a CG context and
-    // draw the focus ring with DrawThemeButton(), there are ugly lines all
-    // through the button.  This may get fixed in a dot-release, but until it
-    // does, we can't draw the focus ring.
-    if (inKind != kThemePushButton || nsRenderingContextMac::OnTigerOrLater())
-      info.adornment = kThemeAdornmentFocus;
-  }
-  if ( inIsDefault )
-    info.adornment |= kThemeAdornmentDefault;
 
+  if ( inDisabled )
+    info.state = kThemeStateUnavailableInactive;
+  else {
+    info.state = ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER)) ? 
+                    kThemeStatePressed : kThemeStateActive;
+    if ( inState & NS_EVENT_STATE_FOCUS ) {
+      // There is a bug in OS 10.2.x-10.3.x where if we are in a CG context and
+      // draw the focus ring with DrawThemeButton(), there are ugly lines all
+      // through the button.  This may get fixed in a dot-release, but until it
+      // does, we can't draw the focus ring.
+      if (inKind != kThemePushButton || nsRenderingContextMac::OnTigerOrLater())
+        info.adornment = kThemeAdornmentFocus;
+    }
+    if ( inIsDefault )
+      info.adornment |= kThemeAdornmentDefault;
+  }
   ::DrawThemeButton ( &inBoxRect, inKind, &info, nsnull, mEraseProc, nsnull, 0L );
 }
 
