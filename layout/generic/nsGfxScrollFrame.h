@@ -154,6 +154,7 @@ public:
   PRPackedBool mDidHistoryRestore:1;
   // Is this the scrollframe for the document's viewport?
   PRPackedBool mIsRoot:1;
+  PRPackedBool mSupppressScrollbarUpdate:1;
 };
 
 /**
@@ -306,6 +307,10 @@ public:
 protected:
   nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;
+  
+  void SetSuppressScrollbarUpdate(PRBool aSuppress) {
+    mInner.mSupppressScrollbarUpdate = aSuppress;
+  }
 
 private:
   friend class nsGfxScrollFrameInner;
