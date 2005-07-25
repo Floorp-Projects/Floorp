@@ -35,13 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsDirectoryServiceDefs.h"
 #include "nsBrowserProfileMigratorUtils.h"
 #include "nsMacIEProfileMigrator.h"
+#include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIProfileMigrator.h"
 #include "nsIServiceManager.h"
+#include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+
+#define MACIE_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("Favorites.html")
+#define MACIE_PREFERENCES_FOLDER_NAME NS_LITERAL_STRING("Explorer")
+#define FIREFOX_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("bookmarks.html")
+
+#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsMacIEProfileMigrator
@@ -65,7 +76,27 @@ nsMacIEProfileMigrator::Migrate(PRUint16 aItems, nsIProfileStartup* aStartup, co
 {
   nsresult rv = NS_OK;
 
+  PRBool replace = aStartup ? PR_TRUE : PR_FALSE;
+
+  if (!mTargetProfile) { 
+    GetProfilePath(aStartup, mTargetProfile);
+    if (!mTargetProfile) return NS_ERROR_FAILURE;
+  }
+
+  if (!mSourceProfile) {
+    nsCOMPtr<nsIProperties> fileLocator =
+      do_GetService("@mozilla.org/file/directory_service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    fileLocator->Get(NS_OSX_USER_PREFERENCES_DIR,
+                     NS_GET_IID(nsILocalFile),
+                     getter_AddRefs(mSourceProfile));
+    mSourceProfile->Append(MACIE_PREFERENCES_FOLDER_NAME);
+  }
+
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
+
+  COPY_DATA(CopyBookmarks, replace, nsIBrowserProfileMigrator::BOOKMARKS);
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
@@ -77,15 +108,39 @@ nsMacIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                                        PRBool aReplace,
                                        PRUint16* aResult)
 {
-  *aResult = 0; // XXXben implement me
+  *aResult = 0;
+
+  if (!mSourceProfile) {
+    nsresult rv;
+    nsCOMPtr<nsIProperties> fileLocator =
+      do_GetService("@mozilla.org/file/directory_service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    fileLocator->Get(NS_OSX_USER_PREFERENCES_DIR,
+                     NS_GET_IID(nsILocalFile),
+                     getter_AddRefs(mSourceProfile));
+    mSourceProfile->Append(MACIE_PREFERENCES_FOLDER_NAME);
+  }
+
+  MigrationData data[] = { { ToNewUnicode(MACIE_BOOKMARKS_FILE_NAME),
+                             nsIBrowserProfileMigrator::BOOKMARKS,
+                             PR_FALSE } };
+
+  // Frees file name strings allocated above.
+  GetMigrateDataFromArray(data, sizeof(data)/sizeof(MigrationData), 
+                          aReplace, mSourceProfile, aResult);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMacIEProfileMigrator::GetSourceExists(PRBool* aResult)
 {
-  *aResult = PR_FALSE; // XXXben implement me
-
+  PRUint16 data;
+  GetMigrateData(nsnull, PR_FALSE, &data);
+  
+  *aResult = data != 0;
+  
   return NS_OK;
 }
 
@@ -106,3 +161,58 @@ nsMacIEProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
 ///////////////////////////////////////////////////////////////////////////////
 // nsMacIEProfileMigrator
 
+nsresult
+nsMacIEProfileMigrator::CopyBookmarks(PRBool aReplace)
+{
+  nsCOMPtr<nsIFile> sourceFile;
+  mSourceProfile->Clone(getter_AddRefs(sourceFile));
+
+  sourceFile->Append(MACIE_BOOKMARKS_FILE_NAME);
+  PRBool exists = PR_FALSE;
+  sourceFile->Exists(&exists);
+  if (!exists)
+    return NS_OK;
+
+  nsCOMPtr<nsIFile> targetFile;
+  mTargetProfile->Clone(getter_AddRefs(targetFile));
+  targetFile->Append(FIREFOX_BOOKMARKS_FILE_NAME);
+
+  // If we're blowing away existing content, annotate the Personal Toolbar and
+  // then just copy the file. 
+  if (aReplace) {
+    nsresult rv;
+
+    // Look for the localized name of the IE Favorites Bar
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(kStringBundleServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLString toolbarFolderNameMacIE;
+    bundle->GetStringFromName(NS_LITERAL_STRING("toolbarFolderNameMacIE").get(), 
+                              getter_Copies(toolbarFolderNameMacIE));
+    nsCAutoString ctoolbarFolderNameMacIE;
+    CopyUTF16toUTF8(toolbarFolderNameMacIE, ctoolbarFolderNameMacIE);
+
+    // If we can't find it for some reason, just copy the file. 
+    if (NS_FAILED(rv)) {
+      targetFile->Exists(&exists);
+      if (exists)
+        targetFile->Remove(PR_FALSE);
+
+      return sourceFile->CopyTo(mTargetProfile, FIREFOX_BOOKMARKS_FILE_NAME);
+    }
+
+    // Now read the 4.x bookmarks file, correcting the Personal Toolbar Folder 
+    // line and writing to the new location.
+    return AnnotatePersonalToolbarFolder(sourceFile,
+                                         targetFile,
+                                         ctoolbarFolderNameMacIE.get());
+  }
+
+  return ImportBookmarksHTML(sourceFile,
+                             NS_LITERAL_STRING("sourceNameIE").get());
+}

@@ -652,45 +652,10 @@ nsDogbertProfileMigrator::MigrateDogbertBookmarks()
   mSourceProfile->Clone(getter_AddRefs(sourceBookmarksFile));
   sourceBookmarksFile->Append(BOOKMARKS_FILE_NAME_IN_4x);
 
-  nsCOMPtr<nsIInputStream> fileInputStream;
-  NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), sourceBookmarksFile);
-  if (!fileInputStream) return NS_ERROR_OUT_OF_MEMORY;
-
   nsCOMPtr<nsIFile> targetBookmarksFile;
   mTargetProfile->Clone(getter_AddRefs(targetBookmarksFile));
   targetBookmarksFile->Append(BOOKMARKS_FILE_NAME_IN_5x);
 
-  nsCOMPtr<nsIOutputStream> outputStream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), targetBookmarksFile);
-  if (!outputStream) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileInputStream));
-  nsCAutoString sourceBuffer;
-  nsCAutoString targetBuffer;
-  PRBool moreData = PR_FALSE;
-  PRUint32 bytesWritten = 0;
-  do {
-    nsresult rv = lineInputStream->ReadLine(sourceBuffer, &moreData);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!moreData)
-      break;
-
-    PRInt32 nameOffset = sourceBuffer.Find(toolbarName);
-    if (nameOffset >= 0) {
-      // Found the personal toolbar name on a line, check to make sure it's actually a folder. 
-      NS_NAMED_LITERAL_CSTRING(folderPrefix, "<DT><H3 ");
-      PRInt32 folderPrefixOffset = sourceBuffer.Find(folderPrefix);
-      if (folderPrefixOffset >= 0)
-        sourceBuffer.Insert(NS_LITERAL_CSTRING("PERSONAL_TOOLBAR_FOLDER=\"true\" "), 
-                            folderPrefixOffset + folderPrefix.Length());
-    }
-
-    targetBuffer.Assign(sourceBuffer);
-    targetBuffer.Append("\r\n");
-    outputStream->Write(targetBuffer.get(), targetBuffer.Length(), &bytesWritten);
-  }
-  while (1);
-
-  return NS_OK;
+  return AnnotatePersonalToolbarFolder(sourceBookmarksFile,
+                                       targetBookmarksFile, toolbarName);
 }

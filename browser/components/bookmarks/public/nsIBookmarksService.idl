@@ -48,7 +48,7 @@ interface nsIArray;
 interface nsIRDFResource;
 interface nsITransactionManager;
 
-[scriptable, uuid(2c31ecce-4157-4820-8631-ec65b2e0ca93)]
+[scriptable, uuid(ccc48346-429d-4931-94dc-beb1afcea292)]
 interface nsIBookmarksService : nsISupports
 {
     const unsigned long BOOKMARK_DEFAULT_TYPE   = 0;
@@ -105,8 +105,6 @@ interface nsIBookmarksService : nsISupports
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
     string resolveKeyword(in wstring aName, out wstring aPostData);
-    
-    void importSystemBookmarks(in nsIRDFResource aParentFolder);
 
     readonly attribute nsITransactionManager transactionManager;
 
