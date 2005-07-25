@@ -62,7 +62,7 @@
 
 NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
-nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull), mAlphaRow(nsnull)
+nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mAlphaRow(nsnull)
 {
 }
 
@@ -70,9 +70,6 @@ nsXBMDecoder::~nsXBMDecoder()
 {
     if (mBuf)
         free(mBuf);
-
-    if (mRow)
-        free(mRow);
 
     if (mAlphaRow)
         free(mAlphaRow);
@@ -107,10 +104,6 @@ NS_IMETHODIMP nsXBMDecoder::Close()
     mImage = nsnull;
     mFrame = nsnull;
 
-    if (mRow) {
-        free(mRow);
-        mRow = nsnull;
-    }
     if (mAlphaRow) {
         free(mAlphaRow);
         mAlphaRow = nsnull;
@@ -208,8 +201,11 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         PRUint32 abpr;
         mFrame->GetAlphaBytesPerRow(&abpr);
 
-        mRow = (PRUint8*)calloc(bpr, 1);
         mAlphaRow = (PRUint8*)malloc(abpr);
+        if (!mAlphaRow) {
+          mState = RECV_DONE;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         mState = RECV_SEEK;
 
@@ -243,7 +239,11 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                 return NS_OK;   // 0x at the end, actual number is missing
             while (*endPtr && isspace(*endPtr))
                 endPtr++;       // skip whitespace looking for comma
-            if (*endPtr && (*endPtr != ',')) {
+
+            if (!*endPtr) {
+                // Need more data
+                return NS_OK;
+            } else if (*endPtr != ',') {
                 *endPtr = '\0';
                 mState = RECV_DONE;  // strange character (or ending '}')
             }
@@ -264,22 +264,29 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
 
             mCurCol = PR_MIN(mCurCol + 8, mWidth);
             if (mCurCol == mWidth || mState == RECV_DONE) {
-                    // Row finished. Set Data.
-                    mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
-                    mFrame->SetImageData(mRow, bpr, mCurRow * bpr);
-                    nsIntRect r(0, mCurRow, mWidth, 1);
-                    mObserver->OnDataAvailable(nsnull, mFrame, &r);
+                // Row finished. Set Data.
+                mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
+                // nsnull gets interpreted as all-zeroes, which is what we
+                // want
+                mFrame->SetImageData(nsnull, bpr, mCurRow * bpr);
+                nsIntRect r(0, mCurRow, mWidth, 1);
+                mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
-                    if ((mCurRow + 1) == mHeight) {
-                        mState = RECV_DONE;
-                        return mObserver->OnStopFrame(nsnull, mFrame);
-                    }
-                    mCurRow++;
-                    mCurCol = 0;
+                if ((mCurRow + 1) == mHeight) {
+                    mState = RECV_DONE;
+                    return mObserver->OnStopFrame(nsnull, mFrame);
+                }
+                mCurRow++;
+                mCurCol = 0;
             }
 
-            mPos++;
-        } while (*mPos && (mState == RECV_DATA));
+            // Skip the comma
+            NS_ASSERTION(mState != RECV_DATA || *mPos == ',' ||
+                         (mIsX10 && hiByte),
+                         "Must be a comma");
+            if (*mPos == ',')
+                mPos++;
+        } while ((mState == RECV_DATA) && *mPos);
     }
 
     return NS_OK;
