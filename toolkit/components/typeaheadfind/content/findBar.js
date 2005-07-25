@@ -50,6 +50,7 @@ var gFindMode = FIND_NORMAL;
 var gFoundLink = null;
 var gTmpOutline = null;
 var gTmpOutlineOffset = "0";
+var gDrawOutline = false;
 var gQuickFindTimeout = null;
 var gQuickFindTimeoutLength = 0;
 var gHighlightTimeout = null;
@@ -103,6 +104,9 @@ function initFindBar()
   pbi.addObserver(gTypeAheadFind.searchLinksPref, gTypeAheadFind, false);
   gUseTypeAheadFind = prefService.getBoolPref("accessibility.typeaheadfind");
   gTypeAheadLinksOnly = prefService.getBoolPref("accessibility.typeaheadfind.linksonly");
+
+  var fastFind = getBrowser().fastFind;
+  fastFind.focusLinks = true;
 }
 
 function uninitFindBar()
@@ -345,12 +349,13 @@ function setFoundLink(foundLink)
   if (gFoundLink == foundLink)
     return;
 
-  if (gFoundLink) {
+  if (gFoundLink && gDrawOutline) {
     // restore original outline
     gFoundLink.style.outline = gTmpOutline;
     gFoundLink.style.outlineOffset = gTmpOutlineOffset;
   }
-  if (foundLink) {
+  gDrawOutline = (foundLink && gFindMode != FIND_NORMAL);
+  if (gDrawOutline) {
     // backup original outline
     gTmpOutline = foundLink.style.outline;
     gTmpOutlineOffset = foundLink.style.outlineOffset;
@@ -358,7 +363,7 @@ function setFoundLink(foundLink)
     // XXX Should we change the following style for FAYT pseudo focus?
     // XXX Shouldn't we change default design if outline is visible already?
     foundLink.style.outline = "1px dotted invert";
-    foundLink.style.outlineOffset = "0;";
+    foundLink.style.outlineOffset = "0";
   }
 
   gFoundLink = foundLink;
@@ -544,13 +549,11 @@ function enableFindButtons(aEnable)
 
 function updateFoundLink(res)
 {
-  if (gFindMode != FIND_NORMAL) {
-    var val = document.getElementById("find-field").value;
-    if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND || !val)
-      setFoundLink(null);
-    else
-      setFoundLink(getBrowser().fastFind.foundLink);
-  }
+  var val = document.getElementById("find-field").value;
+  if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND || !val)
+    setFoundLink(null);
+  else
+    setFoundLink(getBrowser().fastFind.foundLink);
 }
 
 function find(val)
@@ -752,6 +755,4 @@ function setFindMode(mode)
     return;
 
   gFindMode = mode;
-  var fastFind = getBrowser().fastFind;
-  fastFind.focusLinks = (gFindMode != FIND_NORMAL);
 }
