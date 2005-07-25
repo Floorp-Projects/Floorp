@@ -21,6 +21,11 @@
     </hbox>
     
     <vbox flex="1" style="max-width: 45em;">
+#ifdef XP_MACOSX
+# On mac, we're exposing the dialog title inside the dialog
+      <!-- Dialog title -->
+      <description id="info.title" class="dialogTitle"/>
+#endif
       <!-- text -->
       <description id="info.header" class="header"/>
       <vbox id="info.box"/>
