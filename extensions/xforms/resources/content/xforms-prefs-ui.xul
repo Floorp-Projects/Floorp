@@ -62,7 +62,9 @@
                         accesskey="&xforms.crossdomain.ui.accesskey;"
                         onpreferenceread="return gContentPane.updateButtons('xformsCrossDomainButton', 'xforms.crossdomain.enabled');"/>
             </vbox>
-            <button id="xformsCrossDomainButton" label="&allowedSites.label;"
+            <button id="xformsCrossDomainButton"
+                    label="&allowedSitesXForms.label;"
+                    accesskey="&allowedSitesXForms.accesskey;"
                     oncommand="loadXFormsPermission()"/>
           </row>
         </rows>

@@ -37,3 +37,5 @@
 <!ENTITY xforms.crossdomain.ui.label "Allow XForms to submit data to other domains">
 <!ENTITY xforms.crossdomain.ui.accesskey "X">
 
+<!ENTITY allowedSitesXForms.label "Allowed Sites">
+<!ENTITY allowedSitesXForms.accesskey "t">
