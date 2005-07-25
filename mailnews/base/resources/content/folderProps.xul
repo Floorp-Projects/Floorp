@@ -122,7 +122,7 @@
                 <radio wsm_persist="true" accesskey="&retentionKeepMsg.accesskey;"
                         value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
                 <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
-                <label value="&days.label;"/>
+                <label value="&daysOld.label;"/>
               </hbox>
             </radiogroup>
             <hbox>
