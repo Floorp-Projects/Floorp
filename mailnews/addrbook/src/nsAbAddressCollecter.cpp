@@ -89,7 +89,12 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar *aAddr
 NS_IMETHODIMP nsAbAddressCollecter::GetCardFromAttribute(const char *aName, const char *aValue, nsIAbCard **aCard)
 {
   NS_ENSURE_ARG_POINTER(aCard);
-  return m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
+  if (m_database)
+    // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
+    // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+    return m_database->GetCardFromAttribute(m_directory, aName, aValue, PR_FALSE /* retain case */, aCard);
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool aCreateCard, PRUint32 aSendFormat)
@@ -124,8 +129,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
     nsCOMPtr <nsIAbCard> existingCard;
     nsCOMPtr <nsIAbCard> cardInstance;
 
-    // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
-    // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
     rv = GetCardFromAttribute(kPriEmailColumn, curAddress, getter_AddRefs(existingCard));
     if (!existingCard && aCreateCard)
     {
@@ -325,9 +328,7 @@ nsresult nsAbAddressCollecter::Init(void)
 
   nsXPIDLCString prefVal;
   pPrefBranchInt->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  rv = SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
-  NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
+  return rv = SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
 }
 
 nsresult nsAbAddressCollecter::AddCardToAddressBook(nsIAbCard *card)
@@ -335,9 +336,10 @@ nsresult nsAbAddressCollecter::AddCardToAddressBook(nsIAbCard *card)
   NS_ENSURE_ARG_POINTER(card);
 
   nsCOMPtr <nsIAbCard> addedCard;
-  nsresult rv = m_directory->AddCard(card, getter_AddRefs(addedCard));
-  NS_ENSURE_SUCCESS(rv,rv);
-  return rv;
+  if (m_directory)
+    return m_directory->AddCard(card, getter_AddRefs(addedCard));
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsAbAddressCollecter::SetAbURI(const char *aURI)
