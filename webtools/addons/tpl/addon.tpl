@@ -1,6 +1,6 @@
 <h2><strong>{$addon->Name}</strong> &raquo; Overview</h2>
 
-<script language="Javascript" type="text/javascript" src="/js/auto.js"></script>
+<script type="text/javascript" src="/js/auto.js"></script>
 
 <p class="first">
 <strong><a href="./addon.php?id={$addon->ID}">{$addon->Name} {$addon->Version}</a></strong>,
@@ -48,8 +48,8 @@ Requires: {$addon->AppName} 1.0 - 1.0+ <img src="{$config.webpath}/img/{$addon->
 <ul>
 <li>Categories: 
 <ul>
-{section name=cats loop=$addon->Cats}
-<li><a href="./search.php?cat={$addon->Cats[cats].CatName}" title="See other Addons in this category.">{$addon->Cats[cats].CatName}</a></li>
+{section name=cats loop=$addon->AddonCats}
+<li><a href="./search.php?cat={$addon->AddonCats[cats].CatName}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
 {/section}
 </ul>
 </li>

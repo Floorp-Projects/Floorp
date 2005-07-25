@@ -37,7 +37,7 @@
     <form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
     <div>
         <input type="text" id="q" name="q" accesskey="s" size="10" value="{$clean.q}">
-        <input type="submit" id="submit" value="Search">
+        <input type="submit" id="submit" value="Search Addons">
     </div>
     </form>
     <div class="ie-clear-menu">&nbsp;</div>

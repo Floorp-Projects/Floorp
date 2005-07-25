@@ -250,7 +250,6 @@ class AddOn extends AMO_Object
         // Gather addon categories.
         $this->db->query("
             SELECT DISTINCT
-                categories.CatID,
                 categories.CatName
             FROM
                 categoryxref
@@ -262,7 +261,7 @@ class AddOn extends AMO_Object
                 categories.CatName
         ", SQL_ALL, SQL_ASSOC);
 
-        $this->AddonCats = $this->db->record;
+        $this->setVar('AddonCats',$this->db->record);
     }
 }
 ?>

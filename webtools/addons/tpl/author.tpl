@@ -5,7 +5,7 @@
 
 <dt>Email</dt>
 <dd>
-{if $user->UserEmailHide}
+{if $user->UserEmailHide eq 1}
 Email not disclosed
 {else}
 <a href="mailt:{$user->UserEmail|escape}">{$user->UserEmail|escape}</a>
