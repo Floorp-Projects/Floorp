@@ -37,14 +37,15 @@
 
 var XPInstallConfirm = 
 { 
-  _installCountdown: 2,
-  _installCountdownInterval: -1,
   _param: null
 };
 
 
 XPInstallConfirm.init = function ()
 {
+  var _installCountdown = 2;
+  var _installCountdownInterval = -1;
+
   var bundle = document.getElementById("xpinstallConfirmStrings");
   
   this._param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
@@ -82,26 +83,43 @@ XPInstallConfirm.init = function ()
   introNode.appendChild(textNode);
   
   var okButton = document.documentElement.getButton("accept");
-  okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [this._installCountdown]);
+  okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
   okButton.disabled = true;
   okButton.focus();
-  
-  this._installCountdownInterval = setInterval("XPInstallConfirm.okButtonCountdown()", 1000);
+
+  function okButtonCountdown() {
+    _installCountdown -= 0.1;
+
+    if (_installCountdown <= 0) {
+      okButton.label = bundle.getString("installButtonLabel");
+      okButton.disabled = false;
+      clearInterval(_installCountdownInterval);
+      _installCountdownInterval = -1;
+    }
+    else
+      okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
+  }
+
+  function myfocus() {
+    if (_installCountdownInterval == -1)
+      _installCountdownInterval = setInterval(okButtonCountdown, 100);
+  }
+
+  function myblur() {
+    if (_installCountdownInterval != -1)
+      clearInterval(_installCountdownInterval);
+
+    _installCountdown = 2;
+    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
+    okButton.disabled = true;
+  }
+
+  window.addEventListener("focus", myfocus, true);
+  window.addEventListener("blur", myblur, true);
+
+  _installCountdownInterval = setInterval(okButtonCountdown, 100);
 }
 
-XPInstallConfirm.okButtonCountdown = function ()
-{
-  var okButton = document.documentElement.getButton("accept");
-  var bundle = document.getElementById("xpinstallConfirmStrings");
-  if (this._installCountdown-- <= 1) {
-    okButton.label = bundle.getString("installButtonLabel");
-    okButton.disabled = false;
-    clearInterval(this._installCountdownInterval);
-  }
-  else
-    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [this._installCountdown]);
-}
-    
 XPInstallConfirm.onOK = function ()
 {
   this._param.SetInt(0, 0);
@@ -113,4 +131,3 @@ XPInstallConfirm.onCancel = function ()
   this._param.SetInt(0, 1);
   return true;
 }
-
