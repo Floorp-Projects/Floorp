@@ -61,8 +61,8 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 -(BOOL) addBookmarkFolderFromSafariDict:(NSDictionary *)aDict;
 -(BOOL) addBookmarkFolderFromXML:(CFXMLTreeRef)aTreeRef;
 // Deletes the bookmark or bookmark array
--(void) deleteBookmark:(Bookmark *)childBookmark;
--(void) deleteBookmarkFolder:(BookmarkFolder *)childArray;
+-(BOOL) deleteBookmark:(Bookmark *)childBookmark;
+-(BOOL) deleteBookmarkFolder:(BookmarkFolder *)childArray;
   //Notification methods
 -(void) itemAddedNote:(BookmarkItem *)theItem atIndex:(unsigned)anIndex;
 -(void) itemRemovedNote:(BookmarkItem *)theItem;
@@ -574,10 +574,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   BOOL itsDead = NO;
   if ([[self childArray] indexOfObjectIdenticalTo:aChild] !=NSNotFound) {
     if ([aChild isKindOfClass:[Bookmark class]])
-      [self deleteBookmark:(Bookmark *)aChild];
+      itsDead = [self deleteBookmark:(Bookmark *)aChild];
     else if ([aChild isKindOfClass:[BookmarkFolder class]])
-      [self deleteBookmarkFolder:(BookmarkFolder *)aChild];
-    itsDead = YES;
+      itsDead = [self deleteBookmarkFolder:(BookmarkFolder *)aChild];
   } else { //with current setup, shouldn't ever hit this code path.
     NSEnumerator *enumerator = [[self childArray] objectEnumerator];
     id anObject;
@@ -589,7 +588,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return itsDead;
 }
 
--(void) deleteBookmark:(Bookmark *)aChild
+-(BOOL) deleteBookmark:(Bookmark *)aChild
 {
   NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
   //record undo
@@ -604,14 +603,15 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   }
   // send message & clean up - undo manager has retained aChild, which prevents crash
   [self itemRemovedNote:aChild];
+  return YES;
 }
 
--(void) deleteBookmarkFolder:(BookmarkFolder *)aChild
+-(BOOL) deleteBookmarkFolder:(BookmarkFolder *)aChild
 {
   NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
   //Make sure it's not a special array - redundant, but oh well.
   if ([aChild isSpecial])
-    return;
+    return NO;
   unsigned size = [aChild count];
   [undoManager beginUndoGrouping];
   while (size > 0)
@@ -626,6 +626,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [undoManager setActionName:NSLocalizedString(@"Delete Folder",@"Delete Bookmark Folder")];
   // send message  - undo manager has retained aChild, which prevents crash
   [self itemRemovedNote:aChild];
+  return YES;
 }
 
 //

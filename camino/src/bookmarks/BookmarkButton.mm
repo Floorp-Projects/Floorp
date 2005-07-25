@@ -184,8 +184,9 @@
 -(IBAction)deleteBookmarks: (id)aSender
 {
   BookmarkItem *item = [self bookmarkItem];
-  [[item parent] deleteChild:item];
-  [self removeFromSuperview];
+  BOOL deleted = [[item parent] deleteChild:item];
+  if (deleted)
+    [self removeFromSuperview];
 }
 
 -(IBAction)addFolder:(id)aSender
