@@ -166,7 +166,7 @@
           row.setAttribute("type", warning ? "warning" : "error");
           row.setAttribute("msg", aObject.errorMessage);
           if (aObject.lineNumber || aObject.sourceName) {
-            row.setAttribute("url", aObject.sourceName);
+            row.setAttribute("href", aObject.sourceName);
             row.setAttribute("line", aObject.lineNumber);
           } else {
             row.setAttribute("hideSource", "true");
@@ -296,7 +296,7 @@
           </xul:box>
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
-            <xul:box class="console-error-source" xbl:inherits="url,line"/>
+            <xul:box class="console-error-source" xbl:inherits="href,line"/>
             <spacer flex="1"/>
             <xul:label class="label" value="&errLine.label;"/>
             <xul:label class="label" xbl:inherits="value=line" flex="1"/>
@@ -321,9 +321,9 @@
           
           var strBundle = this._ConsoleBox.mStrBundle;
           
-          if (this.hasAttribute("line") && this.hasAttribute("url")) {
+          if (this.hasAttribute("line") && this.hasAttribute("href")) {
             msg += "\n" + strBundle.getFormattedString("errFile", 
-                                        [this.getAttribute("url")]) + "\n";
+                                        [this.getAttribute("href")]) + "\n";
             if (this.hasAttribute("col")) {
               msg += strBundle.getFormattedString("errLineCol",
                          [this.getAttribute("line"), this.getAttribute("col")]);
@@ -367,12 +367,12 @@
 
   <binding id="console-error-source" extends="xul:box">
     <content>
-      <xul:label class="text-link" xbl:inherits="value=url" crop="right"/>
+      <xul:label class="text-link" xbl:inherits="href,value=href" crop="right"/>
     </content>
 
     <handlers>
       <handler event="click" button="0"><![CDATA[
-          var url = this.getAttribute("url");
+          var url = this.getAttribute("href");
           var line = getAttribute("line");  
           window.openDialog(
             "chrome://global/content/viewSource.xul", "_blank", 

@@ -83,19 +83,3 @@ download[state="5"], download[state="6"] {
   margin-right: 10px;
 }
 
-.link {
-  text-decoration: underline;
-  color: blue;
-  cursor: pointer;
-  -moz-user-focus: normal;
-  border: 1px solid transparent;
-}
-
-.link:hover:active {
-  color: red;
-}
-
-.link:focus {
-  border: 1px dotted black;
-}
-

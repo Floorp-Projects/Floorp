@@ -166,10 +166,6 @@ link:active {
   color: #FF0000;
 }
 
-.linkLabel {
-  cursor: pointer; 
-}
-
 .updateCategoryContent {
   -moz-margin-start: 12px;
 }

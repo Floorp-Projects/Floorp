@@ -78,24 +78,6 @@ label:last-child {
 
 /* Download View Items, implementation */
 
-
-.link {
-  text-decoration: underline;
-  color: blue !important;
-  cursor: pointer;
-  font-size: 100% !important;
-  margin-left: 6px;
-  padding: 0px;
-  
-}
-
-.link:hover:active {
-  color : red !important;
-}
-
-.link:focus {
-}
-
 progressmeter {
   margin: 6px 6px 4px 6px;
   min-height:19px;

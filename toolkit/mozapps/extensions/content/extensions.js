@@ -209,6 +209,7 @@ function Startup()
   gGetMoreURL = pref.getComplexValue(isExtensions ? PREF_EXTENSIONS_GETMOREEXTENSIONSURL 
                                                   : PREF_EXTENSIONS_GETMORETHEMESURL, 
                                      Components.interfaces.nsIPrefLocalizedString).data;
+  document.getElementById('getMore').setAttribute('href', gGetMoreURL);
   var app = Components.classes["@mozilla.org/xre/app-info;1"]
                       .getService(Components.interfaces.nsIXULAppInfo);
   gGetMoreURL = gGetMoreURL.replace(/%APPID%/g, app.ID);

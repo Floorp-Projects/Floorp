@@ -291,9 +291,7 @@
       </hbox>
       <spacer flex="1"/>
 
-      <label id="getMore"
-             onclick="openURL(gGetMoreURL);"
-             onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openURL(gGetMoreURL);"
+      <label id="getMore" class="text-link"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"
              tooltiptextthemes="&getMoreThemes.tooltip;"

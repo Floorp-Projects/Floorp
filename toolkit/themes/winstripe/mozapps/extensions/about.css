@@ -13,12 +13,6 @@
   color: #909090;
 }
 
-#extensionHomepage {
-  color: #0000FF;
-  text-decoration: underline !important;
-  cursor: pointer;
-}
-
 #genericAbout {
   padding: 0px 0px 10px 0px;
   min-height: 200px;

@@ -117,9 +117,7 @@
         <row align="center">
           <spacer/>
           <hbox>
-            <label id="privacyPolicy"
-                   onclick="openPrivacyPolicy();"
-                   onkeypress="if (event.keyCode == event.DOM_VK_ENTER || event.keyCode == event.DOM_VK_RETURN) openPrivacyPolicy();"
+            <label id="privacyPolicy" class="text-link"
                    value="&reportForm.privacyPolicy.title;"
                    tooltiptext="&reportForm.privacyPolicy.tooltip;"/>
           </hbox>

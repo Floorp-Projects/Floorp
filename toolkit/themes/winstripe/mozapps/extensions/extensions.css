@@ -66,15 +66,7 @@
 }
 
 #getMore {
-  color: #0000FF;
-  text-decoration: underline !important;
-  cursor: pointer;
   text-align: right;
-  -moz-user-focus: normal;
-}
-
-#getMore:focus {
-  outline: 1px dotted invert ! important;
 }
 
 richlistbox {

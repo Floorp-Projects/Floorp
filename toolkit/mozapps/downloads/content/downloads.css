@@ -40,7 +40,7 @@ download[state="7"] {
 }
 
 /* Only focus links in the selected item*/
-download[selected="true"] .link {
-  -moz-user-focus: normal;
+download:not([selected="true"]) .text-link {
+  -moz-user-focus: none;
 }
 
