@@ -99,7 +99,11 @@ function setLabelForNode(aNode, aLabel, aIsLabelFlag)
 function commonDialogOnLoad()
 {
   // set the document title
+#ifdef XP_MACOSX
+  setElementText("info.title", gCommonDialogParam.GetString(12), true);
+#else
   document.title = gCommonDialogParam.GetString(12);
+#endif
 
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);
