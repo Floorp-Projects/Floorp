@@ -86,7 +86,6 @@ private:
     PRUint32 mXHotspot;
     PRUint32 mYHotspot;
 
-    PRUint8* mRow; // Hold the decoded row
     PRUint8* mAlphaRow; // alpha data for the row
 
     PRPackedBool mIsCursor;
