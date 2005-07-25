@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>CSS 2.1 Test Suite: Positioned inline as absolute containing block</title>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#containing-block-details"/>
+  <style type="text/css">
+    #testBlock { font-family: Ahem; font-size: 20px; line-height: 1; }
+    #testBlock { position: absolute; top: 100px; }
+    #hider { position: absolute; background: red; top: -9px; height: 52px;
+             left: 33px; width: 275px; z-index: 1; }
+    #cb { display: inline; position: relative; background: green; color: green;
+          padding-left: 100px; padding-right: 50px; padding-top: 20px;
+	  padding-bottom: 40px; }
+    #test { position: absolute; top: 0; bottom: 0; left: 0; right: 0;
+            background: green; color: green; margin-left: 33px; margin-right: 22px;
+	    margin-top: 11px; margin-bottom: 17px; z-index: 2; }
+  </style>
+ </head>
+ <body>
+   <p>There should be no red</p>
+   <div id="testBlock">
+     <div id="hider"></div>
+     <div id="cb">XXXX<span id="test">XXX</span>XXXXX</div>
+   </div>
+ </body>
+</html>
