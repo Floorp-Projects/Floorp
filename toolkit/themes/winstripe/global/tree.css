@@ -70,7 +70,7 @@ tree {
 /* ::::: tree rows ::::: */
 
 treechildren::-moz-tree-row {
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   min-height: 18px;
   height: 1.3em;
 }
@@ -84,7 +84,11 @@ treechildren::-moz-tree-row(selected, focus) {
 }
 
 treechildren::-moz-tree-row(current, focus) {
-  border: 1px dotted #F5DB95;
+  border: 2px dotted Highlight;
+}
+
+treechildren::-moz-tree-row(selected, current, focus) {
+  border: 2px dotted #F3D982;
 }
 
 /* ::::: tree cells ::::: */
