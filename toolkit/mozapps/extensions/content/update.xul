@@ -53,7 +53,6 @@
         title="&updateWizard.title;"
         windowtype="Update:Wizard"
         onload="gUpdateWizard.init();"
-        onunload="gUpdateWizard.uninit();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
         onclose="return gUpdateWizard.onWizardClose(event);"
         style="width: 47em; min-height: 35em;"
@@ -65,6 +64,19 @@
     <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/extensions/update.properties"/>
   </stringbundleset>
+  
+  <wizardpage id="dummy" pageid="dummy"/>
+  
+  <wizardpage id="versioninfo" pageid="versioninfo" next="mismatch"
+              label="&versioninfo.title;"
+              onpageshow="gVersionInfoPage.onPageShow();">
+    <progressmeter id="versioninfo.progress" mode="undetermined"/>
+    <hbox align="center">
+      <image id="versioninfo.throbber" class="throbber"/>
+      <label flex="1" crop="right">&versioninfo.intro;</label>
+    </hbox>
+    <separator/>
+  </wizardpage>
 
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.title;"

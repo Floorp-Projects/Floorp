@@ -14,15 +14,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is The Extension Manager.
+# The Original Code is the Extension List UI.
 #
-# The Initial Developer of the Original Code is
-# Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
+#   Ben Goodger <ben@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,32 +37,30 @@
 #
 # ***** END LICENSE BLOCK *****
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/"?>
 
-<!DOCTYPE dialog [
-<!ENTITY % finalizeDTD SYSTEM "chrome://mozapps/locale/extensions/finalize.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%finalizeDTD;
-%brandDTD;
-]>
+<dialog id="addonList" windowtype="Addons:List"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: 35em;" 
+        buttons="accept,cancel" onload="init();">
 
-<dialog id="finalize" title="&finalize.title;" 
-        style="width: 30em;" onload="init();"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" 
+          src="chrome://mozapps/content/extensions/list.js"/>
+          
+  <stringbundle id="extensionsBundle" 
+                src="chrome://mozapps/locale/extensions/extensions.properties"/>
   
-  <script type="application/x-javascript">
-  <![CDATA[
-    function init()
-    {
-      var accept = document.documentElement.getButton("accept");
-      accept.hidden = true;
-      var cancel = document.documentElement.getButton("cancel");
-      cancel.hidden = true;
-    }
-  ]]>
-  </script>
-                
-  <label>&intro.label;</label>
-
+  <label id="message1" hidden="true"/>
+  <separator class="thin"/>
+  <tree rows="10" hidecolumnpicker="true">
+    <treecols>
+      <treecol flex="1" id="nameColumn" hideheader="true"/>
+    </treecols>
+    <treechildren id="addonsChildren"/>
+  </tree>
+  <separator class="thin"/>
+  <label id="message2" hidden="true"/>
+  <separator class="thin"/>
+  <label class="bold" id="message3" hidden="true"/>
 </dialog>
 

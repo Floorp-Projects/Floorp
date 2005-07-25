@@ -89,10 +89,10 @@ extension[selected="true"] {
 }
 
 extension {
-  padding-top: 13px;
-  padding-bottom: 13px;
-  -moz-padding-start: 13px;
-  -moz-padding-end: 10px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
   background-image: url("chrome://mozapps/skin/shared/itemFader.png");
@@ -121,7 +121,7 @@ extension[disabled="true"] .extension-icon {
 }
 
 .extension-icon {
-  -moz-margin-end: 10px; 
+  -moz-margin-end: 2px; 
 }
 
 .previewText {
@@ -148,5 +148,43 @@ extension[itemType="theme"] .extension-icon {
   margin-bottom: 5px;
   -moz-margin-start: 5px;
   -moz-margin-end: 10px;
+}
+
+extension[availableUpdateURL="none"] .extension-badge {
+  display: none;
+}
+
+extension[loading="true"] .extension-badge {
+  display: -moz-box;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px;
+  -moz-margin-end: -2px;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
+}
+
+.extension-badge {
+  display: -moz-box;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px;
+  -moz-margin-end: -2px;
+  list-style-image: url("chrome://mozapps/skin/update/extensionalert.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+extension[availableUpdateURL="none"] .extension-install-button-box {
+  display: none;
+}
+
+.extension-install-button-box {
+  display: -moz-box;
+  margin: 0px;
+}
+
+.throbber {
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif") !important;
 }
 

@@ -41,6 +41,8 @@
 interface nsIFile;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
+interface nsIAddonUpdateListener;
+interface nsIAddonUpdateCheckListener;
 interface nsICommandLine;
 interface nsISimpleEnumerator;
 interface nsIDirectoryEnumerator;
@@ -157,37 +159,6 @@ interface nsIInstallLocation : nsISupports
 };
 
 /**
- * Interface for handling download and install notifications for Extensions
- * and Themes.
- */
-[scriptable, uuid(9048223f-ec50-49e5-9866-80ee8f26179d)]
-interface nsIExtensionDownloadListener : nsISupports
-{
-  /**
-   * Install/Download state has changed
-   * @param   url
-   *          The url that state changed for
-   * @param   state
-   *          The new state. States are defined in nsIXPIProgressDialog
-   * @param   value
-   *          Some data about the new state
-   */
-  void onStateChange(in AString url, in short state, in long value);
-
-  /**
-   * Progress occurred in the download/install operation
-   * @param   url
-   *          The url that progress occurred for
-   * @param   value
-   *          The value of the current progress
-   * @param   maxValue
-   *          The maximum value |value| can reach
-   */
-  void onProgress(in AString url, in unsigned long value, 
-                  in unsigned long maxValue);
-};
-
-/**
  * Interface representing a system for the installation and management of
  * Extensions, Themes etc. 
  *
@@ -283,10 +254,14 @@ interface nsIExtensionManager : nsISupports
    *          false if this check should find the newest versions available,
    *          true if it should only find newer target application compatibility
    *          information for the currently installed version.
+   * @param   listener
+   *          An nsIAddonUpdateCheckListener object which will be notified during
+   *          the update check process. 
    */
    void update([array, size_is(itemCount)] in nsIUpdateItem items,
                in unsigned long itemCount, 
-               in unsigned long versionUpdateOnly);
+               in unsigned long versionUpdateOnly,
+               in nsIAddonUpdateCheckListener listener);
 
   /**
    * Gets a nsIUpdateItem for the item with the specified id.
@@ -383,14 +358,14 @@ interface nsIExtensionManager : nsISupports
    *          The listener to add
    * @returns the index of the added listen in the listener list. 
    */
-  long addDownloadListener(in nsIExtensionDownloadListener listener);
+  long addUpdateListener(in nsIAddonUpdateListener listener);
 
   /**
    * Removes a download progress listener.
    * @param   index
    *          The index of the listener to remove.
    */
-  void removeDownloadListenerAt(in long index);
+  void removeUpdateListenerAt(in long index);
 
   /**
    * Move an Item to the index of another item in its container.
@@ -400,40 +375,6 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
-};
-
-/**
- * Interface representing an object that can update a set of Extensions,
- * Themes etc. 
- */
-[scriptable, uuid(c0b7517f-0b3a-41a2-bde8-ba3ac8a5af47)]
-interface nsIExtensionItemUpdater : nsISupports
-{
-  /**
-   * Checks for updates to a list of items.
-   * @param   items
-   *          An array of nsIUpdateItems to check for updates for.
-   * @param   itemCount
-   *          The length of |items|
-   * @param   versionUpdateOnly
-   *          false if this check should find the newest versions available,
-   *          true if it should only find newer target application compatibility
-   *          information for the currently installed version.
-   */
-  void checkForUpdates([array, size_is(itemCount)] in nsIUpdateItem items,
-                       in unsigned long itemCount, 
-                       in boolean versionUpdateOnly);
-
-  /**
-   * The event that spawned the update check. Types defined in 
-   * nsIUpdateService
-   */
-  readonly attribute unsigned short sourceEvent;
-
-  /**
-   * The nsIUpdateItem types being checked for updates to.
-   */
-  readonly attribute unsigned long updateTypes;
 };
 
 /**
@@ -519,6 +460,79 @@ interface nsIUpdateItem : nsISupports
    * Returns a JS Object source representing an nsIUpdateItem.
    */
   readonly attribute AString objectSource;
+};
+
+/**
+ * Interface for handling download and install progress notifications for 
+ * addons.
+ */
+[scriptable, uuid(bb86037c-98c1-4c22-8e03-1e4c9fc89a8e)]
+interface nsIAddonUpdateListener : nsISupports
+{
+  /**
+   * Install/Download state has changed
+   * @param   addon
+   *          The addon that state changed for
+   * @param   state
+   *          The new state. States are defined in nsIXPIProgressDialog
+   * @param   value
+   *          Some data about the new state
+   */
+  void onStateChange(in nsIUpdateItem addon, in short state, in long value);
+
+  /**
+   * Progress occurred in the download/install operation
+   * @param   addon
+   *          The addon that progress occurred for
+   * @param   value
+   *          The value of the current progress
+   * @param   maxValue
+   *          The maximum value |value| can reach
+   */
+  void onProgress(in nsIUpdateItem addon, in unsigned long value, 
+                  in unsigned long maxValue);
+};
+
+/**
+ * Interface for handling notifications during the addon update check process.
+ */
+[scriptable, uuid(c946119f-9e7c-41aa-a794-803148045350)]
+interface nsIAddonUpdateCheckListener : nsISupports
+{
+  /**
+   * Addon update has begun
+   */
+  void onUpdateStarted();
+
+  const unsigned long STATUS_NONE = 0;
+  const unsigned long STATUS_UPDATE = 1;
+  const unsigned long STATUS_VERSIONINFO = 2;
+  const unsigned long STATUS_DATA_FOUND = 
+    STATUS_UPDATE + STATUS_VERSIONINFO;
+  const unsigned long STATUS_FAILURE = 4;
+  const unsigned long STATUS_NO_UPDATE = 8;
+  const unsigned long STATUS_DISABLED = 16;
+
+  /**
+   * Addon update has ended
+   */
+  void onUpdateEnded();
+
+  /**
+   * Update for an individual addon has begun
+   * @param   addon
+   *          A nsIUpdateItem object representing the addon being updated
+   */
+  void onAddonUpdateStarted(in nsIUpdateItem addon);
+
+  /**
+   * Update for an individual addon has ended
+   * @param   addon
+   *          A nsIUpdateItem object representing the addon being updated
+   * @param   status
+   *          The success or failure code of the update operation
+   */
+  void onAddonUpdateEnded(in nsIUpdateItem addon, in long status);
 };
 
 %{ C++

@@ -77,7 +77,7 @@ interface nsIUpdatePatch : nsISupports
   attribute AString state;
 
   /**
-   *
+   * 
    */
   attribute boolean selected;
 

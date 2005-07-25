@@ -220,6 +220,9 @@
                      predicate="http://www.mozilla.org/2004/em-rdf#incompatibleUpdate"
                      object="?incompatibleUpdate"/>
             <binding subject="?extension"
+                     predicate="http://www.mozilla.org/2004/em-rdf#availableUpdateURL"
+                     object="?available-update-url"/>
+            <binding subject="?extension"
                      predicate="http://www.mozilla.org/2004/em-rdf#updateable"
                      object="?updateable"/>
           </bindings>
@@ -233,6 +236,7 @@
                        compatible="?compatible" hidden="?hidden"
                        optionsURL="?options-url" homepageURL="?homepage-url"
                        aboutURL="?about-url" updateURL="?update-url"
+                       availableUpdateURL="?available-update-url"
                        previewImage="?previewImage" internalName="?internalName"
                        opType="?opType" downloadURL="?downloadURL"
                        state="?state" progress="?progress" status="?status"
