@@ -1957,15 +1957,15 @@ MOZCE_SHUNT_API BOOL mozce_GetTextMetricsA(HDC hdc, LPTEXTMETRICA lptma)
     lptma->tmOverhang = tmw.tmOverhang;
     lptma->tmDigitizedAspectX = tmw.tmDigitizedAspectX;
     lptma->tmDigitizedAspectY = tmw.tmDigitizedAspectY;
-    lptma->tmFirstChar = (char)tmw.tmFirstChar;
-    lptma->tmLastChar = (char)tmw.tmLastChar;
-    lptma->tmDefaultChar = (char)tmw.tmDefaultChar;
-    lptma->tmBreakChar = (char)tmw.tmBreakChar;
     lptma->tmItalic = tmw.tmItalic;
     lptma->tmUnderlined = tmw.tmUnderlined;
     lptma->tmStruckOut = tmw.tmStruckOut;
     lptma->tmPitchAndFamily = tmw.tmPitchAndFamily;
     lptma->tmCharSet = tmw.tmCharSet;
+
+    w2a_buffer(&tmw.tmFirstChar, 1, &lptma->tmFirstChar, 1);
+    w2a_buffer(&tmw.tmDefaultChar, 1, &lptma->tmDefaultChar, 1);
+    w2a_buffer(&tmw.tmBreakChar, 1, &lptma->tmBreakChar, 1);
 
     return res;
 }
