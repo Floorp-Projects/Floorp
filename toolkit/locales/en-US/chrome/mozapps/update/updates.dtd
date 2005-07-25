@@ -14,7 +14,7 @@
 
 <!ENTITY  moreDetails.label               "More Details &#0187;">
 <!ENTITY  moreDetails.accesskey           "M">
-<!ENTITY  clickHere.label                 "For more general information about this update, Click Here">
+<!ENTITY  clickHere.label                 "View more information about this update">
 
 <!ENTITY  incompatible.warning            "This update will cause some of your extensions and/or themes 
                                            to stop working until they are updated.">
