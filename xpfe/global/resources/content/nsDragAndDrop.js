@@ -325,6 +325,63 @@ var nsDragAndDrop = {
       if ("canDrop" in aDragDropObserver)
         this.mDragSession.canDrop &= aDragDropObserver.canDrop(aEvent, this.mDragSession);
       return true;
-    } 
-};
+    },
 
+  /**
+   * Do a security check for drag n' drop. Make sure the source document
+   * can load the dragged link.
+   *
+   * @param DOMEvent aEvent
+   *        the DOM event fired by leaving the element
+   * @param Object aDragDropObserver
+   *        javascript object of format described above that specifies
+   *        the way in which the element responds to drag events.
+   * @param String aUri
+   *        the uri being dragged
+   **/
+  dragDropSecurityCheck: function (aEvent, aDragSession, aUri)
+    {
+      var sourceDoc = aDragSession.sourceDocument;
+
+      if (sourceDoc) {
+        // Strip leading and trailing whitespace, then try to create a
+        // URI from the dropped string. If that succeeds, we're
+        // dropping a URI and we need to do a security check to make
+        // sure the source document can load the dropped URI. We don't
+        // so much care about creating the real URI here
+        // (i.e. encoding differences etc don't matter), we just want
+        // to know if aUri really is a URI.
+
+        var uriStr = aUri.replace(/^\s*|\s*$/g, '');
+        var uri = null;
+
+        try {
+          uri = Components.classes["@mozilla.org/network/io-service;1"]
+            .getService(Components.interfaces.nsIIOService)
+            .newURI(uriStr, null, null);
+        } catch (e) {
+        }
+
+        if (uri) {
+          // aUri is a URI, do the security check.
+          var sourceURI = sourceDoc.documentURI;
+
+          const nsIScriptSecurityManager =
+            Components.interfaces.nsIScriptSecurityManager;
+          var secMan =
+            Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+            .getService(nsIScriptSecurityManager);
+
+          try {
+            secMan.checkLoadURIStr(sourceURI, uriStr,
+                                   nsIScriptSecurityManager.STANDARD);
+          } catch (e) {
+            // Stop event propagation right here.
+            aEvent.stopPropagation();
+
+            throw "Drop of " + aUri + " denied.";
+          }
+        }
+      }
+    }
+};
