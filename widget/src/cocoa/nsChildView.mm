@@ -1964,6 +1964,8 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 
 //
 // Force Input Method Editor to commit the uncommited input
+// Note that this and other nsIKBStateControl methods don't necessarily
+// get called on the same ChildView that input is going through.
 //
 NS_IMETHODIMP nsChildView::ResetInputState()
 {
@@ -2091,21 +2093,12 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
 //
 // Scroll
 //
-// Someone wants us to scroll in the current window, probably as the result
-// of a scrollWheel event or external scrollbars. Pass along to the 
-// eventhandler.
+// The cocoa view calls DispatchWindowEvent() directly, so no need for this
 //
 NS_IMETHODIMP
 nsChildView::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
                         PRInt16 aMouseLocalY, PRBool *_retval )
 {
-#if 0
-  *_retval = PR_FALSE;
-  Point localPoint = {aMouseLocalY, aMouseLocalX};
-  if ( mMacEventHandler.get() )
-    *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
-                                          aNumLines, localPoint);
-#endif
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2715,7 +2708,6 @@ nsChildView::Idle()
   // The right mouse went down.  Fire off a right mouse down and
   // then send the context menu event.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-
   [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
 
   // plugins need a native event here
@@ -2736,7 +2728,6 @@ nsChildView::Idle()
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
-
   [self convertEvent:theEvent message:NS_MOUSE_RIGHT_BUTTON_UP toGeckoEvent:&geckoEvent];
 
   // plugins need a native event here
@@ -2813,6 +2804,49 @@ nsChildView::Idle()
     geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // dispatch scroll wheel carbon event for plugins
+  {
+    EventRef theEvent;
+    OSStatus err = ::MacCreateEvent(NULL,
+                          kEventClassMouse,
+                          kEventMouseWheelMoved,
+                          TicksToEventTime(TickCount()),
+                          kEventAttributeUserEvent,
+                          &theEvent);
+    if (err == noErr)
+    {
+      EventMouseWheelAxis axis;
+      if (inAxis & nsMouseScrollEvent::kIsVertical)
+        axis = kEventMouseWheelAxisY;
+      else if (inAxis & nsMouseScrollEvent::kIsHorizontal)
+        axis = kEventMouseWheelAxisX;
+      
+      SetEventParameter(theEvent,
+                            kEventParamMouseWheelAxis,
+                            typeMouseWheelAxis,
+                            sizeof(EventMouseWheelAxis),
+                            &axis);
+
+      SInt32 delta = (SInt32)-geckoEvent.delta;
+      SetEventParameter(theEvent,
+                            kEventParamMouseWheelDelta,
+                            typeLongInteger,
+                            sizeof(SInt32),
+                            &delta);
+
+      Point mouseLoc;
+      GetGlobalMouse(&mouseLoc);
+      SetEventParameter(theEvent,
+                            kEventParamMouseLocation,
+                            typeQDPoint,
+                            sizeof(Point),
+                            &mouseLoc);
+      
+      SendEventToWindow(theEvent, (WindowRef)[[self window] windowRef]);
+      ReleaseEvent(theEvent);
+    }
+  }
 }
 
 -(void)scrollWheel:(NSEvent*)theEvent
@@ -2827,6 +2861,9 @@ nsChildView::Idle()
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
+  if ([self getIsPluginView])
+    return nil;
+  
   // Fire the context menu event into Gecko.
   nsMouseEvent geckoEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
