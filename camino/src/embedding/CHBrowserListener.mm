@@ -51,6 +51,7 @@
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMPopupBlockedEvent.h"
+#include "nsIDOMBarProp.h"
 
 // XPCOM and String includes
 #include "nsIInterfaceRequestorUtils.h"
@@ -147,6 +148,19 @@ CHBrowserListener::CreateChromeWindow(nsIWebBrowserChrome *parent,
   NSLog(@"Made a chrome window.");
 #endif
   
+  // apply scrollbar chrome flags
+  if (!(chromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS))
+  {
+    nsCOMPtr<nsIDOMWindow> contentWindow = dont_AddRef([childView getContentWindow]);
+    if (contentWindow)
+    {
+      nsCOMPtr<nsIDOMBarProp> scrollbars;
+      contentWindow->GetScrollbars(getter_AddRefs(scrollbars));
+      if (scrollbars)
+        scrollbars->SetVisible(PR_FALSE);
+    }
+  }
+
   *_retval = listener;
   NS_IF_ADDREF(*_retval);
   return NS_OK;
