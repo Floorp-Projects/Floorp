@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= init.d
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DIRS += os2turbo
+endif
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 ifndef MOZ_WINCONSOLE
@@ -222,7 +226,6 @@ LIBS += -lphexlib -lph
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DIRS += os2turbo
 REQUIRES += xpconnect intl profile
 CPPSRCS += nsNativeAppSupportOS2.cpp
 CPPSRCS += nsNativeAppSupportBase.cpp
