@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.100 2005/07/12 10:56:52 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.101 2005/07/25 12:50:49 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -218,15 +218,11 @@
       
       <para>
       At this point, you need to <filename>su</filename> to root. You should
-      remain as root until the end of the install. Then run:
+      remain as root until the end of the install. To check you have the
+      required modules, run:
       </para>
       
-      <screen><prompt>bash#</prompt> ./checksetup.pl</screen>
-
-      <!-- We really need a "module-check" switch for checksetup,
-      which we can use here to make it really clear when they've got
-      all the modules. -->
- 
+      <screen><prompt>bash#</prompt> ./checksetup.pl --check-modules</screen>
  
       <para>
         <filename>checksetup.pl</filename> will print out a list of the
@@ -580,10 +576,15 @@
       <title>localconfig</title>
       
       <para>
-        Once you run <filename>checksetup.pl</filename> with all the correct 
-        modules installed, it displays a message about, and write out a 
-        file called, <filename>localconfig</filename>. This file contains
-        the default settings for a number of Bugzilla parameters.
+        You should now run <filename>checksetup.pl</filename> again, this time
+        without the <literal>--check-modules</literal> switch.
+      </para>
+      <screen><prompt>bash#</prompt> ./checksetup.pl</screen>
+      <para>
+        This time, <filename>checksetup.pl</filename> should tell you that all
+        the correct modules are installed and will display a message about, and
+        write out a  file called, <filename>localconfig</filename>. This file
+        contains the default settings for a number of Bugzilla parameters.
       </para>
       
       <para>
