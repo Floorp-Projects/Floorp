@@ -53,6 +53,11 @@ public:
   virtual ~nsMacIEProfileMigrator();
 
 protected:
+  nsresult CopyBookmarks(PRBool aReplace);
+
+protected:
+  nsCOMPtr<nsILocalFile> mSourceProfile;
+  nsCOMPtr<nsIFile> mTargetProfile;
 
 private:
   nsCOMPtr<nsIObserverService> mObserverService;

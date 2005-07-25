@@ -36,20 +36,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsBrowserProfileMigratorUtils.h"
 #include "nsCRT.h"
-#include "nsIBookmarksService.h"
 #include "nsICookieManager2.h"
 #include "nsIFile.h"
-#include "nsIInputStream.h"
 #include "nsILineInputStream.h"
 #include "nsInt64.h"
+#include "nsIOutputStream.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
-#include "nsIRDFService.h"
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
 #include "nsNetscapeProfileMigratorBase.h"
@@ -64,18 +62,12 @@
 #define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
 #endif /* XP_MAC */
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
-
 #define FILE_NAME_PREFS_5X NS_LITERAL_STRING("prefs.js")
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsNetscapeProfileMigratorBase
 nsNetscapeProfileMigratorBase::nsNetscapeProfileMigratorBase()
 {
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(kStringBundleServiceCID));
-  bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(mBundle));
 }
 
 nsresult
@@ -280,54 +272,8 @@ nsNetscapeProfileMigratorBase::ImportNetscapeBookmarks(const nsAString& aBookmar
   nsCOMPtr<nsIFile> bookmarksFile;
   mSourceProfile->Clone(getter_AddRefs(bookmarksFile));
   bookmarksFile->Append(aBookmarksFileName);
-
-  nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
-  nsCOMPtr<nsISupportsArray> params;
-  NS_NewISupportsArray(getter_AddRefs(params));
-
-  nsCOMPtr<nsIRDFService> rdfs(do_GetService("@mozilla.org/rdf/rdf-service;1"));
-  nsCOMPtr<nsIRDFResource> prop;
-  rdfs->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#URL"), 
-                    getter_AddRefs(prop));
-  nsCOMPtr<nsIRDFLiteral> url;
-  nsAutoString path;
-  bookmarksFile->GetPath(path);
-  rdfs->GetLiteral(path.get(), getter_AddRefs(url));
-
-  params->AppendElement(prop);
-  params->AppendElement(url);
   
-  nsCOMPtr<nsIRDFResource> importCmd;
-  rdfs->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#command?cmd=import"), 
-                    getter_AddRefs(importCmd));
-
-  nsCOMPtr<nsIRDFResource> root;
-  rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"), getter_AddRefs(root));
-
-  nsXPIDLString sourceName;
-  mBundle->GetStringFromName(aImportSourceNameKey, getter_Copies(sourceName));
-
-  const PRUnichar* sourceNameStrings[] = { sourceName.get() };
-  nsXPIDLString importedBookmarksTitle;
-  mBundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
-                                sourceNameStrings, 1, 
-                                getter_Copies(importedBookmarksTitle));
-
-  nsCOMPtr<nsIRDFResource> folder;
-  bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1, getter_AddRefs(folder));
-  
-  nsCOMPtr<nsIRDFResource> folderProp;
-  rdfs->GetResource(NS_LITERAL_CSTRING("http://home.netscape.com/NC-rdf#Folder"), 
-                    getter_AddRefs(folderProp));
-  params->AppendElement(folderProp);
-  params->AppendElement(folder);
-
-  nsCOMPtr<nsISupportsArray> sources;
-  NS_NewISupportsArray(getter_AddRefs(sources));
-  sources->AppendElement(folder);
-
-  nsCOMPtr<nsIRDFDataSource> ds(do_QueryInterface(bms));
-  return ds->DoCommand(sources, importCmd, params);
+  return ImportBookmarksHTML(bookmarksFile, aImportSourceNameKey);
 }
 
 nsresult

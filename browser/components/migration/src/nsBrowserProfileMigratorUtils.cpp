@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
+ *  Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBrowserProfileMigratorUtils.h"
+#include "nsIBookmarksService.h"
 #include "nsIFile.h"
+#include "nsIInputStream.h"
+#include "nsILineInputStream.h"
 #include "nsIProperties.h"
 #include "nsIProfileMigrator.h"
 
@@ -44,8 +48,15 @@
 #include "nsNetUtil.h"
 
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIRDFService.h"
+#include "nsIStringBundle.h"
+#include "nsISupportsArray.h"
 #include "nsXPCOMCID.h"
 #include "nsCRT.h"
+
+#define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
                   const char* aPortPref, nsIPrefBranch* aPrefs) 
@@ -140,4 +151,134 @@ GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir)
                   (void**) getter_AddRefs(aProfileDir));
     }
   }
+}
+
+nsresult 
+AnnotatePersonalToolbarFolder(nsIFile* aSourceBookmarksFile,
+                              nsIFile* aTargetBookmarksFile,
+                              const char* aToolbarFolderName)
+{
+  nsCOMPtr<nsIInputStream> fileInputStream;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
+                                           aSourceBookmarksFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
+                                   aTargetBookmarksFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILineInputStream> lineInputStream =
+    do_QueryInterface(fileInputStream, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString sourceBuffer;
+  nsCAutoString targetBuffer;
+  PRBool moreData = PR_FALSE;
+  PRUint32 bytesWritten = 0;
+  do {
+    lineInputStream->ReadLine(sourceBuffer, &moreData);
+    if (!moreData)
+      break;
+
+    PRInt32 nameOffset = sourceBuffer.Find(aToolbarFolderName);
+    if (nameOffset >= 0) {
+      // Found the personal toolbar name on a line, check to make sure it's
+      // actually a folder. 
+      NS_NAMED_LITERAL_CSTRING(folderPrefix, "<DT><H3 ");
+      PRInt32 folderPrefixOffset = sourceBuffer.Find(folderPrefix);
+      if (folderPrefixOffset >= 0)
+        sourceBuffer.Insert(NS_LITERAL_CSTRING("PERSONAL_TOOLBAR_FOLDER=\"true\" "), 
+                            folderPrefixOffset + folderPrefix.Length());
+    }
+
+    targetBuffer.Assign(sourceBuffer);
+    targetBuffer.Append("\r\n");
+    outputStream->Write(targetBuffer.get(), targetBuffer.Length(),
+                        &bytesWritten);
+  }
+  while (1);
+  
+  outputStream->Close();
+  
+  return NS_OK;
+}
+
+nsresult
+ImportBookmarksHTML(nsIFile* aBookmarksFile, 
+                    const PRUnichar* aImportSourceNameKey)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIBookmarksService> bms = 
+    do_GetService("@mozilla.org/browser/bookmarks-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsArray> params;
+  rv = NS_NewISupportsArray(getter_AddRefs(params));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFService> rdfs =
+    do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFResource> prop;
+  rv = rdfs->GetResource(NC_URI(URL), getter_AddRefs(prop));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFLiteral> url;
+  nsAutoString path;
+  aBookmarksFile->GetPath(path);
+  rdfs->GetLiteral(path.get(), getter_AddRefs(url));
+
+  params->AppendElement(prop);
+  params->AppendElement(url);
+  
+  nsCOMPtr<nsIRDFResource> importCmd;
+  rv = rdfs->GetResource(NC_URI(command?cmd=import), getter_AddRefs(importCmd));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFResource> root;
+  rv = rdfs->GetResource(NS_LITERAL_CSTRING("NC:BookmarksRoot"),
+                         getter_AddRefs(root));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Look for the localized name of the bookmarks toolbar
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(kStringBundleServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString sourceName;
+  bundle->GetStringFromName(aImportSourceNameKey, getter_Copies(sourceName));
+
+  const PRUnichar* sourceNameStrings[] = { sourceName.get() };
+  nsXPIDLString importedBookmarksTitle;
+  bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
+                               sourceNameStrings, 1, 
+                               getter_Copies(importedBookmarksTitle));
+
+  nsCOMPtr<nsIRDFResource> folder;
+  bms->CreateFolderInContainer(importedBookmarksTitle.get(), root, -1,
+                               getter_AddRefs(folder));
+
+  nsCOMPtr<nsIRDFResource> folderProp;
+  rv = rdfs->GetResource(NC_URI(Folder), getter_AddRefs(folderProp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  params->AppendElement(folderProp);
+  params->AppendElement(folder);
+
+  nsCOMPtr<nsISupportsArray> sources;
+  rv = NS_NewISupportsArray(getter_AddRefs(sources));
+  NS_ENSURE_SUCCESS(rv, rv);
+  sources->AppendElement(folder);
+
+  nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(bms, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ds->DoCommand(sources, importCmd, params);
 }

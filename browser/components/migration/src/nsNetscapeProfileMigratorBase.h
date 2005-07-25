@@ -40,6 +40,7 @@
 
 #include "nsILocalFile.h"
 #include "nsIStringBundle.h"
+#include "nsISupportsArray.h"
 #include "nsString.h"
 
 class nsIFile;
@@ -95,8 +96,6 @@ protected:
 protected:
   nsCOMPtr<nsILocalFile> mSourceProfile;
   nsCOMPtr<nsIFile> mTargetProfile;
-
-  nsCOMPtr<nsIStringBundle> mBundle;
 };
  
 #endif

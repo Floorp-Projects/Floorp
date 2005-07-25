@@ -204,7 +204,6 @@ nsIRDFService        *gRDF;
 nsIRDFContainerUtils *gRDFC;
 nsICharsetAlias      *gCharsetAlias;
 PRBool                gLoadedBookmarks = PR_FALSE;
-PRBool                gImportedSystemBookmarks = PR_FALSE;
 
 static nsresult
 bm_AddRefGlobals()
@@ -1618,10 +1617,6 @@ nsBookmarksService::nsBookmarksService() :
     mBookmarksAvailable(PR_FALSE),
     mDirty(PR_FALSE),
     mNeedBackupUpdate(PR_FALSE)
-
-#if defined(XP_MACOSX)
-    ,mIEFavoritesAvailable(PR_FALSE)
-#endif
 { }
 
 nsBookmarksService::~nsBookmarksService()
@@ -3456,55 +3451,6 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, PRUnichar** aPos
 }
 
 NS_IMETHODIMP
-nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
-{
-    gImportedSystemBookmarks = PR_TRUE;
-
-#if defined(XP_MACOSX)
-    nsCOMPtr<nsIFile> ieFavoritesFile;
-    nsresult rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(ieFavoritesFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ieFavoritesFile->Append(NS_LITERAL_STRING("Explorer"));
-    ieFavoritesFile->Append(NS_LITERAL_STRING("Favorites.html"));
-
-    BookmarkParser parser;
-    parser.Init(ieFavoritesFile, mInner);
-    BeginUpdateBatch();
-    parser.Parse(aParentFolder, kNC_Bookmark);
-    EndUpdateBatch();
-#endif
-
-    return NS_OK;
-}
-
-#if defined(XP_MACOSX)
-void
-nsBookmarksService::HandleSystemBookmarks(nsIRDFNode* aNode) 
-{
-    if (!gImportedSystemBookmarks && aNode == kNC_SystemBookmarksStaticRoot)
-    {
-        PRBool isSeq = PR_TRUE;
-        gRDFC->IsSeq(mInner, kNC_SystemBookmarksStaticRoot, &isSeq);
-    
-        if (!isSeq)
-        {
-            nsCOMPtr<nsIRDFContainer> ctr;
-            gRDFC->MakeSeq(mInner, kNC_SystemBookmarksStaticRoot, getter_AddRefs(ctr));
-      
-            ImportSystemBookmarks(kNC_SystemBookmarksStaticRoot);
-        }
-    }
-#if defined(XP_MACOSX)
-    // on the Mac, IE favorites are stored in an HTML file.
-    // Defer importing the contents of this file until necessary.
-    else if ((aNode == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
-        ReadFavorites();
-#endif
-}
-#endif
-
-NS_IMETHODIMP
 nsBookmarksService::GetTransactionManager(nsITransactionManager** aTransactionManager)
 {
     NS_ENSURE_ARG_POINTER(aTransactionManager);
@@ -3939,10 +3885,6 @@ nsBookmarksService::HasAssertion(nsIRDFResource* source,
                 PRBool tv,
                 PRBool* hasAssertion)
 {
-#if defined(XP_MACOSX)
-    HandleSystemBookmarks(source);
-#endif
-
     PRBool isLivemark = PR_FALSE;
     if (property != kNC_LivemarkLock &&
         (property == kRDF_nextVal || property == kNC_child) &&
@@ -3984,20 +3926,12 @@ nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
 NS_IMETHODIMP
 nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_MACOSX)
-    HandleSystemBookmarks(aNode);
-#endif
-
     return mInner->HasArcIn(aNode, aArc, _retval);
 }
 
 NS_IMETHODIMP
 nsBookmarksService::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_MACOSX)
-    HandleSystemBookmarks(aSource);
-#endif
-
     PRBool isLivemark = PR_FALSE;
     if (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Livemark, PR_TRUE, &isLivemark)) &&
         isLivemark)
@@ -4012,20 +3946,12 @@ NS_IMETHODIMP
 nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
                 nsISimpleEnumerator** labels)
 {
-#if defined(XP_MACOSX)
-    HandleSystemBookmarks(source);
-#endif
-
     return mInner->ArcLabelsOut(source, labels);
 }
 
 NS_IMETHODIMP
 nsBookmarksService::GetAllResources(nsISimpleEnumerator** aResult)
-{
-#if defined(XP_MACOSX)
-    HandleSystemBookmarks(kNC_SystemBookmarksStaticRoot);
-#endif
-  
+{ 
     return mInner->GetAllResources(aResult);
 }
 
@@ -4472,59 +4398,6 @@ nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
     return NS_OK;
 }
 
-
-#if defined(XP_MACOSX)
-
-nsresult
-nsBookmarksService::ReadFavorites()
-{
-    mIEFavoritesAvailable = PR_TRUE;
-    nsresult rv;
-            
-#ifdef DEBUG_varga
-    PRTime now = PR_Now();
-    printf("Start reading in IE Favorites.html\n");
-#endif
-
-    // look for and import any IE Favorites
-    nsAutoString    ieTitle;
-    getLocaleString("ImportedIEFavorites", ieTitle);
-
-    nsCOMPtr<nsIFile> ieFavoritesFile;
-    rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(ieFavoritesFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ieFavoritesFile->Append(NS_LITERAL_STRING("Explorer"));
-    ieFavoritesFile->Append(NS_LITERAL_STRING("Favorites.html"));
-
-    if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
-    {
-        BookmarkParser parser;
-        parser.Init(ieFavoritesFile, mInner);
-        BeginUpdateBatch();
-        parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
-        EndUpdateBatch();
-            
-        nsCOMPtr<nsIRDFLiteral> ieTitleLiteral;
-        rv = gRDF->GetLiteral(ieTitle.get(), getter_AddRefs(ieTitleLiteral));
-        if (NS_SUCCEEDED(rv) && ieTitleLiteral)
-        {
-            rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
-        }
-    }
-#ifdef DEBUG_varga
-    PRTime now2 = PR_Now();
-    PRUint64    loadTime64;
-    LL_SUB(loadTime64, now2, now);
-    PRUint32    loadTime32;
-    LL_L2UI(loadTime32, loadTime64);
-    printf("Finished reading in IE Favorites.html  (%u microseconds)\n", loadTime32);
-#endif
-    return rv;
-}
-
-#endif
-
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks(PRBool *didLoadBookmarks)
 {
@@ -4695,9 +4568,7 @@ nsBookmarksService::LoadBookmarks()
         parser.Init(bookmarksFile, mInner);
         if (useDynamicSystemBookmarks)
         {
-#if defined(XP_MACOSX)
-            parser.SetIEFavoritesRoot(nsCString(kURINC_IEFavoritesRoot));
-#elif defined(XP_BEOS)
+#if defined(XP_BEOS)
             parser.SetIEFavoritesRoot(bookmarksURICString);
 #endif
             parser.ParserFoundIEFavoritesRoot(&foundIERoot);
@@ -4744,90 +4615,11 @@ nsBookmarksService::LoadBookmarks()
 
     } // <-- scope the stream to get the open/close automatically.
 
-    // Now append the one-time-per-profile empty "Full" System Bookmarks Root. 
-    // When the user opens this folder for the first time, system bookmarks are 
-    // imported into this folder. A pref is used to keep track of whether or 
-    // not to perform this operation. 
-#if defined(XP_MACOSX)
-    PRBool addedStaticRoot = PR_FALSE;
-    if (mBookmarksPrefs) 
-        mBookmarksPrefs->GetBoolPref("added_static_root", 
-                                     &addedStaticRoot);
-
-    // Add the root that System bookmarks are imported into as real bookmarks. This is 
-    // only done once. 
-    if (!addedStaticRoot)
-    {
-        nsCOMPtr<nsIRDFContainer> rootContainer(do_CreateInstance(kRDFContainerCID, &rv));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = rootContainer->Init(this, kNC_BookmarksRoot);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mInner->Assert(kNC_SystemBookmarksStaticRoot, kRDF_type, kNC_Folder, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-
-        nsAutoString importedStaticTitle;
-        getLocaleString("ImportedIEStaticFavorites", importedStaticTitle);
-
-        nsCOMPtr<nsIRDFLiteral> staticTitleLiteral;
-        rv = gRDF->GetLiteral(importedStaticTitle.get(), getter_AddRefs(staticTitleLiteral));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mInner->Assert(kNC_SystemBookmarksStaticRoot, kNC_Name, staticTitleLiteral, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = rootContainer->AppendElement(kNC_SystemBookmarksStaticRoot);
-        if (NS_FAILED(rv)) return rv;
-
-        // If the user has not specifically asked for the Dynamic bookmarks root 
-        // via the pref, remove it from an existing bookmarks file as it serves
-        // only to add confusion. 
-        if (!useDynamicSystemBookmarks)
-        {
-            nsCOMPtr<nsIRDFContainer> container(do_CreateInstance(kRDFContainerCID, &rv));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = container->Init(this, kNC_BookmarksRoot);
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIRDFResource> systemFolderResource;
-#if defined(XP_MACOSX)
-            rv = gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
-                                   getter_AddRefs(systemFolderResource));
-#endif
-      
-            rv = container->RemoveElement(systemFolderResource, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        if (mBookmarksPrefs)
-            mBookmarksPrefs->SetBoolPref("added_static_root", PR_TRUE);
-    }
-#endif
-
     // Add the dynamic system bookmarks root if the user has asked for it
     // by setting the pref. 
     if (useDynamicSystemBookmarks)
     {
-#if defined(XP_MACOSX)
-        // if the IE Favorites root isn't somewhere in bookmarks.html, add it
-        if (!foundIERoot)
-        {
-            nsCOMPtr<nsIRDFContainer> bookmarksRoot(do_CreateInstance(kRDFContainerCID, &rv));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = bookmarksRoot->Init(this, kNC_BookmarksRoot);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
-            if (NS_FAILED(rv)) return rv;
-
-            // make sure IE Favorites root folder has the proper type     
-            rv = mInner->Assert(kNC_IEFavoritesRoot, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
-        }
-#elif defined(XP_BEOS)
+#if defined(XP_BEOS)
         nsCOMPtr<nsIRDFResource> systemFolderResource;
         rv = gRDF->GetResource(bookmarksURICString,
                                getter_AddRefs(systemFolderResource));

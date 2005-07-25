@@ -106,17 +106,6 @@ public:
     static nsresult UpdateBookmarkForwardProxy(nsIRDFDataSource* aDS, nsIRDFResource* aBookmarkResource);
 
 protected:
-    // System Bookmark parsing
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    PRBool        mIEFavoritesAvailable;
-
-    nsresult      ReadFavorites();
-#endif
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    void          HandleSystemBookmarks(nsIRDFNode* aNode);
-#endif
-
     static void FireTimer(nsITimer* aTimer, void* aClosure);
 
     nsresult ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
