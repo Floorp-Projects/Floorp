@@ -86,7 +86,7 @@
     <vbox id="searchTerms" flex="3" persist="height">
       <vbox>
         <hbox align="center">
-          <label value="&abSearchHeading.label;" accesskey="&abSearchHeading.accesskey;"/>
+          <label value="&abSearchHeading.label;" accesskey="&abSearchHeading.accesskey;" control="abPopup"/>
           <menulist id="abPopup">
             <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
                        datasources="rdf:addressdirectory"

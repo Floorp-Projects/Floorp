@@ -27,7 +27,7 @@
 
 <!-- for ABSearchDialog.xul -->
 <!ENTITY abSearchHeading.label       "Search in:">
-<!ENTITY abSearchHeading.accesskey   "S">
+<!ENTITY abSearchHeading.accesskey   "h">
 <!ENTITY propertiesButton.label      "Properties">
 <!ENTITY propertiesButton.accesskey  "P">
 <!ENTITY composeButton.label         "Write">

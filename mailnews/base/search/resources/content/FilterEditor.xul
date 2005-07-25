@@ -88,7 +88,7 @@
   <separator/>
 
   <vbox flex="1">
-    <label value="&filterActionDesc.label;" accesskey="&filterActionDesc.accesskey;"/>
+    <label value="&filterActionDesc.label;" accesskey="&filterActionDesc.accesskey;" control="filterActionList"/>
     <hbox flex="1">
       <vbox flex="1">
         <listbox flex="1" id="filterActionList">

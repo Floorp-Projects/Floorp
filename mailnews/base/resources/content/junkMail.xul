@@ -65,7 +65,7 @@
   </stringbundleset>
 
   <hbox align="center">
-    <label value="&account.label;" accesskey="&account.accesskey;"/>
+    <label value="&account.label;" accesskey="&account.accesskey;" control="server"/>
     <menulist oncommand="onServerClick(event);" id="server">
       <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                  sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
