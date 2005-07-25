@@ -82,19 +82,11 @@ LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-
 LOCAL_INCLUDES	= -I$(srcdir)
 
 include $(topsrcdir)/config/config.mk
 
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
-
-# Force applications to be built non-statically
-# when building the mozcomps meta component
-ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
-BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
-endif
 
 ifdef BUILD_STATIC_LIBS
 
@@ -115,7 +107,9 @@ endif # BUILD_STATIC_LIBS
 include $(topsrcdir)/config/rules.mk
 
 ifdef BUILD_STATIC_LIBS
+
 include $(topsrcdir)/config/static-rules.mk
+
 endif # BUILD_STATIC_LIBS
 
 
