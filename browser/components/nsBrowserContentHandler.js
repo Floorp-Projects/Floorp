@@ -115,6 +115,25 @@ function getMostRecentWindow(aType) {
   return wm.getMostRecentWindow(aType);
 }
 
+// this returns the most recent non-popup browser window
+function getMostRecentBrowserWindow() {
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var windowList = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+  if (!windowList.hasMoreElements())
+    return null;
+
+  var win = windowList.getNext();
+  while (!win.toolbar.visible) {
+    if (!windowList.hasMoreElements()) 
+      return null;
+
+    win = windowList.getNext();
+  }
+
+  return win;
+}
+
 var nsBrowserContentHandler = {
   /* helper functions */
 
@@ -371,7 +390,7 @@ const CONTRACTID_PREFIX = "@mozilla.org/uriloader/content-handler;1?type=";
 
 function handURIToExistingBrowser(uri, location)
 {
-  var navWin = getMostRecentWindow("navigator:browser");
+  var navWin = getMostRecentBrowserWindow();
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
     openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
