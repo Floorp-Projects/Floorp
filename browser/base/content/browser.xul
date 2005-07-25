@@ -144,9 +144,6 @@
 # hiddenWindow.xul.
 #include browser-menubar.inc
       </toolbaritem>
-      <toolbaritem id="softwareupdate-item" title="&updatesItem.title;" align="center" pack="center">
-        <toolbarbutton type="updates" id="softwareupdate"/>
-      </toolbaritem>
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
