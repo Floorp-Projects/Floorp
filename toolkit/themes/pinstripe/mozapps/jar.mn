@@ -33,6 +33,7 @@ classic.jar:
   skin/classic/mozapps/shared/richview.css                        (shared/richview.css)
   skin/classic/mozapps/shared/richview.xml                        (shared/richview.xml)
   skin/classic/mozapps/update/warning.gif                         (update/warning.gif)
+  skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/update/update.png                          (update/update.png)
   skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (xpinstall/xpinstallItemGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (xpinstall/xpinstallConfirm.css)
