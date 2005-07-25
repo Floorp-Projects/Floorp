@@ -566,16 +566,6 @@ enum BWCOpenDest {
   [mThrobberImages release];
   [mURLFieldEditor release];
 
-  // release top-level nib items (balancing the retain at nib loading)
-  [mPageMenu release];
-  [mImageMenu release];
-  [mInputMenu release];
-  [mLinkMenu release];
-  [mMailToLinkMenu release];
-  [mImageLinkMenu release];
-  [mImageMailToLinkMenu release];
-  [mTabMenu release];
-  
   [super dealloc];
 }
 
@@ -698,6 +688,7 @@ enum BWCOpenDest {
         pref->RegisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
     }
 
+    // remove the dummy tab view
     [mTabBrowser removeTabViewItem:[mTabBrowser tabViewItemAtIndex:0]];
     
     // create ourselves a new tab and fill it with the appropriate content. If we
