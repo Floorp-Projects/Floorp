@@ -22,6 +22,7 @@
  *  Ben Goodger <ben@mozilla.org> (Google Inc.)
  *  Benjamin Smedberg <benjamin@smedbergs.us>
  *  Jens Bannmann <jens.b@web.de>
+ *  Robert Strong <rob_strong@exchangecode.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2516,7 +2517,7 @@ ExtensionManager.prototype = {
         else if (installData.error == INSTALLERROR_INCOMPATIBLE_VERSION) {
           LOG("... success, item installed but is not compatible");
           callback(installManifest, installData.id, location, installData.type);
-          em.disableItem(id);
+          em._appDisableItem(id);
         }
         else {
           /**
@@ -2914,7 +2915,7 @@ ExtensionManager.prototype = {
           LOG("_upgradeThemeChrome: failed to upgrade contents manifest for " + 
               "theme: " + item.id + ", exception: " + e + "... The theme will be " + 
               "disabled.");
-          this.disableItem(item.id);
+          this._appDisableItem(item.id);
         }
         finally {
           try {
@@ -2988,7 +2989,8 @@ ExtensionManager.prototype = {
         var items = PendingOperations.getOperations(OP_NEEDS_ENABLE);
         for (var i = items.length - 1; i >= 0; --i) {
           var id = items[0].id;
-          ds.setItemProperty(id, EM_R("disabled"), null);
+          ds.setItemProperty(id, EM_R("userDisabled"), null);
+          ds.setItemProperty(id, EM_R("appDisabled"), null);
           var installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
           PendingOperations.clearItem(id);
@@ -3000,7 +3002,11 @@ ExtensionManager.prototype = {
         items = PendingOperations.getOperations(OP_NEEDS_DISABLE);
         for (i = items.length - 1; i >= 0; --i) {
           id = items[i].id;
-          ds.setItemProperty(id, EM_R("disabled"), EM_L("true"));
+          // Only set the userDisabled property when the item's appDisabled
+          // property is not true since an item can't be disabled by the user
+          // when it is already disabled by the application.
+          if (ds.getItemProperty(id, "appDisabled") != "true")
+            ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
           installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
           PendingOperations.clearItem(id);
@@ -3029,7 +3035,7 @@ ExtensionManager.prototype = {
         items = PendingOperations.getOperations(OP_NEEDS_INSTALL);
         for (i = items.length - 1; i >= 0; --i) {
           needsRestart = true;
-          var id = items[i].id;
+          id = items[i].id;
           // check if there is updated app compatibility info
           newTargetAppInfo = ds.getUpdatedTargetAppInfo(id);
           if (newTargetAppInfo)
@@ -3114,7 +3120,7 @@ ExtensionManager.prototype = {
       if (items.length > 0) {
         // Now disable the items so they won't hurt anything. 
         for (var i = 0; i < items.length; ++i)
-          this.disableItem(items[i].id);
+          this._appDisableItem(items[i].id);
         
         this._showMismatchWindow(items);
         needsRestart = true;
@@ -3274,12 +3280,14 @@ ExtensionManager.prototype = {
       var oldPrefix = (item.type == nsIUpdateItem.TYPE_EXTENSION) ? PREFIX_EXTENSION : PREFIX_THEME;
       var oldRes = gRDF.GetResource(oldPrefix + item.id);
       // Disable the item if it was disabled in the version 1.0 extensions
-      // datasource otherwise enable the item. If an item is incompatible it
-      // will be disabled later during the incompatible check.
+      // datasource.
       if (oldExtensionsDS.GetTarget(oldRes, EM_R("disabled"), true))
         this.disableItem(item.id);
-      else if (ds.getItemProperty(item.id, "disabled") == "true")
-       this.enableItem(item.id);
+
+      // app enable all items that are app disabled. If it is incompatible
+      // it will be app disabled later on.
+      if (ds.getItemProperty(item.id, "appDisabled") == "true")
+       this._appEnableItem(item.id);
 
       // if the item is already compatible don't attempt to migrate the
       // item's compatibility info
@@ -3354,7 +3362,7 @@ ExtensionManager.prototype = {
             op == OP_NEEDS_UNINSTALL || op == OP_NEEDS_DISABLE)
           continue;
       }
-      // Suppress items that have been disabled by the user.
+      // Suppress items that have been disabled by the user or the app.
       if (ds.getItemProperty(item.id, "disabled") != "true")
         activeItems.push({ id: item.id, location: installLocation });
     }
@@ -3851,7 +3859,9 @@ ExtensionManager.prototype = {
         LOG("Phone Home Listener: Update For " + addon.id + " ended, status = " + status); 
         em.datasource.removeDownload(this._xpi.path);
         LOG("Version Check Phone Home Completed");
-        if (status & nsIAddonUpdateCheckListener.STATUS_DATA_FOUND) {
+        // Only compatibility updates (e.g. STATUS_VERSIONINFO) are currently
+        // supported
+        if (status == nsIAddonUpdateCheckListener.STATUS_VERSIONINFO) {
           em.datasource.setTargetApplicationInfo(addon.id, 
                                                  addon.minAppVersion,
                                                  addon.maxAppVersion, 
@@ -4112,11 +4122,11 @@ ExtensionManager.prototype = {
    *          The nsIUpdateItem type of this item. 
    */
   _upgradeItem: function (installManifest, id, installLocation, type) {
-    // Clear any "disabled" flags that may have been set by the mismatch 
+    // Clear any "appDisabled" flags that may have been set by the mismatch 
     // checking code at startup.
     var ds = this.datasource;
     ds.updateVisibleList(id, installLocation.name, false);
-    var props = { disabled        : null,
+    var props = { appDisabled     : null,
                   name            : EM_L(getManifestProperty(installManifest, "name")),
                   version         : EM_L(getManifestProperty(installManifest, "version")),
                   installLocation : EM_L(installLocation.name),
@@ -4206,6 +4216,7 @@ ExtensionManager.prototype = {
       var installManifest = getInstallManifest(installRDF);
       if (installManifest) {
         var type = getAddonTypeFromInstallManifest(installManifest);
+        var userDisabled = ds.getItemProperty(id, "userDisabled") == "true";
 
         // Clean the item resource
         ds.removeItemMetadata(id);
@@ -4213,6 +4224,8 @@ ExtensionManager.prototype = {
         // "initial state" for installation.
         this._configureForthcomingItem(installManifest, id, installLocation, 
                                        type);
+        if (userDisabled)
+          ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
       }
       if (stagedFileExists)
         installRDF.remove(false);
@@ -4334,26 +4347,62 @@ ExtensionManager.prototype = {
     StartupCache.put(location, id, op, true);
     PendingOperations.addItem(op, { locationKey: location.name, id: id });
     var ds = this.datasource;
-    ds.updateProperty(id, "displayDescription");
     ds.updateProperty(id, "opType");
     ds.updateProperty(id, "updateable");
+    ds.updateProperty(id, "displayDescription");
     var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
     this._updateManifests(restartRequired);
   },
+  
+  /**
+   * Enables an item for the application (e.g. the item meets all requirements
+   * for it to be enabled). If the item is not disabled by the user this will
+   * also set the needs-enable operation for the next restart.
+   * @param   id
+   *          The ID of the item to be enabled by the application.
+   */
+  _appEnableItem: function(id) {
+    var ds = this.datasource;
+    if (ds.getItemProperty(id, "userDisabled") != "true") {
+      this._setOp(id, OP_NEEDS_ENABLE);
+      this._notifyAction(id, EM_ITEM_ENABLED);
+    }
+    else {
+      ds.setItemProperty(id, EM_R("appDisabled"), null);
+      ds.updateProperty(id, "compatible");
+      ds.updateProperty(id, "displayDescription");
+    }
+  },
+
+  /**
+   * Disables an item for the application (e.g. the item does not meets all
+   * requirements like app compatibility for it to be enabled). If the item is
+   * not disabled by the user this will also set the needs-disable operation
+   * for the next restart.
+   * @param   id
+   *          The ID of the item to be disabled by the application.
+   */
+  _appDisableItem: function(id) {
+    var ds = this.datasource;
+    ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
+    if (ds.getItemProperty(id, "userDisabled") != "true") {
+      this._setOp(id, OP_NEEDS_DISABLE);
+      this._notifyAction(id, EM_ITEM_DISABLED);
+    }
+  },
     
   /**
-   * Sets an item to be enabled. If the item is already enabled this clears
-   * the needs-enable operation for the next restart. If the item's operation
-   * is set to be uninstalled this will cancel the uninstall and sets the
-   * needs-enable operation for the next restart if the item is disabled.
+   * Sets an item to be enabled by the user. If the item is already enabled this
+   * clears the needs-enable operation for the next restart. If the item's
+   * operation is set to needs-uninstall this will cancel the uninstall and set
+   * the needs-enable operation for the next restart if the item is disabled.
    * 
    * @param   id
-   *          The ID of the item to enable.
+   *          The ID of the item to be enabled by the user.
    */
   enableItem: function(id) {
     var ds = this.datasource;
-    var disabled = ds.getItemProperty(id, "disabled") ? true : false;
-    if (disabled) {
+    if (ds.getItemProperty(id, "userDisabled") == "true") {
       this._setOp(id, OP_NEEDS_ENABLE);
       this._notifyAction(id, EM_ITEM_ENABLED);
     }
@@ -4364,15 +4413,14 @@ ExtensionManager.prototype = {
   },
   
   /**
-   * Sets an item to be disabled. If the item is already disabled this clears
-   * the needs-disable operation for the next restart.
+   * Sets an item to be disabled by the user. If the item is already disabled
+   * this clears the needs-disable operation for the next restart.
    * @param   id
-   *          The ID of the item to disable.
+   *          The ID of the item to be disabled by the user.
    */
   disableItem: function(id) {
     var ds = this.datasource;
-    var disabled = ds.getItemProperty(id, "disabled") ? true : false;
-    if (disabled) {
+    if (ds.getItemProperty(id, "userDisabled") == "true") {
       this._setOp(id, OP_NONE);
       this._notifyAction(id, EM_ITEM_CANCEL);
     }
@@ -4400,7 +4448,7 @@ ExtensionManager.prototype = {
                              gApp.version);
 
     if (items.length == 0)
-      items = this.getUpdateableItemList(nsIUpdateItem.TYPE_ADDON, { });
+      items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
     updater.checkForUpdates(items, items.length, versionUpdateOnly, listener);
@@ -4444,23 +4492,6 @@ ExtensionManager.prototype = {
    */
   getItemList: function(type, countRef) {
     return this.datasource.getItemList(type, countRef);
-  },
-
-  /*
-   * Retrieves a list of nsIUpdateItems of items matching the specified type
-   * that can be updated.
-   * @param   type
-   *          The type of item to return.
-   * @param   countRef
-   *          The XPCJS reference to the number of items returned.
-   * @returns An array of nsIUpdateItems matching the type filter that can be
-   *          updated based on if the item is not appManaged, does not have
-   *          a pending install, upgrade, or uninstall operation, the item's
-   *          update.enabled pref is not set to false, and the item's location
-   *          is writeable.
-   */
-  getUpdateableItemList: function(type, countRef) {
-    return this.datasource.getUpdateableItemList(type, countRef);
   },
 
   /**  
@@ -5031,8 +5062,8 @@ ExtensionItemUpdater.prototype = {
       // already been disabled, re-enable it.
       var op = StartupCache.entries[aLocalItem.installLocationKey][aLocalItem.id].op;
       if (op == OP_NEEDS_DISABLE ||
-          this._emDS.getItemProperty(aLocalItem.id, "disabled") == "true")
-        this._em.enableItem(aLocalItem.id);
+          this._emDS.getItemProperty(aLocalItem.id, "appDisabled") == "true")
+        this._em._appEnableItem(aLocalItem.id);
     }
   },
   
@@ -5092,6 +5123,42 @@ RDFItemUpdater.prototype = {
       }
     }
     catch (e) { }
+
+    // Items managed by the app are not checked for updates.
+    var emDS = this._updater._emDS;
+    if (emDS.getItemProperty(aItem.id, "appManaged") == "true") {
+      var status = nsIAddonUpdateCheckListener.STATUS_APP_MANAGED;
+      this._updater.checkForDone(aItem, status);
+      return;
+    }
+
+    // Items that have a pending install, uninstall, or upgrade are not checked
+    // for updates.
+    var opType = emDS.getItemProperty(aItem.id, "opType");
+    if (opType == OP_NEEDS_INSTALL || opType == OP_NEEDS_UNINSTALL ||
+        opType == OP_NEEDS_UPGRADE) {
+      var status = nsIAddonUpdateCheckListener.STATUS_PENDING_OP;
+      this._updater.checkForDone(aItem, status);
+      return;
+    }
+
+    var installLocation = InstallLocations.get(emDS.getInstallLocationKey(aItem.id));
+    // Don't check items for updates that are installed in a location that is
+    // not managed by the app.
+    if (installLocation && (installLocation.name == "winreg-app-global" ||
+        installLocation.name == "winreg-app-user")) {
+      var status = nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED;
+      this._updater.checkForDone(aItem, status);
+      return;
+    }
+
+    // Don't check items for updates if the location can't be written to except
+    // when performing a version only update.
+    if (!aVersionUpdateOnly && (!installLocation || !installLocation.canAccess)) {
+      var status = nsIAddonUpdateCheckListener.STATUS_READ_ONLY;
+      this._updater.checkForDone(aItem, status);
+      return;
+    }
 
     this._versionUpdateOnly = aVersionUpdateOnly;
     this._item = aItem;
@@ -5256,7 +5323,9 @@ RDFItemUpdater.prototype = {
                           aLocalItem.name, 
                           "", "", "", 
                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
+      if (this._updater._isValidUpdate(aLocalItem, sameItem) &&
+         (aLocalItem.minAppVersion != sameItem.minAppVersion ||
+          aLocalItem.maxAppVersion != sameItem.maxAppVersion)) {
         // Install-time updates are not written to the DS because there is no
         // entry yet, EM just uses the notifications to ascertain (by hand)
         // whether or not there is a remote maxVersion tweak that makes the 
@@ -5280,7 +5349,7 @@ RDFItemUpdater.prototype = {
       item = newerItem;
       status = nsIAddonUpdateCheckListener.STATUS_UPDATE;
     }
-    else if (this._versionUpdateOnly && sameItem) {
+    else if (sameItem) {
       item = sameItem;
       status = nsIAddonUpdateCheckListener.STATUS_VERSIONINFO;
     }
@@ -5416,7 +5485,7 @@ RDFItemUpdater.prototype = {
           "the update datasource for item " + this._item.id + ", error: " + aErrorMsg);
     }
     catch (e) {
-      LOG("RDFItemUpdater:onError: Failure during onAddonUpdateEnded call");
+      LOG("RDFItemUpdater:onError: Failure during removeXMLSinkObserver call");
     }
     this._updater.checkForDone(this._item,
                                nsIAddonUpdateCheckListener.STATUS_FAILURE);
@@ -5508,8 +5577,9 @@ ExtensionsDataSource.prototype = {
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(id, "type");
       // Skip this item if we're not seeking disabled items
-      var disabled = this.getItemProperty(id, "disabled") == "true";
-      if (!includeDisabled && disabled) 
+      if (!includeDisabled &&
+         (this.getItemProperty(id, "disabled") == "true" ||
+          this.getItemProperty(id, "appDisabled") == "true"))
         continue;
       
       // If the id of this item matches one of the items potentially installed
@@ -5551,36 +5621,6 @@ ExtensionsDataSource.prototype = {
       var type = this.getItemProperty(eID, "type");
       if (type != -1 && type & desiredType)
         items.push(this.getItemForID(eID));
-    }
-    countRef.value = items.length;
-    return items;
-  },
-
-  /*
-   * Retrieves a list of nsIUpdateItems of items matching the specified type
-   * that can be updated.
-   * @param   type
-   *          The type of item to return.
-   * @param   countRef
-   *          The XPCJS reference to the number of items returned.
-   * @returns An array of nsIUpdateItems matching the type filter that can be
-   *          updated based on if the item is not appManaged, does not have
-   *          a pending install, upgrade, or uninstall operation, the item's
-   *          update.enabled pref is not set to false, and the item's location
-   *          is writeable.
-   */
-  getUpdateableItemList: function(desiredType, countRef) {
-    var items = [];
-    var ctr = getContainer(this, this._itemRoot);
-    var elements = ctr.GetElements();
-    while (elements.hasMoreElements()) {
-      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      var eID = stripPrefix(e.Value, PREFIX_ITEM_URI);
-      var type = this.getItemProperty(eID, "type");
-      if (type != -1 && type & desiredType) {
-        if (this.getItemProperty(eID, "updateable") == "true")
-          items.push(this.getItemForID(eID));
-      }
     }
     countRef.value = items.length;
     return items;
@@ -6072,9 +6112,9 @@ ExtensionsDataSource.prototype = {
         this._inner.Assert(targetRes, property, anon, true);
       }
     }
-    this.updateProperty(id, "displayDescription");
     this.updateProperty(id, "opType");
     this.updateProperty(id, "updateable");
+    this.updateProperty(id, "displayDescription");
     this.Flush();
   },
   
@@ -6362,7 +6402,7 @@ ExtensionsDataSource.prototype = {
    */
   onAddonUpdateEnded: function(addon, status) {
     LOG("Datasource: Addon Update Ended: " + addon.id + ", status: " + status);
-    this._updateURLs[addon.id] = null;
+    this._updateURLs[addon.id] = status;
     var url = null, version = null;
     var updateAvailable = status == nsIAddonUpdateCheckListener.STATUS_UPDATE;
     if (updateAvailable) {
@@ -6456,7 +6496,8 @@ ExtensionsDataSource.prototype = {
   },
   
   /**
-   * If we're in safe mode, force the generic about dialog for all extensions.
+   * If we're in safe mode, the item is disabled by the user or app, or the
+   * item is to be upgraded force the generic about dialog for the item.
    */
   _rdfGet_aboutURL: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
@@ -6509,52 +6550,55 @@ ExtensionsDataSource.prototype = {
     var extensionsStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
     var itemName = this.getItemProperty(id, "name");
     
-    function getLiteral(key, string1, string2) {
+    function getLiteral(key, strings) {
       return EM_L(extensionsStrings.formatStringFromName(key, 
-                  [string1, string2], 2));
+                  strings, strings.length));
     }
-    if (id in this._updateURLs && this._updateURLs[id])
-      return getLiteral("updatingMessage", itemName, BundleManager.appName);
+    if (id in this._updateURLs && this._updateURLs[id]) {
+      switch (this._updateURLs[id]) {
+      case id:
+        return getLiteral("updatingMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_NO_UPDATE:
+        return getLiteral("updateNoUpdateMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_VERSIONINFO:
+        return getLiteral("updateCompatibilityMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_FAILURE:
+        return getLiteral("updateErrorMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_DISABLED:
+        return getLiteral("updateDisabledMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_APP_MANAGED:
+        return getLiteral("updateAppManagedMessage", [itemName, BundleManager.appName]);
+      case nsIAddonUpdateCheckListener.STATUS_READ_ONLY:
+        return getLiteral("updateReadOnlyMessage", []);
+      case nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED:
+        return getLiteral("updateNotManagedMessage", [BundleManager.appName]);
+      }
+    }
     var node = this._inner.GetTarget(item, EM_R("availableUpdateURL"), true); 
     if (node) {
       var version = this.getItemProperty(id, "availableUpdateVersion");
-      return getLiteral("updateAvailableMessage", itemName, 
-                        version);
+      return getLiteral("updateAvailableMessage", [itemName, version]);
     }
-    var key = this.getItemProperty(id, "installLocation");
-    if (key in StartupCache.entries && id in StartupCache.entries[key] &&
-        StartupCache.entries[key][id] &&
-        this._em.installRequiresRestart(id, this.getItemProperty(id, "type"))) {
-      switch (StartupCache.entries[key][id].op) {
-      case OP_NEEDS_DISABLE:
-        return getLiteral("restartBeforeDisableMessage", itemName, BundleManager.appName);
-      case OP_NEEDS_ENABLE:
-        return getLiteral("restartBeforeEnableMessage", itemName, BundleManager.appName);
-      case OP_NEEDS_INSTALL:
-        return getLiteral("restartBeforeInstallMessage", itemName, BundleManager.appName);
-      case OP_NEEDS_UNINSTALL:
-        return getLiteral("restartBeforeUninstallMessage", itemName, BundleManager.appName);
-      case OP_NEEDS_UPGRADE:
-        return getLiteral("restartBeforeUpgradeMessage", itemName, BundleManager.appName);
-      }
-    }    
-    if (this.getItemProperty(id, "disabled") == "true" &&
-        this.getItemProperty(id, "compatible") != "true") {
-      // See if this item was disabled because it was incompatible and if so
-      // show a message saying this is why it is deactivated.
-      // XXXben potential visual-glitch bug here with extensions whose install.rdf 
-      //        manifests state that they are incompatible but when phone home checking
-      //        reveals that they are compatible and they are installed the 
-      //        incompatible metadata is written anyway and will remain in the ds
-      //        until the next background update check corrects it - this means that
-      //        when a compatible extension is installed in this manner it is 
-      //        likely that when it is disabled it will show this special-case
-      //        error message.
-      return getLiteral("incompatibleExtension", BundleManager.appName, gApp.version);
+    var opType = this.getItemProperty(id, "opType");
+    switch (opType) {
+    case OP_NEEDS_DISABLE:
+      return getLiteral("restartBeforeDisableMessage", [itemName, BundleManager.appName]);
+    case OP_NEEDS_ENABLE:
+      return getLiteral("restartBeforeEnableMessage", [itemName, BundleManager.appName]);
+    case OP_NEEDS_INSTALL:
+      return getLiteral("restartBeforeInstallMessage", [itemName, BundleManager.appName]);
+    case OP_NEEDS_UNINSTALL:
+      return getLiteral("restartBeforeUninstallMessage", [itemName, BundleManager.appName]);
+    case OP_NEEDS_UPGRADE:
+      return getLiteral("restartBeforeUpgradeMessage", [itemName, BundleManager.appName]);
     }
 
+    if (this.getItemProperty(id, "appDisabled") == "true" &&
+        this.getItemProperty(id, "compatible") != "true")
+      return getLiteral("incompatibleExtension", [BundleManager.appName, gApp.version]);
+
     if (inSafeMode())
-      return getLiteral("disabledBySafeMode", itemName, BundleManager.appName);
+      return getLiteral("disabledBySafeMode", [itemName, BundleManager.appName]);
 
     // No special state for this item, so just use the "description" property. 
     return this.GetTarget(item, EM_R("description"), true);
@@ -6625,6 +6669,21 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_homepageURL: function(item, property) {
     return this._getLocalizablePropertyValue(item, property);
+  },
+
+  /**
+   * Get the em:disabled property. This will be true if the item has a
+   * appDisabled or a userDisabled property that is true as long as it is not
+   * about to be disabled.
+   */
+  _rdfGet_disabled: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if ((this.getItemProperty(id, "userDisabled") == "true" ||
+        this.getItemProperty(id, "appDisabled") == "true") &&
+        this.getItemProperty(id, "opType") != OP_NEEDS_DISABLE)
+      return EM_L("true");
+
+    return EM_L("false");
   },
 
   /**

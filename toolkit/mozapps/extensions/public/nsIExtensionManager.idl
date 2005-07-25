@@ -165,7 +165,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(2c981b79-6873-41da-8341-7cda018b6e18)]
+[scriptable, uuid(003efd62-feb2-4bec-9846-48237fb169ba)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -285,23 +285,6 @@ interface nsIExtensionManager : nsISupports
    */
   void getItemList(in unsigned long type, out unsigned long itemCount,
                    [retval, array, size_is(itemCount)] out nsIUpdateItem items);
-
-  /*
-   * Retrieves a list of nsIUpdateItems of items matching the specified type
-   * that can be updated.
-   * @param   type
-   *          The type of item to return.
-   * @param   countRef
-   *          The XPCJS reference to the number of items returned.
-   * @returns An array of nsIUpdateItems matching the type filter that can be
-   *          updated based on if the item is not appManaged, does not have
-   *          a pending install, upgrade, or uninstall operation, the item's
-   *          update.enabled pref is not set to false, and the item's location
-   *          is writeable.
-   */
-  void getUpdateableItemList(in unsigned long type,
-                             out unsigned long itemCount,
-                             [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 
   /**
    * Retrieves a list of nsIUpdateItems of items that are incompatible
@@ -512,6 +495,13 @@ interface nsIAddonUpdateCheckListener : nsISupports
   const unsigned long STATUS_FAILURE = 4;
   const unsigned long STATUS_NO_UPDATE = 8;
   const unsigned long STATUS_DISABLED = 16;
+  const unsigned long STATUS_APP_MANAGED = 32;
+  const unsigned long STATUS_READ_ONLY = 64;
+  const unsigned long STATUS_PENDING_OP = 128;
+  const unsigned long STATUS_NOT_MANAGED = 256;
+  const unsigned long STATUS_DISALLOWED =
+    STATUS_DISABLED + STATUS_APP_MANAGED + STATUS_READ_ONLY +
+    STATUS_PENDING_OP + STATUS_NOT_MANAGED;
 
   /**
    * Addon update has ended
