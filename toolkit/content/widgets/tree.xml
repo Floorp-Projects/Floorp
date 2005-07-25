@@ -246,7 +246,18 @@
             this.treeBoxObject.scrollByLines(rows);
         ]]>
       </handler>
-      <handler event="focus" action="this.treeBoxObject.focused = true;"/>
+      <handler event="focus">
+        <![CDATA[
+          this.treeBoxObject.focused = true;
+          if (this.currentIndex == -1 && this.view.rowCount > 0) {
+            this.currentIndex = 0;
+            if (this.view.selection.single) {
+              this.view.selection.select(0);
+            }
+            this.treeBoxObject.ensureRowIsVisible(0);
+          }
+        ]]>
+      </handler>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="keypress" keycode="vk_enter" action="this.changeOpenState(this.currentIndex);"/>
       <handler event="keypress" keycode="vk_return" action="this.changeOpenState(this.currentIndex);"/>

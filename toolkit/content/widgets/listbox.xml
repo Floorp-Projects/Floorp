@@ -228,7 +228,7 @@
 
       <property name="currentIndex">
         <getter><![CDATA[
-          return this.getIndexOfItem(this.currentItem);
+          return this.currentItem ? this.getIndexOfItem(this.currentItem) : -1;
         ]]></getter>
         <setter><![CDATA[
           if (val >= 0)
@@ -504,6 +504,19 @@
     </implementation>
     
     <handlers>
+      <handler event="focus">
+        <![CDATA[
+          if (this.currentIndex == -1 && this.getRowCount() > 0) {
+            this.currentItem = getItemAtIndex(0);  // focus first item
+            if (this.selType != 'multiple') {
+              // In single selection trees the selection should be the same
+              // as the focus
+              this.timedSelect(currentItem, this._selectDelay);
+            }
+            this.ensureIndexIsVisible(0);
+          }
+        ]]>
+      </handler>
       <handler event="keypress" keycode="vk_up" phase="target">
         <![CDATA[
          if (this.selectedItems.length < 1)
