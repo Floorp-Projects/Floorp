@@ -986,9 +986,6 @@ function getFormElementValue(formElement) {
         return !formElement.checked;
       return formElement.checked;
     }
-    if (type == "radiogroup" || type=="menulist") {
-      return formElement.selectedItem.value;
-    }
     if (type == "textbox" &&
         formElement.getAttribute("datatype") == "nsIFileSpec") {
       if (formElement.value) {
