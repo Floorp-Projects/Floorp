@@ -1006,6 +1006,10 @@ RemoteCommandLine()
 }
 #endif // MOZ_ENABLE_XREMOTE
 
+#ifdef XP_MACOSX
+static char const *gBinaryPath;
+#endif
+
 nsresult
 XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
 {
@@ -1028,6 +1032,10 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
     return rv;
 
 #elif defined(XP_MACOSX)
+  if (gBinaryPath)
+    return NS_NewNativeLocalFile(nsDependentCString(gBinaryPath), PR_FALSE,
+                                 aResult);
+
   NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(lf));
   nsCOMPtr<nsILocalFileMac> lfm (do_QueryInterface(lf));
   if (!lfm)
@@ -1441,6 +1449,12 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     } else {
       localDir = lf;
     }
+
+    // Clear out flags that we handled (or should have handled!) last startup.
+    char *dummy;
+    CheckArg("p", &dummy);
+    CheckArg("profile", &dummy);
+    CheckArg("profilemanager", &dummy);
 
     return NS_LockProfilePath(lf, localDir, nsnull, aResult);
   }
@@ -1871,6 +1885,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 1;
   }
 
+#ifdef XP_MACOSX
+  // The xulrunner stub executable tricks CFBundleGetMainBundle on
+  // purpose into lying about the main bundle path. It will set
+  // XRE_BINARY_PATH to inform us of our real location.
+  gBinaryPath = getenv("XRE_BINARY_PATH");
+
+  if (gBinaryPath && !*gBinaryPath)
+    gBinaryPath = nsnull;
+#endif
+
   gAppData = aAppData;
 
   gRestartArgc = argc;
@@ -2233,6 +2257,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         PR_SetEnv("XRE_IMPORT_PROFILES=");
         PR_SetEnv("NO_EM_RESTART=");
         PR_SetEnv("XUL_APP_FILE=");
+        PR_SetEnv("XRE_BINARY_PATH=");
 
 #ifdef XP_MACOSX
         // we re-initialize the command-line service and do appleevents munging
@@ -2354,6 +2379,14 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     sprintf(kEnvVar2, "XRE_PROFILE_LOCAL_PATH=%s", path2.get());
     PR_SetEnv(kEnvVar1);
     PR_SetEnv(kEnvVar2);
+
+#ifdef XP_MACOSX
+    if (gBinaryPath) {
+      static char kEnvVar3[MAXPATHLEN];
+      sprintf(kEnvVar3, "XRE_BINARY_PATH=%s", gBinaryPath);
+      PR_SetEnv(kEnvVar3);
+    }
+#endif
 
     rv = LaunchChild(nativeApp, appInitiatedRestart);
     return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
