@@ -721,9 +721,7 @@ CreateSourceText(const PRInt32 aColNumber,
 }
 
 nsresult
-nsExpatDriver::HandleError(const char *aBuffer,
-                           PRUint32 aLength,
-                           PRBool aIsFinal)
+nsExpatDriver::HandleError()
 {
   PRInt32 code = XML_GetErrorCode(mExpatParser);
   NS_WARN_IF_FALSE(code > XML_ERROR_NONE, "unexpected XML error code");
@@ -761,9 +759,9 @@ nsExpatDriver::HandleError(const char *aBuffer,
 
     nsAutoString tagName;
     if (uriEnd && nameEnd) {
-        // We have a prefix.
-        tagName.Append(nameEnd + 1, pos - nameEnd - 1);
-        tagName.Append(PRUnichar(':'));
+      // We have a prefix.
+      tagName.Append(nameEnd + 1, pos - nameEnd - 1);
+      tagName.Append(PRUnichar(':'));
     }
     const PRUnichar *nameStart = uriEnd ? uriEnd + 1 : mismatch;
     tagName.Append(nameStart, (nameEnd ? nameEnd : pos) - nameStart);
@@ -783,19 +781,16 @@ nsExpatDriver::HandleError(const char *aBuffer,
     nsTextFormatter::smprintf_free(message);
   }
 
-  nsAutoString sourceLine;
-  if (!aIsFinal) {
-    GetLine(aBuffer, aLength,
-            XML_GetCurrentByteIndex(mExpatParser) - mBytesParsed,
-            sourceLine);
-  }
-  else {
-    sourceLine.Append(mLastLine);
-  }
-
   // Adjust the column number so that it is one based rather than zero based.
   PRInt32 colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
   PRInt32 lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+
+  nsAutoString errorText;
+  CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
+                  colNumber, errorText);
+
+  nsAutoString sourceText;
+  CreateSourceText(colNumber, mLastLine.get(), sourceText);
 
   nsCOMPtr<nsIConsoleService> cs
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -803,19 +798,11 @@ nsExpatDriver::HandleError(const char *aBuffer,
   if (serr && cs) {
     if (NS_SUCCEEDED(serr->Init(description.get(),
                                 mURISpec.get(),
-                                sourceLine.get(),
+                                sourceText.get(),
                                 lineNumber, colNumber,
                                 nsIScriptError::errorFlag, "malformed-xml")))
       cs->LogMessage(serr);
   }
-
-  nsAutoString errorText;
-  CreateErrorText(description.get(), XML_GetBase(mExpatParser),
-                  XML_GetCurrentLineNumber(mExpatParser), colNumber,
-                  errorText);
-
-  nsAutoString sourceText;
-  CreateSourceText(colNumber, sourceLine.get(), sourceText);
 
   NS_ASSERTION(mSink, "no sink?");
   if (mSink) {
@@ -831,102 +818,119 @@ nsExpatDriver::ParseBuffer(const char* aBuffer,
                            PRBool aIsFinal)
 {
   NS_ASSERTION((aBuffer && aLength != 0) || (!aBuffer && aLength == 0), "?");
+  NS_ASSERTION(aLength % sizeof(PRUnichar) == 0,
+               "We can have a PRUnichar spanning chunks?");
+  NS_PRECONDITION(mBytesParsed % sizeof(PRUnichar) == 0,
+                  "Parsed part of a PRUnichar?");
+  NS_PRECONDITION(mBytePosition % sizeof(PRUnichar) == 0,
+                  "Parsed part of a PRUnichar?");
+  NS_PRECONDITION(XML_GetCurrentByteIndex(mExpatParser) == -1 ||
+                  XML_GetCurrentByteIndex(mExpatParser) % sizeof(PRUnichar) == 0,
+                  "Consumed part of a PRUnichar?");
 
   if (mExpatParser && mInternalState == NS_OK) {
-    if (!XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal)) {
-      if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK ||
-          mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
-        mBytePosition = (XML_GetCurrentByteIndex(mExpatParser) - mBytesParsed);
-        mBytesParsed += mBytePosition;
+    XML_Bool parsedAll = XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal);
+
+    PRInt32 parserBytesConsumed = XML_GetCurrentByteIndex(mExpatParser);
+
+    NS_ASSERTION(parserBytesConsumed == -1 ||
+                 parserBytesConsumed % sizeof(PRUnichar) == 0,
+                 "Consumed part of a PRUnichar?");
+
+    // Now figure out the startOffset for appending to mLastLine -- this
+    // calculation is the same no matter whether we saw an error, got blocked,
+    // parsed it all but didn't consume it all, or whatever else happened.
+    const PRUnichar* const buffer =
+      NS_REINTERPRET_CAST(const PRUnichar*, aBuffer);
+    PRUint32 startOffset;
+    // we assume that if expat failed to consume some bytes last time it won't
+    // consume them this time without also consuming some bytes from aBuffer.
+    // Note that if expat consumed everything we passed it, it will have nulled
+    // out all its internal pointers to data, so parserBytesConsumed will come
+    // out -1 in that case.
+    if (buffer) {
+      if (parserBytesConsumed < 0 ||
+          (PRUint32)parserBytesConsumed >= mBytesParsed) {
+        // We consumed something
+        if (parserBytesConsumed < 0) {
+          NS_ASSERTION(parserBytesConsumed == -1,
+                       "Unexpected negative value?");
+          // Consumed everything.
+          startOffset = aLength;
+        }
+        else {
+          // Consumed something, but not all
+          NS_ASSERTION(parserBytesConsumed - mBytesParsed <= aLength,
+                       "Too many bytes consumed?");
+          startOffset = (parserBytesConsumed - mBytesParsed) /
+                        sizeof(PRUnichar);
+        }
+        // Now startOffset points one past the last PRUnichar consumed in
+        // buffer
+        while (startOffset-- != 0) {
+          if (buffer[startOffset] == '\n' || buffer[startOffset] == '\r') {
+            mLastLine.Truncate();
+            break;
+          }
+        }
+        // Now startOffset is pointing to the last newline we consumed (or to
+        // -1 if there weren't any consumed in this chunk).  Make startOffset
+        // point to the first char of the first line whose end we haven't
+        // consumed yet.
+        ++startOffset;
       }
       else {
-        HandleError(aBuffer, aLength, aIsFinal);
+        // Didn't parse anything new.  So append all of aBuffer.
+        startOffset = 0;
+      }
+    }
+
+    if (!parsedAll) {
+      if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK ||
+          mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING) {
+        NS_ASSERTION((PRUint32)parserBytesConsumed >= mBytesParsed,
+                     "How'd this happen?");
+        mBytePosition = parserBytesConsumed - mBytesParsed;
+        mBytesParsed = parserBytesConsumed;
+        if (buffer) {
+          PRUint32 endOffset = mBytePosition / sizeof(PRUnichar);
+          NS_ASSERTION(startOffset <= endOffset,
+                       "Something is confused about what we've consumed");
+          // Only append the data we actually parsed.  The rest will come
+          // through this method again.
+          mLastLine.Append(Substring(buffer + startOffset,
+                                     buffer + endOffset));
+        }
+      }
+      else {
+        // An error occured, look for the next newline after the last one we
+        // consumed.
+        PRUint32 length = aLength / sizeof(PRUnichar);
+        if (buffer) {
+          PRUint32 endOffset = startOffset;
+          while (endOffset < length && buffer[endOffset] != '\n' &&
+                 buffer[endOffset] != '\r') {
+            ++endOffset;
+          }
+          mLastLine.Append(Substring(buffer + startOffset,
+                                     buffer + endOffset));
+        }
+        HandleError();
         mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
       }
 
       return mInternalState;
     }
 
-    if (aBuffer && aLength != 0) {
-      // Cache the last line in the buffer
-      GetLine(aBuffer, aLength, aLength - sizeof(PRUnichar), mLastLine);
+    if (!aIsFinal && buffer) {
+      mLastLine.Append(Substring(buffer + startOffset,
+                                 buffer + aLength / sizeof(PRUnichar)));
     }
-
     mBytesParsed += aLength;
     mBytePosition = 0;
   }
 
   return NS_OK;
-}
-
-void
-nsExpatDriver::GetLine(const char* aSourceBuffer,
-                       PRUint32 aLength,
-                       PRUint32 aOffset,
-                       nsString& aLine)
-{
-  // Figure out the line inside aSourceBuffer that contains character specified
-  // by aOffset. Copy it into aLine.
-  NS_ASSERTION(aOffset < aLength, "?");
-  // Assert that the byteIndex and the length of the buffer are even.
-  NS_ASSERTION(aOffset % 2 == 0 && aLength % 2 == 0, "?");
-
-  // Will try to find the start of the line.
-  PRUnichar* start = (PRUnichar*)&aSourceBuffer[aOffset];
-
-  // Will try to find the end of the line.
-  PRUnichar* end = (PRUnichar*)&aSourceBuffer[aOffset];
-
-  // Track the position of the 'start' pointer into the buffer.
-  PRUint32 startIndex = aOffset / sizeof(PRUnichar);
-
-  // Track the position of the 'end' pointer into the buffer.
-  PRUint32 endIndex = aOffset / sizeof(PRUnichar);
-
-  PRUint32 numCharsInBuffer = aLength / sizeof(PRUnichar);
-
-  // Use start to find the first new line before the error position and end to
-  // find the first new line after the error position.
-  PRBool reachedStart = startIndex <= 0 || *start == '\n' || *start == '\r';
-  PRBool reachedEnd = endIndex >= numCharsInBuffer || *end == '\n' ||
-                      *end == '\r';
-  while (!reachedStart || !reachedEnd) {
-    if (!reachedStart) {
-      --start;
-      --startIndex;
-      reachedStart = startIndex <= 0 || *start == '\n' || *start == '\r';
-    }
-    if (!reachedEnd) {
-      ++end;
-      ++endIndex;
-      reachedEnd = endIndex >= numCharsInBuffer || *end == '\n' ||
-                   *end == '\r';
-    }
-  }
-
-  aLine.Truncate(0);
-  if (startIndex == endIndex) {
-    // Special case if the error is on a line where the only character is a
-    // newline. Do nothing.
-  }
-  else {
-    NS_ASSERTION(endIndex - startIndex >= sizeof(PRUnichar), "?");
-    // At this point, there are two cases.  Either the error is on the first
-    // line or on subsequent lines.  If the error is on the first line,
-    // startIndex will decrement all the way to zero.  If not, startIndex
-    // will decrement to the position of the newline character on the
-    // previous line.  So, in the first case, the start position of the
-    // error line = startIndex (== 0).  In the second case, the start
-    // position of the error line = startIndex + 1.  In both cases, the end
-    // position of the error line will be (endIndex - 1).
-    PRUint32 startPosn = startIndex <= 0 ? startIndex : startIndex + 1;
-
-    // At this point the substring starting at startPosn and ending at
-    // (endIndex - 1) is the line on which the error occurred. Copy that
-    // substring into the error structure.
-    const PRUnichar* unicodeBuffer = (const PRUnichar*)aSourceBuffer;
-    aLine.Append(&unicodeBuffer[startPosn], endIndex - startPosn);
-  }
 }
 
 NS_IMETHODIMP
@@ -958,8 +962,8 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
 
     if (NS_FAILED(mInternalState)) {
       if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
-        // mBytePosition / 2 => character position, one char is two bytes.
-        aScanner.SetPosition(start.advance(mBytePosition / 2), PR_TRUE);
+        aScanner.SetPosition(start.advance(mBytePosition / sizeof(PRUnichar)),
+                             PR_TRUE);
         aScanner.Mark();
       }
 

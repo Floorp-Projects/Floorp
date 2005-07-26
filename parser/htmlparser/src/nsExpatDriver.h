@@ -91,7 +91,7 @@ private:
                                           nsAString& aAbsURL);
 
   nsresult ParseBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal);
-  nsresult HandleError(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
+  nsresult HandleError();
   void GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset,
                nsString& aLine);
 
@@ -106,8 +106,12 @@ private:
   PRPackedBool     mInCData;
   PRPackedBool     mInInternalSubset;
   PRPackedBool     mInExternalDTD;
+
+  // Number of bytes parsed in the current buffer.
   PRInt32          mBytePosition;
   nsresult         mInternalState;
+
+  // Total number of bytes parsed.
   PRUint32         mBytesParsed;
   nsCOMPtr<nsIExpatSink> mSink;
   const nsCatalogData* mCatalogData; // weak
