@@ -117,27 +117,20 @@ var gAdvancedPane = {
   
   checkForAddonUpdates: function ()
   {
-    var updateTypes = 
-        Components.classes["@mozilla.org/supports-PRUint8;1"].
-        createInstance(Components.interfaces.nsISupportsPRUint8);
-    updateTypes.data = Components.interfaces.nsIUpdateItem.TYPE_ADDON;
-    var showMismatch = 
-        Components.classes["@mozilla.org/supports-PRBool;1"].
-        createInstance(Components.interfaces.nsISupportsPRBool);
-    showMismatch.data = false;
-    var ary = 
-        Components.classes["@mozilla.org/supports-array;1"].
-        createInstance(Components.interfaces.nsISupportsArray);
-    ary.AppendElement(updateTypes);
-    ary.AppendElement(showMismatch);
-
-    var features = "chrome,centerscreen,dialog,titlebar";
-    const URI_EXTENSION_UPDATE_DIALOG = 
-      "chrome://mozapps/content/extensions/update.xul";
-    var ww = 
-        Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
-        getService(Components.interfaces.nsIWindowWatcher);
-    ww.openWindow(window, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);  
+    var wm = 
+        Components.classes["@mozilla.org/appshell/window-mediator;1"].
+        getService(Components.interfaces.nsIWindowMediator);
+    var manager = wm.getMostRecentWindow("Extension:Manager-extensions");
+    if (!manager) {
+      const features = "chrome,centerscreen,dialog,titlebar";
+      const URI_EXTENSIONS_WINDOW = 
+        "chrome://mozapps/content/extensions/extensions.xul?type=extensions";
+      openDialog(URI_EXTENSIONS_WINDOW, "", features, "updatecheck");
+    }
+    else {
+      manager.performUpdate();
+      manger.focus();
+    }
   },
   
   checkForUpdates: function ()
