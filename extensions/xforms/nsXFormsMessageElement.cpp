@@ -617,14 +617,17 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
   options.AppendLiteral(MESSAGE_WINDOW_PROPERTIES);
 
   nsAutoString src;
-  mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
-  PRBool hasSrc = !src.IsEmpty();
+  if (!hasBinding) {
+    mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+  }
 
   nsCOMPtr<nsIDOMViewCSS> cssView(do_QueryInterface(internal));
   AppendCSSOptions(cssView, options);
 
+  // order of precedence is single-node binding, linking attribute then
+  // inline text
   nsresult rv;
-  if (hasSrc) {
+  if (!hasBinding && !src.IsEmpty()) {
     // Creating a normal window for messages with src attribute.
     options.AppendLiteral(",chrome=no");
     rv = ConstructMessageWindowURL(src, PR_TRUE, src);
