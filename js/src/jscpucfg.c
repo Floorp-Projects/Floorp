@@ -73,6 +73,12 @@
 
 #endif /* CROSS_COMPILE */
 
+#ifdef __GNUC__
+#define NS_NEVER_INLINE __attribute__((noinline))
+#else
+#define NS_NEVER_INLINE
+#endif
+
 typedef void *prword;
 
 struct align_short {
@@ -148,7 +154,7 @@ static void BitsPerByte(void)
     bpb = 8;
 }
 
-static int StackGrowthDirection(int *dummy1addr)
+static int NS_NEVER_INLINE StackGrowthDirection(int *dummy1addr)
 {
     int dummy2;
 
