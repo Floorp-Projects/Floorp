@@ -51,8 +51,12 @@ sub login {
     for ($env_id, $env_email, $env_realname) { $_ ||= '' };
     # make sure the email field contains only a valid email address
     my $emailregexp = Param("emailregexp");
-    $env_email =~ /($emailregexp)/;
-    $env_email = $1;
+    if ($env_email =~ /($emailregexp)/) {
+        $env_email = $1;
+    }
+    else {
+        return undef;
+    }
     # untaint the remaining values
     trick_taint($env_id);
     trick_taint($env_realname);
