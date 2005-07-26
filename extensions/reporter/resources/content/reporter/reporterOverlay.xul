@@ -48,7 +48,7 @@
   <!-- Firefox -->
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
-              label="&reporterMenu.title;" 
+              label="&reporterMenu.title;..." 
               accesskey="&reporterMenu.accesskey;" 
               insertbefore="aboutSeparator"
               oncommand="loadReporterWizard()"/>
@@ -64,7 +64,7 @@
   <!-- SeaMonkey -->
   <menupopup id="helpPopup">
     <menuseparator insertbefore="menu_HelpAboutSeparator"/>
-    <menuitem id="helpPopup_reportertoolmenu" label="&reporterMenu.title;" accesskey="&reporterMenu.accesskey;" insertbefore="menu_HelpAboutSeparator"
+    <menuitem id="helpPopup_reportertoolmenu" label="&reporterMenu.title;..." accesskey="&reporterMenu.accesskey;" insertbefore="menu_HelpAboutSeparator"
               oncommand="loadReporterWizard()"/>
   </menupopup>
 </overlay>
