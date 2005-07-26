@@ -152,6 +152,7 @@
                   onblur="this.parentNode.delegate.value = this.value;"
                   onclick="this.parentNode._change();"
                   onkeyup="this.parentNode._change();"
+                  onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
                   xbl:inherits="accesskey"/>
     </content>
 
@@ -195,6 +196,17 @@
           return true;
         </body>
       </method>
+
+      <!-- The underlying "html:input" element does not send a DOMActivate
+           event when hitting the Enter key.  We handle that here. -->
+      <method name="dispatchDOMActivate">
+        <body>
+          var ev = document.createEvent("UIEvents");
+          ev.initUIEvent("DOMActivate", true, true, window, 1);
+          this.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -218,6 +230,10 @@
           } else {
             this.inputField.removeAttribute("readonly");
           }
+
+          <!-- Ignore Enter keypress on checkbox -->
+          this.inputField.removeAttribute("onkeypress");
+
           return true;
         </body>
       </method>
