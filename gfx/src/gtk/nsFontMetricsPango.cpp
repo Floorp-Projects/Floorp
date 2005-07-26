@@ -53,7 +53,6 @@
 #include "nsUnicharUtils.h"
 #include "nsQuickSort.h"
 
-#include <pango/pangoxft.h>
 #include <fontconfig/fontconfig.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -301,12 +300,11 @@ nsFontMetricsPango::CacheFontMetrics(void)
 
     // Get our font face
     FT_Face face;
+    face = pango_fc_font_lock_face(fcfont);
+    if (!face)
+    	return NS_ERROR_NOT_AVAILABLE;
+    	
     TT_OS2 *os2;
-    XftFont *xftFont = pango_xft_font_get_font(PANGO_FONT(fcfont));
-    if (!xftFont)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    face = XftLockFace(xftFont);
     os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
 
     // mEmHeight (size in pixels of EM height)
@@ -318,10 +316,12 @@ nsFontMetricsPango::CacheFontMetrics(void)
     mEmHeight = PR_MAX(1, nscoord(size * f));
 
     // mMaxAscent
-    mMaxAscent = nscoord(xftFont->ascent * f);
+    val = MOZ_FT_TRUNC(face->size->metrics.ascender);
+    mMaxAscent = NSToIntRound(val * f);
 
     // mMaxDescent
-    mMaxDescent = nscoord(xftFont->descent * f);
+    val = -MOZ_FT_TRUNC(face->size->metrics.descender);
+    mMaxDescent = NSToIntRound(val * f);
 
     nscoord lineHeight = mMaxAscent + mMaxDescent;
 
@@ -341,7 +341,8 @@ nsFontMetricsPango::CacheFontMetrics(void)
     mEmDescent = mEmHeight - mEmAscent;
 
     // mMaxAdvance
-    mMaxAdvance = nscoord(xftFont->max_advance_width * f);
+    val = MOZ_FT_TRUNC(face->size->metrics.max_advance);
+    mMaxAdvance = NSToIntRound(val * f);
 
     // mPangoSpaceWidth
     PangoLayout *layout = pango_layout_new(mPangoContext);
@@ -364,17 +365,16 @@ nsFontMetricsPango::CacheFontMetrics(void)
     mAveCharWidth = tmpWidth;
 
     // mXHeight (height of an 'x' character)
-    PRUnichar xUnichar('x');
-    XGlyphInfo extents;
-    if (FcCharSetHasChar(xftFont->charset, xUnichar)) {
-        XftTextExtents16(GDK_DISPLAY(), xftFont, &xUnichar, 1, &extents);
-        mXHeight = extents.height;
+    if (pango_fc_font_has_char(fcfont, 'x')) {
+        PangoRectangle rect;
+        PangoGlyph glyph = pango_fc_font_get_glyph (fcfont, 'x');
+        pango_font_get_glyph_extents (PANGO_FONT (fcfont), glyph, &rect, NULL);
+        mXHeight = NSToIntRound(rect.height * f / PANGO_SCALE);
     }
     else {
         // 56% of ascent, best guess for non-true type or asian fonts
-        mXHeight = nscoord(((float)mMaxAscent) * 0.56);
+        mXHeight = nscoord(((float)mMaxAscent) * 0.56 * f);
     }
-    mXHeight = nscoord(mXHeight * f);
 
     // mUnderlineOffset (offset for underlines)
     val = CONVERT_DESIGN_UNITS_TO_PIXELS(face->underline_position,
@@ -384,7 +384,8 @@ nsFontMetricsPango::CacheFontMetrics(void)
     }
     else {
         mUnderlineOffset =
-            -NSToIntRound(PR_MAX(1, floor(0.1 * xftFont->height + 0.5)) * f);
+            -NSToIntRound(PR_MAX(1, floor(0.1 *
+                MOZ_FT_TRUNC(face->size->metrics.height) + 0.5)) * f);
     }
 
     // mUnderlineSize (thickness of an underline)
@@ -395,7 +396,8 @@ nsFontMetricsPango::CacheFontMetrics(void)
     }
     else {
         mUnderlineSize =
-            NSToIntRound(PR_MAX(1, floor(0.05 * xftFont->height + 0.5)) * f);
+            NSToIntRound(PR_MAX(1,
+               floor(0.05 * MOZ_FT_TRUNC(face->size->metrics.height) + 0.5)) * f);
     }
 
     // mSuperscriptOffset
@@ -426,7 +428,7 @@ nsFontMetricsPango::CacheFontMetrics(void)
     // mStrikeoutSize
     mStrikeoutSize = mUnderlineSize;
 
-    XftUnlockFace(xftFont);
+    pango_fc_font_unlock_face(fcfont);
 
     /*
     printf("%i\n", mXHeight);
@@ -893,7 +895,7 @@ nsFontMetricsPango::SetRightToLeftText(PRBool aIsRTL)
 {
     if (aIsRTL) {
         if (!mRTLPangoContext) {
-            mRTLPangoContext = pango_xft_get_context(GDK_DISPLAY(), 0);
+            mRTLPangoContext = gdk_pango_context_get();
             pango_context_set_base_dir(mRTLPangoContext, PANGO_DIRECTION_RTL);
 
             gdk_pango_context_set_colormap(mRTLPangoContext, gdk_rgb_get_cmap());
@@ -1163,7 +1165,7 @@ nsFontMetricsPango::FamilyExists(nsIDeviceContext *aDevice,
     NS_ConvertUCS2toUTF8 name(aName);
 
     nsresult rv = NS_ERROR_FAILURE;
-    PangoContext *context = pango_xft_get_context(GDK_DISPLAY(), 0);
+    PangoContext *context = gdk_pango_context_get();
     PangoFontFamily **familyList;
     int n;
 
@@ -1262,7 +1264,7 @@ nsFontMetricsPango::RealizeFont(void)
 
     // Now that we have the font description set up, create the
     // context.
-    mLTRPangoContext = pango_xft_get_context(GDK_DISPLAY(), 0);
+    mLTRPangoContext = gdk_pango_context_get();
     mPangoContext = mLTRPangoContext;
 
     // Make sure to set the base direction to LTR - if layout needs to
