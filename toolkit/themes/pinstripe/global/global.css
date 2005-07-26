@@ -89,8 +89,8 @@ prefwindow {
   font: message-box;
 }
 
-prefwindow {
-	  padding: 8px 10px 10px 8px;
+prefwindow[type="child"] {
+  padding: 18px 20px 15px 18px !important;
 }
 
 /* deprecated */

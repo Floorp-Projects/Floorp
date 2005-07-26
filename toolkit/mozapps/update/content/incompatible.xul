@@ -63,7 +63,7 @@
   
   <label>&incompatible.intro;</label>
   <separator/>
-  <listbox id="incompatibleItems" rows="10"/>
+  <listbox id="incompatibleItems" rows="5"/>
   <separator/>
   <label>&incompatible.update;</label>        
   <separator class="thin"/>

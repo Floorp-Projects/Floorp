@@ -805,7 +805,7 @@
         <parameter name="aFeatures"/>
         <parameter name="aParams"/>
         <body>
-          return openDialog(aURL, "", "modal,centerscreen" + (aFeatures != "" ? ("," + aFeatures) : ""), aParams);
+          return openDialog(aURL, "", "modal,centerscreen,resizable=no" + (aFeatures != "" ? ("," + aFeatures) : ""), aParams);
         </body>
       </method>
       

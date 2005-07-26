@@ -122,6 +122,9 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
+#downloadStatusLine {
+  -moz-box-align: start;
+}
 
 #verificationFailedIcon {
   list-style-image: url("chrome://global/skin/icons/notfound.png");

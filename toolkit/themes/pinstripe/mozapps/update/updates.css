@@ -29,6 +29,10 @@ link:focus {
   border: 1px dotted black;
 }
 
+.wizard-page-box {
+  padding: 15px 10px 15px 10px;
+}
+
 /**
  * License Page
  */
@@ -48,7 +52,7 @@ license {
   margin-top: 3px;
 }
 .licenseLoadingThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
 }
 .licenseLoadingThrobber[state="error"] {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
@@ -58,37 +62,39 @@ license {
  * Update Found Page
  */
 #updatesfoundContent {
-  margin: 10px 44px 10px 44px;
+  -moz-margin-start: 8px;
+  -moz-margin-end: 8px;
 }
 
 wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin: 0px;
 }
 
-#installButtons {
-  margin: 10px;
+#moreDetails {
+  margin: 1px 0px 4px 3px;
 }
 
-#moreDetails {
-  margin: 1px 5px 4px 3px;
+#updateMoreInfoURL, #updateMoreInfoURLLabel {
+  -moz-margin-start: 0px;
+  -moz-margin-end: 0px;
 }
 
 #downloadNow {
   font-weight: bold;
 }
 
-#downloadNow > .button-box {
-  padding-left: 15px;
-  padding-right: 15px;  
-}
-
-#updateForMoreInfo {
-  margin-left: 5px;
+#downloadNow, #downloadLater {
+  margin: 0px;
 }
 
 #updateName, #updateFinishedName {
   font-weight: bold;
   font-size: larger;
+  -moz-margin-start: 0px;
+}
+
+#separatorGroove {
+  display: none;
 }
 
 #alertImage {
@@ -117,15 +123,19 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 }
 #downloadThrobber {
   margin: 5px 3px 0px 5px;
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.png");
+  list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 #downloadThrobber[state="loading"] {
-  list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+  list-style-image: url("chrome://global/skin/icons/loading_16.gif");
 }
 
 #verificationFailedIcon {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
   margin: 5px 3px 0px 5px;
+}
+
+#downloadStatusLine {
+  -moz-box-align: center;
 }
 
 /**
@@ -173,9 +183,14 @@ update {
   margin-bottom: 1px;
 }
 
+/**
+ * Advanced Preferences
+ */
 .updatePrefsInfo {
   font-size: smaller;
-  margin-left: 27px;
+  margin-top: 5px;
   margin-bottom: 10px;
+  -moz-margin-start: 22px;
+  -moz-margin-end: 10px;
 }
 

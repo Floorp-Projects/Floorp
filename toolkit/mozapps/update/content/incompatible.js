@@ -51,5 +51,6 @@ function init() {
   var cancelbutton = document.documentElement.getButton("cancel");
   cancelbutton.label = closebuttonlabel;
   cancelbutton.focus();
+  cancelbutton.setAttribute("default", "true");
 }
 
