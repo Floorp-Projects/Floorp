@@ -877,6 +877,9 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
       m_outFileStream->seek(PR_SEEK_END, 0);
     } else
     	m_newMailParser->PublishMsgHeader(aMsgWindow); 
+    // run any reply/forward filter after we've finished with the
+    // temp quarantine file, and/or moved the message to another folder.
+    m_newMailParser->ApplyForwardAndReplyFilter(aMsgWindow);
     if (aSize)
       hdr->SetUint32Property("onlineSize", aSize);
 

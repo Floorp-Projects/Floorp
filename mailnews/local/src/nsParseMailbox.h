@@ -248,6 +248,7 @@ public:
                              PRUint32 length, nsFileSpec &destFileSpec);
 
   virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, PRUint32 msgOffset);
+  nsresult    ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow);
 
 protected:
   virtual nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
@@ -278,6 +279,14 @@ protected:
   // used for applying move filters, because in the case of using a temporary
   // download file, the offset/key in the msg hdr is not right.
   PRUint32      m_curHdrOffset; 
+
+  // we have to apply the reply/forward filters in a second pass, after 
+  // msg quarantining and moving to other local folders, so we remember the 
+  // info we'll need to apply them with these vars.
+  // these need to be arrays in case we have multiple reply/forward filters.
+  nsCStringArray     m_forwardTo;
+  nsCStringArray     m_replyTemplateUri;
+  nsCOMPtr <nsIMsgDBHdr> m_msgToForwardOrReply;
 };
 
 #endif

@@ -1491,7 +1491,6 @@ nsParseNewMailState::Init(nsIMsgFolder *serverFolder, nsIMsgFolder *downloadFold
     if (m_filterList) 
     {
       rv = server->ConfigureTemporaryFilters(m_filterList);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to configure temp filters");
     }
     // check if this server defers to another server, in which case
     // we'll use that server's filters as well.
@@ -1814,36 +1813,18 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         {
           nsXPIDLCString forwardTo;
           filterAction->GetStrValue(getter_Copies(forwardTo));
-          nsCOMPtr <nsIMsgIncomingServer> server;
-          rv = m_rootFolder->GetServer(getter_AddRefs(server));
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (!forwardTo.IsEmpty())
-          {
-            nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
-            if (compService)
-            {
-              nsAutoString forwardStr;
-              forwardStr.AssignWithConversion(forwardTo.get());
-              rv = compService->ForwardMessage(forwardStr, msgHdr, msgWindow, server);
-            }
-          }
+          m_forwardTo.AppendCString(forwardTo);
+          m_msgToForwardOrReply = msgHdr;
         }
         break;
       case nsMsgFilterAction::Reply:
         {
           nsXPIDLCString replyTemplateUri;
           filterAction->GetStrValue(getter_Copies(replyTemplateUri));
-          nsCOMPtr <nsIMsgIncomingServer> server;
-          rv = m_rootFolder->GetServer(getter_AddRefs(server));
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (!replyTemplateUri.IsEmpty())
-          {
-            nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
-            if (compService)
-              rv = compService->ReplyWithTemplate(msgHdr, replyTemplateUri, msgWindow, server);
-          }
+          m_replyTemplateUri.AppendCString(replyTemplateUri);
+          m_msgToForwardOrReply = msgHdr;
         }
-
+        break;
       case nsMsgFilterAction::DeleteFromPop3Server:
         {
           PRUint32 flags = 0;
@@ -1911,6 +1892,51 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
   }
   return rv;
 }
+
+// this gets run in a second pass, after apply filters to a header.
+nsresult nsParseNewMailState::ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr <nsIMsgIncomingServer> server;
+
+  for (PRInt32 i = 0; i < m_forwardTo.Count(); i++)
+  {
+    if (!m_forwardTo[i]->IsEmpty())
+    {
+      nsAutoString forwardStr;
+      forwardStr.AssignWithConversion(m_forwardTo[i]->get());
+
+      rv = m_rootFolder->GetServer(getter_AddRefs(server));
+      NS_ENSURE_SUCCESS(rv, rv);
+      {
+        nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
+        if (compService)
+          rv = compService->ForwardMessage(forwardStr, m_msgToForwardOrReply, msgWindow, server);
+      }
+    }
+  }
+  m_forwardTo.Clear();
+
+  for (i = 0; i < m_replyTemplateUri.Count(); i++)
+  {
+    if (!m_replyTemplateUri[i]->IsEmpty())
+    {
+      // copy this and truncate the original, so we don't accidentally re-use it on the next hdr.
+      nsCAutoString replyTemplateUri(*m_replyTemplateUri[i]);
+      rv = m_rootFolder->GetServer(getter_AddRefs(server));
+      if (server && !replyTemplateUri.IsEmpty())
+      {
+        nsCOMPtr <nsIMsgComposeService> compService = do_GetService (NS_MSGCOMPOSESERVICE_CONTRACTID) ;
+        if (compService)
+          rv = compService->ReplyWithTemplate(m_msgToForwardOrReply, replyTemplateUri.get(), msgWindow, server);
+      }
+    }
+  }
+  m_replyTemplateUri.Clear();
+  m_msgToForwardOrReply = nsnull;
+  return rv;
+}
+
 
 int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 {
@@ -2121,6 +2147,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
         }
       }
       destMailDB->AddNewHdrToDB(newHdr, PR_TRUE);
+      m_msgToForwardOrReply = newHdr;
     }
   }
   else
