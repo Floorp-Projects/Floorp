@@ -48,8 +48,6 @@ cp -a bin/components/nsDictionary.js                     wince/components
 cp -a bin/components/nsInterfaceInfoToIDL.js             wince/components
 cp -a bin/components/nsXmlRpcClient.js                   wince/components
 
-cp -a bin/components/snav.dll                            wince/components
-
 cp -a bin/components/pipboot.dll                         wince/components
 cp -a bin/components/pipnss.dll                          wince/components
 cp -a bin/components/pippki.dll                          wince/components

@@ -3,12 +3,13 @@ nsUConvModule
 nsI18nModule
 necko_core_and_primary_protocols
 nsJarModule
-nsRDFModule
 nsPrefModule
 nsSecurityManagerModule
+nsRDFModule
 nsParserModule
 nsGfxModule
 nsImageLib2Module
+nsPluginModule
 nsWidgetModule
 nsLayoutModule
 docshell_provider
@@ -22,5 +23,4 @@ nsMorkModule
 nsXMLExtrasModule
 TransformiixModule
 nsWebServicesModule
-nsPluginModule
 SoftKeyBoardModule
