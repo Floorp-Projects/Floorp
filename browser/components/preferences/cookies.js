@@ -58,7 +58,7 @@ var gCookiesWindow = {
     
     this._loadCookies();
     this._tree.treeBoxObject.view = this._view;
-    // this.sort("rawHost");
+    this.sort("rawHost");
     if (this._view.rowCount > 0) 
       this._tree.view.selection.select(0);
       
@@ -184,6 +184,8 @@ var gCookiesWindow = {
     _filterSet  : [],
     _filterValue: "",
     _rowCount   : 0,
+    _cacheValid : 0,
+    _cacheItems : [],
     get rowCount() 
     { 
       return this._rowCount; 
@@ -193,14 +195,27 @@ var gCookiesWindow = {
     {
       if (this._filtered)
         return this._filterSet[aIndex];
-        
+
+      var start = 0;
       var count = 0, hostIndex = 0;
-      for (var i = 0; i < gCookiesWindow._hostOrder.length; ++i) { // var host in gCookiesWindow._hosts) {
+
+      var cacheIndex = Math.min(this._cacheValid, aIndex);
+      if (cacheIndex > 0) {
+        var cacheItem = this._cacheItems[cacheIndex];
+        start = cacheItem['start'];
+        count = hostIndex = cacheItem['count'];
+      }
+
+      for (var i = start; i < gCookiesWindow._hostOrder.length; ++i) { // var host in gCookiesWindow._hosts) {
         var currHost = gCookiesWindow._hosts[gCookiesWindow._hostOrder[i]]; // gCookiesWindow._hosts[host];
         if (!currHost) continue;
         if (count == aIndex)
           return currHost;
         hostIndex = count;
+
+        var cacheEntry = { 'start' : i, 'count' : count };
+        var cacheStart = count;
+
         if (currHost.open) {
           if (count < aIndex && aIndex <= (count + currHost.cookies.length)) {
             // We are looking for an entry within this host's children, 
@@ -225,6 +240,10 @@ var gCookiesWindow = {
         }
         else
           ++count;
+
+        for (var j = cacheStart; j < count; j++)
+          this._cacheItems[j] = cacheEntry;
+        this._cacheValid = count - 1;
       }
       return null;
     },
@@ -239,6 +258,7 @@ var gCookiesWindow = {
       
       var item = this._getItemAtIndex(aIndex);
       if (!item) return;
+      this._invalidateCache(aIndex - 1);
       if (item.container)
         gCookiesWindow._hosts[item.rawHost] = null;
       else {
@@ -250,6 +270,11 @@ var gCookiesWindow = {
             parent.cookies.splice(i, removeCount);
         }
       }
+    },
+
+    _invalidateCache: function (aIndex)
+    {
+      this._cacheValid = Math.min(this._cacheValid, aIndex);
     },
     
     getCellText: function (aIndex, aColumn)
@@ -379,6 +404,7 @@ var gCookiesWindow = {
       if (!this._filtered) {
         var item = this._getItemAtIndex(aIndex);
         if (!item) return;
+        this._invalidateCache(aIndex);
         var multiplier = item.open ? -1 : 1;
         var delta = multiplier * item.cookies.length;
         this._rowCount += delta;
@@ -725,6 +751,7 @@ var gCookiesWindow = {
         this._view._filterSet.reverse();
     }
 
+    this._view._invalidateCache(0);
     this._view.selection.clearSelection();
     this._view.selection.select(0);
     this._tree.treeBoxObject.invalidate();
