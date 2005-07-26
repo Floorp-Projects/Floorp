@@ -46,5 +46,5 @@ interface nsISchemaDuration : nsISupports {
   PRUint32 getHours();
   PRUint32 getMinutes();
   PRUint32 getSeconds();
-  PRUint32 getFractionSeconds();
+  double getFractionSeconds();
 };

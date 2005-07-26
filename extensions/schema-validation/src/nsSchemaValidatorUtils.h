@@ -146,6 +146,9 @@ private:
   nsSchemaValidatorUtils();
   ~nsSchemaValidatorUtils();
 
+  static PRBool IsValidSchemaDouble(const nsAString & aNodeValue, double *aResult);
+  static PRBool IsValidSchemaDouble(const char* aString, double *aResult);
+
 protected:
 };
 

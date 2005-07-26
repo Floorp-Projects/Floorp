@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS1_CI(nsSchemaDuration, nsISchemaDuration)
 nsSchemaDuration::nsSchemaDuration(PRUint32 aYears, PRUint32 aMonths,
                                    PRUint32 aDays, PRUint32 aHours,
                                    PRUint32 aMinutes,  PRUint32 aSeconds,
-                                   PRUint32 aFractionalSeconds, PRBool aNegative)
+                                   double aFractionalSeconds, PRBool aNegative)
 {
   years = aYears;
   months = aMonths;
@@ -124,7 +124,7 @@ nsSchemaDuration::GetSeconds(PRUint32 *aResult)
 }
 
 NS_IMETHODIMP
-nsSchemaDuration::GetFractionSeconds(PRUint32 *aResult)
+nsSchemaDuration::GetFractionSeconds(double *aResult)
 {
   *aResult = fractional_seconds;
   return NS_OK;

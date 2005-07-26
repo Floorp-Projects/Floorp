@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Doron Rosenberg <doronr@us.ibm.com> (original author)
+ *   Laurent Jouanneau <laurent@xulfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,6 +55,7 @@
 #include "prlog.h"
 #include "prprf.h"
 #include "prtime.h"
+#include "prdtoa.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gSchemaValidationUtilsLog = PR_NewLogModule("schemaValidation");
@@ -76,7 +78,7 @@ nsSchemaValidatorUtils::IsValidSchemaInteger(const nsAString & aNodeValue,
 PRBool
 nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
 {
-  if (strlen(aString) == 0)
+  if (*aString == 0)
     return PR_FALSE;
 
   char * pEnd;
@@ -87,6 +89,31 @@ nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
 
   return (!((intValue == LONG_MAX || intValue == LONG_MIN) && errno == ERANGE))
          && *pEnd == '\0';
+}
+
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaDouble(const nsAString & aNodeValue,
+                                            double *aResult)
+{
+  return !aNodeValue.IsEmpty() &&
+         IsValidSchemaDouble(NS_ConvertUTF16toUTF8(aNodeValue).get(), aResult);
+}
+
+// overloaded, for char* rather than nsAString
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
+                                            double *aResult)
+{
+  if (*aString == 0)
+    return PR_FALSE;
+
+  char * pEnd;
+  double value = PR_strtod(aString, &pEnd);
+
+  if (aResult)
+    *aResult = value;
+
+  return (pEnd != aString);
 }
 
 PRBool
@@ -794,10 +821,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
       ++start;
   }
 
-  PRBool errorParsing = PR_FALSE;
-  PRUint32 length = aStrValue.Length();
-
-  nsAutoString parseBuffer, parseBuffer2;
+  nsAutoString parseBuffer;
   PRBool timeSeparatorFound = PR_FALSE;
 
   // designators may not repeat, so keep track of those we find.
@@ -815,7 +839,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
   PRUint32 hour = 0;
   PRUint32 minute = 0;
   PRUint32 second = 0;
-  PRUint32 fractionSecond = 0;
+  double fractionSecond = 0;
 
   /* durations look like this:
        (-)PnYnMnDTnHnMn(.n)S
@@ -830,7 +854,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
     currentChar = *start++;
     // not a number - so it has to be a type designator (YMDTHMS)
     // it can also be |.| for fractional seconds
-    if ((currentChar > '9') || (currentChar < '0')){
+    if ((currentChar > '9') || (currentChar < '0')) {
       // first check if the buffer is bigger than what long can store
       // which is 11 digits, as we convert to long
       if ((parseBuffer.Length() == 10) &&
@@ -894,14 +918,13 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
             state = 5;
             secondFound = PR_TRUE;
           }
-      } else if (currentChar == '.'){
+      } else if (currentChar == '.') {
         // fractional seconds
         if (fractionSecondFound) {
           done = PR_TRUE;
         } else {
-          parseBuffer2.Assign(parseBuffer);
-          parseBuffer.AssignLiteral("");
-          buffLength = 0;
+          parseBuffer.Append(currentChar);
+          buffLength++;
           fractionSecondFound = PR_TRUE;
         }
       } else {
@@ -956,7 +979,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
               hour = temp;
             break;
           }
-          
+
           case 4: {
             // minutes
             if (!IsValidSchemaInteger(parseBuffer, &temp))
@@ -969,15 +992,15 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
           case 5: {
             // seconds - we have to handle optional fraction seconds as well
             if (fractionSecondFound) {
-              long temp2;
-              if (!IsValidSchemaInteger(parseBuffer2, &temp) ||
-                  !IsValidSchemaInteger(parseBuffer, &temp2)) {
+              double temp2, intpart;
+
+              if (!IsValidSchemaDouble(parseBuffer, &temp2)) {
                 done = PR_TRUE;
               } else {
-                second = temp;
-                fractionSecond = temp2;
+                fractionSecond = modf(temp2, &intpart);
+                second = NS_STATIC_CAST(PRUint32, intpart);
               }
-            } else { 
+            } else {
               if (!IsValidSchemaInteger(parseBuffer, &temp))
                 done = PR_TRUE;
               else
@@ -988,9 +1011,12 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
         }
       }
 
-      // clear buffer
-      parseBuffer.AssignLiteral("");
-      buffLength = 0;
+      // clear buffer unless we are at fraction seconds, since we want to parse
+      // the seconds and fraction seconds into the same buffer.
+      if (!fractionSecondFound) {
+        parseBuffer.AssignLiteral("");
+        buffLength = 0;
+      }
     } else {
       if (buffLength > 11) {
         done = PR_TRUE;
@@ -1006,7 +1032,10 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
   }
 
   if (isValid) {
-    nsISchemaDuration* duration = new nsSchemaDuration(year, month, day, hour, minute, second, fractionSecond, isNegative);
+    nsISchemaDuration* duration = new nsSchemaDuration(year, month, day, hour,
+                                                       minute, second,
+                                                       fractionSecond,
+                                                       isNegative);
 
     *aDuration = duration;
     NS_IF_ADDREF(*aDuration);
@@ -1143,7 +1172,7 @@ int
 nsSchemaValidatorUtils::CompareDurations(nsISchemaDuration *aDuration1,
                                          nsISchemaDuration *aDuration2)
 {
-  int cmp, tmpcmp, i = 0;
+  int cmp = 0, tmpcmp, i = 0;
 
   PRTime foo;
   PRExplodedTime explodedTime, newTime1, newTime2;
@@ -1199,8 +1228,9 @@ nsSchemaValidatorUtils::AddDurationToDatetime(PRExplodedTime aDatetime,
    *      we can just add the duration's fraction second (stored as an float),
    *      which will be < 1.0.
    */
-  aDuration->GetFractionSeconds(&temp);
-  resultDatetime.tm_usec = temp * 1000000;
+  double dblValue;
+  aDuration->GetFractionSeconds(&dblValue);
+  resultDatetime.tm_usec = (int) dblValue * 1000000;
 
   // seconds
   aDuration->GetSeconds(&temp);

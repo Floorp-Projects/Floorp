@@ -60,7 +60,7 @@ public:
 
   nsSchemaDuration(PRUint32 aYears, PRUint32 aMonths, PRUint32 aDays,
                    PRUint32 aHours, PRUint32 aMinutes,  PRUint32 aSeconds,
-                   PRUint32 aFractionalSeconds,  PRBool aNegative);
+                   double aFractionalSeconds, PRBool aNegative);
 private:
   ~nsSchemaDuration();
   PRUint32 years;
@@ -69,7 +69,7 @@ private:
   PRUint32 hours;
   PRUint32 minutes;
   PRUint32 seconds;
-  PRUint32 fractional_seconds;
+  double fractional_seconds;
 
   PRBool negative;
 
