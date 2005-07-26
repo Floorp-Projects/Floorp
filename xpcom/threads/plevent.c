@@ -102,7 +102,10 @@
  * or paint events are starved, otherwise it will use a posted
  * WM_APP msg for PLEvent notification.
  */
+
+#ifndef WINCE
 #define USE_TIMER
+#endif
 
 /* Threshold defined in milliseconds for determining when the input
  * and paint events have been held in the WIN32 msg queue too long
