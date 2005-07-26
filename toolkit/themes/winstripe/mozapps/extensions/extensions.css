@@ -165,12 +165,7 @@ extension[loading="true"] .extension-badge {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 
-extension[availableUpdateURL="none"] .extension-install-button-box {
-  display: none;
-}
-
 .extension-install-button-box {
-  display: -moz-box;
   margin: 0px;
 }
 

@@ -19,3 +19,11 @@ extension[itemType="theme"][state="downloading"] {
   width: 0px;
 }
 
+extension[availableUpdateURL="none"] .extension-install-button-box {
+  display: none;
+}
+
+.extension-install-button-box {
+  display: -moz-box;
+}
+
