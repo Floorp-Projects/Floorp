@@ -22,4 +22,22 @@ function run_test() {
 
   for (var i = 0; i < 100; ++i)
     check_header(chan, "foopy" + i, i);
+
+  var x = false;
+  try {
+    chan.setRequestHeader("foo:py", "baz", false);
+  } catch (e) {
+    x = true;
+  }
+  if (!x)
+    do_throw("header with colon not rejected");
+
+  x = false;
+  try {
+    chan.setRequestHeader("foopy", "b\naz", false);
+  } catch (e) {
+    x = true;
+  }
+  if (!x)
+    do_throw("header value with newline not rejected");
 }
