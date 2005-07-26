@@ -147,6 +147,11 @@ GetActionForEvent(nsIDOMEvent* aEvent)
     if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB)
       return b ? eEventAction_ShiftTab : eEventAction_Tab;
 
+    PRUint32 charCode;
+    keyEvent->GetCharCode(&charCode);
+    if (charCode == ' ' || keyCode == nsIDOMKeyEvent::DOM_VK_SPACE)
+      return eEventAction_Propagate;
+
     if (b) return eEventAction_Suppress;
 
     for (PRUint32 i = 0; i < sizeof(kOKKeyCodes)/sizeof(kOKKeyCodes[0]); ++i) {
