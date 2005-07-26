@@ -40,4 +40,13 @@ function run_test() {
   }
   if (!x)
     do_throw("header value with newline not rejected");
+
+  x = false;
+  try {
+    chan.setRequestHeader("foopy\u0080", "baz", false);
+  } catch (e) {
+    x = true;
+  }
+  if (!x)
+    do_throw("header name with non-ASCII not rejected");
 }
