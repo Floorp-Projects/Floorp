@@ -133,7 +133,11 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsICharsetAlias.h"
 #include "nsIParser.h"
 
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
+
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 // Helper structs for the content->subdoc map
 
@@ -1050,7 +1054,7 @@ NS_IMETHODIMP
 nsDocument::GetLastModified(nsAString& aLastModified)
 {
   if (!mLastModified.IsEmpty()) {
-    CopyASCIItoUCS2(mLastModified, aLastModified);
+    aLastModified.Assign(mLastModified);
   } else {
     // If we for whatever reason failed to find the last modified time
     // (or even the current time), fall back to what NS4.x returned.
@@ -4504,11 +4508,14 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
   nsresult rv;
 
   if (httpChannel) {
+    nsCAutoString tmp;
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                        mLastModified);
+                                        tmp);
 
     if (NS_FAILED(rv)) {
       mLastModified.Truncate();
+    } else {
+      CopyASCIItoUTF16(tmp, mLastModified);
     }
 
     // The misspelled key 'referer' is as per the HTTP spec
@@ -4578,21 +4585,20 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 
   if (LL_NE(modDate, LL_ZERO)) {
     PRExplodedTime prtime;
-    char buf[100];
-
     PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
 
-    // Use '%#c' for windows, because '%c' is backward-compatible and
-    // non-y2k with msvc; '%#c' requests that a full year be used in the
-    // result string.  Other OSes just use "%c".
-    PR_FormatTime(buf, sizeof buf,
-#ifdef XP_WIN
-                  "%#c",
-#else
-                  "%c",
-#endif
-                  &prtime);
-    mLastModified.Assign(buf);
+    nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+                                  do_CreateInstance(kDateTimeFormatCID);
+    if (!dateFormatter)
+      return;
+
+    rv = dateFormatter->FormatPRExplodedTime(nsnull /* nsILocale* locale */,
+                                             kDateFormatLong,
+                                             kTimeFormatSeconds,
+                                             &prtime,
+                                             mLastModified);
+    if (NS_FAILED(rv))
+      mLastModified.Truncate();
   }
 }
 

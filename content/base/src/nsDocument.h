@@ -595,7 +595,7 @@ protected:
   virtual ~nsDocument();
 
   nsCString mReferrer;
-  nsCString mLastModified;
+  nsString mLastModified;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   nsVoidArray mCharSetObservers;
