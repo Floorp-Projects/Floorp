@@ -13,6 +13,8 @@
 <!ENTITY itemCache.accesskey          "a">
 <!ENTITY itemDownloads.label          "Download History">
 <!ENTITY itemDownloads.accesskey      "D">
+<!ENTITY itemSessions.label           "Authenticated Sessions">
+<!ENTITY itemSessions.accesskey       "S">
 
 <!ENTITY promptOnSanitize.label       "Ask me before Sanitizing &brandShortName;">
 <!ENTITY promptOnSanitize.accesskey   "k">

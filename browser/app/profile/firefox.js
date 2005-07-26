@@ -275,6 +275,7 @@ pref("privacy.item.downloads",  true);
 pref("privacy.item.cookies",    false);
 pref("privacy.item.cache",      true);
 pref("privacy.item.siteprefs",  false);
+pref("privacy.item.sessions",   true);
 
 pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.promptOnSanitize", true);
