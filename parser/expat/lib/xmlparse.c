@@ -1568,8 +1568,11 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
   }
 /* BEGIN MOZILLA CHANGE (Blocking parser) */
   else if (errorCode == XML_ERROR_SUSPENDED) {
+    int unparsed = bufferEnd - eventEndPtr;
     bufferPtr = eventPtr;
     parseEndPtr = eventEndPtr;
+    bufferEnd -= unparsed; /* Substract what we haven't parsed */
+    parseEndByteIndex -= unparsed;
     XmlUpdatePosition(encoding, positionPtr, eventEndPtr, &position);
     return XML_STATUS_ERROR;
   }
