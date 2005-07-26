@@ -158,6 +158,9 @@ NO_PKG_FILES += \
 	winEmbed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \
+	chrome/overlayinfo \
+	components/compreg.dat \
+	components/xpti.dat \
 	$(NULL)
 
 # browser/locales/Makefile uses this makefile for it's variable defs, but
