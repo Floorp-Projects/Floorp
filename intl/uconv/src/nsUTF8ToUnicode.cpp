@@ -76,11 +76,26 @@ nsUTF8ToUnicode::nsUTF8ToUnicode()
 //----------------------------------------------------------------------
 // Subclassing of nsTableDecoderSupport class [implementation]
 
+/**
+ * Normally the maximum length of the output of the UTF8 decoder in UTF16
+ *  code units is the same as the length of the input in UTF8 code units,
+ *  since 1-byte, 2-byte and 3-byte UTF-8 sequences decode to a single
+ *  UTF-16 character, and 4-byte UTF-8 sequences decode to a surrogate pair.
+ *
+ * However, there is an edge case where the output can be longer than the
+ *  input: if the previous buffer ended with an incomplete multi-byte
+ *  sequence and this buffer does not begin with a valid continuation
+ *  byte, we will return NS_ERROR_UNEXPECTED and the caller may insert a
+ *  replacement character in the output buffer which corresponds to no
+ *  character in the input buffer. So in the worst case the destination
+ *  will need to be one code unit longer than the source.
+ *  See bug 301797.
+ */
 NS_IMETHODIMP nsUTF8ToUnicode::GetMaxLength(const char * aSrc,
                                             PRInt32 aSrcLength,
                                             PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength;
+  *aDestLength = aSrcLength + 1;
   return NS_OK;
 }
 
