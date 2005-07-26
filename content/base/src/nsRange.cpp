@@ -1588,8 +1588,10 @@ nsresult nsRange::DeleteContents()
 
       node->GetParentNode(getter_AddRefs(parent));
 
-      res = parent->RemoveChild(node, getter_AddRefs(tmpNode));
-      if (NS_FAILED(res)) return res;
+      if (parent) {
+        res = parent->RemoveChild(node, getter_AddRefs(tmpNode));
+        if (NS_FAILED(res)) return res;
+      }
     }
   }
 
