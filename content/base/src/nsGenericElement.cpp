@@ -2764,7 +2764,10 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     nsIDocument *document = GetCurrentDoc();
     mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    PRBool hasListeners = 
+      HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED);
+
+    if (hasListeners) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, oldKid);
       mutation.mRelatedNode = do_QueryInterface(this);
 
@@ -2773,15 +2776,19 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
                              NS_EVENT_FLAG_INIT, &status);
     }
 
-    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
+    // Someone may have removed the kid while that event was processing...
+    if (!hasListeners ||
+        (oldKid->GetParent() == this && oldKid == GetChildAt(aIndex))) {
+      nsRange::OwnerChildRemoved(this, aIndex, oldKid);
 
-    mAttrsAndChildren.RemoveChildAt(aIndex);
+      mAttrsAndChildren.RemoveChildAt(aIndex);
 
-    if (aNotify && document) {
-      document->ContentRemoved(this, oldKid, aIndex);
-    }
+      if (aNotify && document) {
+        document->ContentRemoved(this, oldKid, aIndex);
+      }
     
-    oldKid->UnbindFromTree();
+      oldKid->UnbindFromTree();
+    }
   }
 
   return NS_OK;
