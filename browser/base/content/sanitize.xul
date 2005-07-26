@@ -130,6 +130,7 @@
       <preference id="privacy.item.downloads"             name="privacy.item.downloads"             type="bool" readonly="true"/>
       <preference id="privacy.item.cookies"               name="privacy.item.cookies"               type="bool" readonly="true"/>
       <preference id="privacy.item.cache"                 name="privacy.item.cache"                 type="bool" readonly="true"/>
+      <preference id="privacy.item.sessions"              name="privacy.item.sessions"              type="bool" readonly="true"/>
     </preferences>
     <preferences>
       <preference id="privacy.sanitize.promptOnSanitize"  name="privacy.sanitize.promptOnSanitize"  type="bool" instantApply="true"/>
@@ -155,6 +156,9 @@
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
       <checkbox label="&itemCache.label;" accesskey="&itemCache.accesskey;"
                 preference="privacy.item.cache"
+                onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
+      <checkbox label="&itemSessions.label;" accesskey="&itemSessions.accesskey;"
+                preference="privacy.item.sessions"
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
     </groupbox>
     
