@@ -10,6 +10,9 @@
 $clean = array();
 $sql = array();
 
+// Array to store our page information.
+$page = array();
+
 // Category.
 if (isset($_GET['cat'])&&ctype_digit($_GET['cat'])) {
     $clean['cat'] = intval($_GET['cat']);
@@ -53,7 +56,7 @@ if (isset($_GET['sort'])&&ctype_alpha($_GET['sort'])) {
 }
 
 // Starting point.
-$clean['left'] = (isset($_GET['left'])) ? intval($_GET['left']) : 0;
+$page['left'] = (isset($_GET['left'])) ? intval($_GET['left']) : 0;
 
 // Per page.
 $_GET['perpage'] = (isset($_GET['perpage'])) ? intval($_GET['perpage']) : null;
@@ -71,7 +74,7 @@ switch ($_GET['perpage']) {
 }
 
 // Ending point.
-$clean['right'] = $clean['left'] + $clean['perpage'];
+$page['right'] = $page['left'] + $clean['perpage'];
 
 
 // Prepared verified inputs for their destinations.
@@ -93,10 +96,10 @@ $dates = array(
 );
 
 $sort = array(
+    'newest' => 'Newest',
     'name'   => 'Name',
     'rating' => 'Rating',
-    'downloads' => 'Popularity',
-    'newest' => 'Newest'
+    'downloads' => 'Popularity'
 );
 
 $apps = array(
@@ -154,6 +157,10 @@ if (!empty($sql['q'])) {
     $where .= " main.Name LIKE '%{$sql['q']}%' AND ";
 }
 
+if (!empty($sql['type'])) {
+    $where .= " main.Type = '{$sql['type']}' AND ";
+}
+
 if (!empty($sql['date'])) {
     switch ($sql['date']) {
         case 'day':
@@ -180,8 +187,11 @@ if (!empty($sql['date'])) {
 
 if (!empty($sql['sort'])) {
     switch ($sql['sort']) {
-        case 'name':
+        case 'newest':
         default:
+            $orderby .= " main.DateUpdated DESC";
+            break;
+        case 'name':
             $orderby .= " main.Name ASC";
             break;
         case 'rating':
@@ -190,12 +200,9 @@ if (!empty($sql['sort'])) {
         case 'downloads':
             $orderby .= " main.TotalDownloads DESC";
             break;
-        case 'newest':
-            $orderby .= " main.DateUpdated DESC";
-            break;
     }
 } else {
-    $orderby .= " main.Name ASC ";
+    $orderby .= " main.DateUpdated DESC ";
 }
 
 $where .= ' 1 ';
@@ -207,35 +214,47 @@ $rawResults = array();
 
 $db->query($query, SQL_ALL);
 
+unset($select);
+unset($where);
+unset($orderby);
+unset($query);
+
 if (is_array($db->record)) {
     foreach ($db->record as $row) {
         $rawResults[] = $row[0]; 
     }
 }
 
-for ($i=$clean['left'];$i<$clean['right'];$i++) {
+for ($i=$page['left'];$i<$page['right'];$i++) {
     if (isset($rawResults[$i])) {
         $results[] = new Addon($rawResults[$i]);
     }
 }
 
 $resultCount = count($rawResults);
-if ($resultCount<$clean['right']) {
-    $clean['right'] = $resultCount;
+if ($resultCount<$page['right']) {
+    $page['right'] = $resultCount;
 }
 
-unset($select);
-unset($where);
-unset($orderby);
-unset($query);
+// Do we even have a next or previous page?
+$page['previous'] = ($page['left'] >= $clean['perpage']) ? $page['left']-$clean['perpage'] : null;
+$page['next'] = ($page['left']+$clean['perpage'] < $resultCount) ? $page['left']+$clean['perpage'] : null;
+$page['resultCount'] = $resultCount;
+$page['leftDisplay'] = $page['left']+1;
+
+// Build the URL based on passed arguments.
+foreach ($clean as $key=>$val) {
+    if (!empty($val)) {
+        $buf[] = $key.'='.$val;
+    }
+}
+$page['url'] = implode('&amp;',$buf);
+unset($buf);
 
 // Pass variables to template object.
 $tpl->assign(
     array(
-        'left'          => $clean['left']+1,
-        'right'         => $clean['right'],
-        'perpage'       => $clean['perpage'],
-        'resultcount'   => $resultCount,
+        'page'          => $page,
         'results'       => $results,
         'clean'         => $clean,
         'cats'          => $amo->Cats,

@@ -44,6 +44,8 @@ class AddOn extends AMO_Object
     // Preview information.
     var $PreviewID;
     var $PreviewURI;
+    var $PreviewHeight;
+    var $PreviewWidth;
     var $Caption;
     var $Previews = array(); // Store the information for previews
 
@@ -104,7 +106,14 @@ class AddOn extends AMO_Object
 
         if (!empty($this->db->record)) {
             $this->setVars($this->db->record);
+
+            if (file_exists(ROOT_PATH.$this->PreviewURI)) {
+                $size = getimagesize(ROOT_PATH.$this->PreviewURI);
+                $this->setVar('PreviewWidth',$size[0]);
+                $this->setVar('PreviewHeight',$size[1]);
+            }
         }
+
     }
 
     function getPreviews()
@@ -117,8 +126,7 @@ class AddOn extends AMO_Object
             FROM
                 previews
             WHERE
-                ID = {$this->ID} AND
-                preview = 'NO'
+                ID = {$this->ID}
             ORDER BY
                 PreviewID ASC
         ", SQL_NONE);
@@ -250,13 +258,16 @@ class AddOn extends AMO_Object
         // Gather addon categories.
         $this->db->query("
             SELECT DISTINCT
-                categories.CatName
+                categories.CatName,
+                categories.CategoryID
             FROM
                 categoryxref
             INNER JOIN categories ON categoryxref.CategoryID = categories.CategoryID 
             INNER JOIN main ON categoryxref.ID = main.ID
             WHERE
                 categoryxref.ID = {$this->ID}
+            GROUP BY
+                categories.CatName
             ORDER BY
                 categories.CatName
         ", SQL_ALL, SQL_ASSOC);

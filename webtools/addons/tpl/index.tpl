@@ -19,7 +19,7 @@
 </li>
 {/section}
 </ol>
-<p><strong><a href="./search.php?app={$app}&amp;cat=Newest">More ...</a></strong></p>
+<p><strong><a href="./search.php?app={$app}&amp;sort=newest">More ...</a></strong></p>
 
 <h2>Popular {$app} Extensions</h2>
 <ol class="popularlist">
@@ -29,7 +29,7 @@
 </li>
 {/section}
 </ol>
-<p><strong><a href="./search.php?app={$app}&amp;cat=Popular&amp;type=E">More ...</a></strong></p>
+<p><strong><a href="./search.php?app={$app}&amp;sort=popular&amp;type=E">More ...</a></strong></p>
 
 <h2>Popular {$app} Themes</h2>
 <ol class="popularlist">
@@ -37,7 +37,7 @@
 <li><a href="./addon.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].Rating} rating, {$popularThemes[pt].dc} downloads)</span> - {$popularThemes[pt].Description|escape} ...</li>
 {/section}
 </ol>
-<p><strong><a href="./search.php?app={$app}&amp;cat=Popular&amp;type=T">More ...</a></strong></p>
+<p><strong><a href="./search.php?app={$app}&amp;sort=popular&amp;type=T">More ...</a></strong></p>
 </div>
 <!-- end mainContent -->
 

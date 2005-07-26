@@ -77,6 +77,27 @@
     padding: 10px;
 }
 
+.pages {
+    color: #999;
+    font-weight: bold;
+    height: 2em;
+}
+
+.next {
+    border-left: 1px solid #000;
+    display: inline;
+    padding-left: 5px;
+}
+
+.prev {
+    display: inline;
+}
+
+.pages a {
+    color: blue;
+    text-decoration: none;
+}
+
 .popularlist {
 	font-size: 85%;
 }
@@ -211,6 +232,7 @@
     padding: 3px;
     padding-left: 10px;
     font-size: 8pt;
+    clear: right;
     color: #333;
 }
 

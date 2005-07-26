@@ -2,20 +2,21 @@
 
 <script type="text/javascript" src="/js/auto.js"></script>
 
+{if $addon->PreviewURI}
+<p class="screenshot">
+<a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">
+<img src="{$config.webpath}{$addon->PreviewURI}" height="{$addon->PreviewHeight}" width="{$addon->PreviewWidth}" alt="{$addon->Name} screenshot">
+</a>
+<strong><a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">More Previews &raquo;</a></strong>
+</p>
+{/if}
+
 <p class="first">
 <strong><a href="./addon.php?id={$addon->ID}">{$addon->Name} {$addon->Version}</a></strong>,
 by <a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a>,
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
-{if $addon->PreviewURI}
-<p class="screenshot">
-<a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">
-<img src="{$config.webpath}{$addon->PreviewURI}" alt="{$addon->Name} screenshot">
-</a>
-<strong><a href="./previews.php?id={$addon->ID}" title="See more {$addon->Name} previews.">More Previews &raquo;</a></strong>
-</p>
-{/if}
 
 <p>{$addon->Description}</p>
 

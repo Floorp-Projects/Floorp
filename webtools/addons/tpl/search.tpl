@@ -82,18 +82,47 @@
 <div id="mainContent">
 
 {if $results}
-<h2>Addon Search Results</h2>
-<p class="first">{$resultcount} Addons found.  Showing records {$left}-{$right}.</p>
+
+<h2>Addon Search Results - </h2>
+<p class="first"><b>{$page.resultCount}</b> Addons found.  Showing records <b>{$page.leftDisplay}-{$page.right}</b>. <em>Too many results?  Try narrowing your search.</em></p>
+
+<div class="pages">
+<div class="prev">
+{if $page.left}
+<a href="./search.php?{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+{else}
+&laquo; Previous Page
+{/if}
+</div>
+
+<div class="next">
+{if $page.next}
+<a href="./search.php?{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+{else}
+Next Page &raquo;
+{/if}
+</div>
+</div>
+
 {section name=r loop=$results}
 <div class="item">
     <div class="rating" title="4.67 Stars out of 5">Rating: {$results[r]->Rating}</div>
+    <h2 class="first"><a href="./addon.php?id={$results[r]->ID}">{$results[r]->Name} {$results[r]->Version}</a></h2>
 
-    <h2 class="first"><a href="./addon.php?id={$results[r]->ID}">{$results[r]->Name}</a></h2>
-    <p class="first">By <a href="author.php?id={$results[r]->UserID}">{$results[r]->UserName}</a></p>
+    {if $results[r]->PreviewURI}
+    <p class="screenshot">
+    <a href="./previews.php?id={$results[r]->ID}" title="See more {$results[r]->Name} previews.">
+    <img src="{$config.webpath}{$results[r]->PreviewURI}" height="{$results[r]->PreviewHeight}" width="{$results[r]->PreviewWidth}" alt="{$results[r]->Name} screenshot">
+    </a>
+    <strong><a href="./previews.php?id={$results[r]->ID}" title="See more {$results[r]->Name} previews.">More Previews &raquo;</a></strong>
+    </p>
+    {/if}
+
+    <p class="first">By <a href="./author.php?id={$results[r]->UserID}">{$results[r]->UserName}</a></p>
     <p class="first">{$results[r]->Description}</p>
     <div style="margin-top: 30px; height: 34px">
         <div class="iconbar">
-            <a href="{$results[r]->DownloadURI}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/img/default.png');">
+            <a href="{$results[r]->URI}" onclick="return install(event,'{$results[r]->Name}', '{$config.webpath}/img/default.png');">
             <img src="{$config.webpath}/img/download.png" height="32" width="32" title="Install {$results[r]->Name}" ALT="">Install</a><br>
             <span class="filesize">&nbsp;&nbsp;{$results[r]->Size} kb</span>
         </div>
@@ -104,9 +133,31 @@
     <div class="baseline">Last Update:  {$results[r]->DateUpdated|date_format} | Downloads Last 7 Days: {$results[r]->downloadcount} | Total Downloads: {$results[r]->TotalDownloads}</DIV>
 </div>
 {/section}
+
+
+<div class="pages">
+<div class="prev">
+{if $page.left}
+<a href="./search.php?{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
 {else}
-    <h2>Addon Search</h2>
-    <p class="first">There are currently no results.  Please use the options at the left to begin a search or try adjusting your search terms.</p>
+&laquo; Previous Page
+{/if}
+</div>
+
+<div class="next">
+{if $page.next}
+<a href="./search.php?{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+{else}
+Next Page &raquo;
+{/if}
+</div>
+</div>
+
+{else}
+
+<h2>Addon Search</h2>
+<p class="first">There are currently no results.  Please use the options at the left to begin a search or try adjusting your search terms.</p>
+
 {/if}
 
 </div>
