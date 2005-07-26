@@ -3500,7 +3500,7 @@ int TabBarVisiblePrefChangedCallback(const char* inPref, void* inBWC)
   if (strcmp(inPref, gTabBarVisiblePref) == 0) {
     BOOL newValue = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
     BrowserWindowController* bwc = (BrowserWindowController*)inBWC;
-    [bwc->mTabBrowser setBarAlwaysVisible:newValue];
+    [[bwc getTabBrowser] setBarAlwaysVisible:newValue];
   }
   return NS_OK;
 }
