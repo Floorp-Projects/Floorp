@@ -1899,7 +1899,8 @@ nsresult nsParseNewMailState::ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow
   nsresult rv = NS_OK;
   nsCOMPtr <nsIMsgIncomingServer> server;
 
-  for (PRInt32 i = 0; i < m_forwardTo.Count(); i++)
+  PRInt32 i;
+  for (i = 0; i < m_forwardTo.Count(); i++)
   {
     if (!m_forwardTo[i]->IsEmpty())
     {
