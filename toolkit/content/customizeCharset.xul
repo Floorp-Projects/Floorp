@@ -39,7 +39,6 @@
 #***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/arrow.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/customizeCharset.dtd">
 
@@ -48,8 +47,7 @@
         onload="Init();"
         ondialogaccept="return Save();"
         persist="width height"
-        headertitle="&left.header;"
-        width="500" height="394">
+        headertitle="&left.header;">
 
   <script type="application/x-javascript" src="chrome://global/content/customizeCharset.js"/>
   <script type="application/x-javascript">
@@ -62,42 +60,39 @@
   <!-- The two-pane -->
   <hbox flex="1">
     <vbox flex="1">
-      <label value="&additional.label;"/>
+      <label value="&additional.label;" control="available_charsets"/>
       <!-- Available Charsets Tree -->
       <listbox id="available_charsets" flex="1" seltype="multiple"
-            onselect="SelectAvailableCharset();" 
+            onfocus = "document.getElementById('active_charsets').clearSelection();"
+            onselect="update_buttons();"
             ondblclick="AddAvailableCharset();"/>
       
       <separator class="thin"/>
       
       <hbox align="center">
         <button id="add_button" oncommand="AddAvailableCharset();"
-                label="&add.label;" icon="add" disabled="true"/>
+                label="&add.label;" icon="add"  accesskey="&add.accessKey;"/>
       </hbox>
     </vbox>
     
     <separator orient="vertical"/>
     
     <vbox flex="1">
-      <label value="&current.label;"/>
+      <label value="&current.label;" control="active_charsets"/>
       <listbox id="active_charsets" flex="1" seltype="multiple"
-            onselect="SelectActiveCharset();"
+            onfocus = "document.getElementById('available_charsets').clearSelection();"
+            onselect="update_buttons();"
             ondblclick="RemoveActiveCharset();"/>
       
       <separator class="thin"/>
       <hbox align="center">
-        <button id="remove_button" oncommand="RemoveActiveCharset();"
-                disabled="true" icon="remove"
-                label="&remove.label;"/>
+        <button id="up_button" label="&moveUp.label;" icon="go-up"
+                accesskey="&moveUp.accessKey;" oncommand="MoveUp();"/>
+        <button id="down_button" label="&moveDown.label;" icon="go-down"
+                accesskey="&moveDown.accessKey;" oncommand="MoveDown();"/>
+        <button id="remove_button" oncommand="RemoveActiveCharset();" icon="remove"
+                label="&remove.label;" accesskey="&remove.accessKey;"/>
       </hbox>
     </vbox> 
-    <vbox>
-      <spacer flex="1"/>
-      <button id="up_button" class="up" disabled="true"
-              oncommand="MoveUp();"/>
-      <button id="down_button" class="down" disabled="true"
-              oncommand="MoveDown();"/>
-      <spacer flex="1"/>
-    </vbox>
   </hbox>
 </dialog>
