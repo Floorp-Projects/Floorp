@@ -1,3 +1,11 @@
+httpd:
+
+implement proxy inside httpd so that client can pass cookies to us and
+we can then do a more faithful (i.e. transparent) HTTP view
+
+perhaps have the proxy do some viewing too, like the "proxy" tool but
+with better presentation e.g. lists of links to all the sessions
+
 css:
 
 parse css for urls, etc

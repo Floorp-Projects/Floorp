@@ -167,6 +167,12 @@ cgiviewHTTPResponseHeaderValue(App *app, Buf *buf, unsigned char *url)
 	}
 }
 
+static void
+cgiviewPrintHTML(App *app, char *str)
+{
+	viewPrintHTML(app, str);
+}
+
 static HTTPNameValue *
 cgiviewGetEnv(App *app, char *referer, char *verbose, char **version)
 {
@@ -334,6 +340,7 @@ main(int argc, char *argv[])
 	app->httpResponseBody = cgiviewHTTPResponseBody;
 	app->httpResponseHeaderName = cgiviewHTTPResponseHeaderName;
 	app->httpResponseHeaderValue = cgiviewHTTPResponseHeaderValue;
+	app->printHTML = cgiviewPrintHTML;
 	view = &app->view;
 	view->out = stdout;
 	freopen("/dev/null", "w", stderr);

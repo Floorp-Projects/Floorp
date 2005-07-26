@@ -63,6 +63,7 @@ struct App
 	void	(*httpResponseHeaderValue)(App *app, Buf *buf,
 			unsigned char *url);
 
+	void	(*printHTML)(App *app, char *str);
 	void	(*status)(App *app, char *message, char *file, int line);
 	void	(*time)(App *app, int task, struct timeval *theTime);
 

@@ -105,6 +105,11 @@ appHTTPResponseHeaderValue(App *app, Buf *buf, unsigned char *url)
 }
 
 static void
+appPrintHTML(App *app, char *str)
+{
+}
+
+static void
 appStatus(App *app, char *message, char *file, int line)
 {
 }
@@ -132,6 +137,7 @@ App appDefault =
 	appHTTPResponseCharSet,
 	appHTTPResponseHeaderName,
 	appHTTPResponseHeaderValue,
+	appPrintHTML,
 	appStatus,
 	appTime
 };
