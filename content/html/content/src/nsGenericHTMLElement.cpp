@@ -85,7 +85,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
+#include "nsIScriptLoader.h"
 #include "nsRuleData.h"
 
 #include "nsPresState.h"
@@ -938,25 +938,21 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
 
-  nsIScriptContext *scx = nsnull;
+  // Strong ref since appendChild can fire events
+  nsCOMPtr<nsIScriptLoader> loader;
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
-    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-
-    if (sgo) {
-      scx = sgo->GetContext();
-
-      if (scx) {
-        scripts_enabled = scx->GetScriptsEnabled();
-      }
+    loader = doc->GetScriptLoader();
+    if (loader) {
+      loader->GetEnabled(&scripts_enabled);
     }
   }
 
   if (scripts_enabled) {
     // Don't let scripts execute while setting .innerHTML.
 
-    scx->SetScriptsEnabled(PR_FALSE, PR_FALSE);
+    loader->SetEnabled(PR_FALSE);
   }
 
   rv = nsrange->CreateContextualFragment(aInnerHTML, getter_AddRefs(df));
@@ -970,7 +966,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     // If we disabled scripts, re-enable them now that we're
     // done. Don't fire JS timeouts when enabling the context here.
 
-    scx->SetScriptsEnabled(PR_TRUE, PR_FALSE);
+    loader->SetEnabled(PR_TRUE);
   }
 
   return rv;
