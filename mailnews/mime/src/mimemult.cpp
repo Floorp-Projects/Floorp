@@ -264,9 +264,12 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
           if (detachingPart)
           {
             char *contentType = MimeHeaders_get(mult->hdrs, "Content-Type", PR_FALSE, PR_FALSE);
-            MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Type: "));
-            MimeWriteAString(obj, nsDependentCString(contentType));
-            PR_Free(contentType);
+            if (contentType)
+            {
+              MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Type: "));
+              MimeWriteAString(obj, nsDependentCString(contentType));
+              PR_Free(contentType);
+            }
             char *contentEncoding = MimeHeaders_get(mult->hdrs, "Content-Transfer-Encoding", PR_FALSE, PR_FALSE);
             if (contentEncoding)
             {
