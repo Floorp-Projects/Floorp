@@ -85,8 +85,22 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
   void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
   int temp1, temp2, temp3;
  
+#ifdef XP_MACOSX
+  unsigned int saved_esp;
+  __asm__ __volatile__(
+    "movl %%esp, %0\n\t"
+    : "=r"(saved_esp));
+#endif
+  
  __asm__ __volatile__(
     "subl  %8, %%esp\n\t" /* make room for params */
+#ifdef XP_MACOSX
+    /* the subl and the addl around the andl compensate for the push
+       of the this parameter below */
+    "subl $0x4, %%esp\n\t"
+    "andl $0xfffffff0, %%esp\n\t" /* make sure stack is 16-byte aligned */
+    "addl $0x4, %%esp\n\t"
+#endif
     "pushl %%esp\n\t"
     "pushl %7\n\t"
     "pushl %6\n\t"
@@ -127,8 +141,18 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
       "g" (n),              /* %8 */
       "0" (fn_copy)         /* %3 */
     : "memory"
+#ifdef XP_MACOSX
+      , "%esp"
+#endif 
     );
     
+#ifdef XP_MACOSX
+ __asm__ __volatile__(
+    "movl %0, %%esp\n\t"
+    :
+    : "r"(saved_esp));
+#endif 
+ 
   return result;
 
 #else
