@@ -841,6 +841,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSFunction *fun;
     JSString *str;
     JSBool ok;
+    JSBool inXML;
     jsval val;
     static const char catch_cookie[] = "/*CATCH*/";
     static const char with_cookie[] = "/*WITH*/";
@@ -898,6 +899,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     op = JSOP_NOP;
     sn = NULL;
     rval = NULL;
+    inXML = JS_FALSE;
 
     while (pc < endpc) {
         lastop = op;
@@ -925,9 +927,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (sn && SN_TYPE(sn) == SRC_ASSIGNOP) {
                     /* Print only the right operand of the assignment-op. */
                     todo = SprintPut(&ss->sprinter, rval, strlen(rval));
-                } else {
+                } else if (!inXML) {
                     todo = Sprint(&ss->sprinter, "%s %s %s",
                                   lval, cs->token, rval);
+                } else {
+                    /* In XML, just concatenate the two operands. */
+                    JS_ASSERT(op == JSOP_ADD);
+                    todo = Sprint(&ss->sprinter, "%s%s", lval, rval);
                 }
                 break;
 
@@ -2039,8 +2045,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_STRING)
-                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   (jschar)'"');
+                if (!inXML) {
+                    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
+                                       (jschar)'"');
+                } else {
+                    /* Don't quote strings in XML mode. */
+                    JSString *str = ATOM_TO_STRING(atom);
+                    todo = SprintPut(&ss->sprinter,
+                                     js_GetStringBytes(str),
+                                     JSSTRING_LENGTH(str));
+                    break;
+                }
                 if (!rval)
                     return JS_FALSE;
                 todo = STR2OFF(&ss->sprinter, rval);
@@ -2461,6 +2476,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
+              case JSOP_STARTXML:
+              case JSOP_JSEXPR:
+                inXML = op == JSOP_STARTXML; 
+                todo = -2;
+                break;
+
               case JSOP_DEFXMLNS:
                 rval = POP_STR();
                 js_printf(jp, "\t%s %s %s %s;\n",
@@ -2498,6 +2519,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_TOATTRVAL:
+                todo = -2;
                 break;
 
               case JSOP_ADDATTRNAME:
@@ -2524,11 +2546,21 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = POP_STR();
                 goto do_setlval;
 
-              case JSOP_XMLNAME:
-              case JSOP_XMLTAGEXPR:
               case JSOP_XMLELTEXPR:
+              case JSOP_XMLTAGEXPR:
+                saveop = op;
+                op = JSOP_NOP;
+                todo = Sprint(&ss->sprinter, "{%s}", POP_STR());
+                op = saveop;
+                inXML = JS_TRUE; /* we're done with the tag. */
+                break;
+
               case JSOP_TOXML:
               case JSOP_TOXMLLIST:
+                inXML = JS_FALSE;
+                /* fall through */
+
+              case JSOP_XMLNAME:
               case JSOP_FOREACH:
               case JSOP_FILTER:
                 /* Conversion and prefix ops do nothing in the decompiler. */

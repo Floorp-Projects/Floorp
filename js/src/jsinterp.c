@@ -5063,6 +5063,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             *result = POP_OPND();
             goto out;
 
+	  case JSOP_STARTXML:
+	  case JSOP_JSEXPR:
+	    break;
+
           case JSOP_TOXML:
             rval = FETCH_OPND(-1);
             SAVE_SP(fp);
