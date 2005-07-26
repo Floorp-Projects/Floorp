@@ -127,7 +127,7 @@ static PRBool IsValidToken(const nsCString &s)
     const char *end   = start + s.Length();
 
     for (; start != end; ++start)
-        if (*start > 127 || !kValidTokenMap[*start])
+        if (((unsigned char) *start) > 127 || !kValidTokenMap[*start])
             return PR_FALSE;
 
     return PR_TRUE;
