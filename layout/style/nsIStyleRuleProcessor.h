@@ -167,6 +167,8 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
  * Simple style sheets can and will act as their own processor. 
  * Sheets where rule ordering interlaces between multiple sheets, will need to 
  * share a single rule processor between them (CSS sheets do this for cascading order)
+ *
+ * @see nsIStyleRule (for significantly more detailed comments)
  */
 class nsIStyleRuleProcessor : public nsISupports {
 public:
@@ -176,16 +178,25 @@ public:
   //  nsCOMArray<nsIStyleRuleProcessor>::nsCOMArrayEnumFunc
   typedef PRBool (* PR_CALLBACK EnumFunc)(nsIStyleRuleProcessor*, void*);
 
-  // populate rule node tree with nsIStyleRule*
-  // rules are ordered, those with higher precedence are farthest from the root of the tree
+  /**
+   * Find the |nsIStyleRule|s matching the given content node and
+   * position the given |nsRuleWalker| at the |nsRuleNode| in the rule
+   * tree representing that ordered list of rules (with higher
+   * precedence being farther from the root of the lexicographic tree).
+   */
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData) = 0;
 
+  /**
+   * Just like the previous |RulesMatching|, except for a given content
+   * node <em>and pseudo-element</em>.
+   */
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData) = 0;
 
   /**
-   * Test whether style is dependent on content state.  This test is
-   * used for optimization only, and may err on the side of reporting
-   * more dependencies than really exist.
+   * Return how (as described by nsReStyleHint) style can depend on a
+   * change of the given content state on the given content node.  This
+   * test is used for optimization only, and may err on the side of
+   * reporting more dependencies than really exist.
    *
    * Event states are defined in nsIEventStateManager.h.
    */
@@ -193,9 +204,10 @@ public:
                                     nsReStyleHint* aResult) = 0;
 
   /**
-   * Test whether style is dependent the presence or value of an
-   * attribute.  This test is used for optimization only, and may err on
-   * the side of reporting more dependencies than really exist.
+   * Return how (as described by nsReStyleHint) style can depend on the
+   * presence or value of the given attribute for the given content
+   * node.  This test is used for optimization only, and may err on the
+   * side of reporting more dependencies than really exist.
    */
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult) = 0;
