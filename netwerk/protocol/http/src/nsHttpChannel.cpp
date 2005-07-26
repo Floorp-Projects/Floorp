@@ -86,6 +86,53 @@ static NS_METHOD DiscardSegments(nsIInputStream *input,
     return NS_OK;
 }
 
+//
+// From section 2.2 of RFC 2616, a token is defined as:
+//
+//   token          = 1*<any CHAR except CTLs or separators>
+//   CHAR           = <any US-ASCII character (octets 0 - 127)>
+//   separators     = "(" | ")" | "<" | ">" | "@"
+//                  | "," | ";" | ":" | "\" | <">
+//                  | "/" | "[" | "]" | "?" | "="
+//                  | "{" | "}" | SP | HT
+//   CTL            = <any US-ASCII control character
+//                    (octets 0 - 31) and DEL (127)>
+//   SP             = <US-ASCII SP, space (32)>
+//   HT             = <US-ASCII HT, horizontal-tab (9)>
+//
+static const char kValidTokenMap[128] = {
+    0, 0, 0, 0, 0, 0, 0, 0, //   0
+    0, 0, 0, 0, 0, 0, 0, 0, //   8
+    0, 0, 0, 0, 0, 0, 0, 0, //  16
+    0, 0, 0, 0, 0, 0, 0, 0, //  24
+
+    0, 1, 0, 1, 1, 1, 1, 1, //  32
+    0, 0, 1, 1, 0, 1, 1, 0, //  40
+    1, 1, 1, 1, 1, 1, 1, 1, //  48
+    1, 1, 0, 0, 0, 0, 0, 0, //  56
+
+    0, 1, 1, 1, 1, 1, 1, 1, //  64
+    1, 1, 1, 1, 1, 1, 1, 1, //  72
+    1, 1, 1, 1, 1, 1, 1, 1, //  80
+    1, 1, 1, 0, 0, 0, 1, 1, //  88
+
+    1, 1, 1, 1, 1, 1, 1, 1, //  96
+    1, 1, 1, 1, 1, 1, 1, 1, // 104
+    1, 1, 1, 1, 1, 1, 1, 1, // 112
+    1, 1, 1, 0, 1, 0, 1, 0  // 120
+};
+static PRBool IsValidToken(const nsCString &s)
+{
+    const char *start = s.get();
+    const char *end   = start + s.Length();
+
+    for (; start != end; ++start)
+        if (*start > 127 || !kValidTokenMap[*start])
+            return PR_FALSE;
+
+    return PR_TRUE;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <public>
 //-----------------------------------------------------------------------------
@@ -3305,7 +3352,13 @@ nsHttpChannel::SetRequestMethod(const nsACString &method)
 {
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
-    nsHttpAtom atom = nsHttp::ResolveAtom(method);
+    const nsCString &flatMethod = PromiseFlatCString(method);
+
+    // Method names are restricted to valid HTTP tokens.
+    if (!IsValidToken(flatMethod))
+        return NS_ERROR_INVALID_ARG;
+
+    nsHttpAtom atom = nsHttp::ResolveAtom(flatMethod.get());
     if (!atom)
         return NS_ERROR_FAILURE;
 
@@ -3480,16 +3533,31 @@ nsHttpChannel::SetRequestHeader(const nsACString &header,
 {
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
-    LOG(("nsHttpChannel::SetRequestHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
-        this, PromiseFlatCString(header).get(), PromiseFlatCString(value).get(), merge));
+    const nsCString &flatHeader = PromiseFlatCString(header);
+    const nsCString &flatValue  = PromiseFlatCString(value);
 
-    nsHttpAtom atom = nsHttp::ResolveAtom(header);
+    LOG(("nsHttpChannel::SetRequestHeader [this=%x header=\"%s\" value=\"%s\" merge=%u]\n",
+        this, flatHeader.get(), flatValue.get(), merge));
+
+    // Header names are restricted to valid HTTP tokens.
+    if (!IsValidToken(flatHeader))
+        return NS_ERROR_INVALID_ARG;
+    
+    // Header values MUST NOT contain line-breaks.  RFC 2616 technically
+    // permits CTL characters, including CR and LF, in header values provided
+    // they are quoted.  However, this can lead to problems if servers do not
+    // interpret quoted strings properly.  Disallowing CR and LF here seems
+    // reasonable and keeps things simple.
+    if (flatValue.FindCharInSet("\r\n\0") != kNotFound)
+        return NS_ERROR_INVALID_ARG;
+
+    nsHttpAtom atom = nsHttp::ResolveAtom(flatHeader.get());
     if (!atom) {
         NS_WARNING("failed to resolve atom");
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    return mRequestHead.SetHeader(atom, value, merge);
+    return mRequestHead.SetHeader(atom, flatValue, merge);
 }
 
 NS_IMETHODIMP
