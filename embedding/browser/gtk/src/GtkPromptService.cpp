@@ -75,6 +75,8 @@ GtkPromptService::AlertCheck(nsIDOMWindow* aParent,
                              const PRUnichar* aDialogText,
                              const PRUnichar* aCheckMsg, PRBool* aCheckValue)
 {
+    NS_ENSURE_ARG_POINTER(aCheckValue);
+
     EmbedPrompter prompter;
     prompter.SetTitle(aDialogTitle ? aDialogTitle : NS_LITERAL_STRING("Alert").get());
     prompter.SetMessageText(aDialogText);
@@ -109,6 +111,8 @@ GtkPromptService::ConfirmCheck(nsIDOMWindow* aParent,
                                const PRUnichar* aCheckMsg,
                                PRBool* aCheckValue, PRBool* aConfirm)
 {
+    NS_ENSURE_ARG_POINTER(aCheckValue);
+
     EmbedPrompter prompter;
     prompter.SetTitle(aDialogTitle ? aDialogTitle : NS_LITERAL_STRING("Confirm").get());
     prompter.SetMessageText(aDialogText);
@@ -171,10 +175,11 @@ GtkPromptService::Prompt(nsIDOMWindow* aParent, const PRUnichar* aDialogTitle,
     prompter.SetTitle(aDialogTitle ? aDialogTitle : NS_LITERAL_STRING("Prompt").get());
     prompter.SetMessageText(aDialogText);
     prompter.SetTextValue(*aValue);
-    if (aCheckMsg) {
+    if (aCheckMsg)
         prompter.SetCheckMessage(aCheckMsg);
+    if (aCheckValue)
         prompter.SetCheckValue(*aCheckValue);
-    }
+
     prompter.Create(EmbedPrompter::TYPE_PROMPT,
                     GetGtkWindowForDOMWindow(aParent));
     prompter.Run();
@@ -204,10 +209,11 @@ GtkPromptService::PromptUsernameAndPassword(nsIDOMWindow* aParent,
     prompter.SetMessageText(aDialogText);
     prompter.SetUser(*aUsername);
     prompter.SetPassword(*aPassword);
-    if (aCheckMsg) {
+    if (aCheckMsg)
         prompter.SetCheckMessage(aCheckMsg);
+    if (aCheckValue)
         prompter.SetCheckValue(*aCheckValue);
-    }
+
     prompter.Create(EmbedPrompter::TYPE_PROMPT_USER_PASS,
                     GetGtkWindowForDOMWindow(aParent));
     prompter.Run();
@@ -238,10 +244,11 @@ GtkPromptService::PromptPassword(nsIDOMWindow* aParent,
     prompter.SetTitle(aDialogTitle ? aDialogTitle : NS_LITERAL_STRING("Prompt").get());
     prompter.SetMessageText(aDialogText);
     prompter.SetPassword(*aPassword);
-    if (aCheckMsg) {
+    if (aCheckMsg)
         prompter.SetCheckMessage(aCheckMsg);
+    if (aCheckValue)
         prompter.SetCheckValue(*aCheckValue);
-    }
+
     prompter.Create(EmbedPrompter::TYPE_PROMPT_PASS,
                     GetGtkWindowForDOMWindow(aParent));
     prompter.Run();
