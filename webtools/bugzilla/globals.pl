@@ -825,7 +825,7 @@ sub quoteUrls {
                               "<a href=\"#c$4\">$1</a>")
               ~egox;
 
-    # Duplicate markers
+    # Old duplicate markers
     $text =~ s~(?<=^\*\*\*\ This\ bug\ has\ been\ marked\ as\ a\ duplicate\ of\ )
                (\d+)
                (?=\ \*\*\*\Z)

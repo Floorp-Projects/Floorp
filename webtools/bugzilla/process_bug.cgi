@@ -1044,7 +1044,7 @@ SWITCH: for ($cgi->param('knob')) {
         ChangeResolution('DUPLICATE');
         my $comment = $cgi->param('comment');
         $comment .= "\n\n*** This bug has been marked " .
-                    "as a duplicate of $duplicate ***";
+                    "as a duplicate of bug $duplicate ***";
         $cgi->param('comment', $comment);
         last SWITCH;
     };
