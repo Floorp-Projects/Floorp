@@ -11,6 +11,19 @@
     <resources>
       <stylesheet src="chrome://global/skin/tree.css"/>
     </resources>
+    <implementation>
+      <method name="_isAccelPressed">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+# Workaround until bug 302174 is fixed
+#ifdef XP_MACOSX
+          return aEvent.metaKey;
+#else
+          return aEvent.ctrlKey;
+#endif
+        ]]></body>       
+      </method>
+    </implementation>
   </binding>
 
   <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
@@ -290,7 +303,7 @@
       </handler>
       <handler event="keypress" keycode="vk_up" modifiers="accel any">
         <![CDATA[
-         if (event.ctrlKey && this.view.selection.single) {
+         if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(-1);
            return;
          }
@@ -298,7 +311,7 @@
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
-         if (!event.ctrlKey)
+         if (!this._isAccelPressed(event))
            this.view.selection.timedSelect(c - 1, this._selectDelay);
          else // Ctrl+Up moves the anchor without selecting
            this.currentIndex = c - 1;
@@ -307,7 +320,7 @@
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="accel any">
         <![CDATA[
-         if (event.ctrlKey && this.view.selection.single) {
+         if (this._isAccelPressed(event) && this.view.selection.single) {
            this.treeBoxObject.scrollByLines(1);
            return;
          }
@@ -316,7 +329,7 @@
             if (c+1 == this.view.rowCount)
               return;
          } catch (e) {}
-         if (!event.ctrlKey)
+         if (!this._isAccelPressed(event))
            this.view.selection.timedSelect(c+1, this._selectDelay);
          else // Ctrl+Down moves the anchor without selecting
            this.currentIndex = c + 1;
@@ -331,7 +344,8 @@
          if (c == -1 || c == 0)
            return;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c - 1, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, c - 1,
+                                          this._isAccelPressed(event));
          this.treeBoxObject.ensureRowIsVisible(c - 1);
         ]]>
       </handler>
@@ -345,13 +359,14 @@
               return;
          } catch (e) {}
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, c + 1, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, c + 1,
+                                          this._isAccelPressed(event));
          this.treeBoxObject.ensureRowIsVisible(c + 1);
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up" modifiers="accel any">
         <![CDATA[
-         if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
+         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(-1);
            return;
          }
@@ -373,7 +388,7 @@
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="accel any">
         <![CDATA[
-         if (this.pageUpOrDownMovesSelection == event.ctrlKey) {
+         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
            this.treeBoxObject.scrollByPages(1);
            return;
          }
@@ -413,7 +428,7 @@
            this.treeBoxObject.scrollByPages(-1);
          }
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="accel any, shift">
@@ -436,7 +451,7 @@
            this.treeBoxObject.scrollByPages(1);
          }
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, i, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
         ]]>
       </handler>
       <handler event="keypress" keycode="vk_home" modifiers="accel any">
@@ -444,7 +459,7 @@
           if (this.view.rowCount == 0)
            return;
          // Normal behaviour is to select the first row
-         if (!event.ctrlKey)
+         if (!this._isAccelPressed(event))
            this.view.selection.timedSelect(0, this._selectDelay);
          // In a multiselect tree Ctrl+Home moves the anchor
          else if (!this.view.selection.single)
@@ -458,7 +473,7 @@
          if (l < 0)
            return;
          // Normal behaviour is to select the last row
-         if (!event.ctrlKey)
+         if (!this._isAccelPressed(event))
            this.view.selection.timedSelect(l, this._selectDelay);
          // In a multiselect tree Ctrl+End moves the anchor
          else if (!this.view.selection.single)
@@ -471,7 +486,7 @@
          if (this.view.selection.single)
            return;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, 0, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, 0, this._isAccelPressed(event));
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
@@ -481,7 +496,7 @@
            return;
          var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
-         this.view.selection.rangedSelect(-1, l, event.ctrlKey);
+         this.view.selection.rangedSelect(-1, l, this._isAccelPressed(event));
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
@@ -489,12 +504,14 @@
         <![CDATA[
          var c = this.currentIndex;
          if (event.charCode == ' '.charCodeAt(0) && !this.view.selection.single) {
-           if (!this.view.selection.isSelected(c) || event.ctrlKey) {
+           if (!this.view.selection.isSelected(c) ||
+               this._isAccelPressed(event)) {
              this.view.selection.toggleSelect(c);
            }
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
-                  !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+                  !event.altKey && !this._isAccelPressed(event) &&
+                  !event.shiftKey && !event.metaKey) {
            var key = String.fromCharCode(event.charCode);
            key = key.toLowerCase();
            if (event.timeStamp - this._lastKeyTime > 1000)
@@ -596,7 +613,8 @@
            click, so that drags work correctly. -->
       <handler event="mousedown" clickcount="1">
       <![CDATA[
-         if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
+         if (((!this._isAccelPressed(event) ||
+             !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
              this.parentNode.view.selection.single) {
            var row = {};
@@ -659,7 +677,7 @@
         }
 
         if (! b.view.selection.single) {
-          var augment = event.ctrlKey || event.metaKey;
+          var augment = this._isAccelPressed(event);
           if (event.shiftKey) {
             b.view.selection.rangedSelect(-1, row.value, augment);
             b.ensureRowIsVisible(row.value);
