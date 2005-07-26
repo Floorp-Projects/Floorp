@@ -121,6 +121,10 @@ typedef void (*_sigsig)(int inSignal);
 
 #define _O_TEMPORARY    0x0040  // temporary file bit
 
+#define _O_CREAT        O_CREAT
+#define _O_TRUNC        O_TRUNC
+#define _O_WRONLY       O_WRONLY
+
 // From stdlib.h
 #define _MAX_DRIVE      MAX_PATH
 #define _MAX_DIR        MAX_PATH

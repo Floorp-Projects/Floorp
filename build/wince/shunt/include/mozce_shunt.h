@@ -68,6 +68,11 @@
 #endif
 #define mkdir		mozce_mkdir
 
+#ifdef _mkdir
+#undef _mkdir
+#endif
+#define _mkdir		mozce_mkdir
+
 #ifdef rmdir
 #undef rmdir
 #endif
@@ -213,6 +218,11 @@
 #endif
 #define rewind		mozce_rewind
 
+#ifdef fdopen
+#undef fdopen
+#endif
+#define	fdopen		mozce_fdopen
+
 #ifdef _fdopen
 #undef _fdopen
 #endif
@@ -248,6 +258,11 @@
 #undef open
 #endif
 #define open mozce_open
+
+#ifdef _open
+#undef _open
+#endif
+#define _open mozce_open
 
 #ifdef close
 #undef close
