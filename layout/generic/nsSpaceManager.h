@@ -281,6 +281,8 @@ public:
    */
   void ClearRegions();
 
+  PRBool HasAnyFloats() { return mFrameInfoMap != nsnull; }
+
   /**
    * Methods for dealing with the propagation of float damage during
    * reflow.
