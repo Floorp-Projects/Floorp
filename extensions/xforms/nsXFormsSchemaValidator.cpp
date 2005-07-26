@@ -159,6 +159,7 @@ nsXFormsSchemaValidator::IsValidSchemaYearMonthDuration(const nsAString & aValue
   if (NS_SUCCEEDED(rv)) {
     // check if no days/hours/minutes/seconds/fractionseconds were set
     PRUint32 temp;
+    double dbltemp;
     duration->GetDays(&temp);
 
     if (temp == 0) {
@@ -168,8 +169,8 @@ nsXFormsSchemaValidator::IsValidSchemaYearMonthDuration(const nsAString & aValue
         if (temp == 0) {
           duration->GetSeconds(&temp);
           if (temp == 0) {
-            duration->GetFractionSeconds(&temp);
-            if (temp == 0) {
+            duration->GetFractionSeconds(&dbltemp);
+            if (dbltemp == 0) {
               isValid = PR_TRUE;
             }
           }
