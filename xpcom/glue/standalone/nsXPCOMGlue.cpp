@@ -51,7 +51,7 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <mbstring.h>
-
+#include <malloc.h>
 #define snprintf _snprintf
 #endif
 
@@ -466,6 +466,27 @@ nsresult GRE_Startup()
         NS_WARNING("gre: XPCOMGlueStartup failed");
         return rv;
     }
+
+#ifdef XP_WIN
+    // On windows we have legacy GRE code that does not load the GRE dependent
+    // libs (seamonkey GRE, not libxul)... add the GRE to the PATH.
+    // See bug 301043.
+
+    char *lastSlash = strrchr(xpcomLocation, '\\');
+    if (lastSlash) {
+        int xpcomPathLen = lastSlash - xpcomLocation;
+        DWORD pathLen = GetEnvironmentVariable("PATH", nsnull, 0);
+
+        char *newPath = (char*) _alloca(xpcomPathLen + pathLen + 1);
+        strncpy(newPath, xpcomLocation, xpcomPathLen);
+        // in case GetEnvironmentVariable fails
+        newPath[xpcomPathLen] = ';';
+        newPath[xpcomPathLen + 1] = '\0';
+
+        GetEnvironmentVariable("PATH", newPath + xpcomPathLen + 1, pathLen);
+        SetEnvironmentVariable("PATH", newPath);
+    }
+#endif
 
     nsGREDirServiceProvider *provider = new nsGREDirServiceProvider();
     if ( !provider ) {
