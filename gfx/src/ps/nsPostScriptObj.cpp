@@ -227,20 +227,14 @@ nsPostScriptObj::~nsPostScriptObj()
   }
 
   if (nsnull != mPrintContext){
-    if (nsnull != mPrintContext->prInfo){
-      delete mPrintContext->prInfo;
-    }
-    if (nsnull != mPrintContext->prSetup){
-      delete mPrintContext->prSetup;
-    }
+    delete mPrintContext->prInfo;
+    delete mPrintContext->prSetup;
     delete mPrintContext;
     mPrintContext = nsnull;
   }
 
-  if (nsnull != mPrintSetup) {
-	  delete mPrintSetup;
-	  mPrintSetup = nsnull;
-  }
+  delete mPrintSetup;
+  mPrintSetup = nsnull;
 
   NS_IF_RELEASE(gPrefs);
 
@@ -434,10 +428,16 @@ nsPostScriptObj::write_prolog(FILE *aHandle, PRBool aFTPEnable)
   else
     orientation = "Portrait";
 
+  float fWidth = NSTwipsToFloatPoints(paper_width);
+  float fHeight = NSTwipsToFloatPoints(paper_height);
+
   fprintf(f, "%%!PS-Adobe-3.0\n");
   fprintf(f, "%%%%BoundingBox: 0 0 %s %s\n",
-    fpCString(NSTwipsToFloatPoints(paper_width)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_height)).get());
+    fpCString(NSToCoordRound(fWidth)).get(),
+    fpCString(NSToCoordRound(fHeight)).get());
+  fprintf(f, "%%%%HiResBoundingBox: 0 0 %s %s\n",
+    fpCString(fWidth).get(),
+    fpCString(fHeight).get());
 
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
