@@ -385,3 +385,9 @@ OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, 12,  JOF_UINT24
 OPDEF(JSOP_LITERAL,       189,"literal",    NULL,     4,  0,  1, 12,  JOF_UINT24)
 OPDEF(JSOP_FINDNAME,      190,"findname",   NULL,     4,  0,  2,  0,  JOF_UINT24)
 OPDEF(JSOP_LITOPX,        191,"litopx",     NULL,     5,  0,  0, 12,  JOF_LITOPX)
+
+/*
+ * Opcodes to help the decompiler deal with XML.
+ */
+OPDEF(JSOP_STARTXML,      192,"startxml",   NULL,     1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_JSEXPR,        193,"jsepxr",     NULL,     1,  0,  0,  0,  JOF_BYTE)

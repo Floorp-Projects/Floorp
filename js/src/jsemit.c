@@ -2818,7 +2818,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     intN noteIndex;
     JSSrcNoteType noteType;
     jsbytecode *pc;
-    JSOp op;
+    JSOp op, nextop;
     uint32 argc;
     int stackDummy;
 
@@ -4709,7 +4709,17 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         JS_ASSERT(pn->pn_type == TOK_XMLLIST || pn->pn_count != 0);
+        nextop = pn->pn_head->pn_type;
+        if (nextop != TOK_XMLPTAGC &&
+            nextop != TOK_XMLSTAGO &&
+            nextop != TOK_XMLETAGO && /* XXX can this happen? */
+            js_Emit1(cx, cg, JSOP_STARTXML) < 0) {
+            return JS_FALSE;
+        }
+
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (pn2->pn_type == TOK_LC && js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+                return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
@@ -4746,6 +4756,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       {
         uint32 i;
 
+        if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
+            return JS_FALSE;
+
         ale = js_IndexAtom(cx,
                            (pn->pn_type == TOK_XMLETAGO)
                            ? cx->runtime->atomState.etagoAtom
@@ -4757,12 +4770,18 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JS_ASSERT(pn->pn_count != 0);
         pn2 = pn->pn_head;
+        if (pn2->pn_type == TOK_LC && js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+            return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_ADD) < 0)
             return JS_FALSE;
 
         for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
+            if (pn2->pn_type == TOK_LC) {
+                if (!js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+                    return JS_FALSE;
+            }
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             if ((i & 1) && pn2->pn_type == TOK_LC) {
