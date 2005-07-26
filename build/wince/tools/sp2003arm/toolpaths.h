@@ -7,7 +7,7 @@
 #define WCE_INC   "c:/Program Files/Windows CE Tools/wce420/SMARTPHONE 2003/Include/Armv4/"
 #define WCE_LIB   "c:/Program Files/Windows CE Tools/wce420/SMARTPHONE 2003/Lib/Armv4/"
 
-#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/ARMV4Rel/"
+#define SHUNT_LIB TOPSRCDIR "/build/wince/shunt/build/ARMV4SmartPhone/"
 #define SHUNT_INC TOPSRCDIR "/build/wince/shunt/include/"
 
 #define ASM_PATH WCE_BIN "armasm.exe"
