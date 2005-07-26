@@ -83,7 +83,7 @@
 
 {if $results}
 
-<h2>Addon Search Results - </h2>
+<h2>Addon Search Results</h2>
 <p class="first"><b>{$page.resultCount}</b> Addons found.  Showing records <b>{$page.leftDisplay}-{$page.right}</b>. <em>Too many results?  Try narrowing your search.</em></p>
 
 <div class="pages">

@@ -36,7 +36,7 @@ $db->query("
         TM.ID id, 
         TM.Name name, 
         TM.Rating,
-        LEFT(TM.Description,255) as Description,
+        LEFT(TM.Description,96) as Description,
         TM.downloadcount dc
     FROM
         main TM
@@ -62,7 +62,7 @@ $db->query("
         TM.ID id, 
         TM.Name name, 
         TM.Rating,
-        LEFT(TM.Description,255) as Description,
+        LEFT(TM.Description,96) as Description,
         TM.downloadcount dc
     FROM
         main TM
@@ -89,7 +89,7 @@ $db->query("
         TM.Type,
         TM.Name,
         TM.Rating,
-        LEFT(TM.Description,255) as Description,
+        LEFT(TM.Description,96) as Description,
         MAX(TV.Version) Version,
         MAX(TV.DateAdded) DateAdded
     FROM  

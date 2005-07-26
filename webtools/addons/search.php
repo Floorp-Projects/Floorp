@@ -4,6 +4,7 @@
  *
  * @package amo
  * @subpackage docs
+ * @todo figure out why some addon listings have incorrect applications.
  */
 
 // Array to store clean inputs.
@@ -225,9 +226,15 @@ if (is_array($db->record)) {
     }
 }
 
-for ($i=$page['left'];$i<$page['right'];$i++) {
-    if (isset($rawResults[$i])) {
-        $results[] = new Addon($rawResults[$i]);
+// If we have only one result, redirect to the addon page.
+if ( count($rawResults) == 1) {
+    header('Location: https://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/addon.php?id='.$rawResults[0]);
+    exit;
+} else {
+    for ($i=$page['left'];$i<$page['right'];$i++) {
+        if (isset($rawResults[$i])) {
+            $results[] = new Addon($rawResults[$i]);
+        }
     }
 }
 
