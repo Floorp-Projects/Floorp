@@ -118,3 +118,12 @@ void CreateSplashScreen()
   CloseHandle(handle);
 }
 
+
+void GetScreenSize(unsigned long* x, unsigned long* y)
+{
+  RECT workarea;
+  SystemParametersInfo(SPI_GETWORKAREA, 0, &workarea, 0);
+
+  *x = workarea.right - workarea.left;
+  *y = workarea.bottom - workarea.top;
+}

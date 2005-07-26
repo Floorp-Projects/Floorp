@@ -98,5 +98,6 @@
 
 void CreateSplashScreen();
 void KillSplashScreen();
+void GetScreenSize(unsigned long* x, unsigned long* y);
 
 #endif // MINIMO_PRIVATE_H

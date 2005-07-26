@@ -94,11 +94,14 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
         
         nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
 
+        unsigned long x, y;
+        GetScreenSize(&x, &y);
+
         appShell->CreateTopLevelWindow(xulParent, 
                                        0, 
                                        aChromeFlags,
-                                       240, //XXXXXX
-                                       320 - 24 /* 24 is the height of the menubar */,
+                                       x,
+                                       y,
                                        mAppShell, 
                                        getter_AddRefs(newWindow));
     }
