@@ -64,7 +64,7 @@
  {0x9d, 0xaa, 0x91, 0xb6, 0x57, 0xeb, 0x31, 0x3c}}
 
 #define NS_MSGCOMPOSECONTENTHANDLER_CONTRACTID  \
-  NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-mailto"
+  NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-mailto"
 
 //
 // nsMsgCompose

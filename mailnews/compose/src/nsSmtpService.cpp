@@ -355,7 +355,7 @@ NS_IMETHODIMP nsSmtpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
   pipeOut->Close();
 
   return NS_NewInputStreamChannel(_retval, aURI, pipeIn,
-                                  NS_LITERAL_CSTRING("x-application-mailto"));
+                                  NS_LITERAL_CSTRING("application/x-mailto"));
 }
 
 

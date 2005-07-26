@@ -64,7 +64,7 @@ NS_IMETHODIMP nsMsgComposeContentHandler::HandleContent(const char * aContentTyp
     return NS_ERROR_NULL_POINTER;
 
   // First of all, get the content type and make sure it is a content type we know how to handle!
-  if (nsCRT::strcasecmp(aContentType, "x-application-mailto") == 0) {
+  if (nsCRT::strcasecmp(aContentType, "application/x-mailto") == 0) {
     nsCOMPtr<nsIURI> aUri;
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
     if(!aChannel) return NS_ERROR_FAILURE;
@@ -78,7 +78,7 @@ NS_IMETHODIMP nsMsgComposeContentHandler::HandleContent(const char * aContentTyp
         rv = composeService->OpenComposeWindowWithURI(nsnull, aUri);
     }
   } else {
-    // The content-type was not x-application-mailto...
+    // The content-type was not application/x-mailto...
     return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
