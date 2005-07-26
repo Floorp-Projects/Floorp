@@ -47,12 +47,22 @@
 #include "nsISupportsUtils.h"
 #include "nsLDAPBERValue.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage)
+
+NS_IMPL_THREADSAFE_ADDREF(nsLDAPMessage)
+NS_IMPL_THREADSAFE_RELEASE(nsLDAPMessage)
+NS_INTERFACE_MAP_BEGIN(nsLDAPMessage)
+  NS_INTERFACE_MAP_ENTRY(nsILDAPMessage)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsILDAPMessage)
+  NS_IMPL_QUERY_CLASSINFO(nsLDAPMessage)
+NS_INTERFACE_MAP_END_THREADSAFE
+NS_IMPL_CI_INTERFACE_GETTER1(nsLDAPMessage, nsILDAPMessage)
+
 
 // constructor
 //
 nsLDAPMessage::nsLDAPMessage() 
     : mMsgHandle(0),
+      mErrorCode(LDAP_SUCCESS),
       mMatchedDn(0),
       mErrorMessage(0),
       mReferrals(0),
@@ -603,7 +613,7 @@ nsLDAPMessage::GetBinaryValues(const char *aAttr, PRUint32 *aCount,
         NS_NEWXPCOM(berValue, nsLDAPBERValue);
         if (!berValue) {
             NS_ERROR("nsLDAPMessage::GetBinaryValues(): out of memory"
-                     " creating nsBERValue object");
+                     " creating nsLDAPBERValue object");
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             ldap_value_free_len(values);
             return NS_ERROR_OUT_OF_MEMORY;

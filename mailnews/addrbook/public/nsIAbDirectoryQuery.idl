@@ -81,8 +81,7 @@ interface nsIAbDirectoryQueryArguments : nsISupports
 
     /** 
      * A parameter which can be used to pass in data specific to a particular
-     * type of addressbook.  In particular, the LDAP addressbook will be
-     * passing in an nsIAbLDAPAttributeMap this way.
+     * type of addressbook.  
      */
     attribute nsISupports typeSpecificArg;
 };

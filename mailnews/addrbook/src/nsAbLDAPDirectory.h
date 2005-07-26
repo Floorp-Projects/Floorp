@@ -44,7 +44,8 @@
 #include "nsAbLDAPDirectoryQuery.h"
 #include "nsIAbDirectorySearch.h"
 #include "nsAbDirSearchListener.h"
-
+#include "nsIAbLDAPDirectory.h"
+#include "nsArray.h"
 #include "nsHashtable.h"
 
 class nsAbLDAPDirectory :
@@ -52,7 +53,8 @@ class nsAbLDAPDirectory :
     public nsAbDirProperty,            // nsIAbDirectory
     public nsAbLDAPDirectoryQuery,        // nsIAbDirectoryQuery
     public nsIAbDirectorySearch,
-    public nsAbDirSearchListenerContext
+    public nsAbDirSearchListenerContext,
+    public nsIAbLDAPDirectory
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -84,11 +86,19 @@ public:
     nsresult OnSearchFinished (PRInt32 result);
     nsresult OnSearchFoundCard (nsIAbCard* card);
 
+    NS_DECL_NSIABLDAPDIRECTORY
+
 protected:
+
+    // historically, these classes weren't always friends, but since they
+    // are now (and should be), code and interface contortions that are used
+    // can probably go away.
+    friend class nsAbLDAPDirectoryQuery;
+    friend class nsAbQueryLDAPMessageListener;
+
     nsresult Initiate ();
     nsresult InitiateConnection ();
 
-protected:
     PRPackedBool mInitialized;
     PRPackedBool mInitializedConnection;
     PRPackedBool mPerformingQuery;
@@ -101,6 +111,9 @@ protected:
     nsSupportsHashtable mCache;
 
     PRLock* mLock;
+
+    nsCOMPtr<nsIMutableArray> mSearchServerControls;
+    nsCOMPtr<nsIMutableArray> mSearchClientControls;
 };
 
 #endif

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * 
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -16,12 +16,12 @@
  * The Original Code is the mozilla.org LDAP XPCOM SDK.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Oracle Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dan Mosedale <dmose@netscape.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,37 +37,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsLDAPBERValue_h_
-#define _nsLDAPBERValue_h_
-
-#include "ldap.h"
+#include "nsILDAPControl.h"
+#include "nsCOMPtr.h"
 #include "nsILDAPBERValue.h"
+#include "nsString.h"
+#include "ldap.h"
 
-// 7c9fa10e-1dd2-11b2-a097-ac379e6803b2
-//
-#define NS_LDAPBERVALUE_CID \
-{ 0x7c9fa10e, 0x1dd2, 0x11b2, \
-  {0xa0, 0x97, 0xac, 0x37, 0x9e, 0x68, 0x03, 0xb2 }}
+// {5B608BBE-C0EA-4f74-B209-9CDCD79EC401}
+#define NS_LDAPCONTROL_CID \
+  { 0x5b608bbe, 0xc0ea, 0x4f74, \
+      { 0xb2, 0x9, 0x9c, 0xdc, 0xd7, 0x9e, 0xc4, 0x1 } }
 
-class nsLDAPBERValue : public nsILDAPBERValue
+class nsLDAPControl : public nsILDAPControl
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSILDAPBERVALUE
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSILDAPCONTROL
 
-    nsLDAPBERValue();
-    virtual ~nsLDAPBERValue();
-    
+  nsLDAPControl();
+
+  /**
+   * return a pointer to C-SDK compatible LDAPControl structure.  Note that
+   * this is allocated with NS_Alloc and must be freed with NS_Free, both by 
+   * ldap_control_free() and friends.
+   *
+   * @exception null pointer return if allocation failed
+   */
+  nsresult ToLDAPControl(LDAPControl **aControl);
+
+private:
+  ~nsLDAPControl();
+
 protected:
-
-    /** 
-     * nsLDAPControl needs to be able to grovel through this without an
-     * an extra copy
-     */
-    friend class nsLDAPControl;
-
-    PRUint8 *mValue;    // pointer to an array
-    PRUint32 mSize;	    // size of the value, in bytes
+  nsCOMPtr<nsILDAPBERValue> mValue;	// the value portion of this control
+  PRBool mIsCritical;      // should server abort if control not understood?
+  nsCString mOid;          // Object ID for this control
 };
-
-#endif // _nsLDAPBERValue_h_

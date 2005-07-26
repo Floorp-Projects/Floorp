@@ -223,7 +223,7 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
     nsresult rv = mQuery->GetOperation(getter_AddRefs(operation));
     if(operation && mState != kIdle)
     {
-        rv = operation->Abandon();
+        rv = operation->AbandonExt();
         if(NS_SUCCEEDED(rv))
             mState = kIdle;
     }

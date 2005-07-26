@@ -57,6 +57,7 @@
 #include "nsIDOMWindow.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsAbLDAPDirectory.h"
 
 class nsAbQueryLDAPMessageListener : public nsILDAPMessageListener
 {
@@ -241,7 +242,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
     else
     {
         if (mSearchOperation)
-            rv = mSearchOperation->Abandon ();
+            rv = mSearchOperation->AbandonExt ();
 
         rv = QueryResultStatus (nsnull, getter_AddRefs (queryResult), nsIAbDirectoryQueryResult::queryResultStopped);
         // reset because we might re-use this listener...except don't do this
@@ -497,6 +498,22 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
 
     CharPtrArrayGuard attributes;
     rv = mUrl->GetAttributes (attributes.GetSizeAddr (), attributes.GetArrayAddr ());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // I don't _think_ it's ever actually possible to get here without having
+    // an nsAbLDAPDirectory object, but, just in case, I'll do a QI instead
+    // of just static casts...
+    nsCOMPtr<nsIAbLDAPDirectory> nsIAbDir = 
+        do_QueryInterface(mDirectoryQuery, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAbLDAPDirectory *dir = 
+        NS_STATIC_CAST(nsAbLDAPDirectory *,
+                       NS_STATIC_CAST(nsIAbLDAPDirectory *, nsIAbDir.get()));
+
+    rv = mSearchOperation->SetServerControls(dir->mSearchServerControls.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mSearchOperation->SetClientControls(dir->mSearchClientControls.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mSearchOperation->SearchExt (dn, scope, filter,

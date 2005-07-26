@@ -77,7 +77,7 @@ nsAbLDAPDirectory::~nsAbLDAPDirectory()
         PR_DestroyLock (mLock);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsAbLDAPDirectory, nsAbDirectoryRDFResource, nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch)
+NS_IMPL_ISUPPORTS_INHERITED4(nsAbLDAPDirectory, nsAbDirectoryRDFResource, nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch, nsIAbLDAPDirectory)
 
 NS_IMETHODIMP nsAbLDAPDirectory::Init(const char* aURI)
 {
@@ -525,3 +525,30 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetSearchDuringLocalAutocomplete(PRBool *aSearc
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAbLDAPDirectory::GetSearchClientControls(nsIMutableArray **aControls)
+{
+    NS_IF_ADDREF(*aControls = mSearchClientControls);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbLDAPDirectory::SetSearchClientControls(nsIMutableArray *aControls)
+{
+    mSearchClientControls = aControls;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbLDAPDirectory::GetSearchServerControls(nsIMutableArray **aControls)
+{
+    NS_IF_ADDREF(*aControls = mSearchServerControls);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbLDAPDirectory::SetSearchServerControls(nsIMutableArray *aControls)
+{
+    mSearchServerControls = aControls;
+    return NS_OK;
+}

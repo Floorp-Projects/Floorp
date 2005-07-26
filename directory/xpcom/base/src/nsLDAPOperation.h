@@ -46,6 +46,7 @@
 #include "nsILDAPOperation.h"
 #include "nsILDAPMessageListener.h"
 #include "nsString.h"
+#include "nsIArray.h"
 
 // 97a479d0-9a44-47c6-a17a-87f9b00294bb
 #define NS_LDAPOPERATION_CID \
@@ -69,28 +70,6 @@ class nsLDAPOperation : public nsILDAPOperation
      */
     void Clear();
   protected:
-    /**
-     * wrapper for ldap_search_ext()
-     *
-     * XXX should move to idl, once LDAPControls have an IDL representation
-     */
-    int SearchExt(const nsACString& base, // base DN to search
-                  int scope, // SCOPE_{BASE,ONELEVEL,SUBTREE}
-                  const nsACString& filter, // search filter
-                  char **attrs, // attribute types to be returned
-                  int attrsOnly, // attrs only, or values too?
-                  LDAPControl **serverctrls, 
-                  LDAPControl **clientctrls,
-                  struct timeval *timeoutp, // how long to wait
-                  int sizelimit); // max # of entries to return
-
-    /** 
-     * wrapper for ldap_abandon_ext().
-     *
-     * XXX should move to idl, once LDAPControls have an IDL representation
-     */
-    nsresult AbandonExt(LDAPControl **serverctrls, LDAPControl **clientctrls);
-
 
     nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here
     nsCOMPtr<nsISupports> mClosure;  // private parameter (anything caller desires)
@@ -99,6 +78,9 @@ class nsLDAPOperation : public nsILDAPOperation
     LDAP *mConnectionHandle; // cache connection handle
     nsCString mSavePassword;
     PRInt32 mMsgID;          // opaque handle to outbound message for this op
+
+    nsCOMPtr<nsIMutableArray> mClientControls;
+    nsCOMPtr<nsIMutableArray> mServerControls;
 };
 
 #endif // _nsLDAPOperation_h

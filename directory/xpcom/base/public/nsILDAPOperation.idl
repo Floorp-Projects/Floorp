@@ -42,10 +42,13 @@
 
 interface nsILDAPMessage;
 interface nsILDAPMessageListener;
+interface nsIMutableArray;
+
+// XXXdmose check to make sure ctl-related err codes documented
 
 typedef PRUint32 PRIntervalTime;
 
-[scriptable, uuid(fd3d413b-14b0-49c4-8348-a4fc0edba9ff)]
+[scriptable, uuid(51f3b2f3-1f22-4fa8-9836-2e30e1471bff)]
 interface nsILDAPOperation : nsISupports
 {
     /**
@@ -80,6 +83,14 @@ interface nsILDAPOperation : nsISupports
      * No time and/or size limit specified
      */
     const long NO_LIMIT = 0;
+
+    /**
+     * If specified, these arrays of nsILDAPControls are passed into the LDAP
+     * C SDK for any extended operations (ie method calls on this interface
+     * ending in "Ext").
+     */
+    attribute nsIMutableArray serverControls;
+    attribute nsIMutableArray clientControls;
 
     /**
      * Initializes this operation.  Must be called prior to initiating
@@ -122,7 +133,7 @@ interface nsILDAPOperation : nsISupports
      * @param aScope            One of SCOPE_{BASE,ONELEVEL,SUBTREE}
      * @param aFilter           Search filter
      * @param aAttrCount        Number of attributes we request (0 for all)
-     * @param aAttributes       Array of strings, holding the attributes we need
+     * @param aAttributes       Array of strings, holding the attrs we need
      * @param aTimeOut          How long to wait
      * @param aSizeLimit        Maximum number of entries to return.
      *
@@ -133,8 +144,7 @@ interface nsILDAPOperation : nsISupports
      * @exception NS_ERROR_INVALID_ARG
      * @exception NS_ERROR_LDAP_NOT_SUPPORTED
      * @exception NS_ERROR_LDAP_FILTER_ERROR
-     *
-     * XXX doesn't currently handle LDAPControl params
+     * @exception NS_ERROR_UNEXPECTED
      */
     void searchExt(in AUTF8String aBaseDn, in PRInt32 aScope,
                    in AUTF8String aFilter, in unsigned long aAttrCount,
@@ -144,6 +154,10 @@ interface nsILDAPOperation : nsISupports
     /**  
      * Cancels an async operation that is in progress.
      *
+     * XXX controls not supported yet
+     *
+     * @exception NS_ERROR_NOT_IMPLEMENTED      server or client controls
+     *                                          were set on this object
      * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
      * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
      * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
@@ -153,5 +167,5 @@ interface nsILDAPOperation : nsISupports
      * @exception NS_ERROR_INVALID_ARG          invalid argument
      * @exception NS_ERROR_UNEXPECTED           internal error
      */
-    void abandon();
+    void abandonExt();
 };

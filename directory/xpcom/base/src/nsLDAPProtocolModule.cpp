@@ -46,6 +46,9 @@
 #include "nsLDAPServer.h"
 #include "nsLDAPService.h"
 #include "nsLDAPBERValue.h"
+#include "nsLDAPBERElement.h"
+#include "nsLDAPControl.h"
+
 #include "ldappr.h"
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
@@ -62,23 +65,48 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPURL, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPBERValue)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPBERElement)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPControl)
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler)
 #endif
+
+NS_DECL_CLASSINFO(nsLDAPMessage)
+NS_DECL_CLASSINFO(nsLDAPOperation)
+NS_DECL_CLASSINFO(nsLDAPConnection)
 
 // a table of the CIDs implemented by this module
 //
 static const nsModuleComponentInfo components[] =
 {
     { "LDAP Connection", NS_LDAPCONNECTION_CID,
-          "@mozilla.org/network/ldap-connection;1", 
-          nsLDAPConnectionConstructor },
+      "@mozilla.org/network/ldap-connection;1", nsLDAPConnectionConstructor,
+      nsnull, // no registration callback
+      nsnull, // no unregistration callback
+      nsnull, // no destruction callback
+      NS_CI_INTERFACE_GETTER_NAME(nsLDAPConnection),
+      nsnull, // no language helper
+      &NS_CLASSINFO_NAME(nsLDAPConnection),
+      nsIClassInfo::THREADSAFE},
     { "LDAP Operation", NS_LDAPOPERATION_CID,
-          "@mozilla.org/network/ldap-operation;1", 
-          nsLDAPOperationConstructor },
+      "@mozilla.org/network/ldap-operation;1", nsLDAPOperationConstructor,
+      nsnull, // no registration callback
+      nsnull, // no unregistration callback
+      nsnull, // no destruction callback
+      NS_CI_INTERFACE_GETTER_NAME(nsLDAPOperation),
+      nsnull, // no language helper
+      &NS_CLASSINFO_NAME(nsLDAPOperation),
+      nsIClassInfo::THREADSAFE},
     { "LDAP Message", NS_LDAPMESSAGE_CID,
-          "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
+      "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor,
+      nsnull, // no registration callback
+      nsnull, // no unregistration callback
+      nsnull, // no destruction callback
+      NS_CI_INTERFACE_GETTER_NAME(nsLDAPMessage),
+      nsnull, // no language helper
+      &NS_CLASSINFO_NAME(nsLDAPMessage),
+      nsIClassInfo::THREADSAFE },
     { "LDAP Server", NS_LDAPSERVER_CID,
           "@mozilla.org/network/ldap-server;1", nsLDAPServerConstructor },
     { "LDAP Service", NS_LDAPSERVICE_CID,
@@ -91,7 +119,11 @@ static const nsModuleComponentInfo components[] =
     { "LDAP URL", NS_LDAPURL_CID,
           "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor },
     { "LDAP BER Value", NS_LDAPBERVALUE_CID,
-          "@mozilla.org/network/ldap-ber-value;1", nsLDAPBERValueConstructor }
+      "@mozilla.org/network/ldap-ber-value;1", nsLDAPBERValueConstructor },
+    { "LDAP BER Element", NS_LDAPBERELEMENT_CID,
+      "@mozilla.org/network/ldap-ber-element;1", nsLDAPBERElementConstructor },
+    { "LDAP Control", NS_LDAPCONTROL_CID,
+      "@mozilla.org/network/ldap-control;1", nsLDAPControlConstructor}
 };
 
 PR_STATIC_CALLBACK(nsresult)

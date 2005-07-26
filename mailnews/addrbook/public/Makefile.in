@@ -79,6 +79,7 @@ XPIDLSRCS       += \
                 nsIAbLDAPReplicationQuery.idl \
                 nsIAbLDAPReplicationData.idl \
 		nsIAbLDAPAttributeMap.idl \
+		nsIAbLDAPDirectory.idl \
 		$(NULL)
 endif
 

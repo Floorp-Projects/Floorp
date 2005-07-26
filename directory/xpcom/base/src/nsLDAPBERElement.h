@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * 
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -16,12 +16,12 @@
  * The Original Code is the mozilla.org LDAP XPCOM SDK.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Oracle Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Dan Mosedale <dmose@netscape.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,37 +37,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsLDAPBERValue_h_
-#define _nsLDAPBERValue_h_
+#include "lber.h"
+#include "nsILDAPBERElement.h"
 
-#include "ldap.h"
-#include "nsILDAPBERValue.h"
+// 070af769-b7f5-40e7-81be-196155ead84c
+#define NS_LDAPBERELEMENT_CID \
+  { 0x070af769, 0xb7f5, 0x40e7, \
+      { 0x81, 0xbe, 0x19, 0x61, 0x55, 0xea, 0xd8, 0x4c }}
 
-// 7c9fa10e-1dd2-11b2-a097-ac379e6803b2
-//
-#define NS_LDAPBERVALUE_CID \
-{ 0x7c9fa10e, 0x1dd2, 0x11b2, \
-  {0xa0, 0x97, 0xac, 0x37, 0x9e, 0x68, 0x03, 0xb2 }}
-
-class nsLDAPBERValue : public nsILDAPBERValue
+class nsLDAPBERElement : public nsILDAPBERElement
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSILDAPBERVALUE
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSILDAPBERELEMENT
 
-    nsLDAPBERValue();
-    virtual ~nsLDAPBERValue();
-    
+  nsLDAPBERElement();
+
+private:
+  ~nsLDAPBERElement();
+
+  BerElement *mElement;
+
 protected:
-
-    /** 
-     * nsLDAPControl needs to be able to grovel through this without an
-     * an extra copy
-     */
-    friend class nsLDAPControl;
-
-    PRUint8 *mValue;    // pointer to an array
-    PRUint32 mSize;	    // size of the value, in bytes
 };
 
-#endif // _nsLDAPBERValue_h_

@@ -44,12 +44,13 @@
 interface nsILDAPURL;   
 interface nsILDAPAutoCompFormatter;
 interface nsIAuthPrompt;
+interface nsIMutableArray;
 
 /**
  * Extends nsIAutoCompleteSession to have various LDAP-specific parameters.
  * and output format.
  */
-[scriptable, uuid(82b6a78e-1dd2-11b2-a3d0-876e20e7b350)]
+[scriptable, uuid(e7f26534-f96c-4c87-803c-30cdf0bc2973)]
 interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
 
     /**
@@ -138,4 +139,11 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * @exception NS_ERROR_NULL_POINTER   null pointer passed to getter
      */
     attribute unsigned long version;
+
+    /**
+     * If set, these arrays of nsILDAPControls are passed through to the
+     * nsILDAPOperation that searchExt is called on.
+     */
+    attribute nsIMutableArray searchServerControls;
+    attribute nsIMutableArray searchClientControls;
 };
