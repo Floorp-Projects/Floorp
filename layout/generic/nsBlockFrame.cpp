@@ -3667,6 +3667,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
   PRInt32 spins = 0;
 #endif
   PRUint8 lineReflowStatus = LINE_REFLOW_REDO;
+  PRBool didRedo = PR_FALSE;
   do {
     // Once upon a time we allocated the first 30 nsLineLayout objects
     // on the stack, and then we switched to the heap.  At that time
@@ -3685,6 +3686,10 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                               aKeepReflowGoing, &lineReflowStatus,
                               aUpdateMaximumWidth, aDamageDirtyArea);
     lineLayout.EndLineReflow();
+    
+    if (LINE_REFLOW_REDO == lineReflowStatus) {
+      didRedo = PR_TRUE;
+    }
 
 #ifdef DEBUG
     spins++;
@@ -3696,6 +3701,12 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
 #endif
 
   } while (NS_SUCCEEDED(rv) && LINE_REFLOW_REDO == lineReflowStatus);
+
+  // If we did at least one REDO, then the line did not fit next to some float.
+  // Mark it as impacted by a float, even if it no longer is next to a float.
+  if (didRedo) {
+    aLine->SetLineIsImpactedByFloat(PR_TRUE);
+  }
 
   return rv;
 }
