@@ -144,8 +144,9 @@
               val.selected = true;
               this.scrollBoxObject.ensureElementIsVisible(val);
               this.fireActiveItemEvent();
-              this._fireOnSelect();
             }
+
+            this._fireOnSelect();
           ]]>
         </setter>
       </property>
