@@ -129,14 +129,14 @@
           <vbox>
             <label>&softwareupdateinfo.label;</label>
             <separator class="thin"/>
-            <vbox align="start">
+            <vbox align="start" class="updateControls">
               <checkbox id="enableAppUpdate"
                         label="&enableAppUpdate.label;"
                         accesskey="&enableAppUpdate.accesskey;"
                         preference="app.update.enabled"
                         onsyncfrompreference="return gAdvancedPane.updateAppUpdateUI();"/>
-              <vbox class="indent" align="start">
-                <hbox>
+              <vbox class="indent">
+                <hbox align="center">
                   <checkbox id="enableAutoInstall"
                             label="&enableAutoInstall.label;"
                             accesskey="&enableAutoInstall.accesskey;"
@@ -147,7 +147,6 @@
                           label="&autoInstallOptions.label;" accesskey="&autoInstallOptions.accesskey;"
                           oncommand="gAdvancedPane.showAutoInstallOptions();"/>
                 </hbox>
-                <separator class="thin"/>
                 <hbox>
                   <button id="checkNowButton" 
                           label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
@@ -158,12 +157,11 @@
               </vbox>
             </vbox>
             <separator/>
-            <vbox align="start">
+            <vbox align="start" class="updateControls">
               <checkbox id="enableExtensionUpdate"
                         label="&enableExtensionUpdate.label;"
                         accesskey="&enableExtensionUpdate.accesskey;"
                         preference="extensions.update.autoUpdateEnabled"/>      
-              <separator class="thin"/>
               <hbox class="indent">
                 <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
                         oncommand="gAdvancedPane.checkForAddonUpdates();"

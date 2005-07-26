@@ -206,3 +206,14 @@ caption {
   padding: 0;
 }
 
+/**
+ * Update Preferences
+ */
+#autoInstallOptions {
+  -moz-margin-start: 20px;
+}
+
+.updateControls {
+  -moz-margin-start: 10px;
+}
+

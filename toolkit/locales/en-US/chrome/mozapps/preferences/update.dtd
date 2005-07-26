@@ -1,6 +1,6 @@
 <!ENTITY update.title                   "Automatic Update">
 <!ENTITY window.width                   "30em">
-<!ENTITY window.height                  "25em">
+<!ENTITY window.height                  "27em">
 
 <!ENTITY update.intro                   "Automatically download and install updates for:">
 

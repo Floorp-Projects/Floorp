@@ -2340,7 +2340,7 @@ UpdatePrompt.prototype = {
       win.focus();
     }
     else {
-      var openFeatures = "chrome,centerscreen,dialog";
+      var openFeatures = "chrome,centerscreen,dialog=no,resizable=no,titlebar,toolbar=no";
       if (features)
         openFeatures += "," + features;
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]

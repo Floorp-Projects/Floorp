@@ -109,19 +109,20 @@
             </vbox>
           </hbox>
           <link id="updateMoreInfoURL">
-            <label>&clickHere.label;</label>
+            <label id="updateMoreInfoURLLabel">&clickHere.label;</label>
           </link>
         </vbox>
       </deck>
       <separator flex="1"/>
     </vbox>    
-    <separator class="groove"/>
+    <separator id="separatorGroove" class="groove"/>
     <hbox id="installButtons">
       <button id="downloadLater" label="&later.label;" accesskey="&later.accesskey;"
               oncommand="gUpdatesAvailablePage.onInstallLater();"/>
       <spacer flex="1"/>
       <button id="downloadNow" label="&download.label;" accesskey="&download.accesskey;"
-              oncommand="gUpdatesAvailablePage.onInstallNow();"/>
+              oncommand="gUpdatesAvailablePage.onInstallNow();"
+              default="true"/>
     </hbox>
   </wizardpage>
   
@@ -145,7 +146,7 @@
       </link>
     </hbox>
     <progressmeter id="downloadProgress" mode="undetermined"/>
-    <hbox align="start">
+    <hbox id="downloadStatusLine">
       <image id="downloadThrobber"/>
       <description id="downloadStatus" flex="1">&connecting.label;</description>
       <button id="pauseButton" oncommand="gDownloadingPage.onPause();" 
