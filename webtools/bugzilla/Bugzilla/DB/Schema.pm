@@ -72,6 +72,7 @@ module directly, but should instead rely on methods provided by
 Bugzilla::DB.
 
 =cut
+
 #--------------------------------------------------------------------------
 # Define the Bugzilla abstract database schema and version as constants.
 
@@ -1032,12 +1033,12 @@ DB-specific code in a subclass. Methods which are prefixed with C<_>
 are considered protected. Subclasses may override these methods, but
 other modules should not invoke these methods directly.
 
-=over 4
-
 =cut
 
 #--------------------------------------------------------------------------
 sub new {
+
+=over
 
 =item C<new>
 
@@ -1383,6 +1384,7 @@ sub get_add_column_ddl {
  Returns:     An array of SQL statements.
 
 =cut
+
     my ($self, $table, $column, $definition, $init_value) = @_;
     my @statements;
     push(@statements, "ALTER TABLE $table ADD COLUMN $column " .
@@ -1565,6 +1567,7 @@ sub get_drop_index_ddl {
  Returns:     An array of SQL statements.
 
 =cut
+
     my ($self, $table, $name) = @_;
 
     # Although ANSI SQL-92 doesn't specify a method of dropping an index,
@@ -1594,6 +1597,7 @@ sub get_drop_column_ddl {
  Returns:     An array of SQL statements.
 
 =cut
+
 sub get_drop_table_ddl {
     my ($self, $table) = @_;
     return ("DROP TABLE $table");
@@ -1626,6 +1630,7 @@ sub get_rename_column_ddl {
  Returns:     nothing
 
 =cut
+
 sub delete_table {
     my ($self, $name) = @_;
 
@@ -1674,6 +1679,7 @@ sub get_column_abstract {
               undef.
 
 =cut
+
 sub get_indexes_on_column_abstract {
     my ($self, $table, $column) = @_;
     my %ret_hash;
@@ -1702,7 +1708,7 @@ sub get_indexes_on_column_abstract {
 
 sub get_index_abstract {
 
-=item C<get_index_abstract($table, $index)
+=item C<get_index_abstract($table, $index)>
 
  Description: Returns an index definition from the internal abstract schema.
  Params:      $table - The table the index is on.
@@ -1751,6 +1757,7 @@ sub get_table_abstract {
  Returns:     nothing
 
 =cut
+
 sub add_table {
     my ($self, $name, $definition) = @_;
     (die "Table already exists: $name")
@@ -1898,6 +1905,7 @@ sub _set_object {
  Returns:     nothing
 
 =cut
+
 sub delete_index {
     my ($self, $table, $name) = @_;
 
@@ -1921,6 +1929,9 @@ sub columns_equal {
  Params:      $col_one, $col_two - The columns to compare. Hash 
                   references, in C<ABSTRACT_SCHEMA> format.
  Returns:     C<1> if the columns are identical, C<0> if they are not.
+
+=back
+
 =cut
 
     my $self = shift;
@@ -1958,6 +1969,7 @@ sub columns_equal {
               is either store it somewhere or deserialize it.
 
 =cut
+
 sub serialize_abstract {
     my ($self) = @_;
     # We do this so that any two stored Schemas will have the
@@ -1981,6 +1993,7 @@ sub serialize_abstract {
               However, it will represent the serialized data instead of
               ABSTRACT_SCHEMA.
 =cut
+
 sub deserialize_abstract {
     my ($class, $serialized, $version) = @_;
 
@@ -2005,12 +2018,16 @@ sub deserialize_abstract {
 These methods are generally called on the class instead of on a specific
 object.
 
+=over
+
 =item C<get_empty_schema()>
 
  Description: Returns a Schema that has no tables. In effect, this
               Schema is totally "empty."
  Params:      none
  Returns:     A "empty" Schema object.
+
+=back
 
 =cut
 
@@ -2020,9 +2037,8 @@ sub get_empty_schema {
 }
 
 1;
-__END__
 
-=back
+__END__
 
 =head1 ABSTRACT DATA TYPES
 

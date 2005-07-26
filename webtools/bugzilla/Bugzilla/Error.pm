@@ -154,7 +154,7 @@ Bugzilla::Error - Error handling utilities for Bugzilla
 
   ThrowUserError("error_tag",
                  { foo => 'bar' });
- 
+
 =head1 DESCRIPTION
 
 Various places throughout the Bugzilla codebase need to report errors to the

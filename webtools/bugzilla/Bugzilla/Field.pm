@@ -57,7 +57,6 @@ sub check_form_field_defined ($$) {
 
 Bugzilla::Field - Useful routines for fields manipulation
 
-
 =head1 SYNOPSIS
 
   use Bugzilla::Field;

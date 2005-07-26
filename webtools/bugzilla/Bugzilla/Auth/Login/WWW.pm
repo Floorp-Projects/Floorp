@@ -104,10 +104,12 @@ Bugzilla::Auth::Login::WWW - WWW login information gathering module
 
 =head1 METHODS
 
+=over
+
 =item C<login>
 
 Passes C<login> calls to each class defined in the param C<user_info_class>
 and returns a C<Bugzilla::User> object from the first one that successfully
 gathers user login information.
 
-
+=back

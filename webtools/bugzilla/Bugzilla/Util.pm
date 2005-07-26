@@ -400,7 +400,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for decoding
   $rv = url_decode($var);
-  
+
   # Functions that tell you about your environment
   my $is_cgi = i_am_cgi();
 
@@ -591,8 +591,6 @@ The intended use of this function is to wrap comments that are about to be
 displayed or emailed. Generally, wrapped text should not be stored in the
 database.
 
-=back
-
 =item C<find_wrap_point($string, $maxpos)>
 
 Search for a comma, a whitespace or a hyphen to split $string, within the first
@@ -621,6 +619,9 @@ the routine has to "guess" the date format that was passed to $dbh->sql_date_for
 
 Returns a number with 2 digit precision, unless the last digit is a 0. Then it 
 returns only 1 digit precision.
+
+=back
+
 
 =head2 Files
 

@@ -835,7 +835,9 @@ sub _bz_init_schema_storage {
  Params:      none
  Returns:     A C<Bugzilla::DB::Schema> object representing the database
               as it exists on the disk.
+
 =cut
+
 sub _bz_real_schema {
     my ($self) = @_;
     return $self->{private_real_schema} if exists $self->{private_real_schema};
@@ -852,7 +854,6 @@ sub _bz_real_schema {
     return $self->{private_real_schema};
 }
 
-
 =item C<_bz_store_real_schema()>
 
  Description: Stores the _bz_real_schema structures in the database
@@ -863,7 +864,12 @@ sub _bz_real_schema {
 
  Precondition: $self->{_bz_real_schema} must exist.
 
+=back
+
+=end private
+
 =cut
+
 sub _bz_store_real_schema {
     my ($self) = @_;
 
@@ -890,9 +896,6 @@ sub _bz_store_real_schema {
 1;
 
 __END__
-=back
-
-=end private
 
 =head1 NAME
 
@@ -912,7 +915,7 @@ Bugzilla::DB - Database access routines, using L<DBI>
 
   # Execute the query
   $sth->execute;
-  
+
   # Get the results
   my @result = $sth->fetchrow_array;
 
@@ -982,6 +985,9 @@ Bugzilla::DB module, this would be "Mysql." For PostgreSQL it would be "Pg."
 
 The minimum version of the DBD module that we require for this database.
 
+=back
+
+
 =head1 CONNECTION
 
 A new database handle to the required database can be created using this
@@ -1037,6 +1043,7 @@ should not be called from anywhere else.
               implementation in its super class.
 
 =back
+
 
 =head1 ABSTRACT METHODS
 
@@ -1218,13 +1225,14 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               back). False (0) or no param if the operation succeeded.
  Returns:     none
 
+=back
+
+
 =head1 IMPLEMENTED METHODS
 
 These methods are implemented in Bugzilla::DB, and only need
 to be implemented in subclasses if you need to override them for 
 database-compatibility reasons.
-
-=over 4
 
 =head2 General Information Methods
 
@@ -1243,6 +1251,8 @@ These methods return information about data in the database.
  Params:      $table = name of table containing serial column (scalar)
               $column = name of column containing serial data type (scalar)
  Returns:     Last inserted ID (scalar)
+
+=back
 
 
 =head2 Schema Modification Methods
@@ -1398,6 +1408,9 @@ MySQL only.
  Params:      none
  Returns:     List of all the "bug" fields
 
+=back
+
+
 =head2 Transaction Methods
 
 These methods deal with the starting and stopping of transactions 
@@ -1425,6 +1438,9 @@ in the database.
  Params:      none
  Returns:     none
 
+=back
+
+
 =head1 SUBCLASS HELPERS
 
 Methods in this class are intended to be used by subclasses to help them
@@ -1444,6 +1460,7 @@ with their functions.
               our check for implementation of new() by derived class useles.
 
 =back
+
 
 =head1 DEPRECATED ROUTINES
 
@@ -1481,6 +1498,7 @@ PushGlobalSQLState
 PopGlobalSQLState
 
 =back
+
 
 =head1 SEE ALSO
 

@@ -184,8 +184,6 @@ the status codes defined in L<Bugzilla::Constants|Bugzilla::Constants> and
 described below.  The rest of the return values are status code-specific 
 and are explained in the status code descriptions.
 
-=over 4
-
 =item C<AUTH_OK>
 
 Authentication succeeded. The third variable is the userid of the new
@@ -232,8 +230,6 @@ is some text explaining why the account was disabled. This text would
 typically come from the C<disabledtext> field in the C<profiles> table.
 Note that this argument is a string, not a tag.
 
-=back
-
 =item C<current_verify_class>
 
 This scalar gets populated with the full name (eg.,
@@ -269,6 +265,8 @@ by trying cookies as a fallback.
 
 The login interface consists of the following methods:
 
+=over 4
+
 =item C<login>, which takes a C<$type> argument, using constants found in
 C<Bugzilla::Constants>.
 
@@ -280,8 +278,6 @@ When a login is required, but data is not present, it is the job of the
 login method to prompt the user for this data.
 
 The constants accepted by C<login> include the following:
-
-=over 4
 
 =item C<LOGIN_OPTIONAL>
 
@@ -299,13 +295,9 @@ I<requirelogin> parameter.
 
 A login is always required to access this data.
 
-=back
-
 =item C<logout>, which takes a C<Bugzilla::User> argument for the user
 being logged out, and an C<$option> argument. Possible values for
 C<$option> include:
-
-=over 4
 
 =item C<LOGOUT_CURRENT>
 

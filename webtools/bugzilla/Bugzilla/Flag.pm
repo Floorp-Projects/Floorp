@@ -95,8 +95,6 @@ use vars qw($template $vars);
 basic sets of columns and tables for getting flag types from th
 database.  B<Used by get, match, sqlify_criteria and perlify_record>
 
-=back
-
 =cut
 
 my @base_columns = 
@@ -129,9 +127,13 @@ my @base_tables = ("flags");
 
 =head1 PUBLIC FUNCTIONS
 
-=over C<get($id)>
+=over
+
+=item C<get($id)>
 
 Retrieves and returns a flag from the database.
+
+=back
 
 =cut
 
@@ -723,7 +725,7 @@ sub clear {
 
 =over
 
-=item C<FormToNewFlags($target, $cgi)
+=item C<FormToNewFlags($target, $cgi)>
 
 Checks whether or not there are new flags to create and returns an
 array of flag objects. This array is then passed to Flag::create().
@@ -1022,6 +1024,8 @@ Converts a row from the database into a Perl record.
 
 =back
 
+=end private
+
 =cut
 
 sub perlify_record {
@@ -1044,8 +1048,6 @@ sub perlify_record {
     return $flag;
 }
 
-=end private
-
 =head1 SEE ALSO
 
 =over
@@ -1053,6 +1055,7 @@ sub perlify_record {
 =item B<Bugzilla::FlagType>
 
 =back
+
 
 =head1 CONTRIBUTORS
 

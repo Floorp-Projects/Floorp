@@ -279,15 +279,18 @@ sub set {
 __END__
 
 =head1 NAME
+
 Bugzilla::User::Setting - Object for a user preference setting
 
 =head1 SYNOPSIS
+
 Setting.pm creates a setting object, which is a hash containing the user
 preference information for a single preference for a single user. These 
 are usually accessed through the "settings" object of a user, and not 
 directly.
 
 =head1 DESCRIPTION
+
 use Bugzilla::User::Setting;
 my $settings;
 
@@ -343,13 +346,17 @@ Params:      C<$setting_name> - string - the name of the setting
 Returns:     nothing
 
 =begin private
+
 =item C<_setting_exists>
 
 Description: Determines if a given setting exists in the database.
 Params:      C<$setting_name> - string - the setting name
 Returns:     boolean - true if the setting already exists in the DB.
 
+=back
+
 =end private
+
 =head1 METHODS
 
 =over 4
@@ -386,4 +393,4 @@ Description: If a user chooses to use their own value rather than the
 Params:      C<$value> - string - the new value for this setting for this user.
 Returns:     nothing
 
-
+=back

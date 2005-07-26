@@ -494,7 +494,7 @@ sub bz_setup_database {
 
 =begin private
 
-=head 1 MYSQL-SPECIFIC DATABASE-READING METHODS
+=head1 MYSQL-SPECIFIC DATABASE-READING METHODS
 
 These methods read information about the database from the disk,
 instead of from a Schema object. They are only reliable for MySQL 
@@ -611,11 +611,13 @@ sub bz_index_list_real {
 
 =back
 
-=head 1 MYSQL-SPECIFIC "SCHEMA BUILDER"
+=head1 MYSQL-SPECIFIC "SCHEMA BUILDER"
 
 MySQL needs to be able to read in a legacy database (from before 
 Schema existed) and create a Schema object out of it. That's what
 this code does.
+
+=end private
 
 =cut
 
@@ -653,10 +655,3 @@ sub _bz_build_schema_from_disk {
     return $schema;
 }
 1;
-
-__END__
-
-=back
-
-=end private
-

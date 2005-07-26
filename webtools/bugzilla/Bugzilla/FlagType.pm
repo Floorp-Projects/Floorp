@@ -117,6 +117,7 @@ my @base_tables = ("flagtypes");
 ######################################################################
 # Public Functions
 ######################################################################
+
 =head1 PUBLIC FUNCTIONS/METHODS
 
 =over
@@ -597,6 +598,8 @@ sub perlify_record {
     return $type;
 }
 
+1;
+
 =end private
 
 =head1 SEE ALSO
@@ -618,5 +621,3 @@ sub perlify_record {
 =back
 
 =cut
-
-1;
