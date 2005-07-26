@@ -4053,6 +4053,13 @@ DocumentViewerImpl::InstallNewPresentation()
 
   mPresShell->BeginObservingDocument();
 
+  // Make sure we have focus in a context that has a container, bug 244128.
+  nsIEventStateManager* esm = mPresContext->EventStateManager();
+  if (esm) {
+    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+    esm->SetFocusedContent(nsnull);
+  }
+
   nscoord width  = bounds.width;
   nscoord height = bounds.height;
   float p2t;
