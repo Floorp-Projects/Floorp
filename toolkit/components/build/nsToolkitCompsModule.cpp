@@ -69,7 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
-#if defined(MOZ_PHOENIX) || defined(MOZ_SUNBIRD) || defined (MINIMO)
+#ifndef MOZ_THUNDERBIRD
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
@@ -89,7 +89,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 static void PR_CALLBACK nsToolkitCompModuleDtor(nsIModule* self)
 {
-#ifdef MOZ_PHOENIX
+#ifndef MOZ_THUNDERBIRD
   nsFormHistory::ReleaseInstance();
   nsPasswordManager::Shutdown();
 #endif
