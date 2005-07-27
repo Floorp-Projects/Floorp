@@ -48,6 +48,7 @@ var helpTocPanel;
 var helpIndexPanel;
 var helpGlossaryPanel;
 var strBundle;
+var gTocDSList = "";
 
 # Namespaces
 const NC = "http://home.netscape.com/NC-rdf#";
@@ -87,8 +88,6 @@ const NC_TITLE = RDF.GetResource(NC + "title");
 const NC_BASE = RDF.GetResource(NC + "base");
 const NC_DEFAULTTOPIC = RDF.GetResource(NC + "defaulttopic");
 
-const RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"]
-    .getService().QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 const RDFContainer = Components.classes["@mozilla.org/rdf/container;1"]
     .getService(Components.interfaces.nsIRDFContainer);
 const CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1']
@@ -101,9 +100,6 @@ var helpFileDS;
 # Set from nc:base attribute on help rdf file. It may be used for prefix
 # reduction on all links within the current help set.
 var helpBaseURI;
-
-var searchDatasources = "rdf:null";
-var searchDS = null;
 
 var gIgnoreFocus = false;
 var gClickSelectsAll;
@@ -127,14 +123,13 @@ const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7;
 function displayTopic(topic) {
     // Get the page to open.
     var uri = getLink(topic);
-
     // Use default topic if specified topic is not found.
     if (!uri) {
         uri = getLink(defaultTopic);
     }
-
     // Load the page.
-    loadURI(uri);
+    if (uri)
+      loadURI(uri);
 }
 
 # Initialize the Help window
@@ -217,6 +212,10 @@ function hideSearchSidebar(aEvent) {
   tableOfContents.removeAttribute("hidden");
 }
 
+# loadHelpRDF
+# Parse the provided help content pack RDF file, and use it to
+# populate the datasources attached to the trees in the viewer.
+# Filter out any information not applicable to the user's platform.
 function loadHelpRDF() {
   if (!helpFileDS) {
     try {
@@ -242,7 +241,11 @@ function loadHelpRDF() {
         var panelDef = iterator.getNext();
         var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
 
-        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
+        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "");
+        // if datasources is "", there's nothing to load
+        if (!datasources)
+          continue;
+
         datasources = normalizeLinks(helpBaseURI, datasources);
 
         var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
@@ -251,21 +254,34 @@ function loadHelpRDF() {
         if (panelPlatforms.indexOf(platform) == -1)
           continue; // ignore datasources for other platforms
 
+        var datasourceArray = datasources.split(/\s+/)
+                                          .map(RDF.GetDataSourceBlocking);
+
         // Cache Additional Datasources to Augment Search Datasources.
         if (panelID == "search") {
-          emptySearchText = getAttribute(helpFileDS, panelDef,
-          NC_EMPTY_SEARCH_TEXT, emptySearchText);
-          emptySearchLink = getAttribute(helpFileDS, panelDef,
-          NC_EMPTY_SEARCH_LINK, emptySearchLink);
-          searchDatasources += " " + datasources;
-          continue; // Don't try to display them yet!
+          emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, emptySearchText);
+          emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, emptySearchLink);
+
+          datasourceArray.forEach(helpSearchPanel.database.AddDataSource,
+                                  helpSearchPanel.database);
+          filterDatasourceByPlatform(helpSearchPanel.database);
+
+          continue; // to next panel definition
         }
 
-        // Cache TOC Datasources for Use by ID Lookup.
+        // cache toc datasources list for use in getLink()
+        if (panelID == "toc")
+          gTocDSList += " " + datasources;
+
         var tree = document.getElementById("help-" + panelID + "-panel");
-        loadDatabasesBlocking(datasources);
-        tree.setAttribute("datasources",
-        tree.getAttribute("datasources") + " " + datasources);
+
+        // add each datasource to the current tree
+        datasourceArray.forEach(tree.database.AddDataSource,
+                                tree.database);
+
+        // filter and display the current tree
+        filterDatasourceByPlatform(tree.database);
+        tree.builder.rebuild();
       }
     } catch (e) {
       log(e + "");
@@ -273,22 +289,66 @@ function loadHelpRDF() {
   }
 }
 
-function loadDatabasesBlocking(datasources) {
-  var ds = datasources.split(/\s+/);
-  for (var i=0; i < ds.length; ++i) {
-    if (ds[i] == "rdf:null" || ds[i] == "")
-      continue;
-    try {
-      // We need blocking here to ensure the database is loaded so
-      // getLink(topic) works.
-      var datasource = RDF.GetDataSourceBlocking(ds[i]);
-    } catch (e) {
-      log("Datasource: " + ds[i] + " was not found.");
-    }
+# filterDatasourceByPlatform
+# Remove statements for other platforms from a datasource.
+function filterDatasourceByPlatform(aDatasource) {
+  filterNodeByPlatform(aDatasource, RDF_ROOT, 0);
+}
+
+# filterNodeByPlatform
+# Remove statements for other platforms from the provided datasource.
+function filterNodeByPlatform(aDatasource, aCurrentResource, aCurrentLevel) {
+  if (aCurrentLevel > MAX_LEVEL) {
+     log("Datasources over " + MAX_LEVEL + " levels deep are unsupported.");
+     return;
+  }
+
+  // get the subheadings under aCurrentResource and filter them
+  var nodes = aDatasource.GetTargets(aCurrentResource, NC_SUBHEADINGS, true);
+  while (nodes.hasMoreElements()) {
+    var node = nodes.getNext();
+    node = node.QueryInterface(Components.interfaces.nsIRDFResource);
+    // should we test for rdf:Seq here?  see also doFindOnDatasource
+    filterSeqByPlatform(aDatasource, node, aCurrentLevel+1);
   }
 }
 
-# Prepend helpBaseURI to list of space separated links if the don't start with
+# filterSeqByPlatform
+# Go through the children of aNode, if any, removing statements applicable
+# only on other platforms.
+function filterSeqByPlatform(aDatasource, aNode, aCurrentLevel) {
+  // get nc:subheading children into an enumerator
+  var RDFC = Components.classes["@mozilla.org/rdf/container;1"]
+                       .createInstance(Components.interfaces.nsIRDFContainer);
+  RDFC.Init(aDatasource, aNode);
+  var targets = RDFC.GetElements();
+
+  // process items in the rdf:Seq
+  while (targets.hasMoreElements()) {
+    var currentTarget = targets.getNext();
+
+    // find out on which platforms this node is meaningful
+    var nodePlatforms = getAttribute(aDatasource,
+                                     currentTarget.QueryInterface(Components.interfaces.nsIRDFResource),
+                                     NC_PLATFORM,
+                                     platform);
+
+    if (nodePlatforms.indexOf(platform) == -1) { // node is for another platform
+      var currentNode = currentTarget.QueryInterface(Components.interfaces.nsIRDFNode);
+      // "false" because we don't want to renumber elements in the container
+      RDFC.RemoveElement(currentNode, false);
+
+      // move to next node - ignore the children, because 1) they might be
+      // needed elsewhere and 2) nodes not connected to RDF_ROOT are ignored
+      continue;
+    }
+
+    // filter any children
+    filterNodeByPlatform(aDatasource, currentTarget, aCurrentLevel+1);
+  }
+}
+
+# Prepend helpBaseURI to list of space separated links if they don't start with
 # "chrome:"
 function normalizeLinks(helpBaseURI, links) {
   if (!helpBaseURI) {
@@ -309,42 +369,23 @@ function normalizeLinks(helpBaseURI, links) {
 }
 
 function getLink(ID) {
-    if (!ID) {
-        return null;
-    }
-    // Note resources are stored in fileURL#ID format.
-    // We have one possible source for an ID for each datasource in the
-    // composite datasource.
-    // The first ID which matches is returned.
-    var tocTree = document.getElementById("help-toc-panel");
-    var tocDS = tocTree.database;
-    if (tocDS == null) {
-        return null;
-    }
-    var tocDatasources = tocTree.getAttribute("datasources");
-    var ds = tocDatasources.split(/\s+/);
-    for (var i=0; i < ds.length; ++i) {
-        if (ds[i] == "rdf:null" || ds[i] == "") {
-            continue;
-        }
-        try {
-            var rdfID = ds[i] + "#" + ID;
-            var resource = RDF.GetResource(rdfID);
-            if (resource) {
-                var link = tocDS.GetTarget(resource, NC_LINK, true);
-                if (link) {
-                    link = link.QueryInterface(Components.interfaces
-                        .nsIRDFLiteral);
-                    if (link) {
-                        return link.Value;
-                    } else {
-                        return null;
-                    }
-                }
-            }
-        } catch (e) {
-            log(rdfID + " " + e);
-        }
+    if (!ID)
+      return null;
+
+    var tocDS = document.getElementById("help-toc-panel").database;
+    if (!tocDS)
+      return null;
+
+    // URIs include both the ID part and the base file name,
+    // so we need to check for a matching ID in each datasource
+    var tocDSArray = gTocDSList.split(/\s+/);
+
+    for (var i = 0; i < tocDSArray.length; i++) {
+      var resource = RDF.GetResource(tocDSArray[i] + "#" + ID);
+      var link = tocDS.GetTarget(resource, NC_LINK, true);
+      if (!link)  // no such rdf:ID found
+        continue;
+      return link.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
     return null;
 }
@@ -673,33 +714,20 @@ function doFind() {
     // search TOC
     var resultsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
         .createInstance(Components.interfaces.nsIRDFDataSource);
-    var tree = helpTocPanel;
-    var sourceDS = tree.database;
+    var sourceDS = helpTocPanel.database;
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
     // search glossary.
-    tree = helpGlossaryPanel;
-    sourceDS = tree.database;
-    // If the glossary has never been displayed this will be null (sigh!).
-    if (!sourceDS)
-      sourceDS = loadCompositeDS(tree.datasources);
-
+    sourceDS = helpGlossaryPanel.database;
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
     // search index
-    tree = helpIndexPanel;
-    sourceDS = tree.database;
-    //If the index has never been displayed this will be null
-    if (!sourceDS)
-      sourceDS = loadCompositeDS(tree.datasources);
-
+    sourceDS = helpIndexPanel.database;
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
     // search additional search datasources
-    if (searchDatasources != "rdf:null") {
-      if (!searchDS) searchDS = loadCompositeDS(searchDatasources);
-      doFindOnDatasource(resultsDS, searchDS, RDF_ROOT, 0);
-    }
+    sourceDS = helpSearchPanel.database;
+    doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
     if (emptySearch)
         assertSearchEmpty(resultsDS);
@@ -786,28 +814,6 @@ function isMatch(text) {
     return true;
 }
 
-function loadCompositeDS(datasources) {
-# We can't search on each individual datasource's - only the aggregate
-# (for each sidebar tab) has the appropriate structure.
-    var compositeDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=composite-datasource"]
-        .createInstance(Components.interfaces.nsIRDFCompositeDataSource);
-
-    var ds = datasources.split(/\s+/);
-    for (var i=0; i < ds.length; ++i) {
-        if (ds[i] == "rdf:null" || ds[i] == "") {
-            continue;
-        }
-        try {
-            // we need blocking here to ensure the database is loaded.
-            var sourceDS = RDF.GetDataSourceBlocking(ds[i]);
-            compositeDS.AddDataSource(sourceDS);
-        } catch (e) {
-            log("Datasource: " + ds[i] + " was not found.");
-        }
-    }
-    return compositeDS;
-}
-
 function getAttribute(datasource, resource, attributeResourceName,
         defaultValue) {
     var literal = datasource.GetTarget(resource, attributeResourceName, true);
@@ -833,20 +839,6 @@ function getLiteralValue(literal, defaultValue) {
 # Write debug string to javascript console.
 function log(aText) {
     CONSOLE_SERVICE.logStringMessage(aText);
-}
-
-# INDEX OPENING FUNCTION -- called in oncommand for index pane
-#  iterate over all the items in the outliner;
-#  open the ones at the top-level (i.e., expose the headings underneath
-#  the letters in the list.
-function expandAllIndexEntries() {
-    var treeview = helpIndexPanel.view;
-    var i = treeview.rowCount;
-    while (i--) {
-        if (!treeview.getLevel(i) && !treeview.isContainerOpen(i)) {
-            treeview.toggleOpenState(i);
-        }
-    }
 }
 
 function getBoolPref (aPrefname, aDefault)

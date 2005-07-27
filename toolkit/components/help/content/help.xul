@@ -283,82 +283,22 @@
         <!-- xxxmpc: we need a better solution for this -->
 
         <vbox id="help-sidebar-hidden-trees" hidden="true">
-          <tree id="help-glossary-panel" class="focusring"
+          <tree id="help-glossary-panel"
                 flex="1" hidecolumnpicker="true"
                 datasources="rdf:null"
                 containment="http://home.netscape.com/NC-rdf#subheadings"
-                ref="urn:root" flags="dont-build-content"
-                onselect="onselect_loadURI(this)">
-            <template>
-              <rule>
-                <conditions>
-                  <content uri="?uri"/>
-                  <triple subject="?uri"
-                          predicate="http://home.netscape.com/NC-rdf#subheadings"
-                          object="?subheadings"/>
-                  <member container="?subheadings"
-                          child="?subheading"/>
-                </conditions>
-                <bindings>
-                  <binding subject="?subheading"
-                           predicate="http://home.netscape.com/NC-rdf#name"
-                           object="?name"/>
-                </bindings>
-                <action>
-                  <treechildren>
-                    <treeitem uri="?subheading">
-                      <treerow>
-                        <treecell label="?name"/>
-                      </treerow>
-                    </treeitem>
-                  </treechildren>
-                </action>
-              </rule>
-            </template>
-            <treecols>
-              <treecol id="GlossaryNameColumn" flex="1"
-                       hideheader="true" primary="true"/>
-            </treecols>
-          </tree>
-          <tree id="help-index-panel" class="focusring"
+                ref="urn:root" flags="dont-build-content"/>
+          <tree id="help-index-panel"
                 flex="1" datasources="rdf:null"
                 hidecolumnpicker="true"
                 containment="http://home.netscape.com/NC-rdf#subheadings"
                 ref="urn:root"
-                flags="dont-build-content dont-test-empty"
-                onselect="onselect_loadURI(this)">
-            <template>
-              <rule>
-                <conditions>
-                  <content uri="?uri"/>
-                  <triple subject="?uri"
-                          predicate="http://home.netscape.com/NC-rdf#subheadings"
-                          object="?subheadings"/>
-                  <member container="?subheadings"
-                          child="?subheading"/>
-                </conditions>
-                <bindings>
-                  <binding subject="?subheading"
-                           predicate="http://home.netscape.com/NC-rdf#name"
-                           object="?name"/>
-                </bindings>
-                <action>
-                  <treechildren>
-                    <treeitem uri="?subheading">
-                      <treerow>
-                        <treecell label="?name"/>
-                      </treerow>
-                    </treeitem>
-                  </treechildren>
-                </action>
-              </rule>
-            </template>
-            <treecols>
-              <treecol id="IndexNameColumn" flex="1" hideheader="true"
-                       primary="true" sortActive="true"
-                       sortDirection="ascending" sort="?name"/>
-            </treecols>
-          </tree>
+                flags="dont-build-content dont-test-empty"/>
+          <tree id="help-search-panel"
+                flex="1" hidecolumnpicker="true"
+                datasources="rdf:null"
+                containment="http://home.netscape.com/NC-rdf#subheadings"
+                ref="urn:root" flags="dont-build-content"/>
         </vbox>
 
         <!-- END HIDDEN ITEMS -->
