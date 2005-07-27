@@ -170,6 +170,7 @@ bin\components\xmlextras.xpt
 ; misson control, autoconfig
 bin\defaults\autoconfig\platform.js
 bin\defaults\autoconfig\prefcalls.js
+bin\components\autoconfig.xpt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
