@@ -1883,13 +1883,9 @@ var PendingOperations = {
    *          "id"            The GUID of the item.
    */
   addItem: function(opType, entry) {
-    if (opType == "") {
-      delete this._ops[entry.id];
-    }
-    else {
-      entry.opType = opType;
-      this._ops[entry.id] = entry;
-    }
+    if (!(opType in this._ops))
+      this._ops[opType] = [];
+    this._ops[opType].push(entry);
   },
   
   /**
@@ -1899,8 +1895,13 @@ var PendingOperations = {
    * @param   id
    *          The GUID of the item to remove the entry for
    */
-  clearItem: function(id) {
-    delete this._ops[id];
+  clearItem: function(opType, id) {
+    if (!(opType in this._ops))
+      return;
+    for (var i = 0; i < this._ops[opType].length; ++i) {
+      if (this._ops[opType][i].id == id)
+        this._ops[opType].splice(i, 1);
+    }
   },
   
   /**
@@ -1909,11 +1910,8 @@ var PendingOperations = {
    *          The type of Operation to remove all entries for
    */
   clearItems: function(opType) {
-    for (var id in this._ops) {
-      if (this._ops[id].opType == opType) {
-        delete this._ops[id];
-      }
-    }
+    if (opType in this._ops)
+      this._ops[opType] = [];
   },
   
   /**
@@ -1922,13 +1920,7 @@ var PendingOperations = {
    *          The type of Operation to return a list of
    */
   getOperations: function(opType) {
-    ops = [];
-    for (var id in this._ops) {
-      if (this._ops[id].opType == opType) {
-        ops.push(this._ops[id]);
-      }
-    }
-    return ops;
+    return opType in this._ops ? this._ops[opType] : [];
   },
   
   /**
@@ -1936,8 +1928,8 @@ var PendingOperations = {
    */
   get size() {
     var size = 0;
-    for (var id in this._ops)
-      ++size;
+    for (var opType in this._ops)
+      size += this._ops[opType].length;
     return size;
   }
 };
@@ -2993,7 +2985,7 @@ ExtensionManager.prototype = {
           ds.setItemProperty(id, EM_R("appDisabled"), null);
           var installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
-          PendingOperations.clearItem(id);
+          PendingOperations.clearItem(OP_NEEDS_ENABLE, id);
           needsRestart = true;
         }
         PendingOperations.clearItems(OP_NEEDS_ENABLE);
@@ -3009,7 +3001,7 @@ ExtensionManager.prototype = {
             ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
           installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
-          PendingOperations.clearItem(id);
+          PendingOperations.clearItem(OP_NEEDS_DISABLE, id);
         }
         PendingOperations.clearItems(OP_NEEDS_DISABLE);
 
@@ -3282,12 +3274,11 @@ ExtensionManager.prototype = {
       // Disable the item if it was disabled in the version 1.0 extensions
       // datasource.
       if (oldExtensionsDS.GetTarget(oldRes, EM_R("disabled"), true))
-        this.disableItem(item.id);
+        ds.setItemProperty(item.id, EM_R("userDisabled"), EM_L("true"));
 
-      // app enable all items that are app disabled. If it is incompatible
-      // it will be app disabled later on.
-      if (ds.getItemProperty(item.id, "appDisabled") == "true")
-       this._appEnableItem(item.id);
+      // app enable all items. If it is incompatible it will be app disabled
+      // later on.
+      ds.setItemProperty(item.id, EM_R("appDisabled"), null);
 
       // if the item is already compatible don't attempt to migrate the
       // item's compatibility info
@@ -4167,7 +4158,7 @@ ExtensionManager.prototype = {
       for (var i = 0; i < entries.length; ++i) {
         var location = InstallLocations.get(entries[i].location);
         StartupCache.clearEntry(location, id);
-        PendingOperations.clearItem(id);
+        PendingOperations.clearItem(OP_NEEDS_INSTALL, id);
       }
       return;
     }
@@ -4188,7 +4179,7 @@ ExtensionManager.prototype = {
     
     // Clear the op flag from the Startup Cache and Pending Operations sets
     StartupCache.put(installLocation, id, OP_NONE, true);
-    PendingOperations.clearItem(id);
+    PendingOperations.clearItem(OP_NEEDS_INSTALL, id);
   },
 
   /**
@@ -4233,7 +4224,7 @@ ExtensionManager.prototype = {
     // Clear the op flag from the Pending Operations set. Do NOT clear op flag in 
     // the startup cache since this may have been reset to OP_NEEDS_INSTALL by
     // |_configureForthcomingItem|.
-    PendingOperations.clearItem(id);
+    PendingOperations.clearItem(OP_NEEDS_UPGRADE, id);
   },
   
   /**
@@ -4274,7 +4265,7 @@ ExtensionManager.prototype = {
     
     // Clear the op flag from the Startup Cache and the Pending Operations set.
     StartupCache.clearEntry(installLocation, id);
-    PendingOperations.clearItem(id);
+    PendingOperations.clearItem(OP_NEEDS_UNINSTALL, id);
   },
   
   /**
