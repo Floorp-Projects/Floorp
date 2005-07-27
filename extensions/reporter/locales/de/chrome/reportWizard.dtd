@@ -1,0 +1,55 @@
+<!-- Entities for the Sample Extension Options Dialog go here -->
+<!ENTITY reportWizard.title                         "Fehlerhafte Website melden">
+
+<!ENTITY privacyNotice.label                        "Privatsphären-Regeln">
+<!ENTITY reportWizardPrivacy.description            "Dieses 'Werkzeug' erlaubt Ihnen, dem &quot;Evangelismus-Team&quot; Websites zu melden, die in &brandShortName; nicht richtig funktionieren oder &brandShortName; ausschließen. Dies ist ein Weg, um uns zu helfen, ein bestmögliches Erlebnis für &brandShortName;-Benutzer zu sichern. Bitte nehmen Sie sich einen Moment Zeit, um den folgenden Text zu lesen, um zu erfahren, wie wir die Informationen verwenden, falls Sie beschließen, teilzunehmen.">
+<!ENTITY reportWizardMustAgree.description          "Um fortzusetzen, müssen Sie den obenstehenden Privatsphären-Regeln zustimmen.">
+
+<!ENTITY dontShowPrivacyStatement.label             "Ich habe die oben abgegebenen Privatsphären-Regeln gelesen und akzeptiert.">
+<!ENTITY dontShowPrivacyStatement.accesskey         "I">
+
+<!ENTITY reportForm.label                           "Bericht ausfüllen">
+
+<!ENTITY reportForm.description                     "Erklären Sie das Problem, das Sie gesehen haben:">
+<!ENTITY reportForm.url.title                       "Website-URL:">
+
+<!ENTITY reportForm.behind_login.title              "Webseite ist Passwort-geschützt"><!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.accesskey          "P">
+
+<!ENTITY reportForm.problem_type.title              "Problem-Typ:">
+<!ENTITY reportForm.problem_type.accesskey          "T">
+
+<!ENTITY reportForm.problem_type.chooseOne.title    "Einen wählen...">
+
+<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server admin first! -->
+<!ENTITY reportForm.problem_type.item1.title        "Browser nicht unterstützt">
+<!ENTITY reportForm.problem_type.item2.title        "Kann nicht einloggen">
+<!ENTITY reportForm.problem_type.item3.title        "Plugin nicht angezeigt">
+<!ENTITY reportForm.problem_type.item4.title        "Anderer Inhalt fehlt">
+<!ENTITY reportForm.problem_type.item5.title        "Falsches Verhalten">
+<!ENTITY reportForm.problem_type.item6.title        "Falsche Anzeige">
+<!ENTITY reportForm.problem_type.item7.title        "Anderes Problem">
+
+<!ENTITY reportForm.describe.title                  "Problembeschreibung:">
+<!ENTITY reportForm.describe.accesskey              "D">
+
+<!ENTITY reportForm.platform.title                  "Plattform:">
+<!ENTITY reportForm.product.title                   "Produkt:">
+<!ENTITY reportForm.gecko.title                     "Gecko:">
+<!ENTITY reportForm.useragent.title                 "Useragent:">
+<!ENTITY reportForm.language.title                  "Sprache:">
+
+<!--  Make sure this has "(Optional)" at the end.  This is important for the user to know -->
+<!ENTITY reportForm.email.title                     "E-Mail (optional):">
+<!ENTITY reportForm.email.accesskey                 "E">
+
+<!ENTITY reportForm.privacyPolicy.title             "Privatsphären-Regeln">
+<!ENTITY reportForm.privacyPolicy.tooltip           "Privatsphären-Regeln ansehen">
+
+<!ENTITY reportResults.showDetail.title             "Details anzeigen">
+<!ENTITY reportResults.showDetail.accesskey         "S">
+
+<!ENTITY sendReport.label                           "Bericht senden">
+<!ENTITY sendReport.description                     "Bericht an Server senden...">
+
+<!ENTITY finish.label                               "Bericht gesendet">
