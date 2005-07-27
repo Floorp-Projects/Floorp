@@ -675,7 +675,7 @@ sub find_languages {
    desc => 'Defines how email is sent, or if it is sent at all.<br><ul>' .
            '<li>\'sendmail\', \'smtp\' and \'qmail\' are all MTAs. ' .
            '(only SMTP is available in Windows.)</li>' .
-           '<li>\'testfile\' is useful for debugging: all email is stored' .
+           '<li>\'testfile\' is useful for debugging: all email is stored ' .
            'in data/mailer.testfile instead of being sent. For more ' .
            'information, see the Mail::Mailer manual.</li>' .
            '<li>\'none\' will completely disable email. Bugzilla continues ' .
