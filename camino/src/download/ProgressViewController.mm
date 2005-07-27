@@ -300,7 +300,8 @@ enum {
   id iconLabel = [curView viewWithTag:kLabelTagIcon];
   
   id filenameLabel = [curView viewWithTag:kLabelTagFilename];
-  [filenameLabel setStringValue:filename];
+  if (![[filenameLabel stringValue] isEqualToString:filename])
+    [filenameLabel setStringValue:filename];
   
   if (iconLabel) { // update the icon image
     NSImage *iconImage = [[NSWorkspace sharedWorkspace] iconForFile:mDestPath];
@@ -326,7 +327,8 @@ enum {
           [[self class] formatTime:(int)mDownloadTime], [[self class] formatBytes:mDownloadSize]];
       }
       
-      [statusLabel setStringValue:statusString];
+      if (![[statusLabel stringValue] isEqualToString:statusString])
+        [statusLabel setStringValue:statusString];
     }
   }
   else {
