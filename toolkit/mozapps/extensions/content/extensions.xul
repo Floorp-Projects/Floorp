@@ -94,6 +94,7 @@
 #endif
     <command id="cmd_uninstall"/>
     <command id="cmd_update"/>
+    <command id="cmd_update_all"/>
     <command id="cmd_enable"/>
     <command id="cmd_disable"/>
     <command id="cmd_movetop"/>
@@ -270,14 +271,11 @@
         <button id="installButton"
                 label="&cmd.install.label;" accesskey="&cmd.install.accesskey;" tooltiptext="&cmd.install.tooltip;" 
                 command="cmd_install"/>
+        <separator class="commandBarSeparator"/>
 #endif
         <button id="uninstallButton" 
                 label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;" tooltiptext="&cmd.uninstall.tooltip;" 
                 command="cmd_uninstall"/>
-        <separator class="commandBarSeparator"/>
-        <button id="updateButton" 
-                label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
-                command="cmd_update"/>
         <separator class="commandBarSeparator"/>
         <button id="optionsButton" command="cmd_options"
 #ifdef XP_WIN
@@ -291,6 +289,11 @@
       </hbox>
       <spacer flex="1"/>
 
+      <separator class="commandBarSeparator"/>
+      <button id="updateButton" 
+              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;" tooltiptext="&cmd.update.tooltip;"
+              command="cmd_update_all"/>
+      <separator class="commandBarSeparator"/>
       <label id="getMore" class="text-link"
              valuethemes="&getMoreThemes.label;"
              valueextensions="&getMoreExtensions.label;"

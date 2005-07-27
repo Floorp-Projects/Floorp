@@ -894,6 +894,8 @@ var gExtensionsViewController = {
       return !selectedItem && gExtensionsView.children.length > 0 ||
              (selectedItem &&
               selectedItem.getAttribute("updateable") != "false");
+    case "cmd_update_all":
+      return gExtensionsView.children.length > 0;
     case "cmd_reallyEnable":
     // controls whether to show Enable or Disable in extensions' context menu
       return selectedItem && 
@@ -1052,6 +1054,13 @@ var gExtensionsViewController = {
         var id = getIDFromResourceURI(aSelectedItem.id);
         items = [gExtensionManager.getItemForID(id)];
       }
+      var listener = new UpdateCheckListener();
+      gExtensionManager.update(items, items.length, false, listener);
+    },
+
+    cmd_update_all: function (aSelectedItem)
+    {
+      var items = gExtensionManager.getItemList(gItemType, { });
       var listener = new UpdateCheckListener();
       gExtensionManager.update(items, items.length, false, listener);
     },
