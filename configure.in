@@ -3871,14 +3871,58 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
+ACCESSIBILITY=1
+BUILD_MODULES=all
+BUILD_SHARED_LIBS=1
+BUILD_STATIC_LIBS=
+ENABLE_TESTS=1
+MOZ_ACTIVEX_SCRIPTING_SUPPORT=
+MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
-MOZ_MAIL_NEWS=
-MOZ_STATIC_MAIL_BUILD=
-MOZ_SINGLE_PROFILE=
-MOZ_PROFILESHARING=1
-MOZ_IPCD=
-MOZ_PROFILELOCKING=1
+MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
+MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
+MOZ_IPCD=
+MOZ_JSDEBUGGER=1
+MOZ_JSLOADER=1
+MOZ_LIBART_CFLAGS=
+MOZ_LIBART_LIBS=
+MOZ_MAIL_NEWS=
+MOZ_MATHML=1
+MOZ_NO_ACTIVEX_SUPPORT=1
+MOZ_OJI=1
+MOZ_PLAINTEXT_EDITOR_ONLY=
+MOZ_PLUGINS=1
+MOZ_PROFILELOCKING=1
+MOZ_PROFILESHARING=1
+MOZ_PSM=1
+MOZ_PYTHON=
+MOZ_PYTHON_DEBUG_SUFFIX=
+MOZ_PYTHON_DLL_SUFFIX=
+MOZ_PYTHON_INCLUDES=
+MOZ_PYTHON_LIBS=
+MOZ_PYTHON_PREFIX=
+MOZ_PYTHON_VER=
+MOZ_PYTHON_VER_DOTTED=
+MOZ_REFLOW_PERF=
+MOZ_REORDER=
+MOZ_SINGLE_PROFILE=
+MOZ_STATIC_COMPONENT_LIBS=
+MOZ_STATIC_MAIL_BUILD=
+MOZ_TIMELINE=
+MOZ_UI_LOCALE=en-US
+MOZ_USE_NATIVE_UCONV=
+MOZ_V1_STRING_ABI=1
+MOZ_VIEW_SOURCE=1
+MOZ_XPFE_COMPONENTS=1
+MOZ_XPINSTALL=1
+MOZ_XTF=1
+MOZ_XUL=1
+NECKO_COOKIES=1
+NECKO_DISK_CACHE=1
+NECKO_SMALL_BUFFERS=
+SUNCTL=
 
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
@@ -3886,6 +3930,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             suite
                             browser (Firefox)
                             mail (Thunderbird)
+                            minimo
                             composer
                             calendar
                             xulrunner
@@ -3916,6 +3961,41 @@ browser)
   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
   MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
+  ;;
+
+minimo)
+  MOZ_APP_NAME=minimo
+  MOZ_APP_DISPLAYNAME=minimo
+  ACCESSIBILITY=
+  AC_DEFINE(MINIMO)
+  ENABLE_TESTS=
+  MINIMO=1
+  MOZ_ACTIVEX_SCRIPTING_SUPPORT=
+  MOZ_APP_VERSION=`cat $topsrcdir/embedding/minimo/wince/version.txt`
+  MOZ_COMPOSER=
+  MOZ_ENABLE_POSTSCRIPT=
+  MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras transformiix webservices spatialnavigation"
+  MOZ_IMG_DECODERS="png,gif,jpeg"
+  MOZ_INSTALLER=
+  MOZ_JSDEBUGGER=
+  MOZ_LDAP_XPCOM=
+  MOZ_MAIL_NEWS=
+  MOZ_MATHML=
+  MOZ_NO_ACTIVEX_SUPPORT=1
+  MOZ_OJI=
+  MOZ_PLAINTEXT_EDITOR_ONLY=1
+  MOZ_PROFILELOCKING=
+  MOZ_PROFILESHARING=
+  MOZ_SINGLE_PROFILE=1
+  MOZ_UPDATER=
+  MOZ_V1_STRING_ABI=
+  MOZ_XPFE_COMPONENTS=
+  MOZ_XPINSTALL=
+  MOZ_XUL_APP=1
+  NECKO_DISK_CACHE=
+  NECKO_PROTOCOLS="about,data,http,file,res,jar"
+  NECKO_SMALL_BUFFERS=1
+  NS_DISABLE_LOGGING=1
   ;;
 
 mail)
@@ -4011,9 +4091,6 @@ MOZ_ARG_HEADER(Components and Features)
 dnl ========================================================
 dnl = Localization
 dnl ========================================================
-
-MOZ_UI_LOCALE=en-US
-
 MOZ_ARG_ENABLE_STRING(ui-locale,
 [  --enable-ui-locale=ab-CD
                           Select the user interface locale (default: en-US)],
@@ -4063,7 +4140,6 @@ MOZ_ARG_DISABLE_BOOL(ldap,
 dnl ========================================================
 dnl = Trademarked Branding 
 dnl ========================================================
-MOZ_BRANDING_DIRECTORY=
 MOZ_ARG_ENABLE_BOOL(official-branding,
 [  --enable-official-branding Enable Official mozilla.org Branding
                           Do not distribute builds with
@@ -4361,9 +4437,6 @@ AC_SUBST(MOZ_EXTRA_X11CONVERTERS)
 dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
-
-MOZ_PSM=1
-
 MOZ_ARG_DISABLE_BOOL(crypto,
 [  --disable-crypto        Disable crypto support (Personal Security Manager)],
     MOZ_PSM=,
@@ -4379,7 +4452,6 @@ esac
 dnl ========================================================
 dnl = JS Debugger XPCOM component (js/jsd)
 dnl ========================================================
-MOZ_JSDEBUGGER=1
 MOZ_ARG_DISABLE_BOOL(jsd,
 [  --disable-jsd           Disable JavaScript debug library],
     MOZ_JSDEBUGGER=,
@@ -4389,7 +4461,6 @@ MOZ_ARG_DISABLE_BOOL(jsd,
 dnl ========================================================
 dnl = Disable plugin support
 dnl ========================================================
-MOZ_PLUGINS=1
 MOZ_ARG_DISABLE_BOOL(plugins,
 [  --disable-plugins       Disable plugins support],
     MOZ_PLUGINS=,
@@ -4398,7 +4469,6 @@ MOZ_ARG_DISABLE_BOOL(plugins,
 dnl ========================================================
 dnl = Open JVM Interface (OJI) support
 dnl ========================================================
-MOZ_OJI=1
 MOZ_ARG_DISABLE_BOOL(oji,
 [  --disable-oji           Disable Open JVM Integration support],
     MOZ_OJI=,
@@ -4433,7 +4503,6 @@ AC_DEFINE(IBMBIDI)
 dnl ========================================================
 dnl complex text support off by default
 dnl ========================================================
-SUNCTL=
 MOZ_ARG_ENABLE_BOOL(ctl,
 [  --enable-ctl            Enable Thai Complex Script support],
     SUNCTL=1,
@@ -4442,7 +4511,6 @@ MOZ_ARG_ENABLE_BOOL(ctl,
 dnl ========================================================
 dnl view source support on by default
 dnl ========================================================
-MOZ_VIEW_SOURCE=1
 MOZ_ARG_DISABLE_BOOL(view-source,
 [  --disable-view-source     Disable view source support],
     MOZ_VIEW_SOURCE=,
@@ -4455,7 +4523,6 @@ fi
 dnl ========================================================
 dnl accessibility support on by default
 dnl ========================================================
-ACCESSIBILITY=1
 MOZ_ARG_DISABLE_BOOL(accessibility,
 [  --disable-accessibility Disable accessibility support],
     ACCESSIBILITY=,
@@ -4467,7 +4534,6 @@ fi
 dnl ========================================================
 dnl xpfe/components on by default
 dnl ========================================================
-MOZ_XPFE_COMPONENTS=1
 MOZ_ARG_DISABLE_BOOL(xpfe-components,
 [  --disable-xpfe-components
                           Disable xpfe components],
@@ -4477,7 +4543,6 @@ MOZ_ARG_DISABLE_BOOL(xpfe-components,
 dnl ========================================================
 dnl xpinstall support on by default
 dnl ========================================================
-MOZ_XPINSTALL=1
 MOZ_ARG_DISABLE_BOOL(xpinstall,
 [  --disable-xpinstall     Disable xpinstall support],
     MOZ_XPINSTALL=,
@@ -4497,7 +4562,6 @@ MOZ_ARG_ENABLE_BOOL(single-profile,
 dnl ========================================================
 dnl xpcom js loader support on by default
 dnl ========================================================
-MOZ_JSLOADER=1
 MOZ_ARG_DISABLE_BOOL(jsloader,
 [  --disable-jsloader      Disable xpcom js loader support],
     MOZ_JSLOADER=,
@@ -4509,7 +4573,6 @@ fi
 dnl ========================================================
 dnl use native unicode converters
 dnl ========================================================
-MOZ_USE_NATIVE_UCONV=
 MOZ_ARG_ENABLE_BOOL(native-uconv,
 [  --enable-native-uconv   Enable iconv support],
     MOZ_USE_NATIVE_UCONV=1,
@@ -4526,7 +4589,6 @@ dnl Libeditor can be build as plaintext-only,
 dnl or as a full html and text editing component.
 dnl We build both by default.
 dnl ========================================================
-MOZ_PLAINTEXT_EDITOR_ONLY=
 MOZ_ARG_ENABLE_BOOL(plaintext-editor-only,
 [  --enable-plaintext-editor-only
                           Allow only plaintext editing],
@@ -4547,7 +4609,6 @@ AC_SUBST(MOZ_COMPOSER)
 dnl ========================================================
 dnl XTF
 dnl ========================================================
-MOZ_XTF=1
 MOZ_ARG_DISABLE_BOOL(xtf,
 [  --disable-xtf           Disable XTF (pluggable xml tags) support],
     MOZ_XTF=,
@@ -4559,8 +4620,6 @@ fi
 dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
-
-MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
@@ -4770,7 +4829,6 @@ MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 dnl ========================================================
 dnl Image decoders
 dnl ========================================================
-MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 case "$target_os" in
 cygwin*|mingw*|msvc*|mks*|os2*|wince*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
@@ -4822,7 +4880,6 @@ MOZ_ARG_ENABLE_BOOL(ldap-experimental,
 dnl ========================================================
 dnl MathML on by default
 dnl ========================================================
-MOZ_MATHML=1
 MOZ_ARG_DISABLE_BOOL(mathml,
 [  --disable-mathml        Disable MathML support],
     MOZ_MATHML=,
@@ -4936,10 +4993,10 @@ AC_SUBST(MOZ_INSTALLER)
 dnl ========================================================
 dnl Updater
 dnl ========================================================
-
 if test "$MOZ_XUL_APP"; then
     MOZ_UPDATER=1
 fi
+
 MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
     MOZ_UPDATER=,
@@ -4970,17 +5027,15 @@ AC_SUBST(MOZ_UPDATE_PACKAGING)
 dnl ========================================================
 dnl ActiveX
 dnl ========================================================
-MOZ_NO_ACTIVEX_SUPPORT=1
-MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*|wince*)
+    msvc*|mks*|cygwin*|mingw*)
         if test -z "$GNU_CC"; then 
             MOZ_NO_ACTIVEX_SUPPORT=
             MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
         fi
         ;;
 esac
-
+ 
 MOZ_ARG_DISABLE_BOOL(activex,
 [  --disable-activex       Disable building of ActiveX control (win32 only)],
     MOZ_NO_ACTIVEX_SUPPORT=1,
@@ -4998,7 +5053,6 @@ if test -n "$MOZ_NO_ACTIVEX_SUPPORT" -a -n "$MOZ_ACTIVEX_SCRIPTING_SUPPORT";
 then
     AC_MSG_ERROR([Cannot enable ActiveX scripting support when ActiveX support is disabled.])
 fi
-
 
 dnl ========================================================
 dnl leaky
@@ -5021,7 +5075,6 @@ MOZ_ARG_ENABLE_BOOL(xpctools,
 dnl ========================================================
 dnl build the tests by default
 dnl ========================================================
-ENABLE_TESTS=1
 MOZ_ARG_DISABLE_BOOL(tests,
 [  --disable-tests         Do not build test libraries & programs],
     ENABLE_TESTS=,
@@ -5214,7 +5267,6 @@ dnl = Enable/disable generation of debugger info for specific modules only
 dnl =    the special module name ALL_MODULES can be used to denote all modules
 dnl =    module names beginning with ^ will be disabled
 dnl ========================================================
-MOZ_DBGRINFO_MODULES=
 MOZ_ARG_ENABLE_STRING(debugger-info-modules,
 [  --enable-debugger-info-modules
                           Enable/disable debugger info for specific modules],
@@ -5270,7 +5322,6 @@ fi
 dnl ========================================================
 dnl = Enable function reordering. Off by default
 dnl ========================================================
-MOZ_REORDER=
 MOZ_ARG_ENABLE_BOOL(reorder,
 [  --enable-reorder        Enable function reordering (requires GNU ld) ],
     _ENABLE_REORDER=1,
@@ -5422,7 +5473,6 @@ dnl = Enable timeline service, which provides lightweight
 dnl = instrumentation of mozilla for performance measurement.
 dnl = Timeline is off by default.
 dnl ========================================================
-MOZ_TIMELINE=
 MOZ_ARG_ENABLE_BOOL(timeline,
 [  --enable-timeline       Enable timeline services ],
     MOZ_TIMELINE=1,
@@ -5434,7 +5484,6 @@ fi
 dnl ========================================================
 dnl Turn on reflow counting
 dnl ========================================================
-MOZ_REFLOW_PERF=
 MOZ_ARG_ENABLE_BOOL(reflow-perf,
 [  --enable-reflow-perf    Enable reflow performance tracing],
     MOZ_REFLOW_PERF=1,
@@ -5933,11 +5982,6 @@ dnl = Static Build Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
-
-BUILD_SHARED_LIBS=1
-BUILD_STATIC_LIBS=
-MOZ_STATIC_COMPONENT_LIBS=
-
 MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        Disable building of internal shared libs],
     BUILD_SHARED_LIBS=)
@@ -5982,7 +6026,6 @@ MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 dnl ========================================================
 dnl = Only selectively build modules
 dnl ========================================================
-BUILD_MODULES=all
 MOZ_ARG_ENABLE_STRING(standalone-modules,
 [  --enable-standalone-modules=mod1[,mod2]
                           Enable standalone build of specific modules],
@@ -6134,9 +6177,6 @@ AC_SUBST(HOST_LIBIDL_LIBS)
 dnl ========================================================
 dnl Check for libart
 dnl ========================================================
-MOZ_LIBART_CFLAGS=
-MOZ_LIBART_LIBS=
-
 if test "$MOZ_SVG_RENDERER_LIBART"; then
   if test ! -f $topsrcdir/other-licenses/libart_lgpl/Makefile.in; then
     AC_MSG_ERROR([You must check out the mozilla version of libart. Use
@@ -6254,7 +6294,6 @@ AC_SUBST(MOZ_CAIRO_LIBS)
 dnl ========================================================
 dnl disable xul
 dnl ========================================================
-MOZ_XUL=1
 MOZ_ARG_DISABLE_BOOL(xul,
 [  --disable-xul           Disable XUL],
     MOZ_XUL= )
@@ -6277,14 +6316,6 @@ dnl PYTHON will allow you to build from any Python version you nominate
 dnl
 dnl If future Python based extensions are added, some of this should
 dnl be split out appropriately.
-MOZ_PYTHON=
-MOZ_PYTHON_PREFIX=
-MOZ_PYTHON_INCLUDES=
-MOZ_PYTHON_LIBS=
-MOZ_PYTHON_VER=
-MOZ_PYTHON_VER_DOTTED=
-MOZ_PYTHON_DEBUG_SUFFIX=
-MOZ_PYTHON_DLL_SUFFIX=
 if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
     dnl If PYTHON is in the environment, we use that
     if test -z "$PYTHON"; then
@@ -6402,7 +6433,6 @@ done
 dnl
 dnl option to disable necko's disk cache
 dnl
-NECKO_DISK_CACHE=1
 MOZ_ARG_DISABLE_BOOL(necko-disk-cache,
 [  --disable-necko-disk-cache
                           Disable necko disk cache],
@@ -6416,7 +6446,6 @@ fi
 dnl
 dnl option to minimize size of necko's i/o buffers
 dnl
-NECKO_SMALL_BUFFERS=
 MOZ_ARG_ENABLE_BOOL(necko-small-buffers,
 [  --enable-necko-small-buffers
                           Minimize size of necko's i/o buffers],
@@ -6430,7 +6459,6 @@ fi
 dnl
 dnl option to disable cookies
 dnl
-NECKO_COOKIES=1
 MOZ_ARG_DISABLE_BOOL(cookies,
 [  --disable-cookies       Disable cookie support],
     NECKO_COOKIES=,
@@ -6446,7 +6474,6 @@ _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 dnl ========================================================
 dnl string api compatibility
 dnl ========================================================
-MOZ_V1_STRING_ABI=1
 MOZ_ARG_DISABLE_BOOL(v1-string-abi,
 [  --disable-v1-string-abi   Disable binary compatibility layer for strings],
     MOZ_V1_STRING_ABI=,

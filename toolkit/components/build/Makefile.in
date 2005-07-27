@@ -84,7 +84,7 @@ REQUIRES = 	\
 		xuldoc \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 REQUIRES += alerts
 endif
 
@@ -102,7 +102,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../typeaheadfind/src \
 	$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 LOCAL_INCLUDES += -I$(srcdir)/../alerts/src
 endif
 
@@ -110,14 +110,17 @@ SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_XPINSTALL
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
+endif
+
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
-ifneq (,$(MOZ_PHOENIX)$(MOZ_SUNBIRD))
+ifneq (,$(MOZ_PHOENIX)$(MOZ_SUNBIRD)$(MINIMO))
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)satchel_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \

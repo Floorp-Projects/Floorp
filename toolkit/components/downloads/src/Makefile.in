@@ -66,7 +66,7 @@ REQUIRES  = xpcom \
             embed_base \
             $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 REQUIRES += alerts
 endif
 
