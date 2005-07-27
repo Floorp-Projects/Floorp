@@ -1826,7 +1826,12 @@ eval {
     $vars->{'patchviewerinstalled'} = 1;
 };
 
-$action = Bugzilla->user->settings->{'post_bug_submit_action'}->{'value'};
+if (defined $cgi->param('id')) {
+    $action = Bugzilla->user->settings->{'post_bug_submit_action'}->{'value'};
+} else {
+    # param('id') is not defined when changing multiple bugs
+    $action = 'nothing';
+}
 
 if ($action eq 'next_bug') {
     my $next_bug;
