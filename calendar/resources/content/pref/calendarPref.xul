@@ -93,7 +93,9 @@
       // the listbox is unreliable. It might update too late.
       var gCategoryList;
       //A list of preferences to be reverted when the dialog is cancelled.
-      var backupPrefList = [];
+      //It needs to be a property of the parent to be visible onCancel
+      if (!parent.backupPrefList)
+         parent.backupPrefList = [];
 
       var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
@@ -260,25 +262,25 @@
          catch (ex) {
             currentColor="##NEW";
          }
-         for(var i = 0; i<backupPrefList.length; i++) {
-            if(categoryNameFix == backupPrefList[i].name)
+         for(var i = 0; i < parent.backupPrefList.length; i++) {
+            if (categoryNameFix == parent.backupPrefList[i].name)
                 return;
          }
-         backupPrefList[backupPrefList.length] = {name : categoryNameFix,
+         parent.backupPrefList[parent.backupPrefList.length] = {name : categoryNameFix,
                 color : currentColor};
       }
 
       function panelOnCancel() {
-         for(var i = 0; i<backupPrefList.length; i++) {
-            if(backupPrefList[i].color == "##NEW") {
+         for(var i = 0; i < parent.backupPrefList.length; i++) {
+            if (parent.backupPrefList[i].color == "##NEW") {
                try {
-                  categoryPrefBranch.clearUserPref(backupPrefList[i].name);
+                  categoryPrefBranch.clearUserPref(parent.backupPrefList[i].name);
                }
                catch (ex) { }
             }
             else
-               categoryPrefBranch.setCharPref(backupPrefList[i].name,
-                       backupPrefList[i].color);
+               categoryPrefBranch.setCharPref(parent.backupPrefList[i].name,
+                       parent.backupPrefList[i].color);
          }
       }
 
