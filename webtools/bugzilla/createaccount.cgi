@@ -30,21 +30,23 @@ use lib qw(.);
 
 require "CGI.pl";
 
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::BugMail;
 use Bugzilla::Util;
 
 # Shut up misguided -w warnings about "used only once":
-use vars qw(
-  $template
-  $vars
-);
+use vars qw($template $vars);
 
 # Just in case someone already has an account, let them get the correct footer
-# on an error message.  The user is logged out just before the account is
+# on an error message. The user is logged out just after the account is
 # actually created.
 Bugzilla->login(LOGIN_OPTIONAL);
+
+my $dbh = Bugzilla->dbh;
+my $cgi = Bugzilla->cgi;
+print $cgi->header();
 
 # If we're using LDAP for login, then we can't create a new account here.
 unless (Bugzilla::Auth->can_edit('new')) {
@@ -56,9 +58,6 @@ unless ($createexp) {
     ThrowUserError("account_creation_disabled");
 }
 
-my $cgi = Bugzilla->cgi;
-print $cgi->header();
-
 my $login = $cgi->param('login');
 
 if (defined($login)) {
@@ -66,9 +65,12 @@ if (defined($login)) {
     my $realname = trim($cgi->param('realname'));
     check_email_syntax($login);
     $vars->{'login'} = $login;
-    
+
+    $dbh->bz_lock_tables('profiles WRITE', 'email_setting WRITE', 'tokens READ');
+
     if (!is_available_username($login)) {
-        # Account already exists        
+        # Account already exists
+        $dbh->bz_unlock_tables();
         $template->process("account/exists.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
@@ -78,11 +80,14 @@ if (defined($login)) {
         ThrowUserError("account_creation_disabled");
     }
     
+    # Create account
+    my $password = insert_new_user($login, $realname);
+
+    $dbh->bz_unlock_tables();
+
     # Clear out the login cookies in case the user is currently logged in.
     Bugzilla->logout();
 
-    # Create account
-    my $password = insert_new_user($login, $realname);
     Bugzilla::BugMail::MailPassword($login, $password);
     
     $template->process("account/created.html.tmpl", $vars)
