@@ -1889,7 +1889,65 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
     // Get info about native surface layout
     PRUint32 bytesPerPix = rowLen/aSurfaceSize.width;
     nsPixelFormat format;
-    aBlackSurface->GetPixelFormat(&format);
+    
+#ifndef XP_MACOSX
+    rv = aBlackSurface->GetPixelFormat(&format);
+    if (NS_FAILED(rv)) {
+        aBlackSurface->Unlock();
+        return rv;
+    }
+#else
+    // On the mac, GetPixelFormat returns NS_ERROR_NOT_IMPLEMENTED;
+    // we fake the pixel format here.  The data that we care about
+    // will be in ABGR format, either 8-8-8 or 5-5-5.
+
+    if (bytesPerPix == 4) {
+        format.mRedZeroMask   = 0xff;
+        format.mGreenZeroMask = 0xff;
+        format.mBlueZeroMask  = 0xff;
+        format.mAlphaZeroMask = 0;
+        
+        format.mRedMask   = 0x00ff0000;
+        format.mGreenMask = 0x0000ff00;
+        format.mBlueMask  = 0x000000ff;
+        format.mAlphaMask = 0;
+        
+        format.mRedCount   = 8;
+        format.mGreenCount = 8;
+        format.mBlueCount  = 8;
+        format.mAlphaCount = 0;
+        
+        format.mRedShift   = 16;
+        format.mGreenShift = 8;
+        format.mBlueShift  = 0;
+        format.mAlphaShift = 0;
+    } else if (bytesPerPix == 2) {
+        format.mRedZeroMask   = 0x1f;
+        format.mGreenZeroMask = 0x1f;
+        format.mBlueZeroMask  = 0x1f;
+        format.mAlphaZeroMask = 0;
+        
+        format.mRedMask   = 0x7C00;
+        format.mGreenMask = 0x03E0;
+        format.mBlueMask  = 0x001F;
+        format.mAlphaMask = 0;
+        
+        format.mRedCount   = 5;
+        format.mGreenCount = 5;
+        format.mBlueCount  = 5;
+        format.mAlphaCount = 0;
+        
+        format.mRedShift   = 10;
+        format.mGreenShift = 5;
+        format.mBlueShift  = 0;
+        format.mAlphaShift = 0;
+    } else {
+        // no clue!
+        aBlackSurface->Unlock();
+        return NS_ERROR_FAILURE;
+    }
+    
+#endif
 
     // Create a temporary surface to hold the full-size image in cairo
     // image format.
@@ -1907,7 +1965,19 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
         aBlackSurface->Unlock();
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    
+
+#ifdef IS_BIG_ENDIAN
+#define BLUE_BYTE 3
+#define GREEN_BYTE 2
+#define RED_BYTE 1
+#define ALPHA_BYTE 0
+#else
+#define BLUE_BYTE 0
+#define GREEN_BYTE 1
+#define RED_BYTE 2
+#define ALPHA_BYTE 3
+#endif
+
     // Convert the data
     PRUint8* dest = tmpBuf;
     PRInt32 index = 0;
@@ -1924,17 +1994,22 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
             // Note that because aBlackSurface is the image rendered
             // onto black, the channel values we get here have
             // effectively been premultipled by the alpha value.
-            dest[0] = (PRUint8)(((v & format.mBlueMask) >> format.mBlueShift)
+            dest[BLUE_BYTE] = (PRUint8)(((v & format.mBlueMask) >> format.mBlueShift)
                                 << (8 - format.mBlueCount));
-            dest[1] = (PRUint8)(((v & format.mGreenMask) >> format.mGreenShift)
+            dest[GREEN_BYTE] = (PRUint8)(((v & format.mGreenMask) >> format.mGreenShift)
                                 << (8 - format.mGreenCount));
-            dest[2] = (PRUint8)(((v & format.mRedMask) >> format.mRedShift)
+            dest[RED_BYTE] = (PRUint8)(((v & format.mRedMask) >> format.mRedShift)
                                 << (8 - format.mRedCount));
-            dest[3] = alphas ? alphas[index++] : 0xFF;
+            dest[ALPHA_BYTE] = alphas ? alphas[index++] : 0xFF;
             src += bytesPerPix;
             dest += 4;
         }
     }
+
+#undef RED_BYTE
+#undef GREEN_BYTE
+#undef BLUE_BYTE
+#undef ALPHA_BYTE
 
     cairo_set_source_surface(mCairo, tmpSurf, 0, 0);
     cairo_paint_with_alpha(mCairo, mGlobalAlpha);
