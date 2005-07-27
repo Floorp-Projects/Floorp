@@ -19,6 +19,20 @@
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
+[%# INTERFACE:
+  # id: number; the ID of the bug that was created.
+  # sentmail: array of hash; bugs for which BugMail should be sent, contains:
+  #     type: string; type of change for this bug, either 'created' if this bug
+  #         was created or 'dep' if it was added as a dependent/blocker
+  #     id: integer; the ID of the bug
+  # mailrecipients: hash; contains the BugMail recipients, for details on
+  #     this contents, see template bug/process/bugmail.html.tmpl
+  # bug: object; Bugzilla::Bug object of the bug that was created (used in
+  #     template bug/edit.html.tmpl
+  # bug_list: array of integers; sorted bug list (used in template
+  #     bug/navigate.html.tmpl)
+  #%]
+
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
@@ -32,6 +46,7 @@
      type = item.type
      id = item.id
      mail = item.mail
+     mailrecipients = mailrecipients
    %]
 [% END %]
 
