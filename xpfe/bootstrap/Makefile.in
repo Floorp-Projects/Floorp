@@ -509,10 +509,12 @@ README_FILE = $(topsrcdir)/README.txt
 endif
 
 libs::
+ifndef MOZ_SUITE
 ifeq ($(OS_ARCH),OS2)
 	cp $(README_FILE) $(DIST)/bin/README.txt
 else
 	$(INSTALL) $(README_FILE) $(DIST)/bin
+endif
 endif
 	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
 
