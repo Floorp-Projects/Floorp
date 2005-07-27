@@ -236,6 +236,10 @@
   [% ELSIF message_tag == "shutdown" %]
     [% title = "$terms.Bugzilla is Down" %]
     [% Param("shutdownhtml") %]
+    [% IF userid %]
+      <p>For security reasons, you have been logged out automatically.
+      The cookie that was remembering your login is now gone.
+    [% END %]
 
   [% ELSIF message_tag == "user_match_failed" %]
     You entered a username that did not match any known 
