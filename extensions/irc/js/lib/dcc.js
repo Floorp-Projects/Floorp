@@ -116,11 +116,20 @@ function dcc_addfile(user, port, file, size)
 CIRCDCC.prototype.addHost =
 function dcc_addhost(host, auth)
 {
-    try {
-        var dnsRecord = this._dnsSvc.resolve(host, false);
+    var me = this;
+    var listener = {
+        onLookupComplete: function _onLookupComplete(request, record, status) {
+            // record == null if it failed. We can't do anything with a failure.
+            if (record)
+            {
+                while (record.hasMore())
+                    me.addIP(record.getNextAddrAsString(), auth);
+            }
+        }
+    };
 
-        while (dnsRecord.hasMore())
-            this.addIP(dnsRecord.getNextAddrAsString(), auth);
+    try {
+        var dnsRecord = this._dnsSvc.asyncResolve(host, false, listener, null);
     } catch (ex) {
         dd("Error resolving host to IP: " + ex);
     }
