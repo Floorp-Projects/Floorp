@@ -165,7 +165,7 @@
   locale/@AB_CD@/navigator-platform/unix/navigator.properties           (%chrome/navigator-platform/unix/navigator.properties)
 + locale/@AB_CD@/global/charset.dtd                 (%chrome/global/charset.dtd)
   locale/@AB_CD@/global-platform/win/nsWindowsHooks.properties (%chrome/global-platform/win/nsWindowsHooks.properties)
-#ifndef MOZ_USE_GENERIC_BRANDING
+#ifdef MOZ_USE_GENERIC_BRANDING
 % locale branding @AB_CD@ %locale/@AB_CD@/branding/
   locale/@AB_CD@/branding/brand.properties            (%chrome/branding/brand.properties)
 * locale/@AB_CD@/branding/brand.dtd                   (%chrome/branding/brand.dtd)
