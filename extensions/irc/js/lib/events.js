@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Robert Ginda, rginda@ndcico.com, original author
+ *   James Ross, silver@warwickcompsoc.co.uk
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,6 @@
 
 function CEvent (set, type, destObject, destMethod)
 {
-
     this.set = set;
     this.type = type;
     this.destObject = destObject;
@@ -57,7 +57,6 @@ function CEvent (set, type, destObject, destMethod)
  */
 function CEventPump (eventsPerStep)
 {
-
     /* event routing stops after this many levels, safety valve */
     this.MAX_EVENT_DEPTH = 50;
     /* When there are this many 'used' items in a queue, always clean up. At
@@ -102,14 +101,24 @@ function ep_hook(e, hooks)
             !matchObject (e, hooks[h].pattern, hooks[h].neg))
             continue hook_loop;
 
-        e.hooks.push (hooks[h]);
-        var rv = hooks[h].f(e);
+        e.hooks.push(hooks[h]);
+        try
+        {
+            var rv = hooks[h].f(e);
+        }
+        catch(ex)
+        {
+            dd("hook #" + h + " '" +
+               ((typeof hooks[h].name != "undefined") ? hooks[h].name :
+                "") + "' had an error!");
+            dd(formatException(ex));
+        }
         if ((typeof rv == "boolean") &&
             (rv == false))
         {
-            dd ("hook #" + h + " '" +
-                ((typeof hooks[h].name != "undefined") ? hooks[h].name :
-                 "") + "' stopped hook processing.");
+            dd("hook #" + h + " '" +
+               ((typeof hooks[h].name != "undefined") ? hooks[h].name :
+                "") + "' stopped hook processing.");
             return true;
         }
     }
@@ -345,6 +354,6 @@ function ep_stepevents()
         this.bulkQueuePointer = 0;
     }
 
-    return true;
+    return i;
 
 }
