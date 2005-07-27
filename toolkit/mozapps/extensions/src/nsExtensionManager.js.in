@@ -6684,6 +6684,19 @@ ExtensionsDataSource.prototype = {
         this.getItemProperty(id, "opType") != OP_NEEDS_DISABLE)
       return EM_L("true");
 
+    // Migrate disabled in the extensions datasource to userDisabled or
+    // appDisabled as appropriate.
+    var oldDisabled = this._inner.GetTarget(item, property, true);
+    if (oldDisabled instanceof Components.interfaces.nsIRDFLiteral) {
+      this._inner.Unassert(item, property, oldDisabled);
+      if (this.getItemProperty(id, "compatible") == "true")
+        this.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
+      else
+        this.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
+
+      return EM_L("true");
+    }
+
     return EM_L("false");
   },
 
