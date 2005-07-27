@@ -3547,8 +3547,9 @@ nsHttpChannel::SetRequestHeader(const nsACString &header,
     // permits CTL characters, including CR and LF, in header values provided
     // they are quoted.  However, this can lead to problems if servers do not
     // interpret quoted strings properly.  Disallowing CR and LF here seems
-    // reasonable and keeps things simple.
-    if (flatValue.FindCharInSet("\r\n\0") != kNotFound)
+    // reasonable and keeps things simple.  We also disallow a null byte.
+    if (flatValue.FindCharInSet("\r\n") != kNotFound ||
+        flatValue.Length() != strlen(flatValue.get()))
         return NS_ERROR_INVALID_ARG;
 
     nsHttpAtom atom = nsHttp::ResolveAtom(flatHeader.get());
