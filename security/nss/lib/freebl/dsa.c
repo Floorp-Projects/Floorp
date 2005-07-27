@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.14 2005/05/21 21:35:24 nelsonb%netscape.com Exp $ */
+/* $Id: dsa.c,v 1.15 2005/07/27 18:48:44 wtchang%redhat.com Exp $ */
 
 #include "secerr.h"
 
@@ -270,7 +270,7 @@ cleanup:
     return rv;
 }
 
-/* signature is caller-supplied buffer of at least 20 bytes.
+/* signature is caller-supplied buffer of at least 40 bytes.
 ** On input,  signature->len == size of buffer to hold signature.
 **            digest->len    == size of digest.
 ** On output, signature->len == size of signature in buffer.
@@ -368,8 +368,11 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
     ** Verify that 0 < r' < q and 0 < s' < q
     */
     if (mp_cmp_z(&r_) <= 0 || mp_cmp_z(&s_) <= 0 ||
-        mp_cmp(&r_, &q) >= 0 || mp_cmp(&s_, &q) >= 0)
+        mp_cmp(&r_, &q) >= 0 || mp_cmp(&s_, &q) >= 0) {
+	/* err is zero here. */
+	PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
 	goto cleanup; /* will return verified == SECFailure */
+    }
     /*
     ** FIPS 186-1, Section 6, Step 1
     **
