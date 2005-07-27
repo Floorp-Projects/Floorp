@@ -49,6 +49,7 @@ const MESSAGE_TEMPLATE = "\n\
 <html>\n\
   <head>\n\
     <title>%TITLE%</title>\n\
+    <base href=\"%BASE%\">\n\
     <style type=\"text/css\">\n\
       %STYLE%\n\
     </style>\n\
@@ -106,6 +107,8 @@ function FeedItem()
 
 FeedItem.prototype = 
 {
+  isStoredWithId: false, // we currently only do this for IETF Atom. RSS2 with GUIDs should do this as well.
+  xmlContentBase: null, // only for IETF Atom
   id: null,
   feed: null,
   description: null,
@@ -156,6 +159,24 @@ FeedItem.prototype =
     return messageID;
   },
 
+  get itemUniqueURI()
+  {
+    var theURI;
+    if(this.isStoredWithId && this.id)
+      theURI = "urn:" + this.id;
+    else
+      theURI = this.mURL || ("urn:" + this.id);
+    return theURI;
+  },
+
+  get contentBase()
+  {
+    if(this.xmlContentBase)
+      return this.xmlContentBase
+    else
+      return this.mURL;
+  },
+
   store: function() 
   {
     this.mUnicodeConverter.charset = this.characterSet;
@@ -169,6 +190,7 @@ FeedItem.prototype =
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, LOCAL_STYLE);
       content = content.replace(/%TITLE%/, this.title);
+      content = content.replace(/%BASE%/, this.contentBase); 
       content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%CONTENT%/, this.content);
       this.content = content; // XXX store it elsewhere, f.e. this.page
@@ -183,6 +205,7 @@ FeedItem.prototype =
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, LOCAL_STYLE);
+      content = content.replace(/%BASE%/, this.contentBase); 
       content = content.replace(/%TITLE%/, this.title);
       content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%CONTENT%/, this.content);
@@ -197,6 +220,7 @@ FeedItem.prototype =
       content = content.replace(/%CONTENT_TEMPLATE%/, REMOTE_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, REMOTE_STYLE);
       content = content.replace(/%TITLE%/, this.title);
+      content = content.replace(/%BASE%/, this.contentBase); 
       content = content.replace(/%URL%/g, this.mURL);
       content = content.replace(/%DESCRIPTION%/, this.description || this.title);
       this.content = content; // XXX store it elsewhere, f.e. this.page
@@ -224,7 +248,7 @@ FeedItem.prototype =
     }
 
     var ds = getItemsDS(server);
-    var itemURI = this.mURL || ("urn:" + this.id);
+    var itemURI = this.itemUniqueURI;
     var itemResource = rdf.GetResource(itemURI);
 
     var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
@@ -261,7 +285,9 @@ FeedItem.prototype =
   {
     debug("validating " + this.mURL);
     var ds = getItemsDS(this.feed.server);
-    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
+
+    var itemURI = this.itemUniqueURI;
+    var resource = rdf.GetResource(itemURI);
     
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
       ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
@@ -278,7 +304,8 @@ FeedItem.prototype =
   markStored: function() 
   {
     var ds = getItemsDS(this.feed.server);
-    var resource = rdf.GetResource(this.mURL || ("urn:" + this.id));
+    var itemURI = this.itemUniqueURI;
+    var resource = rdf.GetResource(itemURI);
    
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
       ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);

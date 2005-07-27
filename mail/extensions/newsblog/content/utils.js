@@ -83,7 +83,7 @@ const RDF_LITERAL_FALSE = rdf.GetLiteral("false");
 
 // Atom constants
 const ATOM_03_NS = "http://purl.org/atom/ns#";
-
+const ATOM_IETF_NS = "http://www.w3.org/2005/Atom";
 
 // XXX There's a containerutils in forumzilla.js that this should be merged with.
 var containerUtils = Components.classes["@mozilla.org/rdf/container-utils;1"]

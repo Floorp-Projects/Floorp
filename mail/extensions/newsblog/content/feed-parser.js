@@ -69,8 +69,13 @@ FeedParser.prototype =
     } 
     else if (aDOM.documentElement.namespaceURI == ATOM_03_NS)
     {
-      debug(aFeed.url + " is an Atom feed");
+      debug(aFeed.url + " is an Atom 0.3 feed");
       return this.parseAsAtom(aFeed, aDOM);
+    }
+    else if (aDOM.documentElement.namespaceURI == ATOM_IETF_NS)
+    {
+      debug(aFeed.url + " is an IETF Atom feed");
+      return this.parseAsAtomIETF(aFeed, aDOM);
     }
     else if (aSource.search(/"http:\/\/my\.netscape\.com\/rdf\/simple\/0\.9\/"/) != -1)
     {
@@ -109,7 +114,7 @@ FeedParser.prototype =
     aFeed.invalidateItems();
     var itemNodes = aDOM.getElementsByTagName("item");
 
-    for (var i=0; i<itemNodes.length; i++) 
+    for (var i=0; i < itemNodes.length; i++) 
     {
       var itemNode = itemNodes[i];
       var item = new FeedItem();
@@ -266,7 +271,7 @@ FeedParser.prototype =
     var items = aDOM.getElementsByTagName("entry");
     debug("Items to parse: " + items.length);
   
-    for (var i=0; i<items.length; i++) 
+    for (var i=0; i < items.length; i++) 
     {
       var itemNode = items[i];
       var item = new FeedItem();
@@ -345,13 +350,130 @@ FeedParser.prototype =
     return parsedItems;
   },
 
+  parseAsAtomIETF: function(aFeed, aDOM)
+  {
+    
+    var parsedItems = new Array();
+
+    // Get the first channel (assuming there is only one per Atom File).
+    var channel = aDOM.getElementsByTagNameNS(ATOM_IETF_NS,"feed")[0];
+    if (!channel)
+    {
+      aFeed.onParseError(aFeed);
+      return parsedItems;
+    }
+
+    aFeed.title = aFeed.title || this.stripTags(this.serializeTextConstruct(channel.getElementsByTagNameNS(ATOM_IETF_NS,"title")[0]));
+    aFeed.description = this.serializeTextConstruct(channel.getElementsByTagNameNS(ATOM_IETF_NS,"subtitle")[0]);
+    aFeed.link = this.findAtomLink("alternate",channel.getElementsByTagNameNS(ATOM_IETF_NS,"link"));
+
+    if (!aFeed.parseItems)
+      return parsedItems;
+
+    aFeed.invalidateItems();
+    var items = aDOM.getElementsByTagNameNS(ATOM_IETF_NS,"entry");
+    debug("Items to parse: " + items.length);
+
+    for (var i=0; i < items.length; i++) 
+    {
+      var itemNode = items[i];
+      var item = new FeedItem();
+      item.feed = aFeed;
+      item.characterSet = "UTF-8";
+      item.isStoredWithId = true;
+      item.url = this.findAtomLink("alternate",itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"link")) || aFeed.link;
+      item.id = getNodeValue(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"id")[0]);
+      item.description = this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"summary")[0]);
+      item.title = this.stripTags(this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"title")[0])
+                                  || (item.description ? item.description.substr(0, 150) : null)
+                                  || item.title);
+      
+      // XXX Support multiple authors
+      var source = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"source")[0];
+      var authorEl = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0]
+                           || (source ? source.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0] : null)
+                           || channel.getElementsByTagNameNS(ATOM_IETF_NS,"author")[0];
+      var author = "";
+
+      if (authorEl) 
+      {
+        var name = getNodeValue(authorEl.getElementsByTagNameNS(ATOM_IETF_NS,"name")[0]);
+        var email = getNodeValue(authorEl.getElementsByTagNameNS(ATOM_IETF_NS,"email")[0]);
+        if (name)
+          author = name + (email ? " <" + email + ">" : "");
+        else if (email)
+          author = email;
+      }
+      
+      item.author = author || item.author || aFeed.title;
+      item.date = getNodeValue(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"updated")[0]
+                               || itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"published")[0])
+                               || item.date;
+
+      item.content = this.serializeTextConstruct(itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"content")[0]);
+
+      if(item.content)
+        item.xmlContentBase = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"content")[0].baseURI;
+      else if(item.description)
+        item.xmlContentBase = itemNode.getElementsByTagNameNS(ATOM_IETF_NS,"summary")[0].baseURI;
+      else
+        item.xmlContentBase = itemNode.baseURI;
+
+      parsedItems[i] = item;
+    }
+
+    return parsedItems;
+
+  },
+
+  serializeTextConstruct: function(textElement)
+  {
+    var content = "";
+
+    if (textElement) 
+    {
+      var textType = textElement.getAttribute('type');
+
+      // Atom spec says consider it "text" if not present
+      if(!textType)
+        textType = "text";
+
+      // There could be some strange content type we don't handle
+      if((textType != "text") && (textType != "html") && (textType != "xhtml"))
+        return null;
+
+      for (var j=0; j < textElement.childNodes.length; j++) 
+      {
+        var node = textElement.childNodes.item(j);
+        if (node.nodeType == node.CDATA_SECTION_NODE)
+          content += node.data;
+        else
+          content += serializer.serializeToString(node);
+      }
+      if (textType == "html") 
+      {
+        content = content.replace(/&lt;/g, "<");
+        content = content.replace(/&gt;/g, ">");
+        content = content.replace(/&amp;/g, "&");
+      }
+    }
+
+    // other parts of the code depend on this being null
+    // if there's no content
+    return content ? content : null;
+  },
+
   findAtomLink: function(linkRel, linkElements)
   {
     // XXX Need to check for MIME type and hreflang
     for ( var j=0 ; j<linkElements.length ; j++ ) {
       var alink = linkElements[j];
-      if (alink && alink.getAttribute('rel') 
-          && alink.getAttribute('rel') == linkRel && alink.getAttribute('href')) 
+      if (alink && 
+          //if there's a link rel
+          ((alink.getAttribute('rel') && alink.getAttribute('rel') == linkRel) ||
+           //if there isn't, assume 'alternate'
+           (!alink.getAttribute('rel') && (linkRel=="alternate"))) 
+          && alink.getAttribute('href')) 
       {
         // Atom links are interpreted relative to xml:base
         url = Components.classes["@mozilla.org/network/standard-url;1"].
@@ -360,6 +482,7 @@ FeedParser.prototype =
         return url.resolve(alink.getAttribute('href'));
       }
     }
+    return null;
   },
   
   stripTags: function(someHTML) 
