@@ -154,7 +154,7 @@
     <toolbox id="help-toolbox" class="toolbox-top">
       <toolbar id="HelpToolbar" class="chromeclass-toolbar">
         <toolbarbutton id="help-back-button" type="menu-button"
-                       class="browserButton" label="&backButton.label;"
+                       label="&backButton.label;"
                        oncommand="if (event.target == this) goBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu"
                        tooltiptext="&backButton.tooltip;"
@@ -162,18 +162,17 @@
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="help-forward-button" type="menu-button"
-                       class="browserButton"
                        oncommand="if (event.target == this) goForward(); else gotoHistoryIndex(event);"
                        tooltiptext="&forwardButton.tooltip;"
                        observes="canGoForward"
                        chromedir="&locale.dir;">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </toolbarbutton>
-        <toolbarbutton id="help-home-button" class="browserButton"
+        <toolbarbutton id="help-home-button"
                        tooltiptext="&homeButton.tooltip;"
                        command="Help:Home"/>
         <toolbarseparator/>
-        <toolbarbutton id="help-print-button" class="browserButton"
+        <toolbarbutton id="help-print-button"
                        label="&printButton.label;"
                        oncommand="print();"
                        tooltiptext="&printButton.tooltip;"/>
