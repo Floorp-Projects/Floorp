@@ -3011,7 +3011,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
         aURI->GetSpec(spec);
 
         nsCAutoString chanName;
-        aFailedChannel->GetName(chanName);
+        if (aFailedChannel)
+            aFailedChannel->GetName(chanName);
+        else
+            chanName.AssignLiteral("<no channel>");
 
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsDocShell[%p]::LoadErrorPage(\"%s\", \"%s\", {...}, [%s])\n", this,
@@ -3022,6 +3025,9 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     if (aFailedChannel) {
         mURIResultedInDocument = PR_TRUE;
         OnLoadingSite(aFailedChannel, PR_TRUE);
+    } else if (aURI) {
+        mURIResultedInDocument = PR_TRUE;
+        OnNewURI(aURI, nsnull, mLoadType, PR_TRUE);
     }
 
     nsCAutoString url;
@@ -6980,7 +6986,10 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         aURI->GetSpec(spec);
 
         nsCAutoString chanName;
-        aChannel->GetName(chanName);
+        if (aChannel)
+            aChannel->GetName(chanName);
+        else
+            chanName.AssignLiteral("<no channel>");
 
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsDocShell[%p]::OnNewURI(\"%s\", [%s], 0x%x)\n", this, spec.get(),
@@ -7032,6 +7041,9 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     if (mCurrentURI)
         aURI->Equals(mCurrentURI, &equalUri);
 
+    PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+           ("  shAvailable=%i updateHistory=%i equalURI=%i\n",
+            shAvailable, updateHistory, equalUri));
 
     /* If the url to be loaded is the same as the one already there,
      * and the original loadType is LOAD_NORMAL, LOAD_LINK, or
@@ -7185,7 +7197,10 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         aURI->GetSpec(spec);
 
         nsCAutoString chanName;
-        aChannel->GetName(chanName);
+        if (aChannel)
+            aChannel->GetName(chanName);
+        else
+            chanName.AssignLiteral("<no channel>");
 
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsDocShell[%p]::AddToSessionHistory(\"%s\", [%s])\n", this, spec.get(),
