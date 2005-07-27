@@ -358,9 +358,9 @@
   
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
-    Sorry, either the product <em>[% product FILTER html %]</em> does not
-    exist, or you don't have the required permissions to
-    enter [% terms.abug %] against that product.
+    Sorry, either the product <em>[% product FILTER html %]</em>
+    does not exist or you aren't authorized to
+    enter [% terms.abug %] into it.
 
   [% ELSIF error == "fieldname_invalid" %]
     [% title = "Specified Field Does Not Exist" %]
@@ -754,15 +754,15 @@
 
   [% ELSIF error == "missing_component" %]
     [% title = "Missing Component" %]
-    Sorry; there needs to be at least one component
-    associated with the product <em>[% product FILTER html %]</em> in order to
-    create a new [% terms.bug %].
+    Sorry, the product <em>[% product FILTER html %]</em>
+    has to have at least one component in order for you to
+    enter [% terms.abug %] into it.<p>
     [% IF UserInGroup("editcomponents") %]
       <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">Create
       a new component</a>.
     [% ELSE %]
-       Please contact [% Param("maintainer") %], giving the name of
-       the product in which you tried to create a new [% terms.bug %].
+      Please contact [% Param("maintainer") %] and ask them
+      to add a component to this product.
     [% END %]
 
   [% ELSIF error == "missing_content_type" %]
@@ -815,15 +815,15 @@
                 
   [% ELSIF error == "missing_version" %]
     [% title = "Missing Version" %]
-    Sorry; there needs to be at least one version
-    associated with the product <em>[% product FILTER html %]</em> in order to
-    create a new [% terms.bug %].
+    Sorry, the product <em>[% product FILTER html %]</em>
+    has to have at least one version in order for you to
+    enter [% terms.abug %] into it.<p>
     [% IF UserInGroup("editcomponents") %]
       <a href="editversions.cgi?product=[% product FILTER url_quote %]">Create
       a new version</a>.
     [% ELSE %]
-       Please contact [% Param("maintainer") %], giving the name of
-       the product in which you tried to create a new [% terms.bug %].
+      Please contact [% Param("maintainer") %] and ask them
+      to add a version to this product.
     [% END %]
 
   [% ELSIF error == "need_component" %]
@@ -947,7 +947,7 @@
 
   [% ELSIF error == "product_disabled" %]
     [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
-    Sorry, entering [% terms.bugs %] into
+    Sorry, entering [% terms.bugs %] into the
     product <em>[% product FILTER html %]</em> has been disabled.
 
   [% ELSIF error == "product_edit_denied" %]
