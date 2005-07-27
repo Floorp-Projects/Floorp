@@ -1677,7 +1677,7 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     if (NS_FAILED(rv))
       return PR_FALSE;
 
-    rv = lf->Equals(aXULRunnerDir, &eq);
+    rv = lf->Equals(aAppDir, &eq);
     if (NS_FAILED(rv) || !eq)
       return PR_FALSE;
   }
