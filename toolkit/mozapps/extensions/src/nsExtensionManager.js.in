@@ -5049,9 +5049,9 @@ ExtensionItemUpdater.prototype = {
     // If |targetAppInfo| is null, then this item does not exist in the 
     // datasource yet, probably because this update check operation was spawned
     // during a Phone Home operation and the item has not yet been installed.
-    // Return!
+    // Return true so the new compatibility info will be used for the install.
     if (!targetAppInfo) 
-      return;
+      return true;
     if (gVersionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
       // Remotely specified maxVersion is newer than the maxVersion 
       // for the installed Extension. Apply that change to the datasources.
@@ -5064,7 +5064,9 @@ ExtensionItemUpdater.prototype = {
       if (op == OP_NEEDS_DISABLE ||
           this._emDS.getItemProperty(aLocalItem.id, "appDisabled") == "true")
         this._em._appEnableItem(aLocalItem.id);
+      return true;
     }
+    return false;
   },
   
   _isValidUpdate: function(aLocalItem, aRemoteItem) {
@@ -5323,14 +5325,13 @@ RDFItemUpdater.prototype = {
                           aLocalItem.name, 
                           "", "", "", 
                           aLocalItem.type);
-      if (this._updater._isValidUpdate(aLocalItem, sameItem) &&
-         (aLocalItem.minAppVersion != sameItem.minAppVersion ||
-          aLocalItem.maxAppVersion != sameItem.maxAppVersion)) {
+      if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
         // Install-time updates are not written to the DS because there is no
         // entry yet, EM just uses the notifications to ascertain (by hand)
         // whether or not there is a remote maxVersion tweak that makes the 
         // item being installed compatible.
-        this._updater._applyVersionUpdates(aLocalItem, sameItem);
+        if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
+          sameItem = null;
       }
       else 
         sameItem = null;
