@@ -37,35 +37,16 @@
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-toolbarbutton {
-  -moz-box-orient: horizontal;
+toolbar toolbarbutton {
+  min-width: 16px;
+  list-style-image: url("chrome://help/skin/Toolbar.png");
+  -moz-box-orient: horizontal !important;
 }
 
 toolbarbutton[type="menu-button"] {
   margin: 0px;
   padding: 0px;
 }
-
-.toolbarbutton-1 {
-  min-width: 16px;
-  list-style-image: url("chrome://help/skin/Toolbar.png");
-  -moz-box-orient: vertical;
-}
-
-.toolbarbutton-menubutton-stack {
-  -moz-box-orient: horizontal;
-}
-
-.toolbarbutton-menubutton-stack > .toolbarbutton-menubutton-button {
-  -moz-box-orient: horizontal;
-}
-
-.browserButton {
-  min-width: 16px;
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-box-orient: horizontal;
-}
-
 
 toolbarbutton:not([disabled="true"]):hover,
 menubutton:not([disabled="true"]):hover,
@@ -85,11 +66,11 @@ menubutton:not([disabled="true"]):hover:active {
 #help-forward-button:not([disabled="true"]):hover:active { -moz-image-region: rect(32px 64px 64px 32px); }
 #help-forward-button[disabled="true"] { -moz-image-region: rect(64px 64px 96px 32px); }
 
-#help-home-button { -moz-image-region: rect(0px 160px 32px 128px); }
-#help-home-button:hover:active { -moz-image-region: rect(32px 160px 64px 128px); }
+#help-home-button { -moz-image-region: rect(0px 96px 32px 64px); }
+#help-home-button:hover:active { -moz-image-region: rect(32px 96px 64px 64px); }
 
-#help-print-button { -moz-image-region: rect(0px 288px 32px 256px); }
-#help-print-button:hover:active { -moz-image-region: rect(32px 288px 64px 256px); }
+#help-print-button { -moz-image-region: rect(0px 128px 32px 96px); }
+#help-print-button:hover:active { -moz-image-region: rect(32px 128px 64px 96px); }
 
 
 #helpsidebar-splitter {
@@ -121,4 +102,3 @@ menubutton:not([disabled="true"]):hover:active {
   margin-bottom: 14px;
   border-bottom: 1px solid #bebebe;
 }
-

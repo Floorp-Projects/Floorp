@@ -37,20 +37,10 @@
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.toolbarbutton-1 {
-	-moz-box-orient: vertical;
-	min-width: 0px;
-#ifdef MOZ_PHOENIX
-	list-style-image: url("chrome://browser/skin/Toolbar.png");
-#else
+toolbar toolbarbutton {
+	-moz-box-orient: horizontal !important;
+	min-width: 16px;
 	list-style-image: url("chrome://help/skin/Toolbar.png");
-#endif
-}
-
- #help-zoom-large-button,
- #help-zoom-small-button,
- #help-sidebar-button {
-	list-style-image: url("chrome://help/skin/zoomImg.png");
 }
 
 toolbarbutton:not([disabled="true"]):hover,
@@ -59,6 +49,9 @@ toolbarbutton:not([disabled="true"]):hover:active,
 menubutton:not([disabled="true"]):hover:active {
 	color: ButtonText !important;
 }
+
+/* Set the minimum sidebar width so the help contents aren't squeezed together.*/
+#help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
 
 # *** BEGIN TOOLBAR BUTTON CODE ***
 # All toolbar button images are 30x30 for the Help Viewer.
@@ -71,65 +64,8 @@ menubutton:not([disabled="true"]):hover:active {
  #help-forward-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
  #help-forward-button[disabled="true"] { -moz-image-region: rect(60px 60px 90px 30px); }
 
- #help-find-button { -moz-image-region: rect(0px 240px 30px 210px); }
- #help-find-button:hover { -moz-image-region: rect(30px 240px 60px 210px); }
+ #help-home-button { -moz-image-region: rect(0px 90px 30px 60px); }
+ #help-home-button:hover { -moz-image-region: rect(30px 90px 60px 60px); }
 
- #help-toolbar-customization { -moz-image-region: rect(0px 330px 30px 300px); }
- #help-toolbar-customization:hover { -moz-image-region: rect(30px 330px 60px 300px); }
-
- #help-home-button { -moz-image-region: rect(0px 150px 30px 120px); }
- #help-home-button:hover { -moz-image-region: rect(30px 150px 60px 120px); }
-
- #help-print-button { -moz-image-region: rect(0px 270px 30px 240px); }
- #help-print-button:hover { -moz-image-region: rect(30px 270px 60px 240px); }
-
- #help-zoom-large-button { -moz-image-region: rect(0px 30px 30px 0px); }
- #help-zoom-large-button:hover { -moz-image-region: rect(30px 30px 60px 0px); }
-
- #help-zoom-small-button { -moz-image-region: rect(0px 60px 30px 30px); }
- #help-zoom-small-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
-
- #help-sidebar-button { -moz-image-region: rect(0px 90px 60px 60px); }
- #help-sidebar-button:hover { -moz-image-region: rect(30px 90px 60px 60px); }
-
-# ** Toolbar Customization stuff **
-toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-text,
-toolbar[mode="icons"] > toolbarbutton[type="menu-button"] > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton[type="menu-button"] > .toolbarbutton-text {
-	display: -moz-box;
-}
-
-toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-text,
-toolbar[mode="text"] > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="text"] > toolbarbutton > toolbarbutton > .toolbarbutton-icon,
-toolbar[mode="icons"] > toolbarbutton > toolbarbutton > .toolbarbutton-text {
-	display: none;
-}
-
-# Small icons are not supported.
- #smallicons { display: none; }
-
-# *** THROBBER ***
- #help-throbber {
-  -moz-appearance: none;
-  -moz-user-focus: ignore;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0px !important;
-  min-width: 0;
-  background-color: transparent;
-#ifdef MOZ_PHOENIX
-  list-style-image: url("chrome://browser/skin/Throbber.png");
-#else
-  list-style-image: url("chrome://help/skin/throbber.png");
-#endif
-}
-
- #help-throbber[busy="true"] {
-#ifdef MOZ_PHOENIX
-  list-style-image: url("chrome://global/skin/icons/Loading.gif");
-#else
-  list-style-image: url("chrome://help/skin/throbber-busy.gif");
-#endif
-}
+ #help-print-button { -moz-image-region: rect(0px 120px 30px 90px); }
+ #help-print-button:hover { -moz-image-region: rect(30px 120px 60px 90px); }
