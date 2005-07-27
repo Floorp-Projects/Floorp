@@ -304,7 +304,8 @@ protected:
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
     PRBool OnLoadingSite(nsIChannel * aChannel,
-                         PRBool aFireOnLocationChange);
+                         PRBool aFireOnLocationChange,
+                         PRBool aAddToGlobalHistory = PR_TRUE);
 
     // Returns PR_TRUE if would have called FireOnLocationChange,
     // but did not because aFireOnLocationChange was false on entry.
@@ -312,7 +313,8 @@ protected:
     // FireOnLocationChange is called.
     // In all other cases PR_FALSE is returned.
     PRBool OnNewURI(nsIURI * aURI, nsIChannel * aChannel, PRUint32 aLoadType,
-                    PRBool aFireOnLocationChange);
+                    PRBool aFireOnLocationChange,
+                    PRBool aAddToGlobalHistory = PR_TRUE);
 
     virtual void SetReferrerURI(nsIURI * aURI);
 
