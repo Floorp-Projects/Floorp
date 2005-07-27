@@ -137,6 +137,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 + (CHBrowserView*)browserViewFromDOMWindow:(nsIDOMWindow*)inWindow
 {
+  if (!inWindow)
+    return nil;
+
   // make sure we get the root window (e.g. for subframes in frameset)
   nsCOMPtr<nsIDOMWindow> topWindow;
   inWindow->GetTop(getter_AddRefs(topWindow));
