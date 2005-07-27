@@ -49,6 +49,9 @@ messenger.jar:
     content/branding/about-credits.png              (content/about-credits.png)
     content/branding/about-thunderbird.png          (content/about-thunderbird.png)
     content/branding/thunderbird-watermark.png      (content/thunderbird-watermark.png)
+#ifdef XP_WIN
+    content/branding/uninstall.properties           (content/uninstall.properties)
+#endif
 #endif
 # The following file should have an official-branding version also. See bug 286483
     content/branding/icon64.png                     (content/icon64.png)

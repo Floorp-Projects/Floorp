@@ -48,6 +48,7 @@ const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
+const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -85,6 +86,8 @@ const STATE_FAILED          = "failed";
 const DOWNLOAD_CHUNK_SIZE           = 65536;
 const DOWNLOAD_BACKGROUND_INTERVAL  = 1;
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
+
+const POST_UPDATE_CONTRACTID = "@mozilla.org/updates/post-update;1";
 
 const nsILocalFile            = Components.interfaces.nsILocalFile;
 const nsIUpdateService        = Components.interfaces.nsIUpdateService;
@@ -339,6 +342,20 @@ function getPref(func, preference, defaultValue) {
   catch (e) {
   }
   return defaultValue;
+}
+
+/**
+ * Gets the current value of the locale.  It's possible for this preference to
+ * be localized, so we have to do a little extra work here.  Similar code
+ * exists in nsHttpHandler.cpp when building the UA string.
+ */
+function getLocale() {
+  try {
+    return gPref.getComplexValue(PREF_GENERAL_USERAGENT_LOCALE,
+                                 nsIPrefLocalizedString).data;
+  } catch (e) {}
+
+  return gPref.getCharPref(PREF_GENERAL_USERAGENT_LOCALE);
 }
 
 /**
@@ -858,6 +875,12 @@ UpdateService.prototype = {
         update.statusText = bundle.GetStringFromName("installSuccess");
         LOG("UpdateService", "_postUpdateProcessing: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
+
+        // Perform platform-specific post-update processing.
+        if (POST_UPDATE_CONTRACTID in Components.classes) {
+          Components.classes[POST_UPDATE_CONTRACTID].
+              createInstance(Components.interfaces.nsIRunnable).run();
+        }
         
         // Done with this update. Clean it up.
         cleanup();
@@ -889,7 +912,7 @@ UpdateService.prototype = {
       LOG("UpdateService", "_postUpdateProcessing: No Status, No Update");
     }
   },
-  
+
   /**
    * Initialize Logging preferences, formatted like so:
    *  app.update.log.<moduleName> = <true|false>
@@ -1458,13 +1481,11 @@ Checker.prototype = {
       return null;
     }
 
-    var locale = gPref.getCharPref("general.useragent.locale");
-
     url = url.replace(/%PRODUCT%/g, gApp.name);
     url = url.replace(/%VERSION%/g, gApp.version);
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gApp.XPCOMABI);
-    url = url.replace(/%LOCALE%/g, locale);
+    url = url.replace(/%LOCALE%/g, getLocale());
     url = url.replace(/\+/g, "%2B");
 
     LOG("Checker", "update url: " + url);
