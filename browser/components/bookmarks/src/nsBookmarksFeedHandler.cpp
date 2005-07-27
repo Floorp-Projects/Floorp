@@ -697,7 +697,9 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
 
                                 nsAutoString rel;
                                 linkElem->GetAttribute(NS_LITERAL_STRING("rel"), rel);
-                                if (rel.Equals(NS_LITERAL_STRING("alternate"))) {
+                                if (rel.Equals(NS_LITERAL_STRING("alternate")) ||
+                                    rel.IsEmpty())
+                                {
                                     rv = linkElem->GetAttribute(NS_LITERAL_STRING("href"), linkStr);
                                     if (NS_FAILED(rv)) break; // out of while(childNode) loop
                                 }
