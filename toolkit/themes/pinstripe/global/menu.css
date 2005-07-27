@@ -51,6 +51,8 @@ menuitem {
   -moz-box-align: center;
   color: MenuText;
   font: menu;
+  list-style-image: none;
+  -moz-image-region: auto;
 }
 
 menu[disabled="true"], menuitem[disabled="true"],
