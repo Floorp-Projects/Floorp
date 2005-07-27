@@ -129,7 +129,7 @@ var gAdvancedPane = {
     }
     else {
       manager.performUpdate();
-      manger.focus();
+      manager.focus();
     }
   },
   
