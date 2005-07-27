@@ -1963,11 +1963,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return 0;
   }
 
-#if defined(MOZ_UPDATER)
-  // Check for and process any available updates
-  ProcessUpdates(dirProvider.GetAppDir(), gRestartArgc, gRestartArgv);
-#endif
-
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
   // setup for private colormap.  Ideally we'd like to do this
   // in nsAppShell::Create, but we need to get in before gtk
@@ -2065,6 +2060,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (RemoteCommandLine())
       return 0;
   }
+#endif
+
+#if defined(MOZ_UPDATER)
+  // Check for and process any available updates
+  ProcessUpdates(dirProvider.GetAppDir(), gRestartArgc, gRestartArgv);
 #endif
 
   nsCOMPtr<nsIProfileLock> profileLock;
