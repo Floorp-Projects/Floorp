@@ -2205,6 +2205,15 @@ function serv_pong (e)
     return true;
 }
 
+CIRCServer.prototype.onInvite =
+function serv_invite(e)
+{
+    e.channel = new CIRCChannel(this, null, e.params[2]);
+
+    e.destObject = this.parent;
+    e.set = "network";
+}
+
 CIRCServer.prototype.onNotice =
 function serv_notice (e)
 {

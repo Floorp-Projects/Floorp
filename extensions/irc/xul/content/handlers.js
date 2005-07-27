@@ -823,11 +823,30 @@ function my_unknown (e)
     var msg = getMsg("msg.err.irc." + e.code, null, "");
     if (msg)
     {
-        this.display(msg);
         if (arrayIndexOf(e.server.channelTypes, e.params[0][0]) != -1)
         {
             // Message about a channel (e.g. join failed).
             e.channel = new CIRCChannel(e.server, null, e.params[0]);
+        }
+
+        // Check for /knock support for the +i message.
+        if (((e.code == 471) || (e.code == 473) || (e.code == 475)) &&
+            ("knock" in e.server.servCmds))
+        {
+            var args = [msg, e.channel.unicodeName,
+                        "knock " + e.channel.unicodeName];
+            msg = getMsg("msg.err.irc." + e.code + ".knock", args, "");
+            client.munger.entries[".inline-buttons"].enabled = true;
+            this.display(msg);
+            client.munger.entries[".inline-buttons"].enabled = false;
+        }
+        else
+        {
+            this.display(msg);
+        }
+
+        if (e.channel)
+        {
             if (e.channel.busy)
             {
                 e.channel.busy = false;
@@ -1495,8 +1514,12 @@ function my_341 (e)
 CIRCNetwork.prototype.onInvite = /* invite message */
 function my_invite (e)
 {
-    this.display (getMsg(MSG_INVITE_YOU, [e.user.unicodeName, e.user.name,
-                                          e.user.host, e.params[2]]), "INVITE");
+    this.display(getMsg(MSG_INVITE_YOU, [e.user.unicodeName, e.user.name,
+                                         e.user.host, e.channel.unicodeName]),
+                 "INVITE");
+
+    if ("messages" in e.channel)
+        e.channel.join();
 }
 
 CIRCNetwork.prototype.on433 = /* nickname in use */
