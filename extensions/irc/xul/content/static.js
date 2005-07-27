@@ -273,11 +273,31 @@ function initStatic()
     if (app)
     {
         // Use the XUL host app info, and Gecko build ID.
-        // FIXME: What happens in XULRunner, where we /are/ the app?
-        ua = app.name + " " + app.version + "/" + app.geckoBuildID;  // 1.1+
-        // "Mozilla Firefox 1.0+, Windows"
-        CIRCServer.prototype.HOST_RPLY = app.vendor + " " + app.name + " " +
-                                         app.version + ", " + client.platform;
+        if (app.ID == "{" + __cz_guid + "}")
+        {
+            // We ARE the app, in other words, we're running in XULrunner.
+            // Because of this, we must disregard app.(name|vendor|version).
+            // "XULRunner 1.7+/2005071506"
+            ua = "XULRunner " + app.platformVersion + "/" + app.platformBuildID;
+
+            // "XULRunner 1.7+/2005071506, Windows"
+            CIRCServer.prototype.HOST_RPLY = ua + ", " + client.platform;
+        }
+        else
+        {
+            // "Firefox 1.0+/2005071506"
+            ua = app.name + " " + app.version + "/";
+            if ("platformBuildID" in app) // 1.1 and up
+                ua += app.platformBuildID;
+            else if ("geckoBuildID" in app) // 1.0 - 1.1 trunk only
+                ua += app.geckoBuildID;
+            else // Uh oh!
+                ua += "??????????";
+
+            // "Mozilla Firefox 1.0+, Windows"
+            CIRCServer.prototype.HOST_RPLY = app.vendor + " " + app.name + " " +
+                                             app.version + ", " + client.platform;
+        }
     }
     else
     {
