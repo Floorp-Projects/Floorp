@@ -3384,6 +3384,9 @@ nsBrowserStatusHandler.prototype =
     if (document.getElementById("highlight").checked)
       document.getElementById("highlight").removeAttribute("checked");
 
+    //fix bug 271359 - reset mFavIconURL
+    getBrowser().selectedBrowser.mFavIconURL = null;
+
     setTimeout(function () { updatePageLivemarks(); }, 0);
 #ifdef ALTSS_ICON
     setTimeout(function () { updatePageStyles(); }, 0);
