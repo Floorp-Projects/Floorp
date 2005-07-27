@@ -48,10 +48,16 @@ DIRS	= \
 		locales \
 		obsolete \
 		profile \
-		xre \
-		mozapps \
 		themes \
 		$(NULL)
 
+ifndef MINIMO
+DIRS =  xre \
+        mozapps \
+        $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
+export::
+	@$(MAKE) -C xre export

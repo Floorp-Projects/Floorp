@@ -42,7 +42,7 @@
 #    1. cvs co mozilla/client.mk
 #    2. cd mozilla
 #    3. create your .mozconfig file with
-#       mk_add_options MOZ_CO_PROJECT=suite,browser,mail,xulrunner
+#       mk_add_options MOZ_CO_PROJECT=suite,browser,mail,minimo,xulrunner
 #    4. gmake -f client.mk 
 #
 # This script will pick up the CVSROOT from the CVS/Root file. If you wish
@@ -58,6 +58,7 @@
 #     suite (Seamonkey suite)
 #     browser (aka Firefox)
 #     mail (aka Thunderbird)
+#     minimo (small browser for devices)
 #     composer (standalone composer, aka NVU)
 #     calendar (aka Sunbird, use this to build the calendar extensions also)
 #     xulrunner
@@ -93,6 +94,7 @@ AVAILABLE_PROJECTS = \
   toolkit \
   browser \
   mail \
+  minimo \
   composer \
   calendar \
   xulrunner \
@@ -144,6 +146,10 @@ MODULES_browser :=                              \
   mozilla/other-licenses/7zstub/firefox         \
   $(NULL)
 
+MODULES_minimo :=                               \
+  $(MODULES_toolkit)                            \
+  $(NULL)
+
 LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
   browser                                       \
@@ -151,6 +157,8 @@ LOCALES_browser :=                              \
   $(NULL)
 
 BOOTSTRAP_browser := mozilla/browser/config/mozconfig
+
+BOOTSTRAP_minimo := mozilla/embedding/minimo
 
 MODULES_mail :=                                 \
   $(MODULES_toolkit)                            \

@@ -69,11 +69,14 @@ DIRS +=	\
 	passwordmgr \
 	satchel \
 	typeaheadfind \
-	downloads \
 	$(NULL)
 endif # MOZ_THUNDERBIRD
 
-ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_XPINSTALL
+DIRS +=	downloads
+endif
+
+ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 DIRS += alerts
 endif
 
