@@ -840,8 +840,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSObject *obj;
     JSFunction *fun;
     JSString *str;
-    JSBool ok;
-    JSBool inXML;
+    JSBool ok, inXML, quoteAttr;
     jsval val;
     static const char catch_cookie[] = "/*CATCH*/";
     static const char with_cookie[] = "/*WITH*/";
@@ -2526,12 +2525,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = POP_STR();
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, "%s %s", lval, rval);
+                /* This gets reset by all XML tag expressions. */
+                quoteAttr = JS_TRUE;
                 break;
 
               case JSOP_ADDATTRVAL:
                 rval = POP_STR();
                 lval = POP_STR();
-                todo = Sprint(&ss->sprinter, "%s=\"%s\"", lval, rval);
+                if (quoteAttr)
+                    todo = Sprint(&ss->sprinter, "%s=\"%s\"", lval, rval);
+                else
+                    todo = Sprint(&ss->sprinter, "%s=%s", lval, rval);
                 break;
 
               case JSOP_BINDXMLNAME:
@@ -2548,11 +2552,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_XMLELTEXPR:
               case JSOP_XMLTAGEXPR:
-                saveop = op;
-                op = JSOP_NOP;
+                op = JSOP_NOP; /* Turn off parens. */
                 todo = Sprint(&ss->sprinter, "{%s}", POP_STR());
-                op = saveop;
-                inXML = JS_TRUE; /* we're done with the tag. */
+                inXML = JS_TRUE; 
+                /* If we're an attribute value, we shouldn't quote this. */
+                quoteAttr = JS_FALSE;
                 break;
 
               case JSOP_TOXML:
