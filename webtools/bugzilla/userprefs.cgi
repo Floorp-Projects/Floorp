@@ -253,7 +253,9 @@ sub SaveEmail {
 
     # Global positive events: a ticked box means "send me mail."
     foreach my $event (GLOBAL_EVENTS) {
-        if (1 == $cgi->param("email-" . REL_ANY . "-$event")) {
+        if (defined($cgi->param("email-" . REL_ANY . "-$event"))
+            && $cgi->param("email-" . REL_ANY . "-$event") == 1)
+        {
             $dbh->do("INSERT INTO email_setting " . 
                      "(user_id, relationship, event) " . 
                      "VALUES ($userid, " . REL_ANY . ", $event)");
