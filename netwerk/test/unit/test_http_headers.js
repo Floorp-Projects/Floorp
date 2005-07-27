@@ -49,4 +49,13 @@ function run_test() {
   }
   if (!x)
     do_throw("header name with non-ASCII not rejected");
+
+  x = false;
+  try {
+    chan.setRequestHeader("foopy", "b\u0000az", false);
+  } catch (e) {
+    x = true;
+  }
+  if (!x)
+    do_throw("header value with null-byte not rejected");
 }
