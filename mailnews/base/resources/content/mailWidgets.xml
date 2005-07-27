@@ -562,7 +562,7 @@
   <binding id="descriptionitem">
     <content>
       <xul:hbox class="attachmentBox" xbl:inherits="orient" align="start">
-        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled,context" flex="1" crop="right"/>
+        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled,context" flex="1" dir="ltr" crop="center"/>
       </xul:hbox>
     </content>
   </binding>
@@ -571,7 +571,7 @@
     <content>
       <xul:hbox class="attachmentBox" xbl:inherits="orient" align="center">
         <xul:image class="descriptioncell-icon" xbl:inherits="src=image"/>
-        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,contextdisabled" flex="1" crop="right"/>
+        <xul:label class="descriptioncell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled,context" flex="1" dir="ltr" crop="center"/>
       </xul:hbox>
     </content>
   </binding>

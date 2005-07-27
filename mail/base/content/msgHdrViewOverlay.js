@@ -451,6 +451,10 @@ var messageHeaderSink = {
         }
       }
 
+      // display name optimization. Eliminate any large quantities of white space from the display name.
+      // such that Hello       World.txt becomes Hello World.txt.
+      var displayName = displayName.replace(/ +/g, " ");
+          
       currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment));
       // if we have an attachment, set the MSG_FLAG_ATTACH flag on the hdr
       // this will cause the "message with attachment" icon to show up
