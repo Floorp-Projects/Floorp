@@ -3024,10 +3024,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     // Create an shistory entry for the old load, if we have a channel
     if (aFailedChannel) {
         mURIResultedInDocument = PR_TRUE;
-        OnLoadingSite(aFailedChannel, PR_TRUE);
+        OnLoadingSite(aFailedChannel, PR_TRUE, PR_FALSE);
     } else if (aURI) {
         mURIResultedInDocument = PR_TRUE;
-        OnNewURI(aURI, nsnull, mLoadType, PR_TRUE);
+        OnNewURI(aURI, nsnull, mLoadType, PR_TRUE, PR_FALSE);
     }
 
     nsCAutoString url;
@@ -3735,7 +3735,7 @@ nsDocShell::SetTitle(const PRUnichar * aTitle)
             treeOwnerAsWin->SetTitle(aTitle);
     }
 
-    if (mGlobalHistory && mCurrentURI) {
+    if (mGlobalHistory && mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
         mGlobalHistory->SetPageTitle(mCurrentURI, nsDependentString(aTitle));
     }
 
@@ -6977,7 +6977,8 @@ nsDocShell::SetupReferrerFromChannel(nsIChannel * aChannel)
 
 PRBool
 nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
-                     PRUint32 aLoadType, PRBool aFireOnLocationChange)
+                     PRUint32 aLoadType, PRBool aFireOnLocationChange,
+                     PRBool aAddToGlobalHistory)
 {
     NS_ASSERTION(aURI, "uri is null");
 #ifdef PR_LOGGING
@@ -7108,12 +7109,14 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         // Update Global history
-        // Get the referrer uri from the channel
-        nsCOMPtr<nsIURI> referrer;
-        nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
-        if (httpchannel)
-            httpchannel->GetReferrer(getter_AddRefs(referrer));
-        AddToGlobalHistory(aURI, PR_FALSE, referrer);
+        if (aAddToGlobalHistory) {
+            // Get the referrer uri from the channel
+            nsCOMPtr<nsIURI> referrer;
+            nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
+            if (httpchannel)
+                httpchannel->GetReferrer(getter_AddRefs(referrer));
+            AddToGlobalHistory(aURI, PR_FALSE, referrer);
+        }
     }
 
     // If this was a history load, update the index in 
@@ -7131,7 +7134,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
 }
 
 PRBool
-nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange)
+nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange,
+                          PRBool aAddToGlobalHistory)
 {
     nsCOMPtr<nsIURI> uri;
     // If this a redirect, use the final url (uri)
@@ -7148,7 +7152,8 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange)
         aChannel->GetOriginalURI(getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, PR_FALSE);
 
-    return OnNewURI(uri, aChannel, mLoadType, aFireOnLocationChange);
+    return OnNewURI(uri, aChannel, mLoadType, aFireOnLocationChange,
+                    aAddToGlobalHistory);
 
 }
 
