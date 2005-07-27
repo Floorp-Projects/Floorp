@@ -519,6 +519,8 @@ static id gSharedProgressController = nil;
                                                    selector:@selector(setDownloadProgress:)
                                                    userInfo:nil
                                                     repeats:YES] retain];
+  // make sure it fires even when the mouse is down
+  [[NSRunLoop currentRunLoop] addTimer:mDownloadTimer forMode:NSEventTrackingRunLoopMode];
 }
 
 -(NSApplicationTerminateReply)allowTerminate
