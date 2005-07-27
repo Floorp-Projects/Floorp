@@ -118,7 +118,7 @@ ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
-ifneq (,$(MOZ_PHOENIX)$(MOZ_SUNBIRD)$(MINIMO))
+ifndef MOZ_THUNDERBIRD
 SHARED_LIBRARY_LIBS += \
 		$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
@@ -128,7 +128,7 @@ SHARED_LIBRARY_LIBS += \
 		$(NULL)
 
 EXTRA_DSO_LIBS = gkgfx
-endif # MOZ_PHOENIX
+endif # MOZ_THUNDERBIRD
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
