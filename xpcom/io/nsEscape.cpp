@@ -390,6 +390,7 @@ NS_COM PRBool NS_EscapeURL(const char *part,
     char tempBuffer[100];
     unsigned int tempBufferPos = 0;
 
+    PRBool previousIsNonASCII = PR_FALSE;
     for (i = 0; i < partLen; i++)
     {
       unsigned char c = *src++;
@@ -404,10 +405,14 @@ NS_COM PRBool NS_EscapeURL(const char *part,
       // On special request we will also escape the colon even when
       // not covered by the matrix.
       // ignoreAscii is not honored for control characters (C0 and DEL)
+      //
+      // And, we should escape the '|' character when it occurs after any
+      // non-ASCII character as it may be part of a multi-byte character.
       if ((NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
                           || (c > 0x7f && ignoreNonAscii)
                           || (c > 0x1f && c < 0x7f && ignoreAscii))
-          && !(c == ':' && colon))
+          && !(c == ':' && colon)
+          && !(previousIsNonASCII && c == '|' && !ignoreNonAscii))
       {
         if (writing)
           tempBuffer[tempBufferPos++] = c;
@@ -423,15 +428,17 @@ NS_COM PRBool NS_EscapeURL(const char *part,
         tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
         tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
       }
- 	  
+
       if (tempBufferPos >= sizeof(tempBuffer) - 4)
- 	  {
+      {
         NS_ASSERTION(writing, "should be writing");
         tempBuffer[tempBufferPos] = '\0';
         result += tempBuffer;
         tempBufferPos = 0;
- 	  }
-	}
+      }
+
+      previousIsNonASCII = (c > 0x7f);
+    }
     if (writing) {
       tempBuffer[tempBufferPos] = '\0';
       result += tempBuffer;
