@@ -457,6 +457,14 @@ nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMN
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeitemAccessible, nsLeafAccessible)
 
+NS_IMETHODIMP nsXULTreeitemAccessible::Shutdown()
+{
+  mTree = nsnull;
+  mTreeView = nsnull;
+  mColumn = nsnull;
+  return nsLeafAccessible::Shutdown();
+}
+
 NS_IMETHODIMP nsXULTreeitemAccessible::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);

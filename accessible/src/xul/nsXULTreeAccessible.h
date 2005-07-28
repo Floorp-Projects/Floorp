@@ -95,6 +95,8 @@ public:
   nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn = nsnull);
   virtual ~nsXULTreeitemAccessible() {}
 
+  NS_IMETHOD Shutdown();
+
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);

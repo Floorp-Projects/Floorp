@@ -52,6 +52,7 @@ EXPORTS		= \
 		nsIPrivateTextEvent.h \
 		nsIPrivateTextRange.h \
 		nsIPrivateCompositionEvent.h \
+		nsPLDOMEvent.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
