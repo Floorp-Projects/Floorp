@@ -61,6 +61,8 @@
 #include "pk11func.h"
 #include "pk11sdr.h" // For PK11SDR_Encrypt, PK11SDR_Decrypt
 
+#include "ssl.h" // For SSL_ClearSessionCache
+
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
 
@@ -336,6 +338,7 @@ Logout()
   {
     nsNSSShutDownPreventionLock locker;
     PK11_LogoutAll();
+    SSL_ClearSessionCache();
   }
 
   return NS_OK;
@@ -352,6 +355,7 @@ LogoutAndTeardown()
   {
     nsNSSShutDownPreventionLock locker;
     PK11_LogoutAll();
+    SSL_ClearSessionCache();
   }
 
   return nssComponent->LogoutAuthenticatedPK11();

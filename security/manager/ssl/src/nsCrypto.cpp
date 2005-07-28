@@ -90,6 +90,8 @@ extern "C" {
 #include "secmod.h"
 #include "nsISaveAsCharset.h"
 
+#include "ssl.h" // For SSL_ClearSessionCache
+
 #include "nsNSSCleaner.h"
 NSSCleanupAutoPtrClass(SECKEYPrivateKey, SECKEY_DestroyPrivateKey)
 NSSCleanupAutoPtrClass(PK11SlotInfo, PK11_FreeSlot)
@@ -2468,6 +2470,7 @@ nsCrypto::Logout()
   {
     nsNSSShutDownPreventionLock locker;
     PK11_LogoutAll();
+    SSL_ClearSessionCache();
   }
 
   return nssComponent->LogoutAuthenticatedPK11();

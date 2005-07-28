@@ -1895,6 +1895,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   else if ((nsCRT::strcmp(aTopic, SESSION_LOGOUT_TOPIC) == 0) && mNSSInitialized) {
     nsNSSShutDownPreventionLock locker;
     PK11_LogoutAll();
+    SSL_ClearSessionCache();
     LogoutAuthenticatedPK11();
   }
   else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
