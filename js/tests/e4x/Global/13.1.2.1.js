@@ -41,6 +41,10 @@
 
 START("13.1.2.1 - isXMLName()");
 
+var bug = 289630;
+printBugNumber (bug);
+
+
 TEST(1, true, typeof isXMLName == "function");
 
 
