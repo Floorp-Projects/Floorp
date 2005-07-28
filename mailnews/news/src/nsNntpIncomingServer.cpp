@@ -331,7 +331,7 @@ nsNntpIncomingServer::GetCharset(nsACString & aCharset)
     //mailnews.view_default_charset setting and set it as per-server preference.
     if(serverCharset.IsEmpty()){
         nsXPIDLString defaultCharset;
-        rv = NS_GetUnicharPreferenceWithDefault(nsnull,
+        rv = NS_GetLocalizedUnicharPreferenceWithDefault(nsnull,
              PREF_MAILNEWS_VIEW_DEFAULT_CHARSET,
              NS_LITERAL_STRING("ISO-8859-1"), defaultCharset);
         LossyCopyUTF16toASCII(defaultCharset,serverCharset);
