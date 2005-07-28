@@ -74,11 +74,24 @@ sub _init {
     return $self;
 }
 
+sub bug_count {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'bug_count'}) {
+        $self->{'bug_count'} = $dbh->selectrow_array(q{
+            SELECT COUNT(*) FROM bugs
+            WHERE product_id = ? AND target_milestone = ?},
+            undef, $self->product_id, $self->name) || 0;
+    }
+    return $self->{'bug_count'};
+}
+
 ################################
 #####      Accessors      ######
 ################################
 
-sub value      { return $_[0]->{'value'};      }
+sub name       { return $_[0]->{'value'};      }
 sub product_id { return $_[0]->{'product_id'}; }
 sub sortkey    { return $_[0]->{'sortkey'};    }
 
@@ -105,12 +118,42 @@ sub get_milestones_by_product ($) {
         SELECT value FROM milestones
         WHERE product_id = ?}, undef, $product_id);
 
-    my $milestones;
+    my @milestones;
     foreach my $value (@$values) {
-        $milestones->{$value} = new Bugzilla::Milestone($product_id,
-                                                        $value);
+        push @milestones, new Bugzilla::Milestone($product_id, $value);
     }
-    return $milestones;
+    return @milestones;
+}
+
+sub check_milestone ($$) {
+    my ($product, $milestone_name) = @_;
+
+    unless ($milestone_name) {
+        ThrowUserError('milestone_not_specified');
+    }
+
+    my $milestone = new Bugzilla::Milestone($product->id,
+                                            $milestone_name);
+    unless ($milestone) {
+        ThrowUserError('milestone_not_valid',
+                       {'product' => $product->name,
+                        'milestone' => $milestone_name});
+    }
+    return $milestone;
+}
+
+sub check_sort_key ($$) {
+    my ($milestone_name, $sortkey) = @_;
+    # Keep a copy in case detaint_signed() clears the sortkey
+    my $stored_sortkey = $sortkey;
+
+    if (!detaint_signed($sortkey) || $sortkey < -32768
+        || $sortkey > 32767) {
+        ThrowUserError('milestone_sortkey_invalid',
+                       {'name' => $milestone_name,
+                        'sortkey' => $stored_sortkey});
+    }
+    return $sortkey;
 }
 
 1;
@@ -151,6 +194,14 @@ Milestone.pm represents a Product Milestone object.
 
  Returns:     A Bugzilla::Milestone object.
 
+=item C<bug_count()>
+
+ Description: Returns the total of bugs that belong to the milestone.
+
+ Params:      none.
+
+ Returns:     Integer with the number of bugs.
+
 =back
 
 =head1 SUBROUTINES
@@ -159,13 +210,22 @@ Milestone.pm represents a Product Milestone object.
 
 =item C<get_milestones_by_product($product_id)>
 
- Description: Returns all Bugzilla product milestones that belong
+ Description: Returns all product milestones that belong
               to the supplied product.
 
- Params:      $product_id - Integer with a Bugzilla product id.
+ Params:      $product_id - Integer with a product id.
 
- Returns:     A hash with milestone value as key and a
-              Bugzilla::Milestone object as hash value.
+ Returns:     Bugzilla::Milestone object list.
+
+=item C<check_milestone($product, $milestone_name)>
+
+ Description: Checks if a milestone name was passed in
+              and if it is a valid milestone.
+
+ Params:      $product - Bugzilla::Product object.
+              $milestone_name - String with a milestone name.
+
+ Returns:     Bugzilla::Milestone object.
 
 =back
 
