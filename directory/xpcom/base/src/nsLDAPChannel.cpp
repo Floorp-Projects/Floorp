@@ -196,7 +196,7 @@ nsLDAPChannel::Cancel(nsresult aStatus)
 
         // if this fails in a non-debug build, there's not much we can do
         //
-        rv = mCurrentOperation->Abandon();
+        rv = mCurrentOperation->AbandonExt();
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
                      "mCurrentOperation->Abandon() failed\n");
         
