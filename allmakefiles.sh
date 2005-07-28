@@ -814,6 +814,7 @@ security/manager/pki/Makefile
 security/manager/pki/resources/Makefile
 security/manager/pki/src/Makefile
 security/manager/pki/public/Makefile
+security/manager/locales/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/build/Makefile
 netwerk/base/public/Makefile
@@ -1436,6 +1437,7 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         reporter ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/reporter/Makefile
+	    extensions/reporter/locales/Makefile
             " ;;
         spellcheck ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/spellcheck/Makefile

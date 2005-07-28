@@ -691,8 +691,6 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-CONFIG_STATUS_DEPS_L10N := $(wildcard $(TOPSRCDIR)/l10n/makefiles.all)
-
 CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \
 	$(TOPSRCDIR)/allmakefiles.sh \
@@ -700,7 +698,6 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
 	$(wildcard $(TOPSRCDIR)/directory/c-sdk/configure) \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
-	$(CONFIG_STATUS_DEPS_L10N) \
 	$(wildcard $(TOPSRCDIR)/themes/makefiles) \
 	$(wildcard $(TOPSRCDIR)/config/milestone.txt) \
 	$(wildcard $(TOPSRCDIR)/config/chrome-versions.sh) \
@@ -719,7 +716,7 @@ ifdef MOZ_TOOLS
   CONFIGURE := $(TOPSRCDIR)/configure
 endif
 
-$(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
+configure:
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
@@ -727,6 +724,9 @@ $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 	@touch $(OBJDIR)/Makefile
+
+$(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
+	@$(MAKE) -f client.mk configure
 
 ifdef CONFIG_STATUS
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
@@ -790,4 +790,4 @@ endif
 echo_objdir:
 	@echo $(OBJDIR)
 
-.PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure
