@@ -420,19 +420,19 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
   switch ( firstByte )
   {
   case 'b':
-    if (colType.Equals("birthyear"))
+    if (colType.EqualsLiteral("birthyear"))
       mDatabase->AddBirthYear(newRow, column.get());
     break; // 'b'
 
   case 'c':
-    if (colType.Equals("cn") || colType.Equals("commonname"))
+    if (colType.EqualsLiteral("cn") || colType.EqualsLiteral("commonname"))
     {
       if (bIsList)
         mDatabase->AddListName(newRow, column.get());
       else
         mDatabase->AddDisplayName(newRow, column.get());
     }
-    else if (colType.Equals("countryname"))
+    else if (colType.EqualsLiteral("c") || colType.EqualsLiteral("countryname"))
     {
       if (mStoreLocAsHome )
         mDatabase->AddHomeCountry(newRow, column.get());
@@ -440,120 +440,75 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddWorkCountry(newRow, column.get());
     }
 
-    // else if (colType.Equals("charset") )
-    //   ioRow->AddColumn(ev, this->ColCharset(), yarn);
-
-    else if (colType.Equals("cellphone") )
+    else if (colType.EqualsLiteral("cellphone") )
       mDatabase->AddCellularNumber(newRow, column.get());
 
-//          else if (colType.Equals("calendar") )
-//            ioRow->AddColumn(ev, this->ColCalendar(), yarn);
-
-//          else if (colType.Equals("car") )
-//            ioRow->AddColumn(ev, this->ColCar(), yarn);
-
-    else if (colType.Equals("carphone"))
+    else if (colType.EqualsLiteral("carphone"))
       mDatabase->AddCellularNumber(newRow, column.get());
-//            ioRow->AddColumn(ev, this->ColCarPhone(), yarn);
-
-//          else if (colType.Equals("carlicense") )
-//            ioRow->AddColumn(ev, this->ColCarLicense(), yarn);
         
-    else if (colType.Equals("custom1"))
+    else if (colType.EqualsLiteral("custom1"))
       mDatabase->AddCustom1(newRow, column.get());
         
-    else if (colType.Equals("custom2"))
+    else if (colType.EqualsLiteral("custom2"))
       mDatabase->AddCustom2(newRow, column.get());
         
-    else if (colType.Equals("custom3"))
+    else if (colType.EqualsLiteral("custom3"))
       mDatabase->AddCustom3(newRow, column.get());
         
-    else if (colType.Equals("custom4"))
+    else if (colType.EqualsLiteral("custom4"))
       mDatabase->AddCustom4(newRow, column.get());
         
-    else if (colType.Equals("company"))
+    else if (colType.EqualsLiteral("company"))
       mDatabase->AddCompany(newRow, column.get());
     break; // 'c'
 
   case 'd':
-    if (colType.Equals("description"))
+    if (colType.EqualsLiteral("description"))
     {
       if (bIsList)
         mDatabase->AddListDescription(newRow, column.get());
       else
         mDatabase->AddNotes(newRow, column.get());
     }
-//          else if (colType.Equals("dn") ) // distinuished name
-//            ioRow->AddColumn(ev, this->ColDistName(), yarn);
 
-    else if (colType.Equals("department"))
+    else if (colType.EqualsLiteral("department"))
       mDatabase->AddDepartment(newRow, column.get());
 
-//          else if (colType.Equals("departmentnumber") )
-//            ioRow->AddColumn(ev, this->ColDepartmentNumber(), yarn);
-
-//          else if (colType.Equals("date") )
-//            ioRow->AddColumn(ev, this->ColDate(), yarn);
+    else if (colType.EqualsLiteral("displayname"))
+    {
+      if (bIsList)
+        mDatabase->AddListName(newRow, column.get());
+      else
+        mDatabase->AddDisplayName(newRow, column.get());
+    }
     break; // 'd'
-
-  case 'e':
-
-//          if (colType.Equals("employeeid") )
-//            ioRow->AddColumn(ev, this->ColEmployeeId(), yarn);
-
-//          else if (colType.Equals("employeetype") )
-//            ioRow->AddColumn(ev, this->ColEmployeeType(), yarn);
-    break; // 'e'
 
   case 'f':
 
-    if (colType.Equals("fax") ||
-        colType.Equals("facsimiletelephonenumber"))
+    if (colType.EqualsLiteral("fax") ||
+        colType.EqualsLiteral("facsimiletelephonenumber"))
       mDatabase->AddFaxNumber(newRow, column.get());
     break; // 'f'
 
   case 'g':
-    if (colType.Equals("givenname"))
+    if (colType.EqualsLiteral("givenname"))
       mDatabase->AddFirstName(newRow, column.get());
-
-//          else if (colType.Equals("gif") )
-//            ioRow->AddColumn(ev, this->ColGif(), yarn);
-
-//          else if (colType.Equals("geo") )
-//            ioRow->AddColumn(ev, this->ColGeo(), yarn);
 
     break; // 'g'
 
   case 'h':
-    if (colType.Equals("homephone"))
+    if (colType.EqualsLiteral("homephone"))
       mDatabase->AddHomePhone(newRow, column.get());
 
-    else if (colType.Equals("homeurl"))
+    else if (colType.EqualsLiteral("homestreet"))
+      mDatabase->AddHomeAddress(newRow, column.get());
+
+    else if (colType.EqualsLiteral("homeurl"))
       mDatabase->AddWebPage2(newRow, column.get());
     break; // 'h'
 
-  case 'i':
-//          if (colType.Equals("imapurl") )
-//            ioRow->AddColumn(ev, this->ColImapUrl(), yarn);
-    break; // 'i'
-
-  case 'j':
-//          if (colType.Equals("jpeg") || colType.Equals("jpegfile") )
-//            ioRow->AddColumn(ev, this->ColJpegFile(), yarn);
-
-    break; // 'j'
-
-  case 'k':
-//          if (colType.Equals("key") )
-//            ioRow->AddColumn(ev, this->ColKey(), yarn);
-
-//          else if (colType.Equals("keywords") )
-//            ioRow->AddColumn(ev, this->ColKeywords(), yarn);
-
-    break; // 'k'
-
   case 'l':
-    if (colType.Equals("l") || colType.Equals("locality"))
+    if (colType.EqualsLiteral("l") || colType.EqualsLiteral("locality"))
     {
       if (mStoreLocAsHome)
         mDatabase->AddHomeCity(newRow, column.get());
@@ -561,70 +516,108 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddWorkCity(newRow, column.get());
     }
 
-//          else if (colType.Equals("language") )
-//            ioRow->AddColumn(ev, this->ColLanguage(), yarn);
-
-//          else if (colType.Equals("logo") )
-//            ioRow->AddColumn(ev, this->ColLogo(), yarn);
-
-//          else if (colType.Equals("location") )
-//            ioRow->AddColumn(ev, this->ColLocation(), yarn);
-
     break; // 'l'
 
   case 'm':
-    if (colType.Equals("mail"))
+    if (colType.EqualsLiteral("mail"))
       mDatabase->AddPrimaryEmail(newRow, column.get());
 
-    else if (colType.Equals("member") && bIsList)
+    else if (colType.EqualsLiteral("member") && bIsList)
       mDatabase->AddLdifListMember(newRow, column.get());
 
-    else if (colType.Equals("mozilla_aimscreenname"))
+    else if (colType.EqualsLiteral("mobile"))
+      mDatabase->AddCellularNumber(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozilla_aimscreenname"))
       mDatabase->AddAimScreenName(newRow, column.get());
 
-//          else if (colType.Equals("manager") )
-//            ioRow->AddColumn(ev, this->ColManager(), yarn);
+    else if (colType.EqualsLiteral("mozillacustom1"))
+      mDatabase->AddCustom1(newRow, column.get());
+        
+    else if (colType.EqualsLiteral("mozillacustom2"))
+      mDatabase->AddCustom2(newRow, column.get());
+        
+    else if (colType.EqualsLiteral("mozillacustom3"))
+      mDatabase->AddCustom3(newRow, column.get());
+        
+    else if (colType.EqualsLiteral("mozillacustom4"))
+      mDatabase->AddCustom4(newRow, column.get());
 
-//          else if (colType.Equals("modem") )
-//            ioRow->AddColumn(ev, this->ColModem(), yarn);
+    else if (colType.EqualsLiteral("mozilladefaultemail"))
+      mDatabase->AddDefaultEmail(newRow, column.get());
 
-//          else if (colType.Equals("msgphone") )
-//            ioRow->AddColumn(ev, this->ColMessagePhone(), yarn);
+    else if (colType.EqualsLiteral("mozillahomecountryname"))
+      mDatabase->AddHomeCountry(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillahomelocalityname"))
+      mDatabase->AddHomeCity(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillahomestate"))
+      mDatabase->AddHomeState(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillahomestreet2"))
+      mDatabase->AddHomeAddress2(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillahomepostalcode"))
+      mDatabase->AddHomeZipCode(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillahomeurl"))
+      mDatabase->AddWebPage2(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillanickname"))
+    {
+      if (bIsList)
+        mDatabase->AddListNickName(newRow, column.get());
+      else
+        mDatabase->AddNickName(newRow, column.get());
+    }
+
+    else if (colType.EqualsLiteral("mozillasecondemail"))
+      mDatabase->Add2ndEmail(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillausehtmlmail"))
+    {
+      ToLowerCase(column);
+      if (kNotFound != column.Find("true"))
+        mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
+      else if (kNotFound != column.Find("false"))
+        mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::plaintext);
+      else
+        mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::unknown);
+    }
+
+    else if (colType.EqualsLiteral("mozillaworkstreet2"))
+      mDatabase->AddWorkAddress2(newRow, column.get());
+
+    else if (colType.EqualsLiteral("mozillaworkurl"))
+      mDatabase->AddWebPage1(newRow, column.get());
 
     break; // 'm'
 
   case 'n':
-//          if (colType.Equals("note") )
-//            ioRow->AddColumn(ev, this->ColNote(), yarn);
-
-    if (colType.Equals("notes"))
+    if (colType.EqualsLiteral("notes"))
       mDatabase->AddNotes(newRow, column.get());
 
-    else if (colType.Equals("nscpaimscreenname"))
+    else if (colType.EqualsLiteral("nscpaimscreenname") || 
+             colType.EqualsLiteral("nsaimid"))
       mDatabase->AddAimScreenName(newRow, column.get());
-
-//          else if (colType.Equals("n") )
-//            ioRow->AddColumn(ev, this->ColN(), yarn);
-
-//          else if (colType.Equals("notifyurl") )
-//            ioRow->AddColumn(ev, this->ColNotifyUrl(), yarn);
 
     break; // 'n'
 
   case 'o':
-    if (colType.Equals("objectclass"))
+    if (colType.EqualsLiteral("objectclass"))
       break;
 
-    else if (colType.Equals("ou") || colType.Equals("orgunit"))
+    else if (colType.EqualsLiteral("ou") || colType.EqualsLiteral("orgunit"))
       mDatabase->AddDepartment(newRow, column.get());
 
-    else if (colType.Equals("o")) // organization
+    else if (colType.EqualsLiteral("o")) // organization
       mDatabase->AddCompany(newRow, column.get());
 
     break; // 'o'
 
   case 'p':
-    if (colType.Equals("postalcode"))
+    if (colType.EqualsLiteral("postalcode"))
     {
       if (mStoreLocAsHome)
         mDatabase->AddHomeZipCode(newRow, column.get());
@@ -632,36 +625,20 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddWorkZipCode(newRow, column.get());
     }
 
-    else if (colType.Equals("postOfficeBox"))
+    else if (colType.EqualsLiteral("postofficebox"))
     {
       nsCAutoString workAddr1, workAddr2;
       SplitCRLFAddressField(column, workAddr1, workAddr2);
       mDatabase->AddWorkAddress(newRow, workAddr1.get());
       mDatabase->AddWorkAddress2(newRow, workAddr2.get());
     }
-    else if (colType.Equals("pager") ||
-             colType.Equals("pagerphone"))
+    else if (colType.EqualsLiteral("pager") || colType.EqualsLiteral("pagerphone"))
       mDatabase->AddPagerNumber(newRow, column.get());
-                    
-//          else if (colType.Equals("photo") )
-//            ioRow->AddColumn(ev, this->ColPhoto(), yarn);
-
-//          else if (colType.Equals("parentphone") )
-//            ioRow->AddColumn(ev, this->ColParentPhone(), yarn);
-
-//          else if (colType.Equals("pageremail") )
-//            ioRow->AddColumn(ev, this->ColPagerEmail(), yarn);
-
-//          else if (colType.Equals("prefurl") )
-//            ioRow->AddColumn(ev, this->ColPrefUrl(), yarn);
-
-//          else if (colType.Equals("priority") )
-//            ioRow->AddColumn(ev, this->ColPriority(), yarn);
 
     break; // 'p'
 
   case 'r':
-    if (colType.Equals("region"))
+    if (colType.EqualsLiteral("region"))
     {
       if (mStoreLocAsHome)
         mDatabase->AddWorkState(newRow, column.get());
@@ -669,21 +646,16 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddWorkState(newRow, column.get());
     }
 
-//          else if (colType.Equals("rfc822mailbox") )
-//            ioRow->AddColumn(ev, this->ColPrimaryEmail(), yarn);
-
-//          else if (colType.Equals("rev") )
-//            ioRow->AddColumn(ev, this->ColRev(), yarn);
-
-//          else if (colType.Equals("role") )
-//            ioRow->AddColumn(ev, this->ColRole(), yarn);
     break; // 'r'
 
   case 's':
-    if (colType.Equals("sn") || colType.Equals("surname"))
+    if (colType.EqualsLiteral("sn") || colType.EqualsLiteral("surname"))
       mDatabase->AddLastName(newRow, column.get());
 
-    else if (colType.Equals("streetaddress"))
+    else if (colType.EqualsLiteral("street"))
+      mDatabase->AddWorkAddress(newRow, column.get());
+
+    else if (colType.EqualsLiteral("streetaddress"))
     {
       nsCAutoString addr1, addr2;
       SplitCRLFAddressField(column, addr1, addr2);
@@ -698,68 +670,42 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddWorkAddress2(newRow, addr2.get());
       }
     }
-    else if (colType.Equals("st"))
+    else if (colType.EqualsLiteral("st"))
     {
     if (mStoreLocAsHome)
       mDatabase->AddHomeState(newRow, column.get());
     else
       mDatabase->AddWorkState(newRow, column.get());
     }
-
-//          else if (colType.Equals("secretary") )
-//            ioRow->AddColumn(ev, this->ColSecretary(), yarn);
-
-//          else if (colType.Equals("sound") )
-//            ioRow->AddColumn(ev, this->ColSound(), yarn);
-
-//          else if (colType.Equals("sortstring") )
-//            ioRow->AddColumn(ev, this->ColSortString(), yarn);
         
     break; // 's'
 
   case 't':
-    if (colType.Equals("title"))
+    if (colType.EqualsLiteral("title"))
       mDatabase->AddJobTitle(newRow, column.get());
 
-    else if (colType.Equals("telephonenumber") )
+    else if (colType.EqualsLiteral("telephonenumber") )
     {
       mDatabase->AddWorkPhone(newRow, column.get());
     }
 
-//          else if (colType.Equals("tiff") )
-//            ioRow->AddColumn(ev, this->ColTiff(), yarn);
-
-//          else if (colType.Equals("tz") )
-//            ioRow->AddColumn(ev, this->ColTz(), yarn);
     break; // 't'
 
   case 'u':
 
-    if (colType.Equals("uniquemember") && bIsList)
+    if (colType.EqualsLiteral("uniquemember") && bIsList)
       mDatabase->AddLdifListMember(newRow, column.get());
-
-//          else if (colType.Equals("uid") )
-//            ioRow->AddColumn(ev, this->ColUid(), yarn);
 
     break; // 'u'
 
-  case 'v':
-//          if (colType.Equals("version") )
-//            ioRow->AddColumn(ev, this->ColVersion(), yarn);
-
-//          else if (colType.Equals("voice") )
-//            ioRow->AddColumn(ev, this->ColVoice(), yarn);
-
-    break; // 'v'
-
   case 'w':
-    if (colType.Equals("workurl"))
+    if (colType.EqualsLiteral("workurl"))
       mDatabase->AddWebPage1(newRow, column.get());
 
     break; // 'w'
 
   case 'x':
-    if (colType.Equals("xmozillanickname"))
+    if (colType.EqualsLiteral("xmozillanickname"))
     {
       if (bIsList)
         mDatabase->AddListNickName(newRow, column.get());
@@ -767,7 +713,7 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
         mDatabase->AddNickName(newRow, column.get());
     }
 
-    else if (colType.Equals("xmozillausehtmlmail"))
+    else if (colType.EqualsLiteral("xmozillausehtmlmail"))
     {
       ToLowerCase(column);
       if (kNotFound != column.Find("true"))
@@ -781,7 +727,7 @@ void nsAbLDIFService::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, ch
     break; // 'x'
 
   case 'z':
-    if (colType.Equals("zip")) // alias for postalcode
+    if (colType.EqualsLiteral("zip")) // alias for postalcode
     {
       if (mStoreLocAsHome)
         mDatabase->AddHomeZipCode(newRow, column.get());

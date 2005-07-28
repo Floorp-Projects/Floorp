@@ -110,54 +110,54 @@
 // our schema is not fixed yet, but we still want some sort of objectclass
 // for now, use obsolete in the class name, hinting that this will change
 // see bugs bug #116692 and #118454
-#define MOZ_AB_OBJECTCLASS "mozillaAbPersonObsolete"
+#define MOZ_AB_OBJECTCLASS "mozillaAbPersonAlpha"
 
 const ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABLE_COUNT] = { 
   {kFirstNameColumn, "givenName", PR_TRUE},
   {kLastNameColumn, "sn", PR_TRUE},
   {kDisplayNameColumn, "cn", PR_TRUE},
-  {kNicknameColumn, "xmozillanickname", PR_TRUE},
+  {kNicknameColumn, MOZ_AB_LDIF_PREFIX "Nickname", PR_TRUE},
   {kPriEmailColumn, "mail", PR_TRUE},
   {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", PR_TRUE},
   {kDefaultEmailColumn, MOZ_AB_LDIF_PREFIX "DefaultEmail", PR_FALSE},
   {kCardTypeColumn, MOZ_AB_LDIF_PREFIX "CardType", PR_FALSE},
-  {kAimScreenNameColumn, MOZ_AB_LDIF_PREFIX "_AimScreenName", PR_FALSE},
-  {kPreferMailFormatColumn, "xmozillausehtmlmail", PR_FALSE},
+  {kAimScreenNameColumn, "nsAIMid", PR_FALSE},
+  {kPreferMailFormatColumn, MOZ_AB_LDIF_PREFIX "UseHtmlMail", PR_FALSE},
   {kLastModifiedDateColumn, "modifytimestamp", PR_FALSE},
   {kWorkPhoneColumn, "telephoneNumber", PR_TRUE}, 
   {kWorkPhoneTypeColumn, MOZ_AB_LDIF_PREFIX "WorkPhoneType", PR_FALSE},
   {kHomePhoneColumn, "homePhone", PR_TRUE},
   {kHomePhoneTypeColumn, MOZ_AB_LDIF_PREFIX "HomePhoneType", PR_FALSE},
-  {kFaxColumn, "facsimileTelephoneNumber", PR_TRUE},
+  {kFaxColumn, "fax", PR_TRUE},
   {kFaxTypeColumn, MOZ_AB_LDIF_PREFIX "FaxNumberType", PR_FALSE},
   {kPagerColumn, "pager", PR_TRUE},
   {kPagerTypeColumn, MOZ_AB_LDIF_PREFIX "PagerNumberType", PR_FALSE},
   {kCellularColumn, "mobile", PR_TRUE},
   {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType", PR_FALSE},
-  {kHomeAddressColumn, "homePostalAddress", PR_TRUE},
-  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomePostalAddress2", PR_TRUE},
+  {kHomeAddressColumn, "homeStreet", PR_TRUE},
+  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomeStreet2", PR_TRUE},
   {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
   {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", PR_TRUE},
   {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", PR_TRUE},
   {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", PR_TRUE},
-  {kWorkAddressColumn, "postalAddress", PR_TRUE},
-  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "PostalAddress2", PR_TRUE}, 
+  {kWorkAddressColumn, "street", PR_TRUE},
+  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "WorkStreet2", PR_TRUE}, 
   {kWorkCityColumn, "l", PR_TRUE}, 
   {kWorkStateColumn, "st", PR_TRUE}, 
   {kWorkZipCodeColumn, "postalCode", PR_TRUE}, 
   {kWorkCountryColumn, "c", PR_TRUE}, 
   {kJobTitleColumn, "title", PR_TRUE},
-  {kDepartmentColumn, "ou", PR_TRUE},
-  {kCompanyColumn, "o", PR_TRUE},
-  {kWebPage1Column, "workurl", PR_TRUE},
-  {kWebPage2Column, "homeurl", PR_TRUE},
+  {kDepartmentColumn, "department", PR_TRUE},
+  {kCompanyColumn, "company", PR_TRUE},
+  {kWebPage1Column, MOZ_AB_LDIF_PREFIX "WorkUrl", PR_TRUE},
+  {kWebPage2Column, MOZ_AB_LDIF_PREFIX "HomeUrl", PR_TRUE},
   {kBirthYearColumn, nsnull, PR_TRUE}, // unused for now
   {kBirthMonthColumn, nsnull, PR_TRUE}, // unused for now
   {kBirthDayColumn, nsnull, PR_TRUE}, // unused for now
-  {kCustom1Column, "custom1", PR_TRUE},
-  {kCustom2Column, "custom2", PR_TRUE},
-  {kCustom3Column, "custom3", PR_TRUE},
-  {kCustom4Column, "custom4", PR_TRUE},
+  {kCustom1Column, MOZ_AB_LDIF_PREFIX "Custom1", PR_TRUE},
+  {kCustom2Column, MOZ_AB_LDIF_PREFIX "Custom2", PR_TRUE},
+  {kCustom3Column, MOZ_AB_LDIF_PREFIX "Custom3", PR_TRUE},
+  {kCustom4Column, MOZ_AB_LDIF_PREFIX "Custom4", PR_TRUE},
   {kNotesColumn, "description", PR_TRUE},
   {kAnniversaryYearColumn, MOZ_AB_LDIF_PREFIX "AnniversaryYear", PR_FALSE}, 
   {kAnniversaryMonthColumn, MOZ_AB_LDIF_PREFIX "AnniversaryMonth", PR_FALSE}, 
@@ -947,7 +947,7 @@ nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aRes
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (!attrValue.IsEmpty()) {
-    rv = AppendProperty("xmozillanickname", attrValue.get(), aResult);
+    rv = AppendProperty("mozillaNickname", attrValue.get(), aResult);
     NS_ENSURE_SUCCESS(rv,rv);
     aResult += LDIF_LINEBREAK;
   }
