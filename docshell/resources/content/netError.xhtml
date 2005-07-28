@@ -6,10 +6,10 @@
     "DTD/xhtml1-strict.dtd">
   %htmlDTD;
   <!ENTITY % netErrorDTD
-       SYSTEM "chrome://global/locale/netError.dtd">
+    SYSTEM "chrome://global/locale/netError.dtd">
   %netErrorDTD;
   <!ENTITY % globalDTD
-       SYSTEM "chrome://global/locale/global.dtd">
+    SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
 ]>
 
@@ -35,6 +35,8 @@
    -
    - Contributor(s):
    -   Adam Lock <adamlock@netscape.com>
+   -   William R. Price <wrprice@alumni.rice.edu>
+   -   Henrik Skupin <mozilla@hskupin.info>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,194 +53,150 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&loadError.label;</title>
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
 
-<head>
-  <title>&loadError.label;</title>
-  <style><![CDATA[
-    body {
-      font: message-box;
-    }
-    div.invisible {
-      display: none;
-    }
-    div.et_visible {
-      margin-top: 2em;
-      margin-bottom: 1em;
-      font-size: large;
-      text-align: start;
-      font-weight: bold;
-      color: #5D616E;
-    }
-    div#shortDesc {
-      width: 90%;
-      text-align: justify;
-      margin-left: 5%;
-      margin-right: 5%;
-    }
-    div#longDesc {
-      width: 90%;
-      text-align: justify;
-      margin-left: 5%;
-      margin-right: 5%;
-    }
-    div.ld_visible {
-      display: block;
-      background-color: #CEE0FF;
-    }
-  ]]></style>
-</head>
+    <!-- Include the localized error titles/descriptions -->
+    <script type="application/x-javascript">
+      var errorTitle = {
+        generic: "&generic.title;",
+        dnsNotFound: "&dnsNotFound.title;",
+        fileNotFound: "&fileNotFound.title;",
+        malformedURI: "&malformedURI.title;",
+        protocolNotFound: "&protocolNotFound.title;",
+        connectionFailure: "&connectionFailure.title;",
+        netTimeout: "&netTimeout.title;",
+        redirectLoop: "&redirectLoop.title;",
+        unknownSocketType: "&unknownSocketType.title;",
+        netReset: "&netReset.title;",
+        netOffline: "&netOffline.title;",
+        netInterrupt: "&netInterrupt.title;",
+        deniedPortAccess: "&deniedPortAccess.title;",
+        proxyResolveFailure: "&proxyResolveFailure.title;",
+        proxyConnectFailure: "&proxyConnectFailure.title;"
+      };
+			 
+      var errorDesc = {
+        generic: "&generic.longDesc;",
+        dnsNotFound: "&dnsNotFound.longDesc;",
+        fileNotFound: "&fileNotFound.longDesc;",
+        malformedURI: "&malformedURI.longDesc;",
+        protocolNotFound: "&protocolNotFound.longDesc;",
+        connectionFailure: "&connectionFailure.longDesc;",
+        netTimeout: "&netTimeout.longDesc;",
+        redirectLoop: "&redirectLoop.longDesc;",
+        unknownSocketType: "&unknownSocketType.longDesc;",
+        netReset: "&netReset.longDesc;",
+        netOffline: "&netOffline.longDesc;",
+        netInterrupt: "&netInterrupt.longDesc;",
+        deniedPortAccess: "&deniedPortAccess.longDesc;",
+        proxyResolveFailure: "&proxyResolveFailure.longDesc;",
+        proxyConnectFailure: "&proxyConnectFailure.longDesc;"
+      };
+    </script>
+    
+    <script type="application/x-javascript"><![CDATA[
+      // Error url MUST be formatted like this:
+      //   moz-neterror:page?e=error&u=url&d=desc
 
-<body style="font: message-box;" dir="&locale.dir;">
+      // Note that this file uses document.documentURI to get
+      // the URL (with the format from above). This is because
+      // document.location.href gets the current URI off the docshell,
+      // which is the URL displayed in the location bar, i.e.
+      // the URI that the user attempted to load.
 
-  <!-- ERROR TITLE -->
-  <div id="errorTitle">
-    <div id="et_malformedURI" class="invisible">
-      <p>&malformedURI.title;</p>
-    </div>
-    <div id="et_fileNotFound" class="invisible">
-      <p>&fileNotFound.title;</p>
-    </div>
-    <div id="et_dnsNotFound" class="invisible">
-      <p>&dnsNotFound.title;</p>
-    </div>
-    <div id="et_protocolNotFound" class="invisible">
-      <p>&protocolNotFound.title;</p>
-    </div>
-    <div id="et_connectionFailure" class="invisible">
-      <p>&connectionFailure.title;</p>
-    </div>
-    <div id="et_netTimeout" class="invisible">
-      <p>&netTimeout.title;</p>
-    </div>
-    <div id="et_redirectLoop" class="invisible">
-      <p>&redirectLoop.title;</p>
-    </div>
-    <div id="et_unknownSocketType" class="invisible">
-      <p>&unknownSocketType.title;</p>
-    </div>
-    <div id="et_netReset" class="invisible">
-      <p>&netReset.title;</p>
-    </div>
-    <div id="et_netOffline" class="invisible">
-      <p>&netOffline.title;</p>
-    </div>
-  </div>
-
-  <!-- SHORT DESCRIPTION -->
-  <div id="shortDesc">
-    <p id="sd"> </p>
-  </div>
-
-  <!-- LONG DESCRIPTION -->
-  <div id="longDesc">
-    <div id="ld_malformedURI" class="invisible">
-      <p>&malformedURI.longDesc;</p>
-    </div>
-    <div id="ld_fileNotFound" class="invisible">
-      <p>&fileNotFound.longDesc;</p>
-    </div>
-    <div id="ld_dnsNotFound" class="invisible">
-      <p>&dnsNotFound.longDesc;</p>
-    </div>
-    <div id="ld_protocolNotFound" class="invisible">
-      <p>&protocolNotFound.longDesc;</p>
-    </div>
-    <div id="ld_connectionFailure" class="invisible">
-      <p>&connectionFailure.longDesc;</p>
-    </div>
-    <div id="ld_netTimeout" class="invisible">
-      <p>&netTimeout.longDesc;</p>
-    </div>
-    <div id="ld_redirectLoop" class="invisible">
-      <p>&redirectLoop.longDesc;</p>
-    </div>
-    <div id="ld_unknownSocketType" class="invisible">
-      <p>&unknownSocketType.longDesc;</p>
-    </div>
-    <div id="ld_netReset" class="invisible">
-      <p>&netReset.longDesc;</p>
-    </div>
-    <div id="ld_netOffline" class="invisible">
-      <p>&netOffline.longDesc;</p>
-    </div>
-  </div>
-  <p><input type="button" value="&retry.label;" id="retry" onclick="retryThis();"/></p>
-
-  <script type="application/x-javascript"><![CDATA[
-    // Error url MUST be formatted like this:
-    //   moz-neterror:page?e=error&u=url&d=desc
-
-    // Note that this file uses document.documentURI to get
-    // the URL (with the format from above). This is because
-    // document.location.href gets the current URI off the docshell,
-    // which is the URL displayed in the location bar, i.e.
-    // the URI that the user attempted to load.
-
-    function getErrorCode()
-    {
-      var url = document.documentURI;
-
-      var error = url.search(/e\=/);
-      var duffUrl = url.search(/\&u\=/);
-      return decodeURIComponent(url.slice(error + 2, duffUrl));
-    }
-
-    function getDuffUrl()
-    {
-      var url = document.documentURI;
-      var duffUrl = url.search(/u\=/);
-      var desc = url.search(/\&d\=/);
-      return decodeURIComponent(url.slice(duffUrl + 2, desc));
-    }
-
-    function getDescription()
-    {
-      var url = document.documentURI;
-      var desc = url.search(/d\=/);
-      return decodeURIComponent(url.slice(desc + 2));
-    }
-
-    function retryThis()
-    {
-      // Session history has the URL of the page that failed
-      // to load, not the one of the error page. So, just call
-      // reload(), which will also repost POST data correctly.
-      location.reload();
-    }
-
-    // Note: It is important to run this code inline, instead of using
-    // an onload handler. This is because error pages are loaded as
-    // LOAD_BACKGROUND, which means that onload handlers will not be executed.
-
-    var err = getErrorCode();
-    var duffUrl = getDuffUrl();
-
-    var i;
-
-    // Fill in the title
-    var et = document.getElementById("et_" + err);
-    if (et) {
-      et.className = "et_visible";
-    }
-
-    // Fill in the short description
-    var sd = document.getElementById("shortDesc");
-    for (i = 0; i < sd.childNodes.length; i++)
-    {
-      var n = sd.childNodes.item(i);
-      if (n.nodeType == Node.TEXT_NODE)
+      function getErrorCode()
       {
-        n.nodeValue = getDescription();
-        break;
+        var url = document.documentURI;
+        var error = url.search(/e\=/);
+        var duffUrl = url.search(/\&u\=/);
+        return decodeURIComponent(url.slice(error + 2, duffUrl));
       }
-    }
 
-    // Long description
-    var ld = document.getElementById("ld_" + err);
-    if (ld) {
-      ld.className = "ld_visible";
-    }
-  ]]></script>
-</body>
+      function getDescription()
+      {
+        var url = document.documentURI;
+        var desc = url.search(/d\=/);
 
+        // desc == -1 if not found; if so, return an empty string
+        // instead of what would turn out to be portions of the URI
+        if (desc == -1) return "";
+
+        return decodeURIComponent(url.slice(desc + 2));
+      }
+
+      function retryThis()
+      {
+        // Session history has the URL of the page that failed
+        // to load, not the one of the error page. So, just call
+        // reload(), which will also repost POST data correctly.
+        location.reload();
+      }
+
+      function parseFakeTags(instr)
+      {
+        return instr.replace(/\[([^\]]+)\]/g, '<$1>');
+      }
+
+      function initPage()
+      {
+        var err = getErrorCode();
+
+        // Map unknown error codes to generic
+        if (!(err in errorDesc && err in errorTitle))
+          err = "generic";
+
+        var title = document.getElementById("errorTitleText");
+        if (title)
+          title.textContent = errorTitle[err];
+
+        var sd = document.getElementById("errorShortDescText");
+        if (sd)
+          sd.textContent = getDescription();
+
+        var ld = document.getElementById("errorLongDesc");
+        if (ld)
+          ld.innerHTML = parseFakeTags(errorDesc[err]);
+      }
+    ]]></script>
+  </head>
+
+  <body dir="&locale.dir;">
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+    
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 id="errorTitleText" />
+      </div>
+      
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+      
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p id="errorShortDescText" />
+        </div>
+
+        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+        <div id="errorLongDesc" />
+
+      </div>
+
+      <!-- Retry Button -->
+      <xul:button xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  id="errorTryAgain" label="&retry.label;" oncommand="retryThis();" />
+
+    </div>
+
+    <!--
+    - Note: It is important to run the script this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+    <script type="application/x-javascript">initPage();</script>
+
+  </body>
 </html>
