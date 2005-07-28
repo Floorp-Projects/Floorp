@@ -102,7 +102,7 @@ static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
    *   PRUint32 offset      (network byte order)
    *   PRUint32 length      (network byte order)
    *   PRUint32 flags       (network byte order)
-   *   char     name[N]
+   *   char     name[N]     (where N >= 1)
    *   char     null_byte;
    */
   PRUint32 offset;
@@ -111,7 +111,7 @@ static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
   const char *name;
   int namelen;
 
-  if ((buf_end - *buf) < (int)(2*sizeof(PRUint32) + 2))
+  if ((buf_end - *buf) < (int)(3*sizeof(PRUint32) + 2))
     return -1;
 
   memcpy(&offset, *buf, sizeof(offset));
