@@ -699,17 +699,18 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   }
 
   jsval v;
+  uintN attrs = JSPROP_ENUMERATE;
 
   if (member->IsConstant()) {
     v = memberval;
   } else if (member->IsAttribute()) {
     // An attribute is being resolved. Define the property, the value
-    // will be dealt with in the get/set hooks.
-
-    // XXX: We should really just have getters and setters for
-    // properties and not do it the hard and expensive way.
+    // will be dealt with in the get/set hooks.  Use JSPROP_SHARED to
+    // avoid entraining last-got or last-set garbage beyond the life
+    // of the value in the getter or setter call site.
 
     v = JSVAL_VOID;
+    attrs |= JSPROP_SHARED;
   } else {
     // We're dealing with a method member here. Clone a function we can
     // use for this object.  NB: cx's newborn roots will protect funobj
@@ -742,7 +743,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
   if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                              ::JS_GetStringLength(str), v, nsnull, nsnull,
-                             0)) {
+                             attrs)) {
     return JS_FALSE;
   }
 
