@@ -53,6 +53,7 @@
 #include "nsGUIEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
+#include "nsPLDOMEvent.h"
 
 // A helper class for managing our ranges of selection.
 struct nsTreeRange
@@ -589,6 +590,9 @@ NS_IMETHODIMP nsTreeSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
 
 NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
 {
+  if (mCurrentIndex == aIndex) {
+    return NS_OK;
+  }
   if (mCurrentIndex != -1)
     mTree->InvalidateRow(mCurrentIndex);
   
@@ -597,7 +601,32 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   if (aIndex != -1)
     mTree->InvalidateRow(aIndex);
 
-  return NS_OK;
+  // Fire DOMMenuItemActive event for tree
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
+  NS_ASSERTION(boxObject, "no box object!");
+  if (!boxObject)
+    return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMElement> treeElt;
+  boxObject->GetElement(getter_AddRefs(treeElt));
+
+  nsCOMPtr<nsIDOMNode> treeDOMNode(do_QueryInterface(treeElt));
+  NS_ENSURE_TRUE(treeDOMNode, NS_ERROR_UNEXPECTED);
+
+  nsPLDOMEvent *event = new nsPLDOMEvent(treeDOMNode,
+                                         NS_LITERAL_STRING("DOMMenuItemActive"));
+
+  nsresult rv;
+  if (event) {
+    rv = event->PostDOMEvent();
+    if (NS_FAILED(rv)) {
+      PL_DestroyEvent(event);
+    }
+  }
+  else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return rv;
 }
 
 #define ADD_NEW_RANGE(macro_range, macro_selection, macro_start, macro_end) \

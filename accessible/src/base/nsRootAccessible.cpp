@@ -237,14 +237,6 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // capture non-text selection changes
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMItemSelected"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // capture non-text selection changes
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMItemUnselected"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
     rv = target->AddEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -317,8 +309,6 @@ nsresult nsRootAccessible::RemoveEventListeners()
   if (target) { 
     target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMItemSelected"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMItemUnselected"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("AlertActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -487,6 +477,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   if (localName.EqualsIgnoreCase("tree")) {
     printf("\ndebugging events in tree, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
   }
+  if (localName.EqualsIgnoreCase("select")) {
+    printf("\ndebugging events in select, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
+  }
 #endif
 
   nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(targetNode);
@@ -557,14 +550,33 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (eventType.LowerCaseEqualsLiteral("focus")) {
       FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
     }
-    else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive") || 
-             eventType.LowerCaseEqualsLiteral("select")) {
+    else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
       if (gLastFocusedNode == targetNode) {
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                   treeItemAccessible, nsnull);
       }
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION, 
-                               treeItemAccessible, nsnull);
+    }
+    else if (eventType.LowerCaseEqualsLiteral("select")) {
+      // If multiselect tree, we should fire selectionadd or selection removed
+      if (gLastFocusedNode == targetNode) {
+        nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
+          do_QueryInterface(targetNode);
+        nsAutoString selType;
+        multiSel->GetSelType(selType);
+        if (selType.IsEmpty() || !selType.EqualsLiteral("single")) {
+          privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN, 
+                                  accessible, nsnull);
+          // XXX We need to fire EVENT_SELECTION_ADD and EVENT_SELECTION_REMOVE
+          //     for each tree item. Perhaps each tree item will need to
+          //     cache its selection state and fire an event after a DOM "select"
+          //     event when that state changes.
+          // nsXULTreeAccessible::UpdateTreeSelection();
+        }
+        else {
+          privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION, 
+                                  treeItemAccessible, nsnull);
+        }
+      }
     }
     return NS_OK;
   }
@@ -678,20 +690,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // Focus was inside of popup that's being hidden
     FireCurrentFocusEvent();
   }
-  else if (eventType.EqualsLiteral("DOMItemUnselected")) {
-    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
-    if (multiSelect) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN, multiSelect, nsnull);
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_REMOVE, accessible, nsnull);
-    }
-  }
-  else if (eventType.EqualsLiteral("DOMItemSelected")) {
-    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
-    if (multiSelect) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN, multiSelect, nsnull);
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_ADD, accessible, nsnull);
-    }
-  }
   else {
     // Menu popup events
     PRUint32 menuEvent = 0;
@@ -747,7 +745,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   // XXX todo: value change events for ATK are done with 
   // AtkPropertyChange, PROP_VALUE. Need the old and new value.
   // Not sure how we'll get the old value.
-  // Aaron: I think this is a problem with the ATK API -- it's much harder to
+  // Aaron: I think this is a problem with the ATK API -- its much harder to
   // grab the old value for all the application developers than it is for
   // AT's to cache old values when they need to (when would that be!?)
   else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
