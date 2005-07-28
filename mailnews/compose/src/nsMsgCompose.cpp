@@ -3701,11 +3701,14 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* char
   const char* cset = (!charset || !*charset) ? "UTF-8" : charset;
   rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
                                      cset, utf8Scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Some ASCII characters still need to be escaped.
-  NS_UnescapeURL(utf8Scheme.get(), utf8Scheme.Length(),
-                 esc_SkipControl | esc_AlwaysCopy, _retval);
+  if (NS_SUCCEEDED(rv)) {
+    // Some ASCII characters still need to be escaped.
+    NS_UnescapeURL(utf8Scheme.get(), utf8Scheme.Length(),
+                   esc_SkipControl | esc_AlwaysCopy, _retval);
+  } else {
+    _retval.Assign(scheme);
+  }
   if (PL_strncasestr(scheme, "http:", 5)) 
     _retval.Cut(0, 7);
   
