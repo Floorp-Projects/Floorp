@@ -4718,7 +4718,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (pn2->pn_type == TOK_LC && js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+            if (pn2->pn_type == TOK_LC &&
+                js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
@@ -4770,7 +4771,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JS_ASSERT(pn->pn_count != 0);
         pn2 = pn->pn_head;
-        if (pn2->pn_type == TOK_LC && js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+        if (pn2->pn_type == TOK_LC && js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
             return JS_FALSE;
         if (!js_EmitTree(cx, cg, pn2))
             return JS_FALSE;
@@ -4779,7 +4780,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
             if (pn2->pn_type == TOK_LC) {
-                if (!js_Emit1(cx, cg, JSOP_JSEXPR) < 0)
+                if (!js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
                     return JS_FALSE;
             }
             if (!js_EmitTree(cx, cg, pn2))

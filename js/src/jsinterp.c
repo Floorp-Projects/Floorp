@@ -5064,7 +5064,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             goto out;
 
 	  case JSOP_STARTXML:
-	  case JSOP_JSEXPR:
+	  case JSOP_STARTXMLEXPR:
 	    break;
 
           case JSOP_TOXML:

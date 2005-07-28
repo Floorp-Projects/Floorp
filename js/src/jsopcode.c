@@ -2044,17 +2044,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_STRING)
-                if (!inXML) {
-                    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                       (jschar)'"');
-                } else {
-                    /* Don't quote strings in XML mode. */
-                    JSString *str = ATOM_TO_STRING(atom);
-                    todo = SprintPut(&ss->sprinter,
-                                     js_GetStringBytes(str),
-                                     JSSTRING_LENGTH(str));
-                    break;
-                }
+                rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
+                                   inXML ? 0 : (jschar)'"');
                 if (!rval)
                     return JS_FALSE;
                 todo = STR2OFF(&ss->sprinter, rval);
@@ -2476,7 +2467,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 #if JS_HAS_XML_SUPPORT
               case JSOP_STARTXML:
-              case JSOP_JSEXPR:
+              case JSOP_STARTXMLEXPR:
                 inXML = op == JSOP_STARTXML; 
                 todo = -2;
                 break;
@@ -2506,7 +2497,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               END_LITOPX_CASE
 
               case JSOP_QNAME:
-                op = JSOP_NOP;           /* turn off parens */
                 rval = POP_STR();
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, "%s::[%s]", lval, rval);
@@ -2552,7 +2542,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_XMLELTEXPR:
               case JSOP_XMLTAGEXPR:
-                op = JSOP_NOP; /* Turn off parens. */
                 todo = Sprint(&ss->sprinter, "{%s}", POP_STR());
                 inXML = JS_TRUE; 
                 /* If we're an attribute value, we shouldn't quote this. */
