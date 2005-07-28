@@ -323,6 +323,9 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
 
   ::GetShortPathName(updateDirPath.get(), tempBuf, sizeof(tempBuf));
   updateDirPath = tempBuf;
+
+  ::GetShortPathName(appFilePath.get(), tempBuf, sizeof(tempBuf));
+  appFilePath = tempBuf;
 #endif
 
   // Construct the PID argument for this process.  If we are using execv, then
