@@ -1026,7 +1026,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	nsRectToMacRect(wRect, macRect);
 
 	StPortSetter portSetter(mWindowPtr);
-    StOriginSetter  originSetter(mWindowPtr);
+	StOriginSetter  originSetter(mWindowPtr);
 
 #ifdef INVALIDATE_DEBUGGING
 	if (caps_lock())
@@ -1216,17 +1216,15 @@ NS_IMETHODIMP	nsWindow::Update()
   {
     reentrant = PR_TRUE;
     
-    StRegionFromPool regionToValidate;
-    if (!regionToValidate)
+    StRegionFromPool redrawnRegion;
+    if (!redrawnRegion)
       return NS_ERROR_OUT_OF_MEMORY;
 
     // make a copy of the window update rgn (which is in global coords)
     StRegionFromPool saveUpdateRgn;
     if (!saveUpdateRgn)
       return NS_ERROR_OUT_OF_MEMORY;
-
-    if (mWindowPtr)
-      ::GetWindowUpdateRegion(mWindowPtr, saveUpdateRgn);
+    ::GetWindowUpdateRegion(mWindowPtr, saveUpdateRgn);
 
     // draw the widget
     StPortSetter portSetter(mWindowPtr);
@@ -1236,27 +1234,28 @@ NS_IMETHODIMP	nsWindow::Update()
     // visRgn and the updateRgn.
     ::BeginUpdate(mWindowPtr);
     mInUpdate = PR_TRUE;
-    
-    HandleUpdateEvent(regionToValidate);
+
+    HandleUpdateEvent(redrawnRegion);
 
     // EndUpdate replaces the normal visRgn
     ::EndUpdate(mWindowPtr);
     mInUpdate = PR_FALSE;
     
-    // restore the window update rgn
-    // saveUpdateRgn is in global coords, so we need to shift it to local coords
+    // Restore the parts of the window update rgn that we didn't draw,
+    // taking care to maintain any bits that got invalidated during the
+    // paint (yes, this can happen). We do this because gecko might not own
+    // the entire window (think: embedding).
+
     Point origin = {0, 0};
     ::GlobalToLocal(&origin);
+    // saveUpdateRgn is in global coords, so we need to shift it to local coords
     ::OffsetRgn(saveUpdateRgn, origin.h, origin.v);
     
-    // put the old update region back...
+    // figure out the difference between the old update region
+    // and what we redrew
+    ::DiffRgn(saveUpdateRgn, redrawnRegion, saveUpdateRgn);
+    // and invalidate it
     ::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
-
-    // and then validate the area that we knew we updated
-    // (hopefully clearing most, if not all the update region).
-    // presumably this is done because we don't necessarily own
-    // the entire window.
-    ::ValidWindowRgn(mWindowPtr, regionToValidate);
 
     reentrant = PR_FALSE;
   }
@@ -1416,57 +1415,56 @@ nsWindow::AddRectToArray ( Rect* inDirtyRect, void* inArray )
 //-------------------------------------------------------------------------
 nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 {
-	if (! mVisible || !ContainerHierarchyIsVisible())
-		return NS_OK;
+  if (! mVisible || !ContainerHierarchyIsVisible())
+    return NS_OK;
 
-	// make sure the port is set and origin is (0, 0).
-	StPortSetter    portSetter(mWindowPtr);
-	// zero the origin, and set it back after drawing widgets
-	StOriginSetter  originSetter(mWindowPtr);
-	
-	// get the damaged region from the OS
-	StRegionFromPool damagedRgn;
-	if (!damagedRgn)
-		return NS_ERROR_OUT_OF_MEMORY;
-	::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), damagedRgn);
+  // make sure the port is set and origin is (0, 0).
+  StPortSetter    portSetter(mWindowPtr);
+  // zero the origin, and set it back after drawing widgets
+  StOriginSetter  originSetter(mWindowPtr);
+  
+  // get the damaged region from the OS
+  StRegionFromPool damagedRgn;
+  if (!damagedRgn)
+    return NS_ERROR_OUT_OF_MEMORY;
+  ::GetPortVisibleRegion(::GetWindowPort(mWindowPtr), damagedRgn);
 
 /*
-#ifdef PAINT_DEBUGGING	
-	if (caps_lock())
-  	blinkRgn(damagedRgn, PR_TRUE);
+#ifdef PAINT_DEBUGGING  
+  if (caps_lock())
+    blinkRgn(damagedRgn, PR_TRUE);
 #endif
 */
-	// calculate the update region relatively to the window port rect
-	// (at this point, the grafPort origin should always be 0,0
-	// so mWindowRegion has to be converted to window coordinates)
-	StRegionFromPool updateRgn;
-	if (!updateRgn)
-		return NS_ERROR_OUT_OF_MEMORY;
-	::CopyRgn(mWindowRegion, updateRgn);
+  // calculate the update region relatively to the window port rect
+  // (at this point, the grafPort origin should always be 0,0
+  // so mWindowRegion has to be converted to window coordinates)
+  StRegionFromPool updateRgn;
+  if (!updateRgn)
+    return NS_ERROR_OUT_OF_MEMORY;
+  ::CopyRgn(mWindowRegion, updateRgn);
 
-	nsRect bounds = mBounds;
-	LocalToWindowCoordinate(bounds);
-	::OffsetRgn(updateRgn, bounds.x, bounds.y);
+  nsRect bounds = mBounds;
+  LocalToWindowCoordinate(bounds);
+  ::OffsetRgn(updateRgn, bounds.x, bounds.y);
 
-	// check if the update region is visible
-	::SectRgn(damagedRgn, updateRgn, updateRgn);
+  // check if the update region is visible
+  ::SectRgn(damagedRgn, updateRgn, updateRgn);
 
 #ifdef PAINT_DEBUGGING
-	if (caps_lock())
-  	blinkRgn(updateRgn, PR_TRUE);
+  if (caps_lock())
+    blinkRgn(updateRgn, PR_TRUE);
 #endif
 
-	if (!::EmptyRgn(updateRgn))
-	{
-
+  if (!::EmptyRgn(updateRgn))
+  {
     // Ref: http://developer.apple.com/technotes/tn/tn2051.html
     //      short-circuit QD's implicit LockPortBits()
     //      Note: MUST unlock before exiting this scope (see below)
     ::LockPortBits(::GetWindowPort(mWindowPtr));
 
-	  // Iterate over each rect in the region, sending a paint event for each. Carbon
-	  // has a routine for this, pre-carbon doesn't so we roll our own. If the region
-	  // is very complicated (more than 15 pieces), just use a bounding box.
+    // Iterate over each rect in the region, sending a paint event for each. Carbon
+    // has a routine for this, pre-carbon doesn't so we roll our own. If the region
+    // is very complicated (more than 15 pieces), just use a bounding box.
     const int kMaxUpdateRects = 15;           // the most rects we'll try to deal with
     const int kRectsBeforeBoundingBox = 10;   // if we have more than this, just do bounding box
 
@@ -1512,12 +1510,11 @@ nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
     //      short-circuit QD's implicit LockPortBits()
     //      Note: unlock before exiting (locked above)
     ::UnlockPortBits(::GetWindowPort(mWindowPtr));
+  }
 
-	}
+  NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 
-	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
-
-	return NS_OK;
+  return NS_OK;
 }
 
 
