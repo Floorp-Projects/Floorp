@@ -58,6 +58,7 @@ SEC_BEGIN_PROTOS
  * Generic Slot Lists Management
  ************************************************************/
 void PK11_FreeSlotList(PK11SlotList *list);
+SECStatus PK11_FreeSlotListElement(PK11SlotList *list, PK11SlotListElement *le);
 PK11SlotListElement * PK11_GetFirstSafe(PK11SlotList *list);
 PK11SlotListElement *PK11_GetNextSafe(PK11SlotList *list, 
 				PK11SlotListElement *le, PRBool restart);
