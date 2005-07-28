@@ -41,6 +41,10 @@
 
 START("10.2.1 - XML.toXMLString");
 
+var bug = 297025;
+
+printBugNumber (bug);
+
 var n = 1;
 var actual;
 var expect;
