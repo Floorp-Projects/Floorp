@@ -76,6 +76,16 @@ GRE_DIST	= $(DIST)/gre
 # XPI-contents staging directory for ambitious and right-thinking extensions.
 FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)
 
+# MAKE_JARS_TARGET is a staging area for make-jars.pl.  When packaging in
+# the jar format, make-jars leaves behind a directory structure that's not
+# needed in $(FINAL_TARGET).  For both, flat, and symlink, the directory
+# structure contains the chrome, so leave it in $(FINAL_TARGET).
+ifeq (jar,$(MOZ_CHROME_FILE_FORMAT))
+MAKE_JARS_TARGET = $(if $(XPI_NAME),$(FINAL_TARGET).stage,$(DIST)/chrome-stage)
+else
+MAKE_JARS_TARGET = $(FINAL_TARGET)
+endif
+
 #
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
 # Since the longest of these is 5 characters without the suffix,

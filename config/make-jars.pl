@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-f] [-v] [-l] [-x] [-a] [-e] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-c <localedir>] [-z zipprog] [-o operating-system] < <jar.mn>
+# make-jars [-f] [-v] [-l] [-x] [-a] [-e] [-d <chromeDir>] [-s <srcdir>] [-t <topsrcdir>] [-c <localedir>] [-j <jarDir>] [-z zipprog] [-o operating-system] < <jar.mn>
 
 my $cygwin_mountprefix = "";
 if ($^O eq "cygwin") {
@@ -49,7 +49,7 @@ foreach my $arg (@ARGV) {
 }
 my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
-getopts("d:s:t:c:f:avlD:o:p:xz:e:");
+getopts("d:s:t:c:j:f:avlD:o:p:xz:e:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -74,6 +74,14 @@ if ($Config{'archname'} =~ /VMS/) {
 my $chromeDir = ".";
 if (defined($::opt_d)) {
     $chromeDir = $::opt_d;
+}
+
+my $jarDir = $chromeDir;
+if (defined($::opt_j)) {
+    $jarDir = $::opt_j;
+}
+if ($jarDir !~ /^\//) {
+    $jarDir = getcwd() . '/' . $jarDir;
 }
 
 my $verbose = 0;
@@ -145,6 +153,7 @@ if (defined($::opt_o)) {
 if ($verbose) {
     print "make-jars "
         . "-v -d $chromeDir "
+        . "-j $jarDir "
         . "-z $zipprog "
         . ($fileformat ? "-f $fileformat " : "")
         . ($nofilelocks ? "-l " : "")
@@ -207,13 +216,14 @@ sub zipErrorCheck($$)
 
 sub JarIt
 {
-    my ($destPath, $jarfile, $args, $overrides) = @_;
+    my ($destPath, $jarPath, $jarfile, $args, $overrides) = @_;
     my $oldDir = cwd();
+    my $jarchive = $jarPath . '/' . $jarfile . '.jar';
     chdir("$destPath/$jarfile");
 
     if ("$fileformat" eq "flat" || "$fileformat" eq "symlink") {
-    unlink("../$jarfile.jar") if ( -e "../$jarfile.jar");
-    chdir($oldDir);
+        unlink($jarchive) if ( -e $jarchive);
+        chdir($oldDir);
         return 0;
     }
 
@@ -227,7 +237,7 @@ sub JarIt
         my $cwd = getcwd;
         my $err = 0; 
 
-        #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $args\n";
+        #print "$zipprog $zipmoveopt -uX $jarchive $args\n";
 
         # Handle posix cmdline limits
         while (length($args) > $maxCmdline) {
@@ -237,15 +247,15 @@ sub JarIt
             $subargs = substr($args, 0, $pos);
             $args = substr($args, $pos);
 
-            #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $subargs\n";
+            #print "$zipprog $zipmoveopt -uX $jarchive $subargs\n";
             #print "Length of subargs: " . length($subargs) . "\n";
-            system("$zipprog $zipmoveopt -uX ../$jarfile.jar $subargs") == 0 or
+            system("$zipprog $zipmoveopt -uX $jarchive $subargs") == 0 or
                 $err = $? >> 8;
             zipErrorCheck($err,$lockfile);
         }
         #print "Length of args: " . length($args) . "\n";
-        #print "$zipprog $zipmoveopt -uX ../$jarfile.jar $args\n";
-        system("$zipprog $zipmoveopt -uX ../$jarfile.jar $args") == 0 or
+        #print "$zipprog $zipmoveopt -uX $jarchive $args\n";
+        system("$zipprog $zipmoveopt -uX $jarchive $args") == 0 or
             $err = $? >> 8;
         zipErrorCheck($err,$lockfile);
     }
@@ -261,15 +271,15 @@ sub JarIt
             $subargs = substr($overrides, 0, $pos);
             $overrides = substr($overrides, $pos);
 
-            #print "$zipprog $zipmoveopt -X ../$jarfile.jar $subargs\n";       
+            #print "$zipprog $zipmoveopt -X $jarchive $subargs\n";       
             #print "Length of subargs: " . length($subargs) . "\n";
-            system("$zipprog $zipmoveopt -X ../$jarfile.jar $subargs") == 0 or
+            system("$zipprog $zipmoveopt -X $jarchive $subargs") == 0 or
                 $err = $? >> 8;
             zipErrorCheck($err,$lockfile);
         }
         #print "Length of args: " . length($overrides) . "\n";
-        #print "$zipprog $zipmoveopt -X ../$jarfile.jar $overrides\n";
-        system("$zipprog $zipmoveopt -X ../$jarfile.jar $overrides\n") == 0 or 
+        #print "$zipprog $zipmoveopt -X $jarchive $overrides\n";
+        system("$zipprog $zipmoveopt -X $jarchive $overrides\n") == 0 or 
         $err = $? >> 8;
         zipErrorCheck($err,$lockfile);
     }
@@ -356,7 +366,7 @@ sub RegIt
     } else {
         $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/$chromeType/$pkgName/";
     }
-    my $installedChromeFile = "$chromeDir/installed-chrome.txt";
+    my $installedChromeFile = "$jarDir/installed-chrome.txt";
     UniqIt($installedChromeFile, $line);
 }
 
@@ -493,7 +503,7 @@ start:
         my $cwd = cwd();
         my @manifestLines;
 
-        print "+++ making chrome $cwd  => $chromeDir/$jarfile.jar\n";
+        print "+++ making chrome $cwd  => $jarDir/$jarfile.jar\n";
         while (defined($_ = shift @gLines)) {
             if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\(\%?[\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
@@ -547,17 +557,17 @@ start:
                 # end with blank line
                 last;
             } else {
-                my $manifest = "$chromeDir/$jarfile.manifest";
-                my $manifest = "$chromeDir/../chrome.manifest" if $useExtensionManifest;
+                my $manifest = "$jarDir/$jarfile.manifest";
+                my $manifest = "$jarDir/../chrome.manifest" if $useExtensionManifest;
                 UniqIt($manifest, @manifestLines);
-                JarIt($chromeDir, $jarfile, $args, $overrides);
+                JarIt($chromeDir, $jarDir, $jarfile, $args, $overrides);
                 goto start;
             }
         }
-        my $manifest = "$chromeDir/$jarfile.manifest";
-        $manifest = "$chromeDir/../chrome.manifest" if $useExtensionManifest;
+        my $manifest = "$jarDir/$jarfile.manifest";
+        $manifest = "$jarDir/../chrome.manifest" if $useExtensionManifest;
         UniqIt($manifest, @manifestLines);
-        JarIt($chromeDir, $jarfile, $args, $overrides);
+        JarIt($chromeDir, $jarDir, $jarfile, $args, $overrides);
 
     } elsif (/^\s*\#.*$/) {
         # skip comments
