@@ -859,6 +859,7 @@ PK11_TokenKeyGenWithFlags;
 ;+NSS_3.11 { 	# NSS 3.11 release
 ;+    global:
 CERT_CompareValidityTimes;
+PK11_FreeSlotListElement;
 PK11_GenerateRandomOnSlot;
 SECMOD_HasRootCerts;
 ;+    local:
