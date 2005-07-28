@@ -4108,7 +4108,7 @@ nsGlobalWindow::Atob(const nsAString& aAsciiBase64String,
 
   resultLen = ((resultLen * 3) / 4);
 
-  char *bin_data = PL_Base64Decode(base64, aAsciiBase64String.Length(),
+  char *bin_data = PL_Base64Decode(base64, dataLen,
                                    nsnull);
   if (!bin_data) {
     nsMemory::Free(base64);
