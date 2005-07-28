@@ -34,6 +34,7 @@ classic.jar:
 +  skin/classic/global/listbox.css
 +  skin/classic/global/menu.css
 +  skin/classic/global/menulist.css
++  skin/classic/global/netError.css
 +  skin/classic/global/popup.css
 +  skin/classic/global/progressmeter.css
 +  skin/classic/global/radio.css
@@ -106,6 +107,7 @@ classic.jar:
 +  skin/classic/global/icons/small-globe-sunken-grey.png              (icons/small-globe-sunken-grey.png)
 +  skin/classic/global/icons/small-globe-sunken.png                   (icons/small-globe-sunken.png)
 +  skin/classic/global/icons/white-gray-gradient.gif                  (icons/white-gray-gradient.gif)
++  skin/classic/global/icons/warning-large.png                        (icons/warning-large.png)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)

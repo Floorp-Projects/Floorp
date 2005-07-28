@@ -20,6 +20,7 @@ classic.jar:
         skin/classic/global/listbox.css
         skin/classic/global/menu.css
         skin/classic/global/menulist.css
+        skin/classic/global/netError.css
         skin/classic/global/popup.css
         skin/classic/global/preferences.css
         skin/classic/global/printPageSetup.css
@@ -77,6 +78,7 @@ classic.jar:
         skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
         skin/classic/global/icons/tabstrip-bottom.png               (icons/tabstrip-bottom.png)
         skin/classic/global/icons/Warning.png                       (icons/Warning.png)
+        skin/classic/global/icons/warning-large.png                 (icons/warning-large.png)
         skin/classic/global/icons/wrap.png                          (icons/wrap.png)
         skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
         skin/classic/global/menu/Menu-arrow-rtl.png                 (menu/Menu-arrow-rtl.png)
