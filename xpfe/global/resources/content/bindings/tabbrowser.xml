@@ -636,7 +636,7 @@
 
             function setFocus(element) {
               document.commandDispatcher.suppressFocusScroll = true;
-              Components.lookupMethod(element, "focus").call(element);
+              element.focus();
               document.commandDispatcher.suppressFocusScroll = false;
             }
 
@@ -664,12 +664,6 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            // mechanism for reading properties of the underlying XPCOM object
-            // (ignoring potential getters/setters added by malicious content)
-            var safeGetProperty = function(obj, propname) {
-              return Components.lookupMethod(obj, propname).call(obj);
-            };
-
             if (!this.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
@@ -701,13 +695,11 @@
               Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
 
-            const targetDoc = safeGetProperty(event.target, "ownerDocument");
+            const targetDoc = event.target.ownerDocument;
             // Make a URI out of our href.
-            var docCharset = safeGetProperty(targetDoc, "characterSet");
-            var uri = ioService.newURI(href, docCharset, null);
+            var uri = ioService.newURI(href, targetDoc.characterSet, null);
 
-            var origURIStr = safeGetProperty(targetDoc, "documentURI");
-            var origURI = ioService.newURI(origURIStr, docCharset, null);
+            var origURI = ioService.newURI(targetDoc.documentURI, targetDoc.characterSet, null);
 
             const nsIScriptSecMan =
               Components.interfaces.nsIScriptSecurityManager;
@@ -724,7 +716,7 @@
               if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
                 if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
                                              uri, origURI, event.target,
-                                             safeGetProperty(event.target, "type"),
+                                             event.target.type,
                                              null) == nsIContentPolicy.ACCEPT) {
                   this.mTabListeners[i].setIcon(href);
                   if (this.browsers[i] == this.mCurrentBrowser)
@@ -786,8 +778,7 @@
                 // Let's try to unescape it using a character set
                 // in case the URI is not ASCII.
                 try {
-                  var characterSet = Components.lookupMethod(browser.contentDocument, 'characterSet')
-                                               .call(browser.contentDocument);
+                  var characterSet = browser.contentDocument.characterSet;
                   const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                                  .getService(Components.interfaces.nsITextToSubURI);
                   title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
@@ -1550,11 +1541,9 @@
           // We're about to open a modal dialog, make sure the opening
           // tab is brought to the front.
 
-          var targetTop = new XPCNativeWrapper(event.target, "top").top;
-
           const browsers = this.browsers;
           for (var i = 0; i < browsers.length; ++i) {
-            if (browsers[i].contentWindow == targetTop) {
+            if (browsers[i].contentWindow == event.target.top) {
               this.selectedTab = this.mTabContainer.childNodes[i];
 
               break;
