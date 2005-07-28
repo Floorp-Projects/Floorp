@@ -979,12 +979,11 @@ nsMsgTemplateReplyHelper::OnDataAvailable(nsIRequest* request,
 
   PRUint32 available, readCount;
   PRUint32 maxReadCount = sizeof(readBuf) - 1;
-  PRInt32 bodyOffset = 0, readOffset = 0;
 
   rv = inStream->Available(&available);
   while (NS_SUCCEEDED(rv) && available > 0)
   {
-    readOffset = 0;
+    PRInt32 bodyOffset = 0, readOffset = 0;
     if (!mInMsgBody && mLastBlockChars[0])
     {
       memcpy(readBuf, mLastBlockChars, 3);
