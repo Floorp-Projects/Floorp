@@ -62,7 +62,7 @@ interface nsIProxyObjectManager : nsISupports
     /**
      * Always create proxy even if for same thread as current thread.
      */
-    const long CREATE_ALWAYS = 0x0004;
+    const long FORCE_PROXY_CREATION = 0x0004;
 
 
     void getProxyForObject(in nsIEventQueue destQueue, 
