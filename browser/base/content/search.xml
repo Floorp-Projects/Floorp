@@ -64,7 +64,7 @@
                    onclick="URLBarClickHandler(event, this);"
                    xbl:inherits="disableautocomplete,searchengine,src">
         <xul:button class="searchbar-dropmarker" type="menu"
-                    popup="_child" xbl:inherits="src">
+                    id="searchbar-dropmarker" popup="_child" xbl:inherits="src">
           <xul:menupopup anonid="searchbar-popup" position="after_start"
                          datasources="rdf:internetsearch"
                          ref="NC:SearchEngineRoot" 
@@ -138,6 +138,9 @@
             if (!this.ISEARCHDS.hasArcIn(rEngine, rChild)) {
               this.currentEngine = this.getDefaultEngine();
             } // if default engine not found... XXXblake what to do now?
+            else {
+              this.currentEngine = engine; // Ensure tooltiptext is set
+            }
           }
 
           var element;
@@ -162,6 +165,19 @@
       <field name="ISEARCHDS"/>
       <field name="FORMHISTSVC"/>
 
+      <method name="openSearch">
+        <body>
+          <![CDATA[
+            if (!this.popupOpen) {  // Don't open search popup if history popup is open
+              document.getAnonymousElementByAttribute(this.parentNode,
+                                                      "id", "searchbar-dropmarker").click();
+              return false;
+            }
+            return true;
+          ]]>
+        </body>
+      </method>
+
       <property name="currentEngine"
                 onget="return this.parentNode.getAttribute('searchengine')">
         <setter><![CDATA[
@@ -183,7 +199,13 @@
           PREF.setComplexValue("browser.search.selectedEngine", 
                                Components.interfaces.nsIPrefLocalizedString,
                                pls);
-
+          // XXX Why did mStringBundle say that formatStringFromName is not a method?
+          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+          var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                             .getService(Components.interfaces.nsILocaleService);
+          var bundle = stringBundleService.createBundle("chrome://browser/locale/searchbar.properties", localeService.getApplicationLocale());
+          var toolTipText = bundle.formatStringFromName("searchtip", [pls], 1);
+          this.setAttribute("tooltiptext", toolTipText);
         ]]></setter>
       </property>
 
@@ -367,6 +389,17 @@
           event.stopPropagation();
         ]]>
       </handler>
+      
+      <handler event="keypress" keycode="vk_down" modifiers="alt" phase="capturing"
+               action="return this.openSearch();"/>
+      
+      <handler event="keypress" keycode="vk_up" modifiers="alt" phase="capturing"
+               action="return this.openSearch();"/>
+
+#ifndef XP_MACOSX
+      <handler event="keypress" keycode="vk_f4" phase="capturing"
+               action="return this.openSearch();"/>
+#endif
 
       <handler event="keypress" keycode="vk_down" modifiers="accel" phase="capturing">
         <![CDATA[
