@@ -92,6 +92,7 @@ ifdef BUILD_STATIC_LIBS
 
 FINAL_LINK_COMPS=$(topsrcdir)/embedding/minimo/wince/minimo-link-comps
 FINAL_LINK_COMP_NAMES=$(topsrcdir)/embedding/minimo/wince/minimo-link-names
+FINAL_LINK_LIBS=$(topsrcdir)/embedding/minimo/wince/minimo-link-libs
 
 include $(topsrcdir)/config/static-config.mk
 
