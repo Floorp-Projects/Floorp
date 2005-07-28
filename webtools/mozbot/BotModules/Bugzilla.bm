@@ -223,12 +223,7 @@ sub CheckForBugs {
             }
             if (defined($bug)) {
                 $self->debug("Noticed someone mention bug $bug -- investigating...");
-                my $last = 0;
-                $last = $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} if defined($self->{'bugsHistory'}->{$event->{'target'}}->{$bug});
-                if (($event->{'time'}-$last) > $self->{'backoffTime'}) {
-                    $bugsToFetch .= "$bug ";
-                }
-                $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'};
+                $bugsToFetch .= "$bug ";
                 $bugsFound++;
             }
         } while (defined($bug));
@@ -284,19 +279,26 @@ sub FetchBug {
     my ($event, $bugParams, $subtype, $skipURI, $skipZaroo) = @_;
     my $uri;
     my $type;
+    my @bugs = split(' ', $bugParams);
+    my @ids = ();
+    foreach my $bug (@bugs) {
+        if($self->needToFetchBug($event->{'target'}, $event->{'time'}, $bug)) {
+            push @ids, $bug;
+            $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'};
+        }
+    }
+    return unless @ids;
     if ($subtype eq 'bug') {
         # Code taken from Bugzilla's xml.cgi
-        my @ids = ();
-        @ids = split(' ', $bugParams);
         $uri = "$self->{'bugsURI'}show_bug.cgi?ctype=xml&excludefield=long_desc".join('', map { $_ = "&id=" . $_ } @ids);
         $type = 'xml';
     } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
-        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&$self->{'bugsDWIMQueryDefault'}".join(',',split(' ',$bugParams));
+        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&$self->{'bugsDWIMQueryDefault'}".join(',',@ids);
         $subtype = 'bugs';
         $type = 'buglist';
     } else {
-        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&bug_id=".join(',',split(' ',$bugParams));
+        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&bug_id=".join(',',@ids);
         $type = 'buglist';
     }
     $self->getURI($event, $uri, $type, $subtype, $skipURI, $skipZaroo);
@@ -703,3 +705,14 @@ sub ignoringCommentsFrom {
     return 0;
 }
 
+sub needToFetchBug {
+    my ($self, $target, $time, $bug) = @_;
+    my $last = 0;
+    if (defined($self->{'bugsHistory'}->{$target}->{$bug})) {
+        $last = $self->{'bugsHistory'}->{$target}->{$bug};
+    }
+    if (($time-$last) > $self->{'backoffTime'}) {
+       return 1;
+    }
+    return 0;
+}
