@@ -7070,8 +7070,6 @@
 				3FBDC86208253C8C00D7F8E0,
 				3FBDC8E10827C44B00D7F8E0,
 				3FFE23540847CB0D00D6CAFC,
-				3FDEFAF0089968DB00FB6C86,
-				3FDEFAF1089968DB00FB6C86,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10369,46 +10367,6 @@
 			settings = {
 			};
 		};
-		3FDEFAEC089968DB00FB6C86 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "wrapper.plug-in";
-			name = JavaEmbeddingPlugin.bundle;
-			path = ../plugin/oji/JEP/JavaEmbeddingPlugin.bundle;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		3FDEFAED089968DB00FB6C86 = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.cfbundle;
-			name = MRJPlugin.plugin;
-			path = ../plugin/oji/JEP/MRJPlugin.plugin;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		3FDEFAEE089968DB00FB6C86 = {
-			fileRef = 3FDEFAEC089968DB00FB6C86;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3FDEFAEF089968DB00FB6C86 = {
-			fileRef = 3FDEFAED089968DB00FB6C86;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3FDEFAF0089968DB00FB6C86 = {
-			fileRef = 3FDEFAEC089968DB00FB6C86;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3FDEFAF1089968DB00FB6C86 = {
-			fileRef = 3FDEFAED089968DB00FB6C86;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3FE4ECE9082C2D89003BF39E = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -11217,8 +11175,6 @@
 			dstPath = plugins;
 			dstSubfolderSpec = 6;
 			files = (
-				3FDEFAEE089968DB00FB6C86,
-				3FDEFAEF089968DB00FB6C86,
 				4D5881770864B28D001305B3,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -14273,8 +14229,6 @@
 			children = (
 				F56610BC0394775201A9666E,
 				F5F0BDC803C0A76F01202892,
-				3FDEFAEC089968DB00FB6C86,
-				3FDEFAED089968DB00FB6C86,
 			);
 			isa = PBXGroup;
 			name = Plugins;
