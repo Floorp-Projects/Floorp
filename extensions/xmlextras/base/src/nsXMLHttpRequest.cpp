@@ -1506,6 +1506,13 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       if (httpChannel) {
         httpChannel->SetRequestMethod(method);
       }
+
+      // Bypass the network cache since there is no way for us to ever reuse
+      // a POST response.  This avoids wasting space in the cache.
+      nsLoadFlags flags;
+      mChannel->GetLoadFlags(&flags);
+      flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
+      mChannel->SetLoadFlags(flags);
     }
   }
 
