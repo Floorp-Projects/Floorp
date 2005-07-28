@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -186,7 +187,7 @@ x = function (y) {return y+1;};
 checkThis('x("abc")');
 
 status = inSection(29);
-checkThis('function (y) {return y+1;}("abc")');
+checkThis('(function (y) {return y+1;})("abc")');
 
 status = inSection(30);
 function f(y) { function g() {return y;}; return g();};

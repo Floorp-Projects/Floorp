@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,54 +54,67 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
+/*
+From ECMA-262 Edition 3, 12.4:
+
+12.4 Expression Statement
+
+Syntax
+ExpressionStatement : [lookahead not in {{, function}] Expression ;
+
+Note that an ExpressionStatement cannot start with an opening curly brace
+because that might make it ambiguous with a Block. Also, an ExpressionStatement
+cannot start with the function keyword because that might make it ambiguous with
+a FunctionDeclaration.
+*/
 
 status = inSection(1);
-actual = eval('1; function() {}');
+actual = eval('(function() {}); 1');
 expect = 1;
 addThis();
 
 status = inSection(2);
-actual = eval('2; function f() {}');
+actual = eval('(function f() {}); 2');
 expect = 2;
 addThis();
 
 status = inSection(3);
-actual = eval('3; if (true) function() {}');
+actual = eval('if (true) (function() {}); 3');
 expect = 3;
 addThis();
 
 status = inSection(4);
-actual = eval('4; if (true) function f() {}');
+actual = eval('if (true) (function f() {}); 4');
 expect = 4;
 addThis();
 
 status = inSection(5);
-actual = eval('5; if (false) function() {}');
+actual = eval('if (false) (function() {}); 5');
 expect = 5;
 addThis();
 
 status = inSection(6);
-actual = eval('6; if (false) function f() {}');
+actual = eval('if (false) (function f() {}); 6');
 expect = 6;
 addThis();
 
 status = inSection(7);
-actual = eval('7; switch(true) { case true: function() {} }');
+actual = eval('switch(true) { case true: (function() {}) }; 7');
 expect = 7;
 addThis();
 
 status = inSection(8);
-actual = eval('8; switch(true) { case true: function f() {} }');
+actual = eval('switch(true) { case true: (function f() {}) }; 8');
 expect = 8;
 addThis();
 
 status = inSection(9);
-actual = eval('9; switch(false) { case false: function() {} }');
+actual = eval('switch(false) { case false: (function() {}) }; 9');
 expect = 9;
 addThis();
 
 status = inSection(10);
-actual = eval('10; switch(false) { case false: function f() {} }');
+actual = eval('switch(false) { case false: (function f() {}) }; 10');
 expect = 10;
 addThis();
 
