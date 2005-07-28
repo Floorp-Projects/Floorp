@@ -87,8 +87,8 @@
   <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
   <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
 
-  <command id="import_command" oncommand="startImport()"/>
-  <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="import_command" oncommand="loadEventsFromFile()"/>
+  <command id="export_command" oncommand="saveEventsToFile(gCalendarWindow.EventSelection.selectedEvents)" disabled="true" disabledwhennoeventsselected="true"/>
 
   <command id="reload_remote_calendars" oncommand="reloadCalendars()"/>
   <command id="publish_calendar" oncommand="publishEntireCalendar()"/>

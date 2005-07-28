@@ -100,7 +100,7 @@ function loadEventsFromFile()
         var items;
         try
         {
-           inputFromStream.init( fp.file, MODE_RDONLY, 0444, {} );
+           inputStream.init( fp.file, MODE_RDONLY, 0444, {} );
 
            var scriptableInputStream = 
                Components.classes["@mozilla.org/scriptableinputstream;1"]
@@ -108,13 +108,13 @@ function loadEventsFromFile()
            scriptableInputStream.init(inputStream);
 
            // XXX Convert the stream to unicode. Or should the importer do that?
-           items = importer.importStream(inputStream, {});
+           items = importer.importFromStream(inputStream, {});
            scriptableInputStream.close();
            inputStream.close();
         }
         catch(ex)
         {
-           alert(getStringBundle().GetStringFromName("unableToRead") + aFilePath + "\n"+ex );
+           alert(getStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
         }
 
         // XXX Ask for a calendar to import into

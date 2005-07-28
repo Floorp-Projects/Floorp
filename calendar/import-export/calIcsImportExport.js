@@ -60,19 +60,27 @@ function getFileTypes(aCount) {
 calIcsImporter.prototype.importFromStream =
 function ics_importFromStream(aStream, aCount) {
     var items = new Array();
+
+    var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
+                                      .createInstance(Components.interfaces.nsIScriptableInputStream);
+    scriptableInputStream.init(aStream);
+    var str = scriptableInputStream.read(-1);
+
     icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
                        .getService(Components.interfaces.calIICSService);
-    var calComp = icssrv.parseICS(aData);
+    var calComp = icssrv.parseICS(str);
     var subComp = calComp.getFirstSubcomponent("ANY");
     while (subComp) {
         switch (subComp.componentType) {
         case "VEVENT":
-            var event = createEvent();
+            var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                  .createInstance(Components.interfaces.calIEvent);
             event.icalComponent = subComp;
             items.push(event);
             break;
         case "VTODO":
-            var todo = createToDo();
+            var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                 .createInstance(Components.interfaces.calITodo);
             todo.icalComponent = subComp;
             items.push(todo);
             break;
