@@ -259,7 +259,7 @@ function OnUnloadMsgHeaderPane()
 var messageHeaderSink = {
     onStartHeaders: function()
     {
-      mSaveHdr = null;
+      this.mSaveHdr = null;
       // clear out any pending collected address timers...
       if (gCollectAddressTimer)
       {
@@ -399,7 +399,7 @@ var messageHeaderSink = {
         var displayHtmlAs = pref.getIntPref("mailnews.display.html_as");
         if (inlineAttachments && !displayHtmlAs)
         {
-          mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
+          this.mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
           return;
         }
       }
@@ -430,9 +430,9 @@ var messageHeaderSink = {
     onEndAllAttachments: function()
     {
       // if we only got a v-card, turn off the attachments flag
-      if (!currentAttachments.length && mSaveHdr)
-        mSaveHdr.markHasAttachments(false);
-      mSaveHdr = null;
+      if (!currentAttachments.length && this.mSaveHdr)
+        this.mSaveHdr.markHasAttachments(false);
+      this.mSaveHdr = null;
       displayAttachmentsForExpandedView();
       // AddSaveAllAttachmentsMenu();
       if (gCollapsedHeaderViewMode)

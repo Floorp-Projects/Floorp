@@ -437,7 +437,7 @@ var messageHeaderSink = {
 
       try
       {
-        if (!mSaveHdr)
+        if (!this.mSaveHdr)
           this.mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
       }
       catch (ex) {}
