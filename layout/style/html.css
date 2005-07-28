@@ -422,6 +422,10 @@ spacer {
   float: none ! important;
 }
 
+canvas {
+  -moz-user-select: none;
+}
+
 /* focusable content: anything w/ tabindex >=0 is focusable */
 abbr:focus, acronym:focus, address:focus, applet:focus, b:focus, 
 base:focus, big:focus, blockquote:focus, br:focus, canvas:focus, caption:focus,
