@@ -113,6 +113,7 @@ cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $MOZ_OBJDIR/dist/wince
 
 echo Zipping
 
-zip $MOZ_OBJDIR/dist/wince.zip $MOZ_OBJDIR/dist/wince
+rm -f $MOZ_OBJDIR/dist/wince.zip
+zip -r $MOZ_OBJDIR/dist/wince.zip $MOZ_OBJDIR/dist/wince
 
 echo Done.
