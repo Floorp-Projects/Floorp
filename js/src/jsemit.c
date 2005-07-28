@@ -577,7 +577,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
             pc2 += JUMP_OFFSET_LEN;
             for (i = low; i <= high; i++) {
                 off = GET_JUMP_OFFSET(pc2);
-                if (!AddSpanDep(cx, cg, pc, pc2, off))
+                if (off != 0 && !AddSpanDep(cx, cg, pc, pc2, off))
                     return JS_FALSE;
                 pc2 += JUMP_OFFSET_LEN;
             }
@@ -4712,10 +4712,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         switch (pn->pn_head->pn_type) {
             case TOK_XMLETAGO:
                 JS_ASSERT(0);
+                /* FALL THROUGH */
             case TOK_XMLPTAGC:
             case TOK_XMLSTAGO:
                 break;
-
             default:
                 if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
                     return JS_FALSE;
@@ -4723,8 +4723,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             if (pn2->pn_type == TOK_LC &&
-                js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0)
+                js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0) {
                 return JS_FALSE;
+            }
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
             if (pn2 != pn->pn_head && js_Emit1(cx, cg, JSOP_ADD) < 0)
@@ -4785,7 +4786,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
             if (pn2->pn_type == TOK_LC &&
                 js_Emit1(cx, cg, JSOP_STARTXMLEXPR) < 0) {
-                    return JS_FALSE;
+                return JS_FALSE;
             }
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
