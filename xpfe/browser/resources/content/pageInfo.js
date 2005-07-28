@@ -559,8 +559,7 @@ function grabAll(elem)
         // we need to use a special access method, XPCNativeWrapper, to get their real values
         if ("form" in elem && elem.form)
         {
-          var formWrapper = new XPCNativeWrapper(elem.form, "target", "action");
-          linkView.addRow([elem.value || getValueText(elem) || gStrings.linkSubmit, formWrapper.action, gStrings.linkSubmission, formWrapper.target]);
+          linkView.addRow([elem.value || getValueText(elem) || gStrings.linkSubmit, elem.form.action, gStrings.linkSubmission, elem.form.target]);
         }
         else
           linkView.addRow([elem.value || getValueText(elem) || gStrings.linkSubmit, '', gStrings.linkSubmission, '']);
@@ -568,8 +567,7 @@ function grabAll(elem)
   }
   else if (elem instanceof nsIFormElement)
   {
-    formWrapper = new XPCNativeWrapper(elem, "name", "method", "action");
-    formView.addRow([formWrapper.name, formWrapper.method, formWrapper.action, elem]);
+    formView.addRow([elem.name, elem.method, elem.action, elem]);
   }
   else if (elem instanceof nsIAppletElement)
   {
@@ -609,18 +607,16 @@ function onFormSelect()
     var clickedRow = formView.selection.currentIndex;
     // form-node;
     var form = formView.data[clickedRow][3];
-    const formWrapper = new XPCNativeWrapper(form,
-      "name", "elements", "encoding", "target", "getElementsByTagName()");
 
     var ft = null;
-    if (formWrapper.name)
-      ft = theBundle.getFormattedString("formTitle", [formWrapper.name]);
+    if (form.name)
+      ft = theBundle.getFormattedString("formTitle", [form.name]);
 
-    setItemValue("formenctype", formWrapper.encoding, theBundle.getString("default"));
-    setItemValue("formtarget", formWrapper.target, theBundle.getString("formDefaultTarget"));
+    setItemValue("formenctype", form.encoding, theBundle.getString("default"));
+    setItemValue("formtarget", form.target, theBundle.getString("formDefaultTarget"));
     document.getElementById("formname").value = ft || theBundle.getString("formUntitled");
 
-    var formfields = formWrapper.elements;
+    var formfields = form.elements;
 
     var length = formfields.length;
 
@@ -639,7 +635,7 @@ function onFormSelect()
       fieldView.addRow(["", elem.name, elem.type, val]);
     }
 
-    var labels = formWrapper.getElementsByTagName("label");
+    var labels = form.getElementsByTagName("label");
     var llength = labels.length;
     var label;
 

@@ -1521,9 +1521,8 @@ var BookmarksUtils = {
       var name = "";
       var charset;
       try {
-        var doc = new XPCNativeWrapper(webNav.document, "title", "characterSet");
-        name = doc.title || url;
-        charset = doc.characterSet;
+        name = webNav.document.title || url;
+        charset = webNav.document.characterSet;
       } catch (e) {
         name = url;
       }
@@ -1550,9 +1549,8 @@ var BookmarksUtils = {
     var url = aDocShell.currentURI.spec;
     var title, docCharset = null;
     try {
-      var doc = new XPCNativeWrapper(aDocShell.document, "title", "characterSet");
-      title = doc.title || url;
-      docCharset = doc.characterSet;
+      title = aDocShell.document.title || url;
+      docCharset = aDocShell.document.characterSet;
     }
     catch (e) {
       title = url;
