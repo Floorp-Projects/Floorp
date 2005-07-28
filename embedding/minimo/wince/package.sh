@@ -30,14 +30,23 @@ cp -a bin/ssl3.dll                                       wince
 
 
 mkdir -p wince/chrome
+
 cp -a bin/chrome/classic.jar                             wince/chrome
+cp -a bin/chrome/classic.manifest                        wince/chrome
+
 cp -a bin/chrome/en-US.jar                               wince/chrome
-cp -a bin/chrome/installed-chrome.txt                    wince/chrome
+cp -a bin/chrome/en-US.manifest                          wince/chrome
+
 cp -a bin/chrome/minimo.jar                              wince/chrome
+
 cp -a bin/chrome/toolkit.jar                             wince/chrome
+cp -a bin/chrome/toolkit.manifest                        wince/chrome
 
 cp -a bin/chrome/pippki.jar                              wince/chrome
-cp -a bin/chrome/pipnss.jar                              wince/chrome
+cp -a bin/chrome/pippki.manifest                         wince/chrome
+
+cp -a bin/chrome/installed-chrome.txt                    wince/chrome
+
 
 mkdir -p wince/components
 
@@ -52,6 +61,7 @@ cp -a bin/components/pipboot.dll                         wince/components
 cp -a bin/components/pipnss.dll                          wince/components
 cp -a bin/components/pippki.dll                          wince/components
 
+cp -a bin/extensions/spatial-navigation@extensions.mozilla.org/components/* wince/components
 
 mkdir -p wince/greprefs
 cp -a bin/greprefs/*                                     wince/greprefs
@@ -65,7 +75,7 @@ mkdir -p wince/plugins
 
 echo Linking XPT files.
 
-host/bin/host_xpt_link wince/components/all.xpt                        bin/components/*.xpt
+host/bin/host_xpt_link wince/components/all.xpt          bin/components/*.xpt
 
 echo Chewing on chrome
 
