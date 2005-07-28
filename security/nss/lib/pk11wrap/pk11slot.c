@@ -145,10 +145,15 @@ PK11_NewSlotList(void)
 /*
  * free a list element when all the references go away.
  */
-static void
-pk11_FreeListElement(PK11SlotList *list, PK11SlotListElement *le)
+SECStatus
+PK11_FreeSlotListElement(PK11SlotList *list, PK11SlotListElement *le)
 {
     PRBool freeit = PR_FALSE;
+
+    if (list == NULL || le == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
 
     PZ_Lock(list->lock);
     if (le->refCount-- == 1) {
@@ -159,6 +164,24 @@ pk11_FreeListElement(PK11SlotList *list, PK11SlotListElement *le)
     	PK11_FreeSlot(le->slot);
 	PORT_Free(le);
     }
+    return SECSuccess;
+}
+
+static void
+pk11_FreeSlotListStatic(PK11SlotList *list)
+{
+    PK11SlotListElement *le, *next ;
+    if (list == NULL) return;
+
+    for (le = list->head ; le; le = next) {
+	next = le->next;
+	PK11_FreeSlotListElement(list,le);
+    }
+    if (list->lock) {
+    	PZ_DestroyLock(list->lock);
+    }
+    list->lock = NULL;
+    list->head = NULL;
 }
 
 /*
@@ -168,14 +191,7 @@ pk11_FreeListElement(PK11SlotList *list, PK11SlotListElement *le)
 void
 PK11_FreeSlotList(PK11SlotList *list)
 {
-    PK11SlotListElement *le, *next ;
-    if (list == NULL) return;
-
-    for (le = list->head ; le; le = next) {
-	next = le->next;
-	pk11_FreeListElement(list,le);
-    }
-    PZ_DestroyLock(list->lock);
+    pk11_FreeSlotListStatic(list);
     PORT_Free(list);
 }
 
@@ -213,7 +229,7 @@ PK11_DeleteSlotFromList(PK11SlotList *list,PK11SlotListElement *le)
     if (le->next) le->next->prev = le->prev; else list->tail = le->prev;
     le->next = le->prev = NULL;
     PZ_Unlock(list->lock);
-    pk11_FreeListElement(list,le);
+    PK11_FreeSlotListElement(list,le);
     return SECSuccess;
 }
 
@@ -259,7 +275,7 @@ PK11_GetNextRef(PK11SlotList *list, PK11SlotListElement *le, PRBool restart)
     PK11SlotListElement *new_le;
     new_le = le->next;
     if (new_le) new_le->refCount++;
-    pk11_FreeListElement(list,le);
+    PK11_FreeSlotListElement(list,le);
     return new_le;
 }
 
@@ -300,7 +316,7 @@ PK11_GetNextSafe(PK11SlotList *list, PK11SlotListElement *le, PRBool restart)
     }
     if (new_le) new_le->refCount++;
     PZ_Unlock(list->lock);
-    pk11_FreeListElement(list,le);
+    PK11_FreeSlotListElement(list,le);
     return new_le;
 }
 
@@ -709,75 +725,59 @@ PK11_RestoreROSession(PK11SlotInfo *slot,CK_SESSION_HANDLE rwsession)
 /* Init the static built int slot list (should actually integrate
  * with PK11_NewSlotList */
 static void
-pk11_initSlotList(PK11SlotList *list)
+pk11_InitSlotListStatic(PK11SlotList *list)
 {
     list->lock = PZ_NewLock(nssILockList);
     list->head = NULL;
 }
 
-static void
-pk11_freeSlotList(PK11SlotList *list)
-{
-    PK11SlotListElement *le, *next ;
-    if (list == NULL) return;
-
-    for (le = list->head ; le; le = next) {
-	next = le->next;
-	pk11_FreeListElement(list,le);
-    }
-    if (list->lock) {
-    	PZ_DestroyLock(list->lock);
-    }
-    list->lock = NULL;
-    list->head = NULL;
-}
 
 /* initialize the system slotlists */
 SECStatus
 PK11_InitSlotLists(void)
 {
-    pk11_initSlotList(&pk11_aesSlotList);
-    pk11_initSlotList(&pk11_desSlotList);
-    pk11_initSlotList(&pk11_rc4SlotList);
-    pk11_initSlotList(&pk11_rc2SlotList);
-    pk11_initSlotList(&pk11_rc5SlotList);
-    pk11_initSlotList(&pk11_md5SlotList);
-    pk11_initSlotList(&pk11_md2SlotList);
-    pk11_initSlotList(&pk11_sha1SlotList);
-    pk11_initSlotList(&pk11_rsaSlotList);
-    pk11_initSlotList(&pk11_dsaSlotList);
-    pk11_initSlotList(&pk11_dhSlotList);
-    pk11_initSlotList(&pk11_ecSlotList);
-    pk11_initSlotList(&pk11_ideaSlotList);
-    pk11_initSlotList(&pk11_sslSlotList);
-    pk11_initSlotList(&pk11_tlsSlotList);
-    pk11_initSlotList(&pk11_randomSlotList);
-    pk11_initSlotList(&pk11_sha256SlotList);
-    pk11_initSlotList(&pk11_sha512SlotList);
+    pk11_InitSlotListStatic(&pk11_aesSlotList);
+    pk11_InitSlotListStatic(&pk11_desSlotList);
+    pk11_InitSlotListStatic(&pk11_rc4SlotList);
+    pk11_InitSlotListStatic(&pk11_rc2SlotList);
+    pk11_InitSlotListStatic(&pk11_rc5SlotList);
+    pk11_InitSlotListStatic(&pk11_md5SlotList);
+    pk11_InitSlotListStatic(&pk11_md2SlotList);
+    pk11_InitSlotListStatic(&pk11_sha1SlotList);
+    pk11_InitSlotListStatic(&pk11_rsaSlotList);
+    pk11_InitSlotListStatic(&pk11_dsaSlotList);
+    pk11_InitSlotListStatic(&pk11_dhSlotList);
+    pk11_InitSlotListStatic(&pk11_ecSlotList);
+    pk11_InitSlotListStatic(&pk11_ideaSlotList);
+    pk11_InitSlotListStatic(&pk11_sslSlotList);
+    pk11_InitSlotListStatic(&pk11_tlsSlotList);
+    pk11_InitSlotListStatic(&pk11_randomSlotList);
+    pk11_InitSlotListStatic(&pk11_sha256SlotList);
+    pk11_InitSlotListStatic(&pk11_sha512SlotList);
     return SECSuccess;
 }
 
 void
 PK11_DestroySlotLists(void)
 {
-    pk11_freeSlotList(&pk11_aesSlotList);
-    pk11_freeSlotList(&pk11_desSlotList);
-    pk11_freeSlotList(&pk11_rc4SlotList);
-    pk11_freeSlotList(&pk11_rc2SlotList);
-    pk11_freeSlotList(&pk11_rc5SlotList);
-    pk11_freeSlotList(&pk11_md5SlotList);
-    pk11_freeSlotList(&pk11_md2SlotList);
-    pk11_freeSlotList(&pk11_sha1SlotList);
-    pk11_freeSlotList(&pk11_rsaSlotList);
-    pk11_freeSlotList(&pk11_dsaSlotList);
-    pk11_freeSlotList(&pk11_dhSlotList);
-    pk11_freeSlotList(&pk11_ecSlotList);
-    pk11_freeSlotList(&pk11_ideaSlotList);
-    pk11_freeSlotList(&pk11_sslSlotList);
-    pk11_freeSlotList(&pk11_tlsSlotList);
-    pk11_freeSlotList(&pk11_randomSlotList);
-    pk11_freeSlotList(&pk11_sha256SlotList);
-    pk11_freeSlotList(&pk11_sha512SlotList);
+    pk11_FreeSlotListStatic(&pk11_aesSlotList);
+    pk11_FreeSlotListStatic(&pk11_desSlotList);
+    pk11_FreeSlotListStatic(&pk11_rc4SlotList);
+    pk11_FreeSlotListStatic(&pk11_rc2SlotList);
+    pk11_FreeSlotListStatic(&pk11_rc5SlotList);
+    pk11_FreeSlotListStatic(&pk11_md5SlotList);
+    pk11_FreeSlotListStatic(&pk11_md2SlotList);
+    pk11_FreeSlotListStatic(&pk11_sha1SlotList);
+    pk11_FreeSlotListStatic(&pk11_rsaSlotList);
+    pk11_FreeSlotListStatic(&pk11_dsaSlotList);
+    pk11_FreeSlotListStatic(&pk11_dhSlotList);
+    pk11_FreeSlotListStatic(&pk11_ecSlotList);
+    pk11_FreeSlotListStatic(&pk11_ideaSlotList);
+    pk11_FreeSlotListStatic(&pk11_sslSlotList);
+    pk11_FreeSlotListStatic(&pk11_tlsSlotList);
+    pk11_FreeSlotListStatic(&pk11_randomSlotList);
+    pk11_FreeSlotListStatic(&pk11_sha256SlotList);
+    pk11_FreeSlotListStatic(&pk11_sha512SlotList);
     return;
 }
 
@@ -955,7 +955,7 @@ PK11_ClearSlotList(PK11SlotInfo *slot)
 
 	    if (le) {
 		PK11_DeleteSlotFromList(slotList,le);
-		pk11_FreeListElement(slotList,le);
+		PK11_FreeSlotListElement(slotList,le);
 	    }
 	}
     }
@@ -2065,7 +2065,7 @@ PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int mech_count, void *wincx)
 	    }
 	    slot = le->slot;
 	    PK11_ReferenceSlot(slot);
-	    pk11_FreeListElement(list,le);
+	    PK11_FreeSlotListElement(list,le);
 	    if (freeit) { PK11_FreeSlotList(list); }
 	    return slot;
 	}
