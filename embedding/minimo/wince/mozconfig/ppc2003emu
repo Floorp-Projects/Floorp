@@ -1,25 +1,21 @@
 mk_add_options NSPR_CO_TAG=NSPRPUB_PRE_4_2_WINCE_BRANCH
 mk_add_options NSS_CO_TAG=NSS_WINCE_CLIENT_TAG
 
-mk_add_options MOZ_CO_PROJECT=suite
-ac_add_options --enable-application=suite
+mk_add_options MOZ_CO_PROJECT=minimo
+ac_add_options --enable-application=minimo
 
 CROSS_COMPILE=1
 
 CXX=arm-wince-gcc
 LD=arm-wince-link
 AR=arm-wince-lib
-mk_add_options AR=arm-wince-lib
-
 AS=arm-wince-as
+
+mk_add_options AR=arm-wince-lib
 
 ac_add_options --target=arm-wince
 ac_add_options --enable-win32-target=WINCE
 ac_add_options --enable-default-toolkit=windows
-
-ac_add_options --disable-activex
-ac_add_options --disable-activex-scripting
-ac_add_options --disable-oji
 
 WINCE=1
 mk_add_options WINCE=1
@@ -27,50 +23,10 @@ mk_add_options WINCE=1
 TARGET_DEVICE=emulator
 mk_add_options TARGET_DEVICE=emulator
 
-MINIMO=1
-mk_add_options MINIMO=1
-
-# enable minimal profile support
-ac_add_options --disable-profilesharing
-ac_add_options --disable-profilelocking
-ac_add_options --enable-single-profile
-
-# disable features and skip various build steps
-ac_add_options --enable-extensions="xml-rpc xmlextras transformiix webservices spatialnavigation"
-ac_add_options --disable-accessibility
-ac_add_options --disable-composer
-ac_add_options --enable-plaintext-editor-only
-ac_add_options --disable-mailnews
-ac_add_options --disable-ldap	
-ac_add_options --disable-postscript
-ac_add_options --disable-mathml
-ac_add_options --disable-jsd
-ac_add_options --disable-installer
-ac_add_options --disable-xpinstall
-ac_add_options --disable-xpfe-components
-ac_add_options --disable-necko-disk-cache
-ac_add_options --disable-updater
-
-# configure necko to allocate smaller network buffers
-ac_add_options --enable-necko-small-buffers
-
-# disable debug logging and tests
-ac_add_options --disable-dtd-debug
-ac_add_options --disable-logging
-ac_add_options --disable-tests
-
-# build minimal set of protocol handlers
-ac_add_options --enable-necko-protocols=about,data,http,file,res,jar
-
-# build minimal set of image decoders
-ac_add_options --enable-image-decoders=png,gif,jpeg
-
 # code generation options (optimize for size)
 ac_add_options --enable-strip
 ac_add_options --disable-debug
-
-#ac_add_options --disable-optimize
-#ac_add_options --enable-debug
+ac_add_options --enable-optimize
 
 # enable static build
 ac_add_options --disable-shared
@@ -78,5 +34,3 @@ ac_add_options --enable-static
 
 #xptcall busted
 ac_add_options --disable-jsloader
-
-ac_add_options --disable-v1-string-abi

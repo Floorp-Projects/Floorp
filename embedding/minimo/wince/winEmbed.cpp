@@ -157,7 +157,7 @@ nsresult StartupProfile()
 	return locProvider->SetProfileDir(localAppDataDir);   
 }
 
-void SetPreferences()
+void DoPreferences()
 {
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!prefBranch)
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     if (NS_FAILED(StartupProfile()))
         return 1;
     
-    SetPreferences();
+    DoPreferences();
 
     NS_TIMELINE_ENTER("appStartup");
     nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
