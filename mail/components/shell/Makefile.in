@@ -64,6 +64,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 CPPSRCS = nsMailGNOMEIntegration.cpp
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), mac)
+CPPSRCS = nsMailMacIntegration.cpp
+endif
+
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk

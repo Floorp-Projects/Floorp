@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@brianryner.com>
+ *  Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,7 +65,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraProfileMigrator)
 #include "nsMailGNOMEIntegration.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMailGNOMEIntegration, Init)
 #endif
-
+#ifdef XP_MACOSX
+#include "nsMailMacIntegration.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailMacIntegration)
+#endif
 
 static const nsModuleComponentInfo components[] = {
   { "Profile Importer",
@@ -100,6 +104,12 @@ static const nsModuleComponentInfo components[] = {
     NS_MAILGNOMEINTEGRATION_CID,
     "@mozilla.org/mapiregistry;1",
     nsMailGNOMEIntegrationConstructor },
+#endif
+#ifdef XP_MACOSX
+  { "Mail Mac Integration",
+    NS_MAILMACINTEGRATION_CID,
+    "@mozilla.org/mapiregistry;1",
+    nsMailMacIntegrationConstructor },
 #endif
 };
 

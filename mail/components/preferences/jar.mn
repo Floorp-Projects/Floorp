@@ -30,6 +30,10 @@ messenger.jar:
 *   content/messenger/preferences/fonts.xul
 *   content/messenger/preferences/notifications.xul
 *   content/messenger/preferences/notifications.js
+#ifdef HAVE_SHELL_SERVICE
+*   content/messenger/preferences/defaultClient.xul
+*   content/messenger/preferences/defaultClient.js
+#endif
 *   content/messenger/AccountManager.xul                            (/mailnews/base/prefs/resources/content/AccountManager.xul)
     content/messenger/AccountManager.js                             (/mailnews/base/prefs/resources/content/AccountManager.js)
     content/messenger/am-main.xul                                   (/mailnews/base/prefs/resources/content/am-main.xul)

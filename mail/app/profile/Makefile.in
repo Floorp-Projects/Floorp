@@ -59,4 +59,6 @@ install:: $(FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/US
 
-
+ifneq (,$(filter gtk2 mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DHAVE_SHELL_SERVICE=1
+endif

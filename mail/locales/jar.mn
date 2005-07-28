@@ -117,6 +117,7 @@
   locale/@AB_CD@/messenger/preferences/changeaction.dtd                 (%chrome/messenger/preferences/changeaction.dtd)
   locale/@AB_CD@/messenger/preferences/fonts.dtd                        (%chrome/messenger/preferences/fonts.dtd)
   locale/@AB_CD@/messenger/preferences/notifications.dtd                (%chrome/messenger/preferences/notifications.dtd)
+  locale/@AB_CD@/messenger/preferences/defaultClient.dtd                (%chrome/messenger/preferences/defaultClient.dtd)
   locale/@AB_CD@/messenger/preferences/preferences.properties           (%chrome/messenger/preferences/preferences.properties)
   locale/@AB_CD@/messenger/migration/migration.dtd                      (%chrome/messenger/migration/migration.dtd)
   locale/@AB_CD@/messenger/migration/migration.properties               (%chrome/messenger/migration/migration.properties)

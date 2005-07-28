@@ -6,14 +6,10 @@
 <!ENTITY setDefaultNewsClient.accesskey    "N">
 <!ENTITY setDefaultFeedClient.label        "RSS Feeds">
 <!ENTITY setDefaultFeedClient.accesskey    "F">
-<!ENTITY checkNow.label                    "Check Now">
-<!ENTITY checkMailNow.accesskey            "C">
-<!ENTITY checkNewsNow.accesskey            "h">
-<!ENTITY whenStartingCheck.label           "When starting, &brandShortName; should check to see if it is the default application for">
-<!ENTITY mailApplication.label             "Mail">
-<!ENTITY checkDefaultMail.accesskey        "M">
-<!ENTITY newsApplication.label             "News">
-<!ENTITY checkDefaultNews.accesskey        "N">
+<!ENTITY checkDefaultMailClient.label      "&brandShortName; should check to see if it is the default mail client when starting">
+<!ENTITY checkDefaultMailClient.accesskey  "n">
+<!ENTITY defaultClientAdvanced.label       "Advanced...">
+<!ENTITY defaultClientAdvanced.accesskey   "d">
 
 <!ENTITY windowSettings.label             "Window Configuration">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail.">
@@ -35,7 +31,7 @@
 <!ENTITY playSound.accesskey              "P">
 <!ENTITY showAnimatedAlert.label          "Show an alert">
 <!ENTITY showAnimatedAlert.accesskey      "S">
-<!ENTITY soundbutton.label                "Advanced">
+<!ENTITY soundbutton.label                "Advanced...">
 <!ENTITY soundbutton.accesskey            "A">
 
 <!ENTITY showConnections.label         "Connection Settings...">

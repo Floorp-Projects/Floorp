@@ -51,8 +51,11 @@
     <preferences>
       <preference id="mail.checkDefaultMail"
                   name="mail.checkDefaultMail"
+#ifdef XP_WIN
                   onchange="return gGeneralPane.onWriteDefaultMailPref();"
+#endif
                   type="bool"/>
+#ifdef XP_WIN
       <preference id="mail.checkDefaultNews"
                   name="mail.checkDefaultNews"
                   onchange="return gGeneralPane.onWriteDefaultNewsPref();"
@@ -61,6 +64,7 @@
                   name="mail.checkDefaultFeed"
                   onchange="return gGeneralPane.onWriteDefaultFeed();"
                   type="bool"/>
+#endif
       <preference id="mail.pane_config.dynamic" name="mail.pane_config.dynamic" type="int"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
       <preference id="mailnews.start_page.enabled" name="mailnews.start_page.enabled" type="bool"/>
@@ -71,9 +75,6 @@
       <preference id="mail.biff.animate_dock_icon" name="mail.biff.animate_dock_icon" type="bool"/>
 #endif
     </preferences>
-    
-    <stringbundle id="mapiBundle" src="chrome://messenger-mapi/locale/mapi.properties"/>
-    <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
 
     <groupbox align="start" id="defaultClientBox">
       <caption label="&generalSettings.caption;"/>
@@ -95,32 +96,17 @@
       </hbox>
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
-      <vbox align="left">
-        <label value="&whenStartingCheck.label;"/>
-        <grid flex="1" style="margin-left: 20px;">
-          <columns>
-            <column/>
-            <column flex="1" align="left"/>
-          </columns>
-          <rows>
-            <row>
-              <checkbox id="checkDefaultMail" preference="mail.checkDefaultMail"
-                        label="&mailApplication.label;"
-                        accesskey="&checkDefaultMail.accesskey;"/>
-              <button label="&checkNow.label;" accesskey="&checkMailNow.accesskey;"
-                       oncommand="gGeneralPane.checkDefaultMailNow(false)"/>
-            </row>
-            <row>
-              <checkbox id="checkDefaultNews" preference="mail.checkDefaultNews"
-                        label="&newsApplication.label;"
-                        accesskey="&checkDefaultNews.accesskey;"/>
-              <button label="&checkNow.label;" accesskey="&checkNewsNow.accesskey;"
-                      oncommand="gGeneralPane.checkDefaultMailNow(true)"/>
-            </row>
-          </rows>
-        </grid>
-      </vbox>
+#ifdef HAVE_SHELL_SERVICE
+      <hbox flex="1" align="center">
+        <checkbox id="checkDefaultMail"
+                  preference="mail.checkDefaultMail"
+                  label="&checkDefaultMailClient.label;"
+                  accesskey="&checkDefaultMailClient.accesskey;"
+                  flex="1"/>
+        <button label="&defaultClientAdvanced.label;"
+                accesskey="&defaultClientAdvanced.accesskey;"
+                oncommand="gGeneralPane.openDefaultClientDialog()"/>
+      </hbox>
 #endif
     </groupbox>
 

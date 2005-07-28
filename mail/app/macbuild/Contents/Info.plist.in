@@ -34,6 +34,22 @@
 				<string>mailto</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>News URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>news</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>RSS / ATOM URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>feed</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSAppleScriptEnabled</key>
 	<true/>

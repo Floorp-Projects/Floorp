@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 */
 
-prefwindow {
+prefwindow:not([type="child"]) {
   padding: 0 !important;
 }
 
