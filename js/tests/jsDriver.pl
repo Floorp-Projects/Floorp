@@ -358,12 +358,12 @@ sub write_results {
            "<pre>\n" .
            "# Retest List, $opt_engine_type, " .
            "generated $completion_date.\n" .
-           "# Original test base was: $list_name.\n" .
-           "# $tests_completed of " . ($#test_list + 1) .
+           "FAILURE: # Original test base was: $list_name.\n" .
+           "FAILURE: # $tests_completed of " . ($#test_list + 1) .
            " test(s) were completed, " .
            "$failures_reported failures reported.\n" .
-	   "Engine command line: $engine_command<br>\n" .
-           join ("\n", @failed_tests) .
+	   "FAILURE: Engine command line: $engine_command<br>\n" .
+           join ("\n", map { "FAILURE: $_" } @failed_tests) .
            "\n</pre>\n" .
            "[ <a href='#tippy_top'>Top of Page</a> | " .
            "<a href='#retest_list'>Top of Retest List</a> ]<br>\n");
@@ -482,6 +482,7 @@ sub parse_args {
             }
 
         } else {
+            &dd ("opt: unknown option $option '$value'.");
             &usage;
         }
 
