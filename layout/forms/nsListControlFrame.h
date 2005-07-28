@@ -202,7 +202,7 @@ public:
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
   static nsIDOMHTMLOptionsCollection* GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
   static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLOptionsCollection* aOptions, PRInt32 aIndex);
-  static nsIContent* GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
+  static already_AddRefed<nsIContent> GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
 
   static void ComboboxFocusSet();
 
@@ -234,7 +234,7 @@ protected:
   nsresult GetSizeAttribute(PRInt32 *aSize);
   nsIContent* GetOptionFromContent(nsIContent *aContent);
   nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, PRInt32& aCurIndex);
-  nsIContent* GetOptionContent(PRInt32 aIndex);
+  already_AddRefed<nsIContent> GetOptionContent(PRInt32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
   PRBool   IsOptionElement(nsIContent* aContent);
