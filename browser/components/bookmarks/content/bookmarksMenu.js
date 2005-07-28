@@ -977,8 +977,10 @@ var BookmarksToolbar =
       return;
     var chevron = document.getElementById("bookmarks-chevron");
     var width = window.innerWidth;
-    if (width == 0) 
-      window.addEventListener('focus', BookmarksToolbar.resizeFunc, false); // hack for bug 266737
+    if (width == 0) {  // hack for bug 266737
+      window.addEventListener('focus', BookmarksToolbar.resizeFunc, false);
+      return;
+    }
     var myToolbar = buttons.parentNode.parentNode.parentNode;
     for (var i = myToolbar.childNodes.length-1; i >= 0; i--){
       var anItem = myToolbar.childNodes[i];
