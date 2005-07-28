@@ -452,7 +452,10 @@ sub generate_log ($) {
             # If we didn't remove anything, only added something.
             elsif (!$old) {
                 $line .= " set the $field field on bug"
-                         . " $bug_info->{bug_id} to $new.";
+                         . " $bug_info->{bug_id} to $new";
+                # Hack for "RESOLVED DUPLICATE" messages.
+                $line .= ' of bug ' . $bug_info->{dup_of} if exists $bug_info->{dup_of};
+                $line .= '.';
             }
             # If we didn't add anything, only removed something.
             elsif (!$new) {

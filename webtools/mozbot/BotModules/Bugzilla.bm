@@ -627,8 +627,19 @@ sub CheckForBugMail {
                     # up properly in the GotURI after FetchBug.
                     $event->{'target'} = $channel;
                     $self->say($event, $message);
-                    $self->FetchBug($event, $bug_id, 'bug')
-                        unless $said_bug{$channel . $bug_id};
+                    my $bugids = "";
+                    # Special case for "duplicate of messages"
+                    if ($message =~ /DUPLICATE of bug (\d+)/) {
+                        my $dup_id = $1;
+                        $bugids = $dup_id unless $said_bug{$channel . $dup_id};
+                        $said_bug{$channel . $dup_id} = 1;
+                    }
+                    if (! $said_bug{$channel . $bug_id}) {
+                        $bugids = $bug_id . " " . $bugids;
+                    }
+                    if ($bugids ne '') {
+                        $self->FetchBug($event, $bugids, 'bug');
+                    }
                     $said_to{$channel} = 1;
                     $said_bug{$channel . $bug_id} = 1;
                 } # unless $said_to
