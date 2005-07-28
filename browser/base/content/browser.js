@@ -3875,6 +3875,7 @@ function nsContextMenu( xulMenu ) {
     this.onTextInput       = false;
     this.onKeywordField    = false;
     this.onImage           = false;
+    this.onLoadedImage     = false;
     this.onLink            = false;
     this.onMailtoLink      = false;
     this.onSaveableLink    = false;
@@ -3952,7 +3953,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-savelink", this.onSaveableLink );
 
         // Save image depends on whether there is one.
-        this.showItem( "context-saveimage", this.onImage );
+        this.showItem( "context-saveimage", this.onLoadedImage );
 
         this.showItem( "context-sendimage", this.onImage );
 
@@ -3976,9 +3977,9 @@ nsContextMenu.prototype = {
         if (shell)
           haveSetDesktopBackground = true;
 #endif
-        this.showItem( "context-setDesktopBackground", haveSetDesktopBackground && this.onImage );
+        this.showItem( "context-setDesktopBackground", haveSetDesktopBackground && this.onLoadedImage );
 
-        if ( haveSetDesktopBackground && this.onImage ) {
+        if ( haveSetDesktopBackground && this.onLoadedImage ) {
             // Disable the Set as Desktop Background menu item if we're still trying
             // to load the image or the load failed
             const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
@@ -4099,6 +4100,7 @@ nsContextMenu.prototype = {
         }
         // Initialize contextual info.
         this.onImage    = false;
+        this.onLoadedImage = false;
         this.onStandaloneImage = false;
         this.onMetaDataItem = false;
         this.onTextInput = false;
@@ -4115,13 +4117,16 @@ nsContextMenu.prototype = {
 
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
-             if ( this.isImageSaveable( this.target ) ) {
+            if ( this.target instanceof Components.interfaces.nsIImageLoadingContent && this.target.currentURI  ) {
                 this.onImage = true;
+                var request = this.target.getRequest( Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST );
+                if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+                    this.onLoadedImage = true;
                 this.imageURL = this.target.currentURI.spec;
 
                 if ( this.target.ownerDocument instanceof ImageDocument)
                    this.onStandaloneImage = true;
-             } else if ( this.target instanceof HTMLInputElement ) {
+            } else if ( this.target instanceof HTMLInputElement ) {
                type = this.target.getAttribute("type");
                this.onTextInput = this.isTargetATextBox(this.target);
                this.onKeywordField = this.isTargetAKeywordField(this.target);
@@ -4255,15 +4260,6 @@ nsContextMenu.prototype = {
     getComputedURL: function( elem, prop ) {
          var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
          return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
-    },
-    // Returns true iff clicked on image is saveable.
-    isImageSaveable : function ( image ) {
-        if (image instanceof Components.interfaces.nsIImageLoadingContent) {
-            var request = image.getRequest(image.CURRENT_REQUEST);
-            if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
-                return true;
-        }
-        return false;
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
