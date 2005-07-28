@@ -4710,15 +4710,15 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JS_ASSERT(pn->pn_type == TOK_XMLLIST || pn->pn_count != 0);
         switch (pn->pn_head->pn_type) {
-            case TOK_XMLETAGO:
-                JS_ASSERT(0);
-                /* FALL THROUGH */
-            case TOK_XMLPTAGC:
-            case TOK_XMLSTAGO:
-                break;
-            default:
-                if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
-                    return JS_FALSE;
+          case TOK_XMLETAGO:
+            JS_ASSERT(0);
+            /* FALL THROUGH */
+          case TOK_XMLPTAGC:
+          case TOK_XMLSTAGO:
+            break;
+          default:
+            if (js_Emit1(cx, cg, JSOP_STARTXML) < 0)
+                return JS_FALSE;
         }
 
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
