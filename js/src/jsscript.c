@@ -306,7 +306,8 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         rt = cx->runtime;
         if (rt->findObjectPrincipals) {
             scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-            if (!principals->subsume(principals, scopePrincipals)) {
+            if (scopePrincipals &&
+                !principals->subsume(principals, scopePrincipals)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_INDIRECT_CALL,
                                      "Script.prototype.exec");
