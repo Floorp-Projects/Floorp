@@ -290,54 +290,68 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   
   PRBool hdrMoved = PR_FALSE;
   nsCOMPtr <nsIMsgDBHdr> curHdr;
-  for (childIndex = 0; childIndex < numChildren; childIndex++)
+
+  // This is an ugly but simple fix for a difficult problem. Basically, when we add
+  // a message to a thread, we have to run through the thread to see if the new
+  // message is a parent of an existing message in the thread, and adjust things
+  // accordingly. If you thread by subject, and you have a large folder with
+  // messages w/ all the same subject, this code can take a really long time. So the
+  // pragmatic thing is to say that for threads with more than 1000 messages, it's
+  // simply not worth dealing with the case where the parent comes in after the
+  // child. Threads with more than 1000 messages are pretty unwieldy anyway.
+  // See Bug 90452
+
+  if (numChildren < 1000)
   {
-    nsMsgKey msgKey;
-    
-    ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
-    if (NS_SUCCEEDED(ret) && curHdr)
+    for (childIndex = 0; childIndex < numChildren; childIndex++)
     {
-      if (hdr->IsParentOf(curHdr))
+      nsMsgKey msgKey;
+    
+      ret = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
+      if (NS_SUCCEEDED(ret) && curHdr)
       {
-        nsMsgKey oldThreadParent;
-        mdb_pos outPos;
-        // move this hdr before the current header.
-        if (!hdrMoved)
+        if (hdr->IsParentOf(curHdr))
         {
-          m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, childIndex, &outPos);
-          hdrMoved = PR_TRUE;
-          curHdr->GetThreadParent(&oldThreadParent);
-          curHdr->GetMessageKey(&msgKey);
-          nsCOMPtr <nsIMsgDBHdr> curParent;
-          m_mdbDB->GetMsgHdrForKey(oldThreadParent, getter_AddRefs(curParent));
-          if (curParent && hdr->IsAncestorOf(curParent))
+          nsMsgKey oldThreadParent;
+          mdb_pos outPos;
+          // move this hdr before the current header.
+          if (!hdrMoved)
           {
-            nsMsgKey curParentKey;
-            curParent->GetMessageKey(&curParentKey);
-            if (curParentKey == m_threadRootKey)
+            m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, childIndex, &outPos);
+            hdrMoved = PR_TRUE;
+            curHdr->GetThreadParent(&oldThreadParent);
+            curHdr->GetMessageKey(&msgKey);
+            nsCOMPtr <nsIMsgDBHdr> curParent;
+            m_mdbDB->GetMsgHdrForKey(oldThreadParent, getter_AddRefs(curParent));
+            if (curParent && hdr->IsAncestorOf(curParent))
             {
-              m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, 0, &outPos);
-              RerootThread(child, curParent, announcer);
+              nsMsgKey curParentKey;
+              curParent->GetMessageKey(&curParentKey);
+              if (curParentKey == m_threadRootKey)
+              {
+                m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, 0, &outPos);
+                RerootThread(child, curParent, announcer);
+                parentKeyNeedsSetting = PR_FALSE;
+              }
+            }
+            else if (msgKey == m_threadRootKey)
+            {
+              RerootThread(child, curHdr, announcer);
               parentKeyNeedsSetting = PR_FALSE;
             }
           }
-          else if (msgKey == m_threadRootKey)
-          {
-            RerootThread(child, curHdr, announcer);
+          curHdr->SetThreadParent(newHdrKey);
+          if (msgKey == newHdrKey)
             parentKeyNeedsSetting = PR_FALSE;
-          }
-        }
-        curHdr->SetThreadParent(newHdrKey);
-        if (msgKey == newHdrKey)
-          parentKeyNeedsSetting = PR_FALSE;
         
-        // OK, this is a reparenting - need to send notification
-        if (announcer)
-          announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newHdrKey, nsnull);
-#ifdef DEBUG_bienvenu1
-        if (newHdrKey != m_threadKey)
-          printf("adding second level child\n");
-#endif
+          // OK, this is a reparenting - need to send notification
+          if (announcer)
+            announcer->NotifyParentChangedAll(msgKey, oldThreadParent, newHdrKey, nsnull);
+  #ifdef DEBUG_bienvenu1
+          if (newHdrKey != m_threadKey)
+            printf("adding second level child\n");
+  #endif
+        }
       }
     }
   }
