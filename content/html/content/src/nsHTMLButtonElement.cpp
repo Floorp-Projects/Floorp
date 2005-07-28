@@ -287,7 +287,6 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
-  NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // Do not process any DOM events if the element is disabled
