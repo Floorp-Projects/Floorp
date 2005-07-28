@@ -800,16 +800,24 @@ endif
 PWD := $(shell pwd)
 endif
 
-ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
-ifeq ($(OS_ARCH),WINNT)
+ifdef NSINSTALL_BIN
+NSINSTALL	= $(CYGWIN_WRAPPER) $(NSINSTALL_BIN)
+else
+ifeq (WINNT,$(CROSS_COMPILE)$(OS_ARCH))
 NSINSTALL	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS_DIR)/bin/nsinstall
 else
+ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
 NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
-endif
-INSTALL		= $(NSINSTALL)
 else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
+endif # OS2
+endif # WINNT
+endif # NSINSTALL_BIN
 
+
+ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
+INSTALL		= $(NSINSTALL)
+else
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
 INSTALL		= $(NSINSTALL) -t
@@ -820,13 +828,13 @@ ifeq ($(OS_ARCH),Darwin)
 INSTALL		= $(NSINSTALL) -L $(PWD)
 else
 INSTALL		= $(NSINSTALL) -L `$(NFSPWD)`
-endif
+endif # Darwin
 else
 # install using relative symbolic links
 INSTALL		= $(NSINSTALL) -R
-endif
-endif
-endif # WINNT
+endif # absolute_symlink
+endif # copy
+endif # WINNT/OS2
 
 ifeq (,$(filter-out WINCE,$(OS_ARCH)))
 NSINSTALL	= $(CYGWIN_WRAPPER) nsinstall

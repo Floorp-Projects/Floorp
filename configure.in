@@ -107,6 +107,7 @@ LIBGNOME_VERSION=2.0
 dnl Set various checks
 dnl ========================================================
 MISSING_X=
+AC_PROG_AWK
 
 dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.
@@ -164,6 +165,29 @@ case "$target" in
 esac
 fi
 
+COMPILE_ENVIRONMENT=1
+MOZ_ARG_ENABLE_BOOL(compile-environment,
+[  --disable-compile-environment
+                           Disable compiler/library checks.],
+    COMPILE_ENVIRONMENT=1,
+    COMPILE_ENVIRONMENT= )
+
+AC_PATH_PROGS(NSINSTALL_BIN, nsinstall )
+if test -z "$COMPILE_ENVIRONMENT"; then
+if test -z "$NSINSTALL_BIN" || test "$NSINSTALL_BIN" = ":"; then
+    AC_MSG_ERROR([nsinstall not found in \$PATH])
+fi
+fi
+AC_SUBST(NSINSTALL_BIN)
+
+dnl ========================================================
+dnl Checks for compilers.
+dnl ========================================================
+dnl Set CROSS_COMPILE in the environment when running configure
+dnl to use the cross-compile setup for now
+dnl ========================================================
+
+if test "$COMPILE_ENVIRONMENT"; then
 
 dnl Do some special WinCE toolchain stuff
 case "$target" in
@@ -185,12 +209,6 @@ case "$target" in
     ;;
 esac
 
-dnl ========================================================
-dnl Checks for compilers.
-dnl ========================================================
-dnl Set CROSS_COMPILE in the environment when running configure
-dnl to use the cross-compile setup for now
-dnl ========================================================
 if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
@@ -315,8 +333,6 @@ if test "$GNU_CC"; then
     fi
 fi
 
-AC_PROG_AWK
-
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
@@ -430,9 +446,6 @@ case "$target" in
     ;;
 esac
 
-AC_SUBST(MIDL_FLAGS)
-AC_SUBST(_MSC_VER)
-
 if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
@@ -452,6 +465,14 @@ if test "$CC" != "icc" -a -z "$_WIN32_MSVC"; then
     fi
 fi
 
+AC_PROG_CPP
+AC_PROG_CXXCPP
+
+fi # COMPILE_ENVIRONMENT
+
+AC_SUBST(MIDL_FLAGS)
+AC_SUBST(_MSC_VER)
+
 AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
 AC_SUBST(GNU_CC)
@@ -460,8 +481,6 @@ AC_SUBST(GNU_CXX)
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
-AC_PROG_CPP
-AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROGS(PERL, $PERL perl5 perl )
@@ -502,9 +521,12 @@ if test -z "$XARGS" || test "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
 
+if test "$COMPILE_ENVIRONMENT"; then
+
 dnl ========================================================
 dnl = Mac OS X toolchain support
 dnl ========================================================
+
 case "$target_os" in
 darwin*)
     dnl Current known valid versions for GCC_VERSION are 2.95.2 3.1 3.3 4.0.
@@ -625,6 +647,8 @@ You can change the target SDK by using a different --with-macos-sdk option.])
   fi
 fi
 
+fi # COMPILE_ENVIRONMENT
+
 dnl Be sure the make we use is GNU make.
 dnl on win32, gmake.exe is the generally the wrong version
 case "$host_os" in
@@ -659,6 +683,8 @@ if test "$_MAKE_MAJOR_VERSION" -lt "$MAKE_MAJOR_VERSION" || \
 fi
 AC_SUBST(MAKE)
 
+if test "$COMPILE_ENVIRONMENT"; then
+
 AC_PATH_XTRA
 
 dnl Check in X11 include directory too.
@@ -667,6 +693,8 @@ if test "$no_x" != "yes"; then
 fi
 
 XCFLAGS="$X_CFLAGS"
+
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl set the defaults first
@@ -1055,6 +1083,8 @@ dnl normal behavior.
 dnl ========================================================
 MKSHLIB_FORCE_ALL=
 MKSHLIB_UNFORCE_ALL=
+
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$GNU_CC"; then
   AC_MSG_CHECKING(whether ld has archive extraction flags)
   AC_CACHE_VAL(ac_cv_mkshlib_force_and_unforce,
@@ -1083,11 +1113,13 @@ LOOP_INPUT
     MKSHLIB_FORCE_ALL=$force
     MKSHLIB_UNFORCE_ALL=$unforce
   fi
-fi
+fi # GNU_CC
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl Checking for 64-bit OS
 dnl ========================================================
+if test "$COMPILE_ENVIRONMENT"; then
 AC_LANG_SAVE
 AC_LANG_C
 AC_MSG_CHECKING(for 64-bit OS)
@@ -1107,6 +1139,7 @@ if test "$HAVE_64BIT_OS"; then
        esac
 fi
 AC_LANG_RESTORE
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl System overrides of the defaults for host
@@ -1198,6 +1231,7 @@ AC_DEFINE_UNQUOTED(MOZILLA_VERSION_MINOR,$MOZILLA_VERSION_MINOR)
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
+
 case "$target" in
 *-aix*)
     AC_DEFINE(AIX)
@@ -1221,30 +1255,34 @@ case "$target" in
         LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
         MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
         MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
-        AC_LANG_SAVE
-        AC_LANG_CPLUSPLUS
-        AC_MSG_CHECKING([for VisualAge C++ compiler version >= 5.0.2.0])
-        AC_TRY_COMPILE([],
-            [#if (__IBMCPP__ < 502)
-             #error "Bad compiler"
-             #endif],
-            _BAD_COMPILER=,_BAD_COMPILER=1)
-        if test -n "$_BAD_COMPILER"; then
-            AC_MSG_RESULT([no])    
-            AC_MSG_ERROR([VisualAge C++ version 5.0.2.0 or higher is required to build.])
-        else
-            AC_MSG_RESULT([yes])    
+        if test "$COMPILE_ENVIRONMENT"; then
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            AC_MSG_CHECKING([for VisualAge C++ compiler version >= 5.0.2.0])
+            AC_TRY_COMPILE([],
+                [#if (__IBMCPP__ < 502)
+                 #error "Bad compiler"
+                 #endif],
+                _BAD_COMPILER=,_BAD_COMPILER=1)
+            if test -n "$_BAD_COMPILER"; then
+                AC_MSG_RESULT([no])    
+                AC_MSG_ERROR([VisualAge C++ version 5.0.2.0 or higher is required to build.])
+            else
+                AC_MSG_RESULT([yes])    
+            fi
+            AC_LANG_RESTORE
+            CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
+            CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
         fi
-        AC_LANG_RESTORE
-        CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
-        CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
     fi
     case "${target_os}" in
     aix4.1*)
         DLL_SUFFIX='_shr.a'
         ;;
     esac
-    AC_CHECK_HEADERS(sys/inttypes.h)
+    if test "$COMPILE_ENVIRONMENT"; then
+        AC_CHECK_HEADERS(sys/inttypes.h)
+    fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
@@ -1255,8 +1293,10 @@ case "$target" in
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
-    AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
-    AC_CHECK_LIB(zeta,main,LIBS="$LIBS -lzeta")
+    if test "$COMPILE_ENVIRONMENT"; then
+        AC_CHECK_LIB(bind,main,LIBS="$LIBS -lbind")
+        AC_CHECK_LIB(zeta,main,LIBS="$LIBS -lzeta")
+    fi
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-multichar"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-multichar"
     _MOZ_USE_RTTI=1
@@ -2102,6 +2142,10 @@ case "$target" in
         fi
         ;;
 esac
+
+if test -z "$COMPILE_ENVIRONMENT"; then
+    SKIP_COMPILER_CHECKS=1
+fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -3736,6 +3780,7 @@ if test "$MOZ_ENABLE_XREMOTE"; then
     AC_DEFINE(MOZ_ENABLE_XREMOTE)
 fi
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_ENABLE_GTK"
 then
     AM_PATH_GTK($GTK_VERSION,,
@@ -3818,13 +3863,14 @@ then
 
     AC_MSG_RESULT("$result")
     if test "$result" = "no"; then
-       AC_MSG_ERROR([Qt Mozilla requires at least version $QT_VERSION of Qt])
+        AC_MSG_ERROR([Qt Mozilla requires at least version $QT_VERSION of Qt])
     fi
     CXXFLAGS=$_SAVE_CXXFLAGS
     LIBS=$_SAVE_LIBS
 
     AC_LANG_RESTORE
 fi
+fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 
@@ -4441,13 +4487,16 @@ MOZ_ARG_DISABLE_BOOL(crypto,
 [  --disable-crypto        Disable crypto support (Personal Security Manager)],
     MOZ_PSM=,
     MOZ_PSM=1 )
-case $target in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
-    if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
-        AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler (ml.exe for MSVC).])
-    fi
-    ;;
-esac
+
+if test "$COMPILE_ENVIRONMENT"; then
+    case $target in
+    *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
+        if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
+            AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler (ml.exe for MSVC).])
+        fi
+        ;;
+    esac
+fi
 
 dnl ========================================================
 dnl = JS Debugger XPCOM component (js/jsd)
@@ -5235,6 +5284,7 @@ else
     MOZ_OPTIMIZE=
 fi ], MOZ_OPTIMIZE=1)
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_OPTIMIZE"; then
     AC_MSG_CHECKING([for valid optimization flags])
     _SAVE_CFLAGS=$CFLAGS
@@ -5249,6 +5299,7 @@ if test -n "$MOZ_OPTIMIZE"; then
     fi
     CFLAGS=$_SAVE_CFLAGS
 fi
+fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(MOZ_OPTIMIZE)
 AC_SUBST(MOZ_OPTIMIZE_FLAGS)
@@ -5445,6 +5496,7 @@ MOZ_ARG_ENABLE_BOOL(old-abi-compat-wrappers,
                           of the linux compiler change],
     MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS=1,
     MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS= )
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS"; then
     AC_LANG_SAVE
     AC_LANG_CPLUSPLUS
@@ -5452,6 +5504,7 @@ if test "$MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS"; then
     AC_LANG_RESTORE
     AC_DEFINE(MOZ_ENABLE_OLD_ABI_COMPAT_WRAPPERS)
 fi
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl = --enable-prebinding
@@ -5886,7 +5939,7 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
-fi
+fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl C++ rtti
@@ -6049,6 +6102,10 @@ msvc*|mks*|cygwin*|mingw*|wince*)
     SKIP_IDL_CHECK="no"
     ;;
 esac
+
+if test -z "$COMPILE_ENVIRONMENT"; then
+    SKIP_IDL_CHECK="yes"
+fi
 
 dnl = Allow users to disable libIDL checking for standalone modules
 MOZ_ARG_WITHOUT_BOOL(libIDL,
@@ -6503,6 +6560,7 @@ if test "$MOZ_LDAP_XPCOM"; then
     fi
 fi
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test "$SUNCTL"; then
     dnl older versions of glib do not seem to have gmodule which ctl needs
     _SAVE_CFLAGS=$CFLAGS
@@ -6516,6 +6574,7 @@ if test "$SUNCTL"; then
     CFLAGS=$_SAVE_CFLAGS
     AC_DEFINE(SUNCTL)
 fi
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl =
@@ -6670,11 +6729,6 @@ AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 
-dnl Disable profile at startup, hack for tinderbox.
-if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
-  AC_DEFINE(MOZ_BYPASS_PROFILE_AT_STARTUP)
-fi
-
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
@@ -6695,21 +6749,6 @@ COMPILE_CXXFLAGS=`echo \
     $_DEFINES_CXXFLAGS \
 	$_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
-
-dnl 
-dnl It is perfectly legal to build with both -O and -g even though
-dnl some compilers/platforms might not support this.
-dnl 
-
-dnl # Clean out '-O' flags if doing a debug build.
-dnl if test "$MOZ_DEBUG"
-dnl then
-dnl   changequote(,)dnl
-dnl   CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
-dnl   CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
-dnl   LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
-dnl   changequote([,])dnl
-dnl fi
 
 AC_SUBST(SYSTEM_MAKEDEPEND)
 AC_SUBST(SYSTEM_JPEG)
@@ -6802,7 +6841,8 @@ if test "$USING_HCC"; then
 fi
 
 dnl Check for missing components
-if test -n "$MOZ_X11"; then
+if test "$COMPILE_ENVIRONMENT"; then
+if test "$MOZ_X11"; then
     dnl ====================================================
     dnl = Check if X headers exist
     dnl ====================================================
@@ -6827,6 +6867,7 @@ if test -n "$MOZ_X11"; then
     fi
 
 fi # MOZ_X11
+fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================
@@ -7046,6 +7087,7 @@ RC=
 unset MAKEFILES
 unset CONFIG_FILES
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
     if test -z "$MOZ_DEBUG"; then
@@ -7107,3 +7149,4 @@ if test "$MOZ_LDAP_XPCOM"; then
     AC_OUTPUT_SUBDIRS(directory/c-sdk)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
+fi # COMPILE_ENVIRONMENT
