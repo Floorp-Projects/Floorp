@@ -568,13 +568,16 @@ XRemoteService::OpenURL(nsCString &aArgument,
   }
 
   else if (newTab && aOpenBrowser) {
-    NS_ASSERTION(bwin && uri, "failed to open remote URL in new tab");
     if (bwin && uri) {
       nsCOMPtr<nsIDOMWindow> container;
       rv = bwin->OpenURI(uri, 0,
                          nsIBrowserDOMWindow::OPEN_NEWTAB,
                          nsIBrowserDOMWindow::OPEN_EXTERNAL,
                          getter_AddRefs(container));
+    }
+    else {
+      NS_ERROR("failed to open remote URL in new tab");
+      return NS_ERROR_FAILURE;
     }
   }
 
