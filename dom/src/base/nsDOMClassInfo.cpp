@@ -420,7 +420,8 @@ static const char kDOMStringBundleURL[] =
   (NODE_SCRIPTABLE_FLAGS |                                                    \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_DELPROPERTY |                                       \
-   nsIXPCScriptable::WANT_GETPROPERTY)
+   nsIXPCScriptable::WANT_GETPROPERTY |                                       \
+   nsIXPCScriptable::WANT_POSTCREATE)
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
@@ -5078,20 +5079,10 @@ nsWindowSH::OnDocumentChanged(JSContext *cx, JSObject *obj,
   nsresult rv = window->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // The PostCreate hook for the document will handle defining the property
+  
   jsval v;
-  rv = WrapNative(cx, obj, document, NS_GET_IID(nsIDOMDocument), &v);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_NAMED_LITERAL_STRING(doc_str, "document");
-
-  if (!::JS_DefineUCProperty(cx, obj, NS_REINTERPRET_CAST(const jschar *,
-                                                          doc_str.get()),
-                             doc_str.Length(), v, nsnull,
-                             nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return WrapNative(cx, obj, document, NS_GET_IID(nsIDOMDocument), &v);
 }
 
 NS_IMETHODIMP
@@ -6434,6 +6425,50 @@ nsDocumentSH::GetFlags(PRUint32* aFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj)
+{
+  nsresult rv = nsNodeSH::PostCreate(wrapper, cx, obj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If this is the current document for the window that's the script global
+  // object of this document, then define this document object on the window.
+  // That will make sure that the document is referenced (via window.document)
+  // and prevent it from going away in GC.
+  nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper);
+  if (!doc) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(doc->GetScriptGlobalObject());
+  if (!win) {
+    // No window, nothing else to do here
+    return NS_OK;
+  }
+
+  nsIDOMDocument* currentDoc = win->GetExtantDocument();
+
+  if (SameCOMIdentity(doc, currentDoc)) {
+    jsval winVal;
+    
+    nsresult rv = WrapNative(cx, ::JS_GetGlobalObject(cx), win,
+                             NS_GET_IID(nsIDOMWindow), &winVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    NS_NAMED_LITERAL_STRING(doc_str, "document");
+
+    if (!::JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(winVal),
+                               NS_REINTERPRET_CAST(const jschar *,
+                                                   doc_str.get()),
+                               doc_str.Length(), OBJECT_TO_JSVAL(obj), nsnull,
+                               nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }    
+  }
+  return NS_OK;
+}
 
 // HTMLDocument helper
 
