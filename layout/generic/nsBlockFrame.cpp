@@ -2306,15 +2306,15 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState, PRBool aTryPull)
         }
       }
 
-      // Record if we need to clear floats before reflowing the next
-      // line. Note that inlineFloatBreakType will be handled and
-      // cleared before the next line is processed, so there is no
-      // need to combine break types here.
-      if (line->HasFloatBreakAfter()) {
-        inlineFloatBreakType = line->GetBreakTypeAfter();
-      }
-
       needToRecoverState = PR_TRUE;
+    }
+
+    // Record if we need to clear floats before reflowing the next
+    // line. Note that inlineFloatBreakType will be handled and
+    // cleared before the next line is processed, so there is no
+    // need to combine break types here.
+    if (line->HasFloatBreakAfter()) {
+      inlineFloatBreakType = line->GetBreakTypeAfter();
     }
 
     if (LineHasClear(line.get())) {
