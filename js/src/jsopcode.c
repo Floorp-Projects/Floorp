@@ -431,6 +431,13 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
     /* Sprint the closing quote and return the quoted string. */
     if (quote && Sprint(sp, "%c", (char)quote) < 0)
         return NULL;
+
+    /* 
+     * If we haven't Sprint'd anything yet, Sprint an empty string so that
+     * the OFF2STR below gives a valid result.
+     */
+    if (off == sp->offset && Sprint(sp, "") < 0)
+        return NULL;
     return OFF2STR(sp, off);
 }
 
