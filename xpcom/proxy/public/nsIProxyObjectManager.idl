@@ -39,9 +39,32 @@
 #include "nsISupports.idl"
 interface nsIEventQueue;
 
+/**
+ * See http://www.mozilla.org/projects/xpcom/Proxies.html
+ */
+
 [scriptable, uuid(eea90d43-b059-11d2-915e-c12b696c9333)]
 interface nsIProxyObjectManager : nsISupports 
 {
+    /**
+     * Constants for proxyType
+     */
+    /**
+     * Synchronous: Block until result available, like function call.
+     */
+    const long INVOKE_SYNC   = 0x0001; 
+    /**
+     * Asynchronous: Return without waiting for result.
+     * (Warning: do not pass &pointers into stack when using this flag.)
+     */
+    const long INVOKE_ASYNC  = 0x0002; 
+
+    /**
+     * Always create proxy even if for same thread as current thread.
+     */
+    const long CREATE_ALWAYS = 0x0004;
+
+
     void getProxyForObject(in nsIEventQueue destQueue, 
                            in nsIIDRef iid, 
                            in nsISupports object, 
