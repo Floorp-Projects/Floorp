@@ -336,22 +336,6 @@
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
-          // calling window.close() while an oncommand event
-          // call is on the stack fails to close the window, 
-          // so we need to do this ugly setTimeout hack
-          window.setTimeout(
-            function(aDlgType) {
-              document.documentElement._reallyDoButtonCommand(aDlgType);
-            },
-            0, aDlgType);
-        ]]>
-        </body>
-      </method>
-      
-      <method name="_reallyDoButtonCommand">
-        <parameter name="aDlgType"/>
-        <body>
-        <![CDATA[
           var button = this.getButton(aDlgType);
           if (!button.disabled) {
             var noCancel = this._fireButtonEvent(aDlgType);
