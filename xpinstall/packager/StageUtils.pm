@@ -452,7 +452,7 @@ sub GetProductMilestoneVersion
     print "   versionMilestone: $versionMilestone\n";
   }
 
-  chop($versionMilestone);
+  chomp($versionMilestone);
   chdir($saveCwd);
 
   if(defined($initEmptyValues) && ($initEmptyValues eq 1))
