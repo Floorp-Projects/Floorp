@@ -1308,6 +1308,13 @@ sub init {
     # to other parts of the query, so we want to create it before we
     # write the FROM clause.
     foreach my $orderitem (@inputorder) {
+        # Some fields have 'AS' aliases. The aliases go in the ORDER BY,
+        # not the whole fields.
+        # XXX - Ideally, we would get just the aliases in @inputorder,
+        # and we'd never have to deal with this.
+        if ($orderitem =~ /\s+AS\s+(.+)$/i) {
+            $orderitem = $1;
+        }
         BuildOrderBy($orderitem, \@orderby);
     }
     # Now JOIN the correct tables in the FROM clause.
