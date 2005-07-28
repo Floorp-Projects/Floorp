@@ -456,7 +456,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
 
   // If we have a selected index then get that child frame
   if (focusedIndex != kNothingSelected) {
-    focusedContent = getter_AddRefs(GetOptionContent(focusedIndex));
+    focusedContent = GetOptionContent(focusedIndex);
     // otherwise we find the focusedContent's frame and scroll to it
     if (focusedContent) {
       result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
@@ -949,8 +949,8 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
   // then heightOfARow is zero, so we need to go measure 
   // the height of the option as if it had some text.
   if (heightOfARow == 0 && length > 0) {
-    nsIContent * option = GetOptionContent(0);
-    if (option != nsnull) {
+    nsCOMPtr<nsIContent> option = GetOptionContent(0);
+    if (option) {
       nsIFrame * optFrame;
       nsresult result = GetPresContext()->PresShell()->
         GetPrimaryFrameFor(option, &optFrame);
@@ -958,19 +958,17 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
         nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
           const nsStyleFont* styleFont = optStyle->GetStyleFont();
-          nsIFontMetrics * fontMet;
+          nsCOMPtr<nsIFontMetrics> fontMet;
           result = aPresContext->DeviceContext()->
-            GetMetricsFor(styleFont->mFont, fontMet);
-          if (NS_SUCCEEDED(result) && fontMet != nsnull) {
+            GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
+          if (NS_SUCCEEDED(result) && fontMet) {
             if (fontMet) {
               fontMet->GetHeight(heightOfARow);
               mMaxHeight = heightOfARow;
             }
-            NS_RELEASE(fontMet);
           }
         }
       }
-      NS_RELEASE(option);
     }
   }
   mMaxHeight = heightOfARow;
@@ -1669,7 +1667,7 @@ nsListControlFrame::GetSelect(nsIContent * aContent)
 // Returns the nsIContent object in the collection 
 // for a given index (AddRefs)
 //---------------------------------------------------------
-nsIContent* 
+already_AddRefed<nsIContent> 
 nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection, PRInt32 aIndex) 
 {
   nsIContent * content = nsnull;
@@ -1678,7 +1676,7 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,
   NS_ASSERTION(optionElement != nsnull, "could not get option element by index!");
 
   if (optionElement) {
-    optionElement->QueryInterface(NS_GET_IID(nsIContent),(void**) &content);
+    CallQueryInterface(optionElement, &content);
   }
  
   return content;
@@ -1688,19 +1686,18 @@ nsListControlFrame::GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,
 // for a given index it returns the nsIContent object 
 // from the select
 //---------------------------------------------------------
-nsIContent* 
+already_AddRefed<nsIContent> 
 nsListControlFrame::GetOptionContent(PRInt32 aIndex)
   
 {
-  nsIContent* content = nsnull;
   nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
     getter_AddRefs(GetOptions(mContent));
   NS_ASSERTION(options.get() != nsnull, "Collection of options is null!");
 
   if (options) {
-    content = GetOptionAsContent(options, aIndex);
+    return GetOptionAsContent(options, aIndex);
   } 
-  return(content);
+  return nsnull;
 }
 
 //---------------------------------------------------------
@@ -1772,12 +1769,10 @@ nsListControlFrame::IsContentSelected(nsIContent* aContent)
 PRBool 
 nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex) 
 {
-  nsIContent* content = GetOptionContent(aIndex);
-  NS_ASSERTION(nsnull != content, "Failed to retrieve option content");
+  nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
+  NS_ASSERTION(content, "Failed to retrieve option content");
 
-  PRBool result = IsContentSelected(content);
-  NS_RELEASE(content);
-  return result;
+  return IsContentSelected(content);
 }
 
 //---------------------------------------------------------
@@ -2716,7 +2711,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 
   // If the event coordinate is above the first option frame, then target the
   // first option frame
-  nsIContent* firstOption = GetOptionContent(0);
+  nsCOMPtr<nsIContent> firstOption = GetOptionContent(0);
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
   nsIFrame* optionFrame;
   nsresult rv = presShell->GetPrimaryFrameFor(firstOption, &optionFrame);
@@ -2729,7 +2724,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsIContent* lastOption = GetOptionContent(numOptions - 1);
+  nsCOMPtr<nsIContent> lastOption = GetOptionContent(numOptions - 1);
   // If the event coordinate is below the last option frame, then target the
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
@@ -2889,7 +2884,7 @@ nsListControlFrame::ScrollToIndex(PRInt32 aIndex)
     // kNothingSelected?
     return ScrollToFrame(nsnull);
   } else {
-    nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(aIndex));
+    nsCOMPtr<nsIContent> content = GetOptionContent(aIndex);
     if (content) {
       return ScrollToFrame(content);
     }
