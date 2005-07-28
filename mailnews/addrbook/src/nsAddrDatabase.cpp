@@ -589,42 +589,77 @@ NS_IMETHODIMP nsAddrDatabase::Open
   // and prompt the user
   else if (aCreate) 
   {
-    nsFileSpec *newMabFile = new nsFileSpec(mabFileSpec);
-    if (!newMabFile)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    // save off the name of the corrupt mab file, example abook.mab
-    nsXPIDLCString originalMabFileName;
-    originalMabFileName.Adopt(mabFileSpec.GetLeafName());
+    nsCOMPtr<nsIFile> dummyBackupMabFile;
+    nsCOMPtr<nsIFile> actualBackupMabFile;
 
-    // the suggest new name for the backup will be abook.mab.bak
-    nsCAutoString backupMabFileName(originalMabFileName);
-    backupMabFileName += ".bak";
+    // First create a clone of the corrupt mab file that we'll
+    // use to generate the name for the backup file that we are
+    // going to move it to.
+    rv = aMabFile->Clone(getter_AddRefs(dummyBackupMabFile));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // get a unique file name, using the suggested name
-    // if abook.mab.bak exists, abook.mab-1.bak will come back
-    // store that name
-    newMabFile->MakeUnique(backupMabFileName.get());
-    backupMabFileName.Adopt(newMabFile->GetLeafName());
+    // Now create a second clone that we'll use to do the move
+    // (this allows us to leave the original name intact)
+    rv = aMabFile->Clone(getter_AddRefs(actualBackupMabFile));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // rename abook.mab to abook.mab.bak
-    rv = mabFileSpec.Rename(backupMabFileName.get());
+    // Now we try and generate a new name for the corrupt mab
+    // file using the dummy backup mab file
+
+    // First append .bak - we have to do this the long way as
+    // AppendNative is to the path, not the LeafName.
+    nsCAutoString dummyBackupMabFileName;
+    rv = dummyBackupMabFile->GetNativeLeafName(dummyBackupMabFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    dummyBackupMabFileName.Append(NS_LITERAL_CSTRING(".bak"));
+
+    rv = dummyBackupMabFile->SetNativeLeafName(dummyBackupMabFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now see if we can create it unique
+    rv = dummyBackupMabFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now get the new name
+    nsCAutoString backupMabFileName;
+    rv = dummyBackupMabFile->GetNativeLeafName(backupMabFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // And the parent directory
+    nsCOMPtr<nsIFile> parentDir;
+    rv = dummyBackupMabFile->GetParent(getter_AddRefs(parentDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now move the corrupt file to its backup location
+    rv = actualBackupMabFile->MoveToNative(parentDir, backupMabFileName);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to rename corrupt mab file");
- 
-    if (NS_SUCCEEDED(rv)) {
-      // the new mab file should be name of the old one: abook.mab
-      newMabFile->SetLeafName(originalMabFileName);
 
-      rv = OpenInternal(newMabFile, aCreate, pAddrDB);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIFileSpec> newMabIFileSpec;
+      nsFileSpec newMabFileSpec;
+      // Convert the nsILocalFile into an nsIFileSpec
+      // TODO: convert users of nsIFileSpec to nsILocalFile
+      // and avoid this step.
+      nsresult rv = NS_NewFileSpecFromIFile(aMabFile, getter_AddRefs(newMabIFileSpec));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = newMabIFileSpec->GetFileSpec(&newMabFileSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      rv = OpenInternal(&newMabFileSpec, aCreate, pAddrDB);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create .mab file, after rename");
 
       if (NS_SUCCEEDED(rv)) {
+        nsCAutoString originalMabFileName;
+        rv = aMabFile->GetNativeLeafName(originalMabFileName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         // if this fails, we don't care
         (void)AlertAboutCorruptMabFile(NS_ConvertASCIItoUCS2(originalMabFileName).get(), 
           NS_ConvertASCIItoUCS2(backupMabFileName).get());
       }
     }
-    delete newMabFile;
   }
   return rv;
 }
