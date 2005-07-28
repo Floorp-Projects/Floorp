@@ -407,9 +407,7 @@ public class BaseFunction extends IdScriptableObject implements Function
     private void setupDefaultPrototype()
     {
         NativeObject obj = new NativeObject();
-        final int attr = ScriptableObject.DONTENUM |
-                         ScriptableObject.READONLY |
-                         ScriptableObject.PERMANENT;
+        final int attr = ScriptableObject.DONTENUM;
         obj.defineProperty("constructor", this, attr);
         // put the prototype property into the object now, then in the
         // wacky case of a user defining a function Object(), we don't
