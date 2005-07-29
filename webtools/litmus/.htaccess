@@ -1,0 +1,3 @@
+<FilesMatch ^(.*localconfig.*)$>
+  deny from all
+</FilesMatch>
