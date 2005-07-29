@@ -414,6 +414,7 @@ endif
 
 ifeq ($(MOZ_BUILD_APP),macbrowser)
 tier_99_dirs += \
+	plugin/oji/JEP \
 	embedding/config \
 	camino \
 	$(NULL)
