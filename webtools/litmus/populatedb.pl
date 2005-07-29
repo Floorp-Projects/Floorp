@@ -22,6 +22,23 @@
 
 use strict;
 
+BEGIN {
+	unless (-e localconfig) {
+ 		open(OUT, ">localconfig");
+ 		print OUT <<EOT;
+our $db_host = "";
+our $db_name = "";
+our $db_user = "";
+our $db_pass = "";
+
+our $user_cookiename = "litmus_login";
+our $sysconfig_cookiename = "litmustestingconfiguration";
+EOT
+		close(OUT);
+		exit;
+	}
+}
+
 use Litmus::DB::Product; 
 use Litmus::DB::Testgroup; 
 use Litmus::DB::Subgroup; 
@@ -372,16 +389,3 @@ Litmus::DB::Result->find_or_create(name => "Test unclear/broken", style => "back
 # javascript cache                  
 rebuildCache(); 
 
-unless (-e localconfig) {
-    open(OUT, ">localconfig");
-    print OUT <<EOT;
-our $db_host = "";
-our $db_name = "";
-our $db_user = "";
-our $db_pass = "";
-
-our $user_cookiename = "litmus_login";
-our $sysconfig_cookiename = "litmustestingconfiguration";
-EOT
-    close(OUT);
-}
