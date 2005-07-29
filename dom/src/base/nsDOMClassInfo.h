@@ -136,6 +136,29 @@ public:
   static JSClass sDOMJSClass;
 
   /**
+   * Get our JSClass pointer for the XPCNativeWrapper class
+   */
+  static const JSClass* GetXPCNativeWrapperClass() {
+    return sXPCNativeWrapperClass;
+  }
+  
+  /**
+   * Set our JSClass pointer for the XPCNativeWrapper class
+   */
+  static void SetXPCNativeWrapperClass(JSClass* aClass) {
+    NS_ASSERTION(!sXPCNativeWrapperClass,
+                 "Double set of sXPCNativeWrapperClass");
+    sXPCNativeWrapperClass = aClass;
+  }
+
+  static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
+  {
+    NS_PRECONDITION(sXPCNativeWrapperClass,
+                    "Must know what the XPCNativeWrapper class is!");
+    return ::JS_GetClass(cx, obj) == sXPCNativeWrapperClass;
+  }
+
+  /**
    * Note that the XPConnect wrapper should be preserved.  This will only
    * preserve aWrapper if its native QIs to nsIDOMNode; otherwise it'll just
    * return NS_OK.
@@ -306,6 +329,7 @@ protected:
   static jsval sAddEventListener_id;
 
   static const JSClass *sObjectClass;
+  static const JSClass *sXPCNativeWrapperClass;
 
   static PRBool sDoSecurityCheckInAddProperty;
 };

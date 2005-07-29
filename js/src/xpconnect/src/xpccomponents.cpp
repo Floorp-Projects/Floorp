@@ -2438,13 +2438,15 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
         doResult = JS_TRUE;
     }
 
+    nsresult rv = NS_OK;
     if(doResult)
     {
         if(!JS_NewNumberValue(cx, (jsdouble) res, vp))
             return NS_ERROR_OUT_OF_MEMORY;
+        rv = NS_SUCCESS_I_DID_SOMETHING;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 /* PRBool setProperty (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in JSValPtr vp); */
@@ -2468,7 +2470,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
         {
             xpcc->SetPendingResult(rv);
             xpcc->SetLastResult(rv);
-            return NS_OK;
+            return NS_SUCCESS_I_DID_SOMETHING;
         }
         return NS_ERROR_FAILURE;
     }

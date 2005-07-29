@@ -46,7 +46,7 @@
 #include "nsIXPCScriptNotify.h"
 #include "nsITimer.h"
 #include "prtime.h"
-
+class nsIXPConnectJSObjectHolder;
 
 class nsJSContext : public nsIScriptContext,
                     public nsIXPCScriptNotify,
@@ -138,6 +138,8 @@ protected:
   nsresult InitClasses();
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();
+  // aHolder should be holding our global object
+  nsresult FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder);
 
   void FireGCTimer();
 
