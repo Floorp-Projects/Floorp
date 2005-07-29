@@ -1,0 +1,101 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $product   - the product object selected by the user
+  # @platforms - a list of all platform objects for the current product
+  # %opsyses   - a hash of all operating systems, where the key 
+          is the platform number and the value is an array of 
+          operating system objects
+  # @branches  - a list of all branch objects for the current product
+  # $ua (optional) - Litmus::UserAgentDetect() object for the remote user
+  # $defaultemail (optional)
+  # $goto - the action of the <form>
+  # cgidata (optional) - a CGI object. If provided, the param() data will 
+  #                         be stored in hidden fields and passed to the 
+  #                         next script
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+    
+[% 
+  script = ['opsysscript']
+%]
+
+[% INCLUDE global/header.html.tmpl title = 'Run Tests' 
+    script=script onload = 'showopsys()' %] 
+
+<p class="pagetitle">Run Tests</p>
+<p class="pageinstruction">Welcome to Litmus. To run tests, please enter some 
+information about your system configuration.</p>
+<form action="[% goto %]" method="post" name="form" id="form">
+<input name="isSysConfig" type="hidden" value="1">
+<input name="product" type="hidden" value="[% product.productid %]">
+<input name="testgroup" type="hidden" value="[% testgroup %]">
+
+[% # here we see if there is data to include as hidden fields. 
+   # This is used in situations where we have testresults that 
+   # need to get stored, but have to have system configuration taken care 
+   # of first. 
+%]
+[% IF cgidata %]
+    [% FOREACH curdata = cgidata.param() %]
+    [% IF curdata == "product" %] [% NEXT %] [% END %]
+        <input name="[%curdata FILTER html %]" type="hidden" 
+            value="[% cgidata.param(curdata) FILTER html %]">
+    [% END %]
+[% END %]
+
+<p><strong>System Information:</strong><br>
+<table border="0" cellpadding="5">
+<tr><td><div align="right">Product:</div></td><td>[% product.name FILTER html%] 
+    <div class="smallcaps"><a href="run_tests.cgi">change</a></div></td></tr>
+<tr>
+<td><div align="right">Platform: </div></td>
+<td>[% INCLUDE platformbox platforms=platforms defaultplatform=ua.platform(product) %]
+</td>
+</tr>
+<tr>
+<td><div align="right">Operating System: </div></td>
+<td>
+[% INCLUDE opsysbox opsyses=opsyses defaultopsys=defaultopsys %] 
+<br>
+</td>
+</tr>
+<tr>
+<td><div align="right">Branch: </div></td>
+<td>[% INCLUDE branchbox branches=branches defaultbranch=ua.branch(product) %]</td>
+</tr>
+<tr>
+<td><div align="right">Build Id:</div></td>
+<td><input type="text" id="buildid" name="buildid" size="20" 
+    value="[% ua.buildid FILTER html %]"></td>
+</tr>
+<tr>
+<td><div align="right">Email Address:</div></td>
+<td><input type="text" id="email" name="email" size="20" 
+    value="[% defaultemail.email FILTER html %]"></td>
+</tr>
+</table>
+</p>
+<input type="submit" name="Submit" value="Submit">
+</form>
+
+[% INCLUDE global/footer.html.tmpl %]

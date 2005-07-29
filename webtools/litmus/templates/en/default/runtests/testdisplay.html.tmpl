@@ -1,0 +1,73 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $sysconfig - the user's system configuration
+  # $istrusted - is the user trusted?
+  # $group     - selected group to test
+  # $subgroup  - selected subgroup to test
+  # @tests       - an array of test objects to run
+  # @results   - the list of all possible test results
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+[% script = ['subgroupscript', 'edittestsscript'] %]
+
+[% INCLUDE global/header.html.tmpl title = 'Run Tests' script=script %] 
+
+<p class="pagetitle">Run Tests</p>
+<p class="pageinstruction">Testing Summary:</p>
+<table border="0">
+<tr><td><div align="right"><strong>Product:</strong></div></td><td>[% sysconfig.product.name FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Platform:</strong></div></td><td>[% sysconfig.platform.name FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Opsys:</strong></div></td><td>[% sysconfig.opsys.name FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Branch:</strong></div></td><td>[% sysconfig.branch.name FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Build ID:</strong></div></td><td>[% sysconfig.buildid FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Group:</strong></div></td><td>[% group.name FILTER html %]</td></tr>
+<tr><td><div align="right"><strong>Subgroup:</strong></div></td><td>[% subgroup.name FILTER html %]</td></tr>
+</table>
+<p class="smallcaps"><a href="run_tests.cgi">change configuration</a>
+<hr />
+<form action="process_test.cgi" method="post" name="form" id="form">
+<input name="isTestResult" type="hidden" value="true">
+<input name="editingTestcases" id="editingTestcases" type="hidden" value="">
+<input name="product" type="hidden" value="[% sysconfig.product FILTER html %]">
+<input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]">
+<table border="0" cellpadding="5" width="100%">
+
+[% evenodd = 'odd' %]
+[% FOREACH curtest = tests %]
+    <tr style="testlist_[%evenodd%]"><td>
+        <a href="show_test.cgi?id=[% curtest.testid FILTER html %]" class="smallcaps">show</a></td></tr>
+    [% INCLUDE test/test.html.tmpl test=curtest style="testlist_$evenodd" showedit=istrusted %]
+    <tr><td colspan="3"><hr /></td></tr>
+
+    [% IF evenodd == 'odd' %]
+        [% evenodd = 'even' %]
+    [% ELSE %]
+        [% evenodd = 'odd' %]
+    [% END %]
+[% END %]
+</table>
+<input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()">
+
+</form>
+
+[% INCLUDE global/footer.html.tmpl %]

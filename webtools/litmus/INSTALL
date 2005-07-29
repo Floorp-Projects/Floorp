@@ -1,0 +1,41 @@
+===Litmus Installation Instructions===
+
+First of all, let me convince you that you in fact probbaly do not want
+to install Litmus. Litmus is not 1.0 software. Litmus is not even 0.5
+software. In fact, Litmus doesn't really do any of the things you would
+expect it to do yet.
+
+In summary, if you're not looking to install Litmus because you are or
+want to be a Litmus developer, you'd best turn around and go back from
+whence you came.
+
+If at any point you find that you don't understand these installation
+instructions, it's a good sign you want to turn back as well.
+
+Required Perl Modules: 
+Class::DBI 
+Class::DBI::mysql 
+Template 
+Time::Piece
+Time::Piece::mysql 
+Time::Seconds
+HTML::StripScripts
+HTML::StripScripts::Parser
+
+Once you've got everything installed, run: mysql < createdb.sql to
+create the Litmus database.
+
+Then edit Litmus/Config.pm to give it the information it needs to
+connect to the database.
+
+Run ./populatedb.pl to create products, testgroups, subgroups, etc...
+There is no UI at present for doing this.
+
+Edit the newly created 'localconfig' file and provide your database 
+configuration. 
+
+Then just pop the whole thing into a directory where your web server can
+get at it. Have fun!
+
+Note: After upgrading Litmus, it's a good idea to run populatedb.pl
+again to pick up any schema changes that may have occured. 

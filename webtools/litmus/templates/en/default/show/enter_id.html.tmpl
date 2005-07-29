@@ -1,0 +1,37 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # no interface for this template
+#%]
+
+
+[% INCLUDE global/header.html.tmpl title = 'Show Testcase' %] 
+
+<p class="pagetitle">Show Testcase</p>
+<p class="pageinstruction">Please enter a testcase ID.</p>
+
+
+<form action="show_test.cgi" method="get" name="form" id="form">
+<input type="text" id="id" name="id" size="7" />
+<br /><br />
+<input type="submit" name="Submit" value="Submit">
+</form>
+[% INCLUDE global/footer.html.tmpl %]

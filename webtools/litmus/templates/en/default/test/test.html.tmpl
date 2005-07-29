@@ -1,0 +1,133 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $test       - the test object to show
+  # @results   - the list of all possible test results
+  # $showedit (optional) - include UI to edit the test?
+  #                           for this to work, you must include the 
+  #                           required scripts in the head
+  # $style    (optional) - css class to apply to the table 
+  #                        rows for this testcase
+  #
+#%]
+
+[% PROCESS global/selects.none.tmpl %]
+
+[% IF style %] [% style = "class=\"$style\"" %] [% END %]
+
+  <tr [% style %]>
+    <a name="test_[% test.testid FILTER html %]" />
+    <td><strong>Test ID: </strong>[% test.testid FILTER html %]</td>
+    
+    <td><strong>Summary: </strong>
+        [% IF showedit %]
+            <input name="summary_edit_[%test.testid FILTER html%]" 
+                id="summary_edit_[%test.testid FILTER html%]" 
+                value="[% test.summary FILTER html %]" 
+                style="display: none;"
+                size="35"/> 
+        [% END %]
+            <strong id="summary_text_[%test.testid FILTER html%]">
+                [% test.summary FILTER html %]
+            </strong>
+        </td>
+    
+    <td [% style %]><table border="0">
+    
+        <tr><td><div align="right"><strong>Product:</strong></div></td>
+        [% IF showedit %]
+            <td id="product_edit_[% test.testid FILTER html %]" style="display: none;">
+                [% INCLUDE productbox
+                    test=test selected=test.product%]</td>
+        [% END %]
+        <td id="product_text_[% test.testid FILTER html %]">
+            [% test.product.name FILTER html %]</td></tr>
+        
+        <tr><td><div align="right"><strong>Group:</strong></div></td>
+        [% IF showedit %]
+            <td id="testgroup_edit_[% test.testid FILTER html %]" style="display: none;">
+                [% INCLUDE testgroupbox product=test.product 
+                    testid=test.testid default=test.testgroup%]</td>
+        [% END %]
+        <td id="testgroup_text_[% test.testid FILTER html %]">
+            [% test.testgroup.name FILTER html %]</td></tr>
+            
+        <tr><td><div align="right"><strong>Subgroup:</strong></div></td>
+        [% IF showedit %]
+            <td id="subgroup_edit_[% test.testid FILTER html %]" style="display: none;">
+                [% INCLUDE subgroupbox product=test.product 
+                    test=test default=test.subgroup%]</td>
+        [% END %]
+        <td id="subgroup_text_[% test.testid FILTER html %]">
+            [% test.subgroup.name FILTER html %]</td></tr>
+            
+        </table></td>
+  </tr>
+  <tr [% style %]>
+    <td colspan="3">
+    <table border="0" cellpadding="5">
+      <tr id="testdatarow_[% test.testid FILTER html %]">
+       [% test.format.display(test, showedit, "runtests/testdisplay.html.tmpl") %]
+      </tr>
+    </table></td>
+  </tr>
+    </td>
+  </tr>
+  [% IF showedit %] 
+        <tr class="testlist_[% evenodd %]">
+            <td colspan="3">
+                <p class="smallcaps" id="editlink_[%test.testid FILTER html %]">
+                    <a href="#editing" 
+                        onclick="showEdit('[% test.testid FILTER js %]')"> EDIT</a>
+                </p>
+                <p class="smallcaps" id="canceleditlink_[%test.testid FILTER html%]" 
+                    style="display: none;">
+                    <a href="#editing" 
+                        onclick="cancelEdit('[% test.testid FILTER js %]')"> CANCEL</a>
+                </p>
+            </td>
+        </tr>
+    [% END %]
+  <tr [% style %]>
+  <td colspan="3"><hr /></td>
+  </tr>
+  <tr [% style %]>
+     <td valign="top">
+       <p><strong>Result:</strong></p>
+          <table border="0">
+          [% FOREACH curresult = results %]
+            <tr>
+              <td><div align="right"><strong>[% curresult.name FILTER html %]:</strong></div>
+              </td>
+              <td><input type="radio" name="testresult_[%test.testid FILTER html %]" 
+                  value="[% curresult.resultid FILTER html %]">
+              </td>
+            </tr>
+            [% END %]
+          </table>
+          </td>
+          
+         <td valign="top" colspan="2">
+          <strong>Notes/Comments (optional):</strong><br><textarea 
+             name="testnote_[% test.testid FILTER html %]" cols="45" rows="4" wrap="soft" 
+             id="note"></textarea>
+        </td>
+      </tr>

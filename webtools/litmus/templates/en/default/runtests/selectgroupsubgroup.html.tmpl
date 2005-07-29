@@ -1,0 +1,141 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $opsys      - the selected operating system
+  # @groups    - all group objects for the current product
+  # %subgroups - all possible subgroups, where the key is the group 
+  #            name and the value is an array of subgroups
+  # $sysconfig - the system configuration
+  # $defaultgroup (optional) - the default group to display
+#%]
+
+
+[% INCLUDE global/header.html.tmpl title = 'Run Tests' script = '
+function MM_findObj(n, d) { //v4.01
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && d.getElementById) x=d.getElementById(n); return x;
+}
+
+function showsubgroup() { 
+  var groupselect = MM_findObj("group");
+  
+  var selnum;
+  
+  for (var i=0; i<groupselect.length; i++) {
+      if (groupselect[i].checked)
+          selnum = groupselect[i].value;
+  }
+  
+  // no selection yet so just keep everything as-is:
+  if (! selnum) 
+      return;
+  
+  
+  // object to show
+  var obj = MM_findObj("divsubgroup_"+selnum);
+  
+  // disable all of them
+  for (var i=0; i<groupselect.length; i++) {
+      var gnum = groupselect[i].value;
+    var disableobj = MM_findObj("divsubgroup_"+gnum);
+    disableobj.style.display = "none";
+  }
+  MM_findObj("divsubgroup_null").style.display = "none";
+  
+  obj.style.display = "";
+
+}' onload = 'showsubgroup()' %] 
+
+<p class="pagetitle">Run Tests</p>
+<p class="pageinstruction">Select a testing group and subgroup.</p>
+<form action="run_tests.cgi" method="post" name="form" id="form">
+<p>
+<strong>Testing Group:</strong><br>
+<ul>
+[% FOREACH curgroup = groups %]
+    [% IF defaultgroup.testgroupid == curgroup.testgroupid %]
+      [% selected = "checked" %]
+    [% ELSE %] [% selected = "" %] [% END %]
+    <li><input type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
+        onchange="showsubgroup()" [% selected %]>
+         [% curgroup.name FILTER html %] - [% curgroup.percentcompleted(sysconfig.platform, 0) %]%</li>
+[% END %]
+[% # for some boneheaded reason, our js breaks if there is only one group, 
+   # so we create a fake dummy group if this is the case: %]
+[% IF groups.size == 1 %]
+    <input type="radio" name="group" value="null" style="visibility: hidden;">
+[% END %]
+</ul>
+</p>
+<hr>
+<p>
+<strong>Select Subgroup:</strong><br>
+[% headerrow = '<tr><td><strong>Name</strong></td><td><strong>Number of Tests</td>
+    <td><strong>% Completed</strong></td></tr>' %]
+    
+<div id="divsubgroup_null" style="visibility: visible; position: absolute;">
+<table border="1">
+[% headerrow %]
+</table>
+</div>
+
+[% FOREACH curgroup = subgroups.keys %]
+    [% cursubgrouplist = subgroups.$curgroup %]
+    <div id="divsubgroup_[% curgroup FILTER html %]" style="display: none;">
+        <table border="1">
+            [% headerrow %]
+            [% FOREACH cursubgroup = cursubgrouplist %]
+            
+            [% completed = cursubgroup.percentcompleted(sysconfig.platform, 0) %]
+            [% IF completed == 0 %]
+                [% groupstyle = '' %]
+            [% ELSIF completed == 100 OR completed == 'N/A' %]
+                [% groupstyle = 'completegroup' %]
+            [% END %]
+            
+            <tr class="[% groupstyle %]">
+                <td><input type="radio" name="subgroup_[% curgroup FILTER html %]" 
+                    value="[% cursubgroup.id FILTER html %]">
+                    [% cursubgroup.name FILTER html %]</input></td>
+                <td>[% counttests = cursubgroup.tests %]
+                    [% IF ! counttests %] 0 
+                    [% ELSIF ! counttests.testid %][% counttests.list.size %]
+                    [% ELSE %]
+                    1[% END %]</td>
+                <td>[% completed FILTER html %]%</td>
+            </tr>
+            [% END %]
+        </table>
+    </div>
+[% END %]
+<br>
+</p>
+
+<div id="div_submit">
+<input type="submit" name="Submit" value="Submit">
+</div>
+
+</form>
+
+[% INCLUDE global/footer.html.tmpl %]
