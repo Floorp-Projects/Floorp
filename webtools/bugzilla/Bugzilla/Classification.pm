@@ -21,6 +21,7 @@ package Bugzilla::Classification;
 
 use Bugzilla;
 use Bugzilla::Util;
+use Bugzilla::Error;
 
 ###############################
 ####    Initialization     ####
@@ -87,7 +88,7 @@ sub product_count {
     if (!defined $self->{'product_count'}) {
         $self->{'product_count'} = $dbh->selectrow_array(q{
             SELECT COUNT(*) FROM products
-            WHERE classification_id = ?}, undef, $self->id);
+            WHERE classification_id = ?}, undef, $self->id) || 0;
     }
     return $self->{'product_count'};
 }
@@ -108,13 +109,31 @@ sub get_all_classifications () {
     my $dbh = Bugzilla->dbh;
 
     my $ids = $dbh->selectcol_arrayref(q{
-        SELECT id FROM classifications});
+        SELECT id FROM classifications ORDER BY name});
 
-    my $classifications;
+    my @classifications;
     foreach my $id (@$ids) {
-        $classifications->{$id} = new Bugzilla::Classification($id);
+        push @classifications, new Bugzilla::Classification($id);
     }
-    return $classifications;
+    return @classifications;
+}
+
+sub check_classification ($) {
+    my ($class_name) = @_;
+
+    unless ($class_name) {
+        ThrowUserError("classification_not_specified");
+    }
+
+    my $classification =
+        new Bugzilla::Classification({name => $class_name});
+
+    unless ($classification) {
+        ThrowUserError("classification_doesnt_exist",
+                       { name => $class_name });
+    }
+    
+    return $classification;
 }
 
 1;
@@ -140,11 +159,14 @@ Bugzilla::Classification - Bugzilla classification class.
     my $hash_ref = Bugzilla::Classification::get_all_classifications();
     my $classification = $hash_ref->{1};
 
+    my $classification =
+        Bugzilla::Classification::check_classification('AcmeClass');
+
 =head1 DESCRIPTION
 
 Classification.pm represents a Classification object.
 
-A Classification is a higher-level grouping of Bugzilla Products.
+A Classification is a higher-level grouping of Products.
 
 =head1 METHODS
 
@@ -181,12 +203,20 @@ A Classification is a higher-level grouping of Bugzilla Products.
 
 =item C<get_all_classifications()>
 
- Description: Returns all Bugzilla classifications.
+ Description: Returns all classifications.
 
  Params:      none.
 
- Returns:     A hash with classification id as key and
-              Bugzilla::Classification object as value.
+ Returns:     Bugzilla::Classification object list.
+
+=item C<check_classification($classification_name)>
+
+ Description: Checks if the classification name passed in is a
+              valid classification.
+
+ Params:      $classification_name - String with a classification name.
+
+ Returns:     Bugzilla::Classification object.
 
 =back
 

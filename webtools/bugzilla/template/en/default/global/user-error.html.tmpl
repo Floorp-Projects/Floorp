@@ -248,10 +248,6 @@
      must reassign those products to another classification before you
      can delete this one.
 
-  [% ELSIF error == "cant_delete_default_classification" %]
-     Sorry, but you can not delete the default classification,
-     '[% name FILTER html %]'.
-
   [% ELSIF error == "component_already_exists" %]
     [% title = "Component Already Exists" %]
     A component with the name '[% name FILTER html %]' already exists.

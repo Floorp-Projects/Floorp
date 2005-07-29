@@ -196,13 +196,13 @@ sub get_products_by_classification ($) {
 
     my $ids = $dbh->selectcol_arrayref(q{
         SELECT id FROM products
-        WHERE classification_id = ?}, undef, $class_id);
+        WHERE classification_id = ? ORDER by name}, undef, $class_id);
 
-    my $products;
+    my @products;
     foreach my $id (@$ids) {
-        $products->{$id} = new Bugzilla::Product($id);
+        push @products, new Bugzilla::Product($id);
     }
-    return $products;
+    return @products;
 }
 
 sub get_all_products () {
@@ -265,8 +265,7 @@ Bugzilla::Product - Bugzilla product class.
     my $defaultmilestone = $product->default_milestone;
     my $classificationid = $product->classification_id;
 
-    my $hash_ref = Bugzilla::Product::get_products_by_classification(1);
-    my $product = $hash_ref->{1};
+    my @products = Bugzilla::Product::get_products_by_classification(1);
 
 =head1 DESCRIPTION
 
@@ -355,8 +354,7 @@ Product.pm represents a product object.
 
  Params:      $class_id - Integer with classification id.
 
- Returns:     A hash with product id as key and a Bugzilla::Product
-              object as value.
+ Returns:     Bugzilla::Product object list.
 
 =item C<get_all_products()>
 
