@@ -39,6 +39,10 @@
 
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
+#include "jsdbgapi.h"
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -83,6 +87,13 @@ XPC_NW_Mark(JSContext *cx, JSObject *obj, void *arg);
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
+static JSBool
+RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval);
+
 // JS class for XPCNativeWrapper (and this doubles as the constructor
 // for XPCNativeWrapper for the moment too...)
 
@@ -93,7 +104,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
     JSCLASS_IS_EXTENDED,
-    JS_PropertyStub,    XPC_NW_DelProperty,
+    XPC_NW_AddProperty, XPC_NW_DelProperty,
     XPC_NW_GetProperty, XPC_NW_SetProperty,
     XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
     XPC_NW_Convert,     XPC_NW_Finalize,
@@ -108,9 +119,16 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 
 #define FLAG_DEEP     0x1
 #define FLAG_EXPLICIT 0x2
+// FLAG_RESOLVING is used to tag an XPCNativeWrapper when while it's calling
+// the newResolve hook on the XPCWrappedNative's scriptable info.
+#define FLAG_RESOLVING 0x4
 
 #define HAS_FLAGS(_val, _flags) \
-  ((JSVAL_TO_INT(_val) & (_flags)) != 0)
+  ((PRUint32(JSVAL_TO_INT(_val)) & (_flags)) != 0)
+
+#define NATIVE_HAS_FLAG(_wn, _flag)                \
+  ((_wn)->GetScriptableInfo() &&                   \
+   (_wn)->GetScriptableInfo()->GetFlags()._flag())
 
 // If one of our class hooks is ever called from a non-system script, bypass
 // the hook by calling the same hook on our wrapped native, with obj reset to
@@ -197,6 +215,45 @@ GetStringByIndex(JSContext *cx, uintN index)
   return ID_TO_VALUE(rt->GetStringID(index));
 }
 
+static JSBool
+WrapFunction(JSContext* cx, JSObject* funobj, jsval *rval)
+{
+  // If funobj is already a wrapped function, just return it.
+  if (JS_GetFunctionNative(cx,
+                           JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj))) ==
+      XPC_NW_FunctionWrapper) {
+    *rval = OBJECT_TO_JSVAL(funobj);
+    return JS_TRUE;
+  }
+  
+  // Create a new function that'll call our given function.  This new
+  // function's parent will be the original function and that's how we
+  // get the right thing to call when this function is called.
+  JSFunction *funWrapper =
+    ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, funobj,
+                     "XPCNativeWrapper function wrapper");
+  if (!funWrapper) {
+    return JS_FALSE;
+  }
+
+  *rval = OBJECT_TO_JSVAL(::JS_GetFunctionObject(funWrapper));
+  return JS_TRUE;
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XPC_NW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  jsval flags;
+  ::JS_GetReservedSlot(cx, obj, 0, &flags);
+  if (!HAS_FLAGS(flags, FLAG_RESOLVING)) {
+    return JS_TRUE;
+  }
+
+  // Note: no need to protect *vp from GC here, since it's already in the slot
+  // on |obj|.
+  return RewrapIfDeepWrapper(cx, obj, *vp, vp);
+}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -223,12 +280,29 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 {
   NS_ASSERTION(XPCNativeWrapper::IsNativeWrapper(cx, obj),
                "Unexpected object");
+
+  JSBool primitive = JSVAL_IS_PRIMITIVE(v);
+  JSObject* nativeObj = primitive ? nsnull : JSVAL_TO_OBJECT(v);
+  
+  // We always want to wrap function objects, no matter whether we're deep.
+  if (!primitive && JS_ObjectIsFunction(cx, nativeObj)) {
+    return WrapFunction(cx, nativeObj, rval);
+  }
+
   jsval flags;
   ::JS_GetReservedSlot(cx, obj, 0, &flags);
 
   // Re-wrap non-primitive values if this is a deep wrapper, i.e.
   // if (HAS_FLAGS(flags, FLAG_DEEP).
-  if (HAS_FLAGS(flags, FLAG_DEEP) && !JSVAL_IS_PRIMITIVE(v)) {
+  if (HAS_FLAGS(flags, FLAG_DEEP) && !primitive) {
+
+    XPCWrappedNative* wrappedNative =
+      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
+    if (!wrappedNative) {
+      // Not something we can protect... just make it JSVAL_NULL
+      *rval = JSVAL_NULL;
+      return JS_TRUE;
+    }
 
     if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
 #ifdef DEBUG_XPCNativeWrapper
@@ -248,13 +322,6 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
     // Just using GetNewOrUsed on the return value of
     // GetWrappedNativeOfJSObject will give the right thing -- the unique deep
     // implicit wrapper associated with wrappedNative.
-    JSObject *nativeObj = JSVAL_TO_OBJECT(v);
-    XPCWrappedNative* wrappedNative =
-      XPCWrappedNative::GetWrappedNativeOfJSObject(cx, nativeObj);
-    if (!wrappedNative) {
-      return ThrowException(NS_ERROR_INVALID_ARG, cx);
-    }
-
     JSObject* wrapperObj = XPCNativeWrapper::GetNewOrUsed(cx, wrappedNative);
     if (!wrapperObj) {
       return JS_FALSE;
@@ -355,24 +422,54 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
-  jsval methodName;
+  // This will do verification and the method lookup for us.
+  XPCCallContext ccx(JS_CALLER, cx, nativeObj, nsnull, id);
 
-  if (JSVAL_IS_STRING(id)) {
-    methodName = id;
-  } else if (JSVAL_IS_INT(id)) {
-    // Map wrapper[n] to wrapper.item(n) for get. For set, throw an
-    // error as we don't support that.
+  if (aIsSet ? NATIVE_HAS_FLAG(wrappedNative, WantSetProperty) :
+               NATIVE_HAS_FLAG(wrappedNative, WantGetProperty)) {
+
+    jsval v = *vp;
+    // Note that some sets return random DOM objects (setting
+    // document.location, say), so we want to rewrap for sets too if v != *vp.
+    JSBool retval = JS_TRUE;
+    nsresult rv;
     if (aIsSet) {
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+      rv = wrappedNative->GetScriptableCallback()->
+        SetProperty(wrappedNative, cx, obj, id, &v, &retval);
+    } else {
+      rv = wrappedNative->GetScriptableCallback()->
+        GetProperty(wrappedNative, cx, obj, id, &v, &retval);
+    }
+    
+    if (NS_FAILED(rv)) {
+      return ThrowException(rv, cx);
+    }
+    if (!retval) {
+      return JS_FALSE;
     }
 
-    methodName = GetStringByIndex(cx, XPCJSRuntime::IDX_ITEM);
-  } else {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
+    if (rv == NS_SUCCESS_I_DID_SOMETHING) {
+      // Make sure v doesn't get collected while we're re-wrapping it.
+      AUTO_MARK_JSVAL(ccx, v);
 
-  // This will do verification and the method lookup for us.
-  XPCCallContext ccx(JS_CALLER, cx, nativeObj, nsnull, methodName);
+#ifdef DEBUG_XPCNativeWrapper
+      JSString* strId = ::JS_ValueToString(cx, id);
+      if (strId) {
+        NS_ConvertUTF16toUTF8 propName((PRUnichar*)::JS_GetStringChars(strId),
+                                       ::JS_GetStringLength(strId));
+        printf("%s via scriptable hooks for '%s'\n",
+               aIsSet ? "Set" : "Got", propName.get());
+      }
+#endif
+
+      return RewrapIfDeepWrapper(cx, obj, v, vp);
+    }
+  }
+  
+  if (!JSVAL_IS_STRING(id)) {
+    // Not going to be found here
+    return JS_TRUE;
+  }
 
   // Verify that our jsobject really is a wrapped native.
   XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -385,45 +482,6 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   // interface :)
   XPCNativeInterface* iface = ccx.GetInterface();
   if (!iface) {
-    // No interface, no IDL property.  Check whet her we're getting an indexed
-    // property such as frames[0].  Handle that as a special case here, now
-    // that we know there's no XPConnected .item() method.
-
-    if (methodName != id) {
-      jsid index_id;
-      JSObject *pobj;
-      JSProperty *prop;
-
-      // Look up the property for the id being indexed in nativeObj.
-      if (!::JS_ValueToId(cx, id, &index_id) ||
-          !OBJ_LOOKUP_PROPERTY(cx, nativeObj, index_id, &pobj, &prop)) {
-        return JS_FALSE;
-      }
-
-      if (prop) {
-        JSBool safe = JS_FALSE;
-
-        if (OBJ_IS_NATIVE(pobj)) {
-          // At this point we know we have a native JS object (one that
-          // has a JSScope for its map, containing refs to the runtime's
-          // JSScopeProperty tree nodes.  Compare that property's getter
-          // to the class default getter to decide whether this element
-          // is safe to get -- i.e., it is not overridden, possibly by a
-          // user-defined getter.
-
-          JSScopeProperty *sprop = (JSScopeProperty *) prop;
-          JSClass *nativeObjClass = JS_GET_CLASS(cx, nativeObj);
-
-          safe = (sprop->getter == nativeObjClass->getProperty);
-        }
-
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-
-        if (safe) {
-          return ::JS_GetElement(cx, nativeObj, JSVAL_TO_INT(id), vp);
-        }
-      }
-    }
 
     return JS_TRUE;
   }
@@ -456,11 +514,9 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
-  if (!member->IsAttribute() && methodName == id) {
+  if (!member->IsAttribute()) {
     // Getting the value of a method. Just return and let the value
-    // from XPC_NW_NewResolve() be used.  Note that if methodName != id
-    // then we fully expect that member is not an attribute and we need
-    // to keep going and handle this case below.
+    // from XPC_NW_NewResolve() be used.
 
     return JS_TRUE;
   }
@@ -479,24 +535,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   jsval *argv = nsnull;
   uintN argc = 0;
 
-  if (methodName != id) {
-    // wrapper[n] to wrapper.item(n) mapping case.
-
-    if (member->IsAttribute()) {
-      // Uh oh, somehow wrapper.item is an attribute, not a function.
-      // Throw an error since we don't know how to deal with this case.
-
-      return ThrowException(NS_ERROR_UNEXPECTED, cx);
-    }
-
-#ifdef DEBUG_XPCNativeWrapper
-    printf("Mapping wrapper[%d] to wrapper.item(%d)\n", JSVAL_TO_INT(id),
-           JSVAL_TO_INT(id));
-#endif
-
-    argv = &id;
-    argc = 1;
-  } else if (aIsSet) {
+  if (aIsSet) {
     if (member->IsReadOnlyAttribute()) {
       // Trying to set a property for which there is no setter!
       return ThrowException(NS_ERROR_NOT_AVAILABLE, cx);
@@ -516,8 +555,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 #endif
   }
 
-  // Call the getter (or method if an id access was mapped to
-  // .item(n)).
+  // Call the getter
   jsval v;
   if (!::JS_CallFunctionValue(cx, wrapper->GetFlatJSObject(),
                               OBJECT_TO_JSVAL(funobj), argc, argv, &v)) {
@@ -575,8 +613,10 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                   JSObject **objp)
 {
-  // No need to preserve on sets of wrappedJSObject or toString, since
-  // callers couldn't get at those values anyway.
+  // No need to preserve on sets of wrappedJSObject or toString, since callers
+  // couldn't get at those values anyway.  Also, we always deal with
+  // wrappedJSObject and toString before looking at our scriptable hooks, so no
+  // need to mess with our flags yet.
   if (id == GetStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) ||
       id == GetStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING)) {
     return JS_TRUE;
@@ -632,34 +672,73 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_TRUE;
   }
 
-  if (JSVAL_IS_INT(id)) {
-    // An index is being resolved. Define the property and deal with
-    // the value in the get/set property hooks.
-
-    // Note that we don't have to worry about preserving here, since
-    // numeric ids can't be assigned to.
-
-    if (!::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID, nsnull,
-                            nsnull, 0)) {
-      return JS_FALSE;
-    }
-
-    *objp = obj;
-
-    return JS_TRUE;
-  }
-
-  if (!JSVAL_IS_STRING(id)) {
-    // A non-int and non-string id is being resolved. Won't be found
-    // here, return early.
-
-    return MaybePreserveWrapper(cx, wrappedNative, flags);
-  }
-
   JSObject *nativeObj = wrappedNative->GetFlatJSObject();
 
   // This will do verification and the method lookup for us.
   XPCCallContext ccx(JS_CALLER, cx, nativeObj, nsnull, id);
+
+  // For "constructor" we don't want to call into the resolve hooks on the
+  // wrapped native, since that would give the wrong constructor.
+  if (NATIVE_HAS_FLAG(wrappedNative, WantNewResolve) &&
+      id != GetStringByIndex(cx, XPCJSRuntime::IDX_CONSTRUCTOR)) {
+
+    // Mark ourselves as resolving so our AddProperty hook can do the
+    // right thing here.
+    jsval oldFlags;
+    ::JS_GetReservedSlot(cx, obj, 0, &oldFlags);
+    if (!::JS_SetReservedSlot(cx, obj, 0,
+                              INT_TO_JSVAL(JSVAL_TO_INT(oldFlags) |
+                                           FLAG_RESOLVING))) {
+      return JS_FALSE;
+    }        
+    
+    XPCWrappedNative* oldResolvingWrapper;
+    JSBool allowPropMods =
+      NATIVE_HAS_FLAG(wrappedNative, AllowPropModsDuringResolve);
+    if (allowPropMods) {
+      oldResolvingWrapper = ccx.SetResolvingWrapper(wrappedNative);
+    }
+      
+    JSBool retval = JS_TRUE;
+    JSObject* newObj = nsnull;
+    nsresult rv = wrappedNative->GetScriptableInfo()->
+      GetCallback()->NewResolve(wrappedNative, cx, obj, id, flags,
+                                &newObj, &retval);
+
+    if (allowPropMods) {
+      ccx.SetResolvingWrapper(oldResolvingWrapper);
+    }
+
+    if (!::JS_SetReservedSlot(cx, obj, 0, oldFlags)) {
+      return JS_FALSE;
+    }
+    
+    if (NS_FAILED(rv)) {
+      return ThrowException(rv, cx);
+    }
+
+    if (newObj) {
+#ifdef DEBUG_XPCNativeWrapper
+      JSString* strId = ::JS_ValueToString(cx, id);
+      if (strId) {
+        NS_ConvertUTF16toUTF8 propName((PRUnichar*)::JS_GetStringChars(strId),
+                                       ::JS_GetStringLength(strId));
+        printf("Resolved via scriptable hooks for '%s'\n", propName.get());
+      }
+#endif
+      // Note that we don't need to preserve the wrapper here, since this is
+      // not an "expando" property if the scriptable newResolve hook found it.
+      *objp = newObj;
+      return retval;
+    }      
+  }
+
+  if (!JSVAL_IS_STRING(id)) {
+    // A non-string id is being resolved. Won't be found here, return
+    // early.
+
+    return MaybePreserveWrapper(cx, wrappedNative, flags);
+  }
 
   // Verify that our jsobject really is a wrapped native.
   XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -727,18 +806,9 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
            ::JS_GetStringBytes(JSVAL_TO_STRING(id)));
 #endif
 
-    // Create a new function that'll call the method we got from the
-    // member. This new function's parent will be the method to call from
-    // the function, and that's how we get the method when this function
-    // is called.
-    JSFunction *funWrapper =
-      ::JS_NewFunction(cx, XPC_NW_FunctionWrapper, 0, 0, funobj,
-                       "Components.lookupMethod function wrapper");
-    if (!funWrapper) {
+    if (!WrapFunction(cx, funobj, &v)) {
       return JS_FALSE;
     }
-
-    v = OBJECT_TO_JSVAL(::JS_GetFunctionObject(funWrapper));
   }
 
   if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),

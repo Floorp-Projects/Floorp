@@ -1511,6 +1511,8 @@ nsJSContext::GetNativeContext()
   return mContext;
 }
 
+const JSClass* NS_DOMClassInfo_GetXPCNativeWrapperClass();
+void NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass);
 
 nsresult
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
@@ -1571,6 +1573,13 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
                                               flags,
                                               getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now check whether we need to grab a pointer to the
+    // XPCNativeWrapper class
+    if (!NS_DOMClassInfo_GetXPCNativeWrapperClass()) {
+      rv = FindXPCNativeWrapperClass(holder);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   } else {
     // If there's already a global object in mContext we're called
     // after ::JS_ClearScope() was called. We'll have to tell XPConnect
@@ -1642,6 +1651,51 @@ nsJSContext::InitializeLiveConnectClasses()
 #endif /* OJI */
 
   // return all is well until things are stable.
+  return NS_OK;
+}
+
+nsresult
+nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
+{
+  NS_ASSERTION(!NS_DOMClassInfo_GetXPCNativeWrapperClass(),
+               "Why was this called?");
+
+  JSObject *globalObj;
+  aHolder->GetJSObject(&globalObj);
+  NS_ASSERTION(globalObj, "Must have global by now!");
+      
+  const char* arg = "arg";
+  NS_NAMED_LITERAL_STRING(body, "return new XPCNativeWrapper(arg);");
+
+  // Can't use CompileFunction() here because our principal isn't
+  // inited yet and a null principal makes it fail.
+  JSFunction *fun =
+    ::JS_CompileUCFunction(mContext,
+                           globalObj,
+                           "_XPCNativeWrapperCtor",
+                           1, &arg,
+                           (jschar*)body.get(),
+                           body.Length(),
+                           "javascript:return new XPCNativeWrapper(arg);",
+                           1 // lineno
+                           );
+  NS_ENSURE_TRUE(fun, NS_ERROR_FAILURE);
+
+  jsval globalVal = OBJECT_TO_JSVAL(globalObj);
+  jsval wrapper;
+      
+  JSBool ok = ::JS_CallFunction(mContext, globalObj, fun,
+                                1, &globalVal, &wrapper);
+  if (!ok) {
+    // No need to notify about pending exceptions here; we don't
+    // expect any other than out of memory, really.
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ASSERTION(JSVAL_IS_OBJECT(wrapper), "This should be an object!");
+
+  NS_DOMClassInfo_SetXPCNativeWrapperClass(
+    ::JS_GetClass(mContext, JSVAL_TO_OBJECT(wrapper)));
   return NS_OK;
 }
 

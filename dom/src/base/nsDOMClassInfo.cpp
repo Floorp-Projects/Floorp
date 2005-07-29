@@ -1098,9 +1098,21 @@ jsval nsDOMClassInfo::sTags_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sAddEventListener_id= JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass = nsnull;
+const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
 
 PRBool nsDOMClassInfo::sDoSecurityCheckInAddProperty = PR_TRUE;
 
+const JSClass*
+NS_DOMClassInfo_GetXPCNativeWrapperClass()
+{
+  return nsDOMClassInfo::GetXPCNativeWrapperClass();
+}
+
+void
+NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass)
+{
+  nsDOMClassInfo::SetXPCNativeWrapperClass(aClass);
+}
 
 static void
 PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
@@ -3794,7 +3806,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       NS_GET_IID(nsIDOMWindow), vp);
     }
 
-    return rv;
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
   if (needsSecurityCheck(cx, wrapper)) {
@@ -3820,7 +3832,7 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           // Yup, *vp is a window object, return early (*vp is already
           // the window, so no need to wrap it again).
 
-          return NS_OK;
+          return NS_SUCCESS_I_DID_SOMETHING;
         }
       }
     }
@@ -3877,7 +3889,8 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     rv = location->SetHref(nsDependentJSString(val));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
+    rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
   return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -5754,6 +5767,10 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
+  if (ObjectIsNativeWrapper(cx, obj)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsIScriptContext *script_cx = nsJSUtils::GetStaticScriptContext(cx, obj);
   NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
@@ -5778,7 +5795,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
     rv = manager->RegisterScriptEventListener(script_cx, receiver, atom);
   }
 
-  return rv;
+  return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
 }
 
 NS_IMETHODIMP
@@ -5990,6 +6007,8 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   PRBool is_number = PR_FALSE;
   PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
+  nsresult rv = NS_OK;
+
   if (is_number) {
     if (n < 0) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -5997,17 +6016,19 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsCOMPtr<nsISupports> array_item;
 
-    nsresult rv = GetItemAt(wrapper->Native(), n, getter_AddRefs(array_item));
+    rv = GetItemAt(wrapper->Native(), n, getter_AddRefs(array_item));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (array_item) {
       rv = WrapNative(cx, ::JS_GetGlobalObject(cx), array_item,
                       NS_GET_IID(nsISupports), vp);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = NS_SUCCESS_I_DID_SOMETHING;
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 
@@ -6041,9 +6062,11 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = WrapNative(cx, ::JS_GetGlobalObject(cx), item,
                       NS_GET_IID(nsISupports), vp);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = NS_SUCCESS_I_DID_SOMETHING;
     }
 
-    return NS_OK; // Don't fall through to nsArraySH::GetProperty() here
+    return rv; // Don't fall through to nsArraySH::GetProperty() here
   }
 
   return nsArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -6410,7 +6433,8 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = location->SetHref(nsDependentJSString(val));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
+      rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
+      return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
     }
   }
 
@@ -7074,7 +7098,8 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
     }
 
-    if (id == sAll_id && !sDisableDocumentAllSupport) {
+    if (id == sAll_id && !sDisableDocumentAllSupport &&
+        !ObjectIsNativeWrapper(cx, obj)) {
       nsCOMPtr<nsIHTMLDocument> doc(do_QueryWrappedNative(wrapper));
 
       if (doc->GetCompatibilityMode() == eCompatibility_NavQuirks) {
@@ -7164,11 +7189,14 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (result) {
-    return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
-                      NS_GET_IID(nsISupports), vp);
+    rv = WrapNative(cx, ::JS_GetGlobalObject(cx), result,
+                    NS_GET_IID(nsISupports), vp);
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_SUCCESS_I_DID_SOMETHING;
+    }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 // HTMLElement helper
@@ -7297,8 +7325,9 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     if (result) {
       // Wrap result, result can be either an element or a list of
       // elements
-      return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
-                        NS_GET_IID(nsISupports), vp);
+      nsresult rv = WrapNative(cx, ::JS_GetGlobalObject(cx), result,
+                               NS_GET_IID(nsISupports), vp);
+      return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
     }
 
     return NS_OK; // Don't fall through
@@ -7311,8 +7340,9 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     form->GetElementAt(n, getter_AddRefs(control));
 
     if (control) {
-      return WrapNative(cx, ::JS_GetGlobalObject(cx), control,
-                        NS_GET_IID(nsISupports), vp);
+      nsresult rv = WrapNative(cx, ::JS_GetGlobalObject(cx), control,
+                               NS_GET_IID(nsISupports), vp);
+      return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
     }
   }
 
@@ -7404,6 +7434,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   PRInt32 n = GetArrayIndexFromId(cx, id);
 
+  nsresult rv = NS_OK;
   if (n >= 0) {
     nsCOMPtr<nsIDOMHTMLSelectElement> s(do_QueryWrappedNative(wrapper));
 
@@ -7415,12 +7446,15 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
       options->Item(n, getter_AddRefs(node));
 
-      return WrapNative(cx, ::JS_GetGlobalObject(cx), node,
-                        NS_GET_IID(nsIDOMNode), vp);
+      rv = WrapNative(cx, ::JS_GetGlobalObject(cx), node,
+                      NS_GET_IID(nsIDOMNode), vp);
+      if (NS_SUCCEEDED(rv)) {
+        rv = NS_SUCCESS_I_DID_SOMETHING;
+      }
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 // static
@@ -7473,7 +7507,8 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
     nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
     NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 
-    return SetOption(cx, vp, n, oc);
+    nsresult rv = SetOption(cx, vp, n, oc);
+    return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
   return nsElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -7692,21 +7727,23 @@ nsHTMLExternalObjSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   const jschar *id_chars = nsnull;
   size_t id_length = 0;
 
-  JSBool found;
+  JSBool found = PR_FALSE;
 
-  if (JSVAL_IS_STRING(id)) {
-    JSString *id_str = JSVAL_TO_STRING(id);
+  if (!ObjectIsNativeWrapper(cx, obj)) {
+    if (JSVAL_IS_STRING(id)) {
+      JSString *id_str = JSVAL_TO_STRING(id);
 
-    id_chars = ::JS_GetStringChars(id_str);
-    id_length = ::JS_GetStringLength(id_str);
+      id_chars = ::JS_GetStringChars(id_str);
+      id_length = ::JS_GetStringLength(id_str);
 
-    *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
-  } else {
-    *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
-  }
+      *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
+    } else {
+      *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
+    }
 
-  if (!*_retval) {
-    return NS_ERROR_UNEXPECTED;
+    if (!*_retval) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   if (found) {
@@ -7716,7 +7753,7 @@ nsHTMLExternalObjSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
       *_retval = ::JS_GetElement(cx, pi_obj, JSVAL_TO_INT(id), vp);
     }
 
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
   }
 
   return nsElementSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -7732,21 +7769,23 @@ nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   const jschar *id_chars = nsnull;
   size_t id_length = 0;
 
-  JSBool found;
+  JSBool found = PR_FALSE;
 
-  if (JSVAL_IS_STRING(id)) {
-    JSString *id_str = JSVAL_TO_STRING(id);
+  if (!ObjectIsNativeWrapper(cx, obj)) {
+    if (JSVAL_IS_STRING(id)) {
+      JSString *id_str = JSVAL_TO_STRING(id);
 
-    id_chars = ::JS_GetStringChars(id_str);
-    id_length = ::JS_GetStringLength(id_str);
+      id_chars = ::JS_GetStringChars(id_str);
+      id_length = ::JS_GetStringLength(id_str);
 
-    *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
-  } else {
-    *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
-  }
+      *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
+    } else {
+      *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
+    }
 
-  if (!*_retval) {
-    return NS_ERROR_UNEXPECTED;
+    if (!*_retval) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   if (found) {
@@ -7756,7 +7795,7 @@ nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
       *_retval = ::JS_SetElement(cx, pi_obj, JSVAL_TO_INT(id), vp);
     }
 
-    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+    return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
   }
 
   return nsElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
@@ -8050,7 +8089,11 @@ nsHTMLOptionsCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 
-  return nsHTMLSelectElementSH::SetOption(cx, vp, n, oc);
+  nsresult rv = nsHTMLSelectElementSH::SetOption(cx, vp, n, oc);
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_SUCCESS_I_DID_SOMETHING;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -8280,7 +8323,7 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   *vp = STRING_TO_JSVAL(str);
 
-  return NS_OK;
+  return NS_SUCCESS_I_DID_SOMETHING;
 }
 
 

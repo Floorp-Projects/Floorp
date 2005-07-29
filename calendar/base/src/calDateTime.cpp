@@ -637,7 +637,7 @@ calDateTime::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
             *vp = OBJECT_TO_JSVAL(obj);
             *_retval = PR_TRUE;
-            return NS_OK;
+            return NS_SUCCESS_I_DID_SOMETHING;
         }
     }
 
@@ -675,7 +675,7 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
             }
 
             *_retval = PR_TRUE;
-            return NS_OK;
+            return NS_SUCCESS_I_DID_SOMETHING;
         }
     }
     *_retval = PR_TRUE;

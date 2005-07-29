@@ -137,6 +137,7 @@ nsSOAPPropertyBag::GetProperty(nsIXPConnectWrappedNative * wrapper,
                                JSContext * cx, JSObject * obj,
                                jsval id, jsval * vp, PRBool * _retval)
 {
+  nsresult rv = NS_OK;
   if (JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
     const PRUnichar *name = NS_REINTERPRET_CAST(const PRUnichar *,
@@ -144,13 +145,14 @@ nsSOAPPropertyBag::GetProperty(nsIXPConnectWrappedNative * wrapper,
     nsCOMPtr<nsIVariant> value;
     mProperties.Get(nsDependentString(name), getter_AddRefs(value));
     if (!value)
-      return NS_OK;
+      return rv;
+    rv = NS_SUCCESS_I_DID_SOMETHING;
     void *mark;
     jsval *argv = JS_PushArguments(cx, &mark, "%iv", value.get());
     *vp = *argv;
     JS_PopArguments(cx, mark);
   }
-  return NS_OK;
+  return rv;
 }
 
 PLDHashOperator PR_CALLBACK
