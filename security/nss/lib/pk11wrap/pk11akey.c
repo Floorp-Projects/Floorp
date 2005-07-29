@@ -815,7 +815,12 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     /* set up the mechanism specific info */
     switch (type) {
     case CKM_RSA_PKCS_KEY_PAIR_GEN:
+    case CKM_RSA_X9_31_KEY_PAIR_GEN:
 	rsaParams = (PK11RSAGenParams *)param;
+	if (rsaParams->pe == 0) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return NULL;
+	}
 	modulusBits = rsaParams->keySizeInBits;
 	peCount = 0;
 
@@ -1000,6 +1005,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     pubKeyIndex =  NULL;
     switch (type) {
     case CKM_RSA_PKCS_KEY_PAIR_GEN:
+    case CKM_RSA_X9_31_KEY_PAIR_GEN:
       pubKeyIndex = &(*pubKey)->u.rsa.modulus;
       break;
     case CKM_DSA_KEY_PAIR_GEN:
