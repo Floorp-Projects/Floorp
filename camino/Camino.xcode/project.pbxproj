@@ -10416,6 +10416,46 @@
 			settings = {
 			};
 		};
+		3FEBB08E0899C0F600BD8373 = {
+			isa = PBXFileReference;
+			lastKnownFileType = "wrapper.plug-in";
+			name = JavaEmbeddingPlugin.bundle;
+			path = ../dist/bin/plugins/JavaEmbeddingPlugin.bundle;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FEBB09D0899C0F700BD8373 = {
+			fileRef = 3FEBB08E0899C0F600BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB0A70899C0F700BD8373 = {
+			fileRef = 3FEBB08E0899C0F600BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB0E60899C18600BD8373 = {
+			explicitFileType = "wrapper.plug-in";
+			isa = PBXFileReference;
+			name = MRJPlugin.plugin;
+			path = ../dist/bin/plugins/MRJPlugin.plugin;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FEBB0F90899C18600BD8373 = {
+			fileRef = 3FEBB0E60899C18600BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB0FA0899C18600BD8373 = {
+			fileRef = 3FEBB0E60899C18600BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3FECC78F05D1F68E0068E7ED = {
 			children = (
 				3F44AD8705BDFB9F00CB4B08,
@@ -11175,6 +11215,8 @@
 			dstPath = plugins;
 			dstSubfolderSpec = 6;
 			files = (
+				3FEBB09D0899C0F700BD8373,
+				3FEBB0F90899C18600BD8373,
 				4D5881770864B28D001305B3,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -11191,6 +11233,8 @@
 			dstPath = plugins;
 			dstSubfolderSpec = 6;
 			files = (
+				3FEBB0A70899C0F700BD8373,
+				3FEBB0FA0899C18600BD8373,
 				4D58817B0864B2AE001305B3,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -14229,6 +14273,8 @@
 			children = (
 				F56610BC0394775201A9666E,
 				F5F0BDC803C0A76F01202892,
+				3FEBB0E60899C18600BD8373,
+				3FEBB08E0899C0F600BD8373,
 			);
 			isa = PBXGroup;
 			name = Plugins;
