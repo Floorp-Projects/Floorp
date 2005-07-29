@@ -1250,7 +1250,10 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
     const PRUnichar* params[] = {appName.get(), appName.get()};
 
     nsXPIDLString killMessage;
-    sb->FormatStringFromName(NS_LITERAL_STRING("restartMessage").get(),
+    static const PRUnichar kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r'};
+    static const PRUnichar kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r'};
+
+    sb->FormatStringFromName(aUnlocker ? kRestartUnlocker : kRestartNoUnlocker,
                              params, 2, getter_Copies(killMessage));
 
     nsXPIDLString killTitle;
