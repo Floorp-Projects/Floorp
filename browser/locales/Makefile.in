@@ -48,6 +48,10 @@ include $(topsrcdir)/config/config.mk
 run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
 _ABS_DIST := $(shell cd $(DIST) && pwd)
 
+ifdef MOZ_BRANDING_DIRECTORY
+SUBMAKEFILES += $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile
+endif
+
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
 
