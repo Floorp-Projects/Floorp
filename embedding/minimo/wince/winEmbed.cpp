@@ -45,8 +45,52 @@ const static char* start_url = "chrome://minimo/content/minimo.xul";
 //const static char* start_url = "http://www.meer.net/~dougt/test.html";
 //const static char* start_url = "resource://gre/res/start.html";
 
+PRBool gDumpJSConsole = PR_FALSE;
+
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
+
+class nsBrowserStatusFilterFactory : public nsIFactory
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
+  
+  nsBrowserStatusFilterFactory();
+  ~nsBrowserStatusFilterFactory() { }
+};
+
+nsBrowserStatusFilterFactory::nsBrowserStatusFilterFactory()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsBrowserStatusFilterFactory, nsIFactory)
+
+NS_IMETHODIMP
+nsBrowserStatusFilterFactory::CreateInstance(nsISupports* aOuter,
+                                   const nsIID& aIID,
+                                   void* *aResult)
+{
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+  
+  nsBrowserStatusFilter* filter = new nsBrowserStatusFilter();
+  if (!filter)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = filter->QueryInterface(aIID, aResult);
+
+  if (NS_FAILED(rv))
+    delete filter;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsBrowserStatusFilterFactory::LockFactory(PRBool)
+{
+  return NS_OK;
+}
 
 class ApplicationObserver: public nsIObserver 
 {
@@ -164,8 +208,29 @@ void DoPreferences()
         return;
 
     prefBranch->SetBoolPref("snav.keyCode.modifier", 0);
+    prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
+
 }
 
+void OverrideComponents()
+{
+  
+  static NS_DEFINE_CID(kBrowserStatusFilter, NS_BROWSERSTATUSFILTER_CID);
+
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  NS_GetComponentRegistrar(getter_AddRefs(registrar));
+
+  nsBrowserStatusFilterFactory* factory = new nsBrowserStatusFilterFactory();
+
+  if (!factory)
+    return;
+
+  if (registrar)
+    registrar->RegisterFactory(kBrowserStatusFilter,
+                               NS_BROWSERSTATUSFILTER_CLASSNAME,
+                               NS_BROWSERSTATUSFILTER_CONTRACTID,
+                               factory);
+}
 
 typedef struct FindAppStruct
 {
@@ -229,6 +294,7 @@ int main(int argc, char *argv[])
         return 1;
     
     DoPreferences();
+    OverrideComponents();
 
     NS_TIMELINE_ENTER("appStartup");
     nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
@@ -257,6 +323,9 @@ int main(int argc, char *argv[])
 
     delete appObserver;
     delete creatorCallback;
+
+    if (gDumpJSConsole)
+      WriteConsoleLog();
 
     // Close down Embedding APIs
     NS_TermEmbedding();

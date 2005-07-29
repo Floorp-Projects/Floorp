@@ -84,9 +84,9 @@ nsBrowserStatusHandler.prototype =
     if(aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) { 
       this.transferCount+=5;
       // Has to be fixed and stay within the urlBarIdentity functions. 
-      if(gSelectedTab==this.refTab) {
-        document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
-    }
+      //if(gSelectedTab==this.refTab) {
+      document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
+      // }
     }
 
     if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
@@ -96,9 +96,9 @@ nsBrowserStatusHandler.prototype =
       {
         this.transferCount=0;
         // Has to be fixed and stay within the urlBarIdentity functions. 
-        if(gSelectedTab==this.refTab) {
-          document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/skin/transfer.gif)";
-      }
+        // if(gSelectedTab==this.refTab) {
+        document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/skin/transfer.gif)";
+        //  }
         this.stopreloadButton.image = "chrome://minimo/skin/stop.gif";
         this.stopreloadButton.onClick = "BrowserStop()";
         this.statusbar.hidden = false;
@@ -108,9 +108,9 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
         // Has to be fixed and stay within the urlBarIdentity functions. 
-        if(gSelectedTab==this.refTab) {
-          document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
-      }
+        //    if(gSelectedTab==this.refTab) {
+        document.styleSheets[1].cssRules[0].style.backgroundPosition="0px 100%";
+        // }
 
         this.stopreloadButton.image = "chrome://minimo/skin/reload.gif";
         this.stopreloadButton.onClick = "BrowserReload()";
@@ -119,9 +119,6 @@ nsBrowserStatusHandler.prototype =
         this.statusbarText.label = "";
         return;
       }
-  
-
-
       return;
     }
 
@@ -136,13 +133,15 @@ nsBrowserStatusHandler.prototype =
       {
         return;
       }
-
       return;
     }
   },
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+    this.transferCount++;
+    document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
+
     //alert("aWebProgress="+aWebProgress+"aRequest.name: "+aRequest.name+"aCurSelfProgress:"+aCurSelfProgress);
   },
 
@@ -151,8 +150,7 @@ nsBrowserStatusHandler.prototype =
   {
 
     // Update the URL BAR only if the gSelectedTab matches this tab. 
-
-    if(gSelectedTab==this.refTab) {
+    // if(gSelectedTab==this.refTab) {
         domWindow = aWebProgress.DOMWindow;
         // Update urlbar only if there was a load on the root docshell
         if (domWindow == domWindow.top) {
@@ -163,7 +161,7 @@ nsBrowserStatusHandler.prototype =
         //this.lastLocation=aLocation.spec; // the onclick tab handler should get this URL to refresh the urlbar. 
           this.refTab.setAttribute("lastLocation",aLocation.spec);
 
-    }
+    //}
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -180,14 +178,16 @@ nsBrowserStatusHandler.prototype =
   * Initial Minimo Startup 
   * 
   **/
+
+/* moved this as global */ 
+
+
 function MiniNavStartup()
 {
 
   gURLBar = document.getElementById("urlbar");
   var currentTab=getBrowser().selectedTab;
   browserInit(currentTab);
-  currentTab.setAttribute("selectedTabIndex",gtabCounter++);    
-  currentTab.setAttribute("recentURL","http://www.google.com");
   gSelectedTab=currentTab;
   loadURI("http://www.google.com");
 
@@ -199,36 +199,33 @@ function MiniNavStartup()
   **/
 function browserInit(refTab)
 {
-  try {
 
     var BrowserStatusHandler = new nsBrowserStatusHandler();
+
     BrowserStatusHandler.init();
-    BrowserStatusHandler.refTab=refTab;
+    BrowserStatusHandler.refTab=refTab; // WARNING (was refTab);
 
-    gBrowserStatusHandlerArray.push(BrowserStatusHandler);
+    try {
 
-    var refBrowser=getBrowser().getBrowserForTab(refTab);
-    var webProgress = refBrowser.webProgress;
-    webProgress.addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+      getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+      gBrowserStatusHandlerArray.push(BrowserStatusHandler);
+      var refBrowser=getBrowser().getBrowserForTab(refTab);
+      var webNavigation=refBrowser.webNavigation;
+      webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+    } catch (e) {
+      alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
+    }
 
-    var webNavigation=refBrowser.webNavigation;
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
-
-  } catch (e) {
-    alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
-  }
-
-  try {
-    refBrowser.markupDocumentViewer.textZoom = .75;
-  } catch (e) {}
-  gURLBar = document.getElementById("urlbar");
+    try {
+      refBrowser.markupDocumentViewer.textZoom = .75;
+    } catch (e) {}
+    gURLBar = document.getElementById("urlbar");
 
 }
 
 function MiniNavShutdown()
 {
-  if (gBrowserStatusHandler)
-    gBrowserStatusHandler.destroy();
+  if (gBrowserStatusHandler) gBrowserStatusHandler.destroy();
 }
 
 function getBrowser()
@@ -243,7 +240,6 @@ function getWebNavigation()
 
 function loadURI(uri)
 {
-  getBrowser().selectedTab.setAttribute("selectedTabURL",uri);
   getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
 
@@ -277,8 +273,23 @@ function BrowserReload()
 }
 
 function BrowserAddTab() {
-    var thisTab=getBrowser().addTab("about:blank");
+
+
+    var thisTab=getBrowser().addTab("http://taboca.com");
+
     browserInit(thisTab);
+}
+
+function BrowserOpenTab()
+{
+  try { 
+    getBrowser().selectedTab = getBrowser().addTab('about:blank');
+    browserInit(getBrowser().selectedTab);
+  } catch (e) {
+     alert(e);
+  }
+  //  if (gURLBar) setTimeout(function() { gURLBar.focus(); }, 0);
+
 }
 
 /** 
@@ -290,11 +301,11 @@ function tabbrowserAreaClick(e) {
 
     // When the click happens, 
     // updates the location bar with the lastLocation for the given selectedTab. 
-      // Note that currently the lastLocation is stored in the DOM for the selectedTab. 
+    // Note that currently the lastLocation is stored in the DOM for the selectedTab. 
 
     gSelectedTab=getBrowser().selectedTab; 
     gURLBar.value=gSelectedTab.getAttribute("lastLocation");
-      document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
+    document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
 }
 
