@@ -375,6 +375,7 @@ MAKEFILES_oji="
 modules/oji/Makefile
 modules/oji/public/Makefile
 modules/oji/src/Makefile
+plugin/oji/JEP/Makefile
 "
 
 MAKEFILES_plugin="
