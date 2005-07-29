@@ -1014,13 +1014,14 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
       //printf("DEBUG: getting uri from document (%p)\n", mDocument.get());
 
-      nsIURI *uri = mDocument->GetDocumentURI();
+      nsIURI *uri = mDocument ? mDocument->GetDocumentURI() : nsnull;
 
       if (uri) {
-        //printf("DEBUG: getting spec fro uri (%p)\n", uri.get());
+        //printf("DEBUG: getting spec for uri (%p)\n", uri.get());
         nsCAutoString spec;
         uri->GetSpec(spec);
-        if (!strcmp(spec.get(), "chrome://navigator/content/navigator.xul")) {
+        if (spec.EqualsLiteral("chrome://navigator/content/navigator.xul") ||
+            spec.EqualsLiteral("chrome://browser/content/browser.xul")) {
           NS_TIMELINE_MARK("Navigator Window visible now");
         }
       }
