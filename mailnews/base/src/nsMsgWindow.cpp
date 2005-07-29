@@ -502,11 +502,11 @@ NS_IMETHODIMP nsMsgWindow::GetPromptDialog(nsIPrompt **aPrompt)
 }
 
 NS_IMETHODIMP 
-nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *body)
+nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *body, PRBool clearMsgHdr)
 {
   nsresult rv;
 
-  if (mMsgPaneController)
+  if (clearMsgHdr && mMsgPaneController)
     mMsgPaneController->ClearMsgPane();
 
   nsString htmlStr;

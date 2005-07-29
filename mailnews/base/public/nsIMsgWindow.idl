@@ -60,7 +60,7 @@ interface nsIMsgMessagePaneController : nsISupports {
 };
 
 
-[scriptable, uuid(BD85A416-5433-11d3-8AC5-0060B0FC04D2)]
+[scriptable, uuid(BCE0AB71-11FF-428E-9EDC-69ABAD73b697)]
 interface nsIMsgWindow : nsISupports {
 
   attribute nsIMsgMessagePaneController messagePaneController;
@@ -69,7 +69,7 @@ interface nsIMsgWindow : nsISupports {
   attribute nsITransactionManager transactionManager;
   attribute nsIMsgFolder openFolder;
   attribute nsIDocShell rootDocShell;
-  void displayHTMLInMessagePane(in wstring title, in wstring body);
+  void displayHTMLInMessagePane(in wstring title, in wstring body, in boolean clearMsgHdr);
 
   readonly attribute nsIPrompt promptDialog;
   attribute string mailCharacterSet;

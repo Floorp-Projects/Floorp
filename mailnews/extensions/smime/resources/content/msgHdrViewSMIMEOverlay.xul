@@ -43,6 +43,11 @@
 
   <script language="JavaScript" src="chrome://messenger-smime/content/msgHdrViewSMIMEOverlay.js"/>
 
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_read_smime" src="chrome://messenger-smime/locale/msgReadSMIMEOverlay.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+
   <hbox id="expandedHeaderView">
     <vbox id="smimeBox" insertafter="expandedHeaders" collapsed="true">
       <spacer flex="1"/>
