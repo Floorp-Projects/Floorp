@@ -558,7 +558,7 @@
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="component-bar"/>
     <statusbarpanel id="statusText" flex="1"/>
-    <statusbarpanel class="statusbarpanel-progress">
+    <statusbarpanel class="statusbarpanel-progress" id="progress-panel" hidden="true">
       <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" mode="normal" value="0"/>
     </statusbarpanel>
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 
