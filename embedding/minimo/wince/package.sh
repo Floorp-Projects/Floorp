@@ -1,17 +1,24 @@
 #!/bin/bash
 
-if [ -z "$MOZ_OBJDIR" ]
+if [ $# -ne 2 ]
 then
-echo MOZ_OBJDIR is not set!!
-exit 1
-else
-echo MOZ_OBJDIR is $MOZ_OBJDIR
+  echo "Usage: `basename $0` OBJDIR SRCDIR"
+  exit $E_BADARGS 
 fi
 
-pushd $MOZ_OBJDIR/dist
-rm -rf wince
+OBJDIR=$1
+SRCDIR=$2
 
-echo Copying over files from MOZ_OBJDIR
+echo ---------------------------------------------------
+echo OBJDIR = $OBJDIR
+echo SRCDIR = $SRCDIR
+echo ---------------------------------------------------
+
+pushd $OBJDIR/dist
+rm -rf wince
+rm -f wince.zip
+
+echo Copying over files from OBJDIR
 
 mkdir wince
 cp -a bin/js3250.dll                                     wince
@@ -101,19 +108,22 @@ echo Copying over customized files
 
 popd
 
-cp -a all.js                                            $MOZ_OBJDIR/dist/wince/greprefs
+pushd $SRCDIR
+
+cp -a all.js                                            $OBJDIR/dist/wince/greprefs
 
 echo Applying SSR
 
-cat ../smallScreen.css >>                               $MOZ_OBJDIR/dist/wince/res/ua.css
+cat ../smallScreen.css >>                               $OBJDIR/dist/wince/res/ua.css
 
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
-cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $MOZ_OBJDIR/dist/wince
+cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/wince
 
 echo Zipping
 
-rm -f $MOZ_OBJDIR/dist/wince.zip
-zip -r $MOZ_OBJDIR/dist/wince.zip $MOZ_OBJDIR/dist/wince
+zip -r $OBJDIR/dist/wince.zip $OBJDIR/dist/wince
+
+popd
 
 echo Done.

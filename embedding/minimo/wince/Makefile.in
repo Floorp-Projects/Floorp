@@ -68,7 +68,12 @@ CPPSRCS		= \
 		winEmbed.cpp \
 		WindowCreator.cpp \
 		SplashScreen.cpp \
+		nsConsoleWriter.cpp \
 	    $(NULL)
+
+
+# this should move into the toolkit!
+CPPSRCS += nsBrowserStatusFilter.cpp
 
 RCINCLUDE = SplashScreen.rc
 
@@ -82,7 +87,7 @@ LIBS		= \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-LOCAL_INCLUDES	= -I$(srcdir)
+LOCAL_INCLUDES	= -I$(srcdir) -I$(topsrcdir)/xpfe/browser/src/
 
 include $(topsrcdir)/config/config.mk
 
@@ -113,4 +118,10 @@ include $(topsrcdir)/config/static-rules.mk
 
 endif # BUILD_STATIC_LIBS
 
+export::
+	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserStatusFilter.cpp .
 
+GARBAGE += nsBrowserStatusFilter.cpp
+
+installer::
+	bash $(srcdir)/package.sh  $(MOZ_BUILD_ROOT) $(srcdir)

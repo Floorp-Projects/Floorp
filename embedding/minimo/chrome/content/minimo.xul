@@ -63,18 +63,19 @@
   <toolbox>
     <toolbar id="nav-bar"  >
 
-<!--
-	<menubar id="sample-menubar" class="chromeclass-menubar">
-	    <menu id="file-menu" label="?" style="margin:0px;">
-	      <menupopup id="file-popup">
-	        <menuitem label="new Tab" oncommand="addTab()" />
-	      </menupopup>
-	    </menu>
-	</menubar>
--->
-<!-- try also the following style with the toolbarbutton... type="menu-button"  --> 
+<menubar  class="chromeclass-menubar">
+  <menu id="menu-button" >
+   <menupopup id="menu_FilePopup">
+     <menuitem id="menu_close"/>
+     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
+               key="key_closeWindow" label="about"/>
+     <menuitem label="new Tab" oncommand="BrowserOpenTab()" />
 
-	  <toolbarbutton id="tabnew" label="+" oncommand="BrowserAddTab()" />
+   </menupopup>
+
+  </menu>
+ </menubar>
+
         <toolbarbutton id="back-button"    image="chrome://minimo/skin/back.gif"    onclick="BrowserBack()"/>  
         <toolbarbutton id="forward-button" image="chrome://minimo/skin/forward.gif" onclick="BrowserForward()"/>  
         <toolbarbutton id="reload-stop-button"  image="chrome://minimo/skin/reload.gif"  onclick="BrowserReload()"/>
@@ -85,7 +86,7 @@
   <hbox flex="1" >
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
-        <tabbrowser context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserAddTab()"/>
+        <tabbrowser context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>
   </hbox>

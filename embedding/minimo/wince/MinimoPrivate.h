@@ -100,4 +100,9 @@ void CreateSplashScreen();
 void KillSplashScreen();
 void GetScreenSize(unsigned long* x, unsigned long* y);
 
+void WriteConsoleLog();
+
+
+#include "nsBrowserStatusFilter.h"
+
 #endif // MINIMO_PRIVATE_H

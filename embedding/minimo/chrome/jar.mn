@@ -6,6 +6,7 @@ minimo.jar:
 	locale/en-US/minimo/minimo.dtd	 (locale/en-US/minimo.dtd)
 	skin/classic/minimo/contents.rdf (skin/contents.rdf)
 	skin/classic/minimo/minimo.css   (skin/minimo.css)
+	skin/classic/minimo/m.jpg        (skin/m.jpg)
 	skin/classic/minimo/back.gif     (skin/back.gif)
 	skin/classic/minimo/forward.gif  (skin/forward.gif)
 	skin/classic/minimo/reload.gif   (skin/reload.gif)
