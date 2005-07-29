@@ -1,4 +1,5 @@
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+# vim: syntax=perl
 ################################
 # Bugzilla Module              #
 ################################
@@ -41,6 +42,7 @@ sub RegisterConfig {
       # [ name, save?, settable? ]
         ['bugsURI', 1, 1, 'http://bugzilla.mozilla.org/'], 
         ['bugsDWIMQueryDefault', 1, 1, 'short_desc_type=substring&short_desc='], 
+        ['bugsDWIMQueryChannelDefault', 1, 1, {}],
         ['bugsHistory', 0, 0, {}], 
         ['backoffTime', 1, 1, 120], 
         ['ignoreCommentsTo', 1, 1, ['']],
@@ -294,7 +296,11 @@ sub FetchBug {
         $type = 'xml';
     } elsif ($subtype eq 'dwim') {
         # XXX should escape query string
-        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&$self->{'bugsDWIMQueryDefault'}".join(',',@ids);
+        my $DWIMdefaultQuery = $self->{'bugsDWIMQueryDefault'};
+        if (exists $self->{'bugsDWIMQueryChannelDefault'}->{$event->{'channel'}}) {
+            $DWIMdefaultQuery = $self->{'bugsDWIMQueryChannelDefault'}->{$event->{'channel'}};
+        }
+        $uri = "$self->{'bugsURI'}buglist.cgi?format=rdf&$DWIMdefaultQuery".join(',',@ids);
         $subtype = 'bugs';
         $type = 'buglist';
     } else {
