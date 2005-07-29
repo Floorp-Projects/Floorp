@@ -900,9 +900,17 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
         prev = prev->prev;
     }
     while (next) {
-        path = JS_sprintf_append(path, "%s(%s).",
-                                 next->name,
-                                 gc_object_class_name(next->thing));
+        uint8 nextFlags = *js_GetGCThingFlags(next->thing);
+        if ((nextFlags & GCF_TYPEMASK) == GCX_OBJECT) {
+            path = JS_sprintf_append(path, "%s(%s @ 0x%08p).",
+                                     next->name,
+                                     gc_object_class_name(next->thing),
+                                     (JSObject*)next->thing);
+        } else {
+            path = JS_sprintf_append(path, "%s(%s).",
+                                     next->name,
+                                     gc_object_class_name(next->thing));
+        }
         next = next->next;
     }
     if (!path)
