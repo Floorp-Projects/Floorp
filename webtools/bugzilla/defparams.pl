@@ -209,6 +209,15 @@ sub check_user_verify_class {
     return "";
 }
 
+sub check_image_converter {
+    my ($value, $hash) = @_;
+    if ($value == 1){
+       eval "require Image::Magick";
+       return "Error requiring Image::Magick: '$@'" if $@;
+    } 
+    return "";
+}
+
 sub check_languages {
     my @languages = split /[,\s]+/, trim($_[0]);
     if(!scalar(@languages)) {
@@ -1290,6 +1299,16 @@ Reason: %reason%
    type => 't',
    default => '0',
    checker => \&check_numeric
+  },
+  
+  {
+   name => 'convert_uncompressed_images',
+   desc => 'If this option is on, attachments with content type image/bmp ' .
+           'will be converted to image/png and compressed before uploading to'.
+           'the database to conserve disk space.',
+   type => 'b',
+   default => 0,
+   checker => \&check_image_converter
   },
 
   {

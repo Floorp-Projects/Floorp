@@ -44,7 +44,12 @@
       </h2>
 
       [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = bugid %]
-
+      [% IF convertedbmp %]
+        <p>
+          <b>Note:</b> [% terms.Bugzilla %] automatically converted your BMP image file to a 
+          compressed PNG format.
+        </p>
+      [% END %]
       [% IF contenttypemethod == 'autodetect' %]
         <p>
           <b>Note:</b> [% terms.Bugzilla %] automatically detected the content type

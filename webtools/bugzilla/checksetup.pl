@@ -368,6 +368,7 @@ my $xmlparser   = have_vers("XML::Parser",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
 my $patchreader = have_vers("PatchReader","0.9.4");
+my $imagemagick = have_vers("Image::Magick",0);
 
 print "\n" unless $silent;
 
@@ -391,6 +392,14 @@ if (!$xmlparser && !$silent) {
           "or from other bugzilla installations, you will need to install\n ",
           "the XML::Parser module by running (as $::root):\n\n",
     "   " . install_command("XML::Parser") . "\n\n";
+}
+if (!$imagemagick && !$silent) {
+    print "If you want to convert BMP image attachments to PNG to conserve\n",
+          "disk space, you will need to install the ImageMagick application\n ",
+          "Available from http://www.imagemagick.org, and the Image::Magick",
+          "Perl module by running (as $::root):\n\n",
+    "   " . install_command("Image::Magick") . "\n\n";
+
 }
 if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
     print "If you you want to see graphical bug reports (bar, pie and line ";

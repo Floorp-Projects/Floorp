@@ -24,6 +24,7 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Alexander J. Vincent <ajvincent@juno.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Greg Hendricks <ghendricks@novell.com>
 
 ################################################################################
 # Script Initialization
@@ -335,7 +336,22 @@ sub validateData
   $data
     || ($cgi->param('bigfile'))
     || ThrowUserError("zero_length_file");
-
+    
+    # Windows screenshots are usually uncompressed BMP files which
+    # makes for a quick way to eat up disk space. Let's compress them. 
+    # We do this before we check the size since the uncompressed version
+    # could easily be greater than maxattachmentsize.
+    if (Param('convert_uncompressed_images') && $cgi->param('contenttype') eq 'image/bmp'){
+      require Image::Magick; 
+      my $img = Image::Magick->new(magick=>'bmp');
+      $img->BlobToImage($data);
+      $img->set(magick=>'png');
+      my $imgdata = $img->ImageToBlob();
+      $data = $imgdata;
+      $cgi->param('contenttype', 'image/png');
+      $vars->{'convertedbmp'} = 1;
+    }
+    
   # Make sure the attachment does not exceed the maximum permitted size
   my $len = $data ? length($data) : 0;
   if ($maxsize && $len > $maxsize) {
@@ -891,9 +907,11 @@ sub insert
     ValidateComment(scalar $cgi->param('comment'));
     my $filename = validateFilename();
     validateIsPatch();
-    my $data = validateData();
     validateDescription();
+    # need to validate content type before data as
+    # we now check the content type for image/bmp in validateData()
     validateContentType() unless $cgi->param('ispatch');
+    my $data = validateData();
 
     my @obsolete_ids = ();
     @obsolete_ids = validateObsolete() if $cgi->param('obsolete');
