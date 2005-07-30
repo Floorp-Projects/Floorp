@@ -743,9 +743,14 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
 
   JSContext* cx = (JSContext*)aContext->GetNativeContext();
   JSObject* scriptObject = (JSObject*) aScriptObject;
+  JSObject* tmp, *global = scriptObject;
 
-  return nsXBLBinding::DoInitJSClass(cx, ::JS_GetGlobalObject(cx),
-                                     scriptObject, aClassName, aClassObject);
+  while ((tmp = ::JS_GetParent(cx, global))) {
+    global = tmp;
+  }
+
+  return nsXBLBinding::DoInitJSClass(cx, global, scriptObject, aClassName,
+                                     aClassObject);
 }
 
 nsIContent*

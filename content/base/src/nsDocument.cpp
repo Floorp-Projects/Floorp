@@ -96,6 +96,7 @@
 #include "nsIPrivateDOMImplementation.h"
 
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 
 #include "nsIBoxObject.h"
@@ -2914,11 +2915,19 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 NS_IMETHODIMP
 nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 {
-  if (mScriptGlobalObject) {
-    return CallQueryInterface(mScriptGlobalObject, aDefaultView);
+  *aDefaultView = nsnull;
+
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobalObject));
+
+  if (win) {
+    // The default view is our outer window.
+    if (!win->IsInnerWindow()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    return CallQueryInterface(win->GetOuterWindow(), aDefaultView);
   }
 
-  *aDefaultView = nsnull;
   return NS_OK;
 }
 

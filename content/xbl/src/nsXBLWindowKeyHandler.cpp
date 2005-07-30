@@ -51,7 +51,6 @@
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIXBLDocumentInfo.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsXBLAtoms.h"
 #include "nsINativeKeyBindings.h"

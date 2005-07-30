@@ -988,7 +988,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
 
       nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
       xpConnect->GetWrappedNativeOfNativeObject(jscontext,
-                                                JS_GetGlobalObject(jscontext),
+                                                global->GetGlobalJSObject(),
                                                 aContent,
                                                 NS_GET_IID(nsISupports),
                                                 getter_AddRefs(wrapper));

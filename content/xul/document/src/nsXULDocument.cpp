@@ -3505,7 +3505,9 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
 
     nsCOMPtr<nsIScriptContext> context;
     if (mScriptGlobalObject && (context = mScriptGlobalObject->GetContext()))
-        rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
+        rv = context->ExecuteScript(aScriptObject,
+                                    mScriptGlobalObject->GetGlobalJSObject(),
+                                    nsnull, nsnull);
 
     return rv;
 }

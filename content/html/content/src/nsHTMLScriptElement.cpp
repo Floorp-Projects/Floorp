@@ -207,12 +207,13 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   // Get the script context...
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsCOMPtr<nsIScriptContext> scriptContext;
+  nsIScriptGlobalObject *sgo;
 
   mOuter->GetOwnerDocument(getter_AddRefs(domdoc));
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc) {
-    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+    sgo = doc->GetScriptGlobalObject();
     if (sgo) {
       scriptContext = sgo->GetContext();
     }
@@ -227,7 +228,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   JSObject *scriptObject = nsnull;
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsContentUtils::XPConnect()->WrapNative(cx, ::JS_GetGlobalObject(cx),
+  nsContentUtils::XPConnect()->WrapNative(cx, sgo->GetGlobalJSObject(),
                                           aTargetObject,
                                           NS_GET_IID(nsISupports),
                                           getter_AddRefs(holder));

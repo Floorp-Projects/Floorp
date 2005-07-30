@@ -461,9 +461,10 @@ public:
   virtual nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
   
   /**
-   * Set the object from which a document can get a script context.
-   * This is the context within which all scripts (during document 
-   * creation and during event handling) will run.
+   * Get/set the object from which a document can get a script context
+   * and scope. This is the context within which all scripts (during
+   * document creation and during event handling) will run. Note that
+   * this is the *inner* window object.
    */
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;

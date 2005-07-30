@@ -112,6 +112,12 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::GetScriptableFlags(PRUint32 *aFlags)
 #ifdef XPC_MAP_WANT_MARK
     nsIXPCScriptable::WANT_MARK |
 #endif
+#ifdef XPC_MAP_WANT_EQUALITY
+    nsIXPCScriptable::WANT_EQUALITY |
+#endif
+#ifdef XPC_MAP_WANT_OUTER_OBJECT
+    nsIXPCScriptable::WANT_OUTER_OBJECT |
+#endif
 
 #ifdef XPC_MAP_FLAGS
     XPC_MAP_FLAGS |
@@ -208,6 +214,16 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Mark(nsIXPConnectWrappedNative *wrapper, JSCont
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
+#ifndef XPC_MAP_WANT_EQUALITY
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsval val, PRBool *bp)
+    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#endif
+
+#ifndef XPC_MAP_WANT_OUTER_OBJECT
+NS_IMETHODIMP XPC_MAP_CLASSNAME::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, JSObject * *_retval)
+    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
+#endif
+
 /**************************************************************/
 
 #undef XPC_MAP_CLASSNAME
@@ -279,6 +295,14 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Mark(nsIXPConnectWrappedNative *wrapper, JSCont
 
 #ifdef XPC_MAP_WANT_MARK
 #undef XPC_MAP_WANT_MARK
+#endif
+
+#ifdef XPC_MAP_WANT_EQUALITY
+#undef XPC_MAP_WANT_EQUALITY
+#endif
+
+#ifdef XPC_MAP_WANT_OUTER_OBJECT
+#undef XPC_MAP_WANT_OUTER_OBJECT
 #endif
 
 #ifdef XPC_MAP_FLAGS

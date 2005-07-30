@@ -7815,7 +7815,7 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
     }
     
     // we promise that the nsIWebBrowserFind that we return has been set
-    // up to point to the focussed, or content window, so we have to
+    // up to point to the focused, or content window, so we have to
     // set that up each time.
 
     nsIScriptGlobalObject* scriptGO = GetScriptGlobalObject();
@@ -7825,17 +7825,17 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
     nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(scriptGO);
     nsCOMPtr<nsIDOMWindow> windowToSearch = rootWindow;
 
-    // if we can, search the focussed window
+    // if we can, search the focused window
     nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(scriptGO);
     nsIFocusController *focusController = nsnull;
     if (ourWindow)
         focusController = ourWindow->GetRootFocusController();
     if (focusController)
     {
-        nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
-        focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
-        if (focussedWindow)
-            windowToSearch = focussedWindow;
+        nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+        focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+        if (focusedWindow)
+            windowToSearch = focusedWindow;
     }
 
     nsCOMPtr<nsIWebBrowserFindInFrames> findInFrames = do_QueryInterface(mFind);

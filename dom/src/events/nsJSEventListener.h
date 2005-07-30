@@ -51,7 +51,8 @@ class nsJSEventListener : public nsIDOMEventListener,
                           public nsIJSEventListener
 {
 public:
-  nsJSEventListener(nsIScriptContext *aContext, nsISupports* aObject);
+  nsJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
+                    nsISupports* aObject);
   virtual ~nsJSEventListener();
 
   NS_DECL_ISUPPORTS
@@ -73,11 +74,6 @@ protected:
 
   nsReturnResult mReturnResult;
 };
-
-/* factory function */
-nsresult NS_NewJSEventListener(nsIDOMEventListener **aInstancePtrResult,
-                               nsIScriptContext *aContext,
-                               nsISupports *aObject);
 
 #endif //nsJSEventListener_h__
 

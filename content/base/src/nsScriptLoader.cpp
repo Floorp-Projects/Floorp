@@ -749,9 +749,9 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   mCurrentScript = aRequest->mElement;
 
   PRBool isUndefined;
-  context->EvaluateString(aScript, nsnull, principal, url.get(),
-                          aRequest->mLineNo, aRequest->mJSVersion, nsnull,
-                          &isUndefined);
+  context->EvaluateString(aScript, globalObject->GetGlobalJSObject(),
+                          principal, url.get(), aRequest->mLineNo,
+                          aRequest->mJSVersion, nsnull, &isUndefined);
 
   // Put the old script back in case it wants to do anything else.
   mCurrentScript = oldCurrent;

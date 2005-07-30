@@ -104,6 +104,7 @@ public:
     virtual JSObject *GetGlobalJSObject();
     virtual void OnFinalize(JSObject *aObject);
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+    virtual nsresult SetNewArguments(JSObject *aArguments);
 
     // nsIScriptObjectPrincipal methods
     virtual nsIPrincipal* GetPrincipal();
@@ -932,6 +933,12 @@ nsXULPDGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
     // We don't care...
 }
 
+nsresult
+nsXULPDGlobalObject::SetNewArguments(JSObject *aArguments)
+{
+    NS_NOTREACHED("waaah!");
+    return NS_ERROR_UNEXPECTED;
+}
 
 //----------------------------------------------------------------------
 //

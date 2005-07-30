@@ -43,6 +43,7 @@
 #include "nsIXPCScriptable.h"
 #include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptContext.h"
 
 class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
@@ -153,9 +154,18 @@ public:
 
   static PRBool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
   {
-    NS_PRECONDITION(sXPCNativeWrapperClass,
-                    "Must know what the XPCNativeWrapper class is!");
-    return ::JS_GetClass(cx, obj) == sXPCNativeWrapperClass;
+#ifdef DEBUG
+    {
+      nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
+
+      NS_PRECONDITION(!scx || !scx->IsContextInitialized() ||
+                      sXPCNativeWrapperClass,
+                      "Must know what the XPCNativeWrapper class is!");
+    }
+#endif
+
+    return sXPCNativeWrapperClass &&
+      ::JS_GetClass(cx, obj) == sXPCNativeWrapperClass;
   }
 
   /**
@@ -422,9 +432,10 @@ public:
                         JSObject **objp, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
-
-  static nsresult OnDocumentChanged(JSContext *cx, JSObject *obj,
-                                    nsIDOMWindow *window);
+  NS_IMETHOD Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                      JSObject * obj, jsval val, PRBool *bp);
+  NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                         JSObject * obj, JSObject * *_retval);
 
   static JSBool JS_DLL_CALLBACK GlobalScopePolluterNewResolve(JSContext *cx,
                                                               JSObject *obj,
@@ -438,10 +449,8 @@ public:
   static JSBool JS_DLL_CALLBACK SecurityCheckOnSetProp(JSContext *cx,
                                                        JSObject *obj, jsval id,
                                                        jsval *vp);
-  static JSObject *GetInvalidatedGlobalScopePolluter(JSContext *cx,
-                                                     JSObject *obj);
+  static void InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
-                                             JSObject *oldPolluter,
                                              nsIHTMLDocument *doc);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -472,6 +481,30 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsLocationSH(aData);
+  }
+};
+
+
+// Navigator scriptable helper
+
+class nsNavigatorSH : public nsDOMGenericSH
+{
+protected:
+  nsNavigatorSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsNavigatorSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsNavigatorSH(aData);
   }
 };
 

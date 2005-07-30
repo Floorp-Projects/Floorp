@@ -43,8 +43,8 @@
 #include "nsString.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
-{ 0xa6cf9064, 0x15b3, 0x11d2,               \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
+{ 0xbac2482a, 0x456e, 0x4ea5,               \
+  { 0x83, 0xfb, 0x16, 0xe1, 0x24, 0x9c, 0x16, 0x6f } }
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
@@ -56,10 +56,6 @@ public:
 
   NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
                               nsIScriptContext **aContext) = 0;
-
-  NS_IMETHOD NewJSEventListener(nsIScriptContext *aContext,
-                                nsISupports* aObject,
-                                nsIDOMEventListener ** aInstancePtrResult) = 0;
 
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
                                    nsIScriptGlobalObject **aGlobal) = 0;

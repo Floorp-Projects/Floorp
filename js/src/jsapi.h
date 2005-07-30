@@ -815,7 +815,13 @@ struct JSClass {
 struct JSExtendedClass {
     JSClass             base;
     JSEqualityOp        equality;
-    jsword              reserved[7];
+    JSObjectOp          outerObject;
+    jsword              reserved0;
+    jsword              reserved1;
+    jsword              reserved2;
+    jsword              reserved3;
+    jsword              reserved4;
+    jsword              reserved5;
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
@@ -853,7 +859,7 @@ struct JSExtendedClass {
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
-#define JSCLASS_NO_RESERVED_MEMBERS     {0,0,0,0,0,0,0}
+#define JSCLASS_NO_RESERVED_MEMBERS     0,0,0,0,0,0
 
 /* For detailed comments on these function pointer types, see jspubtd.h. */
 struct JSObjectOps {

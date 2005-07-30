@@ -740,13 +740,12 @@ GetIdentityObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper;
 
-    if (XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    if(XPCNativeWrapper::IsNativeWrapper(cx, obj))
         wrapper = XPCNativeWrapper::GetWrappedNative(cx, obj);
-    } else {
+    else
         wrapper = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
-    }
 
-    if (!wrapper) {
+    if(!wrapper) {
         return nsnull;
     }
 
@@ -756,18 +755,68 @@ GetIdentityObject(JSContext *cx, JSObject *obj)
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_WN_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
-  if (JSVAL_IS_PRIMITIVE(v)) {
     *bp = JS_FALSE;
 
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
+
+    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
+    if(si && si->GetFlags().WantEquality())
+    {
+        nsresult rv = si->GetCallback()->Equality(wrapper, cx, obj, v, bp);
+
+        if(NS_FAILED(rv))
+            return Throw(rv, cx);
+    }
+    else if(!JSVAL_IS_PRIMITIVE(v))
+    {
+        JSObject *other = JSVAL_TO_OBJECT(v);
+
+        *bp = (obj == other ||
+               GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+    }
+
     return JS_TRUE;
-  }
+}
 
-  JSObject *other = JSVAL_TO_OBJECT(v);
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
+{
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    if(!wrapper)
+    {
+        Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
-  *bp = (obj == other ||
-         GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+        return nsnull;
+    }
 
-  return JS_TRUE;
+    if(!wrapper->IsValid())
+    {
+        Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);
+
+        return nsnull;
+    }
+
+    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
+    if(si && si->GetFlags().WantOuterObject())
+    {
+        JSObject *newThis;
+        nsresult rv =
+            si->GetCallback()->OuterObject(wrapper, cx, obj, &newThis);
+
+        if(NS_FAILED(rv))
+        {
+            Throw(rv, cx);
+
+            return nsnull;
+        }
+
+        obj = newThis;
+    }
+
+    return obj;
 }
 
 
@@ -798,7 +847,8 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
         XPC_WN_Shared_Mark,             // mark;
         nsnull                          // spare;
     },
-    XPC_WN_Equality
+    XPC_WN_Equality,
+    XPC_WN_OuterObject
 };
 
 
@@ -1326,6 +1376,7 @@ XPCNativeScriptableShared::PopulateJSClass()
         mJSClass.base.mark = XPC_WN_Shared_Mark;
 
     mJSClass.equality = XPC_WN_Equality;
+    mJSClass.outerObject = XPC_WN_OuterObject;
 }
 
 /***************************************************************************/

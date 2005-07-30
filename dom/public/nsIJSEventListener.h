@@ -43,6 +43,7 @@
 class nsIScriptObjectOwner;
 class nsIDOMEventListener;
 class nsIAtom;
+struct JSObject;
 
 #define NS_IJSEVENTLISTENER_IID     \
 { 0xa6cf9118, 0x15b3, 0x11d2,       \
@@ -55,8 +56,9 @@ class nsIJSEventListener : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  nsIJSEventListener(nsIScriptContext *aContext, nsISupports *aTarget)
-    : mContext(aContext), mTarget(aTarget)
+  nsIJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
+                     nsISupports *aTarget)
+    : mContext(aContext), mScopeObject(aScopeObject), mTarget(aTarget)
   {
     // mTarget is a weak reference. We are guaranteed because of the
     // ownership model that the target will be freed (and the
@@ -76,6 +78,11 @@ public:
     return mTarget;
   }
 
+  JSObject *GetEventScope()
+  {
+    return mScopeObject;
+  }
+
   virtual void SetEventName(nsIAtom* aName) = 0;
 
 protected:
@@ -85,7 +92,13 @@ protected:
   }
 
   nsIScriptContext *mContext;
+  JSObject *mScopeObject;
   nsISupports *mTarget;
 };
+
+/* factory function */
+nsresult NS_NewJSEventListener(nsIScriptContext *aContext,
+                               JSObject *aScopeObject, nsISupports *aObject,
+                               nsIDOMEventListener **aReturn);
 
 #endif // nsIJSEventListener_h__

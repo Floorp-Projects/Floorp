@@ -135,13 +135,23 @@ nsXBLProtoImplMethod::InstallMember(nsIScriptContext* aContext,
   NS_PRECONDITION(mIsCompiled,
                   "Should not be installing an uncompiled method");
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
+
+  nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
+  nsIScriptGlobalObject *sgo;
+
+  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
+    NS_ERROR("Can't find global object for bound content!");
+ 
+    return NS_ERROR_UNEXPECTED;
+  }
+
   JSObject * scriptObject = (JSObject *) aScriptObject;
   NS_ASSERTION(scriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
   if (!scriptObject)
     return NS_ERROR_FAILURE;
 
   JSObject * targetClassObject = (JSObject *) aTargetClassObject;
-  JSObject * globalObject = ::JS_GetGlobalObject(cx);
+  JSObject * globalObject = sgo->GetGlobalJSObject();
 
   // now we want to reevaluate our property using aContext and the script object for this window...
   if (mJSMethodObject && targetClassObject) {
@@ -290,7 +300,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   
   JSContext* cx = (JSContext*) context->GetNativeContext();
 
-  JSObject* globalObject = ::JS_GetGlobalObject(cx);
+  JSObject* globalObject = global->GetGlobalJSObject();
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
   nsresult rv =

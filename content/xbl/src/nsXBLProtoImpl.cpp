@@ -114,10 +114,19 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
       return NS_OK; // This can be ok, if all we've got are fields (and no methods/properties).
   }
 
+  nsIDocument *ownerDoc = aBoundElement->GetOwnerDoc();
+  nsIScriptGlobalObject *sgo;
+
+  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
+    NS_ERROR("Can't find global object for bound content!");
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // Because our prototype implementation has a class, we need to build up a corresponding
   // class for the concrete implementation in the bound document.
   JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
-  JSObject* global = ::JS_GetGlobalObject(jscontext);
+  JSObject* global = sgo->GetGlobalJSObject();
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
   rv = nsContentUtils::XPConnect()->WrapNative(jscontext, global,
                                                aBoundElement,
@@ -165,7 +174,9 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
   void* classObject;
-  nsresult rv = aBinding->InitClass(mClassName, context, nsnull, &classObject);
+  nsresult rv = aBinding->InitClass(mClassName, context,
+                                    globalObject->GetGlobalJSObject(),
+                                    &classObject);
   if (NS_FAILED(rv))
     return rv;
 

@@ -107,6 +107,13 @@ public:
    * Called to enable/disable scripts.
    */
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
+
+  /** Set a new arguments object for this window. This will be set on
+   * the window right away (if there's an existing document) and it
+   * will also be installed on the window when the next document is
+   * loaded.
+   */
+  virtual nsresult SetNewArguments(JSObject *aArguments) = 0;
 };
 
 #endif

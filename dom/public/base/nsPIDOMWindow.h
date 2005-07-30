@@ -93,46 +93,94 @@ public:
   virtual nsresult Activate() = 0;
   virtual nsresult Deactivate() = 0;
 
-  nsIChromeEventHandler* GetChromeEventHandler()
-  {  
+  nsIChromeEventHandler* GetChromeEventHandler() const
+  {
     return mChromeEventHandler;
   }
 
-  PRBool HasMutationListeners(PRUint32 aMutationEventType)
+  PRBool HasMutationListeners(PRUint32 aMutationEventType) const
   {
-    return (mMutationBits & aMutationEventType) != 0;
+    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+
+    if (!win) {
+      win = this;
+    }
+
+    return (win->mMutationBits & aMutationEventType) != 0;
   }
 
-  void SetMutationListeners(PRUint32 aType) { mMutationBits |= aType; }
+  void SetMutationListeners(PRUint32 aType)
+  {
+    nsPIDOMWindow *win = GetCurrentInnerWindow();
+
+    if (!win) {
+      win = this;
+    }
+
+    win->mMutationBits |= aType;
+  }
 
   virtual nsIFocusController* GetRootFocusController() = 0;
 
   // GetExtantDocument provides a backdoor to the DOM GetDocument accessor
-  nsIDOMDocument* GetExtantDocument() { return mDocument; }
+  nsIDOMDocument* GetExtantDocument() const
+  {
+    return mDocument;
+  }
 
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
   // one doesn't for security reasons.
-  nsIDOMElement* GetFrameElementInternal() { return mFrameElement; }
+  nsIDOMElement* GetFrameElementInternal() const
+  {
+    if (IsInnerWindow()) {
+      return mOuterWindow->GetFrameElementInternal();
+    }
+
+    return mFrameElement;
+  }
+
   void SetFrameElementInternal(nsIDOMElement *aFrameElement)
   {
+    if (IsInnerWindow()) {
+      mOuterWindow->SetFrameElementInternal(aFrameElement);
+    }
+
     mFrameElement = aFrameElement;
   }
 
   PRBool IsLoadingOrRunningTimeout() const
   {
-    return !mIsDocumentLoaded || mRunningTimeout;
+    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+
+    if (!win) {
+      win = this;
+    }
+
+    return !win->mIsDocumentLoaded || win->mRunningTimeout;
   }
 
   // Check whether a document is currently loading
   PRBool IsLoading() const
   {
-    return !mIsDocumentLoaded;
+    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+
+    if (!win) {
+      win = this;
+    }
+
+    return !win->mIsDocumentLoaded;
   }
 
   PRBool IsHandlingResizeEvent() const
   {
-    return mIsHandlingResizeEvent;
+    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+
+    if (!win) {
+      win = this;
+    }
+
+    return win->mIsHandlingResizeEvent;
   }
 
   virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
@@ -143,30 +191,62 @@ public:
   virtual PopupControlState GetPopupControlState() const = 0;
   virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
 
-    // Returns an object containing the window's state.  This also suspends
+  // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.
   virtual nsresult SaveWindowState(nsISupports **aState) = 0;
 
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
 
+  nsPIDOMWindow *GetOuterWindow()
+  {
+    return mOuterWindow ? mOuterWindow : this;
+  }
+
+  nsPIDOMWindow *GetCurrentInnerWindow() const
+  {
+    return mInnerWindow;
+  }
+
+  PRBool IsInnerWindow() const
+  {
+    return mOuterWindow != nsnull;
+  }
+
+  PRBool IsOuterWindow() const
+  {
+    return !IsInnerWindow();
+  }
+
 protected:
-  nsPIDOMWindow()
-    : mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
-      mIsHandlingResizeEvent(PR_FALSE)
+  nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
+    : mFrameElement(nsnull), mRunningTimeout(nsnull), mMutationBits(0),
+      mIsDocumentLoaded(PR_FALSE), mIsHandlingResizeEvent(PR_FALSE),
+      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
   {
   }
 
+  // These two variables are special in that they're set to the same
+  // value on both the outer window and the current inner window. Make
+  // sure you keep them in sync!
   nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // strong
   nsCOMPtr<nsIDOMDocument> mDocument; // strong
+
+  // These members are only used on outer windows.
   nsIDOMElement *mFrameElement; // weak
   nsCOMPtr<nsIURI> mOpenerScriptURL; // strong; used to determine whether to clear scope
+
+  // These variables are only used on inner windows.
   nsTimeout             *mRunningTimeout;
 
   PRUint32               mMutationBits;
 
   PRPackedBool           mIsDocumentLoaded;
   PRPackedBool           mIsHandlingResizeEvent;
+
+  // And these are the references between inner and outer windows.
+  nsPIDOMWindow         *mInnerWindow;
+  nsPIDOMWindow         *mOuterWindow;
 };
 
 
