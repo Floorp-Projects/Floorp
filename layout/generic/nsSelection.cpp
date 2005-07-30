@@ -7209,6 +7209,12 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
   {
     StCaretHider  caretHider(caret);      // stack-based class hides and shows the caret
 
+    // We are going to scroll to a character offset within a frame by
+    // using APIs on the scrollable view directly. So we need to
+    // flush out pending reflows to make sure that frames are up-to-date.
+    // We crash otherwise - bug 252970#c97
+    presShell->FlushPendingNotifications(Flush_OnlyReflow);
+
     //
     // Scroll the selection region into view.
     //
