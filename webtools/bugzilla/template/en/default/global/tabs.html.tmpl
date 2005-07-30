@@ -21,13 +21,27 @@
   #%]
 
 [%# INTERFACE:
-  # This template has no interface.
+  # tabs: List of hashes. Must have at least one item.  Each hash has:
+  #   name: string. Name of the tab.
+  #   link: string. relative URL to the tab's resource on this installation.
+  #   label: string. text displayed in the tab.
+  # current_tab_name: string. name of the currently selected tab
   #%]
 
-[% PROCESS global/tabs.html.tmpl
-     tabs = [ { name => 'specific', label => "Find a Specific $terms.Bug",
-                link => "query.cgi?format=specific" },
-              { name => 'advanced', label => "Advanced Search",
-                link => "query.cgi?format=advanced" } ]
-     current_tab_name = query_format || format || "advanced"
-%]
+<center>
+  <table cellspacing="0" cellpadding="10" border="0" width="100%">
+    <tr>
+      <td class="tab spacer">&nbsp;</td>
+
+      [% FOREACH tab = tabs %]
+        [% IF tab.name == current_tab_name %]
+          <td class="tab selected">[% tab.label %]</td>
+        [% ELSE %]
+          <td class="tab"><a href="[% tab.link %]">[% tab.label %]</a></td>
+        [% END %]
+      [% END %]
+
+       <td class="tab spacer">&nbsp;</td>
+     </tr>
+   </table>
+</center>

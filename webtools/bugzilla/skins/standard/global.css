@@ -313,21 +313,24 @@ body
     padding: 1em 0;
 }
 
-.selected_tab
-{
-    background: #fff;
-    border: 1px solid black;
-}
-
-.unselected_tab
+td.tab
 {
     background: #eee;
-    border: 1px solid black;
+    text-align: center;
+    border-style: solid;
+    border-color: black;
+    border-width: 0px 0px 2px 0px;
+}
+    
+td.tab.selected
+{
+    background: white;
+    border-width: 2px 2px 0px 2px;
 }
 
-.spacer
+td.tab.spacer
 {
-    border: 1px solid black;
+    background: white;
 }
 
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }

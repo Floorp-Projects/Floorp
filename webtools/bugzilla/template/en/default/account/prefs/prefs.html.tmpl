@@ -38,57 +38,33 @@
 [% PROCESS global/header.html.tmpl
    title = "User Preferences"
    h2 = filtered_login
-   style = "td.selected_tab {
-              border-width: 2px 2px 0px;
-              border-style: solid; 
-              border-color: black;
-            }
-            td.unselected_tab, td.spacer {
-              border-width: 0px 0px 2px 0px;
-              border-style: solid; 
-              border-color: black;
-            }"
  %]
 
-[% tabs = [ { name => "account", description => "Account Preferences", 
-              saveable => "1" },
-            { name => "settings", description => "General Preferences", 
-              saveable => "1" }, 
-            { name => "email", description => "Email Preferences", 
-              saveable => "1" },
-            { name => "saved-searches", description => "Saved searches", 
-              saveable => "1" },
-            { name => "permissions", description => "Permissions", 
-              saveable => "0" } ] %]
+[% tabs = [ { name => "account", label => "Account Preferences", 
+              link => "userprefs.cgi?tab=account", saveable => "1" },
+            { name => "settings", label => "General Preferences", 
+              link => "userprefs.cgi?tab=settings", saveable => "1" },
+            { name => "email", label => "Email Preferences", 
+              link => "userprefs.cgi?tab=email", saveable => "1" },
+            { name => "saved-searches", label => "Saved searches", 
+              link => "userprefs.cgi?tab=saved-searches", saveable => "1" },
+            { name => "permissions", label => "Permissions", 
+              link => "userprefs.cgi?tab=permissions", saveable => "0" } ] %]
 
-<center>
-  <table cellspacing="0" cellpadding="10" border="0" width="100%">
-    <tr>
-      <td class="spacer">&nbsp;</td>
- 
-      [% FOREACH tab = tabs %]
-        [% IF tab.name == current_tab_name %]
-          [% current_tab = tab %]
-          <td align="center" bgcolor="lightblue" class="selected_tab">
-            [% tab.description %]
-          </td>
-        [% ELSE %]
-          <td align="center" bgcolor="#BBBBEE" class="unselected_tab">
-            <a href="userprefs.cgi?tab=[% tab.name %]">[% tab.description %]</a>
-          </td>
-        [% END %]
-       [% END %]
- 
-       <td class="spacer">&nbsp;</td>
-     </tr>
-   </table>
-</center>
+[% FOREACH tab IN tabs %]
+  [% IF tab.name == current_tab_name %]
+    [% current_tab=tab %]
+    [% LAST %]
+  [% END %]
+[% END %]
+
+[% PROCESS global/tabs.html.tmpl %]
 
 [% IF changes_saved %]
   <p>
     <font color="red">
       The changes to your 
-      [% current_tab.description FILTER lower %] have been saved.
+      [% current_tab.label FILTER lower %] have been saved.
     </font>
   </p>
   [% IF email_changes_saved %]
@@ -99,7 +75,7 @@
   [% END %]
 [% END %]
 
-<h3>[% current_tab.description %]</h3>
+<h3>[% current_tab.label %]</h3>
 
 <form name="userprefsform" method="post" action="userprefs.cgi">
   <input type="hidden" name="tab" value="[% current_tab.name %]">
