@@ -2140,6 +2140,20 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
+function PageProxyClickHandler(aEvent)
+{
+  switch (aEvent.button) {
+    case 0:
+      gURLBar.select();
+      break;
+    case 1:
+      if (gPrefService.getBoolPref("middlemouse.paste"))
+        middleMousePaste(aEvent);
+      break;
+  }
+  return true;
+}
+
 function URLBarOnDrop(evt)
 {
   nsDragAndDrop.drop(evt, urlbarObserver);

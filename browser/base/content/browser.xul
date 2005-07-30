@@ -209,7 +209,7 @@
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
                  oninfoclick="displaySecurityInfo();">
-          <deck id="page-proxy-deck">
+          <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
                     tooltiptext="&proxyIcon.tooltip;"/>
