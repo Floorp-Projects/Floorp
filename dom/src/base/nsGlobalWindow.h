@@ -70,6 +70,7 @@
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsITimer.h"
 #include "nsIWebBrowserChrome.h"
@@ -86,6 +87,7 @@
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "mozFlushType.h"
+#include "prclist.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -126,7 +128,8 @@ class nsGlobalWindow : public nsIScriptGlobalObject,
                        public nsIDOMNSEventTarget,
                        public nsIDOMViewCSS,
                        public nsSupportsWeakReference,
-                       public nsIInterfaceRequestor
+                       public nsIInterfaceRequestor,
+                       public PRCListStr
 {
 public:
   // public methods
@@ -155,6 +158,7 @@ public:
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(JSObject *aJSObject);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
+  virtual nsresult SetNewArguments(JSObject *aArguments);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
@@ -206,7 +210,7 @@ public:
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
-  
+
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
 
@@ -217,7 +221,37 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // Object Management
-  nsGlobalWindow();
+  nsGlobalWindow(nsGlobalWindow *aOuterWindow);
+
+  static nsGlobalWindow *FromWrapper(nsIXPConnectWrappedNative *wrapper)
+  {
+    // Make sure this matches the casts we do in QueryInterface().
+    return (nsGlobalWindow *)(nsIScriptGlobalObject *)wrapper->Native();
+  }
+
+  nsIScriptContext *GetContextInternal()
+  {
+    if (IsInnerWindow()) {
+      return GetOuterWindowInternal()->mContext;
+    }
+
+    return mContext;
+  }
+
+  nsGlobalWindow *GetOuterWindowInternal()
+  {
+    return NS_STATIC_CAST(nsGlobalWindow *, GetOuterWindow());
+  }
+
+  nsGlobalWindow *GetCurrentInnerWindowInternal()
+  {
+    return NS_STATIC_CAST(nsGlobalWindow *, mInnerWindow);
+  }
+
+  nsIDocShell *GetDocShellInternal()
+  {
+    return GetOuterWindowInternal()->mDocShell;
+  }
 
   static void ShutDown();
   static PRBool IsCallerChrome();
@@ -230,12 +264,24 @@ protected:
   void CleanUp();
   void ClearControllers();
 
+  nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                          PRBool aRemoveEventListeners,
+                          PRBool aClearScopeHint,
+                          PRBool aIsInternalCall);
+
   // Get the parent, returns null if this is a toplevel window
   nsIDOMWindowInternal *GetParentInternal();
 
   // popup tracking
-  PRBool         IsPopupSpamWindow() const { return mIsPopupSpam; }
-  void           SetPopupSpamWindow(PRBool aPopup) { mIsPopupSpam = aPopup; }
+  PRBool IsPopupSpamWindow()
+  {
+    return GetOuterWindowInternal()->mIsPopupSpam;
+  }
+
+  void SetPopupSpamWindow(PRBool aPopup)
+  {
+    GetOuterWindowInternal()->mIsPopupSpam = aPopup;
+  }
 
   // Window Control Functions
   NS_IMETHOD OpenInternal(const nsAString& aUrl,
@@ -244,6 +290,7 @@ protected:
                           PRBool aDialog, jsval *argv, PRUint32 argc,
                           nsISupports *aExtraArgument, nsIDOMWindow **aReturn);
   static void CloseWindow(nsISupports* aWindow);
+  static void ClearWindowScope(nsISupports* aWindow);
 
   // Timeout Functions
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
@@ -318,18 +365,20 @@ protected:
   // objects will keep the global object (this object) alive.  To prevent
   // these cycles, ownership of such members must be released in
   // |CleanUp| and |SetDocShell|.
-  PRPackedBool                  mFirstDocumentLoad;
-  PRPackedBool                  mIsScopeClear;
+
+  // These members are only used on outer window objects. Make sure
+  // you never set any of these on an inner object!
   PRPackedBool                  mFullScreen;
   PRPackedBool                  mIsClosed;
   PRPackedBool                  mInClose;
   PRPackedBool                  mOpenerWasCleared;
   PRPackedBool                  mIsPopupSpam;
+
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
-  nsCOMPtr<nsIEventListenerManager> mListenerManager;
   JSObject*                     mJSObject;
+  JSObject*                     mArguments;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsHistory>           mHistory;
@@ -351,19 +400,13 @@ protected:
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
-  nsEvent*                      mCurrentEvent;
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
-  nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
 
-  // XXX We need mNavigatorHolder because we make two SetNewDocument()
-  // calls when transitioning from page to page. This keeps a reference
-  // to the JSObject holder for the navigator object in between
-  // SetNewDocument() calls so that the JSObject doesn't get garbage
-  // collected in between these calls.
-  // See bug 163645 for more on why we need this and bug 209607 for info
-  // on how we can remove the need for this.
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mNavigatorHolder;
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
+
+  // This member variable is used only on the inner window.
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
@@ -384,6 +427,11 @@ public:
 
   // nsIDOMChromeWindow interface
   NS_DECL_NSIDOMCHROMEWINDOW
+
+  nsGlobalChromeWindow(nsGlobalWindow *aOuterWindow)
+    : nsGlobalWindow(aOuterWindow)
+  {
+  }
 
 protected:
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
@@ -496,6 +544,11 @@ public:
   NS_DECL_NSIDOMJSNAVIGATOR
   
   void SetDocShell(nsIDocShell *aDocShell);
+  nsIDocShell *GetDocShell()
+  {
+    return mDocShell;
+  }
+
   void LoadingNewDocument();
   nsresult RefreshMIMEArray();
 

@@ -862,6 +862,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! global)
         return NS_ERROR_UNEXPECTED;
 
+    JSObject *scope = global->GetGlobalJSObject();
+
     nsIScriptContext *context = global->GetContext();
     if (! context)
         return NS_ERROR_UNEXPECTED;
@@ -876,8 +878,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     JSObject* jselement = nsnull;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext), mRoot,
-                         NS_GET_IID(nsIDOMElement),
+    rv = xpc->WrapNative(jscontext, scope, mRoot, NS_GET_IID(nsIDOMElement),
                          getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -886,7 +887,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     {
         // database
-        rv = xpc->WrapNative(jscontext, ::JS_GetGlobalObject(jscontext), mDB,
+        rv = xpc->WrapNative(jscontext, scope, mDB,
                              NS_GET_IID(nsIRDFCompositeDataSource),
                              getter_AddRefs(wrapper));
         NS_ENSURE_SUCCESS(rv, rv);

@@ -50,6 +50,7 @@
 
 class nsIDOMElement;
 class nsIDOMWindow;
+class nsPIDOMWindow;
 class nsIController;
 class nsIControllers;
 
@@ -105,7 +106,7 @@ protected:
   void UpdateWWActiveWindow();
 
 public:
-  static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindowInternal** aWindow);
+  static nsPIDOMWindow *GetWindowFromDocument(nsIDOMDocument* aElement);
 
 // Members
 protected:

@@ -879,7 +879,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
  
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
             nsresult rv = nsContentUtils::XPConnect()->
-              WrapNative(jscontext, ::JS_GetGlobalObject(jscontext),
+              WrapNative(jscontext, global->GetGlobalJSObject(),
                          mBoundElement, NS_GET_IID(nsISupports),
                          getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
@@ -1113,11 +1113,18 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
   // Obtain the bound element's current script object.
   JSContext* cx = (JSContext*)aContext->GetNativeContext();
 
+  nsIDocument *ownerDoc = mBoundElement->GetOwnerDoc();
+  nsIScriptGlobalObject *sgo;
+
+  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
+    NS_ERROR("Can't find global object for bound content!");
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-
-  JSObject* global = ::JS_GetGlobalObject(cx);
-
-  rv = nsContentUtils::XPConnect()->WrapNative(cx, global, mBoundElement,
+  rv = nsContentUtils::XPConnect()->WrapNative(cx, sgo->GetGlobalJSObject(),
+                                               mBoundElement,
                                                NS_GET_IID(nsISupports),
                                                getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1130,7 +1137,8 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
 
   // First ensure our JS class is initialized.
 
-  rv = DoInitJSClass(cx, global, object, aClassName, aClassObject);
+  rv = DoInitJSClass(cx, sgo->GetGlobalJSObject(), object, aClassName,
+                     aClassObject);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Root mBoundElement so that it doesn't lose it's binding

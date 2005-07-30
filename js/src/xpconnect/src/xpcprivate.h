@@ -139,7 +139,7 @@
 #define DEBUG_xpc_hacker
 #endif
 
-#if defined(DEBUG_brendan) || defined(DEBUG_bzbarsky) || defined(DEBUG_jst)
+#if defined(DEBUG_brendan) || defined(DEBUG_bzbarsky)
 #define DEBUG_XPCNativeWrapper 1
 #endif
 
@@ -1433,6 +1433,8 @@ public:
     JSBool WantConstruct()                GET_IT(WANT_CONSTRUCT)
     JSBool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
     JSBool WantMark()                     GET_IT(WANT_MARK)
+    JSBool WantEquality()                 GET_IT(WANT_EQUALITY)
+    JSBool WantOuterObject()              GET_IT(WANT_OUTER_OBJECT)
     JSBool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
     JSBool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
     JSBool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)

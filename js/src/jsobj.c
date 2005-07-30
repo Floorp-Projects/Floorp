@@ -143,6 +143,9 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsid propid;
     JSAccessMode mode;
     uintN attrs;
+    JSObject *pobj;
+    JSClass *clasp;
+    JSExtendedClass *xclasp;
 
     slot = (uint32) JSVAL_TO_INT(id);
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
@@ -152,9 +155,24 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         propid = ATOM_TO_JSID(cx->runtime->atomState.parentAtom);
         mode = JSACC_PARENT;
     }
+
+    /* Let OBJ_CHECK_ACCESS get the slot's value, based on the access mode. */
     if (!OBJ_CHECK_ACCESS(cx, obj, propid, mode, vp, &attrs))
         return JS_FALSE;
-    *vp = OBJ_GET_SLOT(cx, obj, slot);
+
+    pobj = JSVAL_TO_OBJECT(*vp);
+    if (pobj) {
+        clasp = OBJ_GET_CLASS(cx, pobj);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            xclasp = (JSExtendedClass *) clasp;
+            if (xclasp->outerObject) {
+                pobj = xclasp->outerObject(cx, pobj);
+                if (!pobj)
+                    return JS_FALSE;
+                *vp = OBJECT_TO_JSVAL(pobj);
+            }
+        }
+    }
     return JS_TRUE;
 }
 
@@ -2175,7 +2193,7 @@ HidePropertyName(JSContext *cx, jsid *idp)
 {
     jsid id;
     JSAtom *atom, *hidden;
-    
+
     id = *idp;
     JS_ASSERT(JSID_IS_ATOM(id));
 

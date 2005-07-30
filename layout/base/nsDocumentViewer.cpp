@@ -840,7 +840,6 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                               getter_AddRefs(global));
 
       if (global) {
-        mDocument->SetScriptGlobalObject(global);
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
 
         if (domdoc) {
@@ -1259,14 +1258,6 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
   }
 #endif
 
-  // Break global object circular reference on the document created
-  // in the DocViewer Init
-  nsIScriptGlobalObject* globalObject = mDocument->GetScriptGlobalObject();
-
-  if (globalObject) {
-    globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
-  }
-
 #ifdef NS_PRINTING
   // A Close was called while we were printing
   // so don't clear the ScriptGlobalObject
@@ -1511,18 +1502,20 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   nsCOMPtr<nsISupports> container = do_QueryReferent(mContainer);
   newDoc->SetContainer(container);
 
-  // Replace the old document with the new one
-  mDocument = newDoc;
+  if (mDocument != newDoc) {
+    // Replace the old document with the new one. Do this only when
+    // the new document really is a new document.
+    mDocument = newDoc;
 
-  // Set the script global object on the new document
-  nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
-  if (global) {
-    mDocument->SetScriptGlobalObject(global);
-    global->SetNewDocument(aDocument, PR_TRUE, PR_TRUE);
-
-    rv = SyncParentSubDocMap();
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Set the script global object on the new document
+    nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
+    if (global) {
+      global->SetNewDocument(aDocument, PR_TRUE, PR_TRUE);
+    }
   }
+
+  rv = SyncParentSubDocMap();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Replace the current pres shell with a new shell for the new document
 
@@ -3210,7 +3203,7 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsISelectionController> selCon;
   selCon = do_QueryInterface(shell);
   PRInt16 selectionStatus;
-  selCon->GetDisplaySelection( &selectionStatus);
+  selCon->GetDisplaySelection(&selectionStatus);
 
   //if selection was nsISelectionController::SELECTION_OFF, do nothing
   //otherwise re-enable it.

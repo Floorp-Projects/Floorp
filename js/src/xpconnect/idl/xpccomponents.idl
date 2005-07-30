@@ -177,7 +177,7 @@ interface nsIXPCComponents : nsISupports
     readonly attribute nsIStackFrame                stack;
     readonly attribute nsIXPCComponents_Results     results;
     readonly attribute nsIComponentManager          manager;
-    readonly attribute nsIXPCComponents_Utils        utils;
+    readonly attribute nsIXPCComponents_Utils       utils;
 
     readonly attribute nsIXPCComponents_ID          ID;
     readonly attribute nsIXPCComponents_Exception   Exception;

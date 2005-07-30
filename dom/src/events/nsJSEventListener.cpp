@@ -51,9 +51,10 @@
 /*
  * nsJSEventListener implementation
  */
-nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
+nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
+                                     JSObject *aScopeObject,
                                      nsISupports *aObject)
-  : nsIJSEventListener(aContext, aObject),
+  : nsIJSEventListener(aContext, aScopeObject, aObject),
     mReturnResult(nsReturnResult_eNotSet)
 {
 }
@@ -119,8 +120,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // root
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), mTarget,
-                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  rv = xpc->WrapNative(cx, mScopeObject, mTarget, NS_GET_IID(nsISupports),
+                       getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject* obj = nsnull;
@@ -221,16 +222,16 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  */
 
 nsresult
-NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult,
-                      nsIScriptContext *aContext, nsISupports *aObject)
+NS_NewJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
+                      nsISupports *aObject, nsIDOMEventListener ** aReturn)
 {
-  nsJSEventListener* it = new nsJSEventListener(aContext, aObject);
+  nsJSEventListener* it =
+    new nsJSEventListener(aContext, aScopeObject, aObject);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  *aInstancePtrResult = it;
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aReturn = it);
 
   return NS_OK;
 }

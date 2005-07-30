@@ -713,7 +713,7 @@ protected:
 #endif
 
 
-private:
+protected:
 
   ~nsPresContext() NS_HIDDEN;
 

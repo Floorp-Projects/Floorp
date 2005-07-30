@@ -98,22 +98,14 @@ NS_IMPL_RELEASE(nsDOMScriptObjectFactory)
 
 NS_IMETHODIMP
 nsDOMScriptObjectFactory::NewScriptContext(nsIScriptGlobalObject *aGlobal,
-					   nsIScriptContext **aContext)
+                                           nsIScriptContext **aContext)
 {
   return NS_CreateScriptContext(aGlobal, aContext);
 }
 
 NS_IMETHODIMP
-nsDOMScriptObjectFactory::NewJSEventListener(nsIScriptContext *aContext,
-					     nsISupports *aObject,
-					     nsIDOMEventListener **aInstancePtrResult)
-{
-  return NS_NewJSEventListener(aInstancePtrResult, aContext, aObject);
-}
-
-NS_IMETHODIMP
 nsDOMScriptObjectFactory::NewScriptGlobalObject(PRBool aIsChrome,
-						nsIScriptGlobalObject **aGlobal)
+                                                nsIScriptGlobalObject **aGlobal)
 {
   return NS_NewScriptGlobalObject(aIsChrome, aGlobal);
 }
@@ -157,8 +149,8 @@ nsDOMScriptObjectFactory::GetExternalClassInfoInstance(const nsAString& aName)
 
 NS_IMETHODIMP
 nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
-				  const char *aTopic,
-				  const PRUnichar *someData)
+                                  const char *aTopic,
+                                  const PRUnichar *someData)
 {
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
 #ifdef MOZ_XUL

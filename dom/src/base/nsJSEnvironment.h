@@ -130,14 +130,18 @@ public:
 
   virtual void SetGCOnDestruction(PRBool aGCOnDestruction);
 
+  virtual nsresult InitClasses(JSObject *aGlobalObj);
+
+  virtual void WillInitializeContext();
+  virtual void DidInitializeContext();
+
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
   NS_DECL_NSITIMERCALLBACK
 
 protected:
-  nsresult InitClasses();
   nsresult InitializeExternalClasses();
-  nsresult InitializeLiveConnectClasses();
+  nsresult InitializeLiveConnectClasses(JSObject *aGlobalObj);
   // aHolder should be holding our global object
   nsresult FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder);
 
@@ -153,14 +157,16 @@ protected:
   struct TerminationFuncHolder;
   friend struct TerminationFuncHolder;
   
-  struct TerminationFuncClosure {
+  struct TerminationFuncClosure
+  {
     TerminationFuncClosure(nsScriptTerminationFunc aFunc,
                            nsISupports* aArg,
                            TerminationFuncClosure* aNext) :
       mTerminationFunc(aFunc),
       mTerminationFuncArg(aArg),
       mNext(aNext)
-    {}
+    {
+    }
     ~TerminationFuncClosure()
     {
       delete mNext;
@@ -171,14 +177,16 @@ protected:
     TerminationFuncClosure* mNext;
   };
 
-  struct TerminationFuncHolder {
-    TerminationFuncHolder(nsJSContext* aContext) :
-      mContext(aContext),
-      mTerminations(aContext->mTerminations)
+  struct TerminationFuncHolder
+  {
+    TerminationFuncHolder(nsJSContext* aContext)
+      : mContext(aContext),
+        mTerminations(aContext->mTerminations)
     {
       aContext->mTerminations = nsnull;
     }
-    ~TerminationFuncHolder() {
+    ~TerminationFuncHolder()
+    {
       // Have to be careful here.  mContext might have picked up new
       // termination funcs while the script was evaluating.  Prepend whatever
       // we have to the current termination funcs on the context (since our

@@ -1609,7 +1609,9 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   // or Release() methods are called
   mGlobalWrapperRef = holder;
 
-  rv = InitClasses(); // this will complete global object initialization
+  holder->GetJSObject(&global);
+
+  rv = InitClasses(global); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
 
   mIsInitialized = PR_TRUE;
@@ -1626,7 +1628,7 @@ nsJSContext::InitializeExternalClasses()
 }
 
 nsresult
-nsJSContext::InitializeLiveConnectClasses()
+nsJSContext::InitializeLiveConnectClasses(JSObject *aGlobalObj)
 {
   nsresult rv = NS_OK;
 
@@ -1644,7 +1646,7 @@ nsJSContext::InitializeLiveConnectClasses()
         do_QueryInterface(jvmManager);
 
       if (liveConnectManager) {
-        rv = liveConnectManager->InitLiveConnectClasses(mContext, ::JS_GetGlobalObject(mContext));
+        rv = liveConnectManager->InitLiveConnectClasses(mContext, aGlobalObj);
       }
     }
   }
@@ -1937,22 +1939,21 @@ static JSFunctionSpec JProfFunctions[] = {
 #endif /* defined(MOZ_JPROF) */
 
 nsresult
-nsJSContext::InitClasses()
+nsJSContext::InitClasses(JSObject *aGlobalObj)
 {
   nsresult rv = NS_OK;
-  JSObject *globalObj = ::JS_GetGlobalObject(mContext);
 
   rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = InitializeLiveConnectClasses();
+  rv = InitializeLiveConnectClasses(aGlobalObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsDOMClassInfo::InitDOMJSClass(mContext, globalObj);
+  rv = nsDOMClassInfo::InitDOMJSClass(mContext, aGlobalObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the options object and set default options in mContext
-  JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "_options",
+  JSObject *optionsObj = ::JS_DefineObject(mContext, aGlobalObj, "_options",
                                            &OptionsClass, nsnull, 0);
   if (optionsObj &&
       ::JS_DefineProperties(mContext, optionsObj, OptionsProperties)) {
@@ -1963,15 +1964,27 @@ nsJSContext::InitClasses()
 
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
-  ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, TraceMallocFunctions);
 #endif
 
 #ifdef MOZ_JPROF
   // Attempt to initialize JProf functions
-  ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
+  ::JS_DefineFunctions(mContext, aGlobalObj, JProfFunctions);
 #endif
 
   return rv;
+}
+
+void
+nsJSContext::WillInitializeContext()
+{
+  mIsInitialized = PR_FALSE;
+}
+
+void
+nsJSContext::DidInitializeContext()
+{
+  mIsInitialized = PR_TRUE;
 }
 
 PRBool

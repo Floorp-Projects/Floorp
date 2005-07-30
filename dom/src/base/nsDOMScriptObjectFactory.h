@@ -73,10 +73,6 @@ public:
   NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
                               nsIScriptContext **aContext);
 
-  NS_IMETHOD NewJSEventListener(nsIScriptContext *aContext,
-                                nsISupports *aObject,
-                                nsIDOMEventListener **aInstancePtrResult);
-
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
                                    nsIScriptGlobalObject **aGlobal);
 

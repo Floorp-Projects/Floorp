@@ -3437,9 +3437,15 @@ nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
   mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
 
   nsCOMPtr<nsIDOMWindow> win(do_GetInterface(doc_shell));
-  win.swap(*aContentWindow);
+  nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(win));
 
-  return NS_OK;
+  if (piwin && piwin->IsInnerWindow()) {
+    // We got an inner window here somehow, this just should not happen.
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return CallQueryInterface(piwin->GetOuterWindow(), aContentWindow);
 }
 
 nsresult

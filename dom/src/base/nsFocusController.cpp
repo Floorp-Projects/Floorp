@@ -150,18 +150,33 @@ nsFocusController::RewindFocusState()
 NS_IMETHODIMP
 nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 {
-  if (aWindow && (mCurrentWindow != aWindow)) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(aWindow);
+
+  if (pwin) {
+    pwin = pwin->GetOuterWindow();
+  }
+
+  NS_ASSERTION(!pwin || !pwin->IsInnerWindow(),
+               "Uh, inner window can't have focus!");
+
+  nsCOMPtr<nsIDOMWindowInternal> win = do_QueryInterface(pwin);
+
+  if (win && (mCurrentWindow != win)) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(win);
     if (sgo) {
       nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(sgo->GetDocShell());
       if (basewin)
         basewin->SetFocus();
     }
   }
-  if(mCurrentWindow) mPreviousWindow = mCurrentWindow;
-  else if (aWindow) mPreviousWindow = aWindow;
 
-  mCurrentWindow = aWindow;
+  if (mCurrentWindow) {
+    mPreviousWindow = mCurrentWindow;
+  } else if (win) {
+    mPreviousWindow = win;
+  }
+
+  mCurrentWindow = win;
 
   if (mUpdateWindowWatcher) {
     NS_ASSERTION(mActive, "This shouldn't happen");
@@ -306,18 +321,16 @@ nsFocusController::Focus(nsIDOMEvent* aEvent)
     // but we don't hear the subsequent focus to the Ender window.
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     domElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
-    GetParentWindowFromDocument(ownerDoc, getter_AddRefs(domWindow));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = GetWindowFromDocument(ownerDoc);
     if (domWindow)
       SetFocusedWindow(domWindow);
   }
   else {
     // We're focusing a window.  We only want to do an update commands
     // if no element is focused.
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
     nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(t);
     if (domDoc) {
-      GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
+      nsCOMPtr<nsIDOMWindowInternal> domWindow = GetWindowFromDocument(domDoc);
       if (domWindow) {
         SetFocusedWindow(domWindow);
         if (mCurrentElement) {
@@ -361,10 +374,9 @@ nsFocusController::Blur(nsIDOMEvent* aEvent)
     SetFocusedElement(nsnull);
   }
   
-  nsCOMPtr<nsIDOMWindowInternal> domWindow;
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(t);
   if (domDoc) {
-    GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = GetWindowFromDocument(domDoc);
     if (domWindow)
       SetFocusedWindow(nsnull);
   }
@@ -372,20 +384,21 @@ nsFocusController::Blur(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-nsresult
-nsFocusController::GetParentWindowFromDocument(nsIDOMDocument* aDocument,
-                                               nsIDOMWindowInternal** aWindow)
+nsPIDOMWindow *
+nsFocusController::GetWindowFromDocument(nsIDOMDocument* aDocument)
 {
-	NS_ENSURE_ARG_POINTER(aWindow);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
+  if (!doc)
+    return NS_OK;
 
-  nsCOMPtr<nsIDocument> objectOwner = do_QueryInterface(aDocument);
-  if(!objectOwner) return NS_OK;
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(doc->GetScriptGlobalObject());
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow =
-    do_QueryInterface(objectOwner->GetScriptGlobalObject());
-  *aWindow = domWindow;
-  NS_IF_ADDREF(*aWindow);
-  return NS_OK;
+  if (win->IsInnerWindow()) {
+    return win->GetOuterWindow();
+  }
+
+  return win;
 }
 
 NS_IMETHODIMP
@@ -412,9 +425,7 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
     // Move up to the window.
     nsCOMPtr<nsIDOMDocument> domDoc;
     mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
-    GetParentWindowFromDocument(domDoc, getter_AddRefs(domWindow));
-    currentWindow = do_QueryInterface(domWindow);
+    currentWindow = do_QueryInterface(GetWindowFromDocument(domDoc));
   }
   else if (mCurrentWindow) {
     nsGlobalWindow *win =
@@ -426,20 +437,20 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
 
   while(currentWindow) {
     nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(currentWindow));
-    if(domWindow) {
-      nsCOMPtr<nsIControllers> controllers2;
-      domWindow->GetControllers(getter_AddRefs(controllers2));
-      if(controllers2) {
-        nsCOMPtr<nsIController> controller;
-        controllers2->GetControllerForCommand(aCommand,
-                                              getter_AddRefs(controller));
-        if(controller) {
-          *_retval = controller;
-          NS_ADDREF(*_retval);
-          return NS_OK;
-        }
+
+    nsCOMPtr<nsIControllers> controllers2;
+    domWindow->GetControllers(getter_AddRefs(controllers2));
+    if(controllers2) {
+      nsCOMPtr<nsIController> controller;
+      controllers2->GetControllerForCommand(aCommand,
+                                            getter_AddRefs(controller));
+      if(controller) {
+        *_retval = controller;
+        NS_ADDREF(*_retval);
+        return NS_OK;
       }
-    } 
+    }
+
     nsGlobalWindow *win =
       NS_STATIC_CAST(nsGlobalWindow *,
                      NS_STATIC_CAST(nsIDOMWindowInternal *, currentWindow));

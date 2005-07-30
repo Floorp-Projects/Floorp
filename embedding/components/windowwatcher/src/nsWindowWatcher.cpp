@@ -908,6 +908,15 @@ nsWindowWatcher::GetActiveWindow(nsIDOMWindow **aActiveWindow)
 NS_IMETHODIMP
 nsWindowWatcher::SetActiveWindow(nsIDOMWindow *aActiveWindow)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aActiveWindow));
+
+    NS_ASSERTION(!win || win->IsOuterWindow(),
+                 "Uh, the active window must be an outer window!");
+  }
+#endif
+
   if (FindWindowEntry(aActiveWindow)) {
     mActiveWindow = aActiveWindow;
     return NS_OK;
@@ -923,6 +932,15 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
 
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
+
+    NS_ASSERTION(win->IsOuterWindow(),
+                 "Uh, the active window must be an outer window!");
+  }
+#endif
 
   {
     nsWatcherWindowEntry *info;
@@ -1730,43 +1748,20 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
   NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext *scriptContext = scriptGlobal->GetContext();
+  nsresult rv = NS_OK;
+
   if (scriptContext) {
     JSContext *cx;
     cx = (JSContext *)scriptContext->GetNativeContext();
 
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), aWindow,
-                         NS_GET_IID(nsIDOMWindow), getter_AddRefs(wrapper));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSObject *window_obj;
-    rv = wrapper->GetJSObject(&window_obj);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     JSObject *args;
     args = ::JS_NewArrayObject(cx, argc, argv);
     if (args) {
-      // If this is an existing window that we're opening into, the document
-      // change in it will wipe out the JS scope.  In particular it would clear
-      // the "arguments" property we're about to set.  So set the document in
-      // the window to null right away, so that when the new document loads we
-      // don't clear the scope.
-      nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(aWindow));
-      if (globalObject) {
-        globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
-      }
-      jsval argsVal = OBJECT_TO_JSVAL(args);
-      // ::JS_DefineProperty(cx, window_obj, "arguments",
-      // argsVal, NULL, NULL, JSPROP_PERMANENT);
-      ::JS_SetProperty(cx, window_obj, "arguments", &argsVal);
+      rv = scriptGlobal->SetNewArguments(args);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult

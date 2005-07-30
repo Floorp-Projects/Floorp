@@ -252,6 +252,7 @@ JS_FRIEND_DATA(JSExtendedClass) js_NamespaceClass = {
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              namespace_mark,    NULL },
     namespace_equality,
+    NULL,
     JSCLASS_NO_RESERVED_MEMBERS
 };
 
@@ -454,6 +455,7 @@ JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              qname_mark,        NULL },
     qname_equality,
+    NULL,
     JSCLASS_NO_RESERVED_MEMBERS
 };
 
