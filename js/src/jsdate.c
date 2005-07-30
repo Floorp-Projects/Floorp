@@ -613,6 +613,8 @@ date_parseString(JSString *str, jsdouble *result)
     jsdouble tzoffset = -1;  /* was an int, overflowed on win16!!! */
     int prevc = 0;
     JSBool seenplusminus = JS_FALSE;
+    int temp;
+    JSBool seenmonthname = JS_FALSE;
 
     if (limit == 0)
         goto syntax;
@@ -666,14 +668,9 @@ date_parseString(JSString *str, jsdouble *result)
                 if (tzoffset != 0 && tzoffset != -1)
                     goto syntax;
                 tzoffset = n;
-            } else if (n >= 70 ||
-                       (prevc == '/' && mon >= 0 && mday >= 0 && year < 0)) {
-                if (mday < 0)
-                    mday = n;
-                else if (year >= 0)
-                    goto syntax;
-                else if (c <= ' ' || c == ',' || c == '/' || i >= limit)
-                    year = n < 100 ? n + 1900 : n;
+            } else if (prevc == '/' && mon >= 0 && mday >= 0 && year < 0) {
+                if (c <= ' ' || c == ',' || c == '/' || i >= limit)
+                    year = n;
                 else
                     goto syntax;
             } else if (c == ':') {
@@ -684,8 +681,10 @@ date_parseString(JSString *str, jsdouble *result)
                 else
                     goto syntax;
             } else if (c == '/') {
+                /* until it is determined that mon is the actual
+                   month, keep it as 1-based rather than 0-based */
                 if (mon < 0)
-                    mon = /*byte*/ n-1;
+                    mon = /*byte*/ n;
                 else if (mday < 0)
                     mday = /*byte*/ n;
                 else
@@ -701,8 +700,12 @@ date_parseString(JSString *str, jsdouble *result)
                 min = /*byte*/ n;
             } else if (min >= 0 && sec < 0) {
                 sec = /*byte*/ n;
-            } else if (mday < 0) {
+            } else if (mon < 0) {
+                mon = /*byte*/n;
+            } else if (mon >= 0 && mday < 0) {
                 mday = /*byte*/ n;
+            } else if (mon >= 0 && mday >= 0 && year < 0) {
+                year = n;
             } else {
                 goto syntax;
             }
@@ -740,8 +743,22 @@ date_parseString(JSString *str, jsdouble *result)
                                 }
                             }
                         } else if (action <= 13) { /* month! */
+                            /* Adjust mon to be 1-based until the final values
+                               for mon, mday and year are adjusted below */
+                            if (seenmonthname) {
+                                goto syntax;
+                            }
+                            seenmonthname = JS_TRUE;
+                            temp = /*byte*/ (action - 2) + 1;
+
                             if (mon < 0) {
-                                mon = /*byte*/ (action - 2);
+                                mon = temp;
+                            } else if (mday < 0) {
+                                mday = mon;
+                                mon = temp;
+                            } else if (year < 0) {
+                                year = mon;
+                                mon = temp;
                             } else {
                                 goto syntax;
                             }
@@ -758,6 +775,68 @@ date_parseString(JSString *str, jsdouble *result)
     }
     if (year < 0 || mon < 0 || mday < 0)
         goto syntax;
+    /*
+      Case 1. The input string contains an English month name.
+              The form of the string can be month f l, or f month l, or
+              f l month which each evaluate to the same date. 
+              If f and l are both greater than or equal to 70, or
+              both less than 70, the date is invalid.
+              The year is taken to be the greater of the values f, l.
+              If the year is greater than or equal to 70 and less than 100,
+              it is considered to be the number of years after 1900.
+      Case 2. The input string is of the form "f/m/l" where f, m and l are
+              integers, e.g. 7/16/45.
+              Adjust the mon, mday and year values to achieve 100% MSIE 
+              compatibility.
+              a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
+                 i.  If year < 100, it is the number of years after 1900
+                 ii. If year >= 100, it is the number of years after 0.
+              b. If 70 <= f < 100
+                 i.  If m < 70, f/m/l is interpreted as
+                     year/month/day where year is the number of years after
+                     1900.
+                 ii. If m >= 70, the date is invalid.
+              c. If f >= 100
+                 i.  If m < 70, f/m/l is interpreted as
+                     year/month/day where year is the number of years after 0.
+                 ii. If m >= 70, the date is invalid.
+    */
+    if (seenmonthname) {
+        if (mday >= 70 && year >= 70 || mday < 70 && year < 70) {
+            goto syntax;
+        }
+        if (mday > year) {
+            temp = year;
+            year = mday;
+            mday = temp;
+        }
+        if (year >= 70 && year < 100) {
+            year += 1900;
+        }
+    } else if (mon < 70) { /* (a) month/day/year */
+        if (year < 100) {
+            year += 1900;
+        }
+    } else if (mon < 100) { /* (b) year/month/day */
+        if (mday < 70) { 
+            temp = year;
+            year = mon + 1900;
+            mon = mday;
+            mday = temp;
+        } else {
+            goto syntax;
+        }
+    } else { /* (c) year/month/day */
+        if (mday < 70) {
+            temp = year;
+            year = mon;
+            mon = mday;
+            mday = temp;
+        } else {
+            goto syntax;
+        }
+    }
+    mon -= 1; /* convert month to 0-based */
     if (sec < 0)
         sec = 0;
     if (min < 0)
