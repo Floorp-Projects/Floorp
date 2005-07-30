@@ -90,11 +90,6 @@
   'status.name',
 ],
 
-'search/tabs.html.tmpl' => [
-  'tab.name',
-  'tab.description',
-],
-
 'request/queue.html.tmpl' => [
   'column_headers.$group_field', 
   'column_headers.$column', 
@@ -655,10 +650,8 @@
 ],
 
 'account/prefs/prefs.html.tmpl' => [
-  'tab.name', 
-  'tab.description', 
-  'current_tab.name', 
-  'current_tab.description', 
+  'current_tab.label',
+  'current_tab.name',
 ],
 
 'account/prefs/settings.html.tmpl' => [

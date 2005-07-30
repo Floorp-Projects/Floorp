@@ -35,9 +35,9 @@
 
       [% FOREACH tab = tabs %]
         [% IF tab.name == current_tab_name %]
-          <td class="tab selected">[% tab.label %]</td>
+          <td class="tab selected">[% tab.label FILTER html %]</td>
         [% ELSE %]
-          <td class="tab"><a href="[% tab.link %]">[% tab.label %]</a></td>
+          <td class="tab"><a href="[% tab.link FILTER html %]">[% tab.label FILTER html %]</a></td>
         [% END %]
       [% END %]
 
