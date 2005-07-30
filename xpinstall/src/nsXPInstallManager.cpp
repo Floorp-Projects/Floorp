@@ -162,7 +162,7 @@ nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs, PRUint32 aURL
     if (!mTriggers)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRInt32 i = 0; i < aURLCount; ++i) 
+    for (PRUInt32 i = 0; i < aURLCount; ++i) 
     {
         nsXPITriggerItem* item = new nsXPITriggerItem(0, aURLs[i], nsnull);
         if (!item)
