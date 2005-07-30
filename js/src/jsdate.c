@@ -311,6 +311,68 @@ WeekDay(jsdouble t)
     return (intN) result;
 }
 
+#define MakeTime(hour, min, sec, ms) \
+((((hour) * MinutesPerHour + (min)) * SecondsPerMinute + (sec)) * msPerSecond + (ms))
+
+static jsdouble
+MakeDay(jsdouble year, jsdouble month, jsdouble date)
+{
+    JSBool leap;
+    jsdouble yearday;
+    jsdouble monthday;
+
+    year += floor(month / 12);
+
+    month = fmod(month, 12.0);
+    if (month < 0)
+        month += 12;
+
+    leap = (DaysInYear((jsint) year) == 366);
+
+    yearday = floor(TimeFromYear(year) / msPerDay);
+    monthday = DayFromMonth(month, leap);
+
+    return yearday + monthday + date - 1;
+}
+
+#define MakeDate(day, time) ((day) * msPerDay + (time))
+
+/* 
+ * Years and leap years on which Jan 1 is a Sunday, Monday, etc. 
+ *
+ * yearStartingWith[0][i] is an example non-leap year where
+ * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
+ *
+ * yearStartingWith[1][i] is an example leap year where
+ * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
+ */
+static jsint yearStartingWith[2][7] = {
+    {1978, 1973, 1974, 1975, 1981, 1971, 1977},
+    {1984, 1996, 1980, 1992, 1976, 1988, 1972}
+};
+
+/*
+ * Find a year for which any given date will fall on the same weekday.
+ *
+ * This function should be used with caution when used other than
+ * for determining DST; it hasn't been proven not to produce an
+ * incorrect year for times near year boundaries.
+ */
+static jsint
+EquivalentYearForDST(jsint year) {
+    jsint day;
+    JSBool isLeapYear;
+
+    day = (jsint) DayFromYear(year) + 4;
+    day = day % 7;
+    if (day < 0)
+	day += 7;
+
+    isLeapYear = (DaysInYear(year) == 366);
+
+    return yearStartingWith[isLeapYear][day];
+}
+
 /* LocalTZA gets set by js_InitDateClass() */
 static jsdouble LocalTZA;
 
@@ -325,6 +387,19 @@ DaylightSavingTA(jsdouble t)
     /* abort if NaN */
     if (JSDOUBLE_IS_NaN(t))
         return t;
+
+    /*
+     * If earlier than 1970 or after 2038, potentially beyond the ken of
+     * many OSes, map it to an equivalent year before asking.
+     */
+    if (t < 0.0 || t > 2145916800000.0) {
+        jsint year;
+        jsdouble day;
+
+        year = EquivalentYearForDST(YearFromTime(t));
+        day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+        t = MakeDate(day, TimeWithinDay(t));
+    }
 
     /* put our t in an LL, and map it to usec for prtime */
     JSLL_D2L(PR_t, t);
@@ -384,36 +459,6 @@ msFromTime(jsdouble t)
         result += (intN)msPerSecond;
     return result;
 }
-
-#define MakeTime(hour, min, sec, ms) \
-(((hour * MinutesPerHour + min) * SecondsPerMinute + sec) * msPerSecond + ms)
-
-static jsdouble
-MakeDay(jsdouble year, jsdouble month, jsdouble date)
-{
-    jsdouble result;
-    JSBool leap;
-    jsdouble yearday;
-    jsdouble monthday;
-
-    year += floor(month / 12);
-
-    month = fmod(month, 12.0);
-    if (month < 0)
-        month += 12;
-
-    leap = (DaysInYear((jsint) year) == 366);
-
-    yearday = floor(TimeFromYear(year) / msPerDay);
-    monthday = DayFromMonth(month, leap);
-
-    result = yearday
-             + monthday
-             + date - 1;
-    return result;
-}
-
-#define MakeDate(day, time) (day * msPerDay + time)
 
 #define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
                       && !((d < 0 ? -d : d) > HalfTimeDomain)) \
