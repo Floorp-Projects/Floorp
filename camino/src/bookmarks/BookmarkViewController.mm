@@ -774,7 +774,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     // if it's a folder, use it
     if ([item isKindOfClass:[BookmarkFolder class]])
     {
-      *outIndex = [item count];
+      *outIndex = (int)[(BookmarkFolder*)item count];
       return item;
     }
     
