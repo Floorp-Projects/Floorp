@@ -1277,7 +1277,7 @@ nsGlobalWindow::OnFinalize(JSObject *aJSObject)
 void
 nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
-  FORWARD_TO_INNER(SetScriptsEnabled, (aEnabled, aFireTimeouts));
+  FORWARD_TO_INNER_VOID(SetScriptsEnabled, (aEnabled, aFireTimeouts));
 
   if (aEnabled && aFireTimeouts) {
     // Scripts are enabled (again?) on this context, run timeouts that
