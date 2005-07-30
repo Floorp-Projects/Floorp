@@ -405,7 +405,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   int itemIndex;
   BookmarkFolder* parentFolder = [self selectedItemFolderAndIndex:&itemIndex];
-  [addBookmarkController setDefaultParentFolder:parentFolder];
+  [addBookmarkController setDefaultParentFolder:parentFolder andIndex:itemIndex];
   [addBookmarkController setBookmarkViewController:self];
 
   [addBookmarkController showDialogWithLocationsAndTitles:nil isFolder:YES onWindow:[mBookmarksEditingView window]];
@@ -771,6 +771,14 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   {
     int row = [mBookmarksOutlineView selectedRow];
     BookmarkItem *item = [mBookmarksOutlineView itemAtRow:row];
+    // if it's a folder, use it
+    if ([item isKindOfClass:[BookmarkFolder class]])
+    {
+      *outIndex = [item count];
+      return item;
+    }
+    
+    // otherwise use its parent
     if ([item respondsToSelector:@selector(parent)])    // when would it not?
     {
       parentFolder = [item parent];
