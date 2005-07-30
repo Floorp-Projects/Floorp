@@ -49,10 +49,21 @@ TARGET		= "JEP Plugin"
 
 unexport CC CXX
 
+JEP_PLUGIN_BUNDLE=JavaEmbeddingPlugin.bundle
+MRJ_PLUGIN_BUNDLE=MRJPlugin.plugin
+
+# for objdir builds, copy the project, and symlink the sources
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
+ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
+export::
+	ln -fs $(srcdir)/$(JEP_PLUGIN_BUNDLE) .
+	ln -fs $(srcdir)/$(MRJ_PLUGIN_BUNDLE) .
+endif
+
 libs install:: install-plugin
 
 install-plugin: 
-	$(INSTALL) "JavaEmbeddingPlugin.bundle" $(DIST)/bin/plugins
-	$(INSTALL) "MRJPlugin.plugin" $(DIST)/bin/plugins
+	$(INSTALL) $(JEP_PLUGIN_BUNDLE) $(DIST)/bin/plugins
+	$(INSTALL) $(MRJ_PLUGIN_BUNDLE) $(DIST)/bin/plugins
 
 clean clobber distclean::
