@@ -144,6 +144,7 @@
   // match the size to avoid taking the hit of resizing it when it's
   // not visible.
   [mBrowserContainerView setFrame:browserRect];
+  [mBrowserContainerView setNeedsDisplay:YES];
   // NSLog(@"resizing to %f %f", browserRect.size.width, browserRect.size.height);
 }
 
