@@ -57,6 +57,7 @@ NSString* const BMFolderKeywordKey = @"FolderKeyword";
 NSString* const BMDescKey = @"Description";
 NSString* const BMStatusKey = @"Status";
 NSString* const BMURLKey = @"URL";
+NSString* const BMUUIDKey = @"UUID";
 NSString* const BMKeywordKey = @"Keyword";
 NSString* const BMLastVisitKey = @"LastVisitedDate";
 NSString* const BMNumberVisitsKey = @"VisitCount";
@@ -94,14 +95,14 @@ static BOOL gSuppressAllUpdates = NO;
 {
   if ((self = [super init]))
   {
-    mParent = NULL;
+    mParent = nil;
     mTitle = [[NSString alloc] init]; //retain count +1
     mKeyword = [mTitle retain]; //retain count +2
     mDescription = [mTitle retain]; //retain count +3! and just 1 allocation.
     mUUID = nil;
     // if we set the icon here, we will get a memory leak.  so don't.
     // subclass will provide icon.
-    mIcon = NULL;
+    mIcon = nil;
     mAccumulateItemChangeUpdates = NO;
   }
   return self;
@@ -159,6 +160,8 @@ static BOOL gSuppressAllUpdates = NO;
 {
   if (!mUUID)
     mUUID = [[NSString stringWithUUID] retain];
+
+  NSAssert([mUUID length] > 0, @"Empty UUID");
   return mUUID;
 }
 
@@ -235,6 +238,17 @@ static BOOL gSuppressAllUpdates = NO;
   NSNotification *note = [NSNotification notificationWithName:BookmarkIconChangedNotification
                                                        object:self userInfo:nil];
   [[NSNotificationCenter defaultCenter] postNotification:note];
+}
+
+-(void) setUUID:(NSString*)aUUID
+{
+  // ignore nil or empty strings
+  if (!aUUID || [aUUID length] == 0)
+    return;
+  
+  [aUUID retain];
+  [mUUID release];
+  mUUID = aUUID;
 }
 
 -(BOOL)matchesString:(NSString*)searchString inFieldWithTag:(int)tag
@@ -340,6 +354,25 @@ static BOOL gSuppressAllUpdates = NO;
   return [NSString string];
 }
 
+- (id)savedTitle
+{
+  return mTitle ? mTitle : @"";
+}
+
+- (id)savedItemDescription
+{
+  return mDescription ? mDescription : @"";
+}
+
+- (id)savedKeyword
+{
+  return mKeyword ? mKeyword : @"";
+}
+
+- (id)savedUUID
+{
+  return mUUID ? mUUID : @"";
+}
 
 @end
 

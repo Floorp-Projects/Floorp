@@ -213,9 +213,9 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   char buffer[kBufferLen];
   UInt32 actualSize;
 
-  if ( inPort == -1 )
+  if (inPort == -1)
     inPort = kAnyPort;
-  if(kcfindinternetpassword([realm UTF8String], 0, 0, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
+  if (kcfindinternetpassword([realm UTF8String], 0, 0, inPort, kKCProtocolTypeHTTP, kKCAuthTypeHTTPDigest, 
                             kBufferLen, buffer, &actualSize, outItemRef) != noErr)
     return false;
 

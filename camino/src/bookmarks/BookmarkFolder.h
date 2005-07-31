@@ -83,6 +83,9 @@ enum {
 -(unsigned)indexOfObject:(id)object;
 -(unsigned)indexOfObjectIdenticalTo:(id)object;
 
+// methods used for saving to files; are guaranteed never to return nil
+- (id)savedSpecialFlag;
+
 // ways to add a new bookmark
 -(Bookmark *) addBookmark; //adds to end
 -(Bookmark *) addBookmark:(NSString *)aTitle url:(NSString *)aURL inPosition:(unsigned)aIndex isSeparator:(BOOL)aBool;
@@ -122,7 +125,5 @@ enum {
 //and avoid the compiler warning
 -(NSArray *) indicesOfObjectsByEvaluatingRelativeSpecifier:(NSRelativeSpecifier *)relSpec;
 -(NSArray *) indicesOfObjectsByEvaluatingRangeSpecifier:(NSRangeSpecifier *)rangeSpec;
-
-
 
 @end

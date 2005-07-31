@@ -47,13 +47,15 @@ public:
 
     NS_DECL_NSIABOUTMODULE
 
-                      nsAboutBookmarks() {}
+                      nsAboutBookmarks(PRBool inIsBookmarks);
     virtual           ~nsAboutBookmarks() {}
 
-    static NS_METHOD  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    static NS_METHOD  CreateBookmarks(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    static NS_METHOD  CreateHistory(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
 
+    PRBool            mIsBookmarks;   // or history
 };
 
 #define NS_ABOUT_BOOKMARKS_MODULE_CID                 \

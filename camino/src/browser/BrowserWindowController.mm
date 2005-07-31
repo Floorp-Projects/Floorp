@@ -1207,7 +1207,7 @@ enum BWCOpenDest {
     return ([mTabBrowser numberOfTabViewItems] > 1);
   else if (action == @selector(sendURL:))
   {
-    NSString* curURL = [[self getBrowserWrapper] getCurrentURLSpec];
+    NSString* curURL = [[self getBrowserWrapper] getCurrentURI];
     return ![MainController isBlankURL:curURL];
   }
   else if (action == @selector(viewSource:))
@@ -1659,7 +1659,7 @@ enum BWCOpenDest {
 
 - (IBAction)viewPageSource:(id)aSender
 {
-  NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURLSpec];
+  NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURI];
   [self loadSourceOfURL:urlStr];
 }
 
@@ -1692,7 +1692,7 @@ enum BWCOpenDest {
   NSMutableString *searchURL = [NSMutableString stringWithString:
     [[BrowserWindowController searchURLDictionary] objectForKey:
       [inSearchField titleOfSelectedPopUpItem]]];
-  NSString *currentURL = [[self getBrowserWrapper] getCurrentURLSpec];
+  NSString *currentURL = [[self getBrowserWrapper] getCurrentURI];
   NSString *searchString = [inSearchField stringValue];
   
   const char *aURLSpec = [currentURL lossyCString];
@@ -1733,7 +1733,7 @@ enum BWCOpenDest {
 
     } 
   } else {
-    aURLSpec = [[[self getBrowserWrapper] getCurrentURLSpec] lossyCString];
+    aURLSpec = [[[self getBrowserWrapper] getCurrentURI] UTF8String];
     
     // Get the domain so that we can replace %d in our searchURL
     if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
@@ -1911,7 +1911,7 @@ enum BWCOpenDest {
 
 - (BOOL)bookmarkManagerIsVisible
 {
-  NSString* currentURL = [[[self getBrowserWrapper] getCurrentURLSpec] lowercaseString];
+  NSString* currentURL = [[[self getBrowserWrapper] getCurrentURI] lowercaseString];
   return [currentURL isEqualToString:@"about:bookmarks"] || [currentURL isEqualToString:@"about:history"];
 }
 
@@ -2486,7 +2486,7 @@ enum BWCOpenDest {
     BrowserTabViewItem* tabViewItem = [mTabBrowser itemWithTag:[sender tag]];
     if (tabViewItem)
     {
-      NSString* url = [[tabViewItem view] getCurrentURLSpec];
+      NSString* url = [[tabViewItem view] getCurrentURI];
       BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
       [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
@@ -3343,7 +3343,7 @@ enum BWCOpenDest {
     // kill any autocomplete that was in progress
     [mURLBar revertText];
     // set the text in the URL bar back to the current URL
-    [self updateLocationFields:[mBrowserView getCurrentURLSpec] ignoreTyping:YES];
+    [self updateLocationFields:[mBrowserView getCurrentURI] ignoreTyping:YES];
     
   // see if command-return came in the search field
   } else if ([mSearchBar isFirstResponder]) {

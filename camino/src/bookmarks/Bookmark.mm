@@ -47,8 +47,10 @@
 #import "SiteIconProvider.h"
 
 @interface Bookmark (Private)
--(void) siteIconCheck:(NSNotification *)aNote;
--(void) urlLoadCheck:(NSNotification *)aNote;
+
+- (void)siteIconCheck:(NSNotification *)aNote;
+- (void)urlLoadCheck:(NSNotification *)aNote;
+
 @end
 
 // Notification of URL load
@@ -61,8 +63,8 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 {
   if ((self = [super init])) {
     mURL = [[NSString alloc] init];
-    mStatus = [[NSNumber alloc] initWithUnsignedInt:0]; // retain count +1
-    mNumberOfVisits = [mStatus retain]; // retain count +2
+    mStatus = [[NSNumber alloc] initWithUnsignedInt:kBookmarkOKStatus]; // retain count +1
+    mNumberOfVisits = [[NSNumber alloc] initWithUnsignedInt:0]; // retain count +1
     mLastVisit = [[NSDate date] retain];
     mIcon = [[NSImage imageNamed:@"smallbookmark"] retain];
     // register for notifications
@@ -244,6 +246,29 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 #pragma mark -
 
+- (id)savedURL
+{
+  return mURL ? mURL : @"";
+}
+
+- (id)savedLastVisit
+{
+  return mLastVisit ? mLastVisit : [NSDate distantPast];
+}
+
+- (id)savedStatus
+{
+  return mStatus ? mStatus : [NSNumber numberWithUnsignedInt:kBookmarkOKStatus];
+}
+
+- (id)savedNumberOfVisits
+{
+  return mNumberOfVisits ? mNumberOfVisits : [NSNumber numberWithUnsignedInt:0];
+}
+
+
+#pragma mark -
+
 //
 // for reading/writing from/to disk
 //
@@ -257,6 +282,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   [self setItemDescription:[aDict objectForKey:BMDescKey]];
   [self setKeyword:[aDict objectForKey:BMKeywordKey]];
   [self setUrl:[aDict objectForKey:BMURLKey]];
+  [self setUUID:[aDict objectForKey:BMUUIDKey]];
   [self setLastVisit:[aDict objectForKey:BMLastVisitKey]];
   [self setNumberOfVisits:[[aDict objectForKey:BMNumberVisitsKey] unsignedIntValue]];
   [self setStatus:[[aDict objectForKey:BMStatusKey] unsignedIntValue]];
@@ -324,9 +350,9 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 -(void)writeBookmarksMetadataToPath:(NSString*)inPath
 {
   NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys: 
-                                      mTitle, @"Name",
-                                      mURL, @"URL",
-                                      nil];
+                                      [self savedTitle], @"Name",
+                                        [self savedURL], @"URL",
+                                                         nil];
   NSString* file = [self UUID];
   NSString* path = [NSString stringWithFormat:@"%@/%@.webbookmark", inPath, file];
   [dict writeToFile:path atomically:YES];
@@ -351,18 +377,19 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   NSDictionary* dict;
   if (![self isSeparator]) {
     dict = [NSDictionary dictionaryWithObjectsAndKeys:
-    mTitle,BMTitleKey,
-    mKeyword,BMKeywordKey,
-    mURL,BMURLKey,
-    mDescription,BMDescKey ,
-    mLastVisit,BMLastVisitKey,
-    mNumberOfVisits,BMNumberVisitsKey,
-    mStatus,BMStatusKey,
-    nil];
+                [self savedTitle], BMTitleKey,
+              [self savedKeyword], BMKeywordKey,
+                  [self savedURL], BMURLKey,
+                 [self savedUUID], BMUUIDKey,
+      [self savedItemDescription], BMDescKey,
+            [self savedLastVisit], BMLastVisitKey,
+       [self savedNumberOfVisits], BMNumberVisitsKey,
+               [self savedStatus], BMStatusKey,
+                                   nil];
   } else {
     dict = [NSDictionary dictionaryWithObjectsAndKeys:
-      mStatus,BMStatusKey,
-      nil];
+               [self savedStatus], BMStatusKey,
+                                   nil];
   }
   return dict;
 }
@@ -372,19 +399,19 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   NSDictionary* dict = nil;
   if (![self isSeparator]) {
     NSDictionary *uriDict = [NSDictionary dictionaryWithObjectsAndKeys:
-      mTitle,SafariBookmarkTitleKey,
-      mURL,[NSString string],
-      nil];
+      [self savedTitle], SafariBookmarkTitleKey,
+        [self savedURL], @"",
+                         nil];
     if (!uriDict) {
-      return nil;
+      return nil;   // when would this happen?
     }
 
     dict = [NSDictionary dictionaryWithObjectsAndKeys:
-      uriDict,SafariURIDictKey,
-      mURL,SafariURLStringKey,
-      SafariLeaf,SafariTypeKey,
-      [self UUID],SafariUUIDKey,
-      nil];
+                uriDict, SafariURIDictKey,
+        [self savedURL], SafariURLStringKey,
+             SafariLeaf, SafariTypeKey,
+            [self UUID], SafariUUIDKey,
+                         nil];
   }
   return dict;
 }

@@ -65,6 +65,7 @@
 -(void) setItemDescription:(NSString *)aString;
 -(void) setKeyword:(NSString *)aKeyword;
 -(void) setIcon:(NSImage *)aIcon;
+-(void) setUUID:(NSString*)aUUID;
 
 // Status checks
 - (BOOL)isChildOfItem:(BookmarkItem *)anItem;
@@ -104,6 +105,12 @@ enum
 -(NSDictionary *)writeSafariDictionary;
 -(NSString *)writeHTML:(unsigned)aPad;
 
+// methods used for saving to files; are guaranteed never to return nil
+- (id)savedTitle;
+- (id)savedItemDescription;    // don't use "description"
+- (id)savedKeyword;
+- (id)savedUUID;    // does not generate a new UUID if UUID is not set
+
 @end
 
 // Bunch of Keys for reading/writing dictionaries.
@@ -119,6 +126,7 @@ extern NSString* const BMFolderKeywordKey;
 extern NSString* const BMDescKey;
 extern NSString* const BMStatusKey;
 extern NSString* const BMURLKey;
+extern NSString* const BMUUIDKey;
 extern NSString* const BMKeywordKey;
 extern NSString* const BMLastVisitKey;
 extern NSString* const BMNumberVisitsKey;

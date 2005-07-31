@@ -259,13 +259,14 @@ static unsigned           gFirstUserCollection = 0;
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
   [nc addObserver:self selector:@selector(writeBookmarks:) name:kWriteBookmarkNotification object:nil];
 
+  // broadcast to everyone interested that we're loaded and ready for public consumption
+  [[NSNotificationCenter defaultCenter] postNotificationName:kBookmarkManagerStartedNotification object:nil];
+
   // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
   // easier this way in case someone changed the bm plist directly, we know at startup we always have
   // the most up-to-date cache.
   [self writeBookmarksMetadataForSpotlight];
 
-  // broadcast to everyone interested that we're loaded and ready for public consumption
-  [[NSNotificationCenter defaultCenter] postNotificationName:kBookmarkManagerStartedNotification object:nil];
 }
 
 - (void)shutdown

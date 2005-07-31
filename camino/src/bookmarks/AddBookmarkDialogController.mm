@@ -213,7 +213,7 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
     if (initialItemIndex != -1)
       [mParentFolderPopup selectItemAtIndex:initialItemIndex];
   }
-  else
+  else if ([mParentFolderPopup numberOfItems] > 0)
   {
     [mParentFolderPopup selectItemAtIndex:0];
   }

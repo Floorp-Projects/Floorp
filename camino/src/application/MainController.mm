@@ -66,6 +66,7 @@
 #import "FindDlgController.h"
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
+#import "SiteIconProvider.h"
 
 #include "nsBuildID.h"
 #include "nsCOMPtr.h"
@@ -284,6 +285,11 @@ const int kReuseWindowOnAE = 2;
   // and fire up bookmarks (they will be loaded on a thread)
   [[BookmarkManager sharedBookmarkManager] loadBookmarksLoadingSynchronously:NO];
 
+  // register some special favicon images
+  [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"smallDocument"] forPageURI:@"about:blank"];
+  [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"bm_favicon"]    forPageURI:@"about:bookmarks"];
+  [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"bm_favicon"]    forPageURI:@"about:history"];
+  
   [self setupStartpage];
 
   // Initialize offline mode.
@@ -1367,9 +1373,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   
   if (action == @selector(sendURL:))
   {
-    NSString* titleString = nil;
-    NSString* urlString = nil;
-    [[[self getMainWindowBrowserController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];
+    NSString* urlString = [[[self getMainWindowBrowserController] getBrowserWrapper] location];
     return ![MainController isBlankURL:urlString];
   }
 

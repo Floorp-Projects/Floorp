@@ -43,7 +43,14 @@
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
 
+#import "NSString+Utils.h"
+
 NS_IMPL_ISUPPORTS1(nsAboutBookmarks, nsIAboutModule)
+
+nsAboutBookmarks::nsAboutBookmarks(PRBool inIsBookmarks)
+: mIsBookmarks(inIsBookmarks)
+{
+}
 
 NS_IMETHODIMP
 nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
@@ -53,13 +60,18 @@ nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsresult rv;
     nsIChannel* channel;
 
+    NSString* windowTitle = mIsBookmarks ? NSLocalizedString(@"BookmarksWindowTitle", @"")
+                                         : NSLocalizedString(@"HistoryWindowTitle", @"");
+    
+    NSString* sourceString = [NSString stringWithFormat:kBlankPageHTML, windowTitle];
+    nsAutoString pageSource;
+    [sourceString assignTo_nsAString:pageSource];
+    
     nsCOMPtr<nsIInputStream> in;
-    NSString* localizedBlank = [NSString stringWithFormat:kBlankPageHTML, NSLocalizedString(@"Bookmarks",nil)];
-    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString([localizedBlank UTF8String]));
+    rv = NS_NewStringInputStream(getter_AddRefs(in), pageSource);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewInputStreamChannel(&channel, aURI, in,
-                                  NS_LITERAL_CSTRING("text/html"));
+    rv = NS_NewInputStreamChannel(&channel, aURI, in, NS_LITERAL_CSTRING("text/html"));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -67,9 +79,21 @@ nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
 }
 
 NS_METHOD
-nsAboutBookmarks::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsAboutBookmarks::CreateBookmarks(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    nsAboutBookmarks* about = new nsAboutBookmarks();
+    nsAboutBookmarks* about = new nsAboutBookmarks(PR_TRUE);
+    if (about == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(about);
+    nsresult rv = about->QueryInterface(aIID, aResult);
+    NS_RELEASE(about);
+    return rv;
+}
+
+NS_METHOD
+nsAboutBookmarks::CreateHistory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsAboutBookmarks* about = new nsAboutBookmarks(PR_FALSE);
     if (about == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(about);

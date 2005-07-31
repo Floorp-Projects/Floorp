@@ -602,7 +602,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 - (void) revertText
 {
   BrowserWindowController *controller = (BrowserWindowController *)[[self window] windowController];
-  NSString *url = [[controller getBrowserWrapper] getCurrentURLSpec];
+  NSString *url = [[controller getBrowserWrapper] getCurrentURI];
   if (url) {
     [self clearResults];
     NSTextView *fieldEditor = [self fieldEditor];

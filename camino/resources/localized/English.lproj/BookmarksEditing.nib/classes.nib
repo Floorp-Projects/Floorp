@@ -10,11 +10,16 @@
                 addBookmarkFolder = id; 
                 addBookmarkSeparator = id; 
                 addCollection = id; 
+                copy = id; 
+                cut = id; 
+                delete = id; 
                 deleteBookmarks = id; 
                 locateBookmark = id; 
                 openBookmark = id; 
                 openBookmarkInNewTab = id; 
                 openBookmarkInNewWindow = id; 
+                openBookmarksInTabsInNewWindow = id; 
+                paste = id; 
                 quicksearchPopupChanged = id; 
                 setAsDockMenuFolder = id; 
                 showBookmarkInfo = id; 
@@ -27,7 +32,7 @@
                 mActionMenuHistory = NSMenu; 
                 mAddButton = NSButton; 
                 mAddCollectionButton = NSButton; 
-                mBookmarksEditingView = NSView; 
+                mBookmarksEditingView = BookmarksEditingView; 
                 mBookmarksHostView = NSView; 
                 mBookmarksOutlineView = BookmarkOutlineView; 
                 mContainersSplit = NSSplitView; 

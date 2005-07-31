@@ -59,9 +59,21 @@
 
 @class SearchTextField;
 
+
+// a simple view subclass that allows us to override viewDidMoveToWindow
+@interface BookmarksEditingView : NSView
+{
+  id    mDelegate;
+}
+
+- (id)delegate;
+- (void)setDelegate:(id)inDelegate;
+
+@end
+
 @interface BookmarkViewController : NSObject<ContentViewProvider>
 {
-  IBOutlet NSView*          mBookmarksEditingView;
+  IBOutlet BookmarksEditingView*  mBookmarksEditingView;
 
   IBOutlet NSButton*        mAddCollectionButton;
 

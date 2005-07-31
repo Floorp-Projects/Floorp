@@ -87,7 +87,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)updateOfflineStatus;
 
-- (NSView*)contentProviderViewForURL:(NSString*)inURL;
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
 
 @end
@@ -218,9 +217,9 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mTabItem;
 }
 
--(NSString*)getCurrentURLSpec
+-(NSString*)getCurrentURI
 {
-  return [mBrowserView getCurrentURLSpec];
+  return [mBrowserView getCurrentURI];
 }
 
 - (void)setFrame:(NSRect)frameRect
@@ -260,6 +259,24 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return mTitle;
 }
 
+- (NSString*)pageTitle
+{
+  nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([mBrowserView getContentWindow]);
+  if (!window)
+    return @"";
+  
+  nsCOMPtr<nsIDOMDocument> htmlDoc;
+  window->GetDocument(getter_AddRefs(htmlDoc));
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(htmlDoc));
+  if (!htmlDocument)
+    return @"";
+
+  nsAutoString titleString;
+  htmlDocument->GetTitle(titleString);
+  return [NSString stringWith_nsAString:titleString];
+}
+
 - (NSImage*)siteIcon
 {
   return mSiteIconImage;
@@ -267,7 +284,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (NSString*)location
 {
-  return [mBrowserView getCurrentURLSpec];
+  return [mBrowserView getCurrentURI];
 }
 
 - (NSString*)statusString
@@ -378,22 +395,21 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   return [mContentViewProviders objectForKey:[inURL lowercaseString]];
 }
 
-- (NSView*)contentProviderViewForURL:(NSString*)inURL
-{
-  id<ContentViewProvider> provider = [mContentViewProviders objectForKey:[inURL lowercaseString]];
-  return [provider provideContentViewForURL:inURL];   // ok with nil provider
-}
-
 - (void)checkForCustomViewOnLoad:(NSString*)inURL
 {
-  NSView* newContentView = [self contentProviderViewForURL:inURL];
-  if (!newContentView)
-    newContentView = mBrowserView;  // put the browser view back
+  id<ContentViewProvider> provider = [mContentViewProviders objectForKey:[inURL lowercaseString]];
+  NSView* providedView = [provider provideContentViewForURL:inURL];   // ok with nil provider
+
+  NSView* newContentView = providedView ? providedView : mBrowserView;
 
   if ([self firstSubview] != newContentView)
   {
     [self swapFirstSubview:newContentView];
     [mDelegate contentViewChangedTo:newContentView forURL:inURL];
+    
+    // tell the provider that we swapped in its view
+    if (providedView)
+      [provider contentView:providedView usedForURL:inURL];
   }
 }
 
@@ -480,48 +496,45 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK
 {
-  if (newPage)
+  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
+  
+  NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
+  if (requestOK && useSiteIcons && [faviconURI length] > 0)
   {
-    BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
-    
-    NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
-    if (requestOK && useSiteIcons && [faviconURI length] > 0)
+    SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
+
+    // if the favicon uri has changed, fire off favicon load. When it completes, our
+    // imageLoadedNotification selector gets called.
+    if (![faviconURI isEqualToString:mSiteIconURI])
     {
-      SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
+      // first get a cached image for this site, if we have one. we'll go ahead
+      // and request the load anyway, in case the site updated their icon.
+      NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
+      NSString* cachedImageURI = nil;
 
-      // if the favicon uri has changed, fire off favicon load. When it completes, our
-      // imageLoadedNotification selector gets called.
-      if (![faviconURI isEqualToString:mSiteIconURI])
-      {
-        // first get a cached image for this site, if we have one. we'll go ahead
-        // and request the load anyway, in case the site updated their icon.
-        NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
-        NSString* cachedImageURI = nil;
+      if (cachedImage)
+        cachedImageURI = faviconURI;
+      
+      // immediately update the site icon (to the cached one, or the default)
+      [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
 
-        if (cachedImage)
-          cachedImageURI = faviconURI;
-        
-        // immediately update the site icon (to the cached one, or the default)
-        [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
-
-        // note that this is the only time we hit the network for site icons.
-        // note also that we may get a site icon from a link element later,
-        // which will replace any we get from the default location.
-        [faviconProvider fetchFavoriteIconForPage:urlSpec
-                                 withIconLocation:nil
-                                     allowNetwork:YES
-                                  notifyingClient:self];
-      }
+      // note that this is the only time we hit the network for site icons.
+      // note also that we may get a site icon from a link element later,
+      // which will replace any we get from the default location.
+      [faviconProvider fetchFavoriteIconForPage:urlSpec
+                               withIconLocation:nil
+                                   allowNetwork:YES
+                                notifyingClient:self];
     }
+  }
+  else
+  {
+    if ([urlSpec hasPrefix:@"about:"])
+      faviconURI = urlSpec;
     else
-    {
-      if ([urlSpec isEqualToString:@"about:blank"])
-        faviconURI = urlSpec;
-      else
-      	faviconURI = @"";
+    	faviconURI = @"";
 
-      [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
-    }
+    [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
   }
   
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
@@ -583,7 +596,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)setTabTitle:(NSString*)tabTitle windowTitle:(NSString*)windowTitle
 {
-  NSString* curURL = [self getCurrentURLSpec];
+  NSString* curURL = [self getCurrentURI];
 
   [mTabTitle autorelease];
   mTabTitle  = [[self displayTitleForPageURL:curURL title:tabTitle] retain];
@@ -682,7 +695,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     // imageLoadedNotification selector gets called.
     if (![inIconURI isEqualToString:mSiteIconURI])
     {
-      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self getCurrentURLSpec]
+      [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self getCurrentURI]
                                                              withIconLocation:inIconURI
                                                                  allowNetwork:YES
                                                               notifyingClient:self];
@@ -759,31 +772,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString
 {
-  *outTitle = *outHrefString = nil;
-
-  nsCOMPtr<nsIDOMWindow> window = getter_AddRefs([mBrowserView getContentWindow]);
-  if (!window) return;
-  
-  nsCOMPtr<nsIDOMDocument> htmlDoc;
-  window->GetDocument(getter_AddRefs(htmlDoc));
-  nsCOMPtr<nsIDocument> pageDoc(do_QueryInterface(htmlDoc));
-  if (pageDoc)
-  {
-    nsIURI* url = pageDoc->GetDocumentURI();
-    if (url)
-    {
-      nsCAutoString spec;
-      url->GetSpec(spec);
-      *outHrefString = [NSString stringWithUTF8String:spec.get()];
-    }
-  }
-
-  nsAutoString titleString;
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument(do_QueryInterface(htmlDoc));
-  if (htmlDocument)
-    htmlDocument->GetTitle(titleString);
-  if (!titleString.IsEmpty())
-    *outTitle = [NSString stringWith_nsAString:titleString];
+  *outTitle = [self pageTitle];
+  *outHrefString = [self getCurrentURI];
 }
 
 - (void)offlineModeChanged:(NSNotification*)aNotification
@@ -884,7 +874,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 }
 
 // A nil inSiteIcon image indicates that we should use the default icon
-// If inSiteIconURI is "about:blank", we don't show any icon
 - (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI loadError:(BOOL)inLoadError
 {
   BOOL     resetTabIcon     = NO;
@@ -895,18 +884,14 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   {
     if (!siteIcon)
     {
-      if ([inSiteIconURI isEqualToString:@"about:blank"])
-      {
-        siteIcon = [NSImage imageNamed:@"smallDocument"];
-        tabIconDraggable = NO;
-      }
-      else if (inLoadError)
-      {
+      if (inLoadError)
         siteIcon = [NSImage imageNamed:@"brokenbookmark_icon"];   // it should have its own image
-      }
       else
         siteIcon = [NSImage imageNamed:@"globe_ico"];
     }
+
+    if ([inSiteIconURI isEqualToString:@"about:blank"])
+      tabIconDraggable = NO;
 
     [self setSiteIconImage:siteIcon];
     [self setSiteIconURI:inSiteIconURI];
@@ -943,12 +928,13 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   {
   	NSImage*  iconImage     = [userInfo objectForKey:SiteIconLoadImageKey];
     NSString* siteIconURI   = [userInfo objectForKey:SiteIconLoadURIKey];
+    NSString* pageURI       = [userInfo objectForKey:SiteIconLoadUserDataKey];
     
-    // NSLog(@"BrowserWrapper imageLoadedNotification got image %@ and uri %@", iconImage, proxyImageURI);
     if (iconImage == nil)
       siteIconURI = @"";	// go back to default image
-    
-    [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
+  
+    if ([pageURI isEqualToString:[[self getBrowserView] getCurrentURI]]) // make sure it's for the current page
+      [self updateSiteIconImage:iconImage withURI:siteIconURI loadError:NO];
   }
 }
 

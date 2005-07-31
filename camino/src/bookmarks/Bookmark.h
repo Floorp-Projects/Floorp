@@ -63,4 +63,10 @@
 -(void) setIsSeparator:(BOOL)aSeparatorFlag;
 -(void) setNumberOfVisits:(unsigned)aNumber;
 
+// methods used for saving to files; are guaranteed never to return nil
+- (id)savedURL;
+- (id)savedLastVisit;
+- (id)savedStatus;
+- (id)savedNumberOfVisits;
+
 @end

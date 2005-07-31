@@ -271,7 +271,7 @@ const int kMenuTruncationChars = 60;
 
     CHBrowserView* browserView = (CHBrowserView*)[mTabViewItem view];
     
-    NSString     *url = [browserView getCurrentURLSpec];
+    NSString     *url = [browserView getCurrentURI];
     NSString     *title = [mLabelCell stringValue];
     NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     

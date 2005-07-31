@@ -1379,6 +1379,26 @@
 			settings = {
 			};
 		};
+		0FB6D99A089B276100414498 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = bm_favicon.tiff;
+			path = chrome/bm_favicon.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FB6D99B089B276100414498 = {
+			fileRef = 0FB6D99A089B276100414498;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FB6D99C089B276100414498 = {
+			fileRef = 0FB6D99A089B276100414498;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FBC0EC90798F92600E8E0E2 = {
 			children = (
 				0FBC0ECA0798F92600E8E0E2,
@@ -3214,6 +3234,7 @@
 				3FBDC8E00827C44B00D7F8E0,
 				3FFE23530847CB0D00D6CAFC,
 				0F5187C408858E620091F3FB,
+				0FB6D99B089B276100414498,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7064,6 +7085,7 @@
 				3FBDC86208253C8C00D7F8E0,
 				3FBDC8E10827C44B00D7F8E0,
 				3FFE23540847CB0D00D6CAFC,
+				0FB6D99C089B276100414498,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -12763,6 +12785,7 @@
 				0FFE0A7E079B147F00966027,
 				0FFE0A7F079B147F00966027,
 				0FFE0A80079B147F00966027,
+				0FB6D99A089B276100414498,
 			);
 			isa = PBXGroup;
 			name = images;

@@ -481,17 +481,16 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     browserSetup->SetProperty(property, value);
 }
 
-// how does this differ from getCurrentURLSpec?
 - (NSString*)getCurrentURI
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
   if (!nav)
-    return nil;
+    return @"";
 
   nsCOMPtr<nsIURI> uri;
   nav->GetCurrentURI(getter_AddRefs(uri));
   if (!uri)
-    return nil;
+    return @"";
 
   nsCAutoString spec;
   uri->GetSpec(spec);
@@ -959,6 +958,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   [[self getBrowserContainer] didDismissPrompt];
 }
 
+#if 0
 // how does this differ from getCurrentURI?
 -(NSString*)getCurrentURLSpec
 {
@@ -988,6 +988,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   location->GetHref(urlStr);
   return [NSString stringWith_nsAString: urlStr];
 }
+#endif
 
 - (void)setActive: (BOOL)aIsActive
 {

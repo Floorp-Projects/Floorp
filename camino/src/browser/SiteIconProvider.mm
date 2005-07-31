@@ -476,6 +476,14 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   return siteIcon;
 }
 
+- (void)registerFaviconImage:(NSImage*)inImage forPageURI:(NSString*)inURI
+{
+  if (inImage == nil || [inURI length] == 0)
+    return;
+
+  [mIconDictionary setObject:inImage forKey:inURI];
+}
+
 - (BOOL)fetchFavoriteIconForPage:(NSString*)inPageURI
                 withIconLocation:(NSString*)inIconURI
                     allowNetwork:(BOOL)inAllowNetwork
@@ -561,6 +569,10 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 
 + (NSString*)faviconLocationStringFromURI:(NSString*)inURI
 {
+  // about: urls are special
+  if ([inURI hasPrefix:@"about:"])
+    return inURI;
+
   nsAutoString uriString;
   [inURI assignTo_nsAString:uriString];
 

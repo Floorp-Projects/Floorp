@@ -81,7 +81,11 @@ class nsISupportsArray;
 // 
 @protocol ContentViewProvider
 
+// supply a view for the given url, or return nil to ignore this request
 - (NSView*)provideContentViewForURL:(NSString*)inURL;
+// notification that the given view from this provider has been inserted
+// for the given url
+- (void)contentView:(NSView*)inView usedForURL:(NSString*)inURL;
 
 @end
 
@@ -160,6 +164,7 @@ class nsISupportsArray;
 - (BOOL)isEmpty;                      // is about:blank loaded?
 
 - (NSString*)windowTitle;
+- (NSString*)pageTitle;
 - (NSImage*)siteIcon;
 - (NSString*)location;
 - (NSString*)statusString;
@@ -167,7 +172,7 @@ class nsISupportsArray;
 - (BOOL)popupsBlocked;
 - (unsigned long)securityState;
 
-- (NSString*)getCurrentURLSpec;
+- (NSString*)getCurrentURI;
 
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
 

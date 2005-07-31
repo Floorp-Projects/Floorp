@@ -93,4 +93,8 @@ class NeckoCacheHelper;
 // then this will take that into account.
 - (NSImage*)favoriteIconForPage:(NSString*)inPageURI;
 
+// to register a specific image for a given uri, can all this method. This will
+// add an entry to the cache. It's used for "special" uris like "about:bookmarks".
+- (void)registerFaviconImage:(NSImage*)inImage forPageURI:(NSString*)inURI;
+
 @end

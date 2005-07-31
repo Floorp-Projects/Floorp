@@ -655,6 +655,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return [mChildArray indexOfObjectIdenticalTo:object];
 }
 
+- (id)savedSpecialFlag
+{
+  return mSpecialFlag ? mSpecialFlag : [NSNumber numberWithUnsignedInt:kBookmarkFolder];
+}
+
 //
 // build submenu
 //
@@ -828,6 +833,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [self setTitle:[aDict objectForKey:BMTitleKey]];
   [self setItemDescription:[aDict objectForKey:BMFolderDescKey]];
   [self setKeyword:[aDict objectForKey:BMFolderKeywordKey]];
+  [self setUUID:[aDict objectForKey:BMUUIDKey]];
   unsigned int flag = [[aDict objectForKey:BMFolderTypeKey] unsignedIntValue];
   // on the off chance we've imported somebody else's bookmarks after startup,
   // we need to clear any super special flags on it.  if we have a shared bookmark manager,
@@ -965,11 +971,13 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
         [children addObject:aDict];
     }
     return [NSDictionary dictionaryWithObjectsAndKeys:
-      mTitle,BMTitleKey,
-      mDescription,BMFolderDescKey,
-      mKeyword,BMFolderKeywordKey,
-      mSpecialFlag,BMFolderTypeKey,
-      children,BMChildrenKey, nil];
+                     [self savedTitle], BMTitleKey,
+           [self savedItemDescription], BMFolderDescKey,
+                   [self savedKeyword], BMFolderKeywordKey,
+                      [self savedUUID], BMUUIDKey,
+               [self savedSpecialFlag], BMFolderTypeKey,
+                              children, BMChildrenKey,
+                                        nil];
   }
   return nil;
 }

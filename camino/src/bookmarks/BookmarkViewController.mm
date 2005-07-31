@@ -172,13 +172,10 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (void)dealloc
 {
-  // save the splitter width of the container view
-  float width = [mContainersSplit leftWidth]; 
-  [[NSUserDefaults standardUserDefaults] setFloat: width forKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
+  // we know this is still alive, because we release the last ref below
+  [mBookmarksEditingView setDelegate:nil];
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-  [self saveExpandedStateDictionary];
 
   // balance the extra retains
   [mBookmarksHostView release];
@@ -217,6 +214,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 // called when our nib has loaded
 - (void)awakeFromNib
 {
+  [mBookmarksEditingView setDelegate:self];
+  
   // retain views that we remove from the hierarchy  
   [mBookmarksHostView retain];
   [mHistoryHostView retain];
@@ -352,8 +351,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     [mBookmarksOutlineView setDoubleAction: @selector(openBookmark:)];
     [mBookmarksOutlineView setDeleteAction: @selector(deleteBookmarks:)];
     [mBookmarksOutlineView reloadData];
-
-    [self restoreFolderExpandedStates];
   }
 }
 
@@ -735,6 +732,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
     if (savedWidth < kDefaultSplitWidth)
       savedWidth = kDefaultSplitWidth;
+     
+    float maxWidth = NSWidth([mBookmarksEditingView frame]) - 100;
+    if (savedWidth > maxWidth)
+      savedWidth = maxWidth;
+    
     [mContainersSplit setLeftWidth:savedWidth];
     mSplittersRestored = YES;              // needed first time only
   }
@@ -872,9 +874,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     if ([item isKindOfClass:[BookmarkFolder class]])
     {
       if ([self hasExpandedState:item])
-        [mBookmarksOutlineView expandItem: item];
+        [mBookmarksOutlineView expandItem:item];
       else
-        [mBookmarksOutlineView collapseItem: item];
+        [mBookmarksOutlineView collapseItem:item];
     }
     curRow ++;
   }
@@ -884,19 +886,17 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   if (!mExpandedStates)
   {
-    // We can't save BM expanded states to user defaults, because we don't have a persisent per-bookmark ID.
-    // mExpandedStates = [[[NSUserDefaults standardUserDefaults] dictionaryForKey:kExpandedBookmarksStatesDefaultsKey] mutableCopy];
-    // if (!mExpandedStates)
-    mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
+    mExpandedStates = [[[NSUserDefaults standardUserDefaults] dictionaryForKey:kExpandedBookmarksStatesDefaultsKey] mutableCopy];
+    if (!mExpandedStates)
+      mExpandedStates = [[NSMutableDictionary alloc] initWithCapacity:20];
   }
   return mExpandedStates;
 }
 
 - (void)saveExpandedStateDictionary
 {
-  // We can't save BM expanded states to user defaults, because we don't have a persisent per-bookmark ID.
-  // if (mExpandedStates)
-  //   [[NSUserDefaults standardUserDefaults] setObject:mExpandedStates forKey:kExpandedBookmarksStatesDefaultsKey];
+  if (mExpandedStates)
+    [[NSUserDefaults standardUserDefaults] setObject:mExpandedStates forKey:kExpandedBookmarksStatesDefaultsKey];
 }
 
 -(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy
@@ -1077,6 +1077,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     [mSortButton   setMenu:mSortMenuHistory];
     [mSearchField  setPopupMenu:mQuickSearchMenuHistory];
     [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
+    
+    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"HistoryWindowTitle", @"")];
   } 
   else
   {
@@ -1104,6 +1106,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     [mSortButton   setMenu:mSortMenuBookmarks];
     [mSearchField  setPopupMenu:mQuickSearchMenuBookmarks];
     [mSearchField  selectPopupMenuItem:[[mSearchField popupMenu] itemWithTag:1]];   // select the "all" item
+
+    [[mBookmarksEditingView window] setTitle:NSLocalizedString(@"BookmarksWindowTitle", @"")];
 
     // this reload ensures that we display the newly selected activeCollection 
     [mBookmarksOutlineView reloadData];
@@ -1801,6 +1805,21 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [self reloadDataForItem:[note object] reloadChildren:NO];
 }
 
+- (void)bookmarksViewDidMoveToWindow:(NSWindow*)inWindow
+{
+  // we're leaving the window, so...
+  if (!inWindow)
+  {
+    // save the splitter width
+    float containerWidth = [mContainersSplit leftWidth];
+    [[NSUserDefaults standardUserDefaults] setFloat:containerWidth forKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
+    
+    // save the expanded state
+    [self saveExpandedStateDictionary];
+  }
+
+}
+
 #pragma mark -
 
 //
@@ -1820,6 +1839,10 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return kMinContainerSplitWidth;  // minimum size of collections pane
 
   return proposedCoord;
+}
+
+- (void)splitViewDidResizeSubviews:(NSNotification *)aNotification
+{
 }
 
 
@@ -1844,6 +1867,36 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   }
 
   return mBookmarksEditingView;
+}
+
+- (void)contentView:(NSView*)inView usedForURL:(NSString*)inURL
+{
+  if (inView == mBookmarksEditingView)
+  {
+    [self focus];
+  }
+}
+
+@end
+
+#pragma mark -
+
+@implementation BookmarksEditingView
+
+- (id)delegate
+{
+  return mDelegate;
+}
+
+- (void)setDelegate:(id)inDelegate
+{
+  mDelegate = inDelegate;
+}
+
+- (void)viewDidMoveToWindow
+{
+  if ([mDelegate respondsToSelector:@selector(bookmarksViewDidMoveToWindow:)])
+    [mDelegate bookmarksViewDidMoveToWindow:[self window]];
 }
 
 @end

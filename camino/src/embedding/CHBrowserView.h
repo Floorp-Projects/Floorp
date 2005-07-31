@@ -224,8 +224,6 @@ enum {
 - (void)doBeforePromptDisplay;
 - (void)doAfterPromptDismissal;
 
--(NSString*)getCurrentURLSpec;
-
 - (void)setActive: (BOOL)aIsActive;
 
 - (NSMenu*)getContextMenu;

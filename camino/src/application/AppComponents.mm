@@ -186,13 +186,13 @@ static const nsModuleComponentInfo gAppComponents[] = {
     "About Bookmarks Module",
     NS_ABOUT_BOOKMARKS_MODULE_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "bookmarks",
-    nsAboutBookmarks::Create,
+    nsAboutBookmarks::CreateBookmarks,
   },
   {
     "About Bookmarks Module",
     NS_ABOUT_BOOKMARKS_MODULE_CID,
     NS_ABOUT_MODULE_CONTRACTID_PREFIX "history",
-    nsAboutBookmarks::Create,
+    nsAboutBookmarks::CreateHistory,
   }
  
 };
