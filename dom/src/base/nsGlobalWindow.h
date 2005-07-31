@@ -408,6 +408,9 @@ protected:
   // This member variable is used only on the inner window.
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
 
+  // This member variable is used on both inner and the outer windows.
+  nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   static nsIScriptSecurityManager *sSecMan;

@@ -524,6 +524,9 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
                                PRBool aClearScopeHint,
                                PRBool aIsInternalCall)
 {
+  NS_WARN_IF_FALSE(mDocumentPrincipal == nsnull,
+                   "mDocumentPrincipal prematurely set!");
+
   if (!aIsInternalCall && IsInnerWindow()) {
     return GetOuterWindowInternal()->SetNewDocument(aDocument,
                                                     aRemoveEventListeners,
@@ -535,6 +538,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     return NS_ERROR_INVALID_ARG;
   }
+
+  NS_ASSERTION(!GetCurrentInnerWindow() ||
+               GetCurrentInnerWindow()->GetExtantDocument() == mDocument,
+               "Uh, mDocument doesn't match the current inner window "
+               "document!");
 
   nsCOMPtr<nsIDocument> newDoc(do_QueryInterface(aDocument));
   NS_ENSURE_TRUE(newDoc, NS_ERROR_FAILURE);
@@ -658,12 +666,17 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     }
   }
 
+  // Remember the old document's principal.
+  nsIPrincipal *oldPrincipal = nsnull;
+
+  if (oldDoc) {
+    oldPrincipal = oldDoc->GetPrincipal();
+  }
+
   // Drop our reference to the navigator object unless we're reusing
   // the existing inner window or the new document is from the same
   // origin as the old document.
-  nsIPrincipal *oldPrincipal;
-  if (!reUseInnerWindow && mNavigator && oldDoc &&
-      (oldPrincipal = oldDoc->GetPrincipal())) {
+  if (!reUseInnerWindow && mNavigator && oldPrincipal) {
     nsIPrincipal *newPrincipal = newDoc->GetPrincipal();
     rv = NS_ERROR_FAILURE;
 
@@ -812,9 +825,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
           ::JS_ClearRegExpStatics(cx);
         }
 
-        // Make the current inner window release its strong references to
-        // the document to prevent it from keeping everything around.
+        // Make the current inner window release its strong references
+        // to the document to prevent it from keeping everything
+        // around. But remember the document's principal.
         currentInner->mDocument = nsnull;
+        currentInner->mDocumentPrincipal = oldPrincipal;
       }
 
       mInnerWindow = newInnerWindow;
@@ -925,10 +940,24 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
         ::JS_ClearScope(cx, currentInner->mJSObject);
         ::JS_ClearWatchPointsForObject(cx, currentInner->mJSObject);
 
+        if (currentInner->mDocument) {
+          nsCOMPtr<nsIDocument> doc =
+            do_QueryInterface(currentInner->mDocument);
+
+          // Remember the document's principal.
+          currentInner->mDocumentPrincipal = doc->GetPrincipal();
+        }
+
         // Release the current inner window's document references.
         currentInner->mDocument = nsnull;
         nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
       }
+
+      nsCOMPtr<nsIDocument> doc =
+        do_QueryInterface(mDocument);
+
+      // Remember the document's principal.
+      mDocumentPrincipal = doc->GetPrincipal();
 
       // Release the our document reference
       mDocument = nsnull;
@@ -1322,14 +1351,16 @@ nsGlobalWindow::SetNewArguments(JSObject *aArguments)
 nsIPrincipal*
 nsGlobalWindow::GetPrincipal()
 {
-  // XXXjst: figure out inner window stuff...
-
   if (mDocument) {
     // If we have a document, get the principal from the document
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     NS_ENSURE_TRUE(doc, nsnull);
 
     return doc->GetPrincipal();
+  }
+
+  if (mDocumentPrincipal) {
+    return mDocumentPrincipal;
   }
 
   // If we don't have a principal and we don't have a document we
