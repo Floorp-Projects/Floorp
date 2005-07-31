@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <Foundation/Foundation.h>
 #include "nsAboutBookmarks.h"
 
 #include "nsIIOService.h"
@@ -46,8 +47,8 @@ NS_IMPL_ISUPPORTS1(nsAboutBookmarks, nsIAboutModule)
 
 // XXX get localized page title
 
-static const char kBlankPage[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
-"<html><head><title>Bookmarks</title></head><body></body></html>";
+static NSString* const kBlankPageHTML = @"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
+"<html><head><title>%@</title></head><body></body></html>";
 
 NS_IMETHODIMP
 nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
@@ -56,7 +57,8 @@ nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsIChannel* channel;
 
     nsCOMPtr<nsIInputStream> in;
-    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString(kBlankPage));
+    NSString* localizedBlank = [NSString stringWithFormat:kBlankPageHTML, NSLocalizedString(@"Bookmarks",nil)];
+    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString([localizedBlank UTF8String]));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in,
