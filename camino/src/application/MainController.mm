@@ -1396,6 +1396,13 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
+-(IBAction) supportLink:(id)aSender;
+{
+  NSString* pageToLoad = NSLocalizedStringFromTable(@"SupportPageDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"SupportPageDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
 -(IBAction) infoLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"InfoPageDefault", @"WebsiteDefaults", nil);

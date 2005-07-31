@@ -159,6 +159,7 @@ typedef enum EBookmarkOpenBehavior
 -(IBAction) downloadsWindow:(id)aSender;
 
 // Help menu actions
+-(IBAction) supportLink:(id)aSender;
 -(IBAction) infoLink:(id)aSender;
 -(IBAction) feedbackLink:(id)aSender;
 -(IBAction) releaseNoteLink:(id)aSender;
