@@ -45,14 +45,11 @@
 
 NS_IMPL_ISUPPORTS1(nsAboutBookmarks, nsIAboutModule)
 
-// XXX get localized page title
-
-static NSString* const kBlankPageHTML = @"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
-"<html><head><title>%@</title></head><body></body></html>";
-
 NS_IMETHODIMP
 nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
+    static NSString* const kBlankPageHTML = @"<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"> <html><head><title>%@</title></head><body></body></html>";
+
     nsresult rv;
     nsIChannel* channel;
 
