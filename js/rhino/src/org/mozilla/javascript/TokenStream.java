@@ -574,6 +574,12 @@ class TokenStream
                             }
                             break;
 
+                        case '\n':
+                            // Remove line terminator after escape to follow
+                            // SpiderMonkey and C/C++
+                            c = getChar();
+                            continue strLoop;
+
                         default:
                             if ('0' <= c && c < '8') {
                                 int val = c - '0';
