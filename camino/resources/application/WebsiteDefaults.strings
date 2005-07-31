@@ -1,3 +1,4 @@
+SupportPageDefault = "http://www.mozilla.org/products/camino/support/";
 HomePageDefault = "http://www.mozilla.org/projects/camino/homepage.html";
 SearchPageDefault = "http://www.google.com/";
 StartPageDefault = "http://www.mozilla.org/projects/camino/welcome.html";

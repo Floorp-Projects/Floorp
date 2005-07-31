@@ -68,6 +68,7 @@
                 setFileExtension = id; 
                 showHistory = id; 
                 smallerTextSize = id; 
+                supportLink = id; 
                 tipsTricksLink = id; 
                 toggleAutoCharsetDetection = id; 
                 toggleBookmarksToolbar = id; 
