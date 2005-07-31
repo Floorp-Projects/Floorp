@@ -242,11 +242,14 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 }
 
 - (void)completeSetup
-{  
+{
   // set up the table appearance for item and search views
   [self setupAppearanceOfTableView:mContainersTableView];
   [self setupAppearanceOfTableView:mBookmarksOutlineView];
   [self setupAppearanceOfTableView:mHistoryOutlineView];
+
+  [mBookmarksOutlineView setAutoresizesOutlineColumn:NO];
+  [mHistoryOutlineView setAutoresizesOutlineColumn:NO];
 
   // set up history outliner
   mHistoryDataSource = [[HistoryDataSource alloc] init];
