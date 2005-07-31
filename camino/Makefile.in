@@ -69,7 +69,7 @@ ABS_topsrcdir := $(shell cd $(topsrcdir); pwd)
 export::
 	mkdir -p ./wallet/tables && ln -sf $(ABS_topsrcdir)/extensions/wallet/src/*.tbl ./wallet/tables
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-	rsync -a --exclude .DS_Store --exclude "CVS/" --exclude "*.model" --exclude "*.pbxuser" $(srcdir)/Camino.xcode .
+	rsync -a --exclude .DS_Store --exclude "CVS/" --exclude "*.mode1" --exclude "*.pbxuser" $(srcdir)/Camino.xcode .
 	ln -fs $(srcdir)/src
 	ln -fs $(srcdir)/resources
 	ln -fs $(srcdir)/PreferencePanes
