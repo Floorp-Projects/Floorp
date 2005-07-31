@@ -1842,7 +1842,7 @@
 				F538DFAE023B36A7010001CA,
 				F564872E023B954E010001CA,
 				F50EA33D02BAAAB701000103,
-				3FAA54C70587778700BBF630,
+				3FEBB28C089D73A700BD8373,
 				3F8C00930681262400658CBC,
 				089C165CFE840E0CC02AAC07,
 				F52CE65C02BFA8B701026D5D,
@@ -3142,7 +3142,7 @@
 				3F44AC7405BDFB9E00CB4B08,
 				3F44AC7605BDFB9E00CB4B08,
 				3F44AC7705BDFB9E00CB4B08,
-				3F44AC7805BDFB9E00CB4B08,
+				3FEBB28D089D73A700BD8373,
 				3F44AC7905BDFB9E00CB4B08,
 				3F44AC7A05BDFB9E00CB4B08,
 				3F44AC7B05BDFB9E00CB4B08,
@@ -3586,12 +3586,6 @@
 		};
 		3F44AC7705BDFB9E00CB4B08 = {
 			fileRef = 3F63719B057CE0DE00B62EE2;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC7805BDFB9E00CB4B08 = {
-			fileRef = 3FAA54C70587778700BBF630;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6992,7 +6986,7 @@
 				3F44AEAD05BDFBA000CB4B08,
 				3F44AEAF05BDFBA000CB4B08,
 				3F44AEB005BDFBA000CB4B08,
-				3F44AEB105BDFBA000CB4B08,
+				3FEBB28E089D73A700BD8373,
 				3F44AEB205BDFBA000CB4B08,
 				3F44AEB305BDFBA000CB4B08,
 				3F44AEB405BDFBA000CB4B08,
@@ -7442,12 +7436,6 @@
 		};
 		3F44AEB005BDFBA000CB4B08 = {
 			fileRef = 3F63719B057CE0DE00B62EE2;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AEB105BDFBA000CB4B08 = {
-			fileRef = 3FAA54C70587778700BBF630;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9600,10 +9588,10 @@
 			fileEncoding = 30;
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			name = bookmarks.plist;
-			path = resources/application/bookmarks.plist;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
+			name = English;
+			path = resources/application/English.lproj/bookmarks.plist;
+			refType = 4;
+			sourceTree = "<group>";
 		};
 		3FAD95540461E43700A80005 = {
 			isa = PBXFileReference;
@@ -10452,6 +10440,27 @@
 		};
 		3FEBB0FA0899C18600BD8373 = {
 			fileRef = 3FEBB0E60899C18600BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB28C089D73A700BD8373 = {
+			children = (
+				3FAA54C70587778700BBF630,
+			);
+			isa = PBXVariantGroup;
+			name = bookmarks.plist;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		3FEBB28D089D73A700BD8373 = {
+			fileRef = 3FEBB28C089D73A700BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB28E089D73A700BD8373 = {
+			fileRef = 3FEBB28C089D73A700BD8373;
 			isa = PBXBuildFile;
 			settings = {
 			};
