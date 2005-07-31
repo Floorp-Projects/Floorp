@@ -49,7 +49,7 @@ public final class OptRuntime extends ScriptRuntime
     /**
      * Implement ....() call shrinking optimizer code.
      */
-    public static Object call0(Function fun, Scriptable thisObj,
+    public static Object call0(Callable fun, Scriptable thisObj,
                                Context cx, Scriptable scope)
     {
         return fun.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
@@ -58,7 +58,8 @@ public final class OptRuntime extends ScriptRuntime
     /**
      * Implement ....(arg) call shrinking optimizer code.
      */
-    public static Object call1(Function fun, Scriptable thisObj, Object arg0,                                   Context cx, Scriptable scope)
+    public static Object call1(Callable fun, Scriptable thisObj, Object arg0,
+                               Context cx, Scriptable scope)
     {
         return fun.call(cx, scope, thisObj, new Object[] { arg0 } );
     }
@@ -66,7 +67,7 @@ public final class OptRuntime extends ScriptRuntime
     /**
      * Implement ....(arg0, arg1) call shrinking optimizer code.
      */
-    public static Object call2(Function fun, Scriptable thisObj,
+    public static Object call2(Callable fun, Scriptable thisObj,
                                Object arg0, Object arg1,
                                Context cx, Scriptable scope)
     {
@@ -76,7 +77,7 @@ public final class OptRuntime extends ScriptRuntime
     /**
      * Implement ....(arg0, arg1, ...) call shrinking optimizer code.
      */
-    public static Object callN(Function fun, Scriptable thisObj,
+    public static Object callN(Callable fun, Scriptable thisObj,
                                Object[] args,
                                Context cx, Scriptable scope)
     {
@@ -89,7 +90,7 @@ public final class OptRuntime extends ScriptRuntime
     public static Object callName(Object[] args, String name,
                                   Context cx, Scriptable scope)
     {
-        Function f = getNameFunctionAndThis(name, cx, scope);
+        Callable f = getNameFunctionAndThis(name, cx, scope);
         Scriptable thisObj = lastStoredScriptable(cx);
         return f.call(cx, scope, thisObj, args);
     }
@@ -100,7 +101,7 @@ public final class OptRuntime extends ScriptRuntime
     public static Object callName0(String name,
                                    Context cx, Scriptable scope)
     {
-        Function f = getNameFunctionAndThis(name, cx, scope);
+        Callable f = getNameFunctionAndThis(name, cx, scope);
         Scriptable thisObj = lastStoredScriptable(cx);
         return f.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
     }
@@ -111,7 +112,7 @@ public final class OptRuntime extends ScriptRuntime
     public static Object callProp0(Object value, String property,
                                    Context cx, Scriptable scope)
     {
-        Function f = getPropFunctionAndThis(value, property, cx);
+        Callable f = getPropFunctionAndThis(value, property, cx);
         Scriptable thisObj = lastStoredScriptable(cx);
         return f.call(cx, scope, thisObj, ScriptRuntime.emptyArgs);
     }
@@ -146,7 +147,7 @@ public final class OptRuntime extends ScriptRuntime
         ScriptRuntime.initFunction(cx, scope, fn, functionType, false);
     }
 
-    public static Object callSpecial(Context cx, Function fun,
+    public static Object callSpecial(Context cx, Callable fun,
                                      Scriptable thisObj, Object[] args,
                                      Scriptable scope,
                                      Scriptable callerThis, int callType,

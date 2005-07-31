@@ -1632,7 +1632,7 @@ public class ScriptRuntime {
         }
 
         if (asFunctionCall) {
-            if (!(result instanceof Function)) {
+            if (!(result instanceof Callable)) {
                 throw notFunctionError(result, name);
             }
             storeScriptable(cx, thisObj);
@@ -1866,14 +1866,14 @@ public class ScriptRuntime {
      * The caller must call ScriptRuntime.lastStoredScriptable() immediately
      * after calling this method.
      */
-    public static Function getNameFunctionAndThis(String name,
+    public static Callable getNameFunctionAndThis(String name,
                                                   Context cx,
                                                   Scriptable scope)
     {
         Scriptable parent = scope.getParentScope();
         if (parent == null) {
             Object result = topScopeName(cx, scope, name);
-            if (!(result instanceof Function)) {
+            if (!(result instanceof Callable)) {
                 if (result == Scriptable.NOT_FOUND) {
                     throw notFoundError(scope, name);
                 } else {
@@ -1883,11 +1883,11 @@ public class ScriptRuntime {
             // Top scope is not NativeWith or NativeCall => thisObj == scope
             Scriptable thisObj = scope;
             storeScriptable(cx, thisObj);
-            return (Function)result;
+            return (Callable)result;
         }
 
         // name will call storeScriptable(cx, thisObj);
-        return (Function)nameOrFunction(cx, scope, parent, name, true);
+        return (Callable)nameOrFunction(cx, scope, parent, name, true);
     }
 
     /**
@@ -1897,7 +1897,7 @@ public class ScriptRuntime {
      * The caller must call ScriptRuntime.lastStoredScriptable() immediately
      * after calling this method.
      */
-    public static Function getElemFunctionAndThis(Object obj,
+    public static Callable getElemFunctionAndThis(Object obj,
                                                   Object elem,
                                                   Context cx)
     {
@@ -1929,12 +1929,12 @@ public class ScriptRuntime {
             }
             thisObj = extra;
         }
-        if (!(value instanceof Function)) {
+        if (!(value instanceof Callable)) {
             throw notFunctionError(value, elem);
         }
 
         storeScriptable(cx, thisObj);
-        return (Function)value;
+        return (Callable)value;
     }
 
     /**
@@ -1944,7 +1944,7 @@ public class ScriptRuntime {
      * The caller must call ScriptRuntime.lastStoredScriptable() immediately
      * after calling this method.
      */
-    public static Function getPropFunctionAndThis(Object obj,
+    public static Callable getPropFunctionAndThis(Object obj,
                                                   String property,
                                                   Context cx)
     {
@@ -1971,12 +1971,12 @@ public class ScriptRuntime {
             thisObj = extra;
         }
 
-        if (!(value instanceof Function)) {
+        if (!(value instanceof Callable)) {
             throw notFunctionError(value, property);
         }
 
         storeScriptable(cx, thisObj);
-        return (Function)value;
+        return (Callable)value;
     }
 
     /**
@@ -1986,14 +1986,20 @@ public class ScriptRuntime {
      * The caller must call ScriptRuntime.lastStoredScriptable() immediately
      * after calling this method.
      */
-    public static Function getValueFunctionAndThis(Object value, Context cx)
+    public static Callable getValueFunctionAndThis(Object value, Context cx)
     {
-        if (!(value instanceof Function)) {
+        if (!(value instanceof Callable)) {
             throw notFunctionError(value);
         }
 
-        Function f = (Function)value;
-        Scriptable thisObj = f.getParentScope();
+        Callable f = (Callable)value;
+        Scriptable thisObj;
+        if (f instanceof Scriptable) {
+            thisObj = ((Scriptable)f).getParentScope();
+        } else {
+            if (cx.topCallScope == null) throw new IllegalStateException();
+            thisObj = cx.topCallScope;
+        }
         if (thisObj.getParentScope() != null) {
             if (thisObj instanceof NativeWith) {
                 // functions defined inside with should have with target
@@ -2016,15 +2022,16 @@ public class ScriptRuntime {
      * can be GC-reachable after this method returns. If this is necessary,
      * store args.clone(), not args array itself.
      */
-    public static Ref callRef(Function function, Scriptable thisObj,
-                              Object[] args, Context cx, Scriptable scope)
+    public static Ref callRef(Callable function, Scriptable thisObj,
+                              Object[] args, Context cx)
     {
-        if (function instanceof BaseFunction) {
-            BaseFunction bf = (BaseFunction)function;
-            Ref ref = bf.callRef(cx, scope, thisObj, args);
-            if (ref != null) {
-                return ref;
+        if (function instanceof RefCallable) {
+            RefCallable rfunction = (RefCallable)function;
+            Ref ref = rfunction.refCall(cx, thisObj, args);
+            if (ref == null) {
+                throw new IllegalStateException(rfunction.getClass().getName()+".refCall() returned null");
             }
+            return ref;
         }
         // No runtime support for now
         String msg = getMessage1("msg.no.ref.from.function",
@@ -2047,7 +2054,7 @@ public class ScriptRuntime {
         return function.construct(cx, scope, args);
     }
 
-    public static Object callSpecial(Context cx, Function fun,
+    public static Object callSpecial(Context cx, Callable fun,
                                      Scriptable thisObj,
                                      Object[] args, Scriptable scope,
                                      Scriptable callerThis, int callType,
@@ -2099,15 +2106,15 @@ public class ScriptRuntime {
                                      Scriptable thisObj, Object[] args)
     {
         int L = args.length;
-        Function function;
-        if (thisObj instanceof Function) {
-            function = (Function)thisObj;
+        Callable function;
+        if (thisObj instanceof Callable) {
+            function = (Callable)thisObj;
         } else {
             Object value = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-            if (!(value instanceof Function)) {
+            if (!(value instanceof Callable)) {
                 throw ScriptRuntime.notFunctionError(value, thisObj);
             }
-            function = (Function)value;
+            function = (Callable)value;
         }
 
         Scriptable callThis = null;
@@ -2218,7 +2225,7 @@ public class ScriptRuntime {
             if (value instanceof XMLObject)
                 return "xml";
 
-            return (value instanceof Function) ? "function" : "object";
+            return (value instanceof Callable) ? "function" : "object";
         }
         if (value instanceof String)
             return "string";

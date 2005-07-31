@@ -346,15 +346,6 @@ public class BaseFunction extends IdScriptableObject implements Function
     }
 
     /**
-     * EXPERIMENTAL: subject to change/removal
-     */
-    protected Ref callRef(Context cx, Scriptable scope,
-                          Scriptable thisObj, Object[] args)
-    {
-        return null;
-    }
-
-    /**
      * Decompile the source information associated with this js
      * function/script back into a string.
      *

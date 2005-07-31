@@ -2969,9 +2969,9 @@ switch (op) {
             stackTop -= 1 + indexReg;
 
             // Call code generation ensure that stack here
-            // is ... Function Scriptable
+            // is ... Callable Scriptable
             Scriptable functionThis = (Scriptable)stack[stackTop + 1];
-            Function function = (Function)stack[stackTop];
+            Callable function = (Callable)stack[stackTop];
             Object[] outArgs = getArgsArray(
                                    stack, sDbl, stackTop + 2, indexReg);
             stack[stackTop] = ScriptRuntime.callSpecial(
@@ -2993,22 +2993,20 @@ switch (op) {
         stackTop -= 1 + indexReg;
 
         // CALL generation ensures that fun and funThisObj
-        // are already Scriptable and Function objects respectively
-        Function fun = (Function)stack[stackTop];
+        // are already Scriptable and Callable objects respectively
+        Callable fun = (Callable)stack[stackTop];
         Scriptable funThisObj = (Scriptable)stack[stackTop + 1];
+        if (op == Token.REF_CALL) {
+            Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2,
+                                            indexReg);
+            stack[stackTop] = ScriptRuntime.callRef(fun, funThisObj,
+                                                    outArgs, cx);
+            continue Loop;
+        }
         Scriptable calleeScope = frame.scope;
         if (frame.useActivation) {
             calleeScope = ScriptableObject.getTopLevelScope(frame.scope);
         }
-
-        if (op == Token.REF_CALL) {
-            Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2,
-                                            indexReg);
-            stack[stackTop] = ScriptRuntime.callRef(fun, funThisObj, outArgs,
-                                                    cx, calleeScope);
-            continue Loop;
-        }
-
         if (fun instanceof InterpretedFunction) {
             InterpretedFunction ifun = (InterpretedFunction)fun;
             if (frame.fnOrScript.securityDomain == ifun.securityDomain) {

@@ -1772,14 +1772,12 @@ class BodyCodegen
                 child = child.getNext();
                 generateCallArgArray(node, child, false);
                 cfw.addALoad(contextLocal);
-                cfw.addALoad(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "callRef",
-                    "(Lorg/mozilla/javascript/Function;"
+                    "(Lorg/mozilla/javascript/Callable;"
                     +"Lorg/mozilla/javascript/Scriptable;"
                     +"[Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
                     +")Lorg/mozilla/javascript/Ref;");
                 break;
 
@@ -2558,7 +2556,7 @@ class BodyCodegen
         } else {
             methodName = "callSpecial";
             callSignature = "(Lorg/mozilla/javascript/Context;"
-                            +"Lorg/mozilla/javascript/Function;"
+                            +"Lorg/mozilla/javascript/Callable;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"[Ljava/lang/Object;"
                             +"Lorg/mozilla/javascript/Scriptable;"
@@ -2613,7 +2611,7 @@ class BodyCodegen
             } else {
                 generateFunctionAndThisObj(child, node);
                 methodName = "call0";
-                signature = "(Lorg/mozilla/javascript/Function;"
+                signature = "(Lorg/mozilla/javascript/Callable;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Lorg/mozilla/javascript/Context;"
                             +"Lorg/mozilla/javascript/Scriptable;"
@@ -2644,7 +2642,7 @@ class BodyCodegen
             if (argCount == 1) {
                 generateExpression(firstArgChild, node);
                 methodName = "call1";
-                signature = "(Lorg/mozilla/javascript/Function;"
+                signature = "(Lorg/mozilla/javascript/Callable;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Ljava/lang/Object;"
                             +"Lorg/mozilla/javascript/Context;"
@@ -2654,7 +2652,7 @@ class BodyCodegen
                 generateExpression(firstArgChild, node);
                 generateExpression(firstArgChild.getNext(), node);
                 methodName = "call2";
-                signature = "(Lorg/mozilla/javascript/Function;"
+                signature = "(Lorg/mozilla/javascript/Callable;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Ljava/lang/Object;"
                             +"Ljava/lang/Object;"
@@ -2664,7 +2662,7 @@ class BodyCodegen
             } else {
                 generateCallArgArray(node, firstArgChild, false);
                 methodName = "callN";
-                signature = "(Lorg/mozilla/javascript/Function;"
+                signature = "(Lorg/mozilla/javascript/Callable;"
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"[Ljava/lang/Object;"
                             +"Lorg/mozilla/javascript/Context;"
@@ -2828,7 +2826,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 +")Lorg/mozilla/javascript/Scriptable;");
         } else {
             cfw.addInvoke(ByteCode.INVOKEINTERFACE,
-                "org/mozilla/javascript/Function",
+                "org/mozilla/javascript/Callable",
                 "call",
                 "(Lorg/mozilla/javascript/Context;"
                 +"Lorg/mozilla/javascript/Scriptable;"
@@ -2900,7 +2898,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/String;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +")Lorg/mozilla/javascript/Function;");
+                    +")Lorg/mozilla/javascript/Callable;");
             } else {
                 // Optimizer do not optimize this case for now
                 if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1)
@@ -2912,7 +2910,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Context;"
-                    +")Lorg/mozilla/javascript/Function;");
+                    +")Lorg/mozilla/javascript/Callable;");
             }
             break;
           }
@@ -2927,7 +2925,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 "(Ljava/lang/String;"
                 +"Lorg/mozilla/javascript/Context;"
                 +"Lorg/mozilla/javascript/Scriptable;"
-                +")Lorg/mozilla/javascript/Function;");
+                +")Lorg/mozilla/javascript/Callable;");
             break;
           }
 
@@ -2938,7 +2936,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 "getValueFunctionAndThis",
                 "(Ljava/lang/Object;"
                 +"Lorg/mozilla/javascript/Context;"
-                +")Lorg/mozilla/javascript/Function;");
+                +")Lorg/mozilla/javascript/Callable;");
             break;
         }
         // Get thisObj prepared by get(Name|Prop|Elem|Value)FunctionAndThis

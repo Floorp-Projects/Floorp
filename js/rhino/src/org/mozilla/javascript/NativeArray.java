@@ -546,7 +546,7 @@ public class NativeArray extends IdScriptableObject
                         if (toLocale && elem != Undefined.instance &&
                             elem != null)
                         {
-                            Function fun;
+                            Callable fun;
                             Scriptable funThis;
                             fun = ScriptRuntime.getPropFunctionAndThis(
                                       elem, "toLocaleString", cx);
@@ -717,7 +717,7 @@ public class NativeArray extends IdScriptableObject
             // assemble args and call supplied JS cmp function
             cmpBuf[0] = x;
             cmpBuf[1] = y;
-            Function fun = ScriptRuntime.getValueFunctionAndThis(cmp, cx);
+            Callable fun = ScriptRuntime.getValueFunctionAndThis(cmp, cx);
             Scriptable funThis = ScriptRuntime.lastStoredScriptable(cx);
 
             Object ret = fun.call(cx, scope, funThis, cmpBuf);
