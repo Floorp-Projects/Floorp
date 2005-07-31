@@ -117,5 +117,7 @@ class nsICookie;
 - (void)sortCookiesByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
 - (void)sortPermissionsByColumn:(NSTableColumn *)aTableColumn inAscendingOrder:(BOOL)ascending;
 
-
+  //filtering methods
+- (void) filterCookiesPermissionsWithString: (NSString*) inFilterString;
+- (void) filterCookiesWithString: (NSString*) inFilterString;
 @end

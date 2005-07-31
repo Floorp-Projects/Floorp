@@ -669,7 +669,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         // to a site's nsIPermission. It's this, use a custom class that duplicates the
         // information (wasting a lot of memory), or find a way to tie in to
         // PERM_CHANGE_NOTIFICATION to get the new nsIPermission that way.
-        [self populatePermissionCache];
+        //re-filter
+        [self filterCookiesPermissionsWithString:[mPermissionFilterField stringValue]];
         // re-aquire selection of the changed permission
         int selectedRowIndex = [self getRowForPermissionWithHost:[NSString stringWithUTF8String:host.get()]];
         nsCOMPtr<nsIPermission> selectedItem = (selectedRowIndex != -1) ?
@@ -854,40 +855,76 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
   NSString *filterString = [[aNotification object] stringValue];
-  nsCAutoString host;
   
   // find out if we are filtering the permission or the cookies
   if (([aNotification object] == mPermissionFilterField) && mCachedPermissions && mPermissionManager) {
     // the user wants to filter down the list of cookies. Reinitialize the list of permission in case
     // they deleted or replaced a letter.
-    [self populatePermissionCache];
-    if ([filterString length]) {
-      for (int row = mCachedPermissions->Count() - 1; row >= 0; row--) {
-        mCachedPermissions->ObjectAt(row)->GetHost(host);
-        if ([[NSString stringWithUTF8String: host.get()] rangeOfString: filterString].location == NSNotFound)
-          // remove from cookie permissions list
-          mCachedPermissions->RemoveObjectAt(row);
-      }
-    }
+    [self filterCookiesPermissionsWithString:filterString];
+    // re-sort
+    [self sortPermissionsByColumn:[mPermissionsTable highlightedTableColumn] inAscendingOrder:mSortedAscending];
+      
     [mPermissionsTable deselectAll: self];   // don't want any traces of previous selection
     [mPermissionsTable reloadData];
   } 
   else if (([aNotification object] == mCookiesFilterField) && mCachedCookies && mCookieManager) {
     // reinitialize the list of cookies in case user deleted a letter or replaced a letter
-    [self populateCookieCache];
+    [self filterCookiesWithString:filterString];
+    // re-sort
+    [self sortCookiesByColumn:[mCookiesTable highlightedTableColumn] inAscendingOrder:mSortedAscending];
     
-    if ([filterString length]) {
-      for (int row = mCachedCookies->Count() - 1; row >= 0; row--) {
-        // only search on the host
-        mCachedCookies->ObjectAt(row)->GetHost(host);
-
-        if ([[NSString stringWithUTF8String: host.get()] rangeOfString: filterString].location == NSNotFound)
-          mCachedCookies->RemoveObjectAt(row);
-      }
-    }
     [mCookiesTable deselectAll: self];   // don't want any traces of previous selection
     [mCookiesTable reloadData];
   }
 }
 
+- (void) filterCookiesPermissionsWithString: (NSString*) inFilterString
+{
+  // the user wants to filter down the list of cookies. Reinitialize the list of permission in case
+  // they deleted or replaced a letter.
+  [self populatePermissionCache];
+  
+  if ([inFilterString length]) {
+    NSMutableArray *indexToRemove = [NSMutableArray array];
+    for (int row = 0; row < mCachedPermissions->Count(); row++) {
+      nsCAutoString host;
+      mCachedPermissions->ObjectAt(row)->GetHost(host);
+      if ([[NSString stringWithUTF8String:host.get()] rangeOfString:inFilterString].location == NSNotFound)
+        // add to our buffer
+        [indexToRemove addObject:[NSNumber numberWithInt:row]];
+    }
+    
+    //remove the items at the saved indexes
+    //
+    NSEnumerator *theEnum = [indexToRemove reverseObjectEnumerator];
+    NSNumber *currentItem;
+    while (currentItem = [theEnum nextObject])
+      mCachedPermissions->RemoveObjectAt([currentItem intValue]);
+  }
+}
+
+
+- (void) filterCookiesWithString: (NSString*) inFilterString
+{
+  // reinitialize the list of cookies in case user deleted a letter or replaced a letter
+  [self populateCookieCache];
+  
+  if ([inFilterString length]) {
+    NSMutableArray *indexToRemove = [NSMutableArray array];
+    for (int row = 0; row < mCachedCookies->Count(); row++) {
+      nsCAutoString host;
+      // only search on the host
+      mCachedCookies->ObjectAt(row)->GetHost(host);
+      if ([[NSString stringWithUTF8String:host.get()] rangeOfString:inFilterString].location == NSNotFound)
+        [indexToRemove addObject:[NSNumber numberWithInt:row]];
+    }
+    
+    //remove the items at the saved indexes
+    //
+    NSEnumerator *theEnum = [indexToRemove reverseObjectEnumerator];
+    NSNumber *currentItem;
+    while (currentItem = [theEnum nextObject])
+      mCachedCookies->RemoveObjectAt([currentItem intValue]);
+  }
+}
 @end
