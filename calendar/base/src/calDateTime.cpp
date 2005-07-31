@@ -815,3 +815,20 @@ calDateTime::Mark(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* PRBool equality(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal val); */
+NS_IMETHODIMP
+calDateTime::Equality(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj, jsval val, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP
+calDateTime::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, JSObject **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
