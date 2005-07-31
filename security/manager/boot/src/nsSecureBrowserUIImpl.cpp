@@ -1246,12 +1246,23 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISupports** _result)
 nsresult
 nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
 {
-	*value = PR_FALSE;
+  *value = PR_FALSE;
 
-	if (!aURL)
-		return NS_OK;
+  if (!aURL)
+    return NS_OK;
 
   return aURL->SchemeIs("https", value);
+}
+
+nsresult
+nsSecureBrowserUIImpl::IsURLJavaScript(nsIURI* aURL, PRBool* value)
+{
+  *value = PR_FALSE;
+
+  if (!aURL)
+    return NS_OK;
+
+  return aURL->SchemeIs("javascript", value);
 }
 
 void
@@ -1265,9 +1276,9 @@ nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
       outString = ptrv;
     else
       outString.SetLength(0);
-    
+
     nsMemory::Free(ptrv);
-    
+
   } else {
     outString.SetLength(0);
   }
@@ -1276,7 +1287,7 @@ nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
 nsresult
 nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, PRBool *okayToPost)
 {
-  PRBool formSecure,actionSecure;
+  PRBool formSecure, actionSecure, actionJavaScript;
   *okayToPost = PR_TRUE;
 
   nsresult rv = IsURLHTTPS(formURL, &formSecure);
@@ -1286,21 +1297,30 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *formURL, nsIURI *actionURL, PRBool *oka
   rv = IsURLHTTPS(actionURL, &actionSecure);
   if (NS_FAILED(rv))
     return rv;
-  
+
+  rv = IsURLJavaScript(actionURL, &actionJavaScript);
+  if (NS_FAILED(rv))
+    return rv;
+
   // If we are posting to a secure link, all is okay.
   // It doesn't matter whether the currently viewed page is secure or not,
   // because the data will be sent to a secure URL.
   if (actionSecure) {
     return NS_OK;
   }
-    
+
+  // Action is a JavaScript call, not an actual post. That's okay too.
+  if (actionJavaScript) {
+    return NS_OK;
+  }
+
   // posting to insecure webpage from a secure webpage.
   if (formSecure) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
   }
-  
+
   return NS_OK;
 }
 
