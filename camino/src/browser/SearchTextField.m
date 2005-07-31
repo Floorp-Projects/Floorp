@@ -40,6 +40,10 @@
 #import "SearchTextFieldCell.h"
 #import "SearchTextField.h"
 
+@interface NSString(IfOnlyThisWereObjCPPSoWeCouldIncludeOurAdditions)
+- (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
+@end
+
 @implementation SearchTextField
 
 + (Class)cellClass
@@ -53,6 +57,8 @@
   [self setCell:[[[SearchTextFieldCell alloc] initTextCell:@""] autorelease]];
   if (mPopupMenu)
     [self setPopupMenu:mPopupMenu];
+
+  [self registerForDraggedTypes:[NSArray arrayWithObject:NSStringPboardType]];
 }
 
 
@@ -284,6 +290,49 @@
 - (NSMenuItem*)selectedPopupMenuItem
 {
   return [[[self cell] popUpButtonCell] selectedItem];
+}
+
+#pragma mark -
+
+//
+// -draggingEntered:
+//
+// accept anything that's a string type.
+//
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  if ([[pboard types] containsObject:NSStringPboardType]) {
+    if (sourceDragMask & NSDragOperationCopy)
+      return NSDragOperationCopy;
+  }
+  return NSDragOperationNone;
+}
+
+//
+// -performDragOperation:
+//
+// For strings, strip off any bad chars (newlines, etc) and then execute the action immediately.
+// No need to make the user go focus the text field and hit return.
+//
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  NSString *dragString = nil;
+  if ([[pboard types] containsObject:NSStringPboardType]) {
+    dragString = [pboard stringForType:NSStringPboardType];
+    // Clean the string on the off chance it has line breaks, etc.
+    dragString = [dragString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+
+    // execute the target/action. Set the control text color as that's the way that
+    // the control knows that text was entered vs. the description string.
+    [self setTextColor:[NSColor controlTextColor]];
+    [[self cell] searchSubmittedFromView:self];
+    [self setStringValue:dragString];
+    [self sendAction:[self action] to:[self target]];
+  }
+  return YES;
 }
 
 @end
