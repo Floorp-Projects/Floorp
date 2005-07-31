@@ -119,8 +119,8 @@ class WindowStateHolder;
 // jst@netscape.com
 
 
-class nsGlobalWindow : public nsIScriptGlobalObject,
-                       public nsPIDOMWindow,
+class nsGlobalWindow : public nsPIDOMWindow,
+                       public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
                        public nsIDOMEventReceiver,
