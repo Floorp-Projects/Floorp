@@ -40,11 +40,13 @@
 <!ENTITY pageSetup.label      "Page Setup...">
 <!ENTITY pageSetup.accesskey  "u">
 <!ENTITY page.label           "Page:">
+<!ENTITY page.accesskey       "a">
 <!ENTITY of.label             "of">
 <!ENTITY scale.label          "Scale:">
+<!ENTITY scale.accesskey      "S">
 <!ENTITY percent.label        "&#037;">
 <!ENTITY portrait.label       "Portrait">
-<!ENTITY portrait.accesskey   "t">
+<!ENTITY portrait.accesskey   "o">
 <!ENTITY landscape.label      "Landscape">
 <!ENTITY landscape.accesskey  "L">
 <!ENTITY close.label          "Close">

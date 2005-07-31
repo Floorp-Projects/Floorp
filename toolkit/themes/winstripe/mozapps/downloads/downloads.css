@@ -87,7 +87,6 @@ download[state="5"], download[state="6"] {
   padding-bottom: 3px;
   -moz-padding-start: 5px;
   -moz-padding-end: 6px;
-  -moz-user-focus: normal;
 }
 
 #saveToFolder .toolbarbutton-text {

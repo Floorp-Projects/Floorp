@@ -176,7 +176,7 @@
     <hbox id="commandBar" flex="1">
       <hbox align="center" flex="1" id="autodownloadInfo">
         <label>&filesSavedTo.label;</label>
-        <toolbarbutton id="saveToFolder" crop="right" flex="1"
+        <toolbarbutton class="tabbable" id="saveToFolder" crop="right" flex="1"
                        oncommand="onDownloadShowFolder();"
                        tooltiptext="&showFolder.label;"/>
       </hbox> 
