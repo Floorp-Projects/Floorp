@@ -328,13 +328,13 @@ function loadCalendarEventDialog()
             }
 
             if (!theRule.isFinite) {
-                setElementValue("repeat-forever-radio", true, "selected");
+                radioGroupSelectItem("repeat-until-group", "repeat-forever-radio");
             } else {
                 if (theRule.isByCount) {
-                    setElementValue("repeat-numberoftimes-radio", true, "selected");
+                    radioGroupSelectItem("repeat-until-group", "repeat-numberoftimes-radio");
                     setElementValue("repeat-numberoftimes-textbox", theRule.count );
                 } else {
-                    setElementValue("repeat-until-radio", true, "selected");
+                    radioGroupSelectItem("repeat-until-group", "repeat-until-radio");
                     setElementValue("repeat-end-date-picker", theRule.endDate.jsDate);
                 }
             }
