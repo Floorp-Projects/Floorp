@@ -132,6 +132,7 @@ protected:
   
   nsresult CheckPost(nsIURI *formURI, nsIURI *actionURL, PRBool *okayToPost);
   nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
+  nsresult IsURLJavaScript(nsIURI* aURL, PRBool *value);
 
   PRBool ConfirmEnteringSecure();
   PRBool ConfirmEnteringWeak();
