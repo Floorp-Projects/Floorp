@@ -135,6 +135,14 @@ const float STFSymbolYOffset = 4.0;
   [super dealloc];
 }
 
+// override to clear out the cancel button if given an empty value
+- (void)setStringValue:(NSString *)aString
+{
+  if ([aString length] == 0)
+    _shouldShowCancelButton = NO;
+  [super setStringValue: aString];
+}
+
 
 - (BOOL)hasPopUpButton
 {
@@ -267,8 +275,7 @@ const float STFSymbolYOffset = 4.0;
 
 - (void)cancelButtonClickedWithFrame:(NSRect)aFrame inView:(NSView *)aView
 {
-  [self setStringValue:@""];
-  _shouldShowCancelButton = NO;
+  [self setStringValue:@""];            // clears the cancel button
   _shouldShowSelectedPopUpItem = YES;
 }
 
