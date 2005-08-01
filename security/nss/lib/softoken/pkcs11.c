@@ -2346,7 +2346,7 @@ static PLHashTable *nscSlotHashTable[2] = {NULL, NULL};
 static int
 sftk_GetModuleIndex(CK_SLOT_ID slotID)
 {
-    if ((slotID == FIPS_SLOT_ID) || (slotID >= MIN_FIPS_USER_SLOT_ID)) {
+    if ((slotID == FIPS_SLOT_ID) || (slotID > 100)) {
 	return NSC_FIPS_MODULE;
     }
     return NSC_NON_FIPS_MODULE;
@@ -2357,13 +2357,9 @@ sftk_GetModuleIndex(CK_SLOT_ID slotID)
 SFTKSlot *
 sftk_SlotFromID(CK_SLOT_ID slotID)
 {
-    SFTKSlot *slot;
     int index = sftk_GetModuleIndex(slotID);
-    slot = (SFTKSlot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
+    return (SFTKSlot *)PL_HashTableLookupConst(nscSlotHashTable[index], 
 							(void *)slotID);
-    /* cleared slots shouldn't 'show up' */
-    if (slot && slot->slotID == 0) slot = NULL;
-    return slot;
 }
 
 SFTKSlot *
@@ -2466,29 +2462,20 @@ sftk_DBVerify(SFTKSlot *slot)
     return;
 }
 
+/* forward static declaration. */
+static CK_RV sftk_DestroySlotData(SFTKSlot *slot);
+
 /*
  * initialize one of the slot structures. figure out which by the ID
  */
 CK_RV
-SFTK_SlotInit(SFTKSlot *slot,
-	char *configdir,sftk_token_parameters *params, int moduleIndex)
+SFTK_SlotInit(char *configdir,sftk_token_parameters *params, int moduleIndex)
 {
     unsigned int i;
     CK_SLOT_ID slotID = params->slotID;
+    SFTKSlot *slot = PORT_ZNew(SFTKSlot);
     PRBool needLogin = !params->noKeyDB;
-    PRBool reinit = PR_TRUE;
     CK_RV crv;
-
-    /* if slot as been supplied, we are reinitializing and existing slot.
-     * this means that we preserve some fields and don't try to register
-     * the slot again. To applications it looks like a token removal and
-     * insertion event . If we don't supply a slot (the normal case), we
-     * are creating a new slot, and thus need to fully initialize everything
-     * as well as registering the slot. */
-    if (slot == NULL) {
-	slot = PORT_ZNew(SFTKSlot);
-	reinit = PR_FALSE;
-    }
 
     if (slot == NULL) {
 	return CKR_HOST_MEMORY;
@@ -2533,17 +2520,11 @@ SFTK_SlotInit(SFTKSlot *slot,
 
     slot->password = NULL;
     slot->hasTokens = PR_FALSE;
-    /* if we are reinitalizing, don't clear the sessionIDCount 
-     * and tokenIDCount. We don't want the application to think that old
-     * sessions and tokens from the previous instance are still valid.
-     */
-    if (!reinit) {
-	slot->sessionIDCount = 0;
-	slot->tokenIDCount = 1;
-    }
+    slot->sessionIDCount = 0;
     slot->sessionIDConflict = 0;
     slot->sessionCount = 0;
     slot->rwSessionCount = 0;
+    slot->tokenIDCount = 1;
     slot->needLogin = PR_FALSE;
     slot->isLoggedIn = PR_FALSE;
     slot->ssoLoggedIn = PR_FALSE;
@@ -2584,20 +2565,16 @@ SFTK_SlotInit(SFTKSlot *slot,
 	    slot->minimumPinLen = 1;
 	}
     }
-    if (!reinit) {
-	crv = sftk_RegisterSlot(slot, moduleIndex);
-	if (crv != CKR_OK) {
-	    goto loser;
-	}
+    crv = sftk_RegisterSlot(slot, moduleIndex);
+    if (crv != CKR_OK) {
+	goto loser;
     }
     return CKR_OK;
 
 mem_loser:
     crv = CKR_HOST_MEMORY;
 loser:
-    /* if we are reinitting the slot, don't free it, it's still on the slot
-     * list. */
-    SFTK_DestroySlotData(slot, !reinit);
+    sftk_DestroySlotData(slot);
     return crv;
 }
 
@@ -2613,8 +2590,8 @@ sftk_freeHashItem(PLHashEntry* entry, PRIntn index, void *arg)
 /*
  * initialize one of the slot structures. figure out which by the ID
  */
-CK_RV
-SFTK_DestroySlotData(SFTKSlot *slot, PRBool freeit)
+static CK_RV
+sftk_DestroySlotData(SFTKSlot *slot)
 {
     unsigned int i;
 
@@ -2668,17 +2645,7 @@ SFTK_DestroySlotData(SFTKSlot *slot, PRBool freeit)
     slot->sessHashSize = 0;
     sftk_DBShutdown(slot->certDB,slot->keyDB);
 
-    if (freeit) {
-	PORT_Free(slot);
-    } else {
-	/* paranoia, init should reinitialize everything. Note: we need to
-	 * preserve the sessionID and tokenID counts */
-	unsigned long sessionIDCount = slot->sessionIDCount;
-	unsigned long tokenIDCount = slot->tokenIDCount;
-	PORT_Memset(slot,0,sizeof(*slot));
-	slot->sessionIDCount = sessionIDCount;
-	slot->tokenIDCount = tokenIDCount;
-    }
+    PORT_Free(slot);
     return CKR_OK;
 }
 
@@ -2750,7 +2717,7 @@ static void nscFreeAllSlots(int moduleIndex)
 			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
 	    PORT_Assert(slot);
 	    if (!slot) continue;
-	    SFTK_DestroySlotData(slot, PR_TRUE);
+	    sftk_DestroySlotData(slot);
 	    PL_HashTableRemove(tmpSlotHashTable, (void *)slotID);
 	}
 	PORT_Free(tmpSlotList);
@@ -2860,8 +2827,8 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	}
 
 	for (i=0; i < paramStrings.token_count; i++) {
-	    crv = SFTK_SlotInit(NULL, paramStrings.configdir, 
-			&paramStrings.tokens[i],
+	    crv = 
+		SFTK_SlotInit(paramStrings.configdir, &paramStrings.tokens[i],
 			moduleIndex);
 	    if (crv != CKR_OK) {
                 nscFreeAllSlots(moduleIndex);
@@ -2960,7 +2927,7 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 
     c = __nss_softokn_rcsid[0] + __nss_softokn_sccsid[0]; 
     pInfo->cryptokiVersion.major = 2;
-    pInfo->cryptokiVersion.minor = 20;
+    pInfo->cryptokiVersion.minor = 11;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
     pInfo->libraryVersion.major = NSS_VMAJOR;
     pInfo->libraryVersion.minor = NSS_VMINOR;
@@ -3002,10 +2969,6 @@ CK_RV NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
     PORT_Memcpy(pInfo->slotDescription,slot->slotDescription,64);
     pInfo->flags = CKF_TOKEN_PRESENT;
-    /* all user defined slots are defined as removable */
-    if (slotID > MIN_USER_SLOT_ID) {
-	pInfo->flags |= CKF_REMOVABLE_DEVICE;
-    }
     /* ok we really should read it out of the keydb file. */
     /* pInfo->hardwareVersion.major = NSSLOWKEY_DB_FILE_VERSION; */
     pInfo->hardwareVersion.major = NSS_VMAJOR;
@@ -3698,81 +3661,6 @@ CK_RV NSC_Logout(CK_SESSION_HANDLE hSession)
     return CKR_OK;
 }
 
-/*
- * Create a new slot on the fly. The slot that is passed in is the
- * slot the request came from. Only the crypto or FIPS slots can
- * be used. The resulting slot will live in the same module as
- * the slot the request was passed to. object is the creation object
- * that specifies the module spec for the new slot.
- */
-static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, SFTKObject *object)
-{
-    CK_SLOT_ID idMin, idMax;
-    PRBool isFIPS = PR_FALSE;
-    unsigned long moduleIndex;
-    SFTKAttribute *attribute;
-    sftk_parameters paramStrings;
-    char *paramString;
-    CK_RV crv = CKR_OK;
-    int i;
-
-    /* only the crypto or FIPS slots can create new slot objects */
-    if (slot->slotID == NETSCAPE_SLOT_ID) {
-	idMin = MIN_USER_SLOT_ID;
-	idMax = MAX_USER_SLOT_ID;
-	moduleIndex = NSC_NON_FIPS_MODULE;
-	isFIPS = PR_FALSE;
-    } else if (slot->slotID == FIPS_SLOT_ID) {
-	idMin = MIN_FIPS_USER_SLOT_ID;
-	idMax = MAX_FIPS_USER_SLOT_ID;
-	moduleIndex = NSC_FIPS_MODULE;
-	isFIPS = PR_TRUE;
-    } else {
-	return CKR_ATTRIBUTE_VALUE_INVALID;
-    }
-    attribute = sftk_FindAttribute(object,CKA_NETSCAPE_MODULE_SPEC);
-    if (attribute == NULL) {
-	return CKR_TEMPLATE_INCOMPLETE;
-    }
-    paramString = (unsigned char *)attribute->attrib.pValue;
-    crv = secmod_parseParameters(paramString, &paramStrings, isFIPS);
-    if (crv != CKR_OK) {
-	goto loser;
-    }
-
-    /* The API allows initialization of several tokens at once,
-     * but there is no way to back out reinitialization should one
-     * of these functions fail. In general it's probably best to
-     * only initialize one slot at a time here */
-    for (i=0; i < paramStrings.token_count; i++) {
-	CK_SLOT_ID slotID = paramStrings.tokens[i].slotID;
-	SFTKSlot *newSlot;
-
-	if ((slotID < idMin) || (slotID > idMax)) {
-	    crv = CKR_ATTRIBUTE_VALUE_INVALID;
-	    goto loser;
-	}
-
-        newSlot = sftk_SlotFromID(slotID);
-	if (newSlot) {
-	    crv = SFTK_DestroySlotData(newSlot, PR_FALSE);
-	    if (crv != CKR_OK) {
-		goto loser;
-	    }
-	}
-	crv = SFTK_SlotInit(newSlot, paramStrings.configdir, 
-			&paramStrings.tokens[i], moduleIndex);
-	if (crv != CKR_OK) {
-	    goto loser;
-	}
-    }
-loser:
-    secmod_freeParams(&paramStrings);
-    sftk_FreeAttribute(attribute);
-
-    return crv;
-}
-
 
 /* NSC_CreateObject creates a new object. */
 CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
@@ -3782,7 +3670,6 @@ CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     SFTKSession *session;
     SFTKObject *object;
-    CK_OBJECT_CLASS class;
     CK_RV crv;
     int i;
 
@@ -3804,9 +3691,6 @@ CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
 	    sftk_FreeObject(object);
 	    return crv;
 	}
-	if ((pTemplate[i].type == CKA_CLASS) && pTemplate[i].pValue) {
-	    class = *(CK_OBJECT_CLASS *)pTemplate[i].pValue;
-	}
     }
 
     /* get the session */
@@ -3817,25 +3701,15 @@ CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
     }
 
     /*
-     * handle pseudo objects (CKO_NEWSLOT)
-     */
-    if (class == CKO_NETSCAPE_NEWSLOT) {
-	crv = sftk_CreateNewSlot(slot, object);
-	goto done;
-    } 
-
-    /*
      * handle the base object stuff
      */
     crv = sftk_handleObject(object,session);
     *phObject = object->handle;
-done:
     sftk_FreeSession(session);
     sftk_FreeObject(object);
 
     return crv;
 }
-
 
 
 /* NSC_CopyObject copies an object, creating a new object for the copy. */
