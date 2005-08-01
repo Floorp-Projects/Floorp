@@ -1597,7 +1597,7 @@ class XMLList extends XMLObjectImpl implements Function
         if(isApply || methodName.equals("call"))
             return applyOrCall(isApply, cx, scope, thisObj, args);
 
-        Function method = ScriptRuntime.getElemFunctionAndThis(
+        Callable method = ScriptRuntime.getElemFunctionAndThis(
                               this, methodName, cx);
         // Call lastStoredScriptable to clear stored thisObj
         // but ignore the result as the method should use the supplied
