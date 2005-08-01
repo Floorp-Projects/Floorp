@@ -1153,7 +1153,7 @@ struct MessageWindow {
             // Get current window and return its window handle.
             nsCOMPtr<nsIDOMWindow> win;
             (void)nsNativeAppSupportOS2::HandleRequest( (LPBYTE)cds->lpData, PR_FALSE, getter_AddRefs( win ) );
-            return win ? (long)hwndForDOMWindow( win ) : 0;
+            return win ? (MRESULT)hwndForDOMWindow( win ) : 0;
  }
 
     /* We have to return a FALSE from WM_CREATE or this window will never
