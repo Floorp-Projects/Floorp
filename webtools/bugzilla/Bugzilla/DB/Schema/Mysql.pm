@@ -184,6 +184,9 @@ sub get_rename_indexes_ddl {
         my $type = $indexes{$old_name}->{TYPE};
         $type ||= 'INDEX';
         my $fields = join(',', @{$indexes{$old_name}->{FIELDS}});
+        # $old_name needs to be escaped, sometimes, because it was
+        # a reserved word.
+        $old_name = '`' . $old_name . '`';
         $sql .= " ADD $type $name ($fields), DROP INDEX $old_name,";
     }
     # Remove the last comma.
