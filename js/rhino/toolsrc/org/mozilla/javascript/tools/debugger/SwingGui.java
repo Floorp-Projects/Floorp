@@ -2605,6 +2605,10 @@ class SwingGui extends JFrame implements GuiCallback
         if (interrupted) {
             toolBar.setEnabled(true);
             // raise the debugger window
+            int state = getExtendedState();
+            if (state == Frame.ICONIFIED) {
+                setExtendedState(Frame.NORMAL);
+            }
             toFront();
             context.enable();
         } else {
