@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.18 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: lowcert.c,v 1.19 2005/08/01 18:23:55 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -50,6 +50,7 @@
 #include "pcert.h"
 #include "secasn1.h"
 #include "secoid.h"
+#include "secerr.h"
 
 #ifdef NSS_ENABLE_ECC
 extern SECStatus EC_FillParams(PRArenaPool *arena, 
@@ -362,21 +363,41 @@ nsslowcert_IsNewer(NSSLOWCERTCertificate *certa, NSSLOWCERTCertificate *certb)
 
 #define SOFT_DEFAULT_CHUNKSIZE 2048
 
-
 static SECStatus
-nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer, SECItem *sn,
-			SECItem *key)
+nsslowcert_KeyFromIssuerAndSN(PRArenaPool *arena, 
+			      SECItem *issuer, SECItem *sn, SECItem *key)
 {
     unsigned int len = sn->len + issuer->len;
 
-
-    if (arena) {
-	key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);
-    } else {
-	if (len > key->len) {
-	    key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);
-	}
+    if (!arena) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	goto loser;
     }
+    key->data = (unsigned char*)PORT_ArenaAlloc(arena, len);
+    if ( !key->data ) {
+	goto loser;
+    }
+
+    key->len = len;
+    /* copy the serialNumber */
+    PORT_Memcpy(key->data, sn->data, sn->len);
+
+    /* copy the issuer */
+    PORT_Memcpy(&key->data[sn->len], issuer->data, issuer->len);
+
+    return(SECSuccess);
+
+loser:
+    return(SECFailure);
+}
+
+static SECStatus
+nsslowcert_KeyFromIssuerAndSNStatic(unsigned char *space,
+	int spaceLen, SECItem *issuer, SECItem *sn, SECItem *key)
+{
+    unsigned int len = sn->len + issuer->len;
+
+    key->data = pkcs11_allocStaticData(len, space, spaceLen);
     if ( !key->data ) {
 	goto loser;
     }
@@ -430,10 +451,9 @@ nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, char *nickname)
     cert ->trust = NULL;
 
     /* generate and save the database key for the cert */
-    cert->certKey.data = cert->certKeySpace;
-    cert->certKey.len = sizeof(cert->certKeySpace);
-    rv = nsslowcert_KeyFromIssuerAndSN(NULL, &cert->derIssuer, 
-					&cert->serialNumber, &cert->certKey);
+    rv = nsslowcert_KeyFromIssuerAndSNStatic(cert->certKeySpace,
+		sizeof(cert->certKeySpace), &cert->derIssuer, 
+		&cert->serialNumber, &cert->certKey);
     if ( rv ) {
 	goto loser;
     }

@@ -237,6 +237,9 @@ void
 pkcs11_freeStaticData(unsigned char *data, unsigned char *space);
 
 unsigned char *
+pkcs11_allocStaticData(int datalen, unsigned char *space, int spaceLen);
+
+unsigned char *
 pkcs11_copyStaticData(unsigned char *data, int datalen, unsigned char *space,
 						int spaceLen);
 NSSLOWCERTCertificate *

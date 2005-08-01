@@ -14,7 +14,7 @@
  * The Original Code is the Netscape security libraries.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
+ * RSA Security INC.
  * Portions created by the Initial Developer are Copyright (C) 1994-2000
  * the Initial Developer. All Rights Reserved.
  *
@@ -152,10 +152,10 @@ CK_PKCS11_FUNCTION_INFO(C_GetMechanismInfo)
 /* C_InitToken initializes a token. */
 CK_PKCS11_FUNCTION_INFO(C_InitToken)
 #ifdef CK_NEED_ARG_LIST
-(
 /* pLabel changed from CK_CHAR_PTR to CK_UTF8CHAR_PTR for v2.10 */
+(
   CK_SLOT_ID         slotID,    /* ID of the token's slot */
-  CK_CHAR_PTR        pPin,      /* the SO's initial PIN */
+  CK_UTF8CHAR_PTR    pPin,      /* the SO's initial PIN */
   CK_ULONG           ulPinLen,  /* length in bytes of the PIN */
   CK_UTF8CHAR_PTR    pLabel     /* 32-byte token label (blank padded) */
 );
@@ -167,7 +167,7 @@ CK_PKCS11_FUNCTION_INFO(C_InitPIN)
 #ifdef CK_NEED_ARG_LIST
 (
   CK_SESSION_HANDLE hSession,  /* the session's handle */
-  CK_CHAR_PTR       pPin,      /* the normal user's PIN */
+  CK_UTF8CHAR_PTR   pPin,      /* the normal user's PIN */
   CK_ULONG          ulPinLen   /* length in bytes of the PIN */
 );
 #endif
@@ -178,9 +178,9 @@ CK_PKCS11_FUNCTION_INFO(C_SetPIN)
 #ifdef CK_NEED_ARG_LIST
 (
   CK_SESSION_HANDLE hSession,  /* the session's handle */
-  CK_CHAR_PTR       pOldPin,   /* the old PIN */
+  CK_UTF8CHAR_PTR   pOldPin,   /* the old PIN */
   CK_ULONG          ulOldLen,  /* length of the old PIN */
-  CK_CHAR_PTR       pNewPin,   /* the new PIN */
+  CK_UTF8CHAR_PTR   pNewPin,   /* the new PIN */
   CK_ULONG          ulNewLen   /* length of the new PIN */
 );
 #endif

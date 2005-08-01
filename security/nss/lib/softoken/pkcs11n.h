@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.12 $ $Date: 2005/01/20 02:25:50 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.13 $ $Date: 2005/08/01 18:23:56 $";
 #endif /* DEBUG */
 
 /*
@@ -73,6 +73,7 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.12 $
 #define CKO_NETSCAPE_SMIME              (CKO_NETSCAPE + 2)
 #define CKO_NETSCAPE_TRUST              (CKO_NETSCAPE + 3)
 #define CKO_NETSCAPE_BUILTIN_ROOT_LIST  (CKO_NETSCAPE + 4)
+#define CKO_NETSCAPE_NEWSLOT            (CKO_NETSCAPE + 5)
 
 /*
  * Netscape-defined key types
@@ -106,6 +107,7 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.12 $
 #define CKA_NETSCAPE_PQG_SEED           (CKA_NETSCAPE +  21)
 #define CKA_NETSCAPE_PQG_H              (CKA_NETSCAPE +  22)
 #define CKA_NETSCAPE_PQG_SEED_BITS      (CKA_NETSCAPE +  23)
+#define CKA_NETSCAPE_MODULE_SPEC        (CKA_NETSCAPE +  24)
 
 /*
  * Trust attributes:

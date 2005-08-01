@@ -411,6 +411,10 @@ struct SFTKSSLMACInfoStr {
 #define NETSCAPE_SLOT_ID 1
 #define PRIVATE_KEY_SLOT_ID 2
 #define FIPS_SLOT_ID 3
+#define MIN_USER_SLOT_ID 4
+#define MAX_USER_SLOT_ID 100
+#define MIN_FIPS_USER_SLOT_ID 101
+#define MAX_FIPS_USER_SLOT_ID 127
 
 /* slot helper macros */
 #define sftk_SlotFromSession(sp) ((sp)->slot)
@@ -539,8 +543,10 @@ extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent, 
 	CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex);
 /* shared functions between PKCS11.c and SFTKFIPS.c */
-extern CK_RV SFTK_SlotInit(char *configdir,sftk_token_parameters *params, 
-							int moduleIndex);
+extern CK_RV SFTK_SlotInit(SFTKSlot *slot, char *configdir,
+			sftk_token_parameters *params, int moduleIndex);
+extern CK_RV SFTK_DestroySlotData(SFTKSlot *slot, PRBool freeit);
+
 
 /* internal utility functions used by pkcs11.c */
 extern SFTKAttribute *sftk_FindAttribute(SFTKObject *object,
