@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.102 2005/07/31 23:35:40 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.103 2005/08/01 08:39:32 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -826,8 +826,10 @@
           usually located in <filename>/var/lib/pgsql/data/</filename>. In this file,
           you will need to add a new line to it as follows:</para>
 
-          <computeroutput>host   all    bugs   127.0.0.1    255.255.255.255  md5</computeroutput>
-
+          <para>
+	    <computeroutput>host   all    bugs   127.0.0.1    255.255.255.255  md5</computeroutput>
+          </para>
+	  
           <para>This means that for TCP/IP (host) connections, allow connections from
           '127.0.0.1' to 'all' databases on this server from the 'bugs' user, and use
           password authentication (md5) for that user.</para>
@@ -837,12 +839,16 @@
           , also usually found in the <filename>/var/lib/pgsql/data/</filename> folder.
           You will need to make a single line change, changing</para>
 
-          <computeroutput># tcpip_socket = false</computeroutput>
-
+          <para>
+            <computeroutput># tcpip_socket = false</computeroutput>
+          </para>
+  
           <para>to</para>
             
-          <computeroutput>tcpip_socket = true</computeroutput>
-            
+	  <para>
+            <computeroutput>tcpip_socket = true</computeroutput>
+	  </para>
+  
           <para>Now, you will need to restart PostgreSQL, but you will need to fully
           stop and start the server rather than just restarting due to the possibility
           of a change to <filename>postgresql.conf</filename>. After the server has
