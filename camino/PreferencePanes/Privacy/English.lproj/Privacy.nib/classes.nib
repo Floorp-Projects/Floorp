@@ -43,6 +43,8 @@
                 mPermissionFilterField = SearchTextField; 
                 mPermissionsPanel = id; 
                 mPermissionsTable = ExtendedTableView; 
+                mRemoveAllCookiesButton = NSButton; 
+                mRemoveAllPermissionsButton = NSButton; 
                 mRemoveCookiesButton = NSButton; 
                 mStorePasswords = NSButton; 
             }; 

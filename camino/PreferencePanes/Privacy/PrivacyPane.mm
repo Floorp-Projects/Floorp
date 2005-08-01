@@ -860,6 +860,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   if (([aNotification object] == mPermissionFilterField) && mCachedPermissions && mPermissionManager) {
     // the user wants to filter down the list of cookies. Reinitialize the list of permission in case
     // they deleted or replaced a letter.
+    [mRemoveAllPermissionsButton setEnabled:([filterString length] == 0)];
     [self filterCookiesPermissionsWithString:filterString];
     // re-sort
     [self sortPermissionsByColumn:[mPermissionsTable highlightedTableColumn] inAscendingOrder:mSortedAscending];
@@ -869,6 +870,7 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   } 
   else if (([aNotification object] == mCookiesFilterField) && mCachedCookies && mCookieManager) {
     // reinitialize the list of cookies in case user deleted a letter or replaced a letter
+    [mRemoveAllCookiesButton setEnabled:([filterString length] == 0)];
     [self filterCookiesWithString:filterString];
     // re-sort
     [self sortCookiesByColumn:[mCookiesTable highlightedTableColumn] inAscendingOrder:mSortedAscending];
