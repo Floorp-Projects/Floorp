@@ -754,7 +754,7 @@
     has to have at least one component in order for you to
     enter [% terms.abug %] into it.<p>
     [% IF UserInGroup("editcomponents") %]
-      <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">Create
+      <a href="editcomponents.cgi?action=add&amp;product=[% product FILTER url_quote %]">Create
       a new component</a>.
     [% ELSE %]
       Please contact [% Param("maintainer") %] and ask them
@@ -815,7 +815,7 @@
     has to have at least one version in order for you to
     enter [% terms.abug %] into it.<p>
     [% IF UserInGroup("editcomponents") %]
-      <a href="editversions.cgi?product=[% product FILTER url_quote %]">Create
+      <a href="editversions.cgi?action=add&amp;product=[% product FILTER url_quote %]">Create
       a new version</a>.
     [% ELSE %]
       Please contact [% Param("maintainer") %] and ask them
