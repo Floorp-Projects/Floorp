@@ -48,6 +48,7 @@
 
 #define MPINT_TO_SECITEM(mp, it, arena)                         \
     SECITEM_AllocItem(arena, (it), mp_unsigned_octet_size(mp)); \
+    if ((it)->data == NULL) {err = MP_MEM; goto cleanup;}       \
     err = mp_to_unsigned_octets(mp, (it)->data, (it)->len);     \
     if (err < 0) goto cleanup; else err = MP_OKAY;
 
