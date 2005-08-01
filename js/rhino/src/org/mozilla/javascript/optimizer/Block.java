@@ -470,7 +470,7 @@ class Block
           case Token.CALL :
           case Token.NEW :
           case Token.REF_CALL :
-              return Optimizer.NoType;
+              return Optimizer.AnyType;
 
           case Token.GETELEM :
              return Optimizer.AnyType;
