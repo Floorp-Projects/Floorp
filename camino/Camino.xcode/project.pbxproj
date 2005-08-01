@@ -3235,6 +3235,7 @@
 				3FFE23530847CB0D00D6CAFC,
 				0F5187C408858E620091F3FB,
 				0FB6D99B089B276100414498,
+				3FEBB43C089DA88C00BD8373,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7086,6 +7087,7 @@
 				3FBDC8E10827C44B00D7F8E0,
 				3FFE23540847CB0D00D6CAFC,
 				0FB6D99C089B276100414498,
+				3FEBB43D089DA88C00BD8373,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10487,6 +10489,26 @@
 			settings = {
 			};
 		};
+		3FEBB43B089DA88B00BD8373 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = history.tif;
+			path = resources/images/toolbar/history.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FEBB43C089DA88C00BD8373 = {
+			fileRef = 3FEBB43B089DA88B00BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB43D089DA88C00BD8373 = {
+			fileRef = 3FEBB43B089DA88B00BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3FECC78F05D1F68E0068E7ED = {
 			children = (
 				3F44AD8705BDFB9F00CB4B08,
@@ -13529,6 +13551,7 @@
 				F5566DC3038E075F01A80166,
 				3F63719B057CE0DE00B62EE2,
 				3FBDC8DF0827C44B00D7F8E0,
+				3FEBB43B089DA88B00BD8373,
 			);
 			isa = PBXGroup;
 			name = "Toolbar-Browser";

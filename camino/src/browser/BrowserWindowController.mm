@@ -128,6 +128,7 @@ static NSString* const CloseTabToolbarItemIdentifier    = @"Close Tab Toolbar It
 static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Item";
 static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Toolbar Item";
 static NSString* const FormFillToolbarItemIdentifier    = @"Form Fill Toolbar Item";
+static NSString* const HistoryToolbarItemIdentifier     = @"History Toolbar Item";
 
 int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 static const char* const gTabBarVisiblePref = "camino.tab_bar_always_visible";
@@ -883,6 +884,7 @@ enum BWCOpenDest {
                                         NSToolbarSeparatorItemIdentifier,
                                         DLManagerToolbarItemIdentifier,
                                         FormFillToolbarItemIdentifier,
+                                        HistoryToolbarItemIdentifier,
                                         nil];
 }
 
@@ -1154,6 +1156,14 @@ enum BWCOpenDest {
     [toolbarItem setImage:[NSImage imageNamed:@"autofill"]];
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(fillForm:)];
+  }
+  else if ([itemIdent isEqual:HistoryToolbarItemIdentifier]) {
+    [toolbarItem setLabel:NSLocalizedString(@"ShowHistory", nil)];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"ShowHistory", nil)];
+    [toolbarItem setToolTip:NSLocalizedString(@"ShowHistoryToolTip", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"history"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(manageHistory:)];
   }
   else {
     toolbarItem = nil;
