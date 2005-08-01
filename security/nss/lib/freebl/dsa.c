@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.15 2005/07/27 18:48:44 wtchang%redhat.com Exp $ */
+/* $Id: dsa.c,v 1.16 2005/08/01 18:51:06 wtchang%redhat.com Exp $ */
 
 #include "secerr.h"
 
@@ -46,37 +46,24 @@
 #include "secitem.h"
 #include "blapi.h"
 #include "mpi.h"
+#include "secmpi.h"
 
  /* XXX to be replaced by define in blapit.h */
 #define NSS_FREEBL_DSA_DEFAULT_CHUNKSIZE 2048
 
-#define CHECKOK(func) if (MP_OKAY > (err = func)) goto cleanup
-
-#define SECITEM_TO_MPINT(it, mp) \
-    CHECKOK(mp_read_unsigned_octets((mp), (it).data, (it).len))
-
-/* DSA-specific random number functions defined in prng_fips1861.c. */
-extern SECStatus 
-DSA_RandomUpdate(void *data, size_t bytes, unsigned char *q);
-
+/* DSA-specific random number function defined in prng_fips1861.c. */
 extern SECStatus 
 DSA_GenerateGlobalRandomBytes(void *dest, size_t len, unsigned char *q);
 
 static void translate_mpi_error(mp_err err)
 {
-    switch (err) {
-    case MP_MEM:    PORT_SetError(SEC_ERROR_NO_MEMORY);       break;
-    case MP_RANGE:  PORT_SetError(SEC_ERROR_BAD_DATA);        break;
-    case MP_BADARG: PORT_SetError(SEC_ERROR_INVALID_ARGS);    break;
-    default:        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE); break;
-    }
+    MP_TO_SEC_ERROR(err);
 }
 
 SECStatus 
 dsa_NewKey(const PQGParams *params, DSAPrivateKey **privKey, 
            const unsigned char *xb)
 {
-    unsigned int y_len;
     mp_int p, g;
     mp_int x, y;
     mp_err err;
@@ -105,29 +92,27 @@ dsa_NewKey(const PQGParams *params, DSAPrivateKey **privKey,
     MP_DIGITS(&g) = 0;
     MP_DIGITS(&x) = 0;
     MP_DIGITS(&y) = 0;
-    CHECKOK( mp_init(&p) );
-    CHECKOK( mp_init(&g) );
-    CHECKOK( mp_init(&x) );
-    CHECKOK( mp_init(&y) );
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&g) );
+    CHECK_MPI_OK( mp_init(&x) );
+    CHECK_MPI_OK( mp_init(&y) );
     /* Copy over the PQG params */
-    CHECKOK( SECITEM_CopyItem(arena, &key->params.prime, &params->prime) );
-    CHECKOK( SECITEM_CopyItem(arena, &key->params.subPrime, &params->subPrime));
-    CHECKOK( SECITEM_CopyItem(arena, &key->params.base, &params->base) );
+    CHECK_MPI_OK( SECITEM_CopyItem(arena, &key->params.prime,
+                                          &params->prime) );
+    CHECK_MPI_OK( SECITEM_CopyItem(arena, &key->params.subPrime,
+                                          &params->subPrime) );
+    CHECK_MPI_OK( SECITEM_CopyItem(arena, &key->params.base, &params->base) );
     /* Convert stored p, g, and received x into MPI integers. */
     SECITEM_TO_MPINT(params->prime, &p);
     SECITEM_TO_MPINT(params->base,  &g);
-    CHECKOK( mp_read_unsigned_octets(&x, xb, DSA_SUBPRIME_LEN) );
+    OCTETS_TO_MPINT(xb, &x, DSA_SUBPRIME_LEN);
     /* Store x in private key */
     SECITEM_AllocItem(arena, &key->privateValue, DSA_SUBPRIME_LEN);
     memcpy(key->privateValue.data, xb, DSA_SUBPRIME_LEN);
     /* Compute public key y = g**x mod p */
-    CHECKOK( mp_exptmod(&g, &x, &p, &y) );
+    CHECK_MPI_OK( mp_exptmod(&g, &x, &p, &y) );
     /* Store y in public key */
-    y_len = mp_unsigned_octet_size(&y);
-    SECITEM_AllocItem(arena, &key->publicValue, y_len);
-    err = mp_to_unsigned_octets(&y, key->publicValue.data, y_len);
-    /*   mp_to_unsigned_octets returns bytes written (y_len) if okay */
-    if (err < 0) goto cleanup; else err = MP_OKAY;
+    MPINT_TO_SECITEM(&y, &key->publicValue, arena);
     *privKey = key;
     key = NULL;
 cleanup:
@@ -202,13 +187,13 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     MP_DIGITS(&k) = 0;
     MP_DIGITS(&r) = 0;
     MP_DIGITS(&s) = 0;
-    CHECKOK( mp_init(&p) );
-    CHECKOK( mp_init(&q) );
-    CHECKOK( mp_init(&g) );
-    CHECKOK( mp_init(&x) );
-    CHECKOK( mp_init(&k) );
-    CHECKOK( mp_init(&r) );
-    CHECKOK( mp_init(&s) );
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&q) );
+    CHECK_MPI_OK( mp_init(&g) );
+    CHECK_MPI_OK( mp_init(&x) );
+    CHECK_MPI_OK( mp_init(&k) );
+    CHECK_MPI_OK( mp_init(&r) );
+    CHECK_MPI_OK( mp_init(&s) );
     /*
     ** Convert stored PQG and private key into MPI integers.
     */
@@ -216,24 +201,24 @@ dsa_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest,
     SECITEM_TO_MPINT(key->params.subPrime, &q);
     SECITEM_TO_MPINT(key->params.base,     &g);
     SECITEM_TO_MPINT(key->privateValue,    &x);
-    CHECKOK( mp_read_unsigned_octets(&k, kb, DSA_SUBPRIME_LEN) );
+    OCTETS_TO_MPINT(kb, &k, DSA_SUBPRIME_LEN);
     /*
     ** FIPS 186-1, Section 5, Step 1
     **
     ** r = (g**k mod p) mod q
     */
-    CHECKOK( mp_exptmod(&g, &k, &p, &r) ); /* r = g**k mod p */
-    CHECKOK(     mp_mod(&r, &q, &r) );     /* r = r mod q    */
+    CHECK_MPI_OK( mp_exptmod(&g, &k, &p, &r) ); /* r = g**k mod p */
+    CHECK_MPI_OK(     mp_mod(&r, &q, &r) );     /* r = r mod q    */
     /*                                  
     ** FIPS 186-1, Section 5, Step 2
     **
     ** s = (k**-1 * (SHA1(M) + x*r)) mod q
     */
     SECITEM_TO_MPINT(*digest, &s);         /* s = SHA1(M)     */
-    CHECKOK( mp_invmod(&k, &q, &k) );      /* k = k**-1 mod q */
-    CHECKOK( mp_mulmod(&x, &r, &q, &x) );  /* x = x * r mod q */
-    CHECKOK( mp_addmod(&s, &x, &q, &s) );  /* s = s + x mod q */
-    CHECKOK( mp_mulmod(&s, &k, &q, &s) );  /* s = s * k mod q */
+    CHECK_MPI_OK( mp_invmod(&k, &q, &k) );      /* k = k**-1 mod q */
+    CHECK_MPI_OK( mp_mulmod(&x, &r, &q, &x) );  /* x = x * r mod q */
+    CHECK_MPI_OK( mp_addmod(&s, &x, &q, &s) );  /* s = s + x mod q */
+    CHECK_MPI_OK( mp_mulmod(&s, &k, &q, &s) );  /* s = s * k mod q */
     /*
     ** verify r != 0 and s != 0
     ** mentioned as optional in FIPS 186-1.
@@ -341,16 +326,16 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
     MP_DIGITS(&u2) = 0;
     MP_DIGITS(&v)  = 0;
     MP_DIGITS(&w)  = 0;
-    CHECKOK( mp_init(&p)  );
-    CHECKOK( mp_init(&q)  );
-    CHECKOK( mp_init(&g)  );
-    CHECKOK( mp_init(&y)  );
-    CHECKOK( mp_init(&r_) );
-    CHECKOK( mp_init(&s_) );
-    CHECKOK( mp_init(&u1) );
-    CHECKOK( mp_init(&u2) );
-    CHECKOK( mp_init(&v)  );
-    CHECKOK( mp_init(&w)  );
+    CHECK_MPI_OK( mp_init(&p)  );
+    CHECK_MPI_OK( mp_init(&q)  );
+    CHECK_MPI_OK( mp_init(&g)  );
+    CHECK_MPI_OK( mp_init(&y)  );
+    CHECK_MPI_OK( mp_init(&r_) );
+    CHECK_MPI_OK( mp_init(&s_) );
+    CHECK_MPI_OK( mp_init(&u1) );
+    CHECK_MPI_OK( mp_init(&u2) );
+    CHECK_MPI_OK( mp_init(&v)  );
+    CHECK_MPI_OK( mp_init(&w)  );
     /*
     ** Convert stored PQG and public key into MPI integers.
     */
@@ -361,9 +346,8 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
     /*
     ** Convert received signature (r', s') into MPI integers.
     */
-    CHECKOK( mp_read_unsigned_octets(&r_, signature->data, DSA_SUBPRIME_LEN) );
-    CHECKOK( mp_read_unsigned_octets(&s_, signature->data + DSA_SUBPRIME_LEN, 
-                                          DSA_SUBPRIME_LEN) );
+    OCTETS_TO_MPINT(signature->data, &r_, DSA_SUBPRIME_LEN);
+    OCTETS_TO_MPINT(signature->data + DSA_SUBPRIME_LEN, &s_, DSA_SUBPRIME_LEN);
     /*
     ** Verify that 0 < r' < q and 0 < s' < q
     */
@@ -378,29 +362,29 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
     **
     ** w = (s')**-1 mod q
     */
-    CHECKOK( mp_invmod(&s_, &q, &w) );      /* w = (s')**-1 mod q */
+    CHECK_MPI_OK( mp_invmod(&s_, &q, &w) );      /* w = (s')**-1 mod q */
     /*
     ** FIPS 186-1, Section 6, Step 2
     **
     ** u1 = ((SHA1(M')) * w) mod q
     */
-    SECITEM_TO_MPINT(*digest, &u1);         /* u1 = SHA1(M')     */
-    CHECKOK( mp_mulmod(&u1, &w, &q, &u1) ); /* u1 = u1 * w mod q */
+    SECITEM_TO_MPINT(*digest, &u1);              /* u1 = SHA1(M')     */
+    CHECK_MPI_OK( mp_mulmod(&u1, &w, &q, &u1) ); /* u1 = u1 * w mod q */
     /*
     ** FIPS 186-1, Section 6, Step 3
     **
     ** u2 = ((r') * w) mod q
     */
-    CHECKOK( mp_mulmod(&r_, &w, &q, &u2) );
+    CHECK_MPI_OK( mp_mulmod(&r_, &w, &q, &u2) );
     /*
     ** FIPS 186-1, Section 6, Step 4
     **
     ** v = ((g**u1 * y**u2) mod p) mod q
     */
-    CHECKOK( mp_exptmod(&g, &u1, &p, &g) ); /* g = g**u1 mod p */
-    CHECKOK( mp_exptmod(&y, &u2, &p, &y) ); /* y = y**u2 mod p */
-    CHECKOK(  mp_mulmod(&g, &y, &p, &v)  ); /* v = g * y mod p */
-    CHECKOK(     mp_mod(&v, &q, &v)      ); /* v = v mod q     */
+    CHECK_MPI_OK( mp_exptmod(&g, &u1, &p, &g) ); /* g = g**u1 mod p */
+    CHECK_MPI_OK( mp_exptmod(&y, &u2, &p, &y) ); /* y = y**u2 mod p */
+    CHECK_MPI_OK(  mp_mulmod(&g, &y, &p, &v)  ); /* v = g * y mod p */
+    CHECK_MPI_OK(     mp_mod(&v, &q, &v)      ); /* v = v mod q     */
     /*
     ** Verification:  v == r'
     */
