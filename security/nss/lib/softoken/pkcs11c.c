@@ -3193,6 +3193,17 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 	 * NOTE: EC keys are currently subjected to pairwise
 	 * consistency check for signing/verification.
 	 */
+	/*
+	 * FIPS 140-2 had the following pairwise consistency test for
+	 * public and private keys used for key agreement:
+	 *   If the keys are used to perform key agreement, then the
+	 *   cryptographic module shall create a second, compatible
+	 *   key pair.  The cryptographic module shall perform both
+	 *   sides of the key agreement algorithm and shall compare
+	 *   the resulting shared values.  If the shared values are
+	 *   not equal, the test shall fail.
+	 * This test was removed in Change Notice 3.
+	 */
 
     }
 
