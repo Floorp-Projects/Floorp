@@ -149,7 +149,7 @@ sub mail_locale_finished_message {
         open(OUT,">$logfile.new") || die ("$logfile.new: $!\n");
         while (<IN>) {
             s/\r\n$/\n/;
-	    print OUT "$_";
+            print OUT "$_";
         } 
         close(IN);
         close(OUT);
@@ -274,7 +274,7 @@ sub packit {
       # directory.
       my @msi = grep { -f $_ } <${package_location}/*.msi>;
       if ( scalar(@msi) gt 0 ) {
-	my $msi_files = join(' ', @msi);
+        my $msi_files = join(' ', @msi);
         TinderUtils::run_shell_command "cp $msi_files $stagedir/";
       }
 
@@ -337,15 +337,15 @@ sub packit {
       my @dmg;
       @dmg = grep { -f $_ } <${package_location}/../*.dmg.gz>;
       if ( scalar(@dmg) eq 0 ) {
-	@dmg = grep { -f $_ } <${package_location}/../*.dmg>;
+        @dmg = grep { -f $_ } <${package_location}/../*.dmg>;
       }
 
       if ( scalar(@dmg) gt 0 ) {
-	my $dmg_files = join(' ', @dmg);
-	TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
-	TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
+        my $dmg_files = join(' ', @dmg);
+        TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
+        TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
       } else {
-	TinderUtils::print_log "No files to copy\n";
+        TinderUtils::print_log "No files to copy\n";
       }
 
       if ( scalar(@xforms_xpi) gt 0 ) {
@@ -462,6 +462,15 @@ sub packit_l10n {
 
   TinderUtils::print_log "Starting l10n builds\n";
 
+  foreach my $wgeturl (keys(%Settings::WGetFiles)) {
+    my $status = TinderUtils::run_shell_command_with_timeout("wget --non-verbose --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
+                                                             $Settings::WGetTimeout);
+    if ($status->{exit_value} != 0) {
+      TinderUtils::print_log "Error: wget failed or timed out.\n";
+      return (("busted"));
+    }
+  }
+
   unless (open(ALL_LOCALES, "<$srcdir/$Settings::LocaleProduct/locales/all-locales")) {
       TinderUtils::print_log "Error: Couldn't read $srcdir/$Settings::LocaleProduct/locales/all-locales.\n";
       return (("testfailed"));
@@ -506,24 +515,20 @@ sub packit_l10n {
         $save_path = $ENV{PATH};
         $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
       }
-  
+
       # the one operation we care about saving status of
-      if ($Settings::sea_installer || $Settings::stub_installer) {
-        $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale";
-        if ($status != 0) {
-          $tinderstatus = 'busted';
-        }
-      } else {
-        $status = 0;
+      $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale $Settings::BuildLocalesArgs";
+      if ($status != 0) {
+        $tinderstatus = 'busted';
       }
   
       if ($tinderstatus eq 'success') {
         if (is_windows()) {
           run_locale_shell_command "mkdir -p $stagedir/windows-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/windows-xpi/$locale.xpi";
-	} elsif (is_mac()) {
-	  # Instead of adding something here (which will never be called),
-	  # please add your code to the is_mac() section below.
+        } elsif (is_mac()) {
+          # Instead of adding something here (which will never be called),
+          # please add your code to the is_mac() section below.
         } elsif (is_linux()) {
           run_locale_shell_command "mkdir -p $stagedir/linux-xpi/";
           run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/linux-xpi/$locale.xpi";
@@ -578,7 +583,7 @@ sub packit_l10n {
           TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
           TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
         } else {
-	  TinderUtils::print_log "No files to copy\n";
+          TinderUtils::print_log "No files to copy\n";
         }
 
         if ($tinderstatus eq 'success') {
@@ -747,19 +752,19 @@ sub PreBuild {
     my ($c_hour,$c_yday) = (localtime(time))[2,7];
 
     if ( -e "last-built") {
-	($last_build_day) = (localtime((stat "last-built")[9]))[7];
+        ($last_build_day) = (localtime((stat "last-built")[9]))[7];
     } else {
-	$last_build_day = -1;
+        $last_build_day = -1;
     }
 
     if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) {
-	TinderUtils::print_log "starting nightly release build\n";
-	# clobber the tree
-	TinderUtils::run_shell_command "rm -rf mozilla";
-	$cachebuild = 1;
+        TinderUtils::print_log "starting nightly release build\n";
+        # clobber the tree
+        TinderUtils::run_shell_command "rm -rf mozilla";
+        $cachebuild = 1;
       } else {
-	TinderUtils::print_log "starting non-release build\n";
-	$cachebuild = 0;
+        TinderUtils::print_log "starting non-release build\n";
+        $cachebuild = 0;
       }
 }
 
@@ -850,8 +855,10 @@ sub main {
 
   $upload_directory = $package_location . "/" . $upload_directory;
 
-  unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir,$cachebuild)) {
-    return returnStatus("Packaging failed", ("testfailed"));
+  if (!$Settings::ConfigureOnly) {
+    unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir,$cachebuild)) {
+      return returnStatus("Packaging failed", ("testfailed"));
+    }
   }
 
   if ($Settings::BuildLocales) {
@@ -859,7 +866,7 @@ sub main {
   }
 
   unless (pushit($Settings::ssh_server,
-		 $ftp_path,$upload_directory, $cachebuild)) {
+                 $ftp_path,$upload_directory, $cachebuild)) {
     return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
   }
 

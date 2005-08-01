@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.298 $ ';
+$::UtilsVersion = '$Revision: 1.299 $ ';
 
 package TinderUtils;
 
@@ -113,6 +113,7 @@ sub ParseArgs {
         $args->{ReportStatus} = 0, next if $arg eq '--noreport';
         $args->{ReportFinalStatus} = 0, next if $arg eq '--nofinalreport';
         $args->{RunMozillaTests} = 0, next if $arg eq '--notest';
+        $args->{ConfigureOnly} = 1, next if $arg eq '--configureonly';
         $args->{TestOnly} = 1, next if $arg eq '--testonly';
         $args->{BuildOnce} = 1, next if $arg eq '--once';
         $args->{UseTimeStamp} = 0, next if $arg eq '--notimestamp';
@@ -976,10 +977,15 @@ sub BuildIt {
 
             # Run the build target.
             if ($build_status ne 'busted') {
-                $status = run_shell_command "$make $TreeSpecific::build_target";
+                my $buildTarget = $TreeSpecific::build_target;
+                if ($Settings::ConfigureOnly) {
+                    $buildTarget = "configure";
+                }
+
+                $status = run_shell_command "$make $buildTarget";
                 if ($status != 0) {
                     $build_status = 'busted';
-                } elsif (not BinaryExists($full_binary_name)) {
+                } elsif (!$Settings::ConfigureOnly && !BinaryExists($full_binary_name)) {
                     print_log "Error: binary not found: $binary_basename\n";
                     $build_status = 'busted';
                 } else {

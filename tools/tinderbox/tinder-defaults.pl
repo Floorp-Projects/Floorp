@@ -30,10 +30,18 @@ $ReportStatus      = 1;      # Send results to server, or not
 $ReportFinalStatus = 1;      # Finer control over $ReportStatus.
 $UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 $BuildOnce         = 0;      # Build once, don't send results to server
+$ConfigureOnly     = 0;      # Configure, but do not build.
 $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 $SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
 $BuildLocales      = 0;      # Do l10n packaging?
+
+# Only used when $BuildLocales = 1
+%WGetFiles         = ();  # Pull files from the web, URL => Location
+$WGetTimeout       = 360; # Wget timeout, in seconds
+$BuildLocalesArgs  = "";  # Extra attributes to add to the makefile command
+                          # which builds the "installers-<locale>" target.
+                          # Typically used to set ZIP_IN and WIN32_INSTALLER_IN
 
 # Tests
 $CleanProfile             = 0;
