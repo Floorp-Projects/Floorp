@@ -380,8 +380,9 @@ function radioGroupSelectItem(radioGroupId, id)
 function radioGroupIndexOf(radioGroup, id)
 {
     var items = radioGroup.getElementsByTagName("radio");
-    for each (item in items) {
-        if (item.getAttribute("id") == id)
+    var i;
+    for (i in items) {
+        if (items[i].getAttribute("id") == id)
             return i;
     }
     return -1; // not found
