@@ -77,6 +77,13 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
 {
   nsresult rv = NS_OK;
 
+  // Ensure aRegistryFile exists before open it
+  PRBool regFileExists = PR_FALSE;
+  rv = aRegistryFile->Exists(&regFileExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!regFileExists)
+    return NS_ERROR_FILE_NOT_FOUND;
+
   // Open It
   nsCOMPtr<nsIRegistry> reg(do_CreateInstance("@mozilla.org/registry;1"));
   reg->Open(aRegistryFile);
