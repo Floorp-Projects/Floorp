@@ -367,25 +367,15 @@ nsXULSelectableAccessible(aDOMNode, aShell)
 }
 
 /**
-  * Let Accessible count them up
-  */
-NS_IMETHODIMP nsXULListboxAccessible::GetChildCount(PRInt32 *_retval)
-{
-  return nsAccessible::GetChildCount(_retval);
-}
-
-/**
   * As a nsXULListboxAccessible we can have the following states:
   *     STATE_FOCUSED
   *     STATE_READONLY
   *     STATE_FOCUSABLE
   */
-NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *aState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(_retval);
-
-  *_retval |= STATE_FOCUSABLE;
+  nsAccessible::GetState(aState);
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -393,10 +383,8 @@ NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *_retval)
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
     if (!selType.IsEmpty() && selType.EqualsLiteral("multiple"))
-        *_retval |= STATE_MULTISELECTABLE;
+      *aState |= STATE_MULTISELECTABLE | STATE_EXTSELECTABLE;
   }
-
-  *_retval |= STATE_FOCUSABLE ;
 
   return NS_OK;
 }

@@ -132,7 +132,6 @@ public:
   virtual ~nsXULListboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetValue(nsAString& _retval);
