@@ -127,7 +127,8 @@ protected:
                         nsReflowReason aReason,
                         nsReflowStatus& aStatus,
                         const ReflowConfig& aConfig,
-                        PRBool aLastColumnUnbounded);
+                        PRBool aLastColumnUnbounded,
+                        nsCollapsingMargin* aCarriedOutBottomMargin);
 };
 
 /**
@@ -337,11 +338,12 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
 
 PRBool
 nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowReason           aKidReason,
-                              nsReflowStatus&          aStatus,
-                              const ReflowConfig&      aConfig,
-                              PRBool                   aUnboundedLastColumn) {
+                                 const nsHTMLReflowState& aReflowState,
+                                 nsReflowReason           aKidReason,
+                                 nsReflowStatus&          aStatus,
+                                 const ReflowConfig&      aConfig,
+                                 PRBool                   aUnboundedLastColumn,
+                                 nsCollapsingMargin*      aBottomMarginCarriedOut) {
   PRBool allFit = PR_TRUE;
   PRBool RTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   PRBool shrinkingHeightOnly = aKidReason == eReflowReason_Resize &&
@@ -399,11 +401,12 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
   while (child) {
     // Try to skip reflowing the child. We can't skip if the child is dirty. We also can't
     // skip if the next column is dirty, because the next column's first line(s)
-    // might be pullable back to this column.
+    // might be pullable back to this column. We can't skip if it's the last child
+    // because we need to obtain the bottom margin.
     PRBool skipIncremental = aKidReason == eReflowReason_Incremental
       && !(child->GetStateBits() & NS_FRAME_IS_DIRTY)
-      && (!child->GetNextSibling()
-          || !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY))
+      && child->GetNextSibling()
+      && !(child->GetNextSibling()->GetStateBits() & NS_FRAME_IS_DIRTY)
       && !aDesiredSize.mComputeMEW;
     // If we need to pull up content from the prev-in-flow then this is not just
     // a height shrink. The prev in flow will have set the dirty bit.
@@ -490,6 +493,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
       NS_FRAME_TRACE_REFLOW_OUT("Column::Reflow", aStatus);
 
+      *aBottomMarginCarriedOut = kidDesiredSize.mCarriedOutBottomMargin;
+      
       FinishReflowChild(child, GetPresContext(), &kidReflowState, 
                         kidDesiredSize, childOrigin.x, childOrigin.y, 0);
 
@@ -733,8 +738,9 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
   // content back here and then have to push it out again!
   nsIFrame* nextInFlow = GetNextInFlow();
   PRBool unboundedLastColumn = isBalancing && nextInFlow;
+  nsCollapsingMargin carriedOutBottomMargin;
   PRBool feasible = ReflowChildren(aDesiredSize, aReflowState, kidReason,
-    aStatus, config, unboundedLastColumn);
+    aStatus, config, unboundedLastColumn, &carriedOutBottomMargin);
 
   if (isBalancing) {
     if (feasible ||
@@ -845,7 +851,8 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
       
       unboundedLastColumn = PR_FALSE;
       feasible = ReflowChildren(aDesiredSize, aReflowState,
-                                kidReason, aStatus, config, PR_FALSE);
+                                kidReason, aStatus, config, PR_FALSE, 
+                                &carriedOutBottomMargin);
     }
 
     if (!feasible) {
@@ -861,15 +868,16 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
         config.mColMaxHeight = knownFeasibleHeight;
       }
       if (!skip) {
-        ReflowChildren(aDesiredSize, aReflowState,
-                       eReflowReason_Resize, aStatus, config, PR_FALSE);
+        ReflowChildren(aDesiredSize, aReflowState, eReflowReason_Resize,
+                       aStatus, config, PR_FALSE, &carriedOutBottomMargin);
       }
     }
   }
-
+  
   CheckInvalidateSizeChange(GetPresContext(), aDesiredSize, aReflowState);
 
   FinishAndStoreOverflow(&aDesiredSize);
+  aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
