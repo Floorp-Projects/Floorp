@@ -122,6 +122,13 @@ var calCompositeCalendarObserver = {
             var checkCell = item.firstChild;
             checkCell.setAttribute('checked', false);
         }
+        var newSelectedEvents = new Array();
+        var oldSelectedEvents = gCalendarWindow.EventSelection.selectedEvents;
+        for (var i in oldSelectedEvents) {
+            if (!oldSelectedEvents[i].calendar.uri.equals(aCalendar.uri)) 
+                newSelectedEvents.push(oldSelectedEvents[i]);
+        }
+        gCalendarWindow.EventSelection.setArrayToSelection(newSelectedEvents);
     },
 
     onDefaultCalendarChanged: function (aNewDefaultCalendar) {
