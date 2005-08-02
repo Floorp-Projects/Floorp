@@ -59,6 +59,8 @@
 #include "nsSVGCairoGradient.h"
 #include "nsIDOMSVGRect.h"
 
+extern cairo_surface_t *gSVGCairoDummySurface;
+
 /**
  * \addtogroup cairo_renderer cairo Rendering Engine
  * @{
@@ -389,8 +391,8 @@ NS_IMETHODIMP
 nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
-  // XXX NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
@@ -496,8 +498,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   nsCOMPtr<nsIDOMSVGRect> box;
   metrics->GetBoundingBox(getter_AddRefs(box));
 
-  // XXX NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
   GetGlobalTransform(ctx, nsnull);
 
   float sX, sY, eX, eY, eWidth, eHeight;

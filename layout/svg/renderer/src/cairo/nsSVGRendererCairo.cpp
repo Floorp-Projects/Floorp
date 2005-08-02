@@ -47,6 +47,9 @@
 #include "nsSVGCairoCanvas.h"
 #include "nsSVGCairoRegion.h"
 #include "nsSVGCairoSurface.h"
+#include <cairo.h>
+
+cairo_surface_t *gSVGCairoDummySurface = nsnull;
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -80,6 +83,9 @@ private:
 
 nsSVGRendererCairo::nsSVGRendererCairo()
 {
+  if (!gSVGCairoDummySurface)
+    gSVGCairoDummySurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                                       1, 1);
 }
 
 nsresult

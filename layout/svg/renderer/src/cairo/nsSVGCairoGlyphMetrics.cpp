@@ -52,6 +52,8 @@
 #include "nsIComponentManager.h"
 #include <cairo.h>
 
+extern cairo_surface_t *gSVGCairoDummySurface;
+
 /**
  * \addtogroup gdiplus_renderer Cairo Rendering Engine
  * @{
@@ -98,8 +100,7 @@ private:
 nsSVGCairoGlyphMetrics::nsSVGCairoGlyphMetrics(nsISVGGlyphMetricsSource *src)
   : mSource(src)
 {
-  // XXX NULL isn't legal here without our patch to cairo.c
-  mCT = cairo_create(nsnull);
+  mCT = cairo_create(gSVGCairoDummySurface);
 }
 
 nsSVGCairoGlyphMetrics::~nsSVGCairoGlyphMetrics()
