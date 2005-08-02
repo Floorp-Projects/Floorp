@@ -4289,6 +4289,12 @@ nsEventStateManager::GetFocusedContent(nsIContent** aContent)
 NS_IMETHODIMP
 nsEventStateManager::SetFocusedContent(nsIContent* aContent)
 {
+
+  if (aContent &&
+      (!mPresContext || mPresContext->Type() == nsPresContext::eContext_PrintPreview)) {
+    return NS_OK;
+  }
+
   mCurrentFocus = aContent;
   if (mCurrentFocus)
     mLastFocus = mCurrentFocus;
