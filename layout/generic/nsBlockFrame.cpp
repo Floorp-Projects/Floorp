@@ -5252,6 +5252,12 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
     return NS_OK;
   }
 
+  // If we're inserting at the beginning of our list and we have an
+  // inside bullet, insert after that bullet.
+  if (!aPrevSibling && mBullet && !HaveOutsideBullet()) {
+    aPrevSibling = mBullet;
+  }
+  
   nsIPresShell *presShell = GetPresContext()->PresShell();
 
   // Attempt to find the line that contains the previous sibling
