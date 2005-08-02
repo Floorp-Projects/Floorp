@@ -368,9 +368,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   }
   
   //clear the filter field
-  //
-  [mCookiesFilterField setStringValue: @""];  
-  
+  [mCookiesFilterField setStringValue: @""];
+  // make sure the "remove all" button is enabled
+  [mRemoveAllCookiesButton setEnabled:YES];
+
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
   // it just forgets to tell the scrollbar. *shrug*
@@ -388,6 +389,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) removeCookies:(id)aSender
 {
+  int rowToSelect = -1;
+
   if (mCachedCookies && mCookieManager) {
     NSArray *rows = [[mCookiesTable selectedRowEnumerator] allObjects];
     NSEnumerator *e = [rows reverseObjectEnumerator];
@@ -395,6 +398,11 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     while ((index = [e nextObject]))
     {
       int row = [index intValue];
+      if (rowToSelect == -1)
+        rowToSelect = row;
+      else
+        --rowToSelect;
+
       nsCAutoString host, name, path;
       mCachedCookies->ObjectAt(row)->GetHost(host);
       mCachedCookies->ObjectAt(row)->GetName(name);
@@ -403,8 +411,13 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
       mCachedCookies->RemoveObjectAt(row);
     }
   }
-  [mCookiesTable deselectAll: self];   // don't want any traces of previous selection
+  
   [mCookiesTable reloadData];
+
+  if (rowToSelect >=0 && rowToSelect < [mCookiesTable numberOfRows])
+    [mCookiesTable selectRow:rowToSelect byExtendingSelection:NO];
+  else
+    [mCookiesTable deselectAll: self];
 }
 
 -(IBAction) removeAllCookies: (id)aSender
@@ -489,8 +502,9 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     [mPermissionsTable setUsesAlternatingRowBackgroundColors:YES];
   
   //clear the filter field
-  //
   [mPermissionFilterField setStringValue: @""];
+  // and make sure the button is enabled
+  [mRemoveAllPermissionsButton setEnabled:YES];
   
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
@@ -509,6 +523,8 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) removeCookiePermissions:(id)aSender
 {
+  int rowToSelect = -1;
+  
   if (mCachedPermissions && mPermissionManager) {
     // remove from parallel array and cookie permissions list
     NSArray *rows = [[mPermissionsTable selectedRowEnumerator] allObjects];
@@ -516,14 +532,23 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
     NSNumber *index;
     while ((index = [e nextObject]))  {
       int row = [index intValue];
+      if (rowToSelect == -1)
+        rowToSelect = row;
+      else
+        --rowToSelect;
       nsCAutoString host;
       mCachedPermissions->ObjectAt(row)->GetHost(host);
       mPermissionManager->Remove(host, "cookie");
       mCachedPermissions->RemoveObjectAt(row);
     }
   } 
-  [mPermissionsTable deselectAll: self];   // don't want any traces of previous selection
+
   [mPermissionsTable reloadData];
+
+  if (rowToSelect >=0 && rowToSelect < [mPermissionsTable numberOfRows])
+    [mPermissionsTable selectRow:rowToSelect byExtendingSelection:NO];
+  else
+    [mPermissionsTable deselectAll: self];   // don't want any traces of previous selection
 }
 
 -(IBAction) removeAllCookiePermissions: (id)aSender
