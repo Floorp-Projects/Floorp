@@ -353,6 +353,33 @@ jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
+jsdouble
+jsd_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->minOwnExecutionTime;
+
+    return 0.0;
+}
+
+jsdouble
+jsd_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->maxOwnExecutionTime;
+
+    return 0.0;
+}
+
+jsdouble
+jsd_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->totalOwnExecutionTime;
+
+    return 0.0;
+}
+
 void
 jsd_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script)
 {

@@ -1333,6 +1333,30 @@ jsdScript::GetTotalExecutionTime(double *_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::GetMinOwnExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptMinOwnExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetMaxOwnExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptMaxOwnExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetTotalOwnExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptTotalOwnExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::ClearProfileData()
 {
     ASSERT_VALID_EPHEMERAL;
