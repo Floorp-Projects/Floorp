@@ -61,17 +61,20 @@ public:
   nsFrameOrigin() {
     mLine = 0;
     mXCoord = 0;
+    mDirection = NS_STYLE_DIRECTION_LTR;
   }
 
-  nsFrameOrigin(PRInt32 line, nscoord xCoord) {
+  nsFrameOrigin(PRInt32 line, nscoord xCoord, PRUint8 direction) {
     mLine = line;
     mXCoord = xCoord;
+    mDirection = direction;
   }
 
   // copy constructor
   nsFrameOrigin(const nsFrameOrigin& aFrameOrigin) {
     mLine = aFrameOrigin.mLine;
     mXCoord = aFrameOrigin.mXCoord;
+    mDirection = aFrameOrigin.mDirection;
   }
 
   ~nsFrameOrigin() {
@@ -80,6 +83,7 @@ public:
   nsFrameOrigin& operator=(const nsFrameOrigin& aFrameOrigin) { 
     mLine = aFrameOrigin.mLine;
     mXCoord = aFrameOrigin.mXCoord;
+    mDirection = aFrameOrigin.mDirection;
     return *this;
   }
 
@@ -90,7 +94,8 @@ public:
     if (mLine > aFrameOrigin.mLine) {
       return PR_FALSE;
     }
-    if (mXCoord < aFrameOrigin.mXCoord) {
+    if (mDirection == NS_STYLE_DIRECTION_LTR && mXCoord < aFrameOrigin.mXCoord ||
+        mDirection == NS_STYLE_DIRECTION_RTL && mXCoord > aFrameOrigin.mXCoord) {
       return PR_TRUE;
     }
     return PR_FALSE;
@@ -103,7 +108,8 @@ public:
     if (mLine < aFrameOrigin.mLine) {
       return PR_FALSE;
     }
-    if (mXCoord > aFrameOrigin.mXCoord) {
+    if (mDirection == NS_STYLE_DIRECTION_LTR && mXCoord > aFrameOrigin.mXCoord ||
+        mDirection == NS_STYLE_DIRECTION_RTL && mXCoord < aFrameOrigin.mXCoord) {
       return PR_TRUE;
     }
     return PR_FALSE;
@@ -119,6 +125,7 @@ public:
 protected:
   PRInt32 mLine;
   nscoord mXCoord;
+  PRUint8 mDirection;
 };
 #endif // IBMBIDI
 
@@ -582,20 +589,21 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  nsFrameOrigin maxOrig(LINE_MIN, XCOORD_MIN);
+  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
+  nsFrameOrigin maxOrig(LINE_MIN, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MIN : XCOORD_MAX, direction);
   PRInt32 testLine, thisLine;
 
   result = iter->FindLineContaining(aFrame, &thisLine);
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  nsFrameOrigin limOrig(thisLine, aFrame->GetRect().x);
+  nsFrameOrigin limOrig(thisLine, aFrame->GetRect().x, direction);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine - 1)) {
-      nsFrameOrigin testOrig(testLine, frame->GetRect().x);
+      nsFrameOrigin testOrig(testLine, frame->GetRect().x, direction);
       if (testOrig > maxOrig && testOrig < limOrig) { // we are looking for the highest value less than the current one
         maxOrig = testOrig;
         furthestFrame = frame;
@@ -645,20 +653,21 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  nsFrameOrigin minOrig(MY_LINE_MAX, XCOORD_MAX);
+  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
+  nsFrameOrigin minOrig(MY_LINE_MAX, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MAX : XCOORD_MIN, direction);
   PRInt32 testLine, thisLine;
 
   result = iter->FindLineContaining(aFrame, &thisLine);
   if (NS_FAILED(result) || thisLine < 0)
     return nsnull;
 
-  nsFrameOrigin limOrig(thisLine, aFrame->GetRect().x);
+  nsFrameOrigin limOrig(thisLine, aFrame->GetRect().x, direction);
 
   while (frame) {
     if (NS_SUCCEEDED(iter->FindLineContaining(frame, &testLine))
         && testLine >= 0
         && (testLine == thisLine || testLine == thisLine + 1)) {
-      nsFrameOrigin testOrig(testLine, frame->GetRect().x);
+      nsFrameOrigin testOrig(testLine, frame->GetRect().x, direction);
       if (testOrig < minOrig && testOrig > limOrig) { // we are looking for the lowest value greater than the current one
         minOrig = testOrig;
         nearestFrame = frame;
