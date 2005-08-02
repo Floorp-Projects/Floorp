@@ -16,21 +16,6 @@
 <!ENTITY body.label "body">
 <!ENTITY contains.label "contains">
 <!ENTITY nocontains.label "doesn't contain">
-<!ENTITY moveToFolder.label "Move to folder:">
-<!ENTITY copyToFolder.label "Copy to folder:">
-
-<!ENTITY changePriority.label "Change the priority to:">
-<!ENTITY delete.label "Delete the message">
-<!ENTITY markRead.label "Mark the message as read">
-<!ENTITY markFlagged.label "Flag the message">
-<!ENTITY label.label "Label the message:">
-<!ENTITY killThread.label "Ignore thread">
-<!ENTITY watchThread.label "Watch thread">
-<!ENTITY deleteFromServer.label "Delete from POP server">
-<!ENTITY fetchBodyFromServer.label "Fetch body from POP server">
-<!ENTITY setJunkScore.label "Set Junk Status to:">
-<!ENTITY forwardTo.label "Forward to:">
-<!ENTITY replyWithTemplate.label "Reply with template:">
 <!ENTITY filterName.label "Filter name:">
 <!ENTITY filterName.accesskey "i">
 
@@ -50,3 +35,18 @@
 <!ENTITY newFolderButton.label "New Folder...">
 <!ENTITY newFolderButton.accesskey "N">
 
+<!-- New Style Filter Rule Actions -->
+<!ENTITY moveMessage.label "Move Message to">
+<!ENTITY copyMessage.label "Copy Message to">
+<!ENTITY forwardTo.label "Forward Message to">
+<!ENTITY replyWithTemplate.label "Reply with Template">
+<!ENTITY markMessageRead.label "Mark As Read">
+<!ENTITY markMessageFlagged.label "Mark As Flagged">
+<!ENTITY labelMessage.label "Label Message As">
+<!ENTITY setPriority.label "Set Priority to">
+<!ENTITY setJunkScore.label "Set Junk Status to">
+<!ENTITY deleteMessage.label "Delete Message">
+<!ENTITY deleteFromPOP.label "Delete From POP Server">
+<!ENTITY fetchFromPOP.label "Fetch From POP Server">
+<!ENTITY ignoreThread.label "Ignore Thread">
+<!ENTITY watchThread.label "Watch Thread">

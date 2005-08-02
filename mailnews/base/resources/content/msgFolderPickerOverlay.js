@@ -85,9 +85,8 @@ function PickedMsgFolder(selection,pickerID)
   SetFolderPicker(selectedUri,pickerID);
 }     
 
-function SetFolderPicker(uri,pickerID)
+function SetFolderPickerElement(uri, picker)
 {
-  var picker = document.getElementById(pickerID);
   var msgfolder = GetMsgFolderFromUri(uri, true);
 
   if (!msgfolder) 
@@ -106,7 +105,7 @@ function SetFolderPicker(uri,pickerID)
      serverName = "???";
     }
  
-    if (pickerID == "runFiltersFolder") 
+    if (picker.id == "runFiltersFolder") 
       selectedValue = msgfolder.name;
     else {
       if (!gMessengerBundle)
@@ -118,4 +117,9 @@ function SetFolderPicker(uri,pickerID)
 
   picker.setAttribute("label",selectedValue);
   picker.setAttribute("uri",uri);
+}
+
+function SetFolderPicker(uri,pickerID)
+{
+  SetFolderPickerElement(uri, document.getElementById(pickerID));
 }

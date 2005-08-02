@@ -1854,6 +1854,49 @@
     </handlers>
   </binding>
 
+  <binding id="folderTargetPopup" extends="chrome://messenger/content/mailWidgets.xml#popup-base">
+    <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <tree class="foldersTree" flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content" selstyle="primary" hidecolumnpicker="true">
+        <treecols>
+          <treecol flex="1" primary="true" sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true" sortActive="true" sortDirection="ascending" crop="center" hideheader="true"/>
+        </treecols>
+        <treechildren class="foldersTreeChildren"/>
+        <template>
+          <rule nc:CanFileMessagesOnServer="true" nc:CanFileMessages="true" nc:CanSearchMessages="true">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                    properties="folderNameCol specialFolder-rdf:http://home.netscape.com/NC-rdf#SpecialFolder isServer-rdf:http://home.netscape.com/NC-rdf#IsServer isSecure-rdf:http://home.netscape.com/NC-rdf#IsSecure serverType-rdf:http://home.netscape.com/NC-rdf#ServerType noSelect-rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+          <rule nc:CanFileMessagesOnServer="true" nc:CanFileMessages="false" nc:CanSearchMessages="true" nc:Virtual="false">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                    properties="folderNameCol specialFolder-rdf:http://home.netscape.com/NC-rdf#SpecialFolder isServer-rdf:http://home.netscape.com/NC-rdf#IsServer isSecure-rdf:http://home.netscape.com/NC-rdf#IsSecure serverType-rdf:http://home.netscape.com/NC-rdf#ServerType noSelect-rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+          <rule nc:CanFileMessagesOnServer="true" nc:CanFileMessages="true" nc:Virtual="false">
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
+                    properties="folderNameCol specialFolder-rdf:http://home.netscape.com/NC-rdf#SpecialFolder isServer-rdf:http://home.netscape.com/NC-rdf#IsServer isSecure-rdf:http://home.netscape.com/NC-rdf#IsSecure serverType-rdf:http://home.netscape.com/NC-rdf#ServerType noSelect-rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </rule>
+        </template>
+      </tree>
+    </xbl:content>
+  </binding>
+
   <binding id="locationpopup" extends="chrome://messenger/content/mailWidgets.xml#popup-base">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
       <tree class="foldersTree" flex="1" datasources="rdf:null" flags="dont-build-content" selstyle="primary" hidecolumnpicker="true">
@@ -1899,4 +1942,5 @@
       </tree>
     </xbl:content>
   </binding>
+
 </bindings>

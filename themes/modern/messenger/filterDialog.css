@@ -79,3 +79,11 @@ textbox {
   width: 560px;
   min-height:1px;
 }
+
+.filler {
+  padding-right: 22px;
+}
+
+.ruleactionitem {
+  min-width: 15em;
+}

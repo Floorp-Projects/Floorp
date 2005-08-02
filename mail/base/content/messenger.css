@@ -96,6 +96,42 @@ searchterm {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchterm");
 }
 
+.ruleaction {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleaction"); 
+}
+
+.ruleactiontype {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontype-menulist"); 
+}
+
+.ruleactiontarget[type] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-base");
+}
+
+.ruleactiontarget[type="movemessage"], .ruleactiontarget[type="copymessage"] { 
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-folder");
+}
+
+.ruleactiontarget[type="labelmessageas"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-label");
+}
+
+.ruleactiontarget[type="setpriorityto"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-priority");
+}
+
+.ruleactiontarget[type="setjunkscore"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-junkscore");
+}
+
+.ruleactiontarget[type="forwardmessage"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-forwardto");
+}
+
+.ruleactiontarget[type="replytomessage"] {
+  -moz-binding: url("chrome://messenger/content/searchWidgets.xml#ruleactiontarget-replyto");
+}
+
 dummy.usesMailWidgets {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#dummy");
 }
@@ -113,6 +149,11 @@ dummy.usesMailWidgets {
 .quick-search-clearbutton{
   cursor: default;
   -moz-user-focus: none;
+}
+
+.folderTargetPopup {
+  display: -moz-popup;
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#folderTargetPopup");
 }
 
 .searchPopup {

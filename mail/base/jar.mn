@@ -87,6 +87,7 @@ messenger.jar:
     content/messenger/CustomHeaders.js              (/mailnews/base/search/resources/content/CustomHeaders.js)
     content/messenger/FilterEditor.xul              (/mailnews/base/search/resources/content/FilterEditor.xul)
     content/messenger/FilterEditor.js               (/mailnews/base/search/resources/content/FilterEditor.js)
+*   content/messenger/searchWidgets.xml             (/mailnews/base/search/resources/content/searchWidgets.xml)
     content/messenger/viewLog.xul                   (/mailnews/base/search/resources/content/viewLog.xul)
     content/messenger/viewLog.js                    (/mailnews/base/search/resources/content/viewLog.js)
     content/messenger/junkLog.xul                   (/mailnews/base/resources/content/junkLog.xul)
