@@ -60,6 +60,8 @@
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 
+extern cairo_surface_t *gSVGCairoDummySurface;
+
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
  * @{
@@ -415,8 +417,7 @@ nsSVGCairoPathGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
 {
   *_retval = nsnull;
 
-  // XXX NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
   GeneratePath(ctx, nsnull);
 
@@ -457,8 +458,7 @@ nsSVGCairoPathGeometry::ContainsPoint(float x, float y, PRBool *_retval)
       return NS_OK;
   }
 
-  // XXX NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
   cairo_set_tolerance(ctx, 1.0);
 
   GeneratePath(ctx, nsnull);
@@ -499,8 +499,8 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   if (!rect) return NS_ERROR_FAILURE;
 
   double xmin, ymin, xmax, ymax;
-  // NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
   GeneratePath(ctx, nsnull);
 
   cairo_fill_extents(ctx, &xmin, &ymin, &xmax, &ymax);
