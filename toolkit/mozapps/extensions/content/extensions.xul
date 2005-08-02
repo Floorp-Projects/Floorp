@@ -121,7 +121,7 @@
     <menuitem id="menuitem_uninstall" command="cmd_uninstall"
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"/>
     <menuitem id="menuitem_update" command="cmd_update"
-              label="&cmd.update.label;" accesskey="&cmd.update.accesskey;"/>
+              label="&cmd.updateAddon.label;" accesskey="&cmd.updateAddon.accesskey;"/>
     <menuitem id="menuitem_enable" command="cmd_enable"
               label="&cmd.enable.label;" accesskey="&cmd.enable.accesskey;"/>
     <menuitem id="menuitem_disable" command="cmd_disable"
