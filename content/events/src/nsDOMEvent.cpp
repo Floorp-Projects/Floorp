@@ -67,7 +67,7 @@ static const char* const sEventNames[] = {
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
-  "popupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut",
+  "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide"
 }; 
 
@@ -930,6 +930,11 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   default:
     break;
   }
+  // XXXldb We can hit this case in many ways, partly thanks to
+  // nsDOMEvent::SetEventType being incomplete, and partly due to some
+  // event types not having message constants at all (e.g., popup
+  // blocked events).  Shouldn't we use the event's userType when we
+  // can?
   return nsnull;
 }
 
