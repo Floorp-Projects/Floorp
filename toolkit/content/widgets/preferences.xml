@@ -326,7 +326,7 @@
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
-              event.initEvent("preferenceread", false, true);
+              event.initEvent("syncfrompreference", false, true);
               var f = new Function ("event", 
                                     aElement.getAttribute("onsyncfrompreference"));
               rv = f(event);
@@ -352,7 +352,7 @@
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
-              event.initEvent("preferencewrite", false, true);
+              event.initEvent("synctopreference", false, true);
               var f = new Function ("event", 
                                     aElement.getAttribute("onsynctopreference"));
               var rv = f(event);

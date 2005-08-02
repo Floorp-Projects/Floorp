@@ -50,6 +50,10 @@
             helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences>
+      <preference id="browser.preferences.advanced.selectedTabIndex"
+                  name="browser.preferences.advanced.selectedTabIndex"
+                  type="int"/>
+
       <preference id="accessibility.browsewithcaret"   name="accessibility.browsewithcaret"   type="bool"/>
       <preference id="accessibility.typeaheadfind"     name="accessibility.typeaheadfind"     type="bool"/>
       <preference id="browser.enable_automatic_image_resizing"
@@ -57,20 +61,23 @@
                   type="bool"/>
       <preference id="general.autoScroll"              name="general.autoScroll"              type="bool"/>
       <preference id="general.smoothScroll"            name="general.smoothScroll"            type="bool"/>
-      <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
-      <preference id="app.update.auto"                 name="app.update.auto"                 type="bool"/>
-      <preference id="extensions.update.autoUpdateEnabled"
-                  name="extensions.update.autoUpdateEnabled"
-                  type="bool"/>
+
+      <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"
+                  onchange="gAdvancedPane.updateAppUpdateItems();
+                            gAdvancedPane.updateAutoItems();
+                            gAdvancedPane.updateModeItems();"/>
+      <preference id="app.update.auto"                 name="app.update.auto"                 type="bool"
+                  onchange="gAdvancedPane.updateAutoItems();
+                            gAdvancedPane.updateModeItems();"/>
+      <preference id="app.update.mode"                 name="app.update.mode"                 type="int"
+                  onchange="gAdvancedPane.updateModeItems();"/>
+      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
+                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+
       <preference id="security.enable_ssl2"            name="security.enable_ssl2"            type="bool"/>
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
       <preference id="security.enable_tls"             name="security.enable_tls"             type="bool"/>
       <preference id="security.default_personal_cert"  name="security.default_personal_cert"  type="string"/>
-      
-      <preference id="browser.preferences.advanced.selectedTabIndex"
-                  name="browser.preferences.advanced.selectedTabIndex"
-                  type="int"/>
-
       <preference id="security.disable_button.openCertManager"
                   name="security.disable_button.openCertManager"
                   type="bool"/>
@@ -125,50 +132,48 @@
             </hbox>
           </groupbox>
         </tabpanel>
-        <tabpanel orient="vertical">
-          <vbox>
-            <label>&softwareupdateinfo.label;</label>
-            <separator class="thin"/>
-            <vbox align="start" class="updateControls">
+        <tabpanel orient="vertical" align="start">
+          <label>&autoCheck.label;</label>
+          <vbox class="indent">
+            <hbox>
               <checkbox id="enableAppUpdate"
                         label="&enableAppUpdate.label;"
                         accesskey="&enableAppUpdate.accesskey;"
-                        preference="app.update.enabled"
-                        onsyncfrompreference="return gAdvancedPane.updateAppUpdateUI();"/>
-              <vbox class="indent">
-                <hbox align="center">
-                  <checkbox id="enableAutoInstall"
-                            label="&enableAutoInstall.label;"
-                            accesskey="&enableAutoInstall.accesskey;"
-                            preference="app.update.auto"
-                            onsyncfrompreference="return gAdvancedPane.updateAutoPref();"/>
-                  <spacer flex="1"/>
-                  <button id="autoInstallOptions"
-                          label="&autoInstallOptions.label;" accesskey="&autoInstallOptions.accesskey;"
-                          oncommand="gAdvancedPane.showAutoInstallOptions();"/>
-                </hbox>
-                <hbox>
-                  <button id="checkNowButton" 
-                          label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                          oncommand="gAdvancedPane.checkForUpdates();"/>
-                  <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
-                          oncommand="gAdvancedPane.showUpdates();"/>
-                </hbox>
-              </vbox>
-            </vbox>
-            <separator/>
-            <vbox align="start" class="updateControls">
-              <checkbox id="enableExtensionUpdate"
+                        preference="app.update.enabled"/>
+              <spacer flex="1"/>
+              <button id="appCheckNowButton" 
+                      label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
+                      oncommand="gAdvancedPane.checkForUpdates();"/>
+            </hbox>
+            <hbox>
+              <checkbox id="enableAddonUpdate"
                         label="&enableExtensionUpdate.label;"
                         accesskey="&enableExtensionUpdate.accesskey;"
-                        preference="extensions.update.autoUpdateEnabled"/>      
-              <hbox class="indent">
-                <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                        oncommand="gAdvancedPane.checkForAddonUpdates();"
-                        preference="extensions.update.autoUpdateEnabled"/>
-              </hbox>
-            </vbox>
+                        preference="extensions.update.enabled"/>
+              <spacer flex="1"/>
+              <button id="addonCheckNowButton" 
+                      label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
+                      oncommand="gAdvancedPane.checkForAddonUpdates();"/>
+            </hbox>
           </vbox>
+          <separator/>
+          <label id="updateModeLabel">&whenUpdatesFound.label;</label>
+          <radiogroup id="updateMode" class="indent"
+                      preference="app.update.auto">
+            <radio id="ask" value="false"
+                   label="&modeAskMe.label;"
+                   accesskey="&modeAskMe.accesskey;"/>
+            <radio id="automatic" value="true"
+                   label="&modeAutomatic.label;"
+                   accesskey="&modeAutomatic.accesskey;"/>
+            <hbox class="indent">
+              <checkbox id="warnIncompatible" 
+                        label="&modeAutoWarn.label;" accesskey="&modeAutoWarn.accesskey;"
+                        preference="app.update.mode"
+                        onsyncfrompreference="return gAdvancedPane.addonWarnSyncFrom();"
+                        onsynctopreference="return gAdvancedPane.addonWarnSyncTo();"/>
+            </hbox>
+          </radiogroup>
         </tabpanel>
         <tabpanel orient="vertical">
           <groupbox>
