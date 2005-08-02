@@ -362,8 +362,11 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       }
   }
 
-  // if dirty then check dirty flags
-  if (reason == eReflowReason_Dirty) {
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    reflowLegend = PR_TRUE;
+    reflowContent = PR_TRUE;
+  } else if (reason == eReflowReason_Dirty) {
+    // if dirty then check dirty flags
     if (GetStateBits() & NS_FRAME_IS_DIRTY) {
       reflowLegend = PR_TRUE;
       reflowContent = PR_TRUE;
