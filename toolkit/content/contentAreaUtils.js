@@ -167,17 +167,14 @@ function isContentFrame(aFocusedWindow)
   if (!aFocusedWindow)
     return false;
 
-  var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
-                             .call(aFocusedWindow);
-
-  return (focusedTop == window.content);
+  return (aFocusedWindow.top == window.content);
 }
 
 function getContentFrameURI(aFocusedWindow)
 {
   var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
   if (contentFrame)
-    return Components.lookupMethod(contentFrame, 'location').call(contentFrame).href;
+    return contentFrame.location.href;
   else
     return null;
 }
