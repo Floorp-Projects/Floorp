@@ -213,8 +213,8 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                          * delta calculated above. */
                         if (!JSLL_IS_ZERO(jsdc->lastReturnTime))
                         {
-                            // Add last chunk to running time, and use total
-                            // running time as 'delta'.
+                            /* Add last chunk to running time, and use total
+                             * running time as 'delta'. */
                             JSLL_SUB(ll_delta, now, jsdc->lastReturnTime);
                             JSLL_ADD(pdata->runningTime, pdata->runningTime, ll_delta);
                             JSLL_L2D(delta, pdata->runningTime);
