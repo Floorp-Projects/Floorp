@@ -96,7 +96,12 @@ private:
     static PRCList          mPidLockList;
 
     nsresult                LockWithFcntl(const nsACString& lockFilePath);
-    nsresult                LockWithSymlink(const nsACString& lockFilePath);
+
+    /**
+     * @param aHaveFcntlLock if true, we've already acquired an fcntl lock so this
+     * lock is merely an "obsolete" lock to keep out old Firefoxes
+     */
+    nsresult                LockWithSymlink(const nsACString& lockFilePath, PRBool aHaveFcntlLock);
 
     char*                   mPidLockFileName;
     int                     mLockFileDesc;
