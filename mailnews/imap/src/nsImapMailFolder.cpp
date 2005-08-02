@@ -5216,19 +5216,24 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
   {
     // check if we should download message bodies because it's the inbox and 
     // the server is specified as one where where we download msg bodies automatically.
-    PRBool autoDownloadNewHeaders = PR_FALSE;
-    if (mFlags & MSG_FOLDER_FLAG_INBOX)
-    {
-      nsCOMPtr<nsIImapIncomingServer> imapServer;
-      nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+    // Or if we autosyncing all offline folders.
+    nsCOMPtr<nsIImapIncomingServer> imapServer;
+    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
 
-      if (NS_SUCCEEDED(rv) && imapServer)
+    PRBool autoDownloadNewHeaders = PR_FALSE;
+    PRBool autoSyncOfflineStores = PR_FALSE;
+
+    if (imapServer)
+      imapServer->GetAutoSyncOfflineStores(&autoSyncOfflineStores);
+    if (autoSyncOfflineStores || mFlags & MSG_FOLDER_FLAG_INBOX)
+    {
+      if (imapServer && mFlags & MSG_FOLDER_FLAG_INBOX && !autoSyncOfflineStores)
         imapServer->GetDownloadBodiesOnGetNewMail(&autoDownloadNewHeaders);
       // this isn't quite right - we only want to download bodies for new headers
       // but we don't know what the new headers are. We could query the inbox db
       // for new messages, if the above filter playback actually moves the filtered
       // messages before we get to this code.
-      if (autoDownloadNewHeaders)
+      if (autoDownloadNewHeaders || autoSyncOfflineStores)
       {
           // acquire semaphore for offline store. If it fails, we won't download for offline use.
         if (NS_SUCCEEDED(AcquireSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this))))

@@ -341,6 +341,9 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreSentMailInPFC,
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DownloadBodiesOnGetNewMail,
                         "download_bodies_on_get_new_mail")
 
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, AutoSyncOfflineStores,
+                        "autosync_offline_stores")
+
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UseIdle,
                         "use_idle")
 //NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
