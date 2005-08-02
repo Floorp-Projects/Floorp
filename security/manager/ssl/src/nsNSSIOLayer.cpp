@@ -295,8 +295,10 @@ NS_IMETHODIMP
 nsNSSSocketInfo::GetShortSecurityDescription(PRUnichar** aText) {
   if (mShortDesc.IsEmpty())
     *aText = nsnull;
-  else
+  else {
     *aText = ToNewUnicode(mShortDesc);
+    NS_ENSURE_TRUE(*aText, NS_ERROR_OUT_OF_MEMORY);
+  }
   return NS_OK;
 }
 
@@ -2048,40 +2050,41 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     CERT_DestroyCertificate(serverCert);
 
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+    if (!certNicknameList)
+      goto loser;
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+    if (!certDetailsList) {
+      nsMemory::Free(certNicknameList);
+      goto loser;
+    }
 
     PRInt32 CertsToUse;
-
     for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
          node = CERT_LIST_NEXT(node)
         )
     {
-      nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
+      nsRefPtr<nsNSSCertificate> tempCert = new nsNSSCertificate(node->cert);
 
-      if (tempCert) {
+      if (!tempCert)
+        continue;
       
-        // XXX we really should be using an nsCOMPtr instead of manually add-refing,
-        // but nsNSSCertificate does not have a default constructor.
-        
-        NS_ADDREF(tempCert);
+      NS_ConvertUTF8toUTF16 i_nickname(nicknames->nicknames[CertsToUse]);
+      nsAutoString nickWithSerial, details;
+      
+      if (NS_FAILED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details)))
+        continue;
 
-        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
-        nsAutoString nickWithSerial;
-        nsAutoString details;
-        if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
-          certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
-          certDetailsList[CertsToUse] = ToNewUnicode(details);
-        }
-        else {
-          certNicknameList[CertsToUse] = nsnull;
-          certDetailsList[CertsToUse] = nsnull;
-        }
-
-        NS_RELEASE(tempCert);
-        
-        ++CertsToUse;
+      certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
+      if (!certNicknameList[CertsToUse])
+        continue;
+      certDetailsList[CertsToUse] = ToNewUnicode(details);
+      if (!certDetailsList[CertsToUse]) {
+        nsMemory::Free(certNicknameList[CertsToUse]);
+        continue;
       }
+
+      ++CertsToUse;
     }
 
     /* Throw up the client auth dialog and get back the index of the selected cert */
@@ -2089,7 +2092,11 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
                        NS_GET_IID(nsIClientAuthDialogs),
                        NS_CLIENTAUTHDIALOGS_CONTRACTID);
 
-    if (NS_FAILED(rv)) goto loser;
+    if (NS_FAILED(rv)) {
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certDetailsList);
+      goto loser;
+    }
 
     {
       nsPSMUITracker tracker;
@@ -2103,19 +2110,15 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
       }
     }
 
-    int i;
-    for (i = 0; i < CertsToUse; ++i) {
-      nsMemory::Free(certNicknameList[i]);
-      nsMemory::Free(certDetailsList[i]);
-    }
-    nsMemory::Free(certNicknameList);
-    nsMemory::Free(certDetailsList);
-
     NS_RELEASE(dialogs);
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certDetailsList);
+    
     if (NS_FAILED(rv)) goto loser;
 
     if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
+    int i;
     for (i = 0, node = CERT_LIST_HEAD(certList);
          !CERT_LIST_END(node, certList);
          ++i, node = CERT_LIST_NEXT(node)) {
