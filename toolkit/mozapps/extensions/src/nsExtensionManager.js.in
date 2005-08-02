@@ -63,6 +63,7 @@ const PREF_EM_DISABLEDOBSOLETE        = "extensions.disabledObsolete";
 const PREF_EM_LAST_SELECTED_SKIN      = "extensions.lastSelectedSkin";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.%UUID%.";
 const PREF_EM_ITEM_UPDATE_ENABLED     = "extensions.%UUID%.update.enabled";
+const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_ITEM_UPDATE_URL         = "extensions.%UUID%.update.url";
 const PREF_EM_DSS_ENABLED             = "extensions.dss.enabled";
 const PREF_DSS_SWITCHPENDING          = "extensions.dss.switchPending";
@@ -2395,7 +2396,8 @@ ExtensionManager.prototype = {
    *          The timer that fired
    */
   notify: function(timer) {
-    this.update([], 0, false, null);
+    if (getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
+      this.update([], 0, false, null);
   },
   
   /**
