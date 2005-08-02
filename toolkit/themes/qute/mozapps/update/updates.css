@@ -115,12 +115,18 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
   margin-top: 6px;
   height: 3em !important;
 }
+
 #downloadThrobber {
   margin: 5px 3px 0px 5px;
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.png");
 }
+
 #downloadThrobber[state="loading"] {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
+}
+
+#downloadStatusLine {
+  -moz-box-align: start;
 }
 
 #verificationFailedIcon {
