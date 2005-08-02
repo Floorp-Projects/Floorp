@@ -430,88 +430,6 @@ SECItem *
 PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 					 SECItem *name, int type, char **url)
 {
-#ifdef NSS_CLASSIC
-    CK_OBJECT_CLASS crlClass = CKO_NETSCAPE_CRL;
-    CK_ATTRIBUTE theTemplate[] = {
-	{ CKA_SUBJECT, NULL, 0 },
-	{ CKA_CLASS, NULL, 0 },
-	{ CKA_NETSCAPE_KRL, NULL, 0 },
-    };
-    CK_ATTRIBUTE crlData[] = {
-	{ CKA_VALUE, NULL, 0 },
-	{ CKA_NETSCAPE_URL, NULL, 0 },
-    };
-    /* if you change the array, change the variable below as well */
-    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
-    CK_BBOOL ck_true = CK_TRUE;
-    CK_BBOOL ck_false = CK_FALSE;
-    CK_OBJECT_HANDLE crlh = CK_INVALID_HANDLE;
-    CK_ATTRIBUTE *attrs = theTemplate;
-    CK_RV crv;
-    SECItem *derCrl = NULL;
-
-    PK11_SETATTRS(attrs, CKA_SUBJECT, name->data, name->len); attrs++;
-    PK11_SETATTRS(attrs, CKA_CLASS, &crlClass, sizeof(crlClass)); attrs++;
-    PK11_SETATTRS(attrs, CKA_NETSCAPE_KRL, (type == SEC_CRL_TYPE) ? 
-			&ck_false : &ck_true, sizeof (CK_BBOOL)); attrs++;
-
-    if (*slot) {
-    	crlh = pk11_FindObjectByTemplate(*slot,theTemplate,tsize);
-    } else {
-	PK11SlotList *list = PK11_GetAllTokens(CKM_INVALID_MECHANISM,
-							PR_FALSE,PR_TRUE,NULL);
-	PK11SlotListElement *le;
-
-	/* loop through all the fortezza tokens */
-	for (le = list->head; le; le = le->next) {
-	    crlh = pk11_FindObjectByTemplate(le->slot,theTemplate,tsize);
-	    if (crlh != CK_INVALID_HANDLE) {
-		*slot = PK11_ReferenceSlot(le->slot);
-		break;
-	    }
-	}
-	PK11_FreeSlotList(list);
-    }
-    
-    if (crlh == CK_INVALID_HANDLE) {
-	PORT_SetError(SEC_ERROR_NO_KRL);
-	return NULL;
-    }
-    crv = PK11_GetAttributes(NULL,*slot,crlh,crlData,2);
-    if (crv != CKR_OK) {
-	PORT_SetError(PK11_MapError (crv));
-	goto loser;
-    }
-
-    derCrl = (SECItem *)PORT_ZAlloc(sizeof(SECItem));    
-    if (derCrl == NULL) {
-	goto loser;
-    }
-
-    /* why are we arbitrarily picking the first CRL ??? */
-    derCrl->data = crlData[0].pValue;
-    derCrl->len = crlData[0].ulValueLen;
-
-    if (crlHandle) {
-        *crlHandle = crlh;
-    }
-
-    if ((url) && crlData[1].ulValueLen != 0) {
-	/* make sure it's a null terminated string */
-	*url = PORT_ZAlloc (crlData[1].ulValueLen+1);
-	if (*url) {
-	    PORT_Memcpy(*url,crlData[1].pValue,crlData[1].ulValueLen);
-	}
-    }
-	
-
-loser:
-    if (!derCrl) {
-	if (crlData[0].pValue) PORT_Free(crlData[0].pValue);
-    }
-    if (crlData[1].pValue) PORT_Free(crlData[1].pValue);
-    return derCrl;
-#else
     NSSCRL **crls, **crlp, *crl;
     NSSDER subject;
     SECItem *rvItem;
@@ -580,61 +498,12 @@ loser:
     *crlHandle = crl->object.instances[0]->handle;
     nssCRL_Destroy(crl);
     return rvItem;
-#endif
 }
 
 CK_OBJECT_HANDLE
 PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name, 
 							char *url, int type)
 {
-#ifdef NSS_CLASSIC
-    CK_OBJECT_CLASS crlClass = CKO_NETSCAPE_CRL;
-    CK_ATTRIBUTE theTemplate[] = {
-	{ CKA_SUBJECT, NULL, 0 },
-	{ CKA_CLASS, NULL, 0 },
-	{ CKA_NETSCAPE_KRL, NULL, 0 },
-	{ CKA_NETSCAPE_URL, NULL, 0 },
-	{ CKA_VALUE, NULL, 0 },
-	{ CKA_TOKEN, NULL, 0 }
-    };
-    /* if you change the array, change the variable below as well */
-    int tsize;
-    CK_BBOOL ck_true = CK_TRUE;
-    CK_BBOOL ck_false = CK_FALSE;
-    CK_OBJECT_HANDLE crlh = CK_INVALID_HANDLE;
-    CK_ATTRIBUTE *attrs = theTemplate;
-    CK_SESSION_HANDLE rwsession;
-    CK_RV crv;
-
-    PK11_SETATTRS(attrs, CKA_SUBJECT, name->data, name->len); attrs++;
-    PK11_SETATTRS(attrs, CKA_CLASS, &crlClass, sizeof(crlClass)); attrs++;
-    PK11_SETATTRS(attrs, CKA_NETSCAPE_KRL, (type == SEC_CRL_TYPE) ? 
-			&ck_false : &ck_true, sizeof (CK_BBOOL)); attrs++;
-    if (url) {
-	PK11_SETATTRS(attrs, CKA_NETSCAPE_URL, url, PORT_Strlen(url)+1); attrs++;
-    }
-    PK11_SETATTRS(attrs, CKA_VALUE,crl->data,crl->len); attrs++;
-    PK11_SETATTRS(attrs, CKA_TOKEN, &ck_true,sizeof(CK_BBOOL)); attrs++;
-
-    tsize = attrs - &theTemplate[0];
-    PORT_Assert(tsize <= sizeof(theTemplate)/sizeof(theTemplate[0]));
-
-    rwsession = PK11_GetRWSession(slot);
-    if (rwsession == CK_INVALID_SESSION) {
-	PORT_SetError(SEC_ERROR_READ_ONLY);
-	return crlh;
-    }
-
-    crv = PK11_GETTAB(slot)->
-                        C_CreateObject(rwsession,theTemplate,tsize,&crlh);
-    if (crv != CKR_OK) {
-        PORT_SetError( PK11_MapError(crv) );
-    }
-
-    PK11_RestoreROSession(slot,rwsession);
-
-    return crlh;
-#else
     NSSItem derCRL, derSubject;
     NSSToken *token = PK11Slot_GetNSSToken(slot);
     nssCryptokiObject *object;
@@ -654,7 +523,6 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
 	rvH = CK_INVALID_HANDLE;
     }
     return rvH;
-#endif
 }
 
 
@@ -664,25 +532,6 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
 SECStatus
 SEC_DeletePermCRL(CERTSignedCrl *crl)
 {
-#ifdef NSS_CLASSIC
-    PK11SlotInfo *slot = crl->slot;
-    CK_RV crv;
-
-    if (slot == NULL) {
-	/* shouldn't happen */
-	PORT_SetError( SEC_ERROR_CRL_INVALID);
-	return SECFailure;
-    }
-
-    crv = PK11_DestroyTokenObject(slot,crl->pkcs11ID);
-    if (crv != CKR_OK) {
-        PORT_SetError( PK11_MapError(crv) );
-	return SECFailure;
-    }
-    crl->slot = NULL;
-    PK11_FreeSlot(slot);
-    return SECSuccess;
-#else
     PRStatus status;
     NSSToken *token;
     nssCryptokiObject *object;
@@ -705,7 +554,6 @@ SEC_DeletePermCRL(CERTSignedCrl *crl)
 
     nssCryptokiObject_Destroy(object);
     return (status == PR_SUCCESS) ? SECSuccess : SECFailure;
-#endif
 }
 
 /*
