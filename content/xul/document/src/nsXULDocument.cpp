@@ -2874,14 +2874,22 @@ nsXULDocument::ResumeWalk()
             if (NS_FAILED(rv)) return rv;
 
             if (indx >= (PRInt32)proto->mNumChildren) {
-                // We've processed all of the prototype's children. If
-                // we're in the master prototype, do post-order
-                // document-level hookup. (An overlay will get its
-                // document hookup done when it's successfully
-                // resolved.)
-                if (element && (mState == eState_Master))
-                    AddElementToDocumentPost(element);
+                if (element) {
+                    // We've processed all of the prototype's children. If
+                    // we're in the master prototype, do post-order
+                    // document-level hookup. (An overlay will get its
+                    // document hookup done when it's successfully
+                    // resolved.)
+                    if (mState == eState_Master) {
+                        AddElementToDocumentPost(element);
+                    }
 
+#ifdef MOZ_XTF
+                    if (element->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
+                        element->DoneAddingChildren();
+                    }
+#endif
+                }
                 // Now pop the context stack back up to the parent
                 // element and continue the prototype walk.
                 mContextStack.Pop();
@@ -3563,6 +3571,12 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
                            newNodeInfo);
         if (NS_FAILED(rv)) return rv;
+
+#ifdef MOZ_XTF
+        if (result && newNodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin) {
+            result->BeginAddingChildren();
+        }
+#endif
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
