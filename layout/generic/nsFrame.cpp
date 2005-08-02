@@ -4116,11 +4116,9 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 #ifdef IBMBIDI
   result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                (lineIsReordered) ? VISUAL : LEAF,
+                                lineIsReordered ? VISUAL : LEAF,
                                 aPresContext, 
-                                (lineJump && lineIsRTL)
-                                ? (aPos->mDirection == eDirNext) ? lastFrame : firstFrame
-                                : traversedFrame, aPos->mScrollViewStop);
+                                traversedFrame, aPos->mScrollViewStop);
 #else
   //if we are a container frame we MUST init with last leaf for eDirNext
   //
@@ -4133,7 +4131,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   nsIFrame *newFrame;
 
   for (;;) {
-    if (lineIsRTL && lineJump) 
+    if (lineIsRTL) 
       if (aPos->mDirection == eDirPrevious)
         result = frameTraversal->Next();
       else 
