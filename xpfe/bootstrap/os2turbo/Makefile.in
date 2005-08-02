@@ -48,3 +48,5 @@ CPPSRCS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DMOZ_APP_DISPLAYNAME=\"$(MOZ_APP_DISPLAYNAME)\"

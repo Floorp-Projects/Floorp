@@ -35,16 +35,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*******************************************************************************
-This program implements a module preloader for the OS/2 version of the Mozilla
+This program implements a module preloader for the OS/2 version of the SeaMonkey
 Web Browser.
 
 The way this is implemented is by loading each DLL using DosLoadModule and then
-queying the first ordinal (entry point) using DosQueryProcAddr. This entry point
+querying the first ordinal (entry point) using DosQueryProcAddr. This entry point
 is then accessed so that its memory becomes paged in and resident in memory.
 Once this is done, the program suspends execution by waiting on a named
 semaphore so the modules are held in memory.
 
-The list of module names was determined by loading Mozilla and then
+The list of module names was determined by loading SeaMonkey and then
 seeing which DLLs were in use at that time.
 *******************************************************************************/
 
@@ -155,13 +155,14 @@ int main(int argc, char *argv[]) {
 
 
   if (do_help) {
-    printf("Mozilla for OS/2 preloader\n"\
+    printf("%s for OS/2 preloader\n"\
            "\n"\
-           "Usage: %s [-h] [-l | -u] [-p path]\n"\ 
-           "       -h display this help\n"\ 
-           "       -l load modules\n"\ 
-           "       -u unload modules\n"\ 
-           "       -p specify fully qualified path to directory where EXE is located\n", argv[0]);
+           "Usage: %s [-h] [-l | -u] [-p path]\n"\
+           "       -h display this help\n"\
+           "       -l load modules\n"\
+           "       -u unload modules\n"\
+           "       -p specify fully qualified path to directory where EXE is located\n",
+           MOZ_APP_DISPLAYNAME, argv[0]);
     return(1);
   }
 
@@ -174,7 +175,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    printf("Mozilla for OS/2 preloader is not running\n");
+    printf("%s for OS/2 preloader is not running\n", MOZ_APP_DISPLAYNAME);
     return(1);
   }
 
@@ -195,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     HEV hev;
     if (DosCreateEventSem(SEMNAME, &hev, DC_SEM_SHARED, FALSE) != NO_ERROR) {
-      printf("Mozilla for OS/2 preloader is already running\n");
+      printf("%s for OS/2 preloader is already running\n", MOZ_APP_DISPLAYNAME);
       return(1);
     }
 

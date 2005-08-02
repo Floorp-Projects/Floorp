@@ -285,31 +285,31 @@ private:
 /* DDE Notes
  *
  * This section describes the Win32 DDE service implementation for
- * Mozilla.  DDE is used on Win32 platforms to communicate between
- * separate instances of mozilla.exe (or other Mozilla-based
- * executables), or, between the Win32 desktop shell and Mozilla.
+ * SeaMonkey.  DDE is used on Win32 platforms to communicate between
+ * separate instances of seamonkey.exe (or other Mozilla-based
+ * executables), or, between the Win32 desktop shell and SeaMonkey.
  *
- * The first instance of Mozilla will become the "server" and
+ * The first instance of SeaMonkey will become the "server" and
  * subsequent executables (and the shell) will use DDE to send
  * requests to that process.  The requests are DDE "execute" requests
  * that pass the command line arguments.
  *
- * Mozilla registers the DDE application "Mozilla" and currently
+ * SeaMonkey registers the DDE application "Mozilla" and currently
  * supports only the "WWW_OpenURL" topic.  This should be reasonably
  * compatible with applications that interfaced with Netscape
  * Communicator (and its predecessors?).  Note that even that topic
  * may not be supported in a compatible fashion as the command-line
- * options for Mozilla are different than for Communiator.
+ * options for SeaMonkey are different than for Communiator.
  *
- * It is imperative that at most one instance of Mozilla execute in
- * "server mode" at any one time.  The "native app support" in Mozilla
+ * It is imperative that at most one instance of SeaMonkey execute in
+ * "server mode" at any one time.  The "native app support" in SeaMonkey
  * on Win32 ensures that only the server process performs XPCOM
  * initialization (that is not required for subsequent client processes
  * to communicate with the server process).
  *
  * To guarantee that only one server starts up, a Win32 "mutex" is used
  * to ensure only one process executes the server-detection code.  That
- * code consists of initializing DDE and doing a DdeConnect to Mozilla's
+ * code consists of initializing DDE and doing a DdeConnect to SeaMonkey's
  * application/topic.  If that connection succeeds, then a server process
  * must be running already.
  * 
@@ -322,7 +322,7 @@ private:
  * 1. It is imperative that DdeInitialize be called only after the mutex
  *    lock has been obtained.  The reason is that at shutdown, DDE
  *    notifications go out to all initialized DDE processes.  Thus, if
- *    the mutex is owned by a terminating intance of Mozilla, then
+ *    the mutex is owned by a terminating intance of SeaMonkey, then
  *    calling DdeInitialize and then WaitForSingleObject will cause the
  *    DdeUninitialize from the terminating process to "hang" until the
  *    process waiting for the mutex times out (and can then service the
@@ -333,12 +333,12 @@ private:
  *    are designed to "fail safe" (i.e., a timeout is treated as failure).
  * 
  * 3. An attempt has been made to minimize the degree to which the main
- *    Mozilla application logic needs to be aware of the DDE mechanisms
+ *    SeaMonkey application logic needs to be aware of the DDE mechanisms
  *    implemented herein.  As a result, this module surfaces a very
  *    large-grained interface, consisting of simple start/stop methods.
  *    As a consequence, details of certain scenarios can be "lost."
  *    Particularly, incoming DDE requests can arrive after this module
- *    initiates the DDE server, but before Mozilla is initialized to the
+ *    initiates the DDE server, but before SeaMonkey is initialized to the
  *    point where those requests can be serviced (e.g., open a browser
  *    window to a particular URL).  Since the client process sends the
  *    request early on, it may not be prepared to respond to that error.
@@ -349,18 +349,18 @@ private:
 
 /* Update 2001 March
  *
- * A significant DDE bug in Windows is causing Mozilla to get wedged at
- * startup.  This is detailed in Bugzill bug 53952
+ * A significant DDE bug in Windows is causing SeaMonkey to get wedged at
+ * startup.  This is detailed in Bugzilla bug 53952
  * (http://bugzilla.mozilla.org/show_bug.cgi?id=53952).
  *
  * To resolve this, we are using a new strategy:
- *   o Use a "message window" to detect that Mozilla is already running and
+ *   o Use a "message window" to detect that SeaMonkey is already running and
  *     to pass requests from a second instance back to the first;
  *   o Run only as a "DDE server" (not as DDE client); this avoids the
  *     problematic call to DDEConnect().
  *
  * We still use the mutex semaphore to protect the code that detects
- * whether Mozilla is already running.
+ * whether SeaMonkey is already running.
  */
 
 class nsNativeAppSupportOS2 : public nsNativeAppSupportBase
@@ -690,7 +690,7 @@ nsNativeAppSupportOS2::CheckConsole() {
             strcat(pszTurboPath, TURBOD);
             int statrv = stat(pszTurboPath, &st);
 
-            /* If we can't find the turbo EXE, use the Mozilla turbo */
+            /* If we can't find the turbo EXE, use the builtin turbo */
             if (statrv == 0) {
               RESULTCODES rcodes;
               CHAR pszArgString[CCHMAXPATH];
@@ -727,7 +727,7 @@ nsNativeAppSupportOS2::CheckConsole() {
             strcat(pszTurboPath, TURBOD);
             int statrv = stat(pszTurboPath, &st);
 
-            /* If we can't find the turbo EXE, use the Mozilla turbo */
+            /* If we can't find the turbo EXE, use the builtin turbo */
             if (statrv == 0) {
               RESULTCODES rcodes;
               CHAR pszArgString[CCHMAXPATH];
@@ -821,7 +821,6 @@ NS_CreateSplashScreen( nsISplashScreen **aResult ) {
 }
 
 // Constants
-#define MOZ_DDE_APPLICATION    "Mozilla"
 #define MOZ_STARTUP_MUTEX_NAME "StartupMutex"
 #define MOZ_DDE_START_TIMEOUT 30000
 #define MOZ_DDE_STOP_TIMEOUT  15000
@@ -1176,12 +1175,12 @@ char *nsNativeAppSupportOS2::mAppName = nameBuffer;
 PRBool nsNativeAppSupportOS2::mUseDDE = PR_FALSE;
 
 /* Start: Tries to find the "message window" to determine if it
- *        exists.  If so, then Mozilla is already running.  In that
+ *        exists.  If so, then SeaMonkey is already running.  In that
  *        case, we use the handle to the "message" window and send
  *        a request corresponding to this process's command line
  *        options.
  *        
- *        If not, then this is the first instance of Mozilla.  In
+ *        If not, then this is the first instance of SeaMonkey.  In
  *        that case, we create and set up the message window.
  *
  *        The checking for existance of the message window must
@@ -1313,7 +1312,7 @@ nsNativeAppSupportOS2::FindTopic( HSZ topic ) {
 // Start DDE server.
 //
 // This used to be the Start() method when we were using DDE as the
-// primary IPC mechanism between secondary Mozilla processes and the
+// primary IPC mechanism between secondary SeaMonkey processes and the
 // initial "server" process.
 //
 // Now, it simply initializes the DDE server.  The caller must check
@@ -1553,7 +1552,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                     }
 
                     // Make it look like command line args.
-                    url.Insert( "mozilla -url ", 0 );
+                    url.Insert( NS_STRINGIFY(MOZ_APP_NAME) " -url ", 0 );
 #if MOZ_DEBUG_DDE
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
@@ -1724,7 +1723,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
             }
 
             // Make it look like command line args.
-            url.Insert( "mozilla -url ", 0 );
+            url.Insert( NS_STRINGIFY(MOZ_APP_NAME) " -url ", 0 );
 #if MOZ_DEBUG_DDE
             printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
@@ -1960,7 +1959,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow, nsIDOMWi
     // logic in DoCommandLines changes.  Note that we cover this case below
     // by opening a navigator window if DoCommandLines doesn't open one.  We
     // have to cover that case anyway, because DoCommandLines won't open a
-    // window when given "mozilla -foobar" or the like.
+    // window when given "seamonkey -foobar" or the like.
     PRBool heedStartupPrefs = PR_FALSE;
     PRInt32 argc = 0;
     args->GetArgc( &argc );
@@ -2362,7 +2361,7 @@ nsNativeAppSupportOS2::StartServerMode() {
         return NS_OK;
     } else {
         // Sometimes a window will have been opened even though mShouldShowUI is false
-        // (e.g., mozilla -mail -turbo).  Detect that by testing whether there's a
+        // (e.g., "seamonkey -mail -turbo").  Detect that by testing whether there's a
         // window already open.
         nsCOMPtr<nsIDOMWindowInternal> win;
         GetMostRecentWindow( 0, getter_AddRefs( win ) );
