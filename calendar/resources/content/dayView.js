@@ -356,12 +356,12 @@ DayView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate
     //startDate.jsDate is not
     var adjustedStartDate = new Date();
     var adjustedEndDate = new Date();
-    adjustedStartDate.setFullYear(startDate.year);
-    adjustedStartDate.setMonth(startDate.month);
     adjustedStartDate.setDate(startDate.day);
-    adjustedEndDate.setFullYear(endDate.year);
-    adjustedEndDate.setMonth(endDate.month);
+    adjustedStartDate.setMonth(startDate.month);
+    adjustedStartDate.setFullYear(startDate.year);
     adjustedEndDate.setDate(endDate.day);
+    adjustedEndDate.setMonth(endDate.month);
+    adjustedEndDate.setFullYear(endDate.year);
 
     // Check if the event is within the bounds of events to be displayed.
     if ((adjustedEndDate < this.displayStartDate) ||

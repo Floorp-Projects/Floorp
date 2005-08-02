@@ -325,9 +325,9 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     //This is a HACK because startDate and indexOfDate don't get along well
     //in terms of timezones.
     var adjustedDate = new Date();
-    adjustedDate.setFullYear(startDate.year);
-    adjustedDate.setMonth(startDate.month);
     adjustedDate.setDate(startDate.day);
+    adjustedDate.setMonth(startDate.month);
+    adjustedDate.setFullYear(startDate.year);
     dayBoxItem = this.dayBoxItemArray[this.indexOfDate(adjustedDate)];
     if (!dayBoxItem)
         return;
