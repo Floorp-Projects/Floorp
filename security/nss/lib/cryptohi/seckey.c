@@ -299,10 +299,22 @@ SECKEY_CopySubjectPublicKeyInfo(PRArenaPool *arena,
 			     CERTSubjectPublicKeyInfo *from)
 {
     SECStatus rv;
+    SECItem spk;
 
     rv = SECOID_CopyAlgorithmID(arena, &to->algorithm, &from->algorithm);
-    if (rv == SECSuccess)
-	rv = SECITEM_CopyItem(arena, &to->subjectPublicKey, &from->subjectPublicKey);
+    if (rv == SECSuccess) {
+	/*
+	 * subjectPublicKey is a bit string, whose length is in bits.
+	 * Convert the length from bits to bytes for SECITEM_CopyItem.
+	 */
+	spk = from->subjectPublicKey;
+	DER_ConvertBitString(&spk);
+	rv = SECITEM_CopyItem(arena, &to->subjectPublicKey, &spk);
+	/* Set the length back to bits. */
+	if (rv == SECSuccess) {
+	    to->subjectPublicKey.len = from->subjectPublicKey.len;
+	}
+    }
 
     return rv;
 }
