@@ -532,6 +532,13 @@ nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
       break;
     }
   }
+
+  if (language.IsEmpty()) { // Nothing found, so use document's language
+    nsIDocument *doc = content->GetOwnerDoc();
+    if (doc) {
+      doc->GetHeaderData(nsAccessibilityAtoms::headerContentLanguage, language);
+    }
+  }
  
   *aLanguage = ::SysAllocString(language.get());
   return S_OK;

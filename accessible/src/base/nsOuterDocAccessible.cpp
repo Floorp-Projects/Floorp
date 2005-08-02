@@ -112,7 +112,8 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
   // We're in the accessibility cache now
   // In these variable names, "outer" relates to the nsOuterDocAccessible
   // as opposed to the nsDocAccessibleWrap which is "inner".
-  // The outer node is a <browser>, <iframe> or <editor> tag, whereas the inner node
+  // The outer node is a something like a <browser>, <frame>, <iframe>, <page> or
+  // <editor> tag, whereas the inner node
   // corresponds to the inner document root.
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
