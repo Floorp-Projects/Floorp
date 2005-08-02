@@ -51,6 +51,13 @@
 #include "nsISVGCairoSurface.h"
 #include <cairo.h>
 
+#include "nsIImage.h"
+#include "nsIComponentManager.h"
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 #ifdef XP_MACOSX
 #include "nsIDrawingSurfaceMac.h"
 extern "C" {
@@ -108,6 +115,13 @@ private:
   CGContextRef mQuartzRef;
 #endif
 
+  // image fallback data
+  nsSize mSrcSizeTwips;
+  nsRect mDestRectScaledTwips;
+  nsCOMPtr<imgIContainer> mContainer;
+  nsCOMPtr<gfxIImageFrame> mBuffer;
+  PRUint8 *mData;
+
   PRUint16 mRenderMode;
   PRPackedBool mOwnsCR;
 };
@@ -118,7 +132,7 @@ private:
 //----------------------------------------------------------------------
 // implementation:
 
-nsSVGCairoCanvas::nsSVGCairoCanvas()
+nsSVGCairoCanvas::nsSVGCairoCanvas() : mData(nsnull)
 {
   mOwnsCR = PR_FALSE;
 }
@@ -130,6 +144,10 @@ nsSVGCairoCanvas::~nsSVGCairoCanvas()
 
   if (mOwnsCR) {
     cairo_destroy(mCR);
+  }
+
+  if (mData) {
+    free(mData);
   }
 }
 
@@ -194,25 +212,68 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 #elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
-  surface->GetSize(&mWidth, &mHeight);
-  GdkDrawable *drawable = surface->GetDrawable();
-  GdkVisual *visual = gdk_window_get_visual(drawable);
-  cairoSurf = cairo_xlib_surface_create(GDK_WINDOW_XDISPLAY(drawable),
-                                        GDK_WINDOW_XWINDOW(drawable),
-                                        GDK_VISUAL_XVISUAL(visual),
-                                        mWidth, mHeight);
+  if (surface) {
+    surface->GetSize(&mWidth, &mHeight);
+    GdkDrawable *drawable = surface->GetDrawable();
+    GdkVisual *visual = gdk_window_get_visual(drawable);
+    cairoSurf = cairo_xlib_surface_create(GDK_WINDOW_XDISPLAY(drawable),
+                                          GDK_WINDOW_XWINDOW(drawable),
+                                          GDK_VISUAL_XVISUAL(visual),
+                                          mWidth, mHeight);
+  }
 #endif
 
-  NS_ASSERTION(cairoSurf, "No surface");
-  mOwnsCR = PR_TRUE;
-  mCR = cairo_create(cairoSurf);
-
-  // get the translation set on the rendering context. It will be in
-  // displayunits (i.e. pixels*scale), *not* pixels:
+  // Account for the transform in the rendering context. We set dx,dy
+  // to the translation required in the cairo context that will
+  // ensure the cairo context's origin coincides with the top-left
+  // of the area we need to draw.
   nsTransform2D* xform;
   mMozContext->GetCurrentTransform(xform);
   float dx, dy;
   xform->GetTranslation(&dx, &dy);
+  
+  if (!cairoSurf) {
+    /* printing or some platform we don't know about yet - use an image */
+    float scaledTwipsPerPx = presContext->ScaledPixelsToTwips();
+    mDestRectScaledTwips = dirtyRect;
+    mDestRectScaledTwips.ScaleRoundOut(scaledTwipsPerPx);
+    
+    float twipsPerPx = presContext->PixelsToTwips();
+    nsRect r = dirtyRect;
+    r.ScaleRoundOut(twipsPerPx);
+    mSrcSizeTwips = r.Size();
+  
+    mWidth = dirtyRect.width;
+    mHeight = dirtyRect.height;
+
+    mContainer = do_CreateInstance("@mozilla.org/image/container;1");
+    mContainer->Init(mWidth, mHeight, nsnull);
+    
+    mBuffer = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
+#ifdef XP_WIN
+    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR_A8, 24);
+#else
+    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A8, 24);
+#endif
+    mContainer->AppendFrame(mBuffer);
+
+    mData = (PRUint8 *)calloc(4 * mWidth * mHeight, 1);
+    if (!mData)
+      return NS_ERROR_FAILURE;
+
+    cairoSurf = cairo_image_surface_create_for_data(mData, CAIRO_FORMAT_ARGB32,
+                                                    mWidth, mHeight, 4 * mWidth);
+    
+    // Ensure that dirtyRect.TopLeft() is translated to (0,0) in the surface                            
+    dx = -dirtyRect.x;
+    dy = -dirtyRect.y;
+  }
+
+  mOwnsCR = PR_TRUE;
+  mCR = cairo_create(cairoSurf);
+  // Destroy our reference to the surface; the cairo_t will continue to hold a reference to it
+  cairo_surface_destroy(cairoSurf);
+
   cairo_translate(mCR, dx, dy);
   cairo_get_matrix(mCR, &mInitialTransform);
 
@@ -315,6 +376,108 @@ nsSVGCairoCanvas::Clear(nscolor color)
   return NS_OK;
 }
 
+// XXX this is copied from nsCanvasRenderingContext2D, which sucks,
+// but all this is going to go away in 1.9 so making it shareable is
+// a bit of unnecessary pain
+static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 aHeight,
+    gfxIImageFrame* aImage)
+{
+  PRUint8 *alphaBits, *rgbBits;
+  PRUint32 alphaLen, rgbLen;
+  PRUint32 alphaStride, rgbStride;
+
+  nsresult rv = aImage->LockImageData();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aImage->LockAlphaData();
+  if (NS_FAILED(rv)) {
+    aImage->UnlockImageData();
+    return rv;
+  }
+
+  rv = aImage->GetAlphaBytesPerRow(&alphaStride);
+  rv |= aImage->GetAlphaData(&alphaBits, &alphaLen);
+  rv |= aImage->GetImageBytesPerRow(&rgbStride);
+  rv |= aImage->GetImageData(&rgbBits, &rgbLen);
+  if (NS_FAILED(rv)) {
+    aImage->UnlockImageData();
+    aImage->UnlockAlphaData();
+    return rv;
+  }
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(aImage));
+  PRBool topToBottom = img->GetIsRowOrderTopToBottom();
+
+  for (PRUint32 j = 0; j < (PRUint32) aHeight; j++) {
+    PRUint8 *inrow = (PRUint8*)(aData + (aWidth * 4 * j));
+
+    PRUint32 rowIndex;
+    if (topToBottom)
+      rowIndex = j;
+    else
+      rowIndex = aHeight - j - 1;
+
+    PRUint8 *outrowrgb = rgbBits + (rgbStride * rowIndex);
+    PRUint8 *outrowalpha = alphaBits + (alphaStride * rowIndex);
+
+    for (PRUint32 i = 0; i < (PRUint32) aWidth; i++) {
+#ifdef IS_LITTLE_ENDIAN
+      PRUint8 b = *inrow++;
+      PRUint8 g = *inrow++;
+      PRUint8 r = *inrow++;
+      PRUint8 a = *inrow++;
+#else
+      PRUint8 a = *inrow++;
+      PRUint8 r = *inrow++;
+      PRUint8 g = *inrow++;
+      PRUint8 b = *inrow++;
+#endif
+      // now recover the real bgra from the cairo
+      // premultiplied values
+      if (a == 0) {
+        // can't do much for us if we're at 0
+        b = g = r = 0;
+      } else {
+        // the (a/2) factor is a bias similar to one cairo applies
+        // when premultiplying
+        b = (b * 255 + a / 2) / a;
+        g = (g * 255 + a / 2) / a;
+        r = (r * 255 + a / 2) / a;
+      }
+
+      *outrowalpha++ = a;
+
+#ifdef XP_MACOSX
+      // On the mac, RGB_A8 is really RGBX_A8
+      *outrowrgb++ = 0;
+#endif
+
+#ifdef XP_WIN
+      // On windows, RGB_A8 is really BGR_A8.
+      // in fact, BGR_A8 is also BGR_A8.
+      *outrowrgb++ = b;
+      *outrowrgb++ = g;
+      *outrowrgb++ = r;
+#else
+      *outrowrgb++ = r;
+      *outrowrgb++ = g;
+      *outrowrgb++ = b;
+#endif
+    }
+  }
+
+  rv = aImage->UnlockAlphaData();
+  rv |= aImage->UnlockImageData();
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsRect r(0, 0, aWidth, aHeight);
+  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+  return NS_OK;
+}
+
 /** Implements void flush(); */
 NS_IMETHODIMP
 nsSVGCairoCanvas::Flush()
@@ -323,6 +486,27 @@ nsSVGCairoCanvas::Flush()
   if (mSurface)
     mSurface->EndQuartzDrawing(mQuartzRef);
 #endif
+
+  if (mData) {
+    // ensure that everything's flushed
+    cairo_destroy(mCR);
+    mCR = nsnull;
+    mOwnsCR = PR_FALSE;
+    
+    nsCOMPtr<nsIDeviceContext> ctx;
+    mMozContext->GetDeviceContext(*getter_AddRefs(ctx));
+
+    nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mBuffer));
+    if (ireq) {
+      nsCOMPtr<gfxIImageFrame> img(do_GetInterface(ireq));
+      CopyCairoImageToIImage(mData, mWidth, mHeight, img);
+    }
+    mContainer->DecodingComplete();
+
+    nsRect src(0, 0, mSrcSizeTwips.width, mSrcSizeTwips.height);
+    mMozContext->DrawImage(mContainer, src, mDestRectScaledTwips);
+  }
+
   return NS_OK;
 }
 
