@@ -365,13 +365,13 @@ interface nsIDocShell : nsISupports
   void resumeRefreshURIs();
 
   /**
-   * Begin firing WebProgressListener notifications and DOM events for
-   * restoring a page presentation. |viewer| is the content viewer whose
-   * document we are starting to load.  If null, it defaults to the docshell's
-   * current content viewer, creating one if necessary.  |top| should be true
-   * for the toplevel docshell that is being restored; it will be set to false
-   * when this method is called for child docshells.  This method will post an
-   * event to call finishRestore() after returning to the event loop.
+   * Begin firing WebProgressListener notifications for restoring a page
+   * presentation. |viewer| is the content viewer whose document we are
+   * starting to load.  If null, it defaults to the docshell's current content
+   * viewer, creating one if necessary.  |top| should be true for the toplevel
+   * docshell that is being restored; it will be set to false when this method
+   * is called for child docshells.  This method will post an event to
+   * complete the simulated load after returning to the event loop.
    */
   void beginRestore(in nsIContentViewer viewer, in boolean top);
 

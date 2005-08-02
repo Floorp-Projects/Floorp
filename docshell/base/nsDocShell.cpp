@@ -4644,7 +4644,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     // This will cause any OnLoad(...) handlers to fire, if it is a HTML
     // document...
     //
-    if ((mIsRestoringDocument || !mEODForCurrentDocument) && mContentViewer) {
+    if (!mEODForCurrentDocument && mContentViewer) {
         mIsExecutingOnLoadHandler = PR_TRUE;
         mContentViewer->LoadComplete(aStatus);
         mIsExecutingOnLoadHandler = PR_FALSE;
@@ -4932,7 +4932,11 @@ public:
 PR_STATIC_CALLBACK(void*)
 HandleRestorePresentationEvent(PLEvent *aEvent)
 {
-    NS_STATIC_CAST(RestorePresentationEvent*, aEvent)->mDocShell->FinishRestore();
+    RestorePresentationEvent *event =
+        NS_STATIC_CAST(RestorePresentationEvent*, aEvent);
+
+    nsresult rv = event->mDocShell->RestoreFromHistory();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "RestoreFromHistory failed");
     return nsnull;
 }
 
@@ -4955,7 +4959,7 @@ nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, PRBool aTop)
     nsresult rv;
     if (!aContentViewer) {
         rv = EnsureContentViewer();
-        NS_ENSURE_TRUE(rv, rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         aContentViewer = mContentViewer;
     }
@@ -4977,23 +4981,7 @@ nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, PRBool aTop)
         }
     }
 
-    if (aTop) {
-        // Post a PLEvent that will remove the request after we've returned
-        // to the event loop.  This mimics the way it is called by nsIChannel
-        // implementations.
-
-        nsCOMPtr<nsIEventQueue> uiThreadQueue;
-        NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
-        NS_ENSURE_TRUE(uiThreadQueue, NS_ERROR_UNEXPECTED);
-
-        PLEvent *evt = new RestorePresentationEvent(this);
-        NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
-
-        rv = uiThreadQueue->PostEvent(evt);
-        if (NS_FAILED(rv)) {
-            PL_DestroyEvent(evt);
-        }
-    } else {
+    if (!aTop) {
         // For non-top frames, there is no notion of making sure that the
         // previous document is in the domwindow when STATE_START notifications
         // happen.  We can just call BeginRestore for all of the child shells
@@ -5062,55 +5050,25 @@ nsDocShell::GetRestoringDocument(PRBool *aRestoring)
     return NS_OK;
 }
 
-class ContentViewerDestroyEvent : public PLEvent
-{
-public:
-    ContentViewerDestroyEvent(nsIContentViewer *aViewer, nsDocShell *aShell);
-
-    nsCOMPtr<nsIContentViewer> mViewer;
-};
-
-PR_STATIC_CALLBACK(void*)
-HandleContentViewerDestroyEvent(PLEvent *aEvent)
-{
-    NS_STATIC_CAST(ContentViewerDestroyEvent*, aEvent)->mViewer->Destroy();
-    return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyContentViewerDestroyEvent(PLEvent *aEvent)
-{
-    delete NS_STATIC_CAST(ContentViewerDestroyEvent*, aEvent);
-}
-
-ContentViewerDestroyEvent::ContentViewerDestroyEvent(nsIContentViewer *aViewer,
-                                                     nsDocShell *aShell)
-    : mViewer(aViewer)
-{
-    PL_InitEvent(this, aShell, ::HandleContentViewerDestroyEvent,
-                 ::DestroyContentViewerDestroyEvent);
-}
-
 nsresult
-nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
-                                PRBool *aRestored)
+nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool *aRestoring)
 {
     NS_ASSERTION(mLoadType & LOAD_CMD_HISTORY,
                  "RestorePresentation should only be called for history loads");
-
-    nsCOMPtr<nsIURI> uri;
-    aSHEntry->GetURI(getter_AddRefs(uri));
 
     nsCOMPtr<nsIContentViewer> viewer;
     aSHEntry->GetContentViewer(getter_AddRefs(viewer));
 
 #ifdef DEBUG_PAGE_CACHE
+    nsCOMPtr<nsIURI> uri;
+    aSHEntry->GetURI(getter_AddRefs(uri));
+
     nsCAutoString spec;
     if (uri)
         uri->GetSpec(spec);
 #endif
 
-    *aRestored = PR_FALSE;
+    *aRestoring = PR_FALSE;
 
     if (!viewer) {
 #ifdef DEBUG_PAGE_CACHE
@@ -5141,9 +5099,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     printf("restoring presentation from session history: %s\n", spec.get());
 #endif
 
-    // Notify the old content viewer that it's being hidden.
-    FirePageHideNotification(!aSavePresentation);
-    mFiredUnloadEvent = PR_FALSE;
+    mLSHE = aSHEntry;
 
     // Add the request to our load group.  We do this before swapping out
     // the content viewers so that consumers of STATE_START can access
@@ -5152,6 +5108,83 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     // loading until after data arrives, which is after STATE_START completes.
 
     BeginRestore(viewer, PR_TRUE);
+
+    // Post a PLEvent that will remove the request after we've returned
+    // to the event loop.  This mimics the way it is called by nsIChannel
+    // implementations.
+
+    nsCOMPtr<nsIEventQueue> uiThreadQueue;
+    NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
+    NS_ENSURE_TRUE(uiThreadQueue, NS_ERROR_UNEXPECTED);
+
+    PLEvent *evt = new RestorePresentationEvent(this);
+    NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
+
+    nsresult rv = uiThreadQueue->PostEvent(evt);
+    if (NS_SUCCEEDED(rv)) {
+        // The rest of the restore processing will happen on our PLEvent
+        // callback.
+        *aRestoring = PR_TRUE;
+    } else {
+        PL_DestroyEvent(evt);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsDocShell::RestoreFromHistory()
+{
+    // This section of code follows the same ordering as CreateContentViewer.
+    if (!mLSHE)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIContentViewer> viewer;
+    mLSHE->GetContentViewer(getter_AddRefs(viewer));
+    if (!viewer)
+        return NS_ERROR_FAILURE;
+
+    if (mSavingOldViewer) {
+        // We determined that it was safe to cache the document presentation
+        // at the time we initiated the new load.  We need to check whether
+        // it's still safe to do so, since there may have been DOM mutations
+        // or new requests initiated.
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        viewer->GetDOMDocument(getter_AddRefs(domDoc));
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        nsIRequest *request = nsnull;
+        if (doc)
+            request = doc->GetChannel();
+        mSavingOldViewer = CanSavePresentation(mLoadType, request);
+    }
+
+    // Notify the old content viewer that it's being hidden.
+    FirePageHideNotification(!mSavingOldViewer);
+    // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
+    // *new* document will fire.
+    mFiredUnloadEvent = PR_FALSE;
+
+    mURIResultedInDocument = PR_TRUE;
+    nsCOMPtr<nsISHistory> rootSH;
+    GetRootSessionHistory(getter_AddRefs(rootSH));
+    if (rootSH) {
+        nsCOMPtr<nsISHistoryInternal> hist = do_QueryInterface(rootSH);
+        hist->UpdateIndex();
+    }
+
+    // Rather than call Embed(), we will retrieve the viewer from the session
+    // history entry and swap it in.
+    // XXX can we refactor this so that we can just call Embed()?
+    // XXX PersistLayoutHistoryState() ?
+    nsresult rv;
+    if (mContentViewer) {
+        if (mSavingOldViewer && NS_FAILED(CaptureState())) {
+            if (mOSHE) {
+                mOSHE->SyncPresentationState();
+            }
+            mSavingOldViewer = PR_FALSE;
+        }
+    }
 
     // Save off the root view's parent and sibling so that we can insert the
     // new content viewer's root view at the same position.  Also save the
@@ -5185,36 +5218,9 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     // content viewer, we prevent the viewer from being torn down after
     // Destroy() is called.
 
-    nsresult rv;
-
     if (mContentViewer) {
-        if (aSavePresentation) {
-            rv = CaptureState();
-            if (NS_FAILED(rv) && mOSHE) {
-                mOSHE->SyncPresentationState();
-                aSavePresentation = PR_FALSE;
-            }
-        }
-
-        mContentViewer->Close(aSavePresentation ? mOSHE.get() : nsnull);
-        mContentViewer->Hide();
-
-        // It's unsafe to actually destroy the content viewer here.
-        // In particular, if we're called from within a plugin's event loop,
-        // then attempting to tear down the plugin can cause a hang.
-        // So, post an event to destroy and release the viewer.
-
-        nsCOMPtr<nsIEventQueue> uiThreadQueue;
-        NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
-        NS_ENSURE_TRUE(uiThreadQueue, NS_ERROR_UNEXPECTED);
-
-        PLEvent *evt = new ContentViewerDestroyEvent(mContentViewer, this);
-        NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
-
-        rv = uiThreadQueue->PostEvent(evt);
-        if (NS_FAILED(rv)) {
-            PL_DestroyEvent(evt);
-        }
+        mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
+        mContentViewer->Destroy();
     }
 
     mContentViewer.swap(viewer);
@@ -5224,37 +5230,84 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
     rv = mContentViewer->Open();
 
     // Now remove it from the cached presentation.
-    aSHEntry->SetContentViewer(nsnull);
-
-    // Restore our child docshell hierarchy.
-    DestroyChildren();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 i = 0;
-    nsCOMPtr<nsIDocShellTreeItem> childShell;
-    while (NS_SUCCEEDED(aSHEntry->ChildShellAt(i++,
-                                               getter_AddRefs(childShell))) &&
-           childShell) {
-        AddChild(childShell);
-    }
-
-    // And release the references in the history entry.
-    aSHEntry->ClearChildShells();
-
-    // Dispatch STATE_START notifications for the new child shells.
-    rv = BeginRestoreChildren();
-    NS_ENSURE_SUCCESS(rv, rv);
+    mLSHE->SetContentViewer(nsnull);
+    mEODForCurrentDocument = PR_FALSE;
 
     // Restore the sticky state of the viewer.  The viewer has set this state
     // on the history entry in Destroy() just before marking itself non-sticky,
     // to avoid teardown of the presentation.
     PRBool sticky;
-    aSHEntry->GetSticky(&sticky);
+    mLSHE->GetSticky(&sticky);
     mContentViewer->SetSticky(sticky);
+
+    // Now that we have switched documents, forget all of our children.
+    DestroyChildren();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // mLSHE is now our currently-loaded document.
+    mOSHE = mLSHE;
+    
+    // XXX special wyciwyg handling in Embed()?
+    // XXX SetLayoutHistoryState(null)?
+    // This is the end of our Embed() replacement
+
+    mSavingOldViewer = PR_FALSE;
+    mEODForCurrentDocument = PR_FALSE;
+
+    // Tell the event loop to favor plevents over user events, see comments
+    // in CreateContentViewer.
+    if (++gNumberOfDocumentsLoading == 1)
+        PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
+    if (document) {
+        SetCurrentURI(document->GetDocumentURI(),
+                      document->GetChannel(), PR_TRUE);
+    }
+
+    // This is the end of our CreateContentViewer() replacement.
+    // Now we simulate a load.  First, we restore the state of the javascript
+    // window object.
+    nsCOMPtr<nsPIDOMWindow> privWin =
+        do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, this));
+    NS_ASSERTION(privWin, "could not get nsPIDOMWindow interface");
+
+    nsCOMPtr<nsISupports> windowState;
+    mLSHE->GetWindowState(getter_AddRefs(windowState));
+
+    rv = privWin->RestoreWindowState(windowState);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mLSHE->SetWindowState(nsnull);
+
+    // Now, dispatch a title change event which would happed as the
+    // <head> is parsed.
+    nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(document);
+    if (nsDoc) {
+        const nsAFlatString &title = document->GetDocumentTitle();
+        nsDoc->SetTitle(title);
+    }
+
+    // Now we simulate appending child docshells for subframes.
+    PRInt32 i = 0;
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    while (NS_SUCCEEDED(mLSHE->ChildShellAt(i++, getter_AddRefs(child))) &&
+           child) {
+        AddChild(child);
+
+        nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(child);
+        rv = childShell->BeginRestore(nsnull, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // And release the references in the history entry.
+    mLSHE->ClearChildShells();
 
     // get the previous content viewer size
     nsRect oldBounds(0, 0, 0, 0);
-    aSHEntry->GetViewerBounds(oldBounds);
+    mLSHE->GetViewerBounds(oldBounds);
 
     nsCOMPtr<nsIPresShell> shell;
     nsDocShell::GetPresShell(getter_AddRefs(shell));
@@ -5285,26 +5338,10 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         }
     }
 
-    // restore the state of the window object
-    nsCOMPtr<nsPIDOMWindow> privWin =
-        do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, this));
-    NS_ASSERTION(privWin, "could not get nsPIDOMWindow interface");
-
-    nsCOMPtr<nsISupports> windowState;
-    aSHEntry->GetWindowState(getter_AddRefs(windowState));
-
-    rv = privWin->RestoreWindowState(windowState);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aSHEntry->SetWindowState(nsnull);
-
     // Restore the refresh URI list.  The refresh timers will be restarted
     // when EndPageLoad() is called.
-    aSHEntry->GetRefreshURIList(getter_AddRefs(mRefreshURIList));
-    aSHEntry->SetRefreshURIList(nsnull);
-
-    // aSHEntry is now our currently-loaded document.
-    mOSHE = aSHEntry;
+    mLSHE->GetRefreshURIList(getter_AddRefs(mRefreshURIList));
+    mLSHE->SetRefreshURIList(nsnull);
 
     // Meta-refresh timers have been restarted for this shell, but not
     // for our children.  Walk the child shells and restart their timers.
@@ -5313,13 +5350,6 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         nsCOMPtr<nsIDocShell> child = do_QueryInterface(ChildAt(i));
         if (child)
             child->ResumeRefreshURIs();
-    }
-
-    nsCOMPtr<nsISHistory> rootSH;
-    GetRootSessionHistory(getter_AddRefs(rootSH));
-    if (rootSH) {
-        nsCOMPtr<nsISHistoryInternal> hist = do_QueryInterface(rootSH);
-        hist->UpdateIndex();
     }
 
     // Make sure this presentation is the same size as the previous
@@ -5348,29 +5378,13 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool aSavePresentation,
         }
     }
 
-    // Tell the event loop to favor plevents over user events, see comments
-    // in CreateContentViewer.
-    if (++gNumberOfDocumentsLoading == 1)
-      PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+    // Simulate the completion of the load.
+    nsDocShell::FinishRestore();
 
-    SetCurrentURI(uri);
-
-    // Restore the page title.  Re-setting the current title on the document
-    // will update the docshell title and dispatch DOMTitleChanged.
-    // (We must do this after setting mOSHE so that the correct history entry
-    // title is set).
-    nsIDocument *doc = shell->GetDocument();
-    nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
-    if (doc && nsDoc) {
-        const nsAFlatString &title = doc->GetDocumentTitle();
-        nsDoc->SetTitle(title);
-    }
-    
     // Restart plugins, and paint the content.
     if (shell)
         shell->Thaw();
 
-    *aRestored = PR_TRUE;
     return NS_OK;
 }
 
@@ -5582,7 +5596,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
-    PRBool savePresentation = mSavingOldViewer;
 
     if (mContentViewer || parent) {
         nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
@@ -5595,11 +5608,11 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             // Tell the old content viewer to hibernate in session history when
             // it is destroyed.
 
-            if (savePresentation && NS_FAILED(CaptureState())) {
+            if (mSavingOldViewer && NS_FAILED(CaptureState())) {
                 if (mOSHE) {
                     mOSHE->SyncPresentationState();
                 }
-                savePresentation = PR_FALSE;
+                mSavingOldViewer = PR_FALSE;
             }
         }
         else {
@@ -5724,7 +5737,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             }
         }
 
-        mContentViewer->Close(savePresentation ? mOSHE.get() : nsnull);
+        mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
         aNewViewer->SetPreviousViewer(mContentViewer);
 
         mContentViewer = nsnull;
@@ -6359,9 +6372,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // If we have a saved content viewer in history, restore and show it now.
     if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
         nsCOMPtr<nsISHEntry> oldEntry = mOSHE;
-        PRBool restored;
-        rv = RestorePresentation(aSHEntry, savePresentation, &restored);
-        if (restored)
+        PRBool restoring;
+        rv = RestorePresentation(aSHEntry, &restoring);
+        if (restoring)
             return rv;
 
         // We failed to restore the presentation, so clean up.
