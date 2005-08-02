@@ -593,13 +593,22 @@ function BrowserStartup()
   else {
     var box = document.getElementById("sidebar-box");
     if (box.hasAttribute("sidebarcommand")) {
-      var cmd = box.getAttribute("sidebarcommand");
-      if (cmd) {
-        gMustLoadSidebar = true;
-        box.hidden = false;
-        sidebarSplitter = document.getElementById("sidebar-splitter");
-        sidebarSplitter.hidden = false;
-        document.getElementById(cmd).setAttribute("checked", "true");
+      var commandID = box.getAttribute("sidebarcommand");
+      if (commandID) {
+        var command = document.getElementById(commandID);
+        if (command) {
+          gMustLoadSidebar = true;
+          box.hidden = false;
+          sidebarSplitter = document.getElementById("sidebar-splitter");
+          sidebarSplitter.hidden = false;
+          command.setAttribute("checked", "true");
+        }
+        else {
+          // Remove the |sidebarcommand| attribute, because the element it 
+          // refers to no longer exists, so we should assume this sidebar
+          // panel has been uninstalled. (249883)
+          box.removeAttribute("sidebarcommand");
+        }
       }
     }
   }
