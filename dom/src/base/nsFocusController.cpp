@@ -394,7 +394,7 @@ nsFocusController::GetWindowFromDocument(nsIDOMDocument* aDocument)
   nsCOMPtr<nsPIDOMWindow> win =
     do_QueryInterface(doc->GetScriptGlobalObject());
 
-  if (win->IsInnerWindow()) {
+  if (win && win->IsInnerWindow()) {
     return win->GetOuterWindow();
   }
 
