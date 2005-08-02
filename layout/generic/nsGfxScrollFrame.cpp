@@ -2443,13 +2443,15 @@ nsGfxScrollFrameInner::GetScrolledSize() const
 
 nsMargin
 nsGfxScrollFrameInner::GetActualScrollbarSizes() const {
-  nsRect contentRect;
-  mOuter->GetClientRect(contentRect);
+  nsMargin border;
+  mOuter->GetBorder(border);
+  nsRect r = mOuter->GetRect();
+  r.Deflate(border);
   nsRect scrollArea = mScrollableView->View()->GetBounds();
 
-  return nsMargin(scrollArea.x - contentRect.x, scrollArea.y - contentRect.y,
-                  contentRect.XMost() - scrollArea.XMost(),
-                  contentRect.YMost() - scrollArea.YMost());
+  return nsMargin(scrollArea.x - r.x, scrollArea.y - r.y,
+                  r.XMost() - scrollArea.XMost(),
+                  r.YMost() - scrollArea.YMost());
 }
 
 void
