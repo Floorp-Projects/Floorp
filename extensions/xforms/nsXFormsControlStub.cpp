@@ -573,9 +573,23 @@ nsXFormsControlStubBase::GetContext(nsAString      &aModelID,
   *aContextPosition = 1;
   *aContextSize = 1;
 
-  if (mBoundNode && aContextNode) {
-    CallQueryInterface(mBoundNode, aContextNode); // addrefs
-    NS_ASSERTION(*aContextNode, "could not QI context node from bound node?");
+  if (aContextNode) {
+    if (mBoundNode) {
+      // We are bound to a node: This is the context node
+      CallQueryInterface(mBoundNode, aContextNode); // addrefs
+      NS_ASSERTION(*aContextNode, "could not QI context node from bound node?");
+    } else if (mModel) {
+      // We are bound to a model: The document element of its default instance
+      // document is the context node
+      nsCOMPtr<nsIDOMDocument> instanceDoc;
+      mModel->GetInstanceDocument(EmptyString(), getter_AddRefs(instanceDoc));
+      NS_ENSURE_STATE(instanceDoc);
+
+      nsIDOMElement* docElement;
+      instanceDoc->GetDocumentElement(&docElement); // addrefs
+      NS_ENSURE_STATE(docElement);
+      *aContextNode = docElement; // addref'ed above
+    }
   }
 
   ///
@@ -652,9 +666,7 @@ nsXFormsControlStubBase::MaybeRemoveFromModel(nsIAtom         *aName,
     if (mModel)
       mModel->RemoveFormControl(this);
 
-    if (aName != nsXFormsAtoms::model) {
-      AddRemoveSNBAttr(aName, aValue);
-    }
+    AddRemoveSNBAttr(aName, aValue);
   }
 }
 
