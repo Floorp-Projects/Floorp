@@ -52,7 +52,5 @@
 
 #define USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING @"Autocomplete While Typing" /* Boolean */
 
-#define USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH @"Container Splitter Width"   /* Float */
-#define USER_DEFAULTS_SEARCH_SPLITTER_HEIGHT @"Search Splitter Height"       /* Float */
-
+#define USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH  @"Bookmarks Splitter position"  /* Float */
 

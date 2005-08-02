@@ -288,7 +288,7 @@ const int kReuseWindowOnAE = 2;
   // register some special favicon images
   [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"smallDocument"] forPageURI:@"about:blank"];
   [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"bm_favicon"]    forPageURI:@"about:bookmarks"];
-  [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"bm_favicon"]    forPageURI:@"about:history"];
+  [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"historyicon"]   forPageURI:@"about:history"];
   
   [self setupStartpage];
 
@@ -414,7 +414,7 @@ const int kReuseWindowOnAE = 2;
 //
 - (void)bookmarkLoadingCompleted:(NSNotification*)inNotification
 {
-  [mBookmarksMenu setAutoenablesItems: NO];
+  [mBookmarksMenu setAutoenablesItems:NO];
 
   // menubar bookmarks
   int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
