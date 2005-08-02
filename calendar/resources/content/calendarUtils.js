@@ -162,33 +162,106 @@ function calendarDefaultTimezone() {
     return gDefaultTimezone;
 }
 
-// XXX this should probably live somewhere else
-
-// XXX this table needs a _lot_ more stuff in it.
-const tzTable = {
-    "GMT-0700 Pacific Daylight Time" : "/mozilla.org/20050126_1/America/Los_Angeles",
-    "GMT-0800 Pacific Standard Time" : "/mozilla.org/20050126_1/America/Los_Angeles",
-    "GMT-0700 PDT" : "/mozilla.org/20050126_1/America/Los_Angeles",
-    "GMT-0800 PST" : "/mozilla.org/20050126_1/America/Los_Angeles",
-    "GMT-0400 EDT" : "/mozilla.org/20050126_1/America/New_York",
-    "GMT-0500 EST" : "/mozilla.org/20050126_1/America/New_York"
-};
-
-// returns a ICS timezone string
+/* We're going to do everything in our power, short of rumaging through the
+*  user's actual file-system, to figure out the time-zone they're in.  The
+*  deciding factors are the offsets given by (northern-hemisphere) summer and 
+*  winter JSdates.  However, when available, we also use the name of the 
+*  timezone in the JSdate, or a string-bundle term from the locale.
+*  Returns a ICS timezone string.
+*/
 function guessSystemTimezone()
 {
-    var m = (new Date()).toString().match(/[^(]* ([^ ]*) \(([^)]+)\)/);
-    var offset = m[1];
-    var timezone = m[2];
+    var probableTZ = null;
+    var summerTZname = null;
+    var winterTZname = null;
+    var summerDate = (new Date(2005,6,20)).toString();
+    var winterDate = (new Date(2005,12,20)).toString();
+    var summerData = summerDate.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    var winterData = winterDate.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    if (summerData && summerData[2]) 
+        summerTZname = summerData[2];
+    if (winterData && winterData[2])
+        winterTZname = winterData[2];
+
+    var index = summerDate.indexOf('+');
+    if (index < 0)
+        index = summerDate.indexOf('-');
+    // the offset is always 5 characters long
+    var summerOffset = summerDate.substr(index, 5);
+    index = winterDate.indexOf('+');
+    if (index < 0)
+        index = winterDate.indexOf('-');
+    // the offset is always 5 characters long
+    var winterOffset = winterDate.substr(index, 5);
 
     dump("Guessing system timezone:\n");
-    dump("offset  : " + offset + "\ntimezone: " + timezone + "\n");
+    dump("summerOffset: " + summerOffset + "\nwinterOffset: " + winterOffset + "\n");
+    if (summerTZname && winterTZname)
+        dump("summerTZname: " + summerTZname + "\nwinterTZname: " + winterTZname + "\n");
 
-    var tzindex = offset + " " + timezone;
-    if (tzindex in tzTable) {
-        return tzTable[tzindex];
-    } else {
-        // XXX we don't really have a better option here
-        return "floating";
+    var icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                       .getService(Components.interfaces.calIICSService);
+
+    // returns 0=definitely not, 1=maybe, 2=likely
+    function checkTZ(someTZ)
+    {
+        var comp = icssrv.getTimezone(someTZ);
+        var subComp = comp.getFirstSubcomponent("VTIMEZONE");
+        var standard = subComp.getFirstSubcomponent("STANDARD");
+        var standardTZOffset = standard.getFirstProperty("TZOFFSETTO").stringValue;
+        var standardName = standard.getFirstProperty("TZNAME").stringValue;
+        var daylight = subComp.getFirstSubcomponent("DAYLIGHT");
+        var daylightTZOffset = null;
+        var daylightName = null;
+        if (daylight) {
+            daylightTZOffset = daylight.getFirstProperty("TZOFFSETTO").stringValue;
+            daylightName = daylight.getFirstProperty("TZNAME").stringValue;
+        }
+        if (winterOffset == standardTZOffset && winterOffset == summerOffset &&
+           !daylight) {
+            if(!standardName || standardName == summerTZName)
+                return 2;
+            return 1;
+        }
+        if (winterOffset == standardTZOffset && summerOffset == daylightTZOffset) {
+            // This seems backwards to me too, but it's how the data is written
+            if ((!standardName || standardName == summerTZname) &&
+                (!daylightName || daylightName == winterTZname))
+                return 2;
+            return 1;
+        }
+        return 0;
     }
+    try {
+        var stringBundleTZ = gCalendarBundle.getString("likelyTimezone");
+        switch (checkTZ(stringBundleTZ)) {
+            case 0: break;
+            case 1: 
+                if (!probableTZ)
+                    probableTZ = stringBundleTZ;
+                break;
+            case 2:
+                return stringBundleTZ;
+        }
+    }
+    catch(ex) { } //Oh well, this didn't work, next option...
+        
+    var tzIDs = icssrv.timezoneIds;
+    while (tzIDs.hasMore()) {
+        theTZ = tzIDs.getNext();
+        switch (checkTZ(theTZ)) {
+            case 0: break;
+            case 1: 
+                if (!probableTZ)
+                    probableTZ = theTZ;
+                break;
+            case 2:
+                return theTZ;
+        }
+    }
+    // If we get to this point, should we alert the user?
+    if (probableTZ)
+        return probableTZ;
+    // Everything failed, so this is our only option.
+    return "floating";
 }
