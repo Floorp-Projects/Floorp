@@ -1674,6 +1674,17 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
     mWindow->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height,
                     PR_FALSE);
   }
+
+  // If there's a previous viewer, it's the one that's actually showing,
+  // so be sure to resize it as well so it paints over the right area.
+  // This may slow down the performance of the new page load, but resize
+  // during load is also probably a relatively unusual condition
+  // relating to things being hidden while something is loaded.  It so
+  // happens that Firefox does this a good bit with its infobar, and it
+  // looks ugly if we don't do this.
+  if (mPreviousViewer)
+    mPreviousViewer->SetBounds(aBounds);
+
   return NS_OK;
 }
 
