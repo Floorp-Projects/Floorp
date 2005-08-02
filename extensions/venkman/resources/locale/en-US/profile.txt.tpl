@@ -16,6 +16,7 @@ $section-number <$full-url>
     Function Name: $function-name  (Lines $start-line - $end-line)
     Total Calls: $call-count (max recurse $recurse-depth)
     Total Time: $total-time (min/max/avg $min-time/$max-time/$avg-time)
+    Time (ex. calls): $own-total-time (min/max/avg $own-min-time/$own-max-time/$own-avg-time)
 
 @-item-end
   -------------------------------------------------------------------------------

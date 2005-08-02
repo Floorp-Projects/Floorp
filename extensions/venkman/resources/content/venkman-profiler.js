@@ -97,6 +97,10 @@ function pro_sumscript (scriptWrapper, key)
         var min_ms = roundTo(jsdScript.minExecutionTime, 2);
         var max_ms = roundTo(jsdScript.maxExecutionTime, 2);
         var avg_ms = roundTo(jsdScript.totalExecutionTime / ccount, 2);
+        var own_tot_ms = roundTo(jsdScript.totalOwnExecutionTime, 2);
+        var own_min_ms = roundTo(jsdScript.minOwnExecutionTime, 2);
+        var own_max_ms = roundTo(jsdScript.maxOwnExecutionTime, 2);
+        var own_avg_ms = roundTo(jsdScript.totalOwnExecutionTime / ccount, 2);
         var recurse = jsdScript.maxRecurseDepth;
 
         var summary = new Object();
@@ -105,17 +109,23 @@ function pro_sumscript (scriptWrapper, key)
         summary.avg = avg_ms;
         summary.min = min_ms;
         summary.max = max_ms;
+        summary.own_avg = own_avg_ms;
+        summary.own_min = own_min_ms;
+        summary.own_max = own_max_ms;
+        summary.own_total = own_tot_ms;
         summary.recurse = recurse;
         summary.url = jsdScript.fileName;
         summary.file = getFileFromPath(summary.url);
         summary.base = jsdScript.baseLineNumber;
         summary.end = summary.base + jsdScript.lineExtent;
         summary.fun = scriptWrapper.functionName;
+        var own_str = getMsg(MSN_FMT_PROFILE_STR2, [own_tot_ms, own_min_ms,
+                                                    own_max_ms, own_avg_ms]);
         summary.str = getMsg(MSN_FMT_PROFILE_STR,
                              [summary.fun, summary.base, summary.end, ccount,
                               (summary.recurse ?
                                getMsg(MSN_FMT_PROFILE_RECURSE, recurse) : ""),
-                              tot_ms, min_ms, max_ms, avg_ms]);
+                              tot_ms, min_ms, max_ms, avg_ms, own_str]);
         summary.key = summary[key];
         return summary;
     }
@@ -266,6 +276,10 @@ function pro_rptinst (profileReport, scriptInstance, sectionData)
             "\\$min-time"        : summary.min,
             "\\$avg-time"        : summary.avg,
             "\\$total-time"      : summary.total,
+            "\\$own-max-time"   : summary.own_max,
+            "\\$own-min-time"   : summary.own_min,
+            "\\$own-avg-time"   : summary.own_avg,
+            "\\$own-total-time" : summary.own_total,
             "\\$call-count"      : summary.ccount,
             "\\$recurse-depth"   : summary.recurse,
             "\\$function-name"   : fromUnicode(summary.fun, MSG_REPORT_CHARSET),
