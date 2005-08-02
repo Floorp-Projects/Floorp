@@ -306,7 +306,7 @@
                 readonly="true"/>
 
       <property name="contentTitle"
-                onget="return Components.lookupMethod(this.contentDocument, 'title').call(this.contentDocument);"
+                onget="return this.contentDocument.title;"
                 readonly="true"/>
 
       <field name="mPrefs" readonly="true">
