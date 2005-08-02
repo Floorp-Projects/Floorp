@@ -80,9 +80,7 @@ my $jarDir = $chromeDir;
 if (defined($::opt_j)) {
     $jarDir = $::opt_j;
 }
-if ($jarDir !~ /^\//) {
-    $jarDir = getcwd() . '/' . $jarDir;
-}
+$jarDir = _moz_rel2abs($jarDir, 1);
 
 my $verbose = 0;
 if (defined($::opt_v)) {
@@ -218,8 +216,9 @@ sub JarIt
 {
     my ($destPath, $jarPath, $jarfile, $args, $overrides) = @_;
     my $oldDir = cwd();
-    my $jarchive = $jarPath . '/' . $jarfile . '.jar';
     chdir("$destPath/$jarfile");
+    my $jarchive = File::Spec->abs2rel(
+      File::Spec->catfile($jarPath, $jarfile.'.jar'));
 
     if ("$fileformat" eq "flat" || "$fileformat" eq "symlink") {
         unlink($jarchive) if ( -e $jarchive);
