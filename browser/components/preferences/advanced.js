@@ -44,6 +44,10 @@ var gAdvancedPane = {
     if (preference.value === null)
       return;
     advancedPrefs.selectedIndex = preference.value;
+    
+    this.updateAppUpdateItems();
+    this.updateAutoItems();
+    this.updateModeItems();    
   },
   
   tabSelectionChanged: function ()
@@ -90,29 +94,109 @@ var gAdvancedPane = {
                                         "chrome://pippki/content/device_manager.xul",
                                         "width=600,height=400", null);
   },
-  
-  updateAppUpdateUI: function ()
-  {
-    var preference = document.getElementById("app.update.enabled");
-    document.getElementById("enableAutoInstall").disabled = !preference.value;
 
+  /**
+   * UI state matrix for update preference conditions
+   * 
+   * UI Components:                                     Preferences
+   * 1 = Firefox checkbox                               i   = app.update.enabled
+   * 2 = Check Now button for Firefox                   ii  = app.update.auto
+   * 3 = When updates for Firefox are found label       iii = app.update.mode
+   * 4 = Automatic Radiogroup (Ask vs. Automatically)
+   * 5 = Warn before disabling extensions checkbox
+   * 
+   * States:
+   * Element     p   val     locked    Disabled 
+   * 1,2         i   t/f     f         false 
+   *             i   t/f     t         true
+   *             ii  t/f     t/f       false
+   *             iii 0/1/2   t/f       false
+   * 3,4         i   t       t/f       false
+   *             i   f       t/f       true
+   *             ii  t/f     f         false
+   *             ii  t/f     t         true
+   *             iii 0/1/2   t/f       false
+   * 5           i   t       t/f       false
+   *             i   f       t/f       true
+   *             ii  t       t/f       false
+   *             ii  f       t/f       true
+   *             iii 0/1/2   f         false
+   *             iii 0/1/2   t         true   
+   * 
+   */
+  updateAppUpdateItems: function () 
+  {
     var aus = 
         Components.classes["@mozilla.org/updates/update-service;1"].
         getService(Components.interfaces.nsIApplicationUpdateService);
-    var checkNowButton = document.getElementById("checkNowButton");
-    checkNowButton.disabled = !aus.canUpdate;
 
-    this.updateAutoPref();
-    return undefined;
+    var enabledPref = document.getElementById("app.update.enabled");
+    
+    var enableAppUpdate = document.getElementById("enableAppUpdate");
+    var appCheckNowButton = document.getElementById("appCheckNowButton");
+    appCheckNowButton.disabled = enableAppUpdate.disabled = !aus.canUpdate;
   },
   
-  updateAutoPref: function () 
+  updateAutoItems: function () 
   {
-    var preference = document.getElementById("app.update.auto");
-    var updateEnabledPref = document.getElementById("app.update.enabled");
-    var autoInstallOptions = document.getElementById("autoInstallOptions");
-    autoInstallOptions.disabled = !preference.value || !updateEnabledPref.value;
-    return undefined;
+    var enabledPref = document.getElementById("app.update.enabled");
+    var autoPref = document.getElementById("app.update.auto");
+    
+    var updateModeLabel = document.getElementById("updateModeLabel");
+    var updateMode = document.getElementById("updateMode");
+    
+    var disable = !enabledPref.value || autoPref.locked;
+    updateModeLabel.disabled = updateMode.disabled = disable;
+  },
+
+  updateModeItems: function () 
+  {
+    var enabledPref = document.getElementById("app.update.enabled");
+    var autoPref = document.getElementById("app.update.auto");
+    var modePref = document.getElementById("app.update.mode");
+    
+    var warnIncompatible = document.getElementById("warnIncompatible");
+    
+    var disable = !enabledPref.value || !autoPref.value || modePref.locked;
+    warnIncompatible.disabled = disable;
+  },
+
+  /**
+   * The Extensions checkbox and button are disabled only if the enable Addon
+   * update preference is locked. 
+   */
+  updateAddonUpdateUI: function ()
+  {
+    var enabledPref = document.getElementById("extensions.update.enabled");
+    
+    var enableAddonUpdate = document.getElementById("enableAddonUpdate");
+    var addonCheckNowButton = document.getElementById("addonCheckNowButton");
+    enableAddonUpdate.disabled = addonCheckNowButton.disabled = enabledPref.locked;
+  },  
+
+  /**
+   * app.update.mode is a three state integer preference, and we have to 
+   * express all three values in a single checkbox:
+   * "Warn me if this will disable extensions or themes"
+   * Preference Value         Checkbox State    Meaning
+   * 0                        Unchecked         Do not warn
+   * 1                        Checked           Warn if there are incompatibilities
+   * 2                        Checked           Warn if there are incompatibilities,
+   *                                            or the update is major.
+   */
+  _modePreference: -1,
+  addonWarnSyncFrom: function ()
+  {
+    var preference = document.getElementById("app.update.mode");
+    var doNotWarn = preference.value != 0;
+    gAdvancedPane._modePreference = doNotWarn ? preference.value : 1;
+    return doNotWarn;
+  },
+  
+  addonWarnSyncTo: function ()
+  {
+    var warnIncompatible = document.getElementById("warnIncompatible");
+    return !warnIncompatible.checked ? 0 : gAdvancedPane._modePreference;
   },
   
   checkForAddonUpdates: function ()
