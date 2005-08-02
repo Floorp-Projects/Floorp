@@ -2184,23 +2184,6 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   }
 }
 
-PRBool
-nsHTMLReflowState::UseComputedHeight()
-{
-  static PRBool useComputedHeight = PR_FALSE;
-
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
-  static PRBool firstTime = 1;
-  if (firstTime) {
-    if (getenv("GECKO_USE_COMPUTED_HEIGHT")) {
-      useComputedHeight = PR_TRUE;
-    }
-    firstTime = 0;
-  }
-#endif
-  return useComputedHeight;
-}
-
 #define NORMAL_LINE_HEIGHT_FACTOR 1.2f    // in term of emHeight 
 // For "normal" we use the font's normal line height (em height + leading).
 // If both internal leading and  external leading specified by font itself
@@ -2278,16 +2261,11 @@ ComputeLineHeight(nsPresContext* aPresContext,
       // little hack lets us override that behavior to allow for more
       // precise layout in the face of imprecise fonts.
       nscoord emHeight = font->mFont.size;
-      if (!nsHTMLReflowState::UseComputedHeight()) {
-        fm->GetEmHeight(emHeight);
-      }
+      fm->GetEmHeight(emHeight);
       lineHeight = NSToCoordRound(factor * emHeight);
     } else {
       NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
-      lineHeight = font->mFont.size;
-      if (!nsHTMLReflowState::UseComputedHeight()) {
-        lineHeight = GetNormalLineHeight(fm);
-      }
+      lineHeight = GetNormalLineHeight(fm);
     }
   }
   return lineHeight;

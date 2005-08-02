@@ -624,18 +624,6 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aMetrics.descent += aReflowState.mComputedBorderPadding.bottom;
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
-
-    // Note: we normally use the actual font height for computing the
-    // line-height raw value from the style context. On systems where
-    // they disagree the actual font height is more appropriate. This
-    // little hack lets us override that behavior to allow for more
-    // precise layout in the face of imprecise fonts.
-    if (nsHTMLReflowState::UseComputedHeight()) {
-      const nsStyleFont* font = GetStyleFont();
-      aMetrics.height = font->mFont.size +
-        aReflowState.mComputedBorderPadding.top +
-        aReflowState.mComputedBorderPadding.bottom;
-    }
   }
 
   // For now our overflow area is zero. The real value will be

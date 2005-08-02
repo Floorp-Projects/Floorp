@@ -2439,13 +2439,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         nscoord minimumLineHeight = mMinLineHeight;
         nscoord fontAscent, fontHeight;
         fm->GetMaxAscent(fontAscent);
-        if (nsHTMLReflowState::UseComputedHeight()) {
-          fontHeight = spanFrame->GetStyleFont()->mFont.size;
-        }
-        else 
-        {
-          fm->GetHeight(fontHeight);
-        }
+        fm->GetHeight(fontHeight);
 
         nscoord leading = minimumLineHeight - fontHeight;
         nscoord yTop = -fontAscent - leading/2;

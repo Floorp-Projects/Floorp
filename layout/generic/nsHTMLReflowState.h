@@ -385,8 +385,6 @@ struct nsHTMLReflowState {
                                 nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
 
-  static PRBool UseComputedHeight();
-
   void InitFrameType();
 
   void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
