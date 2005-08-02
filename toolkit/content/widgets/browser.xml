@@ -39,7 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE window [
-  <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findBar.dtd" >
+  <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
   %findBarDTD;
 ]>
 
