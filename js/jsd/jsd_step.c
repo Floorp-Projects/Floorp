@@ -166,9 +166,11 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                                 /* We need to 'stop' the timer for the caller.
                                  * Use time since last return if appropriate. */
                                 if (JSLL_IS_ZERO(jsdc->lastReturnTime))
+                                {
                                     JSLL_SUB(ll_delta, now, callerpdata->lastCallStart);
-                                else
+                                } else {
                                     JSLL_SUB(ll_delta, now, jsdc->lastReturnTime);
+                                }
                                 callerpdata->runningTime += ll_delta;
                             }
                             /* We're the new current function, and no return
