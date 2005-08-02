@@ -72,7 +72,6 @@ pref("app.update.auto", true);
 pref("app.update.mode", 1);
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
-pref("app.update.logEnabled", true);
 
 // Default service URL for testing.
 pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
