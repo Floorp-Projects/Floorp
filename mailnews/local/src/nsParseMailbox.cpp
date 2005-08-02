@@ -903,7 +903,7 @@ int nsParseMailMessageState::ParseHeaders ()
       // Disposition-Notification-To
       else if (!nsCRT::strncasecmp ("Return-Receipt-To", buf, end - buf))
         header = &m_mdn_dnt;
-      else if (!nsCRT::strncasecmp("ReplyTo", buf, end - buf))
+      else if (!nsCRT::strncasecmp("Reply-To", buf, end - buf))
         header = &m_replyTo;
       break;
     case 'S': case 's':
@@ -1723,6 +1723,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
             nsMsgKey msgKey;
             (void) msgHdr->GetMessageKey(&msgKey);
             m_moveCoalescer->AddMove(destIFolder , msgKey);
+            if (loggingEnabled)
+              (void)filter->LogRuleHit(filterAction, msgHdr); 
             err = NS_OK;
             msgIsNew = PR_FALSE;
           }
@@ -1730,14 +1732,12 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
           {
             err = MoveIncorporatedMessage(msgHdr, m_mailDB, destIFolder, filter, msgWindow);
             m_msgMovedByFilter = NS_SUCCEEDED(err);
-            // cleanup after mailHdr in source DB because we moved the message.
             if (m_msgMovedByFilter)
+            {
+              if (loggingEnabled)
+                (void)filter->LogRuleHit(filterAction, msgHdr); 
               m_mailDB->RemoveHeaderMdbRow(msgHdr);
-          }
-          if (NS_SUCCEEDED(err))
-          {
-            if (loggingEnabled)
-              (void)filter->LogRuleHit(filterAction, msgHdr); 
+            }
           }
         }
         *applyMore = PR_FALSE; 
