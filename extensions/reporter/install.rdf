@@ -39,6 +39,5 @@
     <em:description>Report a broken web site.</em:description>
     <em:creator>mozilla.org</em:creator>
     <em:homepageURL>http://reporter.mozilla.org/</em:homepageURL>
-    <em:updateURL>about:blank</em:updateURL>
   </Description>
 </RDF>
