@@ -45,7 +45,6 @@
  */
 nsBlender :: nsBlender()
 {
-  mContext = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -98,8 +97,6 @@ NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender)
 NS_IMETHODIMP
 nsBlender::Init(nsIDeviceContext *aContext)
 {
-  mContext = aContext;
-  
   return NS_OK;
 }
 

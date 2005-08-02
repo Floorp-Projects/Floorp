@@ -140,8 +140,6 @@ protected:
   void Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
                  PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
                  PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality);
-
-  nsCOMPtr<nsIDeviceContext> mContext;
 };
 
 #endif /* !nsBlender_h___ */
