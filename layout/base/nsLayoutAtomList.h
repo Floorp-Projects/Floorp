@@ -195,6 +195,7 @@ LAYOUT_ATOM(onresize, "onresize")
 LAYOUT_ATOM(onscroll, "onscroll")
 LAYOUT_ATOM(onselect, "onselect")
 LAYOUT_ATOM(onsubmit, "onsubmit")
+LAYOUT_ATOM(ontext, "ontext")
 LAYOUT_ATOM(onunload, "onunload")
 
 // scrolling
