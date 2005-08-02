@@ -171,12 +171,12 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                                 } else {
                                     JSLL_SUB(ll_delta, now, jsdc->lastReturnTime);
                                 }
-                                callerpdata->runningTime += ll_delta;
+                                JSLL_ADD(callerpdata->runningTime, callerpdata->runningTime, ll_delta);
                             }
                             /* We're the new current function, and no return
                              * has happened yet. */
                             jsdc->callingFunctionPData = pdata;
-                            jsdc->lastReturnTime = 0;
+                            jsdc->lastReturnTime = JSLL_ZERO;
                             /* This function has no running time (just been
                              * called!), and we'll need the call start time. */
                             pdata->runningTime = JSLL_ZERO;
@@ -216,7 +216,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                             // Add last chunk to running time, and use total
                             // running time as 'delta'.
                             JSLL_SUB(ll_delta, now, jsdc->lastReturnTime);
-                            pdata->runningTime += ll_delta;
+                            JSLL_ADD(pdata->runningTime, pdata->runningTime, ll_delta);
                             JSLL_L2D(delta, pdata->runningTime);
                             delta /= 1000.0;
                         }
