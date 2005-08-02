@@ -92,6 +92,15 @@
           return false;
         </body>
       </method>
+
+      <method name="dispatchDOMActivate">
+        <body>
+          var ev = document.createEvent("UIEvents");
+          ev.initUIEvent("DOMActivate", true, true, window, 1);
+          this.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
     </implementation>
   </binding>
   
@@ -193,17 +202,6 @@
       <method name="focus">
         <body>
           this.inputField.focus();
-          return true;
-        </body>
-      </method>
-
-      <!-- The underlying "html:input" element does not send a DOMActivate
-           event when hitting the Enter key.  We handle that here. -->
-      <method name="dispatchDOMActivate">
-        <body>
-          var ev = document.createEvent("UIEvents");
-          ev.initUIEvent("DOMActivate", true, true, window, 1);
-          this.dispatchEvent(ev);
           return true;
         </body>
       </method>
@@ -323,23 +321,6 @@
     </implementation>
   </binding>
 
-  <!-- TRIGGER: BASE -->
-  <binding id="xformswidget-trigger-base"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content><children/></content>
-
-    <implementation implements="nsIXFormsUIWidget">
-      <method name="dispatchDOMActivate">
-        <body>
-          var ev = document.createEvent("UIEvents");
-          ev.initUIEvent("DOMActivate", true, true, window, 1);
-          this.dispatchEvent(ev);
-          return true;
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
   <!-- TRIGGER: <DEFAULT> -->
   <binding id="xformswidget-trigger"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
@@ -375,7 +356,7 @@
 
   <!-- TRIGGER: MINIMAL -->
   <binding id="xformswidget-trigger-minimal"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <html:span anonid="thespan" xbl:inherits="accesskey"
                  onclick="if (!this._disabled) this.parentNode.dispatchDOMActivate();">
