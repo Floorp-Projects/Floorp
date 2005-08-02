@@ -140,6 +140,12 @@ calDavCalendar.prototype = {
     get uri() { return this.mUri; },
     set uri(aUri) { this.mUri = aUri; },
 
+    get mCalendarUri() { 
+        calUri = this.mUri.clone();
+        calUri.spec += "calendar/";
+        return calUri;
+    },
+
     refresh: function() {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
@@ -183,8 +189,9 @@ calDavCalendar.prototype = {
         }
 
         // XXX how are we REALLY supposed to figure this out?
-        var itemUri = this.mUri.clone();
+        var itemUri = this.mCalendarUri.clone();
         itemUri.spec = itemUri.spec + aItem.id + ".ics";
+        debug("itemUri.spec = " + itemUri.spec + "\n");
         var eventResource = new WebDavResource(itemUri);
 
         var listener = new WebDavListener();
@@ -255,6 +262,7 @@ calDavCalendar.prototype = {
 
         if (aNewItem.id == null) {
 
+            // XXXYYY fix to match iface spec
             // this is definitely an error
             if (aListener) {
                 try {
@@ -272,7 +280,7 @@ calDavCalendar.prototype = {
             return;
         }
 
-        var eventUri = this.mUri.clone();
+        var eventUri = this.mCalendarUri.clone();
         try {
             eventUri.spec = aNewItem.getProperty("locationURI");
             debug("using locationURI: " + eventUri.spec + "\n");
@@ -355,7 +363,7 @@ calDavCalendar.prototype = {
         }
 
         // XXX how are we REALLY supposed to figure this out?
-        var eventUri = this.mUri.clone();
+        var eventUri = this.mCalendarUri.clone();
         eventUri.spec = eventUri.spec + aItem.id + ".ics";
         var eventResource = new WebDavResource(eventUri);
 
@@ -511,6 +519,7 @@ calDavCalendar.prototype = {
 
                 // save the location name in case we need to modify
                 item.setProperty("locationURI", aResource.spec);
+                debug("locationURI = " + aResource.spec + "\n");
                 item.makeImmutable();
 
                 // figure out what type of item to return
@@ -525,10 +534,8 @@ calDavCalendar.prototype = {
                                                                    aRangeEnd,
                                                                    0, {});
                     } else {
-                        var occ = makeOccurrence(item, item.startDate,
-                                                 item.endDate);
                         // XXX need to make occurrences immutable?
-                        items = [ occ ];
+                        items = [ item ];
                     }
                     rv = Components.results.NS_OK;
                 } else if (item.QueryInterface(calIEvent)) {
@@ -546,7 +553,7 @@ calDavCalendar.prototype = {
 
             } else { 
                 // XXX
-                dump("aStatusCode = " + aStatusCode + "\n");
+                debug("aStatusCode = " + aStatusCode + "\n");
                 errString = "XXX";
                 rv = Components.results.NS_ERROR_FAILURE;
             }
@@ -605,8 +612,8 @@ calDavCalendar.prototype = {
         queryDoc = xParser.parseFromString(aQuery, "application/xml");
 
         // construct the resource we want to search against
-        // XXX adding "calendar/" to the uri is wrong
-        var calendarDirUri = this.mUri.clone();
+        var calendarDirUri = this.mCalendarUri.clone();
+        debug("report uri = " + calendarDirUri.spec + "\n");
         var calendarDirResource = new WebDavResource(calendarDirUri);
 
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -626,23 +633,6 @@ calDavCalendar.prototype = {
         if (!aListener)
             return;
 
-        filterTypes = 0;
-        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO ) {
-            filterTypes++;
-            debug("getItems called with TODO filter\n");
-        }
-        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT ) {
-            filterTypes++;
-        }
-        if ( aItemFilter & calICalendar.ITEM_FILTER_TYPE_JOURNAL ) {
-            filterTypes++;
-        }
-        if ( filterTypes > 1 ) {
-            debug("Multiple simultaneous filter types not supported by " + 
-                 "this provider.\n");
-            throw Components.results.NS_ERROR_FAILURE;
-        }
-
         // this is our basic report xml
         var C = new Namespace("urn:ietf:params:xml:ns:caldav")
         default xml namespace = C;
@@ -656,23 +646,27 @@ calDavCalendar.prototype = {
             </filter>
           </calendar-query>;
 
-        switch (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL) {
-        case calICalendar.ITEM_FILTER_TYPE_EVENT:
-            queryXml[0].C::filter.C::["comp-filter"]
-                .C::["comp-filter"].@name="VEVENT";
-            break;
+        // figure out 
+        var compFilterNames = new Array();
+        compFilterNames[calICalendar.ITEM_FILTER_TYPE_TODO] = "VTODO";
+        compFilterNames[calICalendar.ITEM_FILTER_TYPE_VJOURNAL] = "VJOURNAL";
+        compFilterNames[calICalendar.ITEM_FILTER_TYPE_EVENT] = "VEVENT";
 
-        case calICalendar.ITEM_FILTER_TYPE_TODO:
-            queryXml[0].C::filter.C::["comp-filter"]
-                .C::["comp-filter"].@name="VTODO";
-            break;
+        var filterTypes = 0;
+        for (var i in compFilterNames) {
+            if (aItemFilter & i) {
+                // XXX CalDAV only allows you to ask for one filter-type
+                // at once, so if the caller wants multiple filtern
+                // types, all they're going to get for now is events
+                // (since that's last in the Array).  Sorry!
+                ++filterTypes;
+                queryXml[0].C::filter.C::["comp-filter"]
+                    .C::["comp-filter"] = 
+                    <comp-filter name={compFilterNames[i]}/>;
+            }
+        }
 
-        case calICalendar.ITEM_FILTER_TYPE_JOURNAL:
-            break;
-            queryXml[0].C::filter.C::["comp-filter"]
-                .C::["comp-filter"].@name="VJOURNAL";
-
-        default:
+        if (filterTypes < 1) {
             debug("No item types specified\n");
             // XXX should we just quietly call back the completion method?
             throw NS_ERROR_FAILURE;
@@ -691,10 +685,9 @@ calDavCalendar.prototype = {
                 .C::["comp-filter"].appendChild(rangeXml);
         }
 
-        // XXX aItemFilter
-
         var queryString = xmlHeader + queryXml.toXMLString();
-        debug("getItems(): querying CalDAV server for events\n");
+        debug("getItems(): querying CalDAV server for events: " + 
+              queryString + "\n");
 
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
