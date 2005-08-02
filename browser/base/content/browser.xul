@@ -71,10 +71,13 @@
 #include global-scripts.inc
 
 <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+<script type="application/x-javascript" src="chrome://browser/content/feedview/feedviewOverlay.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
+
+  <stringbundle id="bundle_feedview" src="chrome://browser/locale/feedview.properties"/>
 
   <popupset id="mainPopupSet">
     <popup id="backMenu" 
