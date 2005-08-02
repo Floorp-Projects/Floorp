@@ -607,7 +607,7 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
             pSymbol->MaxNameLen = MAX_SYM_NAME;
 
             DWORD64 displacement;
-            ok = _SymFromAddr(myProcess, addr, &displacement, pSymbol);
+            ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
 
             // All done with debug calls so release our lock.
             ReleaseMutex(hStackWalkMutex);
