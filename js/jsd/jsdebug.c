@@ -213,6 +213,27 @@ JSD_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
     return jsd_GetScriptTotalExecutionTime(jsdc, script);
 }
 
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptMinOwnExecutionTime(jsdc, script);
+}
+    
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptMaxOwnExecutionTime(jsdc, script);
+}
+
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptTotalOwnExecutionTime(jsdc, script);
+}
+
 JSD_PUBLIC_API(void)
 JSD_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script)
 {

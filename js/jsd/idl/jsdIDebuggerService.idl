@@ -78,7 +78,7 @@ interface jsdIProperty;
  * Debugger service.  It's not a good idea to have more than one active client of
  * the debugger service.
  */
-[scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
+[scriptable, uuid(9dd9006a-4e5e-4a80-ac3d-007fb7335ca4)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -954,6 +954,21 @@ interface jsdIScript : jsdIEphemeral
      * Total time spent in this function, in milliseconds.
      */
     readonly attribute double totalExecutionTime;
+    /**
+     * Shortest execution time recorded, in milliseconds, excluding time spent
+     * in other called code.
+     */
+    readonly attribute double minOwnExecutionTime;
+    /**
+     * Longest execution time recorded, in milliseconds, excluding time spent
+     * in other called code.
+     */
+    readonly attribute double maxOwnExecutionTime;
+    /**
+     * Total time spent in this function, in milliseconds, excluding time spent
+     * in other called code.
+     */
+    readonly attribute double totalOwnExecutionTime;
     
     /**
      * Clear profile data for this script.

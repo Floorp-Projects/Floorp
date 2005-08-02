@@ -170,6 +170,8 @@ struct JSDContext
     JSHashTable*            atoms;
     JSCList                 objectsList;
     JSHashTable*            objectsTable;
+    JSDProfileData*         callingFunctionPData;
+    int64                   lastReturnTime;
 #ifdef JSD_THREADSAFE
     void*                   scriptsLock;
     void*                   sourceTextLock;
@@ -206,13 +208,18 @@ struct JSDScript
 
 struct JSDProfileData
 {
+    JSDProfileData* caller;
     int64    lastCallStart;
+    int64    runningTime;
     uintN    callCount;
     uintN    recurseDepth;
     uintN    maxRecurseDepth;
     jsdouble minExecutionTime;
     jsdouble maxExecutionTime;
     jsdouble totalExecutionTime;
+    jsdouble minOwnExecutionTime;
+    jsdouble maxOwnExecutionTime;
+    jsdouble totalOwnExecutionTime;
 };
 
 struct JSDSourceText
@@ -408,6 +415,15 @@ jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script);
 
 extern jsdouble
 jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
 
 extern void
 jsd_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script);

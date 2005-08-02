@@ -328,6 +328,27 @@ extern JSD_PUBLIC_API(jsdouble)
 JSD_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script);
 
 /*
+* Get the shortest execution time recorded, excluding time spent in called
+* functions.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the longest execution time recorded, excluding time spent in called
+* functions.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the total amount of time spent in this script, excluding time spent
+* in called functions.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
 * Clear profile data for this script.
 */
 extern JSD_PUBLIC_API(void)
