@@ -1937,9 +1937,6 @@ nsTableRowGroupFrame::CheckLineOrder(PRInt32                  aLine,
 NS_IMETHODIMP
 nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber, 
                                   nscoord    aX, 
-#ifdef IBMBIDI
-                                  PRBool     aCouldBeReordered,
-#endif // IBMBIDI
                                   nsIFrame** aFrameFound,
                                   PRBool*    aXIsBeforeFirstFrame, 
                                   PRBool*    aXIsAfterLastFrame)

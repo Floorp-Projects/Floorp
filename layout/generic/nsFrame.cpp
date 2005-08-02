@@ -3249,11 +3249,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       nsIView * view; //used for call of get offset from view
       aBlockFrame->GetOffsetFromView(offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
-#ifdef IBMBIDI
-      result = it->FindFrameAt(searchingLine, newDesiredX, aPresContext->BidiEnabled(), &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
-#else
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
-#endif // IBMBIDI
       if(NS_FAILED(result))
         continue;
     }
