@@ -396,6 +396,7 @@ nsGlobalWindow::ClearControllers()
 
 // QueryInterface implementation for nsGlobalWindow
 NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
+  // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
@@ -1199,8 +1200,9 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
       mListenerManager &&
       !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags && NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags))) {
     aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this,
-                                  aFlags, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent,
+                                  GetOuterWindowInternal(), aFlags,
+                                  aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
@@ -4634,8 +4636,7 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
   // Retrieve the context
   nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
   return presContext->EventStateManager()->
-    DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this),
-                     aEvent, _retval);
+    DispatchNewEvent(GetOuterWindow(), aEvent, _retval);
 }
 
 //*****************************************************************************
