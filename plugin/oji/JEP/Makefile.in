@@ -56,8 +56,8 @@ MRJ_PLUGIN_BUNDLE=MRJPlugin.plugin
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	ln -fs $(srcdir)/$(JEP_PLUGIN_BUNDLE) .
-	ln -fs $(srcdir)/$(MRJ_PLUGIN_BUNDLE) .
+	rsync -a --exclude CVS/ $(srcdir)/$(JEP_PLUGIN_BUNDLE) .
+	rsync -a --exclude CVS/ $(srcdir)/$(MRJ_PLUGIN_BUNDLE) .
 endif
 
 libs install:: install-plugin
