@@ -76,3 +76,7 @@ CSS_PSEUDO_CLASS(lastChild, ":last-child")
 CSS_PSEUDO_CLASS(lastNode, ":-moz-last-node")
 CSS_PSEUDO_CLASS(onlyChild, ":only-child")
 
+// CSS 3 UI
+// http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes
+CSS_PSEUDO_CLASS(required, ":required")
+CSS_PSEUDO_CLASS(optional, ":optional")

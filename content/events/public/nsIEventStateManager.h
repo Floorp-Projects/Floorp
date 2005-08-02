@@ -139,12 +139,17 @@ public:
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 };
 
-#define NS_EVENT_STATE_ACTIVE       0x0001 // mouse is down on content
-#define NS_EVENT_STATE_FOCUS        0x0002 // content has focus
-#define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content
-#define NS_EVENT_STATE_DRAGOVER     0x0008 // drag  is hovering over content
-#define NS_EVENT_STATE_URLTARGET    0x0010 // content is URL's target (ref)
+#define NS_EVENT_STATE_ACTIVE       0x00000001 // mouse is down on content
+#define NS_EVENT_STATE_FOCUS        0x00000002 // content has focus
+#define NS_EVENT_STATE_HOVER        0x00000004 // mouse is hovering over content
+#define NS_EVENT_STATE_DRAGOVER     0x00000008 // drag  is hovering over content
+#define NS_EVENT_STATE_URLTARGET    0x00000010 // content is URL's target (ref)
+
 // The following states are used only for ContentStatesChanged
-#define NS_EVENT_STATE_CHECKED      0x0020
+// CSS 3 Selectors
+#define NS_EVENT_STATE_CHECKED      0x00000020
+// CSS 3 UI
+#define NS_EVENT_STATE_REQUIRED     0x00000040
+#define NS_EVENT_STATE_OPTIONAL     0x00000080
 
 #endif // nsIEventStateManager_h__
