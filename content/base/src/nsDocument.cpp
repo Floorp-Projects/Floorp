@@ -2034,17 +2034,8 @@ GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
 }
 
 void
-nsDocument::EndLoad()
+nsDocument::DispatchContentLoadedEvents()
 {
-  // Drop the ref to our parser, if any
-  mParser = nsnull;
-  
-  PRInt32 i;
-  for (i = mObservers.Count() - 1; i >= 0; --i) {
-    nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];
-    observer->EndLoad(this);
-  }
-
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -2154,6 +2145,20 @@ nsDocument::EndLoad()
       tmp->GetSameTypeParent(getter_AddRefs(docShellParent));
     }
   }
+}
+
+void
+nsDocument::EndLoad()
+{
+  // Drop the ref to our parser, if any
+  mParser = nsnull;
+  
+  PRInt32 i;
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
+    nsIDocumentObserver* observer = (nsIDocumentObserver*)mObservers[i];
+    observer->EndLoad(this);
+  }
+  DispatchContentLoadedEvents();
 }
 
 void
