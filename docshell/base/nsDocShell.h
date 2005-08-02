@@ -261,6 +261,12 @@ public:
 
     // nsIScriptGlobalObjectOwner methods
     virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+
+    // Restores a cached presentation from history (mLSHE).
+    // This method swaps out the content viewer and simulates loads for
+    // subframes.  It then simulates the completion of the toplevel load.
+    nsresult RestoreFromHistory();
+
 protected:
     // Object Management
     virtual ~nsDocShell();
@@ -440,12 +446,10 @@ protected:
     // state) and stores them on |mOSHE|.
     nsresult CaptureState();
 
-    // Restores the presentation stored in |aSHEntry|.  The old presentation
-    // is saved in session history if |aSavePresentation| is true.
-    // If a presentation could be restored, |aRestored| is set to true.
-    nsresult RestorePresentation(nsISHEntry *aSHEntry,
-                                 PRBool aSavePresentation,
-                                 PRBool *aRestored);
+    // Begin the toplevel restore process for |aSHEntry|.
+    // This simulates a channel open, and defers the real work until
+    // RestoreFromHistory is called from a PLEvent.
+    nsresult RestorePresentation(nsISHEntry *aSHEntry, PRBool *aRestoring);
 
     // Call BeginRestore(nsnull, PR_FALSE) for each child of this shell.
     nsresult BeginRestoreChildren();
