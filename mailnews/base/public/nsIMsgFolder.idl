@@ -66,12 +66,13 @@ interface nsITransport;
 interface nsIFileSpec;
 interface nsIOutputStream;
 interface nsIInputStream;
+interface nsILocalFile;
 
 typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(63b5d816-06e8-4a86-918c-56de10293f58)]
+[scriptable, uuid(9738ca06-09fb-4b53-b420-741fd6a64355)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -346,6 +347,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * local path of this folder
    */
   attribute nsIFileSpec path;
+
+  // this should help in the process of eliminating nsIFileSpec.
+  attribute nsILocalFile filePath;
 
   readonly attribute string baseMessageURI;
   string generateMessageURI(in nsMsgKey msgKey);

@@ -64,6 +64,7 @@
 #include "nsIMsgAccount.h"
 #include "nsLocalMailFolder.h"
 #include "nsIMailboxUrl.h"
+#include "nsInt64.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 #define SECURE_POP3_PORT 995 // The port for Pop3 over SSL
@@ -122,10 +123,19 @@ nsresult nsPop3Service::GetMail(PRBool downloadNewMail,
   
   server = do_QueryInterface(aPopServer);
   
+  nsCOMPtr <nsILocalMailFolder> destLocalFolder = do_QueryInterface(aInbox);
+  if (destLocalFolder)
+  {
+    PRBool destFolderTooBig;
+    destLocalFolder->WarnIfLocalFileTooBig(aMsgWindow, &destFolderTooBig);
+    if (destFolderTooBig)
+      return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
+  }
+
   if (!server) 
     return NS_MSG_INVALID_OR_MISSING_SERVER;
   
-  nsresult rv = server->GetHostName(getter_Copies(popHost));
+  rv = server->GetHostName(getter_Copies(popHost));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!((const char *)popHost)) 
     return NS_MSG_INVALID_OR_MISSING_SERVER;

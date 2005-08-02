@@ -1684,6 +1684,12 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     return OnCopyCompleted(srcSupport, PR_FALSE);
   }
   
+  PRBool mailboxTooLarge;
+
+  (void) WarnIfLocalFileTooBig(msgWindow, &mailboxTooLarge);
+  if (mailboxTooLarge)
+    return OnCopyCompleted(srcSupport, PR_FALSE);
+
   nsXPIDLCString uri;
   rv = srcFolder->GetURI(getter_Copies(uri));
   nsCAutoString protocolType(uri);
@@ -3774,3 +3780,27 @@ nsMsgLocalMailFolder::AddMessage(const char *aMessage)
   ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
   return rv;
 }
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::WarnIfLocalFileTooBig(nsIMsgWindow *aWindow, PRBool *aTooBig)
+{
+  NS_ENSURE_ARG_POINTER(aTooBig);
+  *aTooBig = PR_FALSE;
+  PRInt64 sizeOnDisk;
+  nsCOMPtr <nsILocalFile> filePath;
+  rv = GetFilePath(getter_AddRefs(filePath));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = filePath->GetFileSize(&sizeOnDisk);
+  if (NS_SUCCEEDED(rv))
+  {
+    const nsInt64 kMaxFolderSize = 0xFFF00000;
+    nsInt64 folderSize(sizeOnDisk);
+    if (folderSize > kMaxFolderSize)
+    {
+      ThrowAlertMsg("mailboxTooLarge", aWindow);
+      *aTooBig = PR_TRUE;
+    }
+  }
+  return NS_OK;
+}
+

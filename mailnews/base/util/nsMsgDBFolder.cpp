@@ -4241,6 +4241,29 @@ nsMsgDBFolder::SetPath(nsIFileSpec  *aPath)
 }
 
 NS_IMETHODIMP
+nsMsgDBFolder::SetFilePath(nsILocalFile *aFile)
+{
+  NS_ASSERTION(PR_FALSE, "don't call this until we've converted mPath to an nsIFile");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::GetFilePath(nsILocalFile * *aFile)
+{
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  nsCOMPtr <nsIFileSpec> fileSpec;
+  nsresult rv = GetPath(getter_AddRefs(fileSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsFileSpec spec;
+  rv = fileSpec->GetFileSpec(&spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_FileSpecToIFile(&spec, aFile);
+}
+
+NS_IMETHODIMP
 nsMsgDBFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 {
   PRUint32 count;

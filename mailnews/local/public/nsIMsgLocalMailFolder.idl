@@ -57,7 +57,7 @@ struct nsLocalFolderScanState;
 
 %}
 
-[scriptable, uuid(ca3be30c-b850-4fec-bdd9-131c39e74805)]
+[scriptable, uuid(260398bd-9152-4b10-af4e-3126dcd37837)]
 interface nsIMsgLocalMailFolder : nsISupports {
   /**
    * set the default flags on the subfolders of this folder, such as
@@ -104,4 +104,6 @@ interface nsIMsgLocalMailFolder : nsISupports {
    */
   [noscript] void getFolderScanState(in nsLocalFolderScanState aState);
   [noscript] void getUidlFromFolder(in nsLocalFolderScanState aState, in nsIMsgDBHdr aMsgHdr);
+
+  boolean warnIfLocalFileTooBig(in nsIMsgWindow aWindow);
 };
