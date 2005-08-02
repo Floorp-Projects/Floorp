@@ -214,7 +214,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
 
 <!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
-<script type="application/x-javascript" src="chrome://calendar/content/importExport.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/import-export.js"/>
 
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
