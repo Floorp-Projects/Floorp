@@ -1986,14 +1986,24 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         if (IsRefreshEnabled()) {
           // If an ancestor widget was hidden and then shown, we could
           // have a delayed resize to handle.
-          if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-              IsViewVisible(mRootView)) {
-            DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
-            mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
-            
-            // Paint later.
-            UpdateView(view, NS_VMREFRESH_NO_SYNC);
-          } else {
+          PRBool didResize = PR_FALSE;
+          for (nsViewManager *vm = this; vm;
+               vm = vm->mRootView->GetParent()
+                      ? vm->mRootView->GetParent()->GetViewManager()
+                      : nsnull) {
+            if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+                IsViewVisible(vm->mRootView)) {
+              vm->DoSetWindowDimensions(vm->mDelayedResize.width,
+                                        vm->mDelayedResize.height);
+              vm->mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
+
+              // Paint later.
+              vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
+              didResize = PR_TRUE;
+            }
+          }
+
+          if (!didResize) {
             //NS_ASSERTION(IsViewVisible(view), "painting an invisible view");
 
             // Just notify our own view observer that we're about to paint
