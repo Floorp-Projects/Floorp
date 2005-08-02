@@ -1561,7 +1561,8 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
     break;
   }
 
-  return result;
+  // Make sure not to return a negative height here!
+  return PR_MAX(result, 0);
 }
 // Called by InitConstraints() to compute the containing block rectangle for
 // the element. Handles the special logic for absolutely positioned elements
