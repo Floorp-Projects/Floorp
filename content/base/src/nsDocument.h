@@ -564,6 +564,8 @@ public:
 
 protected:
 
+  void DispatchContentLoadedEvents();
+
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
   static PRBool TryChannelCharset(nsIChannel *aChannel,

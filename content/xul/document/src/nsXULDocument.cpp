@@ -3183,6 +3183,9 @@ nsXULDocument::ResumeWalk()
             nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
             observer->EndLoad(this);
         }
+
+        DispatchContentLoadedEvents();
+
         NS_ASSERTION(mPlaceHolderRequest, "Bug 119310, perhaps overlayinfo referenced a overlay that doesn't exist");
         if (mPlaceHolderRequest) {
             // Remove the placeholder channel; if we're the last channel in the
