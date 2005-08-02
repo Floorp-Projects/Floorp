@@ -82,6 +82,7 @@ NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 - (void)awakeFromNib
 {
   [mTabGroupCheckbox retain];   // so we can remove it
+  [self clearState];
 }
 
 - (void)dealloc
