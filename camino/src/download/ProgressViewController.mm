@@ -23,6 +23,7 @@
  *   Calum Robinson <calumr@mac.com>
  *   Simon Fraser <sfraser@netscape.com>
  *   Josh Aas <josha@mac.com>
+ *   Nick Kreeger <nick.kreeger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -101,24 +102,24 @@ enum {
   // check for seconds first
   if (seconds < 60) {
     if (seconds < 7)
-      return [NSString stringWithFormat:NSLocalizedString(@"UnderSec", @"Under %d seconds"), 5];
+      return [NSString stringWithFormat:NSLocalizedString(@"UnderSec", nil), 5];
     if (seconds < 13)
-      return [NSString stringWithFormat:NSLocalizedString(@"UnderSec", @"Under %d seconds"), 10];
-    return [NSString stringWithFormat:NSLocalizedString(@"UnderMin", @"Under a minute")];
+      return [NSString stringWithFormat:NSLocalizedString(@"UnderSec", nil), 10];
+    return [NSString stringWithFormat:NSLocalizedString(@"UnderMin", nil)];
   }    
   // seconds becomes minutes and we keep checking.  
   seconds = seconds/60;
   if (seconds < 60) {
     if (seconds < 2)
-      return [NSString stringWithFormat:NSLocalizedString(@"AboutMin",@"About a minute")];
+      return [NSString stringWithFormat:NSLocalizedString(@"AboutMin", nil)];
     // OK, tell the good people how much time we have left.
-    return [NSString stringWithFormat:NSLocalizedString(@"AboutMins",@"About %d minutes"), seconds];
+    return [NSString stringWithFormat:NSLocalizedString(@"AboutMins", nil), seconds];
   }
   //this download will never seemingly never end. now seconds become hours.
   seconds = seconds/60;
   if (seconds < 2)
-    return [NSString stringWithFormat:NSLocalizedString(@"AboutHour", @"Over an hour")];
-  return [NSString stringWithFormat:NSLocalizedString(@"AboutHours", @"Over %d hours"), seconds];
+    return [NSString stringWithFormat:NSLocalizedString(@"AboutHour", nil)];
+  return [NSString stringWithFormat:NSLocalizedString(@"AboutHours", nil), seconds];
 }
 
 +(NSString*)formatBytes:(float)bytes
@@ -209,7 +210,10 @@ enum {
 
 -(ProgressView*)view
 {
-  return (mDownloadDone ? mCompletedView : mProgressView);
+  if ([self isPaused] || mDownloadDone)
+    return mCompletedView;
+  else
+    return mProgressView;
 }
 
 -(IBAction)copySourceURL:(id)sender
@@ -250,6 +254,25 @@ enum {
     NSBeep();
   }
   return;
+}
+
+-(IBAction)pause:(id)sender
+{
+  if (!mUserCancelled && !mDownloadDone && mDownloader) 
+  {
+    mDownloader->PauseDownload();
+    [self refreshDownloadInfo];
+    [[self view] setSelected:YES]; // likes to unselect its self when switching progress views
+  }
+}
+
+-(IBAction)resume:(id)sender
+{
+  if (!mUserCancelled && !mDownloadDone && mDownloader) 
+  {
+    mDownloader->ResumeDownload();
+    [self refreshDownloadInfo];
+  }
 }
 
 -(IBAction)remove:(id)sender
@@ -317,13 +340,13 @@ enum {
     if (statusLabel) {
       NSString* statusString;
       if (mUserCancelled) {
-        statusString = NSLocalizedString(@"DownloadCancelled", @"Cancelled");
+        statusString = NSLocalizedString(@"DownloadCancelled", nil);
       }
       else if (mDownloadingError) {
-        statusString = NSLocalizedString(@"DownloadInterrupted", @"Interrupted");
+        statusString = NSLocalizedString(@"DownloadInterrupted", nil);
       }
       else {
-        statusString = [NSString stringWithFormat:NSLocalizedString(@"DownloadCompleted", @"Completed in %@ (%@)"),
+        statusString = [NSString stringWithFormat:NSLocalizedString(@"DownloadCompleted", nil),
           [[self class] formatTime:(int)mDownloadTime], [[self class] formatBytes:mDownloadSize]];
       }
       
@@ -331,13 +354,24 @@ enum {
         [statusLabel setStringValue:statusString];
     }
   }
+	
+  else if ([self isPaused]) { // update the status field
+    id statusLabel = [curView viewWithTag:kLabelTagStatus];
+    if (statusLabel) {
+      NSString* statusString = NSLocalizedString(@"DownloadPausedStatusString", nil);
+      [statusLabel setStringValue:[NSString stringWithFormat:statusString,
+        [[self class] formatBytes:mCurrentProgress],
+        (mDownloadSize > 0 ? [[self class] formatBytes:mDownloadSize] : @"?")]];
+    }
+  }
+	
   else {
     NSTimeInterval elapsedTime = -[mStartTime timeIntervalSinceNow];
     
     // update status field
     id statusLabel = [curView viewWithTag:kLabelTagStatus];
     if (statusLabel) {
-      NSString *statusLabelString = NSLocalizedString(@"DownloadStatusString", @"%@ of %@ (at %@/sec)");
+      NSString *statusLabelString = NSLocalizedString(@"DownloadStatusString", nil);
       float byteSec = mCurrentProgress / elapsedTime;
       [statusLabel setStringValue:[NSString stringWithFormat:statusLabelString, 
                    [[self class] formatBytes:mCurrentProgress],
@@ -352,7 +386,7 @@ enum {
         [timeLabel setStringValue:[[self class] formatFuzzyTime:secToGo]];
       }
       else { // mDownloadSize is undetermined.  Set remaining time to question marks.
-        [timeLabel setStringValue:NSLocalizedString(@"DownloadCalculatingString", @"Unknown")];
+        [timeLabel setStringValue:NSLocalizedString(@"DownloadCalculatingString", nil)];
       }
     }
   }
@@ -378,34 +412,52 @@ enum {
   return [[self view] isSelected];
 }
 
+-(BOOL)isPaused
+{
+  if (mDownloader)
+    return mDownloader->IsDownloadPaused();
+  
+  return NO;
+}
+
 -(NSMenu*)contextualMenu
 {
   NSMenu *menu = [[NSMenu alloc] init];
   NSMenuItem *revealItem;
   NSMenuItem *cancelItem;
   NSMenuItem *removeItem;
+  NSMenuItem *pauseResumeItem; // alternates pause and resume
   NSMenuItem *openItem;
   NSMenuItem *copySourceURLItem;
   
-  revealItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRevealCMLabel", @"Show in Finder")
+  revealItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRevealCMLabel", nil)
                                    action:@selector(reveal:) keyEquivalent:@""];
-  cancelItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCancelCMLabel", @"Cancel")
+  cancelItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCancelCMLabel", nil)
                                    action:@selector(cancel:) keyEquivalent:@""];
-  removeItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRemoveCMLabel", @"Remove")
+  if ([self isPaused]) {
+    pauseResumeItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlResumeCMLabel", nil) 
+                                                 action:@selector(resume:) keyEquivalent:@""];
+  }
+  else {
+    pauseResumeItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlPauseCMLabel", nil)
+                                                 action:@selector(pause:) keyEquivalent:@""];
+  }
+  removeItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRemoveCMLabel", nil)
                                    action:@selector(remove:) keyEquivalent:@""];
-  openItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlOpenCMLabel", @"Open")
+  openItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlOpenCMLabel", nil)
                                    action:@selector(open:) keyEquivalent:@""];
-  copySourceURLItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCopySourceURLCMLabel", @"Copy Source URL")
+  copySourceURLItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCopySourceURLCMLabel", nil)
                                    action:@selector(copySourceURL:) keyEquivalent:@""];
-  
   [revealItem setTarget:mProgressWindowController];
   [cancelItem setTarget:mProgressWindowController];
+  [pauseResumeItem setTarget:mProgressWindowController];
   [removeItem setTarget:mProgressWindowController];
   [openItem setTarget:mProgressWindowController];
   [copySourceURLItem setTarget:self];
   
   [menu addItem:revealItem];
   [menu addItem:cancelItem];
+  [menu addItem:pauseResumeItem];
   [menu addItem:removeItem];
   [menu addItem:openItem];
   [menu addItem:[NSMenuItem separatorItem]];
@@ -413,6 +465,7 @@ enum {
   
   [revealItem release];
   [cancelItem release];
+  [pauseResumeItem release];
   [removeItem release];
   [openItem release];
   [copySourceURLItem release];

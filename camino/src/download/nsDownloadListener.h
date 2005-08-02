@@ -48,6 +48,7 @@
 #include "nsIDownload.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
+#include "nsIRequest.h"
 #include "nsILocalFile.h"
 
 #include "nsIExternalHelperAppService.h"
@@ -77,11 +78,12 @@ public:
     virtual void CancelDownload();
     virtual void DownloadDone(nsresult aStatus);
     virtual void DetachDownloadDisplay();
+    virtual PRBool IsDownloadPaused();
     
 private:
 
     nsCOMPtr<nsICancelable>         mCancelable;        // Object to cancel the download
-
+    nsCOMPtr<nsIRequest>            mRequest;           // Request to hook on status change, allows pause/resume
     nsCOMPtr<nsIURI>                mURI;               // The URI of our source file. Null if we're saving a complete document.
     nsCOMPtr<nsIURI>                mDestination;       // Our destination URL.
     nsCOMPtr<nsILocalFile>          mDestinationFile;   // Our destination file.
@@ -92,5 +94,6 @@ private:
     PRPackedBool                    mGotFirstStateChange; // true after we've seen the first OnStateChange
     PRPackedBool                    mUserCanceled;        // true if the user canceled the download
     PRPackedBool                    mSentCancel;          // true when we've notified the backend of the cancel
+    PRPackedBool                    mDownloadPaused;      // true when download is paused
 };
 

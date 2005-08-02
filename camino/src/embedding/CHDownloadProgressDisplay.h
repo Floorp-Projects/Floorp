@@ -148,8 +148,8 @@ public:
     virtual void CancelDownload() = 0;
     virtual void DownloadDone(nsresult aStatus) = 0;
     virtual void DetachDownloadDisplay() = 0;   // tell downloader to forget about its display
-
     virtual void CreateDownloadDisplay();
+    virtual PRBool IsDownloadPaused() = 0;
     
 protected:
   

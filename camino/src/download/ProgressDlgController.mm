@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Calum Robinson <calumr@mac.com>
  *   Josh Aas <josha@mac.com>
+ *   Nick Kreeger <nick.kreeger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -95,7 +96,7 @@ static id gSharedProgressController = nil;
 
 -(void)awakeFromNib
 {
-  NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@"dlmanager"];
+  NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@"dlmanager1"]; // so pause/resume button will show
   [toolbar setDelegate:self];
   [toolbar setAllowsUserCustomization:YES];
   [toolbar setAutosavesConfiguration:YES];
@@ -117,9 +118,9 @@ static id gSharedProgressController = nil;
 -(IBAction)cancel:(id)sender
 {
   NSMutableArray* selected = [self getSelectedProgressViewControllers];
-  unsigned count = [selected count];
-  for (unsigned i = 0; i < count; i++) {
-    [[selected objectAtIndex:i] cancel:self];
+  unsigned int count = [selected count];
+  for (unsigned int i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] cancel:sender];
   }
 }
 
@@ -127,9 +128,9 @@ static id gSharedProgressController = nil;
 -(IBAction)reveal:(id)sender
 {
   NSMutableArray* selected = [self getSelectedProgressViewControllers];
-  unsigned count = [selected count];
-  for (unsigned i = 0; i < count; i++) {
-    [[selected objectAtIndex:i] reveal:self];
+  unsigned int count = [selected count];
+  for (unsigned int i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] reveal:sender];
   }
 }
 
@@ -137,9 +138,9 @@ static id gSharedProgressController = nil;
 -(IBAction)open:(id)sender
 {
   NSMutableArray* selected = [self getSelectedProgressViewControllers];
-  unsigned count = [selected count];
-  for (unsigned i = 0; i < count; i++) {
-    [[selected objectAtIndex:i] open:self];
+  unsigned int count = [selected count];
+  for (unsigned int i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] open:sender];
   }
 }
 
@@ -148,8 +149,8 @@ static id gSharedProgressController = nil;
 {
   // take care of selecting a download instance to replace the selection being removed
   NSMutableArray* selected = [self getSelectedProgressViewControllers];
-  unsigned selectedCount = [selected count];
-  unsigned indexOfLastSelection = [mProgressViewControllers indexOfObject:[selected objectAtIndex:(((int)selectedCount) - 1)]];
+  unsigned int selectedCount = [selected count];
+  unsigned int indexOfLastSelection = [mProgressViewControllers indexOfObject:[selected objectAtIndex:(((int)selectedCount) - 1)]];
   // if dl instance after last selection exists, select it or look for something else to select
   if ((indexOfLastSelection + 1) < [mProgressViewControllers count]) {
     [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:(indexOfLastSelection + 1)]) view] setSelected:YES];
@@ -166,11 +167,35 @@ static id gSharedProgressController = nil;
   mSelectionPivotIndex = -1; // nothing is selected any more so nothing to pivot on
   
   // now remove stuff
-  for (unsigned i = 0; i < selectedCount; i++) {
+  for (unsigned int i = 0; i < selectedCount; i++) {
     if (![[selected objectAtIndex:i] isActive]) {
       [self removeDownload:[selected objectAtIndex:i]];
     }
   }
+}
+
+-(IBAction)pause:(id)sender
+{
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned int count = [selected count];
+  for (unsigned int i = 0; i < count; i++) 
+  {
+    [[selected objectAtIndex:i] pause:sender];
+  }
+  
+  [self rebuildViews];
+}
+
+-(IBAction)resume:(id)sender
+{
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned int count = [selected count];
+  for (unsigned int i = 0; i < count; i++)
+  {
+    [[selected objectAtIndex:i] resume:sender];
+  }
+  
+  [self rebuildViews];
 }
 
 // remove all inactive instances
@@ -562,40 +587,66 @@ static id gSharedProgressController = nil;
 -(BOOL)shouldAllowCancelAction
 {
   NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
-  unsigned selectedCount = [selectedArray count];
+  unsigned int selectedCount = [selectedArray count];
   // if no selections are inactive or canceled then allow cancel
-  for (unsigned i = 0; i < selectedCount; i++) {
+  for (unsigned int i = 0; i < selectedCount; i++) {
     if ((![[selectedArray objectAtIndex:i] isActive]) || [[selectedArray objectAtIndex:i] isCanceled]) {
-      return FALSE;
+      return NO;
     }
   }
-  return TRUE;
+  return YES;
 }
 
 -(BOOL)shouldAllowRemoveAction
 {
   NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
-  unsigned selectedCount = [selectedArray count];
+  unsigned int selectedCount = [selectedArray count];
   // if no selections are active then allow remove
-  for (unsigned i = 0; i < selectedCount; i++) {
+  for (unsigned int i = 0; i < selectedCount; i++) {
     if ([[selectedArray objectAtIndex:i] isActive]) {
-      return FALSE;
+      return NO;
     }
   }
-  return TRUE;
+  return YES;
 }
 
 -(BOOL)shouldAllowOpenAction
 {
   NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
-  unsigned selectedCount = [selectedArray count];
+  unsigned int selectedCount = [selectedArray count];
   // if no selections are are active or canceled then allow open
-  for (unsigned i = 0; i < selectedCount; i++) {
+  for (unsigned int i = 0; i < selectedCount; i++) {
     if ([[selectedArray objectAtIndex:i] isActive] || [[selectedArray objectAtIndex:i] isCanceled]) {
-      return FALSE;
+      return NO;
     }
   }
-  return TRUE;
+  return YES;
+}
+
+- (BOOL)shouldAllowPauseAction
+{
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  unsigned int selectedCount = [selectedArray count];
+  // if no selections are paused, allow the pause
+  for (unsigned int i = 0; i < selectedCount; i++) {
+    if ([[selectedArray objectAtIndex:i] isPaused] || ![[selectedArray objectAtIndex:i] isActive]) {
+      return NO;
+    }
+  }
+  return YES;
+}
+
+-(BOOL)shouldAllowResumeAction
+{
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  unsigned int selectedCount = [selectedArray count];
+  // if no selections are paused, allow the pause
+  for (unsigned int i = 0; i < selectedCount; i++) {
+    if (![[selectedArray objectAtIndex:i] isPaused] || ![[selectedArray objectAtIndex:i] isActive]) {
+      return NO;
+    }
+  }
+  return YES;
 }
 
 -(BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
@@ -610,7 +661,37 @@ static id gSharedProgressController = nil;
   else if (action == @selector(open:)) {
     return [self shouldAllowOpenAction];
   }
+  else if (action == @selector(pause:)) {
+    return [self shouldAllowPauseAction];
+  }
+  else if (action == @selector(resume:)) {
+    return [self shouldAllowResumeAction];
+  }
   return YES;
+}
+
+
+- (BOOL)setPauseResumeToolbarItem:(NSToolbarItem*)theItem
+{
+  if ([self shouldAllowPauseAction]) {
+    [theItem setToolTip:NSLocalizedString(@"dlPauseButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+    [theItem setAction:@selector(pause:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_pause.tif"]];
+    return YES;
+  }
+  else if ([self shouldAllowResumeAction]) {
+    [theItem setToolTip:NSLocalizedString(@"dlResumeButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
+    [theItem setAction:@selector(resume:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_resume.tif"]];
+    return YES;
+  }
+  else {
+    return NO;
+  }
 }
 
 -(BOOL)validateToolbarItem:(NSToolbarItem *)theItem
@@ -647,7 +728,11 @@ static id gSharedProgressController = nil;
   else if (action == @selector(cancel:)) {
     return [self shouldAllowCancelAction];
   }
-  return TRUE;
+  else if (action == @selector(pause:) || action == @selector(resume:)) {
+    return [self setPauseResumeToolbarItem:theItem];
+  }
+  
+  return YES;
 }
 
 -(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
@@ -656,34 +741,42 @@ static id gSharedProgressController = nil;
   [theItem setTarget:self];
   [theItem setEnabled:NO];
   if ([itemIdentifier isEqualToString:@"removebutton"]) {
-    [theItem setToolTip:NSLocalizedString(@"dlRemoveButtonTooltip", @"Remove selected download(s)")];
-    [theItem setLabel:NSLocalizedString(@"dlRemoveButtonLabel", @"Remove")];
+    [theItem setToolTip:NSLocalizedString(@"dlRemoveButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlRemoveButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlRemoveButtonLabel", nil)];
     [theItem setAction:@selector(remove:)];
     [theItem setImage:[NSImage imageNamed:@"dl_remove.tif"]];
   }
   else if ([itemIdentifier isEqualToString:@"cancelbutton"]) {
-    [theItem setToolTip:NSLocalizedString(@"dlCancelButtonTooltip", @"Cancel selected download(s)")];
-    [theItem setLabel:NSLocalizedString(@"dlCancelButtonLabel", @"Cancel")];
+    [theItem setToolTip:NSLocalizedString(@"dlCancelButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlCancelButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlCancelButtonLabel", nil)];
     [theItem setAction:@selector(cancel:)];
     [theItem setImage:[NSImage imageNamed:@"dl_cancel.tif"]];
   }
   else if ([itemIdentifier isEqualToString:@"revealbutton"]) {
-    [theItem setToolTip:NSLocalizedString(@"dlRevealButtonTooltip", @"Show selected download(s) in Finder")];
-    [theItem setLabel:NSLocalizedString(@"dlRevealButtonLabel", @"Show")];
+    [theItem setToolTip:NSLocalizedString(@"dlRevealButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlRevealButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlRevealButtonLabel", nil)];
     [theItem setAction:@selector(reveal:)];
     [theItem setImage:[NSImage imageNamed:@"dl_reveal.tif"]];
   }
   else if ([itemIdentifier isEqualToString:@"openbutton"]) {
-    [theItem setToolTip:NSLocalizedString(@"dlOpenButtonTooltip", @"Open saved file(s)")];
-    [theItem setLabel:NSLocalizedString(@"dlOpenButtonLabel", @"Open")];
+    [theItem setToolTip:NSLocalizedString(@"dlOpenButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlOpenButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlOpenButtonLabel", nil)];
     [theItem setAction:@selector(open:)];
     [theItem setImage:[NSImage imageNamed:@"dl_open.tif"]];
   }
   else if ([itemIdentifier isEqualToString:@"cleanupbutton"]) {
-    [theItem setToolTip:NSLocalizedString(@"dlCleanUpButtonTooltip", @"Remove all inactive download(s)")];
-    [theItem setLabel:NSLocalizedString(@"dlCleanUpButtonLabel", @"Clean Up")];
+    [theItem setToolTip:NSLocalizedString(@"dlCleanUpButtonTooltip", nil)];
+    [theItem setLabel:NSLocalizedString(@"dlCleanUpButtonLabel", nil)];
+    [theItem setPaletteLabel:NSLocalizedString(@"dlCleanUpButtonLabel", nil)];
     [theItem setAction:@selector(cleanUpDownloads:)];
     [theItem setImage:[NSImage imageNamed:@"dl_clearall.tif"]];
+  }
+  else if ([itemIdentifier isEqualToString:@"pauseresumebutton"]) {
+    [self setPauseResumeToolbarItem:theItem];
   }
   else {
     return nil;
@@ -693,12 +786,12 @@ static id gSharedProgressController = nil;
 
 -(NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"removebutton", @"cleanupbutton", @"cancelbutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
+  return [NSArray arrayWithObjects:@"removebutton", @"cleanupbutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
 }
 
 -(NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
 {
-  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"openbutton", NSToolbarFlexibleSpaceItemIdentifier, @"revealbutton", nil];
+  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"pauseresumebutton", @"openbutton", NSToolbarFlexibleSpaceItemIdentifier, @"revealbutton", nil];
 }
 
 #pragma mark -

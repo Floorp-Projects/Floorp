@@ -3236,6 +3236,8 @@
 				0F5187C408858E620091F3FB,
 				0FB6D99B089B276100414498,
 				3FEBB43C089DA88C00BD8373,
+				3FEBB4E908A02F2900BD8373,
+				3FEBB4EA08A02F2900BD8373,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7088,6 +7090,8 @@
 				3FFE23540847CB0D00D6CAFC,
 				0FB6D99C089B276100414498,
 				3FEBB43D089DA88C00BD8373,
+				3FEBB4EB08A02F2900BD8373,
+				3FEBB4EC08A02F2900BD8373,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10509,6 +10513,46 @@
 			settings = {
 			};
 		};
+		3FEBB4E708A02F2900BD8373 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = dl_pause.tif;
+			path = resources/images/toolbar/dl_pause.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FEBB4E808A02F2900BD8373 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = dl_resume.tif;
+			path = resources/images/toolbar/dl_resume.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FEBB4E908A02F2900BD8373 = {
+			fileRef = 3FEBB4E708A02F2900BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB4EA08A02F2900BD8373 = {
+			fileRef = 3FEBB4E808A02F2900BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB4EB08A02F2900BD8373 = {
+			fileRef = 3FEBB4E708A02F2900BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FEBB4EC08A02F2900BD8373 = {
+			fileRef = 3FEBB4E808A02F2900BD8373;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3FECC78F05D1F68E0068E7ED = {
 			children = (
 				3F44AD8705BDFB9F00CB4B08,
@@ -13536,6 +13580,8 @@
 				3FC0FB8605A0D2F4002F47DE,
 				3FC0FB8705A0D2F4002F47DE,
 				0382B4D907303CCA00A0228A,
+				3FEBB4E708A02F2900BD8373,
+				3FEBB4E808A02F2900BD8373,
 				F5555C8202022F070164C72B,
 				F5555C8302022F070164C72B,
 				F5555C8402022F070164C72B,

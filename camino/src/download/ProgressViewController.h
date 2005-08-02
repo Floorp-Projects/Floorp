@@ -100,10 +100,13 @@ enum {
 -(IBAction)remove:(id)sender;
 -(IBAction)reveal:(id)sender;
 -(IBAction)open:(id)sender;
+-(IBAction)pause:(id)sender;
+-(IBAction)resume:(id)sender;
 
 -(BOOL)isActive;
 -(BOOL)isCanceled;
 -(BOOL)isSelected;
+-(BOOL)isPaused;
 
 -(NSMenu*)contextualMenu;
 

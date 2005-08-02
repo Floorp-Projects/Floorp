@@ -42,7 +42,6 @@
 #include "nsDownloadListener.h"
 
 #include "nsIWebProgress.h"
-#include "nsIRequest.h"
 #include "nsIFileURL.h"
 #include "netCore.h"
 #include "nsNetError.h"
@@ -54,6 +53,7 @@ nsDownloadListener::nsDownloadListener()
 , mGotFirstStateChange(PR_FALSE)
 , mUserCanceled(PR_FALSE)
 ,	mSentCancel(PR_FALSE)
+, mDownloadPaused(PR_FALSE)
 {
   mStartTime = LL_ZERO;
 }
@@ -198,6 +198,9 @@ nsDownloadListener::OnProgressChange64(nsIWebProgress *aWebProgress,
                                        PRInt64 aCurTotalProgress, 
                                        PRInt64 aMaxTotalProgress)
 {
+  if (!mRequest)
+    mRequest = aRequest; // for pause/resume downloading
+	
   [mDownloadDisplay setProgressTo:aCurTotalProgress ofMax:aMaxTotalProgress];
   return NS_OK;
 }
@@ -309,13 +312,21 @@ nsDownloadListener::InitDialog()
 void
 nsDownloadListener::PauseDownload()
 {
-  // write me
+  if (!mDownloadPaused && mRequest) 
+  {
+    mRequest->Suspend();
+    mDownloadPaused = PR_TRUE;
+  }
 }
 
 void
 nsDownloadListener::ResumeDownload()
 {
-  // write me
+  if (mDownloadPaused && mRequest)
+  {
+    mRequest->Resume();
+    mDownloadPaused = PR_FALSE;
+  }
 }
 
 void
@@ -369,6 +380,12 @@ void
 nsDownloadListener::DetachDownloadDisplay()
 {
   mDownloadDisplay = nil;
+}
+
+PRBool
+nsDownloadListener::IsDownloadPaused()
+{
+  return mDownloadPaused;
 }
 
 #pragma mark -

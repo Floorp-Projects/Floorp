@@ -96,6 +96,8 @@
 -(IBAction)reveal:(id)sender;
 -(IBAction)cleanUpDownloads:(id)sender;
 -(IBAction)open:(id)sender;
+-(IBAction)pause:(id)sender;
+-(IBAction)resume:(id)sender;
 
 -(int)numDownloadsInProgress;
 -(void)clearAllDownloads;
