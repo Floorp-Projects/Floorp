@@ -514,18 +514,45 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
 
 NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);
+
+    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+                 "Uh, inner window set as event target!");
+  }
+#endif
+
   mTarget = aTarget;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aCurrentTarget);
+
+    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+                 "Uh, inner window set as event target!");
+  }
+#endif
+
   mCurrentTarget = aCurrentTarget;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aOriginalTarget);
+
+    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+                 "Uh, inner window set as event target!");
+  }
+#endif
+
   mOriginalTarget = aOriginalTarget;
   return NS_OK;
 }
