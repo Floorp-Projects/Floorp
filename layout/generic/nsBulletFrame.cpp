@@ -1492,6 +1492,14 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     }
   }
 
+  // If we're getting our desired size and don't have an image, reset
+  // mIntrinsicSize to (0,0).  Otherwise, if we used to have an image, it
+  // changed, and the new one is coming in, but we're reflowing before it's
+  // fully there, we'll end up with mIntrinsicSize not matching our size, but
+  // won't trigger a reflow in OnStartContainer (because mIntrinsicSize will
+  // match the image size).
+  mIntrinsicSize.SizeTo(0, 0);
+
   const nsStyleFont* myFont = GetStyleFont();
   nsCOMPtr<nsIFontMetrics> fm = aCX->GetMetricsFor(myFont->mFont);
   nscoord bulletSize;
