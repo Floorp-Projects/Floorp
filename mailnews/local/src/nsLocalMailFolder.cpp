@@ -3788,7 +3788,7 @@ nsMsgLocalMailFolder::WarnIfLocalFileTooBig(nsIMsgWindow *aWindow, PRBool *aTooB
   *aTooBig = PR_FALSE;
   PRInt64 sizeOnDisk;
   nsCOMPtr <nsILocalFile> filePath;
-  rv = GetFilePath(getter_AddRefs(filePath));
+  nsresult rv = GetFilePath(getter_AddRefs(filePath));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = filePath->GetFileSize(&sizeOnDisk);
   if (NS_SUCCEEDED(rv))

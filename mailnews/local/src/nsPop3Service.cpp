@@ -123,7 +123,7 @@ nsresult nsPop3Service::GetMail(PRBool downloadNewMail,
   
   server = do_QueryInterface(aPopServer);
   
-  nsCOMPtr <nsILocalMailFolder> destLocalFolder = do_QueryInterface(aInbox);
+  nsCOMPtr <nsIMsgLocalMailFolder> destLocalFolder = do_QueryInterface(aInbox);
   if (destLocalFolder)
   {
     PRBool destFolderTooBig;
@@ -135,7 +135,7 @@ nsresult nsPop3Service::GetMail(PRBool downloadNewMail,
   if (!server) 
     return NS_MSG_INVALID_OR_MISSING_SERVER;
   
-  rv = server->GetHostName(getter_Copies(popHost));
+  nsresult rv = server->GetHostName(getter_Copies(popHost));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!((const char *)popHost)) 
     return NS_MSG_INVALID_OR_MISSING_SERVER;

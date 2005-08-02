@@ -2060,7 +2060,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
     return NS_MSG_NOT_A_MAIL_FOLDER;
   }
   
-  nsCOMPtr <nsILocalMailFolder> destLocalFolder = do_QueryInterface(destIFolder);
+  nsCOMPtr <nsIMsgLocalMailFolder> destLocalFolder = do_QueryInterface(destIFolder);
   if (destLocalFolder)
   {
     PRBool destFolderTooBig;
