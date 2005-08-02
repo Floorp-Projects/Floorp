@@ -762,9 +762,6 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
 NS_IMETHODIMP
 nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
                             nscoord aX,
-#ifdef IBMBIDI
-                            PRBool aCouldBeReordered,
-#endif // IBMBIDI
                             nsIFrame** aFrameFound,
                             PRBool* aXIsBeforeFirstFrame,
                             PRBool* aXIsAfterLastFrame)
@@ -789,180 +786,53 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   if (line->mBounds.width == 0)
     return NS_ERROR_FAILURE;
 
-  nsIFrame *stoppingFrame = nsnull;
-
-  if (aX < line->mBounds.x) {
-    nsIFrame* frame;
-    if (mRightToLeft) {
-      frame = line->LastChild();
-    }
-    else {
-      frame = line->mFirstChild;
-    }
-    if (frame->GetRect().width > 0)
-    {
-      *aFrameFound = frame;
-      *aXIsBeforeFirstFrame = PR_TRUE;
-      *aXIsAfterLastFrame = PR_FALSE;
-      return NS_OK;
-    }
-    else if (mRightToLeft)
-      stoppingFrame = frame;
-    else
-      stoppingFrame = line->LastChild();
-  }
-  else if (aX >= line->mBounds.XMost()) {
-    nsIFrame* frame;
-    if (mRightToLeft) {
-      frame = line->mFirstChild;
-    }
-    else {
-      frame = line->LastChild();
-    }
-    if (frame->GetRect().width > 0)
-    {
-      *aFrameFound = frame;
-      *aXIsBeforeFirstFrame = PR_FALSE;
-      *aXIsAfterLastFrame = PR_TRUE;
-      return NS_OK;
-    }
-    else if (mRightToLeft)
-      stoppingFrame = line->mFirstChild;
-    else
-      stoppingFrame = frame;
-  }
-
-  // Find the frame closest to the X coordinate. Gaps can occur
-  // between frames (because of margins) so we split the gap in two
-  // when checking.
-  *aXIsBeforeFirstFrame = PR_FALSE;
-  *aXIsAfterLastFrame = PR_FALSE;
-#ifdef IBMBIDI
-  PRBool isReordered = PR_FALSE;
-  nsIFrame *firstVisual, *lastVisual;
-  if (aCouldBeReordered)
-    CheckLineOrder(aLineNumber, &isReordered, &firstVisual, &lastVisual);
-#endif
   nsIFrame* frame = line->mFirstChild;
-#ifdef IBMBIDI
-  if (isReordered)
-    frame = firstVisual;
-#endif // IBMBIDI
+  nsIFrame* closestFromLeft = nsnull;
+  nsIFrame* closestFromRight = nsnull;
   PRInt32 n = line->GetChildCount();
-  if (mRightToLeft) {
-    while (--n >= 0) {
-      nsIFrame* nextFrame;
-#ifdef IBMBIDI
-      if (!frame)
-        break;
-      if (isReordered) {
-        nscoord maxX, limX;
-        PRInt32 testLine;
-        nsIFrame* tempFrame;
-
-        maxX = -0x7fffffff;
-
-        limX = frame->GetRect().x;
-        tempFrame = line->mFirstChild;
-        nextFrame = nsnull;
-
-        while (tempFrame) {
-          if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
-              && testLine == aLineNumber) {
-            nsRect tempRect = tempFrame->GetRect();
-            if (tempRect.x > maxX && tempRect.x < limX) { // we are looking for the highest value less than the current one
-              maxX = tempRect.x;
-              nextFrame = tempFrame;
-            }
-          }
-          tempFrame = tempFrame->GetNextSibling();
-        }
-      }
-      else
-#endif // IBMBIDI
-        nextFrame = frame->GetNextSibling();
-
-      nsRect r1 = frame->GetRect();
-      if (r1.width && aX > r1.x) {
+  while (n--) {
+    nsRect rect = frame->GetRect();
+    if (rect.width > 0) {
+      // If aX is inside this frame - this is it
+      if (rect.x <= aX && rect.XMost() > aX) {
+        closestFromLeft = closestFromRight = frame;
         break;
       }
-      if (nextFrame) {
-        nsRect r2 = nextFrame->GetRect();
-        if (r2.width && aX > r2.XMost()) {
-          nscoord rightEdge = r2.XMost();
-          nscoord delta = r1.x - rightEdge;
-          if (!r1.width || aX < rightEdge + delta/2) {
-            frame = nextFrame;
-          }
-          break;
-        }
+      if (rect.x < aX) {
+        if (!closestFromLeft || 
+            rect.XMost() > closestFromLeft->GetRect().XMost())
+          closestFromLeft = frame;
       }
       else {
-        *aXIsBeforeFirstFrame = PR_TRUE;
+        if (!closestFromRight ||
+            rect.x < closestFromRight->GetRect().x)
+          closestFromRight = frame;
       }
-      frame = nextFrame;
-      if (nextFrame == stoppingFrame)
-        break;
     }
+    frame = frame->GetNextSibling();
   }
-  else {
-    while (--n >= 0) {
-      nsIFrame* nextFrame;
-#ifdef IBMBIDI
-      if (!frame)
-        break;
-      if (isReordered) {
-        nsIFrame* tempFrame;
-        nscoord minX, limX;
-        PRInt32 testLine;
-
-        minX = 0x7fffffff;
-
-        limX = frame->GetRect().x;
-        tempFrame = line->mFirstChild;
-        nextFrame = nsnull;
-
-        while (tempFrame) {
-          if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
-              && testLine == aLineNumber) {
-            nsRect tempRect = tempFrame->GetRect();
-            if (tempRect.width && tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
-              minX = tempRect.x;
-              nextFrame = tempFrame;
-            }
-          }
-          tempFrame = tempFrame->GetNextSibling();
-        }
-      }
-      else
-#endif // IBMBIDI
-      nextFrame = frame->GetNextSibling();
-
-      nsRect r1 = frame->GetRect();
-      if (r1.width && aX < r1.XMost()) {
-        break;
-      }
-      if (nextFrame) {
-        nsRect r2 = nextFrame->GetRect();
-        if (r2.width && aX < r2.x) {
-          nscoord rightEdge = r1.XMost();
-          nscoord delta = r2.x - rightEdge;
-          if (!r1.width || aX >= rightEdge + delta/2) {
-            frame = nextFrame;
-          }
-          break;
-        }
-      }
-      else {
-        *aXIsAfterLastFrame = PR_TRUE;
-      }
-      frame = nextFrame;
-      if (nextFrame == stoppingFrame)
-        break;
-    }
+  if (!closestFromLeft && !closestFromRight) {
+    // All frames were zero-width. Just take the first one.
+    closestFromLeft = closestFromRight = line->mFirstChild;
   }
-
-  *aFrameFound = frame;
+  *aXIsBeforeFirstFrame = mRightToLeft ? !closestFromRight : !closestFromLeft;
+  *aXIsAfterLastFrame = mRightToLeft ? !closestFromLeft : !closestFromRight;
+  if (closestFromLeft == closestFromRight) {
+    *aFrameFound = closestFromLeft;
+  }
+  else if (!closestFromLeft) {
+    *aFrameFound = closestFromRight;
+  }
+  else if (!closestFromRight) {
+    *aFrameFound = closestFromLeft;
+  }
+  else { // we're between two frames
+    nscoord delta = closestFromRight->GetRect().x - closestFromLeft->GetRect().XMost();
+    if (aX < closestFromLeft->GetRect().XMost() + delta/2)
+      *aFrameFound = closestFromLeft;
+    else
+      *aFrameFound = closestFromRight;
+  }
   return NS_OK;
 }
 

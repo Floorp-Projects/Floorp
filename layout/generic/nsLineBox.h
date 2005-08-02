@@ -1488,9 +1488,6 @@ public:
                         PRInt32* aLineNumberResult);
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
-#ifdef IBMBIDI
-                         PRBool aCouldBeReordered,
-#endif
                          nsIFrame** aFrameFound,
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame);

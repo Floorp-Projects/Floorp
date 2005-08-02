@@ -118,10 +118,6 @@ public:
   // appropriately.
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
-#ifdef IBMBIDI
-                         //This parameter determines whether to traverse the frames in logical or visual order
-                         PRBool aCouldBeReordered,
-#endif
                          nsIFrame** aFrameFound,
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame) = 0;
