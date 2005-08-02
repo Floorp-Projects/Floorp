@@ -40,7 +40,6 @@
 <!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
 
 <?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/messageKeywords.css" type="text/css"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
