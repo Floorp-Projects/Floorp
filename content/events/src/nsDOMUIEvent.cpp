@@ -113,6 +113,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 nsPoint nsDOMUIEvent::GetScreenPoint() {
   if (!mEvent || 
+       // XXXldb Why not NS_MOUSE_SCROLL_EVENT?
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         !NS_IS_DRAG_EVENT(mEvent))) {
@@ -131,6 +132,7 @@ nsPoint nsDOMUIEvent::GetScreenPoint() {
 
 nsPoint nsDOMUIEvent::GetClientPoint() {
   if (!mEvent || 
+       // XXXldb Why not NS_MOUSE_SCROLL_EVENT?
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         !NS_IS_DRAG_EVENT(mEvent)) ||

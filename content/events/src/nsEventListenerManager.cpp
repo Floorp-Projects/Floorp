@@ -1023,6 +1023,10 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
     *aArrayType = eEventArrayType_Composition;
     *aFlags = NS_EVENT_BITS_COMPOSITION_END;
   }
+  else if (aType == nsLayoutAtoms::ontext) {
+    *aArrayType = eEventArrayType_Text;
+    *aFlags = NS_EVENT_BITS_TEXT_TEXT;
+  }
   else if (aType == nsLayoutAtoms::onpageshow) {
     *aArrayType = eEventArrayType_PageTransition;
     *aFlags = NS_EVENT_BITS_PAGETRANSITION_SHOW;
@@ -1731,9 +1735,10 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
                                     NS_STATIC_CAST(nsKeyEvent*,aEvent));
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
+    case NS_POPUP_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
                                  NS_STATIC_CAST(nsInputEvent*,aEvent));
-    case NS_POPUP_EVENT:
+    case NS_POPUPBLOCKED_EVENT:
       return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
                                         NS_STATIC_CAST(nsPopupBlockedEvent*,
                                                        aEvent));
@@ -1759,9 +1764,10 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
 
   if (aEventType.LowerCaseEqualsLiteral("mouseevent") ||
       aEventType.LowerCaseEqualsLiteral("mouseevents") ||
-      aEventType.LowerCaseEqualsLiteral("mousescrollevents"))
+      aEventType.LowerCaseEqualsLiteral("mousescrollevents") ||
+      aEventType.LowerCaseEqualsLiteral("popupevents"))
     return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
-                               NS_STATIC_CAST(nsMouseEvent*,aEvent));
+                               NS_STATIC_CAST(nsInputEvent*,aEvent));
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
     return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
