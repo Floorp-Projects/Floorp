@@ -208,7 +208,18 @@ nsMathMLmstyleFrame::AttributeChanged(nsIContent*     aContent,
                                       nsIAtom*        aAttribute,
                                       PRInt32         aModType)
 {
-  // These attributes can affect too many things, ask our parent to re-layout
+  if (aAttribute == nsMathMLAtoms::mathcolor_      ||
+      aAttribute == nsMathMLAtoms::color_          ||
+      aAttribute == nsMathMLAtoms::mathsize_       ||
+      aAttribute == nsMathMLAtoms::fontsize_       ||
+      aAttribute == nsMathMLAtoms::fontfamily_     ||
+      aAttribute == nsMathMLAtoms::mathbackground_ ||
+      aAttribute == nsMathMLAtoms::background_) {
+    MapAttributesIntoCSS(GetPresContext(), this);
+    return ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
+  }
+
+  // Other attributes can affect too many things, ask our parent to re-layout
   // its children so that we can pick up changes in our attributes & transmit
   // them in our subtree. However, our siblings will be re-laid too. We used
   // to have a more speedier but more verbose alternative that didn't re-layout
