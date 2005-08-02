@@ -48,20 +48,20 @@
 
 @interface AutoCompleteTextField : NSTextField
 {
-  IBOutlet PageProxyIcon *mProxyIcon;
-  NSWindow *mPopupWin;
-  NSTableView *mTableView;
+  IBOutlet PageProxyIcon*   mProxyIcon;
+  NSWindow*                 mPopupWin;
+  NSTableView*              mTableView;
   
-  NSImageView* mLock;                 // STRONG, lock that shows when a page is secure, hidden otherwise
-  NSColor* mSecureBackgroundColor;    // STRONG, yellow color for bg when on a secure page, cached for perf
+  NSImageView*              mLock;                  // STRONG, lock that shows when a page is secure, hidden otherwise
+  NSColor*                  mSecureBackgroundColor; // STRONG, yellow color for bg when on a secure page, cached for perf
   
-  AutoCompleteDataSource *mDataSource;
+  AutoCompleteDataSource*   mDataSource;
+  NSString*                 mSearchString;
+  NSTimer*                  mOpenTimer;
 
-  nsIAutoCompleteSession *mSession;
-  nsIAutoCompleteResults *mResults;
-  nsIAutoCompleteListener *mListener;
-
-  NSString *mSearchString;
+  nsIAutoCompleteSession*   mSession;   // owned
+  nsIAutoCompleteResults*   mResults;   // owned
+  nsIAutoCompleteListener*  mListener;  // owned
   
   // used to remember if backspace was pressed in complete: so we can check this in controlTextDidChange
   BOOL mBackspaced;
@@ -70,8 +70,6 @@
   // should the autocomplete fill in the default completion into the text field? The default
   // is no, but this can be set with a user default pref.
   BOOL mCompleteWhileTyping;
-  
-  NSTimer *mOpenTimer;
 }
 
 - (void) setSession:(NSString *)aSession;

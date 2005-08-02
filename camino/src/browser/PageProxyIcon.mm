@@ -92,7 +92,13 @@
 {
   NSString*		urlString = nil;
   NSString*		titleString = nil;
-  [[[[self window] windowController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];
+  
+  id parentWindowController = [[self window] windowController];
+  if ([parentWindowController isKindOfClass:[BrowserWindowController class]])
+    [[(BrowserWindowController*)parentWindowController getBrowserWrapper] getTitle:&titleString andHref:&urlString];
+
+  if (!urlString)
+    return;
 
   NSString     *cleanedTitle = [titleString stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 

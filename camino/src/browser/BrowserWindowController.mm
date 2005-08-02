@@ -1465,23 +1465,26 @@ enum BWCOpenDest {
 
 - (void)beginLocationSheet
 {
-    [NSApp beginSheet:  mLocationSheetWindow
-       modalForWindow:  [self window]
-        modalDelegate:  nil
-       didEndSelector:  nil
-          contextInfo:  nil];
+  [mLocationSheetURLField setStringValue:[mURLBar stringValue]];
+  [mLocationSheetURLField selectText:nil];
+
+  [NSApp beginSheet:  mLocationSheetWindow
+     modalForWindow:  [self window]
+      modalDelegate:  nil
+     didEndSelector:  nil
+        contextInfo:  nil];
 }
 
 - (IBAction)endLocationSheet:(id)sender
 {
-  [mLocationSheetWindow orderOut:self];
+  [mLocationSheetWindow close];   // assumes it's not released on close
   [NSApp endSheet:mLocationSheetWindow returnCode:1];
   [self loadURL:[mLocationSheetURLField stringValue] referrer:nil activate:YES allowPopups:NO];
 }
 
 - (IBAction)cancelLocationSheet:(id)sender
 {
-  [mLocationSheetWindow orderOut:self];
+  [mLocationSheetWindow close];   // assumes it's not released on close
   [NSApp endSheet:mLocationSheetWindow returnCode:0];
 }
 

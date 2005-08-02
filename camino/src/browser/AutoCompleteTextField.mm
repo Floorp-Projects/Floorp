@@ -202,13 +202,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   NSScrollView *scrollView;
   NSCell *dataCell;
   
-  mSearchString = nil;
-  mBackspaced = NO;
-  mCompleteResult = NO;
-  mOpenTimer = nil;
-  
-  mSession = nsnull;
-  mResults = nsnull;
   mListener = (nsIAutoCompleteListener *)new AutoCompleteListener(self);
   NS_IF_ADDREF(mListener);
 
@@ -291,9 +284,10 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
                                                name:NSUndoManagerDidUndoChangeNotification
                                              object:[[self fieldEditor] undoManager]];
 
+  // register for embedding shutting down, to clean up history stuff
   [[NSNotificationCenter defaultCenter] addObserver:  self
                                         selector:     @selector(shutdown:)
-                                        name:         XPCOMShutDownNotificationName
+                                        name:         TermEmbeddingNotificationName
                                         object:       nil];
   
   // read the user default on if we should auto-complete the text field as the user
@@ -374,6 +368,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   return [[self window] fieldEditor:NO forObject:self];
 }
+
+#pragma mark -
+
 // searching ////////////////////////////
 
 - (void) startSearch:(NSString*)aString complete:(BOOL)aComplete
@@ -394,6 +391,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
       [mOpenTimer release];
     }
     
+    // note that we've created a circular reference here
     mOpenTimer = [[NSTimer scheduledTimerWithTimeInterval:0.2 target:self selector:@selector(searchTimer:)
                           userInfo:nil repeats:NO] retain];
   }
@@ -459,6 +457,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self closePopup];
 }
 
+#pragma mark -
+
 // handling the popup /////////////////////////////////
 
 - (void) openPopup
@@ -475,32 +475,30 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) resizePopup
 {
-  NSRect locationFrame, winFrame;
-  NSPoint locationOrigin;
-  int tableHeight;
-  
   if ([self visibleRows] == 0) {
     [self closePopup];
     return;
   }
 
   // get the origin of the location bar in coordinates of the root view
-  locationFrame = [[self superview] frame];
-  locationOrigin = [[[self superview] superview] convertPoint:locationFrame.origin
-                                                       toView:[[[self window] contentView] superview]];
+  NSRect locationFrame = [self bounds];
+  NSPoint locationOrigin = locationFrame.origin;
+  locationOrigin.y += NSHeight(locationFrame);    // we want bottom left
+  locationOrigin = [self convertPoint:locationOrigin toView:nil];
 
   // get the height of the table view
-  winFrame = [[self window] frame];
-  tableHeight = (int)([mTableView rowHeight]+[mTableView intercellSpacing].height)*[self visibleRows];
+  NSRect winFrame = [[self window] frame];
+  int tableHeight = (int)([mTableView rowHeight] + [mTableView intercellSpacing].height) * [self visibleRows];
 
   // make the columns split the width of the popup
-  [[mTableView tableColumnWithIdentifier:@"col1"] setWidth:locationFrame.size.width/2];
+  [[mTableView tableColumnWithIdentifier:@"col1"] setWidth:(locationFrame.size.width / 2.0f)];
   
-  // position the popup anchored to bottom/left of location bar (
-  [mPopupWin setFrame:NSMakeRect(winFrame.origin.x + locationOrigin.x + kFrameMargin,
+  // position the popup anchored to bottom/left of location bar
+  NSRect popupFrame = NSMakeRect(winFrame.origin.x + locationOrigin.x + kFrameMargin,
                                  ((winFrame.origin.y + locationOrigin.y) - tableHeight) - kFrameMargin,
-                                 locationFrame.size.width - (2*kFrameMargin),
-                                 tableHeight) display:NO];
+                                 locationFrame.size.width - (2 * kFrameMargin),
+                                 tableHeight);
+  [mPopupWin setFrame:popupFrame display:NO];
 }
 
 - (void) closePopup
@@ -525,6 +523,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   return ( mSearchString != nil );
 }
+
+#pragma mark -
 
 // url completion ////////////////////////////
 
@@ -601,15 +601,22 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) revertText
 {
-  BrowserWindowController *controller = (BrowserWindowController *)[[self window] windowController];
-  NSString *url = [[controller getBrowserWrapper] getCurrentURI];
-  if (url) {
-    [self clearResults];
-    NSTextView *fieldEditor = [self fieldEditor];
-    [[fieldEditor undoManager] removeAllActionsWithTarget:self];
-    [fieldEditor setString:url];
-    [fieldEditor selectAll:self];
+  id parentWindowController = [[self window] windowController];
+  NSString* url = nil;
+  if ([parentWindowController isKindOfClass:[BrowserWindowController class]])
+  {
+    BrowserWindowController *controller = (BrowserWindowController*)parentWindowController;
+    url = [[controller getBrowserWrapper] getCurrentURI];
   }
+
+  if (!url)
+    url = @"";
+
+  [self clearResults];
+  NSTextView *fieldEditor = [self fieldEditor];
+  [[fieldEditor undoManager] removeAllActionsWithTarget:self];
+  [fieldEditor setString:url];
+  [fieldEditor selectAll:self];
 }
 
 //
@@ -716,6 +723,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [fieldEditor setSelectedRange:range];
 }
 
+#pragma mark -
+
 // selecting rows /////////////////////////////////////////
 
 - (void) selectRowAt:(int)aRow
@@ -763,6 +772,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self selectRowAt:row];
 }
 
+#pragma mark -
+
 // event handlers ////////////////////////////////////////////
 
 - (void) onRowClicked:(NSNotification *)aNote
@@ -790,6 +801,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [mTableView deselectAll:self];
   [self clearResults];
 }
+
+#pragma mark -
 
 // Drag & Drop Methods ///////////////////////////////////////
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
@@ -827,6 +840,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 {
   [self selectText:self];
 }
+
+#pragma mark -
 
 // NSTextField delegate //////////////////////////////////
 - (void)controlTextDidChange:(NSNotification *)aNote
@@ -921,6 +936,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
   
   return NO;
+}
+
+#pragma mark -
+
+// NSWindow delegate methods. We're only the window's delegate when we're inside
+// the open location sheet.
+
+- (void)windowWillClose:(NSNotification *)aNotification
+{
+  // make sure we hide the autocomplete popup when the Location sheet is dismissed
+  [self clearResults];
 }
 
 @end
