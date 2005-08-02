@@ -3490,7 +3490,11 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
       }
     }
 #endif //OS2TODO
-    NS_RELEASE(event.widget);
+
+    // Release the widget with NS_IF_RELEASE() just in case
+    // the context menu key code in nsEventListenerManager::HandleEvent()
+    // released it already.
+    NS_IF_RELEASE(event.widget);
     return result;
   }
 
