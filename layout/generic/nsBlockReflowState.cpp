@@ -486,6 +486,14 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
 
   // Recover mKidXMost and mMaxElementWidth
   nscoord xmost = aLine->mBounds.XMost();
+  // If we're shrink-wrapping, then include the right margin in the xmost
+  // so that shrink-wrapping includes it.
+  if (GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsBlock()) {
+    nsHTMLReflowState blockHtmlRS(mPresContext, mReflowState, aLine->mFirstChild,
+                                  nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+                                  mReflowState.reason, PR_TRUE);
+    xmost += blockHtmlRS.mComputedMargin.right;
+  }
   if (xmost > mKidXMost) {
 #ifdef DEBUG
     if (CRAZY_WIDTH(xmost)) {
