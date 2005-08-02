@@ -1375,7 +1375,8 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     PRBool isOpen = PR_FALSE;
     mCurrentMenu->MenuIsOpen(isOpen);
     mCurrentMenu->SelectMenu(PR_FALSE);
-    if (isOpen) {
+    // XXX bug 294183 sometimes mCurrentMenu gets cleared
+    if (mCurrentMenu && isOpen) {
       // Don't close up immediately.
       // Kick off a close timer.
       KillCloseTimer(); // Ensure we don't have another stray waiting closure.
