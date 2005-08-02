@@ -388,3 +388,9 @@ pref("browser.display.screen_resolution", 96);
 
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
+
+pref("browser.feedview.articleLength", 50);
+pref("browser.feedview.showBar", true);
+pref("browser.feedview.showImage", true);
+pref("browser.feedview.timerInterval", 0);
+pref("browser.feedview.externalCSS", "");

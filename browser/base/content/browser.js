@@ -872,6 +872,9 @@ function delayedStartup()
     document.getElementById("textfieldDirection-separator").hidden = false;
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
+
+  // Prepare to load feedview for feed files.
+  initFeedview();
 }
 
 function BrowserShutdown()
