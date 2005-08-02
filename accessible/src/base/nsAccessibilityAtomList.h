@@ -55,6 +55,9 @@
  ******/
 
 
+  // Header info
+ACCESSIBILITY_ATOM(headerContentLanguage, "content-language")
+
   // Alphabetical list of frame types
 ACCESSIBILITY_ATOM(blockFrame, "BlockFrame")
 ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
