@@ -118,30 +118,36 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
 
   //
   // 2) Get @at
-  nsCOMPtr<nsIDOMXPathResult> at;
-  nsCOMPtr<nsIModelElementPrivate> modelTemp;
-  rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                          0,
-                                          NS_LITERAL_STRING("at"),
-                                          EmptyString(),
-                                          nsIDOMXPathResult::NUMBER_TYPE,
-                                          getter_AddRefs(modelTemp),
-                                          getter_AddRefs(at));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString atExpr;
+  mElement->GetAttribute(NS_LITERAL_STRING("at"), atExpr);
+  if (atExpr.IsEmpty())
+    return NS_OK;
+
+  // Context node is first node in nodeset
+  nsCOMPtr<nsIDOMNode> contextNode;
+  nodeset->SnapshotItem(0, getter_AddRefs(contextNode));
+
+  nsCOMPtr<nsIDOMXPathResult> at =
+    nsXFormsUtils::EvaluateXPath(atExpr, contextNode, mElement,
+                                 nsIDOMXPathResult::NUMBER_TYPE, 1, setSize);
+
+  if (!at)
+    return NS_OK;
 
   PRUint32 atInt = 0;
-  if (at) {
-    double atDoub;
-    rv = at->GetNumberValue(&atDoub);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (atDoub < 1) {
-      atInt = 1;
-    } else {
-      atInt = (PRInt32) floor(atDoub + 0.5);
-    }
+  double atDoub;
+  rv = at->GetNumberValue(&atDoub);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /// XXX we need to check for NaN, and select last row. but isnan() is not
+  /// portable :(
+  if (atDoub < 1) {
+    atInt = 1;
+  } else {
+    atInt = (PRInt32) floor(atDoub + 0.5);
+    if (atInt > setSize)
+      atInt = setSize;
   }
-  if (!atInt || atInt > setSize)
-    atInt = setSize;
   
 
   //
