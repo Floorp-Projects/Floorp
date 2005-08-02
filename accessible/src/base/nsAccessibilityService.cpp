@@ -507,9 +507,17 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::a) {
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell, NS_STATIC_CAST(nsIFrame*, aFrame));
   }
+  else if (tag == nsAccessibilityAtoms::li) {
+    // Normally this is created by the list item frame which knows about the bullet frame
+    // However, in this case the list item must have been styled using display: foo
+    *aAccessible = new nsHTMLLIAccessible(aNode, aWeakShell, nsnull, EmptyString());
+  }
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
+           tag == nsAccessibilityAtoms::dd ||
+           tag == nsAccessibilityAtoms::dl ||
+           tag == nsAccessibilityAtoms::dt ||
            tag == nsAccessibilityAtoms::form ||
            tag == nsAccessibilityAtoms::h1 ||
            tag == nsAccessibilityAtoms::h2 ||
