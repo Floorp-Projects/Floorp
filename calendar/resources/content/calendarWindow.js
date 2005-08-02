@@ -726,22 +726,21 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
 
 CalendarView.prototype.setEventboxClass = function calView_setEventboxClass(aEventBox, aEvent, aViewType)
 {
-   // XXX this isn't really const, of course; need to get it from prefs
-   const containerName = "default";
-
    // set the event box to be of class <aViewType>-event-class
    // and the appropriate calendar-color class
    var categoriesClassList = "";
-   if( aEvent.categories != null ) {
-      var categoriesList = aEvent.categories.split(",");
+   if( aEvent.getProperty("CATEGORIES") != null ) {
+      var categoriesList = aEvent.getProperty("CATEGORIES").split(",");
       for ( var i=0; i<categoriesList.length; ++i ) {
          // Remove illegal chars.
-         categoriesList[i].replace( /[ -_.*?"']/g, "" );
+         categoriesList[i] = categoriesList[i].replace(' ','_');
 
-         categoriesClassList = categoriesClassList + "event-category-" + categoriesList[i].toLowerCase();
+         categoriesClassList = categoriesClassList + categoriesList[i].toLowerCase();
       }
    }
-   aEventBox.setAttribute("class", aViewType + "-event-class " + containerName + " " + categoriesClassList);
+   aEventBox.setAttribute("class", aViewType + "-event-class ");
+   aEventBox.setAttribute("item-calendar", aEvent.calendar.uri.spec);
+   aEventBox.setAttribute("item-category", categoriesClassList);
 }
 
 /** PRIVATE

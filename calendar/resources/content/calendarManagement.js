@@ -82,6 +82,7 @@ var calCalendarManagerObserver = {
                 var colorCell = item.childNodes[1];
                 colorCell.style.background = aValue;
             }
+            updateStyleSheetForObject(aCalendar);
         } else if (aName == 'name') {
             if (item) {
                 var nameCell = item.childNodes[2];
@@ -92,6 +93,8 @@ var calCalendarManagerObserver = {
 
     onCalendarPrefDeleting: function(aCalendar, aName) {
         setCalendarManagerUI();
+        if (aName == 'color')
+            updateStyleSheetForObject(aCalendar);
     }
 };
 
@@ -222,6 +225,14 @@ function initCalendarManager()
     calMgr.addObserver(calCalendarManagerObserver);
     composite.addObserver(calCompositeCalendarObserver, 0);
     setCalendarManagerUI();
+    initColors();
+}
+
+function finishCalendarManager() {
+    // Remove the category color pref observer
+    var pbi = prefService.getBranch("");
+    pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
 }
 
 function getDefaultCalendar()
@@ -241,4 +252,99 @@ function getDefaultCalendar()
 function reloadCalendars()
 {
     getDisplayComposite().refresh();
+}
+
+function getCalendarStyleSheet() {
+    var calStyleSheet = null;
+    for (var i = 0; i < document.styleSheets.length; i++) {
+        if (document.styleSheets[i].href.match(
+                /chrome.*\/skin.*\/calendar.css$/ )) {
+        calStyleSheet = document.styleSheets[i];
+        break;
+        }
+    }
+    return calStyleSheet;
+}
+
+function initColors() {
+    var calendars = getCalendarManager().getCalendars({});
+    for (var j in calendars) 
+        updateStyleSheetForObject(calendars[j]);
+
+    var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
+    var prefArray = categoryPrefBranch.getChildList("", {});
+    for (var i = 0; i < prefArray.length; i++) 
+        updateStyleSheetForObject(prefArray[i]);
+   
+    // Setup css classes for category colors
+    var catergoryPrefBranch = prefService.getBranch("");
+    var pbi = catergoryPrefBranch.QueryInterface(
+        Components.interfaces.nsIPrefBranch2);
+    pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
+    categoryPrefObserver.observe(null, null, "");
+}
+
+function updateStyleSheetForObject(object) {
+    var calStyleSheet = getCalendarStyleSheet();
+    var name;
+    if (object.uri)
+        name = object.uri.spec;
+    else
+        name = object.replace(' ','_');
+
+    // Returns an equality selector for calendars (which have a uri), since an
+    // event can only belong to one calendar.  For categories, however, returns
+    // the ~= selector which matches anything in a space-separated list.
+    function selectorForObject(name)
+    {
+        if (object.uri)
+            return '*[item-calendar="' + name + '"]';
+        return '*[item-category~="' + name + '"]';
+    }
+    
+    function getRuleForObject(name)
+    {
+        for (var i = 0; i < calStyleSheet.cssRules.length; i++) {
+            var rule = calStyleSheet.cssRules[i];
+            if (rule.selectorText == selectorForObject(name))
+                return rule;
+        }
+        return null;
+    }
+    
+    var rule = getRuleForObject(name);
+    if (!rule) {
+        calStyleSheet.insertRule(selectorForObject(name) + ' { }',
+                                 calStyleSheet.cssRules.length);
+        rule = calStyleSheet.cssRules[calStyleSheet.cssRules.length-1];
+    }
+
+    var color;
+    if (object.uri) {
+        color = getCalendarManager().getCalendarPref(object, 'color');
+        rule.style.backgroundColor = color;
+        if (color)
+            rule.style.color = getContrastingTextColor(color);
+        return;
+    }
+    var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
+    try {
+        color = categoryPrefBranch.getCharPref(object);
+    }
+    catch(ex) { return; }
+
+    rule.style.borderColor = color;
+    rule.style.borderWidth = "2px";
+}
+
+var categoryPrefObserver =
+{
+   observe: function(aSubject, aTopic, aPrefName)
+   {
+       var name = aPrefName;
+       // We only want the actual category name.  24 is the length of the 
+       // leading 'calendar.category.color.' term
+       name = name.substr(24, aPrefName.length - 24);
+       updateStyleSheetForObject(name);
+   }
 }

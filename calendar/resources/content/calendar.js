@@ -129,37 +129,6 @@ var calendarsToPublish = new Array();
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
 */
 
-/**
- * This obsevers changes in calendar color prefs.
- * It removes all the style rules, and creates them
- * all again
- */
-
-var categoryPrefObserver =
-{
-   mCalendarStyleSheet: null,
-   observe: function(aSubject, aTopic, aPrefName)
-   {
-      var i;
-      for (i = 0; i < this.mCalendarStyleSheet.cssRules.length ; ++i) {
-        if (this.mCalendarStyleSheet.cssRules[i].selectorText.indexOf(".event-category-") == 0) {
-          dump(this.mCalendarStyleSheet.cssRules+" "+this.mCalendarStyleSheet.cssRules[i].selectorText+"\n");
-          this.mCalendarStyleSheet.deleteRule(i);
-          --i;
-        }
-      }
-
-      var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
-      var prefCount = { value: 0 };
-      var prefArray = categoryPrefBranch.getChildList("", prefCount);
-      for (i = 0; i < prefArray.length; ++i) {
-         var prefName = prefArray[i];
-         var prefValue = categoryPrefBranch.getCharPref(prefName);
-         this.mCalendarStyleSheet.insertRule(".event-category-" + prefName + " { border-color: " + prefValue +" !important; }", 1);
-      }
-   }
-}
-
 /** 
 * Called from calendar.xul window onload.
 */
@@ -302,9 +271,7 @@ function calendarFinish()
    
    finishCalendarToDoUnifinder();
 
-   var pbi = prefService.getBranch("");
-   pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
-   pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
+   finishCalendarManager();
 
    gCalendarWindow.close();
 
