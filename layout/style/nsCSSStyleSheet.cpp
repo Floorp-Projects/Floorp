@@ -3125,6 +3125,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       //  <input type=radio>
       result = STATE_CHECK(NS_EVENT_STATE_CHECKED);
     }
+    else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
+      result = STATE_CHECK(NS_EVENT_STATE_REQUIRED);
+    }
+    else if (nsCSSPseudoClasses::optional == pseudoClass->mAtom) {
+      result = STATE_CHECK(NS_EVENT_STATE_OPTIONAL);
+    }
     else {
       NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
       result = PR_FALSE;  // unknown pseudo class
@@ -3637,7 +3643,9 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozDragOver) || 
         (pseudoClass->mAtom == nsCSSPseudoClasses::focus) || 
         (pseudoClass->mAtom == nsCSSPseudoClasses::hover) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::target)) {
+        (pseudoClass->mAtom == nsCSSPseudoClasses::target) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::required) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::optional)) {
       return PR_TRUE;
     }
   }
