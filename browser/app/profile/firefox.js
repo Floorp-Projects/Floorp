@@ -123,6 +123,13 @@ pref("app.update.timer", 5000);
 // which tells users what's new in this new update.
 pref("app.update.showInstalledUI", false);
 
+// 0 = suppress prompting for incompatibilities if there are updates available
+//     to newer versions of installed addons that resolve them.
+// 1 = suppress prompting for incompatibilities only if there are VersionInfo
+//     updates available to installed addons that resolve them, not newer
+//     versions.
+pref("app.update.incompatible.mode", 0);
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled
@@ -131,21 +138,12 @@ pref("app.update.showInstalledUI", false);
 //  .. etc ..
 //
 pref("extensions.update.enabled", true);
-pref("extensions.update.autoUpdateEnabled", true);
 pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.update.autoUpdate", false);    // Automatically download and install 
-                                                // updates to themes and extensions. 
-                                                // Does nothing at present. 
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every week
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
-pref("extensions.update.severity.threshold", 5);// The number of pending Extension/Theme
-                                                // updates you can have before the update
-                                                // notifier goes from low->medium severity.
-pref("extensions.update.count", 0);             // The number of extension/theme/etc 
-                                                // updates available
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.
