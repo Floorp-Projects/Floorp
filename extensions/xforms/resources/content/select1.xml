@@ -1,0 +1,687 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Olli Pettay
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Olli Pettay <Olli.Pettay@helsinki.fi>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="select1Bindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xbl="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xforms="http://www.w3.org/2002/xforms">
+
+  <!-- select1 -->
+  <binding id="xformswidget-select1"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    
+    <!-- The strange indentation is because of the whitespace nodes.-->
+    <content>
+      <children includes="label"/>
+      <html:div class="-moz-xforms-select1-popup" anonid="popup"
+                onmouseover="this.parentNode.shouldHandleBlur = false;
+                             this.parentNode.mouseOver(event);"
+                onmouseup="this.parentNode.mouseUp(event);"
+                onmouseout="this.parentNode.shouldHandleBlur = true;">
+        <children/>
+      </html:div>
+      <html:span class="-moz-select1-container"
+                 anonid="container"><html:input
+                 class="-moz-xforms-select1-input"
+                 anonid="control"
+                 onblur="this.parentNode.parentNode.handleBlur();"
+                 onclick="this.parentNode.parentNode.handleControlClick();"
+                 onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
+                 onkeyup="this.parentNode.parentNode.handleKeyUp(event);"
+      /><html:input class="-moz-xforms-select1-dropdown"
+                    type="button"
+                    anonid="dropmarker"
+                    tabindex="-1"
+                    onmousedown="this.parentNode.parentNode.shouldHandleBlur = false;"
+                    onmouseup="this.parentNode.parentNode.shouldHandleBlur = true;"
+                    onclick="this.parentNode.parentNode.togglePopup();
+                             this.previousSibling.focus();"
+        /></html:span></content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <field name="_inputField">null</field>
+      <field name="_dropMarker">null</field>
+      <field name="_popup">null</field>
+      <field name="_container">null</field>
+      <field name="_width">-1</field>
+      
+      <!-- This is either an nsIXFormsItemElement or null. -->
+      <field name="_selected">null</field>
+      <field name="_tmpSelected">null</field>
+      <field name="popupOpen">false</field>
+      <field name="shouldHandleBlur">true</field>
+
+      <property name="selectionOpen" readonly="true">
+        <getter>
+          return this.getAttribute("selection") == "open";
+        </getter>
+      </property>
+
+      <property name="inputField" readonly="true">
+        <getter>
+          if (!this._inputField) {
+            this._inputField =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._inputField;
+        </getter>
+      </property>
+
+      <property name="dropMarker" readonly="true">
+        <getter>
+          if (!this._dropMarker) {
+            this._dropMarker =
+              document.getAnonymousElementByAttribute(this, "anonid", "dropmarker");
+          }
+          return this._dropMarker;
+        </getter>
+      </property>
+
+      <property name="popup" readonly="true">
+        <getter>
+          if (!this._popup) {
+            this._popup =
+              document.getAnonymousElementByAttribute(this, "anonid", "popup");
+          }
+          return this._popup;
+        </getter>
+      </property>
+
+      <property name="container" readonly="true">
+        <getter>
+          if (!this._container) {
+            this._container =
+              document.getAnonymousElementByAttribute(this, "anonid", "container");
+          }
+          return this._container;
+        </getter>
+      </property>
+
+      <method name="updateInputField">
+        <body>
+          <![CDATA[
+          if (this._selected) {
+            // Remove extra white space characters from the beginning of the label.
+            this.inputField.value = this._selected.labelText.replace(/^[\s\n]+/, "");
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleControlClick">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          if (this.selectionOpen && !this._selected) {
+            if (this.getAttribute("incremental") != "false") {
+              this.delegate.value = this.inputField.value;
+            }
+          } else {
+            this.togglePopup();
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleKeyPress">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            var key = aEvent.keyCode;
+            if (key == aEvent.DOM_VK_RETURN || key == aEvent.DOM_VK_ENTER) {
+              var open = this.popupOpen;
+              this.togglePopup();
+              if (open && this._selected) {
+                this.updateInputField();
+                this.delegate.value = this._selected.value;
+              }
+            } else if (key == aEvent.DOM_VK_UP ||
+                       key == aEvent.DOM_VK_DOWN) {
+              this.internalScroll(aEvent.keyCode == aEvent.DOM_VK_DOWN);
+              if (this._selected && this.popupOpen) {
+                var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
+                if ("scrollIntoView" in el) {
+                  el.scrollIntoView(false);
+                }
+              }
+              
+              if (!this.popupOpen && this.getAttribute("incremental") != "false") {
+                if (this._selected) {
+                  this.updateInputField();
+                  this.delegate.value = this._selected.value;
+                } else if (this.selectionOpen) {
+                  this.delegate.value = this.inputField.value;
+                }
+              }
+            } else if (key == aEvent.DOM_VK_TAB) {
+              // Hiding popup when user uses keyboard to focus out
+              // from <select1>. No need to update the value of the control
+              // in this case. 
+              if (this._selected && this.popupOpen) {
+                this.hidePopup();
+                this._selected.setActive(false);
+                this._selected = this._tmpSelected;
+                this._tmpSelected = null;
+                if (this._selected) {
+                  this._selected.setActive(true);
+                }
+              }
+            }
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleKeyUp">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // These events are handled in handleKeyPress...
+            if (aEvent.keyCode == aEvent.DOM_VK_RETURN ||
+                aEvent.keyCode == aEvent.DOM_VK_ENTER ||
+                aEvent.keyCode == aEvent.DOM_VK_UP ||
+                aEvent.keyCode == aEvent.DOM_VK_DOWN) {
+              return true;
+            }
+
+            // ..other key events are handled in keyUp, because otherwise
+            // this.inputField.value doesn't show the just updated value.
+            if (this.selectionOpen) {
+              if (this._selected) {
+                this._selected.setActive(false);
+                this._selected = null;
+              }
+              if (this.getAttribute("incremental") != "false") {
+                this.delegate.value = this.inputField.value;
+              }
+            }
+
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <!-- This is used by internalScroll to find the next
+           selectable <item>. Returns a DOMElement or null. -->
+      <method name="findNextSelectable">
+        <parameter name="aNode"/>
+        <parameter name="aDown"/>
+        <body>
+          <![CDATA[
+            if (!aNode) {
+              return null;
+            }
+
+            var node = aNode;
+            var next = null;
+            while (node) {
+              if (aDown) {
+                next = node.nextSibling;
+              } else {
+                next = node.previousSibling;
+              }
+
+              if (next && next.namespaceURI == this.XFORMS_NS) {
+                if (next.localName == "item") {
+                  return next;
+                } else if (next.localName == "choices") {
+                  var child = null;
+                  if (aDown) {
+                    child = next.firstChild;
+                  } else {
+                    child = next.lastChild;
+                  }
+                  if (child.namespaceURI == this.XFORMS_NS &&
+                      child.localName == "item") {
+                    return child;
+                  }
+                  child = this.findNextSelectable(child, aDown);
+                  if (child) {
+                    return child;
+                  }
+                } else if (next.localName == "itemset" &&
+                           next.anonymousItemSetContent.childNodes.length > 0) {
+                  return aDown ? next.anonymousItemSetContent.firstChild
+                               : next.anonymousItemSetContent.lastChild;
+                }
+              }
+              node = next;
+            }
+
+            // if we are in a choices or itemset element
+            var parent = aNode.parentNode;
+            if (parent.namespaceURI == this.XFORMS_NS &&
+                parent.localName == "choices") {
+                var sibling = aDown ? parent.nextSibling : parent.previousSibling;
+
+                if (sibling.namespaceURI == this.XFORMS_NS &&
+                    sibling.localName == "item") {
+                  return sibling;
+                }
+                return this.findNextSelectable(sibling, aDown);
+              } 
+              
+            if (parent.parentNode.namespaceURI == this.XFORMS_NS &&
+                parent.parentNode.localName == "itemset") {
+              var sibling2 = aDown
+                ? parent.parentNode.nextSibling
+                : parent.parentNode.previousSibling;
+
+              if (sibling2.namespaceURI == this.XFORMS_NS &&
+                  sibling2.localName == "item") {
+                return sibling2;
+              }
+              return this.findNextSelectable(sibling2, aDown);
+            }
+
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="internalScroll">
+        <parameter name="aDown"/>
+        <body>
+          <![CDATA[
+            var label = null;
+            var next = null;
+            var node = this.firstChild;
+            while (node) {
+              if (node.namespaceURI == this.XFORMS_NS &&
+                  node.localName == "label") {
+                label = node;
+                break;
+              }       
+              node = node.nextSibling;
+            }
+
+            if (this._selected) {
+              node = this._selected.QueryInterface(Components.interfaces.nsIDOMNode);
+            } else if (label) {
+              node = label.nextSibling;
+            } else {
+              node = this.firstChild;
+            }
+
+            next = this.findNextSelectable(node, aDown);
+            if (next) {
+              if (this._selected) {
+                this._selected.setActive(false);
+                this._selected = null;
+              }
+
+              this._selected = next.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+              if (this._selected) {
+                this._selected.setActive(true);
+                this.updateInputField();
+              }
+              return true;
+            }
+
+            if (!aDown && this.selectionOpen) {
+              if (this._selected) {
+                this._selected.setActive(false);
+                this._selected = null;
+              }
+              this.inputField.value = "";
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="mouseUp">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            // Use original target, because <item> is possible (anonymously)
+            // inside <itemset>
+            var target = aEvent.originalTarget;
+            while (target && target != this) {
+              if (target.namespaceURI == this.XFORMS_NS &&
+                  (target.localName == "item" || target.localName == "choices")) {
+                break;
+              }
+              target = target.parentNode;
+            }
+
+            if (target == this) {
+              return true;
+            }
+
+            this.hidePopup();
+
+            if (this._selected) {
+              this.updateInputField();
+              this.delegate.value =
+                this._selected.value;
+            }
+            this.inputField.focus();
+          ]]>
+        </body>
+      </method>
+
+      <method name="mouseOver">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+          // Use original target, because <item> is possible (anonymously)
+          // inside <itemset>
+          var target = aEvent.originalTarget;
+          while (target && target != this) {
+            if (target.namespaceURI == this.XFORMS_NS && target.localName == "item") {
+              if (this._selected) {
+                this._selected.setActive(false);
+                this._selected = null;
+              }
+
+              var item =
+                target.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+              if (item) {
+                item.setActive(true);
+                this._selected = item;
+              }
+              break;
+            }
+            target = target.parentNode;
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="hidePopup">
+        <body>
+          this.popup.style.visibility = "hidden";
+          this.popupOpen = false;
+        </body>
+      </method>
+
+      <method name="refreshWidth">
+        <body>
+          <![CDATA[
+          if (!this.popupOpen) {
+            this.inputField.removeAttribute("style");
+            this.popup.style.width = "auto";
+            this.popup.style.height = "auto";
+            this.popup.style.maxHeight = "none";
+            this._width = -1;
+            var popupBox = document.getBoxObjectFor(this.popup);
+            var w = popupBox.width;
+            if (w > 0) {
+              w = w + 12; // Adding some 'padding' for possible scrollbar
+              this.inputField.setAttribute("style", "width:" + w + "px;");
+              this._width = w + document.getBoxObjectFor(this.dropMarker).width;
+            }
+            this.popup.style.maxHeight = "10px";
+            this.popup.style.left = "0px";
+            this.popup.style.top = "0px";
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="togglePopup">
+        <body>
+          <![CDATA[
+          if (!this.popupOpen && !this.delegate.isReadonly) {
+            // Calculating the size and position of the popup.
+            var style = "";
+            var containerBox = document.getBoxObjectFor(this.container);
+            var x = containerBox.x;
+            var y = containerBox.y;
+            var h = containerBox.height;
+            var w = containerBox.width;
+            var targetY = y + h;
+            this.popup.style.maxHeight = "none";
+            var popupBox = document.getBoxObjectFor(this.popup);
+            var popupHeight = popupBox.height;
+            var pY = window.pageYOffset;
+            var iH = window.innerHeight;
+            var belowSelect = iH - (y + h - pY) - h;
+            if (belowSelect < popupHeight) {
+              if ((y - pY) > popupHeight) {
+                targetY = y - popupHeight;
+              } else if (belowSelect < (y - pY)) {
+                style = style + "max-height:" + (y - pY) + "px;";
+                targetY = pY;
+              } else {
+                style = style + "max-height:" + belowSelect + "px;";
+              }
+            }
+            style = style + "left:" + x + "px;";
+            style = style + "top:" + targetY + "px;";
+
+            style = style + "width:";
+            if (this.selectionOpen) {
+              style = style + w + "px;";
+            } else if (this._width < 0) {
+              style = style + "auto;"
+            } else {
+              style = style + this._width + "px;";
+            }
+
+            style = style + "visibility:visible;";
+            this.popup.setAttribute("style", style);
+            this.popupOpen = true;
+            this._tmpSelected = this._selected;
+
+            if (this._selected) {
+              var el = this._selected.QueryInterface(Components.interfaces.nsIDOMElement);
+              if ("scrollIntoView" in el) {
+                el.scrollIntoView(false);
+              }
+            }
+          } else {
+            this.hidePopup();
+            return;
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="refresh">
+        <body>
+          <![CDATA[
+          try {
+            var newValue = this.stringValue;
+
+            if (!this.selectionOpen || this.delegate.isReadonly) {
+              this.inputField.setAttribute("readonly", "readonly");
+            } else {
+              this.inputField.removeAttribute("readonly");
+            }
+
+            if (this._selected) {
+              if (newValue ==
+                  this._selected.value) {
+                return true;
+              }
+              this._selected.setActive(false);
+              this._selected = null;
+            }
+
+            this.selectItemByValue(newValue);
+            
+            if (this._selected) {
+              this.updateInputField();
+            } else if (this.selectionOpen) {
+              this.inputField.value = newValue;
+            } else {
+              // @todo out-of-range (XXX)
+              this.inputField.value = "";
+            }
+            this.refreshWidth();
+          } catch (ex) {}
+          return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          this.inputField.focus();
+          return true;
+        </body>
+      </method>
+
+      <method name="selectItemByValue">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+          var node = this.firstChild;
+          var item;
+          while (node) {
+            item = null;
+            try {
+              if (node.nodeType == document.ELEMENT_NODE &&
+                  node.namespaceURI == this.XFORMS_NS && node.localName != "label") {
+
+                item = node.QueryInterface(Components.interfaces.nsIXFormsSelectChild);
+                if (item) {
+                  item = item.selectItemByValue(aValue);
+                  if (item) {
+                    if (this._selected) {
+                      this._selected.setActive(false);
+                      this._selected = null;
+                    }
+                    this._selected = item.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+                    if (this._selected) {
+                      this._selected.setActive(true);
+                      return;
+                    }
+                  }
+                }
+              }
+            } catch (ex) {}
+            node = node.nextSibling;
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="handleBlur">
+        <body>
+          <![CDATA[
+          if (this.shouldHandleBlur) {
+            var open = this.popupOpen;
+            this.hidePopup();
+
+            if (open) {
+              if (this._selected) {
+                this._selected.setActive(false);
+                this._selected = this._tmpSelected;
+                this._tmpSelected = null;
+                if (this._selected) {
+                  this._selected.setActive(true);
+                }
+              }
+              return;
+            }
+
+            if (this.selectionOpen && !this._selected) {
+              this.delegate.value = this.inputField.value;
+            } else if (this._selected) {
+              this.updateInputField();
+              this.delegate.value = this._selected.value;
+            }
+          }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="xformswidget-select1-itemset">
+    <content>
+      <html:div style="display:none;">
+        <children/>
+      </html:div>
+      <html:div anonid="insertion"/>
+    </content>
+
+    <implementation implements="nsIXFormsItemSetUIElement">
+      <field name="_anonymousItemSetContent">null</field>
+
+      <property name="anonymousItemSetContent" readonly="true">
+        <getter>
+          if (!this._anonymousItemSetContent) {
+            this._anonymousItemSetContent =
+              document.getAnonymousElementByAttribute(this, "anonid", "insertion");
+          }
+          return this._anonymousItemSetContent;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+
+  <!-- The binding for <item> is needed only because of the
+       scrollIntoView method. -->
+  <binding id="xformswidget-select1-item">
+    <content>
+      <html:div anonid="content">
+        <children/>
+      </html:div>
+    </content>
+
+    <implementation>
+      <field name="_content">null</field>
+      <property name="content" readonly="true">
+        <getter>
+          if (!this._content) {
+            this._content =
+              document.getAnonymousElementByAttribute(this, "anonid", "content");
+          }
+          return this._content;
+        </getter>
+      </property>
+
+      <!-- Only (X)HTML elements have method 'scrollIntoView', 
+           so we need to forward this method call to the anonymous content
+           of this element. -->
+      <method name="scrollIntoView">
+        <parameter name="aTop"/>
+        <body>
+          this.content.scrollIntoView(aTop);
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

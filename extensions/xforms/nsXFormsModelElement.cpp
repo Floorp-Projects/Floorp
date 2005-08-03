@@ -216,6 +216,12 @@ nsPostRefresh::~nsPostRefresh()
   }
 }
 
+const nsVoidArray* 
+nsPostRefresh::PostRefreshList()
+{
+  return sPostRefreshList;
+}
+
 nsresult
 nsXFormsModelElement::NeedsPostRefresh(nsIXFormsControl* aControl)
 {

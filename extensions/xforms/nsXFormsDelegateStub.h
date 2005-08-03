@@ -80,6 +80,18 @@ public:
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD Refresh();
 
+#ifdef DEBUG_smaug
+  virtual const char* Name()
+  {
+    if (mControlType.IsEmpty()) {
+      return "[undefined delegate]";
+    }
+
+    return NS_ConvertUTF16toUTF8(mControlType).get();
+  }
+#endif
+
+
   nsXFormsDelegateStub(const nsAString& aType = EmptyString())
     : mControlType(aType), mRepeatState(eType_Unknown) {}
 

@@ -93,6 +93,9 @@ XPIDLSRCS	= \
 		nsIXFormsControlBase.idl \
 		nsIXFormsDelegate.idl \
 		nsIXFormsUIWidget.idl \
+		nsIXFormsItemElement.idl \
+		nsIXFormsLabelElement.idl \
+		nsIXFormsItemSetUIElement.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -137,6 +140,7 @@ CPPSRCS		= \
 		nsXFormsSwitchElement.cpp \
 		nsXFormsUploadElement.cpp \
 		nsXFormsSelectElement.cpp \
+		nsXFormsSelect1Element.cpp \
 		nsXFormsItemElement.cpp \
 		nsXFormsValueElement.cpp \
 		nsXFormsChoicesElement.cpp \

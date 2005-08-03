@@ -41,11 +41,12 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFBindableElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsXFormsUtils.h"
 #include "nsArray.h"
+#include "nsIXTFXMLVisualWrapper.h"
 
 /**
  * Implementation of XForms \<choices\> element.  This creates an HTML
@@ -53,7 +54,7 @@
  * of the optgroup.
  */
 
-class nsXFormsChoicesElement : public nsXFormsStubElement,
+class nsXFormsChoicesElement : public nsXFormsBindableStub,
                                public nsIXFormsSelectChild
 {
 public:
@@ -61,8 +62,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFGenericElement overrides
-  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
@@ -79,22 +79,25 @@ public:
   NS_DECL_NSIXFORMSSELECTCHILD
 
 private:
-  nsIDOMElement *mElement;
+  nsIDOMElement*                      mElement;
   nsCOMPtr<nsIDOMHTMLOptGroupElement> mOptGroup;
+  PRBool                              mInsideSelect1;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsChoicesElement,
-                             nsXFormsStubElement,
+                             nsXFormsBindableStub,
                              nsIXFormsSelectChild)
 
 NS_IMETHODIMP
-nsXFormsChoicesElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsChoicesElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN);
+
+  mInsideSelect1 = PR_FALSE;
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
@@ -106,14 +109,16 @@ nsXFormsChoicesElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  // Our anonymous content structure will look like this:
+  // Our anonymous content structure in <select> will look like this:
   //
   // <optgroup label="myLabel"/>   (mOptGroup)
   //
+  // <select1>'s anonymous content is created in XBL.
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   node->GetOwnerDocument(getter_AddRefs(domDoc));
 
+  //XXX Remove this when XBLizing <select>.
   nsCOMPtr<nsIDOMElement> element;
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("optgroup"),
@@ -128,9 +133,20 @@ nsXFormsChoicesElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsChoicesElement::ParentChanged(nsIDOMElement *aNewParent)
 {
-  if (aNewParent)
+  mInsideSelect1 = PR_FALSE;
+  if (aNewParent) {
+    nsCOMPtr<nsIDOMNode> parent, tmp;
+    mElement->GetParentNode(getter_AddRefs(parent));
+    while (parent) {
+      if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1"))) {
+        mInsideSelect1 = PR_TRUE;
+        break;
+      }
+      tmp.swap(parent);
+      tmp->GetParentNode(getter_AddRefs(parent));
+    }
     Refresh();
-
+  }
   return NS_OK;
 }
 
@@ -252,6 +268,35 @@ nsXFormsChoicesElement::GetAnonymousNodes(nsIArray **aNodes)
 }
 
 NS_IMETHODIMP
+nsXFormsChoicesElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSelected)
+{
+  NS_ENSURE_ARG_POINTER(aSelected);
+  NS_ENSURE_STATE(mElement);
+  *aSelected = nsnull;
+  nsCOMPtr<nsIDOMNodeList> children;
+  nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 childCount = 0;
+  children->GetLength(&childCount);
+
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsCOMPtr<nsIXFormsSelectChild> childItem;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    children->Item(i, getter_AddRefs(childNode));
+    childItem = do_QueryInterface(childNode);
+    if (childItem) {
+      childItem->SelectItemByValue(aValue, aSelected);
+      if (*aSelected)
+        return NS_OK;
+    }
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsChoicesElement::SelectItemsByValue(const nsStringArray &aValueList)
 {
   nsCOMPtr<nsIDOMNodeList> children;
@@ -322,6 +367,12 @@ nsXFormsChoicesElement::SetContext(nsIDOMElement *aContextNode,
 NS_IMETHODIMP
 nsXFormsChoicesElement::Refresh()
 {
+  if (mInsideSelect1) {
+    // <select1> is XBLized, so there is no need to recreate UI -
+    // XBL will do it for us.
+    return NS_OK;
+  }
+
   // Remove any existing first child that is not an option, to clear out
   // any existing label.
   nsCOMPtr<nsIDOMNode> firstChild, child2;

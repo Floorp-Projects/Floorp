@@ -228,6 +228,7 @@ class nsPostRefresh {
 public:
   nsPostRefresh();
   ~nsPostRefresh();
+  static const nsVoidArray* PostRefreshList();
 };
 
 NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aResult);

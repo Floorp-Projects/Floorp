@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXTFXMLVisualWrapper.h"
+#include "nsIXTFBindableElementWrapper.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -71,12 +71,10 @@
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsContextContainer : public nsXFormsControlStub,
+class nsXFormsContextContainer : public nsXFormsBindableControlStub,
                                  public nsIXFormsRepeatItemElement
 {
 protected:
-  /** The HTML representation for the node */
-  nsCOMPtr<nsIDOMElement> mHTMLElement;
 
   /** The context position for the element */
   PRInt32 mContextPosition;
@@ -90,17 +88,9 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-  
-  // nsIXTFVisual overrides
-  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
-
   // nsIXTFElement overrides
-  NS_IMETHOD OnDestroyed();
   NS_IMETHOD CloneState(nsIDOMElement *aElement);
+  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
 
   // nsIXFormsControl
   NS_IMETHOD Bind();
@@ -119,75 +109,20 @@ public:
 
 #ifdef DEBUG_smaug
   virtual const char* Name() {
-    return mIsBlock ? "contextcontainer" : "contextcontainer-inline";
+    if (mElement) {
+      nsAutoString localName;
+      mElement->GetLocalName(localName);
+      return NS_ConvertUTF16toUTF8(localName).get();
+    }
+    return "contextcontainer(inline?)";
   }
-
-  PRBool mIsBlock;
 #endif
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsContextContainer,
-                             nsXFormsControlStub,
+                             nsXFormsBindableControlStub,
                              nsIXFormsRepeatItemElement)
 
-// nsIXTFXMLVisual
-NS_IMETHODIMP
-nsXFormsContextContainer::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
-{
-#ifdef DEBUG_XF_CONTEXTCONTAINER
-  printf("nsXFormsContextContainer::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
-#endif
-
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  PRBool isBlock;
-
-  // If we're a "contextcontainer" element, then we create a div child.
-  // If not, we're a "contextcontainer-inline" element and create a span child.
-  nsAutoString localName;
-  mElement->GetLocalName(localName);
-  isBlock = localName.EqualsLiteral("contextcontainer");
-
-#ifdef DEBUG_smaug
-  mIsBlock = isBlock;
-#endif
-
-  // Create UI element
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                               isBlock ? NS_LITERAL_STRING("div") :
-                               NS_LITERAL_STRING("span"),
-                               getter_AddRefs(mHTMLElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsContextContainer::GetVisualContent(nsIDOMElement **aElement)
-{
-#ifdef DEBUG_XF_CONTEXTCONTAINER
-  printf("nsXFormsContextContainer::GetVisualContent()\n");
-#endif
-
-  NS_IF_ADDREF(*aElement = mHTMLElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsContextContainer::GetInsertionPoint(nsIDOMElement **aElement)
-{
-#ifdef DEBUG_XF_CONTEXTCONTAINER
-  printf("nsXFormsContextContainer::GetInsertionPoint()\n");
-#endif
-
-  NS_IF_ADDREF(*aElement = mHTMLElement);
-  
-  return NS_OK;
-}
 
 // nsIXTFElement
 NS_IMETHODIMP
@@ -200,7 +135,7 @@ nsXFormsContextContainer::HandleDefault(nsIDOMEvent *aEvent,
   nsAutoString type;
   aEvent->GetType(type);
   if (!type.EqualsLiteral("focus"))
-    return nsXFormsControlStub::HandleDefault(aEvent, aHandled);
+    return nsXFormsBindableControlStub::HandleDefault(aEvent, aHandled);
 
   if (!nsXFormsUtils::EventHandlingAllowed(aEvent, mElement))
     return NS_OK;
@@ -233,14 +168,6 @@ nsXFormsContextContainer::HandleDefault(nsIDOMEvent *aEvent,
   // Tell \<repeat\> about the new index position
   PRUint32 tmp = mContextPosition;
   return repeat->SetIndex(&tmp, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsXFormsContextContainer::OnDestroyed()
-{
-  mHTMLElement = nsnull;
-
-  return nsXFormsControlStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -291,10 +218,10 @@ nsXFormsContextContainer::GetContext(nsAString      &aModelID,
                                      PRInt32        *aContextPosition,
                                      PRInt32        *aContextSize)
 {
-  nsresult rv = nsXFormsControlStub::GetContext(aModelID,
-                                                aContextNode,
-                                                aContextPosition,
-                                                aContextSize);
+  nsresult rv = nsXFormsBindableControlStub::GetContext(aModelID,
+                                                        aContextNode,
+                                                        aContextPosition,
+                                                        aContextSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aContextPosition = mContextPosition;

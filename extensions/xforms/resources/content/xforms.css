@@ -34,6 +34,7 @@
 #
 # ***** END LICENSE BLOCK *****
 @namespace url(http://www.w3.org/2002/xforms);
+@namespace html url(http://www.w3.org/1999/xhtml);
 @namespace mozType url(http://www.mozilla.org/projects/xforms/2005/type);
 
 repeat,
@@ -41,8 +42,21 @@ repeatitem,
 contextcontainer,
 group,
 switch,
-case {
+case,
+select1 item,
+select1 itemset,
+select1 choices {
   display: block;
+}
+
+contextcontainer-inline {
+  display: inline;
+}
+
+select item,
+select itemset,
+select choices {
+  display: none;
 }
 
 message[level="ephemeral"], hint {
@@ -93,4 +107,119 @@ trigger[appearance="minimal"]:hover, submit[appearance="minimal"]:hover {
 
 label {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-label');
+}
+
+select1 {
+  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
+}
+
+select1 itemset {
+  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1-itemset');
+}
+
+/* Most of the select1 specific CSS is copied from forms.css */
+
+select1 item {
+  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1-item');
+  white-space : nowrap;
+}
+
+html|input.-moz-xforms-select1-dropdown {
+  width: 12px;
+  height: 1.3em;
+  white-space: nowrap;
+  position: static !important;
+  background-image: url("data:image/gif;base64,R0lGODlhBwAEAIAAAAAAAP%2F%2F%2FyH5BAEAAAEALAAAAAAHAAQAAAIIhA%2BBGWoNWSgAOw%3D%3D") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  -moz-appearance: menulist-button;
+  -moz-user-select: none !important;
+  -moz-user-focus: ignore !important;
+  -moz-binding: none;
+  vertical-align: text-top;
+  margin: 0px !important;
+  margin-top: -1px !important;
+}
+
+html|input.-moz-xforms-select1-dropdown::-moz-focus-inner {
+  border: 0 !important;
+}
+
+html|input.-moz-xforms-select1-dropdown:active:hover {
+  border-style: outset;
+}
+
+html|input.-moz-xforms-select1-input {
+  border: 1px dotted transparent;
+  margin-right: 0px;
+  padding: 0px;
+  font: -moz-list;
+  -moz-box-sizing: border-box;
+  height: 1.3em;
+  line-height: normal !important;
+}
+
+html|input.-moz-xforms-select1-input:focus {
+  border: 1px dotted black;
+}
+
+html|span.-moz-select1-container {
+  margin: 0px;
+  margin-bottom: 1px;
+  border-color: ThreeDFace;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  font: -moz-list;
+  line-height: normal !important;
+  white-space: nowrap !important;
+  text-align: start;
+  cursor: default;
+  -moz-box-sizing: border-box;
+  -moz-appearance: menulist;
+  border-style: inset;
+  text-indent: 0;
+  padding-right: 0px;
+  overflow: hidden;
+  border-width: 2px;
+  padding-bottom: 0px;
+  padding-top: 1px;
+}
+
+html|div.-moz-xforms-select1-popup {
+  border-width: 1px;
+  top: 0px;
+  left: 0px;
+  border: 1px outset black !important;
+  background-color: -moz-Field;
+  font: -moz-list;
+  text-align: start;
+  visibility: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: absolute;
+  -moz-user-select: none;
+  z-index: 2147482647;
+  cursor: default;
+}
+
+item[_moz_active] {
+  color: HighlightText;
+  background: Highlight;
+}
+
+choices > label {
+  display: block;
+  font: -moz-list;
+  line-height: normal !important;
+  font-style: italic;
+  font-weight: bold;
+  font-size: inherit;
+  -moz-user-select: none;
+  text-indent: 0;
+}
+
+choices > item,  choices > itemset, choices > choices{
+  padding-left: 20px;
+  font-style: normal;
+  font-weight: normal;
 }

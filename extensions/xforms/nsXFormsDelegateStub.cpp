@@ -100,6 +100,12 @@ nsXFormsDelegateStub::Refresh()
   if (mRepeatState == eType_Template)
     return NS_OK;
 
+  const nsVoidArray* list = nsPostRefresh::PostRefreshList();
+  if (list && list->IndexOf(this) >= 0) {
+    // This control will be refreshed later.
+    return NS_OK;
+  }
+
   SetMozTypeAttribute();
 
   nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
@@ -139,7 +145,26 @@ nsXFormsDelegateStub::GetValue(nsAString& aValue)
 NS_IMETHODIMP
 nsXFormsDelegateStub::SetValue(const nsAString& aValue)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mBoundNode || !mModel)
+    return NS_OK;
+
+  PRBool changed;
+  nsresult rv = mModel->SetNodeValue(mBoundNode, aValue, &changed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (changed) {
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(mModel);
+ 
+    if (model) {
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult

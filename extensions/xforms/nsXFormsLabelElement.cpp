@@ -56,22 +56,27 @@
 #include "nsIXFormsUIWidget.h"
 #include "nsIDocument.h"
 #include "nsNetUtil.h"
+#include "nsIXFormsLabelElement.h"
+#include "nsIXFormsItemElement.h"
 
 class nsXFormsLabelElement : public nsXFormsDelegateStub,
                              public nsIStreamListener,
-                             public nsIInterfaceRequestor
+                             public nsIInterfaceRequestor,
+                             public nsIXFormsLabelElement
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIXFORMSLABELELEMENT
 
   // nsIXFormsDelegate
   NS_IMETHOD GetValue(nsAString& aValue);
 
   // nsIXFormsControl
   NS_IMETHOD IsEventTarget(PRBool *aOK);
+  NS_IMETHOD Refresh();
 
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
 
@@ -92,11 +97,12 @@ private:
   nsCOMPtr<nsIChannel> mChannel;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsLabelElement,
+NS_IMPL_ISUPPORTS_INHERITED4(nsXFormsLabelElement,
                              nsXFormsDelegateStub,
                              nsIRequestObserver,
                              nsIStreamListener,
-                             nsIInterfaceRequestor)
+                             nsIInterfaceRequestor,
+                             nsIXFormsLabelElement)
 
 NS_IMETHODIMP
 nsXFormsLabelElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
@@ -238,6 +244,30 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
 // nsIXFormsControl
 
 NS_IMETHODIMP
+nsXFormsLabelElement::Refresh()
+{
+  nsXFormsDelegateStub::Refresh();
+  nsCOMPtr<nsIDOMNode> parent;
+  mElement->GetParentNode(getter_AddRefs(parent));
+
+  // If <label> is inside <select1> its parent is <item>
+  // or <contextcontainer> (which parent is <item>).
+  nsCOMPtr<nsIXFormsItemElement> item(do_QueryInterface(parent));
+  if (item) {
+    item->LabelRefreshed();
+  } else if (parent) {
+    nsCOMPtr<nsIDOMNode> grandparent;
+    parent->GetParentNode(getter_AddRefs(grandparent));
+    item = do_QueryInterface(grandparent);
+    if (item) {
+      item->LabelRefreshed();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsLabelElement::IsEventTarget(PRBool *aOK)
 {
   *aOK = PR_FALSE;
@@ -332,6 +362,21 @@ nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsLabelElement::GetTextValue(nsAString& aValue)
+{
+  NS_ENSURE_STATE(mElement);
+  GetValue(aValue);
+
+  if (aValue.IsVoid()) {
+    nsCOMPtr<nsIDOM3Node> inner(do_QueryInterface(mElement));
+    if (inner) {
+      inner->GetTextContent(aValue);
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_HIDDEN_(nsresult)
 NS_NewXFormsLabelElement(nsIXTFElement **aResult)

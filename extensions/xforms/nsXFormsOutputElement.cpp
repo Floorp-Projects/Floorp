@@ -75,10 +75,6 @@ public:
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
 
-#ifdef DEBUG_smaug
-  virtual const char* Name() { return "output"; }
-#endif
-
   // nsIXFormsDelegate
   NS_IMETHOD GetValue(nsAString& aValue); 
 

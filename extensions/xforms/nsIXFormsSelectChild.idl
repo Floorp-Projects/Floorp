@@ -52,7 +52,7 @@ class nsStringArray;
  * of an XForms select element (choices, item, itemset).
  */
 
-[uuid(21e37ef5-ce3e-4ff1-b7b2-fb34c4e2c8be)]
+[scriptable, uuid(a29ac2bd-f36a-451e-99e1-0f3bd94ffbef)]
 interface nsIXFormsSelectChild : nsISupports
 {
   /**
@@ -62,19 +62,26 @@ interface nsIXFormsSelectChild : nsISupports
   readonly attribute nsIArray anonymousNodes;
 
   /**
-   * These two methods allow the select to synchronize selection with the
-   * instance data.
-   *
    * selectItemsByValue() handles children that have a value element child.
    * If the value element text for this child is contained in the |values|
-   * array, then the item should select itself.
+   * array, then the item should select itself. Used in \<select\>.
    *
+   */
+  [noscript] void selectItemsByValue(in constStringArray values);
+  
+  /**
    * selectItemsByContent() handles children that have a copy element child.
    * If |node| points to the same instance data node as the item, then the
    * item should select itself.
    */
-  void selectItemsByValue(in constStringArray values);
   void selectItemsByContent(in nsIDOMNode node);
+
+  /*
+   * selectItemByValue is used in \<select1\>. If the XFormsSelectChild is or
+   * contains an \<item\>, which has the same value as the parameter |value|,
+   * this method returns that \<item\>.
+   */
+  nsIDOMNode selectItemByValue(in AString value);
 
   /**
    * Instructs the item to serialize its selected elements.

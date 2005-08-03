@@ -63,6 +63,7 @@ NS_HIDDEN_(nsresult) NS_NewXFormsTriggerElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSubmitElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsLabelElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsSelectElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsSelect1Element(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsItemElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsValueElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsChoicesElement(nsIXTFElement **aElement);
@@ -125,8 +126,10 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsContextContainer(aElement);
   if (aTagName.EqualsLiteral("label"))
     return NS_NewXFormsLabelElement(aElement);
-  if (aTagName.EqualsLiteral("select") || aTagName.EqualsLiteral("select1"))
+  if (aTagName.EqualsLiteral("select"))
     return NS_NewXFormsSelectElement(aElement);
+  if (aTagName.EqualsLiteral("select1"))
+    return NS_NewXFormsSelect1Element(aElement);
   if (aTagName.EqualsLiteral("item"))
     return NS_NewXFormsItemElement(aElement);
   if (aTagName.EqualsLiteral("itemset"))

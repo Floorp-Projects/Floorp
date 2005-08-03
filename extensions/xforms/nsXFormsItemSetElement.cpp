@@ -41,7 +41,7 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIXTFGenericElementWrapper.h"
+#include "nsIXTFBindableElementWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocument.h"
@@ -50,8 +50,9 @@
 #include "nsArray.h"
 #include "nsIXFormsControlBase.h"
 #include "nsIXFormsControl.h"
+#include "nsIXFormsItemSetUIElement.h"
 
-class nsXFormsItemSetElement : public nsXFormsStubElement,
+class nsXFormsItemSetElement : public nsXFormsBindableStub,
                                public nsIXFormsSelectChild,
                                public nsIXFormsControlBase
 {
@@ -60,8 +61,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIXTFGenericElement overrides
-  NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
 
   // nsIXTFElement overrides
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
@@ -84,12 +84,12 @@ private:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemSetElement,
-                             nsXFormsStubElement,
+                             nsXFormsBindableStub,
                              nsIXFormsSelectChild,
                              nsIXFormsControlBase)
 
 NS_IMETHODIMP
-nsXFormsItemSetElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
+nsXFormsItemSetElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
@@ -204,6 +204,37 @@ nsXFormsItemSetElement::GetAnonymousNodes(nsIArray **aNodes)
 }
 
 NS_IMETHODIMP
+nsXFormsItemSetElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSelected)
+{
+  NS_ENSURE_ARG_POINTER(aSelected);
+  NS_ENSURE_STATE(mElement);
+  *aSelected = nsnull;
+  // nsIXFormsItemSetUIElement is implemented by the XBL binding.
+  nsCOMPtr<nsIXFormsItemSetUIElement> uiItemSet(do_QueryInterface(mElement));
+  NS_ENSURE_STATE(uiItemSet);
+
+  nsCOMPtr<nsIDOMElement> anonContent;
+  uiItemSet->GetAnonymousItemSetContent(getter_AddRefs(anonContent));
+  NS_ENSURE_STATE(anonContent);
+
+  nsCOMPtr<nsIDOMNode> child, tmp;
+  anonContent->GetFirstChild(getter_AddRefs(child));
+  // Trying to select the first possible (generated) \<item\> element.
+  while (child) {
+    nsCOMPtr<nsIXFormsSelectChild> selectChild(do_QueryInterface(tmp));
+    if (selectChild) {
+      selectChild->SelectItemByValue(aValue, aSelected);
+      if (*aSelected) {
+        return NS_OK;
+      }
+    }
+    tmp.swap(child);
+    tmp->GetNextSibling(getter_AddRefs(child));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsItemSetElement::SelectItemsByValue(const nsStringArray &aValueList)
 {
   return NS_OK;
@@ -271,8 +302,8 @@ nsXFormsItemSetElement::Refresh()
   if (!result)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> node, templateNode, cloneNode;
-  nsCOMPtr<nsIDOMElement> itemNode, itemWrapperNode;
+  nsCOMPtr<nsIDOMNode> node, templateNode, cloneNode, tmpNode;
+  nsCOMPtr<nsIDOMElement> itemNode, itemWrapperNode, contextContainer;
   nsCOMPtr<nsIDOMNodeList> templateNodes;
   mElement->GetChildNodes(getter_AddRefs(templateNodes));
   PRUint32 templateNodeCount = 0;
@@ -287,37 +318,106 @@ nsXFormsItemSetElement::Refresh()
   PRUint32 nodeCount;
   result->GetSnapshotLength(&nodeCount);
 
-  for (PRUint32 i = 0; i < nodeCount; ++i) {
-    result->SnapshotItem(i, getter_AddRefs(node));
-    NS_ASSERTION(node, "incorrect snapshot length");
-
-    document->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                              NS_LITERAL_STRING("item"),
-                              getter_AddRefs(itemNode));
-
-    if (!itemNode)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
-    nsAutoString modelID;
-    modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
-
-    itemNode->SetAttribute(NS_LITERAL_STRING("model"), modelID);
-
-    nsCOMPtr<nsIXFormsSelectChild> item = do_QueryInterface(itemNode);
-    NS_ASSERTION(item, "item must be a SelectChild!");
-
-    item->SetContext(nsCOMPtr<nsIDOMElement>(do_QueryInterface(node)),
-                     i, nodeCount);
-
-    // Clone the template content under the item
-    for (PRUint32 j = 0; j < templateNodeCount; ++j) {
-      templateNodes->Item(j, getter_AddRefs(templateNode));
-      templateNode->CloneNode(PR_TRUE, getter_AddRefs(cloneNode));
-      itemNode->AppendChild(cloneNode, getter_AddRefs(templateNode));
+  // XXX Possibly cleanup this when XBLizing <select>.
+  nsCOMPtr<nsIDOMNode> parent, tmp;
+  mElement->GetParentNode(getter_AddRefs(parent));
+  PRBool parentIsSelect1 = PR_FALSE;
+  while (parent &&
+    !nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select"))) {
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1"))) {
+      parentIsSelect1 = PR_TRUE;
+      break;
+    }
+    tmp.swap(parent);
+    tmp->GetParentNode(getter_AddRefs(parent));
+  }
+  
+  if (parentIsSelect1) {
+    // For select1
+    nsCOMPtr<nsIXFormsItemSetUIElement> uiItemSet(do_QueryInterface(mElement));
+    nsCOMPtr<nsIDOMElement> anonContent;
+    if (uiItemSet) {
+      uiItemSet->GetAnonymousItemSetContent(getter_AddRefs(anonContent));
     }
 
-    mItems.AppendObject(item);
+    NS_ENSURE_STATE(anonContent);
+
+    nsCOMPtr<nsIDOMNode> childNode, nodeReturn;
+    while (NS_SUCCEEDED(anonContent->GetFirstChild(getter_AddRefs(childNode))) &&
+         childNode) {
+      anonContent->RemoveChild(childNode, getter_AddRefs(nodeReturn));
+    }
+
+    for (PRUint32 i = 0; i < nodeCount; ++i) {
+      result->SnapshotItem(i, getter_AddRefs(node));
+      NS_ASSERTION(node, "incorrect snapshot length");
+
+      nsresult rv = document->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                              NS_LITERAL_STRING("item"),
+                                              getter_AddRefs(itemNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // XXX Could we get rid of the <contextcontainer>?
+      rv = document->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                     NS_LITERAL_STRING("contextcontainer"),
+                                     getter_AddRefs(contextContainer));
+
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
+      nsAutoString modelID;
+      modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
+
+      contextContainer->SetAttribute(NS_LITERAL_STRING("model"), modelID);
+
+      nsCOMPtr<nsIXFormsContextControl> ctx(do_QueryInterface(contextContainer));
+      if (ctx) {
+        ctx->SetContext(nsCOMPtr<nsIDOMElement>(do_QueryInterface(node)),
+                        i + 1, nodeCount);
+      }
+      // Clone the template content under the item
+      for (PRUint32 j = 0; j < templateNodeCount; ++j) {
+        templateNodes->Item(j, getter_AddRefs(templateNode));
+        templateNode->CloneNode(PR_TRUE, getter_AddRefs(cloneNode));
+        contextContainer->AppendChild(cloneNode, getter_AddRefs(templateNode));
+      }
+
+      itemNode->AppendChild(contextContainer, getter_AddRefs(tmpNode));
+      anonContent->AppendChild(itemNode, getter_AddRefs(tmpNode));
+    }
+  } else {
+    for (PRUint32 i = 0; i < nodeCount; ++i) {
+      result->SnapshotItem(i, getter_AddRefs(node));
+      NS_ASSERTION(node, "incorrect snapshot length");
+
+      document->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                NS_LITERAL_STRING("item"),
+                                getter_AddRefs(itemNode));
+
+      if (!itemNode)
+        return NS_OK;
+
+      nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
+      nsAutoString modelID;
+      modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
+
+      itemNode->SetAttribute(NS_LITERAL_STRING("model"), modelID);
+
+      nsCOMPtr<nsIXFormsSelectChild> item = do_QueryInterface(itemNode);
+      NS_ASSERTION(item, "item must be a SelectChild!");
+
+      item->SetContext(nsCOMPtr<nsIDOMElement>(do_QueryInterface(node)),
+                       i + 1, nodeCount);
+
+      // Clone the template content under the item
+      for (PRUint32 j = 0; j < templateNodeCount; ++j) {
+        templateNodes->Item(j, getter_AddRefs(templateNode));
+        templateNode->CloneNode(PR_TRUE, getter_AddRefs(cloneNode));
+        itemNode->AppendChild(cloneNode, getter_AddRefs(templateNode));
+      }
+
+      mItems.AppendObject(item);
+    }
   }
 
   // refresh parent control, since we are being defered

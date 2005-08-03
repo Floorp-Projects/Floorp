@@ -59,6 +59,12 @@
 
       <field name="_delegate">null</field>
 
+      <property name="XFORMS_NS" readonly="true">
+        <getter>
+          return "http://www.w3.org/2002/xforms";
+        </getter>
+      </property>
+
       <property name="delegate" readonly="true">
         <getter>
           if (!this._delegate)
