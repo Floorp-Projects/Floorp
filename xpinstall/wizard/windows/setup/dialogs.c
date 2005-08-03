@@ -728,6 +728,7 @@ void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStri
   DeleteObject(hfontNew);
   ReleaseDC(hWnd, hdcWnd);
 }
+
 LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   HWND          hRadioSt0;
@@ -2692,7 +2693,6 @@ void ResizeAndSetString(HWND aDlg, LPARAM lParam)
 
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  HWND      hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
   char      szBuf[MAX_BUF];
   char      szBuf2[MAX_BUF];
   BOOL      wasMinimized = FALSE;
@@ -2734,7 +2734,7 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
           }
           break;
       }
-      return(FALSE);
+      break;
 
     case WM_COMMAND:
       switch(LOWORD(wParam))
