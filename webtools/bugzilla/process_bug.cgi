@@ -1784,6 +1784,7 @@ foreach my $id (@idlist) {
                                   'changer' => Bugzilla->user->login };
 
     $vars->{'id'} = $id;
+    $vars->{'type'} = "bug";
     
     # Let the user know the bug was changed and who did and didn't
     # receive email about the change.
