@@ -50,6 +50,7 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsGfxUtils.h"
+#include "nsQDFlushManager.h"
 #include "nsCOMPtr.h"
 
 #include "plhash.h"
@@ -614,7 +615,7 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRect(const nsRect& aRect, nsClipComb
 	Rect macRect;
 	::SetRect(&macRect, trect.x, trect.y, trect.x + trect.width, trect.y + trect.height);
 
-	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion();
+	StRegionFromPool rectRgn;
 	RgnHandle clipRgn = mGS->mClipRegion;
 	if (!clipRgn || !rectRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -639,7 +640,6 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRect(const nsRect& aRect, nsClipComb
 		::SectRgn(rectRgn, mGS->mMainRegion, clipRgn);
 		break;
 	}
-	sNativeRegionPool.ReleaseRegion(rectRgn);
 
 	{
 		StPortSetter setter(mPort);
@@ -1318,7 +1318,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
 		{
 			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);
 			PRInt32 currentX = x;
-			for (PRInt32 i = 0; i < aLength; i++)
+			for (PRUint32 i = 0; i < aLength; i++)
 			{
 				::DrawChar(aString[i]);
 				currentX += spacing[i];
@@ -1418,7 +1418,6 @@ nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     SetupPortState();
 
     nscoord x,y,w,h;
-    Rect	therect;
 
     x = aX;
     y = aY;
@@ -1426,10 +1425,13 @@ nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     h = aHeight;
 
     mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
-    RgnHandle rgn = ::NewRgn();
+
+    StRegionFromPool rgn;
+    if (!rgn) return NS_ERROR_OUT_OF_MEMORY;
+
     ::SetRectRgn(rgn, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
-    ::QDFlushPortBuffer(mPort, rgn);
-    ::DisposeRgn(rgn);
+
+    nsQDFlushManager::sFlushPortBuffer(mPort, rgn);
   }
 #endif
   return NS_OK;
