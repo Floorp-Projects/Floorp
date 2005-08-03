@@ -49,6 +49,7 @@ const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
 const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
+const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -86,6 +87,11 @@ const STATE_FAILED          = "failed";
 const DOWNLOAD_CHUNK_SIZE           = 65536;
 const DOWNLOAD_BACKGROUND_INTERVAL  = 1;
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
+
+// Values for the PREF_APP_UPDATE_INCOMPATIBLE_MODE pref. See documentation in
+// code below. 
+const INCOMPATIBLE_MODE_NEWVERSIONS   = 0;
+const INCOMPATIBLE_MODE_NONEWVERSIONS = 1;
 
 const POST_UPDATE_CONTRACTID = "@mozilla.org/updates/post-update;1";
 
@@ -591,6 +597,8 @@ function Update(update) {
       this.installDate = parseInt(attr.value);
     else if (attr.name == "isCompleteUpdate")
       this.isCompleteUpdate = attr.value == "true";
+    else if (attr.name == "isSecurityUpdate")
+      this.isSecurityUpdate = attr.value == "true";
     else
       this[attr.name] = attr.value;
   }
@@ -1118,13 +1126,11 @@ UpdateService.prototype = {
     var update = this.selectUpdate(updates, updates.length);
     if (!update)
       return;
-    if (this._shouldPrompt(update)) {
-      LOG("UpdateService", "_selectAndInstallUpdate: need to prompt user before continuing...");
-      var prompter = 
-          Components.classes["@mozilla.org/updates/update-prompt;1"].
-          createInstance(Components.interfaces.nsIUpdatePrompt);
-      prompter.showUpdateAvailable(update);
-    } else {
+    
+    if (this._shouldPrompt(update))
+      showPromptIfNoIncompatibilities(update);
+    else {
+      LOG("UpdateService", "_selectAndInstallUpdate: No need to show prompt, just download update");
       this.downloadUpdate(update, true);
     }
   },
@@ -1368,7 +1374,8 @@ UpdateManager.prototype = {
       return;
     if (this._updates) {
       for (var i = 0; i < this._updates.length; ++i) {
-        if (this._updates[i].version == update.version) {
+        if (this._updates[i].version == update.version &&
+            this._updates[i].buildID == update.buildID) {
           // Replace the existing entry with the new value, updating
           // all metadata.
           this._updates[i] = update;
@@ -2470,13 +2477,133 @@ function NSGetModule(compMgr, fileSpec) {
  */
 function isCompatible(update) {
 #ifdef MOZ_XUL_APP
-  var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                      .getService(Components.interfaces.nsIExtensionManager);
+  var em = 
+      Components.classes["@mozilla.org/extensions/manager;1"].
+      getService(Components.interfaces.nsIExtensionManager);
   var items = em.getIncompatibleItemList("", update.extensionVersion,
-                                         nsIUpdateItem.TYPE_ADDON, false, { });
+    nsIUpdateItem.TYPE_ADDON, false, { });
   return items.length == 0;
 #else
   return true;
 #endif
 }
 
+/**
+ * Shows a prompt for an update, provided there are no incompatible addons.
+ * If there are, kick off an update check and see if updates are available
+ * that will resolve the incompatibilities.
+ * @param   update
+ *          The available update to show
+ */
+function showPromptIfNoIncompatibilities(update) {
+  function showPrompt(update) {
+    LOG("UpdateService", "_selectAndInstallUpdate: need to prompt user before continuing...");
+    var prompter = 
+        Components.classes["@mozilla.org/updates/update-prompt;1"].
+        createInstance(Components.interfaces.nsIUpdatePrompt);
+    prompter.showUpdateAvailable(update);
+  }
+
+#ifdef MOZ_XUL_APP
+  /**
+   * Determines if an addon is compatible with a particular update.
+   * @param   addon
+   *          The addon to check
+   * @param   version
+   *          The extensionVersion of the update to check for compatibility 
+   *          against.
+   * @returns true if the addon is compatible, false otherwise
+   */
+  function addonIsCompatible(addon, version) {
+    var vc = 
+        Components.classes["@mozilla.org/xpcom/version-comparator;1"].
+        getService(Components.interfaces.nsIVersionComparator);
+    return (vc.compare(version, addon.minAppVersion) >= 0) &&
+          (vc.compare(version, addon.maxAppVersion) <= 0);
+  }
+
+  /**
+   * An object implementing nsIAddonUpdateCheckListener that looks for 
+   * available updates to addons and if updates are found that will make the 
+   * user's installed addon set compatible with the update, suppresses the
+   * prompt that would otherwise be shown.
+   * @param   addons
+   *          An array of incompatible addons that are installed.
+   * @constructor
+   */
+  function Listener(addons) {
+    this._addons = addons;
+  }
+  Listener.prototype = {
+    _addons: null,
+    
+    /**
+     * See nsIUpdateService.idl
+     */
+    onUpdateStarted: function() { 
+    },
+    onUpdateEnded: function() {
+      // There are still incompatibilities, even after an extension update 
+      // check to see if there were newer, compatible versions available, so
+      // we have to prompt. 
+      // 
+      // PREF_APP_UPDATE_INCOMPATIBLE_MODE controls the mode in which we 
+      // handle incompatibilities:
+      // 0    We count both VersionInfo updates _and_ NewerVersion updates
+      //      against the list of incompatible addons installed - i.e. if
+      //      Foo 1.2 is installed and it is incompatible with the update, and
+      //      we find Foo 2.0 which is but which is not yet downloaded or 
+      //      installed, then we do NOT prompt because the user can download
+      //      Foo 2.0 when they restart after the update during the mismatch
+      //      checking UI. This is the default, since it suppresses most 
+      //      prompt dialogs. 
+      // 1    We count only VersionInfo updates against the list of 
+      //      incompatible addons installed - i.e. if the situation above
+      //      with Foo 1.2 and available update to 2.0 applies, we DO show
+      //      the prompt since a download operation will be required after
+      //      the update. This is not the default and is supplied only as
+      //      a hidden option for those that want it. 
+      var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 
+                         INCOMPATIBLE_MODE_NEWVERSIONS);
+      if ((mode == 0 && this._addons.length) || !isCompatible(update))
+        showPrompt(update);
+    },
+    onAddonUpdateStarted: function(addon) {
+    },
+    onAddonUpdateEnded: function(addon, status) {
+      if (status == nsIAddonUpdateCheckListener.STATUS_UPDATE &&
+          addonIsCompatible(addon, update.extensionVersion)) {
+        for (var i = 0; i < this._addons.length; ++i) {
+          if (this._addons[i] == addon) {
+            this._addons.splice(i, 1);
+            break;
+          }
+        }
+      }
+    },
+    /**
+     * See nsISupports.idl
+     */
+    QueryInterface: function(iid) {
+      if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) &&
+          !iid.equals(Components.interfaces.nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+      return this;
+    }
+  };
+  
+  if (!isCompatible(update)) {
+    var listener = new Listener(em.getIncompatibleItemList("", 
+      update.extensionVersion, nsIUpdateItem.TYPE_ADDON, false, { }));
+    var em = 
+        Components.classes["@mozilla.org/extensions/manager;1"].
+        getService(Components.interfaces.nsIExtensionManager);
+    // See documentation on |mode| above. 
+    var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 
+                       INCOMPATIBLE_MODE_NEWVERSIONS);
+    em.update([], 0, mode != 0, listener);
+  }
+  else
+#endif
+    showPrompt(update);
+}
