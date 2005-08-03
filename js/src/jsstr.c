@@ -363,6 +363,11 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
         }
     }
 
+    if (newlength >= ~(size_t)0 / sizeof(jschar)) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+
     newchars = (jschar *) JS_malloc(cx, (newlength + 1) * sizeof(jschar));
     if (!newchars)
         return JS_FALSE;
