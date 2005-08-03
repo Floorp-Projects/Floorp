@@ -666,36 +666,53 @@ CK_SESSION_HANDLE PK11_GetRWSession(PK11SlotInfo *slot)
 {
     CK_SESSION_HANDLE rwsession;
     CK_RV crv;
+    PRBool haveMonitor = PR_FALSE;
 
-    if (!slot->isThreadSafe || slot->defRWSession) PK11_EnterSlotMonitor(slot);
-    if (slot->defRWSession) return slot->session;
+    if (!slot->isThreadSafe || slot->defRWSession) {
+    	PK11_EnterSlotMonitor(slot);
+	haveMonitor = PR_TRUE;
+    }
+    if (slot->defRWSession) {
+	PORT_Assert(slot->session != CK_INVALID_SESSION);
+	if (slot->session != CK_INVALID_SESSION) 
+	    return slot->session;
+    }
 
     crv = PK11_GETTAB(slot)->C_OpenSession(slot->slotID,
 				CKF_RW_SESSION|CKF_SERIAL_SESSION,
 				  	  slot, pk11_notify,&rwsession);
-    if (crv == CKR_SESSION_COUNT) {
-	PK11_GETTAB(slot)->C_CloseSession(slot->session);
-	slot->session = CK_INVALID_SESSION;
-    	crv = PK11_GETTAB(slot)->C_OpenSession(slot->slotID,
-				CKF_RW_SESSION|CKF_SERIAL_SESSION,
-				  	  slot,pk11_notify,&rwsession);
-    }
-    if (crv != CKR_OK) {
+    PORT_Assert(rwsession != CK_INVALID_SESSION || crv != CKR_OK);
+    if (crv != CKR_OK || rwsession == CK_INVALID_SESSION) {
+	if (crv == CKR_OK) 
+	    crv = CKR_DEVICE_ERROR;
+	if (haveMonitor)
+	    PK11_ExitSlotMonitor(slot);
 	PORT_SetError(PK11_MapError(crv));
-	if (slot->session == CK_INVALID_SESSION) {
-    	    PK11_GETTAB(slot)->C_OpenSession(slot->slotID,CKF_SERIAL_SESSION,
-				  	 slot,pk11_notify,&slot->session);
-	}
-	if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 	return CK_INVALID_SESSION;
     }
-
+    if (slot->defRWSession) { /* we have the monitor */
+    	slot->session = rwsession;
+    }
     return rwsession;
 }
 
 PRBool
-PK11_RWSessionHasLock(PK11SlotInfo *slot,CK_SESSION_HANDLE session_handle) {
-    return (PRBool)(!slot->isThreadSafe || slot->defRWSession);
+PK11_RWSessionHasLock(PK11SlotInfo *slot,CK_SESSION_HANDLE session_handle) 
+{
+    PRBool hasLock;
+    hasLock = (PRBool)(!slot->isThreadSafe || 
+    	      (slot->defRWSession && slot->session != CK_INVALID_SESSION));
+    return hasLock;
+}
+
+static PRBool
+pk11_RWSessionIsDefault(PK11SlotInfo *slot,CK_SESSION_HANDLE rwsession)
+{
+    PRBool isDefault;
+    isDefault = (PRBool)(slot->session == rwsession &&
+    	                 slot->defRWSession && 
+			 slot->session != CK_INVALID_SESSION);
+    return isDefault;
 }
 
 /*
@@ -706,16 +723,14 @@ PK11_RWSessionHasLock(PK11SlotInfo *slot,CK_SESSION_HANDLE session_handle) {
 void
 PK11_RestoreROSession(PK11SlotInfo *slot,CK_SESSION_HANDLE rwsession)
 {
-    if (slot->defRWSession) {
-	PK11_ExitSlotMonitor(slot);
-	return;
+    PORT_Assert(rwsession != CK_INVALID_SESSION);
+    if (rwsession != CK_INVALID_SESSION) {
+    	PRBool doExit = PK11_RWSessionHasLock(slot, rwsession);
+	if (!pk11_RWSessionIsDefault(slot, rwsession))
+	    PK11_GETTAB(slot)->C_CloseSession(rwsession);
+	if (doExit)
+	    PK11_ExitSlotMonitor(slot);
     }
-    PK11_GETTAB(slot)->C_CloseSession(rwsession);
-    if (slot->session == CK_INVALID_SESSION) {
-    	 PK11_GETTAB(slot)->C_OpenSession(slot->slotID,CKF_SERIAL_SESSION,
-				  	 slot,pk11_notify,&slot->session);
-    }
-    if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 }
 
 /************************************************************

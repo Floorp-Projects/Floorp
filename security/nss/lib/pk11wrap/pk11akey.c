@@ -959,12 +959,17 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	haslock = PK11_RWSessionHasLock(slot,session_handle);
 	restore = PR_TRUE;
     } else {
-        PK11_EnterSlotMonitor(slot); /* gross!! */
 	session_handle = slot->session;
+	if (session_handle != CK_INVALID_SESSION)
+	    PK11_EnterSlotMonitor(slot);
 	restore = PR_FALSE;
 	haslock = PR_TRUE;
     }
 
+    if (session_handle == CK_INVALID_SESSION) {
+    	PORT_SetError(SEC_ERROR_BAD_DATA);
+	return NULL;
+    }
     crv = PK11_GETTAB(slot)->C_GenerateKeyPair(session_handle, &mechanism,
 	pubTemplate,pubCount,privTemplate,privCount,&pubID,&privID);
 
@@ -1640,6 +1645,10 @@ PK11_ConvertSessionPrivKeyToTokenPrivKey(SECKEYPrivateKey *privk, void* wincx)
 
     PK11_Authenticate(slot, PR_TRUE, wincx);
     rwsession = PK11_GetRWSession(slot);
+    if (rwsession == CK_INVALID_SESSION) {
+    	PORT_SetError(SEC_ERROR_BAD_DATA);
+	return NULL;
+    }
     crv = PK11_GETTAB(slot)->C_CopyObject(rwsession, privk->pkcs11ID,
         template, 1, &newKeyID);
     PK11_RestoreROSession(slot, rwsession);
@@ -1652,6 +1661,7 @@ PK11_ConvertSessionPrivKeyToTokenPrivKey(SECKEYPrivateKey *privk, void* wincx)
     return PK11_MakePrivKey(slot, nullKey /*KeyType*/, PR_FALSE /*isTemp*/,
         newKeyID, NULL /*wincx*/);
 }
+
 /*
  * destroy a private key if there are no matching certs.
  * this function also frees the privKey structure.
