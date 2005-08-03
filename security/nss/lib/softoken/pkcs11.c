@@ -1358,14 +1358,9 @@ fail:
 	if (object->objectInfo == NULL) return crv;
 	object->infoFree = (SFTKFree) nsslowkey_DestroyPrivateKey;
 	/* now NULL out the sensitive attributes */
-	if (sftk_isTrue(object,CKA_SENSITIVE)) {
-	    sftk_nullAttribute(object,CKA_PRIVATE_EXPONENT);
-	    sftk_nullAttribute(object,CKA_PRIME_1);
-	    sftk_nullAttribute(object,CKA_PRIME_2);
-	    sftk_nullAttribute(object,CKA_EXPONENT_1);
-	    sftk_nullAttribute(object,CKA_EXPONENT_2);
-	    sftk_nullAttribute(object,CKA_COEFFICIENT);
-	}
+	/* remove nulled out attributes for session objects. these only
+	 * applied to rsa private keys anyway (other private keys did not
+	 * get their attributes NULL'ed out */
     }
     return CKR_OK;
 }
