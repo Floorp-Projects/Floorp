@@ -1631,6 +1631,46 @@ loser:
 }
 
 SECKEYPrivateKey*
+PK11_CopyTokenPrivKeyToSessionPrivKey(PK11SlotInfo *destSlot,
+				      SECKEYPrivateKey *privKey)
+{
+    CK_RV             crv;
+    CK_OBJECT_HANDLE  newKeyID;
+
+    static const CK_BBOOL     ckfalse = CK_FALSE;
+    static const CK_ATTRIBUTE template[1] = { 
+       { CKA_TOKEN, (CK_BBOOL *)&ckfalse, sizeof ckfalse }
+    };
+
+    if (destSlot && destSlot != privKey->pkcs11Slot) {
+	SECKEYPrivateKey *newKey =
+	       pk11_loadPrivKey(destSlot, 
+				privKey, 
+			        NULL,     /* pubKey    */
+			        PR_FALSE, /* token     */
+			        PR_FALSE);/* sensitive */
+	if (newKey)
+	    return newKey;
+    }
+    destSlot = privKey->pkcs11Slot;
+    PK11_Authenticate(destSlot, PR_TRUE, privKey->wincx);
+    PK11_EnterSlotMonitor(destSlot);
+    crv = PK11_GETTAB(destSlot)->C_CopyObject(	destSlot->session, 
+						privKey->pkcs11ID,
+						(CK_ATTRIBUTE *)template, 
+						1, &newKeyID);
+    PK11_ExitSlotMonitor(destSlot);
+
+    if (crv != CKR_OK) {
+	PORT_SetError( PK11_MapError(crv) );
+	return NULL;
+    }
+
+    return PK11_MakePrivKey(destSlot, privKey->keyType, PR_TRUE /*isTemp*/, 
+			    newKeyID, privKey->wincx);
+}
+
+SECKEYPrivateKey*
 PK11_ConvertSessionPrivKeyToTokenPrivKey(SECKEYPrivateKey *privk, void* wincx)
 {
     PK11SlotInfo* slot = privk->pkcs11Slot;
