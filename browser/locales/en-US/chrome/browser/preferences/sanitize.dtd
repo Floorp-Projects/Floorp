@@ -20,7 +20,7 @@
 
 <!ENTITY settings.label               "Sanitize Settings">
 <!ENTITY sanitizeOnShutDown.label     "Sanitize &brandShortName; on shutdown">
-<!ENTITY sanitizeOnShutDown.accesskey "S">
+<!ENTITY sanitizeOnShutDown.accesskey "e">
 <!ENTITY promptOnSanitize.label       "Ask me before Sanitizing &brandShortName;">
 <!ENTITY promptOnSanitize.accesskey   "k">
 

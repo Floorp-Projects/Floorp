@@ -21,7 +21,7 @@
 <!ENTITY enableExtensionUpdate.accesskey "x">
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "N">
-<!ENTITY extensionsCheckNow.accesskey   "w">
+<!ENTITY extensionsCheckNow.accesskey   "o">
 <!ENTITY whenUpdatesFound.label         "When updates to &brandShortName; are found,">
 <!ENTITY modeAskMe.label                "Ask me what I want to do">
 <!ENTITY modeAskMe.accesskey            "A">
