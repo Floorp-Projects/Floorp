@@ -147,6 +147,7 @@
       <field name="_nextFunc">(function() { document.documentElement.advance(); })</field>
       <field name="_finishFunc">(function() { document.documentElement.advance(); })</field>
       <field name="_cancelFunc">(function() { document.documentElement.cancel(); })</field>
+      <field name="_extra1Func">(function() { document.documentElement.extra1(); })</field>
 
       <field name="_closeHandler">(function(event) {
         if (document.documentElement.cancel())
@@ -177,6 +178,7 @@
         this._initWizardButton("next");
         this._initWizardButton("finish");
         this._initWizardButton("cancel");
+        this._initWizardButton("extra1");
         
         this._initPages();
         
@@ -195,6 +197,13 @@
         <body><![CDATA[
           var els = this.getElementsByAttribute("pageid", aPageId);
           return els.item(0);
+        ]]></body>
+      </method>
+      
+      <method name="extra1">
+        <body><![CDATA[
+          if (this.currentPage) 
+            this._fireEvent(this.currentPage, "extra1");
         ]]></body>
       </method>
 
@@ -338,15 +347,19 @@
          var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
          if (btn) {
            btn.addEventListener("command", this["_"+aName+"Func"], false);
+           try {
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
-           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
+            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
 #else
-           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
+            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
 #endif
 #else
-           btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
 #endif
+           }
+           catch (e) {
+           }
            this["_"+aName+"Button"] = btn;
          }
          return btn;
@@ -498,7 +511,10 @@
       <xul:vbox class="wizard-buttons-box-1" flex="1">
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-box-2">
-          <xul:spacer flex="1"/>
+          <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
+#ifndef XP_MACOSX
+          <xul:spacer flex="1" anonid="spacer"/>
+#endif
 #ifdef XP_UNIX
           <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/>
           <xul:spacer style="width: 24px"/>
