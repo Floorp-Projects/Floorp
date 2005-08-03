@@ -109,7 +109,7 @@ sub SaveAccount {
 
         if($old_login_name ne $new_login_name) {
             $cgi->param('Bugzilla_password') 
-              || ThrowCodeError("old_password_required");
+              || ThrowUserError("old_password_required");
 
             use Bugzilla::Token;
             # Block multiple email changes for the same user.
