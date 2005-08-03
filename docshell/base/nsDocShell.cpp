@@ -2606,7 +2606,7 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
             PRUint32 cloneID = 0;
             nsCOMPtr<nsISHEntry> nextEntry;
             aCloneRef->GetID(&cloneID);
-            rv = CloneAndReplace(currentEntry, cloneID, aNewEntry,
+            rv = CloneAndReplace(currentEntry, this, cloneID, aNewEntry,
                                  getter_AddRefs(nextEntry));
 
             if (NS_SUCCEEDED(rv)) {
@@ -4463,7 +4463,7 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
     }
     // XXX What if SetupNewViewer fails?
     if (mLSHE)
-      mOSHE = mLSHE;
+        SetHistoryEntry(&mOSHE, mLSHE);
 
     PRBool updateHistory = PR_TRUE;
 
@@ -4541,7 +4541,7 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                 // Save history state of the previous page
                 rv = PersistLayoutHistoryState();
                 if (mOSHE)
-                    mOSHE = mLSHE;
+                    SetHistoryEntry(&mOSHE, mLSHE);
             }
         
         }
@@ -4684,7 +4684,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
 
         // Clear the mLSHE reference to indicate document loading is done one
         // way or another.
-        mLSHE = nsnull;
+        SetHistoryEntry(&mLSHE, nsnull);
     }
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
@@ -5099,7 +5099,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, PRBool *aRestoring)
     printf("restoring presentation from session history: %s\n", spec.get());
 #endif
 
-    mLSHE = aSHEntry;
+    SetHistoryEntry(&mLSHE, aSHEntry);
 
     // Add the request to our load group.  We do this before swapping out
     // the content viewers so that consumers of STATE_START can access
@@ -5245,7 +5245,7 @@ nsDocShell::RestoreFromHistory()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // mLSHE is now our currently-loaded document.
-    mOSHE = mLSHE;
+    SetHistoryEntry(&mOSHE, mLSHE);
     
     // XXX special wyciwyg handling in Embed()?
     // XXX SetLayoutHistoryState(null)?
@@ -6234,7 +6234,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * onLocationChange() notifications to the browser to update
              * back/forward buttons. 
              */
-            mLSHE = aSHEntry;
+            SetHistoryEntry(&mLSHE, aSHEntry);
 
             /* This is a anchor traversal with in the same page.
              * call OnNewURI() so that, this traversal will be 
@@ -6263,7 +6263,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
              * by OnNewURI() for normal loads or aSHEntry for history loads.
              */
             if (mLSHE) {
-                mOSHE = mLSHE;
+                SetHistoryEntry(&mOSHE, mLSHE);
                 // Save the postData obtained from the previous page
                 // in to the session history entry created for the 
                 // anchor page, so that any history load of the anchor
@@ -6290,7 +6290,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             /* Clear out mLSHE so that further anchor visits get
              * recorded in SH and SH won't misbehave. 
              */
-            mLSHE = nsnull;
+            SetHistoryEntry(&mLSHE, nsnull);
             /* Set the title for the SH entry for this target url. so that
              * SH menus in go/back/forward buttons won't be empty for this.
              */
@@ -6365,7 +6365,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called. But when loading an error page, do not clear the
     // mLSHE for the real page.
     if (mLoadType != LOAD_ERROR_PAGE) {
-        mLSHE = aSHEntry;
+        SetHistoryEntry(&mLSHE, aSHEntry);
         mSavingOldViewer = savePresentation;
     }
 
@@ -7083,7 +7083,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // If this is a refresh to the currently loaded url, we don't
     // have to update session or global history.
     if (mLoadType == LOAD_REFRESH && !inputStream && equalUri) {
-        mLSHE = mOSHE;
+        SetHistoryEntry(&mLSHE, mOSHE);
     }
 
 
@@ -7486,72 +7486,235 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
     return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
-                            nsISHEntry * replaceEntry,
-                            nsISHEntry ** resultEntry)
+/* static */ nsresult
+nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
+                               nsDocShell *aRootShell,
+                               WalkHistoryEntriesFunc aCallback,
+                               void *aData)
 {
-    nsresult result = NS_OK;
-    NS_ENSURE_ARG_POINTER(resultEntry);
-    nsISHEntry *dest = (nsISHEntry *) nsnull;
-    PRUint32 srcID;
-    src->GetID(&srcID);
+    NS_ENSURE_TRUE(aRootEntry, NS_ERROR_FAILURE);
 
-    if (!src || !replaceEntry)
+    nsCOMPtr<nsISHContainer> container(do_QueryInterface(aRootEntry));
+    if (!container)
         return NS_ERROR_FAILURE;
 
-    if (srcID == aCloneID) {
+    PRInt32 childCount;
+    container->GetChildCount(&childCount);
+    for (PRInt32 i = 0; i < childCount; i++) {
+        nsCOMPtr<nsISHEntry> childEntry;
+        container->GetChildAt(i, getter_AddRefs(childEntry));
+        if (!childEntry) {
+            // childEntry can be null for valid reasons, for example if the
+            // docshell at index i never loaded anything useful.
+            continue;
+        }
+
+        nsDocShell *childShell = nsnull;
+        if (aRootShell) {
+            // Walk the children of aRootShell and see if one of them
+            // has srcChild as a SHEntry.
+
+            PRInt32 childCount = aRootShell->mChildList.Count();
+            for (PRInt32 j = 0; j < childCount; ++j) {
+                nsDocShell *child =
+                    NS_STATIC_CAST(nsDocShell*, aRootShell->ChildAt(j));
+
+                if (child->HasHistoryEntry(childEntry)) {
+                    childShell = child;
+                    break;
+                }
+            }
+        }
+        nsresult rv = aCallback(childEntry, childShell, i, aData);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
+}
+
+// callback data for WalkHistoryEntries
+struct CloneAndReplaceData
+{
+    PRUint32              cloneID;
+    nsISHEntry           *replaceEntry;
+    nsISHEntry           *destTreeParent;
+    nsCOMPtr<nsISHEntry>  resultEntry;
+};
+
+/* static */ nsresult
+nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
+                                 PRInt32 aEntryIndex, void *aData)
+{
+    nsresult result = NS_OK;
+    nsCOMPtr<nsISHEntry> dest;
+
+    CloneAndReplaceData *data = NS_STATIC_CAST(CloneAndReplaceData*, aData);
+    PRUint32 cloneID = data->cloneID;
+    nsISHEntry *replaceEntry = data->replaceEntry;
+
+    PRUint32 srcID;
+    aEntry->GetID(&srcID);
+
+    if (srcID == cloneID) {
+        // Just replace the entry, and don't walk the children.
         dest = replaceEntry;
         dest->SetIsSubFrame(PR_TRUE);
-        *resultEntry = dest;
-        NS_IF_ADDREF(*resultEntry);
-    }
-    else {
+    } else {
         // Clone the SHEntry...
-        result = src->Clone(&dest);
+        result = aEntry->Clone(getter_AddRefs(dest));
         if (NS_FAILED(result))
             return result;
 
-        // This entry is for a frame...
+        // This entry is for a subframe navigation
         dest->SetIsSubFrame(PR_TRUE);
 
-        // Transfer the owning reference to 'resultEntry'.  From this point on
-        // 'dest' is *not* an owning reference...
-        *resultEntry = dest;
+        // Walk the children
+        CloneAndReplaceData childData = { cloneID, replaceEntry, dest, nsnull };
+        result = WalkHistoryEntries(aEntry, aShell,
+                                    CloneAndReplaceChild, &childData);
+        if (NS_FAILED(result))
+            return result;
 
-        PRInt32 childCount = 0;
+        if (aShell)
+            aShell->SwapHistoryEntries(aEntry, dest);
+    }
 
-        nsCOMPtr<nsISHContainer> srcContainer(do_QueryInterface(src));
-        if (!srcContainer)
-            return NS_ERROR_FAILURE;
-        nsCOMPtr<nsISHContainer> destContainer(do_QueryInterface(dest));
-        if (!destContainer)
-            return NS_ERROR_FAILURE;
-        srcContainer->GetChildCount(&childCount);
-        for (PRInt32 i = 0; i < childCount; i++) {
-            nsCOMPtr<nsISHEntry> srcChild;
-            srcContainer->GetChildAt(i, getter_AddRefs(srcChild));
-            if (!srcChild) {
-                // srcChild can be null for valid reasons, for example if the
-                // docshell at index i never loaded anything useful.  So if we
-                // hit a null here, just go on; it'll be null in the cloned
-                // tree as well.
-                continue;
-            }
-            nsCOMPtr<nsISHEntry> destChild;
-            result =
-                CloneAndReplace(srcChild, aCloneID, replaceEntry,
-                                getter_AddRefs(destChild));
-            if (NS_FAILED(result))
-                return result;
-            result = destContainer->AddChild(destChild, i);
-            if (NS_FAILED(result))
-                return result;
-        }                       // for 
+    nsCOMPtr<nsISHContainer> container =
+        do_QueryInterface(data->destTreeParent);
+    if (container)
+        container->AddChild(dest, aEntryIndex);
+
+    data->resultEntry = dest;
+    return result;
+}
+
+/* static */ nsresult
+nsDocShell::CloneAndReplace(nsISHEntry *aSrcEntry,
+                                   nsDocShell *aSrcShell,
+                                   PRUint32 aCloneID,
+                                   nsISHEntry *aReplaceEntry,
+                                   nsISHEntry **aResultEntry)
+{
+    NS_ENSURE_ARG_POINTER(aResultEntry);
+    NS_ENSURE_TRUE(aReplaceEntry, NS_ERROR_FAILURE);
+
+    CloneAndReplaceData data = { aCloneID, aReplaceEntry, nsnull, nsnull };
+    nsresult rv = CloneAndReplaceChild(aSrcEntry, aSrcShell, 0, &data);
+
+    data.resultEntry.swap(*aResultEntry);
+    return rv;
+}
+
+
+void
+nsDocShell::SwapHistoryEntries(nsISHEntry *aOldEntry, nsISHEntry *aNewEntry)
+{
+    if (aOldEntry == mOSHE)
+        mOSHE = aNewEntry;
+
+    if (aOldEntry == mLSHE)
+        mLSHE = aNewEntry;
+}
+
+
+struct SwapEntriesData
+{
+    nsDocShell *ignoreShell;     // constant; the shell to ignore
+    nsISHEntry *destTreeRoot;    // constant; the root of the dest tree
+    nsISHEntry *destTreeParent;  // constant; the node under destTreeRoot
+                                 // whose children will correspond to aEntry
+};
+
+
+nsresult
+nsDocShell::SetChildHistoryEntry(nsISHEntry *aEntry, nsDocShell *aShell,
+                                 PRInt32 aEntryIndex, void *aData)
+{
+    SwapEntriesData *data = NS_STATIC_CAST(SwapEntriesData*, aData);
+    nsDocShell *ignoreShell = data->ignoreShell;
+
+    if (!aShell || aShell == ignoreShell)
+        return NS_OK;
+
+    nsISHEntry *destTreeRoot = data->destTreeRoot;
+
+    // aEntry is a clone of the child of destTreeParent with the same index.
+    nsCOMPtr<nsISHEntry> destEntry;
+    nsCOMPtr<nsISHContainer> container =
+        do_QueryInterface(data->destTreeParent);
+
+    if (container) {
+        container->GetChildAt(aEntryIndex, getter_AddRefs(destEntry));
+        NS_ASSERTION(destEntry, "oops, history trees are out of sync");
+
+#ifdef DEBUG
+        PRUint32 id1, id2;
+        aEntry->GetID(&id1);
+        destEntry->GetID(&id2);
+        NS_ASSERTION(id1 == id2, "oops, history trees are out of sync");
+#endif
+    } else {
+        destEntry = destTreeRoot;
+    }
+
+    aShell->SwapHistoryEntries(aEntry, destEntry);
+
+    // Now handle the children of aEntry.
+    SwapEntriesData childData = { ignoreShell, destTreeRoot, destEntry };
+    return WalkHistoryEntries(aEntry, aShell,
+                              SetChildHistoryEntry, &childData);
+}
+
+
+static nsISHEntry*
+GetRootSHEntry(nsISHEntry *aEntry)
+{
+    nsCOMPtr<nsISHEntry> rootEntry = aEntry;
+    nsISHEntry *result = nsnull;
+    while (rootEntry) {
+        result = rootEntry;
+        result->GetParent(getter_AddRefs(rootEntry));
     }
 
     return result;
+}
 
+
+void
+nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry> *aPtr, nsISHEntry *aEntry)
+{
+    // We need to sync up the docshell and session history trees for
+    // subframe navigation.  If the load was in a subframe, we forward up to
+    // the root docshell, which will then recursively sync up all docshells
+    // to their corresponding entries in the new session history tree.
+    // If we don't do this, then we can cache a content viewer on the wrong
+    // cloned entry, and subsequently restore it at the wrong time.
+
+    nsISHEntry *newRootEntry = GetRootSHEntry(aEntry);
+    if (newRootEntry) {
+        // newRootEntry is now the new root entry.
+        // Find the old root entry as well.
+
+        nsISHEntry *oldRootEntry = GetRootSHEntry(*aPtr);
+        if (oldRootEntry) {
+            nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+            GetSameTypeParent(getter_AddRefs(parentAsItem));
+            nsCOMPtr<nsIDocShell> rootShell = do_QueryInterface(parentAsItem);
+            if (rootShell) { // if we're the root just set it, nothing to swap
+                SwapEntriesData data = { this, newRootEntry };
+                nsIDocShell *rootIDocShell =
+                    NS_STATIC_CAST(nsIDocShell*, rootShell);
+                nsDocShell *rootDocShell = NS_STATIC_CAST(nsDocShell*,
+                                                          rootIDocShell);
+
+                nsresult rv = SetChildHistoryEntry(oldRootEntry, rootDocShell,
+                                                   0, &data);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "SetChildHistoryEntry failed");
+            }
+        }
+    }
+
+    *aPtr = aEntry;
 }
 
 

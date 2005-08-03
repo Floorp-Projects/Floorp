@@ -332,12 +332,65 @@ protected:
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType);
     NS_IMETHOD PersistLayoutHistoryState();
-    NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, PRUint32 aCloneID,
-        nsISHEntry * areplaceEntry, nsISHEntry ** destEntry);
+
+    // Clone a session history tree for subframe navigation.
+    // The tree rooted at |aSrcEntry| will be cloned into |aDestEntry|, except
+    // for the entry with id |aCloneID|, which will be replaced with
+    // |aReplaceEntry|.  |aSrcShell| is a (possibly null) docshell which
+    // corresponds to |aSrcEntry| via its mLSHE or mOHE pointers, and will
+    // have that pointer updated to point to the cloned history entry.
+    static nsresult CloneAndReplace(nsISHEntry *aSrcEntry,
+                                    nsDocShell *aSrcShell,
+                                    PRUint32 aCloneID,
+                                    nsISHEntry *aReplaceEntry,
+                                    nsISHEntry **aDestEntry);
+
+    // Child-walking callback for CloneAndReplace
+    static nsresult CloneAndReplaceChild(nsISHEntry *aEntry,
+                                         nsDocShell *aShell,
+                                         PRInt32 aChildIndex, void *aData);
+
     nsresult GetRootSessionHistory(nsISHistory ** aReturn);
     nsresult GetHttpChannel(nsIChannel * aChannel, nsIHttpChannel ** aReturn);
     PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
-    
+
+    // Determine whether this docshell corresponds to the given history entry,
+    // via having a pointer to it in mOSHE or mLSHE.
+    PRBool HasHistoryEntry(nsISHEntry *aEntry) const
+    {
+        return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
+    }
+
+    // Update any pointers (mOSHE or mLSHE) to aOldEntry to point to aNewEntry
+    void SwapHistoryEntries(nsISHEntry *aOldEntry, nsISHEntry *aNewEntry);
+
+    // Call this method to swap in a new history entry to m[OL]SHE, rather than
+    // setting it directly.  This completes the navigation in all docshells
+    // in the case of a subframe navigation.
+    void SetHistoryEntry(nsCOMPtr<nsISHEntry> *aPtr, nsISHEntry *aEntry);
+
+    // Child-walking callback for SetHistoryEntry
+    static nsresult SetChildHistoryEntry(nsISHEntry *aEntry,
+                                         nsDocShell *aShell,
+                                         PRInt32 aEntryIndex, void *aData);
+
+    // Callback prototype for WalkHistoryEntries.
+    // aEntry is the child history entry, aShell is its corresponding docshell,
+    // aChildIndex is the child's index in its parent entry, and aData is
+    // the opaque pointer passed to WalkHistoryEntries.
+    typedef nsresult (*WalkHistoryEntriesFunc)(nsISHEntry *aEntry,
+                                               nsDocShell *aShell,
+                                               PRInt32 aChildIndex,
+                                               void *aData);
+
+    // For each child of aRootEntry, find the corresponding docshell which is
+    // a child of aRootShell, and call aCallback.  The opaque pointer aData
+    // is passed to the callback.
+    static nsresult WalkHistoryEntries(nsISHEntry *aRootEntry,
+                                       nsDocShell *aRootShell,
+                                       WalkHistoryEntriesFunc aCallback,
+                                       void *aData);
+
     // Global History
     nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer);
 

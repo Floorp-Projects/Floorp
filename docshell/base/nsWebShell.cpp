@@ -908,7 +908,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
             // is a bit of a hack, and if the force-load fails I think we'll
             // end up being confused about what page we're on... but we would
             // anyway, since we've updated the session history index above.
-            mOSHE = loadingSHE;
+            SetHistoryEntry(&mOSHE, loadingSHE);
             
             /* The user does want to repost the data to the server.
              * Initiate a new load again.
