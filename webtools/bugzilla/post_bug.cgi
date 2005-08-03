@@ -139,7 +139,7 @@ if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
 
 my @bug_fields = ("version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc",
+                  "bug_status", "everconfirmed", "bug_file_loc", "short_desc",
                   "target_milestone", "status_whiteboard");
 
 if (Param("usebugaliases")) {
@@ -208,18 +208,14 @@ check_form_field_defined($cgi, 'assigned_to');
 check_form_field_defined($cgi, 'bug_file_loc');
 check_form_field_defined($cgi, 'comment');
 
+my $everconfirmed = ($cgi->param('bug_status') eq 'UNCONFIRMED') ? 0 : 1;
+$cgi->param(-name => 'everconfirmed', -value => $everconfirmed);
+
 my @used_fields;
 foreach my $field (@bug_fields) {
     if (defined $cgi->param($field)) {
         push (@used_fields, $field);
     }
-}
-
-if (defined $cgi->param('bug_status') 
-    && $cgi->param('bug_status') ne 'UNCONFIRMED') 
-{
-    push(@used_fields, "everconfirmed");
-    $cgi->param(-name => 'everconfirmed', -value => 1);
 }
 
 $cgi->param(-name => 'product_id', -value => $product_id);
