@@ -24,13 +24,6 @@ license {
 }
 
 /**
- * Update Found Page
- */
-wizard[currentpageid="updatesfound"] .wizard-buttons {
-  display: none;
-}
-
-/**
  * Update History Window
  */
 update {
