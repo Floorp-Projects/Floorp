@@ -115,8 +115,8 @@ richlistbox {
   -moz-image-region: rect(52px, 160px, 78px, 128px) !important;
 }
 
-.button-text {
-	display: none;
+#commandBar .button-text {
+  display: none;
 }
 
 .commandBarSeparator {
