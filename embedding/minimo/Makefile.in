@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = popuplite softkb chrome
+DIRS = popuplite softkb phone chrome
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS += ../browser/gtk/src app

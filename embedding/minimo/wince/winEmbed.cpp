@@ -36,6 +36,8 @@
 
 #include "MinimoPrivate.h"
 
+#include "nsIPhoneSupport.h"
+
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponents.h"
 #endif
@@ -209,12 +211,10 @@ void DoPreferences()
 
     prefBranch->SetBoolPref("snav.keyCode.modifier", 0);
     prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
-
 }
 
 void OverrideComponents()
 {
-  
   static NS_DEFINE_CID(kBrowserStatusFilter, NS_BROWSERSTATUSFILTER_CID);
 
   nsCOMPtr<nsIComponentRegistrar> registrar;

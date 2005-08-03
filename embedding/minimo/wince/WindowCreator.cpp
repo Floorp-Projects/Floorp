@@ -73,45 +73,29 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     
     nsCOMPtr<nsIXULWindow> newWindow;
     
-#ifndef WINCE
-    //modality is screwy on windows ce.
-    if (aParent) {
-        nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
-        NS_ASSERTION(xulParent, "window created using non-XUL parent. that's unexpected, but may work.");
-        
-        if (xulParent)
-            xulParent->CreateNewWindow(aChromeFlags, mAppShell, getter_AddRefs(newWindow));
-
-        // And if it fails, don't try again without a parent. It could fail
-        // intentionally (bug 115969).
-    } 
-    else 
-#endif
-    { 
-        nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-        if (!appShell)
-            return NS_ERROR_FAILURE;
-        
-        nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
-
-        unsigned long x, y;
-        GetScreenSize(&x, &y);
-
-        appShell->CreateTopLevelWindow(xulParent, 
-                                       0, 
-                                       aChromeFlags,
-                                       x,
-                                       y,
-                                       mAppShell, 
-                                       getter_AddRefs(newWindow));
-    }
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+    if (!appShell)
+      return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+    
+    unsigned long x, y;
+    GetScreenSize(&x, &y);
+    
+    appShell->CreateTopLevelWindow(xulParent, 
+                                   0, 
+                                   aChromeFlags,
+                                   x,
+                                   y,
+                                   mAppShell, 
+                                   getter_AddRefs(newWindow));
     
     // if anybody gave us anything to work with, use it
     if (newWindow) {
-        newWindow->SetContextFlags(aContextFlags);
-        nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
-        if (thing)
-            CallGetInterface(thing.get(), aNewWindow);
+      newWindow->SetContextFlags(aContextFlags);
+      nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
+      if (thing)
+        CallGetInterface(thing.get(), aNewWindow);
     }
     
     return *aNewWindow ? NS_OK : NS_ERROR_FAILURE;

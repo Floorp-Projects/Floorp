@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  embedcomponents \
 		  appcomps \
+		  phone \
 		  $(NULL)
 
 CPPSRCS		= \
