@@ -54,10 +54,6 @@ META_COMPONENT	= crypto
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
 
-ifdef MINIMO
-FORCE_SHARED_LIB = 1
-endif
-
 PACKAGE_FILE = pipnss.pkg
 
 CPPSRCS = 				\
