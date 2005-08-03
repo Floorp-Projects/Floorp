@@ -67,8 +67,6 @@ nsBrowserStatusHandler.prototype =
     this.statusbarText    = document.getElementById("statusbar-text");
     this.stopreloadButton = document.getElementById("reload-stop-button");
     this.statusbar        = document.getElementById("statusbar");
-    this.refTab           = null;                            // reference tab.
-    this.transferCount    = 0;                               //
   },
 
   destroy : function()
@@ -81,25 +79,13 @@ nsBrowserStatusHandler.prototype =
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
-    if(aStateFlags & nsIWebProgressListener.STATE_TRANSFERRING) { 
-      this.transferCount+=5;
-      // Has to be fixed and stay within the urlBarIdentity functions. 
-      //if(gSelectedTab==this.refTab) {
-      document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
-      // }
-    }
 
     if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
     {
 
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
-        this.transferCount=0;
-        // Has to be fixed and stay within the urlBarIdentity functions. 
-        // if(gSelectedTab==this.refTab) {
-        document.styleSheets[1].cssRules[0].style.backgroundImage="url(chrome://minimo/skin/transfer.gif)";
-        //  }
-        this.stopreloadButton.image = "chrome://minimo/skin/stop.gif";
+        this.stopreloadButton.className = "stop-button";
         this.stopreloadButton.onClick = "BrowserStop()";
         this.statusbar.hidden = false;
         return;
@@ -107,12 +93,10 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
-        // Has to be fixed and stay within the urlBarIdentity functions. 
-        //    if(gSelectedTab==this.refTab) {
-        document.styleSheets[1].cssRules[0].style.backgroundPosition="0px 100%";
-        // }
+        /* To be fixed. We dont want to directly access sytle from here */
+        document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
-        this.stopreloadButton.image = "chrome://minimo/skin/reload.gif";
+        this.stopreloadButton.className = "reload-button";
         this.stopreloadButton.onClick = "BrowserReload()";
         
         this.statusbar.hidden = true;
@@ -139,29 +123,18 @@ nsBrowserStatusHandler.prototype =
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
-    this.transferCount++;
-    document.styleSheets[1].cssRules[0].style.backgroundPosition=this.transferCount+"px 100%";
+    var percentage = parseInt((aCurTotalProgress * 100) / aMaxTotalProgress);
+    document.styleSheets[1].cssRules[0].style.backgroundPosition=percentage+"px 100%";
 
-    //alert("aWebProgress="+aWebProgress+"aRequest.name: "+aRequest.name+"aCurSelfProgress:"+aCurSelfProgress);
   },
-
-
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
-
-    // Update the URL BAR only if the gSelectedTab matches this tab. 
-    // if(gSelectedTab==this.refTab) {
         domWindow = aWebProgress.DOMWindow;
         // Update urlbar only if there was a load on the root docshell
         if (domWindow == domWindow.top) {
           this.urlBar.value = aLocation.spec;
         }
-
-        // Work-in-progress, to not use the DOM store and simply the StatusHander objects..
-        //this.lastLocation=aLocation.spec; // the onclick tab handler should get this URL to refresh the urlbar. 
-          this.refTab.setAttribute("lastLocation",aLocation.spec);
-
-    //}
+        this.refTab.setAttribute("lastLocation",aLocation.spec);
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)

@@ -62,23 +62,20 @@
 
   <toolbox>
     <toolbar id="nav-bar"  >
+       <menubar  class="chromeclass-menubar">
+         <menu id="menu-button" >
+            <menupopup id="menu_FilePopup">
+              <menuitem id="menu_close"/>
+              <menuitem id="menu_closeWindow" command="cmd_closeWindow"
+                  key="key_closeWindow" label="about"/>
+              <menuitem label="new Tab" oncommand="BrowserOpenTab()" />
+            </menupopup>
+          </menu>
+        </menubar>
 
-<menubar  class="chromeclass-menubar">
-  <menu id="menu-button" >
-   <menupopup id="menu_FilePopup">
-     <menuitem id="menu_close"/>
-     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
-               key="key_closeWindow" label="about"/>
-     <menuitem label="new Tab" oncommand="BrowserOpenTab()" />
-
-   </menupopup>
-
-  </menu>
- </menubar>
-
-        <toolbarbutton id="back-button"    image="chrome://minimo/skin/back.gif"    onclick="BrowserBack()"/>  
-        <toolbarbutton id="forward-button" image="chrome://minimo/skin/forward.gif" onclick="BrowserForward()"/>  
-        <toolbarbutton id="reload-stop-button"  image="chrome://minimo/skin/reload.gif"  onclick="BrowserReload()"/>
+        <toolbarbutton id="back-button" onclick="BrowserBack()"/>  
+        <toolbarbutton id="forward-button" onclick="BrowserForward()"/>  
+        <toolbarbutton id="reload-stop-button" class="reload-button" onclick="BrowserReload()"/>
         <textbox id="urlbar" flex="100%" onkeypress="if( event.keyCode == 13 ) { BrowserLoadURL(); }"/>
     </toolbar>
   </toolbox>
