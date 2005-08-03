@@ -166,7 +166,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     }
 
 #ifndef DEBUG_dougt
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer) );
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get()) );
 #else
     printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 #endif // DEBUG_dougt
