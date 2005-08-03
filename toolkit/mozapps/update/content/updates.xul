@@ -83,47 +83,38 @@
   
   <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
               object="gUpdatesAvailablePage" label="&updatesfound.title;"
-              onpageshow="gUpdatesAvailablePage.onPageShow();">
-    <vbox flex="1" id="updatesfoundContent">
-      <description id="updateType"/>
-      <separator class="thin"/>
-      <label id="updateName" crop="right"/>
-      <separator class="thin"/>
-      <description>&upgrade.evangelism;</description>
-      <separator/>
-      <deck id="detailsDeck">
-        <vbox align="start">
-          <button id="moreDetails" 
-                  label="&moreDetails.label;" accesskey="&moreDetails.accesskey;"
-                  oncommand="gUpdatesAvailablePage.onShowMoreDetails();"/>
-        </vbox>
-        <vbox>
-          <hbox align="start" id="incompatibleWarning" hidden="true">
-            <image id="alertImage"/>
-            <vbox flex="1">
-              <description>&incompatible.warning;</description>
-              <hbox pack="end">
-                <button label="&listIncompatible.label;" accesskey="&listIncompatible.accesskey;"
-                        oncommand="gUpdatesAvailablePage.showIncompatibleItems();"/>
-              </hbox>
-            </vbox>
-          </hbox>
-          <link id="updateMoreInfoURL">
-            <label id="updateMoreInfoURLLabel">&clickHere.label;</label>
-          </link>
-        </vbox>
-      </deck>
-      <separator flex="1"/>
-    </vbox>    
-    <separator id="separatorGroove" class="groove"/>
-    <hbox id="installButtons">
-      <button id="downloadLater" label="&later.label;" accesskey="&later.accesskey;"
-              oncommand="gUpdatesAvailablePage.onInstallLater();"/>
-      <spacer flex="1"/>
-      <button id="downloadNow" label="&download.label;" accesskey="&download.accesskey;"
-              oncommand="gUpdatesAvailablePage.onInstallNow();"
-              default="true"/>
-    </hbox>
+              onpageshow="gUpdatesAvailablePage.onPageShow();"
+              onextra1="dump('+++++++++++++ GOAT\n');gUpdates.wiz.cancel()"
+              downloadNowLabel="&download.label;"
+              downloadLaterLabel="&later.label;">
+    <description id="updateType"/>
+    <separator class="thin"/>
+    <label id="updateName" crop="right"/>
+    <separator class="thin"/>
+    <description>&upgrade.evangelism;</description>
+    <separator/>
+    <deck id="detailsDeck">
+      <vbox align="start">
+        <button id="moreDetails" 
+                label="&moreDetails.label;" accesskey="&moreDetails.accesskey;"
+                oncommand="gUpdatesAvailablePage.onShowMoreDetails();"/>
+      </vbox>
+      <vbox>
+        <hbox align="start" id="incompatibleWarning" hidden="true">
+          <image id="alertImage"/>
+          <vbox flex="1">
+            <description>&incompatible.warning;</description>
+            <hbox pack="end">
+              <button label="&listIncompatible.label;" accesskey="&listIncompatible.accesskey;"
+                      oncommand="gUpdatesAvailablePage.showIncompatibleItems();"/>
+            </hbox>
+          </vbox>
+        </hbox>
+        <link id="updateMoreInfoURL">
+          <label id="updateMoreInfoURLLabel">&clickHere.label;</label>
+        </link>
+      </vbox>
+    </deck>
   </wizardpage>
   
   <wizardpage id="license" pageid="license" next="downloading"
