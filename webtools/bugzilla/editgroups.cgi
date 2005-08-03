@@ -334,12 +334,11 @@ if ($action eq 'del') {
     }
 
     my $hasbugs = 0;
-    my $buglist = "";
+    my $buglist = "0";
     SendSQL("SELECT bug_id FROM bug_group_map WHERE group_id = $gid");
 
     if (MoreSQLData()) {
         $hasbugs = 1;
-        my $buglist = "0";
 
         while (MoreSQLData()) {
             my ($bug) = FetchSQLData();
