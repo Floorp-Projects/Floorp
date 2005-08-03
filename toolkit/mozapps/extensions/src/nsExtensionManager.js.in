@@ -5037,14 +5037,19 @@ ExtensionItemUpdater.prototype = {
   /////////////////////////////////////////////////////////////////////////////
   // ExtensionItemUpdater
   _applyVersionUpdates: function(aLocalItem, aRemoteItem) {
-    var r = getResourceForID(aLocalItem.id);
     var targetAppInfo = this._emDS.getTargetApplicationInfo(aLocalItem.id, this._emDS);
-    // If |targetAppInfo| is null, then this item does not exist in the 
-    // datasource yet, probably because this update check operation was spawned
-    // during a Phone Home operation and the item has not yet been installed.
-    // Return true so the new compatibility info will be used for the install.
-    if (!targetAppInfo) 
-      return true;
+    // If targetAppInfo is null this is for a new install. If the local item's
+    // maxVersion does not equal the targetAppInfo maxVersion then this is for
+    // an upgrade. In both of these cases return true if the remotely specified
+    // maxVersion is greater than the local item's maxVersion.
+    if (!targetAppInfo ||
+        gVersionChecker.compare(aLocalItem.maxAppVersion, targetAppInfo.maxVersion) != 0) {
+      if (gVersionChecker.compare(aLocalItem.maxAppVersion, aRemoteItem.maxAppVersion) < 0)
+        return true;
+      else
+        return false;
+    }
+
     if (gVersionChecker.compare(targetAppInfo.maxVersion, aRemoteItem.maxAppVersion) < 0) {
       // Remotely specified maxVersion is newer than the maxVersion 
       // for the installed Extension. Apply that change to the datasources.
@@ -6543,6 +6548,7 @@ ExtensionsDataSource.prototype = {
 
     var extensionsStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
     var itemName = this.getItemProperty(id, "name");
+    var opType = this.getItemProperty(id, "opType");
     
     function getLiteral(key, strings) {
       return EM_L(extensionsStrings.formatStringFromName(key, 
@@ -6555,6 +6561,8 @@ ExtensionsDataSource.prototype = {
       case nsIAddonUpdateCheckListener.STATUS_NO_UPDATE:
         return getLiteral("updateNoUpdateMessage", [itemName]);
       case nsIAddonUpdateCheckListener.STATUS_VERSIONINFO:
+        if (opType == OP_NEEDS_UPGRADE || opType == OP_NEEDS_INSTALL)
+          break;
         return getLiteral("updateCompatibilityMessage", [itemName]);
       case nsIAddonUpdateCheckListener.STATUS_FAILURE:
         return getLiteral("updateErrorMessage", [itemName]);
@@ -6573,7 +6581,6 @@ ExtensionsDataSource.prototype = {
       var version = this.getItemProperty(id, "availableUpdateVersion");
       return getLiteral("updateAvailableMessage", [itemName, version]);
     }
-    var opType = this.getItemProperty(id, "opType");
     switch (opType) {
     case OP_NEEDS_DISABLE:
       return getLiteral("restartBeforeDisableMessage", [itemName, BundleManager.appName]);
