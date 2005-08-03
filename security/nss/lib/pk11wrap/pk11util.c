@@ -861,7 +861,7 @@ SECMOD_UpdateSlotList(SECMODModule *mod)
     CK_ULONG count;
     int i, oldCount;
     PRBool freeRef = PR_FALSE;
-    void *mark;
+    void *mark = NULL;
     CK_ULONG *slotIDs = NULL;
     PK11SlotInfo **newSlots = NULL;
     PK11SlotInfo **oldSlots = NULL;

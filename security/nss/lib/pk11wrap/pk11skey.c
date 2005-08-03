@@ -85,18 +85,26 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
 	symKey->next = NULL;
 	if ((symKey->series != slot->series) || (!symKey->sessionOwner))
     	    symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
-	return symKey;
+	PORT_Assert(symKey->session != CK_INVALID_SESSION);
+	if (symKey->session != CK_INVALID_SESSION)
+	    return symKey;
+        PK11_FreeSymKey(symKey);
     }
 
     symKey = PORT_New(PK11SymKey);
     if (symKey == NULL) {
 	return NULL;
     }
-    symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
     symKey->next = NULL;
-    return symKey;
+    symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
+    PORT_Assert(symKey->session != CK_INVALID_SESSION);
+    if (symKey->session != CK_INVALID_SESSION)
+	return symKey;
+    PK11_FreeSymKey(symKey);
+    return NULL;
 }
 
+/* Caller MUST hold slot->freeListLock (or ref count == 0?) !! */
 void
 PK11_CleanKeyList(PK11SlotInfo *slot)
 {
@@ -105,6 +113,8 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
     while (slot->freeSymKeysHead) {
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
+/* XXX Perhaps this should be:
+**   if (symKey->sessionOwner)  */
 	pk11_CloseSession(slot, symKey->session,symKey->sessionOwner);
 	PORT_Free(symKey);
     };
@@ -125,6 +135,11 @@ pk11_CreateSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, PRBool owner,
 
 
     if (symKey == NULL) {
+	return NULL;
+    }
+    if (symKey->session == CK_INVALID_SESSION) {
+    	PK11_FreeSymKey(symKey);
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return NULL;
     }
 
@@ -851,11 +866,18 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     /* Get session and perform locking */
     if (isToken) {
 	PK11_Authenticate(symKey->slot,PR_TRUE,wincx);
-        session = PK11_GetRWSession(symKey->slot);  /* Should always be original slot */
+	/* Should always be original slot */
+        session = PK11_GetRWSession(symKey->slot);  
 	symKey->owner = PR_FALSE;
     } else {
         session = symKey->session;
-        pk11_EnterKeyMonitor(symKey);
+	if (session != CK_INVALID_SESSION) 
+	    pk11_EnterKeyMonitor(symKey);
+    }
+    if (session == CK_INVALID_SESSION) {
+	PK11_FreeSymKey(symKey);
+	PORT_SetError(SEC_ERROR_BAD_DATA);
+	return NULL;
     }
 
     crv = PK11_GETTAB(symKey->slot)->C_GenerateKey(session,
@@ -931,6 +953,10 @@ PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk, void *wincx)
 
     PK11_Authenticate(slot, PR_TRUE, wincx);
     rwsession = PK11_GetRWSession(slot);
+    if (rwsession == CK_INVALID_SESSION) {
+	PORT_SetError(SEC_ERROR_BAD_DATA);
+	return NULL;
+    }
     crv = PK11_GETTAB(slot)->C_CopyObject(rwsession, symk->objectID,
         template, 1, &newKeyID);
     PK11_RestoreROSession(slot, rwsession);
@@ -1274,7 +1300,8 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
         newBaseKey = pk11_CopyToSlot (newSlot, derive, CKA_DERIVE, 
 				     baseKey);
 	PK11_FreeSlot(newSlot);
-	if (newBaseKey == NULL) return NULL;	
+	if (newBaseKey == NULL) 
+	    return NULL;	
 	baseKey = newBaseKey;
 	slot = baseKey->slot;
     }
@@ -1304,15 +1331,21 @@ pk11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
         pk11_EnterKeyMonitor(symKey);
 	session = symKey->session;
     }
-    crv = PK11_GETTAB(slot)->C_DeriveKey(session, &mechanism,
-	     baseKey->objectID, keyTemplate, templateCount, &symKey->objectID);
-    if (isPerm) {
-	PK11_RestoreROSession(slot, session);
+    if (session == CK_INVALID_SESSION) {
+	if (!isPerm)
+	    pk11_ExitKeyMonitor(symKey);
+	crv = CKR_SESSION_HANDLE_INVALID;
     } else {
-       pk11_ExitKeyMonitor(symKey);
+	crv = PK11_GETTAB(slot)->C_DeriveKey(session, &mechanism,
+	     baseKey->objectID, keyTemplate, templateCount, &symKey->objectID);
+	if (isPerm) {
+	    PK11_RestoreROSession(slot, session);
+	} else {
+	    pk11_ExitKeyMonitor(symKey);
+	}
     }
-
-    if (newBaseKey) PK11_FreeSymKey(newBaseKey);
+    if (newBaseKey) 
+    	PK11_FreeSymKey(newBaseKey);
     if (crv != CKR_OK) {
 	PK11_FreeSymKey(symKey);
 	return NULL;
@@ -1821,11 +1854,16 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
         pk11_EnterKeyMonitor(symKey);
 	rwsession = symKey->session;
     }
-    crv = PK11_GETTAB(slot)->C_UnwrapKey(rwsession,&mechanism,wrappingKey,
+    PORT_Assert(rwsession != CK_INVALID_SESSION);
+    if (rwsession == CK_INVALID_SESSION) 
+    	crv = CKR_SESSION_HANDLE_INVALID;
+    else
+	crv = PK11_GETTAB(slot)->C_UnwrapKey(rwsession,&mechanism,wrappingKey,
 		wrappedKey->data, wrappedKey->len, keyTemplate, templateCount, 
 							  &symKey->objectID);
     if (isPerm) {
-	PK11_RestoreROSession(slot, rwsession);
+	if (rwsession != CK_INVALID_SESSION)
+	    PK11_RestoreROSession(slot, rwsession);
     } else {
         pk11_ExitKeyMonitor(symKey);
     }
