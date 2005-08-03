@@ -46,28 +46,40 @@ interface nsISimpleEnumerator;
 interface nsITimerCallback;
 interface nsIXMLHttpRequest;
 
+/**
+ * An interface that describes an object representing a patch file that can
+ * be downloaded and applied to a version of this application so that it
+ * can be updated.
+ */
 [scriptable, uuid(56863a67-bd69-42de-9f40-583e625b457d)]
 interface nsIUpdatePatch : nsISupports
 {
   /**
-   *
+   * The type of this patch:
+   * "partial"      A binary difference between two application versions
+   * "complete"     A complete patch containing all of the replacement files
+   *                to update to the new version
    */
   attribute AString type;
+
   /**
-   *
+   * The URL this patch was being downloaded from
    */
   attribute AString URL;
+
   /**
-   *
+   * The hash function to use when determining this file's integrity
    */
   attribute AString hashFunction;
+
   /**
-   *
+   * The value of the hash function named above that should be computed if
+   * this file is not corrupt.
    */
   attribute AString hashValue;
   
   /**
-   *
+   * The size of this file, in bytes. 
    */
   attribute unsigned long size;
 
@@ -77,17 +89,32 @@ interface nsIUpdatePatch : nsISupports
   attribute AString state;
 
   /**
-   * 
+   * true if this patch is currently selected as the patch to be downloaded and
+   * installed for this update transaction, false if another patch from this
+   * update has been selected. 
    */
   attribute boolean selected;
 
   /**
-   *
+   * Serializes this patch object into a DOM Element
+   * @param   updates
+   *          The document to serialize into
+   * @returns The DOM Element created by the serialization process
    */
   nsIDOMElement serialize(in nsIDOMDocument updates);
 };
 
-[scriptable, uuid(bd75a4c6-b813-45b2-a96e-41a429c857c4)]
+/**
+ * An interface that describes an object representing an available update to
+ * the current application - this update may have several available patches
+ * from which one must be selected to download and install, for example we
+ * might select a binary difference patch first and attempt to apply that, 
+ * then if the application process fails fall back to downloading a complete
+ * file-replace patch. This object also contains information about the update
+ * that the front end and other application services can use to learn more 
+ * about what is going on.
+ */
+[scriptable, uuid(6cad6af7-5ae2-46fb-850a-bffd343d3069)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -112,6 +139,14 @@ interface nsIUpdate : nsISupports
    * compatibility of installed addons with this update. 
    */
   attribute AString extensionVersion;
+
+  /**
+   * The Build ID of this update. Used to determine a particular build, down
+   * to the hour, minute and second of its creation. This allows the system
+   * to differentiate between several nightly builds with the same |version|
+   * for example. 
+   */
+  attribute AString buildID;
 
   /**
    * The URL to a page which offers details about the content of this 
@@ -140,6 +175,13 @@ interface nsIUpdate : nsISupports
    * between the new version and the previous version.
    */
   attribute boolean isCompleteUpdate;
+
+  /**
+   * Whether or not the update is a security update or not. If this is true, 
+   * then we present more serious sounding user interface messages to the 
+   * user. 
+   */
+  attribute boolean isSecurityUpdate;
 
   /**
    * When the update was installed.
@@ -175,11 +217,19 @@ interface nsIUpdate : nsISupports
   nsIUpdatePatch getPatchAt(in unsigned long index);
 
   /**
-   * Serializes this Update object to a DOM element
+   * Serializes this update object into a DOM Element
+   * @param   updates
+   *          The document to serialize into
+   * @returns The DOM Element created by the serialization process
    */
   nsIDOMElement serialize(in nsIDOMDocument updates);
 };
 
+/**
+ * An interface describing an object that listens to the progress of an update
+ * check operation. This object is notified as the check continues, finishes
+ * and if it has an error. 
+ */
 [scriptable, uuid(8cbceb6e-8e27-46f2-8808-444c6499f836)]
 interface nsIUpdateCheckListener : nsISupports
 {
@@ -222,55 +272,9 @@ interface nsIUpdateCheckListener : nsISupports
                in nsIUpdate update);
 };
 
-[scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]
-interface nsIUpdatePrompt : nsISupports
-{
-  /**
-   * Shows a user interface that checks for and then displays the available
-   * updates.
-   */
-  void checkForUpdates();
-
-  /**
-   * Show a message advising that an update is available for download and
-   * install.
-   * @param   update
-   *          The update to be downloaded and installed
-   */
-  void showUpdateAvailable(in nsIUpdate update);
-
-  /**
-   * Show a message advising that an update has now been downloaded and that
-   * the user should restart their software should be restarted so that the
-   * update can be installed.
-   * @param   update
-   *          The update that was downloaded
-   */
-  void showUpdateDownloaded(in nsIUpdate update);
-
-  /**
-   * Shows a message detailing the update which was installed.
-   * @param   update
-   *          The nsIUpdate object which was just installed
-   */
-  void showUpdateInstalled(in nsIUpdate update);
-
-  /**
-   * Shows an error message UI telling the user about some kind of update
-   * failure, e.g. failure to apply patch.
-   * @param   update
-   *          The nsIUpdate object which we could not install
-   */
-  void showUpdateError(in nsIUpdate update);
-
-  /**
-   * Shows a list of all updates installed to date.
-   * @param   parent
-   *          A parent window to anchor this window to. Can be null.
-   */
-  void showUpdateHistory(in nsIDOMWindow parent);
-};
-
+/**
+ * An interface describing an object that knows how to check for updates.
+ */
 [scriptable, uuid(877ace25-8bc5-452a-8586-9c1cf2871994)]
 interface nsIUpdateChecker : nsISupports
 {
@@ -310,6 +314,11 @@ interface nsIUpdateChecker : nsISupports
   void stopChecking(in unsigned short duration);
 };
 
+/**
+ * An interface describing a global application service that handles performing
+ * background update checks and provides utilities for selecting and 
+ * downloading update patches.
+ */
 [scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
 interface nsIApplicationUpdateService : nsISupports
 {
@@ -370,6 +379,10 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean canUpdate;
 };
 
+/**
+ * An interface describing a global application service that maintains a list
+ * of updates previously performed as well as the current active update. 
+ */
 [scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]
 interface nsIUpdateManager : nsISupports
 {
@@ -397,6 +410,64 @@ interface nsIUpdateManager : nsISupports
   void saveUpdates();
 };
 
+/**
+ * An interface describing an object that can show various kinds of Update 
+ * notification UI to the user. 
+ */
+[scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]
+interface nsIUpdatePrompt : nsISupports
+{
+  /**
+   * Shows a user interface that checks for and then displays the available
+   * updates.
+   */
+  void checkForUpdates();
+
+  /**
+   * Show a message advising that an update is available for download and
+   * install.
+   * @param   update
+   *          The update to be downloaded and installed
+   */
+  void showUpdateAvailable(in nsIUpdate update);
+
+  /**
+   * Show a message advising that an update has now been downloaded and that
+   * the user should restart their software should be restarted so that the
+   * update can be installed.
+   * @param   update
+   *          The update that was downloaded
+   */
+  void showUpdateDownloaded(in nsIUpdate update);
+
+  /**
+   * Shows a message detailing the update which was installed.
+   * @param   update
+   *          The nsIUpdate object which was just installed
+   */
+  void showUpdateInstalled(in nsIUpdate update);
+
+  /**
+   * Shows an error message UI telling the user about some kind of update
+   * failure, e.g. failure to apply patch.
+   * @param   update
+   *          The nsIUpdate object which we could not install
+   */
+  void showUpdateError(in nsIUpdate update);
+
+  /**
+   * Shows a list of all updates installed to date.
+   * @param   parent
+   *          A parent window to anchor this window to. Can be null.
+   */
+  void showUpdateHistory(in nsIDOMWindow parent);
+};
+
+/**
+ * An interface describing a global application service that allows long 
+ * duration (e.g. 1-7 or more days, weeks or months) timers to be registered
+ * and then fired. 
+ */
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
 interface nsIUpdateTimerManager : nsISupports
 {
