@@ -7535,6 +7535,12 @@ nsDocShell::WalkHistoryEntries(nsISHEntry *aRootEntry,
 // callback data for WalkHistoryEntries
 struct CloneAndReplaceData
 {
+    CloneAndReplaceData(PRUint32 aCloneID, nsISHEntry *aReplaceEntry,
+                        nsISHEntry *aDestTreeParent)
+        : cloneID(aCloneID),
+          replaceEntry(aReplaceEntry),
+          destTreeParent(aDestTreeParent) { }
+
     PRUint32              cloneID;
     nsISHEntry           *replaceEntry;
     nsISHEntry           *destTreeParent;
@@ -7569,7 +7575,7 @@ nsDocShell::CloneAndReplaceChild(nsISHEntry *aEntry, nsDocShell *aShell,
         dest->SetIsSubFrame(PR_TRUE);
 
         // Walk the children
-        CloneAndReplaceData childData = { cloneID, replaceEntry, dest, nsnull };
+        CloneAndReplaceData childData(cloneID, replaceEntry, dest);
         result = WalkHistoryEntries(aEntry, aShell,
                                     CloneAndReplaceChild, &childData);
         if (NS_FAILED(result))
@@ -7598,7 +7604,7 @@ nsDocShell::CloneAndReplace(nsISHEntry *aSrcEntry,
     NS_ENSURE_ARG_POINTER(aResultEntry);
     NS_ENSURE_TRUE(aReplaceEntry, NS_ERROR_FAILURE);
 
-    CloneAndReplaceData data = { aCloneID, aReplaceEntry, nsnull, nsnull };
+    CloneAndReplaceData data(aCloneID, aReplaceEntry, nsnull);
     nsresult rv = CloneAndReplaceChild(aSrcEntry, aSrcShell, 0, &data);
 
     data.resultEntry.swap(*aResultEntry);
