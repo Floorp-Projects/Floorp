@@ -308,7 +308,7 @@ function cleanUpUpdatesDir() {
   while (e.hasMoreElements()) {
     var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
     try {
-      f.remove(false);
+      f.remove(true);
     }
     catch (e) {
       LOG("General", "Failed to remove file: " + f.path);
