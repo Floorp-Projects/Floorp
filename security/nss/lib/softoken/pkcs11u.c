@@ -193,6 +193,10 @@ sftk_FreeAttribute(SFTKAttribute *attribute)
 #define SFTK_DEF_ATTRIBUTE(value,len) \
    { NULL, NULL, PR_FALSE, PR_FALSE, 0, { 0, value, len } }
 
+#define SFTK_CLONE_ATTR(type, staticAttr) \
+    sftk_NewTokenAttribute( type, staticAttr.attrib.pValue, \
+    staticAttr.attrib.ulValueLen, PR_FALSE)
+
 CK_BBOOL sftk_staticTrueValue = CK_TRUE;
 CK_BBOOL sftk_staticFalseValue = CK_FALSE;
 static const SFTKAttribute sftk_StaticTrueAttr = 
@@ -407,12 +411,12 @@ sftk_FindRSAPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
 	SHA1_HashBuf(hash,key->u.rsa.modulus.data,key->u.rsa.modulus.len);
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_ENCRYPT:
     case CKA_VERIFY:
     case CKA_VERIFY_RECOVER:
     case CKA_WRAP:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_MODULUS:
 	return sftk_NewTokenAttributeSigned(type,key->u.rsa.modulus.data,
 					key->u.rsa.modulus.len, PR_FALSE);
@@ -442,9 +446,9 @@ sftk_FindDSAPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
     case CKA_ENCRYPT:
     case CKA_VERIFY_RECOVER:
     case CKA_WRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_VERIFY:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_VALUE:
 	return sftk_NewTokenAttributeSigned(type,key->u.dsa.publicValue.data,
 					key->u.dsa.publicValue.len, PR_FALSE);
@@ -477,12 +481,12 @@ sftk_FindDHPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
 	SHA1_HashBuf(hash,key->u.dh.publicValue.data,key->u.dh.publicValue.len);
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_ENCRYPT:
     case CKA_VERIFY:
     case CKA_VERIFY_RECOVER:
     case CKA_WRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_VALUE:
 	return sftk_NewTokenAttributeSigned(type,key->u.dh.publicValue.data,
 					key->u.dh.publicValue.len, PR_FALSE);
@@ -514,11 +518,11 @@ sftk_FindECPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type)
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
     case CKA_VERIFY:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_ENCRYPT:
     case CKA_VERIFY_RECOVER:
     case CKA_WRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_EC_PARAMS:
         /* XXX Why is the last arg PR_FALSE? */
 	return sftk_NewTokenAttributeSigned(type,
@@ -548,15 +552,15 @@ sftk_FindPublicKeyAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_SENSITIVE:
     case CKA_ALWAYS_SENSITIVE:
     case CKA_NEVER_EXTRACTABLE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_MODIFIABLE:
     case CKA_EXTRACTABLE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_LABEL:
         label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
 	if (label == NULL) {
-	   return (SFTKAttribute *)&sftk_StaticOneAttr;
+	   return SFTK_CLONE_ATTR(type,sftk_StaticOneAttr);
 	}
 	att = sftk_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
@@ -613,14 +617,14 @@ sftk_FindSecretKeyAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_WRAP:
     case CKA_UNWRAP:
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_NEVER_EXTRACTABLE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_LABEL:
         label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
 	if (label == NULL) {
-	   return (SFTKAttribute *)&sftk_StaticNullAttr;
+	   return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
 	}
 	att = sftk_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
@@ -723,7 +727,7 @@ sftk_FindSecretKeyAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 
 static SFTKAttribute *
 sftk_FindRSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key,
-							 CK_ATTRIBUTE_TYPE type)
+				CK_ATTRIBUTE_TYPE type)
 {
     unsigned char hash[SHA1_LENGTH];
     CK_KEY_TYPE keyType = CKK_RSA;
@@ -735,12 +739,12 @@ sftk_FindRSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key,
 	SHA1_HashBuf(hash,key->u.rsa.modulus.data,key->u.rsa.modulus.len);
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_DECRYPT:
     case CKA_SIGN:
     case CKA_SIGN_RECOVER:
     case CKA_UNWRAP:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_MODULUS:
 	return sftk_NewTokenAttributeSigned(type,key->u.rsa.modulus.data,
 					key->u.rsa.modulus.len, PR_FALSE);
@@ -748,12 +752,24 @@ sftk_FindRSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key,
 	return sftk_NewTokenAttributeSigned(type,key->u.rsa.publicExponent.data,
 				key->u.rsa.publicExponent.len, PR_FALSE);
     case CKA_PRIVATE_EXPONENT:
+	return sftk_NewTokenAttributeSigned(type,
+				key->u.rsa.privateExponent.data,
+				key->u.rsa.privateExponent.len, PR_FALSE);
     case CKA_PRIME_1:
+	return sftk_NewTokenAttributeSigned(type, key->u.rsa.prime1.data,
+				key->u.rsa.prime1.len, PR_FALSE);
     case CKA_PRIME_2:
+	return sftk_NewTokenAttributeSigned(type, key->u.rsa.prime2.data,
+				key->u.rsa.prime2.len, PR_FALSE);
     case CKA_EXPONENT_1:
+	return sftk_NewTokenAttributeSigned(type, key->u.rsa.exponent1.data,
+				key->u.rsa.exponent1.len, PR_FALSE);
     case CKA_EXPONENT_2:
+	return sftk_NewTokenAttributeSigned(type, key->u.rsa.exponent2.data,
+				key->u.rsa.exponent2.len, PR_FALSE);
     case CKA_COEFFICIENT:
-	return (SFTKAttribute *) &sftk_StaticNullAttr;
+	return sftk_NewTokenAttributeSigned(type, key->u.rsa.coefficient.data,
+				key->u.rsa.coefficient.len, PR_FALSE);
     default:
 	break;
     }
@@ -772,17 +788,18 @@ sftk_FindDSAPrivateKeyAttribute(NSSLOWKEYPrivateKey *key,
 	return sftk_NewTokenAttribute(type,&keyType,sizeof(keyType), PR_TRUE);
     case CKA_ID:
 	SHA1_HashBuf(hash,key->u.dsa.publicValue.data,
-						key->u.dsa.publicValue.len);
+			  key->u.dsa.publicValue.len);
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
     case CKA_DECRYPT:
     case CKA_SIGN_RECOVER:
     case CKA_UNWRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_SIGN:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_VALUE:
-	return (SFTKAttribute *) &sftk_StaticNullAttr;
+	return sftk_NewTokenAttributeSigned(type, key->u.dsa.privateValue.data,
+				key->u.dsa.privateValue.len, PR_FALSE);
     case CKA_PRIME:
 	return sftk_NewTokenAttributeSigned(type,key->u.dsa.params.prime.data,
 					key->u.dsa.params.prime.len, PR_FALSE);
@@ -812,14 +829,15 @@ sftk_FindDHPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
 	SHA1_HashBuf(hash,key->u.dh.publicValue.data,key->u.dh.publicValue.len);
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_DECRYPT:
     case CKA_SIGN:
     case CKA_SIGN_RECOVER:
     case CKA_UNWRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_VALUE:
-	return (SFTKAttribute *) &sftk_StaticNullAttr;
+	return sftk_NewTokenAttributeSigned(type,key->u.dh.privateValue.data,
+					key->u.dh.privateValue.len, PR_FALSE);
     case CKA_PRIME:
 	return sftk_NewTokenAttributeSigned(type,key->u.dh.prime.data,
 					key->u.dh.prime.len, PR_FALSE);
@@ -847,13 +865,14 @@ sftk_FindECPrivateKeyAttribute(NSSLOWKEYPrivateKey *key, CK_ATTRIBUTE_TYPE type)
 	return sftk_NewTokenAttribute(type,hash,SHA1_LENGTH, PR_TRUE);
     case CKA_DERIVE:
     case CKA_SIGN:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_DECRYPT:
     case CKA_SIGN_RECOVER:
     case CKA_UNWRAP:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_VALUE:
-	return (SFTKAttribute *) &sftk_StaticNullAttr;
+	return sftk_NewTokenAttributeSigned(type, key->u.ec.privateValue.data,
+					key->u.ec.privateValue.len, PR_FALSE);
     case CKA_EC_PARAMS:
         /* XXX Why is the last arg PR_FALSE? */
 	return sftk_NewTokenAttributeSigned(type,
@@ -880,16 +899,16 @@ sftk_FindPrivateKeyAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_ALWAYS_SENSITIVE:
     case CKA_EXTRACTABLE:
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_NEVER_EXTRACTABLE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_SUBJECT:
-	   return (SFTKAttribute *)&sftk_StaticNullAttr;
+	   return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
     case CKA_LABEL:
         label = nsslowkey_FindKeyNicknameByPublicKey(object->obj.slot->keyDB,
 				&object->dbKey, object->obj.slot->password);
 	if (label == NULL) {
-	   return (SFTKAttribute *)&sftk_StaticNullAttr;
+	   return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
 	}
 	att = sftk_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
@@ -926,7 +945,7 @@ sftk_FindSMIMEAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     switch (type) {
     case CKA_PRIVATE:
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_NETSCAPE_EMAIL:
 	return sftk_NewTokenAttribute(type,object->dbKey.data,
 						object->dbKey.len-1, PR_FALSE);
@@ -966,9 +985,9 @@ sftk_FindTrustAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 
     switch (type) {
     case CKA_PRIVATE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_CERT_SHA1_HASH:
     case CKA_CERT_MD5_HASH:
     case CKA_TRUST_CLIENT_AUTH:
@@ -1005,29 +1024,29 @@ sftk_FindTrustAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 	trustFlags = trust->trust->objectSigningFlags;
 trust:
 	if (trustFlags & CERTDB_TRUSTED_CA ) {
-	    return (SFTKAttribute *)&sftk_StaticTrustedDelegatorAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticTrustedDelegatorAttr);
 	}
 	if (trustFlags & CERTDB_TRUSTED) {
-	    return (SFTKAttribute *)&sftk_StaticTrustedAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticTrustedAttr);
 	}
 	if (trustFlags & CERTDB_NOT_TRUSTED) {
-	    return (SFTKAttribute *)&sftk_StaticUnTrustedAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticUnTrustedAttr);
 	}
 	if (trustFlags & CERTDB_TRUSTED_UNKNOWN) {
-	    return (SFTKAttribute *)&sftk_StaticTrustUnknownAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticTrustUnknownAttr);
 	}
 	if (trustFlags & CERTDB_VALID_CA) {
-	    return (SFTKAttribute *)&sftk_StaticValidDelegatorAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticValidDelegatorAttr);
 	}
 	if (trustFlags & CERTDB_VALID_PEER) {
-	    return (SFTKAttribute *)&sftk_StaticValidPeerAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticValidPeerAttr);
 	}
-	return (SFTKAttribute *)&sftk_StaticMustVerifyAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticMustVerifyAttr);
     case CKA_TRUST_STEP_UP_APPROVED:
 	if (trust->trust->sslFlags & CERTDB_GOVT_APPROVED_CA) {
-	    return (SFTKAttribute *)&sftk_StaticTrueAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
 	} else {
-	    return (SFTKAttribute *)&sftk_StaticFalseAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
 	}
     default:
 	break;
@@ -1065,10 +1084,11 @@ sftk_FindCrlAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     switch (type) {
     case CKA_PRIVATE:
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_NETSCAPE_KRL:
-	return (SFTKAttribute *) ((object->obj.handle == SFTK_TOKEN_KRL_HANDLE) 
-			? &sftk_StaticTrueAttr : &sftk_StaticFalseAttr);
+	return ((object->obj.handle == SFTK_TOKEN_KRL_HANDLE) 
+		? SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr)
+		: SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr));
     case CKA_SUBJECT:
 	return sftk_NewTokenAttribute(type,object->dbKey.data,
 						object->dbKey.len, PR_FALSE);	
@@ -1086,7 +1106,7 @@ sftk_FindCrlAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
     switch (type) {
     case CKA_NETSCAPE_URL:
 	if (crl->url == NULL) {
-	    return (SFTKAttribute *) &sftk_StaticNullAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
 	}
 	return sftk_NewTokenAttribute(type, crl->url, 
 					PORT_Strlen(crl->url)+1, PR_TRUE);
@@ -1109,12 +1129,12 @@ sftk_FindCertAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 
     switch (type) {
     case CKA_PRIVATE:
-	return (SFTKAttribute *) &sftk_StaticFalseAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticFalseAttr);
     case CKA_MODIFIABLE:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_CERTIFICATE_TYPE:
         /* hardcoding X.509 into here */
-        return (SFTKAttribute *)&sftk_StaticX509Attr;
+        return SFTK_CLONE_ATTR(type,sftk_StaticX509Attr);
     case CKA_VALUE:
     case CKA_ID:
     case CKA_LABEL:
@@ -1138,7 +1158,7 @@ sftk_FindCertAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (((cert->trust->sslFlags & CERTDB_USER) == 0) &&
 		((cert->trust->emailFlags & CERTDB_USER) == 0) &&
 		((cert->trust->objectSigningFlags & CERTDB_USER) == 0)) {
-	    return (SFTKAttribute *) &sftk_StaticNullAttr;
+	    return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
 	}
 	pubKey = nsslowcert_ExtractPublicKey(cert);
 	if (pubKey == NULL) break;
@@ -1152,9 +1172,10 @@ sftk_FindCertAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 	nsslowkey_DestroyPublicKey(pubKey);
 	return sftk_NewTokenAttribute(type, hash, SHA1_LENGTH, PR_TRUE);
     case CKA_LABEL:
-	return cert->nickname ? sftk_NewTokenAttribute(type, cert->nickname,
-				PORT_Strlen(cert->nickname), PR_FALSE) :
-					(SFTKAttribute *) &sftk_StaticNullAttr;
+	return cert->nickname 
+	       ? sftk_NewTokenAttribute(type, cert->nickname,
+				        PORT_Strlen(cert->nickname), PR_FALSE) 
+	       : SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
     case CKA_SUBJECT:
 	return sftk_NewTokenAttribute(type,cert->derSubject.data,
 						cert->derSubject.len, PR_FALSE);
@@ -1168,7 +1189,7 @@ sftk_FindCertAttribute(SFTKTokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (cert->emailAddr && cert->emailAddr[0])
 	    ? sftk_NewTokenAttribute(type, cert->emailAddr,
 	                             PORT_Strlen(cert->emailAddr), PR_FALSE) 
-	    : (SFTKAttribute *) &sftk_StaticNullAttr;
+	    : SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
     default:
 	break;
     }
@@ -1184,7 +1205,7 @@ sftk_FindTokenAttribute(SFTKTokenObject *object,CK_ATTRIBUTE_TYPE type)
 	return sftk_NewTokenAttribute(type,&object->obj.objclass,
 					sizeof(object->obj.objclass),PR_FALSE);
     case CKA_TOKEN:
-	return (SFTKAttribute *) &sftk_StaticTrueAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticTrueAttr);
     case CKA_LABEL:
 	if (  (object->obj.objclass == CKO_CERTIFICATE) 
 	   || (object->obj.objclass == CKO_PRIVATE_KEY)
@@ -1192,7 +1213,7 @@ sftk_FindTokenAttribute(SFTKTokenObject *object,CK_ATTRIBUTE_TYPE type)
 	   || (object->obj.objclass == CKO_SECRET_KEY)) {
 	    break;
 	}
-	return (SFTKAttribute *) &sftk_StaticNullAttr;
+	return SFTK_CLONE_ATTR(type,sftk_StaticNullAttr);
     default:
 	break;
     }
@@ -2384,6 +2405,342 @@ sftk_DeleteObject(SFTKSession *session, SFTKObject *object)
 }
 
 /*
+ * Token objects don't explicitly store their attributes, so we need to know
+ * what attributes make up a particular token object before we can copy it.
+ * below are the tables by object type.
+ */
+static const CK_ATTRIBUTE_TYPE commonAttrs[] = {
+    CKA_CLASS, CKA_TOKEN, CKA_PRIVATE, CKA_LABEL, CKA_MODIFIABLE
+};
+static const CK_ULONG commonAttrsCount = 
+			sizeof(commonAttrs)/sizeof(commonAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE commonKeyAttrs[] = {
+    CKA_ID, CKA_START_DATE, CKA_END_DATE, CKA_DERIVE, CKA_LOCAL, CKA_KEY_TYPE
+};
+static const CK_ULONG commonKeyAttrsCount = 
+			sizeof(commonKeyAttrs)/sizeof(commonKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE secretKeyAttrs[] = {
+    CKA_SENSITIVE, CKA_EXTRACTABLE, CKA_ENCRYPT, CKA_DECRYPT, CKA_SIGN,
+    CKA_VERIFY, CKA_WRAP, CKA_UNWRAP, CKA_VALUE
+};
+static const CK_ULONG secretKeyAttrsCount = 
+			sizeof(secretKeyAttrs)/sizeof(secretKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE commonPubKeyAttrs[] = {
+    CKA_ENCRYPT, CKA_VERIFY, CKA_VERIFY_RECOVER, CKA_WRAP, CKA_SUBJECT
+};
+static const CK_ULONG commonPubKeyAttrsCount = 
+			sizeof(commonPubKeyAttrs)/sizeof(commonPubKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE rsaPubKeyAttrs[] = {
+    CKA_MODULUS, CKA_PUBLIC_EXPONENT
+};
+static const CK_ULONG rsaPubKeyAttrsCount = 
+			sizeof(rsaPubKeyAttrs)/sizeof(rsaPubKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE dsaPubKeyAttrs[] = {
+    CKA_SUBPRIME, CKA_PRIME, CKA_BASE, CKA_VALUE
+};
+static const CK_ULONG dsaPubKeyAttrsCount = 
+			sizeof(dsaPubKeyAttrs)/sizeof(dsaPubKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE dhPubKeyAttrs[] = {
+    CKA_PRIME, CKA_BASE, CKA_VALUE
+};
+static const CK_ULONG dhPubKeyAttrsCount = 
+			sizeof(dhPubKeyAttrs)/sizeof(dhPubKeyAttrs[0]);
+#ifdef NSS_ENABLE_ECC
+static const CK_ATTRIBUTE_TYPE ecPubKeyAttrs[] = {
+    CKA_EC_PARAMS, CKA_EC_POINT
+};
+static const CK_ULONG ecPubKeyAttrsCount = 
+			sizeof(ecPubKeyAttrs)/sizeof(ecPubKeyAttrs[0]);
+#endif
+
+static const CK_ATTRIBUTE_TYPE commonPrivKeyAttrs[] = {
+    CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER, CKA_UNWRAP, CKA_SUBJECT,
+    CKA_SENSITIVE, CKA_EXTRACTABLE, CKA_NETSCAPE_DB
+};
+static const CK_ULONG commonPrivKeyAttrsCount = 
+		sizeof(commonPrivKeyAttrs)/sizeof(commonPrivKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE rsaPrivKeyAttrs[] = {
+    CKA_MODULUS, CKA_PUBLIC_EXPONENT, CKA_PRIVATE_EXPONENT, 
+    CKA_PRIME_1, CKA_PRIME_2, CKA_EXPONENT_1, CKA_EXPONENT_2, CKA_COEFFICIENT
+};
+static const CK_ULONG rsaPrivKeyAttrsCount = 
+			sizeof(rsaPrivKeyAttrs)/sizeof(rsaPrivKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE dsaPrivKeyAttrs[] = {
+    CKA_SUBPRIME, CKA_PRIME, CKA_BASE, CKA_VALUE
+};
+static const CK_ULONG dsaPrivKeyAttrsCount = 
+			sizeof(dsaPrivKeyAttrs)/sizeof(dsaPrivKeyAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE dhPrivKeyAttrs[] = {
+    CKA_PRIME, CKA_BASE, CKA_VALUE
+};
+static const CK_ULONG dhPrivKeyAttrsCount = 
+			sizeof(dhPrivKeyAttrs)/sizeof(dhPrivKeyAttrs[0]);
+#ifdef NSS_ENABLE_ECC
+static const CK_ATTRIBUTE_TYPE ecPrivKeyAttrs[] = {
+    CKA_EC_PARAMS, CKA_VALUE
+};
+static const CK_ULONG ecPrivKeyAttrsCount = 
+			sizeof(ecPrivKeyAttrs)/sizeof(ecPrivKeyAttrs[0]);
+#endif
+
+static const CK_ATTRIBUTE_TYPE certAttrs[] = {
+    CKA_CERTIFICATE_TYPE, CKA_VALUE, CKA_SUBJECT, CKA_ISSUER, CKA_SERIAL_NUMBER
+};
+static const CK_ULONG certAttrsCount = 
+		sizeof(certAttrs)/sizeof(certAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE trustAttrs[] = {
+    CKA_ISSUER, CKA_SERIAL_NUMBER, CKA_CERT_SHA1_HASH, CKA_CERT_MD5_HASH,
+    CKA_TRUST_SERVER_AUTH, CKA_TRUST_CLIENT_AUTH, CKA_TRUST_EMAIL_PROTECTION,
+    CKA_TRUST_CODE_SIGNING, CKA_TRUST_STEP_UP_APPROVED
+};
+static const CK_ULONG trustAttrsCount = 
+		sizeof(trustAttrs)/sizeof(trustAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE smimeAttrs[] = {
+    CKA_SUBJECT, CKA_NETSCAPE_EMAIL, CKA_NETSCAPE_SMIME_TIMESTAMP, CKA_VALUE
+};
+static const CK_ULONG smimeAttrsCount = 
+		sizeof(smimeAttrs)/sizeof(smimeAttrs[0]);
+
+static const CK_ATTRIBUTE_TYPE crlAttrs[] = {
+    CKA_SUBJECT, CKA_VALUE, CKA_NETSCAPE_URL, CKA_NETSCAPE_KRL
+};
+static const CK_ULONG crlAttrsCount = 
+		sizeof(crlAttrs)/sizeof(crlAttrs[0]);
+
+/* copy an object based on it's table */
+CK_RV
+stfk_CopyTokenAttributes(SFTKObject *destObject,SFTKTokenObject *src_to,
+	const CK_ATTRIBUTE_TYPE *attrArray, CK_ULONG attrCount)
+{
+    SFTKAttribute *attribute;
+    SFTKAttribute *newAttribute;
+    CK_RV crv = CKR_OK;
+    int i;
+
+    for (i=0; i < attrCount; i++) {
+	if (!sftk_hasAttribute(destObject,attrArray[i])) {
+	    attribute =sftk_FindAttribute(&src_to->obj, attrArray[i]);
+	    if (!attribute) {
+		continue; /* return CKR_ATTRIBUTE_VALUE_INVALID; */
+	    }
+	    /* we need to copy the attribute since each attribute
+	     * only has one set of link list pointers */
+	    newAttribute = sftk_NewAttribute( destObject,
+				sftk_attr_expand(&attribute->attrib));
+	    sftk_FreeAttribute(attribute); /* free the old attribute */
+	    if (!newAttribute) {
+		return CKR_HOST_MEMORY;
+	    }
+	    sftk_AddAttribute(destObject,newAttribute);
+	}
+    }
+    return crv;
+}
+
+CK_RV
+stfk_CopyTokenPrivateKey(SFTKObject *destObject,SFTKTokenObject *src_to)
+{
+    CK_RV crv;
+    CK_KEY_TYPE key_type;
+    SFTKAttribute *attribute;
+
+    /* copy the common attributes for all keys first */
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonKeyAttrs,
+							commonKeyAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+    /* copy the common attributes for all private keys next */
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonPrivKeyAttrs,
+							commonKeyAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+    attribute =sftk_FindAttribute(&src_to->obj, CKA_KEY_TYPE);
+    PORT_Assert(attribute); /* if it wasn't here, ww should have failed
+			     * copying the common attributes */
+    if (!attribute) {
+	/* OK, so CKR_ATTRIBUTE_VALUE_INVALID is the immediate error, but
+	 * the fact is, the only reason we couldn't get the attribute would
+	 * be a memory error or database error (an error in the 'device').
+	 * if we have a database error code, we could return it here */
+	crv = CKR_DEVICE_ERROR;
+	goto fail;
+    }
+    key_type = *(CK_KEY_TYPE *)attribute->attrib.pValue;
+    sftk_FreeAttribute(attribute);
+    
+    /* finally copy the attributes for various private key types */
+    switch (key_type) {
+    case CKK_RSA:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, rsaPrivKeyAttrs,
+							rsaPrivKeyAttrsCount);
+	break;
+    case CKK_DSA:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, dsaPrivKeyAttrs,
+							dsaPrivKeyAttrsCount);
+	break;
+    case CKK_DH:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, dhPrivKeyAttrs,
+							dhPrivKeyAttrsCount);
+	break;
+#ifdef NSS_ENABLE_ECC
+    case CKK_ECC:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, eccPrivKeyAttrs,
+							eccPrivKeyAttrsCount);
+	break;
+#endif
+     default:
+	crv = CKR_DEVICE_ERROR; /* shouldn't happen unless we store more types
+				* of token keys into our database. */
+    }
+fail:
+    return crv;
+}
+
+CK_RV
+stfk_CopyTokenPublicKey(SFTKObject *destObject,SFTKTokenObject *src_to)
+{
+    CK_RV crv;
+    CK_KEY_TYPE key_type;
+    SFTKAttribute *attribute;
+
+    /* copy the common attributes for all keys first */
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonKeyAttrs,
+							commonKeyAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+
+    /* copy the common attributes for all public keys next */
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonPubKeyAttrs,
+							commonPubKeyAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+    attribute =sftk_FindAttribute(&src_to->obj, CKA_KEY_TYPE);
+    PORT_Assert(attribute); /* if it wasn't here, ww should have failed
+			     * copying the common attributes */
+    if (!attribute) {
+	/* OK, so CKR_ATTRIBUTE_VALUE_INVALID is the immediate error, but
+	 * the fact is, the only reason we couldn't get the attribute would
+	 * be a memory error or database error (an error in the 'device').
+	 * if we have a database error code, we could return it here */
+	crv = CKR_DEVICE_ERROR;
+	goto fail;
+    }
+    key_type = *(CK_KEY_TYPE *)attribute->attrib.pValue;
+    sftk_FreeAttribute(attribute);
+    
+    /* finally copy the attributes for various public key types */
+    switch (key_type) {
+    case CKK_RSA:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, rsaPubKeyAttrs,
+							rsaPubKeyAttrsCount);
+	break;
+    case CKK_DSA:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, dsaPubKeyAttrs,
+							dsaPubKeyAttrsCount);
+	break;
+    case CKK_DH:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, dhPubKeyAttrs,
+							dhPubKeyAttrsCount);
+	break;
+#ifdef NSS_ENABLE_ECC
+    case CKK_ECC:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, eccPubKeyAttrs,
+							eccPubKeyAttrsCount);
+	break;
+#endif
+     default:
+	crv = CKR_DEVICE_ERROR; /* shouldn't happen unless we store more types
+				* of token keys into our database. */
+    }
+fail:
+    return crv;
+}
+CK_RV
+stfk_CopyTokenSecretKey(SFTKObject *destObject,SFTKTokenObject *src_to)
+{
+    CK_RV crv;
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonKeyAttrs,
+							commonKeyAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+    crv = stfk_CopyTokenAttributes(destObject, src_to, secretKeyAttrs,
+							secretKeyAttrsCount);
+fail:
+    return crv;
+}
+
+/*
+ * Copy a token object. We need to explicitly copy the relevant
+ * attributes since token objects don't store those attributes in
+ * the token itself.
+ */
+CK_RV
+sftk_CopyTokenObject(SFTKObject *destObject,SFTKObject *srcObject)
+{
+    SFTKTokenObject *src_to = sftk_narrowToTokenObject(srcObject);
+    CK_RV crv;
+
+    PORT_Assert(src_to);
+    if (src_to == NULL) {
+	return CKR_DEVICE_ERROR; /* internal state inconsistant */
+    }
+
+    crv = stfk_CopyTokenAttributes(destObject, src_to, commonAttrs,
+							commonAttrsCount);
+    if (crv != CKR_OK) {
+	goto fail;
+    }
+    switch (src_to->obj.objclass) {
+    case CKO_CERTIFICATE:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, certAttrs,
+							certAttrsCount);
+ 	break;
+    case CKO_NETSCAPE_TRUST:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, trustAttrs,
+							trustAttrsCount);
+	break;
+    case CKO_NETSCAPE_SMIME:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, smimeAttrs,
+							smimeAttrsCount);
+	break;
+    case CKO_NETSCAPE_CRL:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, crlAttrs,
+							crlAttrsCount);
+	break;
+    case CKO_PRIVATE_KEY:
+	crv = stfk_CopyTokenPrivateKey(destObject,src_to);
+	break;
+    case CKO_PUBLIC_KEY:
+	crv = stfk_CopyTokenPublicKey(destObject,src_to);
+	break;
+    case CKO_SECRET_KEY:
+	crv = stfk_CopyTokenSecretKey(destObject,src_to);
+	break;
+    default:
+	crv = CKR_DEVICE_ERROR; /* shouldn't happen unless we store more types
+				* of token keys into our database. */
+    }
+fail:
+    return crv;
+}
+
+/*
  * copy the attributes from one object to another. Don't overwrite existing
  * attributes. NOTE: This is a pretty expensive operation since it
  * grabs the attribute locks for the src object for a *long* time.
@@ -2396,7 +2753,7 @@ sftk_CopyObject(SFTKObject *destObject,SFTKObject *srcObject)
     unsigned int i;
 
     if (src_so == NULL) {
-	return CKR_DEVICE_ERROR; /* can't copy token objects yet */
+	return sftk_CopyTokenObject(destObject,srcObject); 
     }
 
     PZ_Lock(src_so->attributeLock);
@@ -2420,6 +2777,7 @@ sftk_CopyObject(SFTKObject *destObject,SFTKObject *srcObject)
 	} while (attribute != NULL);
     }
     PZ_Unlock(src_so->attributeLock);
+
     return CKR_OK;
 }
 
