@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Doron Rosenberg <doronr@us.ibm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -851,28 +852,42 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
 PRBool
 nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
 {
-  PRBool result = PR_TRUE;
+  // we default to true to allow regular posts to work like html forms.
+  PRBool allowSubmission = PR_TRUE;
 
-  // We require same-origin for replace="instance" or XML submission
+  /* for replace="instance" or XML submission, we follow these strict guidelines:
+       - we default to denying submission
+       - if we are not replacing instance, then file:// urls can submit anywhere.
+         We don't allow fetching of content for file:// urls since for example
+         XMLHttpRequest doesn't, since file:// doesn't always mean it is local.
+       - if we are still denying, we check the permission manager to see if the
+         domain hosting the XForm has been granted permission to get/send data
+         anywhere
+       - lastly, if submission is still being denied, we do a same origin check
+   */
   if (mFormat & (ENCODING_XML | ENCODING_MULTIPART_RELATED) || mIsReplaceInstance) {
 
-    // if we don't replace the instance, we allow file:// or sites whitelisted
-    // to submit data
-    if (!mIsReplaceInstance) {
-      aBaseURI->SchemeIs("file", &result);
+    // if same origin is required, default to false
+    allowSubmission = PR_FALSE;
 
-      // lets check the permission manager
-      if (!result) {
-        result = CheckPermissionManager(aBaseURI);
-      }
+    // if we don't replace the instance, we allow file:// to submit data anywhere
+    if (!mIsReplaceInstance) {
+      aBaseURI->SchemeIs("file", &allowSubmission);
     }
 
-    if (!result) {
-      result = nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
+    // let's check the permission manager
+    if (!allowSubmission) {
+      allowSubmission = CheckPermissionManager(aBaseURI);
+    }
+
+    // if none of the above checks have allowed the submission, we do a
+    // same origin check.
+    if (!allowSubmission) {
+      allowSubmission = nsXFormsUtils::CheckSameOrigin(aBaseURI, aTestURI);
     }
   }
 
-  return result;
+  return allowSubmission;
 }
 
 PRBool
