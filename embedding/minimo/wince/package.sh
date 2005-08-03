@@ -64,10 +64,6 @@ cp -a bin/components/nsDictionary.js                     wince/components
 cp -a bin/components/nsInterfaceInfoToIDL.js             wince/components
 cp -a bin/components/nsXmlRpcClient.js                   wince/components
 
-cp -a bin/components/pipboot.dll                         wince/components
-cp -a bin/components/pipnss.dll                          wince/components
-cp -a bin/components/pippki.dll                          wince/components
-
 cp -a bin/extensions/spatial-navigation@extensions.mozilla.org/components/* wince/components
 
 mkdir -p wince/greprefs
@@ -119,6 +115,13 @@ cat ../smallScreen.css >>                               $OBJDIR/dist/wince/res/u
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
 cp -a ../../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/wince
+
+
+echo Rebasing
+
+pushd $OBJDIR/dist/wince
+
+rebase -b 0x0100000 -R . -v *.dll components/*.dll
 
 echo Zipping
 

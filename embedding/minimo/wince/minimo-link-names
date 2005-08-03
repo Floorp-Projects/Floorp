@@ -25,3 +25,7 @@ nsXMLExtrasModule
 TransformiixModule
 nsWebServicesModule
 SoftKeyBoardModule
+BOOT
+NSS
+PKI
+nsPhoneSupportModule
