@@ -36,8 +36,6 @@
 
 #include "MinimoPrivate.h"
 
-#include "nsIPhoneSupport.h"
-
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponents.h"
 #endif
@@ -232,6 +230,7 @@ void OverrideComponents()
                                factory);
 }
 
+#ifdef WINCE
 typedef struct FindAppStruct
 {
   HWND hwnd;
@@ -279,6 +278,10 @@ PRBool DoesProcessAlreadyExist()
     MessageBox(0, "Can not start Minimo", "Unexpected Error", 0);
     return TRUE;
 }
+#else
+PRBool DoesProcessAlreadyExist() {return PR_FALSE;}
+#endif
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -296,7 +299,10 @@ PRBool DoesProcessAlreadyExist()
         library/en-us/dncenet/html/advmemmgmt.asp
  *
  * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
+#ifdef WINCE
 #define HACKY_PRE_LOAD_LIBRARY 1
+#endif
+
 #ifdef HACKY_PRE_LOAD_LIBRARY
 typedef struct _library
 {
@@ -346,8 +352,11 @@ int main(int argc, char *argv[])
     LoadKnownLibs();
 #endif
 
+#ifdef _BUILD_STATIC_BIN
     NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
-
+#else
+    NS_InitEmbedding(nsnull, nsnull);
+#endif
     // Choose the new profile
     if (NS_FAILED(StartupProfile()))
         return 1;

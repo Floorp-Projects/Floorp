@@ -36,6 +36,9 @@
 
 #include "MinimoPrivate.h"
 
+#ifdef WINCE
+#include "resource.h"
+
 static HWND gSplashScreenDialog = NULL;
 
 BOOL CALLBACK
@@ -127,3 +130,15 @@ void GetScreenSize(unsigned long* x, unsigned long* y)
   *x = workarea.right - workarea.left;
   *y = workarea.bottom - workarea.top;
 }
+
+#else
+
+void CreateSplashScreen() {}
+void KillSplashScreen() {}
+void GetScreenSize(unsigned long* x, unsigned long* y)
+{
+  *x = *y = 0;
+}
+
+
+#endif // WINCE
