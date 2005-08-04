@@ -73,6 +73,7 @@ if [ "$MOZ_COMPOSER" ]; then
 MAKEFILES_composer="
 editor/composer/Makefile
 editor/ui/Makefile
+editor/ui/locales/Makefile
 "
 fi
 
