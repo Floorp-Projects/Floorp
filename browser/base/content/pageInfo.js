@@ -308,13 +308,13 @@ function onLoadPageInfo()
   }
 
   /* Select the requested tab, if the name is specified */
+  var tabControl = document.getElementById("tabbox");
   if ("arguments" in window && window.arguments.length > 1)
   {
     var tabName = window.arguments[1];
 
     if (tabName)
     {
-      var tabControl = document.getElementById("tabbox");
       var tab = document.getElementById(tabName);
 
       if (tabControl && tab)
@@ -323,6 +323,7 @@ function onLoadPageInfo()
       }
     }
   }
+  tabControl.selectedTab.focus();
 }
 
 function doHelpButton() {
