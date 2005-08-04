@@ -1572,11 +1572,7 @@
       </constructor>
     </implementation>
     <handlers>
-	<handler event="keypress"><![CDATA[
-	  if (event.keyCode == 13) {
-	    onEnterInSearchTerm(); 
-          }
-        ]]></handler>
+	<handler event="keypress" keycode="VK_ENTER" action="onEnterInSearchTerm();"/>
     </handlers>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
@@ -1712,8 +1708,9 @@
           <![CDATA[
             var box = this.tree.boxObject;
             if (event.originalTarget == box.treeBody) {
-              var eventX = event.screenX - box.screenX + box.x;
-              var eventY = event.screenY - box.screenY + box.y;
+              // XXXbz We really want client*, but event.client* is bogus inside a popup!
+              var eventX = event.screenX - document.documentElement.boxObject.screenX;
+              var eventY = event.screenY - document.documentElement.boxObject.screenY;
               box.view.selection.select(box.getRowAt(eventX, eventY));
             }
           ]]>
