@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIServiceManager.h"
 #include "nsXFormsUtilityService.h"
 #include "nsXFormsUtils.h"
 #include "nsIXTFElement.h"
@@ -47,12 +48,22 @@
 #include "nsIDOMNodeList.h"
 #include "nsIInstanceElementPrivate.h"
 #include "nsIXFormsRepeatElement.h"
+#include "nsISchemaValidator.h"
+#include "nsISchemaDuration.h"
+#include "nsXFormsSchemaValidator.h"
+#include "prdtoa.h"
 
 NS_IMPL_ISUPPORTS1(nsXFormsUtilityService, nsIXFormsUtilityService)
 
+/* I don't know why Doron didn't put this in the .idl so that it could be added
+ * to the generated .h file.  Put it here for now
+ */
+#define NS_SCHEMAVALIDATOR_CONTRACTID  "@mozilla.org/schemavalidator;1"
+
+
 NS_IMETHODIMP
 nsXFormsUtilityService::GetModelFromNode(nsIDOMNode *aNode, 
-                                           nsIDOMNode **aModel)
+                                         nsIDOMNode **aModel)
 {
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
   NS_ASSERTION(aModel, "no return buffer, we'll crash soon");
@@ -163,8 +174,8 @@ nsXFormsUtilityService::IsNodeAssocWithModel( nsIDOMNode *aNode,
 
 NS_IMETHODIMP
 nsXFormsUtilityService::GetInstanceDocumentRoot(const      nsAString& aID,
-                                                  nsIDOMNode *aModelNode,
-                                                  nsIDOMNode **aInstanceRoot)
+                                                nsIDOMNode *aModelNode,
+                                                nsIDOMNode **aInstanceRoot)
 {
   nsresult rv = NS_ERROR_FAILURE;
   NS_ASSERTION(aInstanceRoot, "no return buffer, we'll crash soon");
@@ -195,22 +206,20 @@ nsXFormsUtilityService::GetInstanceDocumentRoot(const      nsAString& aID,
  */
 NS_IMETHODIMP 
 nsXFormsUtilityService::ValidateString(const nsAString & aValue, 
-                                         const nsAString & aType, 
-                                         const nsAString & aNamespace,
-                                         PRBool *aResult)
+                                       const nsAString & aType, 
+                                       const nsAString & aNamespace,
+                                       PRBool *aResult)
 {
 
-  // XXX TODO This function needs to call the XForms validator layer from
-  //   bug 274083 when it goes into the build.
+  NS_ASSERTION(aResult, "no return buffer for result so we'll crash soon");
+  *aResult = PR_FALSE;
 
-#if 0
-  nsresult rv = NS_ERROR_FAILURE;
   nsXFormsSchemaValidator *validator = new nsXFormsSchemaValidator();
-  *aResult = validator->ValidateString(aValue, aType, aNamespace);
-  return rv;
-#endif
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (validator) {
+    *aResult = validator->ValidateString(aValue, aType, aNamespace);
+    delete validator;
+  }
+  return *aResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -225,3 +234,210 @@ nsXFormsUtilityService::GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex)
   /// @bug This should somehow end up in a NaN per the XForms 1.0 Errata (XXX)
   return repeatEle ? repeatEle->GetIndex(aIndex) : NS_OK;
 }
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetMonths(const nsAString & aValue, 
+                                  PRInt32         * aMonths)
+{
+  NS_ASSERTION(aMonths, "no return buffer for months, we'll crash soon");
+
+  *aMonths = 0;
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsCOMPtr<nsISchemaValidator> schemaValidator = 
+    do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDuration(aValue, 
+                                                    getter_AddRefs(duration));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 sumMonths;
+  PRUint32 years;
+  PRUint32 months;
+
+  duration->GetYears(&years);
+  duration->GetMonths(&months);
+
+  sumMonths = months + years*12;
+  PRBool negative;
+  duration->GetNegative(&negative);
+  if (negative) {
+    // according to the spec, "the sign of the result will match the sign
+    // of the duration"
+    sumMonths *= -1;
+  }
+  
+  *aMonths = sumMonths;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetSeconds(const nsAString & aValue, 
+                                   double          * aSeconds)
+{
+  nsCOMPtr<nsISchemaDuration> duration;
+  nsCOMPtr<nsISchemaValidator> schemaValidator = 
+    do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDuration(aValue, 
+                                                    getter_AddRefs(duration));
+  NS_ENSURE_SUCCESS(rv, rv);
+  double sumSeconds;
+  PRUint32 days;
+  PRUint32 hours;
+  PRUint32 minutes;
+  PRUint32 seconds;
+  double fractSecs;
+
+  duration->GetDays(&days);
+  duration->GetHours(&hours);
+  duration->GetMinutes(&minutes);
+  duration->GetSeconds(&seconds);
+  duration->GetFractionSeconds(&fractSecs);
+
+  sumSeconds = seconds + minutes*60 + hours*3600 + days*24*3600 + fractSecs;
+
+  PRBool negative;
+  duration->GetNegative(&negative);
+  if (negative) {
+    // according to the spec, "the sign of the result will match the sign
+    // of the duration"
+    sumSeconds *= -1;
+  }
+
+  *aSeconds = sumSeconds;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetSecondsFromDateTime(const nsAString & aValue, 
+                                               double          * aSeconds)
+{
+  PRTime dateTime;
+  nsCOMPtr<nsISchemaValidator> schemaValidator = 
+    do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDateTime(aValue, &dateTime); 
+  NS_ENSURE_SUCCESS(rv, rv);
+                                               
+  PRTime secs64 = dateTime, remain64;
+  PRInt64 usecPerSec;
+  PRInt32 secs32, remain32;
+
+  // convert from PRTime (microseconds from epoch) to seconds.
+  LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+  LL_MOD(remain64, secs64, usecPerSec);   /* remainder after conversion */
+  LL_DIV(secs64, secs64, usecPerSec);     /* Conversion in whole seconds */
+
+  // convert whole seconds and remainder to PRInt32
+  LL_L2I(secs32, secs64);
+  LL_L2I(remain32, remain64);
+
+  // ready the result to send back to transformiix land now in case there are
+  // no fractional seconds or we end up having a problem parsing them out.  If
+  // we do, we'll just ignore the fractional seconds.
+  double totalSeconds = secs32;
+  *aSeconds = totalSeconds;
+
+  // We're not getting fractional seconds back in the PRTime we get from
+  // the schemaValidator.  We'll have to figure out the fractions from
+  // the original value.  Since ValidateBuiltinTypeDateTime returned
+  // successful for us to get this far, we know that the value is in
+  // the proper format.
+  int findFractionalSeconds = aValue.FindChar('.');
+  if (findFractionalSeconds < 0) {
+    // no fractions of seconds, so we are good to go as we are
+    return NS_OK;
+  }
+
+  const nsAString& fraction = Substring(aValue, findFractionalSeconds+1, 
+                                        aValue.Length());
+
+  PRBool done = PR_FALSE;
+  PRUnichar currentChar;
+  nsCAutoString fractionResult;
+  nsAString::const_iterator start, end, buffStart;
+  fraction.BeginReading(start);
+  fraction.BeginReading(buffStart);
+  fraction.EndReading(end);
+
+  while ((start != end) && !done) {
+    currentChar = *start++;
+
+    // Time is usually terminated with Z or followed by a time zone
+    // (i.e. -05:00).  Time can also be terminated by the end of the string, so
+    // test for that as well.  All of this specified at:
+    // http://www.w3.org/TR/xmlschema-2/#dateTime
+    if ((currentChar == 'Z') || (currentChar == '+') || (currentChar == '-') ||
+        (start == end)) {
+      fractionResult.AssignLiteral("0.");
+      AppendUTF16toUTF8(Substring(buffStart.get(), start.get()-1), 
+                        fractionResult);
+    } else if ((currentChar > '9') || (currentChar < '0')) {
+      // has to be a numerical character or else abort.  This should have been
+      // caught by the schemavalidator, but it is worth double checking.
+      done = PR_TRUE;
+    }
+  }
+
+  if (fractionResult.IsEmpty()) {
+    // couldn't successfully parse the fractional seconds, so we'll just return
+    // without them.
+    return NS_OK;
+  }
+
+  // convert the result string that we have to a double and add it to the total
+  totalSeconds += PR_strtod(fractionResult.get(), nsnull);
+  *aSeconds = totalSeconds;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsUtilityService::GetDaysFromDateTime(const nsAString & aValue, 
+                                            PRInt32         * aDays)
+{
+  NS_ASSERTION(aDays, "no return buffer for days, we'll crash soon");
+  *aDays = 0;
+
+  PRTime date;
+  nsCOMPtr<nsISchemaValidator> schemaValidator = 
+    do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+  NS_ENSURE_TRUE(schemaValidator, NS_ERROR_FAILURE);
+
+  // aValue could be a xsd:date or a xsd:dateTime.  If it is a dateTime, we
+  // should ignore the hours, minutes, and seconds according to 7.10.2 in
+  // the spec.  So search for such things now.  If they are there, strip 'em.
+  int findTime = aValue.FindChar('T');
+
+  nsAutoString dateString;
+  dateString.Assign(aValue);
+  if (findTime >= 0) {
+    dateString.Assign(Substring(dateString, 0, findTime));
+  }
+
+  nsresult rv = schemaValidator->ValidateBuiltinTypeDate(dateString, &date); 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRTime secs64 = date;
+  PRInt64 usecPerSec;
+  PRInt32 secs32;
+
+  // convert from PRTime (microseconds from epoch) to seconds.  Shouldn't
+  // have to worry about remainders since input is a date.  Smallest value
+  // is in whole days.
+  LL_I2L(usecPerSec, PR_USEC_PER_SEC);
+  LL_DIV(secs64, secs64, usecPerSec);
+
+  // convert whole seconds to PRInt32
+  LL_L2I(secs32, secs64);
+
+  // convert whole seconds to days.  86400 seconds in a day.
+  *aDays = secs32/86400;
+
+  return NS_OK;
+}
+
