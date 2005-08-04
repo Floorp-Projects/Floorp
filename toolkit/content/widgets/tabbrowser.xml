@@ -1319,7 +1319,7 @@
             if (!this.mProgressListeners) return;
             for (var i = 0; i < this.mProgressListeners.length; i++) {
               if (this.mProgressListeners[i] == aListener) {
-                this.mProgressListeners[i] = null;
+                this.mProgressListeners.splice(i, 1);
                 break;
               }
             }
