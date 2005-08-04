@@ -21,7 +21,9 @@
   # editusers:                is viewing user member of editusers?
   # editcomponents:           is viewing user member of editcomponents?
   # otheruser:                Bugzilla::User object of the viewed user.
-  # bugs:                     number of bugs the viewed user has a role in
+  # reporter:                 number of bugs reported by the user
+  # assignee_or_qa:           number of bugs the user is either the assignee
+  #                           or the QA contact
   # bug_activity:             number of bugs the viewed user has activity
   #                           entries on
   # cc                        number of bugs the viewed user is cc list member
@@ -129,29 +131,41 @@
 
   <h2>Confirmation</h2>
 
-  [% IF bugs || bug_activity || cc || flags.requestee || flags.setter ||
-        longdescs || namedqueries || profiles_activity || series || votes ||
-        watch.watched || watch.watcher || whine_events || whine_schedules %]
+  [% IF reporter || assignee_or_qa || bug_activity || cc || flags.requestee ||
+        flags.setter || longdescs || namedqueries || profiles_activity || series ||
+        votes || watch.watched || watch.watcher || whine_events || whine_schedules %]
     <ul class="warningmessages">
-      [% IF bugs %]
+      [% IF reporter %]
         <li>
           [% otheruser.login FILTER html %]
-          <a href="buglist.cgi?emailassigned_to1=1&amp;emailreporter1=1&amp;emailqa_contact1=1&amp;emailtype1=exact&amp;email1=[% otheruser.login FILTER url_quote %]">is
-          related to
-          [% IF bugs == 1 %]
-            [%+ terms.abug %]
+          <a href="buglist.cgi?emailreporter1=1&amp;emailtype1=exact&amp;email1=[% otheruser.login FILTER url_quote %]">has reported
+          [% IF reporter == 1 %]
+            one [% terms.bug %]
           [% ELSE %]
-            [%+ bugs %] [%+ terms.bugs %]
-          [% END %]</a>, by having reported, being assigned to or being
-          the QA contact.
+            [%+ reporter %] [%+ terms.bugs %]
+          [% END %]</a>.
           If you delete the user account, the [% terms.bugs %] table in the
           database will be inconsistent, resulting in
-          [% IF bugs == 1 %]
+          [% IF reporter == 1 %]
             this [% terms.bug %]
           [% ELSE %]
             these [% terms.bugs %]
           [% END %]
           not appearing in [% terms.bug %] lists any more.
+        </li>
+      [% END %]
+      [% IF assignee_or_qa %]
+        <li>
+          [% otheruser.login FILTER html %]
+          <a href="buglist.cgi?emailassigned_to1=1&amp;emailqa_contact1=1&amp;emailtype1=exact&amp;email1=[% otheruser.login FILTER url_quote %]">is
+          the assignee or the QA contact of
+          [% IF assignee_or_qa == 1 %]
+            one [% terms.bug %]
+          [% ELSE %]
+            [%+ assignee_or_qa %] [%+ terms.bugs %]
+          [% END %]</a>.
+          If you delete the user account, these roles will fall back to
+          the default assignee or default QA contact.
         </li>
       [% END %]
       [% IF bugs_activity %]

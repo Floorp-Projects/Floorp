@@ -583,7 +583,8 @@
 'admin/users/confirm-delete.html.tmpl' => [
   'andstring',
   'responsibilityterms.$responsibility',
-  'bugs',
+  'reporter',
+  'assignee_or_qa',
   'cc',
   'flags.requestee',
   'flags.setter',

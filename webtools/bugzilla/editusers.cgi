@@ -404,14 +404,14 @@ if ($action eq 'search') {
     $vars->{'editcomponents'} = UserInGroup('editcomponents');
 
     # Find other cross references.
-    $vars->{'bugs'} = $dbh->selectrow_array(
+    $vars->{'assignee_or_qa'} = $dbh->selectrow_array(
         qq{SELECT COUNT(*)
            FROM bugs
-           WHERE assigned_to = ? OR
-                 qa_contact = ? OR
-                 reporter = ?
-          },
-        undef, ($otherUserID, $otherUserID, $otherUserID));
+           WHERE assigned_to = ? OR qa_contact = ?},
+        undef, ($otherUserID, $otherUserID));
+    $vars->{'reporter'} = $dbh->selectrow_array(
+        'SELECT COUNT(*) FROM bugs WHERE reporter = ?',
+        undef, $otherUserID);
     $vars->{'cc'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM cc WHERE who = ?',
         undef, $otherUserID);
@@ -487,7 +487,8 @@ if ($action eq 'search') {
                          'series_data WRITE',
                          'whine_schedules WRITE',
                          'whine_queries WRITE',
-                         'whine_events WRITE');
+                         'whine_events WRITE',
+                         'bugs WRITE');
 
     Param('allowuserdeletion')
         || ThrowUserError('users_deletion_disabled');
@@ -563,6 +564,37 @@ if ($action eq 'search') {
         $sth_deleteWhineQuery->execute($id);
         $sth_deleteWhineSchedule->execute($id);
         $sth_deleteWhineEvent->execute($id);
+    }
+
+    # 3) Bugs
+    # 3.1) fall back to the default assignee
+    my $buglist = $dbh->selectall_arrayref(
+        'SELECT bug_id, initialowner
+         FROM bugs
+         INNER JOIN components ON components.id = bugs.component_id
+         WHERE assigned_to = ?', undef, $otherUserID);
+
+    my $sth_updateAssignee = $dbh->prepare(
+        'UPDATE bugs SET assigned_to = ? WHERE bug_id = ?');
+
+    foreach my $bug (@$buglist) {
+        my ($bug_id, $default_assignee) = @$bug;
+        $sth_updateAssignee->execute($default_assignee, $bug_id);
+    }
+
+    # 3.2) fall back to the default QA contact
+    $buglist = $dbh->selectall_arrayref(
+        'SELECT bug_id, initialqacontact
+         FROM bugs
+         INNER JOIN components ON components.id = bugs.component_id
+         WHERE qa_contact = ?', undef, $otherUserID);
+
+    my $sth_updateQAcontact = $dbh->prepare(
+        'UPDATE bugs SET qa_contact = ? WHERE bug_id = ?');
+
+    foreach my $bug (@$buglist) {
+        my ($bug_id, $default_qa_contact) = @$bug;
+        $sth_updateQAcontact->execute($default_qa_contact, $bug_id);
     }
 
     # Finally, remove the user account itself.
