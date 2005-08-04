@@ -84,10 +84,6 @@ if (! defined $cgi->param('product')) {
     grep($_ eq $product, @myproducts)
       || ThrowUserError("invalid_product_name", {product => $product});
 
-    # We don't want people to be able to view
-    # reports for products they don't have permissions for...
-    if ($product ne '-All-') { CanEnterProductOrWarn($product) }
-          
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint
     trick_taint($product);
