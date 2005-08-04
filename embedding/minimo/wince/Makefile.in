@@ -92,7 +92,9 @@ LOCAL_INCLUDES	= -I$(srcdir) -I$(topsrcdir)/xpfe/browser/src/
 
 include $(topsrcdir)/config/config.mk
 
+ifdef WINCE
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
+endif
 
 ifdef BUILD_STATIC_LIBS
 

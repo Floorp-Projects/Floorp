@@ -46,28 +46,6 @@
 #include "nsIPhoneSupport.h"
 #include "nsIGenericFactory.h"
 
-void errormsg(DWORD dw, LPTSTR lpszFunction) 
-{ 
-  TCHAR szBuf[80]; 
-  LPVOID lpMsgBuf;
-  
-  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                FORMAT_MESSAGE_FROM_SYSTEM,
-                NULL,
-                dw,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (LPTSTR) &lpMsgBuf,
-                0, NULL );
-  
-  wsprintf(szBuf, 
-           "%s failed with error %d: %s", 
-           lpszFunction, dw, lpMsgBuf); 
-  
-  MessageBox(NULL, szBuf, "Error", MB_OK); 
-  
-  LocalFree(lpMsgBuf);
-}
-
 class nsPhoneSupport : public nsIPhoneSupport
 {
 public:

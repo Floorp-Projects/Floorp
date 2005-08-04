@@ -43,19 +43,6 @@
 #include <malloc.h>
 #include <memory.h>
 
-// Win32 header files
-#ifndef WINCE
-#include <tchar.h>
-#include <windows.h>
-#include <commctrl.h>
-#include <commdlg.h>
-#include <aygshell.h>
-#include <sipapi.h>
-#include <winsock2.h>
-#include <connmgr.h>
-#include "resource.h"
-#endif
-
 // Mozilla header files
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppShellCID.h"
@@ -94,7 +81,6 @@
 
 // Local header files
 #include "WindowCreator.h"
-#include "resource.h"
 
 void CreateSplashScreen();
 void KillSplashScreen();
