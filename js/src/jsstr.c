@@ -361,6 +361,12 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
         } else {
             newlength += 5; /* The character will be encoded as %uXXXX */
         }
+
+        /* NB: this works because newlength can be incremented by at most 5. */ 
+        if (newlength < length) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
     }
 
     if (newlength >= ~(size_t)0 / sizeof(jschar)) {
