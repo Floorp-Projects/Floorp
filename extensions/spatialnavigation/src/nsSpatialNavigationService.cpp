@@ -105,7 +105,7 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     NS_ENSURE_SUCCESS(rv, rv);
     windowWatcher->RegisterNotification(this);
     
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     NS_ENSURE_SUCCESS(rv, rv);
     
 	prefBranch->AddObserver("snav.", this, PR_FALSE);

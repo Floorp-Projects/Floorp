@@ -48,8 +48,14 @@ IS_COMPONENT = 1
 
 MOZILLA_INTERNAL_API = 1
 
+
+ifdef MINIMO
+MODULE_NAME  = snav
+EXPORT_LIBRARY = 1
+else
 ifdef MOZ_XUL_APP
 XPI_NAME               = snav
+endif
 endif
 
 # We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
@@ -99,8 +105,10 @@ CPPSRCS     = nsSpatialNavigation.cpp \
 # defined.  We do not use this class anywhere in this
 # extension.
 
+ifndef MINIMO
 DEFINES += -D_IMPL_NS_GFX
 CPPSRCS += nsRect.cpp nsFont.cpp
+endif
 
 EXTRA_DSO_LDOPTS += $(LIBS_DIR)          \
                     $(EXTRA_DSO_LIBS)    \
