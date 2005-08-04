@@ -18,6 +18,7 @@ classic.jar:
     skin/classic/messenger/searchBox.css
     skin/classic/messenger/junkMail.css
     skin/classic/messenger/folderMenus.css
+    skin/classic/messenger/folderPane.css
     skin/classic/messenger/subscribe.css
     skin/classic/messenger/virtualFolderListDialog.css
     skin/classic/messenger/searchDialog.css

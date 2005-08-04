@@ -44,6 +44,7 @@
 @import url("chrome://messenger/skin/");
 @import url("chrome://messenger/skin/primaryToolbar.css");
 @import url("chrome://messenger/skin/folderMenus.css");
+@import url("chrome://messenger/skin/folderPane.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -51,13 +52,15 @@
 	 margin-bottom: -1px;
 }
 
-/* ::::: Folder Pane ::::: */
+#folderPaneHeader {
+	-moz-appearance: treeheadercell;
+}
 
 #folderTree {
-        border-bottom: 1px solid #bebebe;
-        border-right: 1px solid #bebebe;
-        background-color: #FFFFFF !important;
-        background-image: none !important;
+  border-bottom: 1px solid #bebebe;
+  border-right: 1px solid #bebebe;
+  background-color: #FFFFFF !important;
+  background-image: none !important;
 	-moz-appearance: none !important;
 }
 
@@ -67,10 +70,6 @@
 
 #folderTree treechildren::-moz-tree-row(odd) {
   background-color: #FFF;
-}
-
-#folderPaneHeader {
-	-moz-appearance: treeheadercell;
 }
 
 #folderTree treechildren::-moz-tree-row(selected) {
@@ -83,139 +82,6 @@
 
 #folderTree treechildren::-moz-tree-cell-text(selected, focus), #folderTree treechildren::-moz-tree-cell-text(selected) {
   color: #FFFFFF;
-}
-
-treechildren::-moz-tree-image(folderNameCol) {
-  margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, newMessages-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
-}
-
-/* ..... Inbox ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Inbox) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.png");
-}
-
-/* ..... Sent ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Sent) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-sent.png");
-}
-
-/* ..... Unsent ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Unsent Messages) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-outbox.png");
-}
-
-/* ..... Drafts ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Drafts) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-draft.png");
-}
-
-/* ..... Templates ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Templates) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-template.png");
-}
-
-/* ..... Junk ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Junk) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-junk.png");
-}
-
-/* ..... Trash ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true) {
-    list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
-}
-
-treechildren::-moz-tree-cell-text(folderNameCol, biffState-NewMail, isServer-true),
-treechildren::-moz-tree-cell-text(folderNameCol, newMessages-true),
-treechildren::-moz-tree-cell-text(folderNameCol, specialFolder-Inbox, newMessages-true) {
-  font-weight: bold;
-  color: blue;
-}
-
-treechildren::-moz-tree-cell(folderNameCol, newMessages-true),
-treechildren::-moz-tree-cell(folderNameCol, specialFolder-Inbox, newMessages-true) {
-
-}
-
-treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-share.png");
-}
-
-
-/* ..... Server Folders ..... */
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
-  list-style-image: url("chrome://messenger/skin/icons/server-local.png");
-}
-
-/* ..... News Folders ..... */
-
-treechildren::-moz-tree-image(folderNameCol, serverType-nntp) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
-  list-style-image: url("chrome://messenger/skin/icons/server-news.png");
-}
-
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
-  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
-}
-
-/* ..... Saved Search Folder ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
-  list-style-image: url("chrome://messenger/skin/icons/saved-search-folder.png");
-}
-
-/* ::::: All Servers ::::: */
-
-treechildren::-moz-tree-cell-text(subfoldersHaveUnreadMessages-true) {
-  font-weight: bold;
-}
-
-treechildren::-moz-tree-cell-text(hasUnreadMessages-true) {
-  font-weight: bold;
-}
-
-treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
-  color: gray;
-  font-style: italic;
-}
-
-.tree-folder-checkbox {
-  list-style-image: none;
 }
 
 #folderUnreadCol,
