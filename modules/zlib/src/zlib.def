@@ -58,3 +58,11 @@ EXPORTS
     MOZ_Z_inflateSyncPoint
     MOZ_Z_get_crc_table
     MOZ_Z_zError
+; new in zlib-1.2.3
+    MOZ_Z_adler32_combine
+    MOZ_Z_crc32_combine
+    MOZ_Z_deflateSetHeader
+    MOZ_Z_deflateTune
+    MOZ_Z_gzdirect
+    MOZ_Z_inflatePrime
+    MOZ_Z_inflateGetHeader

@@ -1,9 +1,9 @@
 /* zconf.h -- configuration of the zlib compression library
- * Copyright (C) 1995-2004 Jean-loup Gailly.
+ * Copyright (C) 1995-2005 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 3.8 2004/12/15 05:52:38 bryner%brianryner.com Exp $ */
+/* @(#) $Id: zconf.h,v 3.9 2005/08/04 19:14:14 tor%cs.brown.edu Exp $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -46,6 +46,10 @@
 #  define get_crc_table         z_get_crc_table
 #  define zError                z_zError
 
+#  define alloc_func            z_alloc_func
+#  define free_func             z_free_func
+#  define in_func               z_in_func
+#  define out_func              z_out_func
 #  define Byte                  z_Byte
 #  define uInt                  z_uInt
 #  define uLong                 z_uLong
@@ -67,8 +71,10 @@
 #if defined(_WINDOWS) && !defined(WINDOWS)
 #  define WINDOWS
 #endif
-#if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
-#  define WIN32
+#if defined(_WIN32) || defined(_WIN32_WCE) || defined(__WIN32__)
+#  ifndef WIN32
+#    define WIN32
+#  endif
 #endif
 #if (defined(MSDOS) || defined(OS2) || defined(WINDOWS)) && !defined(WIN32)
 #  if !defined(__GNUC__) && !defined(__FLAT__) && !defined(__386__)
@@ -238,10 +244,6 @@
 #      define ZEXPORTVA __declspec(dllimport)
 #    endif
 #  endif
-#endif
-
-#ifdef HAVE_VISIBILITY_PRAGMA
-#define ZEXTERN __attribute__((visibility ("default"))) extern
 #endif
 
 #ifndef ZEXTERN

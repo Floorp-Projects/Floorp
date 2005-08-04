@@ -28,3 +28,14 @@ Mozilla.org changes:
   Our patches of 24, 25 June and 21 Sept are now in the zlib
   distribution.
   See bug #248644
+
+- 24 July 2005
+  Sync'ed with 1.2.3 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bugs #299445 and #300349
+
+- 24 July 2005
+  Added treatment of HAVE_VISIBILITY_PRAGMA in mozzconf.h
+
+- 24 July 2005
+  Updated zlib.def with new symbols in zlib version 1.2.3

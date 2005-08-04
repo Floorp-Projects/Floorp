@@ -41,7 +41,11 @@
 #undef ZLIB_DLL
 #endif
 
-/* Symbols from zlib.def */
+#ifdef HAVE_VISIBILITY_PRAGMA
+#define ZEXTERN __attribute__((visibility ("default"))) extern
+#endif
+
+/* Exported Symbols */
 #define zlibVersion MOZ_Z_zlibVersion
 #define deflate MOZ_Z_deflate
 #define deflateEnd MOZ_Z_deflateEnd
@@ -109,5 +113,18 @@
 #define z_errmsg MOZ_Z_z_errmsg
 #define zcalloc MOZ_Z_zcalloc
 #define zcfree MOZ_Z_zcfree
+#define alloc_func MOZ_Z_alloc_func
+#define free_func MOZ_Z_free_func
+#define in_func MOZ_Z_in_func
+#define out_func MOZ_Z_out_func
+
+/* New as of libpng-1.2.3 */
+#define adler32_combine MOZ_Z_adler32_combine
+#define crc32_combine MOZ_Z_crc32_combine
+#define deflateSetHeader MOZ_Z_deflateSetHeader
+#define deflateTune MOZ_Z_deflateTune
+#define gzdirect MOZ_Z_gzdirect
+#define inflatePrime MOZ_Z_inflatePrime
+#define inflateGetHeader MOZ_Z_inflateGetHeader
 
 #endif
