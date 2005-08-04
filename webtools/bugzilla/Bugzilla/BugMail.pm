@@ -26,6 +26,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 J. Paul Reed <preed@sigkill.com>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Byron Jones <bugzilla@glob.com.au>
 
 use strict;
 
@@ -47,6 +48,10 @@ use Date::Parse;
 use Date::Format;
 use Mail::Mailer;
 use Mail::Header;
+use MIME::Base64;
+use MIME::QuotedPrint;
+use MIME::Parser;
+use Mail::Address;
 
 # We need these strings for the X-Bugzilla-Reasons header
 # Note: this hash uses "," rather than "=>" to avoid auto-quoting of the LHS.
@@ -619,14 +624,100 @@ sub MessageToMTA ($) {
         $Mail::Mailer::testfile::config{outfile} = "$datadir/mailer.testfile";
     }
     
-    $msg =~ /(.*?)\n\n(.*)/ms;
-    my @header_lines = split(/\n/, $1);
-    my $body = $2;
+    my ($header, $body) = $msg =~ /(.*?\n)\n(.*)/s ? ($1, $2) : ('', $msg);
+    my $headers;
 
-    my $headers = new Mail::Header \@header_lines, Modify => 0;
+    if (Param('utf8') and (!is_7bit_clean($header) or !is_7bit_clean($body))) {
+        ($headers, $body) = encode_message($header, $body);
+    } else {
+        my @header_lines = split(/\n/, $header);
+        $headers = new Mail::Header \@header_lines, Modify => 0;
+    }
+
     $mailer->open($headers->header_hashref);
     print $mailer $body;
     $mailer->close;
+}
+
+sub encode_qp_words($) {
+    my ($line) = (@_);
+    my @encoded;
+    foreach my $word (split / /, $line) {
+        if (!is_7bit_clean($word)) {
+            push @encoded, '=?UTF-8?Q?_' . encode_qp($word, '') . '?=';
+        } else {
+            push @encoded, $word;
+        }
+    }
+    return join(' ', @encoded);
+}
+
+sub encode_message($$) {
+    my ($header, $body) = @_;
+
+    # read header into MIME::Entity
+
+    my $parser = MIME::Parser->new;
+    $parser->output_to_core(1);
+    $parser->tmp_to_core(1);
+    my $entity = $parser->parse_data($header);
+    my $head = $entity->head;
+
+    # set charset to UTF-8
+
+    $head->mime_attr('Content-Type' => 'text/plain')
+        unless defined $head->mime_attr('content-type');
+    $head->mime_attr('Content-Type.charset' => 'UTF-8');
+
+    # encode the subject
+
+    my $subject = $head->get('subject');
+    if (defined $subject && !is_7bit_clean($subject)) {
+        $subject =~ s/[\r\n]+$//;
+        $head->replace('subject', encode_qp_words($subject));
+    }
+
+    # encode addresses
+
+    foreach my $field (qw(from to cc reply-to sender errors-to)) {
+        my $high = $head->count($field) - 1;
+        foreach my $index (0..$high) {
+            my $value = $head->get($field, $index);
+            my @addresses;
+            my $changed = 0;
+            foreach my $addr (Mail::Address->parse($value)) {
+                my $phrase = $addr->phrase;
+                if (is_7bit_clean($phrase)) {
+                    push @addresses, $addr->format;
+                } else {
+                    push @addresses, encode_qp_phrase($phrase) . 
+                        ' <' . $addr->address . '>';
+                    $changed = 1;
+                }
+            }
+            $changed && $head->replace($field, join(', ', @addresses), $index);
+        }
+    }
+
+    # process the body
+
+    if (!is_7bit_clean($body)) {
+        # count number of 7-bit chars, and use quoted-printable if more
+        # than half the message is 7-bit clean
+        my $count = ($body =~ tr/\x20-\x7E\x0A\x0D//);
+        if ($count > length($body) / 2) {
+            $head->replace('Content-Transfer-Encoding', 'quoted-printable');
+            $body = encode_qp($body);
+        } else {
+            $head->replace('Content-Transfer-Encoding', 'base64');
+            $body = encode_base64($body);
+        }
+    }
+
+    # done
+    
+    $head->fold(75);
+    return ($head, $body);
 }
 
 # Performs substitutions for sending out email with variables in it,

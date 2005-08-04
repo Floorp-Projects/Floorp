@@ -317,7 +317,15 @@ my $modules = [
     }, 
     { 
         name => 'Mail::Mailer', 
-        version => '1.65'
+        version => '1.67'
+    },
+    {
+        name => 'MIME::Base64',
+        version => $^O =~ /MSWin32/i ? '3.01' : '3.03'
+    },
+    {
+        name => 'MIME::Tools',
+        version => '5.417'
     },
     {
         name => 'Storable',
@@ -339,6 +347,7 @@ my %ppm_modules = (
     'GD::Graph'         => 'GDGraph',
     'GD::Text::Align'   => 'GDTextUtil',
     'Mail::Mailer'      => 'MailTools',
+    'MIME::Tools'       => 'MIME-Tools',
 );
 
 sub install_command {
@@ -1142,6 +1151,10 @@ END
 # Just to be sure ...
 unlink "$datadir/versioncache";
 
+# Check for a new install
+
+my $newinstall = !-e "$datadir/params";
+
 # Remove parameters from the params file that no longer exist in Bugzilla,
 # and set the defaults for new ones
 
@@ -1183,6 +1196,11 @@ if ($^O =~ /MSWin32/i && Param('mail_delivery_method') eq 'sendmail') {
     }
     SetParam('mail_delivery_method', 'smtp');
     SetParam('smtpserver', $smtp);
+}
+
+# Enable UTF-8 on new installs
+if ($newinstall) {
+    SetParam('utf8', 1);
 }
 
 # WriteParams will only write out still-valid entries
@@ -4211,6 +4229,9 @@ if ($sth->rows == 0) {
 
     if ($admin_create) {
 
+        require Bugzilla::Util;
+        import Bugzilla::Util 'is_7bit_clean';
+
         while( $realname eq "" ) {
             print "Enter the real name of the administrator: ";
             $realname = $answer{'ADMIN_REALNAME'} 
@@ -4219,6 +4240,13 @@ if ($sth->rows == 0) {
             chomp $realname;
             if(! $realname ) {
                 print "\nReally.  We need a full name.\n";
+            }
+            if(! is_7bit_clean($realname)) {
+                print "\nSorry, but at this stage the real name can only " . 
+                      "contain standard English\ncharacters.  Once Bugzilla " .
+                      "has been installed, you can use the 'Prefs' page\nto " .
+                      "update the real name.\n";
+                $realname = '';
             }
         }
 

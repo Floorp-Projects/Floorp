@@ -60,8 +60,8 @@ sub new {
     # Make sure our outgoing cookie list is empty on each invocation
     $self->{Bugzilla_cookie_list} = [];
 
-    # Make sure that we don't send any charset headers
-    $self->charset('');
+    # Send appropriate charset
+    $self->charset(Param('utf8') ? 'UTF-8' : '');
 
     # Redirect to SSL if required
     if (Param('sslbase') ne '' and Param('ssl') eq 'always') {

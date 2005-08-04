@@ -28,7 +28,7 @@
 
 [% DEFAULT title = "$terms.Bugzilla $terms.Bugs" %]
 
-<?xml version="1.0"?>
+<?xml version="1.0"[% IF Param('utf8') %] encoding="UTF-8"[% END %]?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
          xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
          xmlns:dc="http://purl.org/dc/elements/1.1/"

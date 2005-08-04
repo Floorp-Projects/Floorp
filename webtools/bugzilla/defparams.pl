@@ -367,6 +367,17 @@ sub find_languages {
   },
 
   {
+   name => 'utf8',
+   desc => 'Use UTF-8 (Unicode) encoding for all text in Bugzilla. New ' .
+           'installations should set this to true to avoid character encoding ' .
+           'problems. Existing databases should set this to true only after ' .
+           'the data has been converted from existing legacy character ' .
+           'encodings to UTF-8.',
+   type => 'b',
+   default => '0',
+  },
+
+  {
    name => 'cookiedomain',
    desc => 'The domain for Bugzilla cookies.  Normally blank.  ' .
            'If your website is at "www.foo.com", setting this to ' .

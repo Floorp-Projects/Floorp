@@ -38,7 +38,7 @@ use base qw(Exporter);
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
                              format_time format_time_decimal
-                             file_mod_time
+                             file_mod_time is_7bit_clean
                              bz_crypt check_email_syntax);
 
 use Bugzilla::Config;
@@ -374,6 +374,10 @@ sub ValidateDate {
     } 
 }
 
+sub is_7bit_clean {
+    return $_[0] !~ /[^\x20-\x7E\x0A\x0D]/;
+}
+
 1;
 
 __END__
@@ -596,6 +600,11 @@ database.
 Search for a comma, a whitespace or a hyphen to split $string, within the first
 $maxpos characters. If none of them is found, just split $string at $maxpos.
 The search starts at $maxpos and goes back to the beginning of the string.
+
+=item C<is_7bit_clean($str)>
+
+Returns true is the string contains only 7-bit characters (ASCII 32 through 126,
+ASCII 10 (LineFeed) and ASCII 13 (Carrage Return).
 
 =back
 
