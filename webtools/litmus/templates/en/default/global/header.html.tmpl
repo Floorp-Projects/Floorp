@@ -24,7 +24,12 @@
    #                     elements can be either actual code or 
    #                     a path to be INCLUDED
    # onload (optional) - onload handler
+   # includeselects (optional) - if true, include script and 
+   #                              onload flags to handle select
+   #                             boxes. 
 %]
+
+[% PROCESS global/selects.none.tmpl %]
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -35,7 +40,6 @@
 
 [% IF script %]
 <script language="JavaScript" type="text/JavaScript">
-<!--
 // don't ask why this is here
 function MM_findObj(n) { 
   var x = document.getElementById(n);
@@ -53,13 +57,15 @@ function MM_findObj(n) {
     [% INCLUDE $curscript %]
 [% END %]
 [% END %]
-
-//-->
 </script>
 [% END %]
-<script language="JavaScript" type="text/Javascript" src="data/litmusconfig.js">
 
-</head>
+[% IF includeselects %] 
+[% INCLUDE selectscripts %]
+[% onload = "$onload selects_onload();" %]
+[% END %]
+
+<script language="JavaScript" type="text/Javascript" src="data/litmusconfig.js"></script>
 [% IF onload %]
     [% realonload = "onload=\"$onload\"" %]
 [% END %]

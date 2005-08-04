@@ -27,6 +27,7 @@ require Exporter;
 use Litmus;
 use Litmus::DB::Product;
 use Litmus::Error;
+use Litmus::Utils;
 use CGI;
 
 our @ISA = qw(Exporter);
@@ -117,8 +118,8 @@ sub buildid() {
 }
 
 # display the system configuration form
-# takes the product to configure for 
-# and a url to load when done. this 
+# optionally takes the product to configure for 
+# and requires a url to load when done. this 
 # url should call processForm() to 
 # set the sysconfig cookie and do 
 # error handling.
@@ -131,34 +132,26 @@ sub displayForm {
     my $goto = shift;
     my $c = shift; 
     
-    # get all possible platforms for that product
-    my @platforms = Litmus::DB::Platform->search(product => $product);
-    
-    # get each possible OS per platform:
-    my %opsyses;
-    foreach my $curplatform (@platforms) {
-        my @opsyses = Litmus::DB::Opsys->search(platform => $curplatform);
-        $opsyses{$curplatform->platformid()} = \@opsyses;
+    my @products; 
+    # if we already know the product, then just send it on:
+    if ($product) {
+        $products[0] = $product;
+    } else {
+        # we need to ask the user for the product then
+        @products = Litmus::DB::Product->retrieve_all();
     }
     
-    # get all possible branches for the product
-    my @branches = Litmus::DB::Branch->search(product => $product);
-    
     my $vars = {
-        product   => $product,
-        platforms => \@platforms,
-        opsyses   => \%opsyses,
-        branches  => \@branches,
-        ua        => Litmus::UserAgentDetect->new(),
-        defaultplatform => Litmus::DB::Platform->autodetect($product),
+        products   => \@products,
+        ua         => Litmus::UserAgentDetect->new(),
         "goto" => $goto,
         cgidata   => $c,
         };
         
     # if the user already has a cookie set for this product, then 
     # load those values as defaults:
-    my $sysconfig = Litmus::SysConfig->getCookie($product);
-    if ($sysconfig && $sysconfig->product() == $product->productid()) {
+    if ($product && Litmus::SysConfig->getCookie($product)) {
+        my $sysconfig = Litmus::SysConfig->getCookie($product);
         $vars->{"defaultplatform"} = $sysconfig->platform();
         $vars->{"defaultopsys"} = $sysconfig->opsys();
         $vars->{"defaultbranch"} = $sysconfig->branch();
@@ -171,25 +164,31 @@ sub displayForm {
 }
 
 # process a form containing sysconfig information. 
-# takes a CGI object containing parma data
+# takes a CGI object containing param data
 sub processForm {
     my $self = shift;
     my $c = shift;
     
-    # the form has an opsys select box for each possible platform, named 
-    # opsys_n where n is the platform id number. We get the correct 
-    # opsys select based on whatever platform the user selected: 
-    my $opsys = $c->param("opsys_".$c->param("platform"));
+    my $product = Litmus::DB::Product->retrieve($c->param("product"));
+    my $platform = Litmus::DB::Platform->retrieve($c->param("platform"));
+    my $opsys = Litmus::DB::Opsys->retrieve($c->param("opsys"));
+    my $branch = Litmus::DB::Branch->retrieve($c->param("branch"));
+    my $buildid = $c->param("buildid");
+    
+    requireField("product", $product);
+    requireField("platform", $platform);
+    requireField("opsys", $opsys);
+    requireField("branch", $branch);
+    requireField("buildid", $buildid);
     
     # set a cookie with the user's testing details:
-    warn $c->param("product");
     my $prod =  Litmus::DB::Product->retrieve($c->param("product"));
     my $sysconfig = Litmus::SysConfig->new(
-                            $prod,
-                            Litmus::DB::Platform->retrieve($c->param("platform")), 
-                            Litmus::DB::Opsys->retrieve($opsys),
-                            Litmus::DB::Branch->retrieve($c->param("branch")),
-                            $c->param("buildid"),
+                            $product,
+                            $platform, 
+                            $opsys,
+                            $branch,
+                            $buildid
                             );
                                     
     return $sysconfig;

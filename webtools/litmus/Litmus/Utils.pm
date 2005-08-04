@@ -26,11 +26,25 @@ package Litmus::Utils;
 use strict;
 
 use Litmus;
+use Litmus::Error;
+use CGI;
 
 our @ISA = qw(Exporter);
-@Litmus::Error::EXPORT = qw(
-    
+@Litmus::Utils::EXPORT = qw(
+    requireField
 );
 
+
+# requireField - checks that $field contains data (other than ---) and throws
+# an invalidInputError if it does not.
+sub requireField {
+    my ($fieldname, $field) = @_;
+    
+    unless($field && $field ne "---") {
+        my $c = new CGI;
+        print $c->header();
+        invalidInputError("You must make a valid selection for field ".$fieldname.".");
+    }
+}
 
 1;

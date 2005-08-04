@@ -38,41 +38,26 @@ if ($c->param("group")) { # display the test screen
     page_test();
 } elsif ($c->param("platform") || $c->param("continuetesting")) { # pick a group
     page_pickGroupSubgroup();
-} elsif ($c->param("product") || 
-         $c->param("testgroup")) { # need to setup their system config
+} else { # need to setup their system config
     page_sysSetup();
-} else {
-    page_pickProduct();
-}    
+}  
 
 # a menu for the user to enter their platform information
 sub page_sysSetup {
     print $c->header();
     
+    # sometimes the user will have already selected their product
     my $productid = $c->param("product");
-
-    # check for a valid product:
-    my $product = Litmus::DB::Product->retrieve($productid);
-    unless ($product) {
-        invalidInputError("product $productid is invalid");
+    my $product = undef;
+    if ($productid) {
+        $product = Litmus::DB::Product->retrieve($productid);
+        unless ($product) {
+            invalidInputError("Invalid product selection: $productid");
+        }
     }
     
     Litmus::SysConfig->displayForm($product, "run_tests.cgi");
     exit;
-}
-
-sub page_pickProduct {
-    print $c->header();
-
-    my @products = Litmus::DB::Product->retrieve_all();
-
-    my $vars = {
-        products => \@products,
-    };
-
-    Litmus->template()->process("runtests/pickproduct.html.tmpl", $vars) || 
-        internalError(Litmus->template()->error());    
-
 }
 
 # the user has selected their system information and now needs to pick 

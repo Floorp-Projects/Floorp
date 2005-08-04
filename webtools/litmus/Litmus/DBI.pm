@@ -3,6 +3,7 @@ package Litmus::DBI;
 use strict;
 use warnings;
 use Litmus::Config;
+use Litmus::Error;
 
 use base 'Class::DBI::mysql';
 

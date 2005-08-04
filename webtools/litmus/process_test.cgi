@@ -28,6 +28,7 @@ use Litmus::DB::Product;
 use Litmus::UserAgentDetect;
 use Litmus::SysConfig;
 use Litmus::Auth;
+use Litmus::Utils;
 
 use CGI;
 use Time::Piece::MySQL;
@@ -97,12 +98,13 @@ foreach my $curtestid (@tests) {
     # configuration and we're not doing the 
     # simpletest interface, then we make you enter it
     $sysconfig = $sysconfig || Litmus::SysConfig->getCookie(
-        Litmus::DB::Product->retrieve($c->param("product")));
+        Litmus::DB::Product->retrieve($c->param("product_$curtestid")));
     if (! $sysconfig && ! $c->param("isSimpleTest")) {
         # users who don't have a sysconfig for this product
         # should go configure themselves first:
         Litmus::SysConfig->displayForm(
-            Litmus::DB::Product->retrieve($c->param("product")), "process_test.cgi", $c);
+            Litmus::DB::Product->retrieve($c->param("product_$curtestid")), 
+                "process_test.cgi", $c);
         exit;
     }
     
@@ -157,11 +159,24 @@ if ($c->param("editingTestcases") && Litmus::Auth::canEdit(Litmus::Auth::getCook
             $edittest->communityenabled(0);
         }
         
-        my $selgroup = $c->param("testgroup_".$editid);
-        $edittest->subgroup($c->param("subgroup_".$selgroup."_".$editid));
-        
+          my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
+          my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
+          my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
+          
+          requireField("product", $product);
+          requireField("group", $group);
+          requireField("subgroup", $subgroup);
+          
+          
+          $edittest->product($product);
+          $edittest->testgroup($group);
+          $edittest->subgroup($subgroup);
+          
         $edittest->update();
     }
+} elsif ($c->param("editingTestcases") && 
+    ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
+        invalidInputError("You do not have permissions to edit testcases. ");
 }
 
 my $testgroup;
@@ -183,7 +198,7 @@ if ($c->param("isSimpleTest")) {
         testgroup => $testgroup || undef,
         "return" => $c->param("return") || undef,
     };
-    Litmus->template()->process("runtests/resultssubmitted.html.tmpl", $vars) ||
+    Litmus->template()->process("process/process.html.tmpl", $vars) ||
         internalError(Litmus->template()->error());    
 }
 

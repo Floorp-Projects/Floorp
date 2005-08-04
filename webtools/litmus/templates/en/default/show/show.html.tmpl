@@ -26,10 +26,10 @@
 
 
 [% PROCESS global/selects.none.tmpl %]
-[% script = ['subgroupscript', 'edittestsscript'] %]
+[% script = ['edittestsscript'] %]
 
 [% INCLUDE global/header.html.tmpl title = "Testcase $test.testid - $test.summary"
-    script=script %] 
+    script=script includeselects=1 %] 
 
 <p class="pageinstruction">Test [% test.testid %] - [% test.summary %]</p>
 
@@ -39,7 +39,7 @@
 <input name="isTestResult" type="hidden" value="true">
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="">
 <input name="return" type="hidden" value="show_test.cgi?id=[% test.testid FILTER html %]">
-<input name="product" type="hidden" value="[%test.product FILTER html %]">
+
 <table border="0">
 [% INCLUDE test/test.html.tmpl test=test results=results showedit=1 %]
 

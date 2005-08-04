@@ -29,9 +29,26 @@ require Exporter;
 use Litmus;
 use Litmus::DB::Platform;
 use Litmus::DB::Opsys;
+use Litmus::DB::Branch;
 
 our @ISA = qw(Exporter);
 our @EXPORT = qw(detectBuildID);
+
+# define some SQL queries we will use:
+Litmus::DB::Platform->set_sql(detectplatform => qq{
+                                                  SELECT __ESSENTIAL__
+                                                  FROM __TABLE__
+                                                  WHERE 
+                                                      ? LIKE detect_regexp AND 
+                                                      product LIKE ?
+                                                });
+Litmus::DB::Branch->set_sql(detectbranch => qq{
+                                                SELECT __ESSENTIAL__
+                                                FROM __TABLE__
+                                                WHERE 
+                                                    ? LIKE detect_regexp AND 
+                                                    product LIKE ?
+                                            });                                                
 
 # constructor. Optionally you can pass a UA string 
 # and it will be used. Otherwise the default is the 
@@ -50,6 +67,7 @@ sub new {
 # default stringification is to return the ua:
 use overload 
     '""' => \&ua;
+    
 
 sub ua {
     my $self = shift;
@@ -74,37 +92,25 @@ sub buildid {
 
 sub platform {
     my $self = shift;
-    my $product = shift;
+    my $product = shift; # optionally, just lookup for one product
     
-    Litmus::DB::Platform->set_sql(detectplatform => qq{
-                                                    SELECT __ESSENTIAL__
-                                                    FROM __TABLE__
-                                                    WHERE 
-                                                        ? LIKE detect_regexp AND 
-                                                        product = ?
-                                                });
-    my $platform = Litmus::DB::Platform->search_detectplatform($self->ua, $product);
-    unless ($platform) { return undef }
-    return $platform->next();
+    if (! $product) { $product = '%' }
+    
+    my @platforms = Litmus::DB::Platform->search_detectplatform($self->ua, $product);
+    return @platforms;
 }
 
 sub branch {
     my $self = shift;
-    my $product = shift;
+    my $product = shift; # optionally, just lookup for one branch
     
-    Litmus::DB::Branch->set_sql(detectbranch => qq{
-                                                    SELECT __ESSENTIAL__
-                                                    FROM __TABLE__
-                                                    WHERE 
-                                                        ? LIKE detect_regexp AND 
-                                                        product = ?
-                                                });
-    my $branch = Litmus::DB::Branch->search_detectbranch($self->ua, $product);
-    unless ($branch) { return undef }
-    return $branch->next();
+    if (! $product) { $product = '%' }
+    
+    my @branches = Litmus::DB::Branch->search_detectbranch($self->ua, $product);
+    return @branches;
 }
 
-# legacy API before we had an OO interface:
+# from the legacy API before we had an OO interface:
 sub detectBuildId() {
     my $self = Litmus::UserAgentDetect->new($main::ENV{"HTTP_USER_AGENT"});
     

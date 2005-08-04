@@ -23,9 +23,9 @@
 use strict;
 
 BEGIN {
-	unless (-e "localconfig") {
- 		open(OUT, ">localconfig");
- 		print OUT <<EOT;
+    unless (-e "localconfig") {
+         open(OUT, ">localconfig");
+         print OUT <<EOT;
 our \$db_host = "";
 our \$db_name = "";
 our \$db_user = "";
@@ -34,9 +34,9 @@ our \$db_pass = "";
 our \$user_cookiename = "litmus_login";
 our \$sysconfig_cookiename = "litmustestingconfiguration";
 EOT
-		close(OUT);
-		exit;
-	}
+        close(OUT);
+        exit;
+    }
 }
 
 use Litmus::DB::Product; 

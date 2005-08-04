@@ -19,7 +19,8 @@
 #%]
   
 [%# INTERFACE:
-  # $product   - the product object selected by the user
+  # @products   - list of all possible product objects or just a one element
+  #                 list with the product selected by the user
   # @platforms - a list of all platform objects for the current product
   # %opsyses   - a hash of all operating systems, where the key 
           is the platform number and the value is an array of 
@@ -34,20 +35,15 @@
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
-    
-[% 
-  script = ['opsysscript']
-%]
 
 [% INCLUDE global/header.html.tmpl title = 'Run Tests' 
-    script=script onload = 'showopsys()' %] 
+     includeselects=1%] 
 
 <p class="pagetitle">Run Tests</p>
 <p class="pageinstruction">Welcome to Litmus. To run tests, please enter some 
 information about your system configuration.</p>
 <form action="[% goto %]" method="post" name="form" id="form">
 <input name="isSysConfig" type="hidden" value="1">
-<input name="product" type="hidden" value="[% product.productid %]">
 <input name="testgroup" type="hidden" value="[% testgroup %]">
 
 [% # here we see if there is data to include as hidden fields. 
@@ -65,8 +61,22 @@ information about your system configuration.</p>
 
 <p><strong>System Information:</strong><br>
 <table border="0" cellpadding="5">
-<tr><td><div align="right">Product:</div></td><td>[% product.name FILTER html%] 
-    <div class="smallcaps"><a href="run_tests.cgi">change</a></div></td></tr>
+
+<tr><td><div align="right">Product:</div></td><td>
+[% # either only one product or the user already set it, so just display it %]
+[% UNLESS products.1 %]
+    [% products.0.name FILTER html %]
+    <select name="product" id="product" class="select_product" style="display: none;">
+        <option value="[%products.0.productid FILTER html%]" selected>
+        [%products.0.name FILTER html%]</option>
+    </select>
+    <input name="product_default" id="product_default" type="hidden" 
+        value="[%products.0.productid FILTER html%]">
+[% ELSE %]
+    [% # display the product selection list then %]
+    [% INCLUDE productbox products=products %]
+[% END %]    
+</td></tr>
 <tr>
 <td><div align="right">Platform: </div></td>
 <td>[% INCLUDE platformbox platforms=platforms defaultplatform=ua.platform(product) %]

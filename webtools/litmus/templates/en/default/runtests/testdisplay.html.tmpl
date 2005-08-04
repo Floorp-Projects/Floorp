@@ -30,7 +30,7 @@
 [% PROCESS global/selects.none.tmpl %]
 [% script = ['subgroupscript', 'edittestsscript'] %]
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' script=script %] 
+[% INCLUDE global/header.html.tmpl title = 'Run Tests' script=script includeselects=1%] 
 
 <p class="pagetitle">Run Tests</p>
 <p class="pageinstruction">Testing Summary:</p>
@@ -48,7 +48,6 @@
 <form action="process_test.cgi" method="post" name="form" id="form">
 <input name="isTestResult" type="hidden" value="true">
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="">
-<input name="product" type="hidden" value="[% sysconfig.product FILTER html %]">
 <input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]">
 <table border="0" cellpadding="5" width="100%">
 
