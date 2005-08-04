@@ -32,7 +32,7 @@ main(int argc, char **argv)
   args[i++] = "/NODEFAULTLIB:LIBC";
   args[i++] = "/NODEFAULTLIB:OLDNAMES";
 
-  args[i++] = "/STACK:0x5000000,0x100000";
+  //  args[i++] = "/STACK:0x5000000,0x100000";
 
   // if -DLL is not passed, then change the entry to 'main'
   while(argv[j])

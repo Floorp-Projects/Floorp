@@ -32,7 +32,7 @@ main(int argc, char **argv)
   args[i++] = "/DDEPRECATE_SUPPORTED";
   args[i++] = "/DSTDC_HEADERS";
 
-  args[i++] = "/F5000000";
+  //  args[i++] = "/F5000000";
   args[i++] = "/Gy";  // For link warning LNK1166
 
   //  args[i++] = "/Gf";
@@ -78,7 +78,7 @@ main(int argc, char **argv)
   if (link)
   {
     args[i++] = "/link";
-    args[i++] = "-STACK:0x5000000,0x100000";
+    //    args[i++] = "-STACK:0x5000000,0x100000";
 
     args[i++] = "-ENTRY:mainACRTStartup";
     args[i++] = "-SUBSYSTEM:WINDOWSCE,4.20";
