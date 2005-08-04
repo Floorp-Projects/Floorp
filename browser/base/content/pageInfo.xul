@@ -115,7 +115,7 @@
           </columns>
           <rows>
             <row>
-              <label value="&generalURL;"/>
+              <label control="urltext" value="&generalURL;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="urltext"/>
             </row>
@@ -123,32 +123,32 @@
               <separator class="thin"/>
             </row>
             <row>
-              <label value="&generalType;"/>
+              <label control="typetext" value="&generalType;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="typetext"/>
             </row>
             <row>
-              <label value="&generalMode;"/>
+              <label control="modetext" value="&generalMode;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="modetext"/>
             </row>
             <row>
-              <label value="&generalSource;"/>
+              <label control="sourcetext" value="&generalSource;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="sourcetext"/>
             </row>
             <row>
-              <label value="&generalEncoding;"/>
+              <label control="encodingtext" value="&generalEncoding;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="encodingtext"/>
             </row>
             <row>
-              <label value="&generalSize;"/>
+              <label control="sizetext" value="&generalSize;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="sizetext"/>
             </row>
             <row>
-              <label value="&generalReferrer;"/>
+              <label control="refertext" value="&generalReferrer;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="refertext"/>
             </row>
@@ -156,19 +156,19 @@
               <separator class="thin"/>
             </row>
             <row>
-              <label value="&generalModified;"/>
+              <label control="modifiedtext" value="&generalModified;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="modifiedtext"/>
             </row>
             <row>
-              <label value="&generalExpires;"/>
+              <label control="expirestext" value="&generalExpires;"/>
               <separator/>
               <textbox readonly="true" crop="right" id="expirestext"/>
             </row>
           </rows>
         </grid>
         <separator class="thin"/>
-        <text id="metahead" class="header" value="&generalMeta;"/>
+        <label id="metahead" control="metatree" class="header" value="&generalMeta;"/>
         <tree id="metatree" flex="1" contextmenu="picontext">
           <treecols>
             <treecol persist="hidden width" flex="1" id="meta-name"    label="&generalMetaName;"/>
@@ -206,18 +206,18 @@
             </columns>
             <rows>
               <row>
-                <label value="&formEncoding;"/>
+                <label control="formenctype" value="&formEncoding;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="formenctype"/>
               </row>
               <row>
-                <label value="&formTarget;"/>
+                <label control="formTarget" value="&formTarget;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" class="label" id="formtarget"/>
               </row>
             </rows>
           </grid>
-          <text class="header" value="&formFields;"/>
+          <label control="formpreview" class="header" value="&formFields;"/>
           <tree id="formpreview" flex="1" contextmenu="picontext">
             <treecols>
               <treecol sortSeparators="true" persist="hidden width" flex="3" 
@@ -288,59 +288,59 @@
             </columns>
             <rows>
               <row>
-                <label value="&mediaURL;"/>
+                <label control="imageurltext" value="&mediaURL;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imageurltext"/>
               </row>
               <row>
-                <label value="&mediaTitle;"/>
+                <label control="imagetitletext" value="&mediaTitle;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagetitletext"/>
               </row>
               <row>
-                <label value="&mediaAlt;"/>
+                <label control="imagealttext" value="&mediaAlt;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagealttext"/>
               </row>
               <row>
-                <label value="&mediaLongdesc;"/>
+                <label control="imagelongdesctext" value="&mediaLongdesc;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagelongdesctext"/>
               </row>
               <row>
-                <label value="&generalType;"/>
+                <label control="imagetypetext" value="&generalType;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagetypetext"/>
               </row>
               <row>
-                <label value="&generalSource;"/>
+                <label control="imagesourcetext" value="&generalSource;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagesourcetext"/>
               </row>
               <row>
-                <label value="&generalSize;"/>
+                <label control="imagesizetext" value="&generalSize;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imagesizetext"/>
               </row>
               <row>
-                <label value="&generalExpires;"/>
+                <label control="imageexpirestext" value="&generalExpires;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imageexpirestext"/>
               </row>
               <row>
-                <label value="&mediaDimensions;"/>
+                <label control="imageSize" value="&mediaDimensions;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="imageSize"/>
               </row>
               <row id="physRow" collapsed="true">
-                <label value="&mediaPhysDimensions;"/>
+                <label control="physSize" value="&mediaPhysDimensions;"/>
                 <separator/>
                 <textbox readonly="true" crop="right" id="physSize"/>
               </row>
             </rows>
           </grid>
           <hbox align="end">
-            <label value="&mediaPreview;" class="header"/>
+            <label control="thepreviewimage" value="&mediaPreview;" class="header"/>
             <spacer flex="1"/>
             <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
                     icon="save" id="imagesaveasbutton" disabled="true"
