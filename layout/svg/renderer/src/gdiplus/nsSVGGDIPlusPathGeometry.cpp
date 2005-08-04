@@ -426,49 +426,61 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
   nscolor color;
   float opacity;
-  PRUint16 type;
+  PRUint16 type, serverType = 0;
   
   // paint fill:
   mSource->GetFillPaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+      if(NS_FAILED(mSource->GetFillPaintServerType(&serverType)))
+        type = nsISVGGeometrySource::PAINT_TYPE_NONE;
+  }
   if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetFill()) {
     if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       mSource->GetFillPaint(&color);
       mSource->GetFillOpacity(&opacity);
       RenderPath(GetFill(), color, opacity, gdiplusCanvas);
     } else {
-      nsCOMPtr<nsISVGGradient> aGrad;
-      mSource->GetFillGradient(getter_AddRefs(aGrad));
+      if (serverType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+        nsCOMPtr<nsISVGGradient> aGrad;
+        mSource->GetFillGradient(getter_AddRefs(aGrad));
 
-      nsCOMPtr<nsISVGRendererRegion> region;
-      GetCoveredRegion(getter_AddRefs(region));
-      nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      mSource->GetCanvasTM(getter_AddRefs(ctm));
+        nsCOMPtr<nsISVGRendererRegion> region;
+        GetCoveredRegion(getter_AddRefs(region));
+        nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+        nsCOMPtr<nsIDOMSVGMatrix> ctm;
+        mSource->GetCanvasTM(getter_AddRefs(ctm));
 
-      GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
-                      mSource, gradCBFill, this);
+        GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
+                        mSource, gradCBFill, this);
+      }
     }
   }
 
   // paint stroke:
   mSource->GetStrokePaintType(&type);
+  if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+      if(NS_FAILED(mSource->GetStrokePaintServerType(&serverType)))
+        type = nsISVGGeometrySource::PAINT_TYPE_NONE;
+  }
   if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetStroke()) {
     if (type == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       mSource->GetStrokePaint(&color);
       mSource->GetStrokeOpacity(&opacity);
       RenderPath(GetStroke(), color, opacity, gdiplusCanvas);
     } else {
-      nsCOMPtr<nsISVGGradient> aGrad;
-      mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+      if (serverType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+        nsCOMPtr<nsISVGGradient> aGrad;
+        mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
-      nsCOMPtr<nsISVGRendererRegion> region;
-      GetCoveredRegion(getter_AddRefs(region));
-      nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      mSource->GetCanvasTM(getter_AddRefs(ctm));
+        nsCOMPtr<nsISVGRendererRegion> region;
+        GetCoveredRegion(getter_AddRefs(region));
+        nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
+        nsCOMPtr<nsIDOMSVGMatrix> ctm;
+        mSource->GetCanvasTM(getter_AddRefs(ctm));
 
-      GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
-                      mSource, gradCBStroke, this);
+        GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
+                        mSource, gradCBStroke, this);
+      }
     }
   }
   

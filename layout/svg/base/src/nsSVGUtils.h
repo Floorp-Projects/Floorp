@@ -51,6 +51,20 @@ public:
    */
   static float CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
                             const nsStyleCoord &aCoord);
+  /*
+   * Gets an internal frame for an element referenced by a URI.  Note that this
+   * only works for URIs that reference elements within the same document.
+   */
+  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uriSpec, 
+                                     nsIContent *aContent, 
+                                     nsIPresShell *aPresShell);
+  /*
+   * For SVGPaint attributes (fills, strokes), return the type of the Paint.  This
+   * is an expanded type that includes whether this is a solid fill, a gradient, or
+   * a pattern.
+   */
+  static nsresult GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& aPaint, 
+                               nsIContent *aContent, nsIPresShell *aPresShell);
 };
 
 #endif

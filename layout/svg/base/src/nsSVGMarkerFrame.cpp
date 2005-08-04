@@ -55,6 +55,7 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsISVGRendererCanvas.h"
+#include "nsSVGUtils.h"
 
 NS_IMETHODIMP_(nsrefcnt)
   nsSVGMarkerFrame::AddRef()
@@ -101,52 +102,32 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** 
 nsresult
 NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult, nsIURI *aURI, nsIContent *aContent)
 {
-  nsresult rv;
   *aResult = nsnull;
 
+  // Get the PresShell
+  nsIDocument *myDoc = aContent->GetCurrentDoc();
+  if (!myDoc) {
+    NS_WARNING("No document for this content!");
+    return NS_ERROR_FAILURE;
+  }
+  nsIPresShell *aPresShell = myDoc->GetShellAt(0);
+
+  // Get the URI Spec
   nsCAutoString uriSpec;
   aURI->GetSpec(uriSpec);
 
-  // Get ID from spec
-  PRInt32 pos = uriSpec.FindChar('#');
-  if (pos == -1) {
-    NS_ASSERTION(pos != -1, "URI Spec not a reference");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Strip off hash and get name
-  nsCAutoString idC;
-  uriSpec.Right(idC, uriSpec.Length() - (pos + 1));
-
-  // Convert to unicode
-  nsAutoString id;
-  CopyUTF8toUTF16(idC, id);
-
-  // Get document
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aContent->GetCurrentDoc());
-  NS_ASSERTION(doc, "Content doesn't reference a dom Document");
-  if (!doc)
+  // Find the referenced frame
+  nsIFrame *marker;
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, 
+                                                   uriSpec, aContent, aPresShell)))
     return NS_ERROR_FAILURE;
 
-  // Get element
-  nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsIPresShell> ps = do_QueryInterface(aContent->GetCurrentDoc()->GetShellAt(0));
-  rv = doc->GetElementById(id, getter_AddRefs(element));
-  if (!NS_SUCCEEDED(rv) || element == nsnull)
-    return rv;
-
-  nsIFrame *frame;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  rv = ps->GetPrimaryFrameFor(content, &frame);
-  if (!frame)
+  nsIAtom* frameType = marker->GetType();
+  if (frameType != nsLayoutAtoms::svgMarkerFrame)
     return NS_ERROR_FAILURE;
 
-//  see comment preceeding nsSVGMarkerFrame::QueryInterface
-//  nsCOMPtr<nsSVGMarkerFrame> marker = do_QueryInterface(frame);
-  nsSVGMarkerFrame *marker;
-  CallQueryInterface(frame, &marker);
-  *aResult = marker;
-  return rv;
+  *aResult = (nsSVGMarkerFrame *)marker;
+  return NS_OK;
 }
 
 nsSVGMarkerFrame::~nsSVGMarkerFrame()

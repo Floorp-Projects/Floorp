@@ -70,6 +70,7 @@
 #include "nsSVGNumber.h"
 #include "nsIDOMSVGStopElement.h"
 #include "nsLayoutAtoms.h"
+#include "nsSVGUtils.h"
   
 typedef nsContainerFrame  nsSVGGradientFrameBase;
 
@@ -261,9 +262,6 @@ private:
   nsCOMPtr<nsIDOMSVGLength>       mR;
 
 };
-
-static nsresult GetSVGGradient(nsSVGGradientFrame **result, nsCAutoString& aSpec, 
-                               nsIContent *aContent, nsIPresShell *aPresShell);
 
 //----------------------------------------------------------------------
 // Implementation
@@ -605,7 +603,7 @@ nsSVGGradientFrame::checkURITarget(nsIAtom *attr) {
 
 PRBool
 nsSVGGradientFrame::checkURITarget(void) {
-  nsSVGGradientFrame *aNextGrad;
+  nsIFrame *aNextGrad;
   // Have we already figured out the next Gradient?
   if (mNextGrad != nsnull) {
     return PR_TRUE;
@@ -621,8 +619,12 @@ nsSVGGradientFrame::checkURITarget(void) {
   CopyUTF16toUTF8(mNextGradStr, aGradStr);
   // Note that we are using *our* frame tree for this call, otherwise we're going to have
   // to get the PresShell in each call
-  if (GetSVGGradient(&aNextGrad, aGradStr, mContent, GetPresContext()->PresShell()) == NS_OK) {
-    mNextGrad = aNextGrad;
+  if (nsSVGUtils::GetReferencedFrame(&aNextGrad, aGradStr, mContent, GetPresContext()->PresShell()) == NS_OK) {
+    nsIAtom* frameType = aNextGrad->GetType();
+    if ((frameType != nsLayoutAtoms::svgLinearGradientFrame) && 
+        (frameType != nsLayoutAtoms::svgRadialGradientFrame))
+      return PR_FALSE;
+    mNextGrad = (nsSVGGradientFrame *)aNextGrad;
     // Add ourselves to the observer list
     if (mNextGrad) {
       // Can't use the NS_ADD macro here because of nsISupports ambiguity
@@ -1170,68 +1172,14 @@ nsresult NS_GetSVGGradient(nsISVGGradient **aGrad, nsIURI *aURI, nsIContent *aCo
   // Get the spec from the URI
   nsCAutoString uriSpec;
   aURI->GetSpec(uriSpec);
-  nsSVGGradientFrame *result;
-  nsresult rv = GetSVGGradient(&result, uriSpec, aContent, aPresShell);
-  *aGrad = (nsISVGGradient*)result;
-  
-  return rv;
-}
-
-// Static (helper) function to get a gradient from URI spec
-static nsresult GetSVGGradient(nsSVGGradientFrame **result, nsCAutoString& aSpec, nsIContent *aContent,
-                               nsIPresShell *aPresShell)
-{
-  nsresult rv = NS_OK;
-  *result = nsnull;
-
-  // Get the ID from the spec (no ID = an error)
-  PRInt32 pos = aSpec.FindChar('#');
-  if (pos == -1) {
-    NS_ASSERTION(pos != -1, "URI Spec not a reference");
+#ifdef DEBUG_scooter
+  printf("NS_GetSVGGradient: uri = %s\n",uriSpec.get());
+#endif
+  nsIFrame *result;
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, 
+                                                   uriSpec, aContent, aPresShell))) {
     return NS_ERROR_FAILURE;
   }
 
-  // Strip off the hash and get the name
-  nsCAutoString aURICName;
-  aSpec.Right(aURICName, aSpec.Length()-(pos + 1));
-
-  // Get a unicode string
-  nsAutoString  aURIName;
-  CopyUTF8toUTF16(aURICName, aURIName);
-
-  // Get the domDocument
-  nsCOMPtr<nsIDOMDocument>domDoc = do_QueryInterface(aContent->GetDocument());
-  NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
-  if (domDoc == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Get the gradient element
-  nsCOMPtr<nsIDOMElement> element;
-  rv = domDoc->GetElementById(aURIName, getter_AddRefs(element));
-  if (!NS_SUCCEEDED(rv) || element == nsnull) {
-    return rv;  
-  }
-
-  // Note: the following queries are not really required, but we want to make sure
-  // we're pointing to gradient elements.
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> lGradient = do_QueryInterface(element);
-  if (!lGradient) {
-    nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradient = do_QueryInterface(element);
-    if (!rGradient) {
-      NS_ASSERTION(PR_FALSE, "Not a gradient element!");
-      return NS_ERROR_FAILURE;
-    } 
-  } 
-
-  // Get the Primary Frame
-  nsCOMPtr<nsIContent> aGContent = do_QueryInterface(element);
-  NS_ASSERTION(aPresShell, "svg get gradient -- no pres shell provided");
-  if (!aPresShell)
-    return NS_ERROR_FAILURE;
-  nsIFrame *grad;
-  rv = aPresShell->GetPrimaryFrameFor(aGContent, &grad);
-
-  *result = (nsSVGGradientFrame *)grad;
-  return rv;
+  return result->QueryInterface(NS_GET_IID(nsISVGGradient), (void **)aGrad);
 }
