@@ -2493,9 +2493,11 @@ case "$target" in
                PR_MD_ASFILES=os_SunOS_x86.s
             fi
         else
-            PR_MD_ASFILES=os_SunOS.s
             if test -n "$USE_64"; then
-                PR_MD_ASFILES="$PR_MD_ASFILES os_SunOS_sparcv9.s"
+                PR_MD_ASFILES=os_SunOS_sparcv9.s
+            fi
+            if test -n "$USE_NATIVE_THREADS"; then
+                PR_MD_ASFILES="$PR_MD_ASFILES os_SunOS.s"
             fi
         fi
     fi
