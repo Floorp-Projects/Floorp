@@ -209,7 +209,7 @@ void DoPreferences()
     if (!prefBranch)
         return;
 
-    prefBranch->SetBoolPref("snav.keyCode.modifier", 0);
+    prefBranch->SetIntPref("snav.keyCode.modifier", 0);
     prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
 }
 
