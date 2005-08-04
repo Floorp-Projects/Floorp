@@ -571,8 +571,13 @@
       <handler event="mousedown" button="0">
       <![CDATA[
         if (this != this.parentNode.selectedItem) { // Not selected yet
-          this.parentNode.selectNewTab(this);
-          event.preventDefault();  // Just show tab, don't focus it
+          // Select new tab after short delay so that PostHandleEvent() doesn't see
+          // the tab as selected yet, otherwise it will focus the tab for us --
+          // the CSS for tab has -moz-user-focus: normal only for selected="true".
+          function setTab(tab) {
+            tab.parentNode.selectNewTab(tab);
+          }
+          setTimeout(setTab, 0, this);
         }
         // Otherwise this tab is already selected and we will fall
         // through to mousedown behavior which sets focus on the current tab,
