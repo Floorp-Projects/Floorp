@@ -1325,14 +1325,20 @@ MOZCE_SHUNT_API HINSTANCE mozce_LoadLibraryA(LPCSTR lpLibFileName)
 
     if(wPath) {
         retval = LoadLibraryW(wPath);
-        free(wPath);
     }
     
 #ifdef DEBUG
     if (!retval) {
-        mozce_printf("LoadLibraryA failure! %d\n", GetLastError());
+        DWORD error = GetLastError();
+        mozce_printf("LoadLibraryA failure (14==OOM)! %d\n", error);
+        
+        if (error == 14)
+            MessageBoxW(NULL, L"Failed to Load Library. Out Of Memory.", wPath, 0);
     }
 #endif
+
+	if (wPath)
+		free(wPath);
     return retval;
 }
 
