@@ -1130,19 +1130,43 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         }
       }
 
-      nsAutoString dialogTitle, dialogText, neverText;
+      nsresult rv;
+      nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+      nsCOMPtr<nsIStringBundle> brandBundle;
+      rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                       getter_AddRefs(brandBundle));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsXPIDLString brandShortName;
+      rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                          getter_Copies(brandShortName));
+      NS_ENSURE_SUCCESS(rv, rv);
+      const PRUnichar* formatArgs[1] = { brandShortName.get() };
+
+      nsAutoString dialogText;
+      GetLocalizedString(NS_LITERAL_STRING("savePasswordText"),
+                         dialogText,
+                         PR_TRUE,
+                         formatArgs,
+                         1);
+
+      nsAutoString dialogTitle, neverText, rememberText, notRememberText;
       GetLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
-      GetLocalizedString(NS_LITERAL_STRING("savePasswordText"), dialogText);
+
       GetLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
+      GetLocalizedString(NS_LITERAL_STRING("rememberPassword"), rememberText);
+      GetLocalizedString(NS_LITERAL_STRING("doNotRememberPassword"),
+                         notRememberText);
 
       PRInt32 selection;
       prompt->ConfirmEx(dialogTitle.get(),
                         dialogText.get(),
                         nsIPrompt::BUTTON_POS_1_DEFAULT +
-                        (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                        (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1) +
+                        (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
+                        (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1) +
                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
-                        nsnull, nsnull,
+                        rememberText.get(),
+                        notRememberText.get(),
                         neverText.get(),
                         nsnull, nsnull,
                         &selection);
