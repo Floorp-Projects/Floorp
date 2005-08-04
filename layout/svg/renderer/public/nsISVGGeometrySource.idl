@@ -68,7 +68,7 @@ interface nsISVGGradient;
  *
  * @nosubgrouping
  */
-[uuid(1130c772-f329-4ab7-8a77-41dac7b85add)]
+[uuid(b2c3119b-a27d-4b25-97a9-a9d60981a95e)]
 interface nsISVGGeometrySource : nsISupports
 {
   /**
@@ -190,6 +190,8 @@ interface nsISVGGeometrySource : nsISupports
   const unsigned short PAINT_TYPE_NONE          = 0;
   const unsigned short PAINT_TYPE_SOLID_COLOR   = 1;
   const unsigned short PAINT_TYPE_SERVER        = 2; 
+  const unsigned short PAINT_TYPE_GRADIENT      = 3; 
+  const unsigned short PAINT_TYPE_PATTERN       = 4; 
   /** @} */
   
   /**
@@ -199,12 +201,16 @@ interface nsISVGGeometrySource : nsISupports
   readonly attribute unsigned short strokePaintType; 
   const unsigned long UPDATEMASK_STROKE_PAINT_TYPE   = 0x00000800;
 
+  /* strokePaintServerType will only be valid if strokePaintType ==
+   * PAINT_TYPE_SERVER */
+  readonly attribute unsigned short strokePaintServerType;
+
   /* strokePaint will only be valid if strokePaintType ==
    * PAINT_TYPE_SOLID_COLOR */
   readonly attribute nscolor strokePaint;
   
   /* GetStrokeGradient will only return a valid result if
-   * strokePaintType == PAINT_TYPE_SERVER */
+   * strokePaintType == PAINT_TYPE_GRADIENT */
   void GetStrokeGradient(out nsISVGGradient aGrad);
   
   /* signifies that either paint color or server have changed,
@@ -220,12 +226,16 @@ interface nsISVGGeometrySource : nsISupports
   readonly attribute unsigned short fillPaintType; 
   const unsigned long UPDATEMASK_FILL_PAINT_TYPE     = 0x00004000;
 
+  /* fillPaintServerType will only be valid if fillPaintType ==
+   * PAINT_TYPE_SERVER */
+  readonly attribute unsigned short fillPaintServerType; 
+
   /* fillPaint will only be valid if fillPaintType ==
    * PAINT_TYPE_SOLID_COLOR */
   readonly attribute nscolor fillPaint;
   
   /* GetFillGradient will only return a valid result if
-   * fillPaintType == PAINT_TYPE_SERVER */
+   * fillPaintType == PAINT_TYPE_GRADIENT */
   void GetFillGradient(out nsISVGGradient aGrad);
   
   /* signifies that either paint color or server have changed,

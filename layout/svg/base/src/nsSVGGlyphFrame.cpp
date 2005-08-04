@@ -743,6 +743,14 @@ nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
   return NS_OK;
 }
 
+/* readonly attribute unsigned short strokePaintServerType; */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetStrokePaintServerType(PRUint16 *aStrokePaintServerType)
+{
+  return nsSVGUtils::GetPaintType(aStrokePaintServerType, GetStyleSVG()->mStroke, mContent,
+                                  nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+}
+
 /* [noscript] readonly attribute nscolor strokePaint; */
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaint(nscolor *aStrokePaint)
@@ -776,6 +784,14 @@ nsSVGGlyphFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 {
   *aFillPaintType = GetStyleSVG()->mFill.mType;
   return NS_OK;
+}
+
+/* readonly attribute unsigned short fillPaintServerType; */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetFillPaintServerType(PRUint16 *aFillPaintServerType)
+{
+  return nsSVGUtils::GetPaintType(aFillPaintServerType, GetStyleSVG()->mFill, mContent,
+                                  nsSVGGlyphFrameBase::GetPresContext()->PresShell());
 }
 
 /* [noscript] readonly attribute nscolor fillPaint; */

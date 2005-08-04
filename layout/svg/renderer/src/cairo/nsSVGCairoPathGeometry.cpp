@@ -294,13 +294,27 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
   }
 
   PRUint16 strokeType, fillType;
+  PRUint16 strokeServerType = 0;
 
   PRBool bStroking = PR_FALSE;
   mSource->GetStrokePaintType(&strokeType);
-  if (strokeType != nsISVGGeometrySource::PAINT_TYPE_NONE)
+  if (strokeType != nsISVGGeometrySource::PAINT_TYPE_NONE) {
     bStroking = PR_TRUE;
+    if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+      if (NS_FAILED(mSource->GetStrokePaintServerType(&strokeServerType)))
+        // unknown type or missing frame
+        bStroking = PR_FALSE;
+    }
+  }
 
   mSource->GetFillPaintType(&fillType);
+  PRUint16 fillServerType = 0;
+  if (fillType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+    if (NS_FAILED(mSource->GetFillPaintServerType(&fillServerType)))
+      // unknown type or missing frame
+      fillType = nsISVGGeometrySource::PAINT_TYPE_NONE;
+  }
+
   if (fillType != nsISVGGeometrySource::PAINT_TYPE_NONE) {
     nscolor rgb;
     mSource->GetFillPaint(&rgb);
@@ -315,14 +329,18 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
     if (fillType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_fill_preserve(ctx);
-    } else {
-      nsCOMPtr<nsISVGGradient> aGrad;
-      mSource->GetFillGradient(getter_AddRefs(aGrad));
+    } else if (fillType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+      if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+        nsCOMPtr<nsISVGGradient> aGrad;
+        mSource->GetFillGradient(getter_AddRefs(aGrad));
 
-      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-      cairo_set_source(ctx, gradient);
-      cairo_fill_preserve(ctx);
-      cairo_pattern_destroy(gradient);
+        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
+        cairo_set_source(ctx, gradient);
+        cairo_fill_preserve(ctx);
+        cairo_pattern_destroy(gradient);
+      } else {
+        cairo_fill_preserve(ctx);
+      }
     }
 
     if (!bStroking)
@@ -342,14 +360,20 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
     if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_stroke(ctx);
-    } else {
-      nsCOMPtr<nsISVGGradient> aGrad;
-      mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+    } else if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+      PRUint16 serverType;
+      mSource->GetStrokePaintServerType(&serverType);
+      if (serverType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+        nsCOMPtr<nsISVGGradient> aGrad;
+        mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
-      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-      cairo_set_source(ctx, gradient);
-      cairo_stroke(ctx);
-      cairo_pattern_destroy(gradient);
+        cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
+        cairo_set_source(ctx, gradient);
+        cairo_stroke(ctx);
+        cairo_pattern_destroy(gradient);
+      } else {
+        cairo_stroke(ctx);
+      }
     }
   }
 

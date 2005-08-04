@@ -43,6 +43,7 @@
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererRegion.h"
 #include "nsISVGValueUtils.h"
+#include "nsISVGGeometrySource.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
@@ -58,7 +59,6 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsSVGAtoms.h"
 #include "nsIViewManager.h"
 #include "nsSVGUtils.h"
 
@@ -621,6 +621,13 @@ nsSVGPathGeometryFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
   return NS_OK;
 }
 
+/* readonly attribute unsigned short strokePaintServerType; */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetStrokePaintServerType(PRUint16 *aStrokePaintServerType) {
+  return nsSVGUtils::GetPaintType(aStrokePaintServerType, GetStyleSVG()->mStroke, mContent,
+                                  nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+}
+
 /* [noscript] readonly attribute nscolor strokePaint; */
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokePaint(nscolor *aStrokePaint)
@@ -654,6 +661,14 @@ nsSVGPathGeometryFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 {
   *aFillPaintType = GetStyleSVG()->mFill.mType;
   return NS_OK;
+}
+
+/* readonly attribute unsigned short fillPaintServerType; */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetFillPaintServerType(PRUint16 *aFillPaintServerType)
+{
+  return nsSVGUtils::GetPaintType(aFillPaintServerType, GetStyleSVG()->mFill, mContent,
+                                  nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
 }
 
 /* [noscript] readonly attribute nscolor fillPaint; */

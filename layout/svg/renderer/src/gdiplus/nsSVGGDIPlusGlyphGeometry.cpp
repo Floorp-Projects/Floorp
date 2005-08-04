@@ -366,14 +366,25 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
 
   PRBool hasFill = PR_FALSE, hasStroke = PR_FALSE;
   PRUint16 filltype, stroketype;
+  PRUint16 fillServerType = 0, strokeServerType = 0;
 
   mSource->GetFillPaintType(&filltype);
   if (filltype != nsISVGGeometrySource::PAINT_TYPE_NONE)
     hasFill = PR_TRUE;
 
+  if (filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+    if(NS_FAILED(mSource->GetFillPaintServerType(&fillServerType)))
+      hasFill = PR_FALSE;
+  }
+
   mSource->GetStrokePaintType(&stroketype);
   if (stroketype != nsISVGGeometrySource::PAINT_TYPE_NONE && mStroke)
     hasStroke = PR_TRUE;
+
+  if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
+    if(NS_FAILED(mSource->GetStrokePaintServerType(&strokeServerType)))
+      hasStroke = PR_FALSE;
+  }
 
   if (!hasFill && !hasStroke) return NS_OK; // nothing to paint
   
@@ -422,8 +433,11 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       SolidBrush brush(Color((BYTE)(opacity*255),NS_GET_R(color),NS_GET_G(color),NS_GET_B(color)));
 
       nsCOMPtr<nsISVGGradient> aGrad;
-      if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-        mSource->GetFillGradient(getter_AddRefs(aGrad));
+      if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+        if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+          mSource->GetFillGradient(getter_AddRefs(aGrad));
+        }
+      }
 
       DrawFill(gdiplusCanvas->GetGraphics(), brush, aGrad,
                sections.GetSectionPtr(), sections.GetLength(), sections.GetAdvance()+x, y);
@@ -440,8 +454,11 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetStrokeOpacity(&opacity);
 
       nsCOMPtr<nsISVGGradient> aGrad;
-      if (stroketype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
-        mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+      if (stroketype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+        if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+          mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+        }
+      }
 
       SolidBrush brush(Color((BYTE)(opacity*255), NS_GET_R(color), NS_GET_G(color), NS_GET_B(color)));
 
@@ -449,7 +466,7 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
         // this is the 'normal' case
         if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
           gdiplusCanvas->GetGraphics()->FillPath(&brush, mStroke);
-        } else {
+        } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
           nsCOMPtr<nsISVGRendererRegion> region;
           GetCoveredRegion(getter_AddRefs(region));
           nsCOMPtr<nsISVGGDIPlusRegion> aRegion = do_QueryInterface(region);
