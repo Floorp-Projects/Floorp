@@ -624,7 +624,29 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
         default:
           NS_ASSERTION(PR_FALSE, "we don't sort by group for this type");
           break;
-      }
+     }
+     if (groupThread)
+     {
+
+      // Get number of messages in group
+      nsAutoString formattedCountMsg;
+      PRUint32 numMsg = groupThread->NumRealChildren();
+      formattedCountMsg.AppendInt(numMsg);
+
+      // Get number of unread messages
+      nsAutoString formattedCountUnrMsg;
+      PRUint32 numUnrMsg = 0;
+      groupThread->GetNumUnreadChildren(&numUnrMsg);
+      formattedCountUnrMsg.AppendInt(numUnrMsg);
+
+      // Add text to header
+      aValue.Append(NS_LITERAL_STRING(" ("));
+      aValue.Append(formattedCountUnrMsg);
+      aValue.Append(NS_LITERAL_STRING("/"));
+      aValue.Append(formattedCountMsg);
+      aValue.Append(NS_LITERAL_STRING(")"));
+
+	 }
     }
     else if (colID[0] == 't')
     {
