@@ -280,12 +280,71 @@ PRBool DoesProcessAlreadyExist()
     return TRUE;
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *   Complete hack below.  We to ensure that the layout of all
+ *   of the shared libaries are at tightly packed as possible.
+ *   We do this by explictly loading all of the modules we
+ *   know about at compile time.  This seams to work for our
+ *   purposes.  Ultimately, we should statically link all of
+ *   these libraries.
+ *
+ *   If you are building this to put on a ROM where XIP exists.
+ *
+ *   For more information:
+ *   1) http://msdn.microsoft.com/library/default.asp?url=/ \
+        library/en-us/dncenet/html/advmemmgmt.asp
+ *
+ * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
+#define HACKY_PRE_LOAD_LIBRARY 1
+#ifdef HACKY_PRE_LOAD_LIBRARY
+typedef struct _library
+{
+	const unsigned short* name;
+	HMODULE module;
+} _library;
+
+_library Libraries[] =
+{
+  {  L"js3250.dll",     NULL },
+  {  L"nspr4.dll",      NULL },
+  {  L"nss3.dll",       NULL },
+  {  L"nssckbi.dll",    NULL },
+  {  L"plc4.dll",       NULL },
+  {  L"plds4.dll",      NULL },
+  {  L"shunt.dll",      NULL },
+  {  L"smime3.dll",     NULL },
+  {  L"softokn3.dll",   NULL },
+  {  L"ssl3.dll",       NULL },
+  {  L"xpcom.dll",      NULL },
+  {  L"xpcom_core.dll", NULL },
+  {  NULL, NULL },
+};
+
+void LoadKnownLibs()
+{
+  for (int i=0; Libraries[i].name; i++)
+    Libraries[i].module = LoadLibraryW(Libraries[i].name);
+}
+
+void UnloadKnownLibs()
+{
+  for (int i=0; Libraries[i].name; i++)
+    if (Libraries[i].module)
+      FreeLibrary(Libraries[i].module);
+}
+#endif // HACKY_PRE_LOAD_LIBRARY
+
 int main(int argc, char *argv[])
 {
     if (DoesProcessAlreadyExist())
         return 0;
 
     CreateSplashScreen();
+
+#ifdef HACKY_PRE_LOAD_LIBRARY
+    LoadKnownLibs();
+#endif
 
     NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
 
@@ -330,5 +389,8 @@ int main(int argc, char *argv[])
     // Close down Embedding APIs
     NS_TermEmbedding();
 
+#ifdef HACKY_PRE_LOAD_LIBRARY
+    UnloadKnownLibs();
+#endif
     return NS_OK;
 }
