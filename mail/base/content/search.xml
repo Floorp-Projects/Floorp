@@ -86,6 +86,15 @@
          this.clearButtonHidden = true;
         ]]></body>
       </method>
+
+      <method name="openmenupopup">
+        <body>
+          <![CDATA[
+            document.getElementById('quick-search-menupopup').click();
+            return false;
+          ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -122,6 +131,13 @@
             menuPopup.setAttribute('value', this.searchMode);
           }
         ]]></handler>
+
+        <handler event="keypress" keycode="vk_down" modifiers="alt" phase="capturing" action="return this.openmenupopup();"/>
+        <handler event="keypress" keycode="vk_up"   modifiers="alt" phase="capturing" action="return this.openmenupopup();"/>
+
+#ifndef XP_MACOSX
+      <handler event="keypress" keycode="vk_f4" phase="capturing" action="return this.openmenupopup();"/>
+#endif
     </handlers>
   </binding>
   
