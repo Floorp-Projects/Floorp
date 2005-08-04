@@ -279,7 +279,8 @@
             {
               case "movemessage":
               case "copymessage":
-                if (!actionTarget.uri || actionTarget.uri == "") 
+                var msgFolder = actionTarget.uri ? GetMsgFolderFromUri(actionTarget.uri) : null;
+                if (!msgFolder || !msgFolder.canFileMessages) 
                   errorString = "mustSelectFolder";
                 break;
               case "forwardmessage":

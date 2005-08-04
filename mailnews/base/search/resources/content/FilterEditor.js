@@ -114,8 +114,6 @@ function filterEditorOnLoad()
         filterAction.type = (getScopeFromFilterList(gFilterList) == Components.interfaces.nsMsgSearchScope.newsFilter) ? nsMsgFilterAction.Delete : nsMsgFilterAction.MoveToFolder;
         gFilter.appendAction(filterAction);
         initializeDialog(gFilter);
-        // Clear the default action added above now that the dialog is initialized.
-        gFilter.clearActionList();
       }
       else
       {
@@ -321,10 +319,9 @@ function saveFilter()
       gFilter.enabled=true;
     }
     else 
-    {
       isNewFilter = false;
-      gFilter.clearActionList();
-    }
+    
+    gFilter.clearActionList();
   }
 
   // add each filteraction to the filter
