@@ -71,7 +71,6 @@ use Bugzilla::User;
 
 require "CGI.pl";
 require "globals.pl";
-$::lockcount = 0;
 
 GetVersionTable();
 
@@ -117,40 +116,6 @@ sub MailMessage {
 
   my $sendmessage = $header . $message . "\n";
   Bugzilla::BugMail::MessageToMTA($sendmessage);
-
-  Log($subject . " sent to: $to");
-}
-
-
-sub Log {
-    my ($str) = (@_);
-    Lock();
-    open(FID, ">>$datadir/maillog") || die "Can't write to $datadir/maillog";
-    print FID time2str("%D %H:%M", time()) . ": $str\n";
-    close FID;
-    Unlock();
-}
-
-sub Lock {
-    if ($::lockcount <= 0) {
-        $::lockcount = 0;
-        open(LOCKFID, ">>$datadir/maillock") || die "Can't open $datadir/maillock: $!";
-        my $val = flock(LOCKFID,2);
-        if (!$val) { # '2' is magic 'exclusive lock' const.
-            print Bugzilla->cgi->header();
-            print "Lock failed: $val\n";
-        }
-        chmod 0666, "$datadir/maillock";
-    }
-    $::lockcount++;
-}
-
-sub Unlock {
-    $::lockcount--;
-    if ($::lockcount <= 0) {
-        flock(LOCKFID,8);       # '8' is magic 'unlock' const.
-        close LOCKFID;
-    }
 }
 
 

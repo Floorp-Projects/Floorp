@@ -36,8 +36,6 @@ use Bugzilla::Bug;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
 
-$::lockcount = 0;
-
 unless ( Param("move-enabled") ) {
   print "\n<P>Sorry. Bug moving is not enabled here. ";
   print "If you need to move a bug, contact " . Param("maintainer");
@@ -47,37 +45,6 @@ unless ( Param("move-enabled") ) {
 Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
-
-sub Log {
-    my ($str) = (@_);
-    Lock();
-    open(FID, ">>$datadir/maillog") || die "Can't write to $datadir/maillog";
-    print FID time2str("%D %H:%M", time()) . ": $str\n";
-    close FID;
-    Unlock();
-}
-
-sub Lock {
-    if ($::lockcount <= 0) {
-        $::lockcount = 0;
-        open(LOCKFID, ">>$datadir/maillock") || die "Can't open $datadir/maillock: $!";
-        my $val = flock(LOCKFID,2);
-        if (!$val) { # '2' is magic 'exclusive lock' const.
-            print $cgi->header();
-            print "Lock failed: $val\n";
-        }
-        chmod 0666, "$datadir/maillock";
-    }
-    $::lockcount++;
-}
-
-sub Unlock {
-    $::lockcount--;
-    if ($::lockcount <= 0) {
-        flock(LOCKFID,8);       # '8' is magic 'unlock' const.
-        close LOCKFID;
-    }
-}
 
 if (!defined $cgi->param('buglist')) {
   print $cgi->header();
@@ -171,6 +138,3 @@ $template->process("bug/show.xml.tmpl", { bugs => \@bugs,
 $msg .= "\n";
 
 Bugzilla::BugMail::MessageToMTA($msg);
-
-my $logstr = "XML: bugs $buglist sent to $to";
-Log($logstr);
