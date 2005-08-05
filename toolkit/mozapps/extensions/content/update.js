@@ -114,7 +114,7 @@ var gUpdateWizard = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     if (this.shouldSuggestAutoChecking)
-      pref.setBoolPref(PREF_EXTENSIONS_UPDATE_ENABLED, this.shouldAutoCheck); 
+      pref.setBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED, this.shouldAutoCheck); 
   },
   
   _setUpButton: function (aButtonID, aButtonKey, aDisabled)
