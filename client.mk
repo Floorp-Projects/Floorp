@@ -158,7 +158,7 @@ LOCALES_browser :=                              \
 
 BOOTSTRAP_browser := mozilla/browser/config/mozconfig
 
-BOOTSTRAP_minimo := mozilla/embedding/minimo
+BOOTSTRAP_minimo := mozilla/minimo
 
 MODULES_mail :=                                 \
   $(MODULES_toolkit)                            \
