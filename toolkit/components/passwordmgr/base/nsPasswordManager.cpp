@@ -1150,13 +1150,16 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                          formatArgs,
                          1);
 
-      nsAutoString dialogTitle, neverText, rememberText, notRememberText;
+      nsAutoString dialogTitle, neverButtonText, rememberButtonText,
+                   notNowButtonText;
       GetLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
 
-      GetLocalizedString(NS_LITERAL_STRING("neverForSite"), neverText);
-      GetLocalizedString(NS_LITERAL_STRING("rememberPassword"), rememberText);
-      GetLocalizedString(NS_LITERAL_STRING("doNotRememberPassword"),
-                         notRememberText);
+      GetLocalizedString(NS_LITERAL_STRING("neverForSiteButton"), 
+                         neverButtonText);
+      GetLocalizedString(NS_LITERAL_STRING("rememberButton"), 
+                         rememberButtonText);
+      GetLocalizedString(NS_LITERAL_STRING("notNowButton"),
+                         notNowButtonText);
 
       PRInt32 selection;
       prompt->ConfirmEx(dialogTitle.get(),
@@ -1165,9 +1168,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_1) +
                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2),
-                        rememberText.get(),
-                        notRememberText.get(),
-                        neverText.get(),
+                        rememberButtonText.get(),
+                        notNowButtonText.get(),
+                        neverButtonText.get(),
                         nsnull, nsnull,
                         &selection);
 
