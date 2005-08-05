@@ -2827,11 +2827,11 @@ ExtensionManager.prototype = {
   
   /**
    * Upgrades contents.rdf files to chrome.manifest files for any existing
-   * Extensions.
+   * Extensions and Themes.
    * @returns true if actions were performed that require a restart, false 
    *          otherwise.
    */
-  _upgradeExtensionChrome: function() {
+  _upgradeChrome: function() {
     if (inSafeMode())
       return false;
 
@@ -2841,14 +2841,16 @@ ExtensionManager.prototype = {
     // manifests, and are still valid, we need to manually create the flat
     // manifest files.
     var extensions = this._getActiveItems(nsIUpdateItem.TYPE_EXTENSION);
-    for (i = 0; i < extensions.length; ++i) {
+    for (var i = 0; i < extensions.length; ++i) {
       var e = extensions[i];
       var itemLocation = e.location.getItemLocation(e.id);
       var manifest = itemLocation.clone();
       manifest.append(FILE_CHROME_MANIFEST);
       if (!manifest.exists()) {
+        var installRDF = itemLocation.clone();
+        installRDF.append(FILE_INSTALL_MANIFEST);
         var installLocation = this.getInstallLocation(e.id);
-        if (installLocation) {
+        if (installLocation && installRDF.exists()) {
           var itemLocation = installLocation.getItemLocation(e.id);
           if (itemLocation.exists() && itemLocation.isDirectory()) {
             var installer = new Installer(ds, e.id, installLocation, 
@@ -2856,70 +2858,69 @@ ExtensionManager.prototype = {
             installer.upgradeExtensionChrome();
           }
         }
+        else {
+          ds.removeItemMetadata(e.id);
+          ds.removeItemFromContainer(e.id);
+        }
+
         checkForNewChrome = true;
       }
     }
-    return checkForNewChrome;  
-  },
-  
-  /**
-   * Upgrades contents.rdf files to chrome.manifest files for any existing
-   * Themes.
-   * @returns true if actions were performed that require a restart, false 
-   *          otherwise.
-   */
-  _upgradeThemeChrome: function() {
-    if (inSafeMode())
-      return false;
 
-    var checkForNewChrome = false;
     var themes = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
+    // If we have themes that were installed before the new flat chrome
+    // manifests, and are still valid, we need to manually create the flat
+    // manifest files.
     for (i = 0; i < themes.length; ++i) {
       var item = themes[i];
       var itemLocation = item.location.getItemLocation(item.id);
       var manifest = itemLocation.clone();
       manifest.append(FILE_CHROME_MANIFEST);
-      if (!manifest.exists()) {
-        var entries;
+      if (manifest.exists() ||
+          item.id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI))
+        continue;
+
+      var entries;
+      try {
+        var manifestURI = getURIFromFile(manifest);
+        var chromeDir = itemLocation.clone();
+        chromeDir.append(DIR_CHROME);
+        
+        if (!chromeDir.exists() || !chromeDir.isDirectory()) {
+          ds.removeItemMetadata(item.id);
+          ds.removeItemFromContainer(item.id);
+          continue;
+        }
+
+        // We're relying on the fact that there is only one JAR file
+        // in the "chrome" directory. This is a hack, but it works.
+        entries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+        var jarFile = entries.nextFile;
+        if (jarFile) {
+          var jarFileURI = getURIFromFile(jarFile);
+          var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
+
+          // Use the Chrome Registry API to install the theme there
+          var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                            .getService(Components.interfaces.nsIToolkitChromeRegistry);
+          cr.processContentsManifest(contentsURI, manifestURI, contentsURI, false, true);
+        }
+        entries.close();
+      }
+      catch (e) {
+        LOG("_upgradeChrome: failed to upgrade contents manifest for " + 
+            "theme: " + item.id + ", exception: " + e + "... The theme will be " + 
+            "disabled.");
+        this._appDisableItem(item.id);
+      }
+      finally {
         try {
-          var manifestURI = getURIFromFile(manifest);
-          var itemLocation = item.location.getItemLocation(item.id);
-          var chromeDir = itemLocation.clone();
-          chromeDir.append(DIR_CHROME);
-          
-          if (!chromeDir.exists() || !chromeDir.isDirectory()) 
-            continue;
-
-          // We're relying on the fact that there is only one JAR file
-          // in the "chrome" directory. This is a hack, but it works.
-          entries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
-          var jarFile = entries.nextFile;
-          if (jarFile) {
-            var jarFileURI = getURIFromFile(jarFile);
-            var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
-
-            // Use the Chrome Registry API to install the theme there
-            var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                              .getService(Components.interfaces.nsIToolkitChromeRegistry);
-            cr.processContentsManifest(contentsURI, manifestURI, contentsURI, false, true);
-          }
           entries.close();
         }
         catch (e) {
-          LOG("_upgradeThemeChrome: failed to upgrade contents manifest for " + 
-              "theme: " + item.id + ", exception: " + e + "... The theme will be " + 
-              "disabled.");
-          this._appDisableItem(item.id);
         }
-        finally {
-          try {
-            entries.close();
-          }
-          catch (e) {
-          }
-        }
-        checkForNewChrome = true;
       }
+      checkForNewChrome = true;
     }
     return checkForNewChrome;  
   },
@@ -3054,7 +3055,7 @@ ExtensionManager.prototype = {
       
       // Upgrade contents.rdf files to the new chrome.manifest format for
       // existing Extensions and Themes
-      if (this._upgradeExtensionChrome() || this._upgradeThemeChrome()) {
+      if (this._upgradeChrome()) {
         var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                            .getService(Components.interfaces.nsIChromeRegistry);
         cr.checkForNewChrome();
