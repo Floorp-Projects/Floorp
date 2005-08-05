@@ -157,14 +157,15 @@ function loadCalendarEventDialog()
         break;
     case "todo":
         var hasEntry = event.entryDate ? true : false;
-        var entryDate = (hasEntry ? event.entryDate.jsDate : null);
+        var selectedDay = window.opener.gCalendarWindow.currentView.getNewEventDate();
+        var entryDate = (hasEntry ? event.entryDate.jsDate : selectedDay );
 
         setElementValue("start-datetime", entryDate);
         setElementValue("start-datetime", !hasEntry, "disabled");
         setElementValue("start-checkbox", hasEntry,  "checked");
 
         var hasDue = event.dueDate ? true : false;
-        var dueDate = (hasDue? event.dueDate.jsDate : null);
+        var dueDate = (hasDue? event.dueDate.jsDate : selectedDay );
 
         setElementValue("due-datetime", dueDate);
         setElementValue("due-datetime", !hasDue, "disabled");
