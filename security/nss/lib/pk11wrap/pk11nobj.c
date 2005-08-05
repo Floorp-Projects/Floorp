@@ -256,11 +256,12 @@ PK11_LookupCrls(CERTCrlHeadNode *nodes, int type, void *wincx) {
     CK_ATTRIBUTE theTemplate[2];
     CK_ATTRIBUTE *attrs;
     CK_OBJECT_CLASS certClass = CKO_NETSCAPE_CRL;
+    CK_BBOOL isKrl = CK_FALSE;
 
     attrs = theTemplate;
     PK11_SETATTRS(attrs, CKA_CLASS, &certClass, sizeof(certClass)); attrs++;
     if (type != -1) {
-	CK_BBOOL isKrl = (CK_BBOOL) (type == SEC_KRL_TYPE);
+	isKrl = (CK_BBOOL) (type == SEC_KRL_TYPE);
         PK11_SETATTRS(attrs, CKA_NETSCAPE_KRL, &isKrl, sizeof(isKrl)); attrs++;
     }
 
