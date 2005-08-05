@@ -218,9 +218,22 @@
 
       <!-- This rule "falls through" to match obsolete language packs -->
       <rule>
-        <listitem uri="..." translation="true" nselected="false" class="outofdate"
-                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName &update.label;"
-                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+        <conditions>
+          <content uri="?container"/>
+          <member container="?container" child="?member"/>
+          <triple predicate="http://www.mozilla.org/rdf/chrome#localeVersion"
+                  subject="?member" object="?version"/>
+        </conditions>
+        <bindings>
+          <binding predicate="http://www.mozilla.org/rdf/chrome#displayName"
+                   subject="?member" object="?label"/>
+          <binding predicate="http://www.mozilla.org/rdf/chrome#name"
+                   subject="?member" object="?value"/>
+        </bindings>
+        <action>
+          <listitem uri="?member" label="?label ?version &update.label;" value="?value"
+                    translation="true" nselected="false" class="outofdate"/>
+        </action>
       </rule>
     </template>
   </listbox>
