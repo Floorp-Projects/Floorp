@@ -55,8 +55,8 @@
 <!ENTITY viewSecurityDevices.label      "Security Devices">
 <!ENTITY viewSecurityDevices.accesskey  "y">
 
-<!ENTITY languages.caption                  "Languages">
-<!ENTITY languagesInfo.label                "Choose Languages web pages are displayed in.">
-<!ENTITY showLanguages.label                "Edit Languages...">
-<!ENTITY showLanguages.accesskey            "L">
+<!ENTITY languages.caption              "Languages">
+<!ENTITY languagesInfo.label            "Choose Languages web pages are displayed in.">
+<!ENTITY showLanguages.label            "Edit Languages...">
+<!ENTITY showLanguages.accesskey        "L">
 

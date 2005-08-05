@@ -2325,7 +2325,7 @@ UpdatePrompt.prototype = {
    * See nsIUpdateService.idl
    */
   showUpdateHistory: function(parent) {
-    this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal", "Update:History", 
+    this._showUI(parent, URI_UPDATE_HISTORY_DIALOG, "modal,dialog=yes", "Update:History", 
                  null, null);
   },
   

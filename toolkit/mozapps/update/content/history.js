@@ -75,6 +75,7 @@ var gUpdateHistory = {
     var closebuttonlabel = document.documentElement.getAttribute("closebuttonlabel");
     var cancelbutton = document.documentElement.getButton("cancel");
     cancelbutton.label = closebuttonlabel;
+    cancelbutton.setAttribute("default", "true");
     cancelbutton.focus();
   },
   
