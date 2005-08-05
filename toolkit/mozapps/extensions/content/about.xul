@@ -61,10 +61,7 @@
     <label id="extensionCreatorLabel">&creator.label;</label>
     <hbox id="creatorBox">
       <label id="extensionCreator" flex="1" crop="right"/>
-      <label id="extensionHomepage" class="text-link"
-             onclick="window.opener.openURL(event.target.getAttribute('href'));">
-        &homepage.label;
-      </label>
+      <label id="extensionHomepage" class="text-link" value="&homepage.label;"/>
     </hbox>
       
     <label id="extensionContributors">&contributors.label;</label>
