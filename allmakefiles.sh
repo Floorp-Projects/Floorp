@@ -801,6 +801,14 @@ MAKEFILES_minimo="
 embedding/minimo/Makefile
 embedding/minimo/app/Makefile
 embedding/minimo/popuplite/Makefile
+minimo/Makefile
+minimo/base/Makefile
+minimo/components/Makefile
+minimo/components/phone/Makefile
+minimo/components/softkb/Makefile
+minimo/components/ssr/Makefile
+minimo/customization/Makefile
+minimo/chrome/Makefile
 "
 
 MAKEFILES_psm2="
