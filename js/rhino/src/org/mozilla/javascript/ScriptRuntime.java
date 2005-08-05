@@ -3298,7 +3298,8 @@ public class ScriptRuntime {
         // XXX Use value for better error reporting
         String msg = (messageHelper == null)
                      ? "null" : messageHelper.toString();
-        return typeError1("msg.isnt.function", msg);
+        return typeError2("msg.isnt.function", msg, 
+                value == null ? "null" : value.getClass().getName());
     }
 
     private static RuntimeException notXmlError(Object value)
