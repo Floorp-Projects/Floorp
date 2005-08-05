@@ -258,8 +258,8 @@ FeedItem.prototype =
       // See Bug #258465 for more details
       itemURI = itemURI.replace(/&lt;/g, '<');
       itemURI = itemURI.replace(/&gt;/g, '>');
-      itemURI = itemURI.replace(/&amp;/g, '&');
       itemURI = itemURI.replace(/&quot;/g, '"');
+      itemURI = itemURI.replace(/&amp;/g, '&');     
 
       debug('Failed to find item, trying entity replacement version: '  + itemURI);
       itemResource = rdf.GetResource(itemURI);
@@ -359,8 +359,8 @@ FeedItem.prototype =
     // Convert these to their unencoded state. i.e. &amp; becomes '&'
     title = title.replace(/&lt;/g, '<');
     title = title.replace(/&gt;/g, '>');
-    title = title.replace(/&amp;/g, '&');
     title = title.replace(/&quot;/g, '"');
+    title = title.replace(/&amp;/g, '&');
   
     // Compress white space in the subject to make it look better.
     title = title.replace(/[\t\r\n]+/g, " ");
