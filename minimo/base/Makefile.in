@@ -66,7 +66,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		winEmbed.cpp \
+		Minimo.cpp \
 		WindowCreator.cpp \
 		SplashScreen.cpp \
 		nsConsoleWriter.cpp \
@@ -76,7 +76,9 @@ CPPSRCS		= \
 # this should move into the toolkit!
 CPPSRCS += nsBrowserStatusFilter.cpp
 
-RCINCLUDE = SplashScreen.rc
+ifdef WINCE
+RCINCLUDE = wince/SplashScreen.rc
+endif
 
 EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
 
@@ -93,14 +95,15 @@ LOCAL_INCLUDES	= -I$(srcdir) -I$(topsrcdir)/xpfe/browser/src/
 include $(topsrcdir)/config/config.mk
 
 ifdef WINCE
+LOCAL_INCLUDES	+= -I$(srcdir)/wince
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
 endif
 
 ifdef BUILD_STATIC_LIBS
 
-FINAL_LINK_COMPS=$(topsrcdir)/embedding/minimo/wince/minimo-link-comps
-FINAL_LINK_COMP_NAMES=$(topsrcdir)/embedding/minimo/wince/minimo-link-names
-FINAL_LINK_LIBS=$(topsrcdir)/embedding/minimo/wince/minimo-link-libs
+FINAL_LINK_COMPS=$(topsrcdir)/minimo/base/minimo-link-comps
+FINAL_LINK_COMP_NAMES=$(topsrcdir)/minimo/base/minimo-link-names
+FINAL_LINK_LIBS=$(topsrcdir)/minimo/base/minimo-link-libs
 
 include $(topsrcdir)/config/static-config.mk
 
@@ -127,4 +130,4 @@ export::
 GARBAGE += nsBrowserStatusFilter.cpp
 
 installer::
-	bash $(srcdir)/package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
+	bash $(srcdir)/../config/wince_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
