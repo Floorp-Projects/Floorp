@@ -245,7 +245,7 @@ nsUnknownContentTypeDialog.prototype = {
     
     validateLeafName: function (aLocalFile, aLeafName, aFileExt)
     {
-      if (!aLocalFile)
+      if (!aLocalFile || !aLocalFile.exists())
         return null;
 
       if (aLeafName == "")
