@@ -594,7 +594,7 @@ static id gSharedProgressController = nil;
       return NO;
     }
   }
-  return YES;
+  return [[self window] isKeyWindow]; // disable if not key window
 }
 
 -(BOOL)shouldAllowRemoveAction
@@ -607,7 +607,7 @@ static id gSharedProgressController = nil;
       return NO;
     }
   }
-  return YES;
+  return [[self window] isKeyWindow];
 }
 
 -(BOOL)shouldAllowOpenAction
@@ -633,6 +633,7 @@ static id gSharedProgressController = nil;
       return NO;
     }
   }
+  
   return YES;
 }
 
@@ -646,6 +647,7 @@ static id gSharedProgressController = nil;
       return NO;
     }
   }
+  
   return YES;
 }
 
@@ -679,7 +681,8 @@ static id gSharedProgressController = nil;
     [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
     [theItem setAction:@selector(pause:)];
     [theItem setImage:[NSImage imageNamed:@"dl_pause.tif"]];
-    return YES;
+    
+    return [[self window] isKeyWindow]; // if not key window, dont enable
   }
   else if ([self shouldAllowResumeAction]) {
     [theItem setToolTip:NSLocalizedString(@"dlResumeButtonTooltip", nil)];
@@ -687,7 +690,8 @@ static id gSharedProgressController = nil;
     [theItem setPaletteLabel:NSLocalizedString(@"dlResumeButtonLabel", nil)];
     [theItem setAction:@selector(resume:)];
     [theItem setImage:[NSImage imageNamed:@"dl_resume.tif"]];
-    return YES;
+    
+    return [[self window] isKeyWindow]; // if not key window, dont enable
   }
   else {
     return NO;
