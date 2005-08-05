@@ -1423,7 +1423,7 @@ sub SqlifyDate {
     if ($str =~ /^(-|\+)?(\d+)([hHdDwWmMyY])$/) {   # relative date
         my ($sign, $amount, $unit, $date) = ($1, $2, lc $3, time);
         my ($sec, $min, $hour, $mday, $month, $year, $wday)  = localtime($date);
-        if ($sign eq '+') { $amount = -$amount; }
+        if ($sign && $sign eq '+') { $amount = -$amount; }
         if ($unit eq 'w') {                  # convert weeks to days
             $amount = 7*$amount + $wday;
             $unit = 'd';
