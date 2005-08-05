@@ -388,6 +388,13 @@ function radioGroupIndexOf(radioGroup, id)
     return -1; // not found
 }
 
+function hasPositiveIntegerValue(elementId)
+{
+    var value = document.getElementById(elementId).value;
+    if (value && (parseInt(value) == value) && value > 0)
+        return true;
+    return false;
+}
 
 function debug(text)
 {

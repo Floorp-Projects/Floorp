@@ -790,7 +790,34 @@ function checkSetRecur()
            recurUntilDate.getMonth() == endDate.getMonth() &&
            recurUntilDate.getDate() == endDate.getDate() ) );
     setRecurError(untilDateIsBeforeEndDate);
-    return(!untilDateIsBeforeEndDate);
+
+    var missingField = false;
+
+    // Make sure the user puts data in all the necessary fields
+    if (getElementValue("repeat-numberoftimes-radio", "selected") &&
+       !hasPositiveIntegerValue("repeat-numberoftimes-textbox")) {
+        setElementValue("repeat-numberoftimes-warning", false, "hidden");
+        missingField = true;
+    }
+    else
+        setElementValue("repeat-numberoftimes-warning", true, "hidden");
+
+    if (getElementValue("repeat-checkbox", "checked")) {
+        if (!hasPositiveIntegerValue("repeat-length-field")) {
+            setElementValue("repeat-interval-warning", false, "hidden");
+            missingField = true;
+        }
+        else
+            setElementValue("repeat-interval-warning", true, "hidden");
+    }
+    // If recur isn't selected, there shouldn't be warnings.
+    else {
+        missingField = false;
+        setElementValue("repeat-numberoftimes-warning", true, "hidden");
+        setElementValue("repeat-interval-warning", true, "hidden");
+    }
+
+    return (!untilDateIsBeforeEndDate && !missingField);
 }
 
 
