@@ -70,7 +70,7 @@
       <rows>
         <row align="center">
           <hbox align="center" pack="end">
-            <label id="printerLabel" value="&printerInput.label;"/>
+            <label id="printerLabel" control="printerList" value="&printerInput.label;"/>
           </hbox>
           <menulist id="printerList" flex="1" type="description" oncommand="setPrinterDefaultsForSelectedPrinter();"/>
           <button id="properties" label="&propertiesButton.label;"

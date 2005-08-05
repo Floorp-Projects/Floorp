@@ -74,7 +74,7 @@
           <caption label="&formatGroup.label;"/>
           <vbox>
             <hbox align="center">
-              <label value="&orientation.label;"/>
+              <label control="orientation" value="&orientation.label;"/>
               <radiogroup id="orientation" oncommand="setOrientation()">
                 <hbox align="center">
                   <radio id="portrait"  class="portrait-page"  label="&portrait;"/>
@@ -84,7 +84,7 @@
             </hbox>
             <separator/>
             <hbox align="center">
-              <label value="&scale.label;"/>
+              <label control="scalingInput" value="&scale.label;"/>
               <textbox id="scalingInput" size="4" onfocus="this.select()" oninput="checkDouble(this)"/>
               <label value="&scalePercent;"/>
               <separator/>
@@ -104,7 +104,7 @@
           <vbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginTop.label;"/>
+              <label control="topInput" value="&marginTop.label;"/>
               <textbox id="topInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
               <!-- This invisible label (with same content as the visible one!) is used
                    to ensure that the <textbox> is centered above the page.  The same
@@ -116,7 +116,7 @@
               <spacer flex="1"/>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginLeft.label;"/>
+                <label control="leftInput" value="&marginLeft.label;"/>
                 <textbox id="leftInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
                 <label value="&marginLeft.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -136,7 +136,7 @@
               </vbox>
               <vbox>
                 <spacer flex="1"/>
-                <label value="&marginRight.label;"/>
+                <label control="rightInput" value="&marginRight.label;"/>
                 <textbox id="rightInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
                 <label value="&marginRight.label;" style="visibility: hidden;"/>
                 <spacer flex="1"/>
@@ -145,7 +145,7 @@
             </hbox>
             <hbox align="center">
               <spacer flex="1"/>
-              <label value="&marginBottom.label;"/>
+              <label control="bottomInput" value="&marginBottom.label;"/>
               <textbox id="bottomInput" size="5" oninput="changeMargin(this)" onfocus="this.select()"/>
               <label value="&marginBottom.label;" style="visibility: hidden;"/>
               <spacer flex="1"/>
