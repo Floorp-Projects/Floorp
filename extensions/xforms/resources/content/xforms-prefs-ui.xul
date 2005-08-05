@@ -60,7 +60,7 @@
               <checkbox id="xformsCrossDomain" preference="xforms.crossdomain.enabled"
                         label="&xforms.crossdomain.ui.label;"
                         accesskey="&xforms.crossdomain.ui.accesskey;"
-                        onpreferenceread="return gContentPane.updateButtons('xformsCrossDomainButton', 'xforms.crossdomain.enabled');"/>
+                        onsyncfrompreference="return gContentPane.updateButtons('xformsCrossDomainButton', 'xforms.crossdomain.enabled');"/>
             </vbox>
             <button id="xformsCrossDomainButton"
                     label="&allowedSitesXForms.label;"
