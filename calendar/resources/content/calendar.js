@@ -161,87 +161,20 @@ function calendarInit()
 
    initCalendarManager();
 
-   //XXX Reimplement this function so that eventboxes will be colored
-   //updateColors();
-}
+   if (("arguments" in window) && (window.arguments.length) &&
+       (typeof(window.arguments[0]) == "object") &&
+       ("channel" in window.arguments[0]) ) {
+       gCalendarWindow.calendarManager.checkCalendarURL( 
+           window.arguments[0].channel );
+   }
 
-function updateColors()
-{
-    // Change made by CofC for Calendar Coloring
-    // initialize calendar color style rules in the calendar's styleSheet
+   // a bit of a hack since the menulist doesn't remember the selected value
+   var value = document.getElementById( 'event-filter-menulist' ).value;
+   document.getElementById( 'event-filter-menulist' ).selectedItem = 
+       document.getElementById( 'event-filter-'+value );
 
-    // find calendar's style sheet index
-    for (var i in document.styleSheets) {
-        if (document.styleSheets[i].href.match(
-                /chrome.*\/skin.*\/calendar.css$/ )) {
-            var calStyleSheet = document.styleSheets[i];
-            break;
-        }
-    }
-
-    // get the list of all calendars from the manager
-    const calMgr = getCalendarManager();
-    var count = {};
-    var calendars = calMgr.getCalendars(count);
-    
-    var calListItems = document.getElementById( "list-calendars-listbox" )
-        .getElementsByTagName("listitem");
-
-    for(i in calendars) {
-        // XXX need to get this from the calendar prefs
-        const containerName = "default";
-
-        // XXX need to get this from the calendar prefs
-        const calendarColor = "#FFFFFF"; // XXX what is default?
-
-        // if the calendar had a color attribute create a style sheet for it
-        if (calendarColor != null) {
-            calStyleSheet.insertRule("." + containerName
-                                     + " { background-color:"
-                                     + calendarColor + "!important;}", 1);
-            calStyleSheet.insertRule("." + containerName + " { color:"
-                                     + getContrastingTextColor(calendarColor)
-                                     + "!important;}", 1);
-            //dump("calListItems[0] = " + calListItems[0] + "\n");
-            //dump("calListItems[1] = " + calListItems[1] + "\n");
-            var calListItem = calListItems[i];
-            if (calListItem && calListItem.childNodes[0]) {
-                calListItem.childNodes[0]
-                    .setAttribute("class", "calendar-list-item-class "
-                                  + containerName);
-            }
-        }
-    }
-
-    // Setup css classes for category colors
-    var catergoryPrefBranch = prefService.getBranch("");
-    var pbi = catergoryPrefBranch.QueryInterface(
-        Components.interfaces.nsIPrefBranch2);
-    pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
-    categoryPrefObserver.mCalendarStyleSheet = calStyleSheet;
-    categoryPrefObserver.observe(null, null, "");
-
-    if( ("arguments" in window) && (window.arguments.length) &&
-        (typeof(window.arguments[0]) == "object") &&
-        ("channel" in window.arguments[0]) ) {
-        gCalendarWindow.calendarManager.checkCalendarURL( 
-            window.arguments[0].channel );
-    }
-
-    // a bit of a hack since the menulist doesn't remember the selected value
-    var value = document.getElementById( 'event-filter-menulist' ).value;
-    document.getElementById( 'event-filter-menulist' ).selectedItem = 
-        document.getElementById( 'event-filter-'+value );
-
-    // XXX busted somehow, so I've commented it out for now.  also, why the
-    // heck are we doing this here?
-    //gEventSource.alarmObserver.firePendingAlarms();
-
-    // All is settled, enable feedbacks to observers
-    gICalLib.batchMode = false;
-
-    var toolbox = document.getElementById("calendar-toolbox");
-    toolbox.customizeDone = CalendarToolboxCustomizeDone;
+   var toolbox = document.getElementById("calendar-toolbox");
+   toolbox.customizeDone = CalendarToolboxCustomizeDone;
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
