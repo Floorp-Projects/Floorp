@@ -32,7 +32,7 @@ use lib 't';
 use Support::Files;
 use Support::Templates;
 
-use File::Spec 0.82;
+use File::Spec;
 use Test::More tests => (  scalar(@Support::Files::testitems)
                          + $Support::Templates::num_actual_files);
 

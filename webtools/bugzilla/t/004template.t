@@ -36,7 +36,7 @@ use Support::Templates;
 # Bug 137589 - Disable command-line input of CGI.pm when testing
 use CGI qw(-no_debug);
 
-use File::Spec 0.82;
+use File::Spec;
 use Template;
 use Test::More tests => ( scalar(@referenced_files) * scalar(@languages)
                         + $num_actual_files * 2 );

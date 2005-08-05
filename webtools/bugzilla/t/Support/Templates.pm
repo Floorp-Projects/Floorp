@@ -37,7 +37,7 @@ use vars qw(@languages @include_paths %include_path @referenced_files
 use Support::Files;
 
 use File::Find;
-use File::Spec 0.82;
+use File::Spec;
 
 # The available template languages
 @languages = ();

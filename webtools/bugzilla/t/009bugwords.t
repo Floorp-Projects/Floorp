@@ -38,7 +38,7 @@ use Support::Files;
 use Support::Templates;
 use Bugzilla::Util;
 
-use File::Spec 0.82;
+use File::Spec;
 
 use Test::More tests => ($Support::Templates::num_actual_files); 
 

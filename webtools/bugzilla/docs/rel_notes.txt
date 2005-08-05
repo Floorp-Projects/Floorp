@@ -98,7 +98,7 @@ Required Perl Modules
   Data::Dumper (any)
   Date::Format v2.21
   DBI v1.38              (changed from 2.18)
-  File::Spec v0.82
+  File::Spec v0.84       (changed from 2.18)
   File::Temp (any)
   Template Toolkit v2.08
   Text::Wrap v2001.0131

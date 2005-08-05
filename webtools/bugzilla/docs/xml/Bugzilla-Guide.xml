@@ -50,7 +50,7 @@
 <!ENTITY min-file-temp-ver "any">
 <!ENTITY min-appconfig-ver "1.52">
 <!ENTITY min-text-wrap-ver "2001.0131">
-<!ENTITY min-file-spec-ver "0.82">
+<!ENTITY min-file-spec-ver "0.84">
 <!ENTITY min-data-dumper-ver "any">
 <!ENTITY min-dbd-mysql-ver "2.9003">
 <!ENTITY min-dbd-pg-ver "1.31">

@@ -301,7 +301,7 @@ my $modules = [
     }, 
     { 
         name => 'File::Spec', 
-        version => '0.82' 
+        version => '0.84' 
     }, 
     {
         name => 'File::Temp',

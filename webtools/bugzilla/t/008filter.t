@@ -35,7 +35,7 @@ use lib 't';
 use vars qw(%safe);
 
 use Support::Templates;
-use File::Spec 0.82;
+use File::Spec;
 use Test::More tests => $Support::Templates::num_actual_files;
 use Cwd;
 
