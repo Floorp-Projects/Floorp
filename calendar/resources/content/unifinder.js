@@ -339,7 +339,7 @@ function searchKeyPress( searchTextItem, event )
     // 13 == return
     if (event && event.keyCode == 13) {
         clearSearchTimer();
-        refreshEventTreeInternal();
+        refreshEventTree();
         return;
     }
     
@@ -347,7 +347,7 @@ function searchKeyPress( searchTextItem, event )
     clearSearchTimer();
    
     // make a new timer
-    gSearchTimeout = setTimeout( "refreshEventTreeInternal()", 400 );
+    gSearchTimeout = setTimeout( "refreshEventTree()", 400 );
 }
 
 function clearSearchTimer( )
