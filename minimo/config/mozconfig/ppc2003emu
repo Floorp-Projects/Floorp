@@ -1,0 +1,36 @@
+mk_add_options NSPR_CO_TAG=NSPRPUB_PRE_4_2_WINCE_BRANCH
+mk_add_options NSS_CO_TAG=NSS_WINCE_CLIENT_TAG
+
+mk_add_options MOZ_CO_PROJECT=minimo
+ac_add_options --enable-application=minimo
+
+CROSS_COMPILE=1
+
+CXX=arm-wince-gcc
+LD=arm-wince-link
+AR=arm-wince-lib
+AS=arm-wince-as
+
+mk_add_options AR=arm-wince-lib
+
+ac_add_options --target=arm-wince
+ac_add_options --enable-win32-target=WINCE
+ac_add_options --enable-default-toolkit=windows
+
+WINCE=1
+mk_add_options WINCE=1
+
+TARGET_DEVICE=emulator
+mk_add_options TARGET_DEVICE=emulator
+
+# code generation options (optimize for size)
+ac_add_options --enable-strip
+ac_add_options --disable-debug
+ac_add_options --enable-optimize
+
+# enable static build
+ac_add_options --disable-shared
+ac_add_options --enable-static
+
+#xptcall busted
+ac_add_options --disable-jsloader

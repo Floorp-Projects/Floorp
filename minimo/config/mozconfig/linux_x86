@@ -1,0 +1,22 @@
+mk_add_options MOZ_CO_PROJECT=minimo
+ac_add_options --enable-application=minimo
+
+
+# use GTK+-2 widget set with XFT font rendering
+ac_add_options --enable-default-toolkit=gtk2
+ac_add_options --enable-xft
+ac_add_options --disable-freetype2
+
+ac_add_options --enable-optimize=-Os
+ac_add_options --enable-strip
+ac_add_options --disable-debug
+ac_add_options --enable-reorder
+ac_add_options --enable-elf-dynstr-gc
+
+# enable static build
+ac_add_options --disable-shared
+ac_add_options --enable-static
+
+# remove link dependency on libstdc++.so
+LIBS=-lsupc++
+CXX=gcc

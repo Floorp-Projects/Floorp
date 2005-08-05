@@ -1,0 +1,84 @@
+* {
+  /* on a small screen, we need to use a readable font */
+  font-size: small ! important;
+}
+
+/* for all elements but the root element and the body, let's */
+/* cancel all annoying document's settings */
+* {
+  /* first cancel all size settings */
+  width: auto ! important;
+  height: auto ! important;
+
+  /* and make the width adjust to screen layout for the device */
+  max-width: 100% ! important;
+
+  /* max-heights should not apply to small screens */
+  max-height: none ! important;
+
+  /* remove all positioning */
+  position: static ! important;
+
+  /* remove all positioning offsets */
+  top: auto ! important;
+  left: auto ! important;
+
+  /* and cancel floats */
+  float: none ! important;
+
+  /* margins and paddings have to be changed */
+  padding: 0px ! important;
+  margin: 0px ! important;
+
+  /* avoid overflow on pre and table cells */
+  white-space: normal ! important;
+}
+
+table,tbody,thead,tfoot,tr,td,th,col,colgroup {
+  /* we need to "flatten" all tables */
+  display: block ! important;
+}
+
+img[width="1"], img[height="1"],img[width="468"], img[height="600"] {
+  /* let's get rid of 1 pixel wide/high images */
+  /* and of std formats of ads ; current ads formats are */
+  /* too big for small screens */
+  display: none ! important;
+}
+
+li {
+  /* better placement of the bullet on a small screen */
+  list-style-position: inside ! important;
+}
+
+:-moz-any-link {
+  /* we need to make anchors more visible */
+  text-decoration: underline !important;
+}
+
+
+ul,ol {
+  display: block ! important;
+}
+li {
+  display: list-item ! important;
+}
+a {
+  background-image: none ! important;
+}
+img[src*="spacer"] {
+  display: none ! important;
+} 
+
+
+ /* google maps hack */ 
+ @-moz-document domain(maps.google.com)
+ {
+ div#rhs { display: none ! important;}
+  
+ div#map { height: 80%; 
+           width: 100%;
+           overflow: hidden;
+           position: inherit;
+         }
+ }
