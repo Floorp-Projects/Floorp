@@ -634,7 +634,9 @@
         <body>
         <![CDATA[
 #ifdef XP_MACOSX
-          document.title = aPaneElement.label;
+          var paneTitle = aPaneElement.label;
+          if (paneTitle != "")
+            document.title = paneTitle;
 #endif
 
           // Find this pane's index in the deck and set the deck's 
