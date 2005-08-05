@@ -43,7 +43,11 @@
 #include "nsMemory.h"
 #include "prefapi.h"
 
+#ifndef MOZ_NO_XPCOM_OBSOLETE
 #include "nsIFileSpec.h"
+#endif
+
+#include "nsString.h"
 #include "nsILocalFile.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
@@ -477,16 +481,23 @@ NS_IMETHODIMP nsPref::GetDefaultLocalizedUnicharPref(const char *pref, PRUnichar
 
 NS_IMETHODIMP nsPref::GetFilePref(const char *pref, nsIFileSpec **_retval)
 {
+#ifdef MOZ_NO_XPCOM_OBSOLETE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   nsresult rv;
 
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
   if (NS_SUCCEEDED(rv))
     rv = prefBranch->GetComplexValue(pref, NS_GET_IID(nsIFileSpec), (void **)_retval);
   return rv;
+#endif
 }
 
 NS_IMETHODIMP nsPref::SetFilePref(const char *pref, nsIFileSpec *value, PRBool setDefault)
 {
+#ifdef MOZ_NO_XPCOM_OBSOLETE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   nsresult  rv;
 
   if (setDefault) {
@@ -497,6 +508,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref, nsIFileSpec *value, PRBool s
       rv = prefBranch->SetComplexValue(pref, NS_GET_IID(nsIFileSpec), value);
   }
     return rv;
+#endif
 }
 
 NS_IMETHODIMP nsPref::GetFileXPref(const char *pref, nsILocalFile **_retval)

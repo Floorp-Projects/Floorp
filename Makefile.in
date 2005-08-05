@@ -140,9 +140,11 @@ endif
 tier_2_dirs	= \
 		js \
 		xpcom \
-		modules/libreg \
-		xpcom/obsolete \
 		$(NULL)
+
+ifndef MOZ_NO_XPCOM_OBSOLETE
+tier_2_dirs += modules/libreg xpcom/obsolete
+endif
 
 ifdef NS_TRACE_MALLOC
 tier_2_dirs	+= tools/trace-malloc/lib

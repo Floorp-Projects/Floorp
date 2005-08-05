@@ -52,7 +52,13 @@
 #include "pldhash.h"
 #include "nsPrefsCID.h"
 
+#ifndef MOZ_NO_XPCOM_OBSOLETE
 #include "nsIFileSpec.h"  // this should be removed eventually
+#endif
+
+#include "plstr.h"
+#include "nsCRT.h"
+
 #include "prefapi_private_data.h"
 
 // Definitions
@@ -347,6 +353,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   }
 
   // This is deprecated and you should not be using it
+#ifndef MOZ_NO_XPCOM_OBSOLETE
   if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
     nsCOMPtr<nsIFileSpec> file(do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv));
 
@@ -366,6 +373,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     }
     return rv;
   }
+#endif
 
   NS_WARNING("nsPrefBranch::GetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;
@@ -447,6 +455,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
+#ifndef MOZ_NO_XPCOM_OBSOLETE
   // This is deprecated and you should not be using it
   if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
     nsCOMPtr<nsIFileSpec> file = do_QueryInterface(aValue);
@@ -458,6 +467,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     }
     return rv;
   }
+#endif
 
   NS_WARNING("nsPrefBranch::SetComplexValue - Unsupported interface type");
   return NS_NOINTERFACE;
