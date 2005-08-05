@@ -64,14 +64,14 @@
     <rows>
       <row id="jobTitleGroup">
         <hbox align="center" pack="end">
-          <label id="jobTitleLabel" value="&jobTitleInput.label;"/>
+          <label id="jobTitleLabel" control="jobTitleInput" value="&jobTitleInput.label;"/>
         </hbox>
         <textbox id="jobTitleInput" flex="1"/>
       </row>
 
       <row id="paperGroup">
         <hbox align="center" pack="end">
-          <label id="paperLabel" value="&paperInput.label;"/>
+          <label id="paperLabel" control="paperList" value="&paperInput.label;"/>
         </hbox>
         <menulist id="paperList" flex="1">
           <menupopup/>
@@ -80,7 +80,7 @@
 
       <row id="plexGroup">
         <hbox align="center" pack="end">
-          <label id="plexLabel" value="&plexInput.label;"/>
+          <label id="plexLabel" control="plexList" value="&plexInput.label;"/>
         </hbox>
         <menulist id="plexList" flex="1">
           <menupopup/>
@@ -89,7 +89,7 @@
 
       <row id="resolutionGroup">
         <hbox align="center" pack="end">
-          <label id="resolutionLabel" value="&resolutionInput.label;"/>
+          <label id="resolutionLabel" control="resolutionList" value="&resolutionInput.label;"/>
         </hbox>
         <menulist id="resolutionList" flex="1">
           <menupopup/>
@@ -98,7 +98,7 @@
 
       <row id="colorspaceGroup">
         <hbox align="center" pack="end">
-          <label id="colorspaceLabel" value="&colorspaceInput.label;"/>
+          <label id="colorspaceLabel" control="colorspaceList" value="&colorspaceInput.label;"/>
         </hbox>
         <menulist id="colorspaceList" flex="1">
           <menupopup/>
@@ -106,13 +106,13 @@
       </row>
 
       <row id="cmdGroup">
-        <label id="cmdLabel" value="&cmdInput.label;"/>
+        <label id="cmdLabel" control="cmdInput" value="&cmdInput.label;"/>
         <textbox id="cmdInput" flex="1"/>
       </row>
 
       <row id="colorGroup">
         <hbox align="center" pack="end">
-          <label value="&colorGroup.label;"/>
+          <label control="colorRadioGroup" value="&colorGroup.label;"/>
         </hbox>
         <radiogroup id="colorRadioGroup" orient="horizontal">
           <radio id="grayRadio" label="&grayRadio.label;"/>
@@ -122,7 +122,7 @@
 
       <row id="fontsGroup">
         <hbox align="center" pack="end">
-          <label value="&fontsGroup.label;"/>
+          <label control="downloadFonts" value="&fontsGroup.label;"/>
         </hbox>
         <checkbox id="downloadFonts" label="&downloadFonts.label;" />
       </row>

@@ -82,7 +82,7 @@
         </row>
         <row class="thin-separator">             
           <hbox pack="end">
-            <label id="dialog.progressLabel" value="&progress;"/>
+            <label id="dialog.progressLabel" control="dialog.progress" value="&progress;"/>
           </hbox>
             <label id="dialog.tempLabel" value="&preparing;"/>
             <progressmeter id="dialog.progress" mode="normal" value="0"/>
