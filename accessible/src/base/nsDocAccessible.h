@@ -106,7 +106,7 @@ class nsDocAccessible : public nsBlockAccessible,
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     virtual void CheckForEditor();
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     void *aData);
+                                     void *aData, PRBool aAllowDupes = PR_FALSE);
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
     void *mWnd;
