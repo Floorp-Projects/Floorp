@@ -130,7 +130,6 @@ div[id="dropin"],
 div[id="dwindow"],
 div[id="dcv_EchangeLay"],
 div[id="mntl"],
-div[id*="popup"],
 div[id="quack"],
 div[id="splashLayer"],
 div[id*="sponsor"],
@@ -238,6 +237,7 @@ object[id="widgeth"],
         display: none !important;
 }
 
+/* turn some false positives back on */
 img[src*=".advance"],
 img[src*="/click_"],
 img[src*="/cnn/images/clickability/"],
