@@ -101,7 +101,7 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
 repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
-	if ! test -d $(dir $(WIN_INSTALLER_OUT)); then \
+	if ! test -d $(dir $(WIN32_INSTALLER_OUT)); then \
 	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
 	fi
 	$(RM) -rf $(DIST)/l10n-stage
