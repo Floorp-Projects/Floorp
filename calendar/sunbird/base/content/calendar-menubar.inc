@@ -132,6 +132,9 @@
 #ifndef XP_MACOSX
            <menuseparator id="calendar-print-sep"/>
 #endif
+           <menuitem id="calendar-quit-menu"
+                     label="Quit"
+                     oncommand="goQuitApplication()"/>
          </menupopup>
        </menu>
 
@@ -142,11 +145,11 @@
            <!-- XXX lilmatt: Finish/localize this! -->
            <menuitem key="undo_key"
                      label="Undo"
-                     command="Edit:Undo"/>
+                     command="undo_command"/>
            <!-- XXX lilmatt: Finish/localize this! -->
            <menuitem key="redo_key"
                      label="Redo"
-                     command="Edit:Redo"/>
+                     command="redo_command"/>
            <menuseparator/>
            <menuitem id="calendar-cut-menu"
                      key="key_cut"
