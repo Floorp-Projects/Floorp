@@ -1352,13 +1352,9 @@
         </getter>
         <setter>
           <![CDATA[
-            // Set newly selected tab after quick timeout, otherwise hideous focus problems
-            // can occur when "browser.tabs.loadInBackground" is false and presshell is not ready
-            function setTab(tabBox, tab) {
-              tabBox.selectedTab = tab;
-            }
-            setTimeout(setTab, 0, this.mTabBox, val);
-            return val;
+          // Update the tab
+          this.mTabBox.selectedTab = val;
+          return val;
           ]]>
         </setter>
       </property>
