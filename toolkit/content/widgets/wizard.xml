@@ -470,6 +470,7 @@
     <content>
       <xul:vbox flex="1">
         <xul:hbox class="wizard-buttons-btm">
+          <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
           <xul:button class="wizard-button" dlgtype="cancel"/>        
           <xul:spacer flex="1"/>
           <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
@@ -512,9 +513,7 @@
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-box-2">
           <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
-#ifndef XP_MACOSX
           <xul:spacer flex="1" anonid="spacer"/>
-#endif
 #ifdef XP_UNIX
           <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/>
           <xul:spacer style="width: 24px"/>
