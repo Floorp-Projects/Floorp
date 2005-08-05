@@ -224,12 +224,6 @@ var gAdvancedPane = {
     prompter.checkForUpdates();
   },
   
-  showAutoInstallOptions: function () 
-  {
-    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/update.xul",
-                                           "", null);  
-  },
-  
   showUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]

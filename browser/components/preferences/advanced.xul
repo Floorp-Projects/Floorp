@@ -73,6 +73,9 @@
                   onchange="gAdvancedPane.updateModeItems();"/>
       <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
                   onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+      <preference id="app.update.disable_button.showUpdateHistory"
+                  name="app.update.disable_button.showUpdateHistory"
+                  type="bool"/>
 
       <preference id="security.enable_ssl2"            name="security.enable_ssl2"            type="bool"/>
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
@@ -174,6 +177,13 @@
                         onsynctopreference="return gAdvancedPane.addonWarnSyncTo();"/>
             </hbox>
           </radiogroup>
+          <separator/>
+          <hbox>
+            <button id="showUpdateHistory" 
+                    label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
+                    preference="app.update.disable_button.showUpdateHistory"
+                    oncommand="gAdvancedPane.showUpdates();"/>
+          </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
           <groupbox>
