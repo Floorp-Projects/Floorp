@@ -35,6 +35,7 @@
 # ***** END LICENSE BLOCK *****
 
 const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const kDialog = "dialog";
 
 /**
  * Initialize the dialog from the parameters supplied via window.arguments
@@ -105,7 +106,7 @@ function init() {
       button.label = buttons[buttonType].label;
       if (buttons[buttonType].focused)
         button.focus();
-      button.addEventListener("command", handleButtonCommand, false);
+      document.addEventListener(kDialog + buttonType, handleButtonCommand, false);
     }
   }
 }
@@ -116,5 +117,5 @@ function init() {
  * the arguments object.
  */
 function handleButtonCommand(event) {
-  window.arguments[1].result = event.target.getAttribute("dlgtype");
+  window.arguments[1].result = event.type.substr(kDialog.length);
 }
