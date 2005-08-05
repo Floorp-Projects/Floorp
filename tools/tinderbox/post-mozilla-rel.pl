@@ -563,7 +563,7 @@ sub packit_l10n {
       if (is_windows()) {
         run_locale_shell_command "cp $package_location/../*$locale*.zip $stagedir/";
       } elsif (is_mac()) {
-        $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale";
+        $status = run_locale_shell_command "$Settings::Make -C $objdir/$Settings::LocaleProduct/locales installers-$locale $Settings::BuildLocalesArgs";
         if ($status != 0) {
           $tinderstatus = 'busted';
         }
