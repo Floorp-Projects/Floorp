@@ -5900,12 +5900,14 @@ PresShell::PopCurrentEventInfo()
 
 PRBool PresShell::InZombieDocument(nsIContent *aContent)
 {
-  // If a content node points to a null document, it is possibly in a
-  // zombie document, about to be replaced by a newly loading document.
+  // If a content node points to a null document, or the document is not
+  // attached to a window, then it is possibly in a zombie document,
+  // about to be replaced by a newly loading document.
   // Such documents cannot handle DOM events.
   // It might actually be in a node not attached to any document,
   // in which case there is not parent presshell to retarget it to.
-  return !aContent->GetDocument();
+  nsIDocument *doc = aContent->GetDocument();
+  return !doc || !doc->GetScriptGlobalObject();
 }
 
 nsresult PresShell::RetargetEventToParent(nsIView         *aView,
