@@ -28,8 +28,6 @@
     </content>
     
     <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
-      <field name="_isUpSelection">0</field>
-      <field name="_isDownSelection">0</field>
       <field name="_suppressOnSelect">false</field>
       <field name="_selectionStart">null</field>
       <field name="_currentItem">null</field>
@@ -219,8 +217,12 @@
           if (this._currentItem)
             this._currentItem.current = false;
           this._currentItem = val;
-          if (val)
-            val.current = true;          
+          if (val) {
+            val.current = true;  
+            var event = document.createEvent("Events");
+            event.initEvent("DOMMenuItemActive", true, true);
+            val.dispatchEvent(event);
+          }
           return val;
         ]]>
         </setter>
@@ -339,7 +341,6 @@
                       
           var suppressSelect = this._suppressOnSelect;
           this._suppressOnSelect = true;
-          this.clearSelection();
 
           this._selectionStart = startItem;
           
@@ -357,10 +358,22 @@
           while (currentItem) {
             if (currentItem.localName == "listitem")
               this.addItemToSelection(currentItem);
-            if (currentItem == endItem)
+            if (currentItem == endItem) {
+              currentItem = this.getNextItem(currentItem, 1);
               break;
+            }
             currentItem = this.getNextItem(currentItem, 1);
           }
+
+          // Clear around new selection
+          // Don't use clearSelection() because it causes a lot of noise
+          // with respect to selection removed notifications used by the
+          // accessibility API support.
+          for (; currentItem; currentItem = this.getNextItem(currentItem, 1))
+            this.removeItemFromSelection(currentItem);
+          for (currentItem = this.getItemAtIndex(0); currentItem != startItem;
+               currentItem = this.getNextItem(currentItem, 1))
+            this.removeItemFromSelection(currentItem);
 
           this._suppressOnSelect = suppressSelect;
           
@@ -501,9 +514,78 @@
           return this.listBoxObject.getRowCount();
         </body>
       </method>
+      <method name="moveByOffset">
+        <parameter name="offset"/>
+        <parameter name="isSelecting"/>
+        <parameter name="isSelectingRange"/>
+        <body>
+          <![CDATA[
+            if ((isSelectingRange || !isSelecting) && this.selType != "multiple")
+              return;
+            var newIndex = this.currentIndex + offset;
+            if (newIndex < 0)
+              newIndex = 0;
+            var numItems = this.getRowCount();
+            if (newIndex > numItems - 1)
+              var newIndex = numItems - 1;
+            var newItem = this.getItemAtIndex(newIndex);
+            if (newItem) {
+              this.ensureIndexIsVisible(newIndex);
+              if (isSelectingRange) {
+                this.selectItemRange(null, newItem);
+              }
+              else if (isSelecting) {
+                this.selectItem(newItem);
+              }
+              this.currentItem = newItem;
+            }
+          ]]>
+        </body>
+      </method>
+      <method name="scrollOnePage">
+        <parameter name="direction"/>  <!-- Must be -1 or 1 -->
+        <body>      
+          <![CDATA[
+            var pageOffset = this.getNumberOfVisibleRows() * direction;
+            var newTop = this.getIndexOfFirstVisibleRow() + pageOffset;
+            if (direction == 1) {
+              var maxTop = this.getRowCount() - pageOffset;
+              if (newTop >= maxTop && maxTop > this.currentIndex) {
+                newTop = maxTop;
+              }
+            }
+            else if (newTop < 0)
+              newTop = 0;
+            this.scrollToIndex(newTop);
+            return pageOffset;          
+          ]]>
+        </body>
+      </method>
     </implementation>
     
     <handlers>
+      <handler event="keypress" keycode="vk_up" modifiers="control shift any"
+               phase="target" action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_down" modifiers="control shift any"
+               phase="target" action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_home" modifiers="control shift any"
+               phase="target" action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_end" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_page_up" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_page_down" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" key=" " phase="target">
+        <![CDATA[
+          if (this.currentItem) {
+            if (this.currentItem.getAttribute("type") != "checkbox")
+              this.addItemToSelection(this.currentItem);
+            else if (!this.currentItem.disabled)
+              this.currentItem.checked = !this.currentItem.checked;
+          }
+        ]]>
+      </handler>
       <handler event="focus">
         <![CDATA[
           if (this.currentIndex == -1 && this.getRowCount() > 0) {
@@ -517,156 +599,11 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" phase="target">
+      <handler event="keypress" key=" " modifiers="control" phase="target">
         <![CDATA[
-         if (this.selectedItems.length < 1)
-           return;
-         this._isUpSelection=0;
-         this._isDownSelection=0;
-         var n = this.getPreviousItem(this.selectedItems[this.selectedItems.length-1], 1);
-         if (n) {
-           this.ensureIndexIsVisible(this.getIndexOfItem(n));
-           this.timedSelect(n, this._selectDelay);
-         }
+          if (this.currentItem && this.selType == "multiple")
+            this.toggleItemSelection(this.currentItem);
         ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_down" phase="target">
-        <![CDATA[
-         var n;
-         if (this.selectedItems.length == 0) {
-           n = this.getItemAtIndex(0);
-         }
-         else {
-           this._isUpSelection=0;
-           this._isDownSelection=0;
-           n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
-         }
-
-         if (n) {
-           this.ensureIndexIsVisible(this.getIndexOfItem(n));
-           this.timedSelect(n, this._selectDelay);
-         }
-        ]]>
-      </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_up" phase="target">
-        <![CDATA[
-         var l=this.selectedItems.length;
-         if (l < 1 || this.selType != "multiple")
-           return;
-         var n = this.getPreviousItem(this.selectedItems[l-1], 1);
-         if (n) {
-           this.ensureElementIsVisible(n);
-           if ( this._isDownSelection) {
-             if ( l > 1 )
-               this.removeItemFromSelection(this.selectedItems[l-1]);
-             if ( l <= 2 )
-               this._isDownSelection=0;
-     }
-           else {
-             this.addItemToSelection(n);
-             this._isUpSelection=1;
-           }
-         }
-        ]]>
-      </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_down" phase="target">
-        <![CDATA[
-         var l=this.selectedItems.length;
-         if (l < 1 || this.selType != "multiple")
-           return;
-         var n = this.getNextItem(this.selectedItems[l-1], 1);
-         if (n) {
-           this.ensureElementIsVisible(n);
-           if ( this._isUpSelection) {
-             if ( l > 1 )
-         this.removeItemFromSelection(this.selectedItems[l-1]);
-             if ( l <= 2 )
-               this._isUpSelection=0;
-           }
-           else {
-             this.addItemToSelection(n);
-             this._isDownSelection=1;
-           }
-         }
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_page_up" phase="target">
-        <![CDATA[
-         var l = this.selectedItems.length;
-         if (l < 1)
-           return;
-         this._isUpSelection=0;
-         this._isDownSelection=0;
-         var i = this.getIndexOfFirstVisibleRow();
-         if ( i == 0 )
-           var n=this.getItemAtIndex(0);
-         else {
-           var v = this.getNumberOfVisibleRows();
-           n = this.getPreviousItem(this.selectedItems[l-1], v);
-           var newIndex = i - v;
-           if ( ! n || newIndex < 0 ) {
-             newIndex=0;
-             n=this.getItemAtIndex(this.getIndexOfItem(this.selectedItems[l-1]) - i);
-           }
-           this.scrollToIndex(newIndex);
-         }
-         this.timedSelect(n, this._selectDelay);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_page_down" phase="target">
-        <![CDATA[
-         var l = this.selectedItems.length;
-         if (l < 1)
-           return;
-         this._isUpSelection=0;
-         this._isDownSelection=0;
-         var i = this.getIndexOfFirstVisibleRow();
-         var v = this.getNumberOfVisibleRows();
-         var count = this.getRowCount();
-         var n;
-         if ( i >= count - v )
-           n=this.getItemAtIndex(count - 1);
-         else {
-           n = this.getNextItem(this.selectedItems[l-1], v);
-           var newIndex = i + v;
-           if ( ! n || newIndex > count - v ) {
-             newIndex = count - v;
-             n = this.getItemAtIndex(newIndex + this.getIndexOfItem(this.selectedItems[l-1]) - i);
-           }
-           this.scrollToIndex(newIndex);
-         }
-         this.timedSelect(n, this._selectDelay);
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_home" phase="target">
-        <![CDATA[
-         if (this.selectedItems.length < 1)
-           return;
-         this._isUpSelection=0;
-         this._isDownSelection=0;
-         this.scrollToIndex(0);
-         this.selectItem(this.getItemAtIndex(0));
-        ]]>
-      </handler>
-      <handler event="keypress" keycode="vk_end" phase="target">
-        <![CDATA[
-         if (this.selectedItems.length < 1)
-           return;
-         this._isUpSelection=0;
-         this._isDownSelection=0;
-         var count = this.getRowCount();
-         this.ensureIndexIsVisible(count-1);
-         this.selectItem(this.getItemAtIndex(count-1));
-        ]]>
-      </handler>
-
-      <handler event="keypress" key=" " phase="target">
-      <![CDATA[
-        if (this.currentItem &&
-            this.currentItem.getAttribute("type") == "checkbox" &&
-            !this.currentItem.disabled)
-          this.currentItem.checked = !this.currentItem.checked;
-      ]]>
       </handler>
       <handler event="keypress" phase="target">
       <![CDATA[
@@ -710,8 +647,6 @@
              var cellText = item.getAttribute("label");
              cellText = cellText.substring(0, length).toLowerCase();
              if (cellText == incrementalString) {
-               this._isUpSelection=0;
-               this._isDownSelection=0;
                this.ensureIndexIsVisible(k);
                this.timedSelect(item, this._selectDelay);
                break;

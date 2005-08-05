@@ -54,6 +54,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
+#include "nsIDOMMutationEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
 #include "nsIEventStateManager.h"
@@ -770,10 +771,15 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     if (multiSelect) {
       // Need to find the right event to use here, SELECTION_WITHIN would
       // seem right but we had started using it for something else
-      FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                       multiSelect, nsnull);
+      nsCOMPtr<nsIAccessNode> multiSelectAccessNode =
+        do_QueryInterface(multiSelect);
+      nsCOMPtr<nsIDOMNode> multiSelectDOMNode;
+      multiSelectAccessNode->GetDOMNode(getter_AddRefs(multiSelectDOMNode));
+      NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
+      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                              multiSelectDOMNode, nsnull, PR_TRUE);
       nsAutoString attrValue;
-      aContent->GetAttr(kNameSpaceID_WAIProperties,
+      aContent->GetAttr(aNameSpaceID,
                         nsAccessibilityAtoms::selected, attrValue);
       if (attrValue.IsEmpty() || attrValue.EqualsLiteral("false")) {
         eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
@@ -884,7 +890,8 @@ nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
 
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
-                                                  void *aData)
+                                                  void *aData,
+                                                  PRBool aAllowDupes)
 {
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
@@ -896,7 +903,7 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
     }
     isTimerStarted = PR_FALSE;
   }
-  else {
+  else if (!aAllowDupes) {
     // Check for repeat events. If a redundant event exists remove
     // original and put the new event at the end of the queue
     // so it is fired after the others
