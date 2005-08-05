@@ -371,13 +371,15 @@
     </content>
 
     <handlers>
-      <handler event="click" button="0"><![CDATA[
+      <handler event="click" phase="capturing" button="0" preventdefault="true">
+        <![CDATA[
           var url = this.getAttribute("href");
           var line = getAttribute("line");  
           window.openDialog(
             "chrome://global/content/viewSource.xul", "_blank", 
             "all,dialog=no", url, null, null, line);
-      ]]></handler>
+        ]]>
+      </handler>
     </handlers>
   </binding>
 

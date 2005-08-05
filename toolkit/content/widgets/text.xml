@@ -293,7 +293,7 @@
                             onset="this.setAttribute('href', val); return val;" />
     </implementation>
     <handlers>
-      <handler event="click">
+      <handler event="click" phase="capturing" button="0">
       <![CDATA[
         if (this.disabled || event.getPreventDefault())
           return;
@@ -302,8 +302,8 @@
           open(href);
       ]]>
       </handler>
-     <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
-     <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
+      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
+      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
     </handlers>
   </binding>
 
