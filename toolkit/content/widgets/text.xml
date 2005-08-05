@@ -295,7 +295,7 @@
     <handlers>
       <handler event="click">
       <![CDATA[
-        if (this.disabled)
+        if (this.disabled || event.getPreventDefault())
           return;
         var href = this.getAttribute('href');
         if (href)
