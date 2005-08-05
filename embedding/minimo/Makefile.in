@@ -42,10 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = popuplite
-
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-DIRS += ../browser/gtk/src app
+DIRS += popuplite ../browser/gtk/src app
 endif
 
 include $(topsrcdir)/config/rules.mk
