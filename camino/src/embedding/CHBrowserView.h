@@ -186,7 +186,6 @@ enum {
 
 - (void)printDocument;
 - (void)pageSetup;
-- (void)ensurePrintSettings;
 
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
             wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;

@@ -129,6 +129,9 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
 - (nsIDocShell*)getDocShell;
 
+- (void)ensurePrintSettings;
+- (void)savePrintSettings;
+
 @end
 
 #pragma mark -
@@ -590,13 +593,17 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 {
   if (!_webBrowser)
     return;
+
+  [self ensurePrintSettings];
+
   nsCOMPtr<nsIDOMWindow> domWindow;
   _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(domWindow));
   nsCOMPtr<nsIWebBrowserPrint> print;
   ir->GetInterface(NS_GET_IID(nsIWebBrowserPrint), getter_AddRefs(print));
-  [self ensurePrintSettings];
   print->Print(mPrintSettings, nsnull);
+
+  [self savePrintSettings];
 }
 
 -(void)pageSetup
@@ -611,15 +618,8 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   if (!ppService)
     return;
   [self ensurePrintSettings];
-  if (NS_SUCCEEDED(ppService->ShowPageSetup(domWindow, mPrintSettings, nsnull)) &&
-      mUseGlobalPrintSettings) {
-      nsCOMPtr<nsIPrintSettingsService> psService =
-          do_GetService("@mozilla.org/gfx/printsettings-service;1");
-      if (!psService)
-        return;
-      psService->SavePrintSettingsToPrefs(mPrintSettings, PR_FALSE,
-                                          nsIPrintSettings::kInitSaveNativeData);
-  }
+  if (NS_SUCCEEDED(ppService->ShowPageSetup(domWindow, mPrintSettings, nsnull)))
+    [self savePrintSettings];
 }
 
 - (void)ensurePrintSettings
@@ -641,6 +641,18 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   else
     psService->GetNewPrintSettings(&mPrintSettings);
 }
+
+- (void)savePrintSettings
+{
+  if (mPrintSettings && mUseGlobalPrintSettings) {
+    nsCOMPtr<nsIPrintSettingsService> psService =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    if (psService)
+      psService->SavePrintSettingsToPrefs(mPrintSettings, PR_FALSE,
+                                          nsIPrintSettings::kInitSaveNativeData);
+  }
+}
+
 
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
     wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
