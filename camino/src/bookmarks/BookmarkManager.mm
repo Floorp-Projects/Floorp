@@ -37,12 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <unistd.h>
+
 #include "nsString.h"
 #include "nsIContent.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #import "NSString+Utils.h"
+#import "NSThread+Utils.h"
 #import "PreferenceManager.h"
 #import "BookmarkManager.h"
 #import "Bookmark.h"
@@ -54,23 +57,39 @@
 #import "KindaSmartFolderManager.h"
 #import "BrowserWindowController.h"
 #import "MainController.h" 
-
+#import "SiteIconProvider.h"
 
 NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
 
 
 @interface BookmarkManager (Private)
 
++ (NSString*)canonicalBookmarkURL:(NSString*)inBookmarkURL;
++ (NSString*)faviconURLForBookmark:(Bookmark*)inBookmark;
+
 - (void)loadBookmarksThreadEntry:(id)inObject;
 - (void)loadBookmarks;
 - (void)setPathToBookmarkFile:(NSString *)aString;
 - (void)setupSmartCollections;
 - (void)delayedStartupItems;
+- (void)noteBookmarksChanged;
 - (void)writeBookmarks:(NSNotification *)note;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
 - (void)writeBookmarksMetadataForSpotlight;
 
++ (void)addItem:(id)inBookmark toURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;
++ (void)removeItem:(id)inBookmark fromURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;  // url may be nil, in which case exhaustive search is used
++ (NSEnumerator*)enumeratorForBookmarksInMap:(NSMutableDictionary*)urlMap matchingURL:(NSString*)inURL;
+
+- (void)registerBookmarkForLoads:(Bookmark*)inBookmark;
+- (void)unregisterBookmarkForLoads:(Bookmark*)inBookmark ignoringURL:(BOOL)inIgnoreURL;
+- (void)setAndReregisterFaviconURL:(NSString*)inFaviconURL forBookmark:(Bookmark*)inBookmark;
+- (void)onSiteIconLoad:(NSNotification *)inNotification;
+- (void)onPageLoad:(NSNotification*)inNotification;
+
 @end
+
+#pragma mark -
 
 @implementation BookmarkManager
 
@@ -118,6 +137,26 @@ static unsigned           gFirstUserCollection = 0;
   return itemsArray;
 }
 
+// return a string with the "canonical" bookmark url (strip trailing slashes, lowercase)
++ (NSString*)canonicalBookmarkURL:(NSString*)inBookmarkURL
+{
+  NSString* tempURL = inBookmarkURL;
+
+  if ([tempURL hasSuffix:@"/"])
+    tempURL = [tempURL substringToIndex:([tempURL length] - 1)];
+
+  return [tempURL lowercaseString];
+}
+
++ (NSString*)faviconURLForBookmark:(Bookmark*)inBookmark
+{
+  // if the bookmark has one, use it, otherwise assume the default location
+  if ([[inBookmark faviconURL] length] > 0)
+    return [inBookmark faviconURL];
+
+  return [SiteIconProvider defaultFaviconLocationStringFromURI:[inBookmark url]];
+}
+
 #pragma mark -
 
 //
@@ -127,6 +166,9 @@ static unsigned           gFirstUserCollection = 0;
 {
   if ((self = [super init]))
   {
+    mBookmarkURLMap        = [[NSMutableDictionary alloc] initWithCapacity:50];
+    mBookmarkFaviconURLMap = [[NSMutableDictionary alloc] initWithCapacity:50];
+
     mBookmarksLoaded = NO;
   }
   
@@ -150,6 +192,9 @@ static unsigned           gFirstUserCollection = 0;
 
   if (mImportDlgController)
     [mImportDlgController release];
+
+  [mBookmarkURLMap release];
+  [mBookmarkFaviconURLMap release];
 
   [super dealloc];
 }
@@ -226,6 +271,11 @@ static unsigned           gFirstUserCollection = 0;
   mUndoManager = [[NSUndoManager alloc] init];
 
   [self performSelectorOnMainThread:@selector(delayedStartupItems) withObject:nil waitUntilDone:NO];
+
+  // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
+  // easier this way in case someone changed the bm plist directly, we know at startup we always have
+  // the most up-to-date cache.
+  [self writeBookmarksMetadataForSpotlight];
 }
 
 
@@ -237,10 +287,21 @@ static unsigned           gFirstUserCollection = 0;
   [mSmartFolderManager postStartupInitialization:self];
   [[self toolbarFolder] refreshIcon];
 
+  NSArray* allBookmarks = [[self rootBookmarks] allChildBookmarks];
+
+  NSEnumerator* bmEnum = [allBookmarks objectEnumerator];
+  Bookmark* thisBM;
+  while ((thisBM = [bmEnum nextObject]))
+  {
+    [self registerBookmarkForLoads:thisBM];
+  }
+
   // load favicons (w/out hitting the network, cache only). Spread it out so that we only get
   // ten every three seconds to avoid locking up the UI with large bookmark lists.
-  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL]) {
-    NSArray *allBookmarks = [[self rootBookmarks] allChildBookmarks];
+  // XXX probably want a better way to do this. This sets up a timer (internally) for every
+  // bookmark
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL])
+  {
     float delay = 3.0; //default value
     int count = [allBookmarks count];
     for (int i = 0; i < count; ++i) {
@@ -259,14 +320,12 @@ static unsigned           gFirstUserCollection = 0;
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
   [nc addObserver:self selector:@selector(writeBookmarks:) name:kWriteBookmarkNotification object:nil];
 
+  // listen for site icon and page loads, to forward to bookmarks
+  [nc addObserver:self selector:@selector(onSiteIconLoad:) name:SiteIconLoadNotificationName object:nil];
+  [nc addObserver:self selector:@selector(onPageLoad:) name:URLLoadNotification object:nil];
+
   // broadcast to everyone interested that we're loaded and ready for public consumption
   [[NSNotificationCenter defaultCenter] postNotificationName:kBookmarkManagerStartedNotification object:nil];
-
-  // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
-  // easier this way in case someone changed the bm plist directly, we know at startup we always have
-  // the most up-to-date cache.
-  [self writeBookmarksMetadataForSpotlight];
-
 }
 
 - (void)shutdown
@@ -285,7 +344,11 @@ static unsigned           gFirstUserCollection = 0;
 // We also have history, but that just points to the real history stuff.
 - (void)setupSmartCollections
 {
-  int collectionIndex = 2;  //skip 0 and 1, the menu and toolbar folders
+  int collectionIndex = 2;  // skip 0 and 1, the menu and toolbar folders
+  
+  // XXX this reliance of indices of the root for the special folders is bad; it makes it hard
+  // for us to reorder the collections without breaking stuff. Also, there's no checking on
+  // reading the file that the Nth folder of the root really is the Toolbar (for example).
   
   // add history
   BookmarkFolder *temp = [[BookmarkFolder alloc] init];
@@ -315,13 +378,12 @@ static unsigned           gFirstUserCollection = 0;
   gFirstUserCollection = collectionIndex;
   
   // set pretty icons
-  
-  [[self historyFolder] setIcon:[NSImage imageNamed:@"historyicon"]];
-  [[self top10Folder] setIcon:[NSImage imageNamed:@"top10_icon"]];
-  [[self bookmarkMenuFolder] setIcon:[NSImage imageNamed:@"bookmarkmenu_icon"]];
-  [[self toolbarFolder] setIcon:[NSImage imageNamed:@"bookmarktoolbar_icon"]];
-  [[self rendezvousFolder] setIcon:[NSImage imageNamed:@"rendezvous_icon"]];
-  [[self addressBookFolder] setIcon:[NSImage imageNamed:@"addressbook_icon"]];
+  [[self historyFolder]       setIcon:[NSImage imageNamed:@"historyicon"]];
+  [[self top10Folder]         setIcon:[NSImage imageNamed:@"top10_icon"]];
+  [[self bookmarkMenuFolder]  setIcon:[NSImage imageNamed:@"bookmarkmenu_icon"]];
+  [[self toolbarFolder]       setIcon:[NSImage imageNamed:@"bookmarktoolbar_icon"]];
+  [[self rendezvousFolder]    setIcon:[NSImage imageNamed:@"rendezvous_icon"]];
+  [[self addressBookFolder]   setIcon:[NSImage imageNamed:@"addressbook_icon"]];
 }
 
 //
@@ -594,33 +656,191 @@ static unsigned           gFirstUserCollection = 0;
 }
 
 #pragma mark -
-//
-// BookmarkClient protocol - so we know when to write out
-//
-- (void)bookmarkAdded:(NSNotification *)note
+
+// 
+// Methods relating to the multiplexing of page load and site icon load notifications
+// 
+
++ (void)addItem:(id)inBookmark toURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL
 {
-  // we only care about additions to non-smart folders.
-  BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  BookmarkFolder* addedTo = [note object];
-  if (![addedTo isSmartFolder]) {
-    if ([MainController supportsSpotlight]) {
-      if ([bmItem isKindOfClass:[Bookmark class]])
-        [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+  NSMutableSet* urlSet = [urlMap objectForKey:inURL];
+  if (!urlSet)
+  {
+    urlSet = [NSMutableSet setWithCapacity:1];
+    [urlMap setObject:urlSet forKey:inURL];
+  }
+  [urlSet addObject:inBookmark];
+}
+
+// url may be nil, in which case exhaustive search is used
++ (void)removeItem:(id)inBookmark fromURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL
+{
+  if (inURL)
+  {
+    NSMutableSet* urlSet = [urlMap objectForKey:inURL];
+    if (urlSet)
+      [urlSet removeObject:inBookmark];
+  }
+  else
+  {
+    NSEnumerator* urlMapEnum = [urlMap objectEnumerator];
+    NSMutableSet* curSet;
+    while ((curSet = [urlMapEnum nextObject]))
+    {
+      if ([curSet containsObject:inBookmark])
+      {
+        [curSet removeObject:inBookmark];
+        break;   // it should only be in one set
+      }
     }
-    [self bookmarkChanged:nil];
   }
 }
 
-- (void)bookmarkRemoved:(NSNotification *)note
+// unregister the bookmark using its old favicon url, set the new one (which might be nil),
+// and reregister (setting a nil favicon url makes it use the default)
+- (void)setAndReregisterFaviconURL:(NSString*)inFaviconURL forBookmark:(Bookmark*)inBookmark
 {
-  [self bookmarkChanged:nil];
+  [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+  [inBookmark setFaviconURL:inFaviconURL];
+  [BookmarkManager addItem:inBookmark toURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+}
+
+
++ (NSEnumerator*)enumeratorForBookmarksInMap:(NSMutableDictionary*)urlMap matchingURL:(NSString*)inURL
+{
+  return [[urlMap objectForKey:inURL] objectEnumerator];
+}
+
+- (void)registerBookmarkForLoads:(Bookmark*)inBookmark
+{
+  NSString* bookmarkURL = [BookmarkManager canonicalBookmarkURL:[inBookmark url]];
   
-  BookmarkItem* bmItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-  if ([MainController supportsSpotlight]) {
-    BookmarkFolder* addedTo = [note object];
-    if (![addedTo isSmartFolder])
-      [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
+  // add to the bookmark url map
+  [BookmarkManager addItem:inBookmark toURLMap:mBookmarkURLMap usingURL:bookmarkURL];
+
+  // and add it to the site icon map
+  [BookmarkManager addItem:inBookmark toURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+}
+
+- (void)unregisterBookmarkForLoads:(Bookmark*)inBookmark ignoringURL:(BOOL)inIgnoreURL
+{
+  NSString* bookmarkURL = inIgnoreURL ? nil : [BookmarkManager canonicalBookmarkURL:[inBookmark url]];
+  [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkURLMap usingURL:bookmarkURL];
+  
+  [BookmarkManager removeItem:inBookmark fromURLMap:mBookmarkFaviconURLMap usingURL:[BookmarkManager faviconURLForBookmark:inBookmark]];
+}
+
+
+- (void)onSiteIconLoad:(NSNotification *)inNotification
+{
+  NSDictionary* userInfo = [inNotification userInfo];
+  //NSLog(@"onSiteIconLoad %@", inNotification);
+  if (!userInfo)
+    return;
+
+	NSImage*  iconImage     = [userInfo objectForKey:SiteIconLoadImageKey];
+  NSString* siteIconURI  = [userInfo objectForKey:SiteIconLoadURIKey];
+  NSString* pageURI      = [userInfo objectForKey:SiteIconLoadUserDataKey];
+  pageURI = [BookmarkManager canonicalBookmarkURL:pageURI];
+
+  BOOL isDefaultSiteIconLocation = [siteIconURI isEqualToString:[SiteIconProvider defaultFaviconLocationStringFromURI:pageURI]];
+
+  if (iconImage)
+  {
+    Bookmark* curBookmark;
+
+    // look for bookmarks to this page. we might not have registered
+    // this bookmark for a custom <link> favicon url yet
+    NSArray* bookmarksForPage = [[mBookmarkURLMap objectForKey:pageURI] allObjects];
+    NSEnumerator* bookmarksForPageEnum = [bookmarksForPage objectEnumerator];
+    // note that we don't enumerate over the NSMutableSet directly, because we'll be
+    // changing it inside the loop
+    while ((curBookmark = [bookmarksForPageEnum nextObject]))
+    {
+      if (isDefaultSiteIconLocation)
+      {
+        // if we've got one from the default location, but the bookmark has a custom linked icon,
+        // so remove the custom link
+        if ([[curBookmark faviconURL] length] > 0)
+          [self setAndReregisterFaviconURL:nil forBookmark:curBookmark];
+      }
+      else   // custom location
+      {
+        if (![[curBookmark faviconURL] isEqualToString:siteIconURI])
+          [self setAndReregisterFaviconURL:siteIconURI forBookmark:curBookmark];
+      }
+    }
+    
+    // update bookmarks known to be using this favicon url
+    NSEnumerator* bookmarksEnum = [BookmarkManager enumeratorForBookmarksInMap:mBookmarkFaviconURLMap matchingURL:siteIconURI];
+    while ((curBookmark = [bookmarksEnum nextObject]))
+    {
+      [curBookmark setIcon:iconImage];
+    }
   }
+  else
+  {
+    // we got no image. If this was a network load for a custom favicon url, clear the favicon url from the bookmarks which use it
+    BOOL networkLoad = [[userInfo objectForKey:SiteIconLoadUsedNetworkKey] boolValue];
+    if (networkLoad && !isDefaultSiteIconLocation)
+    {
+      NSArray* bookmarksForPage = [[mBookmarkURLMap objectForKey:pageURI] allObjects];
+      NSEnumerator* bookmarksForPageEnum = [bookmarksForPage objectEnumerator];
+      // note that we don't enumerate over the NSMutableSet directly, because we'll be
+      // changing it inside the loop
+      Bookmark* curBookmark;
+      while ((curBookmark = [bookmarksForPageEnum nextObject]))
+      {
+        // clear any custom favicon urls
+        if ([[curBookmark faviconURL] isEqualToString:siteIconURI])
+          [self setAndReregisterFaviconURL:nil forBookmark:curBookmark];
+      }
+    }
+  }
+}
+
+- (void)onPageLoad:(NSNotification*)inNotification
+{
+  NSString* loadURL = [BookmarkManager canonicalBookmarkURL:[inNotification object]];
+  BOOL successfullLoad = [[[inNotification userInfo] objectForKey:URLLoadSuccessKey] boolValue];
+  
+  NSEnumerator* bookmarksEnum = [BookmarkManager enumeratorForBookmarksInMap:mBookmarkURLMap matchingURL:loadURL];
+  Bookmark* curBookmark;
+  while ((curBookmark = [bookmarksEnum nextObject]))
+  {
+    [curBookmark notePageLoadedWithSuccess:successfullLoad];
+  }
+}
+
+#pragma mark -
+
+//
+// BookmarkClient protocol - so we know when to write out
+//
+- (void)bookmarkAdded:(NSNotification *)inNotification
+{
+  // we only care about additions to non-smart folders.
+  BookmarkItem* bmItem = [[inNotification userInfo] objectForKey:BookmarkFolderChildKey];
+  BookmarkFolder* parentFolder = [inNotification object];
+
+  if ([parentFolder isSmartFolder])
+    return;
+
+  if ([bmItem isKindOfClass:[Bookmark class]])
+  {
+    if ([MainController supportsSpotlight])
+      [bmItem writeBookmarksMetadataToPath:mMetadataPath];
+
+    [self registerBookmarkForLoads:bmItem];
+  }
+  
+  [self noteBookmarksChanged];
+}
+
+- (void)bookmarkRemoved:(NSNotification *)inNotification
+{
+  BookmarkItem* bmItem = [[inNotification userInfo] objectForKey:BookmarkFolderChildKey];
+
   if ([bmItem isKindOfClass:[BookmarkFolder class]])
   {
     if ([(BookmarkFolder*)bmItem containsChildItem:mLastUsedFolder])
@@ -629,29 +849,63 @@ static unsigned           gFirstUserCollection = 0;
       mLastUsedFolder = nil;
     }
   }
+
+  BookmarkFolder* parentFolder = [inNotification object];
+  if ([parentFolder isSmartFolder])
+    return;
+
+  if ([bmItem isKindOfClass:[Bookmark class]])
+  {
+    if ([MainController supportsSpotlight])
+      [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
+
+    [self unregisterBookmarkForLoads:bmItem ignoringURL:YES];
+  }
+  
+  [self noteBookmarksChanged];
 }
 
-- (void)bookmarkChanged:(NSNotification *)aNote
+- (void)bookmarkChanged:(NSNotification *)inNotification
 {
-  // |aNote| is non-nil when a bookmark has really changed, not when we're using
-  // it from other routines to force a write bookmark notification. 
-  if (aNote) {
-    // don't write out the bookmark file or metadata for changes in a smart container.
-    id item = [aNote object];
-    if ([[item parent] isSmartFolder])
-      return;
-    if ([MainController supportsSpotlight]) {
-      if ([item isKindOfClass:[Bookmark class]])
-        [item writeBookmarksMetadataToPath:mMetadataPath];
+  // don't write out the bookmark file or metadata for changes in a smart container.
+  id item = [inNotification object];
+  if ([[item parent] isSmartFolder])
+    return;
+
+  unsigned int changeFlags = kBookmarkItemEverythingChangedMask;
+  NSNumber* noteChangeFlags = [[inNotification userInfo] objectForKey:BookmarkItemChangedFlagsKey];
+  if (noteChangeFlags)
+    changeFlags = [noteChangeFlags unsignedIntValue];
+
+  if ([item isKindOfClass:[Bookmark class]])
+  {
+    // update Spotlight metadata
+    if ([MainController supportsSpotlight] && (changeFlags & kBookmarkItemSignificantChangeFlagsMask))
+      [item writeBookmarksMetadataToPath:mMetadataPath];
+    
+    // and re-register in the maps if the url changed
+    if (changeFlags & kBookmarkItemURLChangedMask)
+    {
+      // since we've lost the old url, we have to unregister the slow way
+      [self unregisterBookmarkForLoads:item ignoringURL:YES];
+      [self registerBookmarkForLoads:item];
     }
   }
-  NSNotificationQueue* nq = [NSNotificationQueue defaultQueue];
-  NSNotification *note = [NSNotification notificationWithName:kWriteBookmarkNotification object:self userInfo:nil];
-  [nq enqueueNotification:note postingStyle:NSPostASAP coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];   
+  
+  if (changeFlags & kBookmarkItemSignificantChangeFlagsMask)
+    [self noteBookmarksChanged];
 }
 
-- (void)writeBookmarks:(NSNotification *)note
+- (void)noteBookmarksChanged
 {
+  // post a coalescing notification to write the bookmarks file
+  NSNotification *note = [NSNotification notificationWithName:kWriteBookmarkNotification object:self userInfo:nil];
+  [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostASAP coalesceMask:NSNotificationCoalescingOnName forModes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];   
+}
+
+- (void)writeBookmarks:(NSNotification *)inNotification
+{
+  // NSLog(@"Saving bookmarks");
   [self writePropertyListFile:mPathToBookmarkFile];
 }
 
@@ -663,23 +917,40 @@ static unsigned           gFirstUserCollection = 0;
 // the one that Safari uses which launches the default browser when selected. This blows
 // away any previous cache and ensures that everything is up-to-date.
 //
+// Note that this is called on a thread, so it takes pains to ensure that the data
+// it's working with won't be changing on the UI thread
+// 
 - (void)writeBookmarksMetadataForSpotlight
 {
-  if ([MainController supportsSpotlight]) {
-    // build up the path and ensure the folders are present along the way. Removes the
-    // previous version entirely.
-    NSString* metadataPath = [@"~/Library/Caches/Metadata" stringByExpandingTildeInPath];
-    [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
-    metadataPath = [metadataPath stringByAppendingPathComponent:@"Camino"];
-    [[NSFileManager defaultManager] removeFileAtPath:metadataPath handler:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
-    
-    // write all the bookmarks except for smart folders. wBMTP ignores smart folders
-    [mRootBookmarks writeBookmarksMetadataToPath:metadataPath];
-    
-    // save the path for later
-    [mMetadataPath autorelease];
-    mMetadataPath = [metadataPath retain];
+  if (![MainController supportsSpotlight])
+    return;
+
+  // XXX if we quit while this thread is still running, we'll end up with incomplete metadata
+  // on disk, but it will get rebuilt on the next launch.
+
+  NSArray* allBookmarkItems = [mRootBookmarks allChildBookmarks];
+  
+  // build up the path and ensure the folders are present along the way. Removes the
+  // previous version entirely.
+  NSString* metadataPath = [@"~/Library/Caches/Metadata" stringByExpandingTildeInPath];
+  [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
+  metadataPath = [metadataPath stringByAppendingPathComponent:@"Camino"];
+  [[NSFileManager defaultManager] removeFileAtPath:metadataPath handler:nil];
+  [[NSFileManager defaultManager] createDirectoryAtPath:metadataPath attributes:nil];
+  
+  // save the path for later
+  [mMetadataPath autorelease];
+  mMetadataPath = [metadataPath retain];
+
+  unsigned int itemCount = 0;
+  NSEnumerator* bmEnumerator = [allBookmarkItems objectEnumerator];
+  BookmarkItem* curItem;
+  while ((curItem = [bmEnumerator nextObject]))
+  {
+    [curItem writeBookmarksMetadataToPath:mMetadataPath];
+
+    if (!(++itemCount % 100) && ![NSThread inMainThread])
+      usleep(10000);    // 10ms to give the UI some time
   }
 }
 
@@ -700,21 +971,27 @@ static unsigned           gFirstUserCollection = 0;
   NSFileManager *fM = [NSFileManager defaultManager];
   NSString *bookmarkPath = [profileDir stringByAppendingPathComponent:@"bookmarks.plist"];
   [self setPathToBookmarkFile:bookmarkPath];
-  if ([fM isReadableFileAtPath:bookmarkPath]) {
+  if ([fM isReadableFileAtPath:bookmarkPath])
+  {
     if ([self readPropertyListFile:bookmarkPath intoFolder:[self rootBookmarks]])
       return YES; // triumph!
-  } else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]]){
+  }
+  else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
+  {
     BookmarkFolder *aFolder = [[self rootBookmarks] addBookmarkFolder];
     [aFolder setTitle:NSLocalizedString(@"Bookmark Menu",@"Bookmark Menu")];
     if ([self readCaminoXMLFile:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"] intoFolder:[self bookmarkMenuFolder]])
       return NO; // triumph! - will do post processing in init
-  } else {
+  }
+  else
+  {
     NSString *defaultBookmarks = [[NSBundle mainBundle] pathForResource:@"bookmarks" ofType:@"plist"];
     if ([fM copyPath:defaultBookmarks toPath:bookmarkPath handler:nil]) {
         if ([self readPropertyListFile:bookmarkPath intoFolder:[self rootBookmarks]])
           return YES; //triumph!
     }
   }
+
   // if we're here, we've had a problem
   NSString *alert     = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
   NSString *message   = NSLocalizedString(@"CorruptedBookmarksMsg",@"");

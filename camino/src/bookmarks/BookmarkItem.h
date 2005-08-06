@@ -41,15 +41,41 @@
 
 #import <Appkit/Appkit.h>
 
+enum
+{
+  kBookmarkItemAccumulateChangesMask    = (1 << 0),
+  
+  kBookmarkItemTitleChangedMask         = (1 << 1),
+  kBookmarkItemDescriptionChangedMask   = (1 << 2),
+  kBookmarkItemKeywordChangedMask       = (1 << 3),
+  kBookmarkItemIconChangedMask          = (1 << 4),
+  kBookmarkItemURLChangedMask           = (1 << 5),
+  kBookmarkItemLastVisitChangedMask     = (1 << 6),
+  kBookmarkItemStatusChangedMask        = (1 << 7),   // really "flags", like separator vs. bookmark
+  kBookmarkItemNumVisitsChangedMask     = (1 << 8),
+  
+  // mask of flags that require a save of the bookmarks
+  kBookmarkItemSignificantChangeFlagsMask = kBookmarkItemTitleChangedMask |
+                                            kBookmarkItemDescriptionChangedMask |
+                                            kBookmarkItemKeywordChangedMask |
+                                            kBookmarkItemURLChangedMask |
+                                            kBookmarkItemLastVisitChangedMask |
+                                            kBookmarkItemStatusChangedMask |
+                                            kBookmarkItemNumVisitsChangedMask,
+    
+  kBookmarkItemEverythingChangedMask    = 0xFFFFFFFE
+};
+
+
 @interface BookmarkItem : NSObject <NSCopying>
 {
-  id  mParent;	//subclasses will use a BookmarkFolder
-  NSString* mTitle;       
-  NSString* mDescription;
-  NSString* mKeyword; 
-  NSString* mUUID;
-  NSImage* mIcon;
-  BOOL mAccumulateItemChangeUpdates;
+  id              mParent;	//subclasses will use a BookmarkFolder
+  NSString*       mTitle;       
+  NSString*       mDescription;
+  NSString*       mKeyword; 
+  NSString*       mUUID;
+  NSImage*        mIcon;
+  unsigned int    mPendingChangeFlags;
 }
 
 // Setters/Getters
@@ -88,8 +114,8 @@ enum
 // Notification of Change
 +(void) setSuppressAllUpdateNotifications:(BOOL)suppressUpdates;
 +(BOOL) allowNotifications;
--(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates;
--(void) itemUpdatedNote; // not everything triggers an item update, only certain properties changing
+-(void) setAccumulateUpdateNotifications:(BOOL)suppressUpdates; // does not nest
+-(void) itemUpdatedNote:(unsigned int)inChangeMask; // not everything triggers an item update, only certain properties changing
 
 // Methods called on startup for both bookmark & folder
 -(void) refreshIcon;
@@ -130,6 +156,7 @@ extern NSString* const BMUUIDKey;
 extern NSString* const BMKeywordKey;
 extern NSString* const BMLastVisitKey;
 extern NSString* const BMNumberVisitsKey;
+extern NSString* const BMLinkedFaviconURLKey;
 
 // safari keys
 extern NSString* const SafariTypeKey;

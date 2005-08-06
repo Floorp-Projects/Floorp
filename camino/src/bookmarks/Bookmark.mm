@@ -46,43 +46,34 @@
 #import "NSString+Utils.h"
 #import "SiteIconProvider.h"
 
-@interface Bookmark (Private)
-
-- (void)siteIconCheck:(NSNotification *)aNote;
-- (void)urlLoadCheck:(NSNotification *)aNote;
-
-@end
-
 // Notification of URL load
 NSString* const URLLoadNotification   = @"url_load";
 NSString* const URLLoadSuccessKey     = @"url_bool";
+
+#pragma mark -
 
 @implementation Bookmark
 
 -(id) init
 {
-  if ((self = [super init])) {
-    mURL = [[NSString alloc] init];
-    mStatus = [[NSNumber alloc] initWithUnsignedInt:kBookmarkOKStatus]; // retain count +1
-    mNumberOfVisits = [[NSNumber alloc] initWithUnsignedInt:0]; // retain count +1
-    mLastVisit = [[NSDate date] retain];
-    mIcon = [[NSImage imageNamed:@"smallbookmark"] retain];
-    // register for notifications
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    [nc addObserver:self selector:@selector(siteIconCheck:) name:SiteIconLoadNotificationName object:nil];
-    [nc addObserver:self selector:@selector(urlLoadCheck:) name:URLLoadNotification object:nil];
+  if ((self = [super init]))
+  {
+    mURL            = [[NSString alloc] init];
+    mStatus         = kBookmarkOKStatus;
+    mNumberOfVisits = 0;
+    mLastVisit      = [[NSDate date] retain];
   }
   return self;
 }
 
 -(id) copyWithZone:(NSZone *)zone
 {
-  id doppleganger = [super copyWithZone:zone];
-  [doppleganger setUrl:[self url]];
-  [doppleganger setStatus:[self status]];
-  [doppleganger setLastVisit:[self lastVisit]];
-  [doppleganger setNumberOfVisits:[self numberOfVisits]];
-  return doppleganger;
+  id bookmarkCopy = [super copyWithZone:zone];
+  [bookmarkCopy setUrl:[self url]];
+  [bookmarkCopy setStatus:[self status]];
+  [bookmarkCopy setLastVisit:[self lastVisit]];
+  [bookmarkCopy setNumberOfVisits:[self numberOfVisits]];
+  return bookmarkCopy;
 }
 
 - (void) dealloc
@@ -91,9 +82,12 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   mParent = NULL;	// not retained, so just set to null
   [mURL release];
   [mLastVisit release];
-  [mStatus release];
-  [mNumberOfVisits release];
   [super dealloc];
+}
+
+- (NSString*)description
+{
+  return [NSString stringWithFormat:@"Bookmark %08p, url %@, title %@", self, [self url], [self title]];
 }
 
 // set/get properties
@@ -103,6 +97,16 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   return mURL;
 }
 
+-(NSImage *)icon
+{
+  if (!mIcon)
+  {
+    mIcon = [[NSImage imageNamed:@"smallbookmark"] retain];
+    [self refreshIcon];
+  }
+  return mIcon;
+}
+
 -(NSDate *) lastVisit
 {
   return mLastVisit;
@@ -110,47 +114,67 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 -(unsigned) status
 {
-  return [mStatus unsignedIntValue];
+  return mStatus;
 }
 
 -(unsigned) numberOfVisits
 {
-  return [mNumberOfVisits unsignedIntValue];
+  return mNumberOfVisits;
 }
 
 -(BOOL)	isSeparator
 {
-  if ([self status] == kBookmarkSpacerStatus)
-    return YES;
-  return NO;
+  return (mStatus == kBookmarkSpacerStatus);
+}
+
+-(NSString*) faviconURL
+{
+  return mFaviconURL;
+}
+
+-(void)setFaviconURL:(NSString*)inURL
+{
+  [inURL retain];
+  [mFaviconURL release];
+  mFaviconURL = inURL;
 }
 
 -(void) setStatus:(unsigned)aStatus
 {
-  if (aStatus != [mStatus unsignedIntValue]) {
+  if (aStatus != mStatus) {
     // There used to be more than two possible status states.
     // Now we regard everything except kBookmarkSpacerStatus
     // as kBookmarkOKStatus.
     if (aStatus != kBookmarkSpacerStatus)
       aStatus = kBookmarkOKStatus;
     
-    [mStatus release];
-    mStatus = [[NSNumber alloc] initWithUnsignedInt:aStatus];
-    [self itemUpdatedNote];
+    mStatus = aStatus;
+    [self itemUpdatedNote:kBookmarkItemStatusChangedMask];
+
     if (aStatus == kBookmarkSpacerStatus)
-      [self setTitle:NSLocalizedString(@"<Menu Spacer>",@"<Menu Spacer>")];
+    {
+      [self setTitle:NSLocalizedString(@"<Menu Spacer>", @"")];
+    }
   }
 }
 
 - (void) setUrl:(NSString *)aURL
 {
-  if (aURL) {
+  if (!aURL)
+    return;
+  
+  if (![mURL isEqualToString:aURL])
+  {
     [aURL retain];
     [mURL release];
     mURL = aURL;
     [self setStatus:kBookmarkOKStatus];
-    [self refreshIcon];
-    [self itemUpdatedNote];
+    
+    // clear the icon, so we'll refresh it next time someone asks for it
+    [mIcon release];
+    mIcon = nil;
+    
+    [self itemUpdatedNote:kBookmarkItemURLChangedMask];
   }
 }
 
@@ -165,9 +189,8 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 -(void) setNumberOfVisits:(unsigned)aNumber
 {
-  [mNumberOfVisits release];
-  mNumberOfVisits = [[NSNumber alloc] initWithUnsignedInt:aNumber];
-  [self itemUpdatedNote];
+  mNumberOfVisits = aNumber;
+  [self itemUpdatedNote:kBookmarkItemLastVisitChangedMask];
 }
 
 -(void) setIsSeparator:(BOOL)aBool
@@ -194,37 +217,11 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   }
 }
 
--(void) siteIconCheck:(NSNotification *)note
+-(void) notePageLoadedWithSuccess:(BOOL)inSuccess
 {
-  NSDictionary *userInfo = [note userInfo];
-  if (userInfo) {
-    id loadTarget = [note object];
-    NSString *iconString = [userInfo objectForKey:SiteIconLoadUserDataKey];
-    if (iconString) {
-      NSURL *iconURL= [NSURL URLWithString:[NSString escapedURLString:iconString]];
-      NSURL *myURL = [NSURL URLWithString:[NSString escapedURLString:[self url]]];
-      if ((loadTarget == self) || [iconURL isEqual:myURL] || [[[iconURL host] stripWWW] isEqualToString:[[myURL host] stripWWW]]) {
-        NSImage *iconImage = [userInfo objectForKey:SiteIconLoadImageKey];
-        if (iconImage)
-          [self setIcon:iconImage];
-      }
-    }
-  }
-}
-
--(void) urlLoadCheck:(NSNotification *)note
-{
-  NSString *loadedURL = [note object];
-  if ([loadedURL hasSuffix:@"/"])
-    loadedURL = [loadedURL substringToIndex:([loadedURL length]-1)];
-  NSString *myURL = [self url];
-  if ([myURL hasSuffix:@"/"])
-    myURL = [myURL substringToIndex:([myURL length]-1)];
-  if ([loadedURL isEqualToString:myURL]) {
-    [self setLastVisit:[NSDate date]];
-    if ([[[note userInfo] objectForKey:URLLoadSuccessKey] unsignedIntValue] == kBookmarkOKStatus) 
-      [self setNumberOfVisits:([self numberOfVisits]+1)];
-  }
+  [self setLastVisit:[NSDate date]];
+  if (inSuccess)
+    [self setNumberOfVisits:(mNumberOfVisits + 1)];
 }
 
 // rather than overriding this, it might be better to have a stub for
@@ -258,14 +255,18 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 - (id)savedStatus
 {
-  return mStatus ? mStatus : [NSNumber numberWithUnsignedInt:kBookmarkOKStatus];
+  return [NSNumber numberWithUnsignedInt:mStatus];
 }
 
 - (id)savedNumberOfVisits
 {
-  return mNumberOfVisits ? mNumberOfVisits : [NSNumber numberWithUnsignedInt:0];
+  return [NSNumber numberWithUnsignedInt:mNumberOfVisits];
 }
 
+- (id)savedFaviconURL
+{
+  return mFaviconURL ? mFaviconURL : @"";
+}
 
 #pragma mark -
 
@@ -286,6 +287,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   [self setLastVisit:[aDict objectForKey:BMLastVisitKey]];
   [self setNumberOfVisits:[[aDict objectForKey:BMNumberVisitsKey] unsignedIntValue]];
   [self setStatus:[[aDict objectForKey:BMStatusKey] unsignedIntValue]];
+  [self setFaviconURL:[aDict objectForKey:BMLinkedFaviconURLKey]];
   
   //fire an update notification
   [self setAccumulateUpdateNotifications:NO];
@@ -374,24 +376,30 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 // for plist in native format
 -(NSDictionary *)writeNativeDictionary
 {
-  NSDictionary* dict;
-  if (![self isSeparator]) {
-    dict = [NSDictionary dictionaryWithObjectsAndKeys:
+  if ([self isSeparator])
+    return [NSDictionary dictionaryWithObject:[self savedStatus] forKey:BMStatusKey];
+
+  NSMutableDictionary* itemDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                 [self savedTitle], BMTitleKey,
-              [self savedKeyword], BMKeywordKey,
                   [self savedURL], BMURLKey,
-                 [self savedUUID], BMUUIDKey,
-      [self savedItemDescription], BMDescKey,
             [self savedLastVisit], BMLastVisitKey,
        [self savedNumberOfVisits], BMNumberVisitsKey,
                [self savedStatus], BMStatusKey,
                                    nil];
-  } else {
-    dict = [NSDictionary dictionaryWithObjectsAndKeys:
-               [self savedStatus], BMStatusKey,
-                                   nil];
-  }
-  return dict;
+
+  if ([[self itemDescription] length])
+    [itemDict setObject:[self itemDescription] forKey:BMDescKey]; 
+
+  if ([[self keyword] length])
+    [itemDict setObject:[self keyword] forKey:BMKeywordKey]; 
+
+  if ([mUUID length])    // don't call -UUID to avoid generating one
+    [itemDict setObject:mUUID forKey:BMUUIDKey]; 
+
+  if ([[self faviconURL] length])
+    [itemDict setObject:[self faviconURL] forKey:BMLinkedFaviconURLKey]; 
+
+  return itemDict;
 }
 
 -(NSDictionary *)writeSafariDictionary

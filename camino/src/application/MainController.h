@@ -74,8 +74,8 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet NSMenuItem*    mCloseTabMenuItem;
 
     IBOutlet NSMenu*        mGoMenu;
-    IBOutlet NSMenu*        mBookmarksMenu;
-    IBOutlet NSMenu*        mDockMenu;
+    IBOutlet BookmarkMenu*  mBookmarksMenu;
+    IBOutlet BookmarkMenu*  mDockMenu;
     IBOutlet NSMenu*        mServersSubmenu;
 
     IBOutlet NSMenu*        mTextEncodingsMenu;

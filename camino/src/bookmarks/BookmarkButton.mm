@@ -232,19 +232,17 @@
 //
 - (void)showFolderPopup:(NSEvent*)event
 {
-  NSMenu* popupMenu = [[NSMenu alloc] init];
+  BookmarkMenu* bmMenu = [[[BookmarkMenu alloc] initWithTitle:@"" bookmarkFolder:[self bookmarkItem]] autorelease];
   // dummy first item
-  [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
-  // make a temporary BookmarkMenu to build the menu
-  BookmarkMenu* bmMenu = [[BookmarkMenu alloc] initWithMenu:popupMenu firstItem:1 rootBookmarkFolder:(BookmarkFolder *)[self bookmarkItem]];
+  id dummyItem = [bmMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
+  [bmMenu setItemBeforeCustomItems:dummyItem];
+  
   // use a temporary NSPopUpButtonCell to display the menu.
   NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
-  [popupCell setMenu: popupMenu];
+  [popupCell setMenu: bmMenu];
   [popupCell trackMouse:event inRect:[self bounds] ofView:self untilMouseUp:YES];
   lastEventWasMenu = YES;
   [popupCell release];
-  [bmMenu release];
-  [popupMenu release];
 }
 
 -(void)mouseDown:(NSEvent*)aEvent

@@ -42,6 +42,7 @@
 extern NSString* const SiteIconLoadNotificationName;
 extern NSString* const SiteIconLoadImageKey;
 extern NSString* const SiteIconLoadURIKey;
+extern NSString* const SiteIconLoadUsedNetworkKey;
 extern NSString* const SiteIconLoadUserDataKey;
 
 class NeckoCacheHelper;
@@ -56,7 +57,8 @@ class NeckoCacheHelper;
 
 + (SiteIconProvider*)sharedFavoriteIconProvider;
 
-+ (NSString*)faviconLocationStringFromURI:(NSString*)inURI;
+// get the default location (http://www.foo.bar/favicon.ico) for the given URI
++ (NSString*)defaultFaviconLocationStringFromURI:(NSString*)inURI;
 
 // Start a favicon.ico load for the given URI, which can be any URI.
 // The caller will get a 'SiteIconLoadNotificationName' notification
@@ -96,5 +98,9 @@ class NeckoCacheHelper;
 // to register a specific image for a given uri, can all this method. This will
 // add an entry to the cache. It's used for "special" uris like "about:bookmarks".
 - (void)registerFaviconImage:(NSImage*)inImage forPageURI:(NSString*)inURI;
+
+// get the favicon url from the page url. if we've seen the page before, this
+// will attempt to look for any cached <link> image urls.
+- (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL;
 
 @end

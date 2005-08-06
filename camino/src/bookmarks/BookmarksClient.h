@@ -58,7 +58,9 @@ extern NSString* const BookmarkFolderChildIndexKey;             // key for added
 extern NSString* const BookmarkFolderDockMenuChangeNotificaton; // self is NEW dock menu OR nil
 
 // Defined in BookmarkItem.h
-extern NSString* const BookmarkItemChangedNotification;         // no userinfo, self is object
+extern NSString* const BookmarkItemChangedNotification;         // self is object, userInfo contains change flags
+  extern NSString* const BookmarkItemChangedFlagsKey;
+
 extern NSString* const BookmarkIconChangedNotification;         // no userinfo, self is object
 
 

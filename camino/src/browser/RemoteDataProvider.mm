@@ -60,11 +60,12 @@ NSString* const RemoteDataLoadRequestResultKey        = @"remoteload_result_key"
 class StreamLoaderContext : public nsISupports
 {
 public:
-  StreamLoaderContext(id<RemoteLoadListener> inLoadListener, id inUserData, id inTarget, const nsAString& inURI)
+  StreamLoaderContext(id<RemoteLoadListener> inLoadListener, id inUserData, id inTarget, const nsAString& inURI, PRBool inUsingNetwork)
   : mLoadListener(inLoadListener)
   , mTarget(inTarget)
   , mUserData(inUserData)
   , mURI(inURI)
+  , mUsingNetwork(inUsingNetwork)
   {
     [mLoadListener retain];
     [mTarget retain];
@@ -82,6 +83,7 @@ public:
 
   void                    LoadComplete(nsresult inLoadStatus, const void* inData, unsigned int inDataLength);  
   const nsAString&        GetURI() { return mURI; }
+  PRBool                  IsNetworkLoad() const { return mUsingNetwork; }
 
 protected:
 
@@ -91,6 +93,7 @@ protected:
   id                      mTarget;       // retained
   id                      mUserData;     // retained
   nsString                mURI;
+  PRBool                  mUsingNetwork;
   
 };
 
@@ -107,7 +110,11 @@ void StreamLoaderContext::LoadComplete(nsresult inLoadStatus, const void* inData
     if (NS_SUCCEEDED(inLoadStatus))
       loadData = [NSData dataWithBytes:inData length:inDataLength];
 
-    [mLoadListener doneRemoteLoad:[NSString stringWith_nsAString:mURI] forTarget:mTarget withUserData:mUserData data:loadData status:inLoadStatus];
+    [mLoadListener doneRemoteLoad:[NSString stringWith_nsAString:mURI] forTarget:mTarget
+                                                                    withUserData:mUserData
+                                                                            data:loadData
+                                                                          status:inLoadStatus
+                                                                    usingNetwork:mUsingNetwork];
   }
 }
 
@@ -198,7 +205,7 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
   if (!mLoadGroup)
     mLoadGroup = do_CreateInstance(NS_LOADGROUP_CONTRACTID);
     
-  nsCOMPtr<nsISupports> loaderContext = new StreamLoaderContext(loadListener, userData, target, inURI);
+  nsCOMPtr<nsISupports> loaderContext = new StreamLoaderContext(loadListener, userData, target, inURI, allowNetworking);
    
   nsLoadFlags loadFlags = (allowNetworking) ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_FROM_CACHE;
   loadFlags |= nsIRequest::LOAD_BACKGROUND;		// don't show progress or cookie dialogs
@@ -311,7 +318,7 @@ nsresult RemoteURILoadManager::CancelAllRequests()
 
 
 // our own load listener callback
-- (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status
+- (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status usingNetwork:(BOOL)usingNetwork
 {
   NSDictionary*	notificationData = [NSDictionary dictionaryWithObjectsAndKeys:
                               inURI, RemoteDataLoadRequestURIKey,

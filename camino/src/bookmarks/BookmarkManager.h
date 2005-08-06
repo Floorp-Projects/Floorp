@@ -63,6 +63,9 @@ extern NSString* const kBookmarkManagerStartedNotification;
   NSString*                       mPathToBookmarkFile;
   NSString*                       mMetadataPath;            // where we store spotlight cache (strong)
   
+  NSMutableDictionary*            mBookmarkURLMap;          // map of cleaned bookmark url to bookmark item set
+  NSMutableDictionary*            mBookmarkFaviconURLMap;   // map of cleaned bookmark favicon url to bookmark item set
+  
   // smart folders
   BookmarkFolder*                 mTop10Container;
   BookmarkFolder*                 mRendezvousContainer;

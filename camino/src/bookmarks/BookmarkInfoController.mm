@@ -308,8 +308,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 
 - (void)bookmarkRemoved:(NSNotification *)aNote
 {
-  NSDictionary *dict = [aNote userInfo];
-  BookmarkItem *item = [dict objectForKey:BookmarkFolderChildKey];
+  BookmarkItem *item = [[aNote userInfo] objectForKey:BookmarkFolderChildKey];
   if ((item == [self bookmark]) && ![item parent]) {
     [self setBookmark:nil];
     [[self window] close];

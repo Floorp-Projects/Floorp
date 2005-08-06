@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser <smfr@smfr.org>
  *   David Haas   <haasd@cae.wisc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -52,37 +52,26 @@
 const long kOpenInTabsTag = 0xBEEF;
 
 @interface BookmarkMenu(Private)
-- (NSMenu *)menu;
-- (BookmarkFolder *)rootBookmarkFolder;
-- (int)firstItemIndex;
-- (void)setFirstItemIndex:(int)anIndex;
-- (void)setRootBookmarkFolder:(BookmarkFolder *)anArray;
-- (NSMenu *)locateMenuForItem:(BookmarkItem *)anItem;
-- (void)constructMenu:(NSMenu *)menu forBookmarkFolder:(BookmarkFolder *)aFolder;
-- (void)flushMenu;
-- (void)addItem:(BookmarkItem *)anItem toMenu:(NSMenu *)aMenu atIndex:(int)aIndex;
-- (void)dockMenuChanged:(NSNotification *)note;
+
+- (void)setupBookmarkMenu;
+- (void)menuWillBeDisplayed;
+- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus;
+- (void)addLastItems;
+
 @end
 
-@implementation BookmarkMenu
-// init & dealloc
+#pragma mark -
 
-- (id)initWithMenu:(NSMenu *)aMenu firstItem:(int)anIndex rootBookmarkFolder:(BookmarkFolder *)aFolder
+@implementation BookmarkMenu
+
+- (id)initWithTitle:(NSString *)inTitle bookmarkFolder:(BookmarkFolder*)inFolder
 {
-  if ((self = [super init]))
+  if ((self = [super initWithTitle:inTitle]))
   {
-    mMenu = [aMenu retain];
-    mFirstItemIndex = anIndex;
-    [self setRootBookmarkFolder:aFolder];
-    [self constructMenu:mMenu forBookmarkFolder:aFolder];
-    // Generic notifications for Bookmark Client
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
-    [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
-    if (aFolder == [[BookmarkManager sharedBookmarkManager] dockMenuFolder])
-      [nc addObserver:self selector:@selector(dockMenuChanged:) name:BookmarkFolderDockMenuChangeNotificaton object:nil];
+    mFolder = [inFolder retain];
+    mDirty  = YES;
+    mAppendTabsItem = YES;
+    [self setupBookmarkMenu];
   }
   return self;
 }
@@ -90,237 +79,230 @@ const long kOpenInTabsTag = 0xBEEF;
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-  [mMenu release];
-  [mRootFolder release];
+  [mFolder release];
   [super dealloc];
 }
 
-// Getters & setters 
--(NSMenu *)menu
+- (void)awakeFromNib
 {
-  return mMenu;
+  // the main bookmarks menu, and dock menu are in the nib
+  mDirty = YES;
+  // default to not appending the tabs item for nib-based menus
+  mAppendTabsItem = NO;
+  [self setupBookmarkMenu];
 }
 
--(BookmarkFolder *)rootBookmarkFolder
+- (void)setupBookmarkMenu
 {
-  return mRootFolder;
+  [self setAutoenablesItems:NO];
+
+  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+  [nc addObserver:self selector:@selector(bookmarkAdded:)   name:BookmarkFolderAdditionNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkRemoved:) name:BookmarkFolderDeletionNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
+  [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
+
+  // register for menu display
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(menuWillDisplay:)
+                                               name:NSMenuWillDisplayNotification
+                                             object:nil];
 }
 
--(int)firstItemIndex
+
+- (void)setBookmarkFolder:(BookmarkFolder*)inFolder
 {
-  return mFirstItemIndex;
+  [mFolder autorelease];
+  mFolder = [inFolder retain];
 }
 
--(void)setRootBookmarkFolder:(BookmarkFolder *)aFolder
+- (BookmarkFolder*)bookmarkFolder
 {
-  [aFolder retain];
-  [mRootFolder release];
-  mRootFolder = aFolder;
+  return mFolder;
 }
 
--(void)setFirstItemIndex:(int)anIndex
+- (void)setAppendOpenInTabs:(BOOL)inAppend
 {
-  mFirstItemIndex = anIndex;
+  mAppendTabsItem = inAppend;
 }
 
-//
-// Utility methods
-//
-
-- (void)flushMenu
+- (void)setItemBeforeCustomItems:(NSMenuItem*)inItem
 {
-  int firstItemIndex = [self firstItemIndex];
-  [[self menu] removeItemsFromIndex:firstItemIndex];
+  mItemBeforeCustomItems = inItem;
 }
 
-//
-// -addOpenInTabsToMenu:forBookmarkFolder:
-//
-// Adds the "Open In Tabs" option to open all items in the folder |inFolder| as a tabgroup.
-// The main bookmark menu folder doesn't get this item, nor does any container that doesn't
-// have any children. We use |kOpenInTabsTag| to determine if we've already added this
-// to the menu so we don't do it twice.
-//
-- (void)addOpenInTabsToMenu:(NSMenu*)inMenu forBookmarkFolder:(BookmarkFolder*)inFolder
+- (NSMenuItem*)itemBeforeCustomItems
 {
-  // first make sure it's not already present before we add it
-  if ([inMenu indexOfItemWithTag:kOpenInTabsTag] != -1)
-    return;
-  
-  // add the "Open In Tabs" option to open all items in this subfolder (not the main bookmark
-  // folder) as a tabgroup.
-  unsigned long childCount = [inFolder count];
-  if (inFolder != [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] && childCount > 0) {
-    [inMenu addItem:[NSMenuItem separatorItem]];
-
-    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil) action:nil keyEquivalent:@""] autorelease];
-    [inMenu addItem:menuItem];
-    [menuItem setTarget:[NSApp delegate]];
-    [menuItem setTag:kOpenInTabsTag];
-    [menuItem setAction:@selector(openMenuBookmark:)];
-    [menuItem setRepresentedObject:inFolder];
-  }
-}
-
-//
-// -removeOpenInTabsFromMenu:forBookmarkFolder:
-//
-// Removes the "Open In Tabs" menu item and separator from |inMenu|. This is used when |inFolder|
-// drops to zero children.
-//
-- (void)removeOpenInTabsFromMenu:(NSMenu*)inMenu forBookmarkFolder:(BookmarkFolder*)inFolder
-{
-  // first check if there are any children remaining. If so, bail. Then check if the
-  // menu is there at all by checking for our special tag. If not, bail.
-  unsigned long childCount = [inFolder count];
-  if (childCount)
-    return;
-  long location = [inMenu indexOfItemWithTag:kOpenInTabsTag];
-  if (location == -1)
-    return;
-
-  // remove the menu item and the seaparator before it
-  [inMenu removeItemAtIndex:location--];
-  [inMenu removeItemAtIndex:location];
-}
-
-- (void)constructMenu:(NSMenu *)menu forBookmarkFolder:(BookmarkFolder *)aFolder
-{
-  unsigned long childCount = [aFolder count];
-  for (unsigned long i = 0; i < childCount; i++)
-    [self addItem:[aFolder objectAtIndex:i] toMenu:menu atIndex:i];
-
-  [self addOpenInTabsToMenu:menu forBookmarkFolder:aFolder];
-}
-
-- (void)addItem:(BookmarkItem *)anItem toMenu:(NSMenu *)aMenu atIndex:(int)aIndex
-{
-  NSMenuItem *menuItem = nil;
-  NSString *title = [[anItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
-  unsigned realIndex = aIndex;
-  if (aMenu == [self menu])
-    realIndex += [self firstItemIndex];
-
-  if ([anItem isKindOfClass:[Bookmark class]]) {
-    if (![(Bookmark *)anItem isSeparator]) { // normal bookmark
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
-      [menuItem setTarget:[NSApp delegate]];
-      [menuItem setAction:@selector(openMenuBookmark:)];
-      [menuItem setImage:[anItem icon]];
-    } else {//separator
-      menuItem = [NSMenuItem separatorItem];
-    }
-    [aMenu insertItem:menuItem atIndex:realIndex];
-  } else if ([anItem isKindOfClass:[BookmarkFolder class]]){
-    if (![(BookmarkFolder *)anItem isGroup]) { //normal folder
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
-      [aMenu insertItem:menuItem atIndex:realIndex];
-      [menuItem setImage: [anItem icon]];
-      NSMenu* subMenu = [[NSMenu alloc] initWithTitle:title];
-      [aMenu setSubmenu: subMenu forItem: menuItem];
-      [subMenu setAutoenablesItems: NO];
-      [self constructMenu:subMenu forBookmarkFolder:(BookmarkFolder *)anItem];
-      [subMenu release];
-    } else { //group
-      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
-      [aMenu insertItem:menuItem atIndex:realIndex];
-      [menuItem setTarget:[NSApp delegate]];
-      [menuItem setAction:@selector(openMenuBookmark:)];
-      [menuItem setImage:[anItem icon]];      
-    }
-  }
-  [menuItem setRepresentedObject:anItem];
-  if (![menuItem isSeparatorItem])
-    [menuItem release];
-}
-
-- (NSMenu *)locateMenuForItem:(BookmarkItem *)anItem
-{
-  if (![anItem isKindOfClass:[BookmarkItem class]])
-    return nil; //make sure we haven't gone to top of menu item doesn't live in.
-  if (anItem == [self rootBookmarkFolder])
-    return [self menu];
-  NSMenu* parentMenu = [self locateMenuForItem:[anItem parent]];
-  if (parentMenu) {
-    int index = [parentMenu indexOfItemWithRepresentedObject:anItem];
-    if (index != -1) {
-      if ([anItem isKindOfClass:[BookmarkFolder class]]) {
-        NSMenuItem* childMenu = [parentMenu itemAtIndex:index];
-          return [childMenu submenu];
-      } else if ([anItem isKindOfClass:[Bookmark class]]) 
-        return parentMenu;
-    }
-  }
-  return nil;
+  return mItemBeforeCustomItems;
 }
 
 #pragma mark -
-// For the BookmarksClient Protocol
 
-- (void)bookmarkAdded:(NSNotification *)note
+- (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  BookmarkFolder *aFolder = [note object];
-  NSMenu* menu = nil;
-  if (aFolder == [self rootBookmarkFolder])
-    menu = [self menu];
-  else if (![aFolder isGroup]) 
-    menu = [self locateMenuForItem:aFolder];
-  if (menu) {
-      NSDictionary *dict = [note userInfo];
-      [self addItem:[dict objectForKey:BookmarkFolderChildKey] toMenu:menu atIndex:[[dict objectForKey:BookmarkFolderChildIndexKey] unsignedIntValue]];
-      [self addOpenInTabsToMenu:menu forBookmarkFolder:aFolder];
+  if ([self isTargetOfWillDisplayNotification:[inNotification object]])
+  {
+    [self menuWillBeDisplayed];
   }
 }
 
-- (void)bookmarkRemoved:(NSNotification *)note
+- (void)menuWillBeDisplayed
 {
-  BookmarkFolder *aFolder = [note object];
-  NSMenu* menu = nil;
-  if (aFolder == [self rootBookmarkFolder])
-    menu = [self menu];
-  else if (![aFolder isGroup])
-    menu = [self locateMenuForItem:aFolder];
-  if (menu) {
-    BookmarkItem *anItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-    [menu removeItemAtIndex:[menu indexOfItemWithRepresentedObject:anItem]];
-    [self removeOpenInTabsFromMenu:menu forBookmarkFolder:aFolder];
-  }
+  [self rebuildMenuIncludingSubmenus:NO];
 }
 
-- (void)bookmarkChanged:(NSNotification *)note
+- (void)rebuildMenuIncludingSubmenus:(BOOL)includeSubmenus
 {
-  BookmarkItem* anItem = [note object];
-  NSMenu *menu = nil;
-  BOOL isSeparator = NO;
-  if ([[self rootBookmarkFolder] isSmartFolder]) 
-    menu = [self menu];
-  else if ([anItem isKindOfClass:[Bookmark class]]) {
-    menu = [self locateMenuForItem:anItem];
-    isSeparator = [(Bookmark *)anItem isSeparator];
+  if (mDirty)
+  {
+    // remove everything after the "before" item
+    [self removeItemsAfterItem:mItemBeforeCustomItems];
+
+    NSEnumerator* childEnum = [[mFolder childArray] objectEnumerator];
+    BookmarkItem* curItem;
+    while ((curItem = [childEnum nextObject]))
+    {
+      [self appendBookmarkItem:curItem buildingSubmenus:includeSubmenus];
+    }
+    
+    [self addLastItems];
+    mDirty = NO;
   }
-  else if ([anItem isKindOfClass:[BookmarkFolder class]]) 
-    menu = [self locateMenuForItem:[anItem parent]];
-  if (menu) {
-    int index = [menu indexOfItemWithRepresentedObject:anItem];
-    if (index != -1) {
-      if (!isSeparator) {
-        NSMenuItem *menuItem = [menu itemAtIndex:index];
-        [menuItem setTitle:[[anItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle]];
-        [menuItem setImage:[anItem icon]];
-      } else {
-        [menu removeItemAtIndex:index];
-        [menu insertItem:[NSMenuItem separatorItem] atIndex:index];
+  else if (includeSubmenus) // even if we're not dirty, submenus might be
+  {
+    int firstCustomItemIndex = [self indexOfItem:mItemBeforeCustomItems] + 1;
+    
+    for (int i = firstCustomItemIndex; i < [self numberOfItems]; i ++)
+    {
+      NSMenuItem* curItem = [self itemAtIndex:i];
+      if ([curItem hasSubmenu] && [[curItem submenu] isKindOfClass:[BookmarkMenu class]])
+      {
+        [(BookmarkMenu*)[curItem submenu] rebuildMenuIncludingSubmenus:includeSubmenus];
       }
     }
   }
 }
 
-- (void)dockMenuChanged:(NSNotification *)note
+- (void)appendBookmarkItem:(BookmarkItem *)inItem buildingSubmenus:(BOOL)buildSubmenus
 {
-  BookmarkFolder *aFolder = [note object];
-  [self flushMenu];
-  [self setRootBookmarkFolder:aFolder];
-  [self constructMenu:[self menu] forBookmarkFolder:aFolder];
+  NSString *title = [[inItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
+
+  NSMenuItem *menuItem = nil;
+  if ([inItem isKindOfClass:[Bookmark class]])
+  {
+    if (![(Bookmark *)inItem isSeparator])  // normal bookmark
+    {
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+      [menuItem setTarget:[NSApp delegate]];
+      [menuItem setAction:@selector(openMenuBookmark:)];
+      [menuItem setImage:[inItem icon]];
+    }
+    else    //separator
+    {
+      menuItem = [[NSMenuItem separatorItem] retain];
+    }
+  }
+  else if ([inItem isKindOfClass:[BookmarkFolder class]])
+  {
+    BookmarkFolder* curFolder = (BookmarkFolder*)inItem;
+    if (![curFolder isGroup])     // normal folder
+    {
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+      [menuItem setImage:[inItem icon]];
+
+      BookmarkMenu* subMenu = [[BookmarkMenu alloc] initWithTitle:title bookmarkFolder:curFolder];
+      // if building "deep", build submenu; otherwise it will get built lazily on display
+      if (buildSubmenus)
+        [subMenu rebuildMenuIncludingSubmenus:buildSubmenus];
+
+      [menuItem setSubmenu:subMenu];
+      [subMenu release];
+    }
+    else // group
+    { 
+      menuItem = [[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""];
+      [menuItem setTarget:[NSApp delegate]];
+      [menuItem setAction:@selector(openMenuBookmark:)];
+      [menuItem setImage:[inItem icon]];      
+    }
+  }
+
+  [menuItem setRepresentedObject:inItem];
+  [self addItem:menuItem];
+  [menuItem release];
+}
+
+
+- (void)addLastItems
+{
+  // add the "Open In Tabs" option to open all items in this subfolder
+  if (mAppendTabsItem && [[mFolder childURLs] count] > 0)
+  {
+    [self addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil)
+                                                       action:nil
+                                                keyEquivalent:@""] autorelease];
+    [menuItem setTarget:[NSApp delegate]];
+    [menuItem setTag:kOpenInTabsTag];
+    [menuItem setAction:@selector(openMenuBookmark:)];
+    [menuItem setRepresentedObject:mFolder];
+    [self addItem:menuItem];
+  }
+}
+
+#pragma mark -
+
+- (void)bookmarkAdded:(NSNotification *)inNotification
+{
+  BookmarkFolder* parentFolder = [inNotification object];
+  if (parentFolder == mFolder)
+    mDirty = YES;
+}
+
+- (void)bookmarkRemoved:(NSNotification *)inNotification
+{
+  BookmarkFolder* parentFolder = [inNotification object];
+  if (parentFolder == mFolder)
+    mDirty = YES;
+}
+
+- (void)bookmarkChanged:(NSNotification *)inNotification
+{
+  BookmarkItem* changedItem = [inNotification object];
+  if ([changedItem parent] != mFolder)
+    return;
+
+  // find the item
+  int itemIndex = [self indexOfItemWithRepresentedObject:changedItem];
+  if (itemIndex == -1)
+    return;
+
+  unsigned int changeFlags = kBookmarkItemEverythingChangedMask;
+  NSNumber* noteChangeFlags = [[inNotification userInfo] objectForKey:BookmarkItemChangedFlagsKey];
+
+  if (noteChangeFlags)
+    changeFlags = [noteChangeFlags unsignedIntValue];
+  else if ([[inNotification name] isEqualToString:BookmarkIconChangedNotification])
+    changeFlags = kBookmarkItemIconChangedMask;
+
+  // if it changed to or from a separator (or everything changed), just do a rebuild later
+  if (changeFlags & kBookmarkItemStatusChangedMask)
+  {
+    mDirty = YES;
+    return;
+  }
+
+  NSMenuItem* theMenuItem = [self itemAtIndex:itemIndex];
+  if (changeFlags & kBookmarkItemTitleChangedMask)
+  {
+    NSString *title = [[changedItem title] stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
+    [theMenuItem setTitle:title];
+  }
+
+  if (changeFlags & kBookmarkItemIconChangedMask)
+    [theMenuItem setImage:[changedItem icon]];
 }
 
 @end
+

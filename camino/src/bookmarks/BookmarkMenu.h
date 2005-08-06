@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser <smfr@smfr.org>
  *   David Haas   <haasd@cae.wisc.edu>
  * 
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,18 +37,35 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Appkit/Appkit.h>
+
 #import "BookmarksClient.h"
 
 @class BookmarkFolder;
 
-@interface BookmarkMenu : NSObject <BookmarksClient>
+// XXX share some of this code with HistoryMenu
+@interface BookmarkMenu : NSMenu<BookmarksClient>
 {
-  NSMenu*  mMenu;					// retained
-  BookmarkFolder* mRootFolder;
-  int mFirstItemIndex;
-  BOOL mIsDockMenu;
+  IBOutlet NSMenuItem*  mItemBeforeCustomItems;    // the item after which we add our items. Not retained.
+
+  BookmarkFolder*   mFolder;    // retained
+  BOOL              mDirty;
+  BOOL              mAppendTabsItem;
 }
 
-- (id)initWithMenu:(NSMenu *)aMenu firstItem:(int)anIndex rootBookmarkFolder:(BookmarkFolder *)aFolder;
+- (id)initWithTitle:(NSString *)inTitle bookmarkFolder:(BookmarkFolder*)inFolder;
+- (void)setBookmarkFolder:(BookmarkFolder*)inFolder;
+- (BookmarkFolder*)bookmarkFolder;
+
+// set whether to append "Open in Tabs" item (default is YES)
+- (void)setAppendOpenInTabs:(BOOL)inAppend;
+
+// specify the item after which bookmark items will be added
+// (they are assumed to go to the end of the menu). If nil,
+// the entire menu is full of bookmark items.
+- (void)setItemBeforeCustomItems:(NSMenuItem*)inItem;
+- (NSMenuItem*)itemBeforeCustomItems;
+
+// do an explicit rebuild
+- (void)rebuildMenuIncludingSubmenus:(BOOL)includeSubmenus;
 
 @end

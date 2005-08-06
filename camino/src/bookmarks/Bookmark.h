@@ -45,17 +45,21 @@
 
 @interface Bookmark : BookmarkItem
 {
-  NSString* mURL;
-  NSDate* mLastVisit;
-  NSNumber* mStatus;
-  NSNumber* mNumberOfVisits;
+  NSString*     mURL;
+  NSDate*       mLastVisit;
+  unsigned int  mStatus;
+  unsigned int  mNumberOfVisits;
+  NSString*     mFaviconURL;  // only used for <link> favicons
 }
 
 -(NSString *) url;
 -(NSDate *) lastVisit;
 -(unsigned) numberOfVisits;
--(unsigned)  status;
+-(unsigned) status;
 -(BOOL) isSeparator;
+
+-(NSString*) faviconURL;
+-(void) setFaviconURL:(NSString*)inURL; 
 
 -(void) setUrl:(NSString *)aURL; 
 -(void) setLastVisit:(NSDate *)aLastVisit;
@@ -63,10 +67,13 @@
 -(void) setIsSeparator:(BOOL)aSeparatorFlag;
 -(void) setNumberOfVisits:(unsigned)aNumber;
 
+-(void) notePageLoadedWithSuccess:(BOOL)inSuccess;
+
 // methods used for saving to files; are guaranteed never to return nil
 - (id)savedURL;
 - (id)savedLastVisit;
 - (id)savedStatus;
 - (id)savedNumberOfVisits;
+- (id)savedFaviconURL;
 
 @end

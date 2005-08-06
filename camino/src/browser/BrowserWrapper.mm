@@ -467,10 +467,12 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   mProgress = 1.0;
   mIsBusy = NO;
 
-  // send a little love to the bookmarks
+  // tell the bookmarks when a url loaded.
+  // note that this currently fires even when you go Back of Forward to the page,
+  // so it's not a great way to count bookmark visits.
   if (urlString && ![urlString isEqualToString:@"about:blank"])
   {
-    NSDictionary*   userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:0] forKey:URLLoadSuccessKey];
+    NSDictionary*   userInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:succeeded] forKey:URLLoadSuccessKey];
     NSNotification* note     = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
     [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
   }
@@ -498,7 +500,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 {
   BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
   
-  NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
+  NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
   if (requestOK && useSiteIcons && [faviconURI length] > 0)
   {
     SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];

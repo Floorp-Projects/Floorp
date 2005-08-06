@@ -47,13 +47,14 @@
 @class AddressBookManager;
 
 // KindaSmart? How smart? What does it do?
-@interface KindaSmartFolderManager : NSObject {
-  BookmarkFolder* mUpdatedBookmarkFolder;
-  BookmarkFolder* mTop10Folder;
-  BookmarkFolder* mAddressBookFolder;
-  BookmarkFolder* mRendezvousFolder;
-  AddressBookManager*  mAddressBookManager;
-  unsigned          mFewestVisits;
+@interface KindaSmartFolderManager : NSObject
+{
+  BookmarkFolder*       mUpdatedBookmarkFolder;
+  BookmarkFolder*       mTop10Folder;
+  BookmarkFolder*       mAddressBookFolder;
+  BookmarkFolder*       mRendezvousFolder;
+  AddressBookManager*   mAddressBookManager;
+  unsigned              mFewestVisits;
 }
 
 -(id)initWithBookmarkManager:(BookmarkManager *)manager;

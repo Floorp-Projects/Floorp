@@ -93,7 +93,7 @@
   NSResponder *first = ([self window] != nil) ? [[self window] firstResponder] : nil;
 
   while (first != nil && [first isKindOfClass:[NSView class]]) {
-    first = [first superview];
+    first = [(NSView*)first superview];
 
     if (first == self)
       return YES;

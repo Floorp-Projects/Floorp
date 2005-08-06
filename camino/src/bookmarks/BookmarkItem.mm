@@ -42,8 +42,10 @@
 #import "BookmarkItem.h"
 
 // Notifications
-NSString* const BookmarkItemChangedNotification = @"bi_cg";
-NSString* const BookmarkIconChangedNotification = @"bicon_cg";
+NSString* const BookmarkItemChangedNotification = @"bookmark_changed";
+  NSString* const BookmarkItemChangedFlagsKey = @"change_flags";
+
+NSString* const BookmarkIconChangedNotification = @"bookmark_icon_changed";
 
 // all our saving/loading keys
 // Safari & Camino plist keys
@@ -61,6 +63,7 @@ NSString* const BMUUIDKey = @"UUID";
 NSString* const BMKeywordKey = @"Keyword";
 NSString* const BMLastVisitKey = @"LastVisitedDate";
 NSString* const BMNumberVisitsKey = @"VisitCount";
+NSString* const BMLinkedFaviconURLKey = @"LinkedFaviconURL";
 
 // safari keys
 NSString* const SafariTypeKey = @"WebBookmarkType";
@@ -95,15 +98,12 @@ static BOOL gSuppressAllUpdates = NO;
 {
   if ((self = [super init]))
   {
-    mParent = nil;
-    mTitle = [[NSString alloc] init]; //retain count +1
-    mKeyword = [mTitle retain]; //retain count +2
-    mDescription = [mTitle retain]; //retain count +3! and just 1 allocation.
-    mUUID = nil;
-    // if we set the icon here, we will get a memory leak.  so don't.
-    // subclass will provide icon.
-    mIcon = nil;
-    mAccumulateItemChangeUpdates = NO;
+    mParent       = nil;
+    mTitle        = [[NSString alloc] init]; //retain count +1
+    mKeyword      = [mTitle retain]; //retain count +2
+    mDescription  = [mTitle retain]; //retain count +3! and just 1 allocation.
+    mUUID         = nil;
+    mIcon         = nil;
   }
   return self;
 }
@@ -111,14 +111,14 @@ static BOOL gSuppressAllUpdates = NO;
 -(id) copyWithZone:(NSZone *)zone
 {
   //descend from NSObject - so don't call super
-  id doppleganger = [[[self class] allocWithZone:zone] init];
-  [doppleganger setTitle:[self title]];
-  [doppleganger setItemDescription:[self itemDescription]];
-  [doppleganger setKeyword:[self keyword]];
-  [doppleganger setParent:[self parent]];
-  [doppleganger setIcon:[self icon]];
+  id bmItemCopy = [[[self class] allocWithZone:zone] init];
+  [bmItemCopy setTitle:[self title]];
+  [bmItemCopy setItemDescription:[self itemDescription]];
+  [bmItemCopy setKeyword:[self keyword]];
+  [bmItemCopy setParent:[self parent]];
+  [bmItemCopy setIcon:[self icon]];
   // do NOT copy the UUID.  It wouldn't be "U" then, would it?
-  return doppleganger;
+  return bmItemCopy;
 }
 
 -(void)dealloc
@@ -202,28 +202,40 @@ static BOOL gSuppressAllUpdates = NO;
 {
   if (!aTitle)
     return;
-  [aTitle retain];
-  [mTitle release];
-  mTitle = aTitle;
-  [self itemUpdatedNote];
+
+  if (![mTitle isEqualToString:aTitle])
+  {
+    [aTitle retain];
+    [mTitle release];
+    mTitle = aTitle;
+    [self itemUpdatedNote:kBookmarkItemTitleChangedMask];
+  }
 }
 
 -(void) setItemDescription:(NSString *)aDescription
 {
   if (!aDescription)
     return;
-  [aDescription retain];
-  [mDescription release];
-  mDescription = aDescription;
+
+  if (![mDescription isEqualToString:aDescription])
+  {
+    [aDescription retain];
+    [mDescription release];
+    mDescription = aDescription;
+  }
 }
 
 - (void) setKeyword:(NSString *)aKeyword
 {
   if (!aKeyword)
     return;
-  [aKeyword retain];
-  [mKeyword release];
-  mKeyword = aKeyword;
+
+  if (![mKeyword isEqualToString:aKeyword])
+  {
+    [aKeyword retain];
+    [mKeyword release];
+    mKeyword = aKeyword;
+  }
 }
 
 -(void) setIcon:(NSImage *)aIcon
@@ -292,18 +304,33 @@ static BOOL gSuppressAllUpdates = NO;
 // and calling with NO will restore itemUpdatedNote and then call it.
 -(void) setAccumulateUpdateNotifications:(BOOL)accumulateUpdates
 {
-  mAccumulateItemChangeUpdates = accumulateUpdates;
-  if (!mAccumulateItemChangeUpdates)
-    [self itemUpdatedNote];   //fire an update to cover the updates that weren't sent
+  if (accumulateUpdates)
+  {
+    mPendingChangeFlags |= kBookmarkItemAccumulateChangesMask;
+  }
+  else
+  {
+    mPendingChangeFlags &= ~kBookmarkItemAccumulateChangesMask;
+    [self itemUpdatedNote:mPendingChangeFlags];   //fire an update to cover the updates that weren't sent
+  }
 }
 
--(void) itemUpdatedNote
+-(void) itemUpdatedNote:(unsigned int)inChangeMask
 {
-  if (gSuppressAllUpdates || mAccumulateItemChangeUpdates) return;
+  if (gSuppressAllUpdates)
+    return;   // don't even accumulate the flags. caller is expected to update stuff manually
+    
+  // don't let 'em change the pending flag
+  mPendingChangeFlags |= (inChangeMask & kBookmarkItemEverythingChangedMask);
+
+  // if we're just accumulating, return
+  if (mPendingChangeFlags & kBookmarkItemAccumulateChangesMask)
+    return;
   
-  NSNotification *note = [NSNotification notificationWithName:BookmarkItemChangedNotification object:self userInfo:nil];
-  NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-  [nc postNotification:note];
+  NSDictionary*   flagsInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:mPendingChangeFlags] forKey:BookmarkItemChangedFlagsKey];
+  NSNotification* note = [NSNotification notificationWithName:BookmarkItemChangedNotification object:self userInfo:flagsInfo];
+  [[NSNotificationCenter defaultCenter] postNotification:note];
+  mPendingChangeFlags = 0;
 }
 
 // stub functions to avoid warning
@@ -311,6 +338,8 @@ static BOOL gSuppressAllUpdates = NO;
 -(void) refreshIcon
 {
 }
+
+#pragma mark -
 
 //Reading/writing to & from disk - all just stubs.
 

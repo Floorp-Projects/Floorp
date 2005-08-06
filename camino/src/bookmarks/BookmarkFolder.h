@@ -56,9 +56,12 @@ enum {
 @interface BookmarkFolder : BookmarkItem  //AE code: DBAE
 {
   NSMutableArray* mChildArray;
-  NSNumber* mSpecialFlag;
+  unsigned int    mSpecialFlag;
+  NSString*       mIdentifier;    // only non-nil for "special" collection folders
 }
 
+-(id) init;   // designated initializer
+-(id) initWithIdentifier:(NSString*)inIdentifier; // will get used for special folders
 -(NSMutableArray *) childArray;
 -(NSArray *) childURLs;
 -(NSArray *) allChildBookmarks;

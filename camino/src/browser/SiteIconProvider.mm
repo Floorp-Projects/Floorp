@@ -52,6 +52,7 @@
 NSString* const SiteIconLoadNotificationName = @"siteicon_load_notification";
 NSString* const SiteIconLoadImageKey         = @"siteicon_load_image";
 NSString* const SiteIconLoadURIKey           = @"siteicon_load_uri";
+NSString* const SiteIconLoadUsedNetworkKey   = @"siteicon_network_load";    // NSNumber with bool
 NSString* const SiteIconLoadUserDataKey      = @"siteicon_load_user_data";
 
 static const char* const kMissingFaviconMetadataKey     = "missing_favicon";
@@ -290,8 +291,6 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 
 @interface SiteIconProvider(Private)
 
-- (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL;
-
 - (void)addToMissedIconsCache:(NSString*)inURI withExpirationSeconds:(unsigned int)inExpSeconds;
 - (BOOL)inMissedIconsCache:(NSString*)inURI;
 
@@ -347,7 +346,7 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   }
   
   if (!faviconURL)
-    faviconURL = [SiteIconProvider faviconLocationStringFromURI:inPageURL];
+    faviconURL = [SiteIconProvider defaultFaviconLocationStringFromURI:inPageURL];
     
   return faviconURL;
 }
@@ -379,7 +378,7 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 #define SITE_ICON_EXPIRATION_SECONDS (60 * 60 * 24 * 7)    // 1 week
 
 // this is called on the main thread
-- (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status
+- (void)doneRemoteLoad:(NSString*)inURI forTarget:(id)target withUserData:(id)userData data:(NSData*)data status:(nsresult)status usingNetwork:(BOOL)usingNetwork
 {
 #ifdef VERBOSE_SITE_ICON_LOADING
   NSLog(@"Site icon load %@ done, status 0x%08X", inURI, status);
@@ -449,9 +448,12 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
     // about failed requests
     NSDictionary*	notificationData = [NSDictionary dictionaryWithObjectsAndKeys:
                                          inURI, SiteIconLoadURIKey,
-                                  faviconImage, SiteIconLoadImageKey,	// may be nil
                                     requestURL, SiteIconLoadUserDataKey,
-                                           nil];
+        [NSNumber numberWithBool:usingNetwork], SiteIconLoadUsedNetworkKey,
+                                  faviconImage, SiteIconLoadImageKey,	// may be nil (so put last!)
+                                                nil];
+
+    // NSLog(@"siteIconLoad notification, info %@", notificationData);
     NSNotification *note = [NSNotification notificationWithName: SiteIconLoadNotificationName object:requestor userInfo:notificationData];
     [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
   }
@@ -471,7 +473,7 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   NSString* iconURL = [self favoriteIconURLFromPageURL:inPageURI];
   NSImage* siteIcon = [mIconDictionary objectForKey:iconURL];
 #ifdef VERBOSE_SITE_ICON_LOADING
-  NSLog(@"got icon %@ for url %@", siteIcon, iconURL);
+  NSLog(@"got icon %p for url %@", siteIcon, iconURL);
 #endif
   return siteIcon;
 }
@@ -489,7 +491,6 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
                     allowNetwork:(BOOL)inAllowNetwork
                  notifyingClient:(id)inClient
 {
-
   NSString* iconTargetURL = nil;
   
   if (inIconURI)
@@ -567,7 +568,7 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 }
 
 
-+ (NSString*)faviconLocationStringFromURI:(NSString*)inURI
++ (NSString*)defaultFaviconLocationStringFromURI:(NSString*)inURI
 {
   // about: urls are special
   if ([inURI hasPrefix:@"about:"])

@@ -105,11 +105,13 @@ const int kReuseWindowOnAE = 2;
 - (NSMenu*)bookmarksMenu;
 - (BOOL)bookmarksItemsEnabled;
 - (void)adjustBookmarkMenuItems;
+- (void)updateDockMenuBookmarkFolder;
 - (void)doBookmarksMenuEnabling;
 - (void)adjustTextEncodingMenu;
 
 - (void)windowLayeringDidChange:(NSNotification*)inNotification;
 - (void)bookmarkLoadingCompleted:(NSNotification*)inNotification;
+- (void)dockMenuBookmarkFolderChanged:(NSNotification*)inNotification;
 - (void)menuWillDisplay:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
@@ -282,6 +284,9 @@ const int kReuseWindowOnAE = 2;
   
   // listen for bookmark loading completion
   [notificationCenter addObserver:self selector:@selector(bookmarkLoadingCompleted:) name:kBookmarkManagerStartedNotification object:nil];
+  // listen for changes to the dock menu
+  [notificationCenter addObserver:self selector:@selector(dockMenuBookmarkFolderChanged:) name:BookmarkFolderDockMenuChangeNotificaton object:nil];
+
   // and fire up bookmarks (they will be loaded on a thread)
   [[BookmarkManager sharedBookmarkManager] loadBookmarksLoadingSynchronously:NO];
 
@@ -362,6 +367,8 @@ const int kReuseWindowOnAE = 2;
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
 {
+  // the dock menu doesn't get the usual show notifications, so we rebuild it explicitly here
+  [mDockMenu rebuildMenuIncludingSubmenus:YES];
   return mDockMenu;
 }
 
@@ -414,20 +421,21 @@ const int kReuseWindowOnAE = 2;
 //
 - (void)bookmarkLoadingCompleted:(NSNotification*)inNotification
 {
-  [mBookmarksMenu setAutoenablesItems:NO];
-
-  // menubar bookmarks
-  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-  mMenuBookmarks = [[BookmarkMenu alloc] initWithMenu:mBookmarksMenu
-                                            firstItem:firstBookmarkItem
-                                   rootBookmarkFolder:[[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder]];
+  // the bookmarks menus get built lazily (by BookmarkMenu)
+  [mBookmarksMenu setBookmarkFolder:[[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder]];
 
   // dock bookmarks
-  [mDockMenu setAutoenablesItems:NO];
-  firstBookmarkItem = [mDockMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
-  mDockBookmarks = [[BookmarkMenu alloc] initWithMenu:mDockMenu
-                                            firstItem:firstBookmarkItem
-                                   rootBookmarkFolder:[[BookmarkManager sharedBookmarkManager] dockMenuFolder]];
+  [self updateDockMenuBookmarkFolder];
+}
+
+- (void)dockMenuBookmarkFolderChanged:(NSNotification*)inNotification
+{
+  [self updateDockMenuBookmarkFolder];
+}
+
+- (void)updateDockMenuBookmarkFolder
+{
+  [mDockMenu setBookmarkFolder:[[BookmarkManager sharedBookmarkManager] dockMenuFolder]];
 }
 
 // a central place for bookmark opening logic.

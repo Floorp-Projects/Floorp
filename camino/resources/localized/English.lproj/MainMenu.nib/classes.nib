@@ -1,6 +1,13 @@
 {
     IBClasses = (
         {
+            CLASS = BookmarkMenu; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mItemBeforeCustomItems = NSMenuItem; }; 
+            SUPERCLASS = NSMenu; 
+        }, 
+        {CLASS = BookmarkMenuBuilder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
             CLASS = BrowserToolbarController; 
             LANGUAGE = ObjC; 
             SUPERCLASS = ToolbarController; 
@@ -81,13 +88,13 @@
                 mAddBookmarkMenuItem = NSMenuItem; 
                 mApplication = NSApplication; 
                 mBookmarksHelperMenu = NSMenu; 
-                mBookmarksMenu = NSMenu; 
+                mBookmarksMenu = BookmarkMenu; 
                 mBookmarksToolbarMenuItem = NSMenuItem; 
                 mCloseTabMenuItem = NSMenuItem; 
                 mCloseWindowMenuItem = NSMenuItem; 
                 mCreateBookmarksFolderMenuItem = NSMenuItem; 
                 mCreateBookmarksSeparatorMenuItem = NSMenuItem; 
-                mDockMenu = NSMenu; 
+                mDockMenu = BookmarkMenu; 
                 mExportPanelView = NSView; 
                 mFilterView = NSView; 
                 mGoMenu = NSMenu; 
