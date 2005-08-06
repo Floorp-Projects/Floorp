@@ -510,8 +510,10 @@ UpdateCheckListener.prototype = {
    * See nsIExtensionManager.idl
    */
   onUpdateStarted: function() {
-    LOG("Update Started");
+    gExtensionsView.setAttribute("update-check", "true");
     var command = document.getElementById("cmd_update");
+    command.setAttribute("disabled", "true");
+    command = document.getElementById("cmd_update_all");
     command.setAttribute("disabled", "true");
   },
   
@@ -519,13 +521,19 @@ UpdateCheckListener.prototype = {
    * See nsIExtensionManager.idl
    */
   onUpdateEnded: function() {
-    LOG("Update Ended");
+    gExtensionsView.removeAttribute("update-check");
     var command = document.getElementById("cmd_update");
     gExtensionsViewController.updateCommand(command);
+    command = document.getElementById("cmd_update_all");
+    command.removeAttribute("disabled");
     
     // Show message to user listing extensions for which updates are available
     // and prompt to install now.
-    if (this._addons.length > 1) {
+    if (this._addons.length == 1) {
+      var element = document.getElementById(PREFIX_ITEM_URI + this._addons[0].id);
+      gExtensionsView.scrollBoxObject.scrollToElement(element);
+    }
+    else if (this._addons.length > 1) {
       var strings = document.getElementById("extensionsStrings");
       var brandName = document.getElementById("brandStrings").getString("brandShortName");
       var params = {
@@ -560,7 +568,6 @@ UpdateCheckListener.prototype = {
    * See nsIExtensionManager.idl
    */
   onAddonUpdateStarted: function(addon) {
-    LOG("Addon Update Started: " + addon.id);
     var element = document.getElementById(PREFIX_ITEM_URI + addon.id);
     element.setAttribute("loading", "true");
   },
@@ -569,7 +576,6 @@ UpdateCheckListener.prototype = {
    * See nsIExtensionManager.idl
    */
   onAddonUpdateEnded: function(addon, status) {
-    LOG("Addon Update Ended: " + addon.id + ", status: " + status);
     var element = document.getElementById(PREFIX_ITEM_URI + addon.id);
     element.removeAttribute("loading");
     const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
@@ -891,11 +897,12 @@ var gExtensionsViewController = {
              selectedItem.getAttribute("locked") != "true" &&
              canWriteToLocation(selectedItem);
     case "cmd_update":
-      return !selectedItem && gExtensionsView.children.length > 0 ||
-             (selectedItem &&
-              selectedItem.getAttribute("updateable") != "false");
+      return selectedItem &&
+             selectedItem.getAttribute("updateable") != "false" &&
+             !gExtensionsView.hasAttribute("update-check");
     case "cmd_update_all":
-      return gExtensionsView.children.length > 0;
+      return gExtensionsView.children.length > 0 &&
+             !gExtensionsView.hasAttribute("update-check");
     case "cmd_reallyEnable":
     // controls whether to show Enable or Disable in extensions' context menu
       return selectedItem && 
