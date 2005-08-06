@@ -57,6 +57,11 @@ extern HMACContext *
 HMAC_Create(const SECHashObject *hashObj, const unsigned char *secret, 
 	    unsigned int secret_len, PRBool isFIPS);
 
+/* like HMAC_Create, except caller allocates HMACContext. */
+SECStatus
+HMAC_Init(HMACContext *cx, const SECHashObject *hash_obj, 
+	  const unsigned char *secret, unsigned int secret_len, PRBool isFIPS);
+
 /* reset HMAC for a fresh round */
 extern void
 HMAC_Begin(HMACContext *cx);
