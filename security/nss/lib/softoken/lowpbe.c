@@ -587,7 +587,7 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
 	iv->len = pbe_param->ivLen;
     }
 
-    hashObj = &SECRawHashObjects[pbe_param->hashType];
+    hashObj = SEC_GetRawHashObject(pbe_param->hashType);
     switch (pbe_param->pbeType) {
     case NSSPKCS5_PBKDF1:
 	hash = nsspkcs5_PBKDF1Extended(hashObj,pbe_param,pwitem,faulty3DES);
