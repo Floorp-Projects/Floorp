@@ -209,9 +209,11 @@ ifeq ($(CPU_ARCH),sparc)
     endif # NS_USE_GCC
     ifdef USE_PURE_32
 	# this builds for Sparc v8 pure 32-bit architecture
+	ASFILES = mpv_sparcv8x.s
 	DEFINES += -DMP_USE_LONG_LONG_MULTIPLY -DMP_USE_UINT_DIGIT 
 	DEFINES += -DMP_NO_MP_WORD
 	DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
+	DEFINES += -DMP_ASSEMBLY_MULTIPLY
     else
 	ifdef USE_64
 	    # this builds for Sparc v9a pure 64-bit architecture
