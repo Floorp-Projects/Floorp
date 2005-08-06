@@ -37,7 +37,7 @@
 #include "nspr.h"
 #include "sechash.h"
 #include "blapi.h"	/* below the line */
-
+#include "secerr.h"
 
 static void *
 null_hash_new_context(void)
@@ -136,3 +136,12 @@ const SECHashObject SECRawHashObjects[] = {
   },
 };
 
+const SECHashObject *
+SEC_GetRawHashObject(HASH_HashType hashType)
+{
+    if (hashType < HASH_AlgNULL || hashType >= HASH_AlgTOTAL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
+    return &SECRawHashObjects[hashType];
+}

@@ -59,22 +59,22 @@ HMAC_Destroy(HMACContext *cx)
     PORT_ZFree(cx, sizeof(HMACContext));
 }
 
-HMACContext *
-HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret, 
-            unsigned int secret_len, PRBool isFIPS)
+SECStatus
+HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj, 
+	   const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
 {
-    HMACContext *cx;
     unsigned int i;
     unsigned char hashed_secret[HASH_LENGTH_MAX];
 
     /* required by FIPS 198 Section 3 */
     if (isFIPS && secret_len < hash_obj->length/2) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return NULL;
+	return SECFailure;
     }
-    cx = (HMACContext*)PORT_ZAlloc(sizeof(HMACContext));
-    if (cx == NULL)
-	return NULL;
+    if (cx == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     cx->hashobj = hash_obj;
 
     cx->hash = cx->hashobj->create();
@@ -87,8 +87,10 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
 	PORT_Assert(cx->hashobj->length <= sizeof hashed_secret);
 	cx->hashobj->end(   cx->hash, hashed_secret, &secret_len, 
 	                 sizeof hashed_secret);
-	if (secret_len != cx->hashobj->length)
+	if (secret_len != cx->hashobj->length) {
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	    goto loser;
+	}
 	secret = (const unsigned char *)&hashed_secret[0];
     }
 
@@ -101,12 +103,29 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
 	cx->opad[i] ^= secret[i];
     }
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
-    return cx;
+    return SECSuccess;
 
 loser:
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
-    HMAC_Destroy(cx);
-    return NULL;
+    if (cx->hash != NULL)
+	cx->hashobj->destroy(cx->hash, PR_TRUE);
+    return SECFailure;
+}
+
+HMACContext *
+HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret, 
+            unsigned int secret_len, PRBool isFIPS)
+{
+    SECStatus rv;
+    HMACContext * cx = PORT_ZNew(HMACContext);
+    if (cx == NULL)
+	return NULL;
+    rv = HMAC_Init(cx, hash_obj, secret, secret_len, isFIPS);
+    if (rv != SECSuccess) {
+	PORT_ZFree(cx, sizeof(HMACContext));
+	cx = NULL;
+    }
+    return cx;
 }
 
 void
