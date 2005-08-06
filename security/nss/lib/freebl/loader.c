@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.19 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: loader.c,v 1.20 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1489,3 +1489,81 @@ SHA512_Clone(SHA512Context *dest, SHA512Context *src)
       return;
   (vector->p_SHA512_Clone)(dest, src);
 }
+
+SECStatus 
+TLS_PRF(const SECItem *secret, const char *label, 
+		     SECItem *seed, SECItem *result, PRBool isFIPS)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_TLS_PRF)(secret, label, seed, result, isFIPS);
+}
+
+const SECHashObject *
+SEC_GetRawHashObject(HASH_HashType hashType)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_SEC_GetRawHashObject)(hashType);
+}
+
+
+void
+HMAC_Destroy(HMACContext *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_HMAC_Destroy)(cx);
+}
+
+HMACContext *
+HMAC_Create(const SECHashObject *hashObj, const unsigned char *secret, 
+	    unsigned int secret_len, PRBool isFIPS)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_HMAC_Create)(hashObj, secret, secret_len, isFIPS);
+}
+
+SECStatus
+HMAC_Init(HMACContext *cx, const SECHashObject *hashObj, 
+	  const unsigned char *secret, unsigned int secret_len, PRBool isFIPS)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_HMAC_Init)(cx, hashObj, secret, secret_len, isFIPS);
+}
+
+void
+HMAC_Begin(HMACContext *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_HMAC_Begin)(cx);
+}
+
+void 
+HMAC_Update(HMACContext *cx, const unsigned char *data, unsigned int data_len)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_HMAC_Update)(cx, data, data_len);
+}
+
+SECStatus
+HMAC_Finish(HMACContext *cx, unsigned char *result, unsigned int *result_len,
+	    unsigned int max_result_len)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_HMAC_Finish)(cx, result, result_len, max_result_len);
+}
+
+HMACContext *
+HMAC_Clone(HMACContext *cx)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_HMAC_Clone)(cx);
+}
+

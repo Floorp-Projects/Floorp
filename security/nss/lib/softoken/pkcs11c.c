@@ -1266,7 +1266,7 @@ sftk_doHMACInit(SFTKSessionContext *context,HASH_HashType hash,
     SFTKAttribute *keyval;
     HMACContext *HMACcontext;
     CK_ULONG *intpointer;
-    const SECHashObject *hashObj = &SECRawHashObjects[hash];
+    const SECHashObject *hashObj = SEC_GetRawHashObject(hash);
     PRBool isFIPS = (key->slot->slotID == FIPS_SLOT_ID);
 
     /* required by FIPS 198 Section 4 */
@@ -4705,7 +4705,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	    PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
 		ssl3_master->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
 
-	    status = sftk_PRF(&pms, "master secret", &crsr, &master, isFIPS);
+	    status = TLS_PRF(&pms, "master secret", &crsr, &master, isFIPS);
 	    if (status != SECSuccess) {
 	    	crv = CKR_FUNCTION_FAILED;
 		break;
@@ -4836,7 +4836,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		        ssl3_keys->RandomInfo.pClientRandom, 
 			SSL3_RANDOM_LENGTH);
 
-	    status = sftk_PRF(&master, "key expansion", &srcr, &keyblk,
+	    status = TLS_PRF(&master, "key expansion", &srcr, &keyblk,
 			      isFIPS);
 	    if (status != SECSuccess) {
 		goto key_and_mac_derive_fail;
@@ -5043,7 +5043,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		i          += effKeySize;
 		keyblk.data = key_block2;
 		keyblk.len  = sizeof key_block2;
-		status = sftk_PRF(&secret, "client write key", &crsr, &keyblk,
+		status = TLS_PRF(&secret, "client write key", &crsr, &keyblk,
 				  isFIPS);
 		if (status != SECSuccess) {
 		    goto key_and_mac_derive_fail;
@@ -5065,7 +5065,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		i          += effKeySize;
 		keyblk.data = key_block2;
 		keyblk.len  = sizeof key_block2;
-		status = sftk_PRF(&secret, "server write key", &crsr, &keyblk,
+		status = TLS_PRF(&secret, "server write key", &crsr, &keyblk,
 				  isFIPS);
 		if (status != SECSuccess) {
 		    goto key_and_mac_derive_fail;
@@ -5087,7 +5087,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		    secret.len  = 0;
 		    keyblk.data = &key_block[i];
 		    keyblk.len  = 2 * IVSize;
-		    status = sftk_PRF(&secret, "IV block", &crsr, &keyblk,
+		    status = TLS_PRF(&secret, "IV block", &crsr, &keyblk,
 				      isFIPS);
 		    if (status != SECSuccess) {
 			goto key_and_mac_derive_fail;

@@ -37,13 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.19 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: blapi.h,v 1.20 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
 
 #include "blapit.h"
-
+#include "hasht.h"
+#include "alghmac.h"
 
 SEC_BEGIN_PROTOS
 
@@ -939,6 +940,14 @@ extern SECStatus SHA384_Flatten(SHA384Context *cx,unsigned char *space);
 extern SHA384Context * SHA384_Resurrect(unsigned char *space, void *arg);
 extern void SHA384_Clone(SHA384Context *dest, SHA384Context *src);
 
+/****************************************
+ * implement TLS Pseudo Random Function (PRF)
+ */
+
+extern SECStatus
+TLS_PRF(const SECItem *secret, const char *label, SECItem *seed, 
+         SECItem *result, PRBool isFIPS);
+
 /******************************************/
 /*
 ** Pseudo Random Number Generation.  FIPS compliance desirable.
@@ -1043,6 +1052,9 @@ PRBool BLAPI_SHVerify(const char *name, PRFuncPtr addr);
  *  Verify Are Own Shared library signature                               *
  **************************************************************************/
 PRBool BLAPI_VerifySelf(const char *name);
+
+/*********************************************************************/
+extern const SECHashObject * SEC_GetRawHashObject(HASH_HashType hashType);
 
 SEC_END_PROTOS
 
