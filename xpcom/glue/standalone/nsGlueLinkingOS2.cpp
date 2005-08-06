@@ -128,7 +128,7 @@ XPCOMGlueLoad(const char *xpcomFile)
 
     GetFrozenFunctionsFunc sym;
 
-    ulrc = DosQueryProcAddr(h, 0, "NS_GetFrozenFunctions", &sym);
+    ulrc = DosQueryProcAddr(h, 0, "NS_GetFrozenFunctions", (PFN*)&sym);
 
     if (ulrc != NO_ERROR)
         XPCOMGlueUnload();
