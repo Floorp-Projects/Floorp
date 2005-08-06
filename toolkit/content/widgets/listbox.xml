@@ -589,13 +589,7 @@
       <handler event="focus">
         <![CDATA[
           if (this.currentIndex == -1 && this.getRowCount() > 0) {
-            this.currentItem = getItemAtIndex(0);  // focus first item
-            if (this.selType != 'multiple') {
-              // In single selection trees the selection should be the same
-              // as the focus
-              this.timedSelect(currentItem, this._selectDelay);
-            }
-            this.ensureIndexIsVisible(0);
+            this.currentIndex = this.getIndexOfFirstVisibleRow();
           }
         ]]>
       </handler>

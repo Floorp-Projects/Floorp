@@ -263,11 +263,7 @@
         <![CDATA[
           this.treeBoxObject.focused = true;
           if (this.currentIndex == -1 && this.view.rowCount > 0) {
-            this.currentIndex = 0;
-            if (this.view.selection.single) {
-              this.view.selection.select(0);
-            }
-            this.treeBoxObject.ensureRowIsVisible(0);
+            this.currentIndex = this.treeBoxObject.getFirstVisibleRow();
           }
         ]]>
       </handler>
@@ -503,9 +499,9 @@
       <handler event="keypress">
         <![CDATA[
          var c = this.currentIndex;
-         if (event.charCode == ' '.charCodeAt(0) && !this.view.selection.single) {
+         if (event.charCode == ' '.charCodeAt(0)) {
            if (!this.view.selection.isSelected(c) ||
-               this._isAccelPressed(event)) {
+               (!this.view.selection.single && this._isAccelPressed(event))) {
              this.view.selection.toggleSelect(c);
            }
          }
