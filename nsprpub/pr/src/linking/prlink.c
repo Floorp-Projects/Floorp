@@ -50,8 +50,6 @@
 #include <CFString.h>
 #include <CFDictionary.h>
 #include <CFData.h>
-
-#define PStrFromCStr(src, dst) c2pstrcpy(dst, src)
 #endif
 
 #ifdef XP_UNIX
@@ -1165,7 +1163,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         
         PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Looking up symbol: %s", name + 1));
         
-        PStrFromCStr(name + 1, pName);
+        c2pstrcpy(pName, name + 1);
         
         f = (FindSymbol(lm->connection, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
         
