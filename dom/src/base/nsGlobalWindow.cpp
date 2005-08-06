@@ -6451,8 +6451,12 @@ WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
 
   nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(focusWinInternal);
 
+  // The outer window is used for focus purposes, so make sure that's what
+  // we're looking for.
+  nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
+
   while (focusedWindow) {
-    if (focusedWindow == aWindow) {
+    if (focusedWindow == targetWindow) {
       fc->GetFocusedWindow(getter_AddRefs(mFocusedWindow));
       fc->GetFocusedElement(getter_AddRefs(mFocusedElement));
       break;
