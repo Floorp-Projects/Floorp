@@ -1,36 +1,39 @@
-!/*
-! * The contents of this file are subject to the Mozilla Public
-! * License Version 1.1 (the "License"); you may not use this file
-! * except in compliance with the License. You may obtain a copy of
-! * the License at http://www.mozilla.org/MPL/
-! * 
-! * Software distributed under the License is distributed on an "AS
-! * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-! * implied. See the License for the specific language governing
-! * rights and limitations under the License.
-! * 
-! * The Original Code is a SPARC/VIS optimized multiply and add function
-! *
-! * The Initial Developer of the Original Code is Sun Microsystems Inc.
-! * Portions created by Sun Microsystems Inc. are 
-! * Copyright (C) 1999-2000 Sun Microsystems Inc.  All Rights Reserved.
-! * 
-! * Contributor(s):
-! * 
-! * Alternatively, the contents of this file may be used under the
-! * terms of the GNU General Public License Version 2 or later (the
-! * "GPL"), in which case the provisions of the GPL are applicable 
-! * instead of those above.   If you wish to allow use of your 
-! * version of this file only under the terms of the GPL and not to
-! * allow others to use your version of this file under the MPL,
-! * indicate your decision by deleting the provisions above and
-! * replace them with the notice and other provisions required by
-! * the GPL.  If you do not delete the provisions above, a recipient
-! * may use your version of this file under either the MPL or the
-! * GPL.
-! *  $Id: mpv_sparcv8.s,v 1.3 2002/02/08 00:43:12 sonja.mirtitsch%sun.com Exp $
-! */
-
+! Inner multiply loop functions for hybrid 32/64-bit Sparc v8plus CPUs.
+! ***** BEGIN LICENSE BLOCK *****
+! Version: MPL 1.1/GPL 2.0/LGPL 2.1
+! 
+! The contents of this file are subject to the Mozilla Public License Version 
+! 1.1 (the "License"); you may not use this file except in compliance with 
+! the License. You may obtain a copy of the License at 
+! http://www.mozilla.org/MPL/
+! 
+! Software distributed under the License is distributed on an "AS IS" basis,
+! WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+! for the specific language governing rights and limitations under the
+! License.
+!
+! The Original Code is a SPARC v8plus+VIS optimized multiply and add function
+! 
+! The Initial Developer of the Original Code is Sun Microsystems Inc.
+! Portions created by Sun Microsystems Inc. are 
+! Copyright (C) 2000-2005 Sun Microsystems Inc.  All Rights Reserved.
+! 
+! Contributor(s):
+! 
+! Alternatively, the contents of this file may be used under the terms of
+! either the GNU General Public License Version 2 or later (the "GPL"), or
+! the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+! in which case the provisions of the GPL or the LGPL are applicable instead
+! of those above. If you wish to allow use of your version of this file only
+! under the terms of either the GPL or the LGPL, and not to allow others to
+! use your version of this file under the terms of the MPL, indicate your
+! decision by deleting the provisions above and replace them with the notice
+! and other provisions required by the GPL or the LGPL. If you do not delete
+! the provisions above, a recipient may use your version of this file under
+! the terms of any one of the MPL, the GPL or the LGPL.
+! 
+! ***** END LICENSE BLOCK *****
+! $Id: mpv_sparcv8.s,v 1.4 2005/08/06 11:06:55 nelsonb%netscape.com Exp $
 
 	.section	".text",#alloc,#execinstr
 /* 000000	   3 ( 0  0) */		.file	"mpv_sparc.c"
@@ -40,7 +43,7 @@
 !
 ! OFFSET    SOURCE LINE	LABEL	INSTRUCTION	(ISSUE TIME)	(COMPLETION TIME)
 
-                                   .L_const_seg_900000106:		/* frequency 1.0 confidence 0.0 */
+        .L_const_seg_900000106:		/* frequency 1.0 confidence 0.0 */
 /* 000000	  19 ( 0  0) */		.word	1127219200,0
 /* 0x0008	  20 ( 0  0) */		.word	1105199103,-4194304
 /* 0x0010	  21 ( 0  0) */		.align	16
@@ -50,8 +53,8 @@
 ! ENTRY mul_add
 !
 
-                                   	.global mul_add
-                                   mul_add:		/* frequency 1.0 confidence 0.0 */
+        .global mul_add
+        mul_add:		/* frequency 1.0 confidence 0.0 */
 /* 0x0010	  29 ( 0  1) */		sethi	%hi(0x1800),%g1
 /* 0x0014	  30 ( 0  1) */		sethi	%hi(mask_cnst),%g2
 /* 0x0018	  31 ( 1  2) */		xor	%g1,-984,%g1
@@ -62,7 +65,7 @@
 ! ENTRY .L900000154
 !
 
-                                   .L900000154:		/* frequency 1.0 confidence 0.0 */
+        .L900000154:		/* frequency 1.0 confidence 0.0 */
 /* 0x0024	  35 ( 0  2) */		call	(.+0x8)	! params = 	! Result = 
 /* 0x0028	     ( 1  2) */		sethi	%hi((_GLOBAL_OFFSET_TABLE_-(.L900000154-.))),%g5
 /* 0x002c	 177 ( 2  3) */		sethi	%hi(.L_const_seg_900000106),%g3
@@ -190,7 +193,7 @@
 ! ENTRY .L77000037
 !
 
-                                   .L77000037:		/* frequency 1.0 confidence 0.0 */
+        .L77000037:		/* frequency 1.0 confidence 0.0 */
 /* 0x020c	 307 ( 0  1) */		subcc	%o2,16,%g0
 /* 0x0210	 308 ( 0  1) */		bne,pn	%icc,.L77000076	! tprob=0.50
 /* 0x0214	     ( 1  5) */		ldd	[%o0],%f8
@@ -411,7 +414,7 @@
 ! ENTRY .L77000076
 !
 
-                                   .L77000076:		/* frequency 1.0 confidence 0.0 */
+        .L77000076:		/* frequency 1.0 confidence 0.0 */
 /* 0x0568	 540 ( 0  4) */		ldd	[%o0],%f6
 /* 0x056c	 546 ( 0  1) */		add	%o2,1,%g2
 /* 0x0570	 547 ( 0  3) */		fmovd	%f0,%f14
@@ -454,7 +457,7 @@
 ! ENTRY .L900000149
 !
 
-                                   .L900000149:		/* frequency 1.0 confidence 0.0 */
+        .L900000149:		/* frequency 1.0 confidence 0.0 */
 /* 0x05fc	 586 ( 0  4) */		fxnor	%f14,%f12,%f22
 /* 0x0600	 587 ( 0  5) */		fmuld	%f4,%f16,%f4
 /* 0x0604	 588 ( 0  1) */		add	%g2,2,%g2
@@ -491,7 +494,7 @@
 ! ENTRY .L900000152
 !
 
-                                   .L900000152:		/* frequency 1.0 confidence 0.0 */
+        .L900000152:		/* frequency 1.0 confidence 0.0 */
 /* 0x0678	 618 ( 0  4) */		fxnor	%f14,%f12,%f12
 /* 0x067c	 619 ( 0  5) */		fmuld	%f0,%f16,%f22
 /* 0x0680	 620 ( 0  1) */		add	%o5,80,%o5
@@ -548,14 +551,14 @@
 ! ENTRY .L77000077
 !
 
-                                   .L77000077:		/* frequency 1.0 confidence 0.0 */
+        .L77000077:		/* frequency 1.0 confidence 0.0 */
 /* 0x0744	 670 ( 0  4) */		ldd	[%g5],%f0
 
 !
 ! ENTRY .L900000160
 !
 
-                                   .L900000160:		/* frequency 1.0 confidence 0.0 */
+        .L900000160:		/* frequency 1.0 confidence 0.0 */
 /* 0x0748	 672 ( 0  4) */		fxnor	%f14,%f0,%f0
 /* 0x074c	 673 ( 0  1) */		add	%g2,1,%g2
 /* 0x0750	 674 ( 0  1) */		add	%g5,8,%g5
@@ -579,14 +582,14 @@
 ! ENTRY .L77000043
 !
 
-                                   .L77000043:		/* frequency 1.0 confidence 0.0 */
+        .L77000043:		/* frequency 1.0 confidence 0.0 */
 /* 0x0790	 696 ( 0  1) */		subcc	%o3,0,%g0
 
 !
 ! ENTRY .L900000161
 !
 
-                                   .L900000161:		/* frequency 1.0 confidence 0.0 */
+        .L900000161:		/* frequency 1.0 confidence 0.0 */
 /* 0x0794	 698 ( 0  1) */		ble,a,pt	%icc,.L900000159	! tprob=0.50
 /* 0x0798	     ( 0  1) */		or	%g0,%o7,%i0
 /* 0x079c	 703 ( 0  2) */		ldx	[%fp-2256],%o2
@@ -614,7 +617,7 @@
 ! ENTRY .L900000145
 !
 
-                                   .L900000145:		/* frequency 1.0 confidence 0.0 */
+        .L900000145:		/* frequency 1.0 confidence 0.0 */
 /* 0x07ec	 724 ( 0  2) */		ld	[%g3],%o7
 /* 0x07f0	 725 ( 0  1) */		add	%o2,%o3,%o2
 /* 0x07f4	 726 ( 0  1) */		sra	%o0,0,%o3
@@ -647,7 +650,7 @@
 ! ENTRY .L900000148
 !
 
-                                   .L900000148:		/* frequency 1.0 confidence 0.0 */
+        .L900000148:		/* frequency 1.0 confidence 0.0 */
 /* 0x0858	 752 ( 0  1) */		add	%o2,%o3,%o2
 /* 0x085c	 753 ( 0  1) */		sra	%o0,0,%o3
 /* 0x0860	 754 ( 0  2) */		ld	[%g3],%o0
@@ -667,14 +670,14 @@
 ! ENTRY .L77000078
 !
 
-                                   .L77000078:		/* frequency 1.0 confidence 0.0 */
+        .L77000078:		/* frequency 1.0 confidence 0.0 */
 /* 0x0890	 767 ( 0  2) */		ld	[%g3],%o2
 
 !
 ! ENTRY .L900000158
 !
 
-                                   .L900000158:		/* frequency 1.0 confidence 0.0 */
+        .L900000158:		/* frequency 1.0 confidence 0.0 */
 /* 0x0894	 769 ( 0  2) */		ldx	[%g5],%o0
 /* 0x0898	 770 ( 0  1) */		sra	%o7,0,%o1
 /* 0x089c	 771 ( 0  1) */		add	%g4,1,%g4
@@ -693,7 +696,7 @@
 ! ENTRY .L77000047
 !
 
-                                   .L77000047:		/* frequency 1.0 confidence 0.0 */
+        .L77000047:		/* frequency 1.0 confidence 0.0 */
 /* 0x08c8	 783 ( 0  1) */		or	%g0,%o7,%i0
 /* 0x08cc	     ( 1  8) */		ret	! Result =  %o1 %o0 %f0 %f1
 /* 0x08d0	     ( 3  5) */		restore	%g0,%g0,%g0
@@ -702,7 +705,7 @@
 ! ENTRY .L77000048
 !
 
-                                   .L77000048:		/* frequency 1.0 confidence 0.0 */
+        .L77000048:		/* frequency 1.0 confidence 0.0 */
 /* 0x08d4	 794 ( 0  1) */		bne,pn	%icc,.L77000050	! tprob=0.50
 /* 0x08d8	     ( 0  1) */		sethi	%hi(0xfff80000),%g2
 /* 0x08dc	 796 ( 0  4) */		ldd	[%g5],%f4
@@ -872,7 +875,7 @@
 ! ENTRY .L77000050
 !
 
-                                   .L77000050:		/* frequency 1.0 confidence 0.0 */
+        .L77000050:		/* frequency 1.0 confidence 0.0 */
 /* 0x0b64	 978 ( 0  1) */		subcc	%o2,16,%g0
 /* 0x0b68	 979 ( 0  1) */		bne,pn	%icc,.L77000073	! tprob=0.50
 /* 0x0b6c	     ( 0  1) */		sethi	%hi(0xfff80000),%g2
@@ -1180,14 +1183,14 @@
 ! ENTRY .L77000061
 !
 
-                                   .L77000061:		/* frequency 1.0 confidence 0.0 */
+        .L77000061:		/* frequency 1.0 confidence 0.0 */
 /* 0x119c	1437 ( 0  1) */		or	%g0,%o7,%i0
 
 !
 ! ENTRY .L900000159
 !
 
-                                   .L900000159:		/* frequency 1.0 confidence 0.0 */
+        .L900000159:		/* frequency 1.0 confidence 0.0 */
 /* 0x11a0	     ( 0  7) */		ret	! Result =  %o1 %o0 %f0 %f1
 /* 0x11a4	     ( 2  4) */		restore	%g0,%g0,%g0
 
@@ -1195,9 +1198,7 @@
 ! ENTRY .L77000073
 !
 
-                                   .L77000073:		/* frequency 1.0 confidence 0.0 */
-
-
+        .L77000073:		/* frequency 1.0 confidence 0.0 */
 	or	%g0, %i4, %o2
 	or	%g0, %o0, %o1
 	or	%g0, %i3, %o0
@@ -1206,7 +1207,7 @@
 ! ENTRY .L77000052
 !
 
-                                   .L77000052:		/* frequency 1.0 confidence 0.0 */
+        .L77000052:		/* frequency 1.0 confidence 0.0 */
 /* 0x1028	1318 ( 0  1) */		andn	%o2,%g2,%g2
 /* 0x102c	1319 ( 0  1) */		st	%g2,[%sp+96]
 /* 0x1030	1325 ( 0  1) */		add	%o0,1,%g3
@@ -1269,7 +1270,7 @@
 ! ENTRY .L990000154
 !
 
-                                   .L990000154:		/* frequency 1.0 confidence 0.0 */
+        .L990000154:		/* frequency 1.0 confidence 0.0 */
 /* 0x110c	1384 ( 0  3) */		ldd	[%o1],%f24
 /* 0x1110	1385 ( 0  1) */		add	%g4,3,%g4
 /* 0x1114	1386 ( 0  1) */		add	%o4,96,%o4
@@ -1339,7 +1340,7 @@
 ! ENTRY .L990000157
 !
 
-                                   .L990000157:		/* frequency 1.0 confidence 0.0 */
+        .L990000157:		/* frequency 1.0 confidence 0.0 */
 /* 0x120c	1449 ( 0  3) */		fitod	%f12,%f28
 /* 0x1210	1450 ( 0  3) */		fmuld	%f6,%f18,%f24
 /* 0x1214	1451 ( 0  1) */		add	%g3,128,%g3
@@ -1409,14 +1410,14 @@
 ! ENTRY .L77000054
 !
 
-                                   .L77000054:		/* frequency 1.0 confidence 0.0 */
+        .L77000054:		/* frequency 1.0 confidence 0.0 */
 /* 0x130c	1514 ( 0  3) */		ldd	[%o1],%f0
 
 !
 ! ENTRY .L990000161
 !
 
-                                   .L990000161:		/* frequency 1.0 confidence 0.0 */
+        .L990000161:		/* frequency 1.0 confidence 0.0 */
 /* 0x1310	1516 ( 0  2) */		fxnor	%f14,%f0,%f0
 /* 0x1314	1517 ( 0  1) */		add	%g4,1,%g4
 /* 0x1318	1518 ( 0  1) */		add	%o1,8,%o1
@@ -1448,14 +1449,14 @@
 ! ENTRY .L77000056
 !
 
-                                   .L77000056:		/* frequency 1.0 confidence 0.0 */
+         .L77000056:		/* frequency 1.0 confidence 0.0 */
 /* 0x1378	1548 ( 0  1) */		subcc	%o0,0,%g0
 
 !
 ! ENTRY .L990000162
 !
 
-                                   .L990000162:		/* frequency 1.0 confidence 0.0 */
+         .L990000162:		/* frequency 1.0 confidence 0.0 */
 /* 0x137c	1550 ( 0  1) */		bleu,pt	%icc,.L77770061	! tprob=0.50
 /* 0x1380	     ( 0  1) */		nop
 /* 0x1384	1555 ( 0  1) */		sethi	%hi(0x1800),%g1
@@ -1500,7 +1501,7 @@
 ! ENTRY .L990000142
 !
 
-                                   .L990000142:		/* frequency 1.0 confidence 0.0 */
+        .L990000142:		/* frequency 1.0 confidence 0.0 */
 /* 0x1418	1593 ( 0  1) */		add	%o2,%o3,%o2
 /* 0x141c	1594 ( 0  1) */		add	%i2,4,%i2
 /* 0x1420	1595 ( 0  2) */		ld	[%g4],%o3
@@ -1550,7 +1551,7 @@
 ! ENTRY .L990000145
 !
 
-                                   .L990000145:		/* frequency 1.0 confidence 0.0 */
+        .L990000145:		/* frequency 1.0 confidence 0.0 */
 /* 0x14c8	1638 ( 0  1) */		add	%o2,%o3,%o3
 /* 0x14cc	1639 ( 0  1) */		add	%g3,4,%g3
 /* 0x14d0	1640 ( 1  2) */		srl	%o0,0,%o2
@@ -1565,14 +1566,14 @@
 ! ENTRY .L77000058
 !
 
-                                   .L77000058:		/* frequency 1.0 confidence 0.0 */
+        .L77000058:		/* frequency 1.0 confidence 0.0 */
 /* 0x14ec	1648 ( 0  2) */		ldx	[%g2],%o2
 
 !
 ! ENTRY .L990000160
 !
 
-                                   .L990000160:		/* frequency 1.0 confidence 0.0 */
+        .L990000160:		/* frequency 1.0 confidence 0.0 */
 /* 0x14f0	1650 ( 0  1) */		sllx	%o2,19,%o3
 /* 0x14f4	1651 ( 0  2) */		ldx	[%g5],%o0
 /* 0x14f8	1652 ( 0  1) */		add	%i2,1,%i2
@@ -1595,12 +1596,9 @@
 ! ENTRY .L77770061
 !
 
-                                   .L77770061:		/* frequency 1.0 confidence 0.0 */
+        .L77770061:		/* frequency 1.0 confidence 0.0 */
 /* 0x1534	     ( 0  2) */		ret	! Result =  %o1 %o0 %f0 %f1
 /* 0x1538	     ( 2  3) */		restore	%g0,%o5,%o0
-
-
-
 
 /* 0x11a8	1441 ( 0  0) */		.type	mul_add,2
 /* 0x11a8	1442 ( 0  0) */		.size	mul_add,(.-mul_add)
@@ -1611,8 +1609,8 @@
 ! ENTRY mul_add_inp
 !
 
-                                   	.global mul_add_inp
-                                   mul_add_inp:		/* frequency 1.0 confidence 0.0 */
+        .global mul_add_inp
+        mul_add_inp:		/* frequency 1.0 confidence 0.0 */
 /* 0x11b0	1453 ( 0  1) */		or	%g0,%o2,%g1
 /* 0x11b4	1454 ( 0  1) */		or	%g0,%o3,%o4
 /* 0x11b8	1455 ( 1  2) */		or	%g0,%o0,%g3
@@ -1633,7 +1631,7 @@
 ! ENTRY mask_cnst
 !
 
-                                   mask_cnst:		/* frequency 1.0 confidence 0.0 */
+        mask_cnst:		/* frequency 1.0 confidence 0.0 */
 /* 0x11d8	   8 ( 0  0) */		.word	-2147483648
 /* 0x11dc	   9 ( 0  0) */		.word	-2147483648
 /* 0x11e0	  10 ( 0  0) */		.type	mask_cnst,#object
