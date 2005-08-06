@@ -353,14 +353,16 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessi
 }
 
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
-                                                nsIDOMNode *aNode)
+                                                nsIDOMNode *aNode,
+                                                PRBool aForceEvent)
 {
   NS_ASSERTION(aAccessible, "Attempted to fire focus event for no accessible");
-  PRUint32 role = ROLE_NOTHING;
-  aAccessible->GetFinalRole(&role);
 
   // Fire focus only if it changes, but always fire focus events for menu items
-  if (gLastFocusedNode == aNode && role != ROLE_MENUITEM) {
+  // Also always fire for XUL tree items, because they always use the same node for
+  // the tree container itself
+  // XXX use optional aForceIt bool param
+  if (gLastFocusedNode == aNode && !aForceEvent) {
     return;
   }
 
@@ -370,6 +372,8 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   // Use focus events on DHTML menuitems to indicate when to fire menustart and menuend
   // Special dynamic content handling
+  PRUint32 role = ROLE_NOTHING;
+  aAccessible->GetFinalRole(&role);
   PRUint32 naturalRole; // The natural role is the role that this type of element normally has
   aAccessible->GetRole(&naturalRole);
   if (role != naturalRole) {
@@ -551,10 +555,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
     }
     else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
-      if (gLastFocusedNode == targetNode) {
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
-                                  treeItemAccessible, nsnull);
-      }
+      FireAccessibleFocusEvent(treeItemAccessible, targetNode, PR_TRUE);
     }
     else if (eventType.LowerCaseEqualsLiteral("select")) {
       // If multiselect tree, we should fire selectionadd or selection removed
@@ -597,7 +598,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
     // Only fire focus event for DOMMenuItemActive is not inside collapsed popup
     if (0 == (containerState & STATE_COLLAPSED)) {
-      FireAccessibleFocusEvent(accessible, targetNode);
+      FireAccessibleFocusEvent(accessible, targetNode, PR_TRUE);
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("focus")) {
