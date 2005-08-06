@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.17 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: prng_fips1861.c,v 1.18 2005/08/06 07:10:34 nelsonb%netscape.com Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -442,7 +442,7 @@ RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx,
                            unsigned int maxDigestLen)
 {
 #if defined(IS_LITTLE_ENDIAN)
-    register PRUint32 A;
+    register PRUint32 tmp;
 #endif
     static const unsigned char bulk_pad0[64] = { 0,0,0,0,0,0,0,0,0,0,
                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

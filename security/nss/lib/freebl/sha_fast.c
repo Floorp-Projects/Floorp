@@ -37,13 +37,15 @@
 #include "blapi.h"
 #include "sha_fast.h"
 #include "prerror.h"
+#include "prlong.h"
 
 #ifdef TRACING_SSL
 #include "ssl.h"
 #include "ssltrace.h"
 #endif
 
-#if defined(IS_LITTLE_ENDIAN) && defined(_MSC_VER) && defined(_X86_)
+#if defined(_MSC_VER) && defined(_X86_)
+#if defined(IS_LITTLE_ENDIAN) 
 #undef SHA_HTONL
 #ifndef FORCEINLINE
 #if (MSC_VER >= 1200)
@@ -64,26 +66,63 @@ swap4b(PRUint32 dwd)
 }
 
 #define SHA_HTONL(x) swap4b(x)
-#endif
+#endif /* IS_LITTLE_ENDIAN */
 
-static void shaCompress(SHA1Context *ctx);
+#pragma intrinsic (_lrotr, _lrotl) 
+#define SHA_ROTL(x,n) _lrotl(x,n)
+#define SHA_ROTL_IS_DEFINED 1
+#endif /* _MSC_VER */
+
+static void shaCompress(volatile SHA_HW_t *X, const PRUint32 * datain);
 
 #define W u.w
 #define B u.b
 
-#if defined(_MSC_VER) && defined(_X86_)
-#pragma intrinsic (_lrotr, _lrotl) 
-#define SHA_ROTL(x,n) _lrotl(x,n)
-#else
-#define SHA_ROTL(X,n) (((X) << (n)) | ((X) >> (32-(n))))
+#if defined(_X86_) || defined(_x86) || defined(__x86_64__) || defined(__x86_64) 
+#define SHA_ALLOW_UNALIGNED_ACCESS 1
 #endif
+
+#if defined(__GNUC__) 
+/* __x86_64__  and __x86_64 are defined on x86_64 CPUs */
+
+#if SHA1_USING_64_bit
+static __inline__ uint64 SHA_ROTL(uint64 x, uint32 n)
+{
+    uint32 t = (uint32)x;
+    return ((t << n) | (t >> (32 - n)));
+}
+#else 
+static __inline__ uint32 SHA_ROTL(uint32 t, uint32 n)
+{
+    return ((t << n) | (t >> (32 - n)));
+}
+#endif
+#define SHA_ROTL_IS_DEFINED 1
+
+#if defined(_X86_) || defined(_x86) || defined(__x86_64__) || defined(__x86_64) 
+static __inline__ uint32 swap4b(uint32 value)
+{
+    __asm__("bswap %0" : "+r" (value));
+    return (value);
+}
+#undef SHA_HTONL
+#define SHA_HTONL(x) swap4b(x)
+#endif /* x86 family */
+
+#endif /* __GNUC__ */
+
+#if !defined(SHA_ROTL_IS_DEFINED)
+/* calling function must define PRUint32 tmp; */
+#define SHA_ROTL(X,n) (tmp = (X), ((tmp) << (n)) | ((tmp) >> (32-(n))))
+#endif
+
+
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
 #define SHA_F2(X,Y,Z) ((X)^(Y)^(Z))
 #define SHA_F3(X,Y,Z) (((X)&(Y))|((Z)&((X)|(Y))))
 #define SHA_F4(X,Y,Z) ((X)^(Y)^(Z))
-#define SHA_MIX(t)    ctx->W[t] = \
-  (A = ctx->W[t-3] ^ ctx->W[t-8] ^ ctx->W[t-14] ^ ctx->W[t-16], SHA_ROTL(A, 1))
 
+#define SHA_MIX(n,a,b,c)    XW(n) = SHA_ROTL(XW(a)^XW(b)^XW(c)^XW(n), 1)
 
 /*
  *  SHA: Zeroize and initialize context
@@ -91,8 +130,7 @@ static void shaCompress(SHA1Context *ctx);
 void 
 SHA1_Begin(SHA1Context *ctx)
 {
-  memset(ctx, 0, sizeof(SHA1Context));
-
+  LL_UI2L(ctx->size, 0);
   /*
    *  Initialize H with constants from FIPS180-1.
    */
@@ -103,6 +141,44 @@ SHA1_Begin(SHA1Context *ctx)
   ctx->H[4] = 0xc3d2e1f0L;
 }
 
+/* Explanation of H array and index values:
+ * The context's H array is actually the concatenation of two arrays 
+ * defined by SHA1, the H array of state variables (5 elements),
+ * and the W array of intermediate values, of which there are 16 elements.
+ * The W array starts at H[5], that is W[0] is H[5].
+ * Although these values are defined as 32-bit values, we use 64-bit
+ * variables to hold them because the AMD64 stores 64 bit values in
+ * memory MUCH faster than it stores any smaller values.
+ *
+ * Rather than passing the context structure to shaCompress, we pass
+ * this combined array of H and W values.  We do not pass the address
+ * of the first element of this array, but rather pass the address of an
+ * element in the middle of the array, element X.  Presently X[0] is H[11].
+ * So we pass the address of H[11] as the address of array X to shaCompress.
+ * Then shaCompress accesses the members of the array using positive AND 
+ * negative indexes.  
+ *
+ * Pictorially: (each element is 8 bytes)
+ * H | H0 H1 H2 H3 H4 W0 W1 W2 W3 W4 W5 W6 W7 W8 W9 Wa Wb Wc Wd We Wf |
+ * X |-11-10 -9 -8 -7 -6 -5 -4 -3 -2 -1 X0 X1 X2 X3 X4 X5 X6 X7 X8 X9 |
+ * 
+ * The byte offset from X[0] to any member of H and W is always 
+ * representable in a signed 8-bit value, which will be encoded 
+ * as a single byte offset in the X86-64 instruction set.  
+ * If we didn't pass the address of H[11], and instead passed the 
+ * address of H[0], the offsets to elements H[16] and above would be
+ * greater than 127, not representable in a signed 8-bit value, and the 
+ * x86-64 instruction set would encode every such offset as a 32-bit 
+ * signed number in each instruction that accessed element H[16] or 
+ * higher.  This results in much bigger and slower code. 
+ */
+#if !defined(SHA_PUT_W_IN_STACK)
+#define H2X 11 /* X[0] is H[11], and H[0] is X[-11] */
+#define W2X  6 /* X[0] is W[6],  and W[0] is X[-6]  */
+#else
+#define H2X 0
+#define W2X UNDEFINED
+#endif
 
 /*
  *  SHA: Add data to context.
@@ -110,37 +186,60 @@ SHA1_Begin(SHA1Context *ctx)
 void 
 SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len) 
 {
-  register unsigned int lenB = ctx->sizeLo & 63;
+  register unsigned int lenB;
   register unsigned int togo;
 
   if (!len)
     return;
 
+#ifdef HAVE_LONG_LONG
+  lenB = (unsigned int)(ctx->size) & 63U;
+
   /* accumulate the byte count. */
-  ctx->sizeLo += len;
-  ctx->sizeHi += (ctx->sizeLo < len);
+  ctx->size += len;
+#else
+  ctx->size.lo += len;
+  if (ctx->size.lo < len)
+      ctx->size.hi++;
+#endif
 
   /*
    *  Read the data into W and process blocks as they get full
    */
   if (lenB > 0) {
-    togo = 64 - lenB;
+    togo = 64U - lenB;
     if (len < togo)
       togo = len;
     memcpy(ctx->B + lenB, dataIn, togo);
     len    -= togo;
     dataIn += togo;
-    lenB    = (lenB + togo) & 63;
+    lenB    = (lenB + togo) & 63U;
     if (!lenB) {
-      shaCompress(ctx);
+      shaCompress(&ctx->H[H2X], ctx->W);
     }
   }
-  while (len >= 64) {
-    memcpy(ctx->B, dataIn, 64);
-    dataIn += 64;
-    len    -= 64;
-    shaCompress(ctx);
+#if defined(SHA_ALLOW_UNALIGNED_ACCESS)
+  while (len >= 64U) {
+    len    -= 64U;
+    shaCompress(&ctx->H[H2X], (PRUint32 *)dataIn);
+    dataIn += 64U;
   }
+#else
+  if ((ptrdiff_t)dataIn % sizeof(PRUint32)) {
+    while (len >= 64U) {
+      memcpy(ctx->B, dataIn, 64);
+      len    -= 64U;
+      shaCompress(&ctx->H[H2X], ctx->W);
+      dataIn += 64U;
+    }
+  } else {
+    while (len >= 64U) {
+      len    -= 64U;
+      shaCompress(&ctx->H[H2X], (PRUint32 *)dataIn);
+      dataIn += 64U;
+    }
+  }
+#endif
   if (len) {
     memcpy(ctx->B, dataIn, len);
   }
@@ -154,194 +253,271 @@ void
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
-  register PRUint32 sizeHi, sizeLo, lenB;
+#ifdef HAVE_LONG_LONG
+  register PRUint64 size;
+  register PRUint32 lenB;
+#else
+  register PRUint32 lenB;
+  PRUint64 size;
+#endif
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  };
-#define A lenB
+#define tmp lenB
 
   PORT_Assert (maxDigestLen >= SHA1_LENGTH);
 
   /*
    *  Pad with a binary 1 (e.g. 0x80), then zeroes, then length in bits
    */
-  sizeHi = ctx->sizeHi;
-  sizeLo = ctx->sizeLo;
-  lenB = sizeLo & 63;
+  size = ctx->size;
+
+#ifdef HAVE_LONG_LONG
+  lenB = size & 63;
+#else
+  lenB = size.lo & 63;
+#endif
   SHA1_Update(ctx, bulk_pad, (((55+64) - lenB) & 63) + 1);
-  PORT_Assert((ctx->sizeLo & 63) == 56);
+#ifdef HAVE_LONG_LONG
+  PORT_Assert((ctx->size & 63) == 56);
 
-  /* Convert size{Hi,Lo} from bytes to bits. */
-  sizeHi = (sizeHi << 3) | (sizeLo >> 29);
-  sizeLo <<= 3;
+  /* Convert size from bytes to bits. */
+  size <<= 3;
 
-  ctx->W[14] = SHA_HTONL(sizeHi);
-  ctx->W[15] = SHA_HTONL(sizeLo);
-  shaCompress(ctx);
+  ctx->W[14] = SHA_HTONL(size >> 32);
+  ctx->W[15] = SHA_HTONL((PRUint32)size);
+#else
+  PORT_Assert((ctx->size.lo & 63) == 56);
+
+  /* Convert size from bytes to bits. */
+  ctx->W[14] = SHA_HTONL((size.lo >> 29) | (size.hi << 3));
+  ctx->W[15] = SHA_HTONL(size.lo << 3);
+#endif
+  shaCompress(&ctx->H[H2X], ctx->W);
 
   /*
    *  Output hash
    */
-#if defined(IS_LITTLE_ENDIAN)
-  SHA_BYTESWAP(ctx->H[0]);
-  SHA_BYTESWAP(ctx->H[1]);
-  SHA_BYTESWAP(ctx->H[2]);
-  SHA_BYTESWAP(ctx->H[3]);
-  SHA_BYTESWAP(ctx->H[4]);
-#endif
-  memcpy(hashout, ctx->H, SHA1_LENGTH);
+#define STORE(n) ((uint32*)hashout)[n] = SHA_HTONL(ctx->H[n])
+#if defined(SHA_ALLOW_UNALIGNED_ACCESS)
+  STORE(0);
+  STORE(1);
+  STORE(2);
+  STORE(3);
+  STORE(4);
+#else /* ! unaligned access */
+  if (!((ptrdiff_t)hashout % sizeof(PRUint32))) {
+    STORE(0);
+    STORE(1);
+    STORE(2);
+    STORE(3);
+    STORE(4);
+  } else {
+#if defined(IS_LITTLE_ENDIAN) || SHA1_USING_64_bit
+    ctx->W[0] = SHA_HTONL(ctx->H[0]);
+    ctx->W[1] = SHA_HTONL(ctx->H[1]);
+    ctx->W[2] = SHA_HTONL(ctx->H[2]);
+    ctx->W[3] = SHA_HTONL(ctx->H[3]);
+    ctx->W[4] = SHA_HTONL(ctx->H[4]);
+    memcpy(hashout, ctx->W, SHA1_LENGTH);
+#else  /* 32-bit big-endian */
+    memcpy(hashout, ctx->H, SHA1_LENGTH);
+#endif /* 32-bit big endian */
+  }
+#endif /* ! unaligned access */
+#undef STORE
   *pDigestLen = SHA1_LENGTH;
 
   /*
    *  Re-initialize the context (also zeroizes contents)
-   */
   SHA1_Begin(ctx);
+   */
 }
 
 #undef A
 #undef B
+#undef tmp
 /*
  *  SHA: Compression function, unrolled.
+ *
+ * Some operations in shaCompress are done as 5 groups of 16 operations.
+ * Others are done as 4 groups of 20 operations.
+ * The code below shows that structure.
+ *
+ * The functions that compute the new values of the 5 state variables
+ * A-E are done in 4 groups of 20 operations (or you may also think
+ * of them as being done in 16 groups of 5 operations).  They are
+ * done by the SHA_RNDx macros below, in the right column.
+ *
+ * The functions that set the 16 values of the W array are done in 
+ * 5 groups of 16 operations.  The first group is done by the 
+ * LOAD macros below, the latter 4 groups are done by SHA_MIX below,
+ * in the left column.
+ *
+ * gcc's optimizer observes that each member of the W array is assigned
+ * a value 5 times in this code.  It reduces the number of store 
+ * operations done to the W array in the context (that is, in the X array)
+ * by creating a W array on the stack, and storing the W values there for 
+ * the first 4 groups of operations on W, and storing the values in the 
+ * context's W array only in the fifth group.  This is undesirable.
+ * It is MUCH bigger code than simply using the context's W array, because 
+ * all the offsets to the W array in the stack are 32-bit signed offsets, 
+ * and it is no faster than storing the values in the context's W array. 
+ *
+ * The original code for sha_fast.c prevented this creation of a separate 
+ * W array in the stack by creating a W array of 80 members, each of
+ * whose elements is assigned only once. It also separated the computations
+ * of the W array values and the computations of the values for the 5
+ * state variables into two separate passes, W's, then A-E's so that the 
+ * second pass could be done all in registers (except for accessing the W
+ * array) on machines with fewer registers.  The method is suboptimal
+ * for machines with enough registers to do it all in one pass, and it
+ * necessitates using many instructions with 32-bit offsets.
+ *
+ * This code eliminates the separate W array on the stack by a completely
+ * different means: by declaring the X array volatile.  This prevents
+ * the optimizer from trying to reduce the use of the X array by the
+ * creation of a MORE expensive W array on the stack. The result is
+ * that all instructions use signed 8-bit offsets and not 32-bit offsets.
+ *
+ * The combination of this code and the -O3 optimizer flag on GCC 3.4.3
+ * results in code that is 3 times faster than the previous NSS sha_fast
+ * code on AMD64.
  */
 static void 
-shaCompress(SHA1Context *ctx) 
+shaCompress(volatile SHA_HW_t *X, const PRUint32 *inbuf) 
 {
-  register PRUint32 A, B, C, D, E;
+  register SHA_HW_t A, B, C, D, E;
 
-#if defined(IS_LITTLE_ENDIAN)
-  SHA_BYTESWAP(ctx->W[0]);
-  SHA_BYTESWAP(ctx->W[1]);
-  SHA_BYTESWAP(ctx->W[2]);
-  SHA_BYTESWAP(ctx->W[3]);
-  SHA_BYTESWAP(ctx->W[4]);
-  SHA_BYTESWAP(ctx->W[5]);
-  SHA_BYTESWAP(ctx->W[6]);
-  SHA_BYTESWAP(ctx->W[7]);
-  SHA_BYTESWAP(ctx->W[8]);
-  SHA_BYTESWAP(ctx->W[9]);
-  SHA_BYTESWAP(ctx->W[10]);
-  SHA_BYTESWAP(ctx->W[11]);
-  SHA_BYTESWAP(ctx->W[12]);
-  SHA_BYTESWAP(ctx->W[13]);
-  SHA_BYTESWAP(ctx->W[14]);
-  SHA_BYTESWAP(ctx->W[15]);
+#if !defined(SHA_ROTL_IS_DEFINED)
+  register PRUint32 tmp;
 #endif
 
-  /*
-   *  This can be moved into the main code block below, but doing
-   *  so can cause some compilers to run out of registers and resort
-   *  to storing intermediates in RAM.
-   */
+#if !defined(SHA_PUT_W_IN_STACK)
+#define XH(n) X[n-H2X]
+#define XW(n) X[n-W2X]
+#else
+  SHA_HW_t w_0, w_1, w_2, w_3, w_4, w_5, w_6, w_7,
+           w_8, w_9, w_10, w_11, w_12, w_13, w_14, w_15;
+#define XW(n) w_ ## n
+#define XH(n) X[n]
+#endif
 
-               SHA_MIX(16); SHA_MIX(17); SHA_MIX(18); SHA_MIX(19);
-  SHA_MIX(20); SHA_MIX(21); SHA_MIX(22); SHA_MIX(23); SHA_MIX(24);
-  SHA_MIX(25); SHA_MIX(26); SHA_MIX(27); SHA_MIX(28); SHA_MIX(29);
-  SHA_MIX(30); SHA_MIX(31); SHA_MIX(32); SHA_MIX(33); SHA_MIX(34);
-  SHA_MIX(35); SHA_MIX(36); SHA_MIX(37); SHA_MIX(38); SHA_MIX(39);
-  SHA_MIX(40); SHA_MIX(41); SHA_MIX(42); SHA_MIX(43); SHA_MIX(44);
-  SHA_MIX(45); SHA_MIX(46); SHA_MIX(47); SHA_MIX(48); SHA_MIX(49);
-  SHA_MIX(50); SHA_MIX(51); SHA_MIX(52); SHA_MIX(53); SHA_MIX(54);
-  SHA_MIX(55); SHA_MIX(56); SHA_MIX(57); SHA_MIX(58); SHA_MIX(59);
-  SHA_MIX(60); SHA_MIX(61); SHA_MIX(62); SHA_MIX(63); SHA_MIX(64);
-  SHA_MIX(65); SHA_MIX(66); SHA_MIX(67); SHA_MIX(68); SHA_MIX(69);
-  SHA_MIX(70); SHA_MIX(71); SHA_MIX(72); SHA_MIX(73); SHA_MIX(74);
-  SHA_MIX(75); SHA_MIX(76); SHA_MIX(77); SHA_MIX(78); SHA_MIX(79);
+#define K0 0x5a827999L
+#define K1 0x6ed9eba1L
+#define K2 0x8f1bbcdcL
+#define K3 0xca62c1d6L
 
-  A = ctx->H[0];
-  B = ctx->H[1];
-  C = ctx->H[2];
-  D = ctx->H[3];
-  E = ctx->H[4];
+#define SHA_RND1(a,b,c,d,e,n) \
+  a = SHA_ROTL(b,5)+SHA_F1(c,d,e)+a+XW(n)+K0; c=SHA_ROTL(c,30) 
+#define SHA_RND2(a,b,c,d,e,n) \
+  a = SHA_ROTL(b,5)+SHA_F2(c,d,e)+a+XW(n)+K1; c=SHA_ROTL(c,30) 
+#define SHA_RND3(a,b,c,d,e,n) \
+  a = SHA_ROTL(b,5)+SHA_F3(c,d,e)+a+XW(n)+K2; c=SHA_ROTL(c,30) 
+#define SHA_RND4(a,b,c,d,e,n) \
+  a = SHA_ROTL(b,5)+SHA_F4(c,d,e)+a+XW(n)+K3; c=SHA_ROTL(c,30) 
 
-  E = SHA_ROTL(A,5)+SHA_F1(B,C,D)+E+ctx->W[ 0]+0x5a827999L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F1(A,B,C)+D+ctx->W[ 1]+0x5a827999L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F1(E,A,B)+C+ctx->W[ 2]+0x5a827999L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F1(D,E,A)+B+ctx->W[ 3]+0x5a827999L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F1(C,D,E)+A+ctx->W[ 4]+0x5a827999L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F1(B,C,D)+E+ctx->W[ 5]+0x5a827999L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F1(A,B,C)+D+ctx->W[ 6]+0x5a827999L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F1(E,A,B)+C+ctx->W[ 7]+0x5a827999L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F1(D,E,A)+B+ctx->W[ 8]+0x5a827999L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F1(C,D,E)+A+ctx->W[ 9]+0x5a827999L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F1(B,C,D)+E+ctx->W[10]+0x5a827999L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F1(A,B,C)+D+ctx->W[11]+0x5a827999L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F1(E,A,B)+C+ctx->W[12]+0x5a827999L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F1(D,E,A)+B+ctx->W[13]+0x5a827999L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F1(C,D,E)+A+ctx->W[14]+0x5a827999L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F1(B,C,D)+E+ctx->W[15]+0x5a827999L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F1(A,B,C)+D+ctx->W[16]+0x5a827999L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F1(E,A,B)+C+ctx->W[17]+0x5a827999L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F1(D,E,A)+B+ctx->W[18]+0x5a827999L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F1(C,D,E)+A+ctx->W[19]+0x5a827999L; C=SHA_ROTL(C,30); 
+#define LOAD(n) XW(n) = SHA_HTONL(inbuf[n])
 
-  E = SHA_ROTL(A,5)+SHA_F2(B,C,D)+E+ctx->W[20]+0x6ed9eba1L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F2(A,B,C)+D+ctx->W[21]+0x6ed9eba1L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F2(E,A,B)+C+ctx->W[22]+0x6ed9eba1L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F2(D,E,A)+B+ctx->W[23]+0x6ed9eba1L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F2(C,D,E)+A+ctx->W[24]+0x6ed9eba1L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F2(B,C,D)+E+ctx->W[25]+0x6ed9eba1L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F2(A,B,C)+D+ctx->W[26]+0x6ed9eba1L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F2(E,A,B)+C+ctx->W[27]+0x6ed9eba1L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F2(D,E,A)+B+ctx->W[28]+0x6ed9eba1L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F2(C,D,E)+A+ctx->W[29]+0x6ed9eba1L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F2(B,C,D)+E+ctx->W[30]+0x6ed9eba1L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F2(A,B,C)+D+ctx->W[31]+0x6ed9eba1L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F2(E,A,B)+C+ctx->W[32]+0x6ed9eba1L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F2(D,E,A)+B+ctx->W[33]+0x6ed9eba1L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F2(C,D,E)+A+ctx->W[34]+0x6ed9eba1L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F2(B,C,D)+E+ctx->W[35]+0x6ed9eba1L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F2(A,B,C)+D+ctx->W[36]+0x6ed9eba1L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F2(E,A,B)+C+ctx->W[37]+0x6ed9eba1L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F2(D,E,A)+B+ctx->W[38]+0x6ed9eba1L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F2(C,D,E)+A+ctx->W[39]+0x6ed9eba1L; C=SHA_ROTL(C,30); 
+  A = XH(0);
+  B = XH(1);
+  C = XH(2);
+  D = XH(3);
+  E = XH(4);
 
-  E = SHA_ROTL(A,5)+SHA_F3(B,C,D)+E+ctx->W[40]+0x8f1bbcdcL; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F3(A,B,C)+D+ctx->W[41]+0x8f1bbcdcL; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F3(E,A,B)+C+ctx->W[42]+0x8f1bbcdcL; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F3(D,E,A)+B+ctx->W[43]+0x8f1bbcdcL; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F3(C,D,E)+A+ctx->W[44]+0x8f1bbcdcL; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F3(B,C,D)+E+ctx->W[45]+0x8f1bbcdcL; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F3(A,B,C)+D+ctx->W[46]+0x8f1bbcdcL; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F3(E,A,B)+C+ctx->W[47]+0x8f1bbcdcL; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F3(D,E,A)+B+ctx->W[48]+0x8f1bbcdcL; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F3(C,D,E)+A+ctx->W[49]+0x8f1bbcdcL; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F3(B,C,D)+E+ctx->W[50]+0x8f1bbcdcL; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F3(A,B,C)+D+ctx->W[51]+0x8f1bbcdcL; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F3(E,A,B)+C+ctx->W[52]+0x8f1bbcdcL; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F3(D,E,A)+B+ctx->W[53]+0x8f1bbcdcL; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F3(C,D,E)+A+ctx->W[54]+0x8f1bbcdcL; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F3(B,C,D)+E+ctx->W[55]+0x8f1bbcdcL; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F3(A,B,C)+D+ctx->W[56]+0x8f1bbcdcL; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F3(E,A,B)+C+ctx->W[57]+0x8f1bbcdcL; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F3(D,E,A)+B+ctx->W[58]+0x8f1bbcdcL; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F3(C,D,E)+A+ctx->W[59]+0x8f1bbcdcL; C=SHA_ROTL(C,30); 
+  LOAD(0);		   SHA_RND1(E,A,B,C,D, 0);
+  LOAD(1);		   SHA_RND1(D,E,A,B,C, 1);
+  LOAD(2);		   SHA_RND1(C,D,E,A,B, 2);
+  LOAD(3);		   SHA_RND1(B,C,D,E,A, 3);
+  LOAD(4);		   SHA_RND1(A,B,C,D,E, 4);
+  LOAD(5);		   SHA_RND1(E,A,B,C,D, 5);
+  LOAD(6);		   SHA_RND1(D,E,A,B,C, 6);
+  LOAD(7);		   SHA_RND1(C,D,E,A,B, 7);
+  LOAD(8);		   SHA_RND1(B,C,D,E,A, 8);
+  LOAD(9);		   SHA_RND1(A,B,C,D,E, 9);
+  LOAD(10);		   SHA_RND1(E,A,B,C,D,10);
+  LOAD(11);		   SHA_RND1(D,E,A,B,C,11);
+  LOAD(12);		   SHA_RND1(C,D,E,A,B,12);
+  LOAD(13);		   SHA_RND1(B,C,D,E,A,13);
+  LOAD(14);		   SHA_RND1(A,B,C,D,E,14);
+  LOAD(15);		   SHA_RND1(E,A,B,C,D,15);
 
-  E = SHA_ROTL(A,5)+SHA_F4(B,C,D)+E+ctx->W[60]+0xca62c1d6L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F4(A,B,C)+D+ctx->W[61]+0xca62c1d6L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F4(E,A,B)+C+ctx->W[62]+0xca62c1d6L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F4(D,E,A)+B+ctx->W[63]+0xca62c1d6L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F4(C,D,E)+A+ctx->W[64]+0xca62c1d6L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F4(B,C,D)+E+ctx->W[65]+0xca62c1d6L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F4(A,B,C)+D+ctx->W[66]+0xca62c1d6L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F4(E,A,B)+C+ctx->W[67]+0xca62c1d6L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F4(D,E,A)+B+ctx->W[68]+0xca62c1d6L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F4(C,D,E)+A+ctx->W[69]+0xca62c1d6L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F4(B,C,D)+E+ctx->W[70]+0xca62c1d6L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F4(A,B,C)+D+ctx->W[71]+0xca62c1d6L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F4(E,A,B)+C+ctx->W[72]+0xca62c1d6L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F4(D,E,A)+B+ctx->W[73]+0xca62c1d6L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F4(C,D,E)+A+ctx->W[74]+0xca62c1d6L; C=SHA_ROTL(C,30); 
-  E = SHA_ROTL(A,5)+SHA_F4(B,C,D)+E+ctx->W[75]+0xca62c1d6L; B=SHA_ROTL(B,30); 
-  D = SHA_ROTL(E,5)+SHA_F4(A,B,C)+D+ctx->W[76]+0xca62c1d6L; A=SHA_ROTL(A,30); 
-  C = SHA_ROTL(D,5)+SHA_F4(E,A,B)+C+ctx->W[77]+0xca62c1d6L; E=SHA_ROTL(E,30); 
-  B = SHA_ROTL(C,5)+SHA_F4(D,E,A)+B+ctx->W[78]+0xca62c1d6L; D=SHA_ROTL(D,30); 
-  A = SHA_ROTL(B,5)+SHA_F4(C,D,E)+A+ctx->W[79]+0xca62c1d6L; C=SHA_ROTL(C,30); 
+  SHA_MIX( 0, 13,  8,  2); SHA_RND1(D,E,A,B,C, 0);
+  SHA_MIX( 1, 14,  9,  3); SHA_RND1(C,D,E,A,B, 1);
+  SHA_MIX( 2, 15, 10,  4); SHA_RND1(B,C,D,E,A, 2);
+  SHA_MIX( 3,  0, 11,  5); SHA_RND1(A,B,C,D,E, 3);
 
-  ctx->H[0] += A;
-  ctx->H[1] += B;
-  ctx->H[2] += C;
-  ctx->H[3] += D;
-  ctx->H[4] += E;
+  SHA_MIX( 4,  1, 12,  6); SHA_RND2(E,A,B,C,D, 4);
+  SHA_MIX( 5,  2, 13,  7); SHA_RND2(D,E,A,B,C, 5);
+  SHA_MIX( 6,  3, 14,  8); SHA_RND2(C,D,E,A,B, 6);
+  SHA_MIX( 7,  4, 15,  9); SHA_RND2(B,C,D,E,A, 7);
+  SHA_MIX( 8,  5,  0, 10); SHA_RND2(A,B,C,D,E, 8);
+  SHA_MIX( 9,  6,  1, 11); SHA_RND2(E,A,B,C,D, 9);
+  SHA_MIX(10,  7,  2, 12); SHA_RND2(D,E,A,B,C,10);
+  SHA_MIX(11,  8,  3, 13); SHA_RND2(C,D,E,A,B,11);
+  SHA_MIX(12,  9,  4, 14); SHA_RND2(B,C,D,E,A,12);
+  SHA_MIX(13, 10,  5, 15); SHA_RND2(A,B,C,D,E,13);
+  SHA_MIX(14, 11,  6,  0); SHA_RND2(E,A,B,C,D,14);
+  SHA_MIX(15, 12,  7,  1); SHA_RND2(D,E,A,B,C,15);
+
+  SHA_MIX( 0, 13,  8,  2); SHA_RND2(C,D,E,A,B, 0);
+  SHA_MIX( 1, 14,  9,  3); SHA_RND2(B,C,D,E,A, 1);
+  SHA_MIX( 2, 15, 10,  4); SHA_RND2(A,B,C,D,E, 2);
+  SHA_MIX( 3,  0, 11,  5); SHA_RND2(E,A,B,C,D, 3);
+  SHA_MIX( 4,  1, 12,  6); SHA_RND2(D,E,A,B,C, 4);
+  SHA_MIX( 5,  2, 13,  7); SHA_RND2(C,D,E,A,B, 5);
+  SHA_MIX( 6,  3, 14,  8); SHA_RND2(B,C,D,E,A, 6);
+  SHA_MIX( 7,  4, 15,  9); SHA_RND2(A,B,C,D,E, 7);
+
+  SHA_MIX( 8,  5,  0, 10); SHA_RND3(E,A,B,C,D, 8);
+  SHA_MIX( 9,  6,  1, 11); SHA_RND3(D,E,A,B,C, 9);
+  SHA_MIX(10,  7,  2, 12); SHA_RND3(C,D,E,A,B,10);
+  SHA_MIX(11,  8,  3, 13); SHA_RND3(B,C,D,E,A,11);
+  SHA_MIX(12,  9,  4, 14); SHA_RND3(A,B,C,D,E,12);
+  SHA_MIX(13, 10,  5, 15); SHA_RND3(E,A,B,C,D,13);
+  SHA_MIX(14, 11,  6,  0); SHA_RND3(D,E,A,B,C,14);
+  SHA_MIX(15, 12,  7,  1); SHA_RND3(C,D,E,A,B,15);
+
+  SHA_MIX( 0, 13,  8,  2); SHA_RND3(B,C,D,E,A, 0);
+  SHA_MIX( 1, 14,  9,  3); SHA_RND3(A,B,C,D,E, 1);
+  SHA_MIX( 2, 15, 10,  4); SHA_RND3(E,A,B,C,D, 2);
+  SHA_MIX( 3,  0, 11,  5); SHA_RND3(D,E,A,B,C, 3);
+  SHA_MIX( 4,  1, 12,  6); SHA_RND3(C,D,E,A,B, 4);
+  SHA_MIX( 5,  2, 13,  7); SHA_RND3(B,C,D,E,A, 5);
+  SHA_MIX( 6,  3, 14,  8); SHA_RND3(A,B,C,D,E, 6);
+  SHA_MIX( 7,  4, 15,  9); SHA_RND3(E,A,B,C,D, 7);
+  SHA_MIX( 8,  5,  0, 10); SHA_RND3(D,E,A,B,C, 8);
+  SHA_MIX( 9,  6,  1, 11); SHA_RND3(C,D,E,A,B, 9);
+  SHA_MIX(10,  7,  2, 12); SHA_RND3(B,C,D,E,A,10);
+  SHA_MIX(11,  8,  3, 13); SHA_RND3(A,B,C,D,E,11);
+
+  SHA_MIX(12,  9,  4, 14); SHA_RND4(E,A,B,C,D,12);
+  SHA_MIX(13, 10,  5, 15); SHA_RND4(D,E,A,B,C,13);
+  SHA_MIX(14, 11,  6,  0); SHA_RND4(C,D,E,A,B,14);
+  SHA_MIX(15, 12,  7,  1); SHA_RND4(B,C,D,E,A,15);
+
+  SHA_MIX( 0, 13,  8,  2); SHA_RND4(A,B,C,D,E, 0);
+  SHA_MIX( 1, 14,  9,  3); SHA_RND4(E,A,B,C,D, 1);
+  SHA_MIX( 2, 15, 10,  4); SHA_RND4(D,E,A,B,C, 2);
+  SHA_MIX( 3,  0, 11,  5); SHA_RND4(C,D,E,A,B, 3);
+  SHA_MIX( 4,  1, 12,  6); SHA_RND4(B,C,D,E,A, 4);
+  SHA_MIX( 5,  2, 13,  7); SHA_RND4(A,B,C,D,E, 5);
+  SHA_MIX( 6,  3, 14,  8); SHA_RND4(E,A,B,C,D, 6);
+  SHA_MIX( 7,  4, 15,  9); SHA_RND4(D,E,A,B,C, 7);
+  SHA_MIX( 8,  5,  0, 10); SHA_RND4(C,D,E,A,B, 8);
+  SHA_MIX( 9,  6,  1, 11); SHA_RND4(B,C,D,E,A, 9);
+  SHA_MIX(10,  7,  2, 12); SHA_RND4(A,B,C,D,E,10);
+  SHA_MIX(11,  8,  3, 13); SHA_RND4(E,A,B,C,D,11);
+  SHA_MIX(12,  9,  4, 14); SHA_RND4(D,E,A,B,C,12);
+  SHA_MIX(13, 10,  5, 15); SHA_RND4(C,D,E,A,B,13);
+  SHA_MIX(14, 11,  6,  0); SHA_RND4(B,C,D,E,A,14);
+  SHA_MIX(15, 12,  7,  1); SHA_RND4(A,B,C,D,E,15);
+
+  XH(0) += A;
+  XH(1) += B;
+  XH(2) += C;
+  XH(3) += D;
+  XH(4) += E;
 }
 
 /*************************************************************************
@@ -361,8 +537,9 @@ SHA1_NewContext(void)
 void
 SHA1_DestroyContext(SHA1Context *cx, PRBool freeit)
 {
+/*  memset(cx, 0, sizeof *cx); */
     if (freeit) {
-        PORT_ZFree(cx, sizeof(SHA1Context));
+        PORT_Free(cx);
     }
 }
 
@@ -375,7 +552,7 @@ SHA1_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
     SHA1_Begin(&ctx);
     SHA1_Update(&ctx, src, src_length);
     SHA1_End(&ctx, dest, &outLen, SHA1_LENGTH);
-
+/*  memset(&ctx, 0, sizeof ctx); */
     return SECSuccess;
 }
 
@@ -413,38 +590,13 @@ SHA1_Resurrect(unsigned char *space,void *arg)
     return cx;
 }
 
+void SHA1_Clone(SHA1Context *dest, SHA1Context *src) 
+{
+	memcpy(dest, src, sizeof *dest);
+}
+
 void
 SHA1_TraceState(SHA1Context *ctx)
 {
-#ifdef TRACING_SSL
-    uint32        W;
-    int           i;
-    int           len;
-    int           fixWord = -1;
-    int           remainder;	/* bytes in last word */
-    unsigned char buf[64 * 4];
-
-    SSL_TRC(99, ("%d: SSL: SHA1 state: %08x %08x %08x %08x %08x", SSL_GETPID(), 
-	         ctx->H[0], ctx->H[1], ctx->H[2], ctx->H[3], ctx->H[4]));
-
-    len = (int)(ctx->sizeLo & 63);
-    remainder = len % 4;
-    if (remainder) 
-    	fixWord = len - remainder;
-    for (i = 0; i < len; i++) {
-	if (0 == (i % 4)) {
-	    W = ctx->W[i / 4];
-	    if (i == fixWord) {
-	        W <<= 8 * (4 - remainder);
-	    }
-	}
-	buf[i] = (unsigned char)(W >> 24);
-	W <<= 8;
-    }
-
-    PRINT_BUF(99, (0, "SHA1_TraceState: buffered input", buf, len));
-
-#else
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
-#endif
 }

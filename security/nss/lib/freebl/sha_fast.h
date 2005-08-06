@@ -39,19 +39,27 @@
 
 #define SHA1_INPUT_LEN 64
 
+#if defined(_LP64) && !defined(__sparc)
+typedef PRUint64 SHA_HW_t;
+#define SHA1_USING_64_bit 1
+#else
+typedef PRUint32 SHA_HW_t;
+#define SHA1_USING_64_bit 0
+#endif
+
 struct SHA1ContextStr {
   union {
-    PRUint32 w[80];		/* input buffer, plus 64 words */
-    PRUint8  b[320];
+    PRUint32 w[16];		/* input buffer */
+    PRUint8  b[64];
   } u;
-  PRUint32 H[5];		/* 5 state variables */
-  PRUint32 sizeHi,sizeLo;	/* 64-bit count of hashed bytes. */
+  PRUint64 size;          	/* 64-bit count of hashed bytes. */
+  SHA_HW_t H[22];		/* 5 state variables, 16 tmp values, 1 extra */
 };
 
 #define SHA_MASK      0x00FF00FF
 #if defined(IS_LITTLE_ENDIAN)
-#define SHA_HTONL(x)  (A = (x), A = (A << 16) | (A >> 16), \
-                       ((A & SHA_MASK) << 8) | ((A >> 8) & SHA_MASK))
+#define SHA_HTONL(x)  (tmp = (x), tmp = (tmp << 16) | (tmp >> 16), \
+                       ((tmp & SHA_MASK) << 8) | ((tmp >> 8) & SHA_MASK))
 #else
 #define SHA_HTONL(x)  (x)
 #endif
