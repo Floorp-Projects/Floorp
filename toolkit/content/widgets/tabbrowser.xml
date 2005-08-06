@@ -953,6 +953,30 @@
         </body>
       </method>
 
+      <method name="loadOneTab">
+        <parameter name="aURI"/>
+        <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
+        <parameter name="aPostData"/>
+        <parameter name="aLoadInBackground"/>
+        <body>
+          <![CDATA[
+            var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData);
+            var bgLoad = (typeof(aLoadInBackground) != "undefined") ? aLoadInBackground :
+                         this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
+            // Set newly selected tab after quick timeout, otherwise hideous focus problems
+            // can occur when "browser.tabs.loadInBackground" is false and presshell is not ready
+            if (!bgLoad) {
+              function selectNewForegroundTab(browser, tab) {
+                this.selectedTab = tab;
+              }
+              setTimeout(selectNewForegroundTab, 0, getBrowser(), tab);
+            }
+            return tab;
+         ]]>
+        </body>
+      </method>
+
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
@@ -1457,20 +1481,15 @@
 
               this.dragDropSecurityCheck(aEvent, aDragSession, url);
 
-              var bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
-
-              var tab = null;
               if (aEvent.originalTarget.localName != "tab") {
                 // We're adding a new tab.
-                tab = this.addTab(getShortcutOrURI(url));
+                this.loadOneTab(getShortcutOrURI(url));
               }
               else {
                 // Load in an existing tab.
-                tab = aEvent.originalTarget;
+                var tab = aEvent.originalTarget;
                 this.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
               }
-              if (this.mCurrentTab != tab && !bgLoad)
-                this.selectedTab = tab;
             }
           ]]>
         </body>

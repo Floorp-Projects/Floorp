@@ -76,9 +76,7 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData, sendRefe
   // If sendReferrer is not specified, default to true
   var referrer = (sendReferrer == false) ? null : getReferrer(document);
 
-  var theTab = browser.addTab(href, referrer, originCharset, postData);
-  if (!loadInBackground)
-    browser.selectedTab = theTab;
+  browser.loadOneTab(href, referrer, originCharset, postData, loadInBackground);
   
   if (linkNode)
     markLinkVisited(href, linkNode);
