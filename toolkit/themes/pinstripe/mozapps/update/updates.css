@@ -119,8 +119,8 @@ wizard[currentpageid="updatesfound"] .wizard-page-box {
 
 #downloadStatus {
   margin-top: 6px;
-  height: 3em !important;
 }
+
 #downloadThrobber {
   margin: 5px 3px 0px 5px;
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
