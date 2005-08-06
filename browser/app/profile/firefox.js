@@ -387,6 +387,10 @@ pref("browser.display.screen_resolution", 96);
 pref("browser.download.show_plugins_in_list", true);
 pref("browser.download.hide_plugins_without_extensions", true);
 
+// Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
+// to be exposed. By default, only expose it for bidi-associated system locales.
+pref("bidi.browser.ui", false);
+
 pref("browser.feedview.articleLength", 50);
 pref("browser.feedview.showBar", true);
 pref("browser.feedview.showImage", true);
