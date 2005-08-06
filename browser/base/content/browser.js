@@ -2735,9 +2735,7 @@ function OpenSearch(tabName, searchStr, newTabFlag)
           loadURI(defaultSearchURL, null, null);
         }
         else {
-          var newTab = getBrowser().addTab(defaultSearchURL);
-          if (!gPrefService.getBoolPref("browser.tabs.loadInBackground"))
-            getBrowser().selectedTab = newTab;
+          getBrowser().loadOneTab(defaultSearchURL);
         }
       }
     }

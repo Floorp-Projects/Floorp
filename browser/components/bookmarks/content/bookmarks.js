@@ -742,8 +742,13 @@ var BookmarksCommand = {
       // focus the first tab if prefs say to
       if (!loadInBackground || doReplace) {
         // Select the first tab in the group.
+        // Set newly selected tab after quick timeout, otherwise hideous focus problems
+        // can occur because new presshell is not ready to handle events
+        function selectNewForegroundTab(browser, tab) {
+          browser.selectedTab = tab;
+        }
         var tabs = browser.mTabContainer.childNodes;
-        browser.selectedTab = tabs[index0];
+        setTimeout(selectNewForegroundTab, 0, browser, tabs[index0]);
       }
 
       // Close any remaining open tabs that are left over.
