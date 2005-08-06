@@ -1248,21 +1248,17 @@ nsDocShell::GetEldestPresContext(nsPresContext** aPresContext)
 NS_IMETHODIMP
 nsDocShell::GetPresContext(nsPresContext ** aPresContext)
 {
-    nsresult rv = NS_OK;
-
     NS_ENSURE_ARG_POINTER(aPresContext);
     *aPresContext = nsnull;
 
-    if (mContentViewer) {
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+    nsresult rv = EnsureContentViewer();
+    if (NS_FAILED(rv))
+      return rv;    // we're probably being destroyed
+    
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
+    NS_ENSURE_TRUE(docv, NS_ERROR_NO_INTERFACE);
 
-        if (docv) {
-            rv = docv->GetPresContext(aPresContext);
-        }
-    }
-
-    // Fail silently, if no PresContext is available...
-    return rv;
+    return docv->GetPresContext(aPresContext);
 }
 
 NS_IMETHODIMP
