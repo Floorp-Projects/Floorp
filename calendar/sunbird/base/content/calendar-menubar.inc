@@ -59,9 +59,11 @@
                      label="&event.new.todo;"
                      accesskey="&event.new.todo.accesskey;"
                      observes="new_todo_command"/>
-           <!-- XXX lilmatt: Finish/localize this! -->
+           <!-- XXX lilmatt: Finish this! -->
            <menuitem key="new_journal_key"
-                     label="New Journal Item..."
+                     id="calendar-new-journal-menu"
+                     label="&calendar.new.journal.label;"
+                     accesskey="&calendar.new.journal.accesskey;"
                      disabled="true"/>
            <menuitem id="calendar-new-calendar-menu"
                      key="new_calendar_key"
@@ -73,10 +75,9 @@
                      label="&calendar.open.file.label;"
                      accesskey="&calendar.open.file.accesskey;"
                      observes="open_local_calendar_command"/>
-           <!-- XXX lilmatt: Localize this! label="&event.edit.event;" -->
            <menuitem id="unifinder-modify-menu"
                      key="modify_event_key"
-                     label="Edit Selection..."
+                     label="&event.edit.event;"
                      accesskey="&event.edit.event.accesskey;"
                      observes="modify_command"/>
            <menuitem id="calendar-close"
@@ -104,36 +105,36 @@
                      accesskey="&calendar.import.accesskey;"
                      observes="import_command"/>
            <!-- export: getting data out of existing files -->
-           <!-- XXX lilmatt: Localize this! label="&calendar.export.label;" -->
            <menuitem id="calendar-export-menu"
-                     label="Export Selection..."
+                     label="&calendar.export.label;"
                      accesskey="&calendar.export.accesskey;"
                      observes="export_command"/>
-           <!-- XXX lilmatt: Localize this! label="&event.mail.event;" -->
            <menuitem id="calendar-mail-event"
                      key="send_event_key"
-                     label="Mail Selection..."
+                     label="&event.mail.event;"
                      accesskey="&event.mail.event.accesskey;"
                      observes="send_event_command"/>
-           <!-- XXX lilmatt: Localize this! label="&calendar.publish.label;" -->
            <menuitem id="calendar-publish-menu"
-                     label="Publish..."
+                     label="&calendar.publish.label;"
                      accesskey="&calendar.publish.accesskey;"
                      observes="publish_events_command"/>
            <menuseparator/>
-           <!-- XXX lilmatt: Finish/localize this! -->
-           <menuitem label="Page Setup..." disabled="true"/>
-           <!-- XXX lilmatt: Localize this! label="&calendar.print.label;" -->
+           <!-- XXX lilmatt: Finish this! -->
+           <menuitem id="calendar-page-setup-menu"
+                     label="&calendar.pagesetup.label;"
+                     accesskey="&calendar.pagesetup.accesskey;
+                     disabled="true"/>
            <menuitem id="calendar-print-menu"
                      key="print_key"
-                     label="Print..."
+                     label="&calendar.print.label;"
                      accesskey="&calendar.print.accesskey;"
                      observes="print_command"/>
 #ifndef XP_MACOSX
            <menuseparator id="calendar-print-sep"/>
 #endif
            <menuitem id="calendar-quit-menu"
-                     label="Quit"
+                     label="&calendar.quit.label;"
+                     accesskey="&calendar.quit.accesskey;"
                      oncommand="goQuitApplication()"/>
          </menupopup>
        </menu>
@@ -142,13 +143,15 @@
              label="&editMenu.label;"
               accesskey="&editMenu.accesskey;">
          <menupopup id="mppEdit">
-           <!-- XXX lilmatt: Finish/localize this! -->
-           <menuitem key="undo_key"
-                     label="Undo"
+           <menuitem id="calendar-undo-menu"
+                     key="undo_key"
+                     accesskey="&calendar.undo.accesskey;"
+                     label="&calendar.undo.label;"
                      command="undo_command"/>
-           <!-- XXX lilmatt: Finish/localize this! -->
-           <menuitem key="redo_key"
-                     label="Redo"
+           <menuitem id="calendar-redo-menu"
+                     key="redo_key"
+                     accesskey="&calendar.redo.accesskey;"
+                     label="&calendar.redo.label;"
                      command="redo_command"/>
            <menuseparator/>
            <menuitem id="calendar-cut-menu"
@@ -187,45 +190,44 @@
              label="&viewMenu.label;"
              accesskey="&viewMenu.accesskey;">
          <menupopup id="mppView">
-           <!-- XXX lilmatt: Finish/localize this! -->
-           <menu label="Toolbars">
+           <menu id="menu_Toolbars"
+                 label="&toolbarsMenu.label;"
+                 accesskey="&toolbarsMenu.accesskey;">
              <menupopup>
                <!-- XXX This eventually needs to be RDF-driven so toolbars created
                         by the user are selectable. Also there's no good way to delete
                         a user-created toolbar without resetting all your other toolbars
                         to the defaults. Should that be fixed here? -->
 
-               <!-- XXX lilmatt: Localize this! -->
                <menuitem id="menu_showCalendarToolbar"
                          type="checkbox"
-                         label="Calendar Toolbar"
+                         label="&calendar.toolbar.label;"
                          command="cmd_showCalendarToolbar"
                          checked="true"/>
                <menuseparator/>
-               <!-- XXX lilmatt: Localize this! label="&calendar.menu.customize.label;" -->
                <menuitem id="calendar-view-menu-customize"
                          command="cmd_CustomizeToolbars"
-                         label="Customize..."
+                         label="&calendar.menu.customize.label;"
                          accesskey="&calendar.menu.customize.accesskey;"/>
              </menupopup>
            </menu>
-           <!-- XXX lilmatt: Localize this! label="&showSearchToolbarCmd.label;" accesskey="&showSearchToolbarCmd.accesskey;" -->
            <menuitem id="menu_showSearchToolbar"
                      type="checkbox"
-                     label="Search Bar"
+                     label="&showSearchToolbarCmd.label;"
                      command="cmd_showSearchToolbar"
+                     accesskey="&showSearchToolbarCmd.accesskey;"
                      checked="true"/>
-           <!-- XXX lilmatt: Localize this! -->
            <menuitem id="menu_showStatusBar"
                      type="checkbox"
-                     label="Status Bar"
+                     label="showStatusBarCmd.label"
                      command="cmd_showStatusBar"
+                     accesskey="&showStatusBarCmd.accesskey;"
                      checked="true"/>
-           <!-- XXX lilmatt: Localize this! -->
            <menuitem id="menu_showTaskBox"
                      type="checkbox"
-                     label="Task List"
+                     label="&showTaskBoxCmd.label;"
                      command="cmd_showTaskBox"
+                     accesskey="&showTaskBoxCmd.accesskey;"
                      checked="true"/>
            <menuseparator/>
            <menuitem id="calendar-view-menu-day"
@@ -264,46 +266,46 @@
                      oncommand="changeOnlyWorkdayCheckbox(1);"
                      persist="checked"
                      disabled="true"/>
-           <!-- XXX lilmatt: Localize this! label="&calendar.displaytodos.checkbox.label;" -->
            <menuitem id="display-todo-inview-checkbox-1"
                      type="checkbox"
-                     label="Show Tasks in Calendar"
+                     label="&calendar.displaytodos.checkbox.label;"
                      accesskey="&calendar.displaytodos.checkbox.accesskey;"
                      oncommand="changeDisplayToDoInViewCheckbox(1);"
                      persist="checked"
                      disabled="true"/>
-           <!-- XXX lilmatt: Localize this! label="&calendar.menu.numberofweeks.label;" -->
            <menu id="menu-numberofweeks-inview"
-                 label="Multiweek View Size"
+                 label="&calendar.menu.numberofweeks.label;"
                  oncommand="gCalendarWindow.currentView.changeNumberOfWeeks(event.target)"
                  disabled="true">
            <menupopup>
-             <!-- XXX lilmatt: Localize this! label="&calendar.menu.numberofweeks.2;" -->
              <menuitem type="radio"
                        value="2"
                        name="menunbofweeks"
-                       label="Two Weeks"/>
+                       label="&calendar.menu.numberofweeks.2;"/>
              <menuitem type="radio"
                        value="3"
                        name="menunbofweeks"
-                       label="Three Weeks"/>
+                       label="&calendar.menu.numberofweeks.3;"/>
              <menuitem type="radio"
                        value="4"
                        name="menunbofweeks"
-                       label="Four Weeks"/>
+                       label="&calendar.menu.numberofweeks.4;"/>
              <menuitem type="radio"
                        value="5"
                        name="menunbofweeks"
-                       label="Five Weeks"/>
+                       label="&calendar.menu.numberofweeks.5;"/>
              <menuitem type="radio"
                        value="6"
                        name="menunbofweeks"
-                       label="Six Weeks"/>
+                       label="&calendar.menu.numberofweeks.6;"/>
            </menupopup>
            </menu>
            <menuseparator/>
-           <!-- XXX lilmatt: Finish/localize this! -->
-           <menuitem label="Full Screen" disabled="true"/>
+           <!-- XXX lilmatt: Finish this! -->
+           <menuitem id="calendar-fullscreen-menu"
+                     label="&calendar.fullscreen.label;"
+                     accesskey="&calendar.fullscreen.accesskey;"
+                     disabled="true"/>
          </menupopup>
        </menu>
 
@@ -343,11 +345,13 @@
 #                     accesskey="&calendar.wizard.accesskey;"
 #                     observes="wizard_command"/>
 #           <menuseparator/>
-           <!-- XXX lilmatt: Finish/localize this! label="&extensions.label;" accesskey="&extensions.accesskey;" -->
-           <menuitem id="extensionsManager" label="Extensions"
+           <menuitem id="extensionsManager"
+                     label="&calendar.extensions.label;"
+                     accesskey="&calendar.extensions.accesskey;"
                      command="Tools:Extensions"/>
-           <!-- XXX lilmatt: Finish/localize this! label="&themes.label;" accesskey="&themes.accesskey;"-->
-           <menuitem id="themesManager" label="Themes"
+           <menuitem id="themesManager"
+                     label="&calendar.themes.label;"
+                     accesskey="&calendar.themes.accesskey;"
                      command="Tools:Themes"/>
            <menuseparator id="devToolsSeparator"/>
            <menuitem id="javascriptConsole" 

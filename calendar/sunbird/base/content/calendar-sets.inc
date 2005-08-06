@@ -118,8 +118,8 @@
 <keyset>
   <key id="new_event_key"        key="&event.new.event.key;"             observes="new_command"                 modifiers="accel"/>
   <key id="new_todo_key"         key="&event.new.todo.key;"              observes="new_todo_command"            modifiers="accel"/>
-#XXX lilmatt: Finish/localize this!
-  <key id="new_journal_key"      key="J"               modifiers="accel"/>
+#XXX lilmatt: Finish this!
+  <key id="new_journal_key"      key="&calendar.new.journal.key;"        modifiers="accel"/>
 
   <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"              modifiers="accel"/>
   <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_calendar_command"  modifiers="accel"/>
@@ -132,9 +132,8 @@
 #endif
   <key id="print_key"            key="&calendar.print.key;"              observes="print_command"               modifiers="accel"/>
 
-#XXX lilmatt: Finish/localize this!
-  <key id="undo_key"             key="Z"               modifiers="accel"/>
-  <key id="redo_key"             key="Z"               modifiers="shift,accel"/>
+  <key id="undo_key"             key="&calendar.undo.key;"               modifiers="accel"/>
+  <key id="redo_key"             key="&calendar.redo.key;"               modifiers="accel"/>
 
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
