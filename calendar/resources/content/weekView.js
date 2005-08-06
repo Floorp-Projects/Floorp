@@ -373,14 +373,8 @@ WeekView.prototype.createEventBoxInternal = function (event)
 
     //HACK because event.start is convert to the proper TZ, but
     //event.start.jsDate is not!
-    var adjustedStartDate = new Date();
-    var adjustedEndDate = new Date();
-    adjustedStartDate.setDate(startDate.day);
-    adjustedStartDate.setMonth(startDate.month);
-    adjustedStartDate.setFullYear(startDate.year);
-    adjustedEndDate.setDate(endDate.day);
-    adjustedEndDate.setMonth(endDate.month);
-    adjustedEndDate.setFullYear(endDate.year);
+    var adjustedStartDate = new Date(startDate.year, startDate.month, startDate.day);
+    var adjustedEndDate = new Date(endDate.year, endDate.month, endDate.day);
 
     // Check if the event is within the bounds of events to be displayed.
     if ((adjustedEndDate < this.displayStartDate) ||

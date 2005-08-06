@@ -268,10 +268,7 @@ MultiweekView.prototype.createEventDotInternal = function(itemOccurrence, startD
 {
     //This is a HACK because startDate and indexOfDate don't get along well
     //in terms of timezones.
-    var adjustedDate = new Date();
-    adjustedDate.setFullYear(startDate.year);
-    adjustedDate.setMonth(startDate.month);
-    adjustedDate.setDate(startDate.day);
+    var adjustedDate = new Date(startDate.year, startDate.month, startDate.day);
     dayBoxItem = this.dayBoxItemArray[this.indexOfDate(adjustedDate)];
 
     var dotBoxHolder
