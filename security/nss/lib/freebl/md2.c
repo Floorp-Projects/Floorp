@@ -289,3 +289,8 @@ MD2_Resurrect(unsigned char *space, void *arg)
 		memcpy(cx, space, sizeof(*cx));
 	return cx;
 }
+
+void MD2_Clone(MD2Context *dest, MD2Context *src) 
+{
+	memcpy(dest, src, sizeof *dest);
+}

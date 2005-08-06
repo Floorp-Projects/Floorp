@@ -37,14 +37,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.12 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: loader.h,v 1.13 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0307
+#define FREEBL_VERSION 0x0308
 
 struct FREEBLVectorStr {
 
@@ -377,6 +377,56 @@ struct FREEBLVectorStr {
 
   /* Version 3.007 came to here */
 
+ SECStatus (* p_AES_InitContext)(AESContext *cx,
+				 const unsigned char *key, 
+				 unsigned int keylen, 
+				 const unsigned char *iv, 
+				 int mode, 
+				 unsigned int encrypt,
+				 unsigned int blocklen);
+ SECStatus (* p_AESKeyWrap_InitContext)(AESKeyWrapContext *cx,
+				 const unsigned char *key, 
+				 unsigned int keylen, 
+				 const unsigned char *iv, 
+				 int mode, 
+				 unsigned int encrypt,
+				 unsigned int blocklen);
+ SECStatus (* p_DES_InitContext)(DESContext *cx,
+				 const unsigned char *key, 
+				 unsigned int keylen,
+				 const unsigned char *iv, 
+				 int mode,
+				 unsigned int encrypt,
+				 unsigned int );
+ SECStatus (* p_RC2_InitContext)(RC2Context *cx,
+				 const unsigned char *key, 
+				 unsigned int keylen,
+				 const unsigned char *iv, 
+				 int mode, 
+				 unsigned int effectiveKeyLen,
+				 unsigned int );
+ SECStatus (* p_RC4_InitContext)(RC4Context *cx, 
+				 const unsigned char *key, 
+				 unsigned int keylen,
+				 const unsigned char *, 
+				 int, 
+				 unsigned int ,
+				 unsigned int );
+
+ AESContext *(*p_AES_AllocateContext)(void);
+ AESKeyWrapContext *(*p_AESKeyWrap_AllocateContext)(void);
+ DESContext *(*p_DES_AllocateContext)(void);
+ RC2Context *(*p_RC2_AllocateContext)(void);
+ RC4Context *(*p_RC4_AllocateContext)(void);
+
+ void (* p_MD2_Clone)(MD2Context *dest, MD2Context *src);
+ void (* p_MD5_Clone)(MD5Context *dest, MD5Context *src);
+ void (* p_SHA1_Clone)(SHA1Context *dest, SHA1Context *src);
+ void (* p_SHA256_Clone)(SHA256Context *dest, SHA256Context *src);
+ void (* p_SHA384_Clone)(SHA384Context *dest, SHA384Context *src);
+ void (* p_SHA512_Clone)(SHA512Context *dest, SHA512Context *src);
+
+  /* Version 3.008 came to here */
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

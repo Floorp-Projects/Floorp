@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.18 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: loader.c,v 1.19 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1347,3 +1347,145 @@ ECDSA_SignDigestWithSeed(ECPrivateKey * key, SECItem * signature,
       seed, seedlen );
 }
 
+/* ============== New for 3.008 =============================== */
+
+AESContext *
+AES_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_AES_AllocateContext)();
+}
+
+AESKeyWrapContext *
+AESKeyWrap_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_AESKeyWrap_AllocateContext)();
+}
+
+DESContext *
+DES_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_DES_AllocateContext)();
+}
+
+RC2Context *
+RC2_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_RC2_AllocateContext)();
+}
+
+RC4Context *
+RC4_AllocateContext(void)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return NULL;
+  return (vector->p_RC4_AllocateContext)();
+}
+
+SECStatus 
+AES_InitContext(AESContext *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *iv, int mode,
+		unsigned int encrypt, unsigned int blocklen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_AES_InitContext)(cx, key, keylen, iv, mode, encrypt, 
+				     blocklen);
+}
+
+SECStatus 
+AESKeyWrap_InitContext(AESKeyWrapContext *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *iv, int mode,
+		unsigned int encrypt, unsigned int blocklen)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_AESKeyWrap_InitContext)(cx, key, keylen, iv, mode, 
+					    encrypt, blocklen);
+}
+
+SECStatus 
+DES_InitContext(DESContext *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *iv, int mode,
+		unsigned int encrypt, unsigned int xtra)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_DES_InitContext)(cx, key, keylen, iv, mode, encrypt, xtra);
+}
+
+SECStatus 
+RC2_InitContext(RC2Context *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *iv, int mode,
+		unsigned int effectiveKeyLen, unsigned int xtra)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RC2_InitContext)(cx, key, keylen, iv, mode, 
+				     effectiveKeyLen, xtra);
+}
+
+SECStatus 
+RC4_InitContext(RC4Context *cx, const unsigned char *key, 
+		unsigned int keylen, const unsigned char *x1, int x2,
+		unsigned int x3, unsigned int x4)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RC4_InitContext)(cx, key, keylen, x1, x2, x3, x4);
+}
+
+void 
+MD2_Clone(MD2Context *dest, MD2Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_MD2_Clone)(dest, src);
+}
+
+void 
+MD5_Clone(MD5Context *dest, MD5Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_MD5_Clone)(dest, src);
+}
+
+void 
+SHA1_Clone(SHA1Context *dest, SHA1Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA1_Clone)(dest, src);
+}
+
+void 
+SHA256_Clone(SHA256Context *dest, SHA256Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA256_Clone)(dest, src);
+}
+
+void 
+SHA384_Clone(SHA384Context *dest, SHA384Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA384_Clone)(dest, src);
+}
+
+void 
+SHA512_Clone(SHA512Context *dest, SHA512Context *src)
+{
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return;
+  (vector->p_SHA512_Clone)(dest, src);
+}
