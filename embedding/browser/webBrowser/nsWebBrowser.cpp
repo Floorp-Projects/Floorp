@@ -1787,19 +1787,14 @@ NS_IMETHODIMP nsWebBrowser::Activate(void)
     if (mWWatch)
       mWWatch->SetActiveWindow(win);
 
-    /* Activate the window itself. Do this only if the PresShell has
-       been created, since DOMWindow->Activate asserts otherwise.
-       (This method can be called during window creation before
-       the PresShell exists. For ex, Windows apps responding to
-       WM_ACTIVATE). */
-    NS_ENSURE_STATE(mDocShell);
-    nsCOMPtr<nsIPresShell> presShell;
-    mDocShell->GetPresShell(getter_AddRefs(presShell));
-    if(presShell) {
-      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(win);
-      if(privateDOMWindow)
-        privateDOMWindow->Activate();
-    }
+    /* Activate the window itself. Note that this method can be called during
+       window creation before the PresShell exists (for ex, Windows apps
+       responding to WM_ACTIVATE), which case nsGlobalWindow::Activate()
+       will return early.
+    */
+    nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(win);
+    if (privateDOMWindow)
+      privateDOMWindow->Activate();
   }
 
   mActivating = PR_FALSE;
@@ -1813,12 +1808,6 @@ NS_IMETHODIMP nsWebBrowser::Deactivate(void)
      the presumed other newly active window to set it when it comes in.
      This seems harmless and maybe safer, but we have no real evidence
      either way just yet. */
-
-  NS_ENSURE_STATE(mDocShell);
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
-  if(!presShell)
-    return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWindow;
   GetContentDOMWindow(getter_AddRefs(domWindow));

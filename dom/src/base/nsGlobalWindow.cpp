@@ -4936,8 +4936,8 @@ nsGlobalWindow::Activate()
    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
    return widget->SetFocus();
-
  */
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   if (treeOwnerAsWin) {
@@ -4952,10 +4952,7 @@ nsGlobalWindow::Activate()
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) {
-    NS_WARNING( "no preshell for window" );
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsIViewManager* vm = presShell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
