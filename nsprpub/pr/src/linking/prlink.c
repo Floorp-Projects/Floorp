@@ -40,7 +40,7 @@
 #include <image.h>
 #endif
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <CodeFragments.h>
 #include <TextUtils.h>
 #include <Types.h>
@@ -173,7 +173,7 @@ struct PRLibrary {
 #endif
 #endif
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
     CFragConnectionID           connection;
     CFBundleRef                 bundle;
     Ptr                         main;
@@ -597,7 +597,7 @@ pr_LoadMachDyldModule(const char *name)
 }
 #endif
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
 {
@@ -742,7 +742,7 @@ pr_LoadViaDyld(const char *name, PRLibrary *lm)
     return (lm->dlh != NULL || lm->image != NULL) ? PR_SUCCESS : PR_FAILURE;
 }
 
-#endif /* defined(XP_MACOSX) */
+#endif /* XP_MACOSX */
 
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
@@ -806,7 +806,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
 #endif /* WIN32 || WIN16 */
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
     {
     int     i;
     PRStatus status;
@@ -1049,7 +1049,7 @@ PR_UnloadLibrary(PRLibrary *lib)
     }
 #endif  /* XP_PC */
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
     /* Close the connection */
     if (lib->connection)
         CloseConnection(&(lib->connection));
@@ -1148,7 +1148,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
     f = GetProcAddress(lm->dlh, name);
 #endif  /* WIN32 || WIN16 */
 
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
     if (lm->bundle) {
         CFStringRef nameRef = CFStringCreateWithCString(NULL, name + 1, kCFStringEncodingASCII);
         if (nameRef) {
