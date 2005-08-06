@@ -301,7 +301,7 @@ function readStatusFile(dir) {
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
   LOG("General", "Reading Status File: " + statusFile.path);
-  return readStringFromFile(statusFile);
+  return readStringFromFile(statusFile) || STATE_NONE;
 }
 
 /**
@@ -328,7 +328,22 @@ function cleanUpUpdatesDir() {
     throw e;
   }
 }
-  
+
+/**
+ * Clean up updates list and the updates directory.
+ */
+function cleanupActiveUpdate() {
+  // Move the update from the Active Update list into the Past Updates list.
+  var um = 
+      Components.classes["@mozilla.org/updates/update-manager;1"].
+      getService(Components.interfaces.nsIUpdateManager);
+  um.activeUpdate = null;
+  um.saveUpdates();
+
+  // Now trash the updates directory, since we're done with it
+  cleanUpUpdatesDir();
+}
+
 /**
  * Gets a preference value, handling the case where there is no default.
  * @param   func
@@ -829,8 +844,11 @@ UpdateService.prototype = {
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
                         .getService(Components.interfaces.nsIUpdateManager);
     var activeUpdate = um.activeUpdate;
-    if (activeUpdate)
-      this.downloadUpdate(activeUpdate, true);
+    if (activeUpdate) {
+      var status = this.downloadUpdate(activeUpdate, true);
+      if (status == STATE_NONE)
+        cleanupActiveUpdate();
+    }
   },
   
   /**
@@ -840,18 +858,6 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function() {
-    /**
-     * Clean up updates list and the updates directory.
-     */
-    function cleanup() {
-      // Move the update from the Active Update list into the Past Updates list.
-      um.activeUpdate = null;
-      um.saveUpdates();
-
-      // Now trash the updates directory, since we're done with it
-      cleanUpUpdatesDir();
-    }
-    
     // Detect installation failures and notify
     var status = readStatusFile(getUpdatesDir()); 
     if (status == STATE_DOWNLOADING) {
@@ -891,11 +897,11 @@ UpdateService.prototype = {
         }
         
         // Done with this update. Clean it up.
-        cleanup();
+        cleanupActiveUpdate();
       }
       else {
         // Something went wrong with the patch application process.
-        cleanup();
+        cleanupActiveUpdate();
 
         update.statusText = bundle.GetStringFromName("patchApplyFailure");
         var oldType = update.selectedPatch ? update.selectedPatch.type 
@@ -905,7 +911,9 @@ UpdateService.prototype = {
           // update in the background instead.
           LOG("UpdateService", "_postUpdateProcessing: Install of Partial Patch " + 
               "failed, downloading Complete Patch and maybe showing UI");
-          this.downloadUpdate(update, true);
+          var status = this.downloadUpdate(update, true);
+          if (status == STATE_NONE)
+            cleanupActiveUpdate();
         }
         else {
           LOG("UpdateService", "_postUpdateProcessing: Install of Complete or " + 
@@ -1131,7 +1139,9 @@ UpdateService.prototype = {
       showPromptIfNoIncompatibilities(update);
     else {
       LOG("UpdateService", "_selectAndInstallUpdate: No need to show prompt, just download update");
-      this.downloadUpdate(update, true);
+      var status = this.downloadUpdate(update, true);
+      if (status == STATE_NONE)
+        cleanupActiveUpdate();
     }
   },
 
@@ -1205,7 +1215,7 @@ UpdateService.prototype = {
       if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
           background == this._downloader.background) {
         LOG("UpdateService", "no support for downloading more than one update at a time");
-        return;
+        return readStatusFile(getUpdatesDir());
       }
       this._downloader.cancel();
     }
@@ -1828,6 +1838,7 @@ Downloader.prototype = {
         } else {
           // This is a pretty fatal error.  Just bail.
           LOG("Downloader", "failed to apply complete patch!");
+          this._writeStatusFile(updateDir, STATE_NONE);
           return null;
         }
       }
@@ -2113,7 +2124,9 @@ Downloader.prototype = {
         // failed, log this and then commence downloading the complete update.
         LOG("Downloader", "onStopRequest: Verification of patch failed, downloading complete update");
         this._update.isCompleteUpdate = true;
-        this.downloadUpdate(this._update);
+        var status = this.downloadUpdate(this._update);
+        if (status == STATE_NONE)
+          cleanupActiveUpdate();
         // This will reset the |.state| property on this._update if a new 
         // download initiates.
       }
