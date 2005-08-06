@@ -48,7 +48,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 40em;"
 #expand buttons="accept,cancel__HELP_BUTTON__"
-  ondialogaccept="return doOk();"
+  ondialogaccept="return doOK();"
   ondialogcancel="return doCancel();"
   ondialoghelp="openHelp('which_token');"
   onload="onLoad();">
