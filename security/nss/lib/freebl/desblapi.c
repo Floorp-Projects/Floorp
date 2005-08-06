@@ -179,12 +179,21 @@ DES_EDE3CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 }
 
 DESContext *
-DES_CreateContext(const BYTE * key, const BYTE *iv, int mode, PRBool encrypt)
+DES_AllocateContext(void)
 {
-    DESContext *cx = PORT_ZNew(DESContext);
+    return PORT_ZNew(DESContext);
+}
+
+SECStatus   
+DES_InitContext(DESContext *cx, const unsigned char *key, unsigned int keylen,
+	        const unsigned char *iv, int mode, unsigned int encrypt,
+	        unsigned int unused)
+{
     DESDirection opposite;
-    if (!cx) 
-    	return 0;
+    if (!cx) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    	return SECFailure;
+    }
     cx->direction = encrypt ? DES_ENCRYPT : DES_DECRYPT;
     opposite      = encrypt ? DES_DECRYPT : DES_ENCRYPT;
     switch (mode) {
@@ -228,10 +237,21 @@ DES_CreateContext(const BYTE * key, const BYTE *iv, int mode, PRBool encrypt)
 	break;
 
     default:
-    	PORT_Free(cx);
-	cx = 0;
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	break;
+	return SECFailure;
+    }
+    return SECSuccess;
+}
+
+DESContext *
+DES_CreateContext(const BYTE * key, const BYTE *iv, int mode, PRBool encrypt)
+{
+    DESContext *cx = PORT_ZNew(DESContext);
+    SECStatus rv   = DES_InitContext(cx, key, 0, iv, mode, encrypt, 0);
+
+    if (rv != SECSuccess) {
+    	PORT_ZFree(cx, sizeof *cx);
+	cx = NULL;
     }
     return cx;
 }

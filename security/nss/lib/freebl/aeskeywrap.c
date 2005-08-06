@@ -36,9 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: aeskeywrap.c,v 1.3 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: aeskeywrap.c,v 1.4 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 
-/* $Id: aeskeywrap.c,v 1.3 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: aeskeywrap.c,v 1.4 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 
 #include "prcpucfg.h"
 #if defined(IS_LITTLE_ENDIAN) || defined(SHA_NO_LONG_LONG)
@@ -50,17 +50,48 @@
 #include "secport.h"	/* for PORT_XXX */
 #include "secerr.h"
 #include "blapi.h"	/* for AES_ functions */
-
+#include "rijndael.h"
 
 struct AESKeyWrapContextStr {
-     AESContext *  aescx;
      unsigned char iv[AES_KEY_WRAP_IV_BYTES];
+     AESContext    aescx;
 };
 
 /******************************************/
 /*
 ** AES key wrap algorithm, RFC 3394
 */
+
+AESKeyWrapContext * 
+AESKeyWrap_AllocateContext(void)
+{
+    AESKeyWrapContext * cx = PORT_New(AESKeyWrapContext);
+    return cx;
+}
+
+SECStatus  
+AESKeyWrap_InitContext(AESKeyWrapContext *cx, 
+		       const unsigned char *key, 
+		       unsigned int keylen,
+		       const unsigned char *iv, 
+		       int x1,
+		       unsigned int encrypt,
+		       unsigned int x2)
+{
+    SECStatus rv = SECFailure;
+    if (!cx) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    	return SECFailure;
+    }
+    if (iv) {
+    	memcpy(cx->iv, iv, sizeof cx->iv);
+    } else {
+	memset(cx->iv, 0xA6, sizeof cx->iv);
+    }
+    rv = AES_InitContext(&cx->aescx, key, keylen, NULL, NSS_AES, encrypt, 
+                                  AES_BLOCK_SIZE);
+    return rv;
+}
 
 /*
 ** Create a new AES context suitable for AES encryption/decryption.
@@ -71,19 +102,14 @@ extern AESKeyWrapContext *
 AESKeyWrap_CreateContext(const unsigned char *key, const unsigned char *iv, 
                          int encrypt, unsigned int keylen)
 {
-    AESKeyWrapContext * cx = PORT_ZNew(AESKeyWrapContext);
+    SECStatus rv;
+    AESKeyWrapContext * cx = AESKeyWrap_AllocateContext();
     if (!cx) 
     	return NULL;	/* error is already set */
-    cx->aescx = AES_CreateContext(key, NULL, NSS_AES, encrypt, keylen, 
-                                  AES_BLOCK_SIZE);
-    if (!cx->aescx) {
+    rv = AESKeyWrap_InitContext(cx, key, keylen, iv, 0, encrypt, 0);
+    if (rv != SECSuccess) {
         PORT_Free(cx);
-	return NULL; 	/* error should already be set */
-    }
-    if (iv) {
-    	memcpy(cx->iv, iv, AES_KEY_WRAP_IV_BYTES);
-    } else {
-	memset(cx->iv, 0xA6, AES_KEY_WRAP_IV_BYTES);
+	cx = NULL; 	/* error should already be set */
     }
     return cx;
 }
@@ -97,9 +123,8 @@ extern void
 AESKeyWrap_DestroyContext(AESKeyWrapContext *cx, PRBool freeit)
 {
     if (cx) {
-	if (cx->aescx)
-	    AES_DestroyContext(cx->aescx, PR_TRUE);
-	memset(cx, 0, sizeof *cx);
+	AES_DestroyContext(&cx->aescx, PR_FALSE);
+/*	memset(cx, 0, sizeof *cx); */
 	if (freeit)
 	    PORT_Free(cx);
     }
@@ -253,7 +278,7 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
     for (j = 0; j < 6; ++j) {
     	for (i = 1; i <= nBlocks; ++i) {
 	    B[1] = R[i];
-	    s = AES_Encrypt(cx->aescx, (unsigned char *)B, &aesLen, 
+	    s = AES_Encrypt(&cx->aescx, (unsigned char *)B, &aesLen, 
 	                    sizeof B,  (unsigned char *)B, sizeof B);
 	    if (s != SECSuccess) 
 	        break;
@@ -358,7 +383,7 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
 	    xor_and_decrement((unsigned char *)&A, (unsigned char *)&t);
 #endif
 	    B[1] = R[i];
-	    s = AES_Decrypt(cx->aescx, (unsigned char *)B, &aesLen, 
+	    s = AES_Decrypt(&cx->aescx, (unsigned char *)B, &aesLen, 
 	                    sizeof B,  (unsigned char *)B, sizeof B);
 	    if (s != SECSuccess) 
 	        break;

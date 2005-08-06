@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sha512.c,v 1.7 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: sha512.c,v 1.8 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 #include "prcpucfg.h"
 #if defined(_X86_) || defined(SHA_NO_LONG_LONG)
 #define NOUNROLL512 1
@@ -513,6 +513,11 @@ SHA256_Resurrect(unsigned char *space, void *arg)
     if (ctx) 
 	PORT_Memcpy(ctx, space, sizeof *ctx);
     return ctx;
+}
+
+void SHA256_Clone(SHA256Context *dest, SHA256Context *src) 
+{
+    memcpy(dest, src, sizeof *dest);
 }
 
 
@@ -1168,6 +1173,11 @@ SHA512_Resurrect(unsigned char *space, void *arg)
     return ctx;
 }
 
+void SHA512_Clone(SHA512Context *dest, SHA512Context *src) 
+{
+    memcpy(dest, src, sizeof *dest);
+}
+
 /* ======================================================================= */
 /* SHA384 uses a SHA512Context as the real context. 
 ** The only differences between SHA384 an SHA512 are:
@@ -1263,6 +1273,11 @@ SHA384Context *
 SHA384_Resurrect(unsigned char *space, void *arg)
 {
     return SHA512_Resurrect(space, arg);
+}
+
+void SHA384_Clone(SHA384Context *dest, SHA384Context *src) 
+{
+    memcpy(dest, src, sizeof *dest);
 }
 
 /* ======================================================================= */

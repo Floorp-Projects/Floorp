@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.15 2004/09/17 00:34:52 nelsonb%netscape.com Exp $ */
+/* $Id: blapit.h,v 1.16 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -347,5 +347,20 @@ struct ECPrivateKeyStr {
     SECItem version;       /* As per SEC 1, Appendix C, Section C.4 */
 };
 typedef struct ECPrivateKeyStr ECPrivateKey;
+
+typedef void * (*BLapiAllocateFunc)(void);
+typedef void (*BLapiDestroyContextFunc)(void *cx, PRBool freeit);
+typedef SECStatus (*BLapiInitContextFunc)(void *cx, 
+				   const unsigned char *key, 
+				   unsigned int keylen,
+				   const unsigned char *, 
+				   int, 
+				   unsigned int ,
+				   unsigned int );
+typedef SECStatus (*BLapiEncrypt)(void *cx, unsigned char *output,
+				unsigned int *outputLen, 
+				unsigned int maxOutputLen,
+				const unsigned char *input, 
+				unsigned int inputLen);
 
 #endif /* _BLAPIT_H_ */
