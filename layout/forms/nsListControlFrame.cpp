@@ -2715,7 +2715,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
   nsIFrame* optionFrame;
   nsresult rv = presShell->GetPrimaryFrameFor(firstOption, &optionFrame);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y < 0 && ptInOptionFrame.x >= 0 &&
         ptInOptionFrame.x < optionFrame->GetSize().width) {
@@ -2729,7 +2729,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
   rv = presShell->GetPrimaryFrameFor(lastOption, &optionFrame);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y >= optionFrame->GetSize().height && ptInOptionFrame.x >= 0 &&
         ptInOptionFrame.x < optionFrame->GetSize().width) {
