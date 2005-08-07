@@ -472,8 +472,8 @@ const gXPInstallObserver = {
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
           messageString = browserBundle.getFormattedString("xpinstallDisabledWarning",
                                                            [brandShortName, host]);
-          buttonKey = browserBundle.getString("xpinstallDisabledWarningButton.accesskey");
-          buttonAccesskeyString = browserBundle.getString("xpinstallDisabledWarningButton");
+          buttonAccesskeyString = browserBundle.getString("xpinstallDisabledWarningButton.accesskey");
+          buttonString = browserBundle.getString("xpinstallDisabledWarningButton");
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
                                    null, "xpinstall-install-edit-prefs",
                                    null, "top", false, buttonAccesskeyString);
