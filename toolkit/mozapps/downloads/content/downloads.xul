@@ -58,7 +58,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="downloadManager" windowtype="Download:Manager"
         orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
-        width="400" height="300" screenX="10" screenY="10"
+        width="&window.width;" height="&window.height;" screenX="10" screenY="10"
         persist="width height screenX screenY sizeMode"
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
