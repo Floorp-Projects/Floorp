@@ -168,10 +168,6 @@
 #include "nsPluginNativeWindow.h"
 #include "nsIScriptSecurityManager.h"
 
-#if defined(XP_MAC) && TARGET_CARBON
-#include "nsIClassicPluginFactory.h"
-#endif
-
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
@@ -182,10 +178,8 @@
 #endif
 #endif
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
-#if TARGET_CARBON
-#include <TextServices.h>  // for ::UseInputWindow()
-#endif
+#ifdef XP_MACOSX
+#include <Carbon/Carbon.h> // for ::UseInputWindow()
 #endif
 
 #ifdef XP_OS2
@@ -4257,7 +4251,7 @@ public:
     {
       // only show the full path if people have set the pref,
       // the default should not reveal path information (bug 88183)
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
       return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
 #else
       return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
@@ -4267,7 +4261,7 @@ public:
     const char* spec;
     if (mPluginTag.mFullPath)
     {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#if !defined(XP_MACOSX)
       NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
 #endif
       spec = mPluginTag.mFullPath;
@@ -4465,10 +4459,8 @@ static PRBool IsCompatibleExecutable(const char* path)
 {
   int fd = open_executable(path);
   if (fd) {
-    // open the file, look at the header. if the first 8-bytes are "Joy!peff" then we have
-    // a CFM/PEFF library, which isn't compatible with MACH-O. If it is 0xfeedface, then it
-    // is MACH-O. Look in /etc/magic for other valid MACH-O header signatures. Should we
-    // just use the contents of /etc/magic like the "file" command does? man 1 file for more info.
+    // check the executable header to see if it is something we can use
+    // currently we can only use 32-bit mach-o (0xFEEDFACE)
     char magic_cookie[8];
     ssize_t n = read(fd, magic_cookie, sizeof(magic_cookie));
     close(fd);
@@ -4476,9 +4468,6 @@ static PRBool IsCompatibleExecutable(const char* path)
       const char mach_o_cookie[] = { 0xFE, 0xED, 0xFA, 0xCE };
       if (memcmp(magic_cookie, mach_o_cookie, sizeof(mach_o_cookie)) == 0)
         return PR_TRUE;
-      const char cfm_cookie[] = { 'J', 'o', 'y', '!', 'p', 'e', 'f', 'f' };
-      if (memcmp(magic_cookie, cfm_cookie, sizeof(cfm_cookie)) == 0)
-        return PR_FALSE;
     }
   }
   return PR_FALSE;
@@ -4519,7 +4508,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
     {
 
      nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#if !defined(XP_MACOSX)
       file->InitWithNativePath(nsDependentCString(pluginTag->mFileName));
 #else
       if (nsnull == pluginTag->mFullPath)
@@ -4605,29 +4594,12 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       {
        // Now lets try to get the entry point from a 4.x plugin
        rv = NS_ERROR_FAILURE;
-#if defined(XP_MAC) && TARGET_CARBON
-        // on Carbon, first let's see if this is a Classic plugin
-        // should we also look for a 'carb' resource?
-        if (PR_FindSymbol(pluginTag->mLibrary, "mainRD") != NULL)
-        {
-          nsCOMPtr<nsIClassicPluginFactory> factory =
-                   do_GetService(NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID, &rv);
-          if (NS_SUCCEEDED(rv))
-            rv = factory->CreatePlugin(serviceManager,
+       if (NS_FAILED(rv))
+         rv = ns4xPlugin::CreatePlugin(serviceManager,
                                        pluginTag->mFileName,
                                        pluginTag->mFullPath,
                                        pluginTag->mLibrary,
                                        &pluginTag->mEntryPoint);
-          if (!pluginTag->mEntryPoint)  // plugin wasn't found
-            rv = NS_ERROR_FAILURE;      // setup failure to try normal loading next
-        }
-#endif
-        if (NS_FAILED(rv))
-          rv = ns4xPlugin::CreatePlugin(serviceManager,
-                                        pluginTag->mFileName,
-                                        pluginTag->mFullPath,
-                                        pluginTag->mLibrary,
-                                        &pluginTag->mEntryPoint);
 
         plugin = pluginTag->mEntryPoint;
         pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
@@ -4635,8 +4607,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       }
     }
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
-#if TARGET_CARBON
+#if defined (XP_MACOSX)
    /* Flash 6.0 r50 and older on Mac has a bug which calls ::UseInputWindow(NULL, true)
       which turn off all our inline IME. Turn it back after the plugin
       initializtion and hope that future versions will be fixed. See bug 159016
@@ -4648,7 +4619,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
          ::UseInputWindow(NULL, false);
        }
     }
-#endif
 #endif
 
     if (plugin != nsnull)
