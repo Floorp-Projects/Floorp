@@ -48,6 +48,11 @@ function init(aEvent)
   button.addEventListener("command", switchPage, false);
 
   document.documentElement.getButton("accept").focus();
+#ifdef XP_MACOSX
+  // it may not be sized at this point, and we need its width to calculate its position
+  window.sizeToContent();
+  window.moveTo((screen.availWidth / 2) - (window.outerWidth / 2), screen.availHeight / 5);
+#endif
 }
 
 function uninit(aEvent)
