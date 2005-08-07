@@ -113,6 +113,9 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
   BOOL enableImageResize = [self getBooleanPref:"browser.enable_automatic_image_resizing" withSuccess:&gotPref];
   [mImageResize setState:enableImageResize];
 
+  BOOL preventAnimation = [[self getStringPref:"image.animation_mode" withSuccess:&gotPref] isEqualToString:@"once"];
+  [mPreventAnimation setState:preventAnimation];
+  
   // check if userContent.css is in the profile. Yes, this will give false positives if the
   // user has made their own, but that's their problem. 
   NSString* adBlockFile = [[[self profilePath] stringByAppendingPathComponent:@"chrome"] 
@@ -190,6 +193,16 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 -(IBAction) clickEnableImageResizing:(id)sender
 {
   [self setPref:"browser.enable_automatic_image_resizing" toBoolean:[sender state] ? YES : NO];
+}
+
+//
+// -clickPreventAnimation:
+//
+// Enable and disable mozilla's limiting of how animated images repeat
+//
+-(IBAction) clickPreventAnimation:(id)sender
+{
+  [self setPref:"image.animation_mode" toString:([sender state] ? @"once" : @"normal")];
 }
 
 //

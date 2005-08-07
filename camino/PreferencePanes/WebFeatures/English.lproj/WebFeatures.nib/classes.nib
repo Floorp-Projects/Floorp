@@ -22,6 +22,7 @@
                 clickEnableJS = id; 
                 clickEnableJava = id; 
                 clickEnablePopupBlocking = id; 
+                clickPreventAnimation = id; 
                 editWhitelist = id; 
                 editWhitelistDone = id; 
                 removeWhitelistSite = id; 
@@ -38,6 +39,7 @@
                 mEnableJava = NSButton; 
                 mEnablePopupBlocking = NSButton; 
                 mImageResize = NSButton; 
+                mPreventAnimation = NSButton; 
                 mWhitelistPanel = id; 
                 mWhitelistTable = ExtendedTableView; 
             }; 
