@@ -122,7 +122,7 @@
            <!-- XXX lilmatt: Finish this! -->
            <menuitem id="calendar-page-setup-menu"
                      label="&calendar.pagesetup.label;"
-                     accesskey="&calendar.pagesetup.accesskey;
+                     accesskey="&calendar.pagesetup.accesskey;"
                      disabled="true"/>
            <menuitem id="calendar-print-menu"
                      key="print_key"
