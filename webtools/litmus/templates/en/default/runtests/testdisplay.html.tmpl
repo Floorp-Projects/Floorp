@@ -28,7 +28,7 @@
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
-[% script = ['subgroupscript', 'edittestsscript'] %]
+[% script = ['edittestsscript'] %]
 
 [% INCLUDE global/header.html.tmpl title = 'Run Tests' script=script includeselects=1%] 
 
@@ -49,22 +49,22 @@
 <input name="isTestResult" type="hidden" value="true">
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="">
 <input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]">
-<table border="0" cellpadding="5" width="100%">
 
 [% evenodd = 'odd' %]
 [% FOREACH curtest = tests %]
-    <tr style="testlist_[%evenodd%]"><td>
-        <a href="show_test.cgi?id=[% curtest.testid FILTER html %]" class="smallcaps">show</a></td></tr>
+    <div class="testlist_[%evenodd%]">
+    <a href="show_test.cgi?id=[% curtest.testid FILTER html %]" class="smallcaps">show</a>
     [% INCLUDE test/test.html.tmpl test=curtest style="testlist_$evenodd" showedit=istrusted %]
-    <tr><td colspan="3"><hr /></td></tr>
 
     [% IF evenodd == 'odd' %]
         [% evenodd = 'even' %]
     [% ELSE %]
         [% evenodd = 'odd' %]
     [% END %]
+    </div>
+    <hr />
 [% END %]
-</table>
+
 <input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()">
 
 </form>

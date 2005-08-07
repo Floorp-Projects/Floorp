@@ -52,9 +52,13 @@ if (! $test) {
 
 my @results = Litmus::DB::Result->retrieve_all();
 
+my $showallresults = $c->param("showallresults") || "";
+
 my $vars = {
     test => $test,
     results => \@results,
+    showallresults => $showallresults,
+    
 };
 
 Litmus->template()->process("show/show.html.tmpl", $vars) || 

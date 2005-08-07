@@ -24,20 +24,16 @@
   # $showedit (optional) - include UI to edit the test?
   #                           for this to work, you must include the 
   #                           required scripts in the head
-  # $style    (optional) - css class to apply to the table 
-  #                        rows for this testcase
-  #
 #%]
 
 [% PROCESS global/selects.none.tmpl %]
 
-[% IF style %] [% style = "class=\"$style\"" %] [% END %]
-
-  <tr [% style %]>
+<table border="0">
+  <tr>
     <a name="test_[% test.testid FILTER html %]" />
     <td><strong>Test ID: </strong>[% test.testid FILTER html %]</td>
     
-    <td><strong>Summary: </strong>
+    <td width="45%">
         [% IF showedit %]
             <input name="summary_edit_[%test.testid FILTER html%]" 
                 id="summary_edit_[%test.testid FILTER html%]" 
@@ -50,7 +46,7 @@
             </strong>
         </td>
     
-    <td [% style %]><table border="0">
+    <td><table border="0">
     
         <tr><td><div align="right"><strong>Product:</strong></div></td>
         [% IF showedit %]
@@ -81,12 +77,20 @@
             
         </table></td>
   </tr>
-  <tr [% style %]>
+  <tr>
     <td colspan="3">
     <table border="0" cellpadding="5">
       <tr id="testdatarow_[% test.testid FILTER html %]">
        [% test.format.display(test, showedit, "runtests/testdisplay.html.tmpl") %]
       </tr>
+      <tr style="display: none;" id="communityenabled_row_edit_[%test.testid FILTER html%]"><td>
+    <strong>Community Enabled Test: </strong> 
+    [% IF test.communityenabled %] [% checked = "checked" %] [% END %]
+    <input name="communityenabled_[%test.testid FILTER html%]" 
+        type="checkbox" 
+        id="communityenabled_[%test.testid FILTER html%]" 
+        value="1" [% checked %]>
+    </td>
     </table></td>
   </tr>
     </td>
@@ -106,10 +110,10 @@
             </td>
         </tr>
     [% END %]
-  <tr [% style %]>
+  <tr>
   <td colspan="3"><hr /></td>
   </tr>
-  <tr [% style %]>
+  <tr>
      <td valign="top">
        <p><strong>Result:</strong></p>
           <table border="0">
@@ -131,3 +135,4 @@
              id="note"></textarea>
         </td>
       </tr>
+      </table>

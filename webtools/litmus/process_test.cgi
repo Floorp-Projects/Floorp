@@ -149,29 +149,33 @@ if ($c->param("editingTestcases") && Litmus::Auth::canEdit(Litmus::Auth::getCook
     @changed = split(',' => $c->param("editingTestcases"));
     foreach my $editid (@changed) {
         my $edittest = Litmus::DB::Test->retrieve($editid);
-        $edittest->summary($c->param("summary_edit_$editid"));
-        $edittest->steps($c->param("steps_edit_$editid"));
-        $edittest->expectedresults($c->param("results_edit_$editid"));
+        if (! $edittest) {invalidInputError("Test $editid does not exist")}
         
+        $edittest->summary($c->param("summary_edit_$editid"));
         if ($c->param("communityenabled_$editid")) {
             $edittest->communityenabled(1);
         } else {
             $edittest->communityenabled(0);
         }
+        my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
+        my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
+        my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
+        requireField("product", $product);
+        requireField("group", $group);
+        requireField("subgroup", $subgroup);
+        $edittest->product($product);
+        $edittest->testgroup($group);
+        $edittest->subgroup($subgroup);
         
-          my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
-          my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
-          my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
-          
-          requireField("product", $product);
-          requireField("group", $group);
-          requireField("subgroup", $subgroup);
-          
-          
-          $edittest->product($product);
-          $edittest->testgroup($group);
-          $edittest->subgroup($subgroup);
-          
+        # now set the format fields: 
+        my $format = $edittest->format();
+        foreach my $curfield ($format->fields()) {
+            warn($curfield."_edit_editid");
+            $edittest->set($format->getColumnMapping($curfield), 
+                           $c->param($curfield."_edit_$editid"));
+        }
+
+        
         $edittest->update();
     }
 } elsif ($c->param("editingTestcases") && 

@@ -63,7 +63,7 @@ sub find_column {
     }
 }
 
-# to finish the job, we need to have accessors that correspond to 
+# we need to have accessors that correspond to 
 # the "virtual columns" created by our format. sounds like a job for 
 # autoload...
 sub AUTOLOAD {
@@ -74,8 +74,7 @@ sub AUTOLOAD {
     my $col = $self->find_column($name);
     
     if (!$col) {
-        internalError("tried to call Litmus::DB::Test method $name which does not exist ".
-            "(mapped to $col)");
+        internalError("tried to call Litmus::DB::Test method $name which does not exist ");
     }
     
     return $self->$col(@args);
@@ -124,6 +123,8 @@ sub iscompleted {
 #
 # Or in other words: "Heuristics are bug ridden by definition. If they didn't 
 # have bugs, then they'd be algorithms."
+#
+# XXX: Rewrite all this as an SQL query so it doesn't take so long. 
 memoize('state');
 sub state {
     my $self = shift;
@@ -167,7 +168,8 @@ sub state {
     # calculate the magic number for this test. In other words, the 
     # result spread that we require in order to have confidence in our 
     # result. If the spread between two states is within the magic 
-    # number, we just return 0 and the test should be considered unrun. 
+    # number, we just return 0 and the test should be considered unrun
+    # since we have no confidence in our result. 
     my $magicnumber = 2; # ok we don't really calculate it. We should though...
     
     foreach my $outer (keys(%statecounts)) {

@@ -163,13 +163,10 @@ tr#header {
 
 /* for test lists, striped white and gray */
 .testlist_odd {
-    background-color: #FFFFFF;
+    background: #FFFFFF;
 }
 .testlist_even {
-    background-color: #ABABAB;
-    border-color: #ADADAD;
-    border-style: solid;
-    border-width: 5px;
+    background: #ABABAB;
 }
 
 /* background colors based on if a group/subgroup is 

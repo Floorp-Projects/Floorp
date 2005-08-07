@@ -18,6 +18,10 @@
   # Contributor(s): Zach Lipton <zach@zachlipton.com>
 #%]
 
+<script language="JavaScript" type="text/JavaScript">
+fields = fields.concat(["steps", "results"]);
+</script>
+
 <td valign="top" width="50%">
 <strong>Steps to Perform:</strong><br>
 [% IF showedit %]
@@ -33,7 +37,7 @@
 <td valign="top" width="50%">
  <strong>Expected Results:</strong><br>
  [% IF showedit %]
-     <textarea name="results_edit_[%test.testid FILTER html%]" 
+     <textarea name="expectedresults_edit_[%test.testid FILTER html%]" 
          id="results_edit_[%test.testid FILTER html%]"
         style="display: none;"
         rows="15" cols="45">[% test.expectedresults FILTER html %]</textarea>
@@ -43,12 +47,4 @@
 </td>
 [% IF showedit %]
 </tr>
-<tr style="display: none;" id="communityenabled_row_edit_[%test.testid FILTER html%]"><td>
-<strong>Community Enabled Test: </strong> 
-    [% IF test.communityenabled %] [% checked = "checked" %] [% END %]
-    <input name="communityenabled_[%test.testid FILTER html%]" 
-        type="checkbox" 
-        id="communityenabled_[%test.testid FILTER html%]" 
-        value="1" [% checked %]>
-</td>
 [% END %]

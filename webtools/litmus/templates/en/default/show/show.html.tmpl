@@ -21,6 +21,8 @@
 [%# INTERFACE:
   # $test - the test object to display
   # @results - the list of all possible test results
+  # $showallresults (optional) - if true, then all test results
+  #								 will be shown
   # 
 #%]
 
@@ -52,7 +54,20 @@
 <td colspan="2">
 
 <table border="0">
+[% 
+  # by default, we show only recent results and the last 
+  # three non-recent results. the showallresults switch
+  # causes us to show all results:
+%]
+[% nonrecentcount = 0 %]
 [% FOREACH curresult = test.testresults %]
+[% UNLESS showallresults %]
+  [% IF curresult.isrecent == 0 && nonrecentcount >= 3 %]
+  	[% NEXT %]
+  [% ELSIF curresult.isrecent == 0 %]
+    [% nonrecentcount = nonrecentcount+1 %]
+  [% END %]
+[% END %] 
 <tr>
 <td colspan="2" style="[% curresult.result.style %]">
 ------- Test Result From 
@@ -85,6 +100,7 @@
 [% END %]
 
 </table>
+<a href="show_test.cgi?showallresults=1&id=[%test.testid FILTER html | uri%]">Show all results</a>
 </td></tr>
 </table>
 

@@ -30,8 +30,8 @@
 %]
 [% BLOCK edittestsscript %]
 var editedtests = new Array();
-var fields = ["product", "summary", "steps", "results", 
-    "testgroup", "subgroup", "communityenabled_row"];
+var fields = ["product", "summary", "testgroup", "subgroup", 
+    "communityenabled_row"];
 function showEdit(testid) { 
     for (var i=0; i<fields.length; i++) {
         show(getField(fields[i]+"_edit",testid));
