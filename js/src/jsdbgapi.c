@@ -335,7 +335,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSRuntime *rt;
     JSWatchPoint *wp;
     JSScopeProperty *sprop;
-    jsval userid;
+    jsval propid, userid;
     JSScope *scope;
     JSBool ok;
 
@@ -346,11 +346,14 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         sprop = wp->sprop;
         if (wp->object == obj && SPROP_USERID(sprop) == id) {
             JS_LOCK_OBJ(cx, obj);
-            userid = SPROP_USERID(sprop);
+            propid = ID_TO_VALUE(sprop->id);
+            userid = (sprop->flags & SPROP_HAS_SHORTID)
+                     ? INT_TO_JSVAL(sprop->shortid)
+                     : propid;
             scope = OBJ_SCOPE(obj);
             JS_UNLOCK_OBJ(cx, obj);
             HoldWatchPoint(wp);
-            ok = wp->handler(cx, obj, userid,
+            ok = wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
                              ? OBJ_GET_SLOT(cx, obj, wp->sprop->slot)
                              : JSVAL_VOID,
@@ -475,7 +478,8 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         /* Clone the prototype property so we can watch the right object. */
         jsval value;
         JSPropertyOp getter, setter;
-        uintN attrs;
+        uintN attrs, flags;
+        intN shortid;
 
         if (OBJ_IS_NATIVE(pobj)) {
             value = SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj))
@@ -484,18 +488,23 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
             getter = sprop->getter;
             setter = sprop->setter;
             attrs = sprop->attrs;
+            flags = sprop->flags;
+            shortid = sprop->shortid;
         } else {
-            if (!OBJ_GET_PROPERTY(cx, pobj, id, &value)) {
+            if (!OBJ_GET_PROPERTY(cx, pobj, id, &value) ||
+                !OBJ_GET_ATTRIBUTES(cx, pobj, id, prop, &attrs)) {
                 OBJ_DROP_PROPERTY(cx, pobj, prop);
                 return JS_FALSE;
             }
-            getter = setter = JS_PropertyStub;
-            attrs = JSPROP_ENUMERATE;
+            getter = setter = NULL;
+            flags = 0;
+            shortid = 0;
         }
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
-        if (!js_DefineProperty(cx, obj, propid, value, getter, setter, attrs,
-                               &prop)) {
+        /* Recall that obj is native, whether or not pobj is native. */
+        if (!js_DefineNativeProperty(cx, obj, propid, value, getter, setter,
+                                     attrs, flags, shortid, &prop)) {
             return JS_FALSE;
         }
         sprop = (JSScopeProperty *) prop;
