@@ -57,6 +57,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <mach-o/loader.h>
 #include <mach-o/fat.h>
 
@@ -153,7 +154,7 @@ static PRBool IsLoadablePlugin(CFURLRef aURL)
 
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-  CFURLRef pluginURL;
+  CFURLRef pluginURL = NULL;
   if (NS_FAILED(toCFURLRef(file, pluginURL)))
     return PR_FALSE;
   
