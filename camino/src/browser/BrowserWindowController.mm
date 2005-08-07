@@ -719,7 +719,8 @@ enum BWCOpenDest {
     // stagger window from last browser, if there is one. we can't just use autoposition
     // because it doesn't work on multiple monitors (radar bug 2972893). |getFrontmostBrowserWindow|
     // only gets fully chromed windows, so this will do the right thing for popups (yay!).
-    const int kWindowStaggerOffset = 15;
+    const int kWindowStaggerOffset = 22;
+    
     NSWindow* lastBrowser = [[NSApp delegate] getFrontmostBrowserWindow];
     if ( lastBrowser != [self window] ) {
       NSRect screenRect = [[lastBrowser screen] visibleFrame];
