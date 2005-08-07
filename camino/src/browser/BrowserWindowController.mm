@@ -782,7 +782,7 @@ enum BWCOpenDest {
   if (button) {
     DraggableImageAndTextCell* newCell = [[[DraggableImageAndTextCell alloc] init] autorelease];
     [newCell setDraggable:YES];
-    [newCell setClickHoldTimeout:0.75];
+    [newCell setClickHoldTimeout:0.45];
     [button setCell:newCell];
 
     [button setBezelStyle: NSRegularSquareBezelStyle];
