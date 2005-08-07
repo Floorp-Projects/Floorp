@@ -900,7 +900,7 @@ nsPop3Sink::IncorporateAbort(PRBool uidlDownload)
   nsresult rv;
   rv = m_outFileStream->close();   //need to close so that the file can be truncated.
   NS_ENSURE_SUCCESS(rv,rv);
-  if (m_msgOffset >= 0)
+  if (m_msgOffset >= 0 && !m_downloadingToTempFile)
   {
      nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
      NS_ASSERTION(server, "Could not get the pop server !!");
