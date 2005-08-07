@@ -226,7 +226,9 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
   //  set up input field
   NSTextField* field = [[[NSTextField alloc] initWithFrame: NSMakeRect(0, 0, width, kTextFieldHeight)] autorelease];
-  [[field cell] setControlSize: NSSmallControlSize];
+  NSTextFieldCell* cell = [field cell];
+  [cell setControlSize: NSSmallControlSize];
+  [cell setScrollable: YES];
   [field setStringValue: promptText];
   [field selectText: nil];
   [field setFont: [NSFont systemFontOfSize: [NSFont smallSystemFontSize]]];
