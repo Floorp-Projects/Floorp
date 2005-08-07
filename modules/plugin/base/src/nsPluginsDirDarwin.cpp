@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Patrick C. Beard <beard@netscape.com>
+ *   Josh Aas <josh@mozillafoundation.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,18 +45,20 @@
   by Patrick C. Beard.
  */
 
-#include "nsPluginsDir.h"
 #include "prlink.h"
+#include "prnetdb.h"
+
+#include "nsPluginsDir.h"
 #include "ns4xPlugin.h"
 #include "nsPluginsDirUtils.h"
 
 #include "nsILocalFileMac.h"
-#include <Processes.h>
-#include <Folders.h>
-#include <Resources.h>
-#include <TextUtils.h>
-#include <Aliases.h>
+#include <Carbon/Carbon.h>
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <mach-o/loader.h>
+#include <mach-o/fat.h>
 
 #include <CFURL.h>
 #include <CFBundle.h>
@@ -97,42 +100,92 @@ static OSErr toFSSpec(nsIFile* file, FSSpec& outSpec)
     return NS_OK;
 }
 
+static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
+{
+  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
+  if (!lfm)
+    return NS_ERROR_FAILURE;
+  CFURLRef url;
+  nsresult rv = lfm->GetCFURL(&url);
+  if (NS_SUCCEEDED(rv))
+    outURL = url;
+  
+  return rv;
+}
+
+// function to test whether or not this is a loadable plugin
+static PRBool IsLoadablePlugin(CFURLRef aURL)
+{
+  if (!aURL)
+    return PR_FALSE;
+  
+  PRBool isLoadable = PR_FALSE;
+  char path[PATH_MAX];
+  if (CFURLGetFileSystemRepresentation(aURL, TRUE, (UInt8*)path, sizeof(path))) {
+    UInt32 magic;
+    int f = open(path, O_RDONLY);
+    if (f != -1) {
+      // Mach-O headers use the byte ordering of the architecture on which
+      // they run, so test against the magic number in the byte order
+      // we're compiling for. Fat headers are always big-endian, so swap
+      // them to host before comparing to host representation of the magic
+      if (read(f, &magic, sizeof(magic)) == sizeof(magic)) {
+        if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
+          isLoadable = PR_TRUE;
+#ifdef __POWERPC__
+        // if we're on ppc, we can use CFM plugins
+        if (isLoadable == PR_FALSE) {
+          UInt32 magic2;
+          if (read(f, &magic2, sizeof(magic2)) == sizeof(magic2)) {
+            UInt32 cfm_header1 = 0x4A6F7921; // 'Joy!'
+            UInt32 cfm_header2 = 0x70656666; // 'peff'
+            if (cfm_header1 == magic && cfm_header2 == magic2)
+              isLoadable = PR_TRUE;
+          }
+        }
+#endif
+      }
+      close(f);
+    }
+  }
+  return isLoadable;
+}
+
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-    // look at file's creator/type and make sure it is a code fragment, etc.
-    FSSpec spec;
-    OSErr err = toFSSpec(file, spec);
-    if (err != noErr)
-        return PR_FALSE;
-
-    FInfo info;
-    err = FSpGetFInfo(&spec, &info);
-    if (err == noErr && ((info.fdType == 'shlb' && info.fdCreator == 'MOSS') ||
-                         info.fdType == 'NSPL')) {
-        return PR_TRUE;
-    }
-
-    // Some additional plugin types for Carbon/Mac OS X
-    if (err == noErr && (info.fdType == 'BRPL' || info.fdType == 'IEPL'))
-        return PR_TRUE;
-
-    // for Mac OS X bundles.
-    nsCString path;
-    file->GetNativePath(path);
-    CFBundleRef bundle = getPluginBundle(path.get());
-    if (bundle) {
-        UInt32 packageType, packageCreator;
-        CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
-        CFRelease(bundle);
-        switch (packageType) {
-        case 'BRPL':
-        case 'IEPL':
-        case 'NSPL':
-            return PR_TRUE;
-        }
-    }
-
+  CFURLRef pluginURL;
+  if (NS_FAILED(toCFURLRef(file, pluginURL)))
     return PR_FALSE;
+  
+  PRBool isPluginFile = PR_FALSE;
+  
+  CFBundleRef pluginBundle = CFBundleCreate(kCFAllocatorDefault, pluginURL);
+  if (pluginBundle) {
+    UInt32 packageType, packageCreator;
+    CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
+    if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
+      CFURLRef executableURL = CFBundleCopyExecutableURL(pluginBundle);
+      if (executableURL) {
+        isPluginFile = IsLoadablePlugin(executableURL);
+        CFRelease(executableURL);
+      }
+    }
+    CFRelease(pluginBundle);
+  }
+  else {
+    LSItemInfoRecord info;
+    if (LSCopyItemInfoForURL(pluginURL, kLSRequestTypeCreator, &info) == noErr) {
+      if ((info.filetype == 'shlb' && info.creator == 'MOSS') ||
+          info.filetype == 'NSPL' ||
+          info.filetype == 'BRPL' ||
+          info.filetype == 'IEPL') {
+        isPluginFile = IsLoadablePlugin(pluginURL);
+      }
+    }
+  }
+  
+  CFRelease(pluginURL);
+  return isPluginFile;
 }
 
 nsPluginFile::nsPluginFile(nsIFile *spec)
