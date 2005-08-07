@@ -1251,9 +1251,14 @@ nsDocShell::GetPresContext(nsPresContext ** aPresContext)
     NS_ENSURE_ARG_POINTER(aPresContext);
     *aPresContext = nsnull;
 
+#if 1
+    if (!mContentViewer)
+      return NS_OK;
+#else
     nsresult rv = EnsureContentViewer();
     if (NS_FAILED(rv))
       return rv;    // we're probably being destroyed
+#endif
     
     nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
     NS_ENSURE_TRUE(docv, NS_ERROR_NO_INTERFACE);
