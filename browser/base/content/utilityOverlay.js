@@ -406,7 +406,7 @@ function openAboutDialog()
     // XXXmano: define minimizable=no although it does nothing on OS X
     // (see Bug 287162); remove this comment once Bug 287162 is fixed...
     window.open("chrome://browser/content/aboutDialog.xul", "About",
-                "centerscreen,chrome,resizable=no, minimizable=no");
+                "chrome, resizable=no, minimizable=no");
   }
 #else
   window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
