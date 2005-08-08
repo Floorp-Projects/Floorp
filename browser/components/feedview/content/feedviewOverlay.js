@@ -117,7 +117,9 @@ function feedviewIsFeed(doc) {
 // Checks every document to see if it's a feed file, and transforms it if so.
 function maybeLoadFeedview(evnt) {
   // See if the document is XML.  If not, it's definitely not a feed.
-  if (!(evnt.originalTarget instanceof XMLDocument))
+  if (!(evnt.originalTarget instanceof XMLDocument) &&
+      // bandaid for bug 256084
+      !(evnt.originalTarget instanceof XULDocument))
     return;
 
   var dataXML = evnt.originalTarget;
