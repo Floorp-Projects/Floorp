@@ -42,6 +42,12 @@
 # SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 #  The first character after a period must be alphabetic.
 
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define UNIX_BUT_NOT_MAC
+#endif
+#endif
+
 pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("general.startup.browser", true);
 
@@ -159,7 +165,7 @@ pref("general.skins.selectedSkin", "classic/1.0");
 pref("general.useragent.extra.firefox", "Firefox/@APP_VERSION@");
 
 pref("general.smoothScroll", false);
-#ifdef XP_UNIX
+#ifdef UNIX_BUT_NOT_MAC
 pref("general.autoScroll", false);
 #else
 pref("general.autoScroll", true);
