@@ -159,7 +159,9 @@ nsBrowserStatusHandler.prototype =
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
-
+    /* Color is temporary. We shall dynamically assign a new class to the element and or to 
+    evaluate access from another class rule, the security identity color has to be with the minimo.css */ 
+    document.styleSheets[1].cssRules[0].style.backgroundColor="yellow";
   }
 }
 
