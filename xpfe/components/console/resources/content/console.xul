@@ -51,7 +51,7 @@
   <!ENTITY % util SYSTEM "chrome://communicator/locale/utilityOverlay.dtd"> %util;
 ]>
 
-<window id="JSConsoleWindow"
+<window id="jsconsoleWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&console.title;"
         windowtype="global:console"
