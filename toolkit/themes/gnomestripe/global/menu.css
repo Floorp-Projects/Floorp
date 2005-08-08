@@ -90,7 +90,7 @@ menulist > menupopup > menuitem,
 menulist > menupopup > menu {
   padding-top: 1px;
   padding-bottom: 1px;
-  -moz-padding-start: 5px;
+  -moz-padding-start: 1px;
   -moz-padding-end: 30px;
   max-width: none;
   font: message-box;

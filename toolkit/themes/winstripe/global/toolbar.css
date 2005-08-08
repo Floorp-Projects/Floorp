@@ -47,20 +47,21 @@
 toolbox {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
+  border-top: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
 }
 
 /* ::::: toolbar & menubar ::::: */
 
 toolbar {
   min-width: 1px;
-  min-height: 20px;
+  min-height: 19px;
   border-top: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDShadow;
 }
 
 toolbar[type="menubar"], menubar {
   min-width: 1px;
-  min-height: 20px;
   border-bottom: 1px solid ThreeDShadow;
   border-top: 0px !important;
 }

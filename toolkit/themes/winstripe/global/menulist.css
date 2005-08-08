@@ -76,14 +76,17 @@ menulist[open="true"]:focus > .menulist-label-box {
 }
 
 .menulist-label {
-  margin: 1px 3px !important;
+  margin-top: 0 !important;
+  -moz-margin-end: 0 !important;
+  margin-bottom: 0 !important;
+  -moz-margin-start: 1px !important;
 }
 
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {
   -moz-appearance: menulist-button;
-  min-width: 17px;
+  min-width: 16px;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;

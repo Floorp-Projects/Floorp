@@ -43,8 +43,22 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+#menubar-items {
+  -moz-box-orient: vertical; /* for flex hack */
+}
+
+#menubar-items > menubar {
+  -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
+}
+
 #PersonalToolbar {
   min-height: 26px;
+}
+
+/* ..... fix searchbar "add engine" padding issue ..... */
+
+#searchbar .searchbar-dropmarker menuseparator + menuitem { 
+-moz-padding-start: 4px; 
 }
 
 /* ::::: bookmark buttons ::::: */
@@ -84,6 +98,11 @@ toolbarbutton.bookmark-item[open="true"] {
   background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat !important;
 }
 
+#wrapper-search-container .searchbar-textbox {
+  -moz-user-input: disabled;
+  -moz-user-focus: normal;
+}
+
 .bookmarks-toolbar-customize {
   display: none;
   max-width: 15em !important;
@@ -107,19 +126,24 @@ menu.bookmark-item,
 menuitem.bookmark-item {
   min-width: 0;
   max-width: 26em;
-  border-top: 1px solid transparent !important;
-  border-bottom: 1px solid transparent !important;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  -moz-padding-start: 2px;
-  -moz-padding-end: 3px;
-  margin-top: -1px;
 }
 
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
   height: 16px;
+  -moz-padding-start: 0px;
 }
+
+/* ..... fix bookmarks padding issue ..... */
+
+#menu_BookmarksPopup menuitem { 
+-moz-padding-start: 4px; 
+}
+
+#menu_BookmarksPopup menuitem.menuitem-iconic { 
+-moz-padding-start: 0px; 
+}
+
 
 /* ..... drag and drop styles ..... */
 
