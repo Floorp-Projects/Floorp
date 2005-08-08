@@ -195,7 +195,7 @@ PR_BEGIN_EXTERN_C
 
 PR_END_EXTERN_C
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(__POWERPC__)
 
 #define TV2FP(tvp) _TV2FP((void *)tvp)
 
@@ -240,7 +240,7 @@ _FP2TV(void *fp)
 #define TV2FP(f) (f)
 #define FP2TV(f) (f)
 
-#endif /* XP_MACOSX */
+#endif /* XP_MACOSX && __POWERPC__ */
 
 ////////////////////////////////////////////////////////////////////////
 // Globals
