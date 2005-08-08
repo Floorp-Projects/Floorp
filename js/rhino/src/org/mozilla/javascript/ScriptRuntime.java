@@ -2938,6 +2938,12 @@ public class ScriptRuntime {
                     errorObject, "javaException", wrap,
                     ScriptableObject.PERMANENT | ScriptableObject.READONLY);
             }
+            if (re != null) {
+                Object wrap = cx.getWrapFactory().wrap(cx, scope, re, null);
+                ScriptableObject.defineProperty(
+                    errorObject, "rhinoException", wrap,
+                    ScriptableObject.PERMANENT | ScriptableObject.READONLY);
+            }
 
             obj = errorObject;
         }
