@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ * Marcio S. Galli - mgalli@geckonnection.com
+ * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -67,6 +68,8 @@ nsBrowserStatusHandler.prototype =
     this.statusbarText    = document.getElementById("statusbar-text");
     this.stopreloadButton = document.getElementById("reload-stop-button");
     this.statusbar        = document.getElementById("statusbar");
+    this.progressBGPosition = 0;  /* To be removed, fix in onProgressChange ... */ 
+    
   },
 
   destroy : function()
@@ -75,6 +78,8 @@ nsBrowserStatusHandler.prototype =
     this.statusbarText = null;
     this.stopreloadButton = null;
     this.statusbar = null;
+    this.progressBGPosition = null;  /* To be removed, fix in onProgressChange ... */ 
+    
   },
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -123,9 +128,19 @@ nsBrowserStatusHandler.prototype =
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
+  
+    /* This is the in-progress version of our background progress bar under urlbar */
+    this.progressBGPosition+=3;
+    document.styleSheets[1].cssRules[0].style.backgroundPosition=this.progressBGPosition+"px 0%";
+
+    /* This is to be the new version, when the aCurTotalProgress aMaxTotalProgres values 
+    are correct...
+    
     var percentage = parseInt((aCurTotalProgress * 100) / aMaxTotalProgress);
     document.styleSheets[1].cssRules[0].style.backgroundPosition=percentage+"px 100%";
 
+    */
+    
   },
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
@@ -144,6 +159,7 @@ nsBrowserStatusHandler.prototype =
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
+
   }
 }
 
@@ -163,6 +179,15 @@ function MiniNavStartup()
   browserInit(currentTab);
   gSelectedTab=currentTab;
   loadURI("http://www.google.com");
+  
+  //
+  // this is temporary til we get menu tminig events stuff fixed. 
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=303934
+  //
+  document.getElementById("command_BrowserOpenTab").addEventListener("mousedown",BrowserOpenTab,false);
+  document.getElementById("command_BrowserOpenInfo").addEventListener("mousedown",BrowserOpenInfo,false);
+  document.getElementById("command_BrowserTestDialogs").addEventListener("mousedown",BrowserTestDialogs,false);
+  document.getElementById("command_BrowserTestSendSMS").addEventListener("mousedown",BrowserTestSendSMS,false);
 
 }
 
@@ -259,7 +284,7 @@ function BrowserOpenTab()
     getBrowser().selectedTab = getBrowser().addTab('about:blank');
     browserInit(getBrowser().selectedTab);
   } catch (e) {
-     alert(e);
+    alert(e);
   }
   //  if (gURLBar) setTimeout(function() { gURLBar.focus(); }, 0);
 

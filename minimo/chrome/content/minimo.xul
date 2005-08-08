@@ -22,7 +22,8 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
-
+ Marcio S. Galli, mgalli@geckonnection.com
+ 
  Alternatively, the contents of this file may be used under the terms of
  either the GNU General Public License Version 2 or later (the "GPL"), or
  the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -61,14 +62,31 @@
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
 
   <toolbox>
-    <toolbar id="nav-bar"  >
+
+	<!-- command definitions --> 
+	<!-- WARNING: this should be enabled soon as the events menu fix is landed. -->
+	<!-- we shall enable all the command="cmd_commandName" for each Menu Item   -->  
+	<!-- so far, the -->
+	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
+	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
+	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
+	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
+	
+    <toolbar id="nav-bar">
+
        <menubar  class="chromeclass-menubar">
-         <menu id="menu-button" >
+       
+         <menu id="menu-button" width="24" > <!-- hack has to fix -->
             <menupopup id="menu_FilePopup">
-              <menuitem id="menu_close"/>
-              <menuitem id="menu_closeWindow" command="cmd_closeWindow"
-                  key="key_closeWindow" label="about"/>
-              <menuitem label="new Tab" oncommand="BrowserOpenTab()" />
+             <menuitem id="menu_close"/>
+		     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
+               key="key_closeWindow" label="about"/>
+		     <menuitem id="command_BrowserOpenTab" label="new Tab"  /> 
+		     <!--
+		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
+		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
+		     <menuitem id="command_BrowserTestSendSMS" label="Send SMS"/>
+		     -->
             </menupopup>
           </menu>
         </menubar>
