@@ -57,7 +57,7 @@
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsITransactionManager.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 
 class nsIOutputStream;
 
@@ -111,8 +111,6 @@ protected:
     nsresult ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
 
     nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
-
-    nsresult GetBookmarksFile(nsIFile* *aResult);
 
     nsresult WriteBookmarks(nsIFile* bookmarksFile, nsIRDFDataSource *ds,
                             nsIRDFResource *root);
@@ -175,7 +173,6 @@ protected:
     nsresult UpdateLivemarkChildren(nsIRDFResource* aSource);
 
     void SaveToBackup();
-    void MaybeRestoreFromBackup(nsIFile* aBookmarkFile, nsIFile* aParentFolder);
 
     // nsIStreamObserver methods:
     NS_DECL_NSIREQUESTOBSERVER

@@ -55,6 +55,7 @@ MOZILLA_INTERNAL_API = 1
 REQUIRES = \
 	xpcom \
 	string \
+	pref \
 	xulapp \
 	$(NULL)
 
