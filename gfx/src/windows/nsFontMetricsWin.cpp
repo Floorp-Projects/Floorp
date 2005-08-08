@@ -281,6 +281,74 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 
 static nsFontCleanupObserver *gFontCleanupObserver;
 
+#undef CHAR_BUFFER_SIZE
+#define CHAR_BUFFER_SIZE 1024
+
+typedef nsAutoBuffer<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
+typedef nsAutoBuffer<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
+
+class nsFontSubset : public nsFontWin
+{
+public:
+  nsFontSubset();
+  virtual ~nsFontSubset();
+
+  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
+                           PRUint32 aLength);
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
+#endif
+
+  int Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWin, nsFontWinA* aFont);
+
+  // convert a Unicode string to ANSI within our codepage
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
+
+  BYTE     mCharset;
+  PRUint16 mCodePage;
+};
+
+class nsFontSubsetSubstitute : public nsFontSubset
+{
+public:
+  nsFontSubsetSubstitute(PRBool aIsForIgnorable = FALSE);
+  virtual ~nsFontSubsetSubstitute();
+
+  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength);
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const PRUnichar* aString, PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#ifdef NS_DEBUG
+  virtual void DumpFontInfo();
+#endif // NS_DEBUG
+#endif
+
+  // overloaded method to convert all chars to substitute chars
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
+  //when fontSubstitute declares it supports a certain char, no need to check subset,
+  // since we have one and only one subset.
+  virtual PRBool HasGlyph(PRUnichar ch) {return PR_TRUE;};
+
+private:
+  PRBool mIsForIgnorable;
+};
+
 static nsresult
 InitGlobals(void)
 {
@@ -373,22 +441,46 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gFontForIgnorable = new nsFontWinSubstitute(gIgnorableCCMapExt); 
-  if (!gFontForIgnorable) {
-    FreeGlobals();
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!UseAFunctions()) {
+    gFontForIgnorable = new nsFontWinSubstitute(gIgnorableCCMapExt); 
+    if (!gFontForIgnorable) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    nsFontWinSubstituteA* font = new nsFontWinSubstituteA(gIgnorableCCMapExt);
+    gFontForIgnorable = font;
+    if (!gFontForIgnorable) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    font->mSubsets = (nsFontSubset**)nsMemory::Alloc(sizeof(nsFontSubset*));
+    if (!font->mSubsets) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    font->mSubsets[0] = nsnull;
+    nsFontSubsetSubstitute* subset = new nsFontSubsetSubstitute(TRUE);
+    if (!subset) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    font->mSubsetsCount = 1;
+    font->mSubsets[0] = subset;
   }
 
   //register an observer to take care of cleanup
   gFontCleanupObserver = new nsFontCleanupObserver();
-  NS_ASSERTION(gFontCleanupObserver, "failed to create observer");
-  if (gFontCleanupObserver) {
-    // register for shutdown
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
-    if (NS_SUCCEEDED(rv)) {
-      rv = observerService->AddObserver(gFontCleanupObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-    }    
+  if (!gFontCleanupObserver) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // register for shutdown
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = observerService->AddObserver(gFontCleanupObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
   gInitialized = 1;
 
@@ -580,12 +672,8 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
 
 
 #define AUTO_FONTDATA_BUFFER_SIZE 16384 /* 16K */
-#undef CHAR_BUFFER_SIZE
-#define CHAR_BUFFER_SIZE 1024
 
 typedef nsAutoBuffer<PRUint8, AUTO_FONTDATA_BUFFER_SIZE> nsAutoFontDataBuffer;
-typedef nsAutoBuffer<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
-typedef nsAutoBuffer<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 static PRUint16
 GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
@@ -4572,37 +4660,6 @@ HaveConverterFor(PRUint8 aCharset)
   return 0;
 }
 
-class nsFontSubset : public nsFontWin
-{
-public:
-  nsFontSubset();
-  virtual ~nsFontSubset();
-
-  virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
-                           PRUint32 aLength);
-  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
-                          const PRUnichar* aString, PRUint32 aLength);
-#ifdef MOZ_MATHML
-  virtual nsresult
-  GetBoundingMetrics(HDC                aDC, 
-                     const PRUnichar*   aString,
-                     PRUint32           aLength,
-                     nsBoundingMetrics& aBoundingMetrics);
-#ifdef NS_DEBUG
-  virtual void DumpFontInfo();
-#endif // NS_DEBUG
-#endif
-
-  int Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWin, nsFontWinA* aFont);
-
-  // convert a Unicode string to ANSI within our codepage
-  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
-                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
-
-  BYTE     mCharset;
-  PRUint16 mCodePage;
-};
-
 nsFontSubset::nsFontSubset()
   : nsFontWin(nsnull, nsnull, nsnull)
 {
@@ -4680,28 +4737,59 @@ nsFontSubset::DumpFontInfo()
 #endif // NS_DEBUG
 #endif
 
-class nsFontSubsetSubstitute : public nsFontSubset
-{
-public:
-  nsFontSubsetSubstitute();
-  virtual ~nsFontSubsetSubstitute();
-
-  // overloaded method to convert all chars to substitute chars
-  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
-                       nsAutoCharBuffer& aResult, PRUint32* aResultLength);
-  //when fontSubstitute declare it support certain char, no need to check subset,
-  // since we have one and only one subset.
-  virtual PRBool HasGlyph(PRUnichar ch) {return PR_TRUE;};
-};
-
-nsFontSubsetSubstitute::nsFontSubsetSubstitute()
-  : nsFontSubset()
+nsFontSubsetSubstitute::nsFontSubsetSubstitute(PRBool aIsForIgnorable)
+  : nsFontSubset(), mIsForIgnorable(aIsForIgnorable)
 {
 }
 
 nsFontSubsetSubstitute::~nsFontSubsetSubstitute()
 {
 }
+
+PRInt32
+nsFontSubsetSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
+  PRUint32 aLength)
+{
+  if (mIsForIgnorable)
+    return 0;
+
+  return nsFontSubset::GetWidth(aDC, aString, aLength);
+}
+
+void
+nsFontSubsetSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+  const PRUnichar* aString, PRUint32 aLength)
+{
+  if (mIsForIgnorable)
+    return;
+
+  nsFontSubset::DrawString(aDC, aX, aY, aString, aLength);
+}
+
+#ifdef MOZ_MATHML
+nsresult
+nsFontSubsetSubstitute::GetBoundingMetrics(HDC                aDC, 
+                                        const PRUnichar*   aString,
+                                        PRUint32           aLength,
+                                        nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();
+  if (mIsForIgnorable)
+    return NS_OK;
+
+  return nsFontSubset::GetBoundingMetrics(aDC, aString, aLength, 
+                                          aBoundingMetrics);
+}
+
+#ifdef NS_DEBUG
+void 
+nsFontSubsetSubstitute::DumpFontInfo()
+{
+  printf("FontName: %s @%p\n", mIsForIgnorable ? "For the ignorable" : mName, this);
+  printf("FontType: nsFontSubsetSubstitute\n");
+}
+#endif // NS_DEBUG
+#endif
 
 void
 nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
@@ -4726,7 +4814,6 @@ nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap)
   : nsFontWin(aLogFont, aFont, aCCMap)
 {
-  NS_ASSERTION(aLogFont, "must pass LOGFONT here");
   if (aLogFont) {
     mLogFont = *aLogFont;
   }
@@ -5096,7 +5183,15 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUint32 c)
 }
 
 nsFontWinSubstituteA::nsFontWinSubstituteA(LOGFONT* aLogFont, HFONT aFont,
-  PRUint16* aCCMap) : nsFontWinA(aLogFont, aFont, aCCMap)
+  PRUint16* aCCMap) : nsFontWinA(aLogFont, aFont, aCCMap),
+  mIsForIgnorable(PR_FALSE)
+{
+  memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
+}
+
+nsFontWinSubstituteA::nsFontWinSubstituteA(PRUint16* aCCMap) :
+  nsFontWinA(NULL, NULL, aCCMap),
+  mIsForIgnorable(PR_TRUE)
 {
   memset(mRepresentableCharMap, 0, sizeof(mRepresentableCharMap));
 }
