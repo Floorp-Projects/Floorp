@@ -161,7 +161,25 @@ nsBrowserStatusHandler.prototype =
   {
     /* Color is temporary. We shall dynamically assign a new class to the element and or to 
     evaluate access from another class rule, the security identity color has to be with the minimo.css */ 
-    document.styleSheets[1].cssRules[0].style.backgroundColor="yellow";
+
+    switch (aState) {
+      case nsIWebProgressListener.STATE_IS_SECURE | nsIWebProgressListener.STATE_SECURE_HIGH:
+        //this.urlBar.value="level high";
+        document.styleSheets[1].cssRules[0].style.backgroundColor="yellow";
+        break;	
+      case nsIWebProgressListener.STATE_IS_SECURE | nsIWebProgressListener.STATE_SECURE_LOW:
+        // this.urlBar.value="level low";
+        document.styleSheets[1].cssRules[0].style.backgroundColor="lightyellow";
+        break;
+      case nsIWebProgressListener.STATE_IS_BROKEN:
+        //this.urlBar.value="level broken";
+        document.styleSheets[1].cssRules[0].style.backgroundColor="lightred";
+        break;
+      case nsIWebProgressListener.STATE_IS_INSECURE:
+        default:
+        document.styleSheets[1].cssRules[0].style.backgroundColor="white";
+        break;
+      }   
   }
 }
 
