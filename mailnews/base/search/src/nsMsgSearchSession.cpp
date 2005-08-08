@@ -278,13 +278,15 @@ NS_IMETHODIMP nsMsgSearchSession::InterruptSearch()
   if (m_window)
   {
     EnableFolderNotifications(PR_TRUE);
+    if (m_idxRunningScope < m_scopeList.Count())
+          m_window->StopUrls();
+
     while (m_idxRunningScope < m_scopeList.Count())
     {
       ReleaseFolderDBRef();
       m_idxRunningScope++;
     }
     //m_idxRunningScope = m_scopeList.Count() so it will make us not run another url
-    m_window->StopUrls();
   }
   if (m_backgroundTimer)
   {
