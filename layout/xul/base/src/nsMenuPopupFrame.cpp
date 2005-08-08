@@ -1745,9 +1745,10 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
     else
       GetPreviousMenuItem(nsnull, &nextItem);
 
-    SetCurrentMenuItem(nextItem);
-
-    aHandledFlag = PR_TRUE;
+    if (nextItem) {
+      aHandledFlag = PR_TRUE;
+      SetCurrentMenuItem(nextItem);
+    }
   }
   else if (mCurrentMenu && isContainer && isOpen) {
     if (theDirection == eNavigationDirection_Start) {
