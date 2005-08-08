@@ -726,7 +726,7 @@ configure:
 	@touch $(OBJDIR)/Makefile
 
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
-	@$(MAKE) -f client.mk configure
+	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure
 
 ifdef CONFIG_STATUS
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
