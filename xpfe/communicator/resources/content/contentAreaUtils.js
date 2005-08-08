@@ -503,7 +503,7 @@ function poseFilePicker(aFpP)
   } catch (e) { }
 
   var autoDownload = branch.getBoolPref("autoDownload");
-  if (dir && autoDownload) {
+  if (autoDownload && dir && dir.exists()) {
     dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName, aFpP.fileInfo.fileExt));
     aFpP.file = uniqueFile(dir);
     return true;

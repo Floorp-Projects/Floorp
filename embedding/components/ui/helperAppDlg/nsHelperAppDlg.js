@@ -142,7 +142,7 @@ nsHelperAppDialog.prototype = {
 
         var autoDownload = branch.getBoolPref("autoDownload");
         // If the autoDownload pref is set then just download to default download directory
-        if (dir && autoDownload) {
+        if (autoDownload && dir && dir.exists()) {
             if (aDefaultFile == "")
                 aDefaultFile = bundle.GetStringFromName("noDefaultFile") + (aSuggestedFileExtension || "");
             dir.append(aDefaultFile);
