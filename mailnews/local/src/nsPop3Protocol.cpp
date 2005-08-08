@@ -623,9 +623,7 @@ nsPop3Protocol::~nsPop3Protocol()
 
   net_pop3_free_state(m_pop3ConData->uidlinfo);
     
-  UpdateProgressPercent(0, 0);
-  
-  FreeMsgInfo();
+  FreeMsgInfo(); 
   PR_Free(m_pop3ConData->only_uidl);
   PR_Free(m_pop3ConData);
   
