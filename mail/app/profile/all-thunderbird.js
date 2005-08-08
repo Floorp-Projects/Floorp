@@ -53,7 +53,7 @@ pref("update.extensions.enabled", true);
 // App-specific update preferences
 
 // Whether or not app updates are enabled
-pref("app.update.enabled", false);               
+pref("app.update.enabled", true);               
 
 // This preference turns on app.update.mode and allows automatic download and
 // install to take place. We use a separate boolean toggle for this to make     
