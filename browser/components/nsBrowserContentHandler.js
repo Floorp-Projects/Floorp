@@ -48,11 +48,13 @@ const nsIDocShellTreeItem    = Components.interfaces.nsIDocShellTreeItem;
 const nsIDOMChromeWindow     = Components.interfaces.nsIDOMChromeWindow;
 const nsIDOMWindow           = Components.interfaces.nsIDOMWindow;
 const nsIFactory             = Components.interfaces.nsIFactory;
+const nsIFileURL             = Components.interfaces.nsIFileURL;
 const nsIHttpProtocolHandler = Components.interfaces.nsIHttpProtocolHandler;
 const nsIInterfaceRequestor  = Components.interfaces.nsIInterfaceRequestor;
 const nsIPrefBranch          = Components.interfaces.nsIPrefBranch;
 const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
 const nsISupportsString      = Components.interfaces.nsISupportsString;
+const nsIURIFixup            = Components.interfaces.nsIURIFixup;
 const nsIWebNavigation       = Components.interfaces.nsIWebNavigation;
 const nsIWindowMediator      = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
@@ -62,6 +64,38 @@ const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 const NS_BINDING_ABORTED = 0x80020006;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
+
+function resolveURIInternal(aCmdLine, aArgument)
+{
+  var uri = aCmdLine.resolveURI(aArgument);
+
+  if (!(uri instanceof nsIFileURL)) {
+    return uri;
+  }
+
+  try {
+    if (uri.file.exists())
+      return uri;
+  }
+  catch (e) {
+    Components.utils.reportError(e);
+  }
+
+  // We have interpreted the argument as a relative file URI, but the file
+  // doesn't exist. Try URI fixup heuristics: see bug 290782.
+ 
+  try {
+    var urifixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                             .getService(nsIURIFixup);
+
+    uri = urifixup.createFixupURI(aArgument, 0);
+  }
+  catch (e) {
+    Components.utils.reportError(e);
+  }
+
+  return uri;
+}
 
 function needHomepageOverride(prefb) {
   var savedmstone;
@@ -192,7 +226,7 @@ var nsBrowserContentHandler = {
           // openURL(<url>,new-window)
           // openURL(<url>,new-tab)
 
-          var uri = cmdLine.resolveURI(remoteParams[0]);
+          var uri = resolveURIInternal(cmdLine, remoteParams[0]);
 
           var location = nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW;
           if (/new-window/.test(remoteParams[1]))
@@ -232,7 +266,7 @@ var nsBrowserContentHandler = {
     try {
       var uriparam;
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
-        var uri = cmdLine.resolveURI(uriparam);
+        var uri = resolveURIInternal(cmdLine, uriparam);
         openWindow(null, this.chromeURL, "_blank",
                    "chrome,dialog=no,all" + this.getFeatures(cmdLine),
                    uri.spec);
@@ -240,8 +274,7 @@ var nsBrowserContentHandler = {
       }
     }
     catch (e) {
-      dump(e);
-      // XXXbsmedberg: use console service
+      Components.utils.reportError(e);
     }
 
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
@@ -338,7 +371,6 @@ var nsBrowserContentHandler = {
           this.mFeatures += ",height=" + height;
       }
       catch (e) {
-        dump(e); // XXXbsmedberg: use console service!
       }
     }
 
@@ -428,11 +460,11 @@ var nsDefaultCommandLineHandler = {
     try {
       var ar;
       while ((ar = cmdLine.handleFlagWithParam("url", false))) {
-        urilist.push(cmdLine.resolveURI(ar));
+        urilist.push(resolveURIInternal(cmdLine, ar));
       }
     }
     catch (e) {
-      dump(e); // XXXbsmedberg: use console service
+      Components.utils.reportError(e);
     }
 
     var count = cmdLine.length;
@@ -440,18 +472,16 @@ var nsDefaultCommandLineHandler = {
     for (var i = 0; i < count; ++i) {
       var curarg = cmdLine.getArgument(i);
       if (curarg.match(/^-/)) {
-        dump("Warning: unrecognized command line flag " + curarg + "\n");
-        // XXXbsmedberg: use console service
+        Components.utils.reportError("Warning: unrecognized command line flag " + curarg + "\n");
         // To emulate the pre-nsICommandLine behavior, we ignore
         // the argument after an unrecognized flag.
         ++i;
-        // xxxbsmedberg: make me use the error service!
       } else {
         try {
-          urilist.push(cmdLine.resolveURI(curarg));
-        }
+          urilist.push(resolveURIInternal(cmdLine, curarg));
+       }
         catch (e) {
-          dump ("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
+          Components.utils.reportError("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
         }
       }
     }
