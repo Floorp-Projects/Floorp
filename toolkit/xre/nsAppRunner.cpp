@@ -371,9 +371,11 @@ public:
   NS_DECL_NSIXULRUNTIME
 };
 
-NS_IMPL_QUERY_INTERFACE2(nsXULAppInfo,
-                         nsIXULAppInfo,
-                         nsIXULRuntime)
+NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULRuntime)
+  NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP_(nsrefcnt)
 nsXULAppInfo::AddRef()
