@@ -306,8 +306,9 @@
                           command="View:FullScreen"/>
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem hidden="true" id="documentDirection-swap" 
-                          label="&bidiSwitchPageDirectionItem.label;" accesskey="&bidiSwitchPageDirectionItem.accesskey;"
-                          oncommand="SwitchDocumentDirection()"/>
+                          label="&bidiSwitchPageDirectionItem.label;"
+                          accesskey="&bidiSwitchPageDirectionItem.accesskey;"
+                          oncommand="SwitchDocumentDirection(window.content)"/>
               </menupopup>
             </menu>
   
