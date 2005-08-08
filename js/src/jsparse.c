@@ -740,7 +740,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             JSBool lambda)
 {
     JSOp op, prevop;
-    JSParseNode *pn, *body;
+    JSParseNode *pn, *body, *result;
     JSAtom *funAtom, *argAtom;
     JSStackFrame *fp;
     JSObject *varobj, *pobj;
@@ -761,11 +761,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     /* Scan the optional function name into funAtom. */
     funAtom = js_MatchToken(cx, ts, TOK_NAME) ? CURRENT_TOKEN(ts).t_atom : NULL;
+#if !JS_HAS_LEXICAL_CLOSURE
     if (!funAtom && !lambda) {
         js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
         return NULL;
     }
+#endif
 
     /* Find the nearest variable-declaring scope and use it as our parent. */
     fp = cx->fp;
@@ -955,15 +957,27 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     }
 #endif
 
+    result = pn;
 #if JS_HAS_LEXICAL_CLOSURE
-    JS_ASSERT(lambda || funAtom);
     if (lambda) {
         /*
-         * ECMA ed. 3 standard: function expression, possibly anonymous (even
-         * if at top-level, an unnamed function is an expression statement, not
-         * a function declaration).
+         * ECMA ed. 3 standard: function expression, possibly anonymous.
          */
         op = funAtom ? JSOP_NAMEDFUNOBJ : JSOP_ANONFUNOBJ;
+    } else if (!funAtom) {
+        /*
+         * If this anonymous function definition is *not* embedded within a
+         * larger expression, we treat it as an expression statement, not as
+         * a function declaration -- and not as a syntax error (as ECMA-262
+         * Edition 3 would have it).  Backward compatibility trumps all.
+         */
+        result = NewParseNode(cx, ts, PN_UNARY, tc);
+        if (!result)
+            return NULL;
+        result->pn_type = TOK_SEMI;
+        result->pn_pos = pn->pn_pos;
+        result->pn_kid = pn;
+        op = JSOP_ANONFUNOBJ;
     } else if (tc->topStmt) {
         /*
          * ECMA ed. 3 extension: a function expression statement not at the
@@ -992,7 +1006,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
     pn->pn_tryCount = funtc.tryCount;
     TREE_CONTEXT_FINISH(&funtc);
-    return pn;
+    return result;
 }
 
 static JSParseNode *
