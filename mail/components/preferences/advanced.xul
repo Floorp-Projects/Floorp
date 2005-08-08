@@ -57,17 +57,25 @@
       <preference id="mailnews.mark_message_read.delay.interval" name="mailnews.mark_message_read.delay.interval" type="int"/>
       <preference id="mail.showFolderPaneColumns" name="mail.showFolderPaneColumns" type="bool"/>
       <preference id="mailnews.reuse_message_window" name="mailnews.reuse_message_window" type="bool"/>
-      <preference id="app.update.enabled"              name="app.update.enabled"              type="bool"/>
-      <preference id="app.update.auto"                 name="app.update.auto" type="bool"/>
-      <preference id="extensions.update.autoUpdateEnabled"
-                  name="extensions.update.autoUpdateEnabled"
-                  type="bool"/>
       <preference id="mailnews.tcptimeout" name="mailnews.tcptimeout" type="int"/>
       <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
       <preference id="offline.send.unsent_messages"          name="offline.send.unsent_messages" type="int"/>
       <preference id="offline.download.download_messages"    name="offline.download.download_messages"    type="int"/>
       <preference id="mail.prompt_purge_threshhold"          name="mail.prompt_purge_threshhold"    type="bool"/>
       <preference id="mail.purge_threshhold"                 name="mail.purge_threshhold"    type="int"/> 
+      <preference id="app.update.enabled" name="app.update.enabled" type="bool"
+                  onchange="gAdvancedPane.updateAppUpdateItems();
+                            gAdvancedPane.updateAutoItems();
+                            gAdvancedPane.updateModeItems();"/>
+      <preference id="app.update.auto" name="app.update.auto" type="bool"
+                  onchange="gAdvancedPane.updateAutoItems(); gAdvancedPane.updateModeItems();"/>
+      <preference id="app.update.mode" name="app.update.mode" type="int"
+                  onchange="gAdvancedPane.updateModeItems();"/>
+      <preference id="extensions.update.enabled" name="extensions.update.enabled" type="bool"
+                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
+      <preference id="app.update.disable_button.showUpdateHistory"
+                  name="app.update.disable_button.showUpdateHistory"
+                  type="bool"/>
     </preferences>
 
     <tabbox id="advancedPrefs" flex="1" onselect="gAdvancedPane.tabSelectionChanged();">
@@ -181,51 +189,56 @@
         </tabpanel>
         
         <!-- Update --> 
-        <tabpanel orient="vertical">
-          <vbox>
-            <label>&softwareupdateinfo.label;</label>
-            <separator class="thin"/>
-            <vbox align="start">
+
+        <tabpanel orient="vertical" align="start">
+          <label>&autoCheck.label;</label>
+          <vbox class="indent">
+            <hbox>
               <checkbox id="enableAppUpdate"
                         label="&enableAppUpdate.label;"
                         accesskey="&enableAppUpdate.accesskey;"
-                        preference="app.update.enabled"
-                        onsyncfrompreference="return gAdvancedPane.updateAppUpdateUI();"/>
-              <vbox class="indent" align="start">
-                <hbox>
-                  <checkbox id="enableAutoInstall"
-                            label="&enableAutoInstall.label;"
-                            accesskey="&enableAutoInstall.accesskey;"
-                            preference="app.update.auto"
-                            onsyncfrompreference="return gAdvancedPane.updateAutoPref();"/>
-                  <spacer flex="1"/>
-                  <button id="autoInstallOptions"
-                          label="&autoInstallOptions.label;" accesskey="&autoInstallOptions.accesskey;"
-                          oncommand="gAdvancedPane.showAutoInstallOptions();"/>
-                </hbox>
-                <separator class="thin"/>
-                <hbox>
-                  <button id="checkNowButton" label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                          oncommand="gAdvancedPane.checkForUpdates();"/>
-                  <button label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
-                          oncommand="gAdvancedPane.showUpdates();"/>
-                </hbox>
-              </vbox>
-            </vbox>
-            <separator/>
-            <vbox align="start">
-              <checkbox id="enableExtensionUpdate"
+                        preference="app.update.enabled"/>
+              <spacer flex="1"/>
+              <button id="appCheckNowButton" 
+                      label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
+                      oncommand="gAdvancedPane.checkForUpdates();"/>
+            </hbox>
+            <hbox>
+              <checkbox id="enableAddonUpdate"
                         label="&enableExtensionUpdate.label;"
                         accesskey="&enableExtensionUpdate.accesskey;"
-                        preference="extensions.update.autoUpdateEnabled"/>      
-              <separator class="thin"/>
-              <hbox class="indent">
-                <button label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                        oncommand="gAdvancedPane.checkForAddonUpdates();"
-                        preference="extensions.update.autoUpdateEnabled"/>
-              </hbox>
-            </vbox>
+                        preference="extensions.update.enabled"/>
+              <spacer flex="1"/>
+              <button id="addonCheckNowButton" 
+                      label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
+                      oncommand="gAdvancedPane.checkForAddonUpdates();"/>
+            </hbox>
           </vbox>
+          <separator/>
+          <label id="updateModeLabel">&whenUpdatesFound.label;</label>
+          <radiogroup id="updateMode" class="indent"
+                      preference="app.update.auto">
+            <radio id="ask" value="false"
+                   label="&modeAskMe.label;"
+                   accesskey="&modeAskMe.accesskey;"/>
+            <radio id="automatic" value="true"
+                   label="&modeAutomatic.label;"
+                   accesskey="&modeAutomatic.accesskey;"/>
+            <hbox class="indent">
+              <checkbox id="warnIncompatible" 
+                        label="&modeAutoWarn.label;" accesskey="&modeAutoWarn.accesskey;"
+                        preference="app.update.mode"
+                        onsyncfrompreference="return gAdvancedPane.addonWarnSyncFrom();"
+                        onsynctopreference="return gAdvancedPane.addonWarnSyncTo();"/>
+            </hbox>
+          </radiogroup>
+          <separator/>
+          <hbox>
+            <button id="showUpdateHistory" 
+                    label="&showUpdates.label;" accesskey="&showUpdates.accesskey;"
+                    preference="app.update.disable_button.showUpdateHistory"
+                    oncommand="gAdvancedPane.showUpdates();"/>
+          </hbox>
         </tabpanel>
       </tabpanels>
     </tabbox>

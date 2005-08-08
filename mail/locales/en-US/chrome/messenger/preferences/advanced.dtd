@@ -31,18 +31,21 @@
 <!ENTITY configEdit.accesskey          "g">
 
 <!-- Update -->
-<!ENTITY softwareupdateinfo.label       "Periodically check for updates to:">
+<!ENTITY autoCheck.label                "Automatically check for updates to:">
 <!ENTITY enableAppUpdate.label          "&brandShortName;">
 <!ENTITY enableAppUpdate.accesskey      "T">
-<!ENTITY enableAutoInstall.label        "Automatically Download and Install updates">
-<!ENTITY enableAutoInstall.accesskey    "A">
-<!ENTITY autoInstallOptions.label       "Advanced...">
-<!ENTITY autoInstallOptions.accesskey   "d">
-<!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
-<!ENTITY enableExtensionUpdate.accesskey "M">
+<!ENTITY enableExtensionUpdate.label    "Installed Extensions and Themes">
+<!ENTITY enableExtensionUpdate.accesskey "x">
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "k">
 <!ENTITY extensionsCheckNow.accesskey   "h">
+<!ENTITY whenUpdatesFound.label         "When updates to &brandShortName; are found,">
+<!ENTITY modeAskMe.label                "Ask me what I want to do">
+<!ENTITY modeAskMe.accesskey            "A">
+<!ENTITY modeAutomatic.label            "Automatically download and install the update">
+<!ENTITY modeAutomatic.accesskey        "d">
+<!ENTITY modeAutoWarn.label             "Warn me if this will disable extensions or themes">
+<!ENTITY modeAutoWarn.accesskey         "W">
 <!ENTITY showUpdates.label              "Show Update History">
 <!ENTITY showUpdates.accesskey          "U">
 
