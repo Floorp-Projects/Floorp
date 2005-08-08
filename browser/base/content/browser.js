@@ -5789,18 +5789,11 @@ function livemarkAddMark(wincontent, data) {
   BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title, description);
 }
 
-function GetFrameDocumentsFromWindow(aWindow){
- if (aWindow.getComputedStyle(aWindow.document.body, "").direction == "ltr")
-    aWindow.document.dir = "rtl";
-  else
-    aWindow.document.dir = "ltr";
+function SwitchDocumentDirection(aWindow) {
+  aWindow.document.dir = (aWindow.document.dir == "ltr" ? "rtl" : "ltr");
 
   for (var run = 0; run < aWindow.frames.length; run++)
-    GetFrameDocumentsFromWindow(aWindow.frames[run]);
-}
-
-function SwitchDocumentDirection(){
-  GetFrameDocumentsFromWindow(window.content);
+    SwitchDocumentDirection(aWindow.frames[run]);
 }
 
 function missingPluginInstaller(){
