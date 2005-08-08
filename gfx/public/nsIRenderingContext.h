@@ -478,8 +478,8 @@ public:
   /**
    * Draw an arc in the current forground color
    * @param aRect The rectangle define bounds of ellipse to use
-   * @param aStartAngle the starting angle of the arc, in the ellipse
-   * @param aEndAngle The ending angle of the arc, in the ellipse
+   * @param aStartAngle the starting angle of the arc, in degrees
+   * @param aEndAngle The ending angle of the arc, in degrees
    */
   NS_IMETHOD DrawArc(const nsRect& aRect,
                      float aStartAngle, float aEndAngle) = 0;
@@ -490,8 +490,8 @@ public:
    * @param aY Vertical top Coordinate in twips
    * @param aWidth Width of horizontal axis in twips
    * @param aHeight Height of vertical axis in twips
-   * @param aStartAngle the starting angle of the arc, in the ellipse
-   * @param aEndAngle The ending angle of the arc, in the ellipse
+   * @param aStartAngle the starting angle of the arc, in degrees
+   * @param aEndAngle The ending angle of the arc, in degrees
    */
   NS_IMETHOD DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                      float aStartAngle, float aEndAngle) = 0;
@@ -499,8 +499,8 @@ public:
   /**
    * Fill an arc in the current forground color
    * @param aRect The rectangle define bounds of ellipse to use
-   * @param aStartAngle the starting angle of the arc, in the ellipse
-   * @param aEndAngle The ending angle of the arc, in the ellipse
+   * @param aStartAngle the starting angle of the arc, in degrees
+   * @param aEndAngle The ending angle of the arc, in degrees
    */
   NS_IMETHOD FillArc(const nsRect& aRect,
                      float aStartAngle, float aEndAngle) = 0;
@@ -511,8 +511,8 @@ public:
    * @param aY Vertical top Coordinate in twips
    * @param aWidth Width of horizontal axis in twips
    * @param aHeight Height of vertical axis in twips
-   * @param aStartAngle the starting angle of the arc, in the ellipse
-   * @param aEndAngle The ending angle of the arc, in the ellipse
+   * @param aStartAngle the starting angle of the arc, in degrees
+   * @param aEndAngle The ending angle of the arc, in degrees
    */
   NS_IMETHOD FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                      float aStartAngle, float aEndAngle) = 0;

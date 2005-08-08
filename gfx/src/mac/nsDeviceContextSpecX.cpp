@@ -42,6 +42,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "nsCRT.h"
 
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
@@ -111,11 +112,20 @@ NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 	return NS_OK;
 }  
 
-NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRInt32     aStartPage, 
+NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
+                                                  PRUnichar*  aPrintToFileName,
+                                                  PRInt32     aStartPage, 
                                                   PRInt32     aEndPage)
 {
+    if (aTitle) {
+      CFStringRef cfString = ::CFStringCreateWithCharacters(NULL, aTitle, nsCRT::strlen(aTitle));
+      if (cfString) {
+        ::PMSetJobNameCFString(mPrintSettings, cfString);
+        ::CFRelease(cfString);
+      }
+    }
+
     OSStatus status;
-    
     status = ::PMSetFirstPage(mPrintSettings, aStartPage, false);
     NS_ASSERTION(status == noErr, "PMSetFirstPage failed");
     status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
