@@ -1867,7 +1867,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   if (callerPrincipal) {
     callerPrincipal->GetURI(getter_AddRefs(uri));
-  } else {
+  }
+  if (!uri) {
     rv = NS_NewURI(getter_AddRefs(uri),
                    NS_LITERAL_CSTRING("about:blank"));
     NS_ENSURE_SUCCESS(rv, rv);
