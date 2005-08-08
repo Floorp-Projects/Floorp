@@ -951,6 +951,7 @@ void nsXULWindow::OnChromeLoaded()
     mChromeLoaded = PR_TRUE;
     ApplyChromeFlags();
 
+    LoadChromeHidingFromXUL();
     LoadWindowClassFromXUL();
     LoadIconFromXUL();
     LoadSizeFromXUL();
@@ -977,7 +978,6 @@ void nsXULWindow::OnChromeLoaded()
     LoadMiscPersistentAttributesFromXUL();
 
     //LoadContentAreas();
-    LoadChromeHidingFromXUL();
 
     if (mCenterAfterLoad && !positionSet)
       Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
