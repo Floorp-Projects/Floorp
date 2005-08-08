@@ -53,11 +53,15 @@
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "a">
 
+<!ENTITY calendar.new.journal.label              "Nouvelle entrée de journal…">
+<!ENTITY calendar.new.journal.key                "J">
+<!ENTITY calendar.new.journal.accesskey          "j">
+
 <!ENTITY calendar.open.file.label               "Ouvrir le fichier d'agenda…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
-<!ENTITY event.edit.event                       "Modifier…">
+<!ENTITY event.edit.event                       "Modifier la sélection…">
 <!ENTITY event.edit.event.key                   "E">
 <!ENTITY event.edit.event.accesskey             "e">
 
@@ -67,11 +71,11 @@
 <!ENTITY event.delete.tasks                     "Supprimer les tâches sélectionnées">
 <!ENTITY event.delete.tasks.accesskey           "t">
 
-<!ENTITY event.mail.event                       "Envoyer les événements par courriel…">
+<!ENTITY event.mail.event                       "Envoyer la sélection par courriel…">
 <!ENTITY event.mail.event.key                   "M">
 <!ENTITY event.mail.event.accesskey             "m">
 
-<!ENTITY calendar.print.label                   "Imprimer les agendas actif(s)…">
+<!ENTITY calendar.print.label                   "Imprimer…">
 <!ENTITY calendar.print.key                     "P">
 <!ENTITY calendar.print.accesskey               "r">
 
@@ -88,7 +92,7 @@
 <!ENTITY calendar.wizard.label                  "Lancer l'assistant…">
 <!ENTITY calendar.wizard.accesskey              "a">
 
-<!ENTITY calendar.export.label                  "Exporter les événements sélectionnés…">
+<!ENTITY calendar.export.label                  "Exporter la sélection…">
 <!ENTITY calendar.export.accesskey              "e">
 
 <!ENTITY calendar.subscribe.label               "S'abonner à un agenda distant…">
@@ -98,8 +102,11 @@
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
-<!ENTITY calendar.publish.label                 "Publier les événements sélectionnés…">
+<!ENTITY calendar.publish.label                 "Publier…">
 <!ENTITY calendar.publish.accesskey             "p">
+
+<!ENTITY calendar.quit.label                    "Quitter">
+<!ENTITY calendar.quit.accesskey                "Q">
 
 <!ENTITY calendar.about.label                   "À propos de Calendar">
 <!ENTITY calendar.about.accesskey               "a">
@@ -128,14 +135,50 @@
 <!ENTITY calendar.selectall.key                 "A">
 <!ENTITY calendar.selectall.accesskey           "t">
 
+<!ENTITY toolbarsMenu.label                     "Barres d'outils">
+<!ENTITY toolbarsMenu.accesskey                 "B">
+
+<!ENTITY calendar.toolbar.label                 "Barre d'outils d'agenda">
+
+<!ENTITY calendar.menu.customize.label          "Personnaliser…">
+<!ENTITY calendar.menu.customize.accesskey      "l">
+
 <!ENTITY calendar.preferences.label             "Préférences…">
 <!ENTITY calendar.preferences.accesskey         "p">
+
+<!ENTITY showSearchToolbarCmd.label             "Barre de recherche">
+<!ENTITY showSearchToolbarCmd.accesskey         "B">
+
+<!ENTITY showStatusBarCmd.label                 "Barre d'état">
+<!ENTITY showStatusBarCmd.accesskey             "a">
+
+<!ENTITY showTaskBoxCmd.label                   "Liste des tâches">
+<!ENTITY showTaskBoxCmd.accesskey               "L">
+
+<!ENTITY calendar.displaytodos.checkbox.label       "Afficher les tâches dans l'agenda">
+<!ENTITY calendar.displaytodos.checkbox.accesskey   "i">
+
+<!ENTITY calendar.menu.numberofweeks.label      "Étendue de l'affichage multisemaine">
+<!ENTITY calendar.menu.numberofweeks.2          "Deux semaines">
+<!ENTITY calendar.menu.numberofweeks.3          "Trois semaines">
+<!ENTITY calendar.menu.numberofweeks.4          "Quatre semaines">
+<!ENTITY calendar.menu.numberofweeks.5          "Cinq semaines">
+<!ENTITY calendar.menu.numberofweeks.6          "Six semaines">
+
+<!ENTITY calendar.fullscreen.label              "Plein écran">
+<!ENTITY calendar.fullscreen.accesskey          "P">
+
+<!ENTITY calendar.extensions.label              "Extensions">
+<!ENTITY calendar.extensions.accesskey          "E">
+
+<!ENTITY calendar.themes.label                  "Thèmes">
+<!ENTITY calendar.themes.accesskey              "T">
 
 <!ENTITY goMenu.label                           "Aller à">
 <!ENTITY goMenu.accesskey                       "a">
 
 <!ENTITY goTodayCmd.label                       "Aujourd'hui">
-<!ENTITY goTodayCmd.accesskey                   "j">
+<!ENTITY goTodayCmd.accesskey                   "h">
 
 <!ENTITY goDateCmd.label                        "Une date…">
 <!ENTITY goDateCmd.accesskey                    "d">

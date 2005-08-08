@@ -90,7 +90,7 @@
 <!ENTITY newevent.email.label        "Envoyer l'alarme par courriel à :" >
 <!ENTITY newevent.beforealarm.label  "avant le début de l'événement" >
 <!ENTITY newevent.beforealarmends.label  "avant la fin de l'événement" >
-<!ENTITY newevent.repeat.label       "Repéter chaque" >
+<!ENTITY newevent.repeat.label       "Répéter chaque" >
 <!ENTITY newevent.until.label        "Jusqu'à" >
 <!ENTITY newevent.forever.label      "Toujours" >
 <!ENTITY newevent.numberoftimes.label "Nombre de fois" >
