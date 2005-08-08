@@ -198,7 +198,7 @@ function MiniNavStartup()
   var currentTab=getBrowser().selectedTab;
   browserInit(currentTab);
   gSelectedTab=currentTab;
-  loadURI("http://www.google.com");
+  loadURI("http://www.google.com/xhtml");
   
   //
   // this is temporary til we get menu tminig events stuff fixed. 
