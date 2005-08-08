@@ -227,6 +227,12 @@ nsMathMLmfracFrame::Paint(nsPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
+  /////////////
+  // paint the numerator and denominator
+  nsresult rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                              aDirtyRect, aWhichLayer);
+  /////////////
+  // paint the fraction line
   if (mSlashChar) {
     // bevelled rendering
     mSlashChar->Paint(aPresContext, aRenderingContext,
@@ -242,10 +248,7 @@ nsMathMLmfracFrame::Paint(nsPresContext*      aPresContext,
                                mLineRect.width, mLineRect.height);
   }
 
-  /////////////
-  // paint the numerator and denominator
-  return nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                       aDirtyRect, aWhichLayer);
+  return rv;
 }
 
 NS_IMETHODIMP
