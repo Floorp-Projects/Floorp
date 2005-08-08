@@ -49,18 +49,23 @@ FORCE_STATIC_LIB=1
 LIBXUL_LIBRARY = 1
 
 REQUIRES	= xpcom \
-		  string \
-		  uconv \
-		  $(NULL)
+			  string \
+			  uconv \
+			  intl \
+			  $(NULL)
 
-CPPSRCS		= \
-		nsNativeUConvService.cpp \
-		$(NULL)
+ifeq ($(OS_ARCH), UNIX)
+CPPSRCS		= nsNativeUConvService.cpp
+endif
+
+ifdef WINCE
+CPPSRCS		= nsWinCEUConvService.cpp
+endif
 
 XPIDLSRCS	= \
 		nsINativeUConvService.idl \
 		$(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../util
+LOCAL_INCLUDES = -I$(srcdir)/../util -I$(srcdir)/../src
 
 include $(topsrcdir)/config/rules.mk
