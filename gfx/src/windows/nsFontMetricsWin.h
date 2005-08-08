@@ -412,13 +412,18 @@ class nsFontWinSubstituteA : public nsFontWinA
 {
 public:
   nsFontWinSubstituteA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
+  nsFontWinSubstituteA(PRUint16* aCCMap);
   virtual ~nsFontWinSubstituteA();
 
-  virtual PRBool HasGlyph(PRUint32 ch) {return IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
+  virtual PRBool HasGlyph(PRUint32 ch) {
+    return mIsForIgnorable ? CCMAP_HAS_CHAR_EXT(mCCMap, ch) :
+      IS_IN_BMP(ch) && IS_REPRESENTABLE(mRepresentableCharMap, ch);};
   virtual void SetRepresentable(PRUint32 ch) { if (IS_IN_BMP(ch)) SET_REPRESENTABLE(mRepresentableCharMap, ch); };
   virtual nsFontSubset* FindSubset(HDC aDC, PRUnichar aChar, nsFontMetricsWinA* aFontMetrics) {return mSubsets[0];};
+private:
+  PRBool mIsForIgnorable;
 
-  //We need to have a easily operatable charmap for substitute font
+  //We need to have a easily operatable charmap for substitute fonts
   PRUint32 mRepresentableCharMap[UCS2_MAP_LEN];
 };
 
