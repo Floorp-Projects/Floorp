@@ -85,7 +85,7 @@ const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
 const DOWNLOAD_CHUNK_SIZE           = 65536;
-const DOWNLOAD_BACKGROUND_INTERVAL  = 1;
+const DOWNLOAD_BACKGROUND_INTERVAL  = 60;  // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
 // Values for the PREF_APP_UPDATE_INCOMPATIBLE_MODE pref. See documentation in
