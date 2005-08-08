@@ -2,6 +2,9 @@
 ********************************************************************************
     
     $Log: PDEUtilities.c,v $
+    Revision 1.3  2005/08/08 03:08:43  smfr%smfr.org
+    Fix bug 202014: add UI to the Mac Print Dialog Extension (PDE) that allows the user to select which headers and footers to print. Patch by Conrad Carlen, r=pinkerton, sr=me, a=asa.
+
     Revision 1.2  2003/04/03 19:20:05  ccarlen%netscape.com
     Bug 188508 - Upgrade print dialog PDE. r=pinkerton/sr=sfraser
 
@@ -77,6 +80,21 @@ extern void MyDebugMessage (char *msg, SInt32 value)
     }
 }
 
+/*
+--------------------------------------------------------------------------------
+    MyCFAssign
+--------------------------------------------------------------------------------
+*/
+
+extern CFTypeRef MyCFAssign(CFTypeRef srcRef, CFTypeRef dstRef)
+{
+    if (srcRef)
+        CFRetain(srcRef);
+    if (dstRef)
+        CFRelease(dstRef);
+    dstRef = srcRef;
+    return dstRef;
+}
 
 /*
 --------------------------------------------------------------------------------
