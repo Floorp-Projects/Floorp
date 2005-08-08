@@ -4007,6 +4007,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   nsIFrame *thisBlock;
   PRInt32   thisLine;
   nsCOMPtr<nsILineIteratorNavigator> it; 
+  PRBool preferLeft = aPos->mPreferLeft;
   nsresult result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
   {
@@ -4090,7 +4091,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
 #endif
     if (aPos->mAmount != eSelectWord)
     {
-      aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
+      preferLeft = (PRBool)!preferLeft;//drift to other side
       aPos->mAmount = eSelectNoAmount;
     }
     else{
@@ -4098,7 +4099,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         return NS_ERROR_FAILURE;
       if (aPos->mDirection == eDirNext)
       {
-        aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
+        preferLeft = (PRBool)!preferLeft;//drift to other side
       }
 #ifdef IBMBIDI
       if (lineIsRTL)
@@ -4260,10 +4261,11 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     aPos->mStartOffset = -1 - aPos->mStartOffset;
 
   if ((aPos->mAmount == eSelectNoAmount) && ((newLevel & 1) != (oldLevel & 1)))  {
-    aPos->mPreferLeft = !(aPos->mPreferLeft);
+    preferLeft = (PRBool)!preferLeft;
   }
 #endif
   aPos->mResultFrame = newFrame;
+  aPos->mPreferLeft = preferLeft;
   return NS_OK;
 }
 
