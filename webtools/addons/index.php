@@ -4,6 +4,9 @@
  *
  * @package amo
  * @subpackage docs
+ *
+ * @todo Do something to spice up this page.
+ * @todo Get main template spruced up.
  */
 
 // Arrays to store clean inputs.

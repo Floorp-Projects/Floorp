@@ -14,6 +14,7 @@
     <ul>
     <li><a href="./addcomment.php?id={$addon->ID}">Add a Comment</a></li>
     <li><a href="./mailfriend.php?id={$addon->ID}">Email a Friend</a></li>
+    <li><a href="./report.php?id={$addon->ID}">Report a Bug</a></li>
     </ul>
 <li><span>Find similar Addons...</span>
     <ul>
@@ -26,6 +27,7 @@
 <li><span>More about the author...</span>
     <ul>
     <li><a href="./author.php?id={$addon->UserID}">{$addon->UserName}</a></li>
+    <li><a href="./mailauthor.php?id={$addon->UserID}">Contact this Author</a></li>
     </ul>
 </ul>
 

@@ -240,7 +240,7 @@ class AddOn extends AMO_Object
                 CommentNote,
                 CommentDate,
                 CommentVote,
-		`helpful-yes` as helpful_yes,
+                `helpful-yes` as helpful_yes,
                 `helpful-no` as helpful_no,
                 `helpful-yes` + `helpful-no` as helpful_total
             FROM

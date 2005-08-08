@@ -5,6 +5,9 @@
  * 
  * @package amo
  * @subpackage docs
+ *
+ * @todo break this into a simpler design, probably a smaller table with an abbreviated desc.
+ * @todo do we still want to allow users access to old versions?
  */
  
 // Arrays to store clean inputs.

@@ -1,8 +1,11 @@
 <?php
 /**
  * FAQ page.
+ *
  * @package amo
  * @subpackage docs
+ *
+ * @todo FAQ search?
  */
 $db->query("
     SELECT

@@ -4,7 +4,12 @@
  *
  * @package amo
  * @subpackage docs
+ *
  * @todo figure out why some addon listings have incorrect applications.
+ * @todo add page links ( 1 2 3 4 5 ..... n ) for big result sets?  is this necessary?
+ * @todo take pagination and throw it into a class so we can reuse the methodology.
+ * @todo check validation - the form has some errors in it.
+ * @todo fix CSS so the pull-downs look symmetrical before design freaks start crying.
  */
 
 // Array to store clean inputs.

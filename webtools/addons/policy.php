@@ -1,8 +1,11 @@
 <?php
 /**
  * Policy page.
+ *
  * @package amo
  * @subpackage docs
+ *
+ * @todo talk to cbeard and rebron about establishing the policy document.
  */
 
 $links = array(
