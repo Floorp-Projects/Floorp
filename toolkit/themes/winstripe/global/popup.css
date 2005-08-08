@@ -56,6 +56,13 @@ popup {
   background-color: Menu;
 }
 
+menupopup > menu > menupopup,
+popup > menu > menupopup {
+ /* align submenus */
+  -moz-margin-start: -3px;
+  margin-top: -3px;
+}
+
 /* ::::: tooltip ::::: */
 
 tooltip {
