@@ -1149,8 +1149,10 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
 #endif  /* WIN32 || WIN16 */
 
 #ifdef XP_MACOSX
+/* add this offset to skip the leading underscore in name */
+#define SYM_OFFSET 1
     if (lm->bundle) {
-        CFStringRef nameRef = CFStringCreateWithCString(NULL, name + 1, kCFStringEncodingASCII);
+        CFStringRef nameRef = CFStringCreateWithCString(NULL, name + SYM_OFFSET, kCFStringEncodingASCII);
         if (nameRef) {
             f = CFBundleGetFunctionPointerForName(lm->bundle, nameRef);
             CFRelease(nameRef);
@@ -1161,18 +1163,18 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         CFragSymbolClass    symClass;
         Str255              pName;
         
-        PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Looking up symbol: %s", name + 1));
+        PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Looking up symbol: %s", name + SYM_OFFSET));
         
-        c2pstrcpy(pName, name + 1);
+        c2pstrcpy(pName, name + SYM_OFFSET);
         
         f = (FindSymbol(lm->connection, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
         
         /* callers expect mach-o function pointers, so must wrap tvectors with glue. */
         if (f && symClass == kTVectorCFragSymbol) {
-            f = TV2FP(lm->wrappers, name + 1, f);
+            f = TV2FP(lm->wrappers, name + SYM_OFFSET, f);
         }
         
-        if (f == NULL && strcmp(name + 1, "main") == 0) f = lm->main;
+        if (f == NULL && strcmp(name + SYM_OFFSET, "main") == 0) f = lm->main;
     }
     if (lm->image) {
         NSSymbol symbol;
@@ -1184,6 +1186,7 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         else
             f = NULL;
     }
+#undef SYM_OFFSET
 #endif /* XP_MACOSX */
 
 #ifdef XP_BEOS
