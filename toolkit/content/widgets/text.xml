@@ -299,7 +299,27 @@
           return;
         var href = this.getAttribute('href');
         if (href)
+        {
+          try {
+            var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService)
+                                .newURI(href, null, null);
+
+            var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                        .getService(Components.interfaces.nsIExternalProtocolService);
+            // if the scheme is not an exposed protocol, then opening this link should 
+            // be deferred to the system's external protocol handler
+            if (!protocolSvc.isExposedProtocol(uri.scheme))
+            {
+              protocolSvc.loadUrl(uri);
+              return;
+            }
+          }
+          catch (ex) {}
+          
+          // otherwise, fall back to opening the anchor directly
           open(href);
+        }
       ]]>
       </handler>
       <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
