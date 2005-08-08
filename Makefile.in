@@ -374,7 +374,7 @@ tier_99_dirs	+= suite
 endif
 
 ifdef MINIMO
-tier_99_dirs	+= minimo embedding/minimo
+tier_99_dirs	+= embedding/minimo minimo
 endif
 
 ifdef MOZ_XUL_APP
