@@ -39,31 +39,48 @@
 #define nsPDECommon_h___
 
 
-#define  kMozPDESignature		"MOZZ"
-#define  kMozPDECreatorCode	'MOZZ'
+#define  kMozPDESignature       "MOZZ"
+#define  kMozPDECreatorCode     'MOZZ'
 
+// Our custom print settings data is stored in a CFDictionary. The dictionary
+// is flattened to XML for storage in the print ticket. The following keys
+// are currently supported:
 
-typedef struct {
-  // State info supplied by printing app
-  Boolean mHaveSelection;
-  Boolean mHaveFrames;
-  Boolean mHaveFrameSelected;
-  // The UI of the PDE allows control of these
-  Boolean mPrintFrameAsIs;
-  Boolean mPrintSelectedFrame;
-  Boolean mPrintFramesSeparately;
-  Boolean mPrintSelection;
-  Boolean mShrinkToFit;
-  Boolean mPrintBGColors;
-  Boolean mPrintBGImages;
-} nsPrintExtensions;
+// State info supplied by the printing app
+#define kPDEKeyHaveSelection            CFSTR("HaveSelection")          // Value: CFBoolean
+#define kPDEKeyHaveFrames               CFSTR("HaveFrames")             // Value: CFBoolean
+#define kPDEKeyHaveFrameSelected        CFSTR("HaveFrameSelected")      // Value: CFBoolean
 
+// The UI of the PDE allows control of these
+#define kPDEKeyPrintSelection           CFSTR("PrintSelection")         // Value: CFBoolean
+#define kPDEKeyPrintFrameType           CFSTR("PrintFrameType")         // Value: CFStringReference - one of the following:
+    #define kPDEValueFramesAsIs         CFSTR("FramesAsIs")
+    #define kPDEValueSelectedFrame      CFSTR("SelectedFrame")
+    #define kPDEValueEachFrameSep       CFSTR("EachFrameSep")
+#define kPDEKeyShrinkToFit              CFSTR("ShrinkToFit")            // Value: CFBoolean
+#define kPDEKeyPrintBGColors            CFSTR("PrintBGColors")          // Value: CFBoolean
+#define kPDEKeyPrintBGImages            CFSTR("PrintBGImages")          // Value: CFBoolean
 
+// Header/Footer strings
+//  The following (case-sensitive) codes are expanded by the print engine at print-time
+//  &D  date
+//  &PT page # of #
+//  &P  page #
+//  &T  title
+//  &U  doc URL
+#define kPDEKeyHeaderLeft               CFSTR("HeaderLeft")             // Value: CFStringReference
+#define kPDEKeyHeaderCenter             CFSTR("HeaderCenter")           // Value: CFStringReference
+#define kPDEKeyHeaderRight              CFSTR("HeaderRight")            // Value: CFStringReference
+#define kPDEKeyFooterLeft               CFSTR("FooterLeft")             // Value: CFStringReference
+#define kPDEKeyFooterCenter             CFSTR("FooterCenter")           // Value: CFStringReference
+#define kPDEKeyFooterRight              CFSTR("FooterRight")            // Value: CFStringReference
 
-// Our tag for the Print Settings ticket. This should be defined in an application
-// header that is common to this file and the applications' files so that it
-// can get access to the data set in the Print Settings.
-#define kAppPrintDialogPDEOnlyKey 		CFSTR("com.apple.print.PrintSettingsTicket." kMozPDESignature)
+// Our tag for the Print Settings ticket. The PDE uses Ticket Services to read and write our
+// custom data, so its key is the standard string with our tag appended. The application
+// uses PM[Get|Set]PrintSettingsExtendedData, which takes an OSType for the tag because the
+// standard string prefix is implied. Short story: the last four bytes of the two must match.
+#define kAppPrintDialogPDEOnlyKey       CFSTR("com.apple.print.PrintSettingsTicket." "GEKO")
+#define kAppPrintDialogAppOnlyKey       'GEKO'
 
 
 #endif
