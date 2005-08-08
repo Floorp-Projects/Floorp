@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Sean Echevarria <sean@beatnik.com>
  *   Håkan Waara <hwaara@chello.se>
+ *   Josh Aas <josh@mozillafoundation.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -180,6 +181,8 @@
 
 #ifdef XP_MACOSX
 #include <Carbon/Carbon.h> // for ::UseInputWindow()
+#include <mach-o/loader.h>
+#include <mach-o/fat.h>
 #endif
 
 #ifdef XP_OS2
@@ -871,10 +874,9 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   mLibrary = nsnull;
   mCanUnloadLibrary = PR_TRUE;
   mEntryPoint = nsnull;
-
-#if TARGET_CARBON
+  
   mCanUnloadLibrary = !aPluginInfo->fBundle;
-#endif
+  
   mFlags = NS_PLUGIN_FLAG_ENABLED;
   mXPConnected = PR_FALSE;
 }
@@ -4398,10 +4400,7 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
 #if defined(XP_MACOSX)
 /**
  * The following code examines the format of a Mac OS X binary, and determines whether it
- * is compatible with the current executable. One trick to make this portable might be
- * to compare the headers of the main executable we are part of with the header of the
- * binary in question, but for a quick and dirty solution, this just checks to see
- * if the specified binary is itself a MACH-O binary with a 4 byte header of 0xFEEDFACE.
+ * is compatible with the current executable.
  */
 
 #include <sys/stat.h>
@@ -4458,15 +4457,16 @@ static int open_executable(const char* path)
 static PRBool IsCompatibleExecutable(const char* path)
 {
   int fd = open_executable(path);
-  if (fd) {
-    // check the executable header to see if it is something we can use
-    // currently we can only use 32-bit mach-o (0xFEEDFACE)
-    char magic_cookie[8];
-    ssize_t n = read(fd, magic_cookie, sizeof(magic_cookie));
+  if (fd > 0) {
+    // Check the executable header to see if it is something we can use. Currently
+    // we can only use 32-bit mach-o and FAT binaries (FAT headers are always big
+    // endian, so we do network-to-host swap on the bytes from disk).
+    // Note: We assume FAT binaries contain the right arch. Maybe fix that later.
+    UInt32 magic;
+    ssize_t n = read(fd, &magic, sizeof(magic));
     close(fd);
-    if (n == sizeof(magic_cookie)) {
-      const char mach_o_cookie[] = { 0xFE, 0xED, 0xFA, 0xCE };
-      if (memcmp(magic_cookie, mach_o_cookie, sizeof(mach_o_cookie)) == 0)
+    if (n == sizeof(magic)) {
+      if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
         return PR_TRUE;
     }
   }
