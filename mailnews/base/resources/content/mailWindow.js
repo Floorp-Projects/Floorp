@@ -228,16 +228,15 @@ function messagePaneOnClick(event)
   // if this is stand alone mail (no browser)
   // or this isn't a simple left click, do nothing, and let the normal code execute
   if (event.button != 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-  {
-    contentAreaClick(event);
-    return;
-  }
+    return contentAreaClick(event);
 
   // try to determine the href for what you are clicking on.  
   // for example, it might be "" if you aren't left clicking on a link
-  var href = hrefForClickEvent(event);
-  if (!href) 
-    return;
+  var ceParams = {event: event, href: "", linkNode: null};
+  hrefAndLinkNodeForClickEvent(ceParams);
+  var href = ceParams.href;
+  if (!href)
+    return true;
 
   // we know that http://, https://, ftp://, file://, chrome://, 
   // resource://, about:, and gopher:// (as if), 
@@ -248,7 +247,7 @@ function messagePaneOnClick(event)
   // and let the normal code handle it
   var needABrowser = /(^http(s)?:|^ftp:|^file:|^gopher:|^chrome:|^resource:|^about:)/i;
   if (href.search(needABrowser) == -1) 
-    return;
+    return true;
 
   // however, if the protocol should not be loaded internally, then we should
   // not put up a new browser window.  we should just let the usual processing
@@ -258,7 +257,7 @@ function messagePaneOnClick(event)
     extProtService = extProtService.QueryInterface(Components.interfaces.nsIExternalProtocolService);
     var scheme = href.substring(0, href.indexOf(":"));
     if (!extProtService.isExposedProtocol(scheme))
-      return;
+      return true;
   } 
   catch (ex) {} // ignore errors, and just assume that we can proceed.
 
@@ -270,7 +269,11 @@ function messagePaneOnClick(event)
   // we want to preventDefault, so that in
   // nsGenericHTMLElement::HandleDOMEventForAnchors(), we don't try to handle the click again
   event.preventDefault();
+  if (isPhishingURL(ceParams.linkNode, false))
+    return false;
+
   openTopBrowserWith(href);
+  return true;
 }
 
 function AddDataSources()
@@ -529,30 +532,32 @@ function StopUrls()
   msgWindow.StopUrls();
 }
 
-function loadStartPage() {
-    try {
-        // collapse the junk bar
-        SetUpJunkBar(null);
+function loadStartPage()
+{
+  try
+  {
+    gMessageNotificationBar.clearMsgNotifications();
 
-        var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
-
-        if (startpageenabled) {
-            var startpage = pref.getComplexValue("mailnews.start_page.url",
-                                                 Components.interfaces.nsIPrefLocalizedString).data;
-            if (startpage != "") {
-                // first, clear out the charset setting.
-                messenger.setDisplayCharset("");
-
-                GetMessagePaneFrame().location.href = startpage;
-                //dump("start message pane with: " + startpage + "\n");
-                ClearMessageSelection();
-            }
-        }
+    var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
+    if (startpageenabled)
+    {
+      var startpage = pref.getComplexValue("mailnews.start_page.url",
+                                           Components.interfaces.nsIPrefLocalizedString).data;
+      if (startpage)
+      {
+        // first, clear out the charset setting.
+        messenger.setDisplayCharset("");
+        GetMessagePaneFrame().location.href = startpage;
+        //dump("start message pane with: " + startpage + "\n");
+        ClearMessageSelection();
+      }
     }
-    catch (ex) {
-        dump("Error loading start page.\n");
-        return;
-    }
+  }
+  catch (ex)
+  {
+    dump("Error loading start page.\n");
+    return;
+  }
 }
 
 // Display AccountCentral page when users clicks on the Account Folder.

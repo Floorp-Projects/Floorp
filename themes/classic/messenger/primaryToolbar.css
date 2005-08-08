@@ -242,21 +242,30 @@
   -moz-image-region: rect(21px 88px 42px 66px) !important;
 }
 
-#junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
+/* ::::: message notification bar style rules ::::: */
+
+.msgNotificationBar {
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: #000000;
+  -moz-appearance: toolbox;
+  background-color: #C7BC8F;
+  color: black;
 }
 
-#junkBarMessage {
+.msgNotificationBarText {
   font-weight: bold;
 }
 
-#junkBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  background-color: #C7BC8F;
+#junkBarImage {
+  list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
 }
 
 #junkIcon {
   margin-left: 0.5ex;
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+}
+
+#remoteContentImage {
+  list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
+  padding: 3px;
 }

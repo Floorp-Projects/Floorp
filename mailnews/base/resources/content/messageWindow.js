@@ -655,6 +655,8 @@ var MessageWindowController =
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
       case "cmd_recalculateJunkScore":
+      case "cmd_markAsShowRemote":
+      case "cmd_markAsNotPhish":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -753,6 +755,10 @@ var MessageWindowController =
       case "button_file":
 			case "cmd_file":
         return (gCurrentMessageUri != null);
+      case "cmd_markAsShowRemote":
+        return (GetNumSelectedMessages() > 0 && checkMsgHdrPropertyIsNot("remoteContentPolicy", kAllowRemoteContent));
+      case "cmd_markAsNotPhish":
+        return (GetNumSelectedMessages() > 0 && checkMsgHdrPropertyIsNot("notAPhishMessage", kNotAPhishMessage));
 			case "cmd_printSetup":
 			  return true;
 			case "cmd_getNewMessages":
@@ -920,6 +926,12 @@ var MessageWindowController =
 				return;
       case "cmd_recalculateJunkScore":
         analyzeMessagesForJunk();
+        return;
+      case "cmd_markAsShowRemote":
+        LoadMsgWithRemoteContent();
+        return;
+      case "cmd_markAsNotPhish":
+        MsgIsNotAScam();
         return;
       case "cmd_label0":
         gDBView.doCommand(nsMsgViewCommandType.label0);

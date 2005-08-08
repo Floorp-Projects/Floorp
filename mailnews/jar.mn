@@ -143,6 +143,7 @@ messenger.jar:
     content/messenger/junkMail.xul                                             (base/resources/content/junkMail.xul)
     content/messenger/junkMail.js                                              (base/resources/content/junkMail.js)
 *   content/messenger/junkMailInfo.xul                                         (base/resources/content/junkMailInfo.xul)
+    content/messenger/phishingDetector.js                                      (base/resources/content/phishingDetector.js)
     content/messenger/SearchDialog.xul                                         (base/search/resources/content/SearchDialog.xul)
     content/messenger/ABSearchDialog.xul                                       (base/search/resources/content/ABSearchDialog.xul)
     content/messenger/SearchDialog.js                                          (base/search/resources/content/SearchDialog.js)

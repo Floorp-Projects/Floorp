@@ -518,6 +518,7 @@ pref("news.cancel.confirm",true);
 pref("news.cancel.alert_on_success",true);
 pref("mail.SpellCheckBeforeSend",false);
 pref("mail.spellcheck.inline",true);
+pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.warn_on_send_accel_key", true);
 pref("mail.enable_autocomplete",true);
 pref("mailnews.html_domains","");

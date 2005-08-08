@@ -280,6 +280,8 @@
     <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.preventBubble()" disabled="true"/>
     <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.preventBubble()" disabled="true"/>
     <command id="cmd_recalculateJunkScore" oncommand="goDoCommand('cmd_recalculateJunkScore');" disabled="true"/>
+    <command id="cmd_markAsShowRemote" oncommand="goDoCommand('cmd_markAsShowRemote'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsNotPhish" oncommand="goDoCommand('cmd_markAsNotPhish'); event.preventBubble()" disabled="true"/>
 </commandset>
 
 <commandset id="mailLabelMenuItems"
@@ -327,6 +329,10 @@
   <key id="key_toggleRead" key="&markAsReadCmd.key;"                 oncommand="goDoCommand('cmd_markAsRead');"/>
   <key id="key_markJunk" key="&markAsJunkCmd.key;"                   oncommand="goDoCommand('cmd_markAsJunk');"/>
   <key id="key_markNotJunk" key="&markAsNotJunkCmd.key;"             oncommand="goDoCommand('cmd_markAsNotJunk');"
+       modifiers="shift"/>
+  <key id="key_markShowRemote" key="&markAsShowRemoteCmd.key;"       oncommand="goDoCommand('cmd_markAsShowRemote');"
+       modifiers="shift"/>
+  <key id="key_markNotPhish" key="&markAsNotPhishCmd.key;"           oncommand="goDoCommand('cmd_markAsNotPhish');"
        modifiers="shift"/>
   <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
   <key id="key_markThreadAsRead" key="&markThreadAsReadCmd.key;"     oncommand="goDoCommand('cmd_markThreadAsRead')"/>
@@ -633,6 +639,12 @@
         <menuitem label="&recalculateJunkScoreCmd.label;"
                   accesskey="&recalculateJunkScoreCmd.accesskey;"
                   command="cmd_recalculateJunkScore"/>
+        <menuitem label="&markAsShowRemoteCmd.label;"
+                  accesskey="&markAsShowRemoteCmd.accesskey;"
+                  command="cmd_markAsShowRemote"/>
+        <menuitem label="&markAsNotPhishCmd.label;"
+                  accesskey="&markAsNotPhishCmd.accesskey;"
+                  command="cmd_markAsNotPhish"/>
       </menupopup>
     </menu>
     <menuseparator/>
@@ -977,6 +989,12 @@
         <menuitem label="&recalculateJunkScoreCmd.label;"
                   accesskey="&recalculateJunkScoreCmd.accesskey;"
                   command="cmd_recalculateJunkScore"/>
+        <menuitem label="&markAsShowRemoteCmd.label;"
+                  accesskey="&markAsShowRemoteCmd.accesskey;"
+                  command="cmd_markAsShowRemote"/>
+        <menuitem label="&markAsNotPhishCmd.label;"
+                  accesskey="&markAsNotPhishCmd.accesskey;"
+                  command="cmd_markAsNotPhish"/>
       </menupopup>
     </menu>
     <menuseparator id="messagePaneContext-sep-labels-2"/>
@@ -1610,6 +1628,14 @@
         <menuitem label="&recalculateJunkScoreCmd.label;"
                   accesskey="&recalculateJunkScoreCmd.accesskey;"
                   command="cmd_recalculateJunkScore"/>
+        <menuitem label="&markAsShowRemoteCmd.label;"
+                  key="key_markShowRemote"
+                  accesskey="&markAsShowRemoteCmd.accesskey;"
+                  command="cmd_markAsShowRemote"/>
+        <menuitem label="&markAsNotPhishCmd.label;"
+                  key="key_markNotPhish"
+                  accesskey="&markAsNotPhishCmd.accesskey;"
+                  command="cmd_markAsNotPhish"/>
       </menupopup>
     </menu>
     <menuseparator/>
@@ -1827,13 +1853,34 @@
           accesskey="&advancedButton.accesskey;"/>
 </hbox>
 
-<hbox id="junkBar" collapsed="true" align="center">
-  <image id="junkBarImage"/>
-  <label id="junkBarMessage" value="&junkBarMessage.label;"/>
-  <spacer flex="1"/>
-  <button label="&junkInfoButton.label;" oncommand="MsgJunkMailInfo(false)"/>
-  <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false)"/>
-</hbox>
+<!-- The msgNotificationBar appears on top of the message and displays 
+     information like: junk, contains remote images, or is a suspected phishing URL 
+-->
+<deck id="msgNotificationBar" selectedIndex="0" collapsed="true">
+  <hbox id="msgNotificationNoStatus"/>
+
+  <hbox id="junkBar" class="msgNotificationBar" align="center">
+    <image id="junkBarImage"/>
+    <description flex="1" class="msgNotificationBarText">&junkBarMessage.label;</description>
+    <spacer flex="1"/>
+    <button label="&junkInfoButton.label;" oncommand="MsgJunkMailInfo(false)"/>
+    <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false);"/>
+  </hbox>
+
+  <hbox id="remoteContentBar" class="msgNotificationBar" align="center">
+    <image id="remoteContentImage"/>
+    <description flex="1" class="msgNotificationBarText">&remoteContentMessage.label;</description>
+    <spacer flex="1"/>
+    <button label="&loadRemoteContentButton.label;" oncommand="LoadMsgWithRemoteContent();"/>
+  </hbox>
+
+  <hbox id="phishingBar" class="msgNotificationBar" align="center">
+    <image id="phishingBarImage"/>
+    <description flex="1" class="msgNotificationBarText">&phishingBarMessage.label;</description>
+    <spacer flex="1"/>
+    <button label="&removePhishingBarButton.label;" oncommand="MsgIsNotAScam();"/>
+  </hbox>
+</deck>
 
 <statusbar class="chromeclass-status" id="status-bar"> 
   <statusbarpanel id="component-bar"/>

@@ -84,6 +84,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/phishingDetector.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -182,14 +183,14 @@
         </splitter>
 
         <vbox id="messagepanebox" flex="2" minheight="100" height="200" minwidth="100" width="200" persist="collapsed height width" class="window-focusborder" focusring="false">
-          <hbox id="junkBar"/>
+          <deck id="msgNotificationBar"/>
 
           <hbox id="msgHeaderView"/>
 
           <browser id="messagepane" name="messagepane" height="0" flex="1"
                    context="messagePaneContext" minwidth="1" minheight="1"
                    disablesecurity="true" disablehistory="true" autofind="false"
-                   type="content-primary" onclick="messagePaneOnClick(event);"/>
+                   type="content-primary" onclick="return messagePaneOnClick(event);"/>
         </vbox>
       </box>
     </box>

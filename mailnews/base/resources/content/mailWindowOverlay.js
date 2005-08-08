@@ -27,6 +27,7 @@
  *   Jan Varga <varga@ku.sk>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   David Bienvenu <bienvenu@netscape.com>
+ *   Ian Neal <bugzilla@arlen.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +53,22 @@ const MSG_DB_LARGE_COMMIT        = 1;
 const kClassicMailLayout = 0;
 const kWideMailLayout = 1;
 const kVerticalMailLayout = 2;
+
+// Per message header flags to keep track of whether the user is allowing remote
+// content for a particular message. 
+// if you change or add more values to these constants, be sure to modify
+// the corresponding definitions in nsMsgContentPolicy.cpp
+const kNoRemoteContentPolicy = 0;
+const kBlockRemoteContent = 1;
+const kAllowRemoteContent = 2;
+
+const kIsAPhishMessage = 0;
+const kNotAPhishMessage = 1;
+
+const kMsgNotificationNoStatus = 0;
+const kMsgNotificationJunkBar = 1;
+const kMsgNotificationRemoteImages = 2;
+const kMsgNotificationPhishingBar = 3;
 
 var gMessengerBundle;
 var gPromptService;
@@ -2049,40 +2066,143 @@ function HandleJunkStatusChanged(folder)
   var loadedMessage = GetLoadedMessage();
   if (loadedMessage && (!(/type=x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
   {
-    var messageURI = GetLoadedMessage();
-    // if multiple message are selected
-    // and we change the junk status
-    // we don't want to show the junk bar
-    // (since the message pane is blank)
-    if (messageURI && (GetNumSelectedMessages() == 1))
-      SetUpJunkBar(messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI));
-    else
-      SetUpJunkBar(null);
+    // if multiple message are selected and we change the junk status
+    // we don't want to show the junk bar (since the message pane is blank)
+    var msgHdr = null;
+    if (GetNumSelectedMessages() == 1)
+      msgHdr = messenger.messageServiceFromURI(loadedMessage).messageURIToMsgHdr(loadedMessage);
+    gMessageNotificationBar.setJunkMsg(msgHdr);
   }
 }
 
-function SetUpJunkBar(aMsgHdr)
+var gMessageNotificationBar = 
 {
-  // XXX todo
-  // should this happen on the start, or at the end?
-  // if at the end, we might keep the "this message is junk" up for a while, until a big message is loaded
-  // or do we need to wait until here, to make sure the message is fully analyzed
-  // what about almost hiding it on the start, and then showing here?
+  mBarStatus: 0,
+  // flag bit values for mBarStatus, indexed by kMsgNotificationXXX
+  mBarFlagValues: [
+                    0, // kMsgNotificationNoStatus
+                    1, // 1 << (kMsgNotificationJunkBar - 1)
+                    2, // 1 << (kMsgNotificationRemoteImages - 1)
+                    4  // 1 << (kMsgNotificationPhishingBar - 1)
+                  ],
 
-  var isJunk = false;
+  mMsgNotificationBar: document.getElementById('msgNotificationBar'),
+
+  setJunkMsg: function(aMsgHdr)
+  {
+    var isJunk = false;
+    var isCurrentlyNotJunk = this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar;
   
-  if (aMsgHdr) {
-    var junkScore = aMsgHdr.getStringProperty("junkscore"); 
-    isJunk = ((junkScore != "") && (junkScore != "0"));
+    if (aMsgHdr) 
+    {
+      var junkScore = aMsgHdr.getStringProperty("junkscore"); 
+      isJunk = ((junkScore != "") && (junkScore != "0"));
+    }
+
+    this.updateMsgNotificationBar (kMsgNotificationJunkBar, isJunk);
+
+    goUpdateCommand('button_junk');
+  },
+
+  setRemoteContentMsg: function(aMsgHdr)
+  {  
+    var blockRemote = aMsgHdr &&
+                      aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent;
+    this.updateMsgNotificationBar(kMsgNotificationRemoteImages, blockRemote);
+  },
+
+  // aUrl is the nsIURI for the message currently loaded in the message pane
+  setPhishingMsg: function(aUrl)
+  {
+    // if we've explicitly marked this message as not being an email scam, then don't
+    // bother checking it with the phishing detector.
+    var phishingMsg = false;
+    if (!checkMsgHdrPropertyIsNot("notAPhishMessage", kIsAPhishMessage))
+      phishingMsg = isMsgEmailScam(aUrl);
+    this.updateMsgNotificationBar(kMsgNotificationPhishingBar, phishingMsg);
+  },
+
+  clearMsgNotifications: function()
+  {
+    this.updateMsgNotificationBar(kMsgNotificationNoStatus, true);
+  },
+
+  // private method used to set our message notification deck to the correct value...
+  updateMsgNotificationBar: function(aIndex, aSet)
+  {
+    var chunk = this.mBarFlagValues[aIndex];
+    var status = aSet ? this.mBarStatus | chunk : this.mBarStatus & ~chunk;
+    this.mBarStatus = status;
+
+    // the junk message takes precedence over the phishing message
+    // which takes precedence over the remote content message
+    if (status & this.mBarFlagValues[kMsgNotificationJunkBar])
+      aIndex = kMsgNotificationJunkBar;
+    else if (status & this.mBarFlagValues[kMsgNotificationPhishingBar])
+      aIndex = kMsgNotificationPhishingBar;
+    else if (status & this.mBarFlagValues[kMsgNotificationRemoteImages])
+      aIndex = kMsgNotificationRemoteImages;
+    else
+      aIndex = kMsgNotificationNoStatus;
+
+    if (status == kMsgNotificationNoStatus)
+      this.mMsgNotificationBar.setAttribute('collapsed', true);
+    else
+      this.mMsgNotificationBar.removeAttribute('collapsed');
+    
+    this.mMsgNotificationBar.selectedIndex = aIndex;
   }
-  
-  var junkBar = document.getElementById("junkBar");
-  if (isJunk)
-    junkBar.removeAttribute("collapsed");
-  else
-    junkBar.setAttribute("collapsed","true");
- 
-  goUpdateCommand('button_junk');
+};
+
+function LoadMsgWithRemoteContent()
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the "remoteContentBar" property on it
+  // then reload the message
+
+  setMsgHdrPropertyAndReload("remoteContentPolicy", kAllowRemoteContent);
+}
+
+function MsgIsNotAScam()
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the "isPhishingMsg" property on it
+  // then reload the message
+
+  setMsgHdrPropertyAndReload("notAPhishMessage", kNotAPhishMessage);
+}
+
+function setMsgHdrPropertyAndReload(aProperty, aValue)
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the appropiate property on it then reload the message
+
+  var msgURI = GetLoadedMessage();
+
+  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  {
+    var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    if (msgHdr)
+    {
+      msgHdr.setUint32Property(aProperty, aValue);
+      MsgReload();
+    }
+  }
+}
+
+function checkMsgHdrPropertyIsNot(aProperty, aValue)
+{
+  // we want to get the msg hdr for the currently selected message,
+  // get the appropiate property on it and then test against value.
+
+  var msgURI = GetLoadedMessage();
+    
+  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  {
+    var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    return (msgHdr && msgHdr.getUint32Property(aProperty) != aValue);
+  }
+  return false;
 }
 
 function MarkCurrentMessageAsRead()
@@ -2097,6 +2217,11 @@ function ClearPendingReadTimer()
     clearTimeout(gMarkViewedMessageAsReadTimer);
     gMarkViewedMessageAsReadTimer = null;
   }
+}
+
+function OnMsgParsed(aUrl)
+{
+  gMessageNotificationBar.setPhishingMsg(aUrl);
 }
 
 function OnMsgLoaded(aUrl)
@@ -2117,14 +2242,11 @@ function OnMsgLoaded(aUrl)
     // SetNextMessageAfterDelete() when the operation completes (bug 243532).
     gNextMessageViewIndexAfterDelete = -2;
 
-    if (/type=x-message-display/.test(msgURI))
-      SetUpJunkBar(null);
-    else
-    {
+    if (!(/type=x-message-display/.test(msgURI)))
       msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-      SetUpJunkBar(msgHdr);
-    }
-    
+
+    gMessageNotificationBar.setJunkMsg(msgHdr);
+
     // we just finished loading a message. set a timer to actually mark the message as read after n seconds
     // where n can be configured by the user.
     var markReadOnADelay = gPrefBranch.getBoolPref("mailnews.mark_message_read.delay");
@@ -2324,5 +2446,3 @@ function OpenOrFocusWindow(args, windowType, chromeURL)
   else
     window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
 }
-
-

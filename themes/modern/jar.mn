@@ -396,6 +396,7 @@ modern.jar:
   skin/modern/messenger/icons/message-news-offl.gif                (messenger/icons/message-news-offl.gif)
   skin/modern/messenger/icons/readcol-read.gif                     (messenger/icons/readcol-read.gif)
   skin/modern/messenger/icons/readcol-unread.gif                   (messenger/icons/readcol-unread.gif)
+  skin/modern/messenger/icons/remote-blocked.png                   (messenger/icons/remote-blocked.png)
   skin/modern/messenger/icons/server-local-new.gif                 (messenger/icons/server-local-new.gif)
   skin/modern/messenger/icons/server-local.gif                     (messenger/icons/server-local.gif)
   skin/modern/messenger/icons/server-mail-new.gif                  (messenger/icons/server-mail-new.gif)

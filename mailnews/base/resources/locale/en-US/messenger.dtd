@@ -437,6 +437,12 @@
 <!ENTITY markAsNotJunkCmd.key "j">
 <!ENTITY recalculateJunkScoreCmd.label "Run Junk Mail Controls">
 <!ENTITY recalculateJunkScoreCmd.accesskey "C">
+<!ENTITY markAsShowRemoteCmd.label "Show Remote Content">
+<!ENTITY markAsShowRemoteCmd.accesskey "e">
+<!ENTITY markAsShowRemoteCmd.key "r">
+<!ENTITY markAsNotPhishCmd.label "As Not Scam">
+<!ENTITY markAsNotPhishCmd.accesskey "S">
+<!ENTITY markAsNotPhishCmd.key "p">
 <!ENTITY openMessageWindowCmd.label "Open Message">
 <!ENTITY openMessageWindowCmd.accesskey "O">
 <!ENTITY openMessageWindowCmd.key "o">
@@ -585,8 +591,15 @@
 <!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
 <!ENTITY deleteJunk.accesskey "e">
 
-<!-- junk bar -->
-<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
+<!-- Junk Bar -->
+<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk.">
 <!ENTITY junkBarButton.label "This is Not Junk">
 <!ENTITY junkInfoButton.label "?">
 
+<!-- Remote Content Bar -->
+<!ENTITY remoteContentMessage.label "To protect your privacy, &brandShortName; has blocked remote content in this message.">
+<!ENTITY loadRemoteContentButton.label "Show Remote Content">
+
+<!-- Phishing Bar -->
+<!ENTITY phishingBarMessage.label "&brandShortName; thinks this message might be an email scam.">
+<!ENTITY removePhishingBarButton.label "Not a Scam">

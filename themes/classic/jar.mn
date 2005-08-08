@@ -429,6 +429,7 @@ classic.jar:
   skin/classic/messenger/icons/message-news-new-attach-off.gif          (messenger/icons/message-news-new-attach-off.gif)
   skin/classic/messenger/icons/message-news-new-offl.gif                (messenger/icons/message-news-new-offl.gif)
   skin/classic/messenger/icons/message-news-offl.gif                    (messenger/icons/message-news-offl.gif)
+  skin/classic/messenger/icons/remote-blocked.png                       (messenger/icons/remote-blocked.png)
   skin/classic/messenger/icons/server-local.gif                         (messenger/icons/server-local.gif)
   skin/classic/messenger/icons/server-local-new.gif                     (messenger/icons/server-local-new.gif)
   skin/classic/messenger/icons/server-mail.gif                          (messenger/icons/server-mail.gif)

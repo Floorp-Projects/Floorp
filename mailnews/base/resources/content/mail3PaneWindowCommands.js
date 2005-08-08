@@ -210,6 +210,8 @@ var DefaultController =
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
       case "cmd_recalculateJunkScore":
+      case "cmd_markAsShowRemote":
+      case "cmd_markAsNotPhish":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -322,12 +324,16 @@ var DefaultController =
       case "cmd_markAsFlagged":
       case "button_file":
       case "cmd_file":
-        return (GetNumSelectedMessages() > 0 );
+        return (GetNumSelectedMessages() > 0);
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
       case "cmd_recalculateJunkScore":
         // can't do news on junk yet.
         return (GetNumSelectedMessages() > 0 && !isNewsURI(GetFirstSelectedMessage()));
+      case "cmd_markAsShowRemote":
+        return (GetNumSelectedMessages() > 0 && checkMsgHdrPropertyIsNot("remoteContentPolicy", kAllowRemoteContent));
+      case "cmd_markAsNotPhish":
+        return (GetNumSelectedMessages() > 0 && checkMsgHdrPropertyIsNot("notAPhishMessage", kNotAPhishMessage));
       case "cmd_applyFilters":
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.applyFilters, enabled, checkStatus);
@@ -632,6 +638,12 @@ var DefaultController =
 				return;
       case "cmd_recalculateJunkScore":
         analyzeMessagesForJunk();
+        return;
+      case "cmd_markAsShowRemote":
+        LoadMsgWithRemoteContent();
+        return;
+      case "cmd_markAsNotPhish":
+        MsgIsNotAScam();
         return;
       case "cmd_applyFilters":
         MsgApplyFilters(null);

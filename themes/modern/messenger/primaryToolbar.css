@@ -254,22 +254,30 @@
   -moz-image-region: rect(68px 199px 101px 150px) !important;
 }
 
+/* ::::: message notification bar style rules ::::: */
+
+.msgNotificationBar {
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: #000000;
+  -moz-appearance: toolbox;
+  background-color: #C7BC8F;
+  color: black;
+}
+
+.msgNotificationBarText {
+  font-weight: bold;
+}
+
 #junkBarImage {
   list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
 }
 
-#junkBarMessage {
-  font-weight: bold;
-}
-
-#junkBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  background-color: #C7BC8F;
-}
-
-
 #junkIcon {
   margin-left: 0.3ex;
   list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
+}
+
+#remoteContentImage {
+  list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
+  padding: 3px;
 }
