@@ -392,7 +392,8 @@ private:
                          nsIPresShell* aPresShell,
                          nsIContent *aNode,
                          PRUint32 aContentOffset,
-                         PRUint32 aKeycode);
+                         PRUint32 aKeycode,
+                         HINT aHint);
   void BidiLevelFromClick(nsIContent *aNewFocus, PRUint32 aContentOffset);
 #ifdef VISUALSELECTION
   NS_IMETHOD VisualSelectFrames(nsPresContext* aContext,
@@ -1423,7 +1424,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
               mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
             }
             else
-              BidiLevelFromMove(context, mShell, pos.mResultContent, pos.mContentOffset, aKeycode);
+              BidiLevelFromMove(context, mShell, pos.mResultContent, pos.mContentOffset, aKeycode, tHint);
         }
       }
 #ifdef VISUALSELECTION
@@ -2241,12 +2242,14 @@ nsSelection::MaintainSelection()
  * @param aNode is the content node
  * @param aContentOffset is the new caret position, as an offset into aNode
  * @param aKeycode is the keyboard event that moved the caret to the new position
+ * @param aHint is the hint indicating in what logical direction the caret moved
  */
 void nsSelection::BidiLevelFromMove(nsPresContext* aContext,
                                     nsIPresShell* aPresShell,
                                     nsIContent *aNode,
                                     PRUint32 aContentOffset,
-                                    PRUint32 aKeycode)
+                                    PRUint32 aKeycode,
+                                    HINT aHint)
 {
   PRUint8 firstLevel;
   PRUint8 secondLevel;
@@ -2262,7 +2265,7 @@ void nsSelection::BidiLevelFromMove(nsPresContext* aContext,
     case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_LEFT:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
-      if (HINTLEFT==mHint)
+      if (HINTLEFT == aHint)
         aPresShell->SetCaretBidiLevel(firstLevel);
       else
         aPresShell->SetCaretBidiLevel(secondLevel);
