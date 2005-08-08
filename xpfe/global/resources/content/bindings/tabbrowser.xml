@@ -705,8 +705,13 @@
               Components.interfaces.nsIScriptSecurityManager;
 
             try {
-              secMan.checkLoadURI(origURI, uri,
-                                  nsIScriptSecMan.DISALLOW_SCRIPT);
+              // error pages can load their favicon
+              // to be on the safe side, only allow chrome:// favicons
+              const aboutNeterr = "about:neterror?";
+              if (origURI.spec.substr(0, aboutNeterr.length) != aboutNeterr ||
+                  !uri.schemeIs("chrome"))
+                secMan.checkLoadURI(origURI, uri,
+                                    nsIScriptSecMan.DISALLOW_SCRIPT);
             } catch(e) {
               return;
             }
