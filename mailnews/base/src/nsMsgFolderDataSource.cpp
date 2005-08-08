@@ -1731,6 +1731,8 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIRDFResource *folderReso
     else if(oldValue > 0 && newValue <= 0)
     {
       NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, kFalseLiteral);
+      // this isn't quite right - parents could still have other children with 
+      // unread messages. NotifyAncestors will have to figure that out...
       NotifyAncestors(folder, kNC_SubfoldersHaveUnreadMessages, kFalseLiteral);
     }
 
@@ -1815,6 +1817,14 @@ nsMsgFolderDataSource::NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aP
   nsCOMPtr<nsIRDFResource> parentFolderResource = do_QueryInterface(parentMsgFolder,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // if we're setting the subFoldersHaveUnreadMessages property to false, check
+  // if the folder really doesn't have subfolders with unread messages.
+  if (aPropertyResource == kNC_SubfoldersHaveUnreadMessages && aNode == kFalseLiteral)
+  {
+    nsCOMPtr <nsIRDFNode> unreadMsgsNode;
+    createHasUnreadMessagesNode(parentMsgFolder, PR_TRUE, getter_AddRefs(unreadMsgsNode));
+    aNode = unreadMsgsNode;
+  }
   NotifyPropertyChanged(parentFolderResource, aPropertyResource, aNode);
 
   return NotifyAncestors(parentMsgFolder, aPropertyResource, aNode);
