@@ -4432,6 +4432,7 @@ NS_IMETHODIMP
 nsMsgDBFolder::CopyFileMessage(nsIFileSpec* fileSpec,
                              nsIMsgDBHdr* messageToReplace,
                              PRBool isDraftOrTemplate,
+                             PRUint32 aNewMsgFlags,
                              nsIMsgWindow *window,
                              nsIMsgCopyServiceListener* listener)
 {

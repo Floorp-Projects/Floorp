@@ -2133,6 +2133,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder,
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
                                       msgToReplace, PRBool isDraftOrTemplate,
+                                      PRUint32 newMsgFlags,
                                       nsIMsgWindow *msgWindow,
                                       nsIMsgCopyServiceListener* listener)
 {

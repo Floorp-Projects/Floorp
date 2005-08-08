@@ -182,6 +182,7 @@ public:
                           nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr* msgToReplace,
                              PRBool isDraftOrTemplate, 
+                             PRUint32 newMsgFlags,
                              nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);

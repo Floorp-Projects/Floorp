@@ -50,7 +50,7 @@ interface nsITransactionManager;
 interface nsIMsgWindow;
 interface nsIFileSpec;
 
-[scriptable, uuid(bce41600-28df-11d3-abf7-00805f8ac968)]
+[scriptable, uuid(c9255b88-5e0f-4614-8fdc-ebb97a0f333e)]
 interface nsIMsgCopyService : nsISupports {
 
     /**
@@ -77,6 +77,7 @@ interface nsIMsgCopyService : nsISupports {
                          in nsIMsgFolder dstFolder,
                          in nsIMsgDBHdr msgToReplace,
                          in boolean isDraftOrTemplate,
+                         in unsigned long aMsgFlags,
                          in nsIMsgCopyServiceListener listener,
                          in nsIMsgWindow msgWindow);
 

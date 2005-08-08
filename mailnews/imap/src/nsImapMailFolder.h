@@ -106,6 +106,7 @@ public:
     PRUint32 m_leftOver;
     PRBool m_allowUndo;
     PRBool m_eatLF;
+    PRBool m_newMsgFlags; // only used if there's no m_message 
 };
 
 // ACLs for this folder.
@@ -269,6 +270,7 @@ public:
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
                               nsIMsgDBHdr* msgToReplace,
                               PRBool isDraftOrTemplate,
+                              PRUint32 aNewMsgFlags,
                               nsIMsgWindow *msgWindow,
                               nsIMsgCopyServiceListener* listener);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
@@ -391,6 +393,7 @@ protected:
                           PRBool isMove,
                           PRBool selectedState,
                           PRBool acrossServers,
+                          PRUint32 newMsgFlags,
                           nsIMsgCopyServiceListener* listener,
                           nsIMsgWindow *msgWindow,
                           PRBool allowUndo);

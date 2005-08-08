@@ -1811,7 +1811,8 @@ nsSaveMsgListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
         if (NS_FAILED(rv)) goto done;
         nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
         if (copyService)
-          rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull, PR_TRUE, this, nsnull);
+          rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull, 
+                                        PR_TRUE, MSG_FLAG_READ, this, nsnull);
         killSelf = PR_FALSE;
     }
   }
@@ -2591,9 +2592,11 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   mMsgFileSpec->CloseStream();
   mNewMessageKey = PR_UINT32_MAX;
   nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
+  PRUint32 origMsgFlags;
+  mOriginalMessage->GetFlags(&origMsgFlags);
   if (copyService)
     rv = copyService->CopyFileMessage(mMsgFileSpec, mMessageFolder, nsnull, PR_FALSE, 
-                                      listenerCopyService, mMsgWindow);
+                                      origMsgFlags, listenerCopyService, mMsgWindow);
   return rv;
 }
 

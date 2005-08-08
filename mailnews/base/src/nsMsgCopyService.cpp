@@ -82,6 +82,7 @@ MOZ_DECL_CTOR_COUNTER(nsCopyRequest)
 nsCopyRequest::nsCopyRequest() :
     m_requestType(nsCopyMessagesType),
     m_isMoveOrDraftOrTemplate(PR_FALSE),
+    m_newMsgFlags(0),
     m_processed(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsCopyRequest);
@@ -105,7 +106,7 @@ nsCopyRequest::~nsCopyRequest()
 nsresult
 nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
                     nsIMsgFolder* dstFolder,
-                    PRBool bVal, nsIMsgCopyServiceListener* listener,
+                    PRBool bVal, PRUint32 newMsgFlags, nsIMsgCopyServiceListener* listener,
                     nsIMsgWindow* msgWindow, PRBool allowUndo)
 {
   nsresult rv = NS_OK;
@@ -114,6 +115,7 @@ nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
   m_dstFolder = dstFolder;
   m_isMoveOrDraftOrTemplate = bVal;
   m_allowUndo = allowUndo;
+  m_newMsgFlags = newMsgFlags;
   if (listener)
       m_listener = listener;
   if (msgWindow)
@@ -318,6 +320,7 @@ nsMsgCopyService::DoNextCopy()
                 rv = copyRequest->m_dstFolder->CopyFileMessage
                     (aSpec, aMessage,
                      copyRequest->m_isMoveOrDraftOrTemplate,
+                     copyRequest->m_newMsgFlags,
                      copyRequest->m_msgWindow,
                      copyRequest->m_listener);
             }
@@ -418,8 +421,9 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
 
   aSupport = do_QueryInterface(srcFolder, &rv);
 
-  rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
-                         isMove, listener, window, allowUndo);
+  rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, isMove, 
+                        0 /* new msg flags, not used */, listener, 
+                         window, allowUndo);
   if (NS_FAILED(rv)) 
     goto done;
 
@@ -516,7 +520,7 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
   if (!copyRequest) return NS_ERROR_OUT_OF_MEMORY;
   
   rv = copyRequest->Init(nsCopyFoldersType, support, dstFolder, 
-    isMove, listener, window, PR_FALSE);
+    isMove, 0 /* new msg flags, not used */ , listener, window, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
   
   curFolder = do_QueryInterface(support, &rv);
@@ -542,6 +546,7 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
                                   nsIMsgFolder* dstFolder,
                                   nsIMsgDBHdr* msgToReplace,
                                   PRBool isDraft,
+                                  PRUint32 aMsgFlags,
                                   nsIMsgCopyServiceListener* listener,
                                   nsIMsgWindow* window)
 {
@@ -562,7 +567,7 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
   if (NS_FAILED(rv)) goto done;
 
   rv = copyRequest->Init(nsCopyFileMessageType, fileSupport, dstFolder,
-                         isDraft, listener, window, PR_FALSE);
+                         isDraft, aMsgFlags, listener, window, PR_FALSE);
   if (NS_FAILED(rv)) goto done;
 
   if (msgToReplace)
