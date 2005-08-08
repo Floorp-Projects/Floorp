@@ -109,5 +109,20 @@ class AMO_Object
             $this->Apps[$this->db->record['AppID']] = $this->db->record['AppName'];
         } while ($this->db->next(SQL_ASSOC));
     }
+
+    function getComment($id)
+    {
+         // Get one comment based on CommentID.
+        $this->db->query("
+            SELECT
+                feedback.*
+            FROM
+                feedback
+            WHERE
+                id = '{$id}'
+        ", SQL_INIT, SQL_ASSOC);
+
+        return $this->db->record[0];
+    }
 }
 ?>
