@@ -112,7 +112,7 @@ struct nsCSSColor : public nsCSSStruct  {
 struct nsRuleDataColor : public nsCSSColor {
 };
 
-// Should be replaced with nsCSSValue::List.
+// Should be replaced with nsCSSValueList and nsCSSValue::Array.
 struct nsCSSShadow {
   nsCSSShadow(void);
   nsCSSShadow(const nsCSSShadow& aCopy);
@@ -433,7 +433,7 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
 struct nsRuleDataPage : public nsCSSPage {
 };
 
-// Should be replaced with nsCSSValue::List.
+// Should be replaced with nsCSSValueList and nsCSSValue::Array.
 struct nsCSSCounterData {
   nsCSSCounterData(void);
   nsCSSCounterData(const nsCSSCounterData& aCopy);
@@ -446,7 +446,7 @@ struct nsCSSCounterData {
   nsCSSCounterData* mNext;
 };
 
-// Should be replaced with nsCSSValue::List.
+// Should be replaced with nsCSSValueList and nsCSSValue::Array.
 struct nsCSSQuotes {
   nsCSSQuotes(void);
   nsCSSQuotes(const nsCSSQuotes& aCopy);
