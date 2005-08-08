@@ -82,6 +82,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 PRBool
 UseAFunctions()
 {
+#ifndef WINCE
   static PRBool useAFunctions = PR_FALSE;
   static PRBool init = PR_FALSE;
   if (!init) {
@@ -98,6 +99,9 @@ UseAFunctions()
   }
 
   return useAFunctions;
+#else
+  return PR_FALSE;
+#endif
 }
 
 static NS_IMETHODIMP

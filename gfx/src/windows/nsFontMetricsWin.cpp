@@ -69,6 +69,7 @@ static PRBool gIsWIN95OR98 = NOT_SETUP;
 
 PRBool IsWin95OrWin98()
 {
+#ifndef WINCE
   if (NOT_SETUP == gIsWIN95OR98) {
     OSVERSIONINFO os;
     os.dwOSVersionInfoSize = sizeof(os);
@@ -82,6 +83,9 @@ PRBool IsWin95OrWin98()
     }
   }
   return gIsWIN95OR98;
+#else
+  return PR_FALSE;
+#endif
 }
 
 extern PRBool UseAFunctions();
