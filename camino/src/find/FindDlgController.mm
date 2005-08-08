@@ -160,7 +160,7 @@
     searchText = [NSString string];
   
   if (outIsNew)
-    *outIsNew = mLastFindString && ![mLastFindString isEqualToString:searchText];
+    *outIsNew = !mLastFindString || (mLastFindString && ![mLastFindString isEqualToString:searchText]);
   
   // remember the last pasteboard string that we saw
   [mLastFindString release];

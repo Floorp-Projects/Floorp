@@ -757,31 +757,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 }
 
 
-//
-// -findAgain
-//
-// Called in response to "Find Again" in edit menu. Tells the find controller
-// to find the next occurrance of what's already been found.
-//
--(IBAction) findAgain:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController findInPage:NO];
-  else
-    NSBeep();
-}
-
-// Called in response to "Find Previous" in edit menu.  
--(IBAction) findPrevious:(id)aSender
-{
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController)
-    [browserController findInPage:YES];
-  else
-    NSBeep();
-}
-
 -(IBAction) getInfo:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
@@ -1292,10 +1267,6 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     return NO;
   }
     
-  // check if someone has previously done a find before allowing findAgain to be enabled
-  if (action == @selector(findAgain:) || action == @selector(findPrevious:))
-    return (browserController && [[browserController lastFindText] length] > 0);
-  
   // check what the state of the personal toolbar should be, but only if there is a browser
   // window open. Popup windows that have the personal toolbar removed should always gray
   // out this menu.

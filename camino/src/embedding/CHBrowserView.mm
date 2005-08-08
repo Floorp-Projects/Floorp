@@ -118,6 +118,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (BOOL)needsToDrawRect:(NSRect)aRect;
 - (BOOL)wantsDefaultClipping;
 @end
+
+const long NSFindPanelActionNext = 2;
+const long NSFindPanelActionPrevious = 3;
+const long NSFindPanelActionSetFindString = 7;
 #endif
 
 
@@ -128,6 +132,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (float)getTextZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
 - (nsIDocShell*)getDocShell;
+- (NSString*)getSelection;
 
 - (void)ensurePrintSettings;
 - (void)savePrintSettings;
@@ -653,6 +658,42 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   }
 }
 
+//
+// -performFindPanelAction:
+//
+// Called on the first responder when the user executes one of the find commands. The
+// tag is the action to perform.
+//
+- (IBAction)performFindPanelAction:(id)inSender
+{
+  switch ([inSender tag]) {
+    case NSFindPanelActionSetFindString:
+    {
+      // set the selected text on the find pasteboard so it's usable from other apps
+      NSString* selectedText = [self getSelection];
+      NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+      [pboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+      [pboard setString:selectedText forType:NSStringPboardType];
+      
+      // set gecko's search string
+      nsCOMPtr<nsIWebBrowserFind> webFind = do_GetInterface(_webBrowser);
+      if (webFind) {
+        nsAutoString sel;
+        [selectedText assignTo_nsAString:sel];
+        webFind->SetSearchString(sel.get()); 
+      }
+      break;
+    }
+    
+    case NSFindPanelActionNext:
+      [self findInPage:NO];
+      break;
+    
+    case NSFindPanelActionPrevious:
+      [self findInPage:YES];
+      break;
+  }
+}
 
 - (BOOL)findInPageWithPattern:(NSString*)inText caseSensitive:(BOOL)inCaseSensitive
     wrap:(BOOL)inWrap backwards:(BOOL)inBackwards
@@ -1229,6 +1270,12 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
     return [self canRedo];
   else if (action == @selector(selectAll:))
     return YES;
+  else if (action == @selector(performFindPanelAction:)) {
+    long tag = [aMenuItem tag];
+    if (tag == NSFindPanelActionNext || tag == NSFindPanelActionPrevious)
+      return ([[self lastFindText] length] > 0);
+    return YES;
+  }
   
   return NO;
 }
@@ -1263,11 +1310,13 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
-- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types
+//
+// -getSelection
+//
+// Returns the currently selected text as a NSString. 
+//
+- (NSString*)getSelection
 {
-  if ([types containsObject:NSStringPboardType] == NO)
-    return NO;
-
   nsCOMPtr<nsICommandManager> cmdManager = do_GetInterface(_webBrowser);
   if (!cmdManager) return NO;
   
@@ -1284,12 +1333,20 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsAutoString selectedText;
   params->GetStringValue("result", selectedText);
 
-  NSString* seletedText = [NSString stringWith_nsAString:selectedText];
+  return [NSString stringWith_nsAString:selectedText];
+}
+
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard types:(NSArray *)types
+{
+  if ([types containsObject:NSStringPboardType] == NO)
+    return NO;
+
+  NSString* selectedText = [self getSelection];
   
   NSArray* typesDeclared = [NSArray arrayWithObject:NSStringPboardType];
   [pboard declareTypes:typesDeclared owner:nil];
     
-  return [pboard setString:seletedText forType:NSStringPboardType];
+  return [pboard setString:selectedText forType:NSStringPboardType];
 }
 
 - (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
