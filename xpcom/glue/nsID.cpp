@@ -91,7 +91,8 @@ NS_COM PRBool nsID::Parse(const char *aIDStr)
   PARSE_HYPHEN(aIDStr);
   PARSE_CHARS_TO_NUM(aIDStr, m2, 4);
   PARSE_HYPHEN(aIDStr);
-  for(int i=0; i<2; i++)
+  int i;
+  for(i=0; i<2; i++)
     PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
   PARSE_HYPHEN(aIDStr);
   while(i < 8) {
