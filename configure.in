@@ -4036,6 +4036,7 @@ minimo)
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
   MOZ_UPDATER=
+  MOZ_USE_NATIVE_UCONV=1
   MOZ_V1_STRING_ABI=
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
@@ -4631,9 +4632,10 @@ MOZ_ARG_ENABLE_BOOL(native-uconv,
 if test "$MOZ_USE_NATIVE_UCONV"; then
     AC_DEFINE(MOZ_USE_NATIVE_UCONV)
 fi
-if test "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
+if test "$OS_ARCH" != "WINCE" -a "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
     AC_MSG_ERROR([iconv() not found.  Cannot enable native uconv support.])
 fi
+
 
 dnl ========================================================
 dnl Libeditor can be build as plaintext-only,
