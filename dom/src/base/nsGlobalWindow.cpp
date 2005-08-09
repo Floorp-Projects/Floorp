@@ -174,7 +174,7 @@ static PRInt32              gRunningTimeoutDepth       = 0;
 PRInt32 gTimeoutCnt                                    = 0;
 #endif
 
-#ifdef DEBUG_bryner
+#if defined(DEBUG_bryner) || defined(DEBUG_chb)
 #define DEBUG_PAGE_CACHE
 #endif
 
@@ -6607,7 +6607,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   printf("saving window state, stateObj = %p\n", (void*)stateObj);
 #endif
   nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   state.swap(*aState);
   return NS_OK;
