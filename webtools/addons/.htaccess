@@ -1,5 +1,5 @@
 # You MUST define [your path]/inc as an include_path!
-php_value include_path /home/morgamic/public_html/v2/inc:.:/usr/share/pear
+php_value include_path /home/morgamic/public_html/v2/inc:.:/usr/share/pear:/home/morgamic/public_html/v2/lib
 
 # Init script to set up required libraries.
 php_value auto_prepend_file init.php

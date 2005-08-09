@@ -36,7 +36,7 @@ $sql['app'] =& $clean['app'];
 // Get most popular extensions based on application.
 $db->query("
     SELECT DISTINCT
-        TM.ID id, 
+        TM.ID ID, 
         TM.Name name, 
         TM.Rating,
         LEFT(TM.Description,96) as Description,
@@ -62,7 +62,7 @@ $popularExtensions = $db->record;
 // Get most popular themes based on application.
 $db->query("
     SELECT DISTINCT
-        TM.ID id, 
+        TM.ID ID, 
         TM.Name name, 
         TM.Rating,
         LEFT(TM.Description,96) as Description,

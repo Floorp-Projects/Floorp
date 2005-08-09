@@ -15,11 +15,13 @@ ini_set('error_reporting',ERROR_REPORTING);
 ini_set('magic_quotes_gpc',0);
 
 // Include required libraries and classes.
-require_once('DB.php');
-require_once(LIB.'/smarty/libs/Smarty.class.php');
+require_once('DB.php');  // PEAR::DB
+require_once('Auth.php');  // PEAR::Auth
+require_once(LIB.'/smarty/libs/Smarty.class.php');  // Smarty
 require_once(LIB.'/amo.class.php');
 require_once(LIB.'/addon.class.php');
 require_once(LIB.'/auth.class.php');
+require_once(LIB.'/error.php');
 require_once(LIB.'/rdf.class.php');
 require_once(LIB.'/rss.class.php');
 require_once(LIB.'/session.class.php');
@@ -63,18 +65,7 @@ class AMO_SQL extends SQL
 
         // Test connection; display "gone fishing" on failure.
         if (DB::isError($this->db)) {
-            
-            $tpl =& new AMO_Smarty();
-            
-            $tpl->assign(
-                array(
-                    'content'=>'site-down.tpl',
-                    'error'=>$this->error
-                )
-            );
-
-            $tpl->display('inc/wrappers/nonav.tpl');
-            exit;
+            triggerError($this->error,'site-down.tpl');
         }
     }
 }

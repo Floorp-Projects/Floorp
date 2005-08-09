@@ -35,11 +35,12 @@ Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="
 <ul id="opinions">
 {section name=comments loop=$addon->Comments max=10}
 <li>
-<h4>{$addon->Comments[comments].CommentTitle} ({$addon->Comments[comments].CommentVote} rating)</h4>
-<p class="opinions-info">by {$addon->Comments[comments].CommentName}, {$addon->Comments[comments].CommentDate|date_format}<br>
-{$addon->Comments[comments].helpful_yes} out of {$addon->Comments[comments].helpful_total} viewers found this comment helpful</p>
+<div class="opinions-vote">{$addon->Comments[comments].CommentVote}<span class="opinions-caption">out of 10</span></div>
+<h4 class="opinions-title">{$addon->Comments[comments].CommentTitle}</h4>
+<p class="opinions-info">by {$addon->Comments[comments].CommentName}, {$addon->Comments[comments].CommentDate|date_format}</p>
 <p class="opinions-text">{$addon->Comments[comments].CommentNote}</p>
-<p class="opinions-rating">Was this comment helpful? <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes">Yes</a> &#124; <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no">No</a></p>
+<p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
+Was this comment helpful? <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes">Yes</a> &#124; <a href="./ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no">No</a></p>
 </li>
 {/section}
 </ul>
@@ -51,7 +52,7 @@ Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="
 <li>Categories: 
 <ul>
 {section name=cats loop=$addon->AddonCats}
-<li><a href="./search.php?cat={$addon->AddonCats[cats].CatName}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
+<li><a href="./search.php?cat={$addon->AddonCats[cats].CategoryID}" title="See other Addons in this category.">{$addon->AddonCats[cats].CatName}</a></li>
 {/section}
 </ul>
 </li>

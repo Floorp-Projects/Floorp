@@ -15,7 +15,7 @@
 <ol class="popularlist">
 {section name=new loop=$newest}
 <li>
-<a href="./addon.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format}) - {$newest[new].Description|escape} <a href="./addon.php?id={$newest[new].id}">more...</a>
+<a href="./addon.php?id={$newest[new].ID}">{$newest[new].Name} {$newest[new].Version}</a> ({$newest[new].DateAdded|date_format}) - {$newest[new].Description|escape} <a href="./addon.php?id={$newest[new].ID}">more...</a>
 </li>
 {/section}
 </ol>
@@ -25,7 +25,7 @@
 <ol class="popularlist">
 {section name=pe loop=$popularExtensions}
 <li>
-<a href="./addon.php?id={$popularExtensions[pe].id}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].Rating} rating, {$popularExtensions[pe].dc} downloads)</span> - {$popularExtensions[pe].Description|escape} <a href="./addon.php?id={$popularExtensions[pe].id}">more...</a>
+<a href="./addon.php?id={$popularExtensions[pe].ID}">{$popularExtensions[pe].name}</a> <span class="downloads">({$popularExtensions[pe].Rating} rating, {$popularExtensions[pe].dc} downloads)</span> - {$popularExtensions[pe].Description|escape} <a href="./addon.php?id={$popularExtensions[pe].ID}">more...</a>
 </li>
 {/section}
 </ol>
@@ -34,7 +34,7 @@
 <h2>Popular {$app} Themes</h2>
 <ol class="popularlist">
 {section name=pt loop=$popularThemes}
-<li><a href="./addon.php?id={$popularThemes[pt].id}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].Rating} rating, {$popularThemes[pt].dc} downloads)</span> - {$popularThemes[pt].Description|escape} <a href="./addon.php?id={$popularThemes[pt].id}">more...</a>
+<li><a href="./addon.php?id={$popularThemes[pt].ID}">{$popularThemes[pt].name}</a> <span class="downloads">({$popularThemes[pt].Rating} rating, {$popularThemes[pt].dc} downloads)</span> - {$popularThemes[pt].Description|escape} <a href="./addon.php?id={$popularThemes[pt].ID}">more...</a>
 </li>
 {/section}
 </ol>
