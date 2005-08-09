@@ -80,7 +80,7 @@ ParseVP(char *part, VersionPart &result)
       result.strBlen = sizeof(kPre) - 1;
     }
     else {
-      char *numstart = strpbrk(result.strB, "0123456789+-");
+      const char *numstart = strpbrk(result.strB, "0123456789+-");
       if (!numstart) {
 	result.strBlen = strlen(result.strB);
 	result.numC = 0;
