@@ -355,13 +355,13 @@ nsSVGSVGElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 NS_IMETHODIMP
 nsSVGSVGElement::GetContentScriptType(nsAString & aContentScriptType)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetContentScriptType");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
 nsSVGSVGElement::SetContentScriptType(const nsAString & aContentScriptType)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetContentScriptType");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -369,13 +369,13 @@ nsSVGSVGElement::SetContentScriptType(const nsAString & aContentScriptType)
 NS_IMETHODIMP
 nsSVGSVGElement::GetContentStyleType(nsAString & aContentStyleType)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetContentStyleType");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
 nsSVGSVGElement::SetContentStyleType(const nsAString & aContentStyleType)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetContentStyleType");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -453,13 +453,13 @@ nsSVGSVGElement::GetScreenPixelToMillimeterY(float *aScreenPixelToMillimeterY)
 NS_IMETHODIMP
 nsSVGSVGElement::GetUseCurrentView(PRBool *aUseCurrentView)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetUseCurrentView");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP
 nsSVGSVGElement::SetUseCurrentView(PRBool aUseCurrentView)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetUseCurrentView");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -467,7 +467,7 @@ nsSVGSVGElement::SetUseCurrentView(PRBool aUseCurrentView)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentView(nsIDOMSVGViewSpec * *aCurrentView)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetCurrentView");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -592,7 +592,7 @@ nsSVGSVGElement::ForceRedraw()
 NS_IMETHODIMP
 nsSVGSVGElement::PauseAnimations()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::PauseAnimations");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -600,7 +600,7 @@ nsSVGSVGElement::PauseAnimations()
 NS_IMETHODIMP
 nsSVGSVGElement::UnpauseAnimations()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::UnpauseAnimations");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -608,7 +608,7 @@ nsSVGSVGElement::UnpauseAnimations()
 NS_IMETHODIMP
 nsSVGSVGElement::AnimationsPaused(PRBool *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::AnimationsPaused");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -616,7 +616,7 @@ nsSVGSVGElement::AnimationsPaused(PRBool *_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentTime(float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -624,7 +624,7 @@ nsSVGSVGElement::GetCurrentTime(float *_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentTime(float seconds)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::SetCurrentTime");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -638,7 +638,7 @@ nsSVGSVGElement::GetIntersectionList(nsIDOMSVGRect *rect,
   // if (!rect || !referenceElement)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetIntersectionList");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -652,7 +652,7 @@ nsSVGSVGElement::GetEnclosureList(nsIDOMSVGRect *rect,
   // if (!rect || !referenceElement)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetEnclosureList");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -666,7 +666,7 @@ nsSVGSVGElement::CheckIntersection(nsIDOMSVGElement *element,
   // if (!element || !rect)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::CheckIntersection");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -680,7 +680,7 @@ nsSVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element,
   // if (!element || !rect)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::CheckEnclosure");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -688,7 +688,7 @@ nsSVGSVGElement::CheckEnclosure(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::DeSelectAll()
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::DeSelectAll");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -710,7 +710,7 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::CreateSVGAngle");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -928,7 +928,7 @@ nsSVGSVGElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *
 NS_IMETHODIMP
 nsSVGSVGElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetNearestViewportElement");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -936,7 +936,7 @@ nsSVGSVGElement::GetNearestViewportElement(nsIDOMSVGElement * *aNearestViewportE
 NS_IMETHODIMP
 nsSVGSVGElement::GetFarthestViewportElement(nsIDOMSVGElement * *aFarthestViewportElement)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetFarthestViewportElement");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1152,7 +1152,7 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
   // if (!element)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetTransformToElement");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

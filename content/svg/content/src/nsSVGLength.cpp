@@ -248,7 +248,7 @@ nsSVGLength::GetValue(float *aValue)
       break;
     case SVG_LENGTHTYPE_EMS:
     case SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("unit not implemented - write me!");
+      NS_NOTYETIMPLEMENTED("SVG_LENGTHTYPE_EXS");
       *aValue = 0;
       return NS_ERROR_NOT_IMPLEMENTED;
     default:
@@ -291,7 +291,7 @@ nsSVGLength::SetValue(float aValue)
       break;
     case SVG_LENGTHTYPE_EMS:
     case SVG_LENGTHTYPE_EXS:
-      NS_NOTYETIMPLEMENTED("unit not implemented - write me!");
+      NS_NOTYETIMPLEMENTED("SVG_LENGTHTYPE_EXS");
       mValueInSpecifiedUnits = 0;
       rv = NS_ERROR_NOT_IMPLEMENTED;
       break;
@@ -499,7 +499,7 @@ nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
   // if (!matrix)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGLength::GetTransformedValue");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

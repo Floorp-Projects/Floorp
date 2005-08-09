@@ -242,7 +242,7 @@ NS_IMETHODIMP nsSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *newItem,
   // if (!newItem)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me");
+  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::InsertItemBefore");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem,
   // if (!newItem)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGPathSegList::ReplaceItem");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
