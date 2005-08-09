@@ -62,6 +62,7 @@ CPPSRCS		= \
 		$(NULL)
 
 SDK_HEADERS     = \
+		nsID.h \
 		nsIGenericFactory.h \
 		nsIInterfaceRequestorUtils.h \
 		nsISupportsImpl.h \

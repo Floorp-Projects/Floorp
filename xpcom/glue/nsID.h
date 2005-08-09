@@ -90,13 +90,13 @@ struct nsID {
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID
    */
-  NS_COM PRBool Parse(const char *aIDStr);
+  NS_COM_GLUE PRBool Parse(const char *aIDStr);
 
   /**
    * nsID string encoder. Returns an allocated string in 
    * {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format. Caller should free string.
    */
-  NS_COM char* ToString() const;
+  NS_COM_GLUE char* ToString() const;
   //@}
 };
 
