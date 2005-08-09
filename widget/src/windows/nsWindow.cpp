@@ -5398,9 +5398,7 @@ DWORD nsWindow::WindowStyle()
   }
 
 #else
-
   switch (mWindowType) {
-
     case eWindowType_child:
       style = WS_OVERLAPPED;
       break;
@@ -5510,7 +5508,7 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE;
 
     case eWindowType_popup:
-      return WS_EX_TOOLWINDOW;
+      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -5518,7 +5516,7 @@ DWORD nsWindow::WindowExStyle()
 
     case eWindowType_toplevel:
     case eWindowType_invisible:
-      return WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+      return WS_EX_WINDOWEDGE;
   }
 #endif
 }
