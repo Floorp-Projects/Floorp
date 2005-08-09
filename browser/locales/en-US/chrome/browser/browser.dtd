@@ -59,10 +59,8 @@
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
 <!ENTITY addCurPageAsCmd.label "Bookmark This Page...">
-<!ENTITY addCurPageAsCmd.accesskey "B">
 <!ENTITY addCurPageAsCmd.commandkey "d">
 <!ENTITY manBookmarksCmd.label "Manage Bookmarks...">
-<!ENTITY manBookmarksCmd.accesskey "M">
 
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
