@@ -123,10 +123,8 @@ pref("extensions.update.autoUpdate", false);    // Automatically download and in
                                                 // updates to themes and extensions. 
                                                 // Does nothing at present. 
 
-pref("extensions.update.interval", 604800000);  // Check for updates to Extensions and 
-                                                // Themes every week
-pref("extensions.update.lastUpdateDate", 0);    // UTC offset when last Extension/Theme 
-                                                // update was performed. 
+pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
+                                            // Themes every week
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
