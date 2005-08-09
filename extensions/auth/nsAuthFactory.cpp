@@ -39,12 +39,12 @@
 
 //-----------------------------------------------------------------------------
 
-#define NS_HTTPNEGOTIATEAUTH_CID \
-{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */         \
-    0x75c80fd0,                                      \
-    0xaccb,                                          \
-    0x432c,                                          \
-    {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
+#define NS_HTTPNEGOTIATEAUTH_CID                   \
+{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */       \
+  0x75c80fd0,                                      \
+  0xaccb,                                          \
+  0x432c,                                          \
+  {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
 }
 
 #include "nsHttpNegotiateAuth.h"
@@ -52,22 +52,50 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNegotiateAuth)
 
 //-----------------------------------------------------------------------------
 
-#define NS_NEGOTIATEAUTH_CID                         \
-{ /* 96ec4163-efc8-407a-8735-007fb26be4e8 */         \
-    0x96ec4163,                                      \
-    0xefc8,                                          \
-    0x407a,                                          \
-    {0x87, 0x35, 0x00, 0x7f, 0xb2, 0x6b, 0xe4, 0xe8} \
+#define NS_NEGOTIATEAUTH_CID                       \
+{ /* 96ec4163-efc8-407a-8735-007fb26be4e8 */       \
+  0x96ec4163,                                      \
+  0xefc8,                                          \
+  0x407a,                                          \
+  {0x87, 0x35, 0x00, 0x7f, 0xb2, 0x6b, 0xe4, 0xe8} \
 }
 
 #if defined( USE_GSSAPI )
 #include "nsNegotiateAuthGSSAPI.h"
+
 #elif defined( USE_SSPI )
 #include "nsNegotiateAuthSSPI.h"
+
+static NS_METHOD
+nsSysNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
+{
+  if (outer)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsNegotiateAuth *auth = new nsNegotiateAuth(PR_TRUE);
+  if (!auth)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(auth);
+  nsresult rv = auth->QueryInterface(iid, result);
+  NS_RELEASE(auth);
+  return rv;
+}
+
+#define NS_SYSNTLMAUTH_CID                         \
+{ /* dc195987-6e9a-47bc-b1fd-ab895d398833 */       \
+  0xdc195987,                                      \
+  0x6e9a,                                          \
+  0x47bc,                                          \
+  {0xb1, 0xfd, 0xab, 0x89, 0x5d, 0x39, 0x88, 0x33} \
+}
+
 #else
 #error "missing implementation"
 #endif
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNegotiateAuth)
+
 
 //-----------------------------------------------------------------------------
 
@@ -77,6 +105,13 @@ static nsModuleComponentInfo components[] = {
     NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate",
     nsNegotiateAuthConstructor
   },
+#if defined( USE_SSPI )
+  { "nsNegotiateAuthNTLM", 
+    NS_SYSNTLMAUTH_CID,
+    NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm",
+    nsSysNTLMAuthConstructor
+  },
+#endif
   { "nsHttpNegotiateAuth", 
     NS_HTTPNEGOTIATEAUTH_CID,
     NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX "negotiate",
