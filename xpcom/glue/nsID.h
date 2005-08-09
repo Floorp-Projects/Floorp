@@ -25,12 +25,8 @@
 
 #include <string.h>
 
-#ifndef prtypes_h___
-#include "prtypes.h"
-#endif
-
-#ifndef nsCom_h__
-#include "nsCom.h"
+#ifndef nscore_h___
+#include "nscore.h"
 #endif
 
 /**
@@ -92,6 +88,41 @@ typedef nsID nsCID;
   const nsCID _name = _cidspec
 
 #define REFNSCID const nsCID&
+
+/**
+ * An "interface id" which can be used to uniquely identify a given
+ * interface.
+ */
+
+typedef nsID nsIID;
+
+/**
+ * A macro shorthand for <tt>const nsIID&<tt>
+ */
+
+#define REFNSIID const nsIID&
+
+/**
+ * Define an IID
+ * obsolete - do not use this macro
+ */
+ 
+#define NS_DEFINE_IID(_name, _iidspec) \
+  const nsIID _name = _iidspec
+
+/**
+ * A macro to build the static const IID accessor method
+ */
+
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
+  static const nsIID& GetIID() {static const nsIID iid = the_iid; return iid;}
+
+/**
+ * A macro to build the static const CID accessor method
+ */
+
+#define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
+  static const nsID& GetCID() {static const nsID cid = the_cid; return cid;}
 
 #endif
 
