@@ -42,6 +42,22 @@
  * specific to the xpinstall wizard for windows.
  */
 
+const URI_BRAND_PROPERTIES     = "chrome://branding/locale/brand.properties";
+const URI_UNINSTALL_PROPERTIES = "chrome://branding/content/uninstall.properties";
+
+const KEY_APPDIR          = "XCurProcD";
+const KEY_WINDIR          = "WinD";
+const KEY_COMPONENTS_DIR  = "ComsD";
+const KEY_PLUGINS_DIR     = "APlugns";
+const KEY_EXECUTABLE_FILE = "XREExeF";
+
+// see prio.h
+const PR_RDONLY      = 0x01;
+const PR_WRONLY      = 0x02;
+const PR_APPEND      = 0x10;
+
+const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
+
 //-----------------------------------------------------------------------------
 
 /**
@@ -62,6 +78,15 @@ function getFile(key) {
 }
 
 /**
+ * Return the full path given a relative path and a base directory.
+ */
+function getFileRelativeTo(dir, relPath) {
+  var file = dir.clone().QueryInterface(Components.interfaces.nsILocalFile);
+  file.setRelativeDescriptor(dir, relPath);
+  return file;
+}
+
+/**
  * Creates a new file object given a native file path.
  * @param   path
  *          The native file path.
@@ -72,6 +97,28 @@ function newFile(path) {
                        .createInstance(Components.interfaces.nsILocalFile);
   file.initWithPath(path);
   return file;
+}
+
+/**
+ * This function returns a file input stream.
+ */
+function openFileInputStream(file) {
+  var stream =
+      Components.classes["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Components.interfaces.nsIFileInputStream);
+  stream.init(file, PR_RDONLY, 0, 0);
+  return stream;
+}
+
+/**
+ * This function returns a file output stream.
+ */
+function openFileOutputStream(file, flags) {
+  var stream =
+      Components.classes["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Components.interfaces.nsIFileOutputStream);
+  stream.init(file, flags, 0644, 0);
+  return stream;
 }
 
 /**
@@ -94,14 +141,257 @@ function getLocale() {
 
 //-----------------------------------------------------------------------------
 
-const URI_BRAND_PROPERTIES     = "chrome://branding/locale/brand.properties";
-const URI_UNINSTALL_PROPERTIES = "chrome://branding/content/uninstall.properties";
+const PREFIX_INSTALLING = "installing: ";
+const PREFIX_CREATE_FOLDER = "create folder: ";
+const PREFIX_CREATE_REGISTRY_KEY = "create registry key: ";
+const PREFIX_STORE_REGISTRY_VALUE_STRING = "store registry value string: ";
 
-const KEY_APPDIR          = "XCurProcD";
-const KEY_WINDIR          = "WinD";
-const KEY_COMPONENTS_DIR  = "ComsD";
-const KEY_PLUGINS_DIR     = "APlugns";
-const KEY_EXECUTABLE_FILE = "XREExeF";
+function InstallLogWriter() {
+}
+InstallLogWriter.prototype = {
+  _outputStream: null,  // nsIOutputStream to the install wizard log file
+
+  /**
+   * Write a single line to the output stream.
+   */
+  _writeLine: function(s) {
+    s = s + "\n";
+    this._outputStream.write(s, s.length);
+  },
+
+  /**
+   * This function creates an empty install wizard log file and returns
+   * a reference to the resulting nsIFile.
+   */
+  _getInstallLogFile: function() {
+    function makeLeafName(index) {
+      return "install_wizard" + index + ".log"
+    }
+
+    var file = getFile(KEY_APPDIR); 
+    file.append("uninstall");
+    if (!file.exists())
+      return null;
+
+    file.append("x");
+    var n = 0;
+    do {
+      file.leafName = makeLeafName(++n);
+    } while (file.exists());
+
+    if (n == 1)
+      return null;  // What, no install wizard log file?
+
+    file.leafName = makeLeafName(n - 1);
+    return file;
+  },
+
+  /**
+   * Return the update.log file.
+   */
+  _getUpdateLogFile: function() {
+    var file = getFile(KEY_APPDIR); 
+    file.append("updates");
+    file.append("0");
+    file.append("update.log");
+    return file.exists() ? file : null;
+  },
+
+  /**
+   * Read update.log to extract information about files that were
+   * newly added for this update.
+   */
+  _readUpdateLog: function(logFile, entries) {
+    var appDir = getFile(KEY_APPDIR);
+    var stream;
+    try {
+      stream = openFileInputStream(logFile).
+          QueryInterface(Components.interfaces.nsILineInputStream);
+
+      var dirs = {};
+      var line = {};
+      while (stream.readLine(line)) {
+        var data = line.value.split(" ");
+        if (data[0] == "EXECUTE" && data[1] == "ADD") {
+          var file = getFileRelativeTo(appDir, data[2]);
+          
+          // remember all parent directories
+          var parent = file.parent;
+          while (!parent.equals(appDir)) {
+            dirs[parent.path] = true;
+            parent = parent.parent;
+          }
+
+          // remember the file
+          entries.files.push(file.path);
+        }
+      }
+      for (var d in dirs)
+        entries.dirs.push(d);
+      // Sort the directories so that subdirectories are deleted first.
+      entries.dirs.sort();
+    } finally {
+      if (stream)
+        stream.close();
+    }
+  },
+
+  /**
+   * This function initializes the log writer and is responsible for
+   * translating 'update.log' to the install wizard format.
+   */
+  begin: function() {
+    var installLog = this._getInstallLogFile();
+    var updateLog = this._getUpdateLogFile();
+    if (!installLog || !updateLog)
+      return;
+
+    var entries = { dirs: [], files: [] };
+    this._readUpdateLog(updateLog, entries);
+
+    this._outputStream =
+        openFileOutputStream(installLog, PR_WRONLY | PR_APPEND);
+    this._writeLine("\nUPDATE [" + new Date().toUTCString() + "]");
+
+    var i;
+    // The log file is processed in reverse order, so list directories before
+    // files to ensure that the directories will be deleted.
+    for (i = 0; i < entries.dirs.length; ++i)
+      this._writeLine(PREFIX_CREATE_FOLDER + entries.dirs[i]);
+    for (i = 0; i < entries.files.length; ++i)
+      this._writeLine(PREFIX_INSTALLING + entries.files[i]);
+  },
+
+  /**
+   * This function records the creation of a registry key.
+   */
+  registryKeyCreated: function(keyPath) {
+    this._writeLine(PREFIX_CREATE_REGISTRY_KEY + keyPath + " []");
+  },
+
+  /**
+   * This function records the creation of a registry key value.
+   */
+  registryKeyValueSet: function(keyPath, valueName) {
+    this._writeLine(
+        PREFIX_STORE_REGISTRY_VALUE_STRING + keyPath + " [" + valueName + "]");
+  },
+
+  end: function() {
+    if (this._outputStream) {
+      this._outputStream.close();
+      this._outputStream = null;
+    }
+  }
+};
+
+var installLogWriter;
+
+//-----------------------------------------------------------------------------
+
+/**
+ * A thin wrapper around nsIWindowsRegKey that keeps track of its path
+ * and notifies the installLogWriter when modifications are made.
+ */
+function RegKey() {
+  // Internally, we may pass parameters to this constructor.
+  if (arguments.length == 3) {
+    this._key = arguments[0];
+    this._root = arguments[1];
+    this._path = arguments[2];
+  } else {
+    this._key =
+        Components.classes["@mozilla.org/windows-registry-key;1"].
+        createInstance(nsIWindowsRegKey);
+  }
+}
+RegKey.prototype = {
+  _key: null,
+  _root: null,
+  _path: null,
+
+  ACCESS_READ:  nsIWindowsRegKey.ACCESS_READ,
+  ACCESS_WRITE: nsIWindowsRegKey.ACCESS_WRITE,
+  ACCESS_ALL:   nsIWindowsRegKey.ACCESS_ALL,
+
+  ROOT_KEY_LOCAL_MACHINE: nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+
+  close: function() {
+    this._key.close();
+    this._root = null;
+    this._path = null;
+  },
+
+  open: function(rootKey, path, mode) {
+    this._key.open(rootKey, path, mode);
+    this._root = rootKey;
+    this._path = path;
+  },
+
+  openChild: function(path, mode) {
+    var child = this._key.openChild(path, mode);
+    return new RegKey(child, this._root, this._path + "\\" + path);
+  },
+
+  createChild: function(path, mode) {
+    var child = this._key.createChild(path, mode);
+    var key = new RegKey(child, this._root, this._path + "\\" + path);
+    if (installLogWriter)
+      installLogWriter.registryKeyCreated(key.toString());
+    return key;
+  },
+
+  readStringValue: function(name) {
+    return this._key.readStringValue(name);
+  },
+
+  writeStringValue: function(name, value) {
+    this._key.writeStringValue(name, value);
+    if (installLogWriter)
+      installLogWriter.registryKeyValueSet(this.toString(), name);
+  },
+
+  writeIntValue: function(name, value) {
+    this._key.writeIntValue(name, value);
+    if (installLogWriter)
+      installLogWriter.registryKeyValueSet(this.toString(), name);
+  },
+
+  hasValue: function(name) {
+    return this._key.hasValue(name);
+  },
+
+  hasChild: function(name) {
+    return this._key.hasChild(name);
+  },
+
+  get childCount() {
+    return this._key.childCount;
+  },
+
+  getChildName: function(index) {
+    return this._key.getChildName(index);
+  },
+
+  removeChild: function(name) {
+    this._key.removeChild(name);
+  },
+
+  toString: function() {
+    var root;
+    switch (this._root) {
+    case this.ROOT_KEY_LOCAL_MACHINE:
+      root = "HKEY_LOCAL_MACHINE";
+      break;
+    default:
+      LOG("unknown root key");
+      return "";
+    }
+    return root + "\\" + this._path;
+  }
+};
+
+//-----------------------------------------------------------------------------
 
 /*
 RegKey.prototype = {
@@ -267,9 +557,7 @@ function updateRegistry() {
   var brandFullName = brandBundle.GetStringFromName("brandFullName");
   var vendorShortName = brandBundle.GetStringFromName("vendorShortName");
 
-  var key =
-      Components.classes["@mozilla.org/windows-registry-key;1"].
-      createInstance(Components.interfaces.nsIWindowsRegKey);
+  var key = new RegKey();
 
   var oldInstall;
   try {
@@ -445,7 +733,17 @@ nsPostUpdateWin.prototype = {
 
   run: function() {
     try {
-      updateRegistry();
+      // We use a global object here for the install log writer, so that the
+      // registry updating code can easily inform it of registry keys that it
+      // may create.
+      installLogWriter = new InstallLogWriter();
+      try {
+        installLogWriter.begin();
+        updateRegistry();
+      } finally {
+        installLogWriter.end();
+        installLogWriter = null;
+      }
     } catch (e) {
       LOG(e);
     }
