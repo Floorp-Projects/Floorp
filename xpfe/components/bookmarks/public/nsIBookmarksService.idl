@@ -98,6 +98,8 @@ interface nsIBookmarksService : nsISupports
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
+    AString getLastCharset(in AUTF8String aURL); 
+
     string resolveKeyword(in wstring aName);
     
     void importSystemBookmarks(in nsIRDFResource aParentFolder);
