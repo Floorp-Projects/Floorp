@@ -41,6 +41,11 @@
 #include "nsStyleContext.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDOMSVGStopElement.h"
+#include "nsIDOMSVGAnimatedNumber.h"
+#include "nsISVGValueObserver.h"
+#include "nsISVGValueUtils.h"
+#include "nsISVGValue.h"
 
 // This is a very simple frame whose only purpose is to capture style change
 // events and propogate them to the parent.  Most of the heavy lifting is done
@@ -48,8 +53,15 @@
 
 typedef nsContainerFrame  nsSVGStopFrameBase;
 
-class nsSVGStopFrame : public nsSVGStopFrameBase
+class nsSVGStopFrame : public nsSVGStopFrameBase,
+                       public nsISVGValueObserver,
+                       public nsSupportsWeakReference
 {
+  // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
   /**
    * Get the "type" of the frame
    *
@@ -64,16 +76,39 @@ class nsSVGStopFrame : public nsSVGStopFrameBase
   }
 #endif
 
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  // nsISVGValueObserver interface:
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable, 
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable, 
+                                    nsISVGValue::modificationType aModType);
+
 protected:
   friend nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
                                      nsIContent*   aContent, 
                                      nsIFrame*     aParentFrame, 
                                      nsIFrame**    aNewFrame);
+  virtual ~nsSVGStopFrame();
 
 private:
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+
+  nsCOMPtr<nsIDOMSVGAnimatedNumber> mOffset;
 };
+
+//----------------------------------------------------------------------
+// nsISupports methods:
+
+NS_INTERFACE_MAP_BEGIN(nsSVGStopFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGStopFrameBase)
 
 //----------------------------------------------------------------------
 // Implementation
@@ -98,6 +133,66 @@ nsSVGStopFrame::GetType() const
 {
   return nsLayoutAtoms::svgStopFrame;
 }
+
+NS_IMETHODIMP
+nsSVGStopFrame::Init(nsPresContext*  aPresContext,
+                     nsIContent*     aContent,
+                     nsIFrame*       aParent,
+                     nsStyleContext* aContext,
+                     nsIFrame*       aPrevInFlow)
+{
+  nsresult rv;
+  rv = nsSVGStopFrameBase::Init(aPresContext, aContent, aParent,
+                                aContext, aPrevInFlow);
+
+  nsCOMPtr<nsIDOMSVGStopElement> stop = do_QueryInterface(mContent);
+  {
+    stop->GetOffset(getter_AddRefs(mOffset));
+    if (!mOffset)
+      return NS_ERROR_FAILURE;
+    NS_ADD_SVGVALUE_OBSERVER(mOffset);
+  }
+
+  return rv;
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+NS_IMETHODIMP
+nsSVGStopFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                        nsISVGValue::modificationType aModType)
+{
+  // Need to tell our parent gradients that something happened.
+  // Calling {Begin,End}Update on an nsISVGValue, which
+  // nsSVGGradientFrame implements, causes its observers (the
+  // referencing graphics frames) to be notified.
+  if (mParent) {
+    nsISVGValue *value;
+    if (NS_SUCCEEDED(mParent->QueryInterface(NS_GET_IID(nsISVGValue),
+                                             (void **)&value)))
+      value->BeginBatchUpdate();
+  }
+  return NS_OK;
+}
+                                                                                
+NS_IMETHODIMP
+nsSVGStopFrame::DidModifySVGObservable(nsISVGValue* observable, 
+                                       nsISVGValue::modificationType aModType)
+{
+  // Need to tell our parent gradients that something happened.
+  // Calling {Begin,End}Update on an nsISVGValue, which
+  // nsSVGGradientFrame implements, causes its observers (the
+  // referencing graphics frames) to be notified.
+  if (mParent) {
+    nsISVGValue *value;
+    if (NS_SUCCEEDED(mParent->QueryInterface(NS_GET_IID(nsISVGValue),
+                                             (void **)&value)))
+      value->EndBatchUpdate();
+  }
+  return NS_OK;
+}
+
 
 // -------------------------------------------------------------------------
 // Public functions
@@ -128,3 +223,8 @@ nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell,
   return NS_OK;
 }
 
+nsSVGStopFrame::~nsSVGStopFrame()
+{
+  if (mOffset)
+    NS_REMOVE_SVGVALUE_OBSERVER(mOffset);
+}
