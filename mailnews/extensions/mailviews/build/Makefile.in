@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
           	  msgdb \
           	  mime \
+		  intl \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
