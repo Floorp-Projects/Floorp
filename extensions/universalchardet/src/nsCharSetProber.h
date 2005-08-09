@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,10 +40,12 @@
 
 #include "nscore.h"
 
+//#define DEBUG_chardet // Uncomment this for debug dump.
+
 typedef enum {
-  eDetecting = 0,   //we are still detecting, no sure answer yet, but caller can ask for confidence.
+  eDetecting = 0,   //We are still detecting, no sure answer yet, but caller can ask for confidence.
   eFoundIt = 1,     //That's a positive answer
-  eNotMe = 2        //negative answer
+  eNotMe = 2        //Negative answer
 } nsProbingState;
 
 #define SHORTCUT_THRESHOLD      (float)0.95
@@ -60,7 +63,14 @@ public:
 #ifdef DEBUG_chardet
   virtual void  DumpStatus() {};
 #endif
+
+  // Helper functions used in the Latin1 and Group probers.
+  // both functions Allocate a new buffer for newBuf. This buffer should be 
+  // freed by the caller using PR_FREEIF.
+  // Both functions return PR_FALSE in case of memory allocation failure.
+  static PRBool FilterWithoutEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen);
+  static PRBool FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen);
+
 };
 
 #endif /* nsCharSetProber_h__ */
-

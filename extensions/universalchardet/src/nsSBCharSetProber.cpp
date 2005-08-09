@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,7 +55,10 @@ nsProbingState nsSingleByteCharSetProber::HandleData(const char* aBuf, PRUint32 
       if (mLastOrder < SAMPLE_SIZE)
       {
         mTotalSeqs++;
-        ++(mSeqCounters[mModel->precedenceMatrix[mLastOrder*SAMPLE_SIZE+order]]);
+        if (!mReversed)
+          ++(mSeqCounters[mModel->precedenceMatrix[mLastOrder*SAMPLE_SIZE+order]]);
+        else // reverse the order of the letters in the lookup
+          ++(mSeqCounters[mModel->precedenceMatrix[order*SAMPLE_SIZE+mLastOrder]]);
       }
     }
     mLastOrder = order;
@@ -107,10 +111,16 @@ float nsSingleByteCharSetProber::GetConfidence(void)
 #endif
 }
 
-#ifdef DEBUG_chardet
-void 
-nsSingleByteCharSetProber::DumpStatus()
+const char* nsSingleByteCharSetProber::GetCharSetName() 
 {
-  printf("[%s] prober has confidence %f\r\n", GetCharSetName(), GetConfidence());
+  if (!mNameProber)
+    return mModel->charsetName;
+  return mNameProber->GetCharSetName();
+}
+
+#ifdef DEBUG_chardet
+void nsSingleByteCharSetProber::DumpStatus()
+{
+  printf("  SBCS: %1.3f [%s]\r\n", GetConfidence(), GetCharSetName());
 }
 #endif

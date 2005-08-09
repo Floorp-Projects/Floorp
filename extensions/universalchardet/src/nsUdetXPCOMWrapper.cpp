@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
 
 #include "nsUniversalDetector.h"
 #include "nsUdetXPCOMWrapper.h"
+#include "nsCharSetProber.h" // for DumpStatus
 
 #include "nsUniversalCharDetDll.h"
 //---- for XPCOM
@@ -101,6 +103,16 @@ NS_IMETHODIMP nsUniversalXPCOMDetector::DoIt(const char* aBuf,
 NS_IMETHODIMP nsUniversalXPCOMDetector::Done()
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
+#ifdef DEBUG_chardet
+  for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+  {
+    // If no data was received the array might stay filled with nulls
+    // the way it was initialized in the constructor.
+    if (mCharSetProbers[i])
+      mCharSetProbers[i]->DumpStatus();
+  }
+#endif
+
   this->DataEnd();
   return NS_OK;
 }
@@ -110,8 +122,6 @@ void nsUniversalXPCOMDetector::Report(const char* aCharset)
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 #ifdef DEBUG_chardet
   printf("Universal Charset Detector report charset %s . \r\n", aCharset);
-  for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
-    mCharSetProbers[i]->DumpStatus();
 #endif
   mObserver->Notify(aCharset, eBestAnswer);
 }
