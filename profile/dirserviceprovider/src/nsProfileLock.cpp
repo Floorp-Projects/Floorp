@@ -24,6 +24,7 @@
  *   Brendan Eich <brendan@mozilla.org>
  *   Colin Blake <colin@theblakes.com>
  *   Javier Pedemonte <pedemont@us.ibm.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -227,7 +228,18 @@ nsresult nsProfileLock::LockWithFcntl(const nsACString& lockFilePath)
         lock.l_len = 0; // len = 0 means entire file
         lock.l_type = F_WRLCK;
         lock.l_whence = SEEK_SET;
-        if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
+
+        // If fcntl(F_GETLK) fails then the server does not support/allow fcntl(),
+        // return failure rather than access denied in this case so we fallback
+        // to using a symlink lock, bug 303633.
+        struct flock testlock = lock;
+        if (fcntl(mLockFileDesc, F_GETLK, &testlock) == -1)
+        {
+            close(mLockFileDesc);
+            mLockFileDesc = -1;
+            rv = NS_ERROR_FAILURE;
+        }
+        else if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
         {
             close(mLockFileDesc);
             mLockFileDesc = -1;
@@ -327,7 +339,7 @@ nsresult nsProfileLock::LockWithSymlink(const nsACString& lockFilePath, PRBool a
                     (unsigned long)getpid());
     const nsPromiseFlatCString& flat = PromiseFlatCString(lockFilePath);
     const char *fileName = flat.get();
-    int symlink_rv, symlink_errno, tries = 0;
+    int symlink_rv, symlink_errno = 0, tries = 0;
 
     // use ns4.x-compatible symlinks if the FS supports them
     while ((symlink_rv = symlink(signature, fileName)) < 0)
