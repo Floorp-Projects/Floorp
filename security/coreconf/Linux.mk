@@ -55,7 +55,11 @@ DEFAULT_COMPILER = gcc
 ifeq ($(OS_TEST),m68k)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= m68k
-else		
+else
+ifeq ($(OS_TEST),ppc64)
+	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH	= ppc64
+else
 ifeq ($(OS_TEST),ppc)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= ppc
@@ -112,6 +116,7 @@ ifeq ($(OS_TEST),mips)
 else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
+endif
 endif
 endif
 endif
