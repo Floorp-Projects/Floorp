@@ -90,7 +90,7 @@ static const char gIDFormat2[] =
  * an nsID. It can also handle the old format without the { and }.
  */
 
-NS_COM PRBool nsID::Parse(const char *aIDStr)
+PRBool nsID::Parse(const char *aIDStr)
 {
   /* Optimized for speed */
   if(!aIDStr) {
@@ -124,7 +124,7 @@ NS_COM PRBool nsID::Parse(const char *aIDStr)
  * the caller.
  */
 
-NS_COM char *nsID::ToString() const 
+char *nsID::ToString() const 
 {
   char *res = (char*)PR_Malloc(39);    // use PR_Malloc if this is to be freed with nsCRT::free
 
