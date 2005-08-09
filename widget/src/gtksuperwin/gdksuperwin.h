@@ -111,6 +111,9 @@ GTKSUPERWIN_API(GdkSuperWin*) gdk_superwin_new (GdkWindow      *parent_window,
                                                 guint           width,
                                                 guint           height);
 
+GTKSUPERWIN_API(void)  gdk_superwin_reparent(GdkSuperWin *superwin,
+                                             GdkWindow   *parent_window);
+
 GTKSUPERWIN_API(void)  
 gdk_superwin_set_event_funcs (GdkSuperWin               *superwin,
                               GdkSuperWinFunc            shell_func,
