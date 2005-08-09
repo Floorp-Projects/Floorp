@@ -4590,6 +4590,7 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   int i;
 
   memset(map, 0, sizeof(map));
+  memset(mb + 128, 0, 160 - 128);
   for (i = 0; i < 127; ++i) {
     mb[i] = i;
   }
