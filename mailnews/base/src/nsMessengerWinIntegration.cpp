@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Bhuvan Racham <racham@netscape.com>
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -90,8 +91,8 @@
 #define SHELL32_DLL NS_LITERAL_CSTRING("shell32.dll")
 #define DOUBLE_QUOTE "\""
 #define MAIL_COMMANDLINE_ARG " -mail"
-#define TIMER_INTERVAL_PREF "mail.windows_xp_integration.unread_count_interval"
 #define IDI_MAILBIFF 101
+#define UNREAD_UPDATE_INTERVAL	(20 * 1000)	// 20 seconds
 
 #define NEW_MAIL_ALERT_ICON "chrome://messenger/skin/icons/new-mail-alert.png"
 #define SHOW_ALERT_PREF "mail.biff.show_alert"
@@ -225,11 +226,10 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
   mDefaultServerAtom = do_GetAtom("DefaultServer");
   mTotalUnreadMessagesAtom = do_GetAtom("TotalUnreadMessages");
 
-  mFirstTimeFolderUnreadCountChanged = PR_TRUE;
+  mUnreadTimerActive = PR_FALSE;
   mInboxURI = nsnull;
   mEmail = nsnull;
   mStoreUnreadCounts = PR_FALSE; 
-  mIntervalTime = 0;
 
   mBiffStateAtom = do_GetAtom("BiffState");
   mBiffIconVisible = PR_FALSE;
@@ -333,23 +333,6 @@ nsMessengerWinIntegration::Init()
 {
   nsresult rv;
 
-  // get pref service
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // first check the timer value
-  PRInt32 timerInterval = 0;
-  prefBranch->GetIntPref(TIMER_INTERVAL_PREF, &timerInterval);
-
-  // return if the timer value is negative or ZERO
-  if (timerInterval > 0) 
-  { 
-    // set the interval for timer. 
-    // multiply the value extracted (in seconds) from prefs 
-    // with 1000 to convert the interval into milliseconds
-    mIntervalTime = timerInterval * 1000; 
-  }
-
   // get directory service to build path for shell dll
   nsCOMPtr<nsIProperties> directoryService = 
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -374,7 +357,7 @@ nsMessengerWinIntegration::Init()
   if (!hModule)
     return NS_OK;
 
-  // get process addresses for the unerad mail count functions
+  // get process addresses for the unread mail count functions
   if (hModule) {
     mSHSetUnreadMailCount = (fnSHSetUnreadMailCount)GetProcAddress(hModule, XP_SHSetUnreadMailCounts);
     mSHEnumerateUnreadMailAccounts = (fnSHEnumerateUnreadMailAccounts)GetProcAddress(hModule, XP_SHEnumerateUnreadMailAccounts);
@@ -385,7 +368,7 @@ nsMessengerWinIntegration::Init()
 
   // if failed to get either of the process addresses, this is not XP platform
   // so we aren't storing unread counts
-  if (mSHSetUnreadMailCount && mSHEnumerateUnreadMailAccounts && (PRUint32) mIntervalTime)
+  if (mSHSetUnreadMailCount && mSHEnumerateUnreadMailAccounts)
     mStoreUnreadCounts = PR_TRUE; 
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = 
@@ -432,8 +415,6 @@ nsMessengerWinIntegration::Init()
 
     rv = ResetCurrent();
     NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = SetupUnreadCountUpdateTimer();
   }
 
   return NS_OK;
@@ -852,26 +833,26 @@ nsMessengerWinIntegration::OnItemIntPropertyChanged(nsIRDFResource *aItem, nsIAt
     rv = aItem->GetValueConst(&itemURI);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    // Today, if the user brings up the mail app and gets his/her mail and read 
-    // couple of messages and quit the app before the first timer action is 
-    // triggered, app will not get the opportunity to update the registry 
-    // latest unread count thus displaying essentially the previous sessions's data. 
-    // That is not desirable. So, we can avoid that situation by updating the 
-    // registry first time the total unread count is changed. That will update 
-    // the registry to reflect the first user action that alters unread mail count.
-    // As the user reads some of the messages, the latest unread mail count 
-    // is kept track of. Now, if the user quits before the first timer is triggered,
-    // the registry is updated one last time via UpdateRegistryWithCurrent() as we will
-    // have all information needed available to do so.
-    if (mFirstTimeFolderUnreadCountChanged) {
-      mFirstTimeFolderUnreadCountChanged = PR_FALSE;
-
-      rv = UpdateUnreadCount();
-      NS_ENSURE_SUCCESS(rv,rv);
+    if (itemURI && mInboxURI && !strcmp(itemURI, mInboxURI)) {
+      mCurrentUnreadCount = aNewValue;
     }
 
-    if (itemURI && mInboxURI && !nsCRT::strcmp(itemURI, mInboxURI)) {
-      mCurrentUnreadCount = aNewValue;
+    // If the timer isn't running yet, then we immediately update the
+    // registry and then start a one-shot timer. If the Unread counter
+    // has toggled zero / nonzero, we also update immediately.
+    // Otherwise, if the timer is running, defer the update. This means
+    // that all counter updates that occur within the timer interval are
+    // batched into a single registry update, to avoid hitting the
+    // registry too frequently. We also do a final update on shutdown,
+    // regardless of the timer.
+    if (!mUnreadTimerActive ||
+         (!mCurrentUnreadCount && mLastUnreadCountWrittenToRegistry) ||
+         (mCurrentUnreadCount && mLastUnreadCountWrittenToRegistry < 1)) {
+      rv = UpdateUnreadCount();
+      NS_ENSURE_SUCCESS(rv,rv);
+      // If timer wasn't running, start it.
+      if (!mUnreadTimerActive)
+        rv = SetupUnreadCountUpdateTimer();
     }
   }
   return NS_OK;
@@ -882,6 +863,7 @@ nsMessengerWinIntegration::OnUnreadCountUpdateTimer(nsITimer *timer, void *osInt
 {
   nsMessengerWinIntegration *winIntegration = (nsMessengerWinIntegration*)osIntegration;
 
+  winIntegration->mUnreadTimerActive = PR_FALSE;
   nsresult rv = winIntegration->UpdateUnreadCount();
   NS_ASSERTION(NS_SUCCEEDED(rv), "updating unread count failed");
 }
@@ -1119,14 +1101,17 @@ nsresult
 nsMessengerWinIntegration::SetupUnreadCountUpdateTimer()
 {
   if (!mStoreUnreadCounts) return NS_OK; // don't do anything here if we aren't storing unread counts...
-  PRUint32 timeInMSUint32 = (PRUint32) mIntervalTime;
+  mUnreadTimerActive = PR_TRUE;
   if (mUnreadCountUpdateTimer) {
     mUnreadCountUpdateTimer->Cancel();
   }
+  else
+  {
+    mUnreadCountUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
 
-  mUnreadCountUpdateTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mUnreadCountUpdateTimer->InitWithFuncCallback(OnUnreadCountUpdateTimer, (void*)this, timeInMSUint32, 
-                                                nsITimer::TYPE_REPEATING_SLACK);
+  mUnreadCountUpdateTimer->InitWithFuncCallback(OnUnreadCountUpdateTimer,
+    (void *)this, UNREAD_UPDATE_INTERVAL, nsITimer::TYPE_ONE_SHOT);
 
   return NS_OK;
 }

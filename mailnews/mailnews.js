@@ -654,12 +654,6 @@ pref("mail.standalone", false);
 // the users last used preference.
 pref("mailnews.import.text.skipfirstrecord", true);
 
-#ifdef XP_WIN
-// Unread mail count timer. Value to be specified in seconds
-// default is 5 minutes, i.e., 5 * 60 seconds = 300
-pref("mail.windows_xp_integration.unread_count_interval", 300);
-#endif
-
 #ifdef XP_MACOSX
 pref("mail.notification.sound",             "");
 pref("mail.close_message_window.on_delete", true);

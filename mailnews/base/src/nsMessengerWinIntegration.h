@@ -121,8 +121,8 @@ private:
   // what type of server is associated with the default account
   PRPackedBool    mDefaultAccountMightHaveAnInbox;
 
-  // first time the unread count changes, we need to update registry
-  PRPackedBool mFirstTimeFolderUnreadCountChanged;
+  // True if the timer is running
+  PRPackedBool mUnreadTimerActive;
 
   nsresult ResetCurrent();
   nsresult RemoveCurrentFromRegistry();
@@ -156,8 +156,6 @@ private:
 
   PRInt32   mCurrentUnreadCount;
   PRInt32   mLastUnreadCountWrittenToRegistry;
-
-  nsInt64   mIntervalTime;
 };
 
 #endif // __nsMessengerWinIntegration_h
