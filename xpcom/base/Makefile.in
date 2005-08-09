@@ -59,7 +59,6 @@ CPPSRCS		= \
 		nsDebugImpl.cpp \
 		nsErrorService.cpp \
 		nsExceptionService.cpp \
-		nsID.cpp \
 		nsMemoryImpl.cpp \
 		nsTraceRefcntImpl.cpp \
 		nsInterfaceRequestorAgg.cpp \
@@ -108,7 +107,6 @@ SDK_XPIDLSRCS   = \
 
 SDK_HEADERS     = \
 		nsError.h \
-		nsID.h \
 		nsISupportsBase.h \
 		nscore.h \
 

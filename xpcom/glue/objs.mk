@@ -38,6 +38,7 @@ XPCOM_GLUE_SRC_LCSRCS =			       \
 		nsCOMPtr.cpp		       \
 		nsComponentManagerUtils.cpp    \
 		nsDebug.cpp		       \
+		nsID.cpp                       \
 		nsIInterfaceRequestorUtils.cpp \
 		nsMemory.cpp		       \
 		nsTraceRefcnt.cpp              \
