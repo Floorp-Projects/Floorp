@@ -1046,24 +1046,22 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
 /** ---------------------------------------------------
  *  Helper function - Returns either the name or sets the length to zero
  */
-static void
+static nsresult 
 GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP,
                        nsAString& aPrinterName)
 {
-  if(!aPS) return;
+  NS_ENSURE_ARG_POINTER(aPS);
+
   aPrinterName.Truncate();
+  if (!aUsePNP)
+    return NS_OK;
 
   // Get the Printer Name from the PrintSettings 
   // to use as a prefix for Pref Names
   PRUnichar* prtName = nsnull;
-  if (aUsePNP && NS_SUCCEEDED(aPS->GetPrinterName(&prtName))) {
-    if (prtName && !*prtName) {
-      nsMemory::Free(prtName);
-      prtName = nsnull;
-    }
-  }
 
-  if (!prtName) return;
+  nsresult rv = aPS->GetPrinterName(&prtName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aPrinterName = nsDependentString(prtName);
 
@@ -1082,6 +1080,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, PRBool aUsePNP,
       i++;
     }
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1155,11 +1154,14 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
 
   // Get the Printer Name from the PrinterSettings
   // to use as a prefix for Pref Names
-  GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
-  NS_ENSURE_FALSE(prtName.IsEmpty(), NS_ERROR_FAILURE);
+  nsresult rv = GetAdjustedPrinterName(aPS, aUsePrinterNamePrefix, prtName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now write any printer specific prefs
-  return WritePrefs(aPS, prtName, aFlags);
+  // XXX but when |prtName| is empty, how can we write printer specific prefs?
+  rv = WritePrefs(aPS, prtName, aFlags);
+ 
+  return rv;
 }
 
 
