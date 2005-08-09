@@ -165,7 +165,7 @@ static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-#if defined(DEBUG_bryner)
+#if defined(DEBUG_bryner) || defined(DEBUG_chb)
 //#define DEBUG_DOCSHELL_FOCUS
 #define DEBUG_PAGE_CACHE
 #endif
@@ -4817,7 +4817,8 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
         aLoadType != LOAD_HISTORY &&
         aLoadType != LOAD_LINK &&
         aLoadType != LOAD_STOP_CONTENT &&
-        aLoadType != LOAD_STOP_CONTENT_AND_REPLACE)
+        aLoadType != LOAD_STOP_CONTENT_AND_REPLACE &&
+        aLoadType != LOAD_ERROR_PAGE)
         return PR_FALSE;
 
     // If the session history entry has the saveLayoutState flag set to false,
@@ -6359,10 +6360,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // mLSHE should be assigned to aSHEntry, only after Stop() has
     // been called. But when loading an error page, do not clear the
     // mLSHE for the real page.
-    if (mLoadType != LOAD_ERROR_PAGE) {
+    if (mLoadType != LOAD_ERROR_PAGE)
         SetHistoryEntry(&mLSHE, aSHEntry);
-        mSavingOldViewer = savePresentation;
-    }
+
+    mSavingOldViewer = savePresentation;
 
     // If we have a saved content viewer in history, restore and show it now.
     if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
