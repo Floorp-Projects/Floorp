@@ -245,6 +245,13 @@ void gdk_superwin_destroy(GtkObject *object)
   }
 }
 
+void gdk_superwin_reparent(GdkSuperWin *superwin,
+                           GdkWindow   *parent_window)
+{
+  gdk_window_reparent(superwin->shell_window,
+                      parent_window, 0, 0);
+}
+
 void         
 gdk_superwin_scroll (GdkSuperWin *superwin,
                      gint dx,

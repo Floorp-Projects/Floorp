@@ -115,6 +115,7 @@ public:
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD           Destroy();
+  NS_IMETHOD           SetParent(nsIWidget* aNewParent);
   void                 ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
   void                 ApplyTransparencyBitmap();
 #ifdef MOZ_XUL

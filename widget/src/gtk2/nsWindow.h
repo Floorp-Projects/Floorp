@@ -87,6 +87,7 @@ public:
                               nsIToolkit       *aToolkit,
                               nsWidgetInitData *aInitData);
     NS_IMETHOD         Destroy(void);
+    NS_IMETHOD         SetParent(nsIWidget* aNewParent);
     NS_IMETHOD         SetModal(PRBool aModal);
     NS_IMETHOD         IsVisible(PRBool & aState);
     NS_IMETHOD         ConstrainPosition(PRBool aAllowSlop,

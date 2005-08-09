@@ -21,6 +21,7 @@
  * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -433,6 +434,23 @@ nsWindow::Destroy(void)
     }
 #endif
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::SetParent(nsIWidget *aNewParent)
+{
+    NS_ENSURE_ARG_POINTER(aNewParent);
+
+    GdkWindow* newParentWindow =
+        NS_STATIC_CAST(GdkWindow*, aNewParent->GetNativeData(NS_NATIVE_WINDOW));
+    NS_ASSERTION(newParentWindow, "Parent widget has a null native window handle");
+
+    if (!mShell && mDrawingarea) {
+        moz_drawingarea_reparent(mDrawingarea, newParentWindow);
+    } else {
+        NS_NOTREACHED("nsWindow::SetParent - reparenting a non-child window");
+    }
     return NS_OK;
 }
 

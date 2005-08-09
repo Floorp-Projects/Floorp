@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Ilya Konstantinov <future@galanet.net>
  *   tim copperfield <timecop@network.email.ne.jp>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -200,6 +201,22 @@ static void printDepth(int depth) {
 
 static int is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int is_parent_grab_leave(GdkEventCrossing *aEvent);
+
+NS_IMETHODIMP nsWindow::SetParent(nsIWidget* aNewParent)
+{
+  NS_ENSURE_ARG_POINTER(aNewParent);
+
+  GdkWindow* newParentWindow =
+    NS_STATIC_CAST(GdkWindow*, aNewParent->GetNativeData(NS_NATIVE_WINDOW));
+  NS_ASSERTION(newParentWindow, "Parent widget has a null native window handle");
+
+  if (!mShell && mSuperWin) {
+    gdk_superwin_reparent(mSuperWin, newParentWindow);
+  } else {
+    NS_NOTREACHED("nsWindow::SetParent - reparenting a non-child window");
+  }
+  return NS_OK;
+}
 
 
 // This function will check if a button event falls inside of a

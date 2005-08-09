@@ -116,6 +116,13 @@ moz_drawingarea_init (MozDrawingarea *drawingarea)
 }
 
 void
+moz_drawingarea_reparent (MozDrawingarea *drawingarea, GdkWindow *aNewParent)
+{
+    gdk_window_reparent(drawingarea->clip_window,
+                        aNewParent, 0, 0);
+}
+
+void
 moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
                                 GtkWidget *widget)
 {
