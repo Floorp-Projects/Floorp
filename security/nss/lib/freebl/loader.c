@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.20 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
+/* $Id: loader.c,v 1.21 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1500,11 +1500,11 @@ TLS_PRF(const SECItem *secret, const char *label,
 }
 
 const SECHashObject *
-SEC_GetRawHashObject(HASH_HashType hashType)
+HASH_GetRawHashObject(HASH_HashType hashType)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return NULL;
-  return (vector->p_SEC_GetRawHashObject)(hashType);
+  return (vector->p_HASH_GetRawHashObject)(hashType);
 }
 
 

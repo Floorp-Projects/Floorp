@@ -1266,7 +1266,7 @@ sftk_doHMACInit(SFTKSessionContext *context,HASH_HashType hash,
     SFTKAttribute *keyval;
     HMACContext *HMACcontext;
     CK_ULONG *intpointer;
-    const SECHashObject *hashObj = SEC_GetRawHashObject(hash);
+    const SECHashObject *hashObj = HASH_GetRawHashObject(hash);
     PRBool isFIPS = (key->slot->slotID == FIPS_SLOT_ID);
 
     /* required by FIPS 198 Section 4 */

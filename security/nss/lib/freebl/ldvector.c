@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.10 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
+/* $Id: ldvector.c,v 1.11 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "alghmac.h"
@@ -209,15 +209,15 @@ static const struct FREEBLVectorStr vector =
     SHA512_Clone,
 
     TLS_PRF,
-    SEC_GetRawHashObject,
+    HASH_GetRawHashObject,
 
-    HMAC_Destroy,
     HMAC_Create,
     HMAC_Init,
     HMAC_Begin,
     HMAC_Update,
-    HMAC_Finish,
     HMAC_Clone,
+    HMAC_Finish,
+    HMAC_Destroy,
 
     /* End of Version 3.008. */
 };
