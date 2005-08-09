@@ -324,8 +324,8 @@ my $modules = [
         version => $^O =~ /MSWin32/i ? '3.01' : '3.03'
     },
     {
-        name => 'MIME::Tools',
-        version => '5.417'
+        name => 'MIME::Parser',
+        version => '5.406'
     },
     {
         name => 'Storable',
@@ -347,7 +347,8 @@ my %ppm_modules = (
     'GD::Graph'         => 'GDGraph',
     'GD::Text::Align'   => 'GDTextUtil',
     'Mail::Mailer'      => 'MailTools',
-    'MIME::Tools'       => 'MIME-Tools',
+    'Mail::Base64'      => 'MIME-Base64',
+    'MIME::Parser'      => 'MIME-Tools',
 );
 
 sub install_command {
