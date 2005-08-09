@@ -72,11 +72,7 @@ struct nsID {
    */
 
   inline PRBool Equals(const nsID& other) const {
-    return (PRBool)
-      ((((PRUint32*) &m0)[0] == ((PRUint32*) &other.m0)[0]) &&
-       (((PRUint32*) &m0)[1] == ((PRUint32*) &other.m0)[1]) &&
-       (((PRUint32*) &m0)[2] == ((PRUint32*) &other.m0)[2]) &&
-       (((PRUint32*) &m0)[3] == ((PRUint32*) &other.m0)[3]));
+    return (memcmp(this, &other, sizeof(*this)) == 0);
   }
 
   /**
