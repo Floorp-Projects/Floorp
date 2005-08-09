@@ -366,11 +366,9 @@
               <menupopup id="menu_BookmarksPopup" contextmenu='bookmarks-context-menu'>
                 <menuitem key="addBookmarkAsKb"
                           label="&addCurPageAsCmd.label;"
-                          accesskey="&addCurPageAsCmd.accesskey;"
                           command="Browser:AddBookmarkAs"/>
                 <menuitem key="manBookmarkKb" 
                           label="&manBookmarksCmd.label;"
-                          accesskey="&manBookmarksCmd.accesskey;"    
                           oncommand="toOpenWindowByType('bookmarks:manager', 'chrome://browser/content/bookmarks/bookmarksManager.xul');"/>
                 <menuseparator/>
               </menupopup>
