@@ -114,7 +114,7 @@ my $urlbase = Param('urlbase');
 
 print $fh "digraph G {";
 print $fh qq{
-graph [URL="${urlbase}query.cgi", rankdir=$rankdir, size="64,64"]
+graph [URL="${urlbase}query.cgi", rankdir=$rankdir]
 node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 };
 
