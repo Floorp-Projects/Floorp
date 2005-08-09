@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.20 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
+/* $Id: blapi.h,v 1.21 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -1054,7 +1054,7 @@ PRBool BLAPI_SHVerify(const char *name, PRFuncPtr addr);
 PRBool BLAPI_VerifySelf(const char *name);
 
 /*********************************************************************/
-extern const SECHashObject * SEC_GetRawHashObject(HASH_HashType hashType);
+extern const SECHashObject * HASH_GetRawHashObject(HASH_HashType hashType);
 
 SEC_END_PROTOS
 

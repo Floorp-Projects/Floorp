@@ -46,7 +46,7 @@ extern void
 HMAC_Destroy(HMACContext *cx);
 
 /* create HMAC context
- *  hashObj     hash object from SECRawHashObjects[]
+ *  hash_obj    hash object from SECRawHashObjects[]
  *  secret	the secret with which the HMAC is performed.
  *  secret_len	the length of the secret.
  *  isFIPS	true if conforming to FIPS 198.
@@ -54,7 +54,7 @@ HMAC_Destroy(HMACContext *cx);
  * NULL is returned if an error occurs.
  */
 extern HMACContext *
-HMAC_Create(const SECHashObject *hashObj, const unsigned char *secret, 
+HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret, 
 	    unsigned int secret_len, PRBool isFIPS);
 
 /* like HMAC_Create, except caller allocates HMACContext. */

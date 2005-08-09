@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.14 2005/08/06 09:27:28 nelsonb%netscape.com Exp $ */
+/* $Id: loader.h,v 1.15 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -429,9 +429,8 @@ struct FREEBLVectorStr {
  SECStatus (* p_TLS_PRF)(const SECItem *secret, const char *label, 
 		         SECItem *seed, SECItem *result, PRBool isFIPS);
 
- const SECHashObject *(* p_SEC_GetRawHashObject)(HASH_HashType hashType);
+ const SECHashObject *(* p_HASH_GetRawHashObject)(HASH_HashType hashType);
 
- void (* p_HMAC_Destroy)(HMACContext *cx);
  HMACContext * (* p_HMAC_Create)(const SECHashObject *hashObj, 
 				 const unsigned char *secret, 
 				 unsigned int secret_len, PRBool isFIPS);
@@ -441,10 +440,11 @@ struct FREEBLVectorStr {
  void (* p_HMAC_Begin)(HMACContext *cx);
  void  (* p_HMAC_Update)(HMACContext *cx, const unsigned char *data, 
 			 unsigned int data_len);
+ HMACContext * (* p_HMAC_Clone)(HMACContext *cx);
  SECStatus (* p_HMAC_Finish)(HMACContext *cx, unsigned char *result, 
 			     unsigned int *result_len, 
 			     unsigned int max_result_len);
- HMACContext * (* p_HMAC_Clone)(HMACContext *cx);
+ void (* p_HMAC_Destroy)(HMACContext *cx);
 
   /* Version 3.008 came to here */
 };
