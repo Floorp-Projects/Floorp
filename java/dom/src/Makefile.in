@@ -62,7 +62,8 @@ ifeq ($(OS_ARCH),Darwin)
  INCLUDES += -I$(MOZ_JDKHOME)/include -I.
  DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljvm_compat
  DLL_SUFFIX = .jnilib
-else
+endif #DARWIN
+
 ifeq ($(OS_ARCH),Linux)
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
  DSO_LDOPTS	+= \
@@ -74,12 +75,14 @@ ifeq ($(OS_ARCH),Linux)
 	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/native_threads \
 	-ljvm -lhpi
  DEFINES	+= -DDISABLE_JIT
+endif # LINUX
 ifeq ($(OS_ARCH),WINNT)
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/win32
  EXTRA_LIBS     += \
 			$(JAVAHOME)/lib/jvm.lib \
 			$(NULL)
-else
+endif # WINNT
+ifeq (($OS_ARCH),SunOS)
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
  DSO_LDOPTS	+= \
 	-L$(JAVAHOME)/jre/lib/sparc \
@@ -90,10 +93,8 @@ else
 	-R$(JAVAHOME)/jre/lib/sparc/native_threads \
 	-ljvm -lhpi
 endif
-endif
-endif
 
-# ifeq (($OS_ARCH),SunOS)
+# 
 
 EXPORTS 	= \
 	nsIJavaDOM.h 

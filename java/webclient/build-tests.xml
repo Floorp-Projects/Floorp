@@ -152,6 +152,7 @@
             <jvmarg value="-Djava.library.path=${myenv.MOZILLA_FIVE_HOME}${PATH_SEP}${myenv.MOZILLA_FIVE_HOME}/components"/>
             <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
             <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+            <jvmarg value="-DMOZ_SRC=${myenv.MOZ_SRC}"/>
             <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
             <sysproperty key="native.waitForDebugger" 
                          value="${native.waitForDebugger}"/>

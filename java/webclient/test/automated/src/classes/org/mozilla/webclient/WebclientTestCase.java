@@ -1,5 +1,5 @@
 /*
- * $Id: WebclientTestCase.java,v 1.8 2004/09/03 19:04:22 edburns%acm.org Exp $
+ * $Id: WebclientTestCase.java,v 1.9 2005/08/09 04:43:00 edburns%acm.org Exp $
  */
 
 /* 
@@ -50,7 +50,7 @@ import org.mozilla.util.THTTPD;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: WebclientTestCase.java,v 1.8 2004/09/03 19:04:22 edburns%acm.org Exp $
+ * @version $Id: WebclientTestCase.java,v 1.9 2005/08/09 04:43:00 edburns%acm.org Exp $
  * 
  * @see	Blah
  * @see	Bloo
@@ -65,7 +65,7 @@ public abstract class WebclientTestCase extends TestCase
 
 public static final String WEBCLIENTSTUB_LOG_MODULE = "webclientstub";
 public static final String WEBCLIENT_LOG_MODULE = "webclient";
-public static final String OUTPUT_FILE_ROOT = "./build.test/";
+public static String OUTPUT_FILE_ROOT = "build.test/";
 
 //
 // Class Variables
@@ -106,6 +106,15 @@ public WebclientTestCase(String name)
 public void setUp()
 {
     verifyPreconditions();
+    
+    String mozSrcValue = null;
+    
+    assertTrue(null != (mozSrcValue = 
+            System.getProperty("MOZ_SRC")));
+    OUTPUT_FILE_ROOT = mozSrcValue + File.separator + 
+            "mozilla" + File.separator + "java" + File.separator + 
+            "webclient" + File.separator + OUTPUT_FILE_ROOT;
+    
 }
 
 //
