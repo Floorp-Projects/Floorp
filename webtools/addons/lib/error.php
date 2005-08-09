@@ -8,7 +8,8 @@
  */
 
 /**
- * @param string $error
+ * @param string $errorMessage Message to display.
+ * @param string $errorTemplate Template to call (defaults to error template).
  */
 function triggerError($errorMessage=null,$errorTemplate='error.tpl') 
 {
