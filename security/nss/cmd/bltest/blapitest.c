@@ -2789,8 +2789,11 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 #endif
 	PR_Close(file);
 	/* loop over the tests in the directory */
-	numtests = (int) (item.data[0] - '0');
-	for (j=1; j<item.len - 1; j++) {
+	numtests = 0;
+	for (j=0; j<item.len; j++) {
+	    if (!isdigit(item.data[j])) {
+		break;
+	    }
 	    numtests *= 10;
 	    numtests += (int) (item.data[j] - '0');
 	}
