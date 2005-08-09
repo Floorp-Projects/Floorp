@@ -37,8 +37,28 @@
 #include "nsIGenericFactory.h"
 #include "nsNegotiateAuth.h"
 
+//-----------------------------------------------------------------------------
+
+#define NS_HTTPNEGOTIATEAUTH_CID \
+{ /* 75c80fd0-accb-432c-af59-ec60668c3990 */         \
+    0x75c80fd0,                                      \
+    0xaccb,                                          \
+    0x432c,                                          \
+    {0xaf, 0x59, 0xec, 0x60, 0x66, 0x8c, 0x39, 0x90} \
+}
+
 #include "nsHttpNegotiateAuth.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNegotiateAuth)
+
+//-----------------------------------------------------------------------------
+
+#define NS_NEGOTIATEAUTH_CID                         \
+{ /* 96ec4163-efc8-407a-8735-007fb26be4e8 */         \
+    0x96ec4163,                                      \
+    0xefc8,                                          \
+    0x407a,                                          \
+    {0x87, 0x35, 0x00, 0x7f, 0xb2, 0x6b, 0xe4, 0xe8} \
+}
 
 #if defined( USE_GSSAPI )
 #include "nsNegotiateAuthGSSAPI.h"
@@ -48,6 +68,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNegotiateAuth)
 #error "missing implementation"
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNegotiateAuth)
+
+//-----------------------------------------------------------------------------
 
 static nsModuleComponentInfo components[] = {
   { "nsNegotiateAuth", 
@@ -61,6 +83,8 @@ static nsModuleComponentInfo components[] = {
     nsHttpNegotiateAuthConstructor
   }
 };
+
+//-----------------------------------------------------------------------------
 
 #if defined( PR_LOGGING )
 PRLogModuleInfo *gNegotiateLog;
