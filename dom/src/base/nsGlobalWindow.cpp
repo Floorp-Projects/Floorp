@@ -6600,20 +6600,16 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   NS_ENSURE_TRUE(stateObj, NS_ERROR_OUT_OF_MEMORY);
 
   // The window state object will root the JSObject.
-  *aState = new WindowStateHolder(cx, stateObj, this);
-  NS_ENSURE_TRUE(*aState, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsISupports> state = new WindowStateHolder(cx, stateObj, this);
+  NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE
   printf("saving window state, stateObj = %p\n", (void*)stateObj);
 #endif
   nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
-  if (NS_FAILED(rv)) {
-    delete *aState;
-    *aState = nsnull;
-    return rv;
-  }
+  NS_ENSURE_TRUE(rv, rv);
 
-  NS_ADDREF(*aState);
+  state.swap(*aState);
   return NS_OK;
 }
 
