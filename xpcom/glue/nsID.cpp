@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *               Daniel Bratell <bratell@lysator.liu.se>
  */
 #include "nsID.h"
 #include "prprf.h"
@@ -29,38 +30,82 @@ static const char gIDFormat[] =
 static const char gIDFormat2[] = 
   "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
 
+
+/**
+ * Multiplies the_int_var with 16 (0x10) and adds the value of the
+ * hexadecimal digit the_char. If it fails it returns PR_FALSE from
+ * the function it's used in.
+ */
+
+#define ADD_HEX_CHAR_TO_INT_OR_RETURN_FALSE(the_char, the_int_var) \
+    the_int_var = (the_int_var << 4) + the_char; \
+    if(the_char >= '0' && the_char <= '9') the_int_var -= '0'; \
+    else if(the_char >= 'a' && the_char <= 'f') the_int_var -= 'a'-10; \
+    else if(the_char >= 'A' && the_char <= 'F') the_int_var -= 'A'-10; \
+    else return PR_FALSE
+
+
+/**
+ * Parses number_of_chars characters from the char_pointer pointer and
+ * puts the number in the dest_variable. The pointer is moved to point
+ * at the first character after the parsed ones. If it fails it returns
+ * PR_FALSE from the function the macro is used in.
+ */
+
+#define PARSE_CHARS_TO_NUM(char_pointer, dest_variable, number_of_chars) \
+  do { PRInt32 _i=number_of_chars; \
+  dest_variable = 0; \
+  while(_i) { \
+    ADD_HEX_CHAR_TO_INT_OR_RETURN_FALSE(*char_pointer, dest_variable); \
+    char_pointer++; \
+    _i--; \
+  } } while(0)
+
+
+/**
+ * Parses a hyphen from the char_pointer string. If there is no hyphen there
+ * the function returns PR_FALSE from the function it's used in. The
+ * char_pointer is advanced one step.
+ */
+
+ #define PARSE_HYPHEN(char_pointer)   if(*(char_pointer++) != '-') return PR_FALSE
+    
 /* 
  * Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} string into
- * an nsID
+ * an nsID. It can also handle the old format without the { and }.
  */
 
 NS_COM PRBool nsID::Parse(const char *aIDStr)
 {
-  PRInt32 count = 0;
-  PRInt32 n1, n2, n3[8];
-  PRInt32 n0;
-  ::memset(n3, 0, sizeof(n3));
-
-  if (NULL != aIDStr) {
-    count = PR_sscanf(aIDStr,
-                      (aIDStr[0] == '{') ? gIDFormat : gIDFormat2,
-                      &n0, &n1, &n2, 
-                      &n3[0],&n3[1],&n3[2],&n3[3],
-                      &n3[4],&n3[5],&n3[6],&n3[7]);
-
-    m0 = (PRInt32) n0;
-    m1 = (PRInt16) n1;
-    m2 = (PRInt16) n2;
-    for (int i = 0; i < 8; i++) {
-      m3[i] = (PRInt8) n3[i];
-    }
+  /* Optimized for speed */
+  if(!aIDStr) {
+    return PR_FALSE;
   }
-  return (PRBool) (count == 11);
+
+  PRBool expectFormat1 = (aIDStr[0] == '{');
+  if(expectFormat1) aIDStr++;
+
+  PARSE_CHARS_TO_NUM(aIDStr, m0, 8);
+  PARSE_HYPHEN(aIDStr);
+  PARSE_CHARS_TO_NUM(aIDStr, m1, 4);
+  PARSE_HYPHEN(aIDStr);
+  PARSE_CHARS_TO_NUM(aIDStr, m2, 4);
+  PARSE_HYPHEN(aIDStr);
+  for(int i=0; i<2; i++)
+    PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
+  PARSE_HYPHEN(aIDStr);
+  while(i < 8) {
+    PARSE_CHARS_TO_NUM(aIDStr, m3[i], 2);
+    i++;
+  }
+  
+  return expectFormat1 ? *aIDStr == '}' : PR_TRUE;
 }
 
 /*
  * Returns an allocated string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
- * format. Caller should delete [] the string.
+ * format. The string is allocated with PR_Malloc and should be freed by
+ * the caller.
  */
 
 NS_COM char *nsID::ToString() const 
