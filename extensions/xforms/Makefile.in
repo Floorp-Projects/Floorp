@@ -84,6 +84,7 @@ XPIDLSRCS	= \
 		nsIXFormsActionModuleElement.idl \
 		nsIXFormsSwitchElement.idl \
 		nsIXFormsCaseElement.idl \
+		nsIXFormsCaseUIElement.idl \
 		nsIXFormsSelectChild.idl \
 		nsIXFormsValueElement.idl \
 		nsIXFormsRepeatElement.idl \

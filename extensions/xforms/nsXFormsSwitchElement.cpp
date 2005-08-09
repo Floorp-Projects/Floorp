@@ -55,6 +55,7 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsSwitchElement.h"
 #include "nsIXFormsCaseElement.h"
+#include "nsXFormsDelegateStub.h"
 
 /**
  * Implementation of the XForms \<switch\> element.
@@ -63,28 +64,22 @@
  */
 
 class nsXFormsSwitchElement : public nsIXFormsSwitchElement,
-                              public nsXFormsControlStub
+                              public nsXFormsDelegateStub
 {
 public:
   nsXFormsSwitchElement() : mAddingChildren(PR_FALSE) {}
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXFORMSSWITCHELEMENT
 
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD WillRemoveChild(PRUint32 aIndex);
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
-  NS_IMETHOD OnDestroyed();
-
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aContent);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
-
-  NS_DECL_NSIXFORMSSWITCHELEMENT
 
   // nsIXFormsControl
-  NS_IMETHOD Refresh();
   NS_IMETHOD IsEventTarget(PRBool *aOK);
 
 #ifdef DEBUG_smaug
@@ -116,20 +111,19 @@ private:
    */
   void SetFocus(nsIDOMElement* aDeselected, nsIDOMElement* aSelected);
 
-  nsCOMPtr<nsIDOMElement> mVisual;
   nsCOMPtr<nsIDOMElement> mSelected;
-  PRBool mAddingChildren;
+  PRBool                  mAddingChildren;
 };
 
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsSwitchElement,
-                             nsXFormsControlStub,
+                             nsXFormsDelegateStub,
                              nsIXFormsSwitchElement)
 
 NS_IMETHODIMP
-nsXFormsSwitchElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsSwitchElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(kStandardNotificationMask |
@@ -139,37 +133,7 @@ nsXFormsSwitchElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("div"),
-                               getter_AddRefs(mVisual));
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::GetVisualContent(nsIDOMElement **aContent)
-{
-  NS_ADDREF(*aContent = mVisual);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::GetInsertionPoint(nsIDOMElement **aPoint)
-{
-  NS_ADDREF(*aPoint = mVisual);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::OnDestroyed()
-{
-  mVisual = nsnull;
-  mSelected = nsnull;
-
-  return nsXFormsControlStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -216,17 +180,8 @@ nsXFormsSwitchElement::DoneAddingChildren()
   if (!mElement)
     return NS_OK;
 
-  Init();
   mAddingChildren = PR_FALSE;
-  Refresh();
-  return NS_OK;
-}
-
-// nsIXFormsControl
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::Refresh()
-{
+  Init();
   return NS_OK;
 }
 

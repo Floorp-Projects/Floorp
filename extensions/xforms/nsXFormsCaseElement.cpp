@@ -39,57 +39,48 @@
 #include "nsXFormsStubElement.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
-#include "nsIXFormsSwitchElement.h"
 #include "nsIXFormsCaseElement.h"
-#include "nsIXTFXMLVisualWrapper.h"
+#include "nsIXFormsCaseUIElement.h"
+#include "nsIXFormsSwitchElement.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsString.h"
-
-#define SELECTED_CASE_STYLE ""
-#define DESELECTED_CASE_STYLE "visibility:hidden;width:0px;height:0px;"
+#include "nsIXTFBindableElementWrapper.h"
 
 /**
  * Implementation of the XForms case element.
  */
 
-class nsXFormsCaseElement : public nsIXFormsCaseElement,
-                            public nsXFormsXMLVisualStub
+class nsXFormsCaseElement : public nsXFormsBindableStub,
+                            public nsIXFormsCaseElement
 {
 public:
-  nsXFormsCaseElement();
-
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXFORMSCASEELEMENT
 
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
+  NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
-
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aContent);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
-
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
 
-  NS_DECL_NSIXFORMSCASEELEMENT
+  nsXFormsCaseElement()
+  : mElement(nsnull), mDoneAddingChildren(PR_TRUE), mSelected(PR_FALSE)
+  {
+  }
 
-private:
-  PRBool mDoneAddingChildren;
+protected:
   nsIDOMElement* mElement;
-  nsCOMPtr<nsIDOMElement> mVisual;
+  PRPackedBool   mDoneAddingChildren;
+  PRPackedBool   mSelected;
 };
 
-nsXFormsCaseElement::nsXFormsCaseElement() : mDoneAddingChildren(PR_TRUE)
-{
-}
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsCaseElement,
-                             nsXFormsXMLVisualStub,
+                             nsXFormsBindableStub,
                              nsIXFormsCaseElement)
 
 NS_IMETHODIMP
-nsXFormsCaseElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsCaseElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
@@ -97,18 +88,13 @@ nsXFormsCaseElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
+
+  // It's ok to keep a pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+
   mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsresult rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                                        NS_LITERAL_STRING("div"),
-                                        getter_AddRefs(mVisual));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mVisual->SetAttribute(NS_LITERAL_STRING("style"),
-                        NS_LITERAL_STRING(DESELECTED_CASE_STYLE));
   return NS_OK;
 }
 
@@ -116,21 +102,6 @@ NS_IMETHODIMP
 nsXFormsCaseElement::OnDestroyed()
 {
   mElement = nsnull;
-  mVisual = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsCaseElement::GetVisualContent(nsIDOMElement **aContent)
-{
-  NS_ADDREF(*aContent = mVisual);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsCaseElement::GetInsertionPoint(nsIDOMElement **aPoint)
-{
-  NS_ADDREF(*aPoint = mVisual);
   return NS_OK;
 }
 
@@ -165,11 +136,24 @@ nsXFormsCaseElement::AttributeSet(nsIAtom *aName, const nsAString &aNewValue)
 NS_IMETHODIMP
 nsXFormsCaseElement::SetSelected(PRBool aEnable)
 {
-  if (mVisual) {
-    mVisual->SetAttribute(NS_LITERAL_STRING("style"),
-                          aEnable ? NS_LITERAL_STRING(SELECTED_CASE_STYLE)
-                                  : NS_LITERAL_STRING(DESELECTED_CASE_STYLE));
+  mSelected = aEnable;
+
+  nsCOMPtr<nsIXFormsCaseUIElement> caseUI(do_QueryInterface(mElement));
+  if (caseUI) {
+    caseUI->CaseSelected(mSelected);
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsCaseElement::WidgetAttached()
+{
+  nsCOMPtr<nsIXFormsCaseUIElement> caseUI(do_QueryInterface(mElement));
+  if (caseUI) {
+    caseUI->CaseSelected(mSelected);
+  }
+
   return NS_OK;
 }
 

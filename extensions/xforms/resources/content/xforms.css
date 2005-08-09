@@ -223,3 +223,12 @@ choices > item,  choices > itemset, choices > choices{
   font-style: normal;
   font-weight: normal;
 }
+
+case {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-case');
+}
+
+case > html|div.-moz-xforms-case-container {
+  display: inherit;
+}
+

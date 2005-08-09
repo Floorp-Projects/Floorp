@@ -54,7 +54,7 @@
       </constructor>
 
       <destructor>
-        _delegate = null;
+        this._delegate = null;
       </destructor>
 
       <field name="_delegate">null</field>
@@ -383,6 +383,45 @@
       <method name="focus">
         <body>
           document.getAnonymousElementByAttribute(this, "anonid", "thespan").focus();
+          return true;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- CASE: <DEFAULT> -->
+  <binding id="xformswidget-case">
+    <content>
+      <html:div anonid="container" class="-moz-xforms-case-container">
+        <children/>
+      </html:div>
+    </content>
+
+    <implementation implements="nsIXFormsCaseUIElement">
+      <constructor>
+        this.QueryInterface(Components.interfaces.nsIXFormsCaseElement).widgetAttached();
+      </constructor>
+
+      <field name="_container">null</field>
+      <property name="container" readonly="true">
+        <getter>
+          if (!this._container) {
+            this._container =
+              document.getAnonymousElementByAttribute(this, "anonid", "container");
+          }
+          return this._container;
+        </getter>
+      </property>
+
+      <method name="caseSelected">
+        <parameter name="aEnable"/>
+        <body>
+          if (aEnable) {
+            this.container.style.display = "inherit";
+          } else {
+            this.container.style.display = "none"
+          }
+
           return true;
         </body>
       </method>

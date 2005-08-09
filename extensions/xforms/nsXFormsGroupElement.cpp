@@ -53,6 +53,7 @@
 #include "nsXFormsControlStub.h"
 #include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsDelegateStub.h"
 
 #ifdef DEBUG
 // #define DEBUG_XF_GROUP
@@ -63,101 +64,28 @@
  * 
  * @see http://www.w3.org/TR/xforms/slice9.html#id2631290
  *
- * @todo If a \<label\> is the first element child for \<group\> it is the
+ * @todo XXX: If a \<label\> is the first element child for \<group\> it is the
  * label for the entire group
  *
- * @todo With some small adjustments we could let nsXFormsContextContainer
+ * @todo XXX: With some small adjustments we could let nsXFormsContextContainer
  * implement group, and get rid of this class (XXX).
  */
-class nsXFormsGroupElement : public nsXFormsControlStub
+
+class nsXFormsGroupElement : public nsXFormsDelegateStub
 {
 protected:
   /** Tries to focus a child form control.*/
   PRBool TryFocusChildControl(nsIDOMNode *aParent);
-  
-  /** The UI HTML element used to represent the tag */
-  nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
 
 public:
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-  
-  // nsIXTFVisual overrides
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
-
-  // nsIXTFElement overrides
-  NS_IMETHOD OnDestroyed();
-
   // nsIXFormsControl
-  NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool *aOK);
 
 #ifdef DEBUG_smaug
   virtual const char* Name() { return "group"; }
 #endif
+
 };
-
-// nsIXTFXMLVisual
-NS_IMETHODIMP
-nsXFormsGroupElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
-{
-#ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
-#endif
-
-  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create HTML tag
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDOMElement> domElement;
-  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          NS_LITERAL_STRING("div"),
-                          getter_AddRefs(domElement));
-
-  mHTMLElement = do_QueryInterface(domElement);
-  NS_ENSURE_TRUE(mHTMLElement, NS_ERROR_FAILURE);
-  
-  return NS_OK;
-}
-
-// nsIXTFVisual
-NS_IMETHODIMP
-nsXFormsGroupElement::GetVisualContent(nsIDOMElement * *aVisualContent)
-{
-  NS_ADDREF(*aVisualContent = mHTMLElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsGroupElement::GetInsertionPoint(nsIDOMElement **aElement)
-{
-  NS_ADDREF(*aElement = mHTMLElement);
-  return NS_OK;
-}
-
-// nsIXTFElement
-NS_IMETHODIMP
-nsXFormsGroupElement::OnDestroyed()
-{
-  mHTMLElement = nsnull;
-  return nsXFormsControlStub::OnDestroyed();
-}
-
-// nsIXFormsControl
-
-NS_IMETHODIMP
-nsXFormsGroupElement::Refresh()
-{
-#ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::Refresh()\n");
-#endif
-
-  return NS_OK;
-}
 
 PRBool
 nsXFormsGroupElement::TryFocusChildControl(nsIDOMNode* aParent)

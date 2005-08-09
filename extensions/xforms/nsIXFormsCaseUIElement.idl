@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Olli Pettay.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -39,19 +39,15 @@
 #include "nsISupports.idl"
 
 /**
- * Interface implemented by the case element.
+ * Interface implemented by the XBL part of the case element.
  */
-[scriptable, uuid(7dd9c79b-5fa2-4a0a-8aa7-f2629281c743)]
-interface nsIXFormsCaseElement : nsISupports
+[scriptable, uuid(31c539ca-201e-4b6e-81b9-32c1e5598c3d)]
+interface nsIXFormsCaseUIElement : nsISupports
 {
   /**
-   * Used by switch elements to mark case element selected or deselected.
+   * Used by case elements to inform the UI that
+   * the element is selected or deselected.
    */
-  [noscript] void setSelected(in boolean aEnable);
-
-  /**
-   * This should be called by the XBL widget, when it is created.
-   */
-   void widgetAttached();
+  void caseSelected(in boolean aEnable);
 };
 
