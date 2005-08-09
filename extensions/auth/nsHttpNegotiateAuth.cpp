@@ -219,7 +219,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 #ifdef DEBUG
     PRBool isGssapiAuth =
         !PL_strncasecmp(challenge, kNegotiate, kNegotiateLen);
-    NS_ENSURE_TRUE(isGssapiAuth, NS_ERROR_UNEXPECTED);
+    NS_ASSERTION(isGssapiAuth, "Unexpected challenge");
 #endif
 
     //
