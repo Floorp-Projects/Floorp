@@ -53,8 +53,6 @@ LIBRARY_NAME	= negotiateauth
 #EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 
-LOCAL_INCLUDES	= $(GSSAPI_INCLUDES)
-
 REQUIRES	= \
 		xpcom \
 		string \
@@ -63,14 +61,19 @@ REQUIRES	= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsHttpGssapiAuth.cpp \
-		nsHttpGssapiAuthModule.cpp \
+		nsNegotiateAuthFactory.cpp \
+		nsHttpNegotiateAuth.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
-		$(GSSAPI_LIBS) \
 		$(NULL)
+
+ifneq (,$(GSSAPI_INCLUDES))
+LOCAL_INCLUDES	  = -DUSE_GSSAPI $(GSSAPI_INCLUDES)
+EXTRA_DSO_LDOPTS += $(GSSAPI_LIBS)
+CPPSRCS		 += nsNegotiateAuthGSSAPI.cpp
+endif
 
 # make sure this component is never statically linked into the main
 # application.  this is necessary since we don't want to force users
