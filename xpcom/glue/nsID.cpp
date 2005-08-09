@@ -39,6 +39,7 @@ NS_COM PRBool nsID::Parse(const char *aIDStr)
   PRInt32 count = 0;
   PRInt32 n1, n2, n3[8];
   PRInt32 n0;
+  ::memset(n3, 0, sizeof(n3));
 
   if (NULL != aIDStr) {
     count = PR_sscanf(aIDStr,
