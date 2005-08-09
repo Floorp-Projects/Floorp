@@ -3667,6 +3667,45 @@ nsBookmarksService::UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource)
 }
 
 NS_IMETHODIMP
+nsBookmarksService::GetLastCharset(const nsACString &aURL, nsAString &aCharset)
+{
+    aCharset.Truncate(); 
+
+    nsCOMPtr<nsIRDFLiteral> urlLiteral;
+    nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
+                                   getter_AddRefs(urlLiteral));
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIRDFResource> bookmark;
+    rv = GetSource(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmark));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIRDFNode> nodeType;
+    GetSynthesizedType(bookmark, getter_AddRefs(nodeType));
+    if (nodeType == kNC_Bookmark) {
+        nsCOMPtr<nsIRDFNode> charsetNode;
+        rv = GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
+                       getter_AddRefs(charsetNode));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (charsetNode) {
+            nsCOMPtr<nsIRDFLiteral> charsetData(do_QueryInterface(charsetNode));
+            if (charsetData) {
+                const PRUnichar *charset;
+                charsetData->GetValueConst(&charset);
+                aCharset.Assign(charset);
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcutURL)
 {
     NS_PRECONDITION(aUserInput != nsnull, "null ptr");
