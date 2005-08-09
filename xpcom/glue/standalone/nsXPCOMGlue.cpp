@@ -472,7 +472,7 @@ nsresult GRE_Startup()
     // libs (seamonkey GRE, not libxul)... add the GRE to the PATH.
     // See bug 301043.
 
-    char *lastSlash = strrchr(xpcomLocation, '\\');
+    const char *lastSlash = strrchr(xpcomLocation, '\\');
     if (lastSlash) {
         int xpcomPathLen = lastSlash - xpcomLocation;
         DWORD pathLen = GetEnvironmentVariable("PATH", nsnull, 0);
