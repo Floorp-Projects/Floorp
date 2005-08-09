@@ -147,7 +147,8 @@ MakeSN(const char *principal, nsCString &result)
 
     // This should always hit our DNS cache
     nsCOMPtr<nsIDNSRecord> record;
-    rv = dns->Resolve(Substring(buf, index + 1), PR_FALSE,
+    rv = dns->Resolve(Substring(buf, index + 1),
+                      nsIDNSService::RESOLVE_CANONICAL_NAME,
                       getter_AddRefs(record));
     if (NS_FAILED(rv))
         return rv;
