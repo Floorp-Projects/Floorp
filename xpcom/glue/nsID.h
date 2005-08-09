@@ -81,20 +81,6 @@ struct nsID {
   //@}
 };
 
-/**
- * Declare an ID. If NS_IMPL_IDS is set, a variable <i>_name</i> is declared
- * with the given values, otherwise <i>_name</i> is declared as an 
- * <tt>extern</tt> variable.
- */
-
-#ifdef NS_IMPL_IDS
-#define NS_DECLARE_ID(_name,m0,m1,m2,m30,m31,m32,m33,m34,m35,m36,m37) \
-  extern "C" const nsID _name = {m0,m1,m2,{m30,m31,m32,m33,m34,m35,m36,m37}}
-#else
-#define NS_DECLARE_ID(_name,m0,m1,m2,m30,m31,m32,m33,m34,m35,m36,m37) \
-  extern "C" const nsID _name
-#endif
-
 /*
  * Class IDs
  */
