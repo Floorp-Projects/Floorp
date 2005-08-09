@@ -23,6 +23,7 @@
  *   Wyllys Ingersoll <wyllys.ingersoll@sun.com>
  *   Christopher Nebergall <cneberg@sandia.gov>
  *   Darin Fisher <darin@meer.net>
+ *   Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -114,6 +115,15 @@ typedef OM_uint32 (*gss_release_name_type)(
     OM_uint32 *, 
     gss_name_t *);
 
+#ifdef XP_MACOSX
+typedef KLStatus (*KLCacheHasValidTickets_type)(
+    KLPrincipal,
+    KLKerberosVersion,
+    KLBoolean *,
+    KLPrincipal *,
+    char **);
+#endif
+
 //-----------------------------------------------------------------------------
 
 // We define GSS_C_NT_HOSTBASED_SERVICE explicitly since it may be referenced
@@ -153,6 +163,12 @@ static PRBool    gssFunInit = PR_FALSE;
 #define gss_import_name_ptr         ((gss_import_name_type)*gssFunPtr[5])
 #define gss_release_buffer_ptr      ((gss_release_buffer_type)*gssFunPtr[6])
 #define gss_release_name_ptr        ((gss_release_name_type)*gssFunPtr[7])
+
+#ifdef XP_MACOSX
+PRFuncPtr *KLCacheHasValidTicketsPtr;
+#define KLCacheHasValidTickets_ptr \
+        ((KLCacheHasValidTickets_type)*KLCacheHasValidTicketsPtr)
+#endif
 
 static nsresult
 gssInit()
@@ -202,6 +218,15 @@ gssInit()
             return NS_ERROR_FAILURE;
         }
     }
+#ifdef XP_MACOSX
+    if (gssNativeImp &&
+            !((PRFuncPtr)KLCacheHasValidTickets_ptr =
+               PR_FindFunctionSymbol(lib, "KLCacheHasValidTickets"))) {
+        LOG(("Fail to load KLCacheHasValidTickets function from gssapi library\n"));
+        PR_UnloadLibrary(lib);
+        return NS_ERROR_FAILURE;
+    }
+#endif
 
     gssFunInit = PR_TRUE;
     return NS_OK;
@@ -395,7 +420,8 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
 
     KLBoolean found;
     if (gssNativeImp &&
-        (KLCacheHasValidTickets(NULL, kerberosVersion_V5, &found, NULL, NULL)
+        (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL,
+                                    NULL)
          != klNoErr || !found))
     {
         major_status = GSS_S_FAILURE;
