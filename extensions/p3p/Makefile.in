@@ -62,23 +62,23 @@ p3p200005.xsl: resources/content/p3p.xsl.in Makefile.in
 p3p200010.xsl: resources/content/p3p.xsl.in Makefile.in
 	@$(RM) -f $@
 	$(PP) -DNAMESPACE=http://www.w3.org/2000/10/18/P3Pv1 \
-	-DHAS_TMPL_RETENTION\
+	-DHAS_TMPL_RETENTION \
 	$< > $@
 
 p3p200012.xsl: resources/content/p3p.xsl.in Makefile.in
 	@$(RM) -f $@
 	$(PP) -DNAMESPACE=http://www.w3.org/2000/12/P3Pv1 \
-	-DHAS_CALL_OURS\
+	-DHAS_CALL_OURS \
 	$< > $@
 
 p3p200109.xsl: resources/content/p3p.xsl.in Makefile.in
 	@$(RM) -f $@
 	$(PP) -DNAMESPACE=http://www.w3.org/2001/09/P3Pv1 \
-	-DHAS_CALL_OURS\
+	-DHAS_CALL_OURS \
 	$< > $@
 
 p3p200201.xsl: resources/content/p3p.xsl.in Makefile.in
 	@$(RM) -f $@
 	$(PP) -DNAMESPACE=http://www.w3.org/2002/01/P3Pv1 \
-	-DHAS_CALL_OURS -DHAS_PURPOSE_SRC\
+	-DHAS_CALL_OURS -DHAS_PURPOSE_SRC \
 	$< > $@
