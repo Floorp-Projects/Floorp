@@ -39,14 +39,14 @@ our @valid_fields = ('op_sys', 'rep_platform', 'priority', 'bug_severity',);
 ######################################################################
 
 # Returns whether or not the specified table exists in the @tables array.
-sub FieldExists {
+sub FieldExists ($) {
   my ($field) = @_;
 
   return lsearch(\@valid_fields, $field) >= 0;
 }
 
 # Same as FieldExists, but emits and error and dies if it fails.
-sub FieldMustExist {
+sub FieldMustExist ($) {
     my ($field)= @_;
 
     $field ||
@@ -58,7 +58,7 @@ sub FieldMustExist {
 }
 
 # Returns if the specified value exists for the field specified.
-sub ValueExists {
+sub ValueExists ($$) {
     my ($field, $value) = @_;
     FieldMustExist($field);
     trick_taint($field);
@@ -75,7 +75,7 @@ sub ValueExists {
 }
 
 # Same check as ValueExists, emits an error text and dies if it fails.
-sub ValueMustExist {
+sub ValueMustExist ($$) {
     my ($field, $value)= @_;
 
     # Values may not be empty (it's very difficult to deal 

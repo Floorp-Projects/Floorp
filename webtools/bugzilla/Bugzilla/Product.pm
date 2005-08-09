@@ -178,7 +178,7 @@ sub classification_id { return $_[0]->{'classification_id'}; }
 ####      Subroutines    ######
 ###############################
 
-sub get_products_by_classification {
+sub get_products_by_classification ($) {
     my ($class_id) = @_;
     my $dbh = Bugzilla->dbh;
     $class_id ||= DEFAULT_CLASSIFICATION_ID;
@@ -205,7 +205,7 @@ sub get_products_by_classification {
     return @products;
 }
 
-sub get_all_products {
+sub get_all_products () {
     my $dbh = Bugzilla->dbh;
 
     my $ids = $dbh->selectcol_arrayref(q{
@@ -218,7 +218,7 @@ sub get_all_products {
     return @products;
 }
 
-sub check_product {
+sub check_product ($) {
     my ($product_name) = @_;
 
     unless ($product_name) {

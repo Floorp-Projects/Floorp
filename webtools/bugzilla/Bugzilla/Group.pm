@@ -106,7 +106,7 @@ sub is_active    { return $_[0]->{'isactive'};     }
 #####  Module Subroutines    ###
 ################################
 
-sub ValidateGroupName {
+sub ValidateGroupName ($$) {
     my ($name, @users) = (@_);
     my $dbh = Bugzilla->dbh;
     my $query = "SELECT id FROM groups " .
@@ -125,7 +125,7 @@ sub ValidateGroupName {
     return $ret;
 }
 
-sub get_group_controls_by_product {
+sub get_group_controls_by_product ($) {
     my ($product_id) = @_;
     my $dbh = Bugzilla->dbh;
 

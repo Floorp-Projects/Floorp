@@ -97,7 +97,7 @@ sub sortAcceptLanguage {
 # Returns the path to the templates based on the Accept-Language
 # settings of the user and of the available languages
 # If no Accept-Language is present it uses the defined default
-sub getTemplateIncludePath {
+sub getTemplateIncludePath () {
     # Return cached value if available
 
     # XXXX - mod_perl!

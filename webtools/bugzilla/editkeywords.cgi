@@ -35,7 +35,7 @@ my $dbh = Bugzilla->dbh;
 use vars qw($template $vars);
 
 
-sub Validate {
+sub Validate ($$) {
     my ($name, $description) = @_;
     if ($name eq "") {
         ThrowUserError("keyword_blank_name");

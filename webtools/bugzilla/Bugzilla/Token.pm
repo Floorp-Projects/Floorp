@@ -249,7 +249,7 @@ sub HasEmailChangeToken {
     return $token;
 }
 
-sub GetTokenData {
+sub GetTokenData($) {
     # Returns the userid, issuedate and eventdata for the specified token
 
     my ($token) = @_;
@@ -263,7 +263,7 @@ sub GetTokenData {
          WHERE  token = ?", undef, $token);
 }
 
-sub DeleteToken {
+sub DeleteToken($) {
     # Deletes specified token
 
     my ($token) = @_;
@@ -280,7 +280,7 @@ sub DeleteToken {
 # Internal Functions
 ################################################################################
 
-sub _create_token {
+sub _create_token($$$) {
     # Generates a unique token and inserts it into the database
     # Returns the token and the token timestamp
     my ($userid, $tokentype, $eventdata) = @_;

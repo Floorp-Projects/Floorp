@@ -97,7 +97,7 @@ sub product_id { return $_[0]->{'product_id'}; }
 #####     Subroutines       ###
 ###############################
 
-sub get_versions_by_product {
+sub get_versions_by_product ($) {
     my ($product_id) = @_;
     my $dbh = Bugzilla->dbh;
 
@@ -123,7 +123,7 @@ sub get_versions_by_product {
     return @versions;
 }
 
-sub check_version {
+sub check_version ($$) {
     my ($product, $version_name) = @_;
 
     $version_name || ThrowUserError('version_not_specified');

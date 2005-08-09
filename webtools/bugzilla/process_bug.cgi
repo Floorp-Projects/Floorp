@@ -210,7 +210,7 @@ check_form_field_defined($cgi, 'component');
 # function and tests, if the comment was given.
 # If comments are required for functions is defined by params.
 #
-sub CheckonComment {
+sub CheckonComment( $ ) {
     my ($function) = (@_);
     
     # Param is 1 if comment should be added !

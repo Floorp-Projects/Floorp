@@ -54,7 +54,7 @@ my %ctl = (
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
 
-sub TestProduct
+sub TestProduct ($)
 {
     my $prod = shift;
 
@@ -65,7 +65,7 @@ sub TestProduct
     return FetchOneColumn();
 }
 
-sub CheckProduct
+sub CheckProduct ($)
 {
     my $prod = shift;
 
@@ -86,7 +86,7 @@ sub CheckProduct
 # TestClassification:  just returns if the specified classification does exists
 # CheckClassification: same check, optionally  emit an error text
 
-sub TestClassification
+sub TestClassification ($)
 {
     my $cl = shift;
 
@@ -97,7 +97,7 @@ sub TestClassification
     return FetchOneColumn();
 }
 
-sub CheckClassification
+sub CheckClassification ($)
 {
     my $cl = shift;
 
@@ -119,7 +119,7 @@ sub CheckClassification
 # we need this routine, which does things properly, and will
 # eventually be the only version. (The older versions assume a
 # $template->put_header() call has been made)
-sub CheckClassificationNew
+sub CheckClassificationNew ($)
 {
     my $cl = shift;
 
@@ -135,7 +135,7 @@ sub CheckClassificationNew
 }
 
 
-sub CheckClassificationProduct
+sub CheckClassificationProduct ($$)
 {
     my $cl = shift;
     my $prod = shift;
@@ -162,7 +162,7 @@ sub CheckClassificationProduct
     }
 }
 
-sub CheckClassificationProductNew
+sub CheckClassificationProductNew ($$)
 {
     my ($cl, $prod) = @_;
     my $dbh = Bugzilla->dbh;
@@ -190,7 +190,7 @@ sub CheckClassificationProductNew
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements
+sub EmitFormElements ($$$$$$$$$)
 {
     my ($classification, $product, $description, $milestoneurl, $disallownew,
         $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
@@ -251,7 +251,7 @@ sub EmitFormElements
 # Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
 #
 
-sub PutTrailer
+sub PutTrailer (@)
 {
     my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
 

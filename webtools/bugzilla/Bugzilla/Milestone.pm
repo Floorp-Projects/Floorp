@@ -99,7 +99,7 @@ sub sortkey    { return $_[0]->{'sortkey'};    }
 #####     Subroutines      #####
 ################################
 
-sub get_milestones_by_product {
+sub get_milestones_by_product ($) {
     my ($product_id) = @_;
     my $dbh = Bugzilla->dbh;
 
@@ -125,7 +125,7 @@ sub get_milestones_by_product {
     return @milestones;
 }
 
-sub check_milestone {
+sub check_milestone ($$) {
     my ($product, $milestone_name) = @_;
 
     unless ($milestone_name) {
@@ -142,7 +142,7 @@ sub check_milestone {
     return $milestone;
 }
 
-sub check_sort_key {
+sub check_sort_key ($$) {
     my ($milestone_name, $sortkey) = @_;
     # Keep a copy in case detaint_signed() clears the sortkey
     my $stored_sortkey = $sortkey;

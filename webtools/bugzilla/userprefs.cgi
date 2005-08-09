@@ -337,7 +337,7 @@ sub DoPermissions {
 # No SavePermissions() because this panel has no changeable fields.
 
 
-sub DoSavedSearches {
+sub DoSavedSearches() {
     # 2004-12-13 - colin.ogilvie@gmail.com, bug 274397
     # Need to work around the possibly missing query_format=advanced
     $vars->{'user'} = Bugzilla->user;
@@ -362,7 +362,7 @@ sub DoSavedSearches {
     $vars->{'queries'} = \@newqueries;
 }
 
-sub SaveSavedSearches {
+sub SaveSavedSearches() {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
     my @queries = @{Bugzilla->user->queries};

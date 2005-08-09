@@ -1156,7 +1156,7 @@ sub get_userlist {
     return $self->{'userlist'};
 }
 
-sub insert_new_user {
+sub insert_new_user ($$;$$) {
     my ($username, $realname, $password, $disabledtext) = (@_);
     my $dbh = Bugzilla->dbh;
 
@@ -1201,7 +1201,7 @@ sub insert_new_user {
     return $password;
 }
 
-sub is_available_username {
+sub is_available_username ($;$) {
     my ($username, $old_username) = @_;
 
     if(login_to_id($username) != 0) {
@@ -1237,7 +1237,7 @@ sub is_available_username {
     return 1;
 }
 
-sub login_to_id {
+sub login_to_id ($) {
     my ($login) = (@_);
     my $dbh = Bugzilla->dbh;
     # $login will only be used by the following SELECT statement, so it's safe.
@@ -1252,7 +1252,7 @@ sub login_to_id {
     }
 }
 
-sub UserInGroup {
+sub UserInGroup ($) {
     return defined Bugzilla->user->groups->{$_[0]} ? 1 : 0;
 }
 
