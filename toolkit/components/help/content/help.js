@@ -618,29 +618,6 @@ function getMarkupDocumentViewer() {
     return helpBrowser.markupDocumentViewer;
 }
 
-function findParentNode(node, parentNode)
-{
-  if (node && node.nodeType == Node.TEXT_NODE) {
-    node = node.parentNode;
-  }
-  while (node) {
-    if (node.nodeType == Node.DOCUMENT_NODE) {
-      return null;
-    }
-    var nodeName = node.localName;
-    if (!nodeName)
-      return null;
-    nodeName = nodeName.toLowerCase();
-    if (nodeName == "body" || nodeName == "html") {
-      return null;
-    }
-    if (nodeName == parentNode)
-      return node;
-    node = node.parentNode;
-  }
-  return null;
-}
-
 function onselect_loadURI(tree) {
     try {
         var resource = tree.view.getResourceAtIndex(tree.currentIndex);
