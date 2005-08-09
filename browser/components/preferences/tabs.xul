@@ -76,7 +76,7 @@
                   preference="browser.link.open_newwindow"
                   onsynctopreference="return gTabsPane.writeWindowLinksBehavior();"
                   onsyncfrompreference="return gTabsPane.readForceLinksMode();">
-        <radio label="&sameTabOrWindow.label;" accesskey="sameTabOrWindow.accesskey;" value="1"/>
+        <radio label="&sameTabOrWindow.label;" accesskey="&sameTabOrWindow.accesskey;" value="1"/>
         <radio label="&newTab.label;" accesskey="&newTab.accesskey;" value="3"/>
       </radiogroup>
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
