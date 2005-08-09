@@ -436,7 +436,8 @@ Contributors:
     <h4 id="languages">Languages</h4>
 
       <p>Some web pages are offered in more than one language. Click the
-        <em>Edit Languages...</em> button to specify your preferred languages.</p>
+        <em>Edit Languages...</em> button to specify your preferred
+        languages.</p>
 
       <p><strong>Languages Dialog:</strong><br/>
         To add a language, press <em>Select a language to add...</em>, choose
@@ -449,21 +450,48 @@ Contributors:
         <em>Move Up</em> and <em>Move Down</em> buttons.</p>
 
   <h3 id="advanced_update">Update tab</h3>
-    <p>&brandShortName; can check whether new versions of your installed
-	    extensions, themes, or &brandShortName; itself are available.</p>
+    <p>&brandShortName; can check whether updates to installed
+      extensions, themes, or &brandShortName; itself are available.</p>
 
-    <p><strong>&brandShortName;</strong><br/>
-      By default, &brandShortName; will periodically check and notify you when a
-      new version is available. Uncheck this &pref.singular; to disable the
-      periodic check.</p>
+    <p><em>Automatically check for updates to:</em><br/>
+      By default &brandShortName; automatically checks for updates to itself as
+      well as to extensions and themes so you'll always know you have the most
+      up-to-date version.  You can turn off this behavior by unchecking the
+      appropriate checkbox here.  You can also manually check for updates to
+      either &brandShortName; or your installed extensions and themes by
+      clicking the corresponding <em>Check Now...</em> button.</p>
 
-    <p><strong>My Extensions and Themes</strong><br/>
-      By default, &brandShortName; will periodically check and notify you when a
-      new version for one of your installed extensions or themes is available.
-      Uncheck this &pref.singular; to disable the periodic check.</p>
+    <p><em>When updates to &brandShortName; are found,</em></p>
 
-    <p>Click the appropriate <em>Check Now</em> button to manually perform a
-      check for updates to &brandShortName; or extensions and themes.</p>
+    <dl>
+      <dt>Ask me what I want to do</dt>
+      <dd>Updates to &brandShortName; are typically installed automatically by
+        default.  Select this &pref.singular; to manually control how and when
+        updates are installed.</dd>
+      <dt>Automatically download and install the update</dt>
+      <dd>When this &pref.singular; is selected, &brandShortName; updates will
+        be automatically downloaded and will be installed the next time
+        &brandShortName; is restarted.  The <em>Warn me if this will disable
+        extensions or themes</em> &pref.singular; determines whether you will be
+        warned before the installation of an update which would require an
+        incompatible extension or theme to be disabled because no newer,
+        compatible version exists.  The warning will allow you to postpone
+        installation of the update, though at the expense of improvements
+        included in it.</dd>
+      <dd>If all extensions and themes are compatible or can be updated to 
+        be compatible, the &brandShortName; update will be installed.  Upon
+        restart you will be asked to install any needed extension and
+        theme updates so that you can continue to use them.</dd>
+    </dl>
+
+    <p><em>Show Update History</em><br/>
+      &brandShortName; automatically records the updates you have installed.
+      You can view information about these updates by clicking this button.</p>
+
+    <p><strong>Note:</strong>  You must be running &brandShortName; as
+      <span class="win">an administrator</span><span class="noWin">root</span>
+      or as the user who originally installed &brandShortName;
+      to install &brandShortName; updates.</p>
 
   <h3 id="advanced_security">Security tab</h3>
     <h4 id="protocols">Protocols</h4>
@@ -519,7 +547,7 @@ Contributors:
         than the one in &brandShortName;, click the <em>Security Devices</em>
         button.</p>
 
-<div class="contentsBox"><em>01 July 2005</em></div>
+<div class="contentsBox"><em>08 August 2005</em></div>
 <p>Copyright &copy; 2003-2005 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
