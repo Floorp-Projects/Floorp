@@ -74,6 +74,7 @@ private:
     CtxtHandle   mCtxt;
     nsCString    mServiceName;
     PRUint32     mServiceFlags;
+    PRUint32     mMaxTokenLen;
     PRBool       mUseNTLM;
 };
 
