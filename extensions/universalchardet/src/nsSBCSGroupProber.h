@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,16 +40,14 @@
 #define nsSBCSGroupProber_h__
 
 
-#define NUM_OF_SBCS_PROBERS    10
+#define NUM_OF_SBCS_PROBERS    13
 
-class nsSingleByteCharSetProber;
+class nsCharSetProber;
 class nsSBCSGroupProber: public nsCharSetProber {
 public:
   nsSBCSGroupProber();
   virtual ~nsSBCSGroupProber();
   nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
-  PRBool FilterWithoutEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen);
-  PRBool FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen);
   const char* GetCharSetName();
   nsProbingState GetState(void) {return mState;};
   void      Reset(void);
@@ -61,7 +60,7 @@ public:
 
 protected:
   nsProbingState mState;
-  nsSingleByteCharSetProber* mProbers[NUM_OF_SBCS_PROBERS];
+  nsCharSetProber* mProbers[NUM_OF_SBCS_PROBERS];
   PRBool          mIsActive[NUM_OF_SBCS_PROBERS];
   PRInt32 mBestGuess;
   PRUint32 mActiveNum;

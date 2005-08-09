@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -86,12 +87,18 @@ const char* nsMBCSGroupProber::GetCharSetName()
 
 void  nsMBCSGroupProber::Reset(void)
 {
+  mActiveNum = 0;
   for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
   {
-    mProbers[i]->Reset();
-    mIsActive[i] = PR_TRUE;
+    if (mProbers[i])
+    {
+      mProbers[i]->Reset();
+      mIsActive[i] = PR_TRUE;
+      ++mActiveNum;
+    }
+    else
+      mIsActive[i] = PR_FALSE;
   }
-  mActiveNum = NUM_OF_PROBERS;
   mBestGuess = -1;
   mState = eDetecting;
 }
@@ -104,8 +111,10 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
   //do filtering to reduce load to probers
   char *highbyteBuf;
   char *hptr;
-  PRBool keepNext = PR_TRUE;   //assume previous is not ascii, it will do not harm except add some noise
-  hptr = highbyteBuf = (char*)PR_MALLOC(aLen);
+  PRBool keepNext = PR_TRUE;   //assume previous is not ascii, it will do no harm except add some noise
+  hptr = highbyteBuf = (char*)PR_Malloc(aLen);
+  if (!hptr)
+      return mState;
   for (i = 0; i < aLen; i++)
   {
     if (aBuf[i] & 0x80)
@@ -180,8 +189,7 @@ float nsMBCSGroupProber::GetConfidence(void)
 }
 
 #ifdef DEBUG_chardet
-void 
-nsMBCSGroupProber::DumpStatus()
+void nsMBCSGroupProber::DumpStatus()
 {
   PRUint32 i;
   float cf;
@@ -190,11 +198,11 @@ nsMBCSGroupProber::DumpStatus()
   for (i = 0; i < NUM_OF_PROBERS; i++)
   {
     if (!mIsActive[i])
-      printf("[%s] is inactive(ie. cofidence is too low).\r\n", ProberName[i]);
+      printf("  MBCS inactive: [%s] (confidence is too low).\r\n", ProberName[i]);
     else
     {
       cf = mProbers[i]->GetConfidence();
-      printf("[%s] prober has confidence %f\r\n", ProberName[i], cf);
+      printf("  MBCS %1.3f: [%s]\r\n", cf, ProberName[i]);
     }
   }
 }
