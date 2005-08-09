@@ -51,8 +51,10 @@ sub showTest {
     $time->date_separator("");
     my $curbuildtime = $time->ymd;
     my $prod = Litmus::DB::Product->search(name => "Firefox")->next();
-    if (! $ua->buildid() || ! $ua->branch($prod) || 
-            $ua->branch($prod)->branchid() != $branch->branchid() || 
+    my $branch = Litmus::DB::Branch->search(product => $prod, name => "Trunk")->next();
+    my @detectbranch = $ua->branch($prod);
+    if (! $ua->buildid() || ! $detectbranch[0] || 
+            $detectbranch[0]->branchid() != $branch->branchid() || 
             $curbuildtime - $ua->buildid() > $maxbuildage) {
         Litmus->template()->process("simpletest/simpletest.html.tmpl") || 
             internalError(Litmus->template()->error());
