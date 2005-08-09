@@ -84,7 +84,6 @@ static const char *MapErrorCode(int rc)
 //-----------------------------------------------------------------------------
 
 static HINSTANCE                 sspi_lib; 
-static ULONG                     sspi_maxTokenLen;
 static PSecurityFunctionTable    sspi;
 
 static nsresult
@@ -114,14 +113,6 @@ InitSSPI()
         return NS_ERROR_UNEXPECTED;
     }
 
-    PSecPkgInfo pinfo;
-    int rc = (sspi->QuerySecurityPackageInfo)("Negotiate", &pinfo);
-    if (rc != SEC_E_OK) {
-        LOG(("Negotiate package not found"));
-        return NS_ERROR_UNEXPECTED;
-    }
-    sspi_maxTokenLen = pinfo->cbMaxToken;
-
     return NS_OK;
 }
 
@@ -145,7 +136,14 @@ MakeSN(const char *principal, nsCString &result)
     if (NS_FAILED(rv))
         return rv;
 
-    // This should always hit our DNS cache
+    // This could be expensive if our DNS cache cannot satisfy the request.
+    // However, we should have at least hit the OS resolver once prior to
+    // reaching this code, so provided the OS resolver has this information
+    // cached, we should not have to worry about blocking on this function call
+    // for very long.  NOTE: because we ask for the canonical hostname, we
+    // might end up requiring extra network activity in cases where the OS
+    // resolver might not have enough information to satisfy the request from
+    // its cache.  This is not an issue in versions of Windows up to WinXP.
     nsCOMPtr<nsIDNSRecord> record;
     rv = dns->Resolve(Substring(buf, index + 1),
                       nsIDNSService::RESOLVE_CANONICAL_NAME,
@@ -166,6 +164,7 @@ MakeSN(const char *principal, nsCString &result)
 
 nsNegotiateAuth::nsNegotiateAuth(PRBool useNTLM)
     : mServiceFlags(REQ_DEFAULT)
+    , mMaxTokenLen(0)
     , mUseNTLM(useNTLM)
 {
     memset(&mCred, 0, sizeof(mCred));
@@ -233,8 +232,18 @@ nsNegotiateAuth::Init(const char *serviceName,
         mServiceFlags = serviceFlags;
     }
 
-    TimeStamp useBefore;
     SECURITY_STATUS rc;
+
+    PSecPkgInfo pinfo;
+    rc = (sspi->QuerySecurityPackageInfo)(package, &pinfo);
+    if (rc != SEC_E_OK) {
+        LOG(("%s package not found\n", package));
+        return NS_ERROR_UNEXPECTED;
+    }
+    mMaxTokenLen = pinfo->cbMaxToken;
+    (sspi->FreeContextBuffer)(pinfo);
+
+    TimeStamp useBefore;
 
     rc = (sspi->AcquireCredentialsHandle)(NULL,
                                           package,
@@ -298,7 +307,7 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     obd.cBuffers = 1;
     obd.pBuffers = &ob;
     ob.BufferType = SECBUFFER_TOKEN;
-    ob.cbBuffer = sspi_maxTokenLen;
+    ob.cbBuffer = mMaxTokenLen;
     ob.pvBuffer = nsMemory::Alloc(ob.cbBuffer);
     if (!ob.pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
