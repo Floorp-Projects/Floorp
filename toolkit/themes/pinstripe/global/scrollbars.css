@@ -72,3 +72,11 @@ scrollcorner {
     cursor: default;
   }
 }
+
+/* ::::: slider ::::: */
+
+thumb {
+  background: url("chrome://global/skin/icons/thumb.png") transparent center no-repeat;
+  min-width: 15px;
+}
+
