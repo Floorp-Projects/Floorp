@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rijndael.c,v 1.19 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: rijndael.c,v 1.20 2005/08/09 03:09:38 nelsonb%netscape.com Exp $ */
 
 #include "prinit.h"
 #include "prerr.h"
@@ -1020,6 +1020,10 @@ AES_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 	cx->worker = (encrypt) ? &rijndael_encryptECB : &rijndael_decryptECB;
     }
     PORT_Assert((cx->Nb * (cx->Nr + 1)) <= RIJNDAEL_MAX_EXP_KEY_SIZE);
+    if ((cx->Nb * (cx->Nr + 1)) > RIJNDAEL_MAX_EXP_KEY_SIZE) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	goto cleanup;
+    }
     /* Generate expanded key */
     if (encrypt) {
 	if (rijndael_key_expansion(cx, key, Nk) != SECSuccess)
