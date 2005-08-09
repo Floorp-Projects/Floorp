@@ -5474,6 +5474,33 @@ DWORD nsWindow::WindowStyle()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowExStyle()
 {
+#ifdef WINCE
+
+  switch (mWindowType)
+  {
+    case eWindowType_child:
+      return 0;
+
+    case eWindowType_dialog:
+      return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
+
+    case eWindowType_popup:
+      return WS_EX_TOOLWINDOW;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      // fall through
+
+    case eWindowType_toplevel:
+    case eWindowType_invisible:
+    if (gUseOkayButton)
+      return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
+    else
+      return WS_EX_WINDOWEDGE;      
+  }
+
+#else
+
   switch (mWindowType)
   {
     case eWindowType_child:
@@ -5491,15 +5518,9 @@ DWORD nsWindow::WindowExStyle()
 
     case eWindowType_toplevel:
     case eWindowType_invisible:
-#ifndef WINCE
-		return WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-#else
-    if (gUseOkayButton)
-      return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
-    else
-      return WS_EX_WINDOWEDGE;      
-#endif
+      return WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
   }
+#endif
 }
 
 
