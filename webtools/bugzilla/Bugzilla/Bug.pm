@@ -339,7 +339,7 @@ sub actual_time {
     return $self->{'actual_time'};
 }
 
-sub any_flags_requesteeble () {
+sub any_flags_requesteeble {
     my ($self) = @_;
     return $self->{'any_flags_requesteeble'} 
         if exists $self->{'any_flags_requesteeble'};
@@ -351,7 +351,7 @@ sub any_flags_requesteeble () {
     return $self->{'any_flags_requesteeble'};
 }
 
-sub attachments () {
+sub attachments {
     my ($self) = @_;
     return $self->{'attachments'} if exists $self->{'attachments'};
     return [] if $self->{'error'};
@@ -359,7 +359,7 @@ sub attachments () {
     return $self->{'attachments'};
 }
 
-sub assigned_to () {
+sub assigned_to {
     my ($self) = @_;
     return $self->{'assigned_to'} if exists $self->{'assigned_to'};
     $self->{'assigned_to_id'} = 0 if $self->{'error'};
@@ -367,7 +367,7 @@ sub assigned_to () {
     return $self->{'assigned_to'};
 }
 
-sub blocked () {
+sub blocked {
     my ($self) = @_;
     return $self->{'blocked'} if exists $self->{'blocked'};
     return [] if $self->{'error'};
@@ -378,7 +378,7 @@ sub blocked () {
 # Even bugs in an error state always have a bug_id.
 sub bug_id { $_[0]->{'bug_id'}; }
 
-sub cc () {
+sub cc {
     my ($self) = @_;
     return $self->{'cc'} if exists $self->{'cc'};
     return [] if $self->{'error'};
@@ -396,7 +396,7 @@ sub cc () {
     return $self->{'cc'};
 }
 
-sub dependson () {
+sub dependson {
     my ($self) = @_;
     return $self->{'dependson'} if exists $self->{'dependson'};
     return [] if $self->{'error'};
@@ -405,7 +405,7 @@ sub dependson () {
     return $self->{'dependson'};
 }
 
-sub flag_types () {
+sub flag_types {
     my ($self) = @_;
     return $self->{'flag_types'} if exists $self->{'flag_types'};
     return [] if $self->{'error'};
@@ -430,7 +430,7 @@ sub flag_types () {
     return $self->{'flag_types'};
 }
 
-sub keywords () {
+sub keywords {
     my ($self) = @_;
     return $self->{'keywords'} if exists $self->{'keywords'};
     return () if $self->{'error'};
@@ -456,7 +456,7 @@ sub longdescs {
     return $self->{'longdescs'};
 }
 
-sub milestoneurl () {
+sub milestoneurl {
     my ($self) = @_;
     return $self->{'milestoneurl'} if exists $self->{'milestoneurl'};
     return '' if $self->{'error'};
@@ -464,7 +464,7 @@ sub milestoneurl () {
     return $self->{'milestoneurl'};
 }
 
-sub qa_contact () {
+sub qa_contact {
     my ($self) = @_;
     return $self->{'qa_contact'} if exists $self->{'qa_contact'};
     return undef if $self->{'error'};
@@ -480,7 +480,7 @@ sub qa_contact () {
     return $self->{'qa_contact'};
 }
 
-sub reporter () {
+sub reporter {
     my ($self) = @_;
     return $self->{'reporter'} if exists $self->{'reporter'};
     $self->{'reporter_id'} = 0 if $self->{'error'};
@@ -489,7 +489,7 @@ sub reporter () {
 }
 
 
-sub show_attachment_flags () {
+sub show_attachment_flags {
     my ($self) = @_;
     return $self->{'show_attachment_flags'} 
         if exists $self->{'show_attachment_flags'};
@@ -694,7 +694,7 @@ sub choices {
 # the alias.
 # Queries the database for the bug with a given alias, and returns
 # the ID of the bug if it exists or the undefined value if it doesn't.
-sub bug_alias_to_id ($) {
+sub bug_alias_to_id {
     my ($alias) = @_;
     return undef unless Param("usebugaliases");
     my $dbh = Bugzilla->dbh;
@@ -707,7 +707,7 @@ sub bug_alias_to_id ($) {
 # Subroutines
 #####################################################################
 
-sub AppendComment ($$$;$$$) {
+sub AppendComment {
     my ($bugid, $whoid, $comment, $isprivate, $timestamp, $work_time) = @_;
     $work_time ||= 0;
     my $dbh = Bugzilla->dbh;
@@ -992,7 +992,7 @@ sub CountOpenDependencies {
     return @dependencies;
 }
 
-sub ValidateComment ($) {
+sub ValidateComment {
     my ($comment) = @_;
 
     if (defined($comment) && length($comment) > MAX_COMMENT_LENGTH) {
@@ -1242,7 +1242,7 @@ sub ValidateBugAlias {
 }
 
 # Validate and return a hash of dependencies
-sub ValidateDependencies($$$) {
+sub ValidateDependencies {
     my $fields = {};
     $fields->{'dependson'} = shift;
     $fields->{'blocked'} = shift;

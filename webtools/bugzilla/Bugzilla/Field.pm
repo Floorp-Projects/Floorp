@@ -27,7 +27,7 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 
 
-sub check_form_field ($$;$) {
+sub check_form_field {
     my ($cgi, $fieldname, $legalsRef) = @_;
     my $dbh = Bugzilla->dbh;
 
@@ -45,7 +45,7 @@ sub check_form_field ($$;$) {
     }
 }
 
-sub check_form_field_defined ($$) {
+sub check_form_field_defined {
     my ($cgi, $fieldname) = @_;
 
     if (!defined $cgi->param($fieldname)) {

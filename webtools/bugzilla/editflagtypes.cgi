@@ -567,7 +567,7 @@ sub validateGroups {
 # added by the user and have passed all validation tests.
 # The only way to have invalid product/component combinations is to
 # hack the URL. So we silently ignore them, if any.
-sub validateAndSubmit ($) {
+sub validateAndSubmit {
     my ($id) = @_;
     my $dbh = Bugzilla->dbh;
 

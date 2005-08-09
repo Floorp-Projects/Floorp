@@ -226,7 +226,7 @@ sub LookupNamedQuery {
 #
 # Returns: A boolean true value if the query existed in the database 
 # before, and we updated it. A boolean false value otherwise.
-sub InsertNamedQuery ($$$;$) {
+sub InsertNamedQuery {
     my ($userid, $query_name, $query, $link_in_footer) = @_;
     $link_in_footer ||= 0;
     $query_name = trim($query_name);

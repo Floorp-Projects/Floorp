@@ -727,7 +727,7 @@ if (defined $cgi->param('rebuildkeywordcache')) {
 # General bug checks
 ###########################################################################
 
-sub BugCheck ($$;$$) {
+sub BugCheck {
     my ($middlesql, $errortext, $repairparam, $repairtext) = @_;
     
     SendSQL("SELECT DISTINCT bugs.bug_id " .

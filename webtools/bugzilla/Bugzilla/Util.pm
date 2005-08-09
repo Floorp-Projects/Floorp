@@ -138,7 +138,7 @@ sub url_decode {
     return $todecode;
 }
 
-sub i_am_cgi () {
+sub i_am_cgi {
     # I use SERVER_SOFTWARE because it's required to be
     # defined for all requests in the CGI spec.
     return exists $ENV{'SERVER_SOFTWARE'} ? 1 : 0;
@@ -221,7 +221,7 @@ sub diff_strings {
     return ($removed, $added);
 }
 
-sub wrap_comment ($) {
+sub wrap_comment {
     my ($comment) = @_;
     my $wrappedcomment = "";
 
@@ -245,7 +245,7 @@ sub wrap_comment ($) {
     return $wrappedcomment;
 }
 
-sub find_wrap_point ($$) {
+sub find_wrap_point {
     my ($string, $maxpos) = @_;
     if (!$string) { return 0 }
     if (length($string) < $maxpos) { return length($string) }
@@ -264,7 +264,7 @@ sub find_wrap_point ($$) {
     return $wrappoint;
 }
 
-sub format_time ($;$) {
+sub format_time {
     my ($date, $format) = @_;
 
     # If $format is undefined, try to guess the correct date format.    
@@ -316,7 +316,7 @@ sub format_time_decimal {
     return $newtime;
 }
 
-sub file_mod_time ($) {
+sub file_mod_time {
     my ($filename) = (@_);
     my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
         $atime,$mtime,$ctime,$blksize,$blocks)
@@ -324,7 +324,7 @@ sub file_mod_time ($) {
     return $mtime;
 }
 
-sub bz_crypt ($) {
+sub bz_crypt {
     my ($password) = @_;
 
     # The list of characters that can appear in a salt.  Salts and hashes

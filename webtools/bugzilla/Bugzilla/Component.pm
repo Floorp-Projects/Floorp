@@ -103,7 +103,7 @@ sub default_qa_contact { return $_[0]->{'initialqacontact'}; }
 ####      Subroutines      ####
 ###############################
 
-sub get_components_by_product ($) {
+sub get_components_by_product {
     my ($product_id) = @_;
     my $dbh = Bugzilla->dbh;
 

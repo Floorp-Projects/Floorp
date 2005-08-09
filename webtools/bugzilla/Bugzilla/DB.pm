@@ -128,12 +128,12 @@ sub FetchOneColumn {
     return $row[0];
 }
 
-sub PushGlobalSQLState() {
+sub PushGlobalSQLState {
     push @SQLStateStack, $_current_sth;
     push @SQLStateStack, $_fetchahead;
 }
 
-sub PopGlobalSQLState() {
+sub PopGlobalSQLState {
     die ("PopGlobalSQLState: stack underflow") if ( scalar(@SQLStateStack) < 1 );
     $_fetchahead = pop @SQLStateStack;
     $_current_sth = pop @SQLStateStack;
@@ -153,7 +153,7 @@ sub connect_shadow {
                     Param("shadowdbsock"), $db_user, $db_pass);
 }
 
-sub connect_main (;$) {
+sub connect_main {
     my ($no_db_name) = @_;
     my $connect_to_db = $db_name;
     $connect_to_db = "" if $no_db_name;

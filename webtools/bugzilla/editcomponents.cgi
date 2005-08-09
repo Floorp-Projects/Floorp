@@ -49,7 +49,7 @@ my $showbugcounts = (defined $cgi->param('showbugcounts'));
 # TestComponent:  just returns if the specified product/component combination exists
 # CheckComponent: same check, optionally emit an error text
 
-sub TestProduct ($)
+sub TestProduct
 {
     my $prod = shift;
 
@@ -60,7 +60,7 @@ sub TestProduct ($)
     return FetchOneColumn();
 }
 
-sub CheckProduct ($)
+sub CheckProduct
 {
     my $prod = shift;
 
@@ -75,7 +75,7 @@ sub CheckProduct ($)
     }
 }
 
-sub TestComponent ($$)
+sub TestComponent
 {
     my ($prod, $comp) = @_;
 
@@ -89,7 +89,7 @@ sub TestComponent ($$)
     return FetchOneColumn();
 }
 
-sub CheckComponent ($$)
+sub CheckComponent
 {
     my ($prod, $comp) = @_;
 

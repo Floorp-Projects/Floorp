@@ -105,7 +105,7 @@ sub description { return $_[0]->{'description'}; }
 ####      Subroutines      ####
 ###############################
 
-sub get_all_classifications () {
+sub get_all_classifications {
     my $dbh = Bugzilla->dbh;
 
     my $ids = $dbh->selectcol_arrayref(q{
@@ -118,7 +118,7 @@ sub get_all_classifications () {
     return @classifications;
 }
 
-sub check_classification ($) {
+sub check_classification {
     my ($class_name) = @_;
 
     unless ($class_name) {

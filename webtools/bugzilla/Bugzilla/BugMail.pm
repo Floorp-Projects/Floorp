@@ -112,7 +112,7 @@ END
 # All the names are email addresses, not userids
 # values are scalars, except for cc, which is a list
 # This hash usually comes from the "mailrecipients" var in a template call.
-sub Send($;$) {
+sub Send {
     my ($id, $forced) = (@_);
 
     # This only works in a sub. Probably something to do with the
@@ -122,7 +122,7 @@ sub Send($;$) {
     return ProcessOneBug($id, $forced);
 }
 
-sub ProcessOneBug($$) {
+sub ProcessOneBug {
     my ($id, $forced) = (@_);
 
     my @headerlist;
@@ -474,7 +474,7 @@ sub ProcessOneBug($$) {
     return {'sent' => \@sent, 'excluded' => \@excluded};
 }
 
-sub sendMail($$$$$$$$$$$$) {
+sub sendMail {
     my ($user, $hlRef, $relRef, $valueRef, $dmhRef, $fdRef,  
         $diffRef, $newcomments, $anyprivate, $start, 
         $id) = @_;
@@ -608,7 +608,7 @@ sub sendMail($$$$$$$$$$$$) {
     return 1;
 }
 
-sub MessageToMTA ($) {
+sub MessageToMTA {
     my ($msg) = (@_);
     return if (Param('mail_delivery_method') eq "none");
 
@@ -639,7 +639,7 @@ sub MessageToMTA ($) {
     $mailer->close;
 }
 
-sub encode_qp_words($) {
+sub encode_qp_words {
     my ($line) = (@_);
     my @encoded;
     foreach my $word (split / /, $line) {
@@ -652,7 +652,7 @@ sub encode_qp_words($) {
     return join(' ', @encoded);
 }
 
-sub encode_message($$) {
+sub encode_message {
     my ($header, $body) = @_;
 
     # read header into MIME::Entity
@@ -735,14 +735,14 @@ sub encode_message($$) {
 # its value will be placed into the string. If it's not a key in the hash,
 # then the value of the parameter called "some_variable_name" will be placed
 # into the string.
-sub PerformSubsts ($;$) {
+sub PerformSubsts {
     my ($str, $substs) = (@_);
     $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
     return $str;
 }
 
 # Send the login name and password of the newly created account to the user.
-sub MailPassword ($$) {
+sub MailPassword {
     my ($login, $password) = (@_);
     my $template = Param("passwordmail");
     my $msg = PerformSubsts($template,
