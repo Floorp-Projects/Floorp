@@ -883,7 +883,14 @@ BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType
     }
     else if ((offset = line.Find(kOpenMeta, PR_TRUE)) >= 0)
     {
-        rv = ParseMetaTag(line, getter_AddRefs(mUnicodeDecoder));
+        // We are not setting mUnicodeDecoder directly since ParseMetaTag set
+        // the returned decoded to null if this is not a Content-Type
+        // declaration.
+        nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder = nsnull;
+        rv = ParseMetaTag(line, getter_AddRefs(unicodeDecoder));
+        if (NS_SUCCEEDED(rv) && unicodeDecoder) {
+            mUnicodeDecoder = unicodeDecoder;
+        }
     }
     else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
          nsCRT::IsAsciiDigit(line.CharAt(offset + 2)))
@@ -1098,7 +1105,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     rv = CallGetService(kCharsetConverterManagerCID, &charsetConv);
     if (NS_SUCCEEDED(rv) && (charsetConv))
     {
-        rv = charsetConv->GetUnicodeDecoderRaw(charset.get(), decoder);
+        rv = charsetConv->GetUnicodeDecoder(charset.get(), decoder);
         NS_RELEASE(charsetConv);
     }
     return rv;
