@@ -165,7 +165,7 @@ static PRBool    gssFunInit = PR_FALSE;
 #define gss_release_name_ptr        ((gss_release_name_type)*gssFunPtr[7])
 
 #ifdef XP_MACOSX
-PRFuncPtr *KLCacheHasValidTicketsPtr;
+static PRFuncPtr KLCacheHasValidTicketsPtr;
 #define KLCacheHasValidTickets_ptr \
         ((KLCacheHasValidTickets_type)*KLCacheHasValidTicketsPtr)
 #endif
