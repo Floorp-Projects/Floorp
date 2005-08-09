@@ -11,5 +11,6 @@ messenger.jar:
 en-US.jar:
     locale/en-US/messenger/msgViewPickerOverlay.dtd                  (resources/locale/en-US/msgViewPickerOverlay.dtd)
     locale/en-US/messenger/mailViewSetup.dtd                         (resources/locale/en-US/mailViewSetup.dtd)    
-    locale/en-US/messenger/mailViewList.dtd                         (resources/locale/en-US/mailViewList.dtd) 
+    locale/en-US/messenger/mailViewList.dtd                          (resources/locale/en-US/mailViewList.dtd) 
+    locale/en-US/messenger/mailviews.properties                      (resources/locale/en-US/mailviews.properties) 
 #endif

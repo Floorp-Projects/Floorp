@@ -65,14 +65,11 @@ function mailViewOnLoad()
 
   if (gMailView)
   {
-    dialog.nameField.value = gMailView.mailViewName;
+    dialog.nameField.value = gMailView.prettyName;
     initializeSearchRows(nsMsgSearchScope.offlineMail, gMailView.searchTerms);
-
-    if (gMailView.searchTerms.Count() == 1)
-      document.getElementById("less0").setAttribute("disabled", "true");
   }
   else
-    onMore(null, 0);
+    onMore(null);
  
   doEnabling();
 }
@@ -91,7 +88,9 @@ function onOK()
   if (gMailView)
   {
     saveSearchTerms(gMailView.searchTerms, gMailView);
-    gMailView.mailViewName = dialog.nameField.value;
+    // if the name of the view has been changed...
+    if (gMailView.prettyName != dialog.nameField.value)
+      gMailView.mailViewName = dialog.nameField.value;
   }
   else  
   {

@@ -83,8 +83,8 @@ function refreshListView(aSelectedMailView)
   for (index = 0; index < numItems; index++)
   {
     mailView = gMailListView.getMailViewAt(index);
-    gListBox.appendItem(mailView.mailViewName, index);
-    if (aSelectedMailView && (mailView.mailViewName == aSelectedMailView.mailViewName) )
+    gListBox.appendItem(mailView.prettyName, index);
+    if (aSelectedMailView && (mailView.prettyName == aSelectedMailView.prettyName) )
       gListBox.selectedIndex = index;
   }
 }

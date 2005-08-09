@@ -206,7 +206,7 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
   for (var index = 0; index < numItems; index++)
   {
     newMenuItem = document.createElement('menuitem');
-    newMenuItem.setAttribute('label', gMailViewList.getMailViewAt(index).mailViewName);
+    newMenuItem.setAttribute('label', gMailViewList.getMailViewAt(index).prettyName);
     newMenuItem.setAttribute('id', "userdefinedview" + (kLastDefaultViewIndex + index));
     item = menupopupNode.insertBefore(newMenuItem, customNode);
     item.setAttribute('value',  kLastDefaultViewIndex + index);

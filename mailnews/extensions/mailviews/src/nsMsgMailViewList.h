@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsIStringBundle.h"
 
 #include "nsIMsgFilterList.h"
 
@@ -59,6 +60,7 @@ public:
 
 protected:
   nsString mName;
+  nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsISupportsArray> mViewSearchTerms;
 };
 

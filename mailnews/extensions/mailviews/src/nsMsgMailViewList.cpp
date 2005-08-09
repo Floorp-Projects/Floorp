@@ -44,9 +44,14 @@
 #include "nsIFileSpec.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
-
 #include "nsAppDirectoryServiceDefs.h"
 
+#define kDefaultViewPeopleIKnow "People I Know"
+#define kDefaultViewRecent "Recent Mail"
+#define kDefaultViewFiveDays "Last 5 Days"
+#define kDefaultViewNotJunk "Not Junk"
+#define kDefaultViewHasAttachments "Has Attachments"
+ 
 nsMsgMailView::nsMsgMailView()
 {
     NS_NewISupportsArray(getter_AddRefs(mViewSearchTerms));
@@ -72,6 +77,37 @@ NS_IMETHODIMP nsMsgMailView::SetMailViewName(const PRUnichar * aMailViewName)
 {
     mName = aMailViewName;
     return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailView::GetPrettyName(PRUnichar ** aMailViewName)
+{
+    nsresult rv = NS_OK;
+    if (!mBundle)
+    {
+        nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        bundleService->CreateBundle("chrome://messenger/locale/mailviews.properties",
+                                    getter_AddRefs(mBundle));
+    }
+
+    NS_ENSURE_TRUE(mBundle, NS_ERROR_FAILURE);
+
+    // see if mName has an associated pretty name inside our string bundle and if so, use that as the pretty name
+    // otherwise just return mName
+    if (mName.EqualsLiteral(kDefaultViewPeopleIKnow))
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("mailViewPeopleIKnow").get(), aMailViewName);    
+    else if (mName.EqualsLiteral(kDefaultViewRecent))
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("mailViewRecentMail").get(), aMailViewName);  
+    else if (mName.EqualsLiteral(kDefaultViewFiveDays))
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("mailViewLastFiveDays").get(), aMailViewName);  
+    else if (mName.EqualsLiteral(kDefaultViewNotJunk))
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("mailViewNotJunk").get(), aMailViewName); 
+    else if (mName.EqualsLiteral(kDefaultViewHasAttachments))
+        rv = mBundle->GetStringFromName(NS_LITERAL_STRING("mailViewHasAttachments").get(), aMailViewName); 
+    else
+        *aMailViewName = ToNewUnicode(mName); 
+
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgMailView::GetSearchTerms(nsISupportsArray ** aSearchTerms)

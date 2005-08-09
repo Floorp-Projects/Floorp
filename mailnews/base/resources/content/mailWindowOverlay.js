@@ -331,7 +331,7 @@ function viewRefreshCustomMailViews(aCurrentViewValue)
   for (i = 0; i < numItems; i++)
   {
     var newMenuItem = document.createElement("menuitem");
-    newMenuItem.setAttribute("label", mailViewList.getMailViewAt(i).mailViewName);
+    newMenuItem.setAttribute("label", mailViewList.getMailViewAt(i).prettyName);
     newMenuItem.setAttribute("userdefined", "true");
     var oncommandStr = "ViewMessagesBy('userdefinedview" + (kLastDefaultViewIndex + i) + "');";  
     newMenuItem.setAttribute("oncommand", oncommandStr);

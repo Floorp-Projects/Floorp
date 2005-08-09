@@ -42,12 +42,10 @@
 
 interface nsIMsgSearchTerm;
 
-// a mail view consists of a string identifier which would show up in the UI
-// and an array of search terms which define the criteria for the view.
-
-[scriptable, uuid(82496947-84F9-42ac-87D1-88B0CCAF114B)]
+[scriptable, uuid(28AC84DF-CBE5-430d-A5C0-4FA63B5424DF)]
 interface nsIMsgMailView : nsISupports {
     attribute wstring mailViewName;
+	readonly attribute wstring prettyName; // localized pretty name
 
     // the array of search terms 
     attribute nsISupportsArray searchTerms;
