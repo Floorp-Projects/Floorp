@@ -41,6 +41,7 @@ use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::User::Setting;
+use Bugzilla::Product;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
@@ -59,6 +60,8 @@ use constant USER_MATCH_FAILED   => 0;
 use constant USER_MATCH_SUCCESS  => 1;
 
 use constant MATCH_SKIP_CONFIRM  => 1;
+
+use constant GET_PRODUCTS_BY_ID => 1;
 
 ################################################################################
 # Functions
@@ -440,6 +443,27 @@ sub get_selectable_products {
     my %list = @products;
     return \%list if $by_id;
     return values(%list);
+}
+
+sub get_selectable_classifications ($) {
+    my ($self) = @_;
+
+    if (defined $self->{selectable_classifications}) {
+        return $self->{selectable_classifications};
+    }
+ 
+    my $products = $self->get_selectable_products(GET_PRODUCTS_BY_ID);
+    
+    my $selectable_classifications;
+   
+    foreach my $prod_id (keys %$products) {
+        my $product = new Bugzilla::Product($prod_id);
+        
+        $selectable_classifications->{$product->classification_id} =
+            $product->classification;
+    }
+    $self->{selectable_classifications} = 
+        [values %$selectable_classifications];
 }
 
 # visible_groups_inherited returns a reference to a list of all the groups
@@ -1270,6 +1294,9 @@ Bugzilla::User - Object for a Bugzilla user
 
   my $user = new Bugzilla::User($id);
 
+  my @get_selectable_classifications = 
+      $user->get_selectable_classifications;
+
   # Class Functions
   $password = insert_new_user($username, $realname, $password, $disabledtext);
 
@@ -1458,6 +1485,16 @@ Returns an alphabetical list of product names from which
 the user can select bugs.  If the $by_id parameter is true, it returns
 a hash where the keys are the product ids and the values are the
 product names.
+
+=item C<get_selectable_classifications>
+
+ Description: Returns the classifications that a user, according his
+              groups ownership, can select to entering, serch, view or
+              edit a bug.
+
+ Params:      none.
+
+ Returns:     Bugzilla::Classification objects values.
 
 =item C<get_userlist>
 
