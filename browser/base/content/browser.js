@@ -1755,20 +1755,48 @@ function getShortcutOrURI(aURL, aPostDataRef)
         var text = aURL.substr(aOffset+1);
         shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
         if (shortcutURL && text) {
+          var encodedText = null; 
+          var charset = "";
+          const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/; 
+          var matches = shortcutURL.match(re);
+          if (matches) {
+             shortcutURL = matches[1];
+             charset = matches[2];
+          }
+          else if (/%s/.test(shortcutURL) || 
+                   (aPostDataRef && /%s/.test(aPostDataRef.value))) {
+            try {
+              charset = BMSVC.getLastCharset(shortcutURL);
+            } catch (ex) {
+            }
+          }
+
+          if (charset)
+            encodedText = escape(convertFromUnicode(charset, text)); 
+          else  // default case: charset=UTF-8
+            encodedText = encodeURIComponent(text);
+
           if (aPostDataRef && aPostDataRef.value) {
             // XXXben - currently we only support "application/x-www-form-urlencoded"
             //          enctypes.
             aPostDataRef.value = unescape(aPostDataRef.value);
-            if (aPostDataRef.value.match(/%s/))
-              aPostDataRef.value = getPostDataStream(aPostDataRef.value, text,
+            if (aPostDataRef.value.match(/%[sS]/)) {
+              aPostDataRef.value = getPostDataStream(aPostDataRef.value,
+                                                     text, encodedText,
                                                      "application/x-www-form-urlencoded");
+            }
             else {
               shortcutURL = null;
               aPostDataRef.value = null;
             }
           }
-          else
-            shortcutURL = shortcutURL.match(/%s/) ? shortcutURL.replace(/%s/g, encodeURIComponent(text)) : null;
+          else {
+            if (/%[sS]/.test(shortcutURL))
+              shortcutURL = shortcutURL.replace(/%s/g, encodedText)
+                                       .replace(/%S/g, text);
+            else 
+              shortcutURL = null;
+          }
         }
       }
     }
@@ -1796,11 +1824,11 @@ function normalizePostData(aStringData)
   return result;
 }
 #endif
-function getPostDataStream(aStringData, aKeyword, aType)
+function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
 {
   var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
                             .createInstance(Components.interfaces.nsIStringInputStream);
-  aStringData = aStringData.replace(/%s/g, encodeURIComponent(aKeyword));
+  aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
   dataStream.setData(aStringData, aStringData.length);
 
   var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
@@ -5900,4 +5928,17 @@ missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
   }
 }
 var gMissingPluginInstaller = new missingPluginInstaller();
-
+ 
+function convertFromUnicode(charset, str)
+{
+  try {
+    var unicodeConverter = Components
+       .classes["@mozilla.org/intl/scriptableunicodeconverter"]
+       .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+    unicodeConverter.charset = charset;
+    str = unicodeConverter.ConvertFromUnicode(str);
+    return str + unicodeConverter.Finish();
+  } catch(ex) {
+    return null; 
+  }
+}

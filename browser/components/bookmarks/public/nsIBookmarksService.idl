@@ -103,6 +103,8 @@ interface nsIBookmarksService : nsISupports
     void removeBookmarkIcon(in string aURL);
 
     void updateLastVisitedDate(in string aURL, in wstring docCharset);
+
+    AString getLastCharset(in AUTF8String aURL); 
     
     string resolveKeyword(in wstring aName, out wstring aPostData);
 
