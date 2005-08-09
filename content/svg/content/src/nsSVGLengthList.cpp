@@ -245,7 +245,7 @@ nsSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
   // if (!newItem)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me");
+  NS_NOTYETIMPLEMENTED("nsSVGLengthList::InsertItemBefore");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -259,7 +259,7 @@ nsSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
   // if (!newItem)
   //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGLengthList::ReplaceItem");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

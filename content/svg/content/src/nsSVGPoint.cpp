@@ -151,13 +151,13 @@ NS_IMETHODIMP nsSVGPoint::MatrixTransform(nsIDOMSVGMatrix *matrix,
 NS_IMETHODIMP
 nsSVGPoint::SetValueString(const nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGPoint::SetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsSVGPoint::GetValueString(nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGPoint::GetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

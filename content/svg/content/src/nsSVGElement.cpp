@@ -433,7 +433,7 @@ nsSVGElement::sColorMap[] = {
 NS_IMETHODIMP
 nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGElement::IsSupported");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

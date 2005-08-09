@@ -264,22 +264,22 @@ NS_IMETHODIMP nsSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 /* nsIDOMSVGMatrix rotateFromVector (in float x, in float y); */
 NS_IMETHODIMP nsSVGMatrix::RotateFromVector(float x, float y, nsIDOMSVGMatrix **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::RotateFromVector");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix flipX (); */
 NS_IMETHODIMP nsSVGMatrix::FlipX(nsIDOMSVGMatrix **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::FlipX");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix flipY (); */
 NS_IMETHODIMP nsSVGMatrix::FlipY(nsIDOMSVGMatrix **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::FlipY");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGMatrix skewX (in float angle); */
@@ -310,13 +310,13 @@ NS_IMETHODIMP nsSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
 NS_IMETHODIMP
 nsSVGMatrix::SetValueString(const nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::SetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsSVGMatrix::GetValueString(nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGMatrix::GetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

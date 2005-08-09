@@ -133,8 +133,8 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGTransform::SetValueString(const nsAString& aValue)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  NS_NOTYETIMPLEMENTED("nsSVGTransform::SetValueString");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
