@@ -104,14 +104,6 @@ struct JSContext;
 
 #define MAPI_STARTUP_ARG       "/MAPIStartUp"
 
-#ifndef LWA_ALPHA
-#define LWA_ALPHA 2
-#endif
-
-#ifndef WS_EX_LAYERED
-#define WS_EX_LAYERED 0x80000
-#endif
-
 static HWND hwndForDOMWindow( nsISupports * );
 
 static
@@ -164,8 +156,6 @@ activateWindow( nsIDOMWindowInternal *win ) {
 #define MOZ_DEBUG_DDE 1
 #endif
 
-typedef BOOL (WINAPI *MOZ_SetLayeredWindowAttributesProc)(HWND, COLORREF, BYTE, DWORD);
-
 class nsSplashScreenWin : public nsISplashScreen {
 public:
     nsSplashScreenWin();
@@ -214,15 +204,10 @@ public:
 
     static BOOL CALLBACK DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp );
     static DWORD WINAPI ThreadProc( LPVOID );
-    static VOID CALLBACK TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
     HWND mDlg;
     HBITMAP mBitmap;
     nsrefcnt mRefCnt;
-
-    static int mOpacity;
-    static MOZ_SetLayeredWindowAttributesProc mSetLayeredWindowAttributesProc;
-
 }; // class nsSplashScreenWin
 
 // Simple Win32 mutex wrapper.
@@ -440,7 +425,6 @@ nsSplashScreenWin::~nsSplashScreenWin() {
 #if MOZ_DEBUG_DDE
     printf( "splash screen dtor called\n" );
 #endif
-    KillTimer(mDlg, 0);
     // Make sure dialog is gone.
     Hide();
 }
@@ -517,20 +501,6 @@ nsSplashScreenWin::LoadBitmap() {
     }
 }
 
-int nsSplashScreenWin::mOpacity = 55;
-MOZ_SetLayeredWindowAttributesProc nsSplashScreenWin::mSetLayeredWindowAttributesProc = 0;
-
-VOID CALLBACK
-nsSplashScreenWin::TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
-    mOpacity += 20;
-    if (mOpacity >= 255) { // >= because we still want to kill the timer for 255
-        mOpacity = 255;
-        KillTimer(hwnd, 0);
-    }
-    // no need to null check - this code can't be reached if SetLayeredWindowAttributes isn't available
-    mSetLayeredWindowAttributesProc(hwnd, 0, mOpacity, LWA_ALPHA);
-}
-
 BOOL CALLBACK
 nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
     if ( msg == WM_INITDIALOG ) {
@@ -538,16 +508,6 @@ nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
         nsSplashScreenWin *splashScreen = (nsSplashScreenWin*)lp;
         if ( lp ) {
             splashScreen->SetDialog( dlg );
-
-            HMODULE user32lib = GetModuleHandle("user32.dll");
-            mSetLayeredWindowAttributesProc = (MOZ_SetLayeredWindowAttributesProc) GetProcAddress(user32lib, "SetLayeredWindowAttributes");
-            if (mSetLayeredWindowAttributesProc) {
-                SetWindowLongPtr(dlg, GWL_EXSTYLE,
-                                 GetWindowLongPtr(dlg, GWL_EXSTYLE) | WS_EX_LAYERED);
-                mSetLayeredWindowAttributesProc(dlg, 0,
-                                                  mOpacity, LWA_ALPHA);
-                SetTimer(dlg, 0, 10, TimerProc);
-            }
 
             // Try to load customized bitmap.
             splashScreen->LoadBitmap();
