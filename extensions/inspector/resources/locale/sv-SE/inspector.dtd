@@ -1,0 +1,63 @@
+
+<!ENTITY Inspector.title "DOM Inspector">
+
+<!ENTITY thDOMNodes.label "DOM-noder">
+<!ENTITY btnInspect.label "Inspektera">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Hitta en nod att inspektera genom att klicka på den">
+<!ENTITY btnFind.tooltip "Hitta en nod att inspektera genom dess id, tagg eller attribut">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Arkiv">
+<!ENTITY mnWindows.label "Inspektera ett fönster">
+<!ENTITY mnWindows.accesskey "f">
+<!ENTITY mnFile.accesskey "A">
+<!ENTITY cmdShowOpenURLDialog.label "Inspektera en URL...">
+<!ENTITY cmdShowOpenURLDialog.accesskey "u">
+<!ENTITY cmdClose.label "Stäng">
+<!ENTITY cmdClose.accesskey "ä">
+<!ENTITY cmdExit.label "Avsluta">
+<!ENTITY cmdExit.accesskey "A">
+
+<!ENTITY mnEdit.label "Redigera">
+<!ENTITY mnEdit.accesskey "R">
+<!ENTITY cmdUndo.label "Ångra">
+<!ENTITY cmdUndo.accesskey "Å">
+<!ENTITY cmdRedo.label "Gör om">
+<!ENTITY cmdRedo.accesskey "G">
+<!ENTITY cmdCut.label "Klipp ut">
+<!ENTITY cmdCut.accesskey "K">
+<!ENTITY cmdCopy.label "Kopiera">
+<!ENTITY cmdCopy.accesskey "o">
+<!ENTITY cmdPaste.label "Klistra in">
+<!ENTITY cmdPaste.accesskey "l">
+<!ENTITY cmdDelete.label "Ta bort">
+<!ENTITY cmdDelete.accesskey "T">
+
+<!ENTITY mnSearch.label "Sök">
+<!ENTITY mnSearch.accesskey "s">
+<!ENTITY mnSearchPlugins.label "Tillägg">
+<!ENTITY mnSearchPlugins.accesskey "T">
+<!ENTITY cmdRunSearch.label "Kör...">
+<!ENTITY cmdRunSearch.accesskey "K">
+
+<!ENTITY mnView.label "Visa">
+<!ENTITY mnView.accesskey "v">
+<!ENTITY cmdToggleBrowser.label "Webbläsare">
+<!ENTITY cmdToggleSearch.label "Sökresultat">
+
+<!ENTITY cmdViewSearchItem.label "Visa...">
+<!ENTITY cmdEditSearchItem.label "Redigera...">
+<!ENTITY cmdCopySearchItemLine.label "Kopiera rad">
+<!ENTITY cmdCopySearchItemAll.label "Kopiera alla">
+<!ENTITY cmdSaveSearchItemText.label "Spara...">
+<!ENTITY cmdClearSearch.label "Rensa">
+<!ENTITY cmdHideSearchItems.label "Dölj">
+
+<!ENTITY browserPanel.label "Webbläsare">
+
+<!ENTITY inspectNewWindow.label "Inspektera i ett nytt fönster">
+
+<!ENTITY closeCmd.key "W">

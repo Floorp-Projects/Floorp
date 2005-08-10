@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspector">
+<!ENTITY Sidebar.label "Sidofält">
+<!ENTITY elementBlinking.label "Elementblinkning">
+<!ENTITY blinkSelectedElement.label "Blinka det valda elementet">
+<!ENTITY borderColor.label "Ramfärg">
+<!ENTITY borderWidth.label "Rambredd">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Blinktid">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Blinkhastighet">
+<!ENTITY invertColors.label "Invertera färger">
+<!ENTITY installHowTo.label "DOM Inspectors Sidofält är inte installerat.  Klicka på knappen 'Installera' för att lägga till den i ditt Sidofält.">
+<!ENTITY install.label "Installera">
+<!ENTITY addNavigatorHooks.label "Lägg till snabbmenyer till Navigator">

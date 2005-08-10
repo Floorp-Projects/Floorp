@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Znajdź pliki...">
+<!ENTITY txSearchFor.label "Szukaj:">
+<!ENTITY txSearchPath.label "Szukaj w:">
+<!ENTITY cbRecurse.label "Kontynuuj wyszukiwanie w podfolderach">

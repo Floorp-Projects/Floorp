@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Hitta bilder i nuvarande tema som inte används...">
+<!ENTITY junkImgsDescription "Om sökningen ska fungera måste du inspektera ett dokument som laddar VARJE CSS-fil i det aktuella temat.  Peka sedan mot den plats på disken som innehåller rotelementet till temat.">

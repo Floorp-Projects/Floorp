@@ -1,0 +1,62 @@
+<!ENTITY Inspector.title "Inspektor DOM">
+
+<!ENTITY thDOMNodes.label "Węzły DOM">
+<!ENTITY btnInspect.label "Zbadaj">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Obiekt">
+<!ENTITY btnSelecting.tooltip "Wybierz węzeł do zbadania poprzez kliknięcie na nim">
+<!ENTITY btnFind.tooltip "Znajdź węzeł do zbadania poprzez jego id, tag, lub atrybut">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Plik">
+<!ENTITY mnWindows.label "Zbadaj okno">
+<!ENTITY mnWindows.accesskey "o">
+<!ENTITY mnFile.accesskey "P">
+  <!ENTITY cmdShowOpenURLDialog.label "Zbadaj URL...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Zamknij">
+  <!ENTITY cmdClose.accesskey "Z">
+  <!ENTITY cmdExit.label "Zakończ">
+  <!ENTITY cmdExit.accesskey "k">
+
+<!ENTITY mnEdit.label "Edycja">
+<!ENTITY mnEdit.accesskey "E">
+  <!ENTITY cmdUndo.label "Cofnij">
+  <!ENTITY cmdUndo.accesskey "C">
+  <!ENTITY cmdRedo.label "Przywróć">
+  <!ENTITY cmdRedo.accesskey "r">
+  <!ENTITY cmdCut.label "Wytnij">
+  <!ENTITY cmdCut.accesskey "t">
+  <!ENTITY cmdCopy.label "Kopiuj">
+  <!ENTITY cmdCopy.accesskey "K">
+  <!ENTITY cmdPaste.label "Wklej">
+  <!ENTITY cmdPaste.accesskey "e">
+  <!ENTITY cmdDelete.label "Usuń">
+  <!ENTITY cmdDelete.accesskey "U">
+
+<!ENTITY mnSearch.label "Szukaj">
+<!ENTITY mnSearch.accesskey "S">
+  <!ENTITY mnSearchPlugins.label "Rozszerzenia">
+  <!ENTITY mnSearchPlugins.accesskey "R">
+    <!ENTITY cmdRunSearch.label "Uruchom...">
+    <!ENTITY cmdRunSearch.accesskey "U">
+
+<!ENTITY mnView.label "Widok">
+<!ENTITY mnView.accesskey "W">
+  <!ENTITY cmdToggleBrowser.label "Przeglądarka">
+  <!ENTITY cmdToggleSearch.label "Wyniki wyszukiwania">
+
+<!ENTITY cmdViewSearchItem.label "Widok...">
+<!ENTITY cmdEditSearchItem.label "Edycja...">
+<!ENTITY cmdCopySearchItemLine.label "Kopiuj linię">
+<!ENTITY cmdCopySearchItemAll.label "Kopiuj wszystko">
+<!ENTITY cmdSaveSearchItemText.label "Zapisz...">
+<!ENTITY cmdClearSearch.label "Wyczyść">
+<!ENTITY cmdHideSearchItems.label "Ukryj">
+
+<!ENTITY browserPanel.label "Przeglądarka">
+
+<!ENTITY inspectNewWindow.label "Zbadaj w nowym oknie">
+
+<!ENTITY closeCmd.key "W">
