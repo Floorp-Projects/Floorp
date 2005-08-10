@@ -207,8 +207,7 @@
 
             <separator/>
 
-            <html:a id="downloadDictionaries" 
-                    style="display: block; color: blue; text-decoration: underline; margin-left: 5px;">&downloadDictionaries.label;</html:a>
+            <label class="text-link" id="downloadDictionaries" value="&downloadDictionaries.label;"/>
 
          </tabpanel>
        </tabpanels>
