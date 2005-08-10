@@ -166,7 +166,7 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
         if (mimeService) {
           nsCOMPtr<nsIMIMEInfo> mimeInfo;
           mimeService->GetFromTypeAndExtension(aType, EmptyCString(),
-                                              getter_AddRefs(mimeInfo));
+                                               getter_AddRefs(mimeInfo));
           if (mimeInfo) {
             PRBool hasDefaultHandler;
             mimeInfo->GetHasDefaultHandler(&hasDefaultHandler);
