@@ -91,6 +91,9 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemSetElement,
 NS_IMETHODIMP
 nsXFormsItemSetElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
+  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |

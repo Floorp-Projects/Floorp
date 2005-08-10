@@ -43,6 +43,8 @@
 #include "nsMemory.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsAtoms.h"
+#include "nsIXTFXMLVisualWrapper.h"
+#include "nsIXTFBindableElementWrapper.h"
 
 static const nsIID sScriptingIIDs[] = {
   NS_IDOMELEMENT_IID,
@@ -377,7 +379,8 @@ nsXFormsXMLVisualStub::DidLayout()
 NS_IMETHODIMP
 nsXFormsXMLVisualStub::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  return NS_OK;
+  NS_ENSURE_ARG(aWrapper);
+  return aWrapper->SetClassAttributeName(nsXFormsAtoms::clazz);
 }
 
 NS_IMETHODIMP
@@ -534,7 +537,8 @@ nsXFormsBindableStub::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 NS_IMETHODIMP
 nsXFormsBindableStub::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
-  return NS_OK;
+  NS_ENSURE_ARG(aWrapper);
+  return aWrapper->SetClassAttributeName(nsXFormsAtoms::clazz);
 }
 
 NS_IMETHODIMP

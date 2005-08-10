@@ -198,9 +198,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
 NS_IMETHODIMP
 nsXFormsMessageElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
+  nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
                                 nsIXTFElement::NOTIFY_PARENT_CHANGED);
-  nsresult rv;
 
   nsCOMPtr<nsIDOMElement> node;
   rv = aWrapper->GetElementNode(getter_AddRefs(node));

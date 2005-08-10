@@ -82,6 +82,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsCaseElement,
 NS_IMETHODIMP
 nsXFormsCaseElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
+  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);

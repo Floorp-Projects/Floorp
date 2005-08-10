@@ -68,7 +68,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
 NS_IMETHODIMP
 nsXFormsActionElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  nsresult rv;
+  nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = aWrapper->GetElementNode(getter_AddRefs(mElement));
   NS_ENSURE_SUCCESS(rv, rv);
   

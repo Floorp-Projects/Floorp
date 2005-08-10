@@ -677,8 +677,9 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,
                              nsIXFormsControlBase)
 
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsBindableControlStub,
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsBindableControlStub,
                              nsXFormsBindableStub,
                              nsIXFormsContextControl,
-                             nsIXFormsControl)
+                             nsIXFormsControl,
+                             nsIXFormsControlBase)
 

@@ -246,9 +246,8 @@ public:
   /** This sets the notification mask and initializes mElement */
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   {
-    NS_ENSURE_ARG(aWrapper);
-    aWrapper->SetClassAttributeName(nsXFormsAtoms::clazz);
-    return nsXFormsControlStubBase::Create(aWrapper);
+    nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
+    return NS_SUCCEEDED(rv) ? nsXFormsControlStubBase::Create(aWrapper) : rv;
   }
 
   // nsIXTFElement overrides
@@ -314,9 +313,8 @@ public:
   /** This sets the notification mask and initializes mElement */
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper)
   {
-    NS_ENSURE_ARG(aWrapper);
-    aWrapper->SetClassAttributeName(nsXFormsAtoms::clazz);
-    return nsXFormsControlStubBase::Create(aWrapper);
+    nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+    return NS_SUCCEEDED(rv) ? nsXFormsControlStubBase::Create(aWrapper) : rv;
   }
 
   // nsIXTFElement overrides
