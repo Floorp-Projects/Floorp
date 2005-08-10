@@ -169,6 +169,8 @@ nsAbLDAPAttributeMap.prototype = {
       // go through the list of possible attrs in precedence order
       for each (var attr in this.mPropertyMap[prop]) {
 
+        attr = attr.toLowerCase();
+
         // find the first attr that exists in this message
         if (msgAttrs.indexOf(attr) != -1) {
           
