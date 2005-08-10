@@ -1,0 +1,4 @@
+overlay	chrome://browser/content/browser.xul	chrome://cckwizard/content/cckwizard-browser-overlay.xul
+content cckwizard jar:chrome/cckwizard.jar!/content/cckwizard/
+#content cckwizard chrome/cckwizard/content/cckwizard/
+

@@ -1,0 +1,2 @@
+overlay	chrome://browser/content/browser.xul	chrome://cck/content/cck-browser-overlay.xul
+content	cck	jar:chrome/cck.jar!/content/cck/
