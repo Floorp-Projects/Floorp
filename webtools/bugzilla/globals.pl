@@ -688,19 +688,6 @@ sub get_classification_id {
     return $classification_id;
 }
 
-sub get_classification_name {
-    my ($classification_id) = @_;
-    die "non-numeric classification_id '$classification_id' passed to get_classification_name"
-      unless ($classification_id =~ /^\d+$/);
-    PushGlobalSQLState();
-    SendSQL("SELECT name FROM classifications WHERE id = $classification_id");
-    my ($classification) = FetchSQLData();
-    PopGlobalSQLState();
-    return $classification;
-}
-
-
-
 sub get_product_id {
     my ($prod) = @_;
     PushGlobalSQLState();
