@@ -116,25 +116,15 @@ nsXULTextAccessible(aDomNode, aShell)
 
 NS_IMETHODIMP nsXULLinkAccessible::GetValue(nsAString& aValue)
 {
-  if (IsALink()) {
-    return mLinkContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+  if (mIsLink) {
+    return mActionContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsXULLinkAccessible::GetState(PRUint32 *aState)
-{
-  // must set focusable state manually because parent class logic can't detect it without ILink
-  nsresult rv = nsLinkableAccessible::GetState(aState);
-  if (NS_SUCCEEDED(rv) && IsALink()) {
-    *aState |= STATE_FOCUSABLE;
-  }
-  return rv;
-}
-
 NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
 {
-  if (IsALink()) {
+  if (mIsLink) {
     *aRole = ROLE_LINK;
   } else {
     // default to calling the link a button; might have javascript
@@ -144,28 +134,22 @@ NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-PRBool nsXULLinkAccessible::IsALink()
+void nsXULLinkAccessible::CacheActionContent()
 {
-  // use the cached answer if it exists
-  if (mIsALinkCached) {
-    return mLinkContent ? PR_TRUE : PR_FALSE;
-  }
-  // indicate the test result is cached
-  mIsALinkCached = PR_TRUE;
-
   // not a link if no content
   nsCOMPtr<nsIContent> mTempContent = do_QueryInterface(mDOMNode);
   if (!mTempContent) {
-    return PR_FALSE;
+    return;
   }
 
   // not a link if there is no href attribute or not on a <link> tag
-  if (!mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::href) &&
-      mTempContent->Tag() != nsAccessibilityAtoms::link) {
-    return PR_FALSE;
+  if (mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::href) ||
+      mTempContent->Tag() == nsAccessibilityAtoms::link) {
+    mIsLink = PR_TRUE;
+    mActionContent = mTempContent;
   }
-  // it's a link, but can't detect traversed yet (no ILink interface)
-  mLinkContent = mTempContent;
-  mIsLinkVisited = PR_FALSE;
-  return PR_TRUE;
+  else if (mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+    mIsOnclick = PR_TRUE;
+    mActionContent = mTempContent;
+  }
 }

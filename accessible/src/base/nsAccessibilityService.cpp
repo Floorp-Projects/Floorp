@@ -507,6 +507,9 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
   else if (tag == nsAccessibilityAtoms::a) {
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell, NS_STATIC_CAST(nsIFrame*, aFrame));
   }
+  else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+    *aAccessible = new nsLinkableAccessible(aNode, aWeakShell);
+  }
   else if (tag == nsAccessibilityAtoms::li) {
     // Normally this is created by the list item frame which knows about the bullet frame
     // However, in this case the list item must have been styled using display: foo
@@ -529,7 +532,6 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
            tag == nsAccessibilityAtoms::tbody ||
            tag == nsAccessibilityAtoms::tfoot ||
            tag == nsAccessibilityAtoms::thead ||
-           content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick) ||
 #else
   else if (
 #endif

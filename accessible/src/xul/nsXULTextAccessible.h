@@ -69,12 +69,11 @@ class nsXULLinkAccessible : public nsXULTextAccessible
 
 public:
   nsXULLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetValue(nsAString& _retval);
 
 protected:
-  PRBool IsALink();
+  void CacheActionContent();
 };
 
 #endif  

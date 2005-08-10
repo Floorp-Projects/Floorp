@@ -154,18 +154,20 @@ NS_IMETHODIMP nsLeafAccessible::GetChildCount(PRInt32 *_retval)
 
 nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
   nsAccessibleWrap(aNode, aShell),
-  mLinkContent(nsnull),
-  mIsALinkCached(PR_FALSE),
-  mIsLinkVisited(PR_FALSE)
-{ 
+  mActionContent(nsnull),
+  mIsLink(PR_FALSE),
+  mIsLinkVisited(PR_FALSE),
+  mIsOnclick(PR_FALSE)
+{
+  CacheActionContent();
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
 
 NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
-  if (IsALink()) {
-    mLinkContent->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
+  if (mActionContent && mActionContent->IsFocusable()) {
+    mActionContent->SetFocus(nsCOMPtr<nsPresContext>(GetPresContext()));
   }
   
   return NS_OK;
@@ -175,13 +177,10 @@ NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
 {
   nsAccessible::GetState(aState);
-  if (IsALink()) {
+  if (mIsLink) {
     *aState |= STATE_LINKED;
     if (mIsLinkVisited)
       *aState |= STATE_TRAVERSED;
-  }
-  
-  if (IsALink()) {
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
     GetRole(&role);
@@ -194,9 +193,9 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
         *aState |= orState;
       }
     }
-    if (!mLinkContent->IsFocusable()) {
-      *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
-    }
+  }
+  if (mActionContent && !mActionContent->IsFocusable()) {
+    *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
   }
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
@@ -213,8 +212,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
 
 NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& _retval)
 {
-  if (IsALink()) {
-    nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
+  if (mIsLink) {
+    nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mActionContent));
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (linkNode && presShell)
       return presShell->GetLinkLocation(linkNode, _retval);
@@ -224,20 +223,23 @@ NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& _retval)
 
 
 /* PRUint8 getAccNumActions (); */
-NS_IMETHODIMP nsLinkableAccessible::GetNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsLinkableAccessible::GetNumActions(PRUint8 *aNumActions)
 {
-  *_retval = eSingle_Action;
+  *aNumActions = mActionContent ? 1 : 0;
   return NS_OK;
 }
 
 /* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsLinkableAccessible::GetActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetActionName(PRUint8 index, nsAString& aActionName)
 {
   // Action 0 (default action): Jump to link
+  aActionName.Truncate();
   if (index == eAction_Jump) {   
-    if (IsALink()) {
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("jump"), _retval); 
-      return NS_OK;
+    if (mIsLink) {
+      return nsAccessible::GetTranslatedString(NS_LITERAL_STRING("jump"), aActionName); 
+    }
+    else if (mIsOnclick) {
+      return nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), aActionName); 
     }
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -249,15 +251,15 @@ NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
 {
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {
-    if (IsALink()) {
+    if (mActionContent) {
       nsCOMPtr<nsPresContext> presContext(GetPresContext());
       if (presContext) {
-        nsMouseEvent linkClickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
-                                    nsMouseEvent::eReal);
+        nsMouseEvent clickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
+                                nsMouseEvent::eReal);
 
         nsEventStatus eventStatus = nsEventStatus_eIgnore;
-        mLinkContent->HandleDOMEvent(presContext, 
-                                     &linkClickEvent, 
+        mActionContent->HandleDOMEvent(presContext, 
+                                     &clickEvent, 
                                      nsnull, 
                                      NS_EVENT_FLAG_INIT, 
                                      &eventStatus);
@@ -268,31 +270,27 @@ NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsLinkableAccessible::GetKeyboardShortcut(nsAString& _retval)
+NS_IMETHODIMP nsLinkableAccessible::GetKeyboardShortcut(nsAString& aKeyboardShortcut)
 {
-  if (IsALink()) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
-    if (linkNode && mDOMNode != linkNode) {
-      nsCOMPtr<nsIAccessible> linkAccessible;
+  if (mActionContent) {
+    nsCOMPtr<nsIDOMNode> actionNode(do_QueryInterface(mActionContent));
+    if (actionNode && mDOMNode != actionNode) {
+      nsCOMPtr<nsIAccessible> accessible;
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
-      rv = accService->GetAccessibleInWeakShell(linkNode, mWeakShell,
-                                                getter_AddRefs(linkAccessible));
-      if (NS_SUCCEEDED(rv) && linkAccessible)
-        return linkAccessible->GetKeyboardShortcut(_retval);
-      else
-        return rv;
+      accService->GetAccessibleInWeakShell(actionNode, mWeakShell,
+                                           getter_AddRefs(accessible));
+      if (accessible) {
+        accessible->GetKeyboardShortcut(aKeyboardShortcut);
+      }
+      return NS_OK;
     }
   }
-  return nsAccessible::GetKeyboardShortcut(_retval);;
+  return nsAccessible::GetKeyboardShortcut(aKeyboardShortcut);
 }
 
-PRBool nsLinkableAccessible::IsALink()
+void nsLinkableAccessible::CacheActionContent()
 {
-  if (mIsALinkCached)  // Cached answer?
-    return mLinkContent? PR_TRUE: PR_FALSE;
-
   for (nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
@@ -306,23 +304,24 @@ PRBool nsLinkableAccessible::IsALink()
       nsCOMPtr<nsIURI> uri;
       link->GetHrefURI(getter_AddRefs(uri));
       if (uri) {
-        mLinkContent = walkUpContent;
-        mIsALinkCached = PR_TRUE;
+        mActionContent = walkUpContent;
         nsLinkState linkState;
         link->GetLinkState(linkState);
         if (linkState == eLinkState_Visited)
           mIsLinkVisited = PR_TRUE;
-        return PR_TRUE;
       }
     }
+    if (walkUpContent->HasAttr(kNameSpaceID_None,
+                            nsAccessibilityAtoms::onclick)) {
+      mActionContent = walkUpContent;
+      mIsOnclick = PR_TRUE;
+    }
   }
-  mIsALinkCached = PR_TRUE;  // Cached that there is no link
-  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsLinkableAccessible::Shutdown()
 {
-  mLinkContent = nsnull;
+  mActionContent = nsnull;
   return nsAccessibleWrap::Shutdown();
 }
 
