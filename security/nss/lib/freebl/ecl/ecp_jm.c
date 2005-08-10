@@ -283,7 +283,7 @@ ec_GFp_pt_mul_jm_wNAF(const mp_int *n, const mp_int *px, const mp_int *py,
 	orderBitSize = mpl_significant_bits(&group->order);
 
 	/* Allocate memory for NAF */
-	naf = (signed char *) malloc(sizeof(signed char) * orderBitSize);
+	naf = (signed char *) malloc(sizeof(signed char) * (orderBitSize + 1));
 	if (naf == NULL) {
 		res = MP_MEM;
 		goto CLEANUP;
