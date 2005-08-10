@@ -1914,6 +1914,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
   // to if it fails the getposition call, make it yourself also only
   // look at primary list
   nsIFrame *closestFrame = nsnull;
+  nsIView *view = GetClosestView();
   nsIFrame *kid = GetFirstChild(nsnull);
 
   if (kid) {
@@ -2025,14 +2026,10 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
       // them to be relative to the closest view.
 
       nsPoint newPoint     = aPoint;
-      nsPoint tmp;
-      nsIView *baseView;
-      GetOffsetFromView(tmp, &baseView);
-      nsIView *closestView;
-      closestFrame->GetOffsetFromView(tmp, &closestView);
+      nsIView *closestView = closestFrame->GetClosestView();
 
-      if (closestView && baseView != closestView)
-        newPoint -= closestView->GetOffsetTo(baseView);
+      if (closestView && view != closestView)
+        newPoint -= closestView->GetOffsetTo(view);
 
       // printf("      0x%.8x   0x%.8x  %4d  %4d\n",
       //        closestFrame, closestView, closestXDistance, closestYDistance);
@@ -2046,7 +2043,6 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
     return NS_ERROR_NULL_POINTER;
 
   nsPoint offsetPoint;
-  nsIView* view;
   GetOffsetFromView(offsetPoint, &view);
   nsRect thisRect = GetRect();
   thisRect.x = offsetPoint.x;
