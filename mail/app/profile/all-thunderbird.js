@@ -220,17 +220,11 @@ pref("network.cookie.cookieBehavior", 3); // 0-Accept, 1-dontAcceptForeign, 2-do
 // End seamonkey suite mailnews.js pref overrides
 ///////////////////////////////////////////////////////////////// 
 
-#ifdef HAVE_SHELL_SERVICE
-// whether to check if we're the default mail client on startup
+// whether to check if we are the default mail, news or feed client
+// on startup. 
 pref("mail.checkDefaultMail", true);
-// whether to check if we're the default news client on startup
 pref("mail.checkDefaultNews", false);
-#ifdef XP_MACOSX
-// whether to check if we're the the default RSS/Atom client on startup
-// (Mac only)
 pref("mail.checkDefaultFeed", false);
-#endif
-#endif
 
 /////////////////////////////////////////////////////////////////
 // Overrides for generic app behavior from the seamonkey suite's all.js
