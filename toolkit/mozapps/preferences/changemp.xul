@@ -41,7 +41,7 @@
 
   <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
-  <description>&masterPasswordDescription.label;</description>
+  <description control="pw1">&masterPasswordDescription.label;</description>
 
   <groupbox>
     <grid>
@@ -51,7 +51,7 @@
       </columns>
       <rows>
         <row>
-          <label value="&setPassword.oldPassword.label;"/> 
+          <label control="oldpw" value="&setPassword.oldPassword.label;"/> 
           <textbox id="oldpw" type="password"/>
           <!-- This textbox is inserted as a workaround to the fact that making the 'type' 
                 & 'disabled' property of the 'oldpw' textbox toggle between ['password' & 
@@ -63,12 +63,12 @@
           <textbox id="message" disabled="true" />
         </row>
         <row>
-          <label value="&setPassword.newPassword.label;"/> 
+          <label control="pw1" value="&setPassword.newPassword.label;"/> 
           <textbox id="pw1" type="password" 
                    oninput="setPasswordStrength(); checkPasswords();"/> 
         </row>
         <row>
-          <label value="&setPassword.reenterPassword.label;"/> 
+          <label control="pw2" value="&setPassword.reenterPassword.label;"/> 
           <textbox id="pw2" type="password" oninput="checkPasswords();"/>  
         </row>
       </rows>
@@ -80,6 +80,6 @@
     <progressmeter id="pwmeter" mode="determined" value="0"/>
   </groupbox>
 
-  <description class="header">&masterPasswordWarning.label;</description>
+  <description control="pw2" class="header">&masterPasswordWarning.label;</description>
 
 </dialog>

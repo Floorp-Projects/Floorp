@@ -62,9 +62,9 @@
   </keyset>
   
   <vbox class="contentPane" flex="1">
-    <description id="permissionsText"/>
+    <description id="permissionsText" control="url"/>
     <separator class="thin"/>
-    <label value="&address.label;"/>
+    <label control="url" value="&address.label;"/>
     <hbox align="start">
       <textbox id="url" flex="1" 
                oninput="gPermissionManager.onHostInput(event.target);"

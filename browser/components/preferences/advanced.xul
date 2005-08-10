@@ -47,7 +47,10 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
-            helpURI="chrome://browser/locale/help/help.rdf">
+            helpURI="chrome://browser/locale/help/help.rdf"
+            xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+            xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+            xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
     <preferences>
       <preference id="browser.preferences.advanced.selectedTabIndex"
@@ -128,7 +131,7 @@
           <groupbox>
             <caption label="&languages.caption;"/>
             <hbox align="center">
-              <description flex="1">&languagesInfo.label;</description>
+              <description flex="1" control="showLanguages">&languagesInfo.label;</description>
               <button label="&showLanguages.label;"
                       accesskey="&showLanguages.accesskey;"
                       oncommand="gAdvancedPane.showLanguages();"/>
@@ -136,8 +139,8 @@
           </groupbox>
         </tabpanel>
         <tabpanel orient="vertical" align="start">
-          <label>&autoCheck.label;</label>
-          <vbox class="indent">
+          <label control="autoUpdateGroup">&autoCheck.label;</label>
+          <vbox class="indent" id="autoUpdateGroup" xhtml2:role="wairole:groupbox">
             <hbox>
               <checkbox id="enableAppUpdate"
                         label="&enableAppUpdate.label;"
@@ -160,7 +163,7 @@
             </hbox>
           </vbox>
           <separator/>
-          <label id="updateModeLabel">&whenUpdatesFound.label;</label>
+          <label id="updateModeLabel" control="updateMode">&whenUpdatesFound.label;</label>
           <radiogroup id="updateMode" class="indent"
                       preference="app.update.auto">
             <radio id="ask" value="false"
@@ -219,7 +222,7 @@
           </groupbox>
           <groupbox>
             <caption label="&certificates.label;"/>
-            <description>&certselect.description;</description>
+            <description control="certselection">&certselect.description;</description>
             <radiogroup id="certSelection" orient="horizontal" preftype="string" 
 	                      preference="security.default_personal_cert">
               <radio label="&certselect.auto;" accesskey="&certselect.auto.accesskey;" 
@@ -230,7 +233,7 @@
             
             <separator/>
             
-            <description>
+            <hbox>
               <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
                       oncommand="gAdvancedPane.showCertificates();"
                       preference="security.disable_button.openCertManager"/>
@@ -242,7 +245,7 @@
               <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
                       oncommand="gAdvancedPane.showSecurityDevices();"
                       preference="security.disable_button.openDeviceManager"/>
-            </description>                              
+            </hbox>                              
           </groupbox>
         </tabpanel>
       </tabpanels>

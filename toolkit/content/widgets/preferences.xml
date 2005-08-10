@@ -424,15 +424,15 @@
     <content xul:dlgbuttons="accept,cancel" xul:persist="lastSelected screenX screenY"
              xul:closebuttonlabel="&preferencesCloseButton.label;"
              xul:closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+             xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+             xhtml2:role="wairole:dialog"
 #ifdef XP_WIN
              xul:title="&preferencesDefaultTitleWin.title;">
 #else
              xul:title="&preferencesDefaultTitleMac.title;">
 #endif
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-                      xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-                      xmlns:waistate="http://www.w3.org/2005/07/aaa"
                       xhtml2:role="wairole:list"/> <!-- Expose to accessibility APIs as a list -->
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
@@ -562,8 +562,6 @@
           radio.setAttribute("label", aPaneElement.label);
           // Expose preference group choice to accessibility APIs as an unchecked list item
           // The parent group is exposed to accessibility APIs as a list
-          radio.setAttributeNS("http://www.w3.org/TR/xhtml2", "role", "wairole:listitem");
-          radio.setAttributeNS("http://www.w3.org/2005/07/aaa", "checked", "false");
           if (aPaneElement.image)
             radio.setAttribute("src", aPaneElement.image);
           radio.style.listStyleImage = aPaneElement.style.listStyleImage;
@@ -1128,6 +1126,16 @@
       <xul:image class="paneButtonIcon" xbl:inherits="src"/>
       <xul:label class="paneButtonLabel" xbl:inherits="value=label"/>
     </content>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULListitemAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
 </bindings>

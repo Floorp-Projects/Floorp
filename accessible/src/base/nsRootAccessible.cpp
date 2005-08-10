@@ -374,29 +374,17 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   // Special dynamic content handling
   PRUint32 role = ROLE_NOTHING;
   aAccessible->GetFinalRole(&role);
-  PRUint32 naturalRole; // The natural role is the role that this type of element normally has
-  aAccessible->GetRole(&naturalRole);
-  if (role != naturalRole) {
-    nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(aNode);
-    if (!multiSelect) {
-      // Selection events that mirror focus events
-      // Mirror selection events to focus, but only for widgets that are selectable
-      // but not a descendent of a multi-selectable widget
-      // Selection events for multiselects is handled separately
-      // in nsDocAccessible::AttributeChanged() for DHTML widgets and
-      // in nsRootAccessible::HandleEvent() via 
-      // DOMItemSelected and DOMItemUnselected for everything else
-      FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION,
-                              aAccessible, nsnull);
-    }
-    if (role == ROLE_MENUITEM) {
-      if (!mIsInDHTMLMenu) {  // Entering menus
-        FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, this, nsnull);
+  if (role == ROLE_MENUITEM) {
+    if (!mIsInDHTMLMenu) {  // Entering menus
+      PRUint32 naturalRole; // The natural role is the role that this type of element normally has
+      aAccessible->GetRole(&naturalRole);
+      if (role != naturalRole) { // Must be a DHTML menuitem
+         FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, this, nsnull);
+         mIsInDHTMLMenu = ROLE_MENUITEM;
       }
-      mIsInDHTMLMenu = PR_TRUE;
     }
   }
-  if (role != ROLE_MENUITEM && mIsInDHTMLMenu) {   // Leaving menus
+  else if (mIsInDHTMLMenu) {
     FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, this, nsnull);
     mIsInDHTMLMenu = PR_FALSE;
   }

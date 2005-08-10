@@ -68,10 +68,10 @@
       <preference id="privacy.sanitize.promptOnSanitize"   name="privacy.sanitize.promptOnSanitize"   type="bool"/>
     </preferences>
 
-    <groupbox orient="vertical" align="start">
+    <groupbox id="sanitizeItems" orient="vertical" align="start">
       <caption label="&items.label;"/>
       
-      <label>&sanitizeItems.label;</label>
+      <description control="sanitizeItems">&sanitizeItems.label;</description>
       <checkbox label="&itemHistory.label;" accesskey="&itemHistory.accesskey;" preference="privacy.item.history"/>
       <checkbox label="&itemFormData.label;" accesskey="&itemFormData.accesskey;" preference="privacy.item.formdata"/>
       <checkbox label="&itemPasswords.label;" accesskey="&itemPasswords.accesskey;" preference="privacy.item.passwords"

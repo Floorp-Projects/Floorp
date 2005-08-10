@@ -37,7 +37,7 @@
   </vbox>
 
   <vbox align="center">
-    <description>&calibrate.instructions;</description>
+    <description control="horizSize">&calibrate.instructions;</description>
     <separator class="thin"/>
     <hbox align="center">
       <textbox id="horizSize" size="5"/>

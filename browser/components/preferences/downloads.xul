@@ -117,10 +117,11 @@
     <groupbox>
       <caption label="&fileTypes.label;"/>
       
-      <description>&fileTypesDescription.label;</description>
+      <description control="configureActions">&fileTypesDescription.label;</description>
       <separator class="thin"/>
       <hbox>
-        <button label="&configureActions.label;" accesskey="&configureActions.accesskey;"
+        <button id="configureActions" label="&configureActions.label;"
+                accesskey="&configureActions.accesskey;"
                 oncommand="gDownloadsPane.showFileTypeActions();"
                 preference="pref.downloads.disable_button.edit_actions"/>
       </hbox>
