@@ -373,8 +373,6 @@ nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
   err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
   if (err != 0) return NS_ERROR_FAILURE;
   
-  mTypedHiddenURIs.Init(3);
-
   return NS_OK;
 }
 
@@ -473,6 +471,8 @@ nsGlobalHistory::nsGlobalHistory()
   mIgnoreSchemes.AppendString(NS_LITERAL_STRING("ftp://"));
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
   mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
+
+  mTypedHiddenURIs.Init(3);
 }
 
 nsGlobalHistory::~nsGlobalHistory()
