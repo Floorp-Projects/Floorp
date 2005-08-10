@@ -682,6 +682,10 @@ nsSimpleGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   // if the page was typed, unhide it now because it's
   // known to be valid
   if (HasCell(mEnv, row, kToken_TypedColumn)) {
+    nsCAutoString URISpec;
+    rv = GetRowValue(row, kToken_URLColumn, URISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     mTypedHiddenURIs.Remove(URISpec);
     row->CutColumn(mEnv, kToken_HiddenColumn);
   }
@@ -1424,11 +1428,10 @@ nsSimpleGlobalHistory::IsVisited(nsIURI* aURI, PRBool *_retval)
   // the list will usually be small and checking the actual Mork row
   // would require several dynamic memory allocations.
   if (*_retval && mTypedHiddenURIs.Contains(URISpec))
+  {
     *_retval = PR_FALSE;
   }
   
-  *_retval = NS_SUCCEEDED(rv);
-
   return NS_OK;
 }
 
