@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is the Firefox Preferences System.
+# 
+# The Initial Developer of the Original Code is Mike Connor.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Mike Connor <mconnor@steelgryphon.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/advanced-scripts.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+
+<prefwindow id="AdvancedJSDialog" type="child"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="&advancedJSDialog.title;"
+            dlgbuttons="accept,cancel,help">
+
+  <prefpane id="AdvancedJSDialogPane"
+            helpTopic="prefs-advanced-javascript" helpURI="chrome://browser/locale/help/help.rdf">
+
+    <preferences>
+     <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool"/>
+     <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool" inverted="true"/>
+     <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool" inverted="true"/>
+     <preference id="dom.disable_window_open_feature.status" inverted="true"
+                 name="dom.disable_window_open_feature.status" type="bool"/>
+     <preference id="dom.disable_window_status_change" inverted="true"
+                 name="dom.disable_window_status_change" type="bool"/>
+    </preferences>
+    
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/advanced-scripts.js"/>
+
+    <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
+
+    <description value="&allowScripts.label;"/>
+
+    <checkbox id="moveResizeWindows" label="&moveResizeWindows.label;" 
+              accesskey="&moveResizeWindows.accesskey;"
+              preference="dom.disable_window_move_resize"/>
+    <checkbox id="raiseLowerWindows" label="&raiseLowerWindows.label;" 
+              accesskey="&raiseLowerWindows.accesskey;"
+              preference="dom.disable_window_flip"/>
+    <checkbox id="disableContextMenus" label="&disableContextMenus.label;" 
+              accesskey="&disableContextMenus.accesskey;"
+              preference="dom.event.contextmenu.enabled"/>
+    <checkbox id="hideStatusBar" label="&hideStatusBar.label;" 
+              accesskey="&hideStatusBar.accesskey;"
+              preference="dom.disable_window_open_feature.status"/>
+    <checkbox id="changeStatusBar" label="&changeStatusBar.label;" 
+              accesskey="&changeStatusBar.accesskey;"
+              preference="dom.disable_window_status_change"/>
+  </prefpane>
+</prefwindow>
+

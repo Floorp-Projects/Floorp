@@ -1,6 +1,7 @@
 browser.jar:
 *   content/browser/preferences/advanced.xul
 *   content/browser/preferences/advanced.js
+*   content/browser/preferences/advanced-scripts.xul
 *   content/browser/preferences/changeaction.xul
 *   content/browser/preferences/changeaction.js
 *   content/browser/preferences/colors.xul
