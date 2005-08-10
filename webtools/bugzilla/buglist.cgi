@@ -934,12 +934,11 @@ $vars->{'closedstates'} = ['CLOSED', 'VERIFIED', 'RESOLVED'];
 # The list of query fields in URL query string format, used when creating
 # URLs to the same query results page with different parameters (such as
 # a different sort order or when taking some action on the set of query
-# results).  To get this string, we start with the raw URL query string
-# buffer that was created when we initially parsed the URL on script startup,
-# then we remove all non-query fields from it, f.e. the sort order (order)
-# and command type (cmdtype) fields.
-$vars->{'urlquerypart'} = $buffer;
-$vars->{'urlquerypart'} =~ s/(order|cmdtype)=[^&]*&?//g;
+# results).  To get this string, we call the Bugzilla::CGI::canoncalise_query
+# function with a list of elements to be removed from the URL.
+$vars->{'urlquerypart'} = $params->canonicalise_query('order',
+                                                      'cmdtype',
+                                                      'query_based_on');
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).

@@ -64,7 +64,7 @@
       <tr>
         <td>[% q.name FILTER html %]</td>
         <td>
-          <a href="buglist.cgi?[% q.query FILTER html %]">Run</a>
+          <a href="buglist.cgi?cmdtype=runnamed&amp;namedcmd=[% q.name FILTER url_quote %]">Run</a>
         </td>
         <td>
           <a href="query.cgi?[% q.query FILTER html %]&amp;known_name=[% q.name FILTER url_quote %]">Edit</a>
