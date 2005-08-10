@@ -95,7 +95,7 @@
     <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/preferences/privacy.js"/>
 
-    <description>&privacy.intro;</description>
+    <description control="panePrivacy">&privacy.intro;</description>
     <separator class="thin"/>
     <tabbox id="privacyPrefs" flex="1"
             onselect="gPrivacyPane.tabSelectionChanged(event);">
@@ -107,11 +107,14 @@
         <tab label="&itemCookies.label;"   helpTopic="prefs-cookies"/>
         <tab label="&itemCache.label;"     helpTopic="prefs-cache"/>
       </tabs>
-      <tabpanels flex="1">
+      <tabpanels flex="1" xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+                 xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+                 xmlns:aaa="http://www.w3.org/2005/07/aaa">
         <tabpanel orient="vertical">
-          <hbox align="center">
+          <hbox xhtml2:role="wairole:label" id="historyDaysContainer" align="center">
             <label control="historyDays" accesskey="&rememberPages.accesskey;">&rememberPages.label;</label>
-            <textbox id="historyDays" size="2" preference="browser.history_expire_days"/>
+            <textbox id="historyDays" size="2" preference="browser.history_expire_days"
+                     xhtml2:role="wairole:textfield" aaa:labelledby="historyDaysContainer"/>
             <label>&rememberDays.label;</label>
           </hbox>
           <separator flex="1"/>
@@ -123,7 +126,7 @@
           </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
-          <description>&savedFormData.intro;</description>
+          <description control="saveFormHistory">&savedFormData.intro;</description>
           <vbox align="start">
             <checkbox id="saveFormHistory" preference="browser.formfill.enable"
                       label="&enableFormFill.label;" accesskey="&enableFormFill.accesskey;"/>
@@ -137,7 +140,7 @@
           </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
-          <description>&savedPasswords.intro;</description>
+          <description control="savePasswords">&savedPasswords.intro;</description>
           <hbox>
             <checkbox id="savePasswords" 
                       label="&enablePasswords.label;" accesskey="&enablePasswords.accesskey;"
@@ -145,7 +148,7 @@
           </hbox>
           <separator/>
           <hbox align="start">
-            <description flex="1">&masterPassword.intro;</description>
+            <description control="setMasterPassword" flex="1">&masterPassword.intro;</description>
             <!-- XXXben - check for keychain access use -->
             <vbox>
               <button id="setMasterPassword" 
@@ -166,7 +169,7 @@
           </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
-          <description>&downloadManager.intro;</description>
+          <description control="viewDownloads" >&downloadManager.intro;</description>
           <separator class="thin"/>
           <hbox align="center">
             <label accesskey="&downloadsRetentionPolicy.accesskey;" 
@@ -182,7 +185,8 @@
           </hbox>
           <separator flex="1"/>
           <hbox>
-            <button label="&viewDownloads.label;" accesskey="&viewDownloads.accesskey;"
+            <button id="viewDownloads" label="&viewDownloads.label;"
+                    accesskey="&viewDownloads.accesskey;"
                     oncommand="gPrivacyPane.viewDownloads();"/>
             <spring flex="1"/>
             <button icon="clear" label="&clearDownloads.label;"
@@ -195,7 +199,7 @@
               created without user interaction, unlike Software Installation, 
               Popup and Image whitelists -->
           <vbox>
-            <description>&cookies.intro;</description>
+            <description control="enableCookies">&cookies.intro;</description>
             <hbox>
               <checkbox id="enableCookies" preference="network.cookie.cookieBehavior"
                         label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
@@ -245,12 +249,13 @@
           </hbox>
         </tabpanel>
         <tabpanel orient="vertical">
-          <description>&cache.intro;</description>
-          <hbox align="center">
+          <description control="cacheSize">&cache.intro;</description>
+          <hbox xhtml2:role="wairole:label" id="cacheSizeContainer" align="center">
             <label accesskey="&cacheUseUpTo.accesskey;" control="cacheSize">&cacheUseUpTo.label;</label>
             <textbox id="cacheSize" size="2" preference="browser.cache.disk.capacity"
                      onsyncfrompreference="return gPrivacyPane.readCacheSizePref();"
-                     onsynctopreference="return gPrivacyPane.writeCacheSizePref();"/>
+                     onsynctopreference="return gPrivacyPane.writeCacheSizePref();"
+                     xhtml2:role="wairole:textfield" aaa:labelledby="cacheSizeContainer"/>
             <label>&cacheSize.label;</label>
           </hbox>
           <separator flex="1"/>
@@ -304,7 +309,7 @@
         </groupbox>
         <groupbox orient="vertical" flex="1">
           <caption label="&itemPasswords.label;"/>
-          <description>&savedPasswords.intro;</description>
+          <description control="savePasswords" >&savedPasswords.intro;</description>
           <hbox align="center">
             <checkbox id="savePasswords" 
                       label="&enablePasswords.label;" accesskey="&enablePasswords.accesskey;"
@@ -322,7 +327,7 @@
         </groupbox>
         <groupbox orient="vertical" flex="1">
           <caption label="&itemDownloads.label;"/>
-          <description>&downloadManager.intro;</description>
+          <description control="viewDownloads">&downloadManager.intro;</description>
           <label accesskey="&downloadsRetentionPolicy.accesskey;" 
                  control="downloadsRetentionPolicy">&downloadsRetentionPolicy.label;</label> 
           <hbox>
@@ -337,7 +342,8 @@
           </hbox>
           <separator flex="1"/>
           <hbox>
-            <button label="&viewDownloads.label;" accesskey="&viewDownloads.accesskey;"
+            <button id="viewDownloads" label="&viewDownloads.label;"
+                    accesskey="&viewDownloads.accesskey;"
                     oncommand="gPrivacyPane.viewDownloads();"/>
             <spring flex="1"/>
             <button label="&clearDownloads.label;" accesskey="&clearDownloads.accesskey;"
@@ -350,7 +356,7 @@
               Popup and Image whitelists -->
           <caption label="&itemCookies.label;"/>
           <vbox>
-            <description>&cookies.intro;</description>
+            <description control="enableCookies">&cookies.intro;</description>
             <hbox>
               <checkbox id="enableCookies" preference="network.cookie.cookieBehavior"
                         label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
@@ -398,7 +404,7 @@
         </groupbox>
         <groupbox orient="vertical" flex="1">
           <caption label="&itemCache.label;"/>
-          <description>&cache.intro;</description>
+          <description id="cacheSize">&cache.intro;</description>
           <hbox align="center">
             <label accesskey="&cacheUseUpTo.accesskey;" control="cacheSize">&cacheUseUpTo.label;</label>
             <textbox id="cacheSize" size="2" preference="browser.cache.disk.capacity"
@@ -417,9 +423,10 @@
 #endif
     <separator class="thin"/>
     <hbox align="center">
-      <button label="&sanitizeSettings.label;" accesskey="&sanitizeSettings.accesskey;"
+      <button id="sanitizeSettings" label="&sanitizeSettings.label;"
+              accesskey="&sanitizeSettings.accesskey;"
               oncommand="gPrivacyPane.showSanitizeSettings();"/>
-      <description flex="1">&sanitize.intro;</description>
+      <description flex="1" control="sanitizeSettings" >&sanitize.intro;</description>
     </hbox>
     <separator/>
   </prefpane>

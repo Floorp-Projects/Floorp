@@ -219,7 +219,7 @@ function setPasswordStrength()
   }
 
   var mymeter=document.getElementById('pwmeter');
-  mymeter.setAttribute("value",pwstrength);
+  mymeter.value = pwstrength;
 
   return;
 }

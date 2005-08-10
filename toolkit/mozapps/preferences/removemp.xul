@@ -13,14 +13,19 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         style="width: 35em;" 
         ondialogaccept="gRemovePasswordDialog.removePassword();" 
-        onload="gRemovePasswordDialog.init()">
+        onload="gRemovePasswordDialog.init()"
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
 
   <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
-  <description>&removeWarning1.label;</description>
-  <description class="header">&removeWarning2.label;</description>
+  <vbox id="warnings">
+    <description>&removeWarning1.label;</description>
+    <description class="header">&removeWarning2.label;</description>
+  </vbox>
   
   <separator class="thin"/>
     
@@ -28,8 +33,10 @@
     <caption label="&removeInfo.label;"/>
 
     <hbox align="center">
-      <label value="&setPassword.oldPassword.label;"/> 
-      <textbox id="password" type="password" oninput="gRemovePasswordDialog.validateInput();"/>
+      <label control="password" value="&setPassword.oldPassword.label;"/> 
+      <textbox id="password" type="password"
+               oninput="gRemovePasswordDialog.validateInput();"
+               xhtml2:role="textfield" aaa:describedby="warnings"/>
     </hbox>
   </groupbox>
   

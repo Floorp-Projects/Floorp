@@ -217,15 +217,32 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
   }
   if (!content->IsContentOfType(nsIContent::eTEXT)) {
     nsAutoString description;
-    if (!mRoleMapEntry ||
-        NS_FAILED(GetTextFromRelationID(nsAccessibilityAtoms::describedby, description))) {
-      if (NS_CONTENT_ATTR_HAS_VALUE !=
-          content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, description)) {
-        nsAutoString name;
-        GetName(name);
-        if (name.IsEmpty() || description == name) {
-          // Has no name or description is not unique
-          description.Truncate();
+    if (mRoleMapEntry) {
+      GetTextFromRelationID(nsAccessibilityAtoms::describedby, description);
+    }
+    if (description.IsEmpty()) {
+      PRBool isXUL = content->IsContentOfType(nsIContent::eXUL);
+      if (isXUL) {
+        // Try XUL <description control="[id]">description text</description>
+        nsIContent *descriptionContent =
+          GetXULLabelContent(content, nsAccessibilityAtoms::description);
+        if (descriptionContent) {
+          // We have a description content node
+          AppendFlatStringFromSubtree(descriptionContent, &description);
+        }
+      }
+      if (description.IsEmpty()) {
+        nsIAtom *descAtom = isXUL ? nsAccessibilityAtoms::tooltiptext :
+                                    nsAccessibilityAtoms::title;
+        if (NS_CONTENT_ATTR_HAS_VALUE ==
+            content->GetAttr(kNameSpaceID_None, descAtom, description)) {
+          nsAutoString name;
+          GetName(name);
+          if (name.IsEmpty() || description == name) {
+            // Don't use tooltip for a description if this object
+            // has no name or the tooltip is the same as the name
+            description.Truncate();
+          }
         }
       }
     }
@@ -1255,7 +1272,6 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     if (textContent->TextLength() > 0) {
       nsAutoString text;
       textContent->AppendTextTo(text);
-      text.CompressWhitespace();
       if (!text.IsEmpty())
         aFlatString->Append(text);
       if (isHTMLBlock && !aFlatString->IsEmpty())
@@ -1271,11 +1287,12 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
                          textEquivalent);
       }
-      else {
-        aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::tooltiptext,
-                          textEquivalent);
+      else if (NS_CONTENT_ATTR_HAS_VALUE !=
+               aContent->GetAttr(kNameSpaceID_None,
+                                 nsAccessibilityAtoms::tooltiptext,
+                                 textEquivalent)) {
+        AppendNameFromAccessibleFor(aContent, aFlatString, PR_TRUE /* use value */);
       }
-      textEquivalent.CompressWhitespace();
       return AppendStringWithSpaces(aFlatString, textEquivalent);
     }
     return NS_OK; // Not HTML and not XUL -- we don't handle it yet
@@ -1348,7 +1365,7 @@ nsresult nsAccessible::AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, 
 
   PRUint32 index;
   for (index = 0; index < numChildren; index++) {
-    AppendFlatStringFromSubtree(aContent->GetChildAt(index), aFlatString);
+    AppendFlatStringFromSubtreeRecurse(aContent->GetChildAt(index), aFlatString);
   }
   return NS_OK;
 }
@@ -1384,7 +1401,7 @@ nsIContent* nsAccessible::GetXULLabelContent(nsIContent *aForNode, nsIAtom *aLab
   }
   
   // Look for label in subtrees of nearby ancestors
-  static const PRUint32 kAncestorLevelsToSearch = 3;
+  static const PRUint32 kAncestorLevelsToSearch = 5;
   PRUint32 count = 0;
   while (!labelContent && ++count <= kAncestorLevelsToSearch && 
          (aForNode = aForNode->GetParent()) != nsnull) {
@@ -1825,23 +1842,6 @@ NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
     // Disabled elements are not selectable or focusable, even if disabled
     // via DHTML accessibility disabled property
     finalState &= ~(STATE_SELECTABLE | STATE_FOCUSABLE);
-  }
-  else if (gLastFocusedNode == mDOMNode && (mRoleMapEntry->state & STATE_SELECTABLE)) {
-    // If we're focused and selectable and not inside a multiselect,
-    // then we're also selected
-    nsCOMPtr<nsIAccessible> container = this;
-    PRUint32 containerState = 0, containerRole;
-    while (0 == (containerState & STATE_MULTISELECTABLE)) {
-      nsCOMPtr<nsIAccessible> current;
-      current.swap(container);
-      current->GetParent(getter_AddRefs(container));      
-      if (!container || (NS_SUCCEEDED(container->GetFinalRole(&containerRole)) &&
-                         containerRole == ROLE_PANE)) {
-        finalState |= STATE_SELECTED;
-        break;
-      }
-      container->GetFinalState(&containerState);
-    }
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));

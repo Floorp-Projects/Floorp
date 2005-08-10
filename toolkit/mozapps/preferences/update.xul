@@ -58,21 +58,28 @@
       <preference id="app.update.mode" name="app.update.mode" type="int"/>
     </preferences>
 
-    <description>&update.intro;</description>
+    <description control="autoInstallMode">&update.intro;</description>
     <radiogroup id="autoInstallMode" preference="app.update.mode">
       <hbox>
-        <radio label="&ausMode0Name.label;" accesskey="&ausMode0Name.accesskey;" 
+        <radio id="ausMode0" label="&ausMode0Name.label;" accesskey="&ausMode0Name.accesskey;" 
                value="0" flex="1"/>
       </hbox>
-      <description class="updatePrefsInfo" id="ausMode0Info">&ausMode0Name.info;</description>
+      <description control="ausMode0" class="updatePrefsInfo" id="ausMode0Info">
+        &ausMode0Name.info;
+      </description>
       <hbox>
-        <radio label="&ausMode1Name.label;" accesskey="&ausMode1Name.accesskey;" 
+        <radio id="ausMode1" label="&ausMode1Name.label;" accesskey="&ausMode1Name.accesskey;" 
                value="1" flex="1"/>
       </hbox>
-      <description class="updatePrefsInfo" id="ausMode1Info">&ausMode1Name.info;</description>
-      <radio label="&ausMode2Name.label;" accesskey="&ausMode2Name.accesskey;" 
+      <description control="ausMode1" class="updatePrefsInfo" id="ausMode1Info">
+        &ausMode1Name.info;
+      </description>
+      <radio id="ausMode2" label="&ausMode2Name.label;" accesskey="&ausMode2Name.accesskey;" 
              value="2"/>
-      <description class="updatePrefsInfo" id="ausMode2Info">&ausMode2Name.info;</description>
+      <description control="ausMode2" class="updatePrefsInfo" 
+                   id="ausMode2Info">
+        &ausMode2Name.info;
+      </description>
     </radiogroup>
     <separator/>
     <separator/>

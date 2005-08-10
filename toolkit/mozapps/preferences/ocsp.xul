@@ -60,7 +60,7 @@
       <preference id="security.OCSP.URL"        name="security.OCSP.URL"       type="string"/>
     </preferences>
     
-    <description>&validation.ocsp.description;</description>
+    <description control="securityOSCPEnabled">&validation.ocsp.description;</description>
     <radiogroup id="securityOCSPEnabled" preference="security.OCSP.enabled"
                 onsyncfrompreference="return gOCSPDialog._updateUI();">
       <radio value="0" label="&disableOCSP.label;"/>
