@@ -3089,50 +3089,38 @@ ExtensionManager.prototype = {
    *          false otherwise.
    */
   checkForMismatches: function() {
-    var needsRestart = false;
-
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
     var currAppVersion = getPref("getCharPref", PREF_EM_APP_EXTENSIONS_VERSION,
                                  gApp.version);
     var lastAppVersion = getPref("getCharPref", PREF_EM_LAST_APP_VERSION, "");
-    if (currAppVersion != lastAppVersion) {
-      // Version mismatch, we're have to load the extensions datasource
-      // and do version checking. Time hit here doesn't matter since this 
-      // doesn't happen all that often.
+    if (currAppVersion == lastAppVersion)
+      return false;
 
-      var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
-      if (!extensionsDS.exists()) {
-        if (this._upgradeFromV10())
-          needsRestart = true;
-      }
+    // Version mismatch, we have to load the extensions datasource and do
+    // version checking. Time hit here doesn't matter since this doesn't happen
+    // all that often.
+    var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
+    if (!extensionsDS.exists())
+      this._upgradeFromV10();
 
-      var ds = this.datasource;
-      var currAppID = gApp.ID;
-      var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
-                                             nsIUpdateItem.TYPE_ADDON,
-                                             true); // XXXben - maybe we should only show enabled items? 
-      if (items.length > 0) {
-        // Now disable the items so they won't hurt anything. 
-        for (var i = 0; i < items.length; ++i)
-          this._appDisableItem(items[i].id);
-        
-        this._showMismatchWindow(items);
-        needsRestart = true;
-      }
-    }
-    
-    // Now update the last app version so we don't do this checking 
-    // again. 
+    // Always check for compatibility updates when upgrading
+    this._showMismatchWindow();
+
+    // Now disable any remaining incompatible items so they won't hurt anything.
+    var ds = this.datasource;
+    var currAppID = gApp.ID;
+    var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
+                                           nsIUpdateItem.TYPE_ADDON, true);
+    for (var i = 0; i < items.length; ++i)
+      this._appDisableItem(items[i].id);
+    // Now update the last app version so we don't do this checking again.
     gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
-
-    return needsRestart;
+    return true;
   },
 
   /**
-   * Shows the "Incompatible Items Found" UI
-   * @param   items
-   *          An array of items to show in the Mismatch UI
+   * Shows the "Compatibility Updates" UI
    */
   _showMismatchWindow: function(items) {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
@@ -3141,17 +3129,12 @@ ExtensionManager.prototype = {
     if (wizard)
       wizard.focus();
     else {
-      var ary = Components.classes["@mozilla.org/supports-array;1"]
-                          .createInstance(Components.interfaces.nsISupportsArray);
-      for (var i = 0; i < items.length; ++i)
-        ary.AppendElement(items[i]);
-
       var features = "chrome,centerscreen,dialog,titlebar,modal";
       // This *must* be modal so as not to break startup! This code is invoked before
       // the main event loop is initiated (via checkForMismatches).
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                          .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, ary);
+      ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, null);
     }
   },
   
@@ -3162,16 +3145,12 @@ ExtensionManager.prototype = {
    * 3) initiates an install to populate the new extensions datasource.
    * 4) migrates the disabled attribute from the old datasource.
    * 5) migrates the app compatibility info from the old datasource.
-   *
-   * @returns true if the application needs to restart again, false otherwise.
    */
   _upgradeFromV10: function() {
-    var needsRestart = false;
-
     // return early if the version 1.0 extensions datasource file doesn't exist.
     var oldExtensionsFile = getFile(KEY_PROFILEDIR, [DIR_EXTENSIONS, "Extensions.rdf"]);
     if (!oldExtensionsFile.exists())
-      return needsRestart;
+      return;
 
     // Version 1.0 profiles have a default theme directory in the profile's
     // extensions directory that will be disabled due to having a maxVersion
@@ -3254,14 +3233,12 @@ ExtensionManager.prototype = {
             items[i].locationKey == KEY_APP_GLOBAL)
           itemsToCheck.push(items[i].id);
       }
-
-      if (this._finishOperations())
-        needsRestart = true;
+      this._finishOperations();
     }
 
     // If there are no items to migrate settings for return early.
     if (itemsToCheck.length == 0)
-      return needsRestart;
+      return;
 
     var fileURL = getURLSpecFromFile(oldExtensionsFile);
     var oldExtensionsDS = gRDF.GetDataSourceBlocking(fileURL);
@@ -3316,7 +3293,6 @@ ExtensionManager.prototype = {
         }
       }
     }
-    return needsRestart;
   },
 
   /**
@@ -4493,8 +4469,8 @@ ExtensionManager.prototype = {
    */
   getIncompatibleItemList: function(id, version, type, includeDisabled, 
                                     countRef) {
-    var items = this.datasource.getIncompatibleItemList(id, version, type,
-                                                        includeDisabled);
+    var items = this.datasource.getIncompatibleItemList(id, version ? version : undefined,
+                                                        type, includeDisabled);
     countRef.value = items.length;
     return items;
   },
@@ -5065,6 +5041,9 @@ ExtensionItemUpdater.prototype = {
         this._em._appEnableItem(aLocalItem.id);
       return true;
     }
+    else if (this._versionUpdateOnly == 2)
+      this._emDS.updateTargetAppInfo(aLocalItem.id, aRemoteItem.minAppVersion,
+                                     aRemoteItem.maxAppVersion);
     return false;
   },
   
@@ -5591,7 +5570,7 @@ ExtensionsDataSource.prototype = {
       // we will continue to support it.
       var locationKey = this.getItemProperty(id, "installLocation");
       var appManaged = this.getItemProperty(id, "appManaged") == "true";
-      if (!includeDisabled && appManaged && locationKey == KEY_APP_GLOBAL)
+      if (appManaged && locationKey == KEY_APP_GLOBAL)
         continue;
 
       if (type != -1 && (type & desiredType) && 

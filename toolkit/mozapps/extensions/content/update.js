@@ -36,13 +36,6 @@
 # ***** END LICENSE BLOCK *****
 
 //
-// window.arguments[...] is an array of nsIUpdateItem implementing objects 
-// that are to be updated. 
-//  * if the array is empty, all items are updated (like a background update
-//    check)
-//  * if the array contains one or two UpdateItems, with null id fields, 
-//    all items of that /type/ are updated.
-//
 // This UI can be opened from the following places, and in the following modes:
 //
 // - from the Version Compatibility Checker at startup
@@ -54,16 +47,6 @@
 //    with the version of the application being started. 
 //    
 //    In this mode, the wizard is opened to panel 'mismatch'. 
-//
-// - from the Extension Manager or Options Dialog or any UI where the user
-//   directly requests to check for updates.
-//    in this case the user selects UpdateItem(s) to update and this list
-//    is passed to this UI. If a single item is sent with the id field set to
-//    null but the type set correctly, this UI will check for updates to all 
-//    items of that type.
-//
-//    In this mode, the wizard is opened to panel 'checking'.
-//
 
 const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
@@ -91,13 +74,10 @@ var gUpdateWizard = {
   
   init: function ()
   {
-    this.items = window.arguments;
-    if (this.items.length == 0) {
-      var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                         .getService(Components.interfaces.nsIExtensionManager);
-      this.items = em.getItemList(nsIUpdateItem.TYPE_ADDON, { });
-    }
-
+    var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                        .getService(Components.interfaces.nsIExtensionManager);
+    // Retrieve all items in order to sync their app compatibility information
+    this.items = em.getItemList(nsIUpdateItem.TYPE_ADDON, { });
     var pref = 
         Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
@@ -187,7 +167,9 @@ var gVersionInfoPage = {
                                   "cancelButtonText", false);
     var em = Components.classes["@mozilla.org/extensions/manager;1"]
                        .getService(Components.interfaces.nsIExtensionManager);
-    em.update(gUpdateWizard.items, gUpdateWizard.items.length, true, this);
+    // Synchronize the app compatibility info for all items by specifying 2 for
+    // the versionUpdateOnly parameter.
+    em.update([], 0, 2, this);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -197,6 +179,12 @@ var gVersionInfoPage = {
   },
   
   onUpdateEnded: function() {
+    var em = Components.classes["@mozilla.org/extensions/manager;1"]
+                       .getService(Components.interfaces.nsIExtensionManager);
+    // Retrieve the remaining incompatible items.
+    gUpdateWizard.items = em.getIncompatibleItemList(null, null,
+                                                     nsIUpdateItem.TYPE_ADDON,
+                                                     true, { });
     if (gUpdateWizard.items.length > 0) {
       // There are still incompatible addons, inform the user.
       document.documentElement.currentPage = 

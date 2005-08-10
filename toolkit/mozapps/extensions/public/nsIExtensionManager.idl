@@ -254,6 +254,9 @@ interface nsIExtensionManager : nsISupports
    *          false if this check should find the newest versions available,
    *          true if it should only find newer target application compatibility
    *          information for the currently installed version.
+   *          2 if this check should only find target application compatibility
+   *          information for the currently installed version and synchronize
+   *          the values.
    * @param   listener
    *          An nsIAddonUpdateCheckListener object which will be notified during
    *          the update check process. 
