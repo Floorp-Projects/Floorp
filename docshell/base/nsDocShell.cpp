@@ -66,7 +66,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsPoint.h"
 #include "nsGfxCIID.h"
-#include "nsIObserverService.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsTextFormatter.h"
@@ -7832,27 +7831,13 @@ NS_IMETHODIMP nsDocShell::MakeEditable(PRBool inWaitForUriLoad)
 nsresult
 nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer)
 {
-    if (mItemType != typeContent || !mGlobalHistory)
+    if (mItemType != typeContent)
         return NS_OK;
 
-    PRBool visited;
-    nsresult rv = mGlobalHistory->IsVisited(aURI, &visited);
-    if (NS_FAILED(rv))
-        return rv;
-    
-    rv = mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), aReferrer);
-    if (NS_FAILED(rv))
-        return rv;
+    if (!mGlobalHistory)
+        return NS_OK;
 
-    if (!visited) {
-        nsCOMPtr<nsIObserverService> obsService =
-            do_GetService("@mozilla.org/observer-service;1");
-        if (obsService) {
-            obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
-        }
-    }
-
-    return NS_OK;
+    return mGlobalHistory->AddURI(aURI, aRedirect, !IsFrame(), aReferrer);
 }
 
 //*****************************************************************************
