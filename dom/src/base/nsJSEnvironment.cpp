@@ -780,6 +780,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      void* aRetValue,
                                      PRBool* aIsUndefined)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   // Beware that the result is not rooted! Be very careful not to run
   // the GC before rooting the result somehow!
   if (!mScriptsEnabled) {
@@ -976,6 +978,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             nsAString *aRetValue,
                             PRBool* aIsUndefined)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   if (!mScriptsEnabled) {
     *aIsUndefined = PR_TRUE;
 
@@ -1110,6 +1114,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                            const char* aVersion,
                            void** aScriptObject)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
@@ -1175,6 +1181,8 @@ nsJSContext::ExecuteScript(void* aScriptObject,
                            nsAString* aRetValue,
                            PRBool* aIsUndefined)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   if (!mScriptsEnabled) {
     if (aIsUndefined) {
       *aIsUndefined = PR_TRUE;
@@ -1273,6 +1281,8 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                  const char *aURL, PRUint32 aLineNo,
                                  PRBool aShared, void** aHandler)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   if (!sSecurityManager) {
     NS_ERROR("Huh, we need a script security manager to compile "
              "an event handler!");
@@ -1335,6 +1345,8 @@ nsJSContext::CompileFunction(void* aTarget,
                              PRBool aShared,
                              void** aFunctionObject)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   JSPrincipals *jsprin = nsnull;
 
   nsIScriptGlobalObject *global = GetGlobalObject();
@@ -1374,6 +1386,8 @@ nsresult
 nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
                               uintN argc, jsval *argv, jsval *rval)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   *rval = JSVAL_VOID;
 
   if (!mScriptsEnabled) {
@@ -1440,6 +1454,8 @@ nsresult
 nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName,
                                       void *aHandler)
 {
+  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
+
   const char *charName = AtomToEventHandlerName(aName);
 
   JSObject *funobj = (JSObject*) aHandler;
@@ -1517,6 +1533,10 @@ void NS_DOMClassInfo_SetXPCNativeWrapperClass(JSClass* aClass);
 nsresult
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
+  // Make sure callers of this use
+  // WillInitializeContext/DidInitializeContext around this call.
+  NS_ENSURE_TRUE(!mIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
+
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1539,8 +1559,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
     return NS_OK;
   }
-
-  mIsInitialized = PR_FALSE;
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
@@ -1613,8 +1631,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   rv = InitClasses(global); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mIsInitialized = PR_TRUE;
 
   return rv;
 }
@@ -2362,9 +2378,13 @@ NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
   rv = nsJSEnvironment::CreateNewContext(getter_AddRefs(scriptContext));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  scriptContext->WillInitializeContext();
+
   // Bind the script context and the global object
   rv = scriptContext->InitContext(aGlobal);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  scriptContext->DidInitializeContext();
 
   if (aGlobal) {
     aGlobal->SetContext(scriptContext);
