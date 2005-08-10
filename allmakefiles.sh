@@ -1676,7 +1676,7 @@ if test -n "$MOZ_PROFILESHARING"; then
     add_makefiles "$MAKEFILES_profilesharingsetup"
 fi
 
-if test -n "MINIMO"; then
+if test -n "$MINIMO"; then
     add_makefiles "$MAKEFILES_minimo"
     add_makefiles "$MAKEFILES_xulapp"
 fi
