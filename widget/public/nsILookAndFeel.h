@@ -173,6 +173,7 @@ public:
     eMetric_DragThresholdX,                               // begin a drag if the mouse is moved further than the threshold while the button is down
     eMetric_DragThresholdY,
     eMetric_UseAccessibilityTheme,                        // Accessibility theme being used?
+    eMetric_IsScreenReaderActive,                         // Screen reader being used?
 
     eMetric_ScrollArrowStyle,                             // position of scroll arrows in a scrollbar
     eMetric_ScrollSliderStyle,                            // is scroll thumb proportional or fixed?

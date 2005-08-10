@@ -91,6 +91,7 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
   { "ui.dragThresholdX", eMetric_DragThresholdX, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.dragThresholdY", eMetric_DragThresholdY, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.useAccessibilityTheme", eMetric_UseAccessibilityTheme, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.isScreenReaderActive", eMetric_IsScreenReaderActive, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.menusCanOverlapOSBar", eMetric_MenusCanOverlapOSBar,
     PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.treeOpenDelay",
