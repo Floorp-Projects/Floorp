@@ -316,9 +316,10 @@ function run_pac_test() {
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
-  // Test it out (we expect no result yet since the PAC load is async)
+  // Test it out (we expect an "unknown" result since the PAC load is async)
   var pi = pps.resolve(uri, 0);
-  do_check_eq(pi, null);
+  do_check_neq(pi, null);
+  do_check_eq(pi.type, "unknown");
 
   // We expect the NON_BLOCKING flag to trigger an exception here since
   // we have configured the PPS to use PAC.
