@@ -372,17 +372,21 @@ function setFoundLink(foundLink)
 function delayedCloseFindBar()
 {
   var findField = document.getElementById("find-field");
+  var findToolbar = document.getElementById("FindToolbar");
   var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                      .getService(Components.interfaces.nsIWindowWatcher);
-  if (window == ww.activeWindow && document.commandDispatcher.focusedElement &&
-      document.commandDispatcher.focusedElement.parentNode.parentNode == findField) {
-    if (gFoundLink)
-      gFoundLink.focus();
-    else
-      window.content.focus();
+
+  if (window == ww.activeWindow) { 
+    var focusedElement = document.commandDispatcher.focusedElement;
+    if (focusedElement && (focusedElement.parentNode == findToolbar ||
+                           focusedElement.parentNode.parentNode == findField)) {
+      if (gFoundLink)
+        gFoundLink.focus();
+      else
+        window.content.focus();
+    }
   }
 
-  var findToolbar = document.getElementById("FindToolbar");
   findToolbar.hidden = true;
   setFindMode(FIND_NORMAL);
   setFoundLink(null);
