@@ -329,11 +329,10 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 
 	/* set name, if any */
 	if (params->text != NULL) {
-		group->text = (char *) malloc(sizeof(char) * strlen(params->text));
+		group->text = strdup(params->text);
 		if (group->text == NULL) {
 			res = MP_MEM;
 		}
-		strcpy(group->text, params->text);
 	}
 
   CLEANUP:
