@@ -42,7 +42,7 @@ use Bugzilla::Constants;
 use Bugzilla::User;
 
 # Include the Bugzilla CGI and general utility library.
-require "CGI.pl";
+require "globals.pl";
 
 use vars qw($db_name
             @components
@@ -58,8 +58,9 @@ use vars qw($db_name
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $buffer = $cgi->query_string();
 
-if (length($::buffer) == 0) {
+if (length($buffer) == 0) {
     print $cgi->header(-refresh=> '10; URL=query.cgi');
     ThrowUserError("buglist_parameters_required");
 }
@@ -146,8 +147,8 @@ if (defined $cgi->param('regetlastlist')) {
                                 });
 }
 
-if ($::buffer =~ /&cmd-/) {
-    my $url = "query.cgi?$::buffer#chart";
+if ($buffer =~ /&cmd-/) {
+    my $url = "query.cgi?$buffer#chart";
     print $cgi->redirect(-location => $url);
     # Generate and return the UI (HTML page) from the appropriate template.
     $vars->{'message'} = "buglist_adding_field";
@@ -361,18 +362,18 @@ if ($cgi->param('cmdtype') eq "dorem" && $cgi->param('remaction') =~ /^run/) {
 # Take appropriate action based on user's request.
 if ($cgi->param('cmdtype') eq "dorem") {  
     if ($cgi->param('remaction') eq "run") {
-        $::buffer = LookupNamedQuery(scalar $cgi->param("namedcmd"));
+        $buffer = LookupNamedQuery(scalar $cgi->param("namedcmd"));
         $vars->{'searchname'} = $cgi->param('namedcmd');
         $vars->{'searchtype'} = "saved";
-        $params = new Bugzilla::CGI($::buffer);
+        $params = new Bugzilla::CGI($buffer);
         $order = $params->param('order') || $order;
 
     }
     elsif ($cgi->param('remaction') eq "runseries") {
-        $::buffer = LookupSeries(scalar $cgi->param("series_id"));
+        $buffer = LookupSeries(scalar $cgi->param("series_id"));
         $vars->{'searchname'} = $cgi->param('namedcmd');
         $vars->{'searchtype'} = "series";
-        $params = new Bugzilla::CGI($::buffer);
+        $params = new Bugzilla::CGI($buffer);
         $order = $params->param('order') || $order;
     }
     elsif ($cgi->param('remaction') eq "forget") {
@@ -402,7 +403,7 @@ if ($cgi->param('cmdtype') eq "dorem") {
 elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
     if ($cgi->param('remtype') eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
-        InsertNamedQuery(Bugzilla->user->id, DEFAULT_QUERY_NAME, $::buffer);
+        InsertNamedQuery(Bugzilla->user->id, DEFAULT_QUERY_NAME, $buffer);
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($cgi->param('remtype') eq "asnamed") {
@@ -439,7 +440,7 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
 # form - see bug 252295
 if (!$params->param('query_format')) {
     $params->param('query_format', 'advanced');
-    $::buffer = $params->query_string;
+    $buffer = $params->query_string;
 }
 
 ################################################################################
@@ -937,7 +938,7 @@ $vars->{'closedstates'} = ['CLOSED', 'VERIFIED', 'RESOLVED'];
 # buffer that was created when we initially parsed the URL on script startup,
 # then we remove all non-query fields from it, f.e. the sort order (order)
 # and command type (cmdtype) fields.
-$vars->{'urlquerypart'} = $::buffer;
+$vars->{'urlquerypart'} = $buffer;
 $vars->{'urlquerypart'} =~ s/(order|cmdtype)=[^&]*&?//g;
 $vars->{'order'} = $order;
 

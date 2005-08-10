@@ -69,7 +69,6 @@ $Data::Dumper::Useqq = 1;
 use Bugzilla::BugMail;
 use Bugzilla::User;
 
-require "CGI.pl";
 require "globals.pl";
 
 GetVersionTable();

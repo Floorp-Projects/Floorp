@@ -34,7 +34,7 @@ use lib ".";
 
 use Bugzilla;
 
-require "CGI.pl";
+require "globals.pl";
 
 use vars qw($template $vars);
 

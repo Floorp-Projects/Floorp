@@ -30,7 +30,6 @@ use AnyDBM_File;
 use lib qw(.);
 
 require "globals.pl";
-require "CGI.pl";
 
 use Bugzilla;
 use Bugzilla::Search;

@@ -27,7 +27,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::User;
 
-require "CGI.pl";
+require "globals.pl";
 
 # Use the global template variables. 
 use vars qw($vars $template);

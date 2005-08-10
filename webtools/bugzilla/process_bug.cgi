@@ -46,7 +46,7 @@ my $PrivilegesRequired = 0;
 
 use lib qw(.);
 
-require "CGI.pl";
+require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;

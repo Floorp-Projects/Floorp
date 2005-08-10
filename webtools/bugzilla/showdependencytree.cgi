@@ -26,7 +26,7 @@
 use strict;
 
 use lib qw(.);
-require "CGI.pl";
+require "globals.pl";
 use Bugzilla::User;
 use Bugzilla::Bug;
 

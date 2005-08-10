@@ -23,7 +23,7 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
+require "globals.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);

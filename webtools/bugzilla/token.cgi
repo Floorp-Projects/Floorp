@@ -39,7 +39,7 @@ my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 
 # Include the Bugzilla CGI and general utility library.
-require "CGI.pl";
+require "globals.pl";
 
 Bugzilla->login(LOGIN_OPTIONAL);
 

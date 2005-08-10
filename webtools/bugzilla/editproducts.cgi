@@ -33,7 +33,6 @@ use strict;
 use lib ".";
 use vars qw ($template $vars);
 use Bugzilla::Constants;
-require "CGI.pl";
 require "globals.pl";
 use Bugzilla::Bug;
 use Bugzilla::Series;

@@ -27,7 +27,7 @@ use strict;
 use lib qw(.);
 use vars qw ($template $vars);
 
-require "CGI.pl";
+require "globals.pl";
 
 use Bugzilla::Bug;
 
@@ -54,7 +54,7 @@ ValidateBugID($bug_id);
 
 $vars->{'bug_id'} = $bug_id;
 
-print Bugzilla->cgi->header();
+print $cgi->header();
 
 $template->process("bug/activity/show.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

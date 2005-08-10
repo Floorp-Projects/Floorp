@@ -44,13 +44,17 @@
 use strict;
 use lib qw(.);
 
-require "CGI.pl";
+require "globals.pl";
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Chart;
 use Bugzilla::Series;
 use Bugzilla::User;
 
-use vars qw($cgi $template $vars);
+use vars qw($vars);
+
+my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
 
 # Go back to query.cgi if we are adding a boolean chart parameter.
 if (grep(/^cmd-/, $cgi->param())) {
@@ -60,7 +64,6 @@ if (grep(/^cmd-/, $cgi->param())) {
     exit;
 }
 
-my $template = Bugzilla->template;
 my $action = $cgi->param('action');
 my $series_id = $cgi->param('series_id');
 

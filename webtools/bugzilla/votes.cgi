@@ -30,7 +30,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
 
-require "CGI.pl";
+require "globals.pl";
 
 # Use global template variables
 use vars qw($template $vars);

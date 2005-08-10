@@ -30,11 +30,9 @@ use strict;
 
 # Include the Bugzilla CGI and general utility library.
 use lib ".";
-require "CGI.pl";
+require "globals.pl";
 
-use vars qw(
-  $vars
-);
+use vars qw($vars);
 
 # Check whether or not the user is logged in and, if so, set the $::userid 
 use Bugzilla::Constants;

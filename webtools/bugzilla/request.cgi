@@ -29,7 +29,7 @@ use strict;
 
 # Include the Bugzilla CGI and general utility library.
 use lib qw(.);
-require "CGI.pl";
+require "globals.pl";
 
 # Use Bugzilla's Request module which contains utilities for handling requests.
 use Bugzilla::Flag;

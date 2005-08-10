@@ -32,7 +32,7 @@ use Bugzilla::Search;
 use Bugzilla::Util;
 use Bugzilla::User;
 
-require "CGI.pl";
+require "globals.pl";
 
 # Use global template variables.
 use vars qw($template $vars $userid);

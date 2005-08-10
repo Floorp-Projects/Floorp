@@ -23,11 +23,9 @@
 
 use strict;
 
-use vars qw($template $vars);
-
 use lib qw(.);
-
-require "CGI.pl";
+use Bugzilla;
+use Bugzilla::Error;
 
 # We don't want to remove a random logincookie from the db, so
 # call Bugzilla->login(). If we're logged in after this, then
@@ -36,9 +34,11 @@ Bugzilla->login();
 
 Bugzilla->logout();
 
+my $template = Bugzilla->template;
 my $cgi = Bugzilla->cgi;
 print $cgi->header();
 
+my $vars = {};
 $vars->{'message'} = "logged_out";
 $template->process("global/message.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

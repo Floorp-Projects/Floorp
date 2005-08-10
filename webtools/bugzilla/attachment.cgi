@@ -35,13 +35,10 @@ use strict;
 
 use lib qw(.);
 
-use vars qw(
-  $template
-  $vars
-);
+use vars qw($template $vars);
 
 # Include the Bugzilla CGI and general utility library.
-require "CGI.pl";
+require "globals.pl";
 use Bugzilla::Config qw(:locations);
 
 # Use these modules to handle flags.
@@ -135,7 +132,7 @@ sub validateID
     # Happens when calling plain attachment.cgi from the urlbar directly
     if ($param eq 'id' && !$cgi->param('id')) {
 
-        print Bugzilla->cgi->header();
+        print $cgi->header();
         $template->process("attachment/choose.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
         exit;
@@ -512,9 +509,9 @@ sub view
     $filename =~ s/\\/\\\\/g; # escape backslashes
     $filename =~ s/"/\\"/g; # escape quotes
 
-    print Bugzilla->cgi->header(-type=>"$contenttype; name=\"$filename\"",
-                                -content_disposition=> "inline; filename=\"$filename\"",
-                                -content_length => $filesize);
+    print $cgi->header(-type=>"$contenttype; name=\"$filename\"",
+                       -content_disposition=> "inline; filename=\"$filename\"",
+                       -content_length => $filesize);
 
     if ($thedata) {
         print $thedata;
@@ -746,7 +743,6 @@ sub diff
     require PatchReader::DiffPrinter::raw;
     $last_reader->sends_data_to(new PatchReader::DiffPrinter::raw());
     # Actually print out the patch
-    use vars qw($cgi);
     print $cgi->header(-type => 'text/plain',
                        -expires => '+3M');
     $reader->iterate_string("Attachment $attach_id", $thedata);
@@ -830,7 +826,7 @@ sub viewall
   $vars->{'bugsummary'} = $bugsummary;
   $vars->{'GetBugLink'} = \&GetBugLink;
 
-  print Bugzilla->cgi->header();
+  print $cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/show-multiple.html.tmpl", $vars)
@@ -887,7 +883,7 @@ sub enter
   $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'},
                                            @$flag_types);
 
-  print Bugzilla->cgi->header();
+  print $cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/create.html.tmpl", $vars)
@@ -1070,7 +1066,7 @@ sub insert
   $vars->{'contenttypemethod'} = $cgi->param('contenttypemethod');
   $vars->{'contenttype'} = $cgi->param('contenttype');
 
-  print Bugzilla->cgi->header();
+  print $cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/created.html.tmpl", $vars)
@@ -1135,7 +1131,7 @@ sub edit
     require PatchReader;
     $vars->{'patchviewerinstalled'} = 1;
   };
-  print Bugzilla->cgi->header();
+  print $cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/edit.html.tmpl", $vars)
@@ -1290,7 +1286,7 @@ sub update
   $vars->{'attachid'} = $attach_id; 
   $vars->{'bugid'} = $bugid; 
 
-  print Bugzilla->cgi->header();
+  print $cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/updated.html.tmpl", $vars)

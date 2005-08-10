@@ -28,7 +28,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
 
-require "CGI.pl";
+require "globals.pl";
 
 use vars qw($template $vars $userid);
 

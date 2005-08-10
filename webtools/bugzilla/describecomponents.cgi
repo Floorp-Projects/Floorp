@@ -26,7 +26,7 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
-require "CGI.pl";
+require "globals.pl";
 
 use vars qw($vars @legal_product);
 

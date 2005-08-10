@@ -25,15 +25,11 @@
 
 use strict;
 
-use vars qw(
-  $userid
-  $template
-  $vars
-);
+use vars qw($userid $template $vars);
 
 use lib qw(.);
 
-require "CGI.pl";
+require "globals.pl";
 
 use Bugzilla::Constants;
 

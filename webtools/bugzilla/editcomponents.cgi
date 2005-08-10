@@ -28,7 +28,6 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
 require "globals.pl";
 
 use Bugzilla::Constants;
@@ -36,6 +35,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 use Bugzilla::Util;
 use Bugzilla::User;
+use Bugzilla::Bug;
 
 use vars qw($template $vars);
 

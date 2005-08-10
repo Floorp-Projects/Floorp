@@ -29,7 +29,7 @@
 
 use strict;
 
-# The caller MUST require CGI.pl and globals.pl before using this
+# The caller MUST require globals.pl before using this module.
 
 use vars qw($userid);
 

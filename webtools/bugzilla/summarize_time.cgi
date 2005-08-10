@@ -27,7 +27,7 @@ use Bugzilla::Bug;       # EmitDependList
 use Bugzilla::Util;      # trim
 use Bugzilla::Constants; # LOGIN_*
 use Bugzilla::User;      # UserInGroup
-require "CGI.pl";
+require "globals.pl";
 
 GetVersionTable();
 

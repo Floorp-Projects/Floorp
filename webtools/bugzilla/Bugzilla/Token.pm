@@ -37,8 +37,8 @@ use Bugzilla::Util;
 use Date::Format;
 use Date::Parse;
 
-# This module requires that its caller have said "require CGI.pl" to import
-# relevant functions from that script and its companion globals.pl.
+# This module requires that its caller have said "require globals.pl" to import
+# relevant functions from that script.
 
 ################################################################################
 # Constants

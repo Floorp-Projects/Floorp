@@ -37,6 +37,7 @@ use Bugzilla::Util;
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::BugMail;
 use Bugzilla::User;
+use Bugzilla::Error;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.

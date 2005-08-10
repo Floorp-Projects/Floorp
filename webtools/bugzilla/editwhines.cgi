@@ -28,7 +28,6 @@
 use strict;
 
 use lib ".";
-require "CGI.pl";
 require "globals.pl";
 
 use vars qw( $vars );

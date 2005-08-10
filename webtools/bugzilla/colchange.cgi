@@ -27,7 +27,6 @@ use lib qw(.);
 
 use vars qw(
   @legal_keywords
-  $buffer
   $template
   $vars
 );
@@ -35,7 +34,7 @@ use vars qw(
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
-require "CGI.pl";
+require "globals.pl";
 
 Bugzilla->login();
 
@@ -150,7 +149,7 @@ if (defined $cgi->cookie('COLUMNLIST')) {
 $vars->{'collist'} = \@collist;
 $vars->{'splitheader'} = $cgi->cookie('SPLITHEADER') ? 1 : 0;
 
-$vars->{'buffer'} = $::buffer;
+$vars->{'buffer'} = $cgi->query_string();
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print $cgi->header();

@@ -23,7 +23,7 @@
 
 use strict;
 
-require "CGI.pl";
+require "globals.pl";
 
 use lib qw(.);
 

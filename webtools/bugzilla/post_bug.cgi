@@ -26,7 +26,7 @@
 use strict;
 use lib qw(.);
 
-require "CGI.pl";
+require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
@@ -37,7 +37,6 @@ use Bugzilla::Field;
 # "use vars" chokes on me when I try it here.
 sub sillyness {
     my $zz;
-    $zz = $::buffer;
     $zz = %::components;
     $zz = %::versions;
     $zz = @::legal_opsys;
@@ -52,9 +51,7 @@ sub sillyness {
 use vars qw($vars $template);
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
-
 my $cgi = Bugzilla->cgi;
-
 my $dbh = Bugzilla->dbh;
 
 # do a match on the fields if applicable
@@ -94,7 +91,7 @@ if (defined $cgi->param('product')) {
 }
 
 if (defined $cgi->param('maketemplate')) {
-    $vars->{'url'} = $::buffer;
+    $vars->{'url'} = $cgi->query_string();
     
     print $cgi->header();
     $template->process("bug/create/make-template.html.tmpl", $vars)

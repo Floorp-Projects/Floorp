@@ -28,7 +28,7 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
+require "globals.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::Search;
@@ -36,7 +36,6 @@ use Bugzilla::User;
 use Bugzilla::Util;
 
 use vars qw(
-    @CheckOptionValues
     @legal_resolution
     @legal_bug_status
     @legal_components
@@ -57,6 +56,7 @@ use vars qw(
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $buffer = $cgi->query_string();
 
 if ($cgi->param("GoAheadAndLogIn")) {
     # We got here from a login page, probably from relogin.cgi.  We better
@@ -112,7 +112,7 @@ if ($cgi->param('nukedefaultquery')) {
                  " WHERE userid = ? AND name = ?", 
                  undef, ($userid, DEFAULT_QUERY_NAME));
     }
-    $::buffer = "";
+    $buffer = "";
 }
 
 my $userdefaultquery;
@@ -200,7 +200,7 @@ sub PrefillForm {
 }
 
 
-if (!PrefillForm($::buffer)) {
+if (!PrefillForm($buffer)) {
     # Ah-hah, there was no form stuff specified.  Do it again with the
     # default query.
     if ($userdefaultquery) {

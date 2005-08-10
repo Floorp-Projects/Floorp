@@ -35,8 +35,7 @@ See below for more information.
 =item *
 
 Prior to calling routines in this module, it's assumed that you have
-already done a C<require CGI.pl>.  This will eventually change in a
-future version when CGI.pl is removed.
+already done a C<require globals.pl>.
 
 =item *
 

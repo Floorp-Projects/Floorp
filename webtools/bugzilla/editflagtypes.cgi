@@ -29,7 +29,7 @@ use strict;
 use lib ".";
 
 # Include the Bugzilla CGI and general utility library.
-require "CGI.pl";
+require "globals.pl";
 
 # Use Bugzilla's flag modules for handling flag types.
 use Bugzilla;

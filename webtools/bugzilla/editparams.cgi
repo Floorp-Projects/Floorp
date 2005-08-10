@@ -29,7 +29,7 @@ use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin);
 use Bugzilla::User;
 
-require "CGI.pl";
+require "globals.pl";
 
 Bugzilla->login(LOGIN_REQUIRED);
 

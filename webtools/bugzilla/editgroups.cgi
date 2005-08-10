@@ -32,7 +32,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
-require "CGI.pl";
+require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

@@ -32,7 +32,7 @@ use Bugzilla::Util;
 use Bugzilla::BugMail;
 use Bugzilla::Bug;
 
-require "CGI.pl";
+require "globals.pl";
 
 Bugzilla->login();
 

@@ -51,7 +51,7 @@ var queryform = "queryform"
 [% button_name = "Search" %]
 
 [%# The decent help requires Javascript %]
-[% IF NOT help %]
+[% IF NOT cgi.param("help") %]
   [% IF cgi.user_agent("Mozilla/5") %]
     <script type="text/javascript"> <!--
       document.write("<p><a href='query.cgi?help=1&amp;format=advanced'>Give me some help</a> (reloads page.)</p>");
@@ -82,6 +82,6 @@ var queryform = "queryform"
 
 </form>
 
-[% PROCESS "search/search-help.html.tmpl" IF help %]
+[% PROCESS "search/search-help.html.tmpl" IF cgi.param("help") %]
 
 [% PROCESS global/footer.html.tmpl %]

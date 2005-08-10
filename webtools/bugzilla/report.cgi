@@ -24,7 +24,7 @@
 use strict;
 use lib ".";
 
-require "CGI.pl";
+require "globals.pl";
 
 use vars qw($template $vars @legal_opsys @legal_platform @legal_severity);
 
@@ -32,6 +32,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
+my $buffer = $cgi->query_string();
 
 # Go straight back to query.cgi if we are adding a boolean chart.
 if (grep(/^cmd-/, $cgi->param())) {
@@ -266,9 +267,9 @@ if ($action eq "wrap") {
     # We need to keep track of the defined restrictions on each of the 
     # axes, because buglistbase, below, throws them away. Without this, we
     # get buglistlinks wrong if there is a restriction on an axis field.
-    $vars->{'col_vals'} = join("&", $::buffer =~ /[&?]($col_field=[^&]+)/g);
-    $vars->{'row_vals'} = join("&", $::buffer =~ /[&?]($row_field=[^&]+)/g);
-    $vars->{'tbl_vals'} = join("&", $::buffer =~ /[&?]($tbl_field=[^&]+)/g);
+    $vars->{'col_vals'} = join("&", $buffer =~ /[&?]($col_field=[^&]+)/g);
+    $vars->{'row_vals'} = join("&", $buffer =~ /[&?]($row_field=[^&]+)/g);
+    $vars->{'tbl_vals'} = join("&", $buffer =~ /[&?]($tbl_field=[^&]+)/g);
     
     # We need a number of different variants of the base URL for different
     # URLs in the HTML.

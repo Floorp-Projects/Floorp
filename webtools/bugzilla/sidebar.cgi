@@ -18,13 +18,10 @@
 use strict;
 
 use lib ".";
-require "CGI.pl";
+require "globals.pl";
 
 # Shut up "Used Only Once" errors
-use vars qw(
-  $template
-  $vars
-);
+use vars qw($template $vars);
 
 Bugzilla->login();
 
