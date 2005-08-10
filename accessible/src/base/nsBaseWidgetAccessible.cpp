@@ -305,6 +305,7 @@ void nsLinkableAccessible::CacheActionContent()
       link->GetHrefURI(getter_AddRefs(uri));
       if (uri) {
         mActionContent = walkUpContent;
+        mIsLink = PR_TRUE;
         nsLinkState linkState;
         link->GetLinkState(linkState);
         if (linkState == eLinkState_Visited)
