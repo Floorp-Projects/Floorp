@@ -59,15 +59,6 @@ function calMemoryCalendar() {
     this.initMemoryCalendar();
 }
 
-function makeOccurrence(item, start, end)
-{
-    var occ = item.createProxy();
-    occ.recurrenceId = start;
-    occ.startDate = start;
-    occ.endDate = end;
-    return occ;
-}
-
 // END_OF_TIME needs to be the max value a PRTime can be
 const START_OF_TIME = -0x7fffffffffffffff;
 const END_OF_TIME = 0x7fffffffffffffff;
@@ -424,12 +415,7 @@ calMemoryCalendar.prototype = {
                     var recs = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
                     itemsFound = itemsFound.concat(recs);
                 } else if (itemEndTime >= startTime) {
-                    // no occurrences
-                    if (itemReturnOccurrences)
-                        itemtoadd = makeOccurrence(item, item.startDate, item.endDate);
-                    else
-                        itemtoadd = item;
-                    itemsFound.push(itemtoadd);
+                    itemsFound.push(item);
                 }
             }
 
