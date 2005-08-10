@@ -1913,6 +1913,7 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 /* PRUint8 getAccNumActions (); */
 NS_IMETHODIMP nsAccessible::GetNumActions(PRUint8 *aNumActions)
 {
+  *aNumActions = 0;
   return NS_OK;
 }
 
