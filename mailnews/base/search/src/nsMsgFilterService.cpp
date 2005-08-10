@@ -706,6 +706,68 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           }
         }
         break;
+      case nsMsgFilterAction::DeleteFromPop3Server:
+        {
+          nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_curFolder);
+          if (localFolder)
+          {
+            // This action ignores the deleteMailLeftOnServer preference
+            localFolder->MarkMsgsOnPop3Server(m_searchHitHdrs, POP3_FORCE_DEL);
+
+            nsCOMPtr <nsISupportsArray> partialMsgs;
+            // Delete the partial headers. They're useless now
+            // that the server copy is being deleted.
+            for (PRUint32 msgIndex = 0; msgIndex < m_searchHits.GetSize(); msgIndex++)
+            {
+              nsCOMPtr <nsIMsgDBHdr> msgHdr;
+              m_searchHitHdrs->QueryElementAt(msgIndex, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(msgHdr));
+              if (msgHdr)
+              {
+                PRUint32 flags;
+                msgHdr->GetFlags(&flags);
+                if (flags & MSG_FLAG_PARTIAL)
+                {
+                  if (!partialMsgs)
+                    partialMsgs = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+                  NS_ENSURE_SUCCESS(rv, rv);
+                  partialMsgs->AppendElement(msgHdr);
+                }
+              }
+            }
+            if (partialMsgs)
+              m_curFolder->DeleteMessages(partialMsgs, m_msgWindow, PR_TRUE, PR_FALSE, nsnull, PR_FALSE);
+          }
+        }
+        break;
+      case nsMsgFilterAction::FetchBodyFromPop3Server:
+        {
+          nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_curFolder);
+          if (localFolder)
+          {
+            nsCOMPtr<nsISupportsArray> messages = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            for (PRUint32 msgIndex = 0; msgIndex < m_searchHits.GetSize(); msgIndex++)
+            {
+              nsCOMPtr <nsIMsgDBHdr> msgHdr;
+              m_searchHitHdrs->QueryElementAt(msgIndex, NS_GET_IID(nsIMsgDBHdr), getter_AddRefs(msgHdr));
+              if (msgHdr)
+              {
+	        PRUint32 flags = 0;
+                msgHdr->GetFlags(&flags);
+                if (flags & MSG_FLAG_PARTIAL)
+                {
+                  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(msgHdr);
+                  messages->AppendElement(iSupports);
+                }
+              }
+            }
+            PRUint32 msgsToFetch;
+            messages->Count(&msgsToFetch);
+            if (msgsToFetch > 0)
+              m_curFolder->DownloadMessagesForOffline(messages, m_msgWindow);
+          }
+        }
+        break;
       default:
         break;
       }

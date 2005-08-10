@@ -146,7 +146,8 @@ NS_IMETHODIMP nsMsgWindow::SelectFolder(const char *folderUri)
 /* void SelectMessage (in string messasgeUri); */
 NS_IMETHODIMP nsMsgWindow::SelectMessage(const char *messageUri)
 {
-    return mMsgWindowCommands->SelectMessage(messageUri);
+    return (mMsgWindowCommands) ? mMsgWindowCommands->SelectMessage(messageUri)
+      : NS_ERROR_NULL_POINTER;;
 }
 
 NS_IMETHODIMP nsMsgWindow::CloseWindow()
