@@ -2190,17 +2190,20 @@ nsSimpleGlobalHistory::FindRow(mdb_column aCol,
 
   mdbOid rowId;
   nsCOMPtr<nsIMdbRow> row;
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
-                        aCol, &yarn,
-                        &rowId, getter_AddRefs(row));
+  if (aResult) {
+    err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
+                          aCol, &yarn,
+                          &rowId, getter_AddRefs(row));
 
+    if (!row) return NS_ERROR_NOT_AVAILABLE;
+  } else {
+    err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
+                          aCol, &yarn, &rowId, nsnull);
+  }
 
-  if (!row) return NS_ERROR_NOT_AVAILABLE;
-  
-  
   // make sure it's actually stored in the main table
   mdb_bool hasRow;
-  mTable->HasRow(mEnv, row, &hasRow);
+  mTable->HasOid(mEnv, &rowId, &hasRow);
 
   if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
