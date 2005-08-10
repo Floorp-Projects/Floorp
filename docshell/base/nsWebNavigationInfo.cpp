@@ -41,6 +41,12 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIPluginManager.h"
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsIMIMEService.h"
+#include "nsIMIMEInfo.h"
+
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 NS_IMPL_ISUPPORTS1(nsWebNavigationInfo, nsIWebNavigationInfo)
 
@@ -143,6 +149,37 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
     }
   }
   else if (value.EqualsLiteral(PLUGIN_DLF_CONTRACT)) {
+#ifdef ACCESSIBILITY
+    // If a screen reader is running, prefer external handlers over plugins
+    // because they are better at dealing with accessibility -- they don't
+    // have the keyboard navigation problems and are more likely to expose
+    // their content via MSAA.
+    // XXX Eventually we will remove this once the major content types are as
+    //     screen reader accessible in plugins as in external apps.
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      PRInt32 isScreenReaderActive;
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_IsScreenReaderActive,
+                            isScreenReaderActive);
+      if (isScreenReaderActive) {
+        nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
+        if (mimeService) {
+          nsCOMPtr<nsIMIMEInfo> mimeInfo;
+          mimeService->GetFromTypeAndExtension(aType, EmptyCString(),
+                                              getter_AddRefs(mimeInfo));
+          if (mimeInfo) {
+            PRBool hasDefaultHandler;
+            mimeInfo->GetHasDefaultHandler(&hasDefaultHandler);
+            if (hasDefaultHandler) {
+              // External app exists to handle this type, so use it instead of PLUGIN
+              *aIsSupported = nsIWebNavigationInfo::UNSUPPORTED;
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+#endif
     *aIsSupported = nsIWebNavigationInfo::PLUGIN;
   }
   else {

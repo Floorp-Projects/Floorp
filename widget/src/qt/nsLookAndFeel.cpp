@@ -281,6 +281,7 @@ static const char *metricToString[] = {
     "eMetric_DragThresholdX",
     "eMetric_DragThresholdY",
     "eMetric_UseAccessibilityTheme",
+    "eMetric_IsScreenReaderActive",
 
     "eMetric_ScrollArrowStyle",
     "eMetric_ScrollSliderStyle",
