@@ -38,7 +38,7 @@
 <!ENTITY advancedJSDialog.title         "Advanced JavaScript Settings">
 <!ENTITY window.width                   "37em">
 
-<!ENTITY allowScripts .label            "Allow scripts to:">
+<!ENTITY allowScripts.label             "Allow scripts to:">
 
 <!ENTITY moveResizeWindows.label        "Move or resize existing windows">
 <!ENTITY moveResizeWindows.accesskey    "M">
