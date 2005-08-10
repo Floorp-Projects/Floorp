@@ -1,0 +1,37 @@
+<!ENTITY ColumnsDialog.title "Колонки">
+<!ENTITY cmdBlink.label "Подсвечивать элемент">
+<!ENTITY cmdCopyXML.label "Копировать XML">
+<!ENTITY cmdDeleteNode.label "Удалить">
+<!ENTITY cmdFindNext.accesskey "д">
+<!ENTITY cmdFindNext.label "Найти далее">
+<!ENTITY cmdFlashSelected.label "Подсвечивать выбранный элемент">
+<!ENTITY cmdInsertNode.label "Вставить...">
+<!ENTITY cmdInspectBrowser.label "Исследовать открытый документ">
+<!ENTITY cmdInspectInNewWindow.label "Исследовать в новом окне">
+<!ENTITY cmdSelectByClick.accesskey "В">
+<!ENTITY cmdSelectByClick.label "Выбирать элемент щелчком">
+<!ENTITY cmdShowColumnsDialog.accesskey "К">
+<!ENTITY cmdShowColumnsDialog.label "Колонки...">
+<!ENTITY cmdShowFindDialog.accelkey "f">
+<!ENTITY cmdShowFindDialog.accesskey "Н">
+<!ENTITY cmdShowFindDialog.label "Найти узлы...">
+<!ENTITY cmdShowPseudoClasses.accesskey "У">
+<!ENTITY cmdShowPseudoClasses.label "Указать псевдоклассы...">
+<!ENTITY cmdToggleAnonContent.accesskey "о">
+<!ENTITY cmdToggleAnonContent.label "Показывать неизвестное содержимое">
+<!ENTITY cmdToggleAttributes.accesskey "а">
+<!ENTITY cmdToggleAttributes.label "Показать атрибуты">
+<!ENTITY cmdToggleWhitespaceNodes.accesskey "П">
+<!ENTITY cmdToggleWhitespaceNodes.label "Показывать пробельные узлы">
+<!ENTITY findNodes.title "Найти узлы">
+<!ENTITY findNodesByAttr.label "Атрибут">
+<!ENTITY findNodesByAttrValue.label "Значение">
+<!ENTITY findNodesById.label "Идентификатор">
+<!ENTITY findNodesByTag.label "Тег">
+<!ENTITY findNodesCancel.label "Отмена">
+<!ENTITY findNodesDirection.label "Направление">
+<!ENTITY findNodesDirectionDown.label "Вниз">
+<!ENTITY findNodesDirectionUp.label "Вверх">
+<!ENTITY findNodesFind.label "Найти">
+<!ENTITY findNodesSearchBy.label "Искать по">
+<!ENTITY pseudoClasses.title "Псевдоклассы">

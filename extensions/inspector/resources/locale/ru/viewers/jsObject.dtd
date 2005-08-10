@@ -1,0 +1,7 @@
+<!ENTITY jsCancel.label "Отмена">
+<!ENTITY jsCopyValue.label "Копировать значение">
+<!ENTITY jsEval.desc "Введите выражение JavaScript. Переменная &quot;target&quot; - выбранное в данный момент свойство. Любое возвращаемое значение будет отображено в области просмотра JavaScript.">
+<!ENTITY jsEval.label "Выполнить JavaScript...">
+<!ENTITY jsExecute.label "Выполнить">
+<!ENTITY jsProperty.label "Свойство">
+<!ENTITY jsValue.label "Значение">

@@ -1,0 +1,4 @@
+<!ENTITY cbRecurse.label "Искать во вложенных папках">
+<!ENTITY findFiles.title "Найти файлы...">
+<!ENTITY txSearchFor.label "Искать:">
+<!ENTITY txSearchPath.label "Искать в:">

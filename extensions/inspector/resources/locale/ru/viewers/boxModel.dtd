@@ -1,0 +1,5 @@
+<!ENTITY boxBorder.label "Граница">
+<!ENTITY boxDimension.label "Размеры">
+<!ENTITY boxMargin.label "Внешние поля">
+<!ENTITY boxPadding.label "Внутренние поля">
+<!ENTITY boxPosition.label "Расположение">

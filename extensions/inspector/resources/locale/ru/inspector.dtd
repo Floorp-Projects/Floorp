@@ -1,0 +1,51 @@
+<!ENTITY Inspector.title "Инспектор DOM">
+<!ENTITY browserPanel.label "Браузер">
+<!ENTITY btnFind.tooltip "Найти узел для исследования по идентификатору, тегу или атрибуту">
+<!ENTITY btnInspect.label "Исследовать">
+<!ENTITY btnSelecting.tooltip "Найти узел для исследования, щелкнув по нему">
+<!ENTITY bxDocPanel.title "Документ">
+<!ENTITY bxObjectPanel.title "Объект">
+<!ENTITY closeCmd.key "W">
+<!ENTITY cmdClearSearch.label "Очистить">
+<!ENTITY cmdClose.accesskey "З">
+<!ENTITY cmdClose.label "Закрыть">
+<!ENTITY cmdCopy.accesskey "К">
+<!ENTITY cmdCopy.label "Копировать">
+<!ENTITY cmdCopySearchItemAll.label "Копировать всё">
+<!ENTITY cmdCopySearchItemLine.label "Копировать строку">
+<!ENTITY cmdCut.accesskey "В">
+<!ENTITY cmdCut.label "Вырезать">
+<!ENTITY cmdDelete.accesskey "У">
+<!ENTITY cmdDelete.label "Удалить">
+<!ENTITY cmdEditSearchItem.label "Изменить...">
+<!ENTITY cmdExit.accesskey "В">
+<!ENTITY cmdExit.label "Выход">
+<!ENTITY cmdHideSearchItems.label "Скрыть">
+<!ENTITY cmdPaste.accesskey "с">
+<!ENTITY cmdPaste.label "Вставить">
+<!ENTITY cmdRedo.accesskey "П">
+<!ENTITY cmdRedo.label "Повторить">
+<!ENTITY cmdRunSearch.accesskey "В">
+<!ENTITY cmdRunSearch.label "Выполнить...">
+<!ENTITY cmdSaveSearchItemText.label "Сохранить...">
+<!ENTITY cmdShowOpenURLDialog.accesskey "с">
+<!ENTITY cmdShowOpenURLDialog.label "Исследовать URL...">
+<!ENTITY cmdToggleBrowser.label "Браузер">
+<!ENTITY cmdToggleSearch.label "Результаты поиска">
+<!ENTITY cmdUndo.accesskey "О">
+<!ENTITY cmdUndo.label "Отменить">
+<!ENTITY cmdViewSearchItem.label "Просмотр...">
+<!ENTITY inspectNewWindow.label "Исследовать в новом окне">
+<!ENTITY mnEdit.accesskey "П">
+<!ENTITY mnEdit.label "Правка">
+<!ENTITY mnFile.accesskey "Ф">
+<!ENTITY mnFile.label "Файл">
+<!ENTITY mnSearch.accesskey "П">
+<!ENTITY mnSearch.label "Поиск">
+<!ENTITY mnSearchPlugins.accesskey "Р">
+<!ENTITY mnSearchPlugins.label "Расширения">
+<!ENTITY mnView.accesskey "В">
+<!ENTITY mnView.label "Вид">
+<!ENTITY mnWindows.accesskey "И">
+<!ENTITY mnWindows.label "Исследовать окно">
+<!ENTITY thDOMNodes.label "Узлы DOM">

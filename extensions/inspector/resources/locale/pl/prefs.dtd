@@ -1,0 +1,15 @@
+<!ENTITY Inspector.label "Inspektor DOM">
+<!ENTITY Sidebar.label "Sidebar">
+<!ENTITY elementBlinking.label "Wyróżnianie elementów interfejsu">
+<!ENTITY blinkSelectedElement.label "Wyróżnij wybrany element mrugającym obramowaniem">
+<!ENTITY borderColor.label "Kolor obramowania">
+<!ENTITY borderWidth.label "Szerokość obramowania">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Mrugaj przez">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Szybkość mrugania">
+<!ENTITY invertColors.label "Odwróć kolory">
+<!ENTITY installHowTo.label "Niektóre funkcje Inspektora DOM dostępne są w postaci panelu Sidebar. Należy nacisnąć przycisk 'Dodaj panel', aby włączyć panel Inspektora DOM.">
+<!ENTITY install.label "Instaluj">
+<!ENTITY addNavigatorHooks.label "Dodaj menu kontekstowe do przeglądarki">
+
