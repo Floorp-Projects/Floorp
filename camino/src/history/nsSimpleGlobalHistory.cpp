@@ -2204,9 +2204,11 @@ nsSimpleGlobalHistory::FindRow(mdb_column aCol,
 
   if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
-  *aResult = row;
-  (*aResult)->AddRef();
-  
+  if (aResult) {
+    *aResult = row;
+    (*aResult)->AddRef();
+  }
+    
   return NS_OK;
 }
 
