@@ -6477,6 +6477,15 @@ WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
 
 WindowStateHolder::~WindowStateHolder()
 {
+  // Release the timeouts, if we still have any.
+  nsTimeout *timeout = mSavedTimeouts;
+  while (timeout) {
+    nsTimeout *next = timeout->mNext;
+    NS_ASSERTION(!timeout->mTimer, "live timer in a saved window state");
+    timeout->Release(nsnull);
+    timeout = next;
+  }
+
   ::JS_RemoveRootRT(mRuntime, &mJSObj);
 }
 
