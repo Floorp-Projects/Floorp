@@ -550,7 +550,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifndef MOZ_ACCESSIBILITY_ATK
 #ifdef MOZ_XUL
   // tree event
-  if (treeItemAccessible) {
+  if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") ||
+           eventType.LowerCaseEqualsLiteral("openstatechange")) {
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
+                                accessible, nsnull);
+      return NS_OK;
+    }
+  else if (treeItemAccessible) {
     if (eventType.LowerCaseEqualsLiteral("focus")) {
       FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
     }
@@ -650,11 +656,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, 
                               accessible, nsnull);
   }
-  else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") ||
-           eventType.LowerCaseEqualsLiteral("openstatechange")) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
-                                accessible, nsnull);
-    }
   else if (eventType.LowerCaseEqualsLiteral("radiostatechange") ) {
     // first the XUL radio buttons
     if (targetNode &&
