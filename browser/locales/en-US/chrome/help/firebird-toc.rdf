@@ -422,6 +422,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs-advanced-javascript" nc:name="Advanced Javascript Settings" nc:link="prefs.xhtml#advanced_javascript"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

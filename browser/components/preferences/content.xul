@@ -50,19 +50,6 @@
       <preference id="permissions.default.image"      name="permissions.default.image"      type="int"/>
       <preference id="security.enable_java"           name="security.enable_java"           type="bool"/>
       <preference id="javascript.enabled"             name="javascript.enabled"             type="bool"/>
-      <preference id="browser.jsannoyances.disabled"  name="browser.jsannoyances.disabled"  type="bool"/>
-      <preference id="dom.event.contextmenu.enabled"  name="dom.event.contextmenu.enabled"  type="bool" 
-                  onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_move_resize" name="dom.disable_window_move_resize" type="bool"
-                  onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_flip"        name="dom.disable_window_flip"        type="bool"
-                  onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_open_feature.status"
-                  name="dom.disable_window_open_feature.status"
-                  type="bool" onchange="gContentPane.annoyancesPrefChanged();"/>
-      <preference id="dom.disable_window_status_change"
-                  name="dom.disable_window_status_change"
-                  type="bool" onchange="gContentPane.annoyancesPrefChanged();"/>
       <preference id="font.language.group"            name="font.language.group"            type="wstring"  onchange="gContentPane._rebuildFonts();"/>
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
@@ -136,11 +123,12 @@
                         label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
                         onsyncfrompreference="return gContentPane.updateButtons('disableAnnoyances', 
                                                                             'javascript.enabled');"/>
-              <checkbox id="disableAnnoyances" class="indent" 
-                        preference="browser.jsannoyances.disabled"
-                        label="&disableAnnoyances.label;" accesskey="&disableAnnoyances.accesskey;"
-                        onsyncfrompreference="return gContentPane.readAnnoyancesEnabled();"
-                        onsynctopreference="return gContentPane.writeAnnoyancesEnabled();"/>
+            </vbox>
+            <vbox>
+              <button id="advancedJSButton" label="&advancedJS.label;"
+                      accesskey="&advancedJS.accesskey;"
+                      oncommand="gContentPane.showAdvancedJS();"
+                      preference="pref.advanced.javascript.disable_button.advanced"/>
             </vbox>
           </row>
         </rows>
