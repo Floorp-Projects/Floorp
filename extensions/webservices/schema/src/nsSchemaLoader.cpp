@@ -2268,7 +2268,7 @@ nsSchemaLoader::ProcessSimpleType(nsIWebServiceErrorHandler* aErrorHandler,
                                  name, aSimpleType);
       break;
     }
-    else if (tagName = nsSchemaAtoms::sUnion_atom) {
+    else if (tagName == nsSchemaAtoms::sUnion_atom) {
       rv = ProcessSimpleTypeUnion(aErrorHandler, aSchema, childElement,
                                   name, aSimpleType);
       break;
