@@ -740,7 +740,7 @@ function delayedStartup()
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
   BrowserOffline.init();
-
+  
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
@@ -4828,8 +4828,8 @@ function asyncOpenWebPanel(event)
        // A Web panel's links should target the main content area.  Do this
        // if no modifier keys are down and if there's no target or the target equals
        // _main (the IE convention) or _content (the Mozilla convention).
-       // The only reason we field _main and _content here is for the markLinkVisited
-       // hack.
+       // XXX Now that markLinkVisited is gone, we may not need to field _main and
+       // _content here.
        target = wrapper.getAttribute("target");
        var docWrapper = wrapper.ownerDocument;
        var locWrapper = docWrapper.location;
@@ -4855,7 +4855,6 @@ function asyncOpenWebPanel(event)
          var url = getShortcutOrURI(wrapper.href, postData);
          if (!url)
            return true;
-         markLinkVisited(wrapper.href, linkNode);
          loadURI(url, null, postData.value);
          event.preventDefault();
          return false;

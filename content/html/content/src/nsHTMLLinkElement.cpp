@@ -233,6 +233,12 @@ void
 nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+  if (oldDoc) {
+    GetCurrentDoc()->ForgetLink(this);
+    // If this link is ever reinserted into a document, it might
+    // be under a different xml:base, so forget the cached state now
+    mLinkState = eLinkState_Unknown;
+  }
 
   // XXXbz we really shouldn't fire the event until after we've finished with
   // the outermost UnbindFromTree...  In particular, this can effectively cause
@@ -289,6 +295,13 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->ForgetLink(this);
+        // The change to 'href' will cause style reresolution which will
+        // eventually recompute the link state and re-add this element
+        // to the link map if necessary.
+    }
     SetLinkState(eLinkState_Unknown);
   }
 

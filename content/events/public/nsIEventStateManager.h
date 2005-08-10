@@ -151,5 +151,6 @@ public:
 // CSS 3 UI
 #define NS_EVENT_STATE_REQUIRED     0x00000040
 #define NS_EVENT_STATE_OPTIONAL     0x00000080
+#define NS_EVENT_STATE_VISITED      0x00000100
 
 #endif // nsIEventStateManager_h__

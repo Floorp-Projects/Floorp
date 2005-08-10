@@ -681,8 +681,10 @@ nsSimpleGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   
   // if the page was typed, unhide it now because it's
   // known to be valid
-  if (HasCell(mEnv, row, kToken_TypedColumn))
+  if (HasCell(mEnv, row, kToken_TypedColumn)) {
+    mTypedHiddenURIs.Remove(URISpec);
     row->CutColumn(mEnv, kToken_HiddenColumn);
+  }
 
   // Update last visit date.
   // First get the old date so we can update observers...
@@ -1413,9 +1415,18 @@ nsSimpleGlobalHistory::IsVisited(nsIURI* aURI, PRBool *_retval)
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIMdbRow> row;
-  rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
-
+  rv = FindRow(kToken_URLColumn, URISpec.get(), nsnull);
+  *_retval = NS_SUCCEEDED(rv);
+  
+  // Hidden, typed URIs haven't really been visited yet. They've only
+  // been typed in and the actual load hasn't happened yet. We maintain
+  // the list of hidden+typed URIs in memory in mTypedHiddenURIs because
+  // the list will usually be small and checking the actual Mork row
+  // would require several dynamic memory allocations.
+  if (*_retval && mTypedHiddenURIs.Contains(URISpec))
+    *_retval = PR_FALSE;
+  }
+  
   *_retval = NS_SUCCEEDED(rv);
 
   return NS_OK;
@@ -1582,6 +1593,7 @@ nsSimpleGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
     // We don't know if this is a valid URI yet. Hide it until it finishes
     // loading.
     SetRowValue(row, kToken_HiddenColumn, 1);
+    mTypedHiddenURIs.Put(spec);
   }
   
   rv = SetRowValue(row, kToken_TypedColumn, 1);
@@ -1635,7 +1647,9 @@ nsSimpleGlobalHistory::Init()
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);
   }
-  
+
+  mTypedHiddenURIs.Init(3);
+
   return NS_OK;
 }
 

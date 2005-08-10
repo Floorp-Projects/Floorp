@@ -60,6 +60,7 @@
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteResultTypes.h"
+#include "nsHashSets.h"
 
 //----------------------------------------------------------------------
 //
@@ -299,6 +300,9 @@ protected:
   // meta-data tokens
   mdb_column kToken_LastPageVisited;
 
+  // A set of the page URI specs that have been typed but not yet loaded
+  nsCStringHashSet mTypedHiddenURIs;
+  
   //
   // AddPage-oriented stuff
   //

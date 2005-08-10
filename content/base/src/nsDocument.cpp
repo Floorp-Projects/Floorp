@@ -140,6 +140,115 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
+void
+nsUint32ToContentHashEntry::Destroy()
+{
+  HashSet* set = GetHashSet();
+  if (set) {
+    delete set;
+  } else {
+    nsIContent* content = GetContent();
+    NS_IF_RELEASE(content);
+  }
+}
+
+nsresult
+nsUint32ToContentHashEntry::PutContent(nsIContent* aVal)
+{
+  // Add the value to the hash if it is there
+  HashSet* set = GetHashSet();
+  if (set) {
+    nsISupportsHashKey* entry = set->PutEntry(aVal);
+    return entry ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // If an element is already there, create a hashtable and both of these to it
+  if (GetContent()) {
+    nsIContent* oldVal = GetContent();
+    nsresult rv = InitHashSet(&set);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsISupportsHashKey* entry = set->PutEntry(oldVal);
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
+    // The hashset adds its own reference, so release the one we had
+    NS_RELEASE(oldVal);
+
+    entry = set->PutEntry(aVal);
+    return entry ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Nothing exists in the hash right now, so just set the single pointer
+  return SetContent(aVal);
+}
+
+void
+nsUint32ToContentHashEntry::RemoveContent(nsIContent* aVal)
+{
+  // Remove from the hash if the hash is there
+  HashSet* set = GetHashSet();
+  if (set) {
+    set->RemoveEntry(aVal);
+    if (set->Count() == 0) {
+      delete set;
+      mValOrHash = nsnull;
+    }
+    return;
+  }
+
+  // Remove the ptr if there is just a ptr
+  nsIContent* v = GetContent();
+  if (v == aVal) {
+    NS_IF_RELEASE(v);
+    mValOrHash = nsnull;
+  }
+}
+
+nsresult
+nsUint32ToContentHashEntry::InitHashSet(HashSet** aSet)
+{
+  HashSet* newSet = new HashSet();
+  if (!newSet) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult rv = newSet->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mValOrHash = newSet;
+  *aSet = newSet;
+  return NS_OK;
+}
+
+static PLDHashOperator PR_CALLBACK
+nsUint32ToContentHashEntryVisitorCallback(nsISupportsHashKey* aEntry,
+                                          void* aClosure)
+{
+  nsUint32ToContentHashEntry::Visitor* visitor =
+    NS_STATIC_CAST(nsUint32ToContentHashEntry::Visitor*, aClosure);
+  visitor->Visit(NS_STATIC_CAST(nsIContent*, aEntry->GetKey()));
+  return PL_DHASH_NEXT;
+}
+
+void
+nsUint32ToContentHashEntry::VisitContent(Visitor* aVisitor)
+{
+  HashSet* set = GetHashSet();
+  if (set) {
+    set->EnumerateEntries(nsUint32ToContentHashEntryVisitorCallback, aVisitor);
+    if (set->Count() == 0) {
+      delete set;
+      mValOrHash = nsnull;
+    }
+    return;
+  }
+
+  nsIContent* v = GetContent();
+  if (v) {
+    aVisitor->Visit(v);
+  }
+}
+
 // Helper structs for the content->subdoc map
 
 class SubDocMapEntry : public PLDHashEntryHdr
@@ -748,6 +857,8 @@ nsDocument::Init()
   if (mBindingManager || mCSSLoader || mNodeInfoManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+
+  mLinkMap.Init();
 
   // Force initialization.
   nsBindingManager *bindingManager = new nsBindingManager();
@@ -4963,6 +5074,9 @@ nsDocument::UnblockOnload()
 void
 nsDocument::OnPageShow(PRBool aPersisted)
 {
+  mVisible = PR_TRUE;
+  UpdateLinkMap();
+  
   if (aPersisted) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(this,
@@ -5028,4 +5142,104 @@ nsDocument::OnPageHide(PRBool aPersisted)
                                           NS_EVENT_FLAG_INIT, &status);
     }
   }
+  
+  mVisible = PR_FALSE;
+}
+
+static PRUint32 GetURIHash(nsIURI* aURI)
+{
+  nsCAutoString str;
+  aURI->GetSpec(str);
+  return HashString(str);
+}
+
+void
+nsDocument::AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI)
+{
+  nsUint32ToContentHashEntry* entry = mLinkMap.PutEntry(GetURIHash(aURI));
+  if (!entry) // out of memory?
+    return;
+  entry->PutContent(aContent);
+}
+
+void
+nsDocument::ForgetLink(nsIContent* aContent)
+{
+  nsCOMPtr<nsIURI> uri = nsContentUtils::GetLinkURI(aContent);
+  if (!uri)
+    return;
+  PRUint32 hash = GetURIHash(uri);
+  nsUint32ToContentHashEntry* entry = mLinkMap.GetEntry(hash);
+  if (!entry)
+    return;
+
+  entry->RemoveContent(aContent);
+  if (entry->IsEmpty()) {
+    // Remove the entry and allow the table to resize, in case
+    // a lot of links are being removed from the document or modified
+    mLinkMap.RemoveEntry(hash);
+  }
+}
+
+class URIVisitNotifier : public nsUint32ToContentHashEntry::Visitor
+{
+public:
+  nsCAutoString matchURISpec;
+  nsIDocument* document;
+  
+  virtual void Visit(nsIContent* aContent) {
+    // Ensure that the URIs really match before we try to do anything
+    nsCOMPtr<nsIURI> uri = nsContentUtils::GetLinkURI(aContent);
+    if (!uri) {
+      NS_ERROR("Should have found a URI for content in the link map");
+      return;
+    }
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    // We use nsCString::Equals here instead of nsIURI::Equals because
+    // history matching is all based on spec equality
+    if (!spec.Equals(matchURISpec))
+      return;
+
+    // Throw away the cached link state so it gets refetched by the style
+    // system      
+    nsCOMPtr<nsILink> link = do_QueryInterface(aContent);
+    if (link) {
+      link->SetLinkState(eLinkState_Unknown);
+    }
+    document->ContentStatesChanged(aContent, nsnull, NS_EVENT_STATE_VISITED);
+  }
+};
+
+void
+nsDocument::NotifyURIVisitednessChanged(nsIURI* aURI)
+{
+  if (!mVisible) {
+    mVisitednessChangedURIs.AppendObject(aURI);
+    return;
+  }
+
+  nsUint32ToContentHashEntry* entry = mLinkMap.GetEntry(GetURIHash(aURI));
+  if (!entry)
+    return;
+  
+  URIVisitNotifier visitor;
+  visitor.document = this;
+  aURI->GetSpec(visitor.matchURISpec);
+  entry->VisitContent(&visitor);
+}
+
+void
+nsDocument::UpdateLinkMap()
+{
+  NS_ASSERTION(mVisible,
+               "Should only be updating the link map in visible documents");
+  if (!mVisible)
+    return;
+    
+  PRInt32 count = mVisitednessChangedURIs.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    NotifyURIVisitednessChanged(mVisitednessChangedURIs[i]);
+  }
+  mVisitednessChangedURIs.Clear();
 }

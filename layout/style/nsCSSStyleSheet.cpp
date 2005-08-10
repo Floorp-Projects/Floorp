@@ -3108,10 +3108,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           result = localTrue;
         }
         else if (nsCSSPseudoClasses::link == pseudoClass->mAtom) {
-          result = localTrue == (eLinkState_Unvisited == data.mLinkState);
+          result = (aStateMask & NS_EVENT_STATE_VISITED) ||
+            localTrue == (eLinkState_Unvisited == data.mLinkState);
         }
         else if (nsCSSPseudoClasses::visited == pseudoClass->mAtom) {
-          result = localTrue == (eLinkState_Visited == data.mLinkState);
+          result = (aStateMask & NS_EVENT_STATE_VISITED) ||
+            localTrue == (eLinkState_Visited == data.mLinkState);
         }
       }
       else {
@@ -3644,6 +3646,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::focus) || 
         (pseudoClass->mAtom == nsCSSPseudoClasses::hover) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::target) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::link) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::visited) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::required) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::optional)) {
       return PR_TRUE;

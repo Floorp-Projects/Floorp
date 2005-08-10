@@ -57,6 +57,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsSupportsArray.h"
+#include "nsHashSets.h"
 
 struct MatchHostData;
 struct SearchQueryData;
@@ -307,6 +308,7 @@ protected:
   mdb_column kToken_LastPageVisited;
   mdb_column kToken_ByteOrder;
 
+  nsCStringHashSet mTypedHiddenURIs;
 };
 
 

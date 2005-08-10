@@ -52,6 +52,8 @@
 #include "nsCRT.h"
 #include "mozFlushType.h"
 #include "nsPropertyTable.h"
+#include "nsHashSets.h"
+#include "nsAutoPtr.h"
 
 class nsIAtom;
 class nsIContent;
@@ -90,8 +92,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x9339ff1e, 0xdab0, 0x4264, \
-  { 0x8a, 0x8c, 0xcb, 0x84, 0xeb, 0x4e, 0x6b, 0x92 } }
+{ 0xd7c47f55, 0x480b, 0x4a60, \
+  { 0x9a, 0xdf, 0xca, 0x49, 0x87, 0x3c, 0x71, 0xe2 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -103,6 +105,7 @@ class nsILayoutHistoryState;
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
 
+#define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
 
 //----------------------------------------------------------------------
 
@@ -751,6 +754,28 @@ public:
    * |aPersisted| parameter.
    */
   virtual void OnPageHide(PRBool aPersisted) = 0;
+  
+  /*
+   * We record the set of links in the document that are relevant to
+   * style.
+   */
+  /**
+   * Notification that an element is a link with a given URI that is
+   * relevant to style.
+   */
+  virtual void AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI) = 0;
+  /**
+   * Notification that an element is a link and its URI might have been
+   * changed or the element removed. If the element is still a link relevant
+   * to style, then someone must ensure that AddStyleRelevantLink is
+   * (eventually) called on it again.
+   */
+  virtual void ForgetLink(nsIContent* aContent) = 0;
+  /**
+   * Notification that the visitedness state of a URI has been changed
+   * and style related to elements linking to that URI should be updated.
+   */
+  virtual void NotifyURIVisitednessChanged(nsIURI* aURI) = 0;
 
 protected:
   ~nsIDocument()

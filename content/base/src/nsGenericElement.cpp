@@ -1897,6 +1897,10 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     // anonymous content that the document is changing.
     document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
 
+    if (HasAttr(kNameSpaceID_XLink, nsHTMLAtoms::href)) {
+      document->ForgetLink(this);
+    }
+
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
 
     if (domElement) {
@@ -3488,6 +3492,20 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
                "Don't call SetAttr with unknown namespace");
 
+  if (kNameSpaceID_XLink == aNamespaceID && nsHTMLAtoms::href == aName) {
+    // XLink URI(s) might be changing. Drop the link from the map. If it
+    // is still style relevant it will be re-added by
+    // nsStyleUtil::IsSimpleXlink. Make sure to keep the style system
+    // consistent so this remains true! In particular if the style system
+    // were to get smarter and not restyling an XLink element if the href
+    // doesn't change in a "significant" way, we'd need to do the same
+    // significance check here.
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      doc->ForgetLink(this);
+    }
+  }
+
   PRBool modification = PR_FALSE;
   nsAutoString oldValue;
 
@@ -3642,6 +3660,11 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsIDocument *document = GetCurrentDoc();    
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (document) {
+    if (kNameSpaceID_XLink == aNameSpaceID && nsHTMLAtoms::href == aName) {
+      // XLink URI might be changing.
+      document->ForgetLink(this);
+    }
+
     if (aNotify) {
       document->AttributeWillChange(this, aNameSpaceID, aName);
     }
