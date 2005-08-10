@@ -364,7 +364,7 @@
   <binding id="xformswidget-trigger-minimal"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <html:span anonid="thespan" xbl:inherits="accesskey"
+      <html:span tabindex="0" anonid="thespan" xbl:inherits="accesskey"
                  onclick="if (!this._disabled) this.parentNode.dispatchDOMActivate();">
         <children/>
       </html:span>
