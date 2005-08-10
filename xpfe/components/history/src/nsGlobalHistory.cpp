@@ -372,6 +372,8 @@ nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
   mdb_err err;
   err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
   if (err != 0) return NS_ERROR_FAILURE;
+  
+  mTypedHiddenURIs.Init(3);
 
   return NS_OK;
 }
@@ -706,8 +708,14 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   
   // if the page was typed, unhide it now because it's
   // known to be valid
-  if (HasCell(mEnv, row, kToken_TypedColumn))
+  if (HasCell(mEnv, row, kToken_TypedColumn)) {
+    nsCAutoString URISpec;
+    rv = GetRowValue(row, kToken_URLColumn, URISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    mTypedHiddenURIs.Remove(URISpec);
     row->CutColumn(mEnv, kToken_HiddenColumn);
+  }
 
   // Update last visit date.
   // First get the old date so we can update observers...
@@ -1252,7 +1260,17 @@ nsGlobalHistory::IsVisited(nsIURI* aURI, PRBool *_retval)
 
   rv = FindRow(kToken_URLColumn, URISpec.get(), nsnull);
   *_retval = NS_SUCCEEDED(rv);
-
+  
+  // Hidden, typed URIs haven't really been visited yet. They've only
+  // been typed in and the actual load hasn't happened yet. We maintain
+  // the list of hidden+typed URIs in memory in mTypedHiddenURIs because
+  // the list will usually be small and checking the actual Mork row
+  // would require several dynamic memory allocations.
+  if (*_retval && mTypedHiddenURIs.Contains(URISpec))
+  {
+    *_retval = PR_FALSE;
+  }
+  
   return NS_OK;
 }
 
@@ -1357,6 +1375,7 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
     // We don't know if this is a valid URI yet. Hide it until it finishes
     // loading.
     SetRowValue(row, kToken_HiddenColumn, 1);
+    mTypedHiddenURIs.Put(spec);
   }
   
   return SetRowValue(row, kToken_TypedColumn, 1);

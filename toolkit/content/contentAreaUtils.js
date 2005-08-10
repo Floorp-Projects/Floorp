@@ -42,7 +42,8 @@
  * Determine whether or not a given focused DOMWindow is in the content
  * area.
  **/
- 
+
+// linkNode is not used anymore
 function openNewTabWith(href, linkNode, event, securityCheck, postData, sendReferrer)
 {
   if (securityCheck)
@@ -77,11 +78,9 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData, sendRefe
   var referrer = (sendReferrer == false) ? null : getReferrer(document);
 
   browser.loadOneTab(href, referrer, originCharset, postData, loadInBackground);
-  
-  if (linkNode)
-    markLinkVisited(href, linkNode);
 }
 
+// linkNode is not used anymore
 function openNewWindowWith(href, linkNode, securityCheck, postData, sendReferrer)
 {
   if (securityCheck)
@@ -99,31 +98,6 @@ function openNewWindowWith(href, linkNode, securityCheck, postData, sendReferrer
   var referrer = (sendReferrer == false) ? null : getReferrer(document);
 
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer, postData);
-  
-  if (linkNode)
-    markLinkVisited(href, linkNode);
-}
-
-function markLinkVisited(href, linkNode)
-{
-  var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                .getService(Components.interfaces.nsIGlobalHistory2);
-
-  var uri = makeURI(href);
-  if (!globalHistory.isVisited(uri)) {
-    globalHistory.addURI(uri, false, true, null);
-    var oldHref = linkNode.getAttribute("href");
-    if (typeof oldHref == "string") {
-      // Use setAttribute instead of direct assignment.
-      // (bug 217195, bug 187195)
-      linkNode.setAttribute("href", "");
-      linkNode.setAttribute("href", oldHref);
-    }
-    else {
-      // Converting to string implicitly would be a 
-      // minor security hole (similar to bug 202994).
-    }
-  }
 }
 
 function urlSecurityCheck(url, doc) 

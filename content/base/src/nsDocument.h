@@ -44,6 +44,7 @@
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
+#include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOM3Document.h"
 #include "nsIDOMDocumentView.h"
@@ -109,6 +110,85 @@ class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
+
+/**
+ * Hashentry using a PRUint32 key and a cheap set of nsIContent* owning
+ * pointers for the value.
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class nsUint32ToContentHashEntry : public PLDHashEntryHdr
+{
+  public:
+    typedef const PRUint32& KeyType;
+    typedef const PRUint32* KeyTypePointer;
+
+    nsUint32ToContentHashEntry(const KeyTypePointer key) :
+      mValue(*key), mValOrHash(nsnull) { }
+    nsUint32ToContentHashEntry(const nsUint32ToContentHashEntry& toCopy) :
+      mValue(toCopy.mValue), mValOrHash(toCopy.mValOrHash)
+    {
+      // Pathetic attempt to not die: clear out the other mValOrHash so we're
+      // effectively stealing it. If toCopy is destroyed right after this,
+      // we'll be OK.
+      NS_CONST_CAST(nsUint32ToContentHashEntry&, toCopy).mValOrHash = nsnull;
+      NS_ERROR("Copying not supported. Fasten your seat belt.");
+    }
+    ~nsUint32ToContentHashEntry() { Destroy(); }
+
+    KeyType GetKey() const { return mValue; }
+    KeyTypePointer GetKeyPointer() const { return &mValue; }
+
+    PRBool KeyEquals(KeyTypePointer aKey) const { return mValue == *aKey; }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+    static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+
+    // Content set methods
+    nsresult PutContent(nsIContent* aContent);
+
+    void RemoveContent(nsIContent* aContent);
+
+    struct Visitor {
+      virtual void Visit(nsIContent* aContent) = 0;
+    };
+    void VisitContent(Visitor* aVisitor);
+
+    PRBool IsEmpty() { return mValOrHash == nsnull; }
+
+  private:
+    typedef unsigned long PtrBits;
+    typedef nsTHashtable<nsISupportsHashKey> HashSet;
+    /** Get the hash pointer (or null if we're not a hash) */
+    HashSet* GetHashSet()
+    {
+      return (PtrBits(mValOrHash) & 0x1) ? nsnull : (HashSet*)mValOrHash;
+    }
+    /** Find out whether it is an nsIContent (returns weak) */
+    nsIContent* GetContent()
+    {
+      return (PtrBits(mValOrHash) & 0x1)
+             ? (nsIContent*)(PtrBits(mValOrHash) & ~0x1)
+             : nsnull;
+    }
+    /** Set the single element, adding a reference */
+    nsresult SetContent(nsIContent* aVal)
+    {
+      NS_IF_ADDREF(aVal);
+      mValOrHash = (void*)(PtrBits(aVal) | 0x1);
+      return NS_OK;
+    }
+    /** Initialize the hash */
+    nsresult InitHashSet(HashSet** aSet);
+
+    void Destroy();
+
+  private:
+    const PRUint32 mValue;
+    /** A hash or nsIContent ptr, depending on the lower bit (0=hash, 1=ptr) */
+    void* mValOrHash;
+};
 
 
 class nsDocHeaderData
@@ -562,6 +642,10 @@ public:
   virtual NS_HIDDEN_(void) BlockOnload();
   virtual NS_HIDDEN_(void) UnblockOnload();
 
+  virtual NS_HIDDEN_(void) AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI);
+  virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
+  virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
+
 protected:
 
   void DispatchContentLoadedEvents();
@@ -572,6 +656,8 @@ protected:
                                   PRInt32& aCharsetSource,
                                   nsACString& aCharset);
   
+  void UpdateLinkMap();
+
   nsresult doCreateShell(nsPresContext* aContext,
                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
                          nsCompatibility aCompatMode,
@@ -592,7 +678,7 @@ protected:
     return kNameSpaceID_None;
   };
 
-  nsDocument() : nsIDocument() {}
+  nsDocument() : nsIDocument(), mVisible(PR_TRUE) {}
   virtual ~nsDocument();
 
   nsCString mReferrer;
@@ -635,10 +721,11 @@ protected:
   nsHashtable mRadioGroups;
 
   // True if the document has been detached from its content viewer.
-  PRPackedBool mIsGoingAway;
-
+  PRPackedBool mIsGoingAway:1;
   // True if the document is being destroyed.
-  PRPackedBool mInDestructor;
+  PRPackedBool mInDestructor:1;
+  // True if the document "page" is not hidden
+  PRPackedBool mVisible:1;
 
   PRUint8 mXMLDeclarationBits;
 
@@ -673,8 +760,12 @@ private:
 
   PRUint32 mOnloadBlockCount;
   nsCOMPtr<nsIRequest> mOnloadBlocker;
+  
+  // A map from unvisited URI hashes to content elements
+  nsTHashtable<nsUint32ToContentHashEntry> mLinkMap;
+  // URIs whose visitedness has changed while we were hidden
+  nsCOMArray<nsIURI> mVisitednessChangedURIs;
 };
-
 
 
 #endif /* nsDocument_h___ */

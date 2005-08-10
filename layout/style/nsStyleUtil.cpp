@@ -458,6 +458,12 @@ PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContex
         } else {
           linkState = eLinkState_NotLink;
         }
+        if (linkState != eLinkState_NotLink) {
+          nsIDocument* doc = aPresContext->GetDocument();
+          if (doc) {
+            doc->AddStyleRelevantLink(aContent, hrefURI);
+          }
+        }
         link->SetLinkState(linkState);
       }
       if (linkState != eLinkState_NotLink) {
@@ -494,6 +500,10 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresCont
         else {
           // no link handler?  then all links are unvisited
           *aState = eLinkState_Unvisited;
+        }
+        nsIDocument* doc = aPresContext->GetDocument();
+        if (doc) {
+          doc->AddStyleRelevantLink(aContent, absURI);
         }
 
         rv = PR_TRUE;

@@ -195,8 +195,12 @@ nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
+    GetCurrentDoc()->ForgetLink(this);
+    // If this link is ever reinserted into a document, it might
+    // be under a different xml:base, so forget the cached state now
+    mLinkState = eLinkState_Unknown;
   }
-
+    
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -577,6 +581,13 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsAutoString val;
     GetHref(val);
     if (!val.Equals(aValue)) {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        doc->ForgetLink(this);
+        // The change to 'href' will cause style reresolution which will
+        // eventually recompute the link state and re-add this element
+        // to the link map if necessary.
+      }
       SetLinkState(eLinkState_Unknown);
     }
   }

@@ -1846,14 +1846,16 @@ PresShell::Init(nsIDocument* aDocument,
                                   PR_TRUE);
   }
 
-#ifdef MOZ_XUL
   {
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1", &result);
-    if (os)
+    if (os) {
+      os->AddObserver(this, NS_LINK_VISITED_EVENT_TOPIC, PR_FALSE);
+#ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
-  }
 #endif
+    }
+  }
 
   // cache the drag service so we can check it during reflows
   mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
@@ -7217,6 +7219,14 @@ PresShell::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 #endif
+
+  if (!nsCRT::strcmp(aTopic, NS_LINK_VISITED_EVENT_TOPIC)) {
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
+    if (uri && mDocument) {
+      mDocument->NotifyURIVisitednessChanged(uri);
+    }
+    return NS_OK;
+  }
 
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;

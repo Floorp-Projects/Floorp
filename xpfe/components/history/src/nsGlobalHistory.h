@@ -57,6 +57,7 @@
 #include "nsString.h"
 #include "nsITimer.h"
 #include "nsIAutoCompleteSession.h"
+#include "nsHashSets.h"
 
 //----------------------------------------------------------------------
 //
@@ -299,6 +300,8 @@ protected:
   // meta-data tokens
   mdb_column kToken_LastPageVisited;
   mdb_column kToken_ByteOrder;
+  
+  nsCStringHashSet mTypedHiddenURIs;
 
   //
   // AddPage-oriented stuff

@@ -480,13 +480,15 @@ NS_IMETHODIMP
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
                                          nsReStyleHint* aResult)
 {
-  if (mActiveRule &&
-      (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
-      aData->mStyledContent &&
+  if (aData->mStyledContent &&
       aData->mIsHTMLContent &&
       aData->mIsHTMLLink &&
-      aData->mContentTag == nsHTMLAtoms::a)
+      aData->mContentTag == nsHTMLAtoms::a &&
+      ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
+       (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
+       (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
     *aResult = eReStyle_Self;
+  }
   else
     *aResult = nsReStyleHint(0);
 
