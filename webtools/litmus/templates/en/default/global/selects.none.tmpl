@@ -467,11 +467,11 @@ function makeOption(obj) {
     return new Option(obj['name'], obj['id'], false, false)
 }
 
-function getElementByClass(class) {
+function getElementByClass(theClass) {
     var elements = new Array();
     var all = document.getElementsByTagName("*"); 
     for (var i=0; i<all.length; i++) {
-        if (all[i].className == class) {
+        if (all[i].className == theClass) {
             elements.push(all[i]);
         }
     }
