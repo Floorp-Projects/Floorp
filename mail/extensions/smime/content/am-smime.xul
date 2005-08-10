@@ -115,11 +115,11 @@
   
   <!-- Certificate manager -->
   <groupbox>
-    <caption label="&managecerts.label;"/>
+    <caption label="&certificates.label;"/>
     <hbox align="center">
-      <button label="&managecerts.button;" oncommand="openCertManager();" id="openCertManagerButton"
+      <button label="&managecerts.label;" oncommand="openCertManager();" id="openCertManagerButton"
               accesskey="&managecerts.accesskey;" prefstring="security.disable_button.openCertManager"/> 
-      <button label="&managedevices.button;" oncommand="openDeviceManager();" id="openDeviceManagerButton" 
+      <button label="&managedevices.label;" oncommand="openDeviceManager();" id="openDeviceManagerButton" 
               accesskey="&managedevices.accesskey;" prefstring="security.disable_button.openDeviceManager"/>
     </hbox>
   </groupbox>

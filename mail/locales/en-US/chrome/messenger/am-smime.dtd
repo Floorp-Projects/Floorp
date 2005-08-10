@@ -13,8 +13,8 @@
 <!ENTITY signingCert.message "Use this certificate to digitally sign messages you send:">
 <!ENTITY signingCert.notselected "No certificate set">
 
-<!ENTITY managecerts.label      "Certificates">
-<!ENTITY managecerts.button     "View Certificates">
+<!ENTITY certificates.label     "Certificates">
+<!ENTITY managecerts.label      "View Certificates">
 <!ENTITY managecerts.accesskey  "V">
-<!ENTITY managedevices.button   "Security Devices">
+<!ENTITY managedevices.label    "Security Devices">
 <!ENTITY managedevices.accesskey "S">
