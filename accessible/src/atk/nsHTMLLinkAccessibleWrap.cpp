@@ -60,7 +60,7 @@ nsHTMLLinkAccessible(aDomNode, aShell, aFrame)
 /* readonly attribute long anchors; */
 NS_IMETHODIMP nsHTMLLinkAccessibleWrap::GetAnchors(PRInt32 *aAnchors)
 {
-  if (!IsALink())
+  if (!mIsLink)
     return NS_ERROR_FAILURE;
   
   *aAnchors = 1;
@@ -89,10 +89,10 @@ NS_IMETHODIMP nsHTMLLinkAccessibleWrap::GetURI(PRInt32 i, nsIURI **aURI)
   //more powerful for the future.
   *aURI = nsnull;
 
-  if (!IsALink())  // Also initializes private data members
+  if (!mIsLink)  // Also initializes private data members
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILink> link(do_QueryInterface(mLinkContent));
+  nsCOMPtr<nsILink> link(do_QueryInterface(mActionContent));
   if (link) {
     return link->GetHrefURI(aURI);
   }
@@ -129,10 +129,10 @@ nsresult nsHTMLLinkAccessibleWrap::GetLinkOffset(PRInt32* aStartOffset, PRInt32*
 {
   NS_ENSURE_TRUE(mTextNodes, NS_ERROR_FAILURE);
 
-  if (!IsALink())  // Also initializes private data members
+  if (!mIsLink)  // Also initializes private data members
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILink> currentLink(do_QueryInterface(mLinkContent));
+  nsCOMPtr<nsILink> currentLink(do_QueryInterface(mActionContent));
   NS_ENSURE_TRUE(currentLink, NS_ERROR_FAILURE);
 
   PRUint32 index, count = 0;
