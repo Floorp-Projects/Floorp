@@ -76,7 +76,7 @@
           <caption label="&direction.label;"/>
           <radiogroup orient="horizontal" flex="1">
             <radio id="radioUp" label="&up.label;" accesskey="&up.accesskey;"/>
-            <radio id="radioDown" label="&down.label;" accesskey="&down.label;" selected="true"/>
+            <radio id="radioDown" label="&down.label;" accesskey="&down.accesskey;" selected="true"/>
           </radiogroup>
         </groupbox>
       </hbox>
