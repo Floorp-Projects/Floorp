@@ -52,15 +52,10 @@ class nsOuterDocAccessible : public nsAccessibleWrap
     nsOuterDocAccessible(nsIDOMNode* aNode, 
                          nsIWeakReference* aShell);
 
-    NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
     NS_IMETHOD GetName(nsAString& aName);
-    NS_IMETHOD GetValue(nsAString& Value);
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetState(PRUint32 *aState);
-    NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, 
-                            PRInt32 *width, PRInt32 *height);
-
-    NS_IMETHOD Init();
+    void CacheChildren(PRBool aWalkAnonContent);
 };
 
 #endif  

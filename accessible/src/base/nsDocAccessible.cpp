@@ -404,7 +404,7 @@ NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *a
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::Init()
+NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
 {
   // Hook up our new accessible with our parent
   if (!mParent) {
@@ -421,17 +421,16 @@ NS_IMETHODIMP nsDocAccessible::Init()
           // the document hierarchy. GetAccessibleFor() is bad because
           // it doesn't support our concept of multiple presshells per doc.
           // It should be changed to use GetAccessibleInWeakShell()
-          nsCOMPtr<nsIAccessible> accParent;
-          accService->GetAccessibleFor(ownerNode, getter_AddRefs(accParent));
-          nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(accParent));
-          if (privateParent) {
-            SetParent(accParent);
-            privateParent->SetFirstChild(this);
-          }
+          accService->GetAccessibleFor(ownerNode, getter_AddRefs(mParent));
         }
       }
     }
   }
+  return mParent ? nsAccessible::GetParent(aParent) : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocAccessible::Init()
+{
   AddEventListeners();
 
   nsresult rv = nsBlockAccessible::Init();
