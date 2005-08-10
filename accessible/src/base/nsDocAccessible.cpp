@@ -752,9 +752,13 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
 
   if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial) {
     if (aAttribute == nsAccessibilityAtoms::role) {
-      nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
-      InvalidateCacheSubtree(changedContent, nsIAccessibleEvent::EVENT_REORDER);
+      InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
     }
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::href || aAttribute == nsAccessibilityAtoms::onclick) {
+    InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
     return;
   }
 
@@ -790,9 +794,8 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
   }
   else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
     // DHTML accessibility attributes
-    nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
-    if (!changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
-                                 nsAccessibilityAtoms::role)) {
+    if (!aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
+                           nsAccessibilityAtoms::role)) {
       // We don't care about DHTML state changes unless there is
       // a DHTML role set for the element
       return;
@@ -814,12 +817,11 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       // This affects whether the accessible supports nsIAccessibleSelectable.
       // COM says we cannot change what interfaces are supported on-the-fly,
       // so invalidate this object. A new one will be created on demand.
-      nsCOMPtr<nsIContent> changedContent(do_QueryInterface(targetNode));
-      if (changedContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
-                                  nsAccessibilityAtoms::role)) {
+      if (aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                            nsAccessibilityAtoms::role)) {
         // The multiselect and other waistate attributes only take affect
         // when XHTML2:role is present
-        InvalidateCacheSubtree(changedContent, nsIAccessibleEvent::EVENT_REORDER);
+        InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
       }
     }
   }

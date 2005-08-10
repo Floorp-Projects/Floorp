@@ -49,12 +49,12 @@ nsLinkableAccessible(aDomNode, aShell), mFrame(aFrame)
 }
 
 /* wstring getName (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetName(nsAString& aName)
 { 
-  if (!IsALink())  // Also initializes private data members
+  if (!mActionContent)
     return NS_ERROR_FAILURE;
 
-  return AppendFlatStringFromSubtree(mLinkContent,&_retval);
+  return AppendFlatStringFromSubtree(mActionContent, &aName);
 }
 
 /* unsigned long getRole (); */

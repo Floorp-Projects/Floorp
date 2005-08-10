@@ -1913,53 +1913,18 @@ NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 /* PRUint8 getAccNumActions (); */
 NS_IMETHODIMP nsAccessible::GetNumActions(PRUint8 *aNumActions)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content && content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
-    *aNumActions = 1;
-  } else {
-    *aNumActions = 0;
-  }
   return NS_OK;
 }
 
 /* DOMString getAccActionName (in PRUint8 index); */
 NS_IMETHODIMP nsAccessible::GetActionName(PRUint8 index, nsAString& aName)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content && content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
-    // Action 0 (default action): Click on element
-    if (index == eAction_Click) {
-      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("click"), aName);
-      return NS_OK;
-    }
-    return NS_ERROR_INVALID_ARG;
-  }
   return NS_ERROR_FAILURE;
 }
 
 /* void doAction (in PRUint8 index); */
 NS_IMETHODIMP nsAccessible::DoAction(PRUint8 index)
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (content && content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
-    // Action 0 (default action): Click on element
-    if (index == eAction_Click) {
-      nsCOMPtr<nsPresContext> presContext(GetPresContext());
-      if (presContext && content) {
-        nsMouseEvent linkClickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
-                                    nsMouseEvent::eReal);
-  
-        nsEventStatus eventStatus = nsEventStatus_eIgnore;
-        content->HandleDOMEvent(presContext,
-                                &linkClickEvent,
-                                nsnull,
-                                NS_EVENT_FLAG_INIT,
-                                &eventStatus);
-        return NS_OK;
-      }
-    }
-    return NS_ERROR_INVALID_ARG;
-  }
   return NS_ERROR_FAILURE;
 }
 
