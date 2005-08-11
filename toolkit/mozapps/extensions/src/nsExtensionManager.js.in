@@ -3393,15 +3393,15 @@ ExtensionManager.prototype = {
    * @returns |val|
    */
   set _extensionListChanged(val) {
-    // This code assumes that we are the only one responsible for creating this
-    // file.  That's OK for now, but in the future we may need to replace this
-    // with code that manages a reference count or something jazzy like that.
+    // When an extension has an operation perform on it (e.g. install, upgrade,
+    // disable, etc.) we are responsible for creating the .autoreg file and
+    // nsAppRunner is responsible for removing it on restart. At some point it
+    // may make sense to be able to cancel a registration but for now we only
+    // create the file.
     try {
       var autoregFile = getFile(KEY_PROFILEDIR, [FILE_AUTOREG]);
-      if (val)
+      if (val && !autoregFile.exists())
         autoregFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-      else if (!autoregFile.exists())
-        autoregFile.remove(false);
     }
     catch (e) {
     }
