@@ -209,14 +209,19 @@ nsXFormsSwitchElement::FindFirstSelectedCase(nsIDOMElement* aDeselected)
       if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("case"))) {
         if (!firstCase)
           firstCase = childElement;
-        nsAutoString selected;
-        childElement->GetAttribute(NS_LITERAL_STRING("selected"), selected);
-        if (selected.EqualsLiteral("true")) {
-          firstCase = childElement;
-          break;
+
+        nsCOMPtr<nsIXFormsCaseElement> caseElem(do_QueryInterface(child));
+        if (caseElem) {
+          PRBool selected;
+          caseElem->GetInitialSelectedState(&selected);
+          if (selected) {
+            firstCase = childElement;
+            break;
+          }
         }
       }
     }
+
     nsCOMPtr<nsIDOMNode> tmp;
     child->GetNextSibling(getter_AddRefs(tmp));
     child.swap(tmp);
@@ -364,10 +369,14 @@ nsXFormsSwitchElement::CaseChanged(nsIDOMNode* aCase, PRBool aRemoved)
   if (!nsXFormsUtils::IsXFormsElement(aCase, NS_LITERAL_STRING("case")))
     return;
 
-  nsAutoString sel;
-  element->GetAttribute(NS_LITERAL_STRING("selected"), sel);
-  if (sel.EqualsLiteral("true"))
-    SetSelected(element, PR_TRUE);
+  nsCOMPtr<nsIXFormsCaseElement> caseElem(do_QueryInterface(element));
+  if (caseElem) {
+    PRBool selected;
+    caseElem->GetInitialSelectedState(&selected);
+    if (selected) {
+      SetSelected(element, PR_TRUE);
+    }
+  }
 }
 
 NS_IMETHODIMP

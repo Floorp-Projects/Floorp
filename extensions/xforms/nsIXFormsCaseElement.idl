@@ -41,9 +41,18 @@
 /**
  * Interface implemented by the case element.
  */
-[scriptable, uuid(7dd9c79b-5fa2-4a0a-8aa7-f2629281c743)]
+[scriptable, uuid(28c8c223-ca17-4b58-b3ca-189864eefe32)]
 interface nsIXFormsCaseElement : nsISupports
 {
+  /**
+   * According to the XForms 1.0 Errata, the "selected" attribute only
+   * determines the initial selected state.  This provides
+   * access to the initial state of the "selected" attribute, since it can
+   * be programmatically changed via the DOM.
+   * (see http://www.w3.org/2003/10/REC-xforms-10-20031014-errata.html#E25b)
+   */
+  readonly attribute boolean initialSelectedState;
+
   /**
    * Used by switch elements to mark case element selected or deselected.
    */
