@@ -52,6 +52,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 /** @file nsHashKeys.h
  * standard HashKey classes for nsBaseHashtable and relatives. Each of these
