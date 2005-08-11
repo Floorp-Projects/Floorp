@@ -38,15 +38,20 @@
 #ifndef nsTHashKeys_h__
 #define nsTHashKeys_h__
 
-#include "nsAString.h"
-#include "nsString.h"
 #include "nsID.h"
-#include "nsCRT.h"
-#include "nsReadableUtils.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
 #include NEW_H
+
+#ifdef MOZILLA_INTERNAL_API
+#include "nsAString.h"
+#include "nsString.h"
+#else
+#include "nsStringAPI.h"
+#endif
+
+#include <stdlib.h>
 
 /** @file nsHashKeys.h
  * standard HashKey classes for nsBaseHashtable and relatives. Each of these
@@ -60,6 +65,10 @@
  * nsIDHashKey
  * nsDepCharHashKey
  */
+
+NS_COM_GLUE PRUint32 HashString(const nsAString& aStr);
+NS_COM_GLUE PRUint32 HashString(const nsACString& aStr);
+NS_COM_GLUE PRUint32 HashCString(const char* aKey);
 
 /**
  * hashkey wrapper using nsAString KeyType
@@ -274,7 +283,7 @@ public:
   }
 
   static const char* KeyToPointer(const char* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const char* aKey) { return nsCRT::HashCode(aKey); }
+  static PLDHashNumber HashKey(const char* aKey) { return HashCString(aKey); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
@@ -304,7 +313,7 @@ public:
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return nsCRT::HashCode(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashCString(aKey); }
 
   enum { ALLOW_MEMMOVE = PR_TRUE };
 

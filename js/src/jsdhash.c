@@ -207,7 +207,9 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
     table->data = data;
     if (capacity < JS_DHASH_MIN_SIZE)
         capacity = JS_DHASH_MIN_SIZE;
-    log2 = JS_CeilingLog2(capacity);
+
+    JS_CEILING_LOG2(log2, capacity);
+
     capacity = JS_BIT(log2);
     if (capacity >= JS_DHASH_SIZE_LIMIT)
         return JS_FALSE;
@@ -601,7 +603,7 @@ JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 {
     char *entryAddr, *entryLimit;
-    uint32 i, capacity, entrySize;
+    uint32 i, capacity, entrySize, ceiling;
     JSBool didRemove;
     JSDHashEntryHdr *entry;
     JSDHashOperator op;
@@ -643,9 +645,11 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
         capacity += capacity >> 1;
         if (capacity < JS_DHASH_MIN_SIZE)
             capacity = JS_DHASH_MIN_SIZE;
-        (void) ChangeTable(table,
-                           JS_CeilingLog2(capacity)
-                           - (JS_DHASH_BITS - table->hashShift));
+
+        JS_CEILING_LOG2(ceiling, capacity);
+        ceiling -= JS_DHASH_BITS - table->hashShift;
+
+        (void) ChangeTable(table, ceiling);
     }
     return i;
 }

@@ -38,6 +38,8 @@
 #ifndef nsStringAPI_h__
 #define nsStringAPI_h__
 
+#include <string.h>
+
 /**
  * nsStringAPI.h
  *
@@ -921,6 +923,18 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
+  NS_HIDDEN_(PRBool) Equals( const self_type &other ) const {
+    const char_type *cself;
+    const char_type *cother;
+    PRUint32 selflen = NS_StringGetData(*this, &cself);
+    PRUint32 otherlen = NS_StringGetData(other, &cother);
+
+    if (selflen != otherlen)
+      return PR_FALSE;
+
+    return memcmp(cself, cother, selflen * sizeof(char_type)) == 0;
+  }
+
 #endif // MOZILLA_INTERNAL_API
 
 protected:
@@ -1025,6 +1039,18 @@ public:
   NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+
+  NS_HIDDEN_(PRBool) Equals( const self_type &other ) const {
+    const char_type *cself;
+    const char_type *cother;
+    PRUint32 selflen = NS_CStringGetData(*this, &cself);
+    PRUint32 otherlen = NS_CStringGetData(other, &cother);
+
+    if (selflen != otherlen)
+      return PR_FALSE;
+ 
+    return memcmp(cself, cother, selflen * sizeof(char_type)) == 0;
+  }
 
 #endif // MOZILLA_INTERNAL_API
 

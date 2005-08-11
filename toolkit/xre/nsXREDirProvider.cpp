@@ -314,7 +314,9 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
 {
   nsINIParser parser;
   nsCOMPtr<nsILocalFile> lf(do_QueryInterface(aComponentsList));
-  parser.Init(lf);
+  nsresult rv =  parser.Init(lf);
+  if (NS_FAILED(rv))
+    return;
 
   NS_NAMED_LITERAL_CSTRING(platform, "platform");
   NS_NAMED_LITERAL_CSTRING(osTarget, OS_TARGET);
@@ -322,14 +324,13 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
   NS_NAMED_LITERAL_CSTRING(targetOSABI, TARGET_OS_ABI);
 #endif
 
-  nsresult rv;
-  char parserBuf[MAXPATHLEN];
-  char buf[18];
   PRInt32 i = 0;
   do {
-    sprintf(buf, "Extension%d", i++);
+    nsCAutoString buf("Extension");
+    buf.AppendInt(i++);
 
-    rv = parser.GetString(aSection, buf, parserBuf, MAXPATHLEN);
+    nsCAutoString path;
+    rv = parser.GetString(aSection, buf.get(), path);
     if (NS_FAILED(rv))
       break;
 
@@ -341,7 +342,7 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
 #ifdef TARGET_OS_ABI
     nsCOMPtr<nsIFile> platformABIDir;
 #endif
-    rv = dir->SetPersistentDescriptor(nsDependentCString(parserBuf));
+    rv = dir->SetPersistentDescriptor(path);
     if (NS_FAILED(rv))
       continue;
 
