@@ -82,6 +82,7 @@ Requires Ant version 1.2 or later
       <include name="org/mozilla/javascript/resources/*.properties"/>
       <include name="org/mozilla/javascript/xml/*.class"/>
       <include name="org/mozilla/javascript/continuations/*.class"/>
+      <include name="org/mozilla/javascript/jdk13/*.class"/>
 
       <!-- exclude classes that defines only int constants -->
       <exclude name="org/mozilla/javascript/Token.class"/>
@@ -92,10 +93,6 @@ Requires Ant version 1.2 or later
 
       <include name="org/mozilla/javascript/regexp/*.class"
                unless="no-regexp"/>
-
-      <include name="org/mozilla/javascript/xmlimpl/*.class"
-               unless="no-e4x"/>
-
     </jar>
 
   </target>
