@@ -53,8 +53,10 @@ class nsISelection;
 class nsIDOMNode;
 
 // IID for the nsICaret interface
-#define NS_ICARET_IID       \
-{ 0x43d789e0, 0x21b7, 0x4fb4, { 0xb6, 0xfc, 0x4a, 0x41, 0x49, 0x3e, 0x40, 0xf0 } }
+// c2ba7b60-ccbf-4f2b-8bf7-07493bbf3377
+#define NS_ICARET_IID \
+{ 0xc2ba7b60, 0xccbf, 0x4f2b, \
+  { 0x8b, 0xf7, 0x07, 0x49, 0x3b, 0xbf, 0x33, 0x77 } }
 
 class nsICaret: public nsISupports
 {
@@ -99,11 +101,6 @@ public:
    */
   NS_IMETHOD GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed, nsIView **outView) = 0;
 
-  /** ClearFrameRefs
-   *  The caret stores a reference to the frame that the caret was last drawn in.
-   *  This is called to tell the caret that that frame is going away.
-   */
-  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
   /** Erase Caret
    *  this will erase the caret if its drawn and reset drawn status
    */

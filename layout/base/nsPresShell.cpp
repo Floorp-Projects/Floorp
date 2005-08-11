@@ -3874,10 +3874,6 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   mPresContext->EventStateManager()->ClearFrameRefs(aFrame);
   
-  if (mCaret) {
-    mCaret->ClearFrameRefs(aFrame);
-  }
-  
   if (aFrame == mCurrentEventFrame) {
     mCurrentEventContent = aFrame->GetContent();
     mCurrentEventFrame = nsnull;
