@@ -44,20 +44,19 @@ ulimit -c 20480 2> /dev/null
 dir=`dirname $0`
 bin="$dir/.."
 
+exit_status=0
+
 for t in $dir/test_*.js
 do
-    if [ `uname` = "Darwin" ]; then
-        DYLD_LIBRARY_PATH=$bin
-        export DYLD_LIBRARY_PATH
-    else
-        LD_LIBRARY_PATH=$bin
-        export LD_LIBRARY_PATH
-    fi
+    echo -n "$t: "
     $bin/xpcshell -f $dir/head.js -f $t -f $dir/tail.js 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
-        echo "$t: FAIL (see $t.log)"
+        echo "FAIL (see $t.log)"
+        exit_status=1
     else
-        echo "$t: PASS"
+        echo "PASS"
     fi
 done
+
+exit $exit_status

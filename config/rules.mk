@@ -1772,7 +1772,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE
+.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE check
 
 # Used as a dependency to force targets to rebuild
 FORCE:
@@ -1899,3 +1899,7 @@ endif
 documentation:
 	@cd $(DEPTH)
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
+
+check:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
