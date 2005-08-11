@@ -67,6 +67,7 @@ $DHTMLPerformanceTest     = 0;  # Tdhtml
 $QATest                   = 0;  
 $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
+$NeckoUnitTest            = 1;
 @CompareLocaleDirs        = (); # Run compare-locales test on these directories
 # ("network","dom","toolkit","security/manager");
 $CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
@@ -106,6 +107,7 @@ $DHTMLPerformanceTestTimeout      = 1200;  # entire test, seconds
 $QATestTimeout                    = 1200;   # entire test, seconds
 $LayoutPerformanceTestPageTimeout = 30000; # each page, ms
 $StartupPerformanceTestTimeout    = 15;    # seconds
+$NeckoUnitTestTimeout             = 30;    # seconds
 $XULWindowOpenTestTimeout	      = 150;   # seconds
 
 

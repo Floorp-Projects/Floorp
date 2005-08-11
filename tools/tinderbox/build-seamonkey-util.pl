@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.299 $ ';
+$::UtilsVersion = '$Revision: 1.300 $ ';
 
 package TinderUtils;
 
@@ -1990,6 +1990,13 @@ sub run_all_tests {
                                             $build_dir,
                                             $app_args,
                                             "file://$startup_build_dir/../startup-test.html");
+    }
+    if ($Settings::NeckoUnitTest and $test_result eq 'success') {
+        $test_result = FileBasedTest("Necko unit tests",
+                                     $build_dir, $binary_dir,
+                                     ["necko_unit_tests/test_all.sh"],
+                                     $Settings::NeckoUnitTestTimeout,
+                                     "FAIL", 0, 0);
     }
     return $test_result;
 }
