@@ -3164,8 +3164,13 @@ nsDocShell::Stop(PRUint32 aStopFlags)
     }
 
     if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
-        // Cancel any timers that were set for this loader.
-        CancelRefreshURITimers();
+        // Suspend any timers that were set for this loader.  We'll clear
+        // them out for good in CreateContentViewer.
+        if (mRefreshURIList) {
+            SuspendRefreshURIs();
+            mSavedRefreshURIList.swap(mRefreshURIList);
+            mRefreshURIList = nsnull;
+        }
 
         // XXXbz We could also pass |this| to nsIURILoader::Stop.  That will
         // just call Stop() on us as an nsIDocumentLoader... We need fewer
@@ -4879,11 +4884,8 @@ nsDocShell::CaptureState()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Suspend refresh URIs and save off the timer queue
-    SuspendRefreshURIs();
-    rv = mOSHE->SetRefreshURIList(mRefreshURIList);
+    rv = mOSHE->SetRefreshURIList(mSavedRefreshURIList);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    mRefreshURIList = nsnull;
 
     // Capture the current content viewer bounds.
     nsCOMPtr<nsIPresShell> shell;
@@ -5183,6 +5185,8 @@ nsDocShell::RestoreFromHistory()
         }
     }
 
+    mSavedRefreshURIList = nsnull;
+
     // Save off the root view's parent and sibling so that we can insert the
     // new content viewer's root view at the same position.  Also save the
     // bounds of the root view's widget.
@@ -5476,6 +5480,7 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     NS_ENSURE_SUCCESS(Embed(viewer, "", (nsISupports *) nsnull),
                       NS_ERROR_FAILURE);
 
+    mSavedRefreshURIList = nsnull;
     mSavingOldViewer = PR_FALSE;
     mEODForCurrentDocument = PR_FALSE;
 
