@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 /*
  * PKCS7 encoding.
  *
- * $Id: p7encode.c,v 1.9 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: p7encode.c,v 1.10 2005/08/11 23:11:38 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -869,6 +870,15 @@ sec_pkcs7_pick_sign_alg (SECOidTag hashalg, SECOidTag encalg)
 	  default:
 	    return SEC_OID_UNKNOWN;
 	}
+#ifdef NSS_ENABLE_ECC
+      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
+	switch (hashalg) {
+	  case SEC_OID_SHA1:
+	    return SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
+	  default:
+	    return SEC_OID_UNKNOWN;
+	}
+#endif /* NSS_ENABLE_ECC */
       default:
 	break;
     }

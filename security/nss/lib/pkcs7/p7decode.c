@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.16 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: p7decode.c,v 1.17 2005/08/11 23:11:38 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1674,6 +1675,9 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
     algiddata = SECOID_FindOID (&(signerinfo->digestEncAlg.algorithm));
     if (algiddata == NULL ||
 	((algiddata->offset != SEC_OID_PKCS1_RSA_ENCRYPTION) &&
+#ifdef NSS_ENABLE_ECC
+	 (algiddata->offset != SEC_OID_ANSIX962_EC_PUBLIC_KEY) &&
+#endif /* NSS_ENABLE_ECC */
 	 (algiddata->offset != SEC_OID_ANSIX9_DSA_SIGNATURE))) {
 	PORT_SetError (SEC_ERROR_PKCS7_BAD_SIGNATURE);
 	goto done;
