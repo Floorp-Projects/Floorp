@@ -39,6 +39,8 @@
 my $executable = shift;
 
 @comparisons = (
+  "0.9",
+  "0.9.1",
   "1.0pre1",
   "1.0pre2",
   "1.0",
@@ -47,7 +49,11 @@ my $executable = shift;
   "1.1pre1",
   "1.1pre10a",
   "1.1pre10",
-  "1.1"
+  "1.1",
+  "1.1.0.1",
+  "1.1.1",
+  "2.0",
+  "2.1"
 );
 
 @equality = (
