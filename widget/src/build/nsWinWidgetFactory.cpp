@@ -64,12 +64,12 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 
 #ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -90,6 +90,15 @@ static const nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/win;1",
     ChildWindowConstructor },
+  { "Clipboard",
+    NS_CLIPBOARD_CID,
+    //    "@mozilla.org/widget/clipboard/win;1",
+    "@mozilla.org/widget/clipboard;1",
+    nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
 #ifndef WINCE
   { "File Picker",
     NS_FILEPICKER_CID,
@@ -100,15 +109,6 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/sound/win;1"
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "Clipboard",
-    NS_CLIPBOARD_CID,
-    //    "@mozilla.org/widget/clipboard/win;1",
-    "@mozilla.org/widget/clipboard;1",
-    nsClipboardConstructor },
-  { "Clipboard Helper",
-    NS_CLIPBOARDHELPER_CID,
-    "@mozilla.org/widget/clipboardhelper;1",
-    nsClipboardHelperConstructor },
   { "Drag Service",
     NS_DRAGSERVICE_CID,
     //    "@mozilla.org/widget/dragservice/win;1",
