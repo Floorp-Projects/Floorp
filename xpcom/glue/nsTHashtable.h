@@ -181,26 +181,26 @@ protected:
 
   static PLDHashTableOps sOps;
 
-  static const void* s_GetKey(PLDHashTable    *table,
-                              PLDHashEntryHdr *entry);
+  static const void* PR_CALLBACK s_GetKey(PLDHashTable    *table,
+                                          PLDHashEntryHdr *entry);
 
-  static PLDHashNumber s_HashKey(PLDHashTable *table,
-                                 const void   *key);
-  
-  static PRBool s_MatchEntry(PLDHashTable           *table,
-                             const PLDHashEntryHdr  *entry,
-                             const void             *key);
-  
-  static void s_CopyEntry(PLDHashTable          *table,
-                          const PLDHashEntryHdr *from,
-                          PLDHashEntryHdr       *to);
-  
-  static void s_ClearEntry(PLDHashTable *table,
-                           PLDHashEntryHdr *entry);
+  static PLDHashNumber PR_CALLBACK s_HashKey(PLDHashTable *table,
+                                             const void   *key);
 
-  static void s_InitEntry(PLDHashTable     *table,
-                          PLDHashEntryHdr  *entry,
-                          const void       *key);
+  static PRBool PR_CALLBACK s_MatchEntry(PLDHashTable           *table,
+                                         const PLDHashEntryHdr  *entry,
+                                         const void             *key);
+  
+  static void PR_CALLBACK s_CopyEntry(PLDHashTable          *table,
+                                      const PLDHashEntryHdr *from,
+                                      PLDHashEntryHdr       *to);
+  
+  static void PR_CALLBACK s_ClearEntry(PLDHashTable *table,
+                                       PLDHashEntryHdr *entry);
+
+  static void PR_CALLBACK s_InitEntry(PLDHashTable     *table,
+                                      PLDHashEntryHdr  *entry,
+                                      const void       *key);
 
   /**
    * passed internally during enumeration.  Allocated on the stack.
@@ -215,14 +215,14 @@ protected:
     void* userArg;
   };
   
-  static PLDHashOperator s_EnumStub(PLDHashTable    *table,
-                                    PLDHashEntryHdr *entry,
-                                    PRUint32         number,
-                                    void            *arg);
+  static PLDHashOperator PR_CALLBACK s_EnumStub(PLDHashTable    *table,
+                                                PLDHashEntryHdr *entry,
+                                                PRUint32         number,
+                                                void            *arg);
 };
 
 // helper function for Reset()
-PR_EXTERN(PLDHashOperator)
+PLDHashOperator PR_CALLBACK
 PL_DHashStubEnumRemove(PLDHashTable    *table,
                        PLDHashEntryHdr *entry,
                        PRUint32         ordinal,
