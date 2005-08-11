@@ -564,6 +564,7 @@ protected:
      */
     nsCString                  mContentTypeHint;
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
+    nsCOMPtr<nsISupportsArray> mSavedRefreshURIList;
     nsRefPtr<nsDSURIContentListener> mContentListener;
     nsRect                     mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
