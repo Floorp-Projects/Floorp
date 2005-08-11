@@ -45,7 +45,7 @@
 #include "pldhash.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsHashKeys.h"
+#include "nsReadableUtils.h"
 
 /*
  * This file provides several major things to make PLDHashTable easier to use:

@@ -71,6 +71,7 @@ CPPSRCS  = nsProfileMigrator.cpp \
            nsNetscapeProfileMigratorBase.cpp \
            nsSeamonkeyProfileMigrator.cpp \
            nsPhoenixProfileMigrator.cpp \
+           nsINIParser.cpp \
            $(NULL)
 
 ifneq ($(OS_ARCH),BeOS)

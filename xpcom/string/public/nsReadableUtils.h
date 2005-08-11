@@ -360,6 +360,9 @@ StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
                 const nsCStringComparator& aComparator =
                                              nsDefaultCStringComparator() );
 
+NS_COM PRUint32 HashString( const nsAString& aStr );
+NS_COM PRUint32 HashString( const nsACString& aStr );
+
 NS_COM const nsAFlatString& EmptyString();
 NS_COM const nsAFlatCString& EmptyCString();
 

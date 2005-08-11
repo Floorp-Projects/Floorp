@@ -73,13 +73,9 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
 endif
 
-CSRCS		= \
-		$(XPCOM_GLUE_SRC_LCSRCS) \
-		$(NULL)
-
 CPPSRCS		= \
-		$(XPCOM_GLUE_SRC_LCPPSRCS) \
-		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
+		$(XPCOM_GLUE_SRC_LCSRCS) \
+		$(XPCOM_GLUENS_SRC_LCSRCS) \
 		nsXPComInit.cpp \
 		nsStringAPI.cpp \
 		$(NULL)
@@ -182,5 +178,5 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 endif # WINNT
 
-export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)
+export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUENS_SRC_CSRCS)
 	$(INSTALL) $^ .
