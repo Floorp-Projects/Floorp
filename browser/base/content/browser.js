@@ -643,6 +643,10 @@ function BrowserStartup()
       // border.  Use 28px as a guess (titlebar + bottom window border)
       defaultHeight -= 28;
 #endif
+#ifdef XP_MACOSX
+      // account for the Mac OS X title bar
+      defaultHeight -= 22;
+#endif
     }
     document.documentElement.setAttribute("width", defaultWidth);
     document.documentElement.setAttribute("height", defaultHeight);
