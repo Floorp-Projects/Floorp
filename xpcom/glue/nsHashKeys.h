@@ -58,6 +58,7 @@
  * nsUint32HashKey
  * nsISupportsHashKey
  * nsIDHashKey
+ * nsDepCharHashKey
  */
 
 /**
@@ -209,6 +210,42 @@ public:
 
 private:
   const nsID mID;
+};
+
+
+/**
+ * hashkey wrapper for "dependent" const char*; this class does not "own"
+ * its string pointer.
+ *
+ * This class must only be used if the strings have a lifetime longer than
+ * the hashtable they occupy. This normally occurs only for static
+ * strings or strings that have been arena-allocated.
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class NS_COM nsDepCharHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
+
+  nsDepCharHashKey(const char* aKey) { mKey = aKey; }
+  nsDepCharHashKey(const nsDepCharHashKey& toCopy) { mKey = toCopy.mKey; }
+  ~nsDepCharHashKey() { }
+
+  const char* GetKey() const { return mKey; }
+  const char* GetKeyPointer() const { return mKey; }
+  PRBool KeyEquals(const char* aKey) const
+  {
+    return !strcmp(mKey, aKey);
+  }
+
+  static const char* KeyToPointer(const char* aKey) { return aKey; }
+  static PLDHashNumber HashKey(const char* aKey) { return nsCRT::HashCode(aKey); }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const char* mKey;
 };
 
 #endif // nsTHashKeys_h__

@@ -144,6 +144,12 @@ public:
   typedef typename EntryType::KeyTypePointer KeyTypePointer;
 
   /**
+   * Return the number of entries in the table.
+   * @return    number of entries
+   */
+  PRUint32 Count() const { return mTable.entryCount; }
+
+  /**
    * Get the entry associated with a key.
    * @param     aKey the key to retrieve
    * @return    pointer to the entry class, if the key exists; nsnull if the
@@ -283,6 +289,12 @@ protected:
                                                 PLDHashEntryHdr *entry,
                                                 PRUint32         number,
                                                 void            *arg);
+private:
+  // copy constructor, not implemented
+  nsTHashtable(nsTHashtable<EntryType>& toCopy);
+
+  // assignment operator, not implemented
+  nsTHashtable<EntryType>& operator= (nsTHashtable<EntryType>& toEqual);
 };
 
 //
