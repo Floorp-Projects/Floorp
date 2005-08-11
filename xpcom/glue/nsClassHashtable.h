@@ -40,6 +40,7 @@
 
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
+#include "nsAutoPtr.h"
 
 /**
  * templated hashtable class maps keys to C++ object pointers.
@@ -51,11 +52,11 @@
  */
 template<class KeyClass,class T>
 class nsClassHashtable :
-  public nsBaseHashtable<KeyClass,nsAutoPtr<T>,T*>
+  public nsBaseHashtable< KeyClass, nsAutoPtr<T>, T* >
 {
 public:
   typedef typename KeyClass::KeyType KeyType;
-  typedef typename T* UserDataType;
+  typedef T* UserDataType;
 
   /**
    * @copydoc nsBaseHashtable::nsBaseHashtable
@@ -74,6 +75,7 @@ public:
   PRBool Get(KeyType aKey, UserDataType* pData) const;
 };
 
+
 //
 // nsClassHashtable definitions
 //
@@ -86,7 +88,7 @@ nsClassHashtable<KeyClass,T>::Get(KeyType aKey, T** retVal) const
     PR_RWLock_Rlock(mLock);
 
   typename nsBaseHashtable<KeyClass,nsAutoPtr<T>,T*>::EntryType* ent =
-    GetEntry(KeyClass::KeyToPointer(aKey));
+    GetEntry(aKey);
 
   if (ent)
   {
