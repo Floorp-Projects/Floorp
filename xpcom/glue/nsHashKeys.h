@@ -212,7 +212,6 @@ private:
   const nsID mID;
 };
 
-
 /**
  * hashkey wrapper for "dependent" const char*; this class does not "own"
  * its string pointer.
