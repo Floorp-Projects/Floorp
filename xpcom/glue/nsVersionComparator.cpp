@@ -183,10 +183,11 @@ static PRBool
 OnlyZeros(char* part)
 {
   VersionPart vp;
-  while (part = ParseVP(part, vp)) {
+  do {
+    part = ParseVP(part, vp);
     if (vp.numA || vp.strB || vp.numC || vp.extraD)
       return PR_FALSE;
-  }
+  } while (part);
 
   return PR_TRUE;
 }
