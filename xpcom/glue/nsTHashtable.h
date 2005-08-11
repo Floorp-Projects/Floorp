@@ -222,7 +222,7 @@ protected:
 };
 
 // helper function for Reset()
-PR_EXTERN(PLDHashOperator)
+PR_EXTERN(PLDHashOperator) PR_CALLBACK
 PL_DHashStubEnumRemove(PLDHashTable    *table,
                        PLDHashEntryHdr *entry,
                        PRUint32         ordinal,
