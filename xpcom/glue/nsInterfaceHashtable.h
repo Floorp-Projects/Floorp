@@ -86,11 +86,6 @@ public:
    *   If the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
-
-protected:
-#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-  using nsBaseHashtableMT<KeyClass, nsCOMPtr<Interface>, Interface*>::mLock;
-#endif
 };
 
 
@@ -136,7 +131,7 @@ PRBool
 nsInterfaceHashtableMT<KeyClass,Interface>::Get
   (KeyType aKey, UserDataType* pInterface) const
 {
-  PR_Lock(mLock);
+  PR_Lock(this->mLock);
 
   typename nsBaseHashtableMT<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
     GetEntry(aKey);
@@ -150,7 +145,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
       NS_IF_ADDREF(*pInterface);
     }
 
-    PR_Unlock(mLock);
+    PR_Unlock(this->mLock);
 
     return PR_TRUE;
   }
@@ -160,7 +155,7 @@ nsInterfaceHashtableMT<KeyClass,Interface>::Get
   if (pInterface)
     *pInterface = nsnull;
 
-  PR_Unlock(mLock);
+  PR_Unlock(this->mLock);
 
   return PR_FALSE;
 }
