@@ -37,84 +37,16 @@
 #include "blapi.h"
 #include "sha_fast.h"
 #include "prerror.h"
-#include "prlong.h"
 
 #ifdef TRACING_SSL
 #include "ssl.h"
 #include "ssltrace.h"
 #endif
 
-#if defined(_MSC_VER) && defined(_X86_)
-#if defined(IS_LITTLE_ENDIAN) 
-#undef SHA_HTONL
-#ifndef FORCEINLINE
-#if (MSC_VER >= 1200)
-#define FORCEINLINE __forceinline
-#else
-#define FORCEINLINE __inline
-#endif
-#endif
-#define FASTCALL __fastcall
-
-static FORCEINLINE PRUint32 FASTCALL 
-swap4b(PRUint32 dwd) 
-{
-    __asm {
-    	mov   eax,dwd
-	bswap eax
-    }
-}
-
-#define SHA_HTONL(x) swap4b(x)
-#endif /* IS_LITTLE_ENDIAN */
-
-#pragma intrinsic (_lrotr, _lrotl) 
-#define SHA_ROTL(x,n) _lrotl(x,n)
-#define SHA_ROTL_IS_DEFINED 1
-#endif /* _MSC_VER */
-
 static void shaCompress(volatile SHA_HW_t *X, const PRUint32 * datain);
 
 #define W u.w
 #define B u.b
-
-#if defined(_X86_) || defined(_x86) || defined(__x86_64__) || defined(__x86_64) 
-#define SHA_ALLOW_UNALIGNED_ACCESS 1
-#endif
-
-#if defined(__GNUC__) 
-/* __x86_64__  and __x86_64 are defined on x86_64 CPUs */
-
-#if SHA1_USING_64_bit
-static __inline__ uint64 SHA_ROTL(uint64 x, uint32 n)
-{
-    uint32 t = (uint32)x;
-    return ((t << n) | (t >> (32 - n)));
-}
-#else 
-static __inline__ uint32 SHA_ROTL(uint32 t, uint32 n)
-{
-    return ((t << n) | (t >> (32 - n)));
-}
-#endif
-#define SHA_ROTL_IS_DEFINED 1
-
-#if defined(_X86_) || defined(_x86) || defined(__x86_64__) || defined(__x86_64) 
-static __inline__ uint32 swap4b(uint32 value)
-{
-    __asm__("bswap %0" : "+r" (value));
-    return (value);
-}
-#undef SHA_HTONL
-#define SHA_HTONL(x) swap4b(x)
-#endif /* x86 family */
-
-#endif /* __GNUC__ */
-
-#if !defined(SHA_ROTL_IS_DEFINED)
-/* calling function must define PRUint32 tmp; */
-#define SHA_ROTL(X,n) (tmp = (X), ((tmp) << (n)) | ((tmp) >> (32-(n))))
-#endif
 
 
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
@@ -125,12 +57,12 @@ static __inline__ uint32 swap4b(uint32 value)
 #define SHA_MIX(n,a,b,c)    XW(n) = SHA_ROTL(XW(a)^XW(b)^XW(c)^XW(n), 1)
 
 /*
- *  SHA: Zeroize and initialize context
+ *  SHA: initialize context
  */
 void 
 SHA1_Begin(SHA1Context *ctx)
 {
-  LL_UI2L(ctx->size, 0);
+  ctx->size = 0;
   /*
    *  Initialize H with constants from FIPS180-1.
    */
@@ -177,7 +109,6 @@ SHA1_Begin(SHA1Context *ctx)
 #define W2X  6 /* X[0] is W[6],  and W[0] is X[-6]  */
 #else
 #define H2X 0
-#define W2X UNDEFINED
 #endif
 
 /*
@@ -192,16 +123,10 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
   if (!len)
     return;
 
-#ifdef HAVE_LONG_LONG
+  /* accumulate the byte count. */
   lenB = (unsigned int)(ctx->size) & 63U;
 
-  /* accumulate the byte count. */
   ctx->size += len;
-#else
-  ctx->size.lo += len;
-  if (ctx->size.lo < len)
-      ctx->size.hi++;
-#endif
 
   /*
    *  Read the data into W and process blocks as they get full
@@ -218,13 +143,7 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
       shaCompress(&ctx->H[H2X], ctx->W);
     }
   }
-#if defined(SHA_ALLOW_UNALIGNED_ACCESS)
-  while (len >= 64U) {
-    len    -= 64U;
-    shaCompress(&ctx->H[H2X], (PRUint32 *)dataIn);
-    dataIn += 64U;
-  }
-#else
+#if !defined(SHA_ALLOW_UNALIGNED_ACCESS)
   if ((ptrdiff_t)dataIn % sizeof(PRUint32)) {
     while (len >= 64U) {
       memcpy(ctx->B, dataIn, 64);
@@ -232,14 +151,15 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
       shaCompress(&ctx->H[H2X], ctx->W);
       dataIn += 64U;
     }
-  } else {
+  } else 
+#endif
+  {
     while (len >= 64U) {
       len    -= 64U;
       shaCompress(&ctx->H[H2X], (PRUint32 *)dataIn);
       dataIn += 64U;
     }
   }
-#endif
   if (len) {
     memcpy(ctx->B, dataIn, len);
   }
@@ -253,13 +173,9 @@ void
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
-#ifdef HAVE_LONG_LONG
   register PRUint64 size;
   register PRUint32 lenB;
-#else
-  register PRUint32 lenB;
-  PRUint64 size;
-#endif
+
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  };
@@ -272,69 +188,23 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
    */
   size = ctx->size;
 
-#ifdef HAVE_LONG_LONG
-  lenB = size & 63;
-#else
-  lenB = size.lo & 63;
-#endif
+  lenB = (PRUint32)size & 63;
   SHA1_Update(ctx, bulk_pad, (((55+64) - lenB) & 63) + 1);
-#ifdef HAVE_LONG_LONG
-  PORT_Assert((ctx->size & 63) == 56);
-
+  PORT_Assert(((PRUint32)ctx->size & 63) == 56);
   /* Convert size from bytes to bits. */
   size <<= 3;
-
-  ctx->W[14] = SHA_HTONL(size >> 32);
+  ctx->W[14] = SHA_HTONL((PRUint32)(size >> 32));
   ctx->W[15] = SHA_HTONL((PRUint32)size);
-#else
-  PORT_Assert((ctx->size.lo & 63) == 56);
-
-  /* Convert size from bytes to bits. */
-  ctx->W[14] = SHA_HTONL((size.lo >> 29) | (size.hi << 3));
-  ctx->W[15] = SHA_HTONL(size.lo << 3);
-#endif
   shaCompress(&ctx->H[H2X], ctx->W);
 
   /*
    *  Output hash
    */
-#define STORE(n) ((uint32*)hashout)[n] = SHA_HTONL(ctx->H[n])
-#if defined(SHA_ALLOW_UNALIGNED_ACCESS)
-  STORE(0);
-  STORE(1);
-  STORE(2);
-  STORE(3);
-  STORE(4);
-#else /* ! unaligned access */
-  if (!((ptrdiff_t)hashout % sizeof(PRUint32))) {
-    STORE(0);
-    STORE(1);
-    STORE(2);
-    STORE(3);
-    STORE(4);
-  } else {
-#if defined(IS_LITTLE_ENDIAN) || SHA1_USING_64_bit
-    ctx->W[0] = SHA_HTONL(ctx->H[0]);
-    ctx->W[1] = SHA_HTONL(ctx->H[1]);
-    ctx->W[2] = SHA_HTONL(ctx->H[2]);
-    ctx->W[3] = SHA_HTONL(ctx->H[3]);
-    ctx->W[4] = SHA_HTONL(ctx->H[4]);
-    memcpy(hashout, ctx->W, SHA1_LENGTH);
-#else  /* 32-bit big-endian */
-    memcpy(hashout, ctx->H, SHA1_LENGTH);
-#endif /* 32-bit big endian */
-  }
-#endif /* ! unaligned access */
-#undef STORE
+  SHA_STORE_RESULT;
   *pDigestLen = SHA1_LENGTH;
 
-  /*
-   *  Re-initialize the context (also zeroizes contents)
-  SHA1_Begin(ctx);
-   */
 }
 
-#undef A
 #undef B
 #undef tmp
 /*
@@ -389,7 +259,7 @@ shaCompress(volatile SHA_HW_t *X, const PRUint32 *inbuf)
 {
   register SHA_HW_t A, B, C, D, E;
 
-#if !defined(SHA_ROTL_IS_DEFINED)
+#if defined(SHA_NEED_TMP_VARIABLE)
   register PRUint32 tmp;
 #endif
 
@@ -534,10 +404,11 @@ SHA1_NewContext(void)
     return cx;
 }
 
+/* Zero and free the context */
 void
 SHA1_DestroyContext(SHA1Context *cx, PRBool freeit)
 {
-/*  memset(cx, 0, sizeof *cx); */
+    memset(cx, 0, sizeof *cx);
     if (freeit) {
         PORT_Free(cx);
     }
@@ -552,7 +423,6 @@ SHA1_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
     SHA1_Begin(&ctx);
     SHA1_Update(&ctx, src, src_length);
     SHA1_End(&ctx, dest, &outLen, SHA1_LENGTH);
-/*  memset(&ctx, 0, sizeof ctx); */
     return SECSuccess;
 }
 
@@ -592,7 +462,7 @@ SHA1_Resurrect(unsigned char *space,void *arg)
 
 void SHA1_Clone(SHA1Context *dest, SHA1Context *src) 
 {
-	memcpy(dest, src, sizeof *dest);
+    memcpy(dest, src, sizeof *dest);
 }
 
 void
