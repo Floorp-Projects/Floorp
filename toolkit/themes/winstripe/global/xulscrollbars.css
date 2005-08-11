@@ -1,0 +1,213 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== scrollbars.css =================================================
+  == Styles used by XUL scrollbar-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+
+/* ::::: scrollbar ::::: */
+
+scrollbar {
+  -moz-appearance: scrollbartrack-horizontal;
+  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
+  cursor: default;
+  background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
+}
+
+scrollbar[orient="vertical"] 
+{
+   -moz-appearance: scrollbartrack-vertical;
+}
+
+/* ::::: borders for thumb and buttons ::::: */
+
+thumb,
+scrollbarbutton {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+  background-color: -moz-Dialog;
+}
+
+/* ::::: thumb (horizontal) ::::: */
+
+thumb {
+  -moz-appearance: scrollbarthumb-vertical;
+  min-height: 8px;
+}
+
+thumb[orient="horizontal"] {
+  -moz-appearance: scrollbarthumb-horizontal;
+  min-width: 8px;
+}
+
+thumb > gripper {
+  -moz-appearance: scrollbargripper-vertical;
+}
+
+thumb[orient="horizontal"] > gripper {
+  -moz-appearance: scrollbargripper-horizontal;
+}
+
+/* ::::: scrollbar button ::::: */
+
+scrollbarbutton {
+  background: -moz-Dialog no-repeat 0px 1px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+scrollbarbutton:hover:active {
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-position: 1px 2px;
+}
+
+/* ::::: square at the corner of two scrollbars ::::: */
+
+scrollcorner { 
+  background-color: -moz-Dialog;
+}
+
+/* ..... increment .... */
+
+scrollbarbutton[type="increment"] {
+  -moz-appearance: scrollbarbutton-right;
+  background-image: url("chrome://global/skin/arrow/arrow-rit.gif")
+}
+
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
+  -moz-appearance: scrollbarbutton-down;
+  background-image: url("chrome://global/skin/arrow/arrow-dn.gif")
+}
+
+/* ..... decrement .... */
+
+scrollbarbutton[type="decrement"] {
+  -moz-appearance: scrollbarbutton-left;
+   background-image: url("chrome://global/skin/arrow/arrow-lft.gif")
+}
+
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
+  -moz-appearance: scrollbarbutton-up;
+   background-image: url("chrome://global/skin/arrow/arrow-up.gif")
+}
+
+/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+/* ::::::::::::::::::::: MEDIA PRINT :::::::::::::::::::::: */
+/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
+@media print {
+  /* ::::: scrollbar ::::: */
+
+  html|div scrollbar {
+    -moz-appearance: scrollbartrack-horizontal;
+    -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
+    cursor: default;
+    background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
+  }
+
+  html|div scrollbar[orient="vertical"] 
+  {
+     -moz-appearance: scrollbartrack-vertical;
+  }
+
+  /* ::::: borders for thumb and buttons ::::: */
+
+  html|div thumb,
+  html|div scrollbarbutton {
+    border: 2px solid;
+    -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+    -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+    -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+    -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+    background-color: -moz-Dialog;
+  }
+
+  /* ::::: thumb (horizontal) ::::: */
+
+  html|div thumb {
+    -moz-appearance: scrollbarthumb-vertical;
+    min-height: 8px;
+  }
+
+  html|div thumb[orient="horizontal"] {
+    -moz-appearance: scrollbarthumb-horizontal;
+    min-width: 8px;
+  }
+
+  html|div thumb > gripper {
+    -moz-appearance: scrollbargripper-vertical;
+  }
+
+  html|div thumb[orient="horizontal"] > gripper {
+    -moz-appearance: scrollbargripper-horizontal;
+  }
+
+  /* ::::: scrollbar button ::::: */
+
+  html|div scrollbarbutton {
+    background: -moz-Dialog no-repeat 0px 1px;
+    min-width: 16px;
+    min-height: 16px;
+  }
+
+  html|div scrollbarbutton:hover:active {
+    -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+    -moz-border-right-colors: ThreeDShadow -moz-Dialog;
+    -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
+    -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+    background-position: 1px 2px;
+  }
+
+  /* ..... increment .... */
+
+  html|div scrollbarbutton[type="increment"] {
+    -moz-appearance: scrollbarbutton-right;
+    background-image: url("chrome://global/skin/arrow/arrow-rit.gif")
+  }
+
+  html|div scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
+    -moz-appearance: scrollbarbutton-down;
+    background-image: url("chrome://global/skin/arrow/arrow-dn.gif")
+  }
+
+  /* ..... decrement .... */
+
+  html|div scrollbarbutton[type="decrement"] {
+    -moz-appearance: scrollbarbutton-left;
+     background-image: url("chrome://global/skin/arrow/arrow-lft.gif")
+  }
+
+  html|div scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
+    -moz-appearance: scrollbarbutton-up;
+     background-image: url("chrome://global/skin/arrow/arrow-up.gif")
+  }
+
+}
