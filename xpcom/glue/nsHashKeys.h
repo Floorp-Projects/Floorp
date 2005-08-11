@@ -186,6 +186,39 @@ private:
 };
 
 /**
+ * hashkey wrapper using void* KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class NS_COM nsVoidPtrHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const void* KeyType;
+  typedef const void* KeyTypePointer;
+
+  nsVoidPtrHashKey(const void* key) :
+    mKey(key) { }
+  nsVoidPtrHashKey(const nsVoidPtrHashKey& toCopy) :
+    mKey(toCopy.mKey) { }
+  ~nsVoidPtrHashKey() { }
+
+  KeyType GetKey() const { return mKey; }
+  KeyTypePointer GetKeyPointer() const { return mKey; }
+  
+  PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return NS_PTR_TO_INT32(aKey) >>2;
+  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const void* mKey;
+};
+
+/**
  * hashkey wrapper using nsID KeyType
  *
  * @see nsTHashtable::EntryType for specification
