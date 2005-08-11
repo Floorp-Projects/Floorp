@@ -112,8 +112,6 @@ libs::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
-ifndef CROSS_COMPILE
-libs::
+check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
-endif
