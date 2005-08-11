@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -95,9 +96,9 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
-, mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
 , mLastContentOffset(0)
+, mLastHint(nsIFrameSelection::HINTLEFT)
 #ifdef IBMBIDI
 , mKeyboardRTL(PR_FALSE)
 #endif
@@ -200,7 +201,7 @@ NS_IMETHODIMP nsCaret::Terminate()
   mDomSelectionWeak = nsnull;
   mPresShell = nsnull;
 
-  mLastCaretFrame = nsnull;
+  mLastContent = nsnull;
   mLastCaretView = nsnull;
   
 #ifdef IBMBIDI
@@ -377,23 +378,6 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
-{
-  EraseCaret(); // make sure that the caret is erased completely
-  
-  if (mLastCaretFrame == aFrame)
-  {
-    mLastCaretFrame = nsnull;     // frames are not refcounted.
-    mLastCaretView = nsnull;
-    mLastContentOffset = 0;
-  }
-  
-  mDrawn = PR_FALSE;    // assume that the view has been cleared, and ensure
-                        // that we don't try to use the frame.
-  return NS_OK; 
-}
-
 NS_IMETHODIMP nsCaret::EraseCaret()
 {
   if (mDrawn)
@@ -412,11 +396,8 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   NS_ENSURE_ARG(aNode);
   
   // XXX we need to do more work here to get the correct hint.
-  if (!SetupDrawingFrameAndOffset(aNode, aOffset, nsIFrameSelection::HINTLEFT))
-    return NS_ERROR_FAILURE;
-
-  GetCaretRectAndInvert();
-  return NS_OK;
+  return DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT) ?
+    NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -513,15 +494,14 @@ nsresult nsCaret::StopBlinking()
   return NS_OK;
 }
 
-
-//-----------------------------------------------------------------------------
-// Get the nsIFrame and the content offset for the current caret position.
-// Returns PR_TRUE if we should go ahead and draw, PR_FALSE otherwise. 
-//
-PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint)
+PRBool
+nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
+                                PRInt32                 aOffset,
+                                nsIFrameSelection::HINT aFrameHint)
 {  
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
-  if (!contentNode) return PR_FALSE;
+  if (!contentNode)
+    return PR_FALSE;
       
   //get frame selection and find out what frame to use...
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
@@ -708,13 +688,15 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
     return PR_FALSE;
   }  
 
-  // mark the frame, so we get notified on deletion.
-  // frames are never unmarked, which means that we'll touch every frame we visit.
-  // this is not ideal.
-  theFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
+  if (!mDrawn)
+  {
+    // save stuff so we can erase the caret later
+    mLastContent = contentNode;
+    mLastContentOffset = aOffset;
+    mLastHint = aFrameHint;
+  }
 
-  mLastCaretFrame = theFrame;
-  mLastContentOffset = theFrameOffset;
+  GetCaretRectAndInvert(theFrame, theFrameOffset);
   return PR_TRUE;
 }
 
@@ -872,7 +854,10 @@ void nsCaret::DrawCaret()
   if (!MustDrawCaret())
     return;
   
-  // if we are drawing, not erasing, then set up the frame etc.
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  nsIFrameSelection::HINT hint;
+
   if (!mDrawn)
   {
     nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
@@ -886,38 +871,49 @@ void nsCaret::DrawCaret()
 
     PRBool hintRight;
     privateSelection->GetInterlinePosition(&hintRight);//translate hint.
-    nsIFrameSelection::HINT hint = (hintRight) ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
+    hint = hintRight ? nsIFrameSelection::HINTRIGHT : nsIFrameSelection::HINTLEFT;
 
     // get the node and offset, which is where we want the caret to draw
-    nsCOMPtr<nsIDOMNode>  focusNode;
-    domSelection->GetFocusNode(getter_AddRefs(focusNode));
-    if (!focusNode)
+    domSelection->GetFocusNode(getter_AddRefs(node));
+    if (!node)
       return;
     
-    PRInt32 contentOffset;
-    if (NS_FAILED(domSelection->GetFocusOffset(&contentOffset)))
-      return;
-
-    if (!SetupDrawingFrameAndOffset(focusNode, contentOffset, hint))
+    if (NS_FAILED(domSelection->GetFocusOffset(&offset)))
       return;
   }
+  else
+  {
+    if (!mLastContent)
+    {
+      mDrawn = PR_FALSE;
+      return;
+    }
+    if (!mLastContent->IsInDoc())
+    {
+      mLastContent = nsnull;
+      mDrawn = PR_FALSE;
+      return;
+    }
+    node = do_QueryInterface(mLastContent);
+    offset = mLastContentOffset;
+    hint = mLastHint;
+  }
 
-  GetCaretRectAndInvert();
+  DrawAtPositionWithHint(node, offset, hint);
 }
 
-void nsCaret::GetCaretRectAndInvert()
+void nsCaret::GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
-  NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
-  
-  nsRect    frameRect = mLastCaretFrame->GetRect();
-  
+  NS_ASSERTION(aFrame, "Should have a frame here");
+
+  nsRect frameRect = aFrame->GetRect();
   frameRect.x = 0;      // the origin is accounted for in GetViewForRendering()
   frameRect.y = 0;
   
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
   nsIView   *drawingView;
-  GetViewForRendering(mLastCaretFrame, eRenderingViewCoordinates, viewOffset, clipRect, &drawingView, nsnull);
+  GetViewForRendering(aFrame, eRenderingViewCoordinates, viewOffset, clipRect, &drawingView, nsnull);
   
   if (!drawingView)
     return;
@@ -954,8 +950,8 @@ void nsCaret::GetCaretRectAndInvert()
   // after we've got an RC.
   if (frameRect.height == 0)
   {
-      const nsStyleFont* fontStyle = mLastCaretFrame->GetStyleFont();
-      const nsStyleVisibility* vis = mLastCaretFrame->GetStyleVisibility();
+      const nsStyleFont* fontStyle = aFrame->GetStyleFont();
+      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
       mRendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
 
       nsCOMPtr<nsIFontMetrics> fm;
@@ -982,7 +978,7 @@ void nsCaret::GetCaretRectAndInvert()
     nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
 
     // if cache in selection is available, apply it, else refresh it
-    privateSelection->GetCachedFrameOffset(mLastCaretFrame,mLastContentOffset, framePos);
+    privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset, framePos);
 
     caretRect += framePos;
 

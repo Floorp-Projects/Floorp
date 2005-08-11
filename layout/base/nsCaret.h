@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -74,7 +73,6 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
     NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
     NS_IMETHOD    GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *inDOMSel, nsRect* outCoordinates, PRBool* outIsCollapsed, nsIView **outView);
-    NS_IMETHOD    ClearFrameRefs(nsIFrame* aFrame);
     NS_IMETHOD    EraseCaret();
 
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
@@ -94,10 +92,10 @@ class nsCaret : public nsICaret,
     nsresult      StopBlinking();
     
     void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView);
-    PRBool        SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint);
+    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint);
     PRBool        MustDrawCaret();
     void          DrawCaret();
-    void          GetCaretRectAndInvert();
+    void          GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset);
     void          ToggleDrawnStatus() {   mDrawn = !mDrawn; }
 
 protected:
@@ -119,9 +117,11 @@ protected:
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
     nsRect                mCaretRect;         // the last caret rect
-    nsIFrame*             mLastCaretFrame;    // store the frame the caret was last drawn in.
     nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
-    PRInt32               mLastContentOffset;
+    nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn in (by DrawAtPosition()/DrawCaret()),
+                                              // note that this can be different than where it was actually drawn (anon <BR> in text control)
+    PRInt32               mLastContentOffset; // the offset for the last request
+    nsIFrameSelection::HINT mLastHint;        // the hint associated with the last request
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret
     nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language
