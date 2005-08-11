@@ -439,7 +439,7 @@ JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
  * we don't shrink on the very next remove after growing a table upon adding
  * an entry that brings entryCount past maxAlpha * tableSize.
  */
-extern JS_PUBLIC_API(void)
+JS_PUBLIC_API(void)
 JS_DHashTableSetAlphaBounds(JSDHashTable *table,
                             float maxAlpha,
                             float minAlpha);

@@ -52,6 +52,10 @@ REQUIRES	= \
 		  string \
 		  $(NULL)
 
+CSRCS = \
+		pldhash.c \
+		$(NULL)
+
 CPPSRCS		= \
 		nsAtomTable.cpp \
 		nsAtomService.cpp \
@@ -75,6 +79,7 @@ CPPSRCS		= \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
+		nsTHashtable.cpp \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
 		nsVoidArray.cpp \
@@ -89,29 +94,37 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsAtomService.h \
+		nsBaseHashtable.h \
 		nsCheapSets.h \
+		nsClassHashtable.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
+		nsDataHashtable.h \
 		nsDeque.h \
 		nsDoubleHashtable.h \
 		nsEnumeratorUtils.h \
 		nsFixedSizeAllocator.h \
 		nsHashSets.h \
+		nsHashKeys.h \
 		nsHashtable.h \
 		nsIByteBuffer.h \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
+		nsInterfaceHashtable.h \
 		nsObserverService.h \
 		nsQuickSort.h \
 		nsRecyclingAllocator.h \
+		nsRefPtrHashtable.h \
 		nsStaticNameTable.h \
 		nsStaticAtom.h \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
+		nsTHashtable.h \
 		nsTime.h \
 		nsUnitConversion.h \
 		nsVariant.h \
 		nsVoidArray.h \
+		pldhash.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
 		nsArray.h \

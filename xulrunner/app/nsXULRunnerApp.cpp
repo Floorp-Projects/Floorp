@@ -139,11 +139,10 @@ static PRBool CheckMaxVersion(const char *versionStr)
 /**
  * Parse application data.
  */
-static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
-                       nsCString& vendor, nsCString& name, nsCString& version,
-                       nsCString& buildID, nsCString& appID,
-                       nsCString& copyright)
+static int LoadAppData(const char* appDataFile, nsXREAppData* aResult)
 {
+  static char vendor[256], name[256], version[32], buildID[32], appID[256], copyright[512];
+  
   nsresult rv;
 
   nsCOMPtr<nsILocalFile> lf;
@@ -170,16 +169,15 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
   // TODO: If these version checks fail, then look for a compatible XULRunner
   //       version on the system, and launch it instead.
 
-  nsCAutoString gkVersion;
-  rv = parser.GetString("Gecko", "MinVersion", gkVersion);
-
-  if (NS_FAILED(rv) || !CheckMinVersion(gkVersion.get())) {
+  char gkVersion[32];
+  rv = parser.GetString("Gecko", "MinVersion", gkVersion, sizeof(gkVersion));
+  if (NS_FAILED(rv) || !CheckMinVersion(gkVersion)) {
     Output(PR_TRUE, "Error: Gecko MinVersion requirement not met.\n");
     return 1;
   }
 
-  rv = parser.GetString("Gecko", "MaxVersion", gkVersion);
-  if (NS_SUCCEEDED(rv) && !CheckMaxVersion(gkVersion.get())) {
+  rv = parser.GetString("Gecko", "MaxVersion", gkVersion, sizeof(gkVersion));
+  if (NS_SUCCEEDED(rv) && !CheckMaxVersion(gkVersion)) {
     Output(PR_TRUE, "Error: Gecko MaxVersion requirement not met.\n");
     return 1;
   }
@@ -190,21 +188,22 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
   const struct {
     const char *key;
     const char **fill;
-    nsCString  &buf;
+    char       *buf;
+    size_t      bufLen;
     PRBool      required;
   } string_fields[] = {
-    { "Vendor",    &aResult->vendor,    vendor,    PR_FALSE },
-    { "Name",      &aResult->name,      name,      PR_TRUE  },
-    { "Version",   &aResult->version,   version,   PR_FALSE },
-    { "BuildID",   &aResult->buildID,   buildID,   PR_TRUE  },
-    { "ID",        &aResult->ID,        appID,     PR_FALSE },
-    { "Copyright", &aResult->copyright, copyright, PR_FALSE }
+    { "Vendor",    &aResult->vendor,    vendor,    sizeof(vendor),    PR_FALSE },
+    { "Name",      &aResult->name,      name,      sizeof(name),      PR_TRUE  },
+    { "Version",   &aResult->version,   version,   sizeof(version),   PR_FALSE },
+    { "BuildID",   &aResult->buildID,   buildID,   sizeof(buildID),   PR_TRUE  },
+    { "ID",        &aResult->ID,        appID,     sizeof(appID),     PR_FALSE },
+    { "Copyright", &aResult->copyright, copyright, sizeof(copyright), PR_FALSE }
   };
   for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
-    rv = parser.GetString("App", string_fields[i].key,
-                          string_fields[i].buf);
+    rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
+                          string_fields[i].bufLen);
     if (NS_SUCCEEDED(rv)) {
-      *string_fields[i].fill = string_fields[i].buf.get();
+      *string_fields[i].fill = string_fields[i].buf;
     }
     else if (string_fields[i].required) {
       Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
@@ -402,12 +401,9 @@ int main(int argc, char* argv[])
     PR_SetEnv(kAppEnv);
   }
 
-  nsCAutoString vendor, name, version, buildID, appID, copyright;
-
   nsXREAppData appData = { sizeof(nsXREAppData), 0 };
 
-  int rv = LoadAppData(appDataFile, &appData,
-                       vendor, name, version, buildID, appID, copyright);
+  int rv = LoadAppData(appDataFile, &appData);
   if (!rv)
     rv = XRE_main(argc, argv, &appData);
 

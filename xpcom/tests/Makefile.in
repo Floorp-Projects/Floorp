@@ -67,7 +67,6 @@ CPPSRCS		= \
 		TestFactory.cpp \
 		TestHashtables.cpp \
 		TestID.cpp \
-		TestINIParser.cpp \
 		TestObserverService.cpp \
 		TestPermanentAtoms.cpp \
 		TestPipes.cpp \

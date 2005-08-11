@@ -34,35 +34,27 @@
 #
 # ***** END LICENSE BLOCK *****
 
-XPCOM_GLUE_SRC_LCSRCS =          \
-  pldhash.c                      \
-  $(NULL)
+XPCOM_GLUE_SRC_LCSRCS =			       \
+		nsCOMPtr.cpp		       \
+		nsComponentManagerUtils.cpp    \
+		nsDebug.cpp		       \
+		nsID.cpp                       \
+		nsIInterfaceRequestorUtils.cpp \
+		nsMemory.cpp		       \
+		nsTraceRefcnt.cpp              \
+		nsWeakReference.cpp	       \
+		nsGREGlue.cpp                  \
+		nsVersionComparator.cpp        \
+		$(NULL)
 
-XPCOM_GLUE_SRC_CSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
-
-XPCOM_GLUE_SRC_LCPPSRCS =        \
-  nsCOMPtr.cpp                   \
-  nsComponentManagerUtils.cpp    \
-  nsDebug.cpp                    \
-  nsID.cpp                       \
-  nsIInterfaceRequestorUtils.cpp \
-  nsINIParser.cpp                \
-  nsMemory.cpp                   \
-  nsTraceRefcnt.cpp              \
-  nsWeakReference.cpp            \
-  nsGREGlue.cpp                  \
-  nsVersionComparator.cpp        \
-  nsTHashtable.cpp               \
-  $(NULL)
-
-XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))
+XPCOM_GLUE_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
 
 # nsGenericFactory is not really all that helpful in the standalone glue,
 # and it has a bad dependency on the NSPR AtomicIncrement function, so we
 # only build it for the dependent XPCOM glue and builtin to xpcom-core.
 
-XPCOM_GLUENS_SRC_LCPPSRCS =      \
-  nsGenericFactory.cpp           \
-  $(NULL)
+XPCOM_GLUENS_SRC_LCSRCS =                      \
+		nsGenericFactory.cpp           \
+		$(NULL)
 
-XPCOM_GLUENS_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCPPSRCS))
+XPCOM_GLUENS_SRC_CSRCS := $(addprefix $(topsrcdir)/xpcom/glue/,$(XPCOM_GLUENS_SRC_LCSRCS))

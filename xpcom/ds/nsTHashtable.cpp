@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,12 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XPCOM tests.
+ * The Original Code is C++ hashtable templates.
  *
  * The Initial Developer of the Original Code is
- * Benjamin Smedberg <benjamin@smedbergs.us>.
- *
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Benjamin Smedberg.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,59 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <string.h>
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
-#include "nsINIParser.h"
-#include "nsILocalFile.h"
-
-static PRBool
-StringCB(const char *aKey, const char *aValue, void* aClosure)
+PR_IMPLEMENT(PLDHashOperator)
+PL_DHashStubEnumRemove(PLDHashTable    *table,
+                                       PLDHashEntryHdr *entry,
+                                       PRUint32         ordinal,
+                                       void            *userarg)
 {
-  printf("%s=%s\n", aKey, aValue);
-
-  return PR_TRUE;
+  return PL_DHASH_REMOVE;
 }
 
-static PRBool
-SectionCB(const char *aSection, void* aClosure)
+PRUint32 nsIDHashKey::HashKey(const nsID* id)
 {
-  nsINIParser *ini = NS_REINTERPRET_CAST(nsINIParser*, aClosure);
+  PRUint32 h = id->m0;
+  PRUint32 i;
 
-  printf("[%s]\n", aSection);
+  h = (h>>28) ^ (h<<4) ^ id->m1;
+  h = (h>>28) ^ (h<<4) ^ id->m2;
 
-  ini->GetStrings(aSection, StringCB, nsnull);
+  for (i = 0; i < 8; i++)
+    h = (h>>28) ^ (h<<4) ^ id->m3[i];
 
-  printf("\n");
-
-  return PR_TRUE;
+  return h;
 }
-
-int main(int argc, char **argv)
-{
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s <ini-file>\n", argv[0]);
-    return 255;
-  }
-
-  nsCOMPtr<nsILocalFile> lf;
-
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(argv[1]),
-                                      PR_TRUE,
-                                      getter_AddRefs(lf));
-  if (NS_FAILED(rv)) {
-    fprintf(stderr, "Error: NS_NewNativeLocalFile failed\n");
-    return 1;
-  }
-
-  nsINIParser ini;
-  rv = ini.Init(lf);
-  if (NS_FAILED(rv)) {
-    fprintf(stderr, "Error: Init failed.");
-    return 2;
-  }
-
-  ini.GetSections(SectionCB, &ini);
-
-  return 0;
-}
-

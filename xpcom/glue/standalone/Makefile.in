@@ -71,12 +71,8 @@ LINKSRC = nsGlueLinkingNull.cpp
 $(warning TinderboxPrint:<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298044">Error: XPCOM Glue</a>)
 endif
 
-CSRCS		= \
-		$(XPCOM_GLUE_SRC_LCSRCS) \
-		$(NULL)
-
 CPPSRCS		= \
-		$(XPCOM_GLUE_SRC_LCPPSRCS)   \
+		$(XPCOM_GLUE_SRC_LCSRCS)     \
 		nsXPCOMGlue.cpp              \
 		nsGREDirServiceProvider.cpp  \
 		$(LINKSRC)                   \
@@ -102,7 +98,7 @@ SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS)
+export:: $(XPCOM_GLUE_SRC_CSRCS) 
 	$(INSTALL) $^ .
 
 DEFINES		+= -DXPCOM_GLUE

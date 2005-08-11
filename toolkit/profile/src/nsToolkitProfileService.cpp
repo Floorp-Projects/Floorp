@@ -403,37 +403,37 @@ nsToolkitProfileService::Init()
 
     nsINIParser parser;
     rv = parser.Init(mListFile);
-    // Init does not fail on parsing errors, only on OOM/really unexpected
-    // conditions.
-    if (NS_FAILED(rv))
-        return rv;
+    // Parsing errors are troublesome... we're gonna continue even on
+    // parsing errors, and let people manually re-locate their profile
+    // if something goes wacky
 
-    nsCAutoString buffer;
-    rv = parser.GetString("General", "StartWithLastProfile", buffer);
-    if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("0"))
+    char parserBuf[MAXPATHLEN];
+    rv = parser.GetString("General", "StartWithLastProfile", parserBuf, MAXPATHLEN);
+    if (NS_SUCCEEDED(rv) && strcmp("0", parserBuf) == 0)
         mStartWithLast = PR_FALSE;
 
     nsToolkitProfile* currentProfile = nsnull;
+    nsCAutoString filePath;
 
     unsigned int c = 0;
     for (c = 0; PR_TRUE; ++c) {
-        nsCAutoString profileID("Profile");
-        profileID.AppendInt(c);
+        char profileID[12];
+        sprintf(profileID, "Profile%u", c);
 
-        rv = parser.GetString(profileID.get(), "IsRelative", buffer);
+        rv = parser.GetString(profileID, "IsRelative", parserBuf, MAXPATHLEN);
         if (NS_FAILED(rv)) break;
 
-        PRBool isRelative = buffer.EqualsLiteral("1");
+        PRBool isRelative = (strcmp(parserBuf, "1") == 0);
 
-        nsCAutoString filePath;
-
-        rv = parser.GetString(profileID.get(), "Path", filePath);
+        rv = parser.GetString(profileID, "Path", parserBuf, MAXPATHLEN);
         if (NS_FAILED(rv)) {
             NS_ERROR("Malformed profiles.ini: Path= not found");
             continue;
         }
 
-        rv = parser.GetString(profileID.get(), "Name", buffer);
+        filePath = parserBuf;
+
+        rv = parser.GetString(profileID, "Name", parserBuf, MAXPATHLEN);
         if (NS_FAILED(rv)) {
             NS_ERROR("Malformed profiles.ini: Name= not found");
             continue;
@@ -462,13 +462,13 @@ nsToolkitProfileService::Init()
             localDir = rootDir;
         }
 
-        currentProfile = new nsToolkitProfile(buffer,
+        currentProfile = new nsToolkitProfile(nsDependentCString(parserBuf),
                                               rootDir, localDir,
                                               currentProfile);
         NS_ENSURE_TRUE(currentProfile, NS_ERROR_OUT_OF_MEMORY);
 
-        rv = parser.GetString(profileID.get(), "Default", buffer);
-        if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("1"))
+        rv = parser.GetString(profileID, "Default", parserBuf, MAXPATHLEN);
+        if (NS_SUCCEEDED(rv) && strcmp("1", parserBuf) == 0)
             mChosen = currentProfile;
     }
 
