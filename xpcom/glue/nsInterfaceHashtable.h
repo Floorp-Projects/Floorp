@@ -75,25 +75,46 @@ public:
   PRBool Get(KeyType aKey, UserDataType* pData) const;
 };
 
-/**
- * declare shared-linkage for common usages of nsDataHashtable.
- *
- * To avoid including this code in multiple translation units, common usages
- * are predeclared with external linkage.  To add to this list, include the
- * declarations here, definitions in nsTHashtable.cpp and dlldeps.cpp .  This
- * only works if the configure-test HAVE_CPP_EXTERN_INSTANTIATION succeeds.
- */
-#ifndef HAVE_CPP_EXTERN_INSTANTIATION
-  #include "nsInterfaceHashtableImpl.h"
-#else
-  #ifndef NO_THASHTABLE_EXTERN_DECL
-    extern template class NS_COM nsBaseHashtableET<nsStringHashKey, nsCOMPtr<nsISupports> >;
-    extern template class NS_COM nsTHashtable< nsBaseHashtableET<nsStringHashKey,nsCOMPtr<nsISupports> > >;
-    extern template class NS_COM nsBaseHashtable<nsStringHashKey, nsCOMPtr<nsISupports>, nsISupports*>;
-    extern template class NS_COM nsInterfaceHashtable<nsStringHashKey, nsISupports>;
-  #else
-    #include "nsInterfaceHashtableImpl.h"
-  #endif
-#endif
+
+//
+// nsInterfaceHashtable definitions
+//
+
+template<class KeyClass,class Interface>
+PRBool
+nsInterfaceHashtable<KeyClass,Interface>::Get
+  (KeyType aKey, UserDataType* pInterface) const
+{
+  if (mLock)
+    PR_RWLock_Rlock(mLock);
+
+  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
+    GetEntry(KeyClass::KeyToPointer(aKey));
+
+  if (ent)
+  {
+    if (pInterface)
+    {
+      *pInterface = ent->mData;
+
+      NS_IF_ADDREF(*pInterface);
+    }
+
+    if (mLock)
+      PR_RWLock_Unlock(mLock);
+
+    return PR_TRUE;
+  }
+
+  // if the key doesn't exist, set *pInterface to null
+  // so that it is a valid XPCOM getter
+  if (pInterface)
+    *pInterface = nsnull;
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+
+  return PR_FALSE;
+}
 
 #endif // nsInterfaceHashtable_h__

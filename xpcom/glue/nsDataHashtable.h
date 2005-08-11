@@ -54,25 +54,4 @@ class nsDataHashtable :
   public nsBaseHashtable<KeyClass,DataType,DataType>
 { };
 
-/**
- * declare shared-linkage for common usages of nsDataHashtable.
- *
- * To avoid including this code in multiple translation units, common usages
- * are predeclared with external linkage.  To add to this list, include the
- * declarations here, definitions in nsTHashtable.cpp and dlldeps.cpp .  This
- * only works if the configure-test HAVE_CPP_EXTERN_INSTANTIATION succeeds.
- */
-#ifndef HAVE_CPP_EXTERN_INSTANTIATION
-  #include "nsBaseHashtableImpl.h"
-#else
-  #ifndef NO_THASHTABLE_EXTERN_DECL
-    extern template class NS_COM nsBaseHashtableET<nsUint32HashKey,PRInt32>;
-    extern template class NS_COM nsTHashtable< nsBaseHashtableET<nsUint32HashKey,PRInt32> >;
-    extern template class NS_COM nsBaseHashtable<nsUint32HashKey,PRInt32,PRInt32>;
-    extern template class NS_COM nsDataHashtable<nsUint32HashKey,PRInt32>;
-  #else
-    #include "nsBaseHashtableImpl.h"
-  #endif
-#endif
-
 #endif // nsDataHashtable_h__

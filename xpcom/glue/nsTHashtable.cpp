@@ -35,16 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NO_THASHTABLE_EXTERN_DECL
-
 #include "nsTHashtable.h"
-#include "nsTHashtableImpl.h"
-#include "nsInterfaceHashtable.h"
-#include "nsInterfaceHashtableImpl.h"
-#include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 
-PLDHashOperator PL_DHashStubEnumRemove(PLDHashTable    *table,
+PR_IMPLEMENT(PLDHashOperator)
+PL_DHashStubEnumRemove(PLDHashTable    *table,
                                        PLDHashEntryHdr *entry,
                                        PRUint32         ordinal,
                                        void            *userarg)
@@ -65,18 +60,3 @@ PRUint32 nsIDHashKey::HashKey(const nsID* id)
 
   return h;
 }
-
-// explicit instantiation of templates
-#ifdef HAVE_CPP_EXTERN_INSTANTIATION
-  /* instantiate common nsInterfaceHashtable uses */
-  template class NS_EXPORT nsBaseHashtableET<nsStringHashKey,nsCOMPtr<nsISupports> >;
-  template class NS_EXPORT nsTHashtable< nsBaseHashtableET<nsStringHashKey,nsCOMPtr<nsISupports> > >;
-  template class NS_EXPORT nsBaseHashtable<nsStringHashKey,nsCOMPtr<nsISupports>,nsISupports*>;
-  template class NS_EXPORT nsInterfaceHashtable<nsStringHashKey,nsISupports>;
-
-  /* instantiate common nsDataHashtable uses */
-  template class NS_EXPORT nsBaseHashtableET<nsUint32HashKey,PRInt32>;
-  template class NS_EXPORT nsTHashtable< nsBaseHashtableET<nsUint32HashKey,PRInt32> >;
-  template class NS_EXPORT nsBaseHashtable<nsUint32HashKey,PRInt32,PRInt32>;
-  template class NS_EXPORT nsDataHashtable<nsUint32HashKey,PRInt32>;
-#endif // HAVE_CPP_EXTERN_INSTANTIATION
