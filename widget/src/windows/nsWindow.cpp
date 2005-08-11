@@ -4535,6 +4535,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       //SetFocus(); // this is bad
       //RelayMouseEvent(msg,wParam, lParam);
     {
+#ifdef WINCE
+      SHRGINFO  shrg;
+      shrg.cbSize = sizeof(shrg);
+      shrg.hwndClient = mWnd;
+      shrg.ptDown.x = LOWORD(lParam);
+      shrg.ptDown.y = HIWORD(lParam);
+      shrg.dwFlags = SHRG_RETURNCMD | SHRG_NOANIMATION;
+      if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
+      {
+        result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
+        result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam);
+        break;
+      }
+#endif
       // check whether IME window do mouse operation
       if (IMEMouseHandling(NS_MOUSE_LEFT_BUTTON_DOWN, IMEMOUSE_LDOWN, lParam))
         break;
@@ -5491,10 +5505,12 @@ DWORD nsWindow::WindowExStyle()
 
     case eWindowType_toplevel:
     case eWindowType_invisible:
-    if (gUseOkayButton)
-      return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
-    else
-      return WS_EX_WINDOWEDGE;      
+      {
+        if (gUseOkayButton)
+          return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
+        
+        return WS_EX_WINDOWEDGE;      
+      }
   }
 
 #else

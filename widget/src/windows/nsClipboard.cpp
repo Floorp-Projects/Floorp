@@ -111,11 +111,13 @@ UINT nsClipboard::GetFormat(const char* aMimeStr)
     format = CF_TEXT;
   else if (strcmp(aMimeStr, kUnicodeMime) == 0)
     format = CF_UNICODETEXT;
+#ifndef WINCE
   else if (strcmp(aMimeStr, kJPEGImageMime) == 0)
     format = CF_DIB;
   else if (strcmp(aMimeStr, kFileMime) == 0 || 
            strcmp(aMimeStr, kFilePromiseMime) == 0)
     format = CF_HDROP;
+#endif
   else if (strcmp(aMimeStr, kURLMime) == 0 || 
            strcmp(aMimeStr, kURLDataMime) == 0 || 
            strcmp(aMimeStr, kURLDescriptionMime) == 0 || 
@@ -145,7 +147,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable * aTransferable, ID
 
   dataObj->AddRef();
 
-  // No set it up with all the right data flavors & enums
+  // Now set it up with all the right data flavors & enums
   nsresult res = SetupNativeDataObject(aTransferable, dataObj);
   if (NS_OK == res) {
     *aDataObj = dataObj; 
@@ -218,8 +220,10 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILEDESCRIPTORW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
+#ifndef WINCE
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_FILECONTENTS), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);  
+#endif
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLA), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kURLMime, &shortcutFE);      
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_INETURLW), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
@@ -232,6 +236,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(imageFE, CF_DIB, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(flavorStr, &imageFE);      
       }
+#ifndef WINCE
       else if ( strcmp(flavorStr, kFilePromiseMime) == 0 ) {
          // if we're a file promise flavor, also register the 
          // CFSTR_PREFERREDDROPEFFECT format.  The data object
@@ -250,6 +255,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(shortcutFE, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL)
         dObj->AddDataFlavor(kFilePromiseMime, &shortcutFE);
       }
+#endif
     }
   }
 
@@ -293,14 +299,14 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
   // null them out to ensure that all of our strlen calls will succeed.
   nsresult  result = NS_ERROR_FAILURE;
   if (aHGBL != NULL) {
-    LPSTR lpStr = (LPSTR)::GlobalLock(aHGBL);
-    DWORD allocSize = ::GlobalSize(aHGBL);
+    LPSTR lpStr = (LPSTR) GlobalLock(aHGBL);
+    DWORD allocSize = GlobalSize(aHGBL);
     char* data = NS_STATIC_CAST(char*, nsMemory::Alloc(allocSize + sizeof(PRUnichar)));
     if ( data ) {    
       memcpy ( data, lpStr, allocSize );
       data[allocSize] = data[allocSize + 1] = '\0';     // null terminate for safety
 
-      ::GlobalUnlock(aHGBL);
+      GlobalUnlock(aHGBL);
       *aData = data;
       *aLen = allocSize;
 
@@ -432,7 +438,9 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
   if (S_OK == hres) {
     static CLIPFORMAT fileDescriptorFlavorA = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORA ); 
     static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
+#ifndef WINCE
     static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
+#endif
     switch (stm.tymed) {
      case TYMED_HGLOBAL: 
         {
@@ -467,10 +475,11 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 }
               } break;
 
+#ifndef WINCE
             case CF_DIB :
               {
                 HGLOBAL hGlobal = stm.hGlobal;
-                BYTE  * pGlobal = (BYTE  *)::GlobalLock (hGlobal) ;
+                BYTE  * pGlobal = (BYTE  *) GlobalLock (hGlobal) ;
                 BITMAPV4HEADER * header = (BITMAPV4HEADER *)pGlobal;
 
                 nsImageFromClipboard converter ( header );
@@ -482,7 +491,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                   result = NS_OK;
                 }
 
-                ::GlobalUnlock (hGlobal) ;
+                GlobalUnlock (hGlobal) ;
               } break;
 
             case CF_HDROP : 
@@ -491,7 +500,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 // single data object. In order to match mozilla's D&D apis, we
                 // just pull out the file at the requested index, pretending as
                 // if there really are multiple drag items.
-                HDROP dropFiles = (HDROP) ::GlobalLock(stm.hGlobal);
+                HDROP dropFiles = (HDROP) GlobalLock(stm.hGlobal);
 
                 UINT numFiles = ::DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
                 NS_ASSERTION ( numFiles > 0, "File drop flavor, but no files...hmmmm" );
@@ -508,15 +517,19 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                   else
                     result = NS_ERROR_OUT_OF_MEMORY;
                 }
-                ::GlobalUnlock (stm.hGlobal) ;
+                GlobalUnlock (stm.hGlobal) ;
 
               } break;
 
+#endif
             default: {
+#ifndef WINCE
               if ( fe.cfFormat == fileDescriptorFlavorA || fe.cfFormat == fileDescriptorFlavorW || fe.cfFormat == fileFlavor ) {
                 NS_WARNING ( "Mozilla doesn't yet understand how to read this type of file flavor" );
               } 
-              else {
+              else
+#endif
+              {
                 // Get the data out of the global data handle. The size we return
                 // should not include the null because the other platforms don't
                 // use nulls, so just return the length we get back from strlen(),
@@ -877,7 +890,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
 #endif
 
       UINT format = GetFormat(flavorStr);
-      if (::IsClipboardFormatAvailable(format)) {
+      if (IsClipboardFormatAvailable(format)) {
         *_retval = PR_TRUE;
         break;
       }
@@ -887,7 +900,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
         if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
           // client asked for unicode and it wasn't present, check if we have CF_TEXT.
           // We'll handle the actual data substitution in the data object.
-          if ( ::IsClipboardFormatAvailable(GetFormat(kTextMime)) )
+          if (IsClipboardFormatAvailable(GetFormat(kTextMime)) )
             *_retval = PR_TRUE;
         }
       }

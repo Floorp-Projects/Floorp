@@ -203,10 +203,12 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 
   static CLIPFORMAT fileDescriptorFlavorA = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORA ); 
   static CLIPFORMAT fileDescriptorFlavorW = ::RegisterClipboardFormat( CFSTR_FILEDESCRIPTORW ); 
-  static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
   static CLIPFORMAT uniformResourceLocatorA = ::RegisterClipboardFormat( CFSTR_INETURLA );
   static CLIPFORMAT uniformResourceLocatorW = ::RegisterClipboardFormat( CFSTR_INETURLW );
+#ifndef WINCE
+  static CLIPFORMAT fileFlavor = ::RegisterClipboardFormat( CFSTR_FILECONTENTS ); 
   static CLIPFORMAT PreferredDropEffect = ::RegisterClipboardFormat( CFSTR_PREFERREDDROPEFFECT );
+#endif
 
   ULONG count;
   FORMATETC fe;
@@ -224,9 +226,10 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
         case CF_UNICODETEXT:
         return GetText(*df, *pFE, *pSTM);
                   
+#ifndef WINCE
         case CF_HDROP:
           return GetFile(*df, *pFE, *pSTM);
-
+#endif
         // Someone is asking for an image
         case CF_DIB:
           return GetDib(*df, *pFE, *pSTM);
@@ -242,14 +245,16 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
             return GetFileDescriptor ( *pFE, *pSTM, PR_FALSE );
           if ( format == fileDescriptorFlavorW )
             return GetFileDescriptor ( *pFE, *pSTM, PR_TRUE);
-          if ( format == fileFlavor )
-            return GetFileContents ( *pFE, *pSTM );
           if ( format == uniformResourceLocatorA )
             return GetUniformResourceLocator( *pFE, *pSTM, PR_FALSE);
           if ( format == uniformResourceLocatorW )
             return GetUniformResourceLocator( *pFE, *pSTM, PR_TRUE);
+#ifndef WINCE
+          if ( format == fileFlavor )
+            return GetFileContents ( *pFE, *pSTM );
           if ( format == PreferredDropEffect )
             return GetPreferredDropEffect( *pFE, *pSTM );
+#endif
           PRNTDEBUG2("***** nsDataObj::GetData - Unknown format %u\n", format);
           return GetText(*df, *pFE, *pSTM);
         } //switch
@@ -305,6 +310,7 @@ STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
   PRNTDEBUG("nsDataObj::SetData\n");
+#ifndef WINCE
   static CLIPFORMAT PerformedDropEffect = ::RegisterClipboardFormat( CFSTR_PERFORMEDDROPEFFECT );  
 
   if (pFE && pFE->cfFormat == PerformedDropEffect) {
@@ -314,6 +320,7 @@ STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease
       mCachedTempFile = NULL;
     }
   }
+#endif
 
   if (fRelease) {
     ReleaseStgMedium(pSTM);
@@ -425,7 +432,7 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
 {
   PRNTDEBUG("nsDataObj::GetDib\n");
   ULONG result = E_FAIL;
-  
+#ifndef WINCE  
   
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
@@ -455,7 +462,8 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
   } // if we have an image
   else  
     NS_WARNING ( "Definately not an image on clipboard" );
-  
+
+#endif
 	return ResultFromScode(result);
 }
 
@@ -625,6 +633,9 @@ GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
+#ifdef WINCE
+  return E_FAIL;
+#else
   // get the title of the shortcut
   nsAutoString title;
   if ( NS_FAILED(ExtractShortcutTitle(title)) )
@@ -662,12 +673,15 @@ nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aST
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-
+#endif
 } // GetFileDescriptorInternetShortcutA
 
 HRESULT
 nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
+#ifdef WINCE
+  return E_FAIL;
+#else
   // get the title of the shortcut
   nsAutoString title;
   if ( NS_FAILED(ExtractShortcutTitle(title)) )
@@ -705,7 +719,7 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-
+#endif
 } // GetFileDescriptorInternetShortcutW
 
 
@@ -718,6 +732,9 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
 HRESULT
 nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 {
+#ifdef WINCE
+  return E_FAIL;
+#else
   nsAutoString url;
   if ( NS_FAILED(ExtractShortcutURL(url)) )
     return E_OUTOFMEMORY;
@@ -752,7 +769,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   aSTG.tymed = TYMED_HGLOBAL;
 
   return S_OK;
-  
+#endif  
 } // GetFileContentsInternetShortcut
 
 
@@ -806,7 +823,7 @@ HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
   HGLOBAL hGlobalMemory = NULL;
   hGlobalMemory = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DWORD));
   if (hGlobalMemory) {
-    DWORD* pdw = (DWORD*) ::GlobalLock(hGlobalMemory);
+    DWORD* pdw = (DWORD*) GlobalLock(hGlobalMemory);
     // The PreferredDropEffect clipboard format is only registered if a drag/drop
     // of an image happens from Mozilla to the desktop.  We want its value
     // to be DROPEFFECT_MOVE in that case so that the file is moved from the
@@ -815,7 +832,7 @@ HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
     // our IDataObject implementation doesn't implement SetData.  It adds data
     // to the data object lazily only when the drop target asks for it.
     *pdw = (DWORD) DROPEFFECT_MOVE;
-    ::GlobalUnlock(hGlobalMemory);
+    GlobalUnlock(hGlobalMemory);
   }
   else {
     res = E_OUTOFMEMORY;
@@ -902,14 +919,14 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     allocLen += sizeof(PRUnichar);
   }
 
-  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GMEM_MOVEABLE, allocLen);
+  hGlobalMemory = (HGLOBAL)GlobalAlloc(GMEM_MOVEABLE, allocLen);
 
   // Copy text to Global Memory Area
   if ( hGlobalMemory ) {
-    char* dest = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+    char* dest = NS_REINTERPRET_CAST(char*, GlobalLock(hGlobalMemory));
     char* source = NS_REINTERPRET_CAST(char*, data);
     memcpy ( dest, source, allocLen );                         // copies the null as well
-    ::GlobalUnlock(hGlobalMemory);
+    GlobalUnlock(hGlobalMemory);
   }
   aSTG.hGlobal = hGlobalMemory;
 
@@ -960,9 +977,9 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     HGLOBAL hGlobalMemory = NULL;
     aSTG.tymed = TYMED_HGLOBAL;
     aSTG.pUnkForRelease = NULL;    
-    hGlobalMemory = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen);
+    hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen);
     if (hGlobalMemory) {      
-      DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, ::GlobalLock(hGlobalMemory));
+      DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, GlobalLock(hGlobalMemory));
 
       // First, populate drop file structure
       pDropFile->pFiles = sizeof(DROPFILES);   // offset to start of file name char array
@@ -982,7 +999,7 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
       // Add the second null character right after the first one.
       dest[allocLen - 1] = '\0';
 
-      ::GlobalUnlock(hGlobalMemory);
+      GlobalUnlock(hGlobalMemory);
     }
     else {
       res = E_OUTOFMEMORY;
@@ -1059,11 +1076,14 @@ void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
   // when the drop target calls EnumFormatEtc to enumerate through the FE list
   // We use the CF_HDROP format to copy file contents when an image is dragged
   // from Mozilla to a drop target.
+#ifndef WINCE
   if (aFE->cfFormat == CF_HDROP) {
     mDataFlavors->InsertElementAt(new nsCAutoString(aDataFlavor), 0);
     m_enumFE->InsertFEAt(aFE, 0);
   }  
-  else {
+  else 
+#endif
+  {
     mDataFlavors->AppendElement(new nsCAutoString(aDataFlavor));
     m_enumFE->AddFE(aFE);
   }
@@ -1294,18 +1314,18 @@ nsDataObj::ExtractUniformResourceLocatorA(FORMATETC& aFE, STGMEDIUM& aSTG )
 
   NS_LossyConvertUTF16toASCII asciiUrl(url);
   const int totalLen = asciiUrl.Length() + 1;
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
+  HGLOBAL hGlobalMemory = GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
   if (!hGlobalMemory)
     return E_OUTOFMEMORY;
 
-  char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+  char* contents = NS_REINTERPRET_CAST(char*, GlobalLock(hGlobalMemory));
   if (!contents) {
-    ::GlobalFree(hGlobalMemory);
+    GlobalFree(hGlobalMemory);
     return E_OUTOFMEMORY;
   }
 
   strcpy(contents, asciiUrl.get());
-  ::GlobalUnlock(hGlobalMemory);
+  GlobalUnlock(hGlobalMemory);
   aSTG.hGlobal = hGlobalMemory;
   aSTG.tymed = TYMED_HGLOBAL;
 
@@ -1322,18 +1342,18 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
     return E_OUTOFMEMORY;
 
   const int totalLen = (url.Length() + 1) * sizeof(PRUnichar);
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
+  HGLOBAL hGlobalMemory = GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
   if (!hGlobalMemory)
     return E_OUTOFMEMORY;
 
-  wchar_t* contents = NS_REINTERPRET_CAST(wchar_t*, ::GlobalLock(hGlobalMemory));
+  wchar_t* contents = NS_REINTERPRET_CAST(wchar_t*, GlobalLock(hGlobalMemory));
   if (!contents) {
-    ::GlobalFree(hGlobalMemory);
+    GlobalFree(hGlobalMemory);
     return E_OUTOFMEMORY;
   }
 
   wcscpy(contents, url.get());
-  ::GlobalUnlock(hGlobalMemory);
+  GlobalUnlock(hGlobalMemory);
   aSTG.hGlobal = hGlobalMemory;
   aSTG.tymed = TYMED_HGLOBAL;
 

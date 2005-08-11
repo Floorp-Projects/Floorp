@@ -75,13 +75,13 @@ CPPSRCS		= \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \
+	nsDataObj.cpp  \
+	nsDataObjCollection.cpp  \
+	nsClipboard.cpp      \
 	$(NULL)
 
 ifneq ($(OS_ARCH), WINCE)
 CPPSRCS += \
-	nsDataObj.cpp  \
-	nsDataObjCollection.cpp  \
-	nsClipboard.cpp  \
 	nsNativeDragTarget.cpp  \
 	nsNativeDragSource.cpp  \
 	nsDragService.cpp  \
