@@ -73,6 +73,11 @@ public:
    * @param pData if the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
+
+protected:
+#ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
+  using nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>::mLock;
+#endif
 };
 
 
