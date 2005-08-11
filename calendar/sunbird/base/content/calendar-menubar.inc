@@ -219,7 +219,7 @@
                      checked="true"/>
            <menuitem id="menu_showStatusBar"
                      type="checkbox"
-                     label="showStatusBarCmd.label"
+                     label="&showStatusBarCmd.label;"
                      command="cmd_showStatusBar"
                      accesskey="&showStatusBarCmd.accesskey;"
                      checked="true"/>
