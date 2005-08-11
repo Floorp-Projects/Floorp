@@ -109,6 +109,13 @@ public:
               PRBool   threadSafe = PR_FALSE);
 
   /**
+   * Check whether the table has been initialized.
+   * This function is especially useful for static hashtables.
+   * @return PR_TRUE if the table has been initialized.
+   */
+  PRBool IsInitialized() const { return mTable.entrySize; }
+
+  /**
    * retrieve the value for a key.
    * @param aKey the key to retreive
    * @param pData data associated with this key will be placed at this
@@ -246,6 +253,7 @@ nsBaseHashtableET<KeyClass,DataType>::~nsBaseHashtableET()
 
 template<class KeyClass,class DataType,class UserDataType>
 nsBaseHashtable<KeyClass,DataType,UserDataType>::nsBaseHashtable()
+  : mLock(nsnull)
 { }
 
 template<class KeyClass,class DataType,class UserDataType>
