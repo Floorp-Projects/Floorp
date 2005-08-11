@@ -42,7 +42,7 @@
 #include "nsILineInputStream.h"
 #include "plbase64.h"
 #include "nsISecretDecoderRing.h"
-#include "nsIPassword.h"
+#include "nsIPasswordInternal.h"
 #include "nsIPrompt.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -106,7 +106,7 @@ public:
   ~SignonHashEntry() { delete head; }
 };
 
-class nsPasswordManager::PasswordEntry : public nsIPassword
+class nsPasswordManager::PasswordEntry : public nsIPasswordInternal
 {
 public:
   PasswordEntry(const nsACString& aKey, SignonDataEntry* aData);
@@ -114,16 +114,20 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPASSWORD
+  NS_DECL_NSIPASSWORDINTERNAL
 
 protected:
 
   nsCString mHost;
   nsString  mUser;
+  nsString  mUserField;
   nsString  mPassword;
+  nsString  mPasswordField;
   PRBool    mDecrypted[2];
 };
 
-NS_IMPL_ISUPPORTS1(nsPasswordManager::PasswordEntry, nsIPassword)
+NS_IMPL_ISUPPORTS2(nsPasswordManager::PasswordEntry, nsIPassword,
+                   nsIPasswordInternal)
 
 nsPasswordManager::PasswordEntry::PasswordEntry(const nsACString& aKey,
                                                 SignonDataEntry* aData)
@@ -133,7 +137,9 @@ nsPasswordManager::PasswordEntry::PasswordEntry(const nsACString& aKey,
 
   if (aData) {
     mUser.Assign(aData->userValue);
+    mUserField.Assign(aData->userField);
     mPassword.Assign(aData->passValue);
+    mPasswordField.Assign(aData->passField);
   }
 }
 
@@ -172,7 +178,19 @@ nsPasswordManager::PasswordEntry::GetPassword(nsAString& aPassword)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPasswordManager::PasswordEntry::GetUserFieldName(nsAString& aField)
+{
+  aField.Assign(mUserField);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsPasswordManager::PasswordEntry::GetPasswordFieldName(nsAString& aField)
+{
+  aField.Assign(mPasswordField);
+  return NS_OK;
+}
 
 
 
