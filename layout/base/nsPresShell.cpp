@@ -1898,14 +1898,16 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return NS_OK;
 
-#ifdef MOZ_XUL
   {
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
-    if (os)
+    if (os) {
+      os->RemoveObserver(this, NS_LINK_VISITED_EVENT_TOPIC);
+#ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
-  }
 #endif
+    }
+  }
 
   // If our paint suppression timer is still active, kill it.
   if (mPaintSuppressionTimer) {
