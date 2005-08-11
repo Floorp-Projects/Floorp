@@ -67,10 +67,9 @@ public:
 
   /**
    * Gets a weak reference to the hashtable entry.
-   * If no entry is found, nsnull will be returned, and *aFound will be set
-   * to PR_FALSE (if aFound is not null).
-   * Otherwise, the pointer to the component will be returned, and *aFound will
-   * be set to PR_TRUE (if aFound is not null). Do not release this pointer!
+   * @param aFound If not nsnull, will be set to PR_TRUE if the entry is found,
+   *               to PR_FALSE otherwise.
+   * @return The entry, or nsnull if not found. Do not release this pointer!
    */
   Interface* GetWeak(KeyType aKey, PRBool* aFound = nsnull) const;
 };
