@@ -60,7 +60,7 @@
 
   <binding id="ruleactiontype-menulist">
     <content>
-      <xul:menulist flex="1" class="ruleactionitem">
+      <xul:menulist class="ruleactionitem">
           <xul:menupopup>
             <xul:menuitem label="&moveMessage.label;" value="movemessage" enablefornews="false"/>
             <xul:menuitem label="&copyMessage.label;" value="copymessage"/>
@@ -201,7 +201,8 @@
   <binding id="ruleaction">
     <content allowevents="true">
       <xul:listcell class="ruleactiontype"/>
-      <xul:listcell class="ruleactiontarget" xbl:inherits="type=value"/>
+      <xul:listcell class="ruleactiontarget" xbl:inherits="type=value"
+                    orient="vertical" align="start" pack="center"/>
       <xul:listcell>
         <xul:button class="small-button" label="+" onclick="this.parentNode.parentNode.addRow();"/>
         <xul:button class="small-button" label="-" onclick="this.parentNode.parentNode.removeRow();" anonid="removeButton"/>

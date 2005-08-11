@@ -63,12 +63,8 @@ listbox {
   padding-top: 2px;
 }
 
-menulist {
+.search-menulist, .search-value-menulist {
   width: 12em;
-}
-
-menulist > menupopup > menuitem {
-  padding-right: 2px;
 }
 
 textbox {

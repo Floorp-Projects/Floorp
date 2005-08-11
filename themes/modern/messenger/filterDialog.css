@@ -53,12 +53,8 @@ treechildren::-moz-tree-image(activeColumn, Enabled-true) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
-menulist {
+.search-menulist, .search-value-menulist {
   width: 12em;
-}
-
-menulist > menupopup > menuitem {
-  padding-right: 2px;
 }
 
 .small-button {
