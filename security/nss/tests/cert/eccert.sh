@@ -568,7 +568,7 @@ cert_smime_client()
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates =============="
 
   cert_create_certs ${ALICEDIR} "Alice" 30 ${D_ALICE}
-  cert_create_cert ${BOBDIR} "Bob" 40  ${D_BOB}
+  cert_create_certs ${BOBDIR} "Bob" 40  ${D_BOB}
 
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
   cert_create_cert "${DAVEDIR}" Dave 50 ${D_DAVE}
