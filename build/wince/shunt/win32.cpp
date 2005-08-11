@@ -1116,11 +1116,13 @@ MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
     oleSetup();
     
     if (pDataObj)
-    {
         *pDataObj = gDataObject;
-        gDataObject->AddRef();
-    }
-    return S_OK;
+
+    if (!*pDataObj)
+		return E_FAIL;
+
+	(*pDataObj)->AddRef();
+	return S_OK;
 }
 
 MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard()
