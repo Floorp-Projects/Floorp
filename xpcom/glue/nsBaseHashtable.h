@@ -40,7 +40,8 @@
 
 #include "nsTHashtable.h"
 #include NEW_H
-typedef struct PRRWLock PRRWLock;
+#include "prrwlock.h"
+#include "nsDebug.h"
 
 template<class KeyClass,class DataType,class UserDataType>
 class nsBaseHashtable; // forward declaration
@@ -183,8 +184,180 @@ protected:
                                         void            *arg);
 };
 
-#ifndef HAVE_CPP_EXTERN_INSTANTIATION
-  #include "nsBaseHashtableImpl.h"
-#endif
+//
+// nsBaseHashtableET definitions
+//
+
+template<class KeyClass,class DataType>
+nsBaseHashtableET<KeyClass,DataType>::nsBaseHashtableET(KeyTypePointer aKey) :
+  KeyClass(aKey)
+{ }
+
+template<class KeyClass,class DataType>
+nsBaseHashtableET<KeyClass,DataType>::nsBaseHashtableET
+  (const nsBaseHashtableET<KeyClass,DataType>& toCopy) :
+  KeyClass(toCopy),
+  mData(toCopy.mData)
+{ }
+
+template<class KeyClass,class DataType>
+nsBaseHashtableET<KeyClass,DataType>::~nsBaseHashtableET()
+{ }
+
+//
+// nsBaseHashtable definitions
+//
+
+template<class KeyClass,class DataType,class UserDataType>
+nsBaseHashtable<KeyClass,DataType,UserDataType>::nsBaseHashtable()
+{ }
+
+template<class KeyClass,class DataType,class UserDataType>
+nsBaseHashtable<KeyClass,DataType,UserDataType>::~nsBaseHashtable()
+{
+  if (mLock)
+    PR_DestroyRWLock(mLock);
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PRBool
+nsBaseHashtable<KeyClass,DataType,UserDataType>::Init(PRUint32 initSize,
+                                                      PRBool   threadSafe)
+{
+  if (!nsTHashtable<EntryType>::Init(initSize))
+    return PR_FALSE;
+
+  if (!threadSafe)
+  {
+    mLock = nsnull;
+    return PR_TRUE;
+  }
+
+  mLock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, "nsBaseHashtable");
+
+  NS_WARN_IF_FALSE(mLock, "Error creating lock during nsBaseHashtable::Init()");
+
+  if (!mLock)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PRBool
+nsBaseHashtable<KeyClass,DataType,UserDataType>::Get(KeyType       aKey,
+                                                     UserDataType* pData) const
+{
+  if (mLock)
+    PR_RWLock_Rlock(mLock);
+
+  EntryType* ent = GetEntry(KeyClass::KeyToPointer(aKey));
+
+  if (ent)
+  {
+    if (pData)
+      *pData = ent->mData;
+
+    if (mLock)
+      PR_RWLock_Unlock(mLock);
+
+    return PR_TRUE;
+  }
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+
+  return PR_FALSE;
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PRBool
+nsBaseHashtable<KeyClass,DataType,UserDataType>::Put(KeyType      aKey,
+                                                     UserDataType aData)
+{
+  if (mLock)
+    PR_RWLock_Wlock(mLock);
+
+  EntryType* ent = PutEntry(KeyClass::KeyToPointer(aKey));
+
+  if (!ent)
+  {
+    if (mLock)
+      PR_RWLock_Unlock(mLock);
+
+    return PR_FALSE;
+  }
+
+  ent->mData = aData;
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+
+  return PR_TRUE;
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+void
+nsBaseHashtable<KeyClass,DataType,UserDataType>::Remove(KeyType aKey)
+{
+  if (mLock)
+    PR_RWLock_Wlock(mLock);
+
+  RemoveEntry(KeyClass::KeyToPointer(aKey));
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+void
+nsBaseHashtable<KeyClass,DataType,UserDataType>::EnumerateRead
+  (EnumReadFunction fEnumCall, void* userArg) const
+{
+  NS_ASSERTION(mTable.entrySize,
+               "nsBaseHashtable was not initialized properly.");
+
+  if (mLock)
+    PR_RWLock_Rlock(mLock);
+
+  s_EnumReadArgs enumData = { fEnumCall, userArg };
+  PL_DHashTableEnumerate(NS_CONST_CAST(PLDHashTable*,&mTable),
+                         s_EnumStub,
+                         &enumData);
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+void nsBaseHashtable<KeyClass,DataType,UserDataType>::Clear()
+{
+  if (mLock)
+    PR_RWLock_Wlock(mLock);
+
+  nsTHashtable<EntryType>::Clear();
+
+  if (mLock)
+    PR_RWLock_Unlock(mLock);
+}
+
+template<class KeyClass,class DataType,class UserDataType>
+PLDHashOperator
+nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumReadStub
+  (PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number, void* arg)
+{
+  EntryType* ent = NS_STATIC_CAST(EntryType*, hdr);
+  s_EnumReadArgs* eargs = (s_EnumReadArgs*) arg;
+
+  PLDHashOperator res = (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
+
+  NS_ASSERTION( !(res & PL_DHASH_REMOVE ),
+                "PL_DHASH_REMOVE return during const enumeration; ignoring.");
+
+  if (res & PL_DHASH_STOP)
+    return PL_DHASH_STOP;
+
+  return PL_DHASH_NEXT;
+}
 
 #endif // nsBaseHashtable_h__
