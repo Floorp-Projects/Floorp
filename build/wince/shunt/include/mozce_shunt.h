@@ -680,25 +680,30 @@
 #endif
 #define _CoLockObjectExternal     mozce_CoLockObjectExternal
 
-#ifdef _OleFlushClipboard
-#undef _OleFlushClipboard
+#ifdef IsClipboardFormatAvailable
+#undef IsClipboardFormatAvailable
 #endif
-#define _OleFlushClipboard        mozce_OleFlushClipboard
+#define IsClipboardFormatAvailable mozce_IsClipboardFormatAvailable
 
-#ifdef _OleGetClipboard
-#undef _OleGetClipboard
+#ifdef OleFlushClipboard
+#undef OleFlushClipboard
 #endif
-#define _OleGetClipboard          mozce_OleGetClipboard
+#define OleFlushClipboard        mozce_OleFlushClipboard
 
-#ifdef _OleQueryLinkFromData
-#undef _OleQueryLinkFromData
+#ifdef OleGetClipboard
+#undef OleGetClipboard
 #endif
-#define _OleQueryLinkFromData     mozce_OleQueryLinkFromData
+#define OleGetClipboard          mozce_OleGetClipboard
 
-#ifdef _OleSetClipboard
-#undef _OleSetClipboard
+#ifdef OleQueryLinkFromData
+#undef OleQueryLinkFromData
 #endif
-#define _OleSetClipboard          mozce_OleSetClipboard
+#define OleQueryLinkFromData     mozce_OleQueryLinkFromData
+
+#ifdef OleSetClipboard
+#undef OleSetClipboard
+#endif
+#define OleSetClipboard          mozce_OleSetClipboard
 
 
 // From win32a.cpp
@@ -1351,6 +1356,8 @@ extern "C" {
   MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject** outDataObj);
   MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard(void);
   MOZCE_SHUNT_API HRESULT mozce_OleQueryLinkFromData(IDataObject* inSrcDataObject);
+  MOZCE_SHUNT_API BOOL  mozce_IsClipboardFormatAvailable(UINT format);
+
   //MOZCE_SHUNT_API void* mozce_SHBrowseForFolder(void* /*LPBROWSEINFOS*/ inBI);
   MOZCE_SHUNT_API BOOL mozce_SetMenu(HWND inWnd, HMENU inMenu);
   MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize);

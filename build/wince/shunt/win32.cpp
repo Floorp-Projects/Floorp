@@ -759,60 +759,6 @@ MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock,
 
     return retval;
 }
-
-
-MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject* inDataObj)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("-- mozce_OleSetClipboard called\n");
-#endif
-
-    HRESULT retval = E_NOTIMPL;
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
-}
-
-
-MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject** outDataObj)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("-- mozce_OleGetClipboard called\n");
-#endif
-
-    HRESULT retval = E_NOTIMPL;
-
-    if(NULL != outDataObj)
-    {
-        *outDataObj = NULL;
-    }
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
-}
-
-
-MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("-- mozce_OleFlushClipboard called\n");
-#endif
-
-    HRESULT retval = E_NOTIMPL;
-
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
-}
-
-
 MOZCE_SHUNT_API HRESULT mozce_OleQueryLinkFromData(IDataObject* inSrcDataObject)
 {
     MOZCE_PRECHECK
@@ -1085,6 +1031,137 @@ MOZCE_SHUNT_API BOOL mozce_GdiFlush(void)
     MOZCE_PRECHECK
 
     return TRUE;
+}
+
+static IDataObject* gDataObject = NULL;
+static HWND gOlewnd = NULL; /* we may need to free this */
+
+void oleSetup()
+{
+    if (gOlewnd)
+        return;
+    
+    WNDCLASS wndclass;
+    ZeroMemory( &wndclass, sizeof(WNDCLASS));
+    
+    
+    wndclass.style          = CS_GLOBALCLASS;
+    wndclass.lpfnWndProc    = DefWindowProc;
+    wndclass.lpszClassName  = L"OLE_CLIPBOARD";
+    
+    RegisterClass(&wndclass);
+    
+    gOlewnd = CreateWindow(L"OLE_Clipboard",
+                           0,
+                           0,
+                           CW_USEDEFAULT, CW_USEDEFAULT,
+                           CW_USEDEFAULT, CW_USEDEFAULT,
+                           0,
+                           0,
+                           0,
+                           0);
+}
+
+MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject * pDataObj)
+{
+    MOZCE_PRECHECK
+        
+	oleSetup();
+    
+    if (gDataObject)
+        gDataObject->Release();
+    
+    gDataObject = pDataObj;
+    
+    if (pDataObj) 
+    {
+        BOOL b = OpenClipboard(gOlewnd);
+        
+        if (!b)
+            return E_FAIL;
+        
+        EmptyClipboard();
+        
+        pDataObj->AddRef();
+        
+        IEnumFORMATETC* enumerator = NULL;
+        pDataObj->EnumFormatEtc(DATADIR_GET, &enumerator);
+        if (!enumerator)
+            return S_OK;
+        
+        FORMATETC etc;
+        
+        while (S_OK == enumerator->Next(1, &etc, NULL))
+        {
+            if ( etc.tymed == TYMED_HGLOBAL )
+            {
+	        HANDLE h = SetClipboardData( etc.cfFormat, NULL);
+                
+                if (!h)
+                    return E_FAIL;
+            }
+        }
+        
+        enumerator->Release();
+        
+        CloseClipboard();
+        
+    }
+    return S_OK;
+}
+
+MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject ** pDataObj)
+{
+    MOZCE_PRECHECK
+    oleSetup();
+    
+    if (pDataObj)
+    {
+        *pDataObj = gDataObject;
+        gDataObject->AddRef();
+    }
+    return S_OK;
+}
+
+MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard()
+{
+    MOZCE_PRECHECK
+    oleSetup();
+
+    mozce_OleSetClipboard(NULL);
+    return S_OK;
+}
+
+
+MOZCE_SHUNT_API BOOL mozce_IsClipboardFormatAvailable(UINT format)
+{
+    if (gOlewnd)
+    {
+        BOOL b = OpenClipboard(gOlewnd);
+        if (!b)
+            return E_FAIL;
+        
+        IEnumFORMATETC* enumerator = NULL;
+        gDataObject->EnumFormatEtc(DATADIR_GET, &enumerator);
+        if (!enumerator)
+            return S_OK;
+        
+        FORMATETC etc;
+        
+        while (S_OK == enumerator->Next(1, &etc, NULL))
+        {
+            if ( etc.cfFormat == format)
+            {
+                enumerator->Release();
+                CloseClipboard();
+                return true;
+            }
+        }
+        enumerator->Release();
+        CloseClipboard();
+    }
+
+    return IsClipboardFormatAvailable(format);
 }
 
 #if 0
