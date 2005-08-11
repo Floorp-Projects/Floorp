@@ -49,19 +49,15 @@
 #include NEW_H
 
 /** @file nsHashKeys.h
- * standard HashKey classes for nsDataHashtable and relatives. Each of these
+ * standard HashKey classes for nsBaseHashtable and relatives. Each of these
  * classes follows the nsTHashtable::EntryType specification
  *
- * Lightweight keytypes are provided here:
+ * Lightweight keytypes provided here:
  * nsStringHashKey
  * nsCStringHashKey
  * nsUint32HashKey
  * nsISupportsHashKey
  * nsIDHashKey
- *
- * Use these keytypes if possible; the templates are already instantiated
- * for them, and they can be dynamically linked and therefore reduce code
- * size!
  */
 
 /**
@@ -91,7 +87,7 @@ public:
   {
     return HashString(*aKey);
   }
-  static PRBool AllowMemMove() { return PR_TRUE; }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
   const nsString mStr;
@@ -122,7 +118,7 @@ public:
   {
     return HashString(*aKey);
   }
-  static PRBool AllowMemMove() { return PR_TRUE; }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
   const nsCString mStr;
@@ -149,7 +145,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) { return *aKey; }
-  static PRBool AllowMemMove() { return PR_TRUE; }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
   const PRUint32 mValue;
@@ -166,7 +162,8 @@ public:
   typedef nsISupports* KeyType;
   typedef const nsISupports* KeyTypePointer;
 
-  nsISupportsHashKey(nsISupports* key) : mSupports(key) { }
+  nsISupportsHashKey(const nsISupports* key) :
+    mSupports(NS_CONST_CAST(nsISupports*,key)) { }
   nsISupportsHashKey(const nsISupportsHashKey& toCopy) :
     mSupports(toCopy.mSupports) { }
   ~nsISupportsHashKey() { }
@@ -181,10 +178,10 @@ public:
   {
     return NS_PTR_TO_INT32(aKey) >>2;
   }
-  static PRBool AllowMemMove() { return PR_TRUE; }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
-  const nsCOMPtr<nsISupports> mSupports;
+  nsCOMPtr<nsISupports> mSupports;
 };
 
 /**
@@ -208,7 +205,7 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey);
-  static PRBool AllowMemMove() { return PR_TRUE; }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
 
 private:
   const nsID mID;

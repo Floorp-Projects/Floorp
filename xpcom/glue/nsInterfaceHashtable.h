@@ -89,7 +89,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
     PR_RWLock_Rlock(mLock);
 
   typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
-    GetEntry(KeyClass::KeyToPointer(aKey));
+    GetEntry(aKey);
 
   if (ent)
   {
