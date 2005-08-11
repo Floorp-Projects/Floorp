@@ -165,7 +165,7 @@ public:
                             NS_CONST_CAST(PLDHashTable*,&mTable),
                             EntryType::KeyToPointer(aKey),
                             PL_DHASH_LOOKUP));
-    return PL_DHASH_ENTRY_IS_BUSY(entry) ?  entry : nsnull;
+    return PL_DHASH_ENTRY_IS_BUSY(entry) ? entry : nsnull;
   }
 
   /**
@@ -268,9 +268,9 @@ protected:
   static void PR_CALLBACK s_ClearEntry(PLDHashTable *table,
                                        PLDHashEntryHdr *entry);
 
-  static void PR_CALLBACK s_InitEntry(PLDHashTable     *table,
-                                      PLDHashEntryHdr  *entry,
-                                      const void       *key);
+  static PRBool PR_CALLBACK s_InitEntry(PLDHashTable     *table,
+                                        PLDHashEntryHdr  *entry,
+                                        const void       *key);
 
   /**
    * passed internally during enumeration.  Allocated on the stack.
@@ -401,12 +401,13 @@ nsTHashtable<EntryType>::s_ClearEntry(PLDHashTable    *table,
 }
 
 template<class EntryType>
-void
+PRBool
 nsTHashtable<EntryType>::s_InitEntry(PLDHashTable    *table,
                                      PLDHashEntryHdr *entry,
                                      const void      *key)
 {
   new(entry) EntryType(NS_REINTERPRET_CAST(KeyTypePointer,key));
+  return PR_TRUE;
 }
 
 template<class EntryType>
