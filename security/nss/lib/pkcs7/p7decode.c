@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.17 2005/08/11 23:11:38 wtchang%redhat.com Exp $
+ * $Id: p7decode.c,v 1.18 2005/08/12 23:26:38 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1747,6 +1747,10 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	    goto done;
 	}
 
+	/*
+	 * XXX the 5th (algid) argument should be the signature algorithm.
+	 * See sec_pkcs7_pick_sign_alg in p7encode.c.
+	 */
 	goodsig = (PRBool)(VFY_VerifyData (encoded_attrs.data, 
 				   encoded_attrs.len,
 				   publickey, &(signerinfo->encDigest),
@@ -1805,6 +1809,10 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	    sig = &holder;
 	}
 
+	/*
+	 * XXX the 4th (algid) argument should be the signature algorithm.
+	 * See sec_pkcs7_pick_sign_alg in p7encode.c.
+	 */
 	goodsig = (PRBool)(VFY_VerifyDigest (digest, publickey, sig,
 				     SECOID_GetAlgorithmTag(&(signerinfo->digestEncAlg)),
 				     cinfo->pwfn_arg)
