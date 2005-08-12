@@ -4621,8 +4621,11 @@ ExtensionManager.prototype = {
    *          An array of nsIUpdateItems to begin downlading.
    * @param   itemCount
    *          The length of |items|
+   * @param   fromChrome
+   *          true when called from chrome
+   *          false when not called from chrome (e.g. web page)
    */
-  addDownloads: function(items, itemCount) { 
+  addDownloads: function(items, itemCount, fromChrome) { 
     this._downloadCount += itemCount;
     
     var urls = [];
@@ -4639,14 +4642,15 @@ ExtensionManager.prototype = {
     gOS.addObserver(this, "offline-requested", false);
     gOS.addObserver(this, "quit-application-requested", false);
     
-    // Cancel the existing xpimgr...
-    gOS.notifyObservers(txn, "xpinstall-progress", "cancel");  
-    
-    // And start a new one...
-    var xpimgr = 
-        Components.classes["@mozilla.org/xpinstall/install-manager;1"].
-        createInstance(Components.interfaces.nsIXPInstallManager);
-    xpimgr.initManagerFromChrome(urls, urls.length, txn);
+    if (fromChrome) {
+      // Initiate an install from chrome
+      var xpimgr = 
+          Components.classes["@mozilla.org/xpinstall/install-manager;1"].
+          createInstance(Components.interfaces.nsIXPInstallManager);
+      xpimgr.initManagerFromChrome(urls, urls.length, txn);
+    }
+    else
+      gOS.notifyObservers(txn, "xpinstall-progress", "open");
   },
   
   /**

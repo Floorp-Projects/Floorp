@@ -142,7 +142,7 @@ function onExtensionUpdateNow(aEvent)
 {
   var item = gExtensionManager.getItemForID(getIDFromResourceURI(
     aEvent.target.id));
-  gExtensionManager.addDownloads([item], 1);
+  gExtensionManager.addDownloads([item], 1, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -344,7 +344,7 @@ XPInstallDownloadManager.prototype = {
       var certName = aParams.GetString(i++);
     }
     
-    gExtensionManager.addDownloads(items, items.length);
+    gExtensionManager.addDownloads(items, items.length, false);
     gExtensionsView.scrollBoxObject.ensureElementIsVisible(gExtensionsView.lastChild);
   },
   
@@ -560,7 +560,7 @@ UpdateCheckListener.prototype = {
       openDialog("chrome://mozapps/content/extensions/list.xul", "", 
                  "titlebar,modal", names, params);
       if (params.result == "accept") 
-        gExtensionManager.addDownloads(this._addons, this._addons.length);
+        gExtensionManager.addDownloads(this._addons, this._addons.length, true);
     }
   },
   

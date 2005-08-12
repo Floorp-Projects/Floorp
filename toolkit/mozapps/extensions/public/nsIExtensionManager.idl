@@ -165,7 +165,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(003efd62-feb2-4bec-9846-48237fb169ba)]
+[scriptable, uuid(a3f5396c-a6e8-414a-8fbc-c8d831746328)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -326,9 +326,12 @@ interface nsIExtensionManager : nsISupports
    *          A list of nsIUpdateItems to entries to add
    * @param   itemCount
    *          The length of |items|
+   * @param   fromChrome
+   *          true when called from chrome
+   *          false when not called from chrome (e.g. web page)
    */
   void addDownloads([array, size_is(itemCount)] in nsIUpdateItem items,
-                    in unsigned long itemCount);
+                    in unsigned long itemCount, in boolean fromChrome);
 
   /**
    * Removes an active download from the UI
