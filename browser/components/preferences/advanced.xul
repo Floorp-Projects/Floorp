@@ -79,6 +79,7 @@
       <preference id="app.update.disable_button.showUpdateHistory"
                   name="app.update.disable_button.showUpdateHistory"
                   type="bool"/>
+      <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
 
       <preference id="security.enable_ssl2"            name="security.enable_ssl2"            type="bool"/>
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
@@ -160,6 +161,12 @@
               <button id="addonCheckNowButton" 
                       label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
                       oncommand="gAdvancedPane.checkForAddonUpdates();"/>
+            </hbox>
+            <hbox>
+              <checkbox id="enableSearchUpdate"
+                        label="&enableSearchUpdate.label;"
+                        accesskey="&enableSearchUpdate.accesskey;"
+                        preference="browser.search.update"/>
             </hbox>
           </vbox>
           <separator/>
