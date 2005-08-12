@@ -149,10 +149,31 @@ function getMostRecentWindow(aType) {
   return wm.getMostRecentWindow(aType);
 }
 
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define BROKEN_WM_Z_ORDER
+#endif
+#endif
+
 // this returns the most recent non-popup browser window
 function getMostRecentBrowserWindow() {
   var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(Components.interfaces.nsIWindowMediator);
+
+#ifdef BROKEN_WM_Z_ORDER
+  var win = wm.getMostRecentWindow("navigator:browser", true);
+
+  // if we're lucky, this isn't a popup, and we can just return this
+  if (win && !win.toolbar.visible) {
+    var windowList = wm.getEnumerator("navigator:browser", true);
+    // this is oldest to newest, so this gets a bit ugly
+    while (windowList.hasMoreElements()) {
+      var nextWin = windowList.getNext();
+      if (nextWin.toolbar.visible)
+        win = nextWin;
+    }
+  }
+#else
   var windowList = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
   if (!windowList.hasMoreElements())
     return null;
@@ -164,6 +185,7 @@ function getMostRecentBrowserWindow() {
 
     win = windowList.getNext();
   }
+#endif
 
   return win;
 }
