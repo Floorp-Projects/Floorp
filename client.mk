@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Stephen Lamm
 #   Benjamin Smedberg <bsmedberg@covad.net>
+#   Chase Phillips <chase@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -90,6 +91,7 @@
 #
 
 AVAILABLE_PROJECTS = \
+  all \
   suite \
   toolkit \
   browser \
@@ -208,6 +210,15 @@ MODULES_macbrowser :=                           \
 
 BOOTSTRAP_macbrowser := mozilla/camino/config/mozconfig
 
+MODULES_all :=                                  \
+  mozilla/other-licenses/libart_lgpl/           \
+  mozilla/tools/trace-malloc/                   \
+  mozilla/tools/jprof/                          \
+  mozilla/tools/codesighs/                      \
+  mozilla/other-licenses/branding/              \
+  mozilla/other-licenses/7zstub/                \
+  $(NULL)
+
 #######################################################################
 # Checkout Tags
 #
@@ -319,10 +330,19 @@ ifneq (,$(filter-out $(AVAILABLE_PROJECTS),$(MOZ_PROJECT_LIST)))
 $(error MOZ_CO_PROJECT contains an unrecognized project.)
 endif
 
+ifeq (all,$(filter all,$(MOZ_PROJECT_LIST)))
+  MOZ_PROJECT_LIST := $(AVAILABLE_PROJECTS)
+endif
+
 MOZ_MODULE_LIST := $(subst $(comma), ,$(MOZ_CO_MODULE)) $(foreach project,$(MOZ_PROJECT_LIST),$(MODULES_$(project)))
 LOCALE_DIRS := $(MOZ_LOCALE_DIRS) $(foreach project,$(MOZ_PROJECT_LIST),$(LOCALES_$(project)))
 
 MOZCONFIG_MODULES += $(foreach project,$(MOZ_PROJECT_LIST),$(BOOTSTRAP_$(project)))
+
+# Using $(sort) here because it also removes duplicate entries.
+MOZ_MODULE_LIST := $(sort $(MOZ_MODULE_LIST))
+LOCALE_DIRS := $(sort $(LOCALE_DIRS))
+MOZCONFIG_MODULES += $(sort $(MOZCONFIG_MODULES))
 
 # Change CVS flags if anonymous root is requested
 ifdef MOZ_CO_USE_MIRROR
