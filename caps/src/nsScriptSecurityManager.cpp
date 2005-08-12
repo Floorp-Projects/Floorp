@@ -402,7 +402,7 @@ struct DomainEntry
     nsCString         mOrigin;
     DomainPolicy*     mDomainPolicy;
     DomainEntry*      mNext;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(DEBUG_CAPS_HACKER)
     nsCString         mPolicyName_DEBUG;
 #endif
 };
