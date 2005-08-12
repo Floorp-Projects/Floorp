@@ -380,6 +380,9 @@
               case KeyEvent.DOM_VK_RIGHT:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_RIGHT);
                 break;
+              case KeyEvent.DOM_VK_HOME:
+                cancel = this.mController.handleKeyNavigation(IController.KEY_HOME);
+                break;
               case KeyEvent.DOM_VK_PAGE_UP:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_PAGE_UP);
                 break;
