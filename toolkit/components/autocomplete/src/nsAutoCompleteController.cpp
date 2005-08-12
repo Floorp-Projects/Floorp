@@ -421,10 +421,14 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
       } else
         StartSearchTimer();
     }    
-  } else if (aKey == nsIAutoCompleteController::KEY_LEFT ||
-             aKey == nsIAutoCompleteController::KEY_RIGHT)
+  } else if (   aKey == nsIAutoCompleteController::KEY_LEFT 
+             || aKey == nsIAutoCompleteController::KEY_RIGHT 
+#ifndef XP_MACOSX
+             || aKey == nsIAutoCompleteController::KEY_HOME
+#endif
+            )
   {
-    // The user hit a left or right arrow key
+    // The user hit a text-navigation key.
     PRBool isOpen;
     mInput->GetPopupOpen(&isOpen);
     if (isOpen) {
