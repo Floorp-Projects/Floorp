@@ -919,6 +919,11 @@ function delayedStartup()
   }
 
   FeedHandler.init();
+
+  var app = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
+                      .QueryInterface(Components.interfaces.nsIXULRuntime);
+  if (app.inSafeMode)
+    window.openDialog("chrome://browser/content/safeMode.xul", "_blank", "chrome,centerscreen,dependent,resizable=no");
 }
 
 function BrowserShutdown()

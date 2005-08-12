@@ -16,6 +16,7 @@
     locale/browser/pageInfo.properties             (%chrome/browser/pageInfo.properties)
     locale/browser/pageReport.dtd                  (%chrome/browser/pageReport.dtd)
     locale/browser/pageReportFirstTime.dtd         (%chrome/browser/pageReportFirstTime.dtd)
+*   locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/searchbar.properties            (%chrome/browser/searchbar.properties)
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)

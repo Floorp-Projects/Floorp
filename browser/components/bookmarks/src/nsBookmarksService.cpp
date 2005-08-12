@@ -4473,6 +4473,39 @@ nsBookmarksService::LoadBookmarks()
     // Lack of Bookmarks file is non-fatal
     if (NS_FAILED(rv)) return NS_OK;
 
+    PRBool restoreDefaultBookmarks = PR_FALSE;
+    if (mBookmarksPrefs)
+        mBookmarksPrefs->GetBoolPref("restore_default_bookmarks", &restoreDefaultBookmarks);
+
+    if (restoreDefaultBookmarks)
+    {
+        nsCOMPtr<nsIFile> defaults;
+        rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR,
+                                    getter_AddRefs(defaults));
+        nsDependentCString leafStr("bookmarks.html");
+        defaults->AppendNative(leafStr);
+        
+        nsCOMPtr<nsIFile> profileDir;
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                    getter_AddRefs(profileDir));
+
+        nsDependentCString backupFilename("bookmarks-backup.html");
+        PRBool exists;
+        bookmarksFile->Exists(&exists);
+        if (exists) {
+            bookmarksFile->CopyToNative(nsnull, backupFilename);
+            bookmarksFile->Remove(PR_FALSE);
+        }
+
+        defaults->CopyToNative(profileDir, leafStr);
+
+        bookmarksFile->Exists(&exists);
+        if (!exists)
+            return NS_OK;
+
+        mBookmarksPrefs->SetBoolPref("restore_default_bookmarks", PR_FALSE);      
+    }
+
     PRBool foundIERoot = PR_FALSE;
 
 #ifdef DEBUG_varga
