@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secvfy.c,v 1.13 2005/02/10 08:05:54 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: secvfy.c,v 1.14 2005/08/12 23:50:19 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -83,7 +83,7 @@ DecryptSigBlock(SECOidTag *tagp, unsigned char *digest, SECKEYPublicKey *key,
     */
     tag = SECOID_GetAlgorithmTag(&di->digestAlgorithm);
     /* XXX Check that tag is an appropriate algorithm? */
-    if (di->digest.len > 32) {
+    if (di->digest.len > HASH_LENGTH_MAX) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	goto loser;
     }
@@ -110,8 +110,11 @@ struct VFYContextStr {
     SECOidTag alg;
     VerifyType type;
     SECKEYPublicKey *key;
-    /* digest holds the full dsa signature... 40 bytes */
-    unsigned char digest[DSA_SIGNATURE_LEN];
+    /*
+     * digest holds either the hash (<= HASH_LENGTH_MAX=64 bytes)
+     * in the RSA signature, or the full DSA signature (40 bytes).
+     */
+    unsigned char digest[HASH_LENGTH_MAX];
     void * wincx;
     void *hashcx;
     const SECHashObject *hashobj;
@@ -350,7 +353,7 @@ VFY_Update(VFYContext *cx, unsigned char *input, unsigned inputLen)
 SECStatus
 VFY_EndWithSignature(VFYContext *cx, SECItem *sig)
 {
-    unsigned char final[32];
+    unsigned char final[HASH_LENGTH_MAX];
     unsigned part;
     SECItem hash,dsasig; /* dsasig is also used for ECDSA */
     SECStatus rv;

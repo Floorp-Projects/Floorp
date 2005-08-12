@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.11 2005/08/12 23:24:22 wtchang%redhat.com Exp $ */
+/* $Id: secsign.c,v 1.12 2005/08/12 23:50:17 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -201,7 +201,7 @@ SGN_Update(SGNContext *cx, unsigned char *input, unsigned inputLen)
 SECStatus
 SGN_End(SGNContext *cx, SECItem *result)
 {
-    unsigned char digest[32];
+    unsigned char digest[HASH_LENGTH_MAX];
     unsigned part1, signatureLen;
     SECStatus rv;
     SECItem digder, sigitem;
