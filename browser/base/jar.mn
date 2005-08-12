@@ -28,6 +28,8 @@ browser.jar:
 *       content/browser/pageReport.js                 (content/pageReport.js)
 *       content/browser/pageReport.xul                (content/pageReport.xul)
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
+*       content/browser/safeMode.js                   (content/safeMode.js)
+*       content/browser/safeMode.xul                  (content/safeMode.xul)
 *       content/browser/sanitize.js                   (content/sanitize.js)
 *       content/browser/sanitize.xul                  (content/sanitize.xul)
 *       content/browser/search.xml                    (content/search.xml)
