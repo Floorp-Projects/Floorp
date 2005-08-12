@@ -690,7 +690,7 @@ static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
   }
 }
 
-static HWND GetTopLevelHWND(HWND aWnd)
+static HWND GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel = PR_FALSE)
 {
   HWND curWnd = aWnd;
   HWND topWnd = NULL;
@@ -698,7 +698,16 @@ static HWND GetTopLevelHWND(HWND aWnd)
   while (curWnd)
   {
     topWnd = curWnd;
-    curWnd = ::GetParent(curWnd);
+
+    if (aStopOnFirstTopLevel)
+    {
+      DWORD style = nsToolkit::mGetWindowLong(curWnd, GWL_STYLE);
+
+      if (!(style & WS_CHILDWINDOW))    // first top-level window
+        break;
+    }
+
+    curWnd = ::GetParent(curWnd);       // Parent or owner (if has no parent)
   }
 
   return topWnd;
@@ -2950,7 +2959,7 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
 
 NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
-  HWND hwnd = GetTopLevelHWND(mWnd);
+  HWND hwnd = GetTopLevelHWND(mWnd, PR_TRUE);
   if (!GetNSWindowPtr(hwnd))
   {
     NS_WARNING("Trying to hide window decorations in an embedded context");
@@ -8165,7 +8174,7 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
   if (aTranslucent == mIsTranslucent)
     return NS_OK;
   
-  HWND hWnd = GetTopLevelHWND(mWnd);
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
   nsWindow* topWindow = GetNSWindowPtr(hWnd);
 
   if (!topWindow)
@@ -8377,7 +8386,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
           SIZE winSize = { mBounds.width, mBounds.height };
           POINT srcPos = { 0, 0 };
           HDC hScreenDC = ::GetDC(NULL);
-          HWND hWnd = GetTopLevelHWND(mWnd);
+          HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
           RECT winRect;
           ::GetWindowRect(hWnd, &winRect);
 
@@ -8507,7 +8516,7 @@ void nsWindow::SetWindowRegionToAlphaMask()
     ::DeleteObject(hrgnRectBlock);
   }
 
-  HWND hWnd = GetTopLevelHWND(mWnd);
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
   nsWindow* topWindow = GetNSWindowPtr(hWnd);
 
   topWindow->w9x.mPerformingSetWindowRgn = PR_TRUE;
