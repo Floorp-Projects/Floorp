@@ -3126,6 +3126,7 @@ sftk_PairwiseConsistencyCheck(CK_SESSION_HANDLE hSession,
 	case CKK_EC:
 	    signature_length = MAX_ECKEY_LEN * 2;
 	    mech.mechanism = CKM_ECDSA;
+	    break;
 #endif
 	default:
 	    return CKR_DEVICE_ERROR;
@@ -3719,7 +3720,6 @@ static SECItem *sftk_PackagePrivateKey(SFTKObject *key, CK_RV *crvp)
 #ifdef NSS_ENABLE_ECC
     SECItem *fordebug;
     int savelen;
-    int i;
 #endif
 
     if(!key) {
