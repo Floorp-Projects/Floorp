@@ -43,9 +43,9 @@ classic.jar:
   skin/classic/browser/bookmarks/livemark-item.png          (bookmarks/livemark-item.png)
   skin/classic/browser/bookmarks/folderarrow-hover.png      (bookmarks/folderarrow-hover.png)
   skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
-  skin/classic/browser/feedview/feedview.css                (feedview/feedview.css)
-  skin/classic/browser/feedview/check.png                   (feedview/check.png)
-  skin/classic/browser/feedview/itemSelected.png            (feedview/itemSelected.png)
+  skin/classic/browser/feedview.css                         (feedview.css)
+  skin/classic/browser/check.png                            (check.png)
+  skin/classic/browser/itemSelected.png                     (itemSelected.png)
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)
   skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
   icon.png
