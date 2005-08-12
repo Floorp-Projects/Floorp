@@ -217,6 +217,9 @@ pref("browser.search.order.Yahoo",            "chrome://branding/content/searchc
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
 
+// send ping to the server to update
+pref("browser.search.update", true);
+
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 pref("browser.sessionhistory.max_viewers", 3);

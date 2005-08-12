@@ -19,6 +19,8 @@
 <!ENTITY enableAppUpdate.accesskey      "F">
 <!ENTITY enableExtensionUpdate.label    "Installed Extensions and Themes">
 <!ENTITY enableExtensionUpdate.accesskey "x">
+<!ENTITY enableSearchUpdate.label       "Search Engines">
+<!ENTITY enableSearchUpdate.accesskey   "h">
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "N">
 <!ENTITY extensionsCheckNow.accesskey   "o">
