@@ -2922,7 +2922,7 @@ CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 
     c = __nss_softokn_rcsid[0] + __nss_softokn_sccsid[0]; 
     pInfo->cryptokiVersion.major = 2;
-    pInfo->cryptokiVersion.minor = 11;
+    pInfo->cryptokiVersion.minor = 20;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
     pInfo->libraryVersion.major = NSS_VMAJOR;
     pInfo->libraryVersion.minor = NSS_VMINOR;
