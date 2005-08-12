@@ -275,9 +275,13 @@ NS_IMETHODIMP nsPrintSettings::SetDownloadFonts(PRBool aDownloadFonts)
 NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
 {
    NS_ENSURE_ARG_POINTER(aPrinter);
+
    *aPrinter = ToNewUnicode(mPrinter);
+   NS_ENSURE_TRUE(*aPrinter, NS_ERROR_OUT_OF_MEMORY);
+
    return NS_OK;
 }
+
 NS_IMETHODIMP nsPrintSettings::SetPrinterName(const PRUnichar * aPrinter)
 {
   if (!aPrinter || !mPrinter.Equals(aPrinter)) {
