@@ -147,7 +147,8 @@
     <command id="cmd_find" oncommand="onFindCmd();"/>
     <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
     <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
-    <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
+    <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'), false);"/>
+    <command id="Browser:BookmarkAllTabs" oncommand="addBookmarkAs(document.getElementById('content'), true);"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>

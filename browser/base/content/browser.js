@@ -185,6 +185,37 @@ function UpdateBackForwardButtons()
   }
 }
 
+function UpdateBookmarkAllTabsMenuitem()
+{
+  var tabbrowser = getBrowser();
+  var numTabs = tabbrowser.tabContainer.childNodes.length;
+
+  var bookmarkAllCommand = document.getElementById("Browser:BookmarkAllTabs");
+  if (numTabs > 1)
+    bookmarkAllCommand.removeAttribute("disabled");
+  else
+    bookmarkAllCommand.setAttribute("disabled", "true");
+}
+
+function addBookmarkMenuitems()
+{
+  var tabbrowser = getBrowser();
+  var tabMenu = document.getAnonymousElementByAttribute(tabbrowser,"anonid","tabContextMenu");
+  var bookmarkAllTabsItem = document.createElement("menuitem");
+  bookmarkAllTabsItem.setAttribute("label", gNavigatorBundle.getString("bookmarkAllTabs_label"));
+  bookmarkAllTabsItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkAllTabs_accesskey"));
+  bookmarkAllTabsItem.setAttribute("command", "Browser:BookmarkAllTabs");
+  var bookmarkCurTabItem = document.createElement("menuitem");
+  bookmarkCurTabItem.setAttribute("label", gNavigatorBundle.getString("bookmarkCurTab_label"));
+  bookmarkCurTabItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkCurTab_accesskey"));
+  bookmarkCurTabItem.setAttribute("oncommand", "addBookmarkAs((getBrowser().mContextTab).linkedBrowser, false);");
+  var menuseparator = document.createElement("menuseparator");
+  var insertPos = tabMenu.lastChild.previousSibling;
+  tabMenu.insertBefore(bookmarkAllTabsItem, insertPos);
+  tabMenu.insertBefore(bookmarkCurTabItem, bookmarkAllTabsItem);
+  tabMenu.insertBefore(menuseparator, bookmarkCurTabItem);
+}
+
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -769,6 +800,8 @@ function delayedStartup()
 
   initFindBar();
 
+  // add bookmark options to context menu for tabs
+  addBookmarkMenuitems();
   // now load bookmarks
   BMSVC.readBookmarks();
   var bt = document.getElementById("bookmarks-ptf");
@@ -1508,16 +1541,16 @@ function updateGoMenu(goMenu)
     endSep.hidden = false;
 }
 
-function addBookmarkAs(aBrowser, aIsWebPanel)
+function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
 {
   const browsers = aBrowser.browsers;
   if (browsers && browsers.length > 1)
-    addBookmarkForTabBrowser(aBrowser);
+    addBookmarkForTabBrowser(aBrowser, aBookmarkAllTabs);
   else
     addBookmarkForBrowser(aBrowser.webNavigation, aIsWebPanel);
 }
 
-function addBookmarkForTabBrowser(aTabBrowser, aSelect)
+function addBookmarkForTabBrowser(aTabBrowser, aBookmarkAllTabs, aSelect)
 {
   var tabsInfo = [];
   var currentTabInfo = { name: "", url: "", charset: null };
@@ -1537,11 +1570,16 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
     } catch (e) {
       name = url;
     }
-    tabsInfo[i] = { name: name, url: url, charset: charSet, description: description, bAddGroup: true };
+    tabsInfo[i] = { name: name, url: url, charset: charSet, description: description };
     if (browsers[i] == activeBrowser)
       currentTabInfo = tabsInfo[i];
   }
   var dialogArgs = currentTabInfo;
+  if (aBookmarkAllTabs) {
+    dialogArgs = { name: gNavigatorBundle.getString("bookmarkAllTabsDefault") };
+    dialogArgs.bBookmarkAllTabs = true;
+  }
+
   dialogArgs.objGroup = tabsInfo;
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
              BROWSER_ADD_BM_FEATURES, dialogArgs);
@@ -3427,7 +3465,7 @@ nsBrowserStatusHandler.prototype =
       }
     }
     UpdateBackForwardButtons();
-
+    UpdateBookmarkAllTabsMenuitem();
     if (findField && gFindMode != FIND_NORMAL) {
       // Close the Find toolbar if we're in old-style TAF mode
       closeFindBar();

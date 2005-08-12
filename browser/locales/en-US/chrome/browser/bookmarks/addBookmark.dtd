@@ -22,7 +22,5 @@
 
 <!ENTITY expanderDown.tooltip    "Show all the bookmarks folders">
 <!ENTITY expanderUp.tooltip      "Hide">
-<!ENTITY addGroup.label          "Bookmark all tabs in a folder">
-<!ENTITY addGroup.accesskey      "B">
 <!ENTITY acceptButton.label      "Add">
 <!ENTITY bookmarksToolbar.label  "Bookmarks Toolbar">

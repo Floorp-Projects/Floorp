@@ -62,7 +62,7 @@
 #endif
         buttoniconaccept="add"
         buttoniconextra2="open"
-        title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
+        title-selectFolder="&selectFolder.label;"
         onload="Startup();"
         onunload="setFolderTreeHeight();"
         persist="screenX screenY width">
@@ -70,7 +70,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
-  
+
   <stringbundle id="bookmarksBundle" 
                 src="chrome://browser/locale/bookmarks/bookmarks.properties"/>
 
@@ -115,11 +115,6 @@
         <button id="expander" class="down" oncommand="expandTree();"
                  tooltiptextdown="&expanderDown.tooltip;"
                  tooltiptextup="&expanderUp.tooltip;"/>
-      </row>
-      <row>
-        <spacer/>
-        <checkbox id="addgroup" label="&addGroup.label;"
-                  accesskey="&addGroup.accesskey;"/>
       </row>
     </rows>
   </grid>
