@@ -62,7 +62,6 @@ DIRS = \
 	shell \
 	sidebar \
 	build \
-	feedview \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

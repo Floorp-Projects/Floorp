@@ -34,6 +34,7 @@
 #   Jason Barnabe <jason_barnabe@fastmail.fm>
 #   Peter Parente <parente@cs.unc.edu>
 #   Giorgio Maone <g.maone@informaction.com>
+#   Tom Germeau <tom.germeau@epigoon.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,7 +72,6 @@ var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
 var gPageStyleButton = null;
-var gLivemarksButton = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
@@ -123,7 +123,7 @@ function pageShowEventHandlers(event)
 #ifdef ALTSS_ICON
     updatePageStyles();
 #endif
-    updatePageLivemarks();
+    FeedHandler.updateFeeds();
   }
 
   // some event handlers want to be told what the original browser/listener is
@@ -197,6 +197,36 @@ const gSessionHistoryObserver = {
     fwdCommand.setAttribute("disabled", "true");
   }
 };
+
+/**
+ * Given a starting docshell and a URI to look up, find the docshell the URI
+ * is loaded in. 
+ * @param   aDocument
+ *          A document to find instead of using just a URI - this is more specific. 
+ * @param   aDocShell
+ *          The doc shell to start at
+ * @param   aSoughtURI
+ *          The URI that we're looking for
+ * @returns The doc shell that the sought URI is loaded in. Can be in 
+ *          subframes.
+ */
+function findChildShell(aDocument, aDocShell, aSoughtURI) {
+  aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+  aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
+  if ((aDocument && doc == aDocument) && 
+      aDocShell.currentURI.spec == aSoughtURI.spec)
+    return aDocShell;
+
+  var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+  for (var i = 0; i < node.childCount; ++i) {
+    var docShell = node.getChildAt(i);
+    docShell = findChildShell(aDocument, docShell, aSoughtURI);
+    if (docShell)
+      return docShell;
+  }
+  return null;
+}
 
 const gPopupBlockerObserver = {
   _reportButton: null,
@@ -322,22 +352,6 @@ const gPopupBlockerObserver = {
       blockedPopupDontShowMessage.setAttribute("label", bundle_browser.getString("popupWarningDontShowFromStatusbar"));
   },
 
-  _findChildShell: function (aDocShell, aSoughtURI)
-  {
-    var webNav = aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-    if (webNav.currentURI.spec == aSoughtURI.spec)
-      return aDocShell;
-
-    var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
-    for (var i = 0; i < node.childCount; ++i) {
-      var docShell = node.getChildAt(i);
-      docShell = this._findChildShell(docShell, aSoughtURI);
-      if (docShell)
-        return docShell;
-    }
-    return null;
-  },
-
   showBlockedPopup: function (aEvent)
   {
     var requestingWindow = aEvent.target.getAttribute("requestingWindowURI");
@@ -349,8 +363,8 @@ const gPopupBlockerObserver = {
     var popupWindowURI = aEvent.target.getAttribute("popupWindowURI");
     var features = aEvent.target.getAttribute("popupWindowFeatures");
 
-    var shell = this._findChildShell(gBrowser.selectedBrowser.docShell,
-                                     requestingWindowURI);
+    var shell = findChildShell(null, gBrowser.selectedBrowser.docShell,
+                               requestingWindowURI);
     if (shell) {
       var ifr = shell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
       var dwi = ifr.getInterface(Components.interfaces.nsIDOMWindowInternal);
@@ -412,28 +426,13 @@ const gPopupBlockerObserver = {
 };
 
 const gXPInstallObserver = {
-  _findChildShell: function (aDocShell, aSoughtShell)
-  {
-    if (aDocShell == aSoughtShell)
-      return aDocShell;
-
-    var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
-    for (var i = 0; i < node.childCount; ++i) {
-      var docShell = node.getChildAt(i);
-      docShell = this._findChildShell(docShell, aSoughtShell);
-      if (docShell == aSoughtShell)
-        return docShell;
-    }
-    return null;
-  },
-
   _getBrowser: function (aDocShell)
   {
     var tabbrowser = getBrowser();
     for (var i = 0; i < tabbrowser.browsers.length; ++i) {
       var browser = tabbrowser.getBrowserAtIndex(i);
       var soughtShell = aDocShell;
-      var shell = this._findChildShell(browser.docShell, soughtShell);
+      var shell = findChildShell(null, browser.docShell, soughtShell);
       if (shell)
         return browser;
     }
@@ -661,7 +660,6 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
-  gBrowser.addEventListener("DOMLinkAdded", livemarkOnLinkAdded, false);
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, false);
   gBrowser.addEventListener("NewTab", BrowserOpenTab, false);
 
@@ -886,8 +884,7 @@ function delayedStartup()
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
 
-  // Prepare to load feedview for feed files.
-  initFeedview();
+  FeedHandler.init();
 }
 
 function BrowserShutdown()
@@ -933,6 +930,7 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
+  FeedHandler.uninit();
 
   uninitFindBar();
 
@@ -3443,7 +3441,7 @@ nsBrowserStatusHandler.prototype =
     //fix bug 271359 - reset mFavIconURL
     getBrowser().selectedBrowser.mFavIconURL = null;
 
-    setTimeout(function () { updatePageLivemarks(); }, 0);
+    setTimeout(function () { FeedHandler.updateFeeds(); }, 0);
 #ifdef ALTSS_ICON
     setTimeout(function () { updatePageStyles(); }, 0);
 #endif
@@ -3507,8 +3505,8 @@ nsBrowserStatusHandler.prototype =
     // (so we keep it while switching tabs after failed load
     getBrowser().userTypedClear = true;
 
-    // clear out livemark data
-    gBrowser.mCurrentBrowser.livemarkLinks = null;
+    // clear out feed data
+    gBrowser.mCurrentBrowser.feeds = null;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
@@ -5692,137 +5690,8 @@ function AddKeywordForSearchField()
              BROWSER_ADD_BM_FEATURES, dialogArgs);
 }
 
-/////////////// livemark handling
-
-// XXX this event listener can/should probably be combined with the onLinkAdded
-// listener in tabbrowser.xml, which only listens for favicons and then passes
-// them to onLinkIconAvailable in the ProgressListener.  We could extend the
-// progress listener to have a generic onLinkAvailable and have tabbrowser pass
-// along all events.  It should give us the browser for the tab, as well as
-// the actual event.
-function livemarkOnLinkAdded(event)
-{
-  if (!gLivemarksButton)
-    gLivemarksButton = document.getElementById("livemark-button");
-
-  // from tabbrowser.xml
-  // mechanism for reading properties of the underlying XPCOM object
-  // (ignoring potential getters/setters added by malicious content)
-  var safeGetProperty = function(obj, propname) {
-    return obj[propname];
-  }
-
-  var erel = event.target.rel;
-  var etype = event.target.type;
-  var etitle = event.target.title;
-
-  // this is a blogger post service URL; so skip it
-  if (erel && erel == "service.post")
-    return;
-
-  if (etype == "application/rss+xml" ||
-      etype == "application/atom+xml" ||
-      etype == "application/x.atom+xml" ||
-      etitle.indexOf("RSS") != -1 ||
-      etitle.indexOf("Atom") != -1 ||
-      etitle.indexOf("rss") != -1)
-  {
-    const targetDoc = safeGetProperty(event.target, "ownerDocument");
-
-    // find which tab this is for, and set the attribute on the browser
-    // should there be a getTabForDocument method on tabbedbrowser?
-    var browserForLink = null;
-    if (gBrowser.mTabbedMode) {
-      var browserIndex = gBrowser.getBrowserIndexForDocument(targetDoc);
-      if (browserIndex == -1)
-        return;
-      browserForLink = gBrowser.getBrowserAtIndex(browserIndex);
-    } else if (gBrowser.mCurrentBrowser.contentDocument == targetDoc) {
-      browserForLink = gBrowser.mCurrentBrowser;
-    }
-
-    if (!browserForLink) {
-      // ??? this really shouldn't happen..
-      return;
-    }
-
-    var livemarkLinks = [];
-    if (browserForLink.livemarkLinks != null) {
-      livemarkLinks = browserForLink.livemarkLinks;
-    }
-
-    var wrapper = event.target;
-
-    livemarkLinks.push({ href: wrapper.href,
-                         type: wrapper.type,
-                        title: wrapper.title});
-
-    browserForLink.livemarkLinks = livemarkLinks;
-    if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
-      gLivemarksButton.setAttribute("livemarks", "true");
-  }
-}
-
-// this is called both from onload and also whenever the user
-// switches tabs; we update whether we show or hide the livemark
-// button based on whether the window has livemarks set.
-function updatePageLivemarks()
-{
-  if (!gLivemarksButton)
-    gLivemarksButton = document.getElementById("livemark-button");
-
-  var livemarkLinks = gBrowser.mCurrentBrowser.livemarkLinks;
-  if (!livemarkLinks || livemarkLinks.length == 0) {
-    gLivemarksButton.removeAttribute("livemarks");
-    gLivemarksButton.setAttribute("tooltiptext", gNavigatorBundle.getString("livemarkNoLivemarksTooltip"));
-  } else {
-    gLivemarksButton.setAttribute("livemarks", "true");
-    gLivemarksButton.setAttribute("tooltiptext", gNavigatorBundle.getString("livemarkHasLivemarksTooltip"));
-  }
-}
-
-function livemarkFillPopup(menuPopup)
-{
-  var livemarkLinks = gBrowser.mCurrentBrowser.livemarkLinks;
-  if (livemarkLinks == null) {
-    // XXX hack -- menu opening depends on setting of an "open"
-    // attribute, and the menu refuses to open if that attribute is
-    // set (because it thinks it's already open).  onpopupshowing gets
-    // called after the attribute is unset, and it doesn't get unset
-    // if we return false.  so we unset it here; otherwise, the menu
-    // refuses to work past this point.
-    menuPopup.parentNode.removeAttribute("open");
-    return false;
-  }
-
-  while (menuPopup.firstChild) {
-    menuPopup.removeChild(menuPopup.firstChild);
-  }
-
-  for (var i = 0; i < livemarkLinks.length; i++) {
-    var markinfo = livemarkLinks[i];
-
-    var menuItem = document.createElement("menuitem");
-    var baseTitle = markinfo.title || markinfo.href;
-    var labelStr = gNavigatorBundle.getFormattedString("livemarkSubscribeTo", [baseTitle]);
-    menuItem.setAttribute("label", labelStr);
-    menuItem.setAttribute("data", markinfo.href);
-    menuItem.setAttribute("tooltiptext", markinfo.href);
-    menuPopup.appendChild(menuItem);
-  }
-
-  return true;
-}
-
-function livemarkAddMark(wincontent, data) {
-  var title = wincontent.document.title;
-  var description = BookmarksUtils.getDescriptionFromDocument(wincontent.document);
-  BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title, description);
-}
-
 function SwitchDocumentDirection(aWindow) {
   aWindow.document.dir = (aWindow.document.dir == "ltr" ? "rtl" : "ltr");
-
   for (var run = 0; run < aWindow.frames.length; run++)
     SwitchDocumentDirection(aWindow.frames[run]);
 }
@@ -5931,7 +5800,7 @@ missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
   }
 }
 var gMissingPluginInstaller = new missingPluginInstaller();
- 
+
 function convertFromUnicode(charset, str)
 {
   try {
@@ -5945,3 +5814,449 @@ function convertFromUnicode(charset, str)
     return null; 
   }
 }
+
+/**
+ * The Feed Handler object manages discovery of RSS/ATOM feeds in web pages
+ * and shows UI when they are discovered. It is also responsible for 
+ * transforming XML feeds into a human-readable form when they are loaded. 
+ */
+const kFeedHandler_Stylesheet = 
+  "chrome://browser/content/feedview.xsl";
+
+var FeedHandler = {
+  /**
+   * The Feed icon in the location bar
+   */
+  _feedButton: null,
+  
+  /**
+   * The XSLT Processor used to do feed transformation
+   */
+  _processor: null,
+
+  /**
+   * The XSLT Stylesheet used to transform feeds
+   */
+  _stylesheet: null,
+  
+  /**
+   * Initialize the Pretty Print mode, adding page load event listeners to
+   * check for and load the pretty print view if a feed is loaded. 
+   */
+  init: function() {
+    var self = this;
+    function onPageLoad(event) {
+      self._checkForFeed(event);
+    }
+    addEventListener("load", onPageLoad, true);
+    gBrowser.addEventListener("DOMLinkAdded", 
+                              function (event) { FeedHandler.onLinkAdded(event); }, 
+                              false);
+  },
+  
+  /**
+   * Release held objects to prevent leaks. 
+   */
+  uninit: function() {
+    this._processor = null;
+    this._stylesheet = null;
+  },
+  
+  /**
+   * Called when the user clicks on the Feed icon in the location bar. 
+   * Builds a menu of unique feeds associated with the page, and if there
+   * is only one, shows the feed inline in the browser window. 
+   * @param   event
+   *          The popupshowing event from the feed list menupopup
+   * @returns true if the menu should be shown, false if there was only
+   *          one feed and the feed should be shown inline in the browser
+   *          window (do not show the menupopup).
+   */
+  buildFeedList: function(event) {
+    var menuPopup = event.target;
+    var feeds = gBrowser.selectedBrowser.feeds;
+    if (feeds == null) {
+      // XXX hack -- menu opening depends on setting of an "open"
+      // attribute, and the menu refuses to open if that attribute is
+      // set (because it thinks it's already open).  onpopupshowing gets
+      // called after the attribute is unset, and it doesn't get unset
+      // if we return false.  so we unset it here; otherwise, the menu
+      // refuses to work past this point.
+      menuPopup.parentNode.removeAttribute("open");
+      return false;
+    }
+
+    while (menuPopup.firstChild)
+      menuPopup.removeChild(menuPopup.firstChild);
+    
+    /**
+     * Attempt to generate a list of unique feeds from the list of feeds
+     * supplied by the web page. It is fairly common for a site to supply
+     * feeds in multiple formats but with divergent |title| attributes so
+     * we need to make a rough pass at trying to not show a menu when there
+     * is in fact only one feed
+     * @param   feeds
+     *          An array of Feed info JS Objects representing the list of
+     *          feeds advertised by the web page
+     * @returns An array of what should be mostly unique feeds.
+     *
+     * Note: we should consider extending HTML in some way here to allow
+     *       pages to give "names" to <link> tags so that multiple tags can
+     *       be identified as pointing to the same content. 
+     */
+    function harvestFeeds(feeds) {
+      var feedHash = { };
+      for (var i = 0; i < feeds.length; ++i) {
+        var feed = feeds[i];
+        if (!(feed.type in feedHash))
+          feedHash[feed.type] = [];
+        feedHash[feed.type].push(feed);
+      }
+      var mismatch = false;
+      var count = 0;
+      var defaultType = null;
+      for (var type in feedHash) {
+        // The default type is whichever is listed first on the web page.
+        // Nothing fancy, just something that works. 
+        if (!defaultType) {
+          defaultType = type;
+          count = feedHash[type].length;
+        }
+        if (feedHash[type].length != count) {
+          mismatch = true;
+          break;
+        }
+        count = feedHash[type].length;
+      }
+      // There are more feeds of one type than another - this implies the
+      // content developer is supplying multiple channels, let's not do 
+      // anything fancier than this and just return the full set. 
+      if (mismatch)
+        return feeds;
+        
+      // Return all the feeds for the selected type.
+      return feedHash[defaultType];
+    }
+    
+    // Get the list of unique feeds, and if there's only one unique entry, 
+    // show the feed in the browser rather than displaying a menu. 
+    var feeds = harvestFeeds(feeds);
+    if (feeds.length == 1) {
+      this.showFeed(feeds[0].href);
+      return false;
+    }
+
+    // Build the menu showing the available feed choices for viewing. 
+    for (var i = 0; i < feeds.length; ++i) {
+      var feedInfo = feeds[i];
+      var menuItem = document.createElement("menuitem");
+      var baseTitle = feedInfo.title || feedInfo.href;
+      var labelStr = gNavigatorBundle.getFormattedString("feedShowFeed", [baseTitle]);
+      menuItem.setAttribute("label", labelStr);
+      menuItem.setAttribute("feed", feedInfo.href);
+      menuItem.setAttribute("tooltiptext", feedInfo.href);
+      menuPopup.appendChild(menuItem);
+    }
+    return true;
+  },
+
+  /**
+   * Adds a Live Bookmark to a feed
+   * @param   event
+   *          The click/command event handler fired by a piece of UI that 
+   *          contains metadata about the feed to add a Live Bookmark to.
+   */
+  addLiveBookmark: function(event) {
+    var a = event.target;
+    var title = a.ownerDocument.title;
+    var description = BookmarksUtils.getDescriptionFromDocument(a.ownerDocument);
+    BookmarksUtils.addLivemark(a.ownerDocument.baseURI, a.getAttribute("feed"), 
+                               title, description);
+  },
+
+  /**
+   * Shows a feed in the content area, pretty printed with the stylesheet. 
+   * @param   url
+   *          The URL to the RSS feed
+   */  
+  showFeed: function(url) {
+    // If there's only one feed, load it and don't show the popup.
+    getWebNavigation().loadURI(url, nsIWebNavigation.LOAD_FLAGS_NONE, 
+                               null, null, null);
+    setTimeout(function () { gBrowser.selectedBrowser.focus(); }, 100);
+  },
+  
+  /**
+   * Update the browser UI to show whether or not feeds are available when
+   * a page is loaded or the user switches tabs to a page that has feeds. 
+   */
+  updateFeeds: function() {
+    if (!this._feedButton)
+      this._feedButton = document.getElementById("feed-button");
+
+    var feeds = gBrowser.mCurrentBrowser.feeds;
+    if (!feeds || feeds.length == 0) {
+      this._feedButton.removeAttribute("feeds");
+      this._feedButton.setAttribute("tooltiptext", 
+        gNavigatorBundle.getString("feedNoFeeds"));
+    } else {
+      this._feedButton.setAttribute("feeds", "true");
+      this._feedButton.setAttribute("tooltiptext", 
+        gNavigatorBundle.getString("feedHasFeeds"));
+    }
+  }, 
+  
+  /**
+   * A new <link> tag has been discovered - check to see if it advertises
+   * an RSS feed. 
+   */
+  onLinkAdded: function(event) {
+    // XXX this event listener can/should probably be combined with the onLinkAdded
+    // listener in tabbrowser.xml, which only listens for favicons and then passes
+    // them to onLinkIconAvailable in the ProgressListener.  We could extend the
+    // progress listener to have a generic onLinkAvailable and have tabbrowser pass
+    // along all events.  It should give us the browser for the tab, as well as
+    // the actual event.
+    if (!this._feedButton)
+      this._feedButton = document.getElementById("feed-button");
+
+    // from tabbrowser.xml
+    // mechanism for reading properties of the underlying XPCOM object
+    // (ignoring potential getters/setters added by malicious content)
+    var safeGetProperty = function(obj, propname) {
+      return obj[propname];
+    }
+
+    var erel = event.target.rel;
+    var etype = event.target.type;
+    var etitle = event.target.title;
+
+    // this is a blogger post service URL; so skip it
+    if (erel && erel == "service.post")
+      return;
+
+    if (etype == "application/rss+xml" ||
+        etype == "application/atom+xml" ||
+        etype == "application/x.atom+xml" ||
+        (etitle && 
+        (etitle.indexOf("RSS") != -1 ||
+          etitle.indexOf("Atom") != -1 ||
+          etitle.indexOf("rss") != -1)))
+    {
+      const targetDoc = safeGetProperty(event.target, "ownerDocument");
+
+      // find which tab this is for, and set the attribute on the browser
+      // should there be a getTabForDocument method on tabbedbrowser?
+      var feedURI = 
+          Components.classes["@mozilla.org/network/io-service;1"].
+          getService(Components.interfaces.nsIIOService).
+          newURI(targetDoc.location.href, null, null);
+      var shellInfo = this._getContentShell(targetDoc, feedURI);
+      var browserForLink = shellInfo.browser;
+      if (!browserForLink) {
+        // ??? this really shouldn't happen..
+        return;
+      }
+
+      var feeds = [];
+      if (browserForLink.feeds != null)
+        feeds = browserForLink.feeds;
+      var wrapper = event.target;
+      feeds.push({ href: wrapper.href,
+                   type: wrapper.type,
+                   title: wrapper.title});
+      browserForLink.feeds = feeds;
+      if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
+        this._feedButton.setAttribute("feeds", "true");
+    }
+  },
+  
+  /**
+   * Locate the shell that has a specified URI loaded in it. 
+   * @param   doc
+   *          The document that contains the feed
+   * @param   feedURI
+   *          The URI to locate a shell for
+   * @returns The doc shell that contains the specified URI
+   */
+  _getContentShell: function(doc, feedURI) {
+    var browsers = getBrowser().browsers;
+    for (var i = 0; i < browsers.length; i++) {
+      var shell = findChildShell(doc, browsers[i].docShell, feedURI);
+      if (shell)
+        return { shell: shell, browser: browsers[i] };
+    }
+    return null;
+  },
+  
+  /**
+   * Validate the document to see if it is a feed we should pretty print or 
+   * not.
+   * @param   doc
+   *          The document to inspect
+   * @returns true if this is an RSS feed we should pretty print, false 
+   *          otherwise.
+   */
+  _validate: function(doc) {
+    // See if the document is XML.  If not, it's definitely not a feed.
+    if (!(doc instanceof XMLDocument))
+      return false;
+      
+    // See if the document we're dealing with is actually a feed.
+    if (!this._isDocumentFeed(doc.documentElement))
+      return false;
+
+    // Make sure the document is loaded into one of the browser tabs.
+    // Otherwise, it might have been loaded as data by some application
+    // that expects it not to change, and we shouldn't break the app
+    // by changing the document.
+    var feedURI = 
+        Components.classes["@mozilla.org/network/io-service;1"].
+        getService(Components.interfaces.nsIIOService).
+        newURI(doc.location.href, null, null);
+    if (!this._getContentShell(doc, feedURI))
+      return false;
+
+    return true;
+  },
+    
+  /**
+   * Loads the Pretty Print if necessary for the current document. 
+   * @param   event
+   *          The "load" DOM event
+   */
+  _checkForFeed: function(event) {
+    var doc = event.originalTarget;
+    if (!this._validate(doc))
+      return;
+    
+    var self = this;
+    /**
+     * Called back once we're guaranteed that an XSLT Processor has been 
+     * created and the transformation stylesheet loaded and ready for use.
+     * Does the work of translating the RSS feed into the output document.
+     * @param   processor
+     *          The XSLT Processor, initialized with the pretty print 
+     *          stylesheet
+     */
+    function transformFeed(processor) {
+      var strings = document.getElementById("bundle_browser");
+      processor.setParameter(null, "url", doc.documentURI);
+      processor.setParameter(null, "title", 
+                             strings.getFormattedString("feedTitle", [""]));
+      /**
+       * @returns the number of articles in the feed
+       */
+      function getArticleCount() {
+        var len = doc.getElementsByTagName("item").length; 
+        if (len == 0)
+          len = doc.getElementsByTagName("entry").length;
+        return len;
+      }
+      processor.setParameter(null, "articleCount", 
+                             strings.getFormattedString("feedDescription", 
+                                                        [getArticleCount()]));
+      processor.setParameter(null, "showMenu", true);
+      processor.setParameter(null, "reloadInterval", 30);
+      processor.setParameter(null, "addLiveBookmarkLink", 
+                             strings.getString("feedAddLiveBookmarkLink"));
+      var regionStrings = document.getElementById("bundle_browser_region");
+      processor.setParameter(null, "liveBookmarkInfoURL",
+                             regionStrings.getString("feedLiveBookmarkInfoURL"));
+      processor.setParameter(null, "liveBookmarkInfoText",
+                             strings.getString("feedLiveBookmarkInfoText"));
+
+      var ownerDocument = document.implementation.createDocument("", "", null);
+      var newFragment = processor.transformToFragment(doc, ownerDocument);
+      
+      var de = doc.documentElement;
+      while (de.hasChildNodes())
+        de.removeChild(de.firstChild);
+      de.appendChild(newFragment);
+      
+      // Update the title bar with the title of the feed. 
+      var h1s = doc.getElementsByTagName("h1");
+      if (h1s.length) 
+        doc.title = strings.getFormattedString("feedTitle", [h1s[0].textContent]);
+      
+      doc.getElementById("addLiveBookmarkLink").addEventListener("click",
+        function (event) { self.addLiveBookmark(event); }, false);
+    }
+    this._process(transformFeed);
+  },
+  
+  /** 
+   * Invoke the tranformation routine on the specified callback, once we've
+   * lazily instantiated and loaded the XSLTProcessor and stylesheet. 
+   * @param   callback
+   *          A function to be called when the processor and stylesheet are
+   *          ready for use.  
+   */
+  _process: function(callback) {
+    var async = false;
+    if (!this._processor) {
+      this._processor = new XSLTProcessor();
+    }
+    if (!this._stylesheet) {
+      this._stylesheet = document.implementation.createDocument("", "", null);
+      
+      var processor = this._processor;
+      var stylesheet = this._stylesheet;
+      function onStyleSheetLoaded() {
+        processor.importStylesheet(stylesheet);
+        callback(processor);
+      }
+      this._stylesheet.addEventListener("load", onStyleSheetLoaded, false);
+      this._stylesheet.load(kFeedHandler_Stylesheet);
+      async = true;
+    }
+    if (!async)
+      callback(this._processor);
+  },
+  
+  /**
+   * Determines if a DOM document is an RSS/ATOM feed or not. 
+   * @param   doc
+   *          The DOM document to test
+   * @returns true if the document is a feed, false otherwise.
+   */
+  _isDocumentFeed: function(doc) {
+    const ATOM_10_NS = "http://www.w3.org/2005/Atom";
+    const ATOM_03_NS = "http://purl.org/atom/ns#";
+    const RSS_10_NS = "http://purl.org/rss/1.0/";
+    const RSS_09_NS = "http://my.netscape.com/rdf/simple/0.9/";
+    const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+    var rootName = doc.localName;
+    var rootNS = doc.namespaceURI;
+    var channel;
+    
+    // Atom feeds have a root "feed" element in one of two namespaces.
+    if (rootName == "feed" && (rootNS == ATOM_10_NS || rootNS == ATOM_03_NS))
+      return true;
+
+    // RSS 2.0, 0.92, and 0.91 feeds have a non-namespaced root "rss" element
+    // containing a non-namespaced "channel" child.
+    else if (rootName == "rss" && rootNS == null) {
+      channel = doc.getElementsByTagName('channel')[0];
+      if (channel && channel.parentNode == doc)
+        return true;
+    }
+
+    // RSS 1.0 and 0.9 feeds have a root "RDF" element in the RDF namespace
+    // and a "channel" child in the RSS 1.0 or 0.9 namespaces.
+    else if (rootName == "RDF" && rootNS == RDF_NS) {
+      channel = doc.getElementsByTagNameNS(RSS_10_NS, 'channel')[0]
+                || doc.getElementsByTagNameNS(RSS_09_NS, 'channel')[0];
+      if (channel && channel.parentNode == doc)
+        return true;
+    }
+
+    // If it didn't match any criteria yet, it's probably not a feed,
+    // or perhaps it's a nonconformist feed.  If you see a number of those
+    // and they match some pattern, add a check for that pattern here,
+    // making sure to specify the strictest check that matches that pattern
+    // to minimize false positives.
+    return false;
+  },
+};
