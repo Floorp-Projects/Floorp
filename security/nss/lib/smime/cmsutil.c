@@ -38,7 +38,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.11 2005/08/11 23:11:39 wtchang%redhat.com Exp $
+ * $Id: cmsutil.c,v 1.12 2005/08/12 23:22:28 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -116,7 +116,7 @@ NSS_CMSUtil_DERCompare(void *a, void *b)
 {
     SECItem *der1 = (SECItem *)a;
     SECItem *der2 = (SECItem *)b;
-    int j;
+    unsigned int j;
 
     /*
      * Find the lowest (lexigraphically) encoding.  One that is
