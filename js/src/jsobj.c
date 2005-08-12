@@ -420,16 +420,19 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
+
         /* 
          * Increment map->depth to protect js_EnterSharpObject from reentering
-         * itself. If it does, then because it hasn't yet incremented
-         * map->depth, we'll destroy the newly-created hash table and crash.
+         * itself badly.  Without this fix, if we reenter the basis case where
+         * map->depth == 0, when unwinding the inner call we will destroy the
+         * newly-created hash table and crash.
          */
 	++map->depth;
         ida = JS_Enumerate(cx, obj);
 	--map->depth;
         if (!ida)
             return NULL;
+
         ok = JS_TRUE;
         for (i = 0, length = ida->length; i < length; i++) {
             id = ida->vector[i];
