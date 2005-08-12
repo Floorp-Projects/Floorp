@@ -444,6 +444,10 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
     } // if we got an error code
   } // if we have a mailnews url.
 
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = 0;
+  mProgressEventSink = 0;
+
   return rv;
 }
 

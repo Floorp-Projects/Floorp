@@ -236,6 +236,10 @@ nsLDAPChannel::Cancel(nsresult aStatus)
             return rv;
     }
 
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = nsnull;
+    mEventSink = nsnull;
+
     return NS_OK;
 }
 
@@ -889,6 +893,10 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
             return rv;
         }
     }
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = nsnull;
+    mEventSink = nsnull;
 
     return NS_OK;
 }

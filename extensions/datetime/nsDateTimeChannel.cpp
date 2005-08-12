@@ -395,6 +395,11 @@ nsDateTimeChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult sta
 
     mPump = 0;
     mTransport = 0;
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mProgressSink = 0;
+
     return NS_OK;
 }
 

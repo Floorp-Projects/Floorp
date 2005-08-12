@@ -375,6 +375,11 @@ nsInputStreamChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult 
 
     mPump = 0;
     mContentStream = 0;
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mProgressSink = 0;
+
     return NS_OK;
 }
 

@@ -166,6 +166,7 @@ nsresult nsExtProtocolChannel::SetURI(nsIURI* aURI)
  
 nsresult nsExtProtocolChannel::OpenURL()
 {
+  nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
 
   if (extProtService)
@@ -181,9 +182,13 @@ nsresult nsExtProtocolChannel::OpenURL()
     // get an nsIPrompt from the channel if we can
     nsCOMPtr<nsIPrompt> prompt;
     NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, prompt);
-    return extProtService->LoadURI(mUrl, prompt);
+    rv = extProtService->LoadURI(mUrl, prompt);
   }
-  return NS_ERROR_FAILURE;
+
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = 0;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::Open(nsIInputStream **_retval)

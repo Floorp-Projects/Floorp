@@ -547,6 +547,12 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
     mTransport->Close(mStatus);
     mTransport = 0;
     mPump = 0;
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mPrompter = 0;
+    mProgressSink = 0;
+
     return NS_OK;
 }
 
