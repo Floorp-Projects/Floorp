@@ -1209,8 +1209,7 @@ SanitizeListener.prototype =
       var bundleBrowser = document.getElementById("bundle_browser");
       var bundleBrand = document.getElementById("bundle_brand");
       var brandShortName = bundleBrand.getString("brandShortName");
-      sanitizeItem.label = bundleBrowser.getFormattedString("sanitizeWithPromptLabel",
-                                                            [brandShortName]);
+      sanitizeItem.label = bundleBrowser.getString("sanitizeWithPromptLabel");
     }
   },
 
