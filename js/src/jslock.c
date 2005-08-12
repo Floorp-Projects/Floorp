@@ -119,6 +119,44 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
     return (int)res;
 }
 
+#elif (defined(__USLC__) || defined(_SCO_DS)) && defined(i386)
+
+/* Note: This fails on 386 cpus, cmpxchgl is a >= 486 instruction */
+
+asm int
+js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
+{
+%ureg w, nv;
+	movl	ov,%eax
+	lock
+	cmpxchgl nv,(w)
+	sete	%al
+	andl	$1,%eax
+%ureg w;  mem ov, nv;
+	movl	ov,%eax
+	movl	nv,%ecx
+	lock
+	cmpxchgl %ecx,(w)
+	sete	%al
+	andl	$1,%eax
+%ureg nv;
+	movl	ov,%eax
+	movl	w,%edx
+	lock
+	cmpxchgl nv,(%edx)
+	sete	%al
+	andl	$1,%eax
+%mem w, ov, nv;
+	movl	ov,%eax
+	movl	nv,%ecx
+	movl	w,%edx
+	lock
+	cmpxchgl %ecx,(%edx)
+	sete	%al
+	andl	$1,%eax
+}
+#pragma asm full_optimization js_CompareAndSwap
+
 #elif defined(SOLARIS) && defined(sparc) && defined(ULTRA_SPARC)
 
 static JS_INLINE int
