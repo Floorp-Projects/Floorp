@@ -62,6 +62,9 @@ mp_err ec_GFp_pt_sub_aff(const mp_int *px, const mp_int *py,
 mp_err ec_GFp_pt_dbl_aff(const mp_int *px, const mp_int *py, mp_int *rx,
 						 mp_int *ry, const ECGroup *group);
 
+/* Validates a point on a GFp curve. */
+mp_err ec_GFp_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group);
+
 #ifdef ECL_ENABLE_GFP_PT_MUL_AFF
 /* Computes R = nP where R is (rx, ry) and P is (px, py). The parameters
  * a, b and p are the elliptic curve coefficients and the prime that

@@ -62,6 +62,9 @@ mp_err ec_GF2m_pt_sub_aff(const mp_int *px, const mp_int *py,
 mp_err ec_GF2m_pt_dbl_aff(const mp_int *px, const mp_int *py, mp_int *rx,
 						  mp_int *ry, const ECGroup *group);
 
+/* Validates a point on a GF2m curve. */
+mp_err ec_GF2m_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group);
+
 /* by default, this routine is unused and thus doesn't need to be compiled */
 #ifdef ECL_ENABLE_GF2M_PT_MUL_AFF
 /* Computes R = nP where R is (rx, ry) and P is (px, py). The parameters
