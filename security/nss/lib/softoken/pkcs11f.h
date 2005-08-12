@@ -264,7 +264,7 @@ CK_PKCS11_FUNCTION_INFO(C_Login)
 (
   CK_SESSION_HANDLE hSession,  /* the session's handle */
   CK_USER_TYPE      userType,  /* the user type */
-  CK_CHAR_PTR       pPin,      /* the user's PIN */
+  CK_UTF8CHAR_PTR   pPin,      /* the user's PIN */
   CK_ULONG          ulPinLen   /* the length of the PIN */
 );
 #endif
