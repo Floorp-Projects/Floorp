@@ -174,8 +174,14 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, P
    char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
    if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
      return NS_OK;
+
 #ifndef WINCE // we really just want to crash for now
-   if(!InDebugger())
+  static int ignoreDebugger;
+  if (!ignoreDebugger) {
+    const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
+    ignoreDebugger = 1 + !(shouldIgnoreDebugger && strcmp(shouldIgnoreDebugger, "1"));
+  }
+   if((ignoreDebugger == 2) || !InDebugger())
       {
       DWORD code = IDRETRY;
 
