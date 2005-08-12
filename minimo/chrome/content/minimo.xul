@@ -81,9 +81,7 @@
              <menuitem id="menu_close"/>
 		     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
                key="key_closeWindow" label="about"/>
-		     <menuitem id="command_BrowserOpenTab" label="new Tab"  /> 
-		     <!-- this only works with keyboard/ oncommand approach, if we use the workaroung (onmousedown), 
-		          the menu disappears --> 
+		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="new Tab"  /> 
              <menu id="menu-zoom" label="Text zoom">
                 <menupopup >
                   <menuitem id="" oncommand="BrowserResetZoomPlus()" label="ZOOM + " />

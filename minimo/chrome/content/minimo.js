@@ -200,14 +200,6 @@ function MiniNavStartup()
   gSelectedTab=currentTab;
   loadURI("http://www.google.com/");
   
-  //
-  // this is temporary til we get menu tminig events stuff fixed. 
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=303934
-  //
-  document.getElementById("command_BrowserOpenTab").addEventListener("mousedown",BrowserOpenTab,false);
-  document.getElementById("command_BrowserOpenInfo").addEventListener("mousedown",BrowserOpenInfo,false);
-  document.getElementById("command_BrowserTestDialogs").addEventListener("mousedown",BrowserTestDialogs,false);
-  document.getElementById("command_BrowserTestSendSMS").addEventListener("mousedown",BrowserTestSendSMS,false);
 
 }
 
