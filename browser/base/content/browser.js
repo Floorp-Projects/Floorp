@@ -6137,7 +6137,9 @@ var FeedHandler = {
    */
   _validate: function(doc) {
     // See if the document is XML.  If not, it's definitely not a feed.
-    if (!(doc instanceof XMLDocument))
+    if (!(doc instanceof XMLDocument) &&
+        // bandaid for bug 256084
+        !(doc instanceof XULDocument))
       return false;
       
     // See if the document we're dealing with is actually a feed.
