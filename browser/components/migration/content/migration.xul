@@ -52,6 +52,7 @@
   <script type="application/x-javascript" src="chrome://browser/content/migration/migration.js"/>
   
   <stringbundle id="bundle" src="chrome://browser/locale/migration/migration.properties"/>
+  <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
   
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;"

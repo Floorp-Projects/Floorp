@@ -52,36 +52,36 @@
  *   Apart from the standard openDialog parameters, this dialog can 
  *   be passed additional information, which is contained in the 
  *   wArg object:
- * 
- *   wArg.name          : Bookmark Name. The value to be prefilled
- *                        into the "Name: " field (if visible).
- *   wArg.description   : Bookmark description. The value to be added
- *                      : to the boomarks description field.
- *   wArg.url           : Bookmark URL: The location of the bookmark.
- *                        The value to be filled in the "Location: "
- *                        field (if visible).
- *   wArg.folderURI     : Bookmark Folder. The RDF Resource URI of the
- *                        folder that this bookmark should be created in.
- *   wArg.charset       : Bookmark Charset. The charset that should be
- *                        used when adding a bookmark to the specified
- *                        URL. (Usually the charset of the current 
- *                        document when launching this window).
- *   wArg.bAddGroup     : True if adding a group of tabs, false
- *                        otherwise.
- *   wArg.objGroup[]    : If adding a group of tabs, this is an array
- *                        of wArg objects with name, URL and charset
- *                        properties, one for each group member.
- *   wArg.bWebPanel     : If the bookmark should become a web panel.
- *   wArg.keyword       : A suggested keyword for the bookmark. If this
- *                        argument is supplied, the keyword row is made
- *                        visible.
- *   wArg.bNeedKeyword  : Whether or not a keyword is required to add
- *                        the bookmark.
- *   wArg.postData      : PostData to be saved with this bookmark, 
- *                        in the format a string of name=value pairs
- *                        separated by CRLFs.
- *   wArg.feedURL       : feed URL for Livemarks (turns bookmark
- *                        into Livemark)
+ *  
+ *   wArg.name              : Bookmark Name. The value to be prefilled
+ *                            into the "Name: " field (if visible).
+ *   wArg.description       : Bookmark description. The value to be added
+ *                          : to the boomarks description field.
+ *   wArg.url               : Bookmark URL: The location of the bookmark.
+ *                            The value to be filled in the "Location: "
+ *                            field (if visible).
+ *   wArg.folderURI         : Bookmark Folder. The RDF Resource URI of the
+ *                            folder that this bookmark should be created in.
+ *   wArg.charset           : Bookmark Charset. The charset that should be
+ *                            used when adding a bookmark to the specified
+ *                            URL. (Usually the charset of the current 
+ *                            document when launching this window).
+ *   wArg.bBookmarkAllTabs  : True if "Bookmark All Tabs" option is chosen,
+ *                            false otherwise.
+ *   wArg.objGroup[]        : If adding a group of tabs, this is an array
+ *                            of wArg objects with name, URL and charset
+ *                            properties, one for each group member.
+ *   wArg.bWebPanel         : If the bookmark should become a web panel.
+ *   wArg.keyword           : A suggested keyword for the bookmark. If this
+ *                            argument is supplied, the keyword row is made
+ *                            visible.
+ *   wArg.bNeedKeyword      : Whether or not a keyword is required to add
+ *                            the bookmark.
+ *   wArg.postData          : PostData to be saved with this bookmark, 
+ *                            in the format a string of name=value pairs
+ *                            separated by CRLFs.
+ *   wArg.feedURL           : feed URL for Livemarks (turns bookmark
+ *                            into Livemark)
  */
 
 var gSelectedFolder;
@@ -91,7 +91,6 @@ var gKeywordRow;
 var gExpander;
 var gMenulist;
 var gBookmarksTree;
-var gGroup;
 var gKeywordRequired;
 var gSuggestedKeyword;
 var gRequiredFields = [];
@@ -110,7 +109,6 @@ function Startup()
   gRequiredFields.push(gName);
   gKeywordRow = document.getElementById("keywordRow");
   gKeyword = document.getElementById("keyword");
-  gGroup = document.getElementById("addgroup");
   gExpander = document.getElementById("expander");
   gMenulist = document.getElementById("select-menu");
   gBookmarksTree = document.getElementById("folder-tree");
@@ -127,10 +125,9 @@ function Startup()
     if (gKeywordRequired)
       gRequiredFields.push(gKeyword);
   }
-  if (!gArg.bAddGroup)
-    gGroup.setAttribute("hidden", "true");
   sizeToContent();
   onFieldInput();
+  initTitle();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
   gPostData = gArg.postData;
@@ -170,6 +167,14 @@ function Startup()
   setTimeout(initMenulist, 0);
 } 
 
+function initTitle()
+{
+  if(gArg.bBookmarkAllTabs)
+    document.title = document.getElementById("bookmarksBundle").getString("bookmarkAllTabsTitle");
+  else
+    document.title = document.getElementById("bookmarksBundle").getString("bookmarkCurTabTitle");
+}
+
 function onFieldInput()
 {
   var ok = document.documentElement.getButton("accept");
@@ -188,7 +193,7 @@ function onOK()
 
   var url, rSource;
   var livemarkFeed = gArg.feedURL;
-  if (gGroup && gGroup.checked) {
+  if (gArg.bBookmarkAllTabs) {
     rSource = BMDS.createFolder(gName.value);
     const groups = gArg.objGroup;
     for (var i = 0; i < groups.length; ++i) {

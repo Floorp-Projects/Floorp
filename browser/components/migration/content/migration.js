@@ -300,6 +300,7 @@ var MigrationWizard = {
       items.removeChild(items.firstChild);
     
     var bundle = document.getElementById("bundle");
+    var brandBundle = document.getElementById("brandBundle");
     var itemID;
     for (var i = 0; i < 16; ++i) {
       var itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;

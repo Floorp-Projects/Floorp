@@ -367,6 +367,10 @@
                 <menuitem key="addBookmarkAsKb"
                           label="&addCurPageAsCmd.label;"
                           command="Browser:AddBookmarkAs"/>
+                <menuitem id="bookmarkAllCmd"
+                          key="addBookmarkGroupKb"
+                          label="&bookmarkAllCmd.label;"
+                          command="Browser:BookmarkAllTabs"/>
                 <menuitem key="manBookmarkKb" 
                           label="&manBookmarksCmd.label;"
                           oncommand="toOpenWindowByType('bookmarks:manager', 'chrome://browser/content/bookmarks/bookmarksManager.xul');"/>
