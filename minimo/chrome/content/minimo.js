@@ -335,3 +335,14 @@ function urlbar() {
     
 
 }
+
+
+/* Reset the text size */ 
+function BrowserResetZoomPlus() {
+ 	getBrowser().selectedBrowser.markupDocumentViewer.textZoom+= .25;
+}
+
+function BrowserResetZoomMinus() {
+ 	getBrowser().selectedBrowser.markupDocumentViewer.textZoom-= .25;
+}
+

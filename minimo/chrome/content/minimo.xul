@@ -82,6 +82,12 @@
 		     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
                key="key_closeWindow" label="about"/>
 		     <menuitem id="command_BrowserOpenTab" label="new Tab"  /> 
+             <menu id="menu-zoom" label ="Text zoom">
+                <menupopup >
+                  <menuitem id="" oncommand="BrowserResetZoomPlus()" label="ZOOM + " />
+                  <menuitem id="" oncommand="BrowserResetZoomMinus()" label="ZOOM - " />
+                </menupopup>
+             </menu>
 		     <!--
 		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
 		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
