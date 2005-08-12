@@ -404,10 +404,13 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // if the focused window was found get our script global object from
   // that.
   if (focusedWin) {
+    NS_ASSERTION(isXULKey, "We should only use the focused window for "
+                 "XUL key handlers!");
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(focusedWin));
 
-    if (piWin && piWin->GetCurrentInnerWindow()) {
+    if (piWin) {
       piWin = piWin->GetCurrentInnerWindow();
+      NS_ENSURE_TRUE(piWin, NS_ERROR_UNEXPECTED);
     }
 
     boundGlobal = do_QueryInterface(piWin->GetPrivateRoot());

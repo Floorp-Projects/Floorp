@@ -451,6 +451,11 @@ public:
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
   /**
+   * Return the window containing the document (the outer window).
+   */
+  virtual nsPIDOMWindow *GetWindow();
+
+  /**
    * Get the script loader for this document
    */
   virtual nsIScriptLoader* GetScriptLoader();
@@ -678,7 +683,7 @@ protected:
     return kNameSpaceID_None;
   };
 
-  nsDocument() : nsIDocument(), mVisible(PR_TRUE) {}
+  nsDocument();
   virtual ~nsDocument();
 
   nsCString mReferrer;

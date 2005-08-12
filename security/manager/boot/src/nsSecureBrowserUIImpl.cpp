@@ -63,7 +63,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIContent.h"
 #include "nsIWebProgress.h"
 #include "nsIChannel.h"
@@ -353,8 +353,9 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
 
   nsIURI *formURL = document->GetBaseURI();
 
-  nsCOMPtr<nsIDOMWindow> postingWindow(do_QueryInterface(document->GetScriptGlobalObject()));
-  
+  nsCOMPtr<nsIDOMWindow> postingWindow =
+    do_QueryInterface(document->GetWindow());
+
   PRBool isChild;
   IsChildOfDomWindow(mWindow, postingWindow, &isChild);
   

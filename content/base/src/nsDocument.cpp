@@ -697,6 +697,12 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
+nsDocument::nsDocument()
+  : nsIDocument(),
+    mVisible(PR_TRUE)
+{
+}
+
 nsDocument::~nsDocument()
 {
   mInDestructor = PR_TRUE;
@@ -2043,6 +2049,15 @@ nsDocument::GetScriptGlobalObject() const
 void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aScriptGlobalObject));
+
+    NS_ASSERTION(!win || win->IsInnerWindow(),
+                 "Script global object must be an inner window!");
+  }
+#endif
+
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
     // our layout history state now.
@@ -2055,6 +2070,18 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
   }
+}
+
+nsPIDOMWindow *
+nsDocument::GetWindow()
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
+
+  if (!win) {
+    return nsnull;
+  }
+
+  return win->GetOuterWindow();
 }
 
 nsIScriptLoader *
@@ -3037,11 +3064,14 @@ nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 
   if (win) {
     // The default view is our outer window.
-    if (!win->IsInnerWindow()) {
-      return NS_ERROR_UNEXPECTED;
+    nsPIDOMWindow *outer = win->GetOuterWindow();
+
+    if (outer) {
+      return CallQueryInterface(outer, aDefaultView);
     }
 
-    return CallQueryInterface(win->GetOuterWindow(), aDefaultView);
+    // Fall through here and return null in case our window no longer
+    // has an outer window.
   }
 
   return NS_OK;

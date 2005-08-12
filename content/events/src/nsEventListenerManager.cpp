@@ -1184,9 +1184,12 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
       scope = global->GetGlobalJSObject();
     }
   } else {
-    nsCOMPtr<nsIDOMWindow> win(do_QueryInterface(aObject));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aObject));
     nsCOMPtr<nsIScriptGlobalObject> global;
     if (win) {
+      NS_ASSERTION(win->IsInnerWindow(),
+                   "Event listener added to outer window!");
+
       nsCOMPtr<nsIDOMDocument> domdoc;
       win->GetDocument(getter_AddRefs(domdoc));
       doc = do_QueryInterface(domdoc);

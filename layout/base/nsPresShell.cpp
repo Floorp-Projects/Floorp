@@ -2718,10 +2718,9 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   }
 
   while (curDoc) {
-    nsCOMPtr<nsPIDOMWindow> curWin =
-      do_QueryInterface(curDoc->GetScriptGlobalObject());
+    nsPIDOMWindow *curWin = curDoc->GetWindow();
 
-    if (!curWin || curWin->GetOuterWindow() == ourWin)
+    if (!curWin || curWin == ourWin)
       break;
 
     curDoc = curDoc->GetParentDocument();
@@ -4362,15 +4361,14 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
       }
       // Selection is at anchor.
       // Now focus the document itself if focus is on an element within it.
-      nsCOMPtr<nsPIDOMWindow> win =
-        do_QueryInterface(mDocument->GetScriptGlobalObject());
+      nsPIDOMWindow *win = mDocument->GetWindow();
 
       if (win) {
         nsCOMPtr<nsIFocusController> focusController = win->GetRootFocusController();
         if (focusController) {
           nsCOMPtr<nsIDOMWindowInternal> focusedWin;
           focusController->GetFocusedWindow(getter_AddRefs(focusedWin));
-          if (SameCOMIdentity(win->GetOuterWindow(), focusedWin)) {
+          if (SameCOMIdentity(win, focusedWin)) {
             esm->ChangeFocusWith(nsnull, nsIEventStateManager::eEventFocusedByApplication);
           }
         }

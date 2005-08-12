@@ -52,6 +52,7 @@
 #include "nsIServiceManager.h"
 
 #include "nsIDocument.h"
+#include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIDirectoryService.h"
@@ -781,8 +782,9 @@ nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
   rv = mOwner->GetDocument(getter_AddRefs(document));
 
   if (NS_SUCCEEDED(rv) && document) {
-    nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
+    nsPIDOMWindow *win = document->GetWindow();
 
+    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(win);
     if(global) {
       *outJSWindow = global->GetGlobalJSObject();
     }

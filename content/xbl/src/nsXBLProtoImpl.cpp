@@ -141,7 +141,8 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // concrete base class.  We need to alter the object so that our concrete class is interposed
   // between the object and its base class.  We become the new base class of the object, and the
   // object's old base class becomes the new class' base class.
-  rv = aBinding->InitClass(mClassName, aContext, (void *) object, aTargetClassObject);
+  rv = aBinding->InitClass(mClassName, jscontext, global, object,
+                           aTargetClassObject);
   if (NS_FAILED(rv))
     return rv;
 
@@ -172,10 +173,12 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
 
   nsIScriptContext *context = globalObject->GetContext();
   NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
+  JSObject *global = globalObject->GetGlobalJSObject();
 
   void* classObject;
-  nsresult rv = aBinding->InitClass(mClassName, context,
-                                    globalObject->GetGlobalJSObject(),
+  nsresult rv = aBinding->InitClass(mClassName,
+                                    (JSContext *)context->GetNativeContext(),
+                                    global, global,
                                     &classObject);
   if (NS_FAILED(rv))
     return rv;

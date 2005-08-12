@@ -67,6 +67,7 @@ class nsIStyleSheet;
 class nsIStyleRule;
 class nsIViewManager;
 class nsIScriptGlobalObject;
+class nsPIDOMWindow;
 class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
@@ -471,6 +472,11 @@ public:
    */
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+
+  /**
+   * Return the window containing the document (the outer window).
+   */
+  virtual nsPIDOMWindow *GetWindow() = 0;
 
   /**
    * Get the script loader for this document

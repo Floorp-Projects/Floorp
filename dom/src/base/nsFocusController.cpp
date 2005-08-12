@@ -409,13 +409,13 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
   *_retval = nsnull;
 
   nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIController> controller;
+
   GetControllers(getter_AddRefs(controllers));
   if(controllers) {
-    nsCOMPtr<nsIController> controller;
     controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
     if(controller) {
-      *_retval = controller;
-      NS_ADDREF(*_retval);
+      controller.swap(*_retval);
       return NS_OK;
     }
   }
@@ -441,12 +441,10 @@ nsFocusController::GetControllerForCommand(const char * aCommand,
     nsCOMPtr<nsIControllers> controllers2;
     domWindow->GetControllers(getter_AddRefs(controllers2));
     if(controllers2) {
-      nsCOMPtr<nsIController> controller;
       controllers2->GetControllerForCommand(aCommand,
                                             getter_AddRefs(controller));
       if(controller) {
-        *_retval = controller;
-        NS_ADDREF(*_retval);
+        controller.swap(*_retval);
         return NS_OK;
       }
     }
