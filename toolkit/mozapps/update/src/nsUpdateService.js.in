@@ -2167,6 +2167,22 @@ Downloader.prototype = {
       prompter.showUpdateDownloaded(this._update);
     }
   },
+
+  /**
+   * See nsIInterfaceRequestor.idl
+   */
+  getInterface: function(iid) {
+    // The network request may require proxy authentication, so provide the
+    // default nsIAuthPrompt if requested.
+    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+      var prompt =
+          Components.classes["@mozilla.org/network/default-auth-prompt;1"].
+          createInstance();
+      return prompt.QueryInterface(iid);
+    }
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  },
    
   /**
    * See nsISupports.idl
@@ -2174,6 +2190,7 @@ Downloader.prototype = {
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIRequestObserver) &&
         !iid.equals(Components.interfaces.nsIProgressEventSink) &&
+        !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
