@@ -3823,6 +3823,17 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 {
 	nsresult	rv;
 
+  // confirm whether the user wants to update plugins.
+  nsCOMPtr<nsIPrefBranch>
+    prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool userAllowed = PR_TRUE;
+  rv = prefBranch->GetBoolPref("browser.search.update", &userAllowed);
+  // if the pref value is not set or wrong type, don't stop here.
+  if (NS_SUCCEEDED(rv) && !userAllowed)
+    return NS_OK;
+
 #ifdef	DEBUG_SEARCH_UPDATES
 	const char	*engineURI = nsnull;
 	engine->GetValueConst(&engineURI);
