@@ -49,10 +49,10 @@
 /* The VERSION Strings should be updated in the following           */
 /* files everytime a new release of JSS is generated:               */
 /*                                                                  */
-/*     jss.jar:  /org/mozilla/jss/CryptoManager.java                */
-/*     jss.dll:  /org/mozilla/jss/CryptoManager.c                   */
-/*    jssver.h:  /org/mozilla/jss/util/jssver.h                     */
-/* manifest.mn:  /lib/manifest.mn                                   */
+/* org/mozilla/jss/CryptoManager.java                               */
+/* org/mozilla/jss/CryptoManager.c                                  */
+/* org/mozilla/jss/util/jssver.h                                    */
+/* lib/manifest.mn                                                  */
 /*                                                                  */
 /********************************************************************/
 
