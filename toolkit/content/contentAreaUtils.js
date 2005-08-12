@@ -38,16 +38,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-/**
- * Determine whether or not a given focused DOMWindow is in the content
- * area.
- **/
 
-// linkNode is not used anymore
-function openNewTabWith(href, linkNode, event, securityCheck, postData, sendReferrer)
+/**
+ * openNewTabWith: opens a new tab with the given URL.
+ *
+ * @param href The URL to open (as a string).
+ * @param sourceURL The URL of the document from which the URL came, or null.
+ *          This is used to set the referrer header and to do a security check of whether
+ *          the document as allowed to reference the URL.
+ *          If null, there will be no referrer header and no security check.
+ * @param postData Form POST data, or null.
+ * @param event The triggering event (for the purpose of determining whether to open in the background), or null
+ */ 
+function openNewTabWith(href, sourceURL, postData, event)
 {
-  if (securityCheck)
-    urlSecurityCheck(href, document); 
+  if (sourceURL)
+    urlSecurityCheck(href, sourceURL);
 
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefService);
@@ -74,17 +80,15 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData, sendRefe
   // open link in new tab
   var browser = top.document.getElementById("content");
 
-  // If sendReferrer is not specified, default to true
-  var referrer = (sendReferrer == false) ? null : getReferrer(document);
+  var referrerURI = sourceURL ? makeURI(sourceURL) : null;
 
-  browser.loadOneTab(href, referrer, originCharset, postData, loadInBackground);
+  browser.loadOneTab(href, referrerURI, originCharset, postData, loadInBackground);
 }
 
-// linkNode is not used anymore
-function openNewWindowWith(href, linkNode, securityCheck, postData, sendReferrer)
+function openNewWindowWith(href, sourceURL, postData)
 {
-  if (securityCheck)
-    urlSecurityCheck(href, document);
+  if (sourceURL)
+    urlSecurityCheck(href, sourceURL);
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
@@ -94,18 +98,20 @@ function openNewWindowWith(href, linkNode, securityCheck, postData, sendReferrer
   if (wintype == "navigator:browser")
     charsetArg = "charset=" + window.content.document.characterSet;
 
-  // If sendReferrer is not specified, default to true
-  var referrer = (sendReferrer == false) ? null : getReferrer(document);
+  var referrerURI = sourceURL ? makeURI(sourceURL) : null;
 
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer, postData);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrerURI, postData);
 }
 
-function urlSecurityCheck(url, doc) 
+/**
+ * urlSecurityCheck: JavaScript wrapper for CheckLoadURI.
+ * If |sourceURL| is not allowed to link to |url|, this function throws with an error message.
+ *
+ * @param url The URL a page has linked to.
+ * @param sourceURL The URL of the document from which the URL came.
+ */
+function urlSecurityCheck(url, sourceURL)
 {
-  // URL Loading Security Check
-  var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceURL = getContentFrameURI(focusedWindow);
-
   var sourceURI = makeURI(sourceURL);
   var destURI = makeURI(url);
 
@@ -115,7 +121,7 @@ function urlSecurityCheck(url, doc)
   try {
     secMan.checkLoadURI(sourceURI, destURI, nsIScriptSecurityManager.STANDARD);
   } catch (e) {
-    throw "Load of " + url + " denied.";
+    throw "Load of " + url + " from " + sourceURL + " denied.";
   }
 }
 
@@ -142,28 +148,6 @@ function isContentFrame(aFocusedWindow)
   return (aFocusedWindow.top == window.content);
 }
 
-function getContentFrameURI(aFocusedWindow)
-{
-  var contentFrame = isContentFrame(aFocusedWindow) ? aFocusedWindow : window.content;
-  if (contentFrame)
-    return contentFrame.location.href;
-  else
-    return null;
-}
-
-function getReferrer(doc)
-{
-  var focusedWindow = doc.commandDispatcher.focusedWindow;
-  var sourceURL = getContentFrameURI(focusedWindow);
-
-  if (sourceURL) {
-    try {
-      return makeURI(sourceURL);
-    }
-    catch (e) { }
-  }
-  return null;
-}
 
 const kSaveAsType_Complete = 0;   // Save document with attached objects
 // const kSaveAsType_URL = 1;     // Save document or URL by itself
