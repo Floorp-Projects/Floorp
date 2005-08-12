@@ -67,9 +67,9 @@ toolbar *, #appcontent * {
 }
 
 #menu-button {
-	background: url("chrome://minimo/skin/m.gif") no-repeat 50% 50%;
-      width:20px;
-      height:12px;
+	background: url("chrome://minimo/skin/m.jpg") no-repeat 50% 50%;
+      width:20px !important;
+      height:12px !important;
 }
 
 #back-button

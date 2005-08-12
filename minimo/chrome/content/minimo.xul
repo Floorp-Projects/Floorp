@@ -76,13 +76,15 @@
 
        <menubar  class="chromeclass-menubar">
        
-         <menu id="menu-button" width="24" > <!-- hack has to fix -->
+         <menu id="menu-button" > <!-- hack has to fix -->
             <menupopup id="menu_FilePopup">
              <menuitem id="menu_close"/>
 		     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
                key="key_closeWindow" label="about"/>
 		     <menuitem id="command_BrowserOpenTab" label="new Tab"  /> 
-             <menu id="menu-zoom" label ="Text zoom">
+		     <!-- this only works with keyboard/ oncommand approach, if we use the workaroung (onmousedown), 
+		          the menu disappears --> 
+             <menu id="menu-zoom" label="Text zoom">
                 <menupopup >
                   <menuitem id="" oncommand="BrowserResetZoomPlus()" label="ZOOM + " />
                   <menuitem id="" oncommand="BrowserResetZoomMinus()" label="ZOOM - " />
