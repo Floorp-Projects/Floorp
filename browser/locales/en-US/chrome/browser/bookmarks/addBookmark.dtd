@@ -25,3 +25,4 @@
 <!ENTITY addGroup.label          "Bookmark all tabs in a folder">
 <!ENTITY addGroup.accesskey      "B">
 <!ENTITY acceptButton.label      "Add">
+<!ENTITY bookmarksToolbar.label  "Bookmarks Toolbar">

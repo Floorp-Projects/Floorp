@@ -71,13 +71,10 @@
 #include global-scripts.inc
 
 <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/feedview/feedviewOverlay.js"/>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
-
-  <stringbundle id="bundle_feedview" src="chrome://browser/locale/feedview.properties"/>
 
   <popupset id="mainPopupSet">
     <popup id="backMenu" 
@@ -210,8 +207,7 @@
                  ontextreverted="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
-                 onclick="URLBarClickHandler(event, this);"
-                 oninfoclick="displaySecurityInfo();">
+                 onclick="URLBarClickHandler(event, this);">
           <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -226,6 +222,13 @@
                              this.parentNode.selectedIndex = 0;"
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
+          <hbox>
+            <button type="menu" class="plain" id="feed-button" chromedir="&locale.dir;">
+              <menupopup onpopupshowing="return FeedHandler.buildFeedList(event);" position="after_end"
+                         oncommand="FeedHandler.showFeed(event.target.getAttribute('feed'));" />
+            </button>
+            <image id="lock-icon" onclick="displaySecurityInfo()"/>
+          </hbox>
         </textbox>
       </toolbaritem>
 
@@ -465,10 +468,6 @@
       </menupopup>
     </statusbarpanel>
 #endif
-    <statusbarpanel id="livemark-button" type="menu" class="statusbarpanel-menu-iconic" chromedir="&locale.dir;">
-      <menupopup onpopupshowing="return livemarkFillPopup(this);"
-                 oncommand="livemarkAddMark(window.content, event.target.getAttribute('data'));" />
-    </statusbarpanel>
   </statusbar>
 </window>
   

@@ -1819,7 +1819,8 @@ var BookmarksUtils = {
       url: aURL,
       bWebPanel: false,
       feedURL: aFeedURL,
-      description: aDescription
+      description: aDescription,
+      folderURI: "NC:PersonalToolbarFolder"
     }
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                ADD_BM_DIALOG_FEATURES, dArgs);

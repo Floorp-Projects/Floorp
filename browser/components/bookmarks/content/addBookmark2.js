@@ -134,6 +134,11 @@ function Startup()
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
   gPostData = gArg.postData;
+  
+  if ("feedURL" in gArg) {
+    var strings = document.getElementById("bookmarksBundle");
+    document.title = strings.getString("addLiveBookmarkTitle");
+  }
 
 # read the persisted attribute. If it is not present, set a default height.
   WSucks = parseInt(gBookmarksTree.getAttribute("height"));
@@ -153,6 +158,16 @@ function Startup()
     localStore.Unassert(rDialog, rPersist, rElement, true);
     gExpander.setAttribute("class", "down");
   }
+  
+  // Select the specified folder after the window is made visible
+  function initMenulist() {
+    if ("folderURI" in gArg) {
+      var folderItem = document.getElementById(gArg.folderURI);
+      if (folderItem)
+        gMenulist.selectedItem = folderItem;
+    }
+  }
+  setTimeout(initMenulist, 0);
 } 
 
 function onFieldInput()

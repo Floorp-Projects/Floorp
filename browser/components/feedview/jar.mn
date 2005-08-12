@@ -1,4 +1,0 @@
-browser.jar:
-  content/browser/feedview/feedviewOverlay.js            (content/feedviewOverlay.js)
-  content/browser/feedview/feedview.xsl                  (content/feedview.xsl)
-  content/browser/feedview/feedview.js                   (content/feedview.js)

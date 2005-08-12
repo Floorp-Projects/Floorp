@@ -70,6 +70,9 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark2.js"/>
+  
+  <stringbundle id="bookmarksBundle" 
+                src="chrome://browser/locale/bookmarks/bookmarks.properties"/>
 
   <separator id="nameseparator" class="thin"/>
   
@@ -96,6 +99,9 @@
             <menuitem class="menuitem-iconic folder-icon"
                       label="&bookmarksRoot.label;"
                       id="NC:BookmarksRoot"/>
+            <menuitem class="menuitem-iconic folder-icon"
+                      label="&bookmarksToolbar.label;"
+                      id="NC:PersonalToolbarFolder"/>
             <menuseparator/>
             <template>
               <!-- this parent="menupopup" here seems to prevent the template builder from recursing. -->

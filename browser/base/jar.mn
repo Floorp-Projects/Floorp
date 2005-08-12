@@ -16,6 +16,8 @@ browser.jar:
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/credits.xhtml                 (content/credits.xhtml)
+*       content/browser/feedview.xsl                  (content/feedview.xsl)
+*       content/browser/feedview.js                   (content/feedview.js)
 *       content/browser/metaData.js                   (content/metaData.js)
 *       content/browser/metaData.xul                  (content/metaData.xul)
         content/browser/monitor.png                   (content/monitor.png)

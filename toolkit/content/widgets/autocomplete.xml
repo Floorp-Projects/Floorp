@@ -63,7 +63,7 @@
                       flex="1" allowevents="true"
                       xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
         </xul:hbox>
-        <xul:image class="info-icon" xbl:inherits="src=infoicon,tooltiptext=infotext"/>
+        <children includes="hbox"/>
       </xul:hbox>
       
       <xul:dropmarker anonid="historydropmarker" class="autocomplete-history-dropmarker"
@@ -469,13 +469,6 @@
       <handler event="blur" phase="capturing"
                action="this.detachController();"/>
                
-      <handler event="dblclick">
-      <![CDATA[
-        if (event.originalTarget.className == "info-icon" && event.button == 0)
-          return this.fireEvent("infoclick");
-        return true;
-      ]]>
-      </handler>
     </handlers>
   </binding> 
 

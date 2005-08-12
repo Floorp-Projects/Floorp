@@ -7,7 +7,6 @@
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
-    locale/browser/feedview.properties             (%chrome/browser/feedview.properties)
     locale/browser/metaData.dtd                    (%chrome/browser/metaData.dtd)
     locale/browser/metaData.properties             (%chrome/browser/metaData.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)
