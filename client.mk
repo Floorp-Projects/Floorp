@@ -211,12 +211,13 @@ MODULES_macbrowser :=                           \
 BOOTSTRAP_macbrowser := mozilla/camino/config/mozconfig
 
 MODULES_all :=                                  \
-  mozilla/other-licenses/libart_lgpl/           \
-  mozilla/tools/trace-malloc/                   \
-  mozilla/tools/jprof/                          \
-  mozilla/tools/codesighs/                      \
-  mozilla/other-licenses/branding/              \
-  mozilla/other-licenses/7zstub/                \
+  mozilla/other-licenses/bsdiff                 \
+  mozilla/other-licenses/libart_lgpl            \
+  mozilla/tools/trace-malloc                    \
+  mozilla/tools/jprof                           \
+  mozilla/tools/codesighs                       \
+  mozilla/other-licenses/branding               \
+  mozilla/other-licenses/7zstub                 \
   $(NULL)
 
 #######################################################################
