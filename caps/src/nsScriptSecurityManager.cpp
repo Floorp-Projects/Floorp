@@ -2798,9 +2798,9 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
     //-- If the object implements nsISecurityCheckedComponent, it has a non-default policy.
     if (aObjectSecurityLevel)
     {
-        if (PL_strcasecmp(aObjectSecurityLevel, "AllAccess") == 0)
+        if (PL_strcasecmp(aObjectSecurityLevel, "allAccess") == 0)
             return NS_OK;
-        else if (PL_strcasecmp(aObjectSecurityLevel, "NoAccess") != 0)
+        else if (PL_strcasecmp(aObjectSecurityLevel, "noAccess") != 0)
         {
             PRBool canAccess = PR_FALSE;
             if (NS_SUCCEEDED(IsCapabilityEnabled(aObjectSecurityLevel, &canAccess)) &&

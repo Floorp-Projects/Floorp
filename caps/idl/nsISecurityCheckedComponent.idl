@@ -49,7 +49,7 @@
  * Each method of this interface should return a string representing the
  * script capability needed to perform the operation on the target component.
  *
- * Return values of 'AllAccess' or 'NoAccess' unconditionally allow or deny
+ * Return values of 'allAccess' or 'noAccess' unconditionally allow or deny
  * access to the operation.
  */
 [scriptable, uuid(0dad9e8c-a12d-4dcb-9a6f-7d09839356e1)]
