@@ -76,7 +76,8 @@
 
        <menubar  class="chromeclass-menubar">
        
-         <menu id="menu-button" > <!-- hack has to fix -->
+         <menu id="menu-button" > 
+         	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="new Tab"  /> 
              <menu id="menu-zoom" label="Text zoom">
                 <menupopup >
