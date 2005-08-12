@@ -338,3 +338,26 @@ function BrowserResetZoomMinus() {
  	getBrowser().selectedBrowser.markupDocumentViewer.textZoom-= .25;
 }
 
+/* 
+  Testing the SMS and Call Services 
+*/
+function BrowserTestSendCall(toCall) {
+  var phoneInterface= Components.classes["@mozilla.org/phone/support;1"].createInstance(Components.interfaces.nsIPhoneSupport);
+  phoneInterface.makeCall(toCall,"");
+}
+
+/* 
+  We want to intercept before it shows, 
+  to evaluate when the selected content area is a phone number, 
+  thus mutate the popup menu to the right make call item 
+*/ 
+function BrowserPopupShowing () {
+	var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
+	var intSelected=parseInt(selectedRange.toString());
+	if(intSelected) {
+		document.getElementById("item_call").label="Call "+intSelected;
+		document.getElementById("item_call").setAttribute("oncommand","BrowserTestSendCall("+selectedRange.toString()+")");
+
+	}
+}
+

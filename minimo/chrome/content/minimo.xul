@@ -77,10 +77,6 @@
        <menubar  class="chromeclass-menubar">
        
          <menu id="menu-button" > <!-- hack has to fix -->
-            <menupopup id="menu_FilePopup">
-             <menuitem id="menu_close"/>
-		     <menuitem id="menu_closeWindow" command="cmd_closeWindow"
-               key="key_closeWindow" label="about"/>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="new Tab"  /> 
              <menu id="menu-zoom" label="Text zoom">
                 <menupopup >
@@ -107,7 +103,7 @@
   <hbox flex="1" >
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
-        <tabbrowser context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserOpenTab()"/>
+        <tabbrowser contentcontextmenu="contentAreaContextMenu"  context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>
   </hbox>
@@ -116,5 +112,18 @@
     <statusbarpanel id="statusbar-text" label="Minimo" flex="1" crop="right"/>
     <statusbarpanel id="security" label="" style="display: none"/>
   </statusbar>
+  
+  <!-- place holder for our app popups and hook to the overlay --> 
+<popupset>
+	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
+	   <menuitem  id="item_call" insertbefore="context-sep-view" label="" oncommand=""/>
+	   <menuitem  id="item_test" label="Context Menu" oncommand=""/>
+	</popup>
+	 <popup id="menu_FilePopup">
+             <menuitem id="menu_close"/>
+		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label="about"  />
+	</popup>
+</popupset>
+  
 </window>
  
