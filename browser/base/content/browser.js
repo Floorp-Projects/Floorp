@@ -24,7 +24,7 @@
 #   David Hyatt <hyatt@mozilla.org>
 #   Peter Annema <disttsc@bart.nl>
 #   Dean Tessman <dean_tessman@hotmail.com>
-#   Kevin Puetz (puetzk@iastate.edu)
+#   Kevin Puetz <puetzk@iastate.edu>
 #   Ben Goodger <ben@netscape.com>
 #   Pierre Chanial <chanial@noos.fr>
 #   Jason Eager <jce2@po.cwru.edu>
@@ -35,6 +35,7 @@
 #   Peter Parente <parente@cs.unc.edu>
 #   Giorgio Maone <g.maone@informaction.com>
 #   Tom Germeau <tom.germeau@epigoon.com>
+#   Jesse Ruderman <jruderman@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2592,9 +2593,9 @@ var newTabButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var uri = xferData[0] ? xferData[0] : xferData[1];
-      if (uri)
-        openNewTabWith(uri, aXferData, aEvent, false);
+      var url = xferData[0] ? xferData[0] : xferData[1];
+      if (url)
+        openNewTabWith(url, null, null, aEvent);
     },
   getSupportedFlavours: function ()
     {
@@ -2623,9 +2624,9 @@ var newWindowButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var uri = xferData[0] ? xferData[0] : xferData[1];
-      if (uri)
-        openNewWindowWith(uri, aXferData, null, false);
+      var url = xferData[0] ? xferData[0] : xferData[1];
+      if (url)
+        openNewWindowWith(url, null, null);
     },
   getSupportedFlavours: function ()
     {
@@ -3973,6 +3974,9 @@ function nsContextMenu( xulMenu ) {
     this.onMetaDataItem    = false;
     this.onMathML          = false;
     this.link              = false;
+    this.linkURL           = "";
+    this.linkURI           = null;
+    this.linkProtocol      = null;
     this.inFrame           = false;
     this.hasBGImage        = false;
     this.isTextSelected    = false;
@@ -4040,16 +4044,13 @@ nsContextMenu.prototype = {
         this.showItem( "context-savepage", !( this.inDirList || this.isContentSelected || this.onTextInput || this.onLink || this.onImage ));
         this.showItem( "context-sendpage", !( this.inDirList || this.isContentSelected || this.onTextInput || this.onLink || this.onImage ));
 
-        // Save link depends on whether we're in a link.
+        // Save+Send link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
-
-        // Save image depends on whether there is one.
-        this.showItem( "context-saveimage", this.onLoadedImage );
-
-        this.showItem( "context-sendimage", this.onImage );
-
-        // Send link depends on whether we're in a link.
         this.showItem( "context-sendlink", this.onSaveableLink );
+
+        // Save+Send image depends on whether we're on an image.
+        this.showItem( "context-saveimage", this.onLoadedImage );
+        this.showItem( "context-sendimage", this.onImage );
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
@@ -4070,24 +4071,8 @@ nsContextMenu.prototype = {
 #endif
         this.showItem( "context-setDesktopBackground", haveSetDesktopBackground && this.onLoadedImage );
 
-        if ( haveSetDesktopBackground && this.onLoadedImage ) {
-            // Disable the Set as Desktop Background menu item if we're still trying
-            // to load the image or the load failed
-            const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
-            var disableDesktopBackground = false;
-            if (("complete" in this.target) && !this.target.complete)
-                disableSetWallpaper = true;
-            else if (makeURI(this.target.src).scheme == "javascript")
-                disableDesktopBackground = true;
-            else if (this.target instanceof nsIImageLoadingContent) {
-                var request = this.target.QueryInterface(nsIImageLoadingContent)
-                                  .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-                if (!request)
-                    disableDesktopBackground = true;
-            }
-               
-            this.setItemAttr( "context-setDesktopBackground", "disabled", disableDesktopBackground);
-        }
+        if ( haveSetDesktopBackground && this.onLoadedImage )
+            this.setItemAttr( "context-setDesktopBackground", "disabled", this.disableSetDesktopBackground());
 
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage  && !this.onStandaloneImage );
@@ -4189,27 +4174,38 @@ nsContextMenu.prototype = {
           this.shouldDisplay = false;
           return;
         }
+
         // Initialize contextual info.
-        this.onImage    = false;
-        this.onLoadedImage = false;
+        this.onImage           = false;
+        this.onLoadedImage     = false;
         this.onStandaloneImage = false;
-        this.onMetaDataItem = false;
-        this.onTextInput = false;
-        this.onKeywordField = false;
-        this.imageURL   = "";
-        this.onLink     = false;
-        this.onMathML   = false;
-        this.inFrame    = false;
-        this.hasBGImage = false;
-        this.bgImageURL = "";
+        this.onMetaDataItem    = false;
+        this.onTextInput       = false;
+        this.onKeywordField    = false;
+        this.imageURL          = "";
+        this.onLink            = false;
+        this.linkURL           = "";
+        this.linkURI           = null;
+        this.linkProtocol      = "";
+        this.onMathML          = false;
+        this.inFrame           = false;
+        this.hasBGImage        = false;
+        this.bgImageURL        = "";
 
         // Remember the node that was clicked.
         this.target = node;
+        
+        // Remember the URL of the document containing the node
+        // for referrer header and for security checks.
+        this.docURL = node.ownerDocument.location.href;
 
-        // See if the user clicked on an image.
+        // First, do checks for nodes that never have children.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
+            // See if the user clicked on an image.
             if ( this.target instanceof Components.interfaces.nsIImageLoadingContent && this.target.currentURI  ) {
                 this.onImage = true;
+                this.onMetaDataItem = true;
+                        
                 var request = this.target.getRequest( Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST );
                 if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
                     this.onLoadedImage = true;
@@ -4218,7 +4214,6 @@ nsContextMenu.prototype = {
                 if ( this.target.ownerDocument instanceof ImageDocument)
                    this.onStandaloneImage = true;
             } else if ( this.target instanceof HTMLInputElement ) {
-               type = this.target.getAttribute("type");
                this.onTextInput = this.isTargetATextBox(this.target);
                this.onKeywordField = this.isTargetAKeywordField(this.target);
             } else if ( this.target instanceof HTMLTextAreaElement ) {
@@ -4271,52 +4266,39 @@ nsContextMenu.prototype = {
             }
         }
 
-        // We have meta data on images.
-        this.onMetaDataItem = this.onImage;
-
-        // See if the user clicked on MathML
-        const NS_MathML = "http://www.w3.org/1998/Math/MathML";
-        if ((this.target.nodeType == Node.TEXT_NODE &&
-             this.target.parentNode.namespaceURI == NS_MathML)
-             || (this.target.namespaceURI == NS_MathML))
-          this.onMathML = true;
-
-        // See if the user clicked in a frame.
-        if ( this.target.ownerDocument != window.content.document ) {
-            this.inFrame = true;
-        }
-
-        // Bubble out, looking for items of interest
+        // Second, bubble out, looking for items of interest that can have childen.
+        // Always pick the innermost link, background image, etc.
+        
         const XMLNS = "http://www.w3.org/XML/1998/namespace";
         var elem = this.target;
         while ( elem ) {
             if ( elem.nodeType == Node.ELEMENT_NODE ) {
+            
                 // Link?
                 if ( !this.onLink &&
-                    ( (elem instanceof HTMLAnchorElement && elem.href) ||
-                      elem instanceof HTMLAreaElement ||
-                      elem instanceof HTMLLinkElement ||
-                      elem.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple" ) ) {
-                    // Clicked on a link.
+                     ( (elem instanceof HTMLAnchorElement && elem.href) ||
+                        elem instanceof HTMLAreaElement ||
+                        elem instanceof HTMLLinkElement ||
+                        elem.getAttributeNS( "http://www.w3.org/1999/xlink", "type") == "simple" ) ) {
+                    
+                    // Target is a link or a descendant of a link.
                     this.onLink = true;
                     this.onMetaDataItem = true;
+                    
                     // Remember corresponding element.
                     this.link = elem;
-                    this.onMailtoLink = this.isLinkType( "mailto:", this.link );
-                    // Remember if it is saveable.
+                    this.linkURL = this.getLinkURL();
+                    this.linkURI = this.getLinkURI();
+                    this.linkProtocol = this.getLinkProtocol();
+                    this.onMailtoLink = (this.linkProtocol == "mailto");
                     this.onSaveableLink = this.isLinkSaveable( this.link );
-                }
-
-                // Text input?
-                if ( !this.onTextInput ) {
-                    // Clicked on a link.
-                    this.onTextInput = this.isTargetATextBox(elem);
                 }
 
                 // Metadata item?
                 if ( !this.onMetaDataItem ) {
-                    // We currently display metadata on anything which fits
-                    // the below test.
+                    // We display metadata on anything which fits
+                    // the below test, as well as for links and images
+                    // (which set this.onMetaDataItem to true elsewhere)
                     if ( ( elem instanceof HTMLQuoteElement && elem.cite)    ||
                          ( elem instanceof HTMLTableElement && elem.summary) ||
                          ( elem instanceof HTMLModElement &&
@@ -4342,6 +4324,19 @@ nsContextMenu.prototype = {
             }
             elem = elem.parentNode;
         }
+        
+        // See if the user clicked on MathML
+        const NS_MathML = "http://www.w3.org/1998/Math/MathML";
+        if ((this.target.nodeType == Node.TEXT_NODE &&
+             this.target.parentNode.namespaceURI == NS_MathML)
+             || (this.target.namespaceURI == NS_MathML))
+          this.onMathML = true;
+
+        // See if the user clicked in a frame.
+        if ( this.target.ownerDocument != window.content.document ) {
+            this.inFrame = true;
+        }
+
     },
     // Returns the computed style attribute for the given element.
     getComputedStyle: function( elem, prop ) {
@@ -4352,56 +4347,28 @@ nsContextMenu.prototype = {
          var url = elem.ownerDocument.defaultView.getComputedStyle( elem, '' ).getPropertyCSSValue( prop );
          return ( url.primitiveType == CSSPrimitiveValue.CSS_URI ) ? url.getStringValue() : null;
     },
-    // Returns true iff clicked on link is saveable.
+    // Returns true if clicked-on link targets a resource that can be saved.
     isLinkSaveable : function ( link ) {
         // We don't do the Right Thing for news/snews yet, so turn them off
         // until we do.
-        return !(this.isLinkType( "mailto:" , link )     ||
-                 this.isLinkType( "javascript:" , link ) ||
-                 this.isLinkType( "news:", link )        ||
-                 this.isLinkType( "snews:", link ) );
+        return this.linkProtocol && !(
+                 this.linkProtocol == "mailto"     ||
+                 this.linkProtocol == "javascript" ||
+                 this.linkProtocol == "news"       ||
+                 this.linkProtocol == "snews"      );
     },
-    // Returns true iff clicked on link is of type given.
-    isLinkType : function ( linktype, link ) {
-        try {
-            // Test for missing protocol property.
-            if ( !link.protocol ) {
-                // We must resort to testing the URL string :-(.
-                var protocol;
-                var wrapper = link;
-                if (wrapper.href) {
-                    protocol = wrapper.href.substr(0, linktype.length);
-                } else {
-                    protocol = wrapper.getAttributeNS("http://www.w3.org/1999/xlink","href");
-                    if (protocol) {
-                        protocol = protocol.substr(0, linktype.length);
-                    }
-                }
-                return protocol.toLowerCase() === linktype;
-            } else {
-                // Presume all but javascript: urls are saveable.
-                return link.protocol.toLowerCase() === linktype;
-            }
-        } catch (e) {
-            // something was wrong with the link,
-            // so we won't be able to save it anyway
-            return false;
-        }
-    },
+
     // Open linked-to URL in a new window.
     openLink : function () {
-        // Determine linked-to URL.
-        openNewWindowWith(this.linkURL(), this.link, true);
+        openNewWindowWith(this.linkURL, this.docURL, null);
     },
     // Open linked-to URL in a new tab.
     openLinkInTab : function () {
-        // Determine linked-to URL.
-        openNewTabWith(this.linkURL(), this.link, null, true);
+        openNewTabWith(this.linkURL, this.docURL, null, null);
     },
     // Open frame in a new tab.
     openFrameInTab : function () {
-        // Determine linked-to URL.
-        openNewTabWith(this.target.ownerDocument.location.href, null, null, true);
+        openNewTabWith(this.target.ownerDocument.location.href, null, null, null);
     },
     // Reload clicked-in frame.
     reloadFrame : function () {
@@ -4409,9 +4376,9 @@ nsContextMenu.prototype = {
     },
     // Open clicked-in frame in its own window.
     openFrame : function () {
-        openNewWindowWith(this.target.ownerDocument.location.href, null, true);
+        openNewWindowWith(this.target.ownerDocument.location.href, null, null);
     },
-    // Open clicked-in frame in the same window
+    // Open clicked-in frame in the same window.
     showOnlyThisFrame : function () {
         window.loadURI(this.target.ownerDocument.location.href, null, null);
     },
@@ -4452,19 +4419,45 @@ nsContextMenu.prototype = {
     },
     // Change current window to the URL of the image.
     viewImage : function (e) {
-        urlSecurityCheck( this.imageURL, document )
+        urlSecurityCheck( this.imageURL, this.docURL );
         openUILink( this.imageURL, e );
     },
     // Change current window to the URL of the background image.
     viewBGImage : function (e) {
-        urlSecurityCheck( this.bgImageURL, document )
+        urlSecurityCheck( this.bgImageURL, this.docURL );
         openUILink( this.bgImageURL, e );
     },
+    disableSetDesktopBackground: function() {
+        // Disable the Set as Desktop Background menu item if we're still trying
+        // to load the image or the load failed.
+        const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+        if (("complete" in this.target) && !this.target.complete)
+            return true;
+        else if (makeURI(this.target.src).scheme == "javascript")
+            return true;
+        else if (this.target instanceof nsIImageLoadingContent) {
+            var request = this.target.QueryInterface(nsIImageLoadingContent)
+                              .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+            if (!request)
+                return true;
+        }
+        
+        return false;
+    },
     setDesktopBackground: function() {
+      // Paranoia: check disableSetDesktopBackground again, in case the
+      // image changed since the context menu was initiated.
+      if (this.disableSetDesktopBackground())
+        return;
+
+      urlSecurityCheck(this.target.src, this.docURL);
+
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL = 
                     "chrome://browser/content/setDesktopBackground.xul";
 #ifdef XP_MACOSX
+      // On Mac, the Set Desktop Background window is not modal.
+      // Don't open more than one Set Desktop Background window.
       var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                          .getService(Components.interfaces.nsIWindowMediator);
       var dbWin = wm.getMostRecentWindow("Shell:SetDesktopBackground");
@@ -4478,6 +4471,7 @@ nsContextMenu.prototype = {
                    this.target);
       }
 #else
+      // On non-Mac platforms, the Set Wallpaper dialog is modal.
       openDialog(kDesktopBackgroundURL, "",
                  "centerscreen,chrome,dialog,modal,dependent",
                  this.target);
@@ -4489,15 +4483,17 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        saveURL( this.linkURL(), this.linkText(), null, true, false );
+        urlSecurityCheck(this.imageURL, this.docURL);
+        saveURL( this.linkURL, this.linkText(), null, true, false, makeURI(this.docURL) );
     },
     sendLink : function () {
-        MailIntegration.sendMessage( this.linkURL(), "" ); // we don't know the title of the link so pass in an empty string
+        MailIntegration.sendMessage( this.linkURL, "" ); // we don't know the title of the link so pass in an empty string
     },
     // Save URL of clicked-on image.
     saveImage : function () {
+        urlSecurityCheck(this.imageURL, this.docURL);
         saveImageURL( this.imageURL, null, "SaveImageTitle", false,
-                      false, getReferrer(document) );
+                      false, makeURI(this.docURL) );
     },
     sendImage : function () {
         MailIntegration.sendMessage(this.imageURL, "");
@@ -4528,7 +4524,7 @@ nsContextMenu.prototype = {
         // Copy the comma-separated list of email addresses only.
         // There are other ways of embedding email addresses in a mailto:
         // link, but such complex parsing is beyond us.
-        var url = this.linkURL();
+        var url = this.linkURL;
         var qmark = url.indexOf( "?" );
         var addresses;
 
@@ -4638,20 +4634,42 @@ nsContextMenu.prototype = {
         // Voila!
         return node;
     },
-    // Generate fully-qualified URL for clicked-on link.
-    linkURL : function () {
-        var wrapper = this.link;
-        if (wrapper.href) {
-          return wrapper.href;
+    // Generate fully qualified URL for clicked-on link.
+    getLinkURL : function () {
+        var href = this.link.href;
+        
+        if (href) {
+          return href;
         }
-        var href = wrapper.getAttributeNS("http://www.w3.org/1999/xlink",
+
+        var href = this.link.getAttributeNS("http://www.w3.org/1999/xlink",
                                           "href");
+
         if (!href || !href.match(/\S/)) {
           throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
         }
-        href = makeURLAbsolute(wrapper.baseURI, href);
+        href = makeURLAbsolute(this.link.baseURI, href);
         return href;
     },
+    
+    getLinkURI : function () {
+         var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+         try {
+           return ioService.newURI(this.linkURL, null, null);
+         } catch (ex) {
+           // e.g. empty URL string
+           return null;
+         }
+    },
+    
+    getLinkProtocol : function () {
+        if (this.linkURI) {
+            return this.linkURI.scheme; // can be |undefined|
+        } else {
+            return null;
+        }
+    },
+
     // Get text of link.
     linkText : function () {
         var text = gatherTextUnder( this.link );
@@ -4660,17 +4678,7 @@ nsContextMenu.prototype = {
           if (!text || !text.match(/\S/)) {
             text = this.link.getAttribute("alt");
             if (!text || !text.match(/\S/)) {
-              var wrapper = this.link;
-
-              if (wrapper.href) {
-                text = wrapper.href;
-              } else {
-                text = wrapper.getAttributeNS("http://www.w3.org/1999/xlink",
-                                              "href");
-                if (text && text.match(/\S/)) {
-                  text = makeURLAbsolute(wrapper.baseURI, text);
-                }
-              }
+              text = this.linkURL;
             }
           }
         }
@@ -4678,8 +4686,8 @@ nsContextMenu.prototype = {
         return text;
     },
 
-    //Get selected object and convert it to a string to get
-    //selected text.   Only use the first 15 chars.
+    // Get selected object and convert it to a string to get
+    // selected text.   Only display the first 15 chars.
     isTextSelection : function() {
         var result = false;
         var selection = this.searchSelected(16);
@@ -4968,6 +4976,8 @@ function asyncOpenWebPanel(event)
 
 function handleLinkClick(event, href, linkNode)
 {
+  var docURL = event.target.ownerDocument.location.href;
+
   switch (event.button) {
     case 0:
 #ifdef XP_MACOSX
@@ -4975,19 +4985,19 @@ function handleLinkClick(event, href, linkNode)
 #else
       if (event.ctrlKey) {
 #endif
-        openNewTabWith(href, linkNode, event, true);
+        openNewTabWith(href, docURL, null, event);
         event.preventBubble();
         return true;
       }
                                                        // if left button clicked
       if (event.shiftKey) {
-        openNewWindowWith(href, linkNode, true);
+        openNewWindowWith(href, docURL, null);
         event.preventBubble();
         return true;
       }
 
       if (event.altKey) {
-        saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true, true);
+        saveURL(href, linkNode ? gatherTextUnder(linkNode) : "", null, true, true, makeURI(docURL));
         return true;
       }
 
@@ -5001,9 +5011,9 @@ function handleLinkClick(event, href, linkNode)
         tab = true;
       }
       if (tab)
-        openNewTabWith(href, linkNode, event, true);
+        openNewTabWith(href, docURL, null, event);
       else
-        openNewWindowWith(href, linkNode, true);
+        openNewWindowWith(href, docURL, null);
       event.preventBubble();
       return true;
   }
