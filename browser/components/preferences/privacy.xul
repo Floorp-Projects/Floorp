@@ -423,10 +423,10 @@
 #endif
     <separator class="thin"/>
     <hbox align="center">
+      <description flex="1" control="sanitizeSettings" >&sanitize.intro;</description>
       <button id="sanitizeSettings" label="&sanitizeSettings.label;"
               accesskey="&sanitizeSettings.accesskey;"
               oncommand="gPrivacyPane.showSanitizeSettings();"/>
-      <description flex="1" control="sanitizeSettings" >&sanitize.intro;</description>
     </hbox>
     <separator/>
   </prefpane>

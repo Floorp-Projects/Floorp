@@ -1,4 +1,4 @@
-<!ENTITY sanitizeDialog.title         "Sanitize &brandShortName;">
+<!ENTITY sanitizeDialog.title         "Clear Private Data">
 
 <!ENTITY sanitizeItems.label          "Clear the following items now:">
 <!ENTITY itemHistory.label            "Browsing History">
@@ -16,5 +16,5 @@
 <!ENTITY itemSessions.label           "Authenticated Sessions">
 <!ENTITY itemSessions.accesskey       "S">
 
-<!ENTITY promptOnSanitize.label       "Ask me before Sanitizing &brandShortName;">
+<!ENTITY promptOnSanitize.label       "Ask me before clearing private data">
 <!ENTITY promptOnSanitize.accesskey   "k">
