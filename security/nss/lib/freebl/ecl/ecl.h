@@ -81,4 +81,8 @@ mp_err ECPoints_mul(const ECGroup *group, const mp_int *k1,
 					const mp_int *k2, const mp_int *px, const mp_int *py,
 					mp_int *qx, mp_int *qy);
 
+/* Validates an EC public key as described in Section 5.2.2 of X9.63. */
+mp_err ECPoint_validate(const ECGroup *group, const mp_int *px, const 
+					mp_int *py);
+
 #endif							/* __ecl_h_ */

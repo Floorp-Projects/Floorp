@@ -115,7 +115,7 @@ ec_points_mul(const ECParams *params, const mp_int *k1, const mp_int *k2,
 	len = (params->fieldID.size + 7) >> 3;
 	if (pointP != NULL) {
 		if ((pointP->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-		(pointP->len != (2 * len + 1))) {
+			(pointP->len != (2 * len + 1))) {
 			return SECFailure;
 		};
 	}
@@ -391,13 +391,50 @@ SECStatus
 EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 {
 #ifdef NSS_ENABLE_ECC
+    mp_int Px, Py;
+    ECGroup *group = NULL;
+    SECStatus rv = SECFailure;
+    mp_err err = MP_OKAY;
+    int len;
+
     if (!ecParams || !publicValue) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+	
+    /* NOTE: We only support uncompressed points for now */
+    len = (ecParams->fieldID.size + 7) >> 3;
+    if ((publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
+	(publicValue->len != (2 * len + 1))) {
+	return SECFailure;
+    };
 
-    /* XXX Add actual checks here. */
-    return SECSuccess;
+    MP_DIGITS(&Px) = 0;
+    MP_DIGITS(&Py) = 0;
+    CHECK_MPI_OK( mp_init(&Px) );
+    CHECK_MPI_OK( mp_init(&Py) );
+
+    /* Initialize Px and Py */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&Px, publicValue->data + 1, (mp_size) len) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&Py, publicValue->data + 1 + len, (mp_size) len) );
+
+    /* construct from named params */
+    group = ECGroup_fromName(ecParams->name);
+
+    /* validate public point */
+    CHECK_MPI_OK( ECPoint_validate(group, &Px, &Py) );
+
+    rv = SECSuccess;
+
+cleanup:
+    ECGroup_free(group);
+    mp_clear(&Px);
+    mp_clear(&Py);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
 #else
     PORT_SetError(SEC_ERROR_UNSUPPORTED_KEYALG);
     return SECFailure;

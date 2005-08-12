@@ -269,3 +269,79 @@ ec_GF2m_pt_mul_aff(const mp_int *n, const mp_int *px, const mp_int *py,
 	return res;
 }
 #endif
+
+/* Validates a point on a GF2m curve. */
+mp_err 
+ec_GF2m_validate_point(const mp_int *px, const mp_int *py, const ECGroup *group)
+{
+	mp_err res = MP_NO;
+	mp_int accl, accr, tmp, pxt, pyt;
+
+	MP_DIGITS(&accl) = 0;
+	MP_DIGITS(&accr) = 0;
+	MP_DIGITS(&tmp) = 0;
+	MP_DIGITS(&pxt) = 0;
+	MP_DIGITS(&pyt) = 0;
+	MP_CHECKOK(mp_init(&accl));
+	MP_CHECKOK(mp_init(&accr));
+	MP_CHECKOK(mp_init(&tmp));
+	MP_CHECKOK(mp_init(&pxt));
+	MP_CHECKOK(mp_init(&pyt));
+
+    /* 1: Verify that publicValue is not the point at infinity */
+	if (ec_GF2m_pt_is_inf_aff(px, py) == MP_YES) {
+		res = MP_NO;
+		goto CLEANUP;
+	}
+    /* 2: Verify that the coordinates of publicValue are elements 
+     *    of the field.
+     */
+	if ((MP_SIGN(px) == MP_NEG) || (mp_cmp(px, &group->meth->irr) >= 0) || 
+		(MP_SIGN(py) == MP_NEG) || (mp_cmp(py, &group->meth->irr) >= 0)) {
+		res = MP_NO;
+		goto CLEANUP;
+	}
+    /* 3: Verify that publicValue is on the curve. */
+	if (group->meth->field_enc) {
+		group->meth->field_enc(px, &pxt, group->meth);
+		group->meth->field_enc(py, &pyt, group->meth);
+	} else {
+		mp_copy(px, &pxt);
+		mp_copy(py, &pyt);
+	}
+	/* left-hand side: y^2 + x*y  */
+	MP_CHECKOK( group->meth->field_sqr(&pyt, &accl, group->meth) );
+	MP_CHECKOK( group->meth->field_mul(&pxt, &pyt, &tmp, group->meth) );
+	MP_CHECKOK( group->meth->field_mul(&pxt, &pyt, &tmp, group->meth) );
+	MP_CHECKOK( group->meth->field_add(&accl, &tmp, &accl, group->meth) );
+	/* right-hand side: x^3 + a*x^2 + b */
+	MP_CHECKOK( group->meth->field_sqr(&pxt, &tmp, group->meth) );
+	MP_CHECKOK( group->meth->field_mul(&pxt, &tmp, &accr, group->meth) );
+	MP_CHECKOK( group->meth->field_mul(&group->curvea, &tmp, &tmp, group->meth) );
+	MP_CHECKOK( group->meth->field_add(&tmp, &accr, &accr, group->meth) );
+	MP_CHECKOK( group->meth->field_add(&accr, &group->curveb, &accr, group->meth) );
+	/* check LHS - RHS == 0 */
+	MP_CHECKOK( group->meth->field_add(&accl, &accr, &accr, group->meth) );
+	if (mp_cmp_z(&accr) != 0) {
+		res = MP_NO;
+		goto CLEANUP;
+	}
+    /* 4: Verify that the order of the curve times the publicValue
+     *    is the point at infinity.
+     */
+	MP_CHECKOK( ECPoint_mul(group, &group->order, px, py, &pxt, &pyt) );
+	if (ec_GF2m_pt_is_inf_aff(&pxt, &pyt) != MP_YES) {
+		res = MP_NO;
+		goto CLEANUP;
+	}
+
+	res = MP_YES;
+
+CLEANUP:
+	mp_clear(&accl);
+	mp_clear(&accr);
+	mp_clear(&tmp);
+	mp_clear(&pxt);
+	mp_clear(&pyt);
+	return res;
+}

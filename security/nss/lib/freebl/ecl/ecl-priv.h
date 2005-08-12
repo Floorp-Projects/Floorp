@@ -149,6 +149,7 @@ struct ECGroupStr {
 	void *extra1;
 	void *extra2;
 	void (*extra_free) (ECGroup *group);
+	mp_err (*validate_point) (const mp_int *px, const mp_int *py, const ECGroup *group);
 };
 
 /* Wrapper functions for generic prime field arithmetic. */
