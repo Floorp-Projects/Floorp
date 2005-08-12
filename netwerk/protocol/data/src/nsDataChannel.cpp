@@ -479,6 +479,9 @@ nsDataChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
 
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = nsnull;
+
     return NS_OK;
 }
 

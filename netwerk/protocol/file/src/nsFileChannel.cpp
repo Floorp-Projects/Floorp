@@ -555,6 +555,11 @@ nsFileChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
 
     mRequest = 0;
     mStream = 0;
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mProgressSink = 0;
+
     return NS_OK;
 }
 

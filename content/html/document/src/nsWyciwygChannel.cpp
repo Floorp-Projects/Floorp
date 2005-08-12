@@ -503,6 +503,11 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
   CloseCacheEntry(mStatus);
   mPump = 0;
   mIsPending = PR_FALSE;
+
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = 0;
+  mProgressSink = 0;
+
   return NS_OK;
 }
 

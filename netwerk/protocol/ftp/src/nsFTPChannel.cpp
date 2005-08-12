@@ -610,6 +610,11 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
         NS_RELEASE(mFTPState);
     }
     mIsPending = PR_FALSE;
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mEventSink = 0;
+
     return rv;
 }
 

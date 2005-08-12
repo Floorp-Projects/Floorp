@@ -737,6 +737,9 @@ NS_IMETHODIMP nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aC
   if (mLoadGroup)
     mLoadGroup->RemoveRequest(this, nsnull, aStatus);
 
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = nsnull;
+
   return NS_OK;
 }
 

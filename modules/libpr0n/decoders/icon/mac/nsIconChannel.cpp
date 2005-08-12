@@ -518,6 +518,10 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
   }
   aListener->OnStopRequest(this, ctxt, rv);
+
+  // Drop notification callbacks to prevent cycles.
+  mCallbacks = nsnull;
+
   return NS_OK;
 }
 

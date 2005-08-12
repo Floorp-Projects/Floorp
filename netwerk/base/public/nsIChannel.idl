@@ -100,6 +100,9 @@ interface nsIChannel : nsIRequest
      * channel may ignore changes to the notificationCallbacks attribute after
      * it has been opened.  This rule also applies to notificationCallbacks
      * queried from the channel's loadgroup.
+     *
+     * When the channel is done, it must not continue holding references to
+     * this object.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 

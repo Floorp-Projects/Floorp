@@ -720,6 +720,11 @@ nsJARChannel::OnStopRequest(nsIRequest *req, nsISupports *ctx, nsresult status)
     NS_IF_RELEASE(mJarInput);
     mIsPending = PR_FALSE;
     mDownloader = 0; // this may delete the underlying jar file
+
+    // Drop notification callbacks to prevent cycles.
+    mCallbacks = 0;
+    mProgressSink = 0;
+
     return NS_OK;
 }
 
