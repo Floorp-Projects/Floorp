@@ -337,7 +337,10 @@ public:
   virtual void SetGCOnDestruction(PRBool aGCOnDestruction) = 0;
 
   /**
-   * Initialize DOM classes on aGlobalObj
+   * Initialize DOM classes on aGlobalObj, always call
+   * WillInitializeContext() before calling InitContext(), and always
+   * call DidInitializeContext() when a context is fully
+   * (successfully) initialized.
    */
   virtual nsresult InitClasses(JSObject *aGlobalObj) = 0;
 

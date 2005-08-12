@@ -2158,7 +2158,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsContentUtils::XPConnect()->
-    GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), mContent,
+    GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), mContent,
                                    NS_GET_IID(nsISupports),
                                    getter_AddRefs(wrapper));
 

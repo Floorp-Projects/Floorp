@@ -518,7 +518,7 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
   {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aTarget);
 
-    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+    NS_ASSERTION(!win || !win->IsInnerWindow(),
                  "Uh, inner window set as event target!");
   }
 #endif
@@ -533,7 +533,7 @@ NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
   {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aCurrentTarget);
 
-    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+    NS_ASSERTION(!win || !win->IsInnerWindow(),
                  "Uh, inner window set as event target!");
   }
 #endif
@@ -548,7 +548,7 @@ NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
   {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aOriginalTarget);
 
-    NS_ASSERTION(!win || win == win->GetOuterWindow(),
+    NS_ASSERTION(!win || !win->IsInnerWindow(),
                  "Uh, inner window set as event target!");
   }
 #endif

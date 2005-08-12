@@ -58,7 +58,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIStringStream.h"
 #include "nsIWindowMediator.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIJSConsoleService.h"
 #include "nsIConsoleService.h"
@@ -147,7 +147,16 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_FAILURE;
     }
 
-    JSObject *globalJSObject = global->GetGlobalJSObject();
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+    nsPIDOMWindow *innerWin = win->GetCurrentInnerWindow();
+
+    if (!innerWin) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsIScriptGlobalObject> innerGlobal = do_QueryInterface(innerWin);
+
+    JSObject *globalJSObject = innerGlobal->GetGlobalJSObject();
 
     nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
     if (NS_FAILED(rv)) {

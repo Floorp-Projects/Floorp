@@ -118,6 +118,15 @@ class WindowStateHolder;
 // doing. Security wise this is very sensitive code. --
 // jst@netscape.com
 
+// nsGlobalWindow inherits PRCList for maintaining a list of all inner
+// widows still in memory for any given outer window. This list is
+// needed to ensure that mOuterWindow doesn't end up dangling. The
+// nature of PRCList means that the window itself is always in the
+// list, and an outer window's list will also contain all inner window
+// objects that are still in memory (and in reality all inner window
+// object's lists also contain its outer and all other inner windows
+// belonging to the same outer window, but that's an unimportant
+// side effect of inheriting PRCList).
 
 class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
@@ -231,7 +240,7 @@ public:
 
   nsIScriptContext *GetContextInternal()
   {
-    if (IsInnerWindow()) {
+    if (mOuterWindow) {
       return GetOuterWindowInternal()->mContext;
     }
 
@@ -250,7 +259,11 @@ public:
 
   nsIDocShell *GetDocShellInternal()
   {
-    return GetOuterWindowInternal()->mDocShell;
+    if (mOuterWindow) {
+      return GetOuterWindowInternal()->mDocShell;
+    }
+
+    return mDocShell;
   }
 
   static void ShutDown();
@@ -275,11 +288,21 @@ protected:
   // popup tracking
   PRBool IsPopupSpamWindow()
   {
+    if (IsInnerWindow() && !mOuterWindow) {
+      return PR_FALSE;
+    }
+
     return GetOuterWindowInternal()->mIsPopupSpam;
   }
 
   void SetPopupSpamWindow(PRBool aPopup)
   {
+    if (IsInnerWindow() && !mOuterWindow) {
+      NS_ERROR("SetPopupSpamWindow() called on inner window w/o an outer!");
+
+      return;
+    }
+
     GetOuterWindowInternal()->mIsPopupSpam = aPopup;
   }
 
@@ -377,7 +400,6 @@ protected:
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
-  JSObject*                     mJSObject;
   JSObject*                     mArguments;
   nsRefPtr<nsNavigator>         mNavigator;
   nsRefPtr<nsScreen>            mScreen;
@@ -391,10 +413,6 @@ protected:
   nsRefPtr<nsBarProp>           mStatusbar;
   nsRefPtr<nsBarProp>           mScrollbars;
   nsCOMPtr<nsIWeakReference>    mWindowUtils;
-  nsTimeout*                    mTimeouts;
-  nsTimeout**                   mTimeoutInsertionPoint;
-  PRUint32                      mTimeoutPublicIdCounter;
-  PRUint32                      mTimeoutFiringDepth;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
 
@@ -405,11 +423,16 @@ protected:
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
 
-  // This member variable is used only on the inner window.
+  // These member variable are used only on inner windows.
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsTimeout*                    mTimeouts;
+  nsTimeout**                   mTimeoutInsertionPoint;
+  PRUint32                      mTimeoutPublicIdCounter;
+  PRUint32                      mTimeoutFiringDepth;
 
-  // This member variable is used on both inner and the outer windows.
+  // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  JSObject* mJSObject;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

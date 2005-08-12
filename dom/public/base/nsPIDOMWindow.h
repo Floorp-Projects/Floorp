@@ -100,9 +100,23 @@ public:
 
   PRBool HasMutationListeners(PRUint32 aMutationEventType) const
   {
-    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+    const nsPIDOMWindow *win;
 
-    if (!win) {
+    if (IsOuterWindow()) {
+      win = GetCurrentInnerWindow();
+
+      if (!win) {
+        NS_ERROR("No current inner window available!");
+
+        return PR_FALSE;
+      }
+    } else {
+      if (!mOuterWindow) {
+        NS_ERROR("HasMutationListeners() called on orphan inner window!");
+
+        return PR_FALSE;
+      }
+
       win = this;
     }
 
@@ -111,9 +125,23 @@ public:
 
   void SetMutationListeners(PRUint32 aType)
   {
-    nsPIDOMWindow *win = GetCurrentInnerWindow();
+    nsPIDOMWindow *win;
 
-    if (!win) {
+    if (IsOuterWindow()) {
+      win = GetCurrentInnerWindow();
+
+      if (!win) {
+        NS_ERROR("No inner window available to set mutation bits on!");
+
+        return;
+      }
+    } else {
+      if (!mOuterWindow) {
+        NS_ERROR("HasMutationListeners() called on orphan inner window!");
+
+        return;
+      }
+
       win = this;
     }
 
@@ -133,20 +161,31 @@ public:
   // one doesn't for security reasons.
   nsIDOMElement* GetFrameElementInternal() const
   {
-    if (IsInnerWindow()) {
+    if (mOuterWindow) {
       return mOuterWindow->GetFrameElementInternal();
     }
+
+    NS_ASSERTION(!IsInnerWindow(),
+                 "GetFrameElementInternal() called on orphan inner window");
 
     return mFrameElement;
   }
 
   void SetFrameElementInternal(nsIDOMElement *aFrameElement)
   {
-    if (IsInnerWindow()) {
-      mOuterWindow->SetFrameElementInternal(aFrameElement);
+    if (IsOuterWindow()) {
+      mFrameElement = aFrameElement;
+
+      return;
     }
 
-    mFrameElement = aFrameElement;
+    if (!mOuterWindow) {
+      NS_ERROR("frameElement set on inner window with no outer!");
+
+      return;
+    }
+
+    mOuterWindow->SetFrameElementInternal(aFrameElement);
   }
 
   PRBool IsLoadingOrRunningTimeout() const
@@ -163,9 +202,23 @@ public:
   // Check whether a document is currently loading
   PRBool IsLoading() const
   {
-    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+    const nsPIDOMWindow *win;
 
-    if (!win) {
+    if (IsOuterWindow()) {
+      win = GetCurrentInnerWindow();
+
+      if (!win) {
+        NS_ERROR("No current inner window available!");
+
+        return PR_FALSE;
+      }
+    } else {
+      if (!mOuterWindow) {
+        NS_ERROR("IsLoading() called on orphan inner window!");
+
+        return PR_FALSE;
+      }
+
       win = this;
     }
 
@@ -174,9 +227,23 @@ public:
 
   PRBool IsHandlingResizeEvent() const
   {
-    const nsPIDOMWindow *win = GetCurrentInnerWindow();
+    const nsPIDOMWindow *win;
 
-    if (!win) {
+    if (IsOuterWindow()) {
+      win = GetCurrentInnerWindow();
+
+      if (!win) {
+        NS_ERROR("No current inner window available!");
+
+        return PR_FALSE;
+      }
+    } else {
+      if (!mOuterWindow) {
+        NS_ERROR("IsHandlingResizeEvent() called on orphan inner window!");
+
+        return PR_FALSE;
+      }
+
       win = this;
     }
 
@@ -200,7 +267,7 @@ public:
 
   nsPIDOMWindow *GetOuterWindow()
   {
-    return mOuterWindow ? mOuterWindow : this;
+    return mIsInnerWindow ? mOuterWindow : this;
   }
 
   nsPIDOMWindow *GetCurrentInnerWindow() const
@@ -210,7 +277,7 @@ public:
 
   PRBool IsInnerWindow() const
   {
-    return mOuterWindow != nsnull;
+    return mIsInnerWindow;
   }
 
   PRBool IsOuterWindow() const
@@ -219,10 +286,15 @@ public:
   }
 
 protected:
+  // The nsPIDOMWindow constructor. The aOuterWindow argument should
+  // be null if and only if the created window itself is an outer
+  // window. In all other cases aOuterWindow should be the outer
+  // window for the inner window that is being created.
   nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
     : mFrameElement(nsnull), mRunningTimeout(nsnull), mMutationBits(0),
       mIsDocumentLoaded(PR_FALSE), mIsHandlingResizeEvent(PR_FALSE),
-      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
+      mIsInnerWindow(aOuterWindow != nsnull), mInnerWindow(nsnull),
+      mOuterWindow(aOuterWindow)
   {
   }
 
@@ -243,6 +315,7 @@ protected:
 
   PRPackedBool           mIsDocumentLoaded;
   PRPackedBool           mIsHandlingResizeEvent;
+  PRPackedBool           mIsInnerWindow;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

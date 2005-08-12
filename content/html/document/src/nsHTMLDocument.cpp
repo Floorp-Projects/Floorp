@@ -61,7 +61,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
@@ -1915,7 +1915,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
       do_QueryInterface((nsIHTMLDocument*)this);
 
-    rv = mScriptGlobalObject->SetNewDocument(kungFuDeathGrip, PR_FALSE,
+    rv = mScriptGlobalObject->SetNewDocument((nsDocument *)this, PR_FALSE,
                                              PR_FALSE);
 
     if (NS_FAILED(rv)) {
@@ -2774,7 +2774,7 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());
   }
 
-  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+  nsIDOMWindow *window = GetWindow();
   NS_ENSURE_TRUE(window, NS_OK);
 
   nsCOMPtr<nsISelection> selection;
@@ -3522,7 +3522,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!editSession)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+  nsIDOMWindow *window = GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
@@ -3837,7 +3837,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -3908,7 +3908,7 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -3939,7 +3939,7 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -3981,7 +3981,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 
@@ -4071,7 +4071,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  nsIDOMWindow *window = GetWindow();
   if (!window)
     return NS_ERROR_FAILURE;
 

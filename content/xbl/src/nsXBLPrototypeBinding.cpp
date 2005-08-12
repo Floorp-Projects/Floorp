@@ -734,23 +734,16 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
  
 nsresult
 nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
-                                 nsIScriptContext * aContext,
-                                 void * aScriptObject, void ** aClassObject)
+                                 JSContext * aContext, JSObject * aGlobal,
+                                 JSObject * aScriptObject,
+                                 void ** aClassObject)
 {
   NS_ENSURE_ARG_POINTER(aClassObject); 
 
   *aClassObject = nsnull;
 
-  JSContext* cx = (JSContext*)aContext->GetNativeContext();
-  JSObject* scriptObject = (JSObject*) aScriptObject;
-  JSObject* tmp, *global = scriptObject;
-
-  while ((tmp = ::JS_GetParent(cx, global))) {
-    global = tmp;
-  }
-
-  return nsXBLBinding::DoInitJSClass(cx, global, scriptObject, aClassName,
-                                     aClassObject);
+  return nsXBLBinding::DoInitJSClass(aContext, aGlobal, aScriptObject,
+                                     aClassName, aClassObject);
 }
 
 nsIContent*

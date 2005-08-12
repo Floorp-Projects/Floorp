@@ -1335,6 +1335,9 @@ _getwindowobject(NPP npp)
   JSContext *cx = GetJSContextFromNPP(npp);
   NS_ENSURE_TRUE(cx, nsnull);
 
+  // Using ::JS_GetGlobalObject(cx) is ok here since the window we
+  // want to return here is the outer window, *not* the inner (since
+  // we don't know what the plugin will do with it).
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, ::JS_GetGlobalObject(cx));
 }
 

@@ -53,6 +53,7 @@ class nsIDOMNode;
 class nsIDOMNodeList;
 class nsIDOMDocument;
 class nsIHTMLDocument;
+class nsGlobalWindow;
 
 struct nsDOMClassInfoData;
 
@@ -412,7 +413,7 @@ protected:
   {
   }
 
-  static nsresult GlobalResolve(nsIScriptGlobalObject *aGlobal, JSContext *cx,
+  static nsresult GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
                                 JSObject *obj, JSString *str, PRUint32 flags,
                                 PRBool *did_resolve);
 

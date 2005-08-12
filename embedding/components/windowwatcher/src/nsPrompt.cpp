@@ -109,6 +109,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsPrompt, nsIPrompt, nsIAuthPrompt)
 nsPrompt::nsPrompt(nsIDOMWindow *aParent)
   : mParent(aParent)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aParent));
+
+    NS_ASSERTION(!win || win->IsOuterWindow(),
+                 "Inner window passed as nsPrompt parent!");
+  }
+#endif
 }
 
 nsresult

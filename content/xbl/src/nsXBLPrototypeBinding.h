@@ -97,8 +97,10 @@ public:
   nsXBLProtoImplAnonymousMethod* GetDestructor();
   nsresult SetDestructor(nsXBLProtoImplAnonymousMethod* aDestructor);
 
-  nsresult InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject);
-  
+  nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
+                     JSObject * aGlobal, JSObject * aScriptObject,
+                     void ** aClassObject);
+
   nsresult ConstructInterfaceTable(const nsAString& aImpls);
   
   void SetImplementation(nsXBLProtoImpl* aImpl) { mImplementation = aImpl; }

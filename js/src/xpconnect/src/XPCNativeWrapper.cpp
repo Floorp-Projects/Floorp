@@ -1098,10 +1098,24 @@ XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_TRUE;
   }
 
-  JSObject *other = JSVAL_TO_OBJECT(v);
+  XPCWrappedNative *wrappedNative =
+    XPCNativeWrapper::GetWrappedNative(cx, obj);
 
-  *bp = (obj == other ||
-         GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+  if (wrappedNative && wrappedNative->IsValid() &&
+      NATIVE_HAS_FLAG(wrappedNative, WantEquality)) {
+    // Forward the call to the wrapped native's Equality() hook.
+    nsresult rv = wrappedNative->GetScriptableCallback()->
+      Equality(wrappedNative, cx, obj, v, bp);
+
+    if (NS_FAILED(rv)) {
+      return ThrowException(rv, cx);
+    }
+  } else {
+    JSObject *other = JSVAL_TO_OBJECT(v);
+
+    *bp = (obj == other ||
+           GetIdentityObject(cx, obj) == GetIdentityObject(cx, other));
+  }
 
   return JS_TRUE;
 }

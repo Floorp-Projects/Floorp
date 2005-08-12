@@ -188,17 +188,14 @@ GetDocumentOuterWindow(nsIDocument *aDocument)
 }
 
 static nsIDocument *
-GetInnerDocument(nsISupports *aWindow)
+GetDocumentFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
   nsPIDOMWindow *innerWin;
-  nsIDocument *doc = nsnull;
+  nsCOMPtr<nsIDocument> doc;
 
-  if (win && (innerWin = win->GetCurrentInnerWindow())) {
-    nsCOMPtr<nsIDocument> tmp =
-      do_QueryInterface(innerWin->GetExtantDocument());
-
-    doc = tmp;
+  if (win) {
+    doc = do_QueryInterface(win->GetExtantDocument());
   }
 
   return doc;
@@ -830,7 +827,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       if (focusedWindow) {
         focusedWindow->Focus();
 
-        nsCOMPtr<nsIDocument> document = GetInnerDocument(focusedWindow);
+        nsCOMPtr<nsIDocument> document = GetDocumentFromWindow(focusedWindow);
 
         if (document) {
           nsIPresShell *shell = document->GetShellAt(0);
@@ -1637,7 +1634,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   rootWindow->GetContent(getter_AddRefs(contentWindow));
   if(!contentWindow) return NS_ERROR_FAILURE;
 
-  nsIDocument *doc = GetInnerDocument(contentWindow);
+  nsIDocument *doc = GetDocumentFromWindow(contentWindow);
   if(!doc) return NS_ERROR_FAILURE;
 
   nsIPresShell *presShell = doc->GetShellAt(0);
