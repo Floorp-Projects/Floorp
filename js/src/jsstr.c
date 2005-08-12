@@ -362,7 +362,10 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
             newlength += 5; /* The character will be encoded as %uXXXX */
         }
 
-        /* NB: this works because newlength can be incremented by at most 5. */ 
+        /*
+         * This overflow test works because newlength is incremented by at
+         * most 5 on each iteration.
+         */
         if (newlength < length) {
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
@@ -1815,7 +1818,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
                 goto again;
             }
             if ((size_t)i == length) {
-                /* 
+                /*
                  * If there was a trivial zero-length match at the end of the
                  * split, then we shouldn't output the matched string at the end
                  * of the split array. See ECMA-262 Ed. 3, 15.5.4.14, Step 15.
