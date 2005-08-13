@@ -4488,7 +4488,7 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        urlSecurityCheck(this.imageURL, this.docURL);
+        urlSecurityCheck(this.linkURL, this.docURL);
         saveURL( this.linkURL, this.linkText(), null, true, false, makeURI(this.docURL) );
     },
     sendLink : function () {
