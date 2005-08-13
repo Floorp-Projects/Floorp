@@ -293,7 +293,7 @@ else {
     ThrowUserError("unknown_action", {action => $cgi->param('action')});
 }
 
-my $format = GetFormat("reports/report", $formatparam, $cgi->param('ctype'));
+my $format = GetFormat("reports/report", $formatparam, scalar($cgi->param('ctype')));
 
 # If we get a template or CGI error, it comes out as HTML, which isn't valid
 # PNG data, and the browser just displays a "corrupt PNG" message. So, you can

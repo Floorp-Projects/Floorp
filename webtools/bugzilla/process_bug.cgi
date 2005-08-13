@@ -1288,8 +1288,8 @@ foreach my $id (@idlist) {
     }   
     if (defined $cgi->param('delta_ts') && $cgi->param('delta_ts') ne $delta_ts)
     {
-        ($vars->{'operations'}) = Bugzilla::Bug::GetBugActivity($cgi->param('id'),
-                                                                $cgi->param('delta_ts'));
+        ($vars->{'operations'}) =
+            Bugzilla::Bug::GetBugActivity($id, $cgi->param('delta_ts'));
 
         $vars->{'start_at'} = $cgi->param('longdesclength');
 
@@ -1310,8 +1310,8 @@ foreach my $id (@idlist) {
     }
 
     # Gather the dependency list, and make sure there are no circular refs
-    my %deps = Bugzilla::Bug::ValidateDependencies($cgi->param('dependson'),
-                                                   $cgi->param('blocked'),
+    my %deps = Bugzilla::Bug::ValidateDependencies(scalar($cgi->param('dependson')),
+                                                   scalar($cgi->param('blocked')),
                                                    $id);
 
     #
@@ -1335,8 +1335,8 @@ foreach my $id (@idlist) {
     }
 
     if ($cgi->param('comment') || $work_time) {
-        AppendComment($id, $whoid, $cgi->param('comment'),
-                      $cgi->param('commentprivacy'), $timestamp, $work_time);
+        AppendComment($id, $whoid, scalar($cgi->param('comment')),
+                      scalar($cgi->param('commentprivacy')), $timestamp, $work_time);
         $bug_changed = 1;
     }
 

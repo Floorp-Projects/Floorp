@@ -269,9 +269,8 @@ foreach my $field ("dependson", "blocked") {
 # Gather the dependency list, and make sure there are no circular refs
 my %deps;
 if (UserInGroup("editbugs")) {
-    %deps = Bugzilla::Bug::ValidateDependencies($cgi->param('dependson'),
-                                                $cgi->param('blocked'),
-                                                undef);
+    %deps = Bugzilla::Bug::ValidateDependencies(scalar($cgi->param('dependson')),
+                                                scalar($cgi->param('blocked')));
 }
 
 # get current time

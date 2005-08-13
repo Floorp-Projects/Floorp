@@ -265,9 +265,7 @@ sub plot {
     validateWidthAndHeight();
     $vars->{'chart'} = new Bugzilla::Chart($cgi);
 
-    my $format = &::GetFormat("reports/chart",
-                              "",
-                              $cgi->param('ctype'));
+    my $format = &::GetFormat("reports/chart", "", scalar($cgi->param('ctype')));
 
     # Debugging PNGs is a pain; we need to be able to see the error messages
     if ($cgi->param('debug')) {

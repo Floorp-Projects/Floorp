@@ -76,12 +76,11 @@ sub SaveAccount {
     if ($cgi->param('Bugzilla_password') ne "" || 
         $pwd1 ne "" || $pwd2 ne "") 
     {
-        my $old = SqlQuote($cgi->param('Bugzilla_password'));
         SendSQL("SELECT cryptpassword FROM profiles WHERE userid = $userid");
         my $oldcryptedpwd = FetchOneColumn();
         $oldcryptedpwd || ThrowCodeError("unable_to_retrieve_password");
 
-        if (crypt($cgi->param('Bugzilla_password'), $oldcryptedpwd) ne 
+        if (crypt(scalar($cgi->param('Bugzilla_password')), $oldcryptedpwd) ne 
                   $oldcryptedpwd) 
         {
             ThrowUserError("old_password_incorrect");
