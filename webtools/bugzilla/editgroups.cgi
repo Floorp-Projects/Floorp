@@ -51,7 +51,7 @@ UserInGroup("creategroups")
 my $action = trim($cgi->param('action') || '');
 
 # RederiveRegexp: update user_group_map with regexp-based grants
-sub RederiveRegexp ($$)
+sub RederiveRegexp
 {
     my $regexp = shift;
     my $gid = shift;

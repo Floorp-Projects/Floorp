@@ -38,7 +38,7 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-sub LoadTemplate ($) {
+sub LoadTemplate {
     my $action = shift;
 
     $action =~ /(\w+)/;

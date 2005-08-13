@@ -519,14 +519,14 @@ EOT
     die "Syntax error in localconfig";
 }
 
-sub LocalVarExists ($)
+sub LocalVarExists
 {
     my ($name) = @_;
     return $main::{$name}; # if localconfig declared it, we're done.
 }
 
 my $newstuff = "";
-sub LocalVar ($$)
+sub LocalVar
 {
     my ($name, $definition) = @_;
     return if LocalVarExists($name); # if localconfig declared it, we're done.
@@ -1616,7 +1616,7 @@ $dbh->bz_setup_database();
 # Populate groups table
 ###########################################################################
 
-sub GroupDoesExist ($)
+sub GroupDoesExist
 {
     my ($name) = @_;
     my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
@@ -1657,7 +1657,7 @@ sub AddGroup {
 
 my $headernum = 1;
 
-sub AddFDef ($$$) {
+sub AddFDef {
     my ($name, $description, $mailhead) = (@_);
 
     my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " .
@@ -1751,7 +1751,7 @@ AddFDef("content", "Content", 0);
 # mkanat@bugzilla.org - bug 17453
 # Create the values for the tables that hold what used to be enum types.
 # Don't populate the tables if the table isn't empty.
-sub PopulateEnumTable ($@) {
+sub PopulateEnumTable {
     my ($table, @valuelist) = @_;
 
     # If we encounter any of the keys in this hash, they are 
