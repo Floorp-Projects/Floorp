@@ -125,8 +125,8 @@ NSPR_API(PRLibrary*) PR_LoadLibrary(const char *name);
 
 typedef enum PRLibSpecType {
     PR_LibSpec_Pathname,
-    PR_LibSpec_MacNamedFragment,
-    PR_LibSpec_MacIndexedFragment
+    PR_LibSpec_MacNamedFragment,   /* obsolete (for Mac OS Classic) */
+    PR_LibSpec_MacIndexedFragment  /* obsolete (for Mac OS Classic) */
 } PRLibSpecType;
 
 struct FSSpec; /* Mac OS FSSpec */
@@ -141,13 +141,13 @@ typedef struct PRLibSpec {
         struct {
             const struct FSSpec *fsspec;
             const char *name;
-        } mac_named_fragment;
+        } mac_named_fragment;      /* obsolete (for Mac OS Classic) */
 
         /* if type is PR_LibSpec_MacIndexedFragment */
         struct {
             const struct FSSpec *fsspec;
             PRUint32 index;
-        } mac_indexed_fragment;
+        } mac_indexed_fragment;    /* obsolete (for Mac OS Classic) */
     } value;
 } PRLibSpec;
 
