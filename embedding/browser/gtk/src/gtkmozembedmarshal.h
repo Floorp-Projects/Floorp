@@ -6,41 +6,46 @@
 
 G_BEGIN_DECLS
 
-/* NONE:POINTER,INT,INT (/dev/stdin:1) */
-extern void gtkmozembed_VOID__POINTER_INT_INT (GClosure     *closure,
-                                               GValue       *return_value,
-                                               guint         n_param_values,
-                                               const GValue *param_values,
-                                               gpointer      invocation_hint,
-                                               gpointer      marshal_data);
-#define gtkmozembed_NONE__POINTER_INT_INT	gtkmozembed_VOID__POINTER_INT_INT
+/* BOOL:STRING (types.txt:1) */
+extern void gtkmozembed_BOOLEAN__STRING (GClosure     *closure,
+                                         GValue       *return_value,
+                                         guint         n_param_values,
+                                         const GValue *param_values,
+                                         gpointer      invocation_hint,
+                                         gpointer      marshal_data);
+#define gtkmozembed_BOOL__STRING	gtkmozembed_BOOLEAN__STRING
 
-/* NONE:INT,UINT (/dev/stdin:2) */
+/* VOID:STRING,INT,INT (types.txt:2) */
+extern void gtkmozembed_VOID__STRING_INT_INT (GClosure     *closure,
+                                              GValue       *return_value,
+                                              guint         n_param_values,
+                                              const GValue *param_values,
+                                              gpointer      invocation_hint,
+                                              gpointer      marshal_data);
+
+/* VOID:INT,UINT (types.txt:3) */
 extern void gtkmozembed_VOID__INT_UINT (GClosure     *closure,
                                         GValue       *return_value,
                                         guint         n_param_values,
                                         const GValue *param_values,
                                         gpointer      invocation_hint,
                                         gpointer      marshal_data);
-#define gtkmozembed_NONE__INT_UINT	gtkmozembed_VOID__INT_UINT
 
-/* NONE:POINTER,INT,UINT (/dev/stdin:3) */
-extern void gtkmozembed_VOID__POINTER_INT_UINT (GClosure     *closure,
-                                                GValue       *return_value,
-                                                guint         n_param_values,
-                                                const GValue *param_values,
-                                                gpointer      invocation_hint,
-                                                gpointer      marshal_data);
-#define gtkmozembed_NONE__POINTER_INT_UINT	gtkmozembed_VOID__POINTER_INT_UINT
+/* VOID:STRING,INT,UINT (types.txt:4) */
+extern void gtkmozembed_VOID__STRING_INT_UINT (GClosure     *closure,
+                                               GValue       *return_value,
+                                               guint         n_param_values,
+                                               const GValue *param_values,
+                                               gpointer      invocation_hint,
+                                               gpointer      marshal_data);
 
-/* NONE:POINTER,INT,POINTER (/dev/stdin:4) */
+/* VOID:POINTER,INT,POINTER (types.txt:5) */
 extern void gtkmozembed_VOID__POINTER_INT_POINTER (GClosure     *closure,
                                                    GValue       *return_value,
                                                    guint         n_param_values,
                                                    const GValue *param_values,
                                                    gpointer      invocation_hint,
                                                    gpointer      marshal_data);
-#define gtkmozembed_NONE__POINTER_INT_POINTER	gtkmozembed_VOID__POINTER_INT_POINTER
 
 G_END_DECLS
 

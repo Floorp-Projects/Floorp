@@ -69,12 +69,16 @@
 // so we get the right marshaler for gtk 1.2
 #define gtkmozembed_VOID__INT_UINT \
   gtk_marshal_NONE__INT_INT
-#define gtkmozembed_VOID__POINTER_INT_INT \
+#define gtkmozembed_VOID__STRING_INT_INT \
   gtk_marshal_NONE__POINTER_INT_INT
-#define gtkmozembed_VOID__POINTER_INT_UINT \
+#define gtkmozembed_VOID__STRING_INT_UINT \
   gtk_marshal_NONE__POINTER_INT_INT
 #define gtkmozembed_VOID__POINTER_INT_POINTER \
   gtk_marshal_NONE__POINTER_INT_POINTER
+#define gtkmozembed_BOOL__STRING \
+  gtk_marshal_BOOL__POINTER
+
+#define G_SIGNAL_TYPE_STATIC_SCOPE 0
 
 #define NEW_TOOLKIT_STRING(x) g_strdup(NS_LossyConvertUTF16toASCII(x).get())
 #define GET_OBJECT_CLASS_TYPE(x) (GTK_OBJECT_CLASS(x)->type)
@@ -348,8 +352,9 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_RUN_FIRST,
 		   GET_OBJECT_CLASS_TYPE(klass),
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, progress_all),
-		   gtkmozembed_VOID__POINTER_INT_INT,
-		   GTK_TYPE_NONE, 3, GTK_TYPE_POINTER,
+		   gtkmozembed_VOID__STRING_INT_INT,
+		   GTK_TYPE_NONE, 3,
+		   GTK_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
 		   GTK_TYPE_INT, GTK_TYPE_INT);
   moz_embed_signals[NET_STATE] =
     gtk_signal_new("net_state",
@@ -363,8 +368,9 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_RUN_FIRST,
 		   GET_OBJECT_CLASS_TYPE(klass),
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_state_all),
-		   gtkmozembed_VOID__POINTER_INT_UINT,
-		   GTK_TYPE_NONE, 3, GTK_TYPE_POINTER,
+		   gtkmozembed_VOID__STRING_INT_UINT,
+		   GTK_TYPE_NONE, 3,
+		   GTK_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
 		   GTK_TYPE_INT, GTK_TYPE_UINT);
   moz_embed_signals[NET_START] =
     gtk_signal_new("net_start",
@@ -406,8 +412,9 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_RUN_LAST,
 		   GET_OBJECT_CLASS_TYPE(klass),
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, open_uri),
-		   gtk_marshal_BOOL__POINTER,
-		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+		   gtkmozembed_BOOL__STRING,
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_STRING |
+		                     G_SIGNAL_TYPE_STATIC_SCOPE);
   moz_embed_signals[SIZE_TO] =
     gtk_signal_new("size_to",
 		   GTK_RUN_LAST,
