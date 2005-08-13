@@ -14,7 +14,7 @@ struct nsRect;
 [ptr] native nsIDeviceContextPtr(nsIDeviceContext);
 [ref] native nsRectRef(nsRect);
 
-[scriptable, uuid(62d0e866-e608-4b1a-9ab0-467142b3e3bd)]
+[scriptable, uuid(6a7ddb40-8a9e-4576-8ad1-71c5641d8780)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -85,8 +85,10 @@ interface nsIContentViewer : nsISupports
 
   /**
    * Attach the content viewer to its DOM window and docshell.
+   * @param aState A state object that might be useful in attaching the DOM
+   *               window.
    */
-  void open();
+  void open(in nsISupports aState);
 
   /**
    * Clears the current history entry.  This is used if we need to clear out

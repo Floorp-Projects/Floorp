@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -51,8 +52,8 @@ class nsIScriptGlobalObjectOwner;
 struct JSObject;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x2b16fc80, 0xfa41, 0x11d1,  \
-{ 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3} }
+{ 0xd4ddb2f8, 0x385f, 0x4baa, \
+  { 0xba, 0x69, 0x6c, 0x42, 0xb3, 0xc2, 0xd0, 0xd0 } }
 
 /**
  * The JavaScript specific global object. This often used to store
@@ -67,6 +68,7 @@ public:
   virtual void SetContext(nsIScriptContext *aContext) = 0;
   virtual nsIScriptContext *GetContext() = 0;
   virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                                  nsISupports *aState,
                                   PRBool aRemoveEventListeners,
                                   PRBool aClearScope) = 0;
   virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
