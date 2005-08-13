@@ -54,6 +54,9 @@
       <preference id="pref.advanced.images.disable_button.view_image"
                   name="pref.advanced.images.disable_button.view_image"
                   type="bool"/>
+      <preference id="pref.advanced.javascript.disable_button.advanced"
+                  name="pref.advanced.javascript.disable_button.advanced"
+                  type="bool"/>
     </preferences>
     
     <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
@@ -121,7 +124,7 @@
             <vbox align="start">
               <checkbox id="enableJavaScript" preference="javascript.enabled"
                         label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
-                        onsyncfrompreference="return gContentPane.updateButtons('disableAnnoyances', 
+                        onsyncfrompreference="return gContentPane.updateButtons('advancedJSButton', 
                                                                             'javascript.enabled');"/>
             </vbox>
             <vbox>
