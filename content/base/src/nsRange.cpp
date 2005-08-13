@@ -84,15 +84,6 @@ nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
-
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  utility functions (some exposed through nsRangeUtils, below
-#pragma mark -
-#endif
-
-
 /******************************************************
  * stack based utilty class for managing monitor
  ******************************************************/
@@ -296,15 +287,6 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   return PR_TRUE;
 }
 
-
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  class nsRangeUtils
-#pragma mark -
-#endif
-
-
 /******************************************************
  * non members
  ******************************************************/
@@ -363,13 +345,6 @@ nsRangeUtils::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
   return nsRange::CompareNodeToRange(aNode, aRange, outNodeBefore,
                                      outNodeAfter);
 }
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  class nsRange
-#pragma mark -
-#endif
-
 
 /******************************************************
  * non members
@@ -1147,12 +1122,6 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
     return res;
   return DoSetRange(theNode,0,theNode,indx);
 }
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  class RangeSubtreeIterator
-#pragma mark -
-#endif
 
 // The Subtree Content Iterator only returns subtrees that are
 // completely within a given range. It doesn't return a CharacterData

@@ -125,7 +125,7 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 
-#if defined (XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <Events.h>
 #endif
 
@@ -1253,7 +1253,7 @@ nsEventStateManager::FireContextClick()
   if ( !mGestureDownContent )
     return;
 
-#if defined (XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // hacky OS call to ensure that we don't show a context menu when the user
   // let go of the mouse already, after a long, cpu-hogging operation prevented
   // us from handling any OS events. See bug 117589.

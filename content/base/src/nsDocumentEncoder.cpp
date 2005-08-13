@@ -81,12 +81,6 @@ enum nsRangeIterationDirection {
   kDirectionIn = 1
 };
 
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsDocumentEncoder declaration 
-#pragma mark -
-#endif
-
 class nsDocumentEncoder : public nsIDocumentEncoder
 {
 public:
@@ -165,11 +159,6 @@ protected:
   PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
 };
-
-#ifdef XP_MAC
-#pragma mark  nsDocumentEncoder implementation 
-#pragma mark -
-#endif
 
 NS_IMPL_ADDREF(nsDocumentEncoder)
 NS_IMPL_RELEASE(nsDocumentEncoder)
@@ -1008,13 +997,6 @@ NS_NewTextEncoder(nsIDocumentEncoder** aResult)
  return NS_OK;
 }
 
-
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsDocumentEncoder declaration 
-#pragma mark -
-#endif
-
 class nsHTMLCopyEncoder : public nsDocumentEncoder
 {
 public:
@@ -1055,11 +1037,6 @@ protected:
 
   PRBool mIsTextWidget;
 };
-
-#ifdef XP_MAC
-#pragma mark  nsDocumentEncoder implementation 
-#pragma mark -
-#endif
 
 nsHTMLCopyEncoder::nsHTMLCopyEncoder()
 {
