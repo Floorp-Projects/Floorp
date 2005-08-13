@@ -98,6 +98,7 @@ _UNIT_FILES	= unit/test_all.sh \
 		  unit/tail.js \
 		  unit/test_protocolproxyservice.js \
 		  unit/test_http_headers.js \
+		  unit/test_cookie_header.js \
 		  unit/test_parse_content_type.js \
 		  $(NULL)
 libs:: $(_UNIT_FILES)

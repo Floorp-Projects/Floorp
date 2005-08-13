@@ -243,6 +243,7 @@ private:
 
     nsCString                         mContentTypeHint;
     nsCString                         mContentCharsetHint;
+    nsCString                         mUserSetCookieHeader;
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;

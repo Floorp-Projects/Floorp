@@ -663,6 +663,10 @@ nsHttpChannel::AddCookiesToRequest()
                                     mDocumentURI ? mDocumentURI : mOriginalURI,
                                     this,
                                     getter_Copies(cookie));
+    if (cookie.IsEmpty())
+        cookie = mUserSetCookieHeader;
+    else if (!mUserSetCookieHeader.IsEmpty())
+        cookie.Append(NS_LITERAL_CSTRING("; ") + mUserSetCookieHeader);
 
     // overwrite any existing cookie headers.  be sure to clear any
     // existing cookies if we have no cookies to set or if the cookie
@@ -3315,6 +3319,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = NS_CheckPortSafety(port, "http", ioService); // this works for https
     if (NS_FAILED(rv))
         return rv;
+
+    // Remember the cookie header that was set, if any
+    const char* cookieHeader = mRequestHead.PeekHeader(nsHttp::Cookie);
+    if (cookieHeader)
+        mUserSetCookieHeader = cookieHeader;
 
     // fetch cookies, and add them to the request header
     AddCookiesToRequest();
