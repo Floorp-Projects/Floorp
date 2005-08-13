@@ -1915,8 +1915,8 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     nsCOMPtr<nsIDOMDocument> kungFuDeathGrip =
       do_QueryInterface((nsIHTMLDocument*)this);
 
-    rv = mScriptGlobalObject->SetNewDocument((nsDocument *)this, nsnull,
-                                             PR_FALSE, PR_FALSE);
+    rv = mScriptGlobalObject->SetNewDocument((nsDocument *)this, PR_FALSE,
+                                             PR_FALSE);
 
     if (NS_FAILED(rv)) {
       return rv;
