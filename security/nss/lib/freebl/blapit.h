@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.16 2005/08/06 07:24:21 nelsonb%netscape.com Exp $ */
+/* $Id: blapit.h,v 1.17 2005/08/13 00:07:18 wtchang%redhat.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -146,7 +146,9 @@
  * function takes desired number of bits in P,
  * returns index (0..8) or -1 if number of bits is invalid.
  */
-#define PQG_PBITS_TO_INDEX(bits) ((((bits)-512) % 64) ? -1 : (int)((bits)-512)/64)
+#define PQG_PBITS_TO_INDEX(bits) \
+    (((bits) < 512 || (bits) > 1024 || (bits) % 64) ? \
+    -1 : (int)((bits)-512)/64)
 
 /*
  * function takes index (0-8)
