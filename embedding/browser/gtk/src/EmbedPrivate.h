@@ -78,7 +78,6 @@ class EmbedPrivate {
   void        Show            (void);
   void        Hide            (void);
   void        Resize          (PRUint32 aWidth, PRUint32 aHeight);
-  void        GetSize         (PRInt32 *aWidth, PRInt32 *aHeight);
   void        Destroy         (void);
   void        SetURI          (const char *aURI);
   void        LoadCurrentURI  (void);

@@ -708,16 +708,10 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 
   if (GTK_WIDGET_REALIZED(widget))
   {
-    PRInt32 width, height;
-
-    embedPrivate->GetSize (&width, &height);
-
     gdk_window_move_resize(widget->window,
 			   allocation->x, allocation->y,
 			   allocation->width, allocation->height);
-
-    if ((allocation->width != width) || (allocation->height != height))
-      embedPrivate->Resize(allocation->width, allocation->height);
+    embedPrivate->Resize(allocation->width, allocation->height);
   }
 }
 
