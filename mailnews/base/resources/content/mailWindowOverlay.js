@@ -65,10 +65,9 @@ const kAllowRemoteContent = 2;
 const kIsAPhishMessage = 0;
 const kNotAPhishMessage = 1;
 
-const kMsgNotificationNoStatus = 0;
 const kMsgNotificationJunkBar = 1;
-const kMsgNotificationRemoteImages = 2;
-const kMsgNotificationPhishingBar = 3;
+const kMsgNotificationPhishingBar = 2;
+const kMsgNotificationRemoteImages = 3;
 
 var gMessengerBundle;
 var gPromptService;
@@ -2080,10 +2079,10 @@ var gMessageNotificationBar =
   mBarStatus: 0,
   // flag bit values for mBarStatus, indexed by kMsgNotificationXXX
   mBarFlagValues: [
-                    0, // kMsgNotificationNoStatus
+                    0, // for no msgNotificationBar
                     1, // 1 << (kMsgNotificationJunkBar - 1)
-                    2, // 1 << (kMsgNotificationRemoteImages - 1)
-                    4  // 1 << (kMsgNotificationPhishingBar - 1)
+                    2, // 1 << (kMsgNotificationPhishingBar - 1)
+                    4  // 1 << (kMsgNotificationRemoteImages - 1)
                   ],
 
   mMsgNotificationBar: document.getElementById('msgNotificationBar'),
@@ -2099,7 +2098,7 @@ var gMessageNotificationBar =
       isJunk = ((junkScore != "") && (junkScore != "0"));
     }
 
-    this.updateMsgNotificationBar (kMsgNotificationJunkBar, isJunk);
+    this.updateMsgNotificationBar(kMsgNotificationJunkBar, isJunk);
 
     goUpdateCommand('button_junk');
   },
@@ -2124,7 +2123,9 @@ var gMessageNotificationBar =
 
   clearMsgNotifications: function()
   {
-    this.updateMsgNotificationBar(kMsgNotificationNoStatus, true);
+    this.mBarStatus = 0;
+    this.mMsgNotificationBar.selectedIndex = 0;
+    this.mMsgNotificationBar.collapsed = true;
   },
 
   // private method used to set our message notification deck to the correct value...
@@ -2136,21 +2137,9 @@ var gMessageNotificationBar =
 
     // the junk message takes precedence over the phishing message
     // which takes precedence over the remote content message
-    if (status & this.mBarFlagValues[kMsgNotificationJunkBar])
-      aIndex = kMsgNotificationJunkBar;
-    else if (status & this.mBarFlagValues[kMsgNotificationPhishingBar])
-      aIndex = kMsgNotificationPhishingBar;
-    else if (status & this.mBarFlagValues[kMsgNotificationRemoteImages])
-      aIndex = kMsgNotificationRemoteImages;
-    else
-      aIndex = kMsgNotificationNoStatus;
+    this.mMsgNotificationBar.selectedIndex = this.mBarFlagValues.indexOf(status & -status);
 
-    if (status == kMsgNotificationNoStatus)
-      this.mMsgNotificationBar.setAttribute('collapsed', true);
-    else
-      this.mMsgNotificationBar.removeAttribute('collapsed');
-    
-    this.mMsgNotificationBar.selectedIndex = aIndex;
+    this.mMsgNotificationBar.collapsed = !status;
   }
 };
 
