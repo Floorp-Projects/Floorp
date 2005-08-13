@@ -944,11 +944,12 @@ MouseTrailer::~MouseTrailer()
 //-------------------------------------------------------------------------
 void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin) 
 {
-  if (mHoldMouseWindow != aNSWin && mTimer) {
+  nsWindow *topWin = aNSWin ? aNSWin->GetTopLevelWindow() : nsnull;
+  if (mHoldMouseWindow != topWin && mTimer) {
     // Make sure TimerProc is fired at least once for the old window
     TimerProc(nsnull, nsnull);
   }
-  mHoldMouseWindow = aNSWin;
+  mHoldMouseWindow = topWin;
   CreateTimer();
 }
 //-------------------------------------------------------------------------
@@ -987,7 +988,7 @@ void MouseTrailer::DestroyTimer()
 //-------------------------------------------------------------------------
 void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin) 
 { 
-  mCaptureWindow = aNSWin;
+  mCaptureWindow = aNSWin ? aNSWin->GetTopLevelWindow() : nsnull;
   if (nsnull != mCaptureWindow) {
     mIsInCaptureMode = PR_TRUE;
   }
@@ -1028,17 +1029,19 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
       mp.x = GET_X_LPARAM(pos);
       mp.y = GET_Y_LPARAM(pos);
 
-      if (::WindowFromPoint(mp) != mSingleton.mHoldMouseWindow->GetWindowHandle()) {
-          ::ScreenToClient(mSingleton.mHoldMouseWindow->GetWindowHandle(), &mp);
+      // Need to get the top level wnd's here. Although mHoldMouseWindow is top level,
+      // the actual top level window handle might be something else
+      HWND mouseWnd = nsWindow::GetTopLevelHWND(::WindowFromPoint(mp), PR_TRUE);
+      HWND holdWnd = nsWindow::GetTopLevelHWND(mSingleton.mHoldMouseWindow->GetWindowHandle(), PR_TRUE);
+      if (mouseWnd != holdWnd) {
+        //notify someone that a mouse exit happened
+        if (nsnull != mSingleton.mHoldMouseWindow) {
+          mSingleton.mHoldMouseWindow->DispatchMouseEvent(NS_MOUSE_EXIT, NULL, NULL);
+        }
 
-          //notify someone that a mouse exit happened
-          if (nsnull != mSingleton.mHoldMouseWindow) {
-            mSingleton.mHoldMouseWindow->DispatchMouseEvent(NS_MOUSE_EXIT);
-          }
-
-          // we are out of this window and of any window, destroy timer
-          mSingleton.DestroyTimer();
-          mSingleton.mHoldMouseWindow = nsnull;
+        // we are out of this window and of any window, destroy timer
+        mSingleton.DestroyTimer();
+        mSingleton.mHoldMouseWindow = nsnull;
       }
     }
   } else {
