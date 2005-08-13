@@ -174,8 +174,8 @@ const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Sur
 #endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x5931c580, 0xb917, 0x11d1,    \
-{ 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+{ 0xb31ad9ce, 0x40cb, 0x43c4, \
+  { 0x90, 0xf8, 0x0f, 0x30, 0x53, 0xf6, 0xb8, 0xea } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -395,12 +395,6 @@ public:
   //scaling. default is 1.0 (no zoom)
   NS_IMETHOD  SetZoom(float aZoom) = 0;
   NS_IMETHOD  GetZoom(float &aZoom) const = 0;
-
-  //get and set the text zoom value used for display-time scaling.
-  //default is 1.0 (no zoom).  The device context doesn't do anything
-  //with this value.  It's merely a convenient place to store it.
-  NS_IMETHOD  SetTextZoom(float aTextZoom) = 0;
-  NS_IMETHOD  GetTextZoom(float &aTextZoom) const = 0;
 
   /**
    * Check to see if a particular named font exists.

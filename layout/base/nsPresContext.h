@@ -418,6 +418,20 @@ public:
   nsIEventStateManager* EventStateManager() { return mEventManager; }
   nsIAtom* GetLangGroup() { return mLangGroup; }
 
+  float TextZoom() { return mTextZoom; }
+  void SetTextZoomInternal(float aZoom) {
+    mTextZoom = aZoom;
+    ClearStyleDataAndReflow();
+  }
+  virtual NS_HIDDEN_(void) SetTextZoomExternal(float aZoom);
+#ifdef _IMPL_NS_LAYOUT
+  void SetTextZoom(float aZoom) { SetTextZoomInternal(aZoom); }
+#else
+  void SetTextZoom(float aZoom) { SetTextZoomExternal(aZoom); }
+#endif
+
+
+
   /**
    * Get the language-specific transform type for the current document.
    * This tells us whether we need to perform special language-dependent
@@ -643,6 +657,8 @@ protected:
 
   nsSupportsHashtable   mImageLoaders;
   nsWeakPtr             mContainer;
+
+  float                 mTextZoom;      // Text zoom, defaults to 1.0
 
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;

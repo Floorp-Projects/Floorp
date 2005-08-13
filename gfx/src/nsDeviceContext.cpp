@@ -60,7 +60,6 @@ DeviceContextImpl::DeviceContextImpl()
   mAppUnitsToDevUnits = 1.0f;
   mCPixelScale = 1.0f;
   mZoom = 1.0f;
-  mTextZoom = 1.0f;
   mWidget = nsnull;
   mFontAliasTable = nsnull;
 
@@ -351,18 +350,6 @@ NS_IMETHODIMP DeviceContextImpl::SetZoom(float aZoom)
 NS_IMETHODIMP DeviceContextImpl::GetZoom(float &aZoom) const
 {
   aZoom = mZoom;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::SetTextZoom(float aTextZoom)
-{
-  mTextZoom = aTextZoom;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::GetTextZoom(float &aTextZoom) const
-{
-  aTextZoom = mTextZoom;
   return NS_OK;
 }
 

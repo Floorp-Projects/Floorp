@@ -109,9 +109,6 @@ public:
   NS_IMETHOD  SetZoom(float aZoom);
   NS_IMETHOD  GetZoom(float &aZoom) const;
 
-  NS_IMETHOD  SetTextZoom(float aTextZoom);
-  NS_IMETHOD  GetTextZoom(float &aTextZoom) const;
-
   NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
 
   NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
@@ -154,7 +151,6 @@ protected:
   nsFontCache       *mFontCache;
   nsCOMPtr<nsIAtom> mLocaleLangGroup; // XXX temp fix for performance bug - erik
   float             mZoom;
-  float             mTextZoom;
   nsHashtable*      mFontAliasTable;
   float             mCPixelScale;
 

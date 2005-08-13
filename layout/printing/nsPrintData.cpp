@@ -82,7 +82,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mOrigTextZoom(1.0), mOrigZoom(1.0), mPPEventListeners(NULL), 
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mOrigZoom(1.0), mPPEventListeners(NULL), 
   mBrandName(nsnull)
 {
 
@@ -106,7 +106,6 @@ nsPrintData::~nsPrintData()
 
   // Set the cached Zoom value back into the DC
   if (mPrintDC) {
-    mPrintDC->SetTextZoom(mOrigTextZoom);
     mPrintDC->SetZoom(mOrigZoom);
   }
 

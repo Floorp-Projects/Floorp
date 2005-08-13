@@ -2552,14 +2552,8 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   CallChildren(SetChildTextZoom, &textZoomInfo);
 
   // Now change our own zoom
-  if (mDeviceContext) {
-    float oldTextZoom = 1.0;  // just in case mDeviceContext doesn't implement
-    // Don't reflow if there's no change in the textZoom.
-    mDeviceContext->GetTextZoom(oldTextZoom);
-    mDeviceContext->SetTextZoom(aTextZoom);
-    if (oldTextZoom != aTextZoom && mPresContext) {
-      mPresContext->ClearStyleDataAndReflow();
-    }
+  if (mPresContext && aTextZoom != mPresContext->TextZoom()) {
+      mPresContext->SetTextZoom(aTextZoom);
   }
 
   if (mViewManager) {
@@ -2574,8 +2568,9 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 {
   NS_ENSURE_ARG_POINTER(aTextZoom);
 
-  if (mDeviceContext) {
-    return mDeviceContext->GetTextZoom(*aTextZoom);
+  if (mPresContext) {
+    *aTextZoom = mPresContext->TextZoom();
+    return NS_OK;
   }
 
   *aTextZoom = 1.0;
