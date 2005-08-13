@@ -337,13 +337,6 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 }
 
 void
-EmbedPrivate::GetSize(PRInt32 *aWidth, PRInt32 *aHeight)
-{
-  mWindow->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
-			 nsnull, nsnull, aWidth, aHeight);
-}
-
-void
 EmbedPrivate::Destroy(void)
 {
   // This flag might have been set from
