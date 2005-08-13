@@ -291,33 +291,51 @@ sub groups {
 sub bless_groups {
     my $self = shift;
 
-    return $self->{bless_groups} if defined $self->{bless_groups};
+    return $self->{'bless_groups'} if defined $self->{'bless_groups'};
     return {} unless $self->id;
 
     my $dbh = Bugzilla->dbh;
-    # Get all groups for the user where:
-    #    + They have direct bless privileges
-    #    + They are a member of a group that inherits bless privs.
-    # Because of the second requirement, derive_groups must be up-to-date
-    # for this to function properly in all circumstances.
-    my $bless_groups = $dbh->selectcol_arrayref(
-        q{SELECT DISTINCT groups.name, groups.id
-            FROM groups, user_group_map, group_group_map AS ggm
-           WHERE user_group_map.user_id = ?
-             AND ((user_group_map.isbless = 1
-                   AND groups.id=user_group_map.group_id)
-                  OR (groups.id = ggm.grantor_id
-                      AND ggm.grant_type = } . GROUP_BLESS .
-                   q{ AND user_group_map.group_id = ggm.member_id
-                      AND user_group_map.isbless = 0))},
-         { Columns=>[1,2] }, $self->{id});
+    my $query;
+    my $connector;
+    my @bindValues;
 
-    # The above gives us an arrayref [name, id, name, id, ...]
-    # Convert that into a hashref
-    my %bless_groups_hashref = @$bless_groups;
-    $self->{bless_groups} = \%bless_groups_hashref;
+    if ($self->in_group('editusers')) {
+        # Users having editusers permissions may bless all groups.
+        $query = 'SELECT DISTINCT id, name, description FROM groups';
+        $connector = 'WHERE';
+    }
+    else {
+        # Get all groups for the user where:
+        #    + They have direct bless privileges
+        #    + They are a member of a group that inherits bless privs.
+        # Because of the second requirement, derive_groups must be up-to-date
+        # for this to function properly in all circumstances.
+        $query = q{
+            SELECT DISTINCT groups.id, groups.name, groups.description
+                       FROM groups, user_group_map, group_group_map AS ggm
+                      WHERE user_group_map.user_id = ?
+                        AND ((user_group_map.isbless = 1
+                              AND groups.id=user_group_map.group_id)
+                             OR (groups.id = ggm.grantor_id
+                                 AND ggm.grant_type = ?
+                                 AND user_group_map.group_id = ggm.member_id
+                                 AND user_group_map.isbless = 0))};
+        $connector = 'AND';
+        @bindValues = ($self->id, GROUP_BLESS);
+    }
 
-    return $self->{bless_groups};
+    # If visibilitygroups are used, restrict the set of groups.
+    if (Param('usevisibilitygroups')) {
+        # Users need to see a group in order to bless it.
+        my $visibleGroups = join(', ', @{$self->visible_groups_direct()})
+            || return $self->{'bless_groups'} = [];
+        $query .= " $connector id in ($visibleGroups)";
+    }
+
+    $query .= ' ORDER BY name';
+
+    return $self->{'bless_groups'} =
+        $dbh->selectall_arrayref($query, {'Slice' => {}}, @bindValues);
 }
 
 sub in_group {
@@ -597,12 +615,12 @@ sub can_bless {
     if (!scalar(@_)) {
         # If we're called without an argument, just return 
         # whether or not we can bless at all.
-        return scalar(keys %{$self->bless_groups}) ? 1 : 0;
+        return scalar(@{$self->bless_groups}) ? 1 : 0;
     }
 
     # Otherwise, we're checking a specific group
     my $group_name = shift;
-    return exists($self->bless_groups->{$group_name});
+    return (grep {$$_{'name'} eq $group_name} (@{$self->bless_groups})) ? 1 : 0;
 }
 
 sub flatten_group_membership {
@@ -1430,10 +1448,12 @@ and getting all of the groups would be overkill.
 
 =item C<bless_groups>
 
-Returns a hashref of group names for groups that the user can bless. The keys
-are the names of the groups, whilst the values are the respective group ids.
-(This is so that a set of all groupids for groups the user can bless can be
-obtained by C<values(%{$user-E<gt>bless_groups})>.)
+Returns an arrayref of hashes of C<groups> entries, where the keys of each hash
+are the names of C<id>, C<name> and C<description> columns of the C<groups>
+table.
+The arrayref consists of the groups the user can bless, taking into account
+that having editusers permissions means that you can bless all groups, and
+that you need to be aware of a group in order to bless a group.
 
 =item C<can_see_user(user)>
 
