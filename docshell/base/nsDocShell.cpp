@@ -5227,14 +5227,8 @@ nsDocShell::RestoreFromHistory()
     mContentViewer.swap(viewer);
     viewer = nsnull; // force a release to complete ownership transfer
 
-    // Grab the window state up here so we can pass it to Open.
-    nsCOMPtr<nsISupports> windowState;
-    mLSHE->GetWindowState(getter_AddRefs(windowState));
-
-    mLSHE->SetWindowState(nsnull);
-
     // Reattach to the window object.
-    rv = mContentViewer->Open(windowState);
+    rv = mContentViewer->Open();
 
     // Now remove it from the cached presentation.
     mLSHE->SetContentViewer(nsnull);
@@ -5281,8 +5275,13 @@ nsDocShell::RestoreFromHistory()
         do_GetInterface(NS_STATIC_CAST(nsIInterfaceRequestor*, this));
     NS_ASSERTION(privWin, "could not get nsPIDOMWindow interface");
 
+    nsCOMPtr<nsISupports> windowState;
+    mLSHE->GetWindowState(getter_AddRefs(windowState));
+
     rv = privWin->RestoreWindowState(windowState);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    mLSHE->SetWindowState(nsnull);
 
     // Now, dispatch a title change event which would happed as the
     // <head> is parsed.

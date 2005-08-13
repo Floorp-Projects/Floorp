@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -273,15 +272,14 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mInClose(PR_FALSE), 
     mOpenerWasCleared(PR_FALSE),
     mIsPopupSpam(PR_FALSE),
+    mJSObject(nsnull),
     mArguments(nsnull),
-    mGlobalObjectOwner(nsnull),
-    mDocShell(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mIsFrozen(PR_FALSE),
-    mJSObject(nsnull)
+    mGlobalObjectOwner(nsnull),
+    mDocShell(nsnull)
 {
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
@@ -539,111 +537,17 @@ nsGlobalWindow::GetPopupControlState() const
   return gPopupControlState;
 }
 
-#define WINDOWSTATEHOLDER_IID \
-{0x2aa29291, 0x3ac9, 0x4d37, {0xa4, 0x3d, 0x45, 0x15, 0x2f, 0x16, 0x23, 0x04 }}
-
-class WindowStateHolder : public nsISupports
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
-  NS_DECL_ISUPPORTS
-
-  WindowStateHolder(nsGlobalWindow *aWindow,
-                    nsIXPConnectJSObjectHolder *aHolder,
-                    nsNavigator *aNavigator);
-
-  // Get the contents of focus memory when the state was saved
-  // (if the focus was inside of this window).
-  nsIDOMElement* GetFocusedElement() { return mFocusedElement; }
-  nsIDOMWindowInternal* GetFocusedWindow() { return mFocusedWindow; }
-
-  nsGlobalWindow* GetInnerWindow() { return mInnerWindow; }
-  nsIXPConnectJSObjectHolder* GetInnerWindowHolder()
-  { return mInnerWindowHolder; }
-
-  nsNavigator* GetNavigator() { return mNavigator; }
-
-  void DidRestoreWindow()
-  {
-    mInnerWindow = nsnull;
-    mInnerWindowHolder = nsnull;
-    mNavigator = nsnull;
-  }
-
-protected:
-  ~WindowStateHolder();
-
-  nsGlobalWindow *mInnerWindow;
-  // We hold onto this to make sure the inner window doesn't go away. The outer
-  // window ends up recalculating it anyway.
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
-  nsRefPtr<nsNavigator> mNavigator;
-  nsCOMPtr<nsIDOMElement> mFocusedElement;
-  nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
-};
-
-WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
-                                     nsIXPConnectJSObjectHolder *aHolder,
-                                     nsNavigator *aNavigator)
-  : mInnerWindow(aWindow),
-    mInnerWindowHolder(aHolder),
-    mNavigator(aNavigator)
-{
-  NS_PRECONDITION(aWindow, "null window");
-  NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
-
-  nsIFocusController *fc = aWindow->GetRootFocusController();
-  NS_ASSERTION(fc, "null focus controller");
-
-  // We want to save the focused element/window only if they are inside of
-  // this window.
-
-  nsCOMPtr<nsIDOMWindowInternal> focusWinInternal;
-  fc->GetFocusedWindow(getter_AddRefs(focusWinInternal));
-
-  nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(focusWinInternal);
-
-  // The outer window is used for focus purposes, so make sure that's what
-  // we're looking for.
-  nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
-
-  while (focusedWindow) {
-    if (focusedWindow == targetWindow) {
-      fc->GetFocusedWindow(getter_AddRefs(mFocusedWindow));
-      fc->GetFocusedElement(getter_AddRefs(mFocusedElement));
-      break;
-    }
-
-    focusedWindow =
-      NS_STATIC_CAST(nsGlobalWindow*,
-                     NS_STATIC_CAST(nsPIDOMWindow*,
-                                    focusedWindow))->GetPrivateParent();
-  }
-
-  aWindow->SuspendTimeouts();
-}
-
-WindowStateHolder::~WindowStateHolder()
-{
-  NS_ASSERTION(!mInnerWindow || !mInnerWindow->mContext,
-               "Potentially leaking the inner window's JS object and document");
-}
-
-NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
-
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
-                               nsISupports* aState,
                                PRBool aRemoveEventListeners,
                                PRBool aClearScopeHint)
 {
-  return SetNewDocument(aDocument, aState, aRemoveEventListeners,
-                        aClearScopeHint, PR_FALSE);
+  return SetNewDocument(aDocument, aRemoveEventListeners, aClearScopeHint,
+                        PR_FALSE);
 }
 
 nsresult
 nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
-                               nsISupports* aState,
                                PRBool aRemoveEventListeners,
                                PRBool aClearScopeHint,
                                PRBool aIsInternalCall)
@@ -657,7 +561,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     }
 
     return GetOuterWindowInternal()->SetNewDocument(aDocument,
-                                                    aState,
                                                     aRemoveEventListeners,
                                                     aClearScopeHint, PR_TRUE);
   }
@@ -846,20 +749,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     // listener manager over to the new inner window.
     nsCOMPtr<nsIEventListenerManager> listenerManager;
 
-    if (currentInner && !currentInner->IsFrozen()) {
+    if (currentInner) {
       if (!reUseInnerWindow) {
         currentInner->ClearAllTimeouts();
 
         currentInner->mChromeEventHandler = nsnull;
-
-        if (currentInner->mLocation) {
-          // Invalidate the inner window's location object now that
-          // the inner window is being torn down. We need to do this
-          // to prevent people from holding on to an old inner
-          // window's location object somehow and tracking the
-          // location of the docshell...
-          currentInner->mLocation->SetDocShell(nsnull);
-        }
       }
 
       if (aRemoveEventListeners && currentInner->mListenerManager) {
@@ -880,47 +774,35 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     PRUint32 flags = 0;
 
-    if (reUseInnerWindow && !currentInner->IsFrozen()) {
+    if (reUseInnerWindow) {
       // We're reusing the current inner window.
       newInnerWindow = currentInner;
     } else {
-      if (aState) {
-        nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
-        NS_ASSERTION(wsh, "What kind of weird state are you giving me here?");
+      if (thisChrome) {
+        newInnerWindow = new nsGlobalChromeWindow(this);
 
-        newInnerWindow = wsh->GetInnerWindow();
-        mInnerWindowHolder = wsh->GetInnerWindowHolder();
-        mNavigator = wsh->GetNavigator(); // This assignment addrefs.
+        flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
       } else {
-        if (thisChrome) {
-          newInnerWindow = new nsGlobalChromeWindow(this);
-
-          flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
-        } else {
-          newInnerWindow = new nsGlobalWindow(this);
-        }
+        newInnerWindow = new nsGlobalWindow(this);
       }
 
       if (!newInnerWindow) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      if (!aState) {
-        // This is redundant if we're restoring from a previous inner window.
-        nsIScriptGlobalObject *sgo =
-          (nsIScriptGlobalObject *)newInnerWindow.get();
+      nsIScriptGlobalObject *sgo =
+        (nsIScriptGlobalObject *)newInnerWindow.get();
 
-        nsresult rv = xpc->
-          InitClassesWithNewWrappedGlobal(cx, sgo, NS_GET_IID(nsISupports),
-                                          flags,
-                                          getter_AddRefs(mInnerWindowHolder));
-        NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = xpc->
+        InitClassesWithNewWrappedGlobal(cx, sgo, NS_GET_IID(nsISupports),
+                                        flags,
+                                        getter_AddRefs(mInnerWindowHolder));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        mInnerWindowHolder->GetJSObject(&newInnerWindow->mJSObject);
-      }
+      mInnerWindowHolder->GetJSObject(&newInnerWindow->mJSObject);
 
       if (currentInner && currentInner->mJSObject) {
-        if (mNavigator && !aState) {
+        if (mNavigator) {
           // Hold on to the navigator wrapper so that we can set
           // window.navigator in the new window to point to the same
           // object (assuming we didn't change origins etc). See bug
@@ -946,8 +828,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
           }
 
           nsIScriptContext *callerScx;
-          if (cx && (callerScx = GetScriptContextFromJSContext(cx)) &&
-              !currentInner->IsFrozen()) {
+          if (cx && (callerScx = GetScriptContextFromJSContext(cx))) {
             // We're called from document.open() (and document.open() is
             // called from JS), clear the scope etc in a termination
             // function on the calling context to prevent clearing the
@@ -963,27 +844,21 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         // Clear scope on the outer window
         ::JS_ClearScope(cx, mJSObject);
         ::JS_ClearWatchPointsForObject(cx, mJSObject);
-        // Clear the regexp statics for the new page unconditionally.
-        // XXX They don't get restored on the inner window when we go back.
-        ::JS_ClearRegExpStatics(cx);
 
         // Re-initialize the outer window.
         scx->InitContext(this);
 
-        // Don't clear scope on our current inner window if it's going to be
-        // held in the bfcache.
-        if (!currentInner->IsFrozen()) {
-          if (!termFuncSet) {
-            ::JS_ClearScope(cx, currentInner->mJSObject);
-            ::JS_ClearWatchPointsForObject(cx, currentInner->mJSObject);
-          }
-
-          // Make the current inner window release its strong references
-          // to the document to prevent it from keeping everything
-          // around. But remember the document's principal.
-          currentInner->mDocument = nsnull;
-          currentInner->mDocumentPrincipal = oldPrincipal;
+        if (!termFuncSet) {
+          ::JS_ClearScope(cx, currentInner->mJSObject);
+          ::JS_ClearWatchPointsForObject(cx, currentInner->mJSObject);
+          ::JS_ClearRegExpStatics(cx);
         }
+
+        // Make the current inner window release its strong references
+        // to the document to prevent it from keeping everything
+        // around. But remember the document's principal.
+        currentInner->mDocument = nsnull;
+        currentInner->mDocumentPrincipal = oldPrincipal;
       }
 
       mInnerWindow = newInnerWindow;
@@ -994,57 +869,54 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
       ::JS_SetGlobalObject(cx, mJSObject);
 
-      if (newDoc != oldDoc && !aState) {
+      if (newDoc != oldDoc) {
         nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
         nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
                                                html_doc);
       }
-
-      newInnerWindow->mListenerManager = listenerManager;
     }
 
     if (newDoc) {
       newDoc->SetScriptGlobalObject(newInnerWindow);
     }
 
-    if (!aState) {
-      if (reUseInnerWindow) {
-        newInnerWindow->mDocument = aDocument;
-      } else {
-        rv = newInnerWindow->SetNewDocument(aDocument, nsnull,
-                                            aRemoveEventListeners,
-                                            aClearScopeHint, PR_TRUE);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (reUseInnerWindow) {
+      newInnerWindow->mDocument = aDocument;
+    } else {
+      rv = newInnerWindow->SetNewDocument(aDocument, aRemoveEventListeners,
+                                          aClearScopeHint, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        // Initialize DOM classes etc on the inner window.
-        rv = scx->InitClasses(newInnerWindow->mJSObject);
-        NS_ENSURE_SUCCESS(rv, rv);
+      // Initialize DOM classes etc on the inner window.
+      rv = scx->InitClasses(newInnerWindow->mJSObject);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        if (navigatorHolder) {
-          // Restore window.navigator onto the new inner window.
-          JSObject *nav;
-          navigatorHolder->GetJSObject(&nav);
+      if (navigatorHolder) {
+        // Restore window.navigator onto the new inner window.
+        JSObject *nav;
+        navigatorHolder->GetJSObject(&nav);
 
-          ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
-                              OBJECT_TO_JSVAL(nav), nsnull, nsnull,
-                              JSPROP_ENUMERATE);
-        }
+        ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
+                            OBJECT_TO_JSVAL(nav), nsnull, nsnull,
+                            JSPROP_ENUMERATE);
       }
 
-      if (mArguments) {
-        jsval args = OBJECT_TO_JSVAL(mArguments);
-
-        ::JS_SetProperty(cx, newInnerWindow->mJSObject, "arguments",
-                         &args);
-
-        ::JS_UnlockGCThing(cx, mArguments);
-        mArguments = nsnull;
-      }
-
-      // Give the new inner window our chrome event handler (since it
-      // doesn't have one).
-      newInnerWindow->mChromeEventHandler = mChromeEventHandler;
+      newInnerWindow->mListenerManager = listenerManager;
     }
+
+    if (mArguments) {
+      jsval args = OBJECT_TO_JSVAL(mArguments);
+
+      ::JS_SetProperty(cx, newInnerWindow->mJSObject, "arguments",
+                       &args);
+
+      ::JS_UnlockGCThing(cx, mArguments);
+      mArguments = nsnull;
+    }
+
+    // Give the new inner window our chrome event handler (since it
+    // doesn't have one).
+    newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
   if (scx && IsOuterWindow()) {
@@ -1079,8 +951,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     NS_ASSERTION(!mTimeouts, "Uh, outer window holds timeouts!");
 
     JSContext *cx = (JSContext *)mContext->GetNativeContext();
-    nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
+    nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
     if (currentInner) {
       currentInner->ClearAllTimeouts();
 
@@ -1088,6 +960,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
         currentInner->mListenerManager->RemoveAllListeners(PR_FALSE);
         currentInner->mListenerManager = nsnull;
       }
+
+      JSContext *cx = (JSContext *)mContext->GetNativeContext();
 
       // XXXjst: We shouldn't need to do this, but if we don't we leak
       // the world... actually, even with this we leak the
@@ -1134,14 +1008,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       ::JS_ClearRegExpStatics(cx);
 
       currentInner->mChromeEventHandler = nsnull;
-
-      if (currentInner->mLocation) {
-        // Invalidate the inner window's location object now that the inner
-        // window is stored in the bfcache. We need to do this to prevent people
-        // from holding on to an old inner window's location object somehow and
-        // tracking the location of the docshell...
-        currentInner->mLocation->SetDocShell(nsnull);
-      }
     }
 
     // if we are closing the window while in full screen mode, be sure
@@ -1185,8 +1051,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   mDocShell = aDocShell;        // Weak Reference
 
-  NS_ASSERTION(!mLocation, "Uh, outer window has location object!");
-
+  if (mLocation)
+    mLocation->SetDocShell(aDocShell);
   if (mNavigator)
     mNavigator->SetDocShell(aDocShell);
   if (mHistory)
@@ -5052,12 +4918,12 @@ nsGlobalWindow::GetPrivateRoot()
 NS_IMETHODIMP
 nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 {
-  FORWARD_TO_INNER(GetLocation, (aLocation), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(GetLocation, (aLocation), NS_ERROR_NOT_INITIALIZED);
 
   *aLocation = nsnull;
 
-  if (!mLocation && GetDocShellInternal()) {
-    mLocation = new nsLocation(GetDocShellInternal());
+  if (!mLocation && mDocShell) {
+    mLocation = new nsLocation(mDocShell);
     if (!mLocation) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -6575,35 +6441,247 @@ nsGlobalWindow::EnsureSizeUpToDate()
   }
 }
 
+#define WINDOWSTATEHOLDER_IID \
+{0xae1c7401, 0xcdee, 0x404a, {0xbd, 0x63, 0x05, 0xc0, 0x35, 0x0d, 0xa7, 0x72}}
+
+class WindowStateHolder : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
+  NS_DECL_ISUPPORTS
+
+  WindowStateHolder(JSContext *cx,  // The JSContext for the window 
+                    JSObject *aObject, // An object to save the properties onto
+                    nsGlobalWindow *aWindow); // The window to operate on
+
+  // This is the property store object that holds the window properties.
+  JSObject* GetObject() { return mJSObj; }
+
+  // Get the listener manager, which holds all event handlers for the window.
+  nsIEventListenerManager* GetListenerManager() { return mListenerManager; }
+
+  // Get the saved value of the mMutationBits field.
+  PRUint32 GetMutationBits() { return mMutationBits; }
+
+  // Get the contents of focus memory when the state was saved
+  // (if the focus was inside of this window).
+  nsIDOMElement* GetFocusedElement() { return mFocusedElement; }
+  nsIDOMWindowInternal* GetFocusedWindow() { return mFocusedWindow; }
+
+  // Manage the list of saved timeouts for the window.
+  nsTimeout* GetSavedTimeouts() { return mSavedTimeouts; }
+  nsTimeout** GetTimeoutInsertionPoint() { return mTimeoutInsertionPoint; }
+  void ClearSavedTimeouts() { mSavedTimeouts = nsnull; }
+
+protected:
+  ~WindowStateHolder();
+
+  JSRuntime *mRuntime;
+  JSObject *mJSObj;
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
+  nsCOMPtr<nsIDOMElement> mFocusedElement;
+  nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
+  nsTimeout *mSavedTimeouts;
+  nsTimeout **mTimeoutInsertionPoint;
+  PRUint32 mMutationBits;
+};
+
+WindowStateHolder::WindowStateHolder(JSContext *cx, JSObject *aObject,
+                                     nsGlobalWindow *aWindow)
+  : mRuntime(::JS_GetRuntime(cx)), mJSObj(aObject)
+{
+  NS_ASSERTION(aWindow, "null window");
+
+  // Prevent mJSObj from being gc'd for the lifetime of this object.
+  ::JS_AddNamedRoot(cx, &mJSObj, "WindowStateHolder::mJSObj");
+
+  aWindow->GetListenerManager(getter_AddRefs(mListenerManager));
+  mMutationBits = aWindow->mMutationBits;
+
+  // Clear the window's EventListenerManager pointer so that it can't have
+  // listeners removed from it later.
+  aWindow->mListenerManager = nsnull;
+
+  nsIFocusController *fc = aWindow->GetRootFocusController();
+  NS_ASSERTION(fc, "null focus controller");
+
+  // We want to save the focused element/window only if they are inside of
+  // this window.
+
+  nsCOMPtr<nsIDOMWindowInternal> focusWinInternal;
+  fc->GetFocusedWindow(getter_AddRefs(focusWinInternal));
+
+  nsCOMPtr<nsPIDOMWindow> focusedWindow = do_QueryInterface(focusWinInternal);
+
+  // The outer window is used for focus purposes, so make sure that's what
+  // we're looking for.
+  nsPIDOMWindow *targetWindow = aWindow->GetOuterWindow();
+
+  while (focusedWindow) {
+    if (focusedWindow == targetWindow) {
+      fc->GetFocusedWindow(getter_AddRefs(mFocusedWindow));
+      fc->GetFocusedElement(getter_AddRefs(mFocusedElement));
+      break;
+    }
+
+    focusedWindow =
+      NS_STATIC_CAST(nsGlobalWindow*,
+                     NS_STATIC_CAST(nsPIDOMWindow*,
+                                    focusedWindow))->GetPrivateParent();
+  }
+
+  aWindow->SuspendTimeouts();
+
+  // Clear the timeout list for aWindow (but we don't need to for children)
+  mSavedTimeouts = aWindow->mTimeouts;
+  mTimeoutInsertionPoint = aWindow->mTimeoutInsertionPoint;
+
+  aWindow->mTimeouts = nsnull;
+  aWindow->mTimeoutInsertionPoint = &aWindow->mTimeouts;
+}
+
+WindowStateHolder::~WindowStateHolder()
+{
+  // Release the timeouts, if we still have any.
+  nsTimeout *timeout = mSavedTimeouts;
+  while (timeout) {
+    nsTimeout *next = timeout->mNext;
+    NS_ASSERTION(!timeout->mTimer, "live timer in a saved window state");
+    timeout->Release(nsnull);
+    timeout = next;
+  }
+
+  ::JS_RemoveRootRT(mRuntime, &mJSObj);
+}
+
+NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
+
+static JSClass sWindowStateClass = {
+  "window state", 0,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+static nsresult
+CopyJSPropertyArray(JSContext *cx, JSObject *aSource, JSObject *aDest,
+                    JSIdArray *props)
+{
+  jsint length = props->length;
+  for (jsint i = 0; i < length; ++i) {
+    jsval propname_value;
+
+    if (!::JS_IdToValue(cx, props->vector[i], &propname_value) ||
+        !JSVAL_IS_STRING(propname_value)) {
+      NS_WARNING("Failed to copy non-string-named window property");
+      return NS_ERROR_FAILURE;
+    }
+
+    JSString *propname = JSVAL_TO_STRING(propname_value);
+    jschar *propname_str = ::JS_GetStringChars(propname);
+    NS_ENSURE_TRUE(propname_str, NS_ERROR_FAILURE);
+
+    // We exclude the "location" property because restoring it this way is
+    // problematic.  It will "just work" without us explicitly saving or
+    // restoring the value.
+
+    if (!nsCRT::strcmp(NS_REINTERPRET_CAST(PRUnichar*, propname_str),
+                       NS_LITERAL_STRING("location").get())) {
+      continue;
+    }
+
+    size_t propname_len = ::JS_GetStringLength(propname);
+
+    JSPropertyOp getter, setter;
+    uintN attrs;
+    JSBool found;
+    if (!::JS_GetUCPropertyAttrsGetterAndSetter(cx, aSource, propname_str,
+                                                propname_len, &attrs, &found,
+                                                &getter, &setter))
+      return NS_ERROR_FAILURE;
+
+    NS_ENSURE_TRUE(found, NS_ERROR_UNEXPECTED);
+
+    jsval propvalue;
+    if (!::JS_LookupUCProperty(cx, aSource, propname_str,
+                               propname_len, &propvalue))
+      return NS_ERROR_FAILURE;
+
+    PRBool res = ::JS_DefineUCProperty(cx, aDest, propname_str, propname_len,
+                                       propvalue, getter, setter, attrs);
+#ifdef DEBUG_PAGE_CACHE
+    if (res)
+      printf("Copied window property: %s\n",
+             NS_ConvertUTF16toUTF8(NS_REINTERPRET_CAST(PRUnichar*,
+                                                       propname_str)).get());
+#endif
+
+    if (!res) {
+#ifdef DEBUG
+      printf("failed to copy property: %s\n",
+             NS_ConvertUTF16toUTF8(NS_REINTERPRET_CAST(PRUnichar*,
+                                                       propname_str)).get());
+#endif
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+CopyJSProperties(JSContext *cx, JSObject *aSource, JSObject *aDest)
+{
+  // Enumerate all of the properties on aSource and install them on aDest.
+
+  JSIdArray *props = ::JS_Enumerate(cx, aSource);
+  if (props) {
+    props = ::JS_EnumerateResolvedStandardClasses(cx, aSource, props);
+  }
+  if (!props) {
+#ifdef DEBUG_PAGE_CACHE
+    printf("failed to enumerate JS properties\n");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+
+#ifdef DEBUG_PAGE_CACHE
+  printf("props length = %d\n", props->length);
+#endif
+
+  nsresult rv = CopyJSPropertyArray(cx, aSource, aDest, props);
+  ::JS_DestroyIdArray(cx, props);
+  return rv;
+}
+
 nsresult
 nsGlobalWindow::SaveWindowState(nsISupports **aState)
 {
-  NS_PRECONDITION(IsOuterWindow(), "Can't save the inner window's state");
-
   *aState = nsnull;
 
-  if (!mContext || !mJSObject) {
+  if (IsOuterWindow() && (!mContext || !mJSObject)) {
     // The window may be getting torn down; don't bother saving state.
     return NS_OK;
   }
 
-  nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
-  NS_ASSERTION(inner, "No inner window to save");
+  FORWARD_TO_INNER(SaveWindowState, (aState), NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
-                                                      mInnerWindowHolder,
-                                                      mNavigator);
+  JSContext *cx = NS_STATIC_CAST(JSContext*,
+                                 GetContextInternal()->GetNativeContext());
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  JSObject *stateObj = ::JS_NewObject(cx, &sWindowStateClass, NULL, NULL);
+  NS_ENSURE_TRUE(stateObj, NS_ERROR_OUT_OF_MEMORY);
+
+  // The window state object will root the JSObject.
+  nsCOMPtr<nsISupports> state = new WindowStateHolder(cx, stateObj, this);
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE
   printf("saving window state, stateObj = %p\n", (void*)stateObj);
 #endif
-
-  if (inner->mLocation)
-    inner->mLocation->SetDocShell(nsnull);
-
-  // Don't do anything else to this inner window!
-  inner->Freeze();
+  nsresult rv = CopyJSProperties(cx, mJSObject, stateObj);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   state.swap(*aState);
   return NS_OK;
@@ -6612,12 +6690,23 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
 nsresult
 nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 {
-  NS_ASSERTION(IsOuterWindow(), "Cannot restore an inner window");
+  // SetNewDocument() has already been called so we should have a
+  // new clean inner window to restore state into here.
 
-  if (!mContext || !mJSObject) {
+  if (IsOuterWindow() && (!mContext || !mJSObject)) {
     // The window may be getting torn down; don't bother restoring state.
     return NS_OK;
   }
+
+  FORWARD_TO_INNER(RestoreWindowState, (aState), NS_ERROR_NOT_INITIALIZED);
+
+  JSContext *cx = NS_STATIC_CAST(JSContext*,
+                                 GetContextInternal()->GetNativeContext());
+  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+  // Note that we don't need to call JS_ClearScope here.  The scope is already
+  // cleared by SetNewDocument(), and calling it again here would remove the
+  // XPConnect properties.
 
   nsCOMPtr<WindowStateHolder> holder = do_QueryInterface(aState);
   NS_ENSURE_TRUE(holder, NS_ERROR_FAILURE);
@@ -6625,8 +6714,11 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 #ifdef DEBUG_PAGE_CACHE
   printf("restoring window state, stateObj = %p\n", (void*)holder->GetObject());
 #endif
+  nsresult rv = CopyJSProperties(cx, holder->GetObject(), mJSObject);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
+  mListenerManager = holder->GetListenerManager();
+  mMutationBits = holder->GetMutationBits();
 
   nsIDOMElement *focusedElement = holder->GetFocusedElement();
   nsIDOMWindowInternal *focusedWindow = holder->GetFocusedWindow();
@@ -6645,6 +6737,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
       // We don't bother checking whether the element or frame is focusable.
       // If it was focusable when we stored the presentation, it must be
       // focusable now.
+      PRBool didFocusContent = PR_FALSE;
       nsIDocument *doc = focusedContent->GetCurrentDoc();
       if (doc) {
         nsIPresShell *shell = doc->GetShellAt(0);
@@ -6667,15 +6760,16 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
     fc->SetFocusedElement(focusedElement);
   }
 
-  // And we're ready to go!
-  inner->Thaw();
+  mTimeouts = holder->GetSavedTimeouts();
+  mTimeoutInsertionPoint = holder->GetTimeoutInsertionPoint();
 
-  if (inner->mLocation)
-    inner->mLocation->SetDocShell(mDocShell);
+  holder->ClearSavedTimeouts();
 
-  holder->DidRestoreWindow();
+  // If our state is being restored from history, we won't be getting an onload
+  // event.  Make sure we're marked as being completely loaded.
+  mIsDocumentLoaded = PR_TRUE;
 
-  return inner->ResumeTimeouts();
+  return ResumeTimeouts();
 }
 
 void
