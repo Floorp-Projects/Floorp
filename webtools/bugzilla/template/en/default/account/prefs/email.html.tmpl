@@ -213,7 +213,7 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
       [% FOREACH relationship = relationships %]
         [% NEXT IF (relationship.id == constants.REL_QA AND NOT useqacontact) OR
                    (relationship.id == constants.REL_VOTER AND NOT usevotes) %]
-        <td align="center"
+        <td align="center">
           <input type="checkbox" 
             name="neg-email-[% relationship.id %]-[% event.id %]"
             value="1"
