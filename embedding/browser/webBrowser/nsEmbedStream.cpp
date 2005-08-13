@@ -262,31 +262,7 @@ NS_IMETHODIMP
 nsEmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
 			    PRUint32 aCount, PRUint32 *_retval)
 {
-  char *readBuf = (char *)malloc(aCount);
-  PRUint32 nBytes;
-
-  if (!readBuf)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = mInputStream->Read(readBuf, aCount, &nBytes);
-
-  *_retval = 0;
-
-  if (NS_SUCCEEDED(rv)) {
-    PRUint32 writeCount = 0;
-    rv = aWriter(this, aClosure, readBuf, 0, nBytes, &writeCount);
-
-    // XXX writeCount may be less than nBytes!!  This is the wrong
-    // way to synthesize ReadSegments.
-    NS_ASSERTION(writeCount == nBytes, "data loss");
-
-    // errors returned from the writer end here!
-    rv = NS_OK;
-  }
-
-  free(readBuf);
-
-  return rv;
+  return mInputStream->ReadSegments(aWriter, aClosure, aCount, _retval);
 }
 
 NS_IMETHODIMP
