@@ -50,7 +50,7 @@
       <menuitem id="context-bookmarklink"
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
-                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL,
                                                       gContextMenu.linkText());"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
