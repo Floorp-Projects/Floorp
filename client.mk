@@ -216,6 +216,7 @@ MODULES_all :=                                  \
   mozilla/tools/trace-malloc                    \
   mozilla/tools/jprof                           \
   mozilla/tools/codesighs                       \
+  mozilla/tools/update-packaging                \
   mozilla/other-licenses/branding               \
   mozilla/other-licenses/7zstub                 \
   $(NULL)
