@@ -223,7 +223,7 @@
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
           <hbox>
-            <button type="menu" class="plain" id="feed-button" chromedir="&locale.dir;">
+            <button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button" chromedir="&locale.dir;">
               <menupopup onpopupshowing="return FeedHandler.buildFeedList(event);" position="after_end"
                          oncommand="FeedHandler.showFeed(event.target.getAttribute('feed'));" />
             </button>
