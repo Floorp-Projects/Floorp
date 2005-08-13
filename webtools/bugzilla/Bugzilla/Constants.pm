@@ -89,6 +89,8 @@ use base qw(Exporter);
     FULLTEXT_BUGLIST_LIMIT
 
     ADMIN_GROUP_NAME
+
+    SENDMAIL_EXE
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -237,5 +239,8 @@ use constant FULLTEXT_BUGLIST_LIMIT => 200;
 
 # Default administration group name.
 use constant ADMIN_GROUP_NAME => 'admin';
+
+# Path to sendmail.exe (Windows only)
+use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
 
 1;

@@ -615,6 +615,14 @@ sub MessageToMTA {
     my ($msg) = (@_);
     return if (Param('mail_delivery_method') eq "none");
 
+    if (Param("mail_delivery_method") eq "sendmail" && $^O =~ /MSWin32/i) {
+        open(SENDMAIL, '|' . SENDMAIL_EXE . ' -t -i') ||
+            die "Failed to execute " . SENDMAIL_EXE . ": $!\n";
+        print SENDMAIL $msg;
+        close SENDMAIL;
+        return;
+    }
+
     my @args;
     if (Param("mail_delivery_method") eq "sendmail" && !Param("sendmailnow")) {
         push @args, "-ODeliveryMode=deferred";

@@ -54,6 +54,7 @@ use Socket;
 
 use Bugzilla::Config qw(:DEFAULT $templatedir $webdotdir);
 use Bugzilla::Util;
+use Bugzilla::Constants;
 
 # Checking functions for the various values
 # Some generic checking functions are included in Bugzilla::Config
@@ -245,6 +246,18 @@ sub find_languages {
     }
     closedir DIR;
     return join(', ', @languages);
+}
+
+sub check_mail_delivery_method {
+    my $check = check_multi(@_);
+    return $check if $check;
+    my $mailer = shift;
+    if ($mailer eq 'sendmail' && $^O =~ /MSWin32/i) {
+        # look for sendmail.exe 
+        return "Failed to locate " . SENDMAIL_EXE
+            unless -e SENDMAIL_EXE;
+    }
+    return "";
 }
 
 # OK, here are the parameter definitions themselves.
@@ -694,7 +707,8 @@ sub find_languages {
    name => 'mail_delivery_method',
    desc => 'Defines how email is sent, or if it is sent at all.<br><ul>' .
            '<li>\'sendmail\', \'smtp\' and \'qmail\' are all MTAs. ' .
-           '(only SMTP is available in Windows.)</li>' .
+           'You need to install a third-party sendmail replacement if ' .
+           'you want to use sendmail on Windows.' .
            '<li>\'testfile\' is useful for debugging: all email is stored ' .
            'in data/mailer.testfile instead of being sent. For more ' .
            'information, see the Mail::Mailer manual.</li>' .
@@ -703,10 +717,10 @@ sub find_languages {
            'stored.</li></ul>' ,
    type => 's',
    choices => $^O =~ /MSWin32/i 
-                  ? ['smtp', 'testfile', 'none']
+                  ? ['smtp', 'testfile', 'sendmail', 'none']
                   : ['sendmail', 'smtp', 'qmail', 'testfile', 'none'],
    default => 'sendmail',
-   checker => \&check_multi
+   checker => \&check_mail_delivery_method
   },
 
   {
