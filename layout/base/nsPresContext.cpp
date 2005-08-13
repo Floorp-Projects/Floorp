@@ -145,6 +145,7 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
 nsPresContext::nsPresContext(nsPresContextType aType)
   : mType(aType),
+    mTextZoom(1.0),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mCompatibilityMode(eCompatibility_FullStandards),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
@@ -987,6 +988,12 @@ nsPresContext::ScaledPixelsToTwips() const
   }
 
   return scale;
+}
+
+void
+nsPresContext::SetTextZoomExternal(float aZoom)
+{
+  SetTextZoomInternal(aZoom);
 }
 
 imgIRequest*

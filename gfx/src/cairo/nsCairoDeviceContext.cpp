@@ -107,7 +107,6 @@ nsCairoDeviceContext::nsCairoDeviceContext()
     mAppUnitsToDevUnits = 1.0f;
     mCPixelScale = 1.0f;
     mZoom = 1.0f;
-    mTextZoom = 1.0f;
 
 #ifdef MOZ_ENABLE_XLIB
     mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);

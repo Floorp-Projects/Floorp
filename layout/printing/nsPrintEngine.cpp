@@ -1040,7 +1040,6 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // over to the new PrintData object
   if (mOldPrtPreview) {
     mPrt->mOrigZoom     = mOldPrtPreview->mOrigZoom;
-    mPrt->mOrigTextZoom = mOldPrtPreview->mOrigTextZoom;
     mPrt->mOrigDCScale  = mOldPrtPreview->mOrigDCScale;
 
   } else {
@@ -1201,9 +1200,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   mPrt->mPrintDC = mDeviceContext;
 
   // Cache original Zoom value and then set it to 1.0
-  mPrt->mPrintDC->GetTextZoom(mPrt->mOrigTextZoom);
   mPrt->mPrintDC->GetZoom(mPrt->mOrigZoom);
-  mPrt->mPrintDC->SetTextZoom(1.0f);
   mPrt->mPrintDC->SetZoom(1.0f);
 
   if (mDeviceContext) {

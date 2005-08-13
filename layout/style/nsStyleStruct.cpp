@@ -225,24 +225,16 @@ nsChangeHint nsStyleFont::MaxDifference()
 }
 #endif
 
-inline float
-TextZoomFor(nsPresContext* aPresContext)
-{
-  float textZoom;
-  aPresContext->DeviceContext()->GetTextZoom(textZoom);
-  return textZoom;
-}
-
 /* static */ nscoord
 nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
-  return nscoord(float(aSize) * TextZoomFor(aPresContext));
+  return nscoord(float(aSize) * aPresContext->TextZoom());
 }
 
 /* static */ nscoord
 nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
-  return nscoord(float(aSize) / TextZoomFor(aPresContext));
+  return nscoord(float(aSize) / aPresContext->TextZoom());
 }
 
 nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)

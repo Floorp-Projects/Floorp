@@ -5157,6 +5157,12 @@ nsDocShell::RestoreFromHistory()
         mSavingOldViewer = CanSavePresentation(mLoadType, request);
     }
 
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(do_QueryInterface(mContentViewer));
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(do_QueryInterface(viewer));
+    float zoom = 1.0;
+    if (oldMUDV && newMUDV)
+        oldMUDV->GetTextZoom(&zoom);
+
     // Notify the old content viewer that it's being hidden.
     FirePageHideNotification(!mSavingOldViewer);
     // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
@@ -5259,6 +5265,10 @@ nsDocShell::RestoreFromHistory()
     // in CreateContentViewer.
     if (++gNumberOfDocumentsLoading == 1)
         PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+
+
+    if (oldMUDV && newMUDV)
+        newMUDV->SetTextZoom(zoom);
 
     nsCOMPtr<nsIDOMDocument> domDoc;
     mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));

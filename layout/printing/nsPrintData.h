@@ -160,7 +160,6 @@ public:
   PRInt32                     mNumPagesPrinted;
   float                       mShrinkRatio;
   float                       mOrigDCScale;
-  float                       mOrigTextZoom;
   float                       mOrigZoom;
 
   nsCOMPtr<nsIPrintSession>   mPrintSession;
