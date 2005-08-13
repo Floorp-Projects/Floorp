@@ -327,7 +327,7 @@
         ]]>
       </constructor>
 
-      <deconstructor>
+      <destructor>
         <![CDATA[
           // when we are destructed and we are selected, unselect ourselves so
           // that richlistbox's selection doesn't point to something not in the DOM.
@@ -335,7 +335,7 @@
             this.control.clearSelection();
           }
         ]]>
-      </deconstructor>
+      </destructor>
 
       <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
       <property name="accessible">
