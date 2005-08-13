@@ -358,17 +358,20 @@ sub ProcessOneBug {
         if ($old) {
             # You can't stop being the reporter, and mail isn't sent if you
             # remove your vote.
+            # Ignore people whose user account has been deleted or renamed.
             if ($what eq "CC") {
                 foreach my $cc_user (split(/[\s,]+/, $old)) {
-                    push(@{$recipients{&::DBNameToIdAndCheck($cc_user)}},
-                         REL_CC);
+                    my $uid = login_to_id($cc_user);
+                    push(@{$recipients{$uid}}, REL_CC) if $uid;
                 }
             }
             elsif ($what eq "QAContact") {
-                push(@{$recipients{&::DBNameToIdAndCheck($old)}}, REL_QA);
+                my $uid = login_to_id($old);
+                push(@{$recipients{$uid}}, REL_QA) if $uid;
             }
             elsif ($what eq "AssignedTo") {
-                push(@{$recipients{&::DBNameToIdAndCheck($old)}}, REL_ASSIGNEE);
+                my $uid = login_to_id($old);
+                push(@{$recipients{$uid}}, REL_ASSIGNEE) if $uid;
             }
         }
     }
