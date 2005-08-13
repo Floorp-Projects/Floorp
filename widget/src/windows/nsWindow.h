@@ -379,6 +379,7 @@ public:
 
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
+  nsWindow*               GetTopLevelWindow();
 
 #ifdef MOZ_XUL
   NS_IMETHOD              SetWindowTranslucency(PRBool aTransparent);
@@ -388,7 +389,6 @@ private:
   nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
   PRBool                  GetWindowTranslucencyInner() { return mIsTranslucent; }
   void                    UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas);
-  nsWindow*               GetTopLevelWindow();
   void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight);
   nsresult                UpdateTranslucentWindow();
   nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent);
@@ -714,6 +714,7 @@ protected:
 
 public:
   static void GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  static HWND GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel = PR_FALSE);
 };
 
 //

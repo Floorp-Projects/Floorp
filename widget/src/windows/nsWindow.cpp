@@ -690,29 +690,6 @@ static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
   }
 }
 
-static HWND GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel = PR_FALSE)
-{
-  HWND curWnd = aWnd;
-  HWND topWnd = NULL;
-
-  while (curWnd)
-  {
-    topWnd = curWnd;
-
-    if (aStopOnFirstTopLevel)
-    {
-      DWORD style = nsToolkit::mGetWindowLong(curWnd, GWL_STYLE);
-
-      if (!(style & WS_CHILDWINDOW))    // first top-level window
-        break;
-    }
-
-    curWnd = ::GetParent(curWnd);       // Parent or owner (if has no parent)
-  }
-
-  return topWnd;
-}
-
 /* This object maintains a correlation between attention timers and the
    windows to which they belong. It's lighter than a hashtable (expected usage
    is really just one at a time) and allows nsWindow::GetNSWindowPtr
@@ -825,6 +802,29 @@ private:
 };
 
 static nsAttentionTimerMonitor *gAttentionTimerMonitor = 0;
+
+HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel)
+{
+  HWND curWnd = aWnd;
+  HWND topWnd = NULL;
+
+  while (curWnd)
+  {
+    topWnd = curWnd;
+
+    if (aStopOnFirstTopLevel)
+    {
+      DWORD style = nsToolkit::mGetWindowLong(curWnd, GWL_STYLE);
+
+      if (!(style & WS_CHILDWINDOW))    // first top-level window
+        break;
+    }
+
+    curWnd = ::GetParent(curWnd);       // Parent or owner (if has no parent)
+  }
+
+  return topWnd;
+}
 
 // Code to dispatch WM_SYSCOLORCHANGE message to all child windows.
 // WM_SYSCOLORCHANGE is only sent to top-level windows, but the
@@ -6024,7 +6024,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
             MouseTrailer::GetSingleton().IgnoreNextCycle();
-            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, gCurrentWindow->GetLastPoint());
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam);
           }
           gCurrentWindow = this;
           if (!mIsDestroying) {
