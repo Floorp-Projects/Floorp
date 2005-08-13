@@ -108,6 +108,9 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsIAbCard.h"
 #include "nsIMsgProgress.h"
+#include "nsIMsgMessageService.h"
+#include "nsIMsgHdr.h"
+#include "nsIMsgFolder.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -2832,7 +2835,9 @@ int nsMsgComposeAndSend::SetMimeHeader(nsMsgCompFields::MsgHeaderID header, cons
 }
 
 nsresult
-nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
+nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields,
+                                           const nsACString &aOriginalMsgURI,
+                                           MSG_ComposeType aType)
 {
   nsresult        rv = NS_OK;
   const char      *pStr = nsnull;
@@ -2915,17 +2920,77 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
     // We use default FCC setting if it's not set or was set to an invalid folder.
     if (useDefaultFCC)
     {
-      char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
-      if ( (uri) && (*uri) )
+      // Only check whether the user wants the message in the original message
+      // folder if the msgcomptype is some kind of a reply.
+      if (!aOriginalMsgURI.IsEmpty() && (
+            aType == nsIMsgCompType::Reply || 
+            aType == nsIMsgCompType::ReplyAll ||
+            aType == nsIMsgCompType::ReplyToGroup ||
+            aType == nsIMsgCompType::ReplyToSender ||
+            aType == nsIMsgCompType::ReplyToSenderAndGroup ||
+            aType == nsIMsgCompType::ReplyWithTemplate )
+         )
       {
-        if (PL_strcasecmp(uri, "nocopy://") == 0)
-          mCompFields->SetFcc("");
-        else
-          mCompFields->SetFcc(uri);
-        PL_strfree(uri);
+        nsCOMPtr <nsIMsgAccountManager> accountManager =
+            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv); 
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr <nsIMsgDBHdr> msgHdr;
+          rv = GetMsgDBHdrFromURI(PromiseFlatCString(aOriginalMsgURI).get(),
+                                  getter_AddRefs(msgHdr));
+          if (NS_SUCCEEDED(rv))
+          {
+            nsCOMPtr <nsIMsgFolder> folder;
+            msgHdr->GetFolder(getter_AddRefs(folder));
+            if (NS_SUCCEEDED(rv))
+            {
+              PRBool canFileMessages;
+              rv = folder->GetCanFileMessages(&canFileMessages);
+              if (NS_SUCCEEDED(rv) && canFileMessages)
+              {
+                nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+                rv = folder->GetServer(getter_AddRefs(incomingServer));
+                if (NS_SUCCEEDED(rv))
+                {
+                  nsXPIDLCString incomingServerType;
+                  rv = incomingServer->GetCharValue("type",
+                           getter_Copies(incomingServerType));
+                  // Exclude RSS accounts, as they falsely report
+                  // 'canFileMessages' = true
+                  if (NS_SUCCEEDED(rv) && !incomingServerType.Equals("rss"))
+                  {
+                    PRBool fccReplyFollowsParent;
+                    rv = mUserIdentity->GetFccReplyFollowsParent(
+                             &fccReplyFollowsParent);
+                    if (NS_SUCCEEDED(rv) && fccReplyFollowsParent)
+                    {
+                      nsXPIDLCString folderURI;
+                      rv = folder->GetURI(getter_Copies(folderURI));
+                      if (NS_SUCCEEDED(rv))
+                      {
+                        mCompFields->SetFcc(folderURI.get());
+                        useDefaultFCC = PR_FALSE;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
-      else
-        mCompFields->SetFcc("");
+
+      if (useDefaultFCC)
+      {
+        char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
+        if ( (uri) && (*uri) )
+        {
+          mCompFields->SetFcc(PL_strcasecmp(uri, "nocopy://") ? uri : "");
+          PL_strfree(uri);
+        }
+        else
+					mCompFields->SetFcc("");
+      }
     }
   }
 
@@ -3138,7 +3203,9 @@ nsMsgComposeAndSend::Init(
               PRUint32 attachment1_body_length,
               const nsMsgAttachmentData *attachments,
               const nsMsgAttachedFile *preloaded_attachments,
-              const char *password)
+              const char *password,
+              const nsACString &aOriginalMsgURI,
+              MSG_ComposeType aType)
 {
   nsresult      rv = NS_OK;
   
@@ -3181,7 +3248,7 @@ nsMsgComposeAndSend::Init(
   if (!fields)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = InitCompositionFields(fields);
+  rv = InitCompositionFields(fields, aOriginalMsgURI, aType);
   if (NS_FAILED(rv))
     return rv;
 
@@ -4055,7 +4122,9 @@ nsMsgComposeAndSend::CreateAndSendMessage(
               nsIDOMWindowInternal              *parentWindow,
               nsIMsgProgress                    *progress,
               nsIMsgSendListener                *aListener,
-              const char                        *password
+              const char                        *password,
+              const nsACString                  &aOriginalMsgURI,
+              MSG_ComposeType                   aType
               )
 {
   nsresult      rv;
@@ -4084,7 +4153,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
           attachment1_type, attachment1_body,
           attachment1_body_length,
           attachments, preloaded_attachments,
-          password);
+          password, aOriginalMsgURI, aType);
 
   if (NS_FAILED(rv) && mSendReport)
     mSendReport->SetError(nsIMsgSendReport::process_Current, rv, PR_FALSE);
@@ -4155,7 +4224,7 @@ nsMsgComposeAndSend::SendMessageFile(
             digest_p, PR_FALSE, mode, msgToReplace, 
             nsnull, nsnull, nsnull,
             nsnull, nsnull,
-            password);
+            password, EmptyCString(), nsnull);
 
   if (NS_SUCCEEDED(rv))
     rv = DeliverMessage();

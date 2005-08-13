@@ -685,7 +685,9 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 										nsnull,                       // parent window
 										nsnull,                       // progress listener
 										m_pListener,		              // listener
-                    nsnull);                      // password
+										nsnull,                       // password
+										EmptyCString(),               // originalMsgURI
+                    nsnull);                      // message compose type
 
 
 	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");

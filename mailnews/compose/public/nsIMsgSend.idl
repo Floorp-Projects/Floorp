@@ -53,6 +53,7 @@
 #include "domstubs.idl"
 #include "nsIPrompt.idl"
 #include "MailNewsTypes2.idl"
+#include "nsIMsgComposeParams.idl"
 
 %{C++
 #include "nsIURL.h"
@@ -164,7 +165,7 @@ typedef struct nsMsgAttachedFile
 [ptr] native nsOutputFileStream(nsOutputFileStream);
 [ptr] native nsCString(nsCString);
 
-[scriptable, uuid(9E9BD970-C5D6-11d2-8297-000000000000)]
+[scriptable, uuid(39876de6-207f-43f4-99a7-d60f1c49ea48)]
 interface nsIMsgSend : nsISupports 
 {
   //
@@ -203,7 +204,9 @@ interface nsIMsgSend : nsISupports
                               in nsIDOMWindowInternal         parentWindow,
                               in nsIMsgProgress               progress,
                               in nsIMsgSendListener           aListener,
-                              in string                       password
+                              in string                       password,
+                              in AUTF8String                  aOriginalMsgURI,
+                              in MSG_ComposeType              aType
                              );
                               
     

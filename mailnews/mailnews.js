@@ -365,6 +365,7 @@ pref("mail.identity.default.compose_html", true);
 pref("mail.identity.default.valid", true);
 pref("mail.identity.default.fcc",true);
 pref("mail.identity.default.fcc_folder","mailbox://nobody@Local%20Folders/Sent");
+pref("mail.identity.default.fcc_reply_follows_parent", false);
 pref("mail.identity.default.autocompleteToMyDomain", false);
 
 // keep these defaults for backwards compatibility and migration

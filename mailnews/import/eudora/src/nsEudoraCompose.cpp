@@ -717,7 +717,9 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										nsnull,                       // parent window
 										nsnull,                       // progress listener
 										m_pListener,		              // listener
-                    nsnull);                      // password
+										nsnull,                       // password
+										EmptyCString(),               // originalMsgURI
+                    nsnull);                      // message compose type
 
 	}
 	else {
@@ -739,7 +741,9 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 										nsnull,                       // parent window
 										nsnull,                       // progress listener
 										m_pListener,		              // listener
-                    nsnull);                      // password
+										nsnull,                       // password
+										EmptyCString(),               // originalMsgURI
+                    nsnull);                      // message compose type
 
 	}
 

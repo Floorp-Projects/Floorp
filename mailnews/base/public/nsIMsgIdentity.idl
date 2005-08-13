@@ -49,7 +49,7 @@
  */
 
 
-[scriptable, uuid(2b165a14-1ac1-4c32-8cc5-72e2937d5be9)]
+[scriptable, uuid(e823535a-66b8-4bd4-99cd-cb1cafbfedb6)]
 interface nsIMsgIdentity : nsISupports {
   /* internal preferences ID */
   attribute string key;
@@ -102,6 +102,7 @@ interface nsIMsgIdentity : nsISupports {
   attribute string fccFolder;
 
   attribute string fccFolderPickerMode;
+  attribute boolean fccReplyFollowsParent;
   attribute string draftsFolderPickerMode;
   attribute string tmplFolderPickerMode;  
 

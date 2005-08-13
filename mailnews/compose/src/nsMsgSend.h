@@ -256,12 +256,17 @@ public:
                    PRUint32         attachment1_body_length,
                    const nsMsgAttachmentData   *attachments,
                    const nsMsgAttachedFile     *preloaded_attachments,
-                   const char       *password);
+                   const char       *password,
+                   const nsACString &aOriginalMsgURI,
+                   MSG_ComposeType  aType);
 
   //
   // Setup the composition fields
   //
-  nsresult    InitCompositionFields(nsMsgCompFields *fields);
+  nsresult    InitCompositionFields(nsMsgCompFields *fields,
+                                    const nsACString &aOriginalMsgURI,
+                                    MSG_ComposeType aType);
+
   int         SetMimeHeader(nsMsgCompFields::MsgHeaderID header, const char *value);
   NS_IMETHOD  GetBodyFromEditor();
 

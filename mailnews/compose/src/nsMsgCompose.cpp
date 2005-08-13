@@ -926,7 +926,9 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     m_window,                           // nsIDOMWindowInternal              *parentWindow;
                     mProgress,                          // nsIMsgProgress                    *progress,
                     sendListener,                       // listener
-                    mSmtpPassword.get());
+                    mSmtpPassword.get(),
+                    mOriginalMsgURI,
+                    mType);
 
       // Cleanup converted body...
       if (newBody)
