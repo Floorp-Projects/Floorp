@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -153,6 +154,7 @@ public:
   virtual void SetContext(nsIScriptContext *aContext);
   virtual nsIScriptContext *GetContext();
   virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                                  nsISupports *aState,
                                   PRBool aRemoveEventListeners,
                                   PRBool aClearScopeHint);
   virtual void SetDocShell(nsIDocShell* aDocShell);
@@ -278,6 +280,7 @@ protected:
   void ClearControllers();
 
   nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                          nsISupports *aState,
                           PRBool aRemoveEventListeners,
                           PRBool aClearScopeHint,
                           PRBool aIsInternalCall);
@@ -382,6 +385,25 @@ protected:
   void SuspendTimeouts();
   nsresult ResumeTimeouts();
 
+  void Freeze()
+  {
+    NS_ASSERTION(IsInnerWindow(), "Freeze called on an outer window");
+    mIsFrozen = PR_TRUE;
+  }
+
+  void Thaw()
+  {
+    NS_ASSERTION(IsInnerWindow(), "Freeze called on an outer window");
+    mIsFrozen = PR_FALSE;
+  }
+
+  PRBool IsFrozen() const
+  {
+    NS_ASSERTION(IsInnerWindow(),
+                 "Why do you care if an outer window is frozen?");
+    return mIsFrozen;
+  }
+
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
   // could own objects that are implemented in JavaScript, then those
@@ -405,7 +427,6 @@ protected:
   nsRefPtr<nsScreen>            mScreen;
   nsRefPtr<nsHistory>           mHistory;
   nsRefPtr<nsDOMWindowList>     mFrames;
-  nsRefPtr<nsLocation>          mLocation;
   nsRefPtr<nsBarProp>           mMenubar;
   nsRefPtr<nsBarProp>           mToolbar;
   nsRefPtr<nsBarProp>           mLocationbar;
@@ -429,6 +450,8 @@ protected:
   nsTimeout**                   mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
+  nsRefPtr<nsLocation>          mLocation;
+  PRPackedBool                  mIsFrozen;
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;

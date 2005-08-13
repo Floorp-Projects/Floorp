@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -354,6 +355,7 @@ private:
   nsresult MakeWindow(nsIWidget* aParentWidget,
                       const nsRect& aBounds);
   nsresult InitInternal(nsIWidget* aParentWidget,
+                        nsISupports *aState,
                         nsIDeviceContext* aDeviceContext,
                         const nsRect& aBounds,
                         PRBool aDoCreation,
@@ -627,7 +629,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
                          const nsRect& aBounds)
 {
-  return InitInternal(aParentWidget, aDeviceContext, aBounds, PR_TRUE, PR_FALSE);
+  return InitInternal(aParentWidget, nsnull, aDeviceContext, aBounds, PR_TRUE, PR_FALSE);
 }
 
 nsresult
@@ -765,6 +767,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 // all the new objects or just initialize the existing ones
 nsresult
 DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
+                                 nsISupports *aState,
                                  nsIDeviceContext* aDeviceContext,
                                  const nsRect& aBounds,
                                  PRBool aDoCreation,
@@ -843,7 +846,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
 
         if (domdoc) {
-          global->SetNewDocument(domdoc, PR_TRUE, PR_TRUE);
+          global->SetNewDocument(domdoc, aState, PR_TRUE, PR_TRUE);
         }
       }
     }
@@ -1203,7 +1206,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Open()
+DocumentViewerImpl::Open(nsISupports *aState)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
 
@@ -1216,7 +1219,7 @@ DocumentViewerImpl::Open()
   nsRect bounds;
   mWindow->GetBounds(bounds);
 
-  nsresult rv = InitInternal(mParentWidget, mDeviceContext, bounds,
+  nsresult rv = InitInternal(mParentWidget, aState, mDeviceContext, bounds,
                              PR_FALSE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1510,7 +1513,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     // Set the script global object on the new document
     nsCOMPtr<nsIScriptGlobalObject> global = do_GetInterface(container);
     if (global) {
-      global->SetNewDocument(aDocument, PR_TRUE, PR_TRUE);
+      global->SetNewDocument(aDocument, nsnull, PR_TRUE, PR_TRUE);
     }
   }
 
@@ -3936,7 +3939,7 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
     }
   }
 
-  InitInternal(mParentWidget, mDeviceContext, bounds, !wasCached, PR_TRUE);
+  InitInternal(mParentWidget, nsnull, mDeviceContext, bounds, !wasCached, PR_TRUE);
 
   if (mPrintEngine && !wasCached) {
     mPrintEngine->Destroy();
