@@ -1465,17 +1465,17 @@ nsMsgFolderDataSource::createFolderIsSecureNode(nsIMsgFolder* folder,
                                                   nsIRDFNode **target)
 {
   nsresult rv;
-  PRBool isSecure;
+  PRBool isSecure = PR_FALSE;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = folder->GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv) || !server) {
-    // this could be a folder, not a server, so that's ok;
-    isSecure = PR_FALSE;
-  }
-  else {
-    rv = server->GetIsSecure(&isSecure);
-    if (NS_FAILED(rv)) return rv;
+
+  if (NS_SUCCEEDED(rv) && server) {
+    PRInt32 socketType;
+    rv = server->GetSocketType(&socketType);
+    if (NS_SUCCEEDED(rv) && (socketType == nsIMsgIncomingServer::alwaysUseTLS || 
+                             socketType == nsIMsgIncomingServer::useSSL))
+      isSecure = PR_TRUE;
   }
 
   *target = (isSecure) ? kTrueLiteral : kFalseLiteral;
