@@ -182,6 +182,18 @@
     </tr>
   [% END %]
 
+  [% IF Param('usestatuswhiteboard') %]
+    <tr>
+      <td align="right">
+        <b>Status Whiteboard:</b>
+      </td>
+      <td colspan="7">
+        <input name="status_whiteboard" 
+               value="[% dontchange FILTER html %]" size="60">
+      </td>
+    </tr>
+  [% END %]
+
 </table>
 
 <b><label for="comment">Additional Comments:</label></b><br>
