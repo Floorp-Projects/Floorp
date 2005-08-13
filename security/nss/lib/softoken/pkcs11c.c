@@ -2500,6 +2500,7 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
     CK_ULONG counter;
     unsigned int seedBits = 0;
     unsigned int primeBits;
+    unsigned int j;
     CK_RV crv = CKR_OK;
     PQGParams *params = NULL;
     PQGVerify *vfy = NULL;
@@ -2511,6 +2512,10 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
     }
     primeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
     sftk_FreeAttribute(attribute);
+    j = PQG_PBITS_TO_INDEX(primeBits);
+    if (j == (unsigned int)-1) {
+	return CKR_ATTRIBUTE_VALUE_INVALID;
+    }
 
     attribute = sftk_FindAttribute(key, CKA_NETSCAPE_PQG_SEED_BITS);
     if (attribute != NULL) {
@@ -2522,9 +2527,9 @@ nsc_parameter_gen(CK_KEY_TYPE key_type, SFTKObject *key)
     sftk_DeleteAttributeType(key,CKA_NETSCAPE_PQG_SEED_BITS);
 
     if (seedBits == 0) {
-	rv = PQG_ParamGen(primeBits, &params, &vfy);
+	rv = PQG_ParamGen(j, &params, &vfy);
     } else {
-	rv = PQG_ParamGenSeedLen(primeBits,seedBits/8, &params, &vfy);
+	rv = PQG_ParamGenSeedLen(j,seedBits/8, &params, &vfy);
     }
 
     if (rv != SECSuccess) {
