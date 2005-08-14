@@ -812,6 +812,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel)
   {
     topWnd = curWnd;
 
+#ifndef WINCE
     if (aStopOnFirstTopLevel)
     {
       DWORD style = nsToolkit::mGetWindowLong(curWnd, GWL_STYLE);
@@ -819,6 +820,7 @@ HWND nsWindow::GetTopLevelHWND(HWND aWnd, PRBool aStopOnFirstTopLevel)
       if (!(style & WS_CHILDWINDOW))    // first top-level window
         break;
     }
+#endif
 
     curWnd = ::GetParent(curWnd);       // Parent or owner (if has no parent)
   }
