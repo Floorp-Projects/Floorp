@@ -50,7 +50,6 @@ use Bugzilla::Config qw(:DEFAULT :db);
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::DB::Schema;
-use Bugzilla::User;
 
 #####################################################################
 # Constants
@@ -299,7 +298,7 @@ sub bz_get_field_defs {
     my ($self) = @_;
 
     my $extra = "";
-    if (!UserInGroup(Param('timetrackinggroup'))) {
+    if (!Bugzilla->user->in_group(Param('timetrackinggroup'))) {
         $extra = "AND name NOT IN ('estimated_time', 'remaining_time', " .
                  "'work_time', 'percentage_complete', 'deadline')";
     }
