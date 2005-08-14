@@ -47,7 +47,8 @@
 <?xml-stylesheet href="chrome://global/skin/menubutton.css"?>
 <?xml-stylesheet href="chrome://global/skin/menulist.css"?>
 <?xml-stylesheet href="chrome://global/skin/radio.css"?>
-<?xml-stylesheet href="chrome://global/skin/scrollbars.css"?>
+<?xml-stylesheet href="chrome://global/skin/nativescrollbars.css"?>
+<?xml-stylesheet href="chrome://global/skin/xulscrollbars.css"?>
 <?xml-stylesheet href="chrome://global/skin/splitter.css"?>
 <?xml-stylesheet href="chrome://global/skin/tabcontrol.css"?>
 <?xml-stylesheet href="chrome://global/skin/tasksOverlay.css"?>

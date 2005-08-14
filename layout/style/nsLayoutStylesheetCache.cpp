@@ -80,12 +80,19 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   if (!gStyleCache->mScrollbarsSheet) {
     nsCOMPtr<nsIURI> sheetURI;
     NS_NewURI(getter_AddRefs(sheetURI),
-              NS_LITERAL_CSTRING("chrome://global/skin/scrollbars.css"));
+#ifdef XP_MACOSX
+              NS_LITERAL_CSTRING("chrome://global/skin/nativescrollbars.css"));
+#else
+              NS_LITERAL_CSTRING("chrome://global/skin/xulscrollbars.css"));
+#endif
 
     if (sheetURI)
       LoadSheet(sheetURI, gStyleCache->mScrollbarsSheet);
-
-    NS_ASSERTION(gStyleCache->mScrollbarsSheet, "Could not load scrollbars.css.");
+#ifdef XP_MACOSX
+    NS_ASSERTION(gStyleCache->mScrollbarsSheet, "Could not load nativescrollbars.css.");
+#else
+    NS_ASSERTION(gStyleCache->mScrollbarsSheet, "Could not load xulscrollbars.css.");
+#endif
   }
 
   return gStyleCache->mScrollbarsSheet;

@@ -39,7 +39,10 @@ classic.jar:
 +  skin/classic/global/progressmeter.css
 +  skin/classic/global/radio.css
 +  skin/classic/global/richlistbox.css
-+  skin/classic/global/scrollbars.css
+# chrome://global/skin/nativescrollbars.css is used on Mac
++  skin/classic/global/nativescrollbars.css
+# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
++  skin/classic/global/xulscrollbars.css                              (../../winstripe/global/xulscrollbars.css)
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
