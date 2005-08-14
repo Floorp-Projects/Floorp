@@ -54,12 +54,10 @@ REQUIRES	= xpcom \
 			  intl \
 			  $(NULL)
 
-ifeq ($(OS_ARCH), UNIX)
-CPPSRCS		= nsNativeUConvService.cpp
-endif
-
 ifdef WINCE
 CPPSRCS		= nsWinCEUConvService.cpp
+else
+CPPSRCS		= nsNativeUConvService.cpp
 endif
 
 XPIDLSRCS	= \
