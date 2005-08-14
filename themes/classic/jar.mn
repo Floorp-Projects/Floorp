@@ -142,8 +142,6 @@ classic.jar:
   skin/classic/global/preview.gif                               (global/mac/preview.gif)
   skin/classic/global/progressmeter.css                         (global/mac/progressmeter.css)
   skin/classic/global/radio.css                                 (global/mac/radio.css)
-# use native scrollbars over xul scrollbars for mac classic skin.
-  skin/classic/global/scrollbars.css                            (global/mac/nativescrollbars.css)
   skin/classic/global/scrollbox.css                             (global/mac/scrollbox.css)
   skin/classic/global/spinbuttons.css                           (global/mac/spinbuttons.css)
   skin/classic/global/splitter.css                              (global/mac/splitter.css)
@@ -255,7 +253,6 @@ classic.jar:
   skin/classic/global/menulist.css                            (global/win/menulist.css)
   skin/classic/global/popup.css                               (global/win/popup.css)
   skin/classic/global/progressmeter.css                       (global/win/progressmeter.css)
-  skin/classic/global/scrollbars.css                          (global/win/scrollbars.css)
   skin/classic/global/scrollbox.css                           (global/win/scrollbox.css)
   skin/classic/global/spinbuttons.css                         (global/win/spinbuttons.css)
   skin/classic/global/splitter.css                            (global/win/splitter.css)
@@ -294,6 +291,10 @@ classic.jar:
   skin/classic/global/netError.css                                      (global/netError.css)
   skin/classic/global/plugins.css                                       (global/plugins.css)
   skin/classic/global/printing.css                                      (global/printing.css)
+# chrome://global/skin/nativescrollbars.css is used on Mac
+  skin/classic/global/nativescrollbars.css                              (global/mac/nativescrollbars.css)
+# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
+  skin/classic/global/xulscrollbars.css                                 (global/win/scrollbars.css)
   skin/classic/global/filepicker/blank.gif                              (global/filepicker/blank.gif)
   skin/classic/global/filepicker/dir-closed.gif                         (global/filepicker/dir-closed.gif)
   skin/classic/global/filepicker/dir-open.gif                           (global/filepicker/dir-open.gif)

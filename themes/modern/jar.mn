@@ -170,7 +170,10 @@ modern.jar:
   skin/modern/global/toolbar.css                                   (global/toolbar.css)
   skin/modern/global/dialog.css                                    (global/dialog.css)
   skin/modern/global/browser.css                                   (global/browser.css)
-  skin/modern/global/scrollbars.css                                (global/scrollbars.css)
+# referenced as chrome://global/skin/nativescrollbars.css on Mac
+  skin/modern/global/nativescrollbars.css                          (global/scrollbars.css)
+# referenced as chrome://global/skin/xulscrollbars.css on non-Mac platforms
+  skin/modern/global/xulscrollbars.css                             (global/scrollbars.css)
   skin/modern/global/scrollbars-mini.css                           (global/scrollbars-mini.css)
   skin/modern/global/arrow/arrow-dn-dis.gif                        (global/arrow/arrow-dn-dis.gif)
   skin/modern/global/arrow/arrow-dn.gif                            (global/arrow/arrow-dn.gif)
