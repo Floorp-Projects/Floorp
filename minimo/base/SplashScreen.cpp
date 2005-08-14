@@ -137,7 +137,7 @@ void CreateSplashScreen() {}
 void KillSplashScreen() {}
 void GetScreenSize(unsigned long* x, unsigned long* y)
 {
-  *x = *y = 0;
+  *x = *y = 100;
 }
 
 

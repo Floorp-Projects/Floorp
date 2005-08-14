@@ -36,6 +36,9 @@
 
 #include "MinimoPrivate.h"
 
+#include "nsIFullScreen.h"
+#include "nsIGenericFactory.h"
+
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponents.h"
 #endif
@@ -49,48 +52,6 @@ PRBool gDumpJSConsole = PR_FALSE;
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
-
-class nsBrowserStatusFilterFactory : public nsIFactory
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFACTORY
-  
-  nsBrowserStatusFilterFactory();
-  ~nsBrowserStatusFilterFactory() { }
-};
-
-nsBrowserStatusFilterFactory::nsBrowserStatusFilterFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsBrowserStatusFilterFactory, nsIFactory)
-
-NS_IMETHODIMP
-nsBrowserStatusFilterFactory::CreateInstance(nsISupports* aOuter,
-                                   const nsIID& aIID,
-                                   void* *aResult)
-{
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-  
-  nsBrowserStatusFilter* filter = new nsBrowserStatusFilter();
-  if (!filter)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = filter->QueryInterface(aIID, aResult);
-
-  if (NS_FAILED(rv))
-    delete filter;
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsBrowserStatusFilterFactory::LockFactory(PRBool)
-{
-  return NS_OK;
-}
 
 class ApplicationObserver: public nsIObserver 
 {
@@ -174,6 +135,81 @@ ApplicationObserver::Observe(nsISupports *aSubject, const char *aTopic, const PR
     return NS_OK;
 }
 
+
+class nsFullScreen : public nsIFullScreen
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFULLSCREEN
+  
+  nsFullScreen();
+  ~nsFullScreen();
+
+#ifdef WINCE
+  HWND hTaskBarWnd;
+#endif
+};
+
+NS_IMPL_ISUPPORTS1(nsFullScreen, nsIFullScreen)
+
+nsFullScreen::nsFullScreen()
+{
+#ifdef WINCE
+  hTaskBarWnd = FindWindow("HHTaskBar", NULL); 
+#endif
+}
+
+nsFullScreen::~nsFullScreen()
+{
+}
+
+NS_IMETHODIMP
+nsFullScreen::HideAllOSChrome()
+{
+#ifndef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!hTaskBarWnd)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  SetWindowPos(hTaskBarWnd, 
+               HWND_NOTOPMOST,
+               0, 0, 0, 0, 
+               SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
+  ShowWindow(hTaskBarWnd, SW_HIDE);
+
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP 
+nsFullScreen::ShowAllOSChrome()
+{
+#ifndef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!hTaskBarWnd)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  SetWindowPos(hTaskBarWnd, 
+               HWND_TOPMOST,
+               0, 0, 0, 0, 
+               SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
+  ShowWindow(hTaskBarWnd, SW_SHOW);
+
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP
+nsFullScreen::GetChromeItems(nsISimpleEnumerator **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 nsresult StartupProfile()
 {    
     NS_TIMELINE_MARK_FUNCTION("Profile Startup");
@@ -211,23 +247,59 @@ void DoPreferences()
     prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
 }
 
+#define NS_FULLSCREEN_CID                          \
+{ /* aca93a4e-53f8-40e2-a59b-9363a0bf9a87 */       \
+  0xaca93a4e,                                      \
+  0x53f8,                                          \
+  0x40e2,                                          \
+  {0xa5, 0x9b, 0x93, 0x63, 0xa0, 0xbf, 0x9a, 0x87} \
+}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen);
+
+static const nsModuleComponentInfo defaultAppComps[] = {
+  {
+     NS_BROWSERSTATUSFILTER_CLASSNAME,
+     NS_BROWSERSTATUSFILTER_CID,
+     NS_BROWSERSTATUSFILTER_CONTRACTID,
+     nsBrowserStatusFilterConstructor
+  },
+
+  {
+     "FullScreen",
+     NS_FULLSCREEN_CID,
+     "@mozilla.org/browser/fullscreen;1",
+     nsFullScreenConstructor
+  },
+
+};
+
 void OverrideComponents()
 {
-  static NS_DEFINE_CID(kBrowserStatusFilter, NS_BROWSERSTATUSFILTER_CID);
+  int count = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
 
-  nsCOMPtr<nsIComponentRegistrar> registrar;
-  NS_GetComponentRegistrar(getter_AddRefs(registrar));
-
-  nsBrowserStatusFilterFactory* factory = new nsBrowserStatusFilterFactory();
-
-  if (!factory)
-    return;
-
-  if (registrar)
-    registrar->RegisterFactory(kBrowserStatusFilter,
-                               NS_BROWSERSTATUSFILTER_CLASSNAME,
-                               NS_BROWSERSTATUSFILTER_CONTRACTID,
-                               factory);
+  nsCOMPtr<nsIComponentRegistrar> cr;
+  NS_GetComponentRegistrar(getter_AddRefs(cr));
+  
+  nsCOMPtr<nsIComponentManager> cm;
+  NS_GetComponentManager (getter_AddRefs (cm));
+  
+  for (int i = 0; i < count; ++i) 
+  {
+    nsCOMPtr<nsIGenericFactory> componentFactory;
+    nsresult rv = NS_NewGenericFactory(getter_AddRefs(componentFactory), &(defaultAppComps[i]));
+    
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Unable to create factory for component");
+      continue;  // don't abort registering other components
+    }
+    
+    rv = cr->RegisterFactory(defaultAppComps[i].mCID,
+                             defaultAppComps[i].mDescription,
+                             defaultAppComps[i].mContractID,
+                             componentFactory);
+  }
 }
 
 #ifdef WINCE
@@ -343,6 +415,11 @@ void UnloadKnownLibs()
 
 int main(int argc, char *argv[])
 {
+#ifdef MOZ_WIDGET_GTK2
+  gtk_set_locale();
+  gtk_init(&argc, &argv);
+#endif
+
     if (DoesProcessAlreadyExist())
         return 0;
 

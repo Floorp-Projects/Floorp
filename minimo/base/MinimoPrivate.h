@@ -43,6 +43,12 @@
 #include <malloc.h>
 #include <memory.h>
 
+// System header files
+
+#ifdef MOZ_WIDGET_GTK2
+#include <gtk/gtk.h>
+#endif
+
 // Mozilla header files
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppShellCID.h"
