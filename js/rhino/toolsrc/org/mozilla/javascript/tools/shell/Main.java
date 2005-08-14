@@ -41,6 +41,7 @@ package org.mozilla.javascript.tools.shell;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.lang.reflect.*;
@@ -82,8 +83,11 @@ public class Main
             if (type == PROCESS_FILES) {
                 processFiles(cx, args);
             } else if (type == EVAL_INLINE_SCRIPT) {
-                evaluateScript(cx, getGlobal(), null, scriptText,
-                               "<command>", 1, null);
+                Script script = loadScriptFromSource(cx, scriptText,
+                                                     "<command>", 1, null);
+                if (script != null) {
+                    evaluateScript(script, cx, getGlobal());
+                }
             } else {
                 throw Kit.codeBug();
             }
@@ -338,17 +342,20 @@ public class Main
                     if (cx.stringIsCompilableUnit(source))
                         break;
                 }
-                Object result = evaluateScript(cx, global, null, source,
-                                               "<stdin>", startline, null);
-                if (result != cx.getUndefinedValue()) {
-                    try {
-                        global.getErr().println(cx.toString(result));
-                    } catch (RhinoException rex) {
-                        errorReporter.reportException(rex);
+                Script script = loadScriptFromSource(cx, source, "<stdin>",
+                                                     lineno, null);
+                if (script != null) {
+                    Object result = evaluateScript(script, cx, global);
+                    if (result != cx.getUndefinedValue()) {
+                        try {
+                            global.getErr().println(cx.toString(result));
+                        } catch (RhinoException rex) {
+                            errorReporter.reportException(rex);
+                        }
                     }
+                    NativeArray h = global.history;
+                    h.put((int)h.getLength(), h, source);
                 }
-                NativeArray h = global.history;
-                h.put((int)h.getLength(), h, source);
             }
             global.getErr().println();
         } else {
@@ -368,91 +375,44 @@ public class Main
     }
 
     static void processFileSecure(Context cx, Scriptable scope,
-                                  String filename, Object securityDomain)
+                                  String path, Object securityDomain)
     {
-        Reader in = null;
-        // Try filename first as URL
-        try {
-            URL url = new URL(filename);
-            InputStream is = url.openStream();
-            in = new BufferedReader(new InputStreamReader(is));
-        }  catch (MalformedURLException mfex) {
-            // fall through to try it as a file
-            in = null;
-        } catch (IOException ioex) {
-            Context.reportError(ToolErrorReporter.getMessage(
-                "msg.couldnt.open.url", filename, ioex.toString()));
-            exitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
-        }
-
-        if (in == null) {
-            // Try filename as file
-            try {
-                in = new PushbackReader(new FileReader(filename));
-                int c = in.read();
-                // Support the executable script #! syntax:  If
-                // the first line begins with a '#', treat the whole
-                // line as a comment.
-                if (c == '#') {
-                    while ((c = in.read()) != -1) {
-                        if (c == '\n' || c == '\r')
-                            break;
-                    }
-                    ((PushbackReader) in).unread(c);
-                } else {
-                    // No '#' line, just reopen the file and forget it
-                    // ever happened.  OPT closing and reopening
-                    // undoubtedly carries some cost.  Is this faster
-                    // or slower than leaving the PushbackReader
-                    // around?
-                    in.close();
-                    in = new FileReader(filename);
-                }
-                filename = new java.io.File(filename).getCanonicalPath();
-            }
-            catch (FileNotFoundException ex) {
-                Context.reportError(ToolErrorReporter.getMessage(
-                    "msg.couldnt.open",
-                    filename));
+        Script script;
+        if (path.endsWith(".class")) {
+            script = loadCompiledScript(cx, path, securityDomain);
+        } else {
+            String source = (String)readFileOrUrl(path, true);
+            if (source == null) {
                 exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
-            } catch (IOException ioe) {
-                global.getErr().println(ioe.toString());
             }
+
+            // Support the executable script #! syntax:  If
+            // the first line begins with a '#', treat the whole
+            // line as a comment.
+            if (source.length() > 0 && source.charAt(0) == '#') {
+                for (int i = 1; i != source.length(); ++i) {
+                    int c = source.charAt(i);
+                    if (c == '\n' || c == '\r') {
+                        source = source.substring(i);
+                        break;
+                    }
+                }
+            }
+            script = loadScriptFromSource(cx, source, path, 1, securityDomain);
         }
-        // Here we evalute the entire contents of the file as
-        // a script. Text is printed only if the print() function
-        // is called.
-        evaluateScript(cx, scope, in, null, filename, 1, securityDomain);
+        if (script != null) {
+            evaluateScript(script, cx, scope);
+        }
     }
 
-    public static Object evaluateScript(Context cx, Scriptable scope,
-                                        Reader in, String script,
-                                        String sourceName,
-                                        int lineno, Object securityDomain)
+    public static Script loadScriptFromSource(Context cx, String scriptSource,
+                                              String path, int lineno,
+                                              Object securityDomain)
     {
-        if (!global.initialized) {
-            global.init(cx);
-        }
-        Object result = cx.getUndefinedValue();
         try {
-            if (in != null) {
-                try {
-                    try {
-                        result = cx.evaluateReader(scope, in,
-                                                   sourceName, lineno,
-                                                   securityDomain);
-                    } finally {
-                        in.close();
-                    }
-                } catch (IOException ioe) {
-                    global.getErr().println(ioe.toString());
-                }
-            } else {
-                result = cx.evaluateString(scope, script, sourceName, lineno,
-                                           securityDomain);
-            }
+            return cx.compileString(scriptSource, path, lineno,
+                                    securityDomain);
         } catch (WrappedException we) {
             global.getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
@@ -470,7 +430,76 @@ public class Main
             exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(msg);
         }
-        return result;
+        return null;
+    }
+
+    private static Script loadCompiledScript(Context cx, String path,
+                                             Object securityDomain)
+    {
+        byte[] data = (byte[])readFileOrUrl(path, false);
+        if (data == null) {
+            exitCode = EXITCODE_FILE_NOT_FOUND;
+            return null;
+        }
+        // XXX: For now extract class name of compiled Script from path
+        // instead of parsing class bytes
+        int nameStart = path.lastIndexOf('/');
+        if (nameStart < 0) {
+            nameStart = 0;
+        } else {
+            ++nameStart;
+        }
+        int nameEnd = path.lastIndexOf('.');
+        if (nameEnd < nameStart) {
+            // '.' does not exist in path (nameEnd < 0)
+            // or it comes before nameStart
+            nameEnd = path.length();
+        }
+        String name = path.substring(nameStart, nameEnd);
+        try {
+            GeneratedClassLoader loader = SecurityController.createLoader(cx.getApplicationClassLoader(), securityDomain);
+            Class clazz = loader.defineClass(name, data);
+            loader.linkClass(clazz);
+            if (!Script.class.isAssignableFrom(clazz)) {
+                throw Context.reportRuntimeError("msg.must.implement.Script");
+            }
+            return (Script) clazz.newInstance();
+         } catch (RhinoException rex) {
+            errorReporter.reportException(rex);
+            exitCode = EXITCODE_RUNTIME_ERROR;
+        } catch (IllegalAccessException iaex) {
+            exitCode = EXITCODE_RUNTIME_ERROR;
+            Context.reportError(iaex.toString());
+        } catch (InstantiationException inex) {
+            exitCode = EXITCODE_RUNTIME_ERROR;
+            Context.reportError(inex.toString());
+        }
+        return null;
+    }
+
+    public static Object evaluateScript(Script script, Context cx,
+                                        Scriptable scope)
+    {
+        if (!global.initialized) {
+            global.init(cx);
+        }
+        try {
+            return script.exec(cx, scope);
+        } catch (WrappedException we) {
+            global.getErr().println(we.getWrappedException().toString());
+            we.printStackTrace();
+        } catch (RhinoException rex) {
+            errorReporter.reportException(rex);
+            exitCode = EXITCODE_RUNTIME_ERROR;
+        } catch (VirtualMachineError ex) {
+            // Treat StackOverflow and OutOfMemory as runtime errors
+            ex.printStackTrace();
+            String msg = ToolErrorReporter.getMessage(
+                "msg.uncaughtJSException", ex.toString());
+            exitCode = EXITCODE_RUNTIME_ERROR;
+            Context.reportError(msg);
+        }
+        return cx.getUndefinedValue();
     }
 
     private static void p(String s) {
@@ -506,6 +535,78 @@ public class Main
 
     public static void setErr(PrintStream err) {
         Global.getInstance(getGlobal()).setErr(err);
+    }
+
+    /**
+     * Read file or url specified by <tt>path</tt>.
+     * @return file or url content as <tt>byte[]</tt> or as <tt>String</tt> if
+     * <tt>convertToString</tt> is true.
+     */
+    private static Object readFileOrUrl(String path, boolean convertToString)
+    {
+        URL url = null;
+        // Assume path is URL if it contains dot and there are at least
+        // 2 characters in the protocol part. The later allows under Windows
+        // to interpret paths with driver letter as file, not URL.
+        if (path.indexOf(':') >= 2) {
+            try {
+                url = new URL(path);
+            } catch (MalformedURLException ex) {
+            }
+        }
+
+        InputStream is = null;
+        int capacityHint = 0;
+        if (url == null) {
+            File file = new File(path);
+            capacityHint = (int)file.length();
+            try {
+                is = new FileInputStream(file);
+            } catch (IOException ex) {
+                Context.reportError(ToolErrorReporter.getMessage(
+                    "msg.couldnt.open", path));
+                return null;
+            }
+        } else {
+            try {
+                URLConnection uc = url.openConnection();
+                is = uc.getInputStream();
+                capacityHint = uc.getContentLength();
+                // Ignore insane values for Content-Length
+                if (capacityHint > (1 << 20)) {
+                    capacityHint = -1;
+                }
+            } catch (IOException ex) {
+                Context.reportError(ToolErrorReporter.getMessage(
+                    "msg.couldnt.open.url", url.toString(), ex.toString()));
+                return null;
+            }
+        }
+        if (capacityHint <= 0) {
+            capacityHint = 4096;
+        }
+
+        byte[] data;
+        try {
+            try {
+                data = Kit.readStream(is, capacityHint);
+            } finally {
+                is.close();
+            }
+        } catch (IOException ex) {
+            Context.reportError(ex.toString());
+            return null;
+        }
+
+        Object result;
+        if (!convertToString) {
+            result = data;
+        } else {
+            // Convert to String using the default encoding
+            // XXX: Use 'charset=' argument of Content-Type if URL?
+            result = new String(data);
+        }
+        return result;
     }
 
     static protected final Global global = new Global();

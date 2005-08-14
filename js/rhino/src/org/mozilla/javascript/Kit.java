@@ -36,6 +36,7 @@
 package org.mozilla.javascript;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
@@ -435,6 +436,33 @@ public class Kit
             }
         }
         return new String(buffer, 0, cursor);
+    }
+
+    public static byte[] readStream(InputStream is, int initialBufferCapacity)
+        throws IOException
+    {
+        if (initialBufferCapacity <= 0) {
+            throw new IllegalArgumentException(
+                "Bad initialBufferCapacity: "+initialBufferCapacity);
+        }
+        byte[] buffer = new byte[initialBufferCapacity];
+        int cursor = 0;
+        for (;;) {
+            int n = is.read(buffer, cursor, buffer.length - cursor);
+            if (n < 0) { break; }
+            cursor += n;
+            if (cursor == buffer.length) {
+                byte[] tmp = new byte[buffer.length * 2];
+                System.arraycopy(buffer, 0, tmp, 0, cursor);
+                buffer = tmp;
+            }
+        }
+        if (cursor != buffer.length) {
+            byte[] tmp = new byte[cursor];
+            System.arraycopy(buffer, 0, tmp, 0, cursor);
+            buffer = tmp;
+        }
+        return buffer;
     }
 
     /**
