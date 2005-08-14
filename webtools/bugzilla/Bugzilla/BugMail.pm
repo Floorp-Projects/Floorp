@@ -37,7 +37,6 @@ use base qw(Exporter);
     PerformSubsts
 );
 
-use Bugzilla;
 use Bugzilla::DB qw(:deprecated);
 use Bugzilla::User;
 use Bugzilla::Constants;

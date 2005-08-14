@@ -18,7 +18,6 @@ use strict;
 
 package Bugzilla::Product;
 
-use Bugzilla;
 use Bugzilla::Component;
 use Bugzilla::Classification;
 use Bugzilla::Version;

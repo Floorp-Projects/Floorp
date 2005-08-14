@@ -22,7 +22,6 @@ use strict;
 use base qw(Exporter);
 @Bugzilla::Field::EXPORT = qw(check_form_field check_form_field_defined);
 
-use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
 

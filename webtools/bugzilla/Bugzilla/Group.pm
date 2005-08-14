@@ -25,7 +25,6 @@ use strict;
 
 package Bugzilla::Group;
 
-use Bugzilla;
 use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;

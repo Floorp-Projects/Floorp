@@ -31,7 +31,6 @@ use lib ".";
 
 package Bugzilla::Series;
 
-use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::User;
 

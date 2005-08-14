@@ -19,7 +19,6 @@ use strict;
 
 package Bugzilla::Component;
 
-use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
 

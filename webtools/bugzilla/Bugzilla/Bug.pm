@@ -36,7 +36,6 @@ use vars qw($legal_keywords @legal_platform
 
 use CGI::Carp qw(fatalsToBrowser);
 
-use Bugzilla;
 use Bugzilla::Attachment;
 use Bugzilla::BugMail;
 use Bugzilla::Config;
