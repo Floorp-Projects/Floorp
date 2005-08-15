@@ -177,8 +177,12 @@ function getPreviewForTask( toDoItem )
       hasHeader = true;
     } else if (toDoItem.percentComplete == 100)
     {
+      if (toDoItem.completedDate == null) {
+        boxAppendLabeledText(vbox, "tooltipPercent", "100%");
+      } else { 
         var completedDate = toDoItem.completedDate.jsDate;
-      boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, false);
+        boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, false);
+      } 
       hasHeader = true;
     }
 
