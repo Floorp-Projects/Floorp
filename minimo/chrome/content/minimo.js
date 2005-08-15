@@ -227,7 +227,7 @@ function browserInit(refTab)
     }
 
     try {
-      refBrowser.markupDocumentViewer.textZoom = .75;
+      refBrowser.markupDocumentViewer.textZoom = .90;
     } catch (e) {}
     gURLBar = document.getElementById("urlbar");
 
@@ -353,11 +353,8 @@ function BrowserTestSendCall(toCall) {
 */ 
 function BrowserPopupShowing () {
 	var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
-	var intSelected=parseInt(selectedRange.toString());
-	if(intSelected) {
-		document.getElementById("item_call").label="Call "+intSelected;
-		document.getElementById("item_call").setAttribute("oncommand","BrowserTestSendCall("+selectedRange.toString()+")");
-
-	}
+    document.getElementById("item_call").label="Call \""+ selectedRange + " \"";
+    document.getElementById("item_call").setAttribute("oncommand","BrowserTestSendCall("+selectedRange+")");
 }
+
 
