@@ -5792,7 +5792,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var tabbrowser = getBrowser();
   const browsers = tabbrowser.mPanelContainer.childNodes;
 
-  var window = aEvent.target.ownerDocument.__parent__;
+  var window = aEvent.target.ownerDocument.defaultView;
   // walk up till the toplevel window
   while (window.parent != window)
     window = window.parent;
