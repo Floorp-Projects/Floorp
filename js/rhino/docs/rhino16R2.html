@@ -1,0 +1,336 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="Author" content="Igor Bukanov">
+
+  <meta name="KeyWords" content="Rhino, JavaScript, Java">
+  <title>Change Log</title>
+
+
+  <style>
+P { text-align: justify; }
+  </style>
+</head>
+
+
+<body style="background-color: rgb(255, 255, 255);">
+
+<h1 align="center">
+Change Log for Rhino</h1>
+
+<h2>Rhino 1.6R2, released 2005-08-21</h2>
+
+<h3>Release overview</h3>
+
+<p>
+Rhino 1.6R2 is a new maintenance release of Rhino. New to Rhino 1.6Rx
+is support for ECMAScript for XML (E4X). See <a href="rhino16R2.html">Change Log for Rhino 1.6R1</a>
+for more details. </p>
+
+<p>
+This version of Rhino should be binary compatible with the current
+embeddings that use only public <a href="apidocs/index.html">API</a>
+unless the code use the previously deperected classes as documented <a href="#Rhino1.5R1-deprecation-removal">below</a>.
+Please report any incompatibilitiy issues to <a href="http://bugzilla.mozilla.org/enter_bug.cgi?product=Rhino">Bugzilla</a>.
+</p>
+
+<h3>Bugs marked fixed in Rhino 1.6R2 (<a href="https://bugzilla.mozilla.org/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;product=Rhino&amp;long_desc_type=substring&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;keywords_type=allwords&amp;keywords=&amp;resolution=FIXED&amp;emailassigned_to1=1&amp;emailtype1=exact&amp;email1=&amp;emailassigned_to2=1&amp;emailreporter2=1&amp;emailqa_contact2=1&amp;emailtype2=exact&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=2004-11-29&amp;chfieldto=2005-08-21&amp;chfield=resolution&amp;chfieldvalue=FIXED&amp;cmdtype=doit&amp;order=Reuse+same+sort+as+last+time&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">query</a>)</h3>
+
+<table x:str="" style="border-collapse: collapse; table-layout: fixed; width: 378pt;" border="0" cellpadding="0" cellspacing="0" width="504">
+
+  <tbody>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl24" style="height: 12.75pt; width: 48pt; font-weight: bold;" height="17" width="64">ID</td>
+
+      <td class="xl24" style="width: 330pt; font-weight: bold;" width="440">Summary</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=238649">238649</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Removal of deprecated features after 1.5R5</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=243057">243057</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">enhancement - ability to assign to Java function
+result a...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=252122">252122</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">double expansion of error message</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=255595">255595</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Factory class for Context creation</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=258844">258844</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Continuation support in interpreter</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=264637">264637</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">InterpretedFunction memory footprint could be
+lighter</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=271401">271401</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">JS prototypes for superclasses with
+ScriptableObject.defi...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=274467">274467</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Add JavaScript stack trace to exceptions</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=274996">274996</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Exceptions with multiple interpreters on stack
+may lead t...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=277537">277537</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">isXMLName() should be properly implemented</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=277935">277935</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Assignments to descendants like "msg..s =
+something" =&gt; f...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=278701">278701</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Minimised windows don't indicate that
+breakpoints have be...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=280047">280047</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Not implementing Scriptable in Undefined</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=280629">280629</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">When using the debugger within another program
+the only w...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=281067">281067</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">ThreadLocal in Context prevents class unloading</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=281247">281247</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">JDK compatibility via special class</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=281537">281537</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">ScriptRuntime.toNumber warns on Undefined</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=282447">282447</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">NPE trying to report error when trying to
+convert null to...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=282595">282595</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Patch for BeanProperties to work with several
+setters for...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=286251">286251</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">initFunction can be called twice</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=289294">289294</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Infinite loop during a script compilation</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=289603">289603</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Update rhino-n.tests to eliminate spidermonkey
+only tests</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=290034">290034</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Cannot catch in JavaScript the original
+exception thrown ...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=291591">291591</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Rhino has differing behaviour to spidermonkey,
+and does n...</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=292324">292324</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">ArrayIndexOutOfBoundsException while compiling a
+script</td>
+
+    </tr>
+
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=298786">298786</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Infinite loop when compiling with optimization</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=299539">299539</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Bad bytecode for function assignments</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=299613">299613</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Runtime support for function-results-as-lvalue</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=302501">302501</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">constructor property shouldn't be readonly</td>
+
+    </tr>
+
+    <tr style="height: 12.75pt;" height="17">
+
+      <td class="xl26" style="height: 12.75pt; width: 48pt; text-align: left;" x:num="" height="17" width="64"><a href="https://bugzilla.mozilla.org/show_bug.cgi?id=303572">303572</a></td>
+
+      <td class="xl25" style="width: 330pt;" width="440">Need access to underlying RhinoException in
+rethrown erro...</td>
+
+    </tr>
+
+  </tbody>
+</table>
+
+<h2>Change logs for previous Rhino releases</h2>
+
+<ul>
+
+  <li><a href="rhino16R1.html">Rhino 1.6R1</a></li>
+
+  <li><a href="rhino15R5.html">Rhino 1.5R5</a></li>
+
+  <li><a href="rhino15R41.html">Rhino 1.5R4.1</a></li>
+
+  <li><a href="rhino15R4.html">Rhino 1.5R4</a></li>
+
+  <li><a href="rhino15R3.html">Rhino 1.5R3</a></li>
+
+  <li><a href="rhino15R2.html">Rhino 1.5R2</a></li>
+
+  <li><a href="rhino15R1.html">Rhino 1.5R1</a></li>
+
+</ul>
+
+<hr width="100%"><br>
+
+<a href="index.html">back to top</a>
+</body>
+</html>
