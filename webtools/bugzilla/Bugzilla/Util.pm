@@ -37,6 +37,7 @@ use base qw(Exporter);
                              lsearch max min
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
+                             perform_substs
                              format_time format_time_decimal validate_date
                              file_mod_time is_7bit_clean
                              bz_crypt validate_email_syntax);
@@ -264,6 +265,12 @@ sub find_wrap_point {
     return $wrappoint;
 }
 
+sub perform_substs {
+    my ($str, $substs) = (@_);
+    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
+    return $str;
+}
+
 sub format_time {
     my ($date, $format) = @_;
 
@@ -418,6 +425,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $val = trim(" abc ");
   ($removed, $added) = diff_strings($old, $new);
   $wrapped = wrap_comment($comment);
+  $msg = perform_substs($str, $substs);
 
   # Functions for formatting time
   format_time($time);
@@ -599,6 +607,24 @@ database.
 Search for a comma, a whitespace or a hyphen to split $string, within the first
 $maxpos characters. If none of them is found, just split $string at $maxpos.
 The search starts at $maxpos and goes back to the beginning of the string.
+
+=item C<perform_substs($str, $substs)>
+
+Performs substitutions for sending out email with variables in it,
+or for inserting a parameter into some other string.
+
+Takes a string and a reference to a hash containing substitution 
+variables and their values.
+
+If the hash is not specified, or if we need to substitute something
+that's not in the hash, then we will use parameters to do the 
+substitution instead.
+
+Substitutions are always enclosed with '%' symbols. So they look like:
+%some_variable_name%. If "some_variable_name" is a key in the hash, then
+its value will be placed into the string. If it's not a key in the hash,
+then the value of the parameter called "some_variable_name" will be placed
+into the string.
 
 =item C<is_7bit_clean($str)>
 

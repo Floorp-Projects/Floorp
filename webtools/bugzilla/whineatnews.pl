@@ -33,6 +33,7 @@ use lib '.';
 require "globals.pl";
 
 use Bugzilla::BugMail;
+use Bugzilla::Util;
 
 # Whining is disabled if whinedays is zero
 exit unless Param('whinedays') >= 1;
@@ -71,7 +72,7 @@ foreach my $email (sort (keys %bugs)) {
     my %substs;
     $substs{'email'} = $email . $emailsuffix;
     $substs{'userid'} = $email;
-    my $msg = PerformSubsts($template, \%substs);
+    my $msg = perform_substs($template, \%substs);
 
     foreach my $i (@{$bugs{$email}}) {
         $msg .= "  " . shift(@{$desc{$email}}) . "\n";

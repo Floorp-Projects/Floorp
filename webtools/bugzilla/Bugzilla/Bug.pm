@@ -1079,7 +1079,7 @@ sub RemoveVotes {
 
             $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
 
-            my $msg = PerformSubsts(Param("voteremovedmail"), \%substs);
+            my $msg = perform_substs(Param("voteremovedmail"), \%substs);
             Bugzilla::BugMail::MessageToMTA($msg);
         }
         my $votes = $dbh->selectrow_array("SELECT SUM(vote_count) " .

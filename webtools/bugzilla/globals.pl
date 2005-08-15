@@ -35,7 +35,6 @@ use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
-use Bugzilla::BugMail;
 use Bugzilla::User;
 use Bugzilla::Error;
 

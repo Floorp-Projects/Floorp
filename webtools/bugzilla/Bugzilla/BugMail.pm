@@ -32,11 +32,6 @@ use strict;
 
 package Bugzilla::BugMail;
 
-use base qw(Exporter);
-@Bugzilla::BugMail::EXPORT = qw(
-    PerformSubsts
-);
-
 use Bugzilla::DB qw(:deprecated);
 use Bugzilla::User;
 use Bugzilla::Constants;
@@ -603,7 +598,7 @@ sub sendMail {
     
     my $template = Param("newchangedmail");
     
-    my $msg = PerformSubsts($template, \%substs);
+    my $msg = perform_substs($template, \%substs);
 
     MessageToMTA($msg);
 
@@ -730,32 +725,11 @@ sub encode_message {
     return ($head, $body);
 }
 
-# Performs substitutions for sending out email with variables in it,
-# or for inserting a parameter into some other string.
-#
-# Takes a string and a reference to a hash containing substitution 
-# variables and their values.
-#
-# If the hash is not specified, or if we need to substitute something
-# that's not in the hash, then we will use parameters to do the 
-# substitution instead.
-#
-# Substitutions are always enclosed with '%' symbols. So they look like:
-# %some_variable_name%. If "some_variable_name" is a key in the hash, then
-# its value will be placed into the string. If it's not a key in the hash,
-# then the value of the parameter called "some_variable_name" will be placed
-# into the string.
-sub PerformSubsts {
-    my ($str, $substs) = (@_);
-    $str =~ s/%([a-z]*)%/(defined $substs->{$1} ? $substs->{$1} : Param($1))/eg;
-    return $str;
-}
-
 # Send the login name and password of the newly created account to the user.
 sub MailPassword {
     my ($login, $password) = (@_);
     my $template = Param("passwordmail");
-    my $msg = PerformSubsts($template,
+    my $msg = perform_substs($template,
                             {"mailaddress" => $login . Param('emailsuffix'),
                              "login" => $login,
                              "password" => $password});

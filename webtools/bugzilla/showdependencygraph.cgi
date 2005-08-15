@@ -29,7 +29,6 @@ use File::Temp;
 use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $webdotdir);
 use Bugzilla::Util;
-use Bugzilla::BugMail;
 use Bugzilla::Bug;
 
 require "globals.pl";
@@ -221,7 +220,7 @@ my $webdotbase = Param('webdotbase');
 
 if ($webdotbase =~ /^https?:/) {
      # Remote dot server
-     my $url = PerformSubsts($webdotbase) . $filename;
+     my $url = perform_substs($webdotbase) . $filename;
      $vars->{'image_url'} = $url . ".gif";
      $vars->{'map_url'} = $url . ".map";
 } else {
