@@ -845,24 +845,6 @@ function delayedOnLoadMessenger()
 
   var toolbarset = document.getElementById('customToolbars');
   toolbox.toolbarset = toolbarset;
-
-  // Ensure the Software Update item is visible on the menubar on Windows and 
-  // Linux, and on the navigation toolbar on MacOSX (since we can't put items on
-  // the menubar on OS X)... 
-  // We don't use a customizable item for the updates item so we can always be
-  // sure it's present.
-  var updateItem = document.getElementById("softwareupdate-item");
-  updateItem.parentNode.removeChild(updateItem);
-
-#ifdef XP_MACOSX
-  var theToolbar = document.getElementById("mail-bar");
-#else
-  var theToolbar = document.getElementById("mail-toolbar-menubar");
-#endif
-  if (theToolbar.lastChild.id == "throbber-box")
-    theToolbar.insertBefore(updateItem, document.getElementById("throbber-box"));
-  else
-    theToolbar.appendChild(updateItem);
 }
 
 function OnUnloadMessenger()

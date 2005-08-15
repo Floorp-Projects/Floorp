@@ -1728,10 +1728,6 @@
       <spacer flex="100%"/>
       </menubar>
     </toolbaritem>
-    
-    <toolbaritem id="softwareupdate-item" title="&updatesItem.title;" align="center" pack="center">
-      <toolbarbutton type="updates" id="softwareupdate" updateCount="0"/>
-    </toolbaritem>
   </toolbar>
 
   <toolbarpalette id="MailToolbarPalette">
