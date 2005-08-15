@@ -635,7 +635,8 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
     dt->ToIcalTime(&itt);                                               \
     nsCAutoString tzid;                                                 \
     if (NS_SUCCEEDED(dt->GetTimezone(tzid))) {                          \
-        if (!tzid.IsEmpty() && !tzid.EqualsLiteral("UTC")) {            \
+        if (!tzid.IsEmpty() && !tzid.EqualsLiteral("UTC") &&            \
+            !tzid.EqualsLiteral("floating")) {                          \
             wantTz = PR_TRUE;                                           \
             nsCOMPtr<calIICSService> ics = do_GetService(kCalICSService); \
             nsCOMPtr<calIIcalComponent> tz;                             \
