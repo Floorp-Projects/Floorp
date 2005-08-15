@@ -132,6 +132,48 @@ TableRowsCollection::~TableRowsCollection()
   // reference for us.
 }
 
+// Macro that can be used to avoid copy/pasting code to iterate over the
+// rowgroups.  _code should be the code to execute for each rowgroup.  The
+// rowgroups will be in the nsCOMPtr<nsIDOMHTMLTableSectionElement> named
+// rowGroup.  Note that this may be null at any time.  This macro assumes an
+// nsresult named |rv| is in scope.
+#define DO_FOR_EACH_ROWGROUP(_code)                                  \
+  PR_BEGIN_MACRO                                                     \
+    if (mParent) {                                                   \
+      /* THead */                                                    \
+      nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;              \
+      rv = mParent->GetTHead(getter_AddRefs(rowGroup));              \
+      NS_ENSURE_SUCCESS(rv, rv);                                     \
+      do { /* gives scoping */                                       \
+        _code                                                        \
+      } while (0);                                                   \
+      nsCOMPtr<nsIDOMHTMLCollection> _tbodies;                       \
+      /* TBodies */                                                  \
+      rv = mParent->GetTBodies(getter_AddRefs(_tbodies));            \
+      NS_ENSURE_SUCCESS(rv, rv);                                     \
+      if (_tbodies) {                                                \
+        nsCOMPtr<nsIDOMNode> _node;                                  \
+        PRUint32 _tbodyIndex = 0;                                    \
+        rv = _tbodies->Item(_tbodyIndex, getter_AddRefs(_node));     \
+        NS_ENSURE_SUCCESS(rv, rv);                                   \
+        while (_node) {                                              \
+          rowGroup = do_QueryInterface(_node);                       \
+          do { /* gives scoping */                                   \
+            _code                                                    \
+          } while (0);                                               \
+          rv = _tbodies->Item(++_tbodyIndex, getter_AddRefs(_node)); \
+          NS_ENSURE_SUCCESS(rv, rv);                                 \
+        }                                                            \
+      }                                                              \
+      /* TFoot */                                                    \
+      rv = mParent->GetTFoot(getter_AddRefs(rowGroup));              \
+      NS_ENSURE_SUCCESS(rv, rv);                                     \
+      do { /* gives scoping */                                       \
+        _code                                                        \
+      } while (0);                                                   \
+    }                                                                \
+  PR_END_MACRO
+
 static PRUint32
 CountRowsInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup)
 {
@@ -155,40 +197,12 @@ CountRowsInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup)
 NS_IMETHODIMP 
 TableRowsCollection::GetLength(PRUint32* aLength)
 {
-  NS_ENSURE_ARG_POINTER(aLength);
-
   *aLength=0;
   nsresult rv = NS_OK;
 
-  if (mParent) {
-    // count the rows in the thead, tfoot, and all tbodies
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
-
-    mParent->GetTHead(getter_AddRefs(rowGroup));
+  DO_FOR_EACH_ROWGROUP(
     *aLength += CountRowsInRowGroup(rowGroup);
-
-    mParent->GetTFoot(getter_AddRefs(rowGroup));
-    *aLength += CountRowsInRowGroup(rowGroup);
-
-    nsCOMPtr<nsIDOMHTMLCollection> tbodies;
-
-    mParent->GetTBodies(getter_AddRefs(tbodies));
-
-    if (tbodies) {
-      nsCOMPtr<nsIDOMNode> node;
-
-      PRUint32 theIndex = 0;
-
-      tbodies->Item(theIndex, getter_AddRefs(node));
-
-      while (node) {
-        rowGroup = do_QueryInterface(node);
-        *aLength += CountRowsInRowGroup(rowGroup);
-        
-        tbodies->Item(++theIndex, getter_AddRefs(node));
-      }
-    }
-  }
+  );
 
   return rv;
 }
@@ -218,19 +232,15 @@ GetItemOrCountInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
   
   return length;
 }
+
 // increments aReturn refcnt by 1
 NS_IMETHODIMP 
 TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   *aReturn = nsnull;
   nsresult rv = NS_OK;
- 
-  if (mParent) {
-    nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;
 
-    // check the thead
-    mParent->GetTHead(getter_AddRefs(rowGroup));
-
+  DO_FOR_EACH_ROWGROUP(
     PRUint32 count = GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
     if (*aReturn) {
       return NS_OK; 
@@ -238,52 +248,41 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
     NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
     aIndex -= count;
-    
-    // check the tbodies
-    nsCOMPtr<nsIDOMHTMLCollection> tbodies;
-
-    mParent->GetTBodies(getter_AddRefs(tbodies));
-
-    if (tbodies) {
-      nsCOMPtr<nsIDOMNode> node;
-      PRUint32 theIndex = 0;
-
-      tbodies->Item(theIndex, getter_AddRefs(node));
-
-      while (node) {
-        rowGroup = do_QueryInterface(node);
-        count = GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
-        if (*aReturn) {
-          return NS_OK; 
-        }
-
-        NS_ASSERTION(count <= aIndex, "GetItemOrCountInRowGroup screwed up");
-        aIndex -= count;
-
-        tbodies->Item(++theIndex, getter_AddRefs(node));
-      }
-    }
-
-    // check the tfoot
-    mParent->GetTFoot(getter_AddRefs(rowGroup));
-
-    GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
-  }
+  );
 
   return rv;
+}
+
+static nsresult
+GetNamedItemInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
+                       const nsAString& aName, nsIDOMNode** aNamedItem)
+{
+  *aNamedItem = nsnull;
+  if (aRowGroup) {
+    nsCOMPtr<nsIDOMHTMLCollection> rows;
+    aRowGroup->GetRows(getter_AddRefs(rows));
+    if (rows) {
+      return rows->NamedItem(aName, aNamedItem);
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  // FIXME: Implement this!
-
   *aReturn = nsnull;
-
-  return NS_OK;
+  nsresult rv = NS_OK;
+  DO_FOR_EACH_ROWGROUP(
+    rv = GetNamedItemInRowGroup(rowGroup, aName, aReturn);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (*aReturn) {
+      return rv;
+    }
+  );
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1139,7 +1138,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
   else if (aData->mSID == eStyleStruct_Padding) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
-  
     if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::cellpadding);
       if (value) {
