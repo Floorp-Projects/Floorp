@@ -60,7 +60,6 @@
 <script type="application/x-javascript" src="chrome://penglobal/content/penFileUtils.js"></script>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/ParseUtils.js"></script>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"></script>
 <script type="application/x-javascript" src="chrome://calendar/content/test/testCalendarEvent.js"></script>
 
   

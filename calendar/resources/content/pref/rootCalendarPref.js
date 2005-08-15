@@ -97,9 +97,6 @@ calendarPrefObserver.prototype =
 
             case "calendar.alarms.showmissed":
                 if( subject.getBoolPref( prefName ) ) {
-                    //this triggers the alarmmanager if show missed is turned on
-                    gICalLib.batchMode = true; 
-                    gICalLib.batchMode = false;
                 }
                 break;
 

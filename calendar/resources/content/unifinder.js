@@ -216,7 +216,6 @@ function prepareCalendarUnifinder( )
 
 function finishCalendarUnifinder( )
 {
-  //gICalLib.removeObserver( unifinderEventDataSourceObserver  );
    var ccalendar = getDisplayComposite();
    ccalendar.removeObserver(unifinderObserver);
 }
@@ -356,7 +355,7 @@ function clearSearchTimer( )
 }
 
 /*
-** This function returns the event table. The event table also gets set in the gEventSource
+** This function returns the event table.
 */
 
 function changeEventFilter( event )

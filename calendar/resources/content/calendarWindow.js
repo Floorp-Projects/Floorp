@@ -195,18 +195,6 @@ function CalendarWindow( )
 
 /** PUBLIC
 *
-*   You must call this when you have finished with the CalendarWindow.
-*   Removes the observer from the data source.
-*/
-
-CalendarWindow.prototype.close = function calWin_close( )
-{
-  //gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
-}
-
-
-/** PUBLIC
-*
 *   Switch to the day view if it isn't already the current view
 */
 

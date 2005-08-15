@@ -46,9 +46,6 @@
 * AUTHOR
 *   Garth Smedley
 *
-* REQUIRED INCLUDES 
-*        <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
-*
 * NOTES
 *   Code for the calendar.
 *
@@ -77,12 +74,6 @@ var gDateMade = "2002052213-cal"
 
 // turn on debuging
 var gDebugCalendar = false;
-
-// ICal Library
-var gICalLib = null;
-
-// calendar event data source see penCalendarEvent.js
-var gEventSource = null;
 
 // single global instance of CalendarWindow
 var gCalendarWindow;
@@ -135,9 +126,6 @@ var calendarsToPublish = new Array();
 
 function calendarInit() 
 {
-    // XXX remove this eventually
-    gICalLib = new Object();
-
    // set up the CalendarWindow instance
    
    gCalendarWindow = new CalendarWindow();
@@ -205,10 +193,6 @@ function calendarFinish()
    finishCalendarToDoUnifinder();
 
    finishCalendarManager();
-
-   gCalendarWindow.close();
-
-   gICalLib.removeObserver( gEventSource.alarmObserver );
 }
 
 function launchPreferences()
@@ -652,23 +636,6 @@ function compareItems( aObject1, aObject2 ){
    }
 }
 
-
-/* 
-* useful to get the new version of an item
-* in order to check if it changed 
-*/
-function fetchItem( aObject ){
-   try{
-      if ( isToDo(aObject) ) {
-         return gICalLib.fetchTodo( aObject.id ); 
-      } else {
-         return gICalLib.fetchEvent( aObject.id );
-      }
-   }catch(er){
-   }
-   return null;
-}
-
 /** 
 * Defaults null start/end date based on selected date in current view.
 * Defaults calendarFile to the selected calendar file.
@@ -981,12 +948,6 @@ function closeCalendar()
 }
 
 
-function reloadApplication()
-{
-    gEventSource.calendarManager.refreshAllRemoteCalendars();
-}
-
-
 /** PUBLIC
 *
 *   Print events using a stylesheet.
@@ -1033,7 +994,6 @@ function print()
 {
    var args = new Object();
 
-   args.eventSource = gEventSource;
    args.selectedEvents = gCalendarWindow.EventSelection.selectedEvents ;
    args.selectedDate=gNewDateVariable = gCalendarWindow.getSelectedDate();
 
