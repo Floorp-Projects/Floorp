@@ -321,7 +321,7 @@ CreateTagItem(TagItem*ti, unsigned int startline, unsigned int endline)
 
 
 static PRBool
-isAttChar(char c)
+isAttChar(int c)
 {
     return (isalnum(c) || c == '/' || c == '-');
 }
@@ -737,7 +737,7 @@ FB_GetChar(FileBuffer *fb)
 
     storedOffset = PR_Seek(fb->fd, 0, PR_SEEK_CUR);
 
-    retval = fb->buf[fb->curIndex++];
+    retval = (unsigned char) fb->buf[fb->curIndex++];
     if (retval == '\n') 
 	fb->lineNum++;
 
