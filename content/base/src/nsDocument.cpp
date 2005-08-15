@@ -136,6 +136,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
+#include "nsIComponentRegistrar.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -827,23 +828,32 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
-  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) &&
-      (!gCheckedForXPathDOM || gHaveXPathDOM)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator))) {
+    nsresult rv;
+    if (!gCheckedForXPathDOM) {
+      nsCOMPtr<nsIComponentRegistrar> cr;
+      rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      gCheckedForXPathDOM = PR_TRUE;
+
+      cr->IsContractIDRegistered(NS_XPATH_EVALUATOR_CONTRACTID,
+                                 &gHaveXPathDOM);
+    }
+
+    if (!gHaveXPathDOM) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+
     if (!mXPathDocument) {
       nsCOMPtr<nsIDOMXPathEvaluator> evaluator;
-      nsresult rv;
       evaluator = do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID, &rv);
-      gCheckedForXPathDOM = PR_TRUE;
-      gHaveXPathDOM = (evaluator != nsnull);
-      if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
-          return NS_ERROR_NO_INTERFACE;
-      }
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIXPathEvaluatorInternal> internal =
           do_QueryInterface(evaluator);
       if (internal) {
-          internal->SetDocument(this);
+        internal->SetDocument(this);
       }
 
       mXPathDocument = new nsXPathDocumentTearoff(evaluator, this);
