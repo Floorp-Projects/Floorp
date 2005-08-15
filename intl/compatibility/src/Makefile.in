@@ -66,7 +66,3 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I..
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -D__STDC__
-endif
