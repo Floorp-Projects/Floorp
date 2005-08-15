@@ -57,29 +57,18 @@ license {
 /**
  * Update Found Page
  */
-#updatesfoundContent {
-  margin: 10px 44px 10px 44px;
-}
-
-wizard[currentpageid="updatesfound"] .wizard-page-box {
-  margin: 0px;
-}
-
-#installButtons {
-  margin: 10px;
-}
 
 #moreDetails {
   margin: 1px 5px 4px 3px;
 }
 
-#downloadNow {
+wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] {
   font-weight: bold;
 }
 
-#downloadNow > .button-box {
+wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-box {
   padding-left: 15px;
-  padding-right: 15px;  
+  padding-right: 15px;
 }
 
 #updateForMoreInfo {
