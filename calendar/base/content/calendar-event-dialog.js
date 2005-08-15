@@ -319,6 +319,17 @@ function updateAccept()
         acceptButton.setAttribute("disabled", "true");
     else if (acceptButton.getAttribute("disabled"))
         acceptButton.removeAttribute("disabled");
+
+    // don't allow for end dates to be before start dates
+    var startDate = jsDateToDateTime(getElementValue("event-starttime"));
+    var endDate = jsDateToDateTime(getElementValue("event-endtime"));
+    if (endDate.compare(startDate) == -1) {
+        acceptButton.setAttribute("disabled", "true");
+    } else if (acceptButton.getAttribute("disabled")) {
+        acceptButton.removeAttribute("disabled");
+    }
+
+    return;
 }
 
 function updateDuedate()

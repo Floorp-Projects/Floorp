@@ -97,12 +97,12 @@
 
           <row align="center" class="event-only">
             <label value="From" class="label"/>
-            <datetimepicker id="event-starttime"/>
+            <datetimepicker id="event-starttime" onchange="updateAccept();"/>
           </row>
 
           <row align="center" class="event-only">
             <label value="To" class="label"/>
-            <datetimepicker id="event-endtime"/>
+            <datetimepicker id="event-endtime" onchange="updateAccept();"/>
           </row>
 
           <row align="center" class="todo-only">
