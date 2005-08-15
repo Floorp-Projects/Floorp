@@ -1268,7 +1268,7 @@ unsigned int
 sftk_GetLengthInBits(unsigned char *buf, unsigned int bufLen)
 {
     unsigned int size = bufLen * 8;
-    int i;
+    unsigned int i;
     /* Get the real length in bytes */
     for (i=0; i < bufLen; i++) {
 	unsigned char  c = *buf++;
@@ -2526,7 +2526,7 @@ stfk_CopyTokenAttributes(SFTKObject *destObject,SFTKTokenObject *src_to,
     SFTKAttribute *attribute;
     SFTKAttribute *newAttribute;
     CK_RV crv = CKR_OK;
-    int i;
+    unsigned int i;
 
     for (i=0; i < attrCount; i++) {
 	if (!sftk_hasAttribute(destObject,attrArray[i])) {
@@ -2596,9 +2596,9 @@ stfk_CopyTokenPrivateKey(SFTKObject *destObject,SFTKTokenObject *src_to)
 							dhPrivKeyAttrsCount);
 	break;
 #ifdef NSS_ENABLE_ECC
-    case CKK_ECC:
-	crv = stfk_CopyTokenAttributes(destObject, src_to, eccPrivKeyAttrs,
-							eccPrivKeyAttrsCount);
+    case CKK_EC:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, ecPrivKeyAttrs,
+							ecPrivKeyAttrsCount);
 	break;
 #endif
      default:
@@ -2658,9 +2658,9 @@ stfk_CopyTokenPublicKey(SFTKObject *destObject,SFTKTokenObject *src_to)
 							dhPubKeyAttrsCount);
 	break;
 #ifdef NSS_ENABLE_ECC
-    case CKK_ECC:
-	crv = stfk_CopyTokenAttributes(destObject, src_to, eccPubKeyAttrs,
-							eccPubKeyAttrsCount);
+    case CKK_EC:
+	crv = stfk_CopyTokenAttributes(destObject, src_to, ecPubKeyAttrs,
+							ecPubKeyAttrsCount);
 	break;
 #endif
      default:
