@@ -285,13 +285,24 @@ var nsBrowserContentHandler = {
       }
     }
 
+    var uriparam;
     try {
-      var uriparam;
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
         var uri = resolveURIInternal(cmdLine, uriparam);
         openWindow(null, this.chromeURL, "_blank",
                    "chrome,dialog=no,all" + this.getFeatures(cmdLine),
                    uri.spec);
+        cmdLine.preventDefault = true;
+      }
+    }
+    catch (e) {
+      Components.utils.reportError(e);
+    }
+
+    try {
+      while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
+        var uri = resolveURIInternal(cmdLine, uriparam);
+        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB);
         cmdLine.preventDefault = true;
       }
     }
