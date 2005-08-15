@@ -135,7 +135,7 @@ typedef void (*_sigsig)(int inSignal);
 // From sys/types.h
 typedef int ptrdiff_t;
 typedef long _off_t;
-
+typedef long off_t;
 
 // From sys/stat.h
 #if !defined(_STAT_DEFINED)
