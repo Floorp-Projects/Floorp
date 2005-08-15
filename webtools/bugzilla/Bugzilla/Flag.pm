@@ -414,11 +414,12 @@ used to obtain the flag fields that the user submitted.
 =cut
 
 sub process {
-    my ($target, $timestamp, $cgi) = @_;
+    my ($bug_id, $attach_id, $timestamp, $cgi) = @_;
 
     my $dbh = Bugzilla->dbh;
-    my $bug_id = $target->{'bug'}->{'id'};
-    my $attach_id = $target->{'attachment'}->{'id'};
+    my $target = get_target($bug_id, $attach_id);
+    # Make sure the target exists.
+    return unless $target->{'exists'};
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
@@ -742,7 +743,7 @@ sub FormToNewFlags {
     my @type_ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
     @type_ids = grep($cgi->param("flag_type-$_") ne 'X', @type_ids);
 
-    return () unless (scalar(@type_ids) && $target->{'exists'});
+    return () unless scalar(@type_ids);
 
     # Get information about the setter to add to each flag.
     my $setter = new Bugzilla::User($::userid);
@@ -846,7 +847,7 @@ sub GetBug {
 
 =over
 
-=item C<GetTarget($bug_id, $attach_id)>
+=item C<get_target($bug_id, $attach_id)>
 
 Someone please document this function.
 
@@ -854,7 +855,7 @@ Someone please document this function.
 
 =cut
 
-sub GetTarget {
+sub get_target {
     my ($bug_id, $attach_id) = @_;
     
     # Create an object representing the target bug/attachment.
@@ -1038,7 +1039,7 @@ sub perlify_record {
         exists    => $exists , 
         id        => $id ,
         type      => Bugzilla::FlagType::get($type_id) ,
-        target    => GetTarget($bug_id, $attach_id) , 
+        target    => get_target($bug_id, $attach_id) , 
         requestee => $requestee_id ? new Bugzilla::User($requestee_id) : undef,
         setter    => new Bugzilla::User($setter_id) ,
         status    => $status , 

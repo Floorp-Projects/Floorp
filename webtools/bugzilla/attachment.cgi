@@ -1054,8 +1054,7 @@ sub insert
   }   
   
   # Create flags.
-  my $target = Bugzilla::Flag::GetTarget(undef, $attachid);
-  Bugzilla::Flag::process($target, $timestamp, $cgi);
+  Bugzilla::Flag::process($bugid, $attachid, $timestamp, $cgi);
    
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'mailrecipients'} =  { 'changer' => Bugzilla->user->login,
@@ -1203,8 +1202,7 @@ sub update
   # to attachments so that we can delete pending requests if the user
   # is obsoleting this attachment without deleting any requests
   # the user submits at the same time.
-  my $target = Bugzilla::Flag::GetTarget(undef, $attach_id);
-  Bugzilla::Flag::process($target, $timestamp, $cgi);
+  Bugzilla::Flag::process($bugid, $attach_id, $timestamp, $cgi);
 
   # Update the attachment record in the database.
   SendSQL("UPDATE  attachments 

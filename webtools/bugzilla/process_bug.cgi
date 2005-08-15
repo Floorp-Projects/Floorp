@@ -1737,8 +1737,7 @@ foreach my $id (@idlist) {
         }
     }
     # Set and update flags.
-    my $target = Bugzilla::Flag::GetTarget($id);
-    Bugzilla::Flag::process($target, $timestamp, $cgi);
+    Bugzilla::Flag::process($id, undef, $timestamp, $cgi);
 
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");
