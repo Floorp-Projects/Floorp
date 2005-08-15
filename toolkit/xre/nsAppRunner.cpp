@@ -1647,21 +1647,20 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  char buffer[MAXPATHLEN];
-  rv = parser.GetString("Compatibility", "LastVersion", buffer, sizeof(buffer));
+  nsCAutoString buf;
+  rv = parser.GetString("Compatibility", "LastVersion", buf);
   if (NS_FAILED(rv))
     return PR_FALSE;
 
-  if (!aVersion.Equals(buffer))
+  if (!aVersion.Equals(buf))
     return PR_FALSE;
 
-  rv = parser.GetString("Compatibility", "LastPlatformDir",
-                        buffer, sizeof(buffer));
+  rv = parser.GetString("Compatibility", "LastPlatformDir", buf);
   if (NS_FAILED(rv))
     return PR_FALSE;
 
   nsCOMPtr<nsILocalFile> lf;
-  rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_FALSE,
+  rv = NS_NewNativeLocalFile(buf, PR_FALSE,
                              getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return PR_FALSE;
@@ -1672,12 +1671,11 @@ CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return PR_FALSE;
 
   if (aAppDir) {
-    rv = parser.GetString("Compatibility", "LastAppDir",
-                          buffer, sizeof(buffer));
+    rv = parser.GetString("Compatibility", "LastAppDir", buf);
     if (NS_FAILED(rv))
       return PR_FALSE;
 
-    rv = NS_NewNativeLocalFile(nsDependentCString(buffer), PR_FALSE,
+    rv = NS_NewNativeLocalFile(buf, PR_FALSE,
                                getter_AddRefs(lf));
     if (NS_FAILED(rv))
       return PR_FALSE;
