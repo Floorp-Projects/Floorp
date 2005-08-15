@@ -1713,7 +1713,7 @@
           <menuitem id="hintsAndTips" accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
           <menuseparator id="menu_HelpAboutSeparator"/>
 #endif
-          <menuitem id="checkForUpdates" accesskey="&updateCmd.accesskey;" 
+          <menuitem id="checkForUpdates" accesskey="&updateCmd.accesskey;" class="menuitem-iconic"
                     label="&updateCmd.label;" oncommand="checkForUpdates();"/>
           <menuseparator/>
           <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
