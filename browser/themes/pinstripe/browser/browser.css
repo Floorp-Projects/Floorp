@@ -669,13 +669,13 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
   background: url("chrome://browser/skin/Secure-background.gif") #FFFED8 repeat-x;
 }
 
-#urlbar[level="high"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="high"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Secure-urlbar.png");
 }
-#urlbar[level="low"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="low"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Secure-urlbar.png");
 }
-#urlbar[level="broken"] > .autocomplete-textbox-container > .info-icon {
+#urlbar[level="broken"] #lock-icon {
   list-style-image: url("chrome://browser/skin/Secure-urlbar-broken.png");
 }
 
@@ -808,15 +808,8 @@ sidebarheader {
   padding: 0px 3px 0px 3px;
 }
 
-#livemark-button {
-  display: none;
-}
-
-#livemark-button[livemarks] {
-  display: -moz-box;
-  list-style-image: url("chrome://browser/skin/page-livemarks.png");
-  padding: 0px 3px 0px 3px;
-}
+#feed-button, #feed-button > .button-box,#feed-button:hover:active > .button-box {  padding: 0px;  margin: 0px;  border: 0px;   background-color: transparent;}
+#feed-button .button-menu-dropmarker,#feed-button .button-text {  display: none;}#feed-button {  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");  -moz-appearance: none;   min-width: 0px;   margin-right: 1px !important;}#feed-button[feeds] {  list-style-image: url("chrome://browser/skin/page-livemarks.png");}#feed-button[chromedir="rtl"][feeds] {  list-style-image: url("chrome://browser/skin/page-livemarks-rtl.png");}
 
 /* :::::: throbber :::::::::: */
 
