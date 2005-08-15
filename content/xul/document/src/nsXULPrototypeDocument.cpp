@@ -89,6 +89,7 @@ public:
     virtual void SetContext(nsIScriptContext *aContext);
     virtual nsIScriptContext *GetContext();
     virtual nsresult SetNewDocument(nsIDOMDocument *aDocument,
+                                    nsISupports *aState,
                                     PRBool aRemoveEventListeners,
                                     PRBool aClearScope);
     virtual void SetDocShell(nsIDocShell *aDocShell);
@@ -846,6 +847,7 @@ nsXULPDGlobalObject::GetContext()
 
 nsresult
 nsXULPDGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
+                                    nsISupports *aState,
                                     PRBool aRemoveEventListeners,
                                     PRBool aClearScope)
 {
