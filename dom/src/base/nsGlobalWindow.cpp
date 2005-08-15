@@ -6614,7 +6614,7 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE
-  printf("saving window state, stateObj = %p\n", (void*)stateObj);
+  printf("saving window state, state = %p\n", (void*)state);
 #endif
 
   if (inner->mLocation) {
@@ -6648,7 +6648,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
   NS_ENSURE_TRUE(holder, NS_ERROR_FAILURE);
 
 #ifdef DEBUG_PAGE_CACHE
-  printf("restoring window state, stateObj = %p\n", (void*)holder->GetObject());
+  printf("restoring window state, state = %p\n", (void*)holder);
 #endif
 
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
