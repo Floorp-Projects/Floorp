@@ -45,6 +45,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef XP_WIN
+#define BINARY_MODE "b"
+#else
+#define BINARY_MODE
+#endif
+
 // Stack based FILE wrapper to ensure that fclose is called, copied from
 // toolkit/mozapps/update/src/updater/readstrings.cpp
 
@@ -65,7 +71,7 @@ nsINIParser::Init(nsILocalFile* aFile)
 
     /* open the file */
     AutoFILE fd;
-    rv = aFile->OpenANSIFileDesc("r", &fd);
+    rv = aFile->OpenANSIFileDesc("r" BINARY_MODE, &fd);
     if (NS_FAILED(rv))
       return rv;
 
@@ -76,7 +82,7 @@ nsresult
 nsINIParser::Init(const char *aPath)
 {
     /* open the file */
-    AutoFILE fd = fopen(aPath, "r");
+    AutoFILE fd = fopen(aPath, "r" BINARY_MODE);
     if (!fd)
         return NS_ERROR_FAILURE;
 
@@ -167,7 +173,7 @@ nsINIParser::InitFromFILE(FILE *fd)
 
     // outer loop tokenizes into lines
     while (char *line = mstrtok(kNL, &buffer)) {
-        if (line[0] == '#') // it's a comment
+        if (line[0] == '#' || line[0] == ';') // it's a comment
             continue;
 
         char *token = mstrtok(kWhitespace, &line);
