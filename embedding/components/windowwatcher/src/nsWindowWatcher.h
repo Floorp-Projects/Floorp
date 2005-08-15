@@ -119,7 +119,6 @@ private:
                                       nsIDocShellTreeItem **outTreeItem);
   static void       GetWindowTreeOwner(nsIDOMWindow *inWindow,
                                        nsIDocShellTreeOwner **outTreeOwner);
-  static JSObject  *GetWindowScriptObject(nsIDOMWindow *inWindow);
 
   nsVoidArray           mEnumeratorList;
   nsWatcherWindowEntry *mOldestWindow;

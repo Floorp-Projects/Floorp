@@ -2123,11 +2123,3 @@ nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
 
   return cx;
 }
-
-JSObject *
-nsWindowWatcher::GetWindowScriptObject(nsIDOMWindow *inWindow)
-{
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(inWindow));
-  return scriptGlobal ? scriptGlobal->GetGlobalJSObject() : 0;
-}
-
