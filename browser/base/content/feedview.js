@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ben Goodger <ben@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,17 +38,93 @@
 
 var FeedView = {
   /**
-   * Attempt to get a JavaScript Date object from a string
-   * @param   str
-   *          A string that may contain a formatted date
-   * @returns A JavaScript Date object representing the date
+   * Converts a W3C-DTF (subset of ISO 8601) date string to an IETF date string.
+   * @param   dateString
+   *          A string that may contain a W3C-DTF date string
+   * @returns an IETF date string
    */
-  _xmlDate: function(str) {
-    str = str.replace("Z", "+00:00");
-    var d = str.replace(/^(\d{4})-(\d\d)-(\d\d)T([0-9:]*)([.0-9]*)(.)(\d\d):(\d\d)$/, '$1/$2/$3 $4 $6$7$8');
-    d = Date.parse(d);
-    d += 1000 * RegExp.$5;
-    return new Date(d);
+  _W3CToIETFDate: function(dateString) {
+    // W3C-DTF is described in this note: http://www.w3.org/TR/NOTE-datetime
+    // IETF is obtained via the Date object's toUTCString() method.  The object's
+    // toString() method is insufficient because it spells out timezones on Win32
+    // (f.e. "Pacific Standard Time" instead of "PST"), which Mail doesn't grok.
+    // For info, see http://lxr.mozilla.org/mozilla/source/js/src/jsdate.c#1654.
+  
+    const HOURS_TO_MINUTES = 60;
+    const MINUTES_TO_SECONDS = 60;
+    const SECONDS_TO_MILLISECONDS = 1000;
+    const MINUTES_TO_MILLISECONDS = MINUTES_TO_SECONDS * SECONDS_TO_MILLISECONDS;
+    const HOURS_TO_MILLISECONDS = HOURS_TO_MINUTES * MINUTES_TO_MILLISECONDS;
+  
+    var parts = dateString.match(/(\d\d\d\d)(-(\d\d))?(-(\d\d))?(T(\d\d):(\d\d)(:(\d\d)(\.(\d+))?)?(Z|([+-])(\d\d):(\d\d))?)?/);
+  
+    // Here's an example of a W3C-DTF date string and what .match returns for it.
+    //  date: 2003-05-30T11:18:50.345-08:00
+    //  date.match returns array values:
+    //   0: 2003-05-30T11:18:50-08:00,
+    //   1: 2003,
+    //   2: -05,
+    //   3: 05,
+    //   4: -30,
+    //   5: 30,
+    //   6: T11:18:50-08:00,
+    //   7: 11,
+    //   8: 18,
+    //   9: :50,
+    //   10: 50,
+    //   11: .345,
+    //   12: 345,
+    //   13: -08:00,
+    //   14: -,
+    //   15: 08,
+    //   16: 00
+  
+    // Create a Date object from the date parts.  Note that the Date object
+    // apparently can't deal with empty string parameters in lieu of numbers,
+    // so optional values (like hours, minutes, seconds, and milliseconds)
+    // must be forced to be numbers.
+    var date = new Date(parts[1], parts[3]-1, parts[5], parts[7] || 0,
+                        parts[8] || 0, parts[10] || 0, parts[12] || 0);
+  
+    // We now have a value that the Date object thinks is in the local timezone
+    // but which actually represents the date/time in the remote timezone
+    // (f.e. the value was "10:00 EST", and we have converted it to "10:00 PST"
+    // instead of "07:00 PST").  We need to correct that.  To do so, we're going
+    // to add the offset between the remote timezone and UTC (to convert the value
+    // to UTC), then add the offset between UTC and the local timezone (to convert
+    // the value to the local timezone).
+  
+    // Ironically, W3C-DTF gives us the offset between UTC and the remote timezone
+    // rather than the other way around, while the getTimezoneOffset() method
+    // of a Date object gives us the offset between the local timezone and UTC
+    // rather than the other way around.  Both of these are the additive inverse
+    // (i.e. -x for x) of what we want, so we have to invert them to use them
+    // by multipying by -1
+    // (f.e. if "the offset between UTC and the remote timezone" is -5 hours,
+    // then "the offset between the remote timezone and UTC" is -5*-1 = 5 hours).
+  
+    // Note that if the timezone portion of the date/time string is absent
+    // (which violates W3C-DTF, although ISO 8601 allows it), we assume the value
+    // to be in UTC.
+  
+    // The offset between the remote timezone and UTC in milliseconds.
+    var remoteToUTCOffset = 0;
+    if (parts[13] && parts[13] != "Z") {
+      var direction = (parts[14] == "+" ? 1 : -1);
+      if (parts[15])
+        remoteToUTCOffset += direction * parts[15] * HOURS_TO_MILLISECONDS;
+      if (parts[16])
+        remoteToUTCOffset += direction * parts[16] * MINUTES_TO_MILLISECONDS;
+    }
+    remoteToUTCOffset = remoteToUTCOffset * -1; // invert it
+  
+    // The offset between UTC and the local timezone in milliseconds.
+    var UTCToLocalOffset = date.getTimezoneOffset() * MINUTES_TO_MILLISECONDS;
+    UTCToLocalOffset = UTCToLocalOffset * -1; // invert it
+  
+    date.setTime(date.getTime() + remoteToUTCOffset + UTCToLocalOffset);
+  
+    return date.toUTCString();
   },
   
   /**
@@ -60,9 +137,12 @@ var FeedView = {
       var d = divs[i].getAttribute("date");
       dump("*** D = " + d + "\n");
       if (d) {
-        // If it is an RFC... date -> first parse it...
-        // otherwise try the Date() constructor.
-        d = d.indexOf("T") ? xmlDate(d) : new Date(d);
+        // If the date looks like it's in W3C-DTF format, convert it into
+        // an IETF standard date string.
+        if (d.search(/^\d\d\d\d/) != -1)
+          d = this._W3CToIETFDate(d);
+
+        d = new Date(d);
 
         // If the date could be parsed...
         if (d instanceof Date) {
@@ -112,16 +192,17 @@ var FeedView = {
    */
   init: function() {
     // Hide the menu if the user chose to have it closed
-    if (!this._getBooleanPref("showMenu")) 
+    if (!this._getBooleanPref("showmenu")) 
       document.getElementById("menubox").style.display = "none";
 
     // Normalize the date formats
     this._initializeDates();
 
-    // Set up the auto-reload timer    
-    setTimeout("RSSPrettyPrint.refresh()", 
-               this._getIntegerPref("reloadInterval") * 1000);
-  },
+    // Set up the auto-reload timer.
+    // The timer loads every browser.feedview.reloadInterval minutes.
+    // It is disabled if the value of that preference is 0.
+    var reloadInterval = this._getIntegerPref("reloadinterval") || 0;
+    if (reloadInterval > 0)
+      setTimeout("FeedView.reload()", reloadInterval * 60 * 1000);
+  }
 };
-
-
