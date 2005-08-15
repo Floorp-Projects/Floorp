@@ -80,7 +80,6 @@ function selectSelectedEventsInTree( EventsToSelect )
 
    if( EventsToSelect === false )
       EventsToSelect = gCalendarWindow.EventSelection.selectedEvents;
-
    var SearchTree = document.getElementById( UnifinderTreeName );
       
    /* The following is a brutal hack, caused by 
@@ -112,14 +111,11 @@ function selectSelectedEventsInTree( EventsToSelect )
    }
    else if( EventsToSelect.length > 1 )
    {
-      /* selecting all events is taken care of in the selectAllEvents in calendar.js 
-      ** Other than that, there's no other way to get in here. */
-      if( gSelectAll === true )
-      {
-         SearchTree.view.selection.selectAll( );
-         
-         gSelectAll = false;
-      }   
+      SearchTree.view.selection.clearSelection( );
+      for (var i in EventsToSelect) {
+         var row = SearchTree.eventView.getRowOfCalendarEvent(EventsToSelect[i]);
+         SearchTree.view.selection.rangedSelect(row,row,true);
+      }
    }
    else
    {

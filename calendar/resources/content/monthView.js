@@ -227,6 +227,8 @@ MonthView.prototype.refreshEvents = function()
     endDate.setDate(endDate.getDate() + 1);
     endDate.setSeconds(endDate.getSeconds() - 1);
 
+    this.eventList = new Array();
+
     // Save this off so we can get it again in onGetResult below
     var eventController = this;
     var getListener = {
@@ -319,6 +321,8 @@ MonthView.prototype.maxEventsToShow = function( dayBox ) {
 
 MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
 {
+    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+
     //This is a HACK because startDate and indexOfDate don't get along well
     //in terms of timezones.
     var adjustedDate = new Date();

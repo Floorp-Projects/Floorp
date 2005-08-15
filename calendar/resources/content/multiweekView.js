@@ -232,6 +232,8 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
     //Save this so we can use it again in onGetResult below in getListener
     var eventController = this;
 
+    this.eventList = new Array();
+
     //Start of our getListener callback
     var getListener =
     {
@@ -336,6 +338,8 @@ MultiweekView.prototype.maxEventsToShow = function( dayBox ) {
 // Create an eventbox. Expects an ItemOccurence
 MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEventBox(itemOccurrence, startDate, endDate)
 {
+    this.eventList.push({event:itemOccurrence, start:startDate, end:endDate});
+
     //This is a HACK because startDate and indexOfDate don't get along well
     //in terms of timezones.
     var adjustedDate = new Date();

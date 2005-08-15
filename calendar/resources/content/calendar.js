@@ -965,13 +965,14 @@ function goFindNewCalendars()
    }
 }
 
-var gSelectAll = false;
-
 function selectAllEvents()
 {
-   gSelectAll = true;
-
-   gCalendarWindow.EventSelection.setArrayToSelection( gEventSource.currentEvents );
+   // I'd like to just add these events to the selection, but hacks in the
+   // unifinder code prevent that from working.
+   var eventsInCurrentView = new Array();
+   for each(var event in gCalendarWindow.currentView.eventList)  
+       eventsInCurrentView.push(event.event);
+   gCalendarWindow.EventSelection.setArrayToSelection(eventsInCurrentView);
 }
 
 function closeCalendar()
