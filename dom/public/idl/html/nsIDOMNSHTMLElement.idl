@@ -63,5 +63,5 @@ interface nsIDOMNSHTMLElement : nsISupports
 
   // |top| is optional in JS, scriptability of this method is done in
   // nsHTMLElementSH
-  [noscript] void           scrollIntoView(in boolean top);
+  void           scrollIntoView(in boolean top);
 };
