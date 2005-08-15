@@ -621,15 +621,15 @@ function modifyTaskFromContext() {
        editToDo(task);
 }
 
-function changeContextMenuForToDo( event )
+function changeContextMenuForToDo(event)
 {
    if (event.target.id != "taskitem-context-menu")
      return;
 
-   var toDoItem = getToDoFromEvent( event );
+   var toDoItem = getToDoFromEvent(event);
 
    // If only one task is selected, enable 'Edit Task'
-   var tree = document.getElementById( ToDoUnifinderTreeName ); 
+   var tree = document.getElementById(ToDoUnifinderTreeName); 
    var start = new Object();
    var end = new Object();
    var numRanges = tree.view.selection.getRangeCount();
@@ -645,26 +645,29 @@ function changeContextMenuForToDo( event )
        tree.taskView.contextTask = null;
    }
 
-   if( toDoItem )
+   if (toDoItem)
    {
       document.getElementById("is_editable").removeAttribute("disabled");
-      var liveList = document.getElementById( "taskitem-context-menu" ).getElementsByAttribute( "checked", "true" );
+      var liveList = document.getElementById("taskitem-context-menu")
+                             .getElementsByAttribute("checked", "true");
       // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
       // 'live', so when attribute is deleted the indexes of later elements
       // change, but Moz1.7- is not.  Reversed order works with both.
       for (var i = liveList.length - 1; i >= 0; i-- )
       {
-         liveList.item(i).removeAttribute( "checked" );
+         liveList.item(i).removeAttribute("checked");
       }
 
-      if( document.getElementById( "percent-"+toDoItem.percent+"-menuitem" ) )
+      if (document.getElementById("percent-"+toDoItem.percentComplete+"-menuitem"))
       {
-         document.getElementById( "percent-"+toDoItem.percent+"-menuitem" ).setAttribute( "checked", "true" );
+         document.getElementById("percent-"+toDoItem.percentComplete+"-menuitem")
+                 .setAttribute("checked", "true");
       }
    
-      if( document.getElementById( "priority-"+toDoItem.priority+"-menuitem" ) )
+      if (document.getElementById("priority-"+toDoItem.priority+"-menuitem"))
       {
-         document.getElementById( "priority-"+toDoItem.priority+"-menuitem" ).setAttribute( "checked", "true" );
+         document.getElementById("priority-"+toDoItem.priority+"-menuitem")
+                 .setAttribute("checked", "true");
       }
    } else {
       document.getElementById("is_editable").setAttribute("disabled", "true");
