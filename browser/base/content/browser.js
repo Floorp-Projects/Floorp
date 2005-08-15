@@ -209,12 +209,21 @@ function addBookmarkMenuitems()
   var bookmarkCurTabItem = document.createElement("menuitem");
   bookmarkCurTabItem.setAttribute("label", gNavigatorBundle.getString("bookmarkCurTab_label"));
   bookmarkCurTabItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkCurTab_accesskey"));
-  bookmarkCurTabItem.setAttribute("oncommand", "addBookmarkAs((getBrowser().mContextTab).linkedBrowser, false);");
+  bookmarkCurTabItem.setAttribute("oncommand", "BookmarkThisTab();");
   var menuseparator = document.createElement("menuseparator");
   var insertPos = tabMenu.lastChild.previousSibling;
   tabMenu.insertBefore(bookmarkAllTabsItem, insertPos);
   tabMenu.insertBefore(bookmarkCurTabItem, bookmarkAllTabsItem);
   tabMenu.insertBefore(menuseparator, bookmarkCurTabItem);
+}
+
+function BookmarkThisTab()
+{
+  var tab = getBrowser().mContextTab;
+  if (tab.localName != "tab")
+    tab = getBrowser().mCurrentTab;
+
+  addBookmarkAs(tab.linkedBrowser, false);
 }
 
 const gSessionHistoryObserver = {
