@@ -85,8 +85,8 @@ static unsigned long changeFlag(unsigned long flag)
 	__asm__("pushfl\n\t"            /* get the flags */
 	        "popl %0\n\t"
 	        "movl %0,%1\n\t"	/* save the original flags */
-	        "xor %0,%2\n\t"	/* flip the but */
-		"pushl %0\n\t"	/* set the flags */
+	        "xor %0,%2\n\t" 	/* flip the bit */
+		"pushl %0\n\t"  	/* set the flags */
 	        "popfl\n\t"
 		"pushfl\n\t"		/* get the flags again (for return) */
 		"popl %0\n\t"	
@@ -134,7 +134,7 @@ static unsigned long changeFlag(unsigned long flag)
 	        mov  ecx,eax            /* save the original flags */
 	        mov  originalFlags,ecx  /* save the original flags */
 		mov  ebx,flag
-	        xor  eax,ebx            /* flip the but */
+	        xor  eax,ebx            /* flip the bit */
 		push eax                /* set the flags */
 	        popfd
 		pushfd                  /* get the flags again (for return) */
@@ -740,7 +740,7 @@ mpi_getProcessorLineSize()
 
 
 /* If no way to get the processor cache line size has been defined, assume
- * it's 32 bytes (most common value, does not significantly impact performance
+ * it's 32 bytes (most common value, does not significantly impact performance)
  */ 
 #ifndef MPI_GET_PROCESSER_LINE_SIZE_DEFINED
 unsigned long
