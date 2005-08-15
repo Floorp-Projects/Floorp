@@ -367,15 +367,18 @@ nsOperaProfileMigrator::SetString(void* aTransform, nsIPrefBranch* aBranch)
 nsresult
 nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
 {
+  nsresult rv;
+
   nsCOMPtr<nsIFile> operaPrefs;
   mOperaProfile->Clone(getter_AddRefs(operaPrefs));
   operaPrefs->Append(OPERA_PREFERENCES_FILE_NAME);
 
-  nsCAutoString path;
-  operaPrefs->GetNativePath(path);
-  nsINIParser* parser = new nsINIParser(path.get());
-  if (!parser)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(operaPrefs));
+  NS_ENSURE_TRUE(lf, NS_ERROR_UNEXPECTED);
+
+  nsINIParser parser;
+  rv = parser.Init(lf);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrefBranch> branch(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
@@ -383,7 +386,6 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
   PrefTransform* transform;
   PrefTransform* end = gTransforms + sizeof(gTransforms)/sizeof(PrefTransform);
 
-  PRInt32 length;
   char* lastSectionName = nsnull;
   for (transform = gTransforms; transform < end; ++transform) {
     if (transform->sectionName)
@@ -402,22 +404,22 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         nsCRT::free(colorString);
     }
     else {
-      nsXPIDLCString val;
-      PRInt32 err = parser->GetStringAlloc(lastSectionName, transform->keyName, getter_Copies(val), &length);
-      if (err == nsINIParser::OK) {
+      nsCAutoString val;
+      rv = parser.GetString(lastSectionName,
+                            transform->keyName,
+                            val);
+      if (NS_SUCCEEDED(rv)) {
         PRInt32 strerr;
         switch (transform->type) {
         case _OPM(STRING):
           transform->stringValue = ToNewCString(val);
           break;
         case _OPM(INT): {
-            nsCAutoString valStr; valStr = val;
-            transform->intValue = valStr.ToInteger(&strerr);
+            transform->intValue = val.ToInteger(&strerr);
           }
           break;
         case _OPM(BOOL): {
-            nsCAutoString valStr; valStr = val;
-            transform->boolValue = valStr.ToInteger(&strerr) != 0;
+            transform->boolValue = val.ToInteger(&strerr) != 0;
           }
           break;
         default:
@@ -440,23 +442,22 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
   if (aReplace)
     CopyUserContentSheet(parser);
 
-  delete parser;
-  parser = nsnull;
-  
   return NS_OK;
 }
 
 nsresult
-nsOperaProfileMigrator::CopyProxySettings(nsINIParser* aParser, 
+nsOperaProfileMigrator::CopyProxySettings(nsINIParser &aParser, 
                                           nsIPrefBranch* aBranch)
 {
+  nsresult rv;
+
   PRInt32 networkProxyType = 0;
 
   const char* protocols[4] = { "HTTP", "HTTPS", "FTP", "GOPHER" };
   const char* protocols_l[4] = { "http", "https", "ftp", "gopher" };
   char toggleBuf[15], serverBuf[20], serverPrefBuf[20], 
        serverPortPrefBuf[25];
-  PRInt32 length, err, enabled;
+  PRInt32 enabled;
   for (PRUint32 i = 0; i < 4; ++i) {
     sprintf(toggleBuf, "Use %s", protocols[i]);
     GetInteger(aParser, "Proxy", toggleBuf, &enabled);
@@ -467,9 +468,9 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser* aParser,
     }
 
     sprintf(serverBuf, "%s Server", protocols[i]);
-    nsXPIDLCString proxyServer;
-    err = aParser->GetStringAlloc("Proxy", serverBuf, getter_Copies(proxyServer), &length);
-    if (err != nsINIParser::OK)
+    nsCAutoString proxyServer;
+    rv = aParser.GetString("Proxy", serverBuf, proxyServer);
+    if (NS_FAILED(rv))
       continue;
 
     sprintf(serverPrefBuf, "network.proxy.%s", protocols_l[i]);
@@ -480,16 +481,18 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser* aParser,
   GetInteger(aParser, "Proxy", "Use Automatic Proxy Configuration", &enabled);
   if (enabled)
     networkProxyType = 2;
-  nsXPIDLCString configURL;
-  err = aParser->GetStringAlloc("Proxy", "Automatic Proxy Configuration URL", getter_Copies(configURL), &length);
-  if (err == nsINIParser::OK)
-    aBranch->SetCharPref("network.proxy.autoconfig_url", configURL);
+
+  nsCAutoString configURL;
+  rv = aParser.GetString("Proxy", "Automatic Proxy Configuration URL",
+                         configURL);
+  if (NS_SUCCEEDED(rv))
+    aBranch->SetCharPref("network.proxy.autoconfig_url", configURL.get());
 
   GetInteger(aParser, "Proxy", "No Proxy Servers Check", &enabled);
   if (enabled) {
-    nsXPIDLCString servers;
-    err = aParser->GetStringAlloc("Proxy", "No Proxy Servers", getter_Copies(servers), &length);
-    if (err == nsINIParser::OK)
+    nsCAutoString servers;
+    rv = aParser.GetString("Proxy", "No Proxy Servers", servers);
+    if (NS_SUCCEEDED(rv))
       ParseOverrideServers(servers.get(), aBranch);
   }
 
@@ -499,28 +502,26 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser* aParser,
 }
 
 nsresult
-nsOperaProfileMigrator::GetInteger(nsINIParser* aParser, 
-                                   char* aSectionName, 
-                                   char* aKeyName, 
+nsOperaProfileMigrator::GetInteger(nsINIParser &aParser, 
+                                   const char* aSectionName, 
+                                   const char* aKeyName, 
                                    PRInt32* aResult)
 {
-  char val[20];
-  PRInt32 length = 20;
+  nsCAutoString val;
 
-  PRInt32 err = aParser->GetString(aSectionName, aKeyName, val, &length);
-  if (err != nsINIParser::OK)
-    return NS_ERROR_FAILURE;
+  nsresult rv = aParser.GetString(aSectionName, aKeyName, val);
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCAutoString valueStr((char*)val);
-  PRInt32 stringErr;
-  *aResult = valueStr.ToInteger(&stringErr);
+  *aResult = val.ToInteger((PRInt32*) &rv);
 
-  return NS_OK;
+  return rv;
 }
 
 
 nsresult
-nsOperaProfileMigrator::ParseColor(nsINIParser* aParser, char* aSectionName, char** aResult)
+nsOperaProfileMigrator::ParseColor(nsINIParser &aParser,
+                                   const char* aSectionName, char** aResult)
 {
   nsresult rv;
   PRInt32 r, g, b;
@@ -541,34 +542,37 @@ nsOperaProfileMigrator::ParseColor(nsINIParser* aParser, char* aSectionName, cha
 }
 
 nsresult 
-nsOperaProfileMigrator::CopyUserContentSheet(nsINIParser* aParser)
+nsOperaProfileMigrator::CopyUserContentSheet(nsINIParser &aParser)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
-  nsXPIDLCString userContentCSS;
-  PRInt32 size;
-  PRInt32 err = aParser->GetStringAlloc("User Prefs", "Local CSS File", getter_Copies(userContentCSS), &size);
-  if (err == nsINIParser::OK && userContentCSS.Length() > 0) {
-    // Copy the file
-    nsCOMPtr<nsILocalFile> userContentCSSFile(do_CreateInstance("@mozilla.org/file/local;1"));
-    if (!userContentCSSFile)
-      return NS_ERROR_OUT_OF_MEMORY;
+  nsCAutoString userContentCSS;
+  rv = aParser.GetString("User Prefs", "Local CSS File", userContentCSS);
+  if (NS_FAILED(rv) || userContentCSS.Length() == 0)
+    return NS_OK;
 
-    userContentCSSFile->InitWithNativePath(userContentCSS);
-    PRBool exists;
-    userContentCSSFile->Exists(&exists);
-    if (!exists)
-      return NS_OK;
+  // Copy the file
+  nsCOMPtr<nsILocalFile> userContentCSSFile;
+  rv = NS_NewNativeLocalFile(userContentCSS, PR_TRUE,
+                             getter_AddRefs(userContentCSSFile));
+  if (NS_FAILED(rv))
+    return NS_OK;
 
-    nsCOMPtr<nsIFile> profileChromeDir;
-    NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR,
-                           getter_AddRefs(profileChromeDir));
-    if (!profileChromeDir)
-      return NS_ERROR_OUT_OF_MEMORY;
+  PRBool exists;
+  rv = userContentCSSFile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists)
+    return NS_OK;
 
-    rv = userContentCSSFile->CopyToNative(profileChromeDir, nsDependentCString("userContent.css"));
-  }
-  return rv;
+  nsCOMPtr<nsIFile> profileChromeDir;
+  NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR,
+                         getter_AddRefs(profileChromeDir));
+  if (!profileChromeDir)
+    return NS_OK;
+
+  userContentCSSFile->CopyToNative(profileChromeDir,
+                                   NS_LITERAL_CSTRING("userContent.css"));
+
+  return NS_OK;
 }
 
 nsresult
@@ -1051,17 +1055,20 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                           nsIStringBundle* aBundle, 
                                           nsIRDFResource* aParentFolder)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   nsCOMPtr<nsIFile> smartKeywords;
   mOperaProfile->Clone(getter_AddRefs(smartKeywords));
   smartKeywords->Append(NS_LITERAL_STRING("search.ini"));
 
-  nsCAutoString path;
-  smartKeywords->GetNativePath(path);
-  nsINIParser* parser = new nsINIParser(path.get());
-  if (!parser)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(smartKeywords));
+  if (!lf)
+    return NS_OK;
+
+  nsINIParser parser;
+  rv = parser.Init(lf);
+  if (NS_FAILED(rv))
+    return NS_OK;
 
   nsXPIDLString sourceNameOpera;
   aBundle->GetStringFromName(NS_LITERAL_STRING("sourceNameOpera").get(), 
@@ -1078,31 +1085,32 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
                                 aParentFolder, -1, getter_AddRefs(keywordsFolder));
 
   PRInt32 sectionIndex = 1;
-  char section[35];
-  nsXPIDLCString name, url, keyword;
-  PRInt32 keyValueLength = 0;
+  nsCAutoString name, url, keyword;
   do {
-    sprintf(section, "Search Engine %d", sectionIndex++);
-    PRInt32 err = parser->GetStringAlloc(section, "Name", getter_Copies(name), &keyValueLength);
-    if (err != nsINIParser::OK)
+    nsCAutoString section("Search Engine ");
+    section.AppendInt(sectionIndex++);
+
+    rv = parser.GetString(section.get(), "Name", name);
+    if (NS_FAILED(rv))
       break;
 
-    err = parser->GetStringAlloc(section, "URL", getter_Copies(url), &keyValueLength);
-    if (err != nsINIParser::OK)
+    rv = parser.GetString(section.get(), "URL", url);
+    if (NS_FAILED(rv))
       continue;
-    err = parser->GetStringAlloc(section, "Key", getter_Copies(keyword), &keyValueLength);
-    if (err != nsINIParser::OK)
+
+    rv = parser.GetString(section.get(), "Key", keyword);
+    if (NS_FAILED(rv))
       continue;
 
     PRInt32 post;
-    err = GetInteger(parser, section, "Is post", &post);
-    if (post)
+    rv = GetInteger(parser, section.get(), "Is post", &post);
+    if (NS_SUCCEEDED(rv) && post)
       continue;
 
     if (url.IsEmpty() || keyword.IsEmpty() || name.IsEmpty())
       continue;
 
-    nsAutoString nameStr; nameStr.Assign(NS_ConvertUTF8toUCS2(name));
+    NS_ConvertUTF8toUCS2 nameStr(name);
     PRUint32 length = nameStr.Length();
     PRInt32 index = 0; 
     do {
@@ -1152,11 +1160,6 @@ nsOperaProfileMigrator::CopySmartKeywords(nsIBookmarksService* aBMS,
   }
   while (1);
   
-  if (parser) {
-    delete parser; 
-    parser = nsnull;
-  }
-
   return rv;
 }
 #endif

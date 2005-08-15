@@ -91,6 +91,7 @@
 #include "nsITextContent.h"
 #include "prlog.h"
 #include "nsCOMPtr.h"
+#include "nsHashKeys.h"
 #include "nsStyleUtil.h"
 #include "nsQuickSort.h"
 #include "nsContentUtils.h"

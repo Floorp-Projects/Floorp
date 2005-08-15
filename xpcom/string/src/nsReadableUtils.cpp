@@ -1079,48 +1079,6 @@ StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
 
 
 
-template <class CharT>
-class CalculateHashCode
-  {
-    public:
-      typedef CharT char_type;
-      typedef PRUint32 hashcode_type;
-      typedef CharT value_type;
-
-      CalculateHashCode() : mHashCode(0)  { }
-      hashcode_type GetHashCode() const { return mHashCode; }
-
-      PRUint32 write( const CharT* chars, PRUint32 N )
-        {
-          for ( const CharT *end = chars + N; chars < end; ++chars)
-            mHashCode = (mHashCode>>28) ^ (mHashCode<<4) ^ PRUint32(*chars);
-          return N;
-        }
-
-    private:
-      hashcode_type mHashCode;
-  };
-
-NS_COM PRUint32 HashString( const nsAString& aStr )
-  {
-    CalculateHashCode<nsAString::char_type> sink;
-    nsAString::const_iterator begin, end;
-    aStr.BeginReading(begin);
-    aStr.EndReading(end);
-    copy_string(begin, end, sink);
-    return sink.GetHashCode();
-  }
-
-NS_COM PRUint32 HashString( const nsACString& aStr )
-  {
-    CalculateHashCode<nsACString::char_type> sink;
-    nsACString::const_iterator begin, end;
-    aStr.BeginReading(begin);
-    aStr.EndReading(end);
-    copy_string(begin, end, sink);
-    return sink.GetHashCode();
-  }
-
 static const PRUnichar empty_buffer[1] = { '\0' };
 
 NS_COM const nsAFlatString& EmptyString()

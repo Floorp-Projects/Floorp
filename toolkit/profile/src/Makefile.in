@@ -60,7 +60,6 @@ LOCAL_INCLUDES = \
 CPPSRCS = \
 		nsProfileLock.cpp \
 		nsToolkitProfileService.cpp \
-		nsINIParser.cpp \
 		$(NULL)
 
 GARBAGE += nsProfileLock.cpp

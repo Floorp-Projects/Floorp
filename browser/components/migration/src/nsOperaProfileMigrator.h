@@ -92,11 +92,11 @@ public:
 
 protected:
   nsresult CopyPreferences(PRBool aReplace);
-  nsresult ParseColor(nsINIParser* aParser, char* aSectionName, char** aResult);
-  nsresult CopyUserContentSheet(nsINIParser* aParser);
-  nsresult CopyProxySettings(nsINIParser* aParser, nsIPrefBranch* aBranch);
-  nsresult GetInteger(nsINIParser* aParser, char* aSectionName, 
-                      char* aKeyName, PRInt32* aResult);
+  nsresult ParseColor(nsINIParser &aParser, const char* aSectionName, char** aResult);
+  nsresult CopyUserContentSheet(nsINIParser &aParser);
+  nsresult CopyProxySettings(nsINIParser &aParser, nsIPrefBranch* aBranch);
+  nsresult GetInteger(nsINIParser &aParser, const char* aSectionName, 
+                      const char* aKeyName, PRInt32* aResult);
 
   nsresult CopyCookies(PRBool aReplace);
   nsresult CopyHistory(PRBool aReplace);
