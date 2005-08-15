@@ -469,7 +469,7 @@ function compareTasks( taskA, taskB )
       case "unifinder-todo-tree-col-status":
         return compareNumber(kStatusOrder.indexOf(taskA.status), kStatusOrder.indexOf(taskB.status)) * modifier;
       case "unifinder-todo-tree-col-calendarname":
-        return compareString(taskA.parent.name, taskB.parent.name) * modifier;
+        return compareString(taskA.calendar.name, taskB.calendar.name) * modifier;
 
       default:
          return 0;
