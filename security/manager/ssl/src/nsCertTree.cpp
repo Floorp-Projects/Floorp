@@ -66,6 +66,18 @@ struct treeArrayElStr {
   PRInt32    numChildren; /* number of chidren (certs) for thread */
 };
 
+CompareCacheHashEntryPtr::CompareCacheHashEntryPtr()
+{
+  entry = new CompareCacheHashEntry;
+}
+
+CompareCacheHashEntryPtr::~CompareCacheHashEntryPtr()
+{
+  if (entry) {
+    delete entry;
+  }
+}
+
 CompareCacheHashEntry::CompareCacheHashEntry()
 :key(nsnull)
 {
@@ -77,33 +89,36 @@ CompareCacheHashEntry::CompareCacheHashEntry()
 PR_STATIC_CALLBACK(const void *)
 CompareCacheGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
-  return entry->key;
+  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
+  return entryPtr->entry->key;
 }
 
 PR_STATIC_CALLBACK(PRBool)
 CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
 {
-  const CompareCacheHashEntry *entry = NS_STATIC_CAST(const CompareCacheHashEntry*, hdr);
-  return entry->key == key;
+  const CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(const CompareCacheHashEntryPtr*, hdr);
+  return entryPtr->entry->key == key;
 }
 
 PR_STATIC_CALLBACK(PRBool)
 CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      const void *key)
 {
-  new (hdr) CompareCacheHashEntry();
-  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
-  entry->key = (void*)key;
+  new (hdr) CompareCacheHashEntryPtr();
+  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
+  if (!entryPtr->entry) {
+    return PR_FALSE;
+  }
+  entryPtr->entry->key = (void*)key;
   return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(void)
 CompareCacheClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
-  entry->~CompareCacheHashEntry();
+  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
+  entryPtr->~CompareCacheHashEntryPtr();
 }
 
 static PLDHashTableOps gMapOps = {
@@ -140,7 +155,7 @@ nsresult nsCertTree::InitCompareHash()
 {
   ClearCompareHash();
   if (!PL_DHashTableInit(&mCompareCache, &gMapOps, nsnull,
-                         sizeof(CompareCacheHashEntry), 128)) {
+                         sizeof(CompareCacheHashEntryPtr), 128)) {
     mCompareCache.ops = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -176,9 +191,10 @@ CompareCacheHashEntry *
 nsCertTree::getCacheEntry(void *cache, void *aCert)
 {
   PLDHashTable &aCompareCache = *NS_REINTERPRET_CAST(PLDHashTable*, cache);
-  return NS_STATIC_CAST(CompareCacheHashEntry*,
-                        PL_DHashTableOperate(&aCompareCache, aCert,
-                                             PL_DHASH_ADD));
+  CompareCacheHashEntryPtr *entryPtr = 
+    NS_STATIC_CAST(CompareCacheHashEntryPtr*,
+                   PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
+  return entryPtr ? entryPtr->entry : NULL;
 }
 
 void nsCertTree::RemoveCacheEntry(void *key)

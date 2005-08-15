@@ -50,15 +50,21 @@
 
 typedef struct treeArrayElStr treeArrayEl;
 
-struct CompareCacheHashEntry : PLDHashEntryHdr {
-  CompareCacheHashEntry();
-
+struct CompareCacheHashEntry {
   enum { max_criterions = 3 };
+  CompareCacheHashEntry();
 
   void *key; // no ownership
   PRPackedBool mCritInit[max_criterions];
   nsXPIDLString mCrit[max_criterions];
 };
+
+struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
+  CompareCacheHashEntryPtr();
+  ~CompareCacheHashEntryPtr();
+  CompareCacheHashEntry *entry;
+};
+
 
 class nsCertTree : public nsICertTree
 {
