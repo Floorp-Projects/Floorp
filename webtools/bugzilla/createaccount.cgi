@@ -63,7 +63,10 @@ my $login = $cgi->param('login');
 if (defined($login)) {
     # We've been asked to create an account.
     my $realname = trim($cgi->param('realname'));
-    check_email_syntax($login);
+
+    validate_email_syntax($login)
+      || ThrowUserError('illegal_email_address', {addr => $login});
+
     $vars->{'login'} = $login;
 
     $dbh->bz_lock_tables('profiles WRITE', 'email_setting WRITE', 'tokens READ');

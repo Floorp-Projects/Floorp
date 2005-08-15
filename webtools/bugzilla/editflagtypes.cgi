@@ -489,7 +489,10 @@ sub validateCCList {
                         { cc_list => $cgi->param('cc_list') });
     
     my @addresses = split(/[, ]+/, $cgi->param('cc_list'));
-    foreach my $address (@addresses) { check_email_syntax($address) }
+    foreach my $address (@addresses) {
+        validate_email_syntax($address)
+          || ThrowUserError('illegal_email_address', {addr => $address});
+    }
 }
 
 sub validateProduct {

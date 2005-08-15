@@ -37,13 +37,13 @@ use base qw(Exporter);
                              lsearch max min
                              diff_arrays diff_strings
                              trim wrap_comment find_wrap_point
-                             format_time format_time_decimal
+                             format_time format_time_decimal validate_date
                              file_mod_time is_7bit_clean
-                             bz_crypt check_email_syntax);
+                             bz_crypt validate_email_syntax);
 
 use Bugzilla::Config;
-use Bugzilla::Error;
 use Bugzilla::Constants;
+
 use Date::Parse;
 use Date::Format;
 use Text::Wrap;
@@ -349,16 +349,15 @@ sub bz_crypt {
     return $cryptedpassword;
 }
 
-sub check_email_syntax {
-    my ($addr) = (@_);
+sub validate_email_syntax {
+    my ($addr) = @_;
     my $match = Param('emailregexp');
-    if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("illegal_email_address", { addr => $addr });
-    }
+    my $ret = ($addr =~ /$match/ && $addr !~ /[\\\(\)<>&,;:"\[\] \t\r\n]/);
+    return $ret ? 1 : 0;
 }
 
-sub ValidateDate {
-    my ($date, $format) = @_;
+sub validate_date {
+    my ($date) = @_;
     my $date2;
 
     # $ts is undefined if the parser fails.
@@ -369,9 +368,8 @@ sub ValidateDate {
         $date =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/; 
         $date2 =~ s/(\d+)-0*(\d+?)-0*(\d+?)/$1-$2-$3/;
     }
-    if (!$ts || $date ne $date2) {
-        ThrowUserError('illegal_date', {date => $date, format => $format});
-    } 
+    my $ret = ($ts && $date eq $date2);
+    return $ret ? 1 : 0;
 }
 
 sub is_7bit_clean {
@@ -431,7 +429,8 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $crypted_password = bz_crypt($password);
 
   # Validation Functions
-  check_email_syntax($email);
+  validate_email_syntax($email);
+  validate_date($date);
 
 =head1 DESCRIPTION
 
@@ -670,9 +669,14 @@ characters of the password to anyone who views the encrypted version.
 
 =over 4
 
-=item C<check_email_syntax($email)>
+=item C<validate_email_syntax($email)>
 
-Do a syntax checking for a legal email address. An error is thrown
-if the validation fails.
+Do a syntax checking for a legal email address and returns 1 if
+the check is successful, else returns 0.
+
+=item C<validate_date($date)>
+
+Make sure the date has the correct format and returns 1 if
+the check is successful, else returns 0.
 
 =back

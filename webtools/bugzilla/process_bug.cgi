@@ -1103,7 +1103,9 @@ if (UserInGroup(Param('timetrackinggroup'))) {
         DoComma();
         $::query .= "deadline = ";
         if ($cgi->param('deadline')) {
-            Bugzilla::Util::ValidateDate($cgi->param('deadline'), 'YYYY-MM-DD');
+            validate_date($cgi->param('deadline'))
+              || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
+                                                 format => 'YYYY-MM-DD'});
             $::query .= SqlQuote($cgi->param('deadline'));
         } else {
             $::query .= "NULL" ;

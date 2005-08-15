@@ -110,9 +110,10 @@ if ( $::action eq 'reqpw' ) {
         ThrowUserError("password_change_requests_not_allowed");
     }
 
-    # Make sure the login name looks like an email address.  This function
-    # displays its own error and stops execution if the login name looks wrong.
-    check_email_syntax($cgi->param('loginname'));
+    # Make sure the login name looks like an email address.
+    validate_email_syntax($cgi->param('loginname'))
+      || ThrowUserError('illegal_email_address',
+                        {addr => $cgi->param('loginname')});
 
     my $quotedloginname = SqlQuote($cgi->param('loginname'));
     SendSQL("SELECT userid FROM profiles WHERE " .

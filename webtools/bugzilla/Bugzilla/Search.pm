@@ -350,14 +350,18 @@ sub init {
             
       if ($params->param('deadlinefrom')){
         $deadlinefrom = $params->param('deadlinefrom');
-        Bugzilla::Util::ValidateDate($deadlinefrom, 'deadlinefrom');
+        validate_date($deadlinefrom)
+          || ThrowUserError('illegal_date', {date => $deadlinefrom,
+                                             format => 'YYYY-MM-DD'});
         $sql_deadlinefrom = &::SqlQuote($deadlinefrom);
         push(@wherepart, "bugs.deadline >= $sql_deadlinefrom");
       }
       
       if ($params->param('deadlineto')){
         $deadlineto = $params->param('deadlineto');
-        Bugzilla::Util::ValidateDate($deadlineto, 'deadlineto');
+        validate_date($deadlineto)
+          || ThrowUserError('illegal_date', {date => $deadlineto,
+                                             format => 'YYYY-MM-DD'});
         $sql_deadlineto = &::SqlQuote($deadlineto);
         push(@wherepart, "bugs.deadline <= $sql_deadlineto");
       }

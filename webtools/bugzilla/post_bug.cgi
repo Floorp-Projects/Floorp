@@ -29,6 +29,7 @@ use lib qw(.);
 require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Field;
@@ -309,7 +310,9 @@ if (UserInGroup(Param("timetrackinggroup")) &&
 }
 
 if ((UserInGroup(Param("timetrackinggroup"))) && ($cgi->param('deadline'))) {
-    Bugzilla::Util::ValidateDate($cgi->param('deadline'), 'YYYY-MM-DD');
+    validate_date($cgi->param('deadline'))
+      || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
+                                         format => 'YYYY-MM-DD'});
     $sql .= SqlQuote($cgi->param('deadline'));  
 } else {
     $sql .= "NULL";

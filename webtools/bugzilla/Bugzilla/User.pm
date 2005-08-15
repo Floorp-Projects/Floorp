@@ -1184,7 +1184,7 @@ sub insert_new_user {
     $password ||= &::GenerateRandomPassword();
     my $cryptpassword = bz_crypt($password);
 
-    # XXX - These should be moved into is_available_username or check_email_syntax
+    # XXX - These should be moved into is_available_username or validate_email_syntax
     #       At the least, they shouldn't be here. They're safe for now, though.
     trick_taint($username);
     trick_taint($realname);
