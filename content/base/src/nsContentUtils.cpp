@@ -134,6 +134,7 @@ imgILoader *nsContentUtils::sImgLoader = nsnull;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
 nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
+nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
@@ -187,6 +188,11 @@ nsContentUtils::Init()
   if (NS_FAILED(rv)) {
     // no image loading for us.  Oh, well.
     sImgLoader = nsnull;
+  }
+
+  sPtrsToPtrsToRelease = new nsVoidArray();
+  if (!sPtrsToPtrsToRelease) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   sInitialized = PR_TRUE;
@@ -404,7 +410,8 @@ nsContentUtils::Shutdown()
 {
   sInitialized = PR_FALSE;
 
-  for (PRInt32 i = 0; i < PRInt32(PropertiesFile_COUNT); ++i)
+  PRInt32 i;
+  for (i = 0; i < PRInt32(PropertiesFile_COUNT); ++i)
     NS_IF_RELEASE(sStringBundles[i]);
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
@@ -421,6 +428,12 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);
+  for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
+    nsISupports** ptrToPtr =
+      NS_STATIC_CAST(nsISupports**, sPtrsToPtrsToRelease->ElementAt(i));
+    NS_RELEASE(*ptrToPtr);
+  }
+  delete sPtrsToPtrsToRelease;
 }
 
 // static
