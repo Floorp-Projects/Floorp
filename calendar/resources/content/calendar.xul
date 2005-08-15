@@ -334,9 +334,10 @@
   <menuitem label="&calendar.context.newtodo.label;"
             accesskey="&calendar.context.newtodo.accesskey;"
             observes="new_todo_command"/>
-  <!--
-  Currently no way to get the item that we clicked on originally 
-  <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_todo_command"/>-->
+  <menuitem id="task-context-menu-modify"
+            label="&calendar.context.modifytask.label;"
+            accesskey="&calendar.context.modifytask.accesskey;"
+            oncommand="modifyTaskFromContext()"/>
   <menuitem label="&calendar.context.deletetask.label;"
             accesskey="&calendar.context.deletetask.accesskey;"
             observes="delete_todo_command"/>

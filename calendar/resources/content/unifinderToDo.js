@@ -513,6 +513,7 @@ function dateToMilliseconds(oeICalDateTime) {
 
 function calendarTaskView( taskArray )
 {
+   this.contextTask = null;
    this.taskArray = taskArray;   
 }
 
@@ -614,12 +615,36 @@ function contextChangePriority( event, Priority )
    endBatchTransaction();
 }
 
+function modifyTaskFromContext() {
+   var task = document.getElementById( ToDoUnifinderTreeName ).taskView.contextTask;
+   if(task)
+       editToDo(task);
+}
+
 function changeContextMenuForToDo( event )
 {
    if (event.target.id != "taskitem-context-menu")
      return;
 
    var toDoItem = getToDoFromEvent( event );
+
+   // If only one task is selected, enable 'Edit Task'
+   var tree = document.getElementById( ToDoUnifinderTreeName ); 
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+   tree.view.selection.getRangeAt(0, start, end);
+   if (numRanges == 1 && (start.value == end.value) && toDoItem) {
+       document.getElementById("task-context-menu-modify")
+               .removeAttribute("disabled");
+       tree.taskView.contextTask = toDoItem;
+   }
+   else {
+       document.getElementById("task-context-menu-modify")
+               .setAttribute("disabled", true);
+       tree.taskView.contextTask = null;
+   }
+
    if( toDoItem )
    {
       document.getElementById("is_editable").removeAttribute("disabled");
