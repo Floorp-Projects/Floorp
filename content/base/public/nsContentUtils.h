@@ -53,6 +53,7 @@
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
+#include "nsVoidArray.h"
 
 class nsIXPConnect;
 class nsIContent;
@@ -544,6 +545,16 @@ public:
    */
   static void NotifyXPCIfExceptionPending(JSContext *aCx);
 
+  /**
+   * Release *aSupportsPtr when the shutdown notification is received
+   */
+  static nsresult ReleasePtrOnShutdown(nsISupports** aSupportsPtr) {
+    NS_ASSERTION(aSupportsPtr, "Expect to crash!");
+    NS_ASSERTION(*aSupportsPtr, "Expect to crash!");
+    return sPtrsToPtrsToRelease->AppendElement(aSupportsPtr) ? NS_OK :
+      NS_ERROR_OUT_OF_MEMORY;
+  }
+   
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -583,6 +594,9 @@ private:
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
 
+  // Holds pointers to nsISupports* that should be released at shutdown
+  static nsVoidArray* sPtrsToPtrsToRelease;
+  
   static PRBool sInitialized;
 };
 

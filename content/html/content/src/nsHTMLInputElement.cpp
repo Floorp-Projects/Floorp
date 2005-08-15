@@ -2810,35 +2810,46 @@ NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
   // such an ordinary process all the time.  There are only two possibilities
   // for this visitor: set to true, and set to false.
   //
-  static nsIRadioVisitor* visitorTrue = nsnull;
-  static nsIRadioVisitor* visitorFalse = nsnull;
+  static nsIRadioVisitor* sVisitorTrue = nsnull;
+  static nsIRadioVisitor* sVisitorFalse = nsnull;
 
   //
   // Get the visitor that sets them to true
   //
   if (aCheckedChanged) {
-    if (!visitorTrue) {
-      visitorTrue = new nsRadioSetCheckedChangedVisitor(PR_TRUE);
-      if (!visitorTrue) {
+    if (!sVisitorTrue) {
+      sVisitorTrue = new nsRadioSetCheckedChangedVisitor(PR_TRUE);
+      if (!sVisitorTrue) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      NS_ADDREF(visitorTrue);
+      NS_ADDREF(sVisitorTrue);
+      nsresult rv =
+        nsContentUtils::ReleasePtrOnShutdown((nsISupports**)&sVisitorTrue);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(sVisitorTrue);
+        return rv;
+      }
     }
-    *aVisitor = visitorTrue;
+    *aVisitor = sVisitorTrue;
   }
-
   //
   // Get the visitor that sets them to false
   //
-  if (!aCheckedChanged) {
-    if (!visitorFalse) {
-      visitorFalse = new nsRadioSetCheckedChangedVisitor(PR_FALSE);
-      if (!visitorFalse) {
+  else {
+    if (!sVisitorFalse) {
+      sVisitorFalse = new nsRadioSetCheckedChangedVisitor(PR_FALSE);
+      if (!sVisitorFalse) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      NS_ADDREF(visitorFalse);
+      NS_ADDREF(sVisitorFalse);
+      nsresult rv =
+        nsContentUtils::ReleasePtrOnShutdown((nsISupports**)&sVisitorFalse);
+      if (NS_FAILED(rv)) {
+        NS_RELEASE(sVisitorFalse);
+        return rv;
+      }
     }
-    *aVisitor = visitorFalse;
+    *aVisitor = sVisitorFalse;
   }
 
   NS_ADDREF(*aVisitor);
