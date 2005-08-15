@@ -1715,9 +1715,7 @@
 #endif
           <menuitem id="checkForUpdates" accesskey="&updateCmd.accesskey;" 
                     label="&updateCmd.label;" oncommand="checkForUpdates();"/>
-#ifndef XP_MACOSX
           <menuseparator/>
-#endif
           <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
 #ifdef XP_MACOSX
