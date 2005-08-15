@@ -252,8 +252,9 @@ else
 	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
 	    ASFLAGS += -march=opteron -m64 -fPIC
 	else
-	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s
+	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s sha-fast-amd64-sun.s
 	    ASFLAGS += -xarch=generic64 -K PIC
+	    SHA_SRCS =
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
 	MPI_SRCS += mpi_amd64.c
