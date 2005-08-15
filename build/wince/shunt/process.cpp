@@ -73,7 +73,6 @@ MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
     char* retval = NULL;
 
 #ifdef DEBUG_NSPR_ALL
-
     if (!strcmp(inName, "NSPR_LOG_MODULES"))
         return "all:5";
 
@@ -88,6 +87,9 @@ MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
     if (!strcmp(inName, "NS_TIMELINE_ENABLE"))
         return "1";
 #endif
+
+	if (!_stricmp(inName, "tmp"))
+        return "/Temp";
     return retval;
 }
 
