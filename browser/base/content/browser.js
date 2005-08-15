@@ -6195,6 +6195,24 @@ var FeedHandler = {
      */
     function transformFeed(processor) {
       var strings = document.getElementById("bundle_browser");
+
+      // Get the values of the reloadInterval and showMenu preferences
+      // or fall back on hardcoded values.
+      var reloadInterval, showMenu;
+      if (gPrefService) {
+        try {
+          reloadInterval =
+            gPrefService.getIntPref("browser.feedview.reloadInterval");
+        } catch (e) {
+          reloadinterval = 0;
+        }
+        try {
+          showMenu = gPrefService.getBoolPref("browser.feedview.showMenu");
+        } catch (e) {
+          showMenu = true;
+        }
+      }
+
       processor.setParameter(null, "url", doc.documentURI);
       processor.setParameter(null, "title", 
                              strings.getFormattedString("feedTitle", [""]));
@@ -6210,8 +6228,9 @@ var FeedHandler = {
       processor.setParameter(null, "articleCount", 
                              strings.getFormattedString("feedDescription", 
                                                         [getArticleCount()]));
-      processor.setParameter(null, "showMenu", true);
-      processor.setParameter(null, "reloadInterval", 30);
+      processor.setParameter(null, "showMenu", showMenu);
+
+      processor.setParameter(null, "reloadInterval", reloadInterval);
       processor.setParameter(null, "addLiveBookmarkLink", 
                              strings.getString("feedAddLiveBookmarkLink"));
       var regionStrings = document.getElementById("bundle_browser_region");
@@ -6312,5 +6331,5 @@ var FeedHandler = {
     // making sure to specify the strictest check that matches that pattern
     // to minimize false positives.
     return false;
-  },
+  }
 };

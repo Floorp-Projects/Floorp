@@ -404,8 +404,5 @@ pref("browser.download.hide_plugins_without_extensions", true);
 // to be exposed. By default, only expose it for bidi-associated system locales.
 pref("bidi.browser.ui", false);
 
-pref("browser.feedview.articleLength", 50);
-pref("browser.feedview.showBar", true);
-pref("browser.feedview.showImage", true);
-pref("browser.feedview.timerInterval", 0);
-pref("browser.feedview.externalCSS", "");
+pref("browser.feedview.showMenu", true);
+pref("browser.feedview.reloadInterval", 0);

@@ -92,10 +92,10 @@
         
         <!-- The options place holder -->
         <div id="data" style="display: none;">
-          <xsl:attribute name="showMenu">
+          <xsl:attribute name="showmenu">
             <xsl:value-of select="$showMenu"/>
           </xsl:attribute>
-          <xsl:attribute name="reloadInterval">
+          <xsl:attribute name="reloadinterval">
             <xsl:value-of select="$reloadInterval"/>
           </xsl:attribute>
           <xsl:attribute name="url">
@@ -105,10 +105,10 @@
 
         <xsl:apply-templates/>
         
-        <script type="application/x-javascript"><!--
+        <script type="application/x-javascript">
           // Initialize the view
           FeedView.init();
-        //--></script>
+        </script>
       </body>
     </html>
   </xsl:template>
