@@ -831,7 +831,7 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     if (!isToken && (slot == NULL || !PK11_DoesMechanism(slot,type))) {
         PK11SlotInfo *bestSlot;
 
-        bestSlot = PK11_GetBestSlot(type,wincx); /* TNH: references the slot? */
+        bestSlot = PK11_GetBestSlot(type,wincx);
         if (bestSlot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
 	    return NULL;
