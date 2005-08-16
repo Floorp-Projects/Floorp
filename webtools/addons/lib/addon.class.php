@@ -3,9 +3,9 @@
  * Addon super class.  The class to end all classes.
  * @package amo
  * @subpackage lib
+ * @todo properly separate accessors and mutators.
  */
-class AddOn extends AMO_Object
-{
+class AddOn extends AMO_Object {
     // AddOn metadata.
     var $ID;
     var $GUID;
@@ -63,8 +63,7 @@ class AddOn extends AMO_Object
     * 
     * @param int $ID AddOn ID
     */
-    function AddOn($ID=null) 
-    {
+    function AddOn($ID=null) {
         // Our DB and Smarty objects are global to save cycles.
         global $db, $tpl;
 
@@ -79,8 +78,10 @@ class AddOn extends AMO_Object
         }
     }
 
-    function getAddOn()
-    {
+    /**
+     * Get all commonly used AddOn information.
+     */
+    function getAddOn() {
         $this->getAddonCats();
         $this->getComments();
         $this->getCurrentVersion();
@@ -88,8 +89,10 @@ class AddOn extends AMO_Object
         $this->getUserInfo();
     }
     
-    function getMainPreview()
-    {
+    /**
+     * Get the "highlight" for the current AddOn.
+     */
+    function getMainPreview() {
         // Gather previews information.
         $this->db->query(" 
             SELECT
@@ -116,8 +119,10 @@ class AddOn extends AMO_Object
 
     }
 
-    function getPreviews()
-    {
+    /**
+     * Get all preview information attached to the current AddOn.
+     */
+    function getPreviews() {
         // Gather preview information
         $this->db->query("
             SELECT
@@ -144,9 +149,10 @@ class AddOn extends AMO_Object
         }
     }
      
-    function getHistory()
-    {
-        // Gather history of an addon
+    /**
+     * Get all previous versions of the current AddOn.
+     */
+    function getHistory() {
         $this->db->query("
              SELECT
                  TV.vID,
@@ -173,9 +179,10 @@ class AddOn extends AMO_Object
         $this->History = $this->db->record;
     }
 
-    function getCurrentVersion()
-    {
-        // Gather version information for most current version.
+    /**
+     * Get information about the most recent verison of the current AddOn.
+     */
+    function getCurrentVersion() {
         $this->db->query("
             SELECT 
                 version.vID, 
@@ -205,8 +212,12 @@ class AddOn extends AMO_Object
         }
     }
 
-    function getUserInfo()
-    {
+    /**
+     * Retrieve user information.
+     *
+     * @todo have this function set a User object instead
+     */ 
+    function getUserInfo() {
         // Gather addons metadata, user info.
         $this->db->query("
             SELECT 
@@ -229,8 +240,13 @@ class AddOn extends AMO_Object
         }
     }
 
-    function getComments($limit=5)
-    {
+    /**
+     * Get comments attached to this Addon.
+     *
+     * @param int $limit number of rows to limit by.
+     * @todo add left/right limit clauses i.e. LIMIT 10,20 to work with pagination
+     */
+    function getComments($limit=5) {
         // Gather 10 latest comments.
         $this->db->query("
             SELECT
@@ -256,8 +272,10 @@ class AddOn extends AMO_Object
         $this->setVar('Comments',$this->db->record);
     }
 
-    function getAddonCats()
-    {
+    /**
+     * Retrieve all categories attached to the current AddOn.
+     */
+    function getAddonCats() {
         // Gather addon categories.
         $this->db->query("
             SELECT DISTINCT

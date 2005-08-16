@@ -20,7 +20,6 @@ require_once('Auth.php');  // PEAR::Auth
 require_once(LIB.'/smarty/libs/Smarty.class.php');  // Smarty
 require_once(LIB.'/amo.class.php');
 require_once(LIB.'/addon.class.php');
-require_once(LIB.'/auth.class.php');
 require_once(LIB.'/error.php');
 require_once(LIB.'/rdf.class.php');
 require_once(LIB.'/rss.class.php');

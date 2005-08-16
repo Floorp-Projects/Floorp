@@ -1,15 +1,21 @@
 <?php
 /**
  * AMO master class.  This class contains global application logic.
+ * @todo properly separate accessors and mutators.
+ * @todo don't store data in this superclass -- strip vars except for tpl/db.
  */
 class AMO_Object
 {
     var $cats;
     var $apps;
     var $platforms;
+    var $db;
+    var $tpl;
 
-    function AMO_Object()
-    {
+    /**
+     * AMO_Object constructor.
+     */
+    function AMO_Object() {
         // Our DB and Smarty objects are global to save cycles.
         global $db, $tpl;
 
@@ -51,6 +57,9 @@ class AMO_Object
         }
     }
 
+    /**
+     * Get all category names.
+     */
     function getCats()
     {
         // Gather categories.
@@ -71,6 +80,9 @@ class AMO_Object
         } while ($this->db->next(SQL_ASSOC));
     }
     
+    /**
+     * Get all operating system names (platforms).  Used to populate forms.
+     */
     function getPlatforms()
     {
         // Gather platforms..
@@ -90,6 +102,9 @@ class AMO_Object
 
     }
 
+    /**
+     * Get all application names.  Used to populate forms.
+     */
     function getApps()
     {
         // Gather aapplications.

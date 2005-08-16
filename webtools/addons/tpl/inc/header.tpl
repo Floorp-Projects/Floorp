@@ -26,8 +26,9 @@
 <div id="key-title">
     <h1><a href="{$config.webpath}/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
     <ul>
+        <li><a href="{$config.webpath}/login.php" title="Log in to MyUpdate">Login</a></li>
+        <li><a href="{$config.webpath}/register.php" title="Register your MyUpdate account">Register</a></li>
         <li><a href="{$config.webpath}/faq.php" title="Frequently Asked Questions">FAQ</a></li>
-        <li><a href="{$config.webpath}/developers/" title="Tools for Addons Developers">Developers</a></li>
         <li><a href="{$config.webpath}/search.php" title="Find an Addon">Search</a></li>
     </ul>
 </div>
