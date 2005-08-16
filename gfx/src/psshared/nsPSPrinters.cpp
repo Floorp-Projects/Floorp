@@ -80,7 +80,7 @@ PRBool
 nsPSPrinterList::Enabled()
 {
     const char *val = PR_GetEnv("MOZILLA_POSTSCRIPT_ENABLED");
-    if (val && (val[0] == '0' || !strcasecmp(val, "false")))
+    if (val && (val[0] == '0' || !PL_strcasecmp(val, "false")))
         return PR_FALSE;
 
     // is the PS module enabled?
