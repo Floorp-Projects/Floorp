@@ -939,7 +939,6 @@ nsWindow::nsWindow() : nsBaseWidget()
 #endif
   mWindowType         = eWindowType_child;
   mBorderStyle        = eBorderStyle_default;
-  mBorderlessParent   = 0;
   mUnicodeWidget      = PR_TRUE;
   mIsInMouseCapture   = PR_FALSE;
   mIsInMouseWheelProcessing = PR_FALSE;
@@ -1535,7 +1534,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   if (mWindowType == eWindowType_popup) {
     NS_ASSERTION(!aParent, "Popups should not be hooked into the nsIWidget hierarchy");
-    mBorderlessParent = parent;
     // Don't set the parent of a popup window.
     parent = NULL;
   } else if (nsnull != aInitData) {
@@ -1842,8 +1840,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
           case nsSizeMode_Maximized :
             mode = SW_SHOWMAXIMIZED;
             break;
-#ifndef WINCE
           case nsSizeMode_Minimized :
+#ifndef WINCE
             mode = SW_SHOWMINIMIZED;
 #endif
             break;
@@ -1930,11 +1928,11 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;
-#ifndef WINCE
       case nsSizeMode_Minimized :
+#ifndef WINCE
         mode = gTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
-        break;
 #endif
+        break;
       default :
         mode = SW_RESTORE;
     }
@@ -4552,7 +4550,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       shrg.hwndClient = mWnd;
       shrg.ptDown.x = LOWORD(lParam);
       shrg.ptDown.y = HIWORD(lParam);
-      shrg.dwFlags = SHRG_RETURNCMD | SHRG_NOANIMATION;
+      shrg.dwFlags = SHRG_RETURNCMD;
       if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
       {
         result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
@@ -4694,7 +4692,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           PRBool result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
 
-#ifndef WINCE
+#ifdef WINCE
+          *aRetValue = 1;
+#else
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
           else
@@ -4849,7 +4849,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
          an impending min/max/restore change (WM_NCCALCSIZE would
          also work, but it's also sent when merely resizing.)) */
       if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
-#ifndef WINCE
         WINDOWPLACEMENT pl;
         pl.length = sizeof(pl);
         ::GetWindowPlacement(mWnd, &pl);
@@ -4884,16 +4883,28 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
 
         NS_RELEASE(event.widget);
-#else
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-#endif // WINCE
       }
     }
     break;
 
     case WM_SETTINGCHANGE:
-      getWheelInfo = PR_TRUE;
+#ifdef WINCE
+      if (wParam == SPI_SETWORKAREA)
+      {
+        RECT workArea;
+        ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+     
+        SetWindowPos(mWnd, 
+                     nsnull, 
+                     workArea.left, 
+                     workArea.top, 
+                     workArea.right, 
+                     workArea.bottom, 
+                     SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+      }
+      else
+#endif
+        getWheelInfo = PR_TRUE;
       break;
 
     case WM_PALETTECHANGED:
@@ -5408,7 +5419,7 @@ DWORD nsWindow::WindowStyle()
       break;
 
     case eWindowType_dialog:
-	  case eWindowType_popup:
+    case eWindowType_popup:
 		  style = WS_BORDER | WS_POPUP;
 		  break;
 
@@ -5508,7 +5519,7 @@ DWORD nsWindow::WindowExStyle()
       return WS_EX_WINDOWEDGE | WS_EX_CAPTIONOKBTN;
 
     case eWindowType_popup:
-      return WS_EX_TOOLWINDOW;
+      return WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -7867,7 +7878,6 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
     gRollupMsgWnd = NULL;
   }
 }
-
 #endif // WinCE
 
 //
@@ -7879,13 +7889,13 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 BOOL
 nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult )
 {
-  if (gRollupListener && gRollupWidget && IsWindowVisible(inWnd)) {
+  if (gRollupListener && gRollupWidget && ::IsWindowVisible(inWnd)) {
 
-    if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
-      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL
+    if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
+        inMsg == WM_MOUSEWHEEL  || inMsg == uMSH_MOUSEWHEEL
 #ifndef WINCE
         || 
+        inMsg == WM_ACTIVATE || 
         inMsg == WM_NCRBUTTONDOWN || 
         inMsg == WM_MOVING || 
         inMsg == WM_SIZING || 
@@ -7961,7 +7971,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         }
       }
       // if we've still determined that we should still rollup everything, do it.
-      else 
+      else
 #endif // WINCE
      if ( rollup ) {
         gRollupListener->Rollup();
