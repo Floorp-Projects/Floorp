@@ -41,7 +41,7 @@ DEPTH	= ../..
 REQUIRES = nss nspr libdbm
 
 DIRS = lib  \
- zlib \
+ $(ZLIB_SRCDIR) \
  addbuiltin \
  atob  \
  bltest \

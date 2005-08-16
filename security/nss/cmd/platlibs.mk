@@ -82,10 +82,6 @@ EXTRA_LIBS += \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
-
-JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
-	$(NULL)
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
@@ -144,10 +140,6 @@ EXTRA_SHARED_LIBS += \
 endif
 endif
 
-JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
-	$(NULL)
-
 else # USE_STATIC_LIBS
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
@@ -167,10 +159,6 @@ EXTRA_LIBS += \
 #OS_LIBS += \
 	wsock32.lib \
 	winmm.lib \
-	$(NULL)
-
-JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
 	$(NULL)
 else
 
@@ -227,10 +215,17 @@ EXTRA_SHARED_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
-
-JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
-	$(NULL)
 endif
 
 endif # USE_STATIC_LIBS
+
+# If a platform has a system zlib, set USE_SYSTEM_ZLIB to 1 and
+# ZLIB_LIBS to the linker command-line arguments for the system zlib
+# (for example, -lz) in the platform's config file in coreconf.
+ifndef USE_SYSTEM_ZLIB
+ZLIB_LIBS = $(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX)
+endif
+
+JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
+	$(ZLIB_LIBS) \
+	$(NULL)

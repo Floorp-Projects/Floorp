@@ -42,6 +42,10 @@ DEPTH = ../..
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 
+ifndef USE_SYSTEM_ZLIB
+ZLIB_SRCDIR = zlib  # Add the zlib directory to DIRS.
+endif
+
 # These sources were once in this directory, but now are gone.
 MISSING_SOURCES = \
 	addcert.c \
