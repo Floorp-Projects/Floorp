@@ -2915,12 +2915,12 @@ cross_compiling=$ac_cv_prog_cc_cross
 
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        CC_VERSION=`"${CC}" -v 2>&1 | grep ' 0-9\+\.0-9\+\.0-9' | sed -e 's|.* \(0-9\+\.0-9\+\.0-9\+\).*|\1|'`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        CXX_VERSION=`"${CXX}" -v 2>&1 | grep ' 0-9\+\.0-9\+\.0-9' | sed -e 's|.* \(0-9\+\.0-9\+\.0-9\+\).*|\1|'`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
@@ -2937,7 +2937,7 @@ cross_compiling=$ac_cv_prog_cc_cross
         fi
 
         # Check linker version
-        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep ' 0-9\+\.0-9\+\.0-9' | sed -e 's|.* \(0-9\+\.0-9\+\.0-9\+\).*|\1|'`
         _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             { echo "configure: error: The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE." 1>&2; exit 1; }
@@ -2945,7 +2945,7 @@ cross_compiling=$ac_cv_prog_cc_cross
         INCREMENTAL_LINKER=1
 
         # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep ' 0-9\+\.0-9\+\.0-9' | sed -e 's|.* \(0-9\+\.0-9\+\.0-9\+\).*|\1|'`
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
