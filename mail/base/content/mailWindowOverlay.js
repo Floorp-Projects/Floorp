@@ -1242,7 +1242,7 @@ function MsgOpenFromFile()
    }
 
    var uri = fp.fileURL;
-   uri.query = "type=x-message-display";
+   uri.query = "type=application/x-message-display";
 
   MsgOpenNewWindowForMessage(uri, null);
 }
@@ -2099,7 +2099,7 @@ function HandleJunkStatusChanged(folder)
   // this might be the stand alone window, open to a message that was
   // and attachment (or on disk), in which case, we want to ignore it.
   var loadedMessage = GetLoadedMessage();
-  if (loadedMessage && (!(/type=x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
+  if (loadedMessage && (!(/type=application\/x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
   {
     // if multiple message are selected
     // and we change the junk status
@@ -2180,7 +2180,7 @@ var gMessageNotificationBar =
   setPhishingMsg: function(aUrl)
   {
     var msgURI = GetLoadedMessage();
-    if (msgURI && !(/type=x-message-display/.test(msgURI)))
+    if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
     {
       var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
       // if we've explicitly marked this message as not being an email scam, then don't
@@ -2221,7 +2221,7 @@ function LoadMsgWithRemoteContent()
   var msgURI = GetLoadedMessage();
   var msgHdr = null;
     
-  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
   {
     msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
     if (msgHdr)
@@ -2241,7 +2241,7 @@ function MsgIsNotAScam()
   var msgURI = GetLoadedMessage();
   var msgHdr = null;
     
-  if (msgURI && !(/type=x-message-display/.test(msgURI)))
+  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
   {
     msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
     if (msgHdr)
@@ -2295,7 +2295,7 @@ function OnMsgLoaded(aUrl)
     // SetNextMessageAfterDelete() when the operation completes (bug 243532).
     gNextMessageViewIndexAfterDelete = -2;
 
-    if (!(/type=x-message-display/.test(msgURI)))
+    if (!(/type=application\/x-message-display/.test(msgURI)))
       msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
      
     gMessageNotificationBar.setJunkMsg(msgHdr);

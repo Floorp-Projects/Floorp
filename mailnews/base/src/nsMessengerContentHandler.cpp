@@ -67,7 +67,7 @@ NS_IMETHODIMP nsMessengerContentHandler::HandleContent(const char * aContentType
     return NS_ERROR_NULL_POINTER;
 
   // First of all, get the content type and make sure it is a content type we know how to handle!
-  if (nsCRT::strcasecmp(aContentType, "x-message-display") == 0) {
+  if (nsCRT::strcasecmp(aContentType, "application/x-message-display") == 0) {
     nsCOMPtr<nsIURI> aUri;
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
     if (!aChannel) return NS_ERROR_FAILURE;
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsMessengerContentHandler::HandleContent(const char * aContentType
         {
           nsCAutoString queryPart;
           aUrl->GetQuery(queryPart);
-          queryPart.ReplaceSubstring("type=message/rfc822", "type=x-message-display");
+          queryPart.ReplaceSubstring("type=message/rfc822", "type=application/x-message-display");
           aUrl->SetQuery(queryPart);
           rv = OpenWindow(aUri);
         }

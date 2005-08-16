@@ -142,7 +142,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
       nsCOMPtr<nsISupportsString> scriptableURL (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
       NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
 
-      fileURL->SetQuery(NS_LITERAL_CSTRING("?type=x-message-display"));
+      fileURL->SetQuery(NS_LITERAL_CSTRING("?type=application/x-message-display"));
 
       wwatch->OpenWindow(nsnull, "chrome://messenger/content/messageWindow.xul", "_blank",
                          "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", fileURL, getter_AddRefs(opened));

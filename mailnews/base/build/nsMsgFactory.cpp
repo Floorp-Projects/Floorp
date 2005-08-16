@@ -372,7 +372,7 @@ static const nsModuleComponentInfo gComponents[] = {
       nsMessengerOS2IntegrationConstructor,
     },
 #endif
-    { "x-message-display content handler",
+    { "application/x-message-display content handler",
        NS_MESSENGERCONTENTHANDLER_CID,
        NS_MESSENGERCONTENTHANDLER_CONTRACTID,
        nsMessengerContentHandlerConstructor

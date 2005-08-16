@@ -418,7 +418,7 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
     // content type appended to it...if it does, we want to remember
     // that as mOutputFormat
     const char * typeField = FindQueryElementData(queryPart, "type=");
-    if (typeField && !strncmp(typeField, "x-message-display", sizeof("x-message-display") - 1))
+    if (typeField && !strncmp(typeField, "application/x-message-display", sizeof("application/x-message-display") - 1))
     {
       const char *secondTypeField = FindQueryElementData(typeField, "type=");
       if (secondTypeField)
@@ -433,11 +433,11 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
 
       if (mRealContentType.LowerCaseEqualsLiteral("message/rfc822"))
       {
-        mRealContentType = "x-message-display";
+        mRealContentType = "application/x-message-display";
         mOutputFormat = "text/html";
         *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
-      else if (mRealContentType.LowerCaseEqualsLiteral("x-message-display"))
+      else if (mRealContentType.LowerCaseEqualsLiteral("application/x-message-display"))
       {
         mRealContentType = "";
         mOutputFormat = "text/html";

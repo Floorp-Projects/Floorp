@@ -730,12 +730,12 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   }
 
   urlString = url;
-  // strip out ?type=x-message-display because it confuses libmime
+  // strip out ?type=application/x-message-display because it confuses libmime
 
-  PRInt32 typeIndex = urlString.Find("?type=x-message-display");
+  PRInt32 typeIndex = urlString.Find("?type=application/x-message-display");
   if (typeIndex != kNotFound)
   {
-    urlString.Cut(typeIndex, sizeof("?type=x-message-display") - 1);
+    urlString.Cut(typeIndex, sizeof("?type=application/x-message-display") - 1);
     // we also need to replace the next '&' with '?'
     PRInt32 firstPartIndex = urlString.FindChar('&');
     if (firstPartIndex != kNotFound)
