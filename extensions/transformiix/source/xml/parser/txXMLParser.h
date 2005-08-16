@@ -49,7 +49,7 @@ class txXPathNode;
 
 /**
  * API to load XML files into DOM datastructures.
- * Parsing is either done by expat, or by expat via the synchloaderservice
+ * Parsing is either done by expat, or by expat via the syncloaderservice
  */
 
 /**

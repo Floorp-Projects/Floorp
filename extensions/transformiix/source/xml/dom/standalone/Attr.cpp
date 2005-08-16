@@ -45,65 +45,18 @@
 #include "txAtoms.h"
 #include "XMLUtils.h"
 
-//
-//Construct an Attribute object using the specified name and document owner
-//
-Attr::Attr(const nsAString& name, Document* owner):
-      NodeDefinition(Node::ATTRIBUTE_NODE, name, EmptyString(), owner)
+Attr::Attr(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
+           Element *aOwnerElement, const nsAString &aValue) :
+    NodeDefinition(Node::ATTRIBUTE_NODE, aLocalName, aValue,
+                   aOwnerElement->getOwnerDocument()),
+    mPrefix(aPrefix),
+    mNamespaceID(aNamespaceID),
+    mOwnerElement(aOwnerElement)
 {
-  int idx = nodeName.FindChar(':');
-  if (idx == kNotFound) {
-    mLocalName = do_GetAtom(nodeName);
-    if (mLocalName == txXMLAtoms::xmlns)
-      mNamespaceID = kNameSpaceID_XMLNS;
-    else
-      mNamespaceID = kNameSpaceID_None;
-  }
-  else {
-    mLocalName = do_GetAtom(Substring(nodeName, idx + 1,
-                                      nodeName.Length() - (idx + 1)));
-    // namespace handling has to be handled late, the attribute must
-    // be added to the tree to resolve the prefix, unless it's
-    // xmlns or xml, try to do that here
-    nsCOMPtr<nsIAtom> prefixAtom = do_GetAtom(Substring(nodeName, 0, idx));
-    if (prefixAtom == txXMLAtoms::xmlns)
-      mNamespaceID = kNameSpaceID_XMLNS;
-    else if (prefixAtom == txXMLAtoms::xml)
-      mNamespaceID = kNameSpaceID_XML;
-    else
-      mNamespaceID = kNameSpaceID_Unknown;
-  }
 }
 
-Attr::Attr(const nsAString& aNamespaceURI,
-           const nsAString& aName,
-           Document* aOwner) :
-    NodeDefinition(Node::ATTRIBUTE_NODE, aName, EmptyString(), aOwner)
-{
- if (aNamespaceURI.IsEmpty())
-    mNamespaceID = kNameSpaceID_None;
-  else
-    mNamespaceID = txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
-
-  mLocalName = do_GetAtom(XMLUtils::getLocalPart(nodeName));
-}
-
-//
-//Release the mLocalName
-//
 Attr::~Attr()
 {
-}
-
-void Attr::setNodeValue(const nsAString& aValue)
-{
-  nodeValue = aValue;
-}
-
-nsresult Attr::getNodeValue(nsAString& aValue)
-{
-  aValue = nodeValue;
-  return NS_OK;
 }
 
 //
@@ -113,6 +66,24 @@ Node* Attr::appendChild(Node* newChild)
 {
   NS_ASSERTION(0, "not implemented");
   return nsnull;
+}
+
+nsresult
+Attr::getNodeName(nsAString& aName) const
+{
+  if (mPrefix) {
+    mPrefix->ToString(aName);
+    aName.Append(PRUnichar(':'));
+  }
+  else {
+    aName.Truncate();
+  }
+
+  const char* ASCIIAtom;
+  mLocalName->GetUTF8String(&ASCIIAtom);
+  AppendUTF8toUTF16(ASCIIAtom, aName);
+
+  return NS_OK;
 }
 
 //
@@ -134,15 +105,6 @@ MBool Attr::getLocalName(nsIAtom** aLocalName)
 //
 PRInt32 Attr::getNamespaceID()
 {
-  if (mNamespaceID >= 0)
-    return mNamespaceID;
-
-  mNamespaceID = kNameSpaceID_None;
-  PRInt32 idx = nodeName.FindChar(':');
-  if (idx != kNotFound) {
-    nsCOMPtr<nsIAtom> prefixAtom = do_GetAtom(Substring(nodeName, 0, idx));
-    mNamespaceID = lookupNamespaceID(prefixAtom);
-  }
   return mNamespaceID;
 }
 
@@ -151,5 +113,5 @@ PRInt32 Attr::getNamespaceID()
 //
 Node* Attr::getXPathParent()
 {
-  return ownerElement;
+  return mOwnerElement;
 }

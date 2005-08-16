@@ -75,4 +75,5 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DXML_DTD -DXML_UNICODE
 
-INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../dom -I$(srcdir)/../../xpath
+INCLUDES += -I$(srcdir)/.. -I$(srcdir)/../../base -I$(srcdir)/../dom \
+        -I$(srcdir)/../../xpath
