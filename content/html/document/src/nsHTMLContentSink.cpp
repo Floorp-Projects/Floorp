@@ -1389,6 +1389,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       case eHTMLTag_frame:
       case eHTMLTag_input:
       case eHTMLTag_embed:
+      // <form> can end up as a leaf if it's misnested with table elements
+      case eHTMLTag_form:
         mSink->AddBaseTagInfo(content);
 
         break;
