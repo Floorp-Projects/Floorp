@@ -79,6 +79,7 @@ REQUIRES	+= tracemalloc
 endif
 
 CPPSRCS		= Minimo.cpp \
+                minimo_support.cpp \
 		minimo_bookmark.cpp \
 		minimo_history.cpp  \
 		minimo_callbacks.cpp \

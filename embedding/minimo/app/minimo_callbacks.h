@@ -54,39 +54,53 @@
 #include "minimo_types.h"
 #include "minimo_preference.h"
 #include "minimo_bookmark.h"
+#include "Minimo.h"
 
 /* context menu callbacks */
-void browse_in_window_from_popup(GtkWidget *menuitem, MinimoBrowser *browser);
-void download_link_from_popup(GtkWidget *menuitem, MinimoBrowser *browser);
-void minimo_load_url(gchar *url, MinimoBrowser *browser);
-void make_tab_from_popup(GtkWidget *menuitem, MinimoBrowser *browser);
-void open_new_tab_cb (GtkMenuItem *button, MinimoBrowser *browser);
-void close_current_tab_cb (GtkMenuItem *button, MinimoBrowser *browser);
+void browse_in_window_from_popup(GtkWidget *, MinimoBrowser *);
+void download_link_from_popup(GtkWidget *, MinimoBrowser *);
+void minimo_load_url(gchar *, MinimoBrowser *);
+void make_tab_from_popup(GtkWidget *, MinimoBrowser *);
+void open_new_tab_cb (GtkMenuItem *, MinimoBrowser *);
+void close_current_tab_cb (GtkMenuItem *, MinimoBrowser *);
 /* menu bar callbacks */
-void open_bookmark_window_cb (GtkMenuItem *button,MinimoBrowser *browser);
-void back_clicked_cb(GtkButton *button, MinimoBrowser *browser);
-void reload_clicked_cb(GtkButton *button, MinimoBrowser *browser);
-void forward_clicked_cb(GtkButton *button, MinimoBrowser *browser);
-void stop_clicked_cb(GtkButton *button, MinimoBrowser *browser);
+void open_bookmark_window_cb (GtkMenuItem *,MinimoBrowser *);
+void back_clicked_cb(GtkButton *, MinimoBrowser *);
+void reload_clicked_cb(GtkButton *, MinimoBrowser *);
+void forward_clicked_cb(GtkButton *, MinimoBrowser *);
+void stop_clicked_cb(GtkButton *, MinimoBrowser *);
 /* callbacks from the UI */
-gboolean delete_cb(GtkWidget *widget, GdkEventAny *event, MinimoBrowser *browser);
+gboolean delete_cb(GtkWidget *, GdkEventAny *, MinimoBrowser *);
 /* callbacks from the widget */
-void pref_clicked_cb(GtkButton *button, MinimoBrowser *browser);
-void quick_message(gchar* message);
-GtkWidget* create_minimo_progress (MinimoBrowser* browser);
-void net_state_change_cb(GtkMozEmbed *embed, gint flags, guint status, GtkLabel* label);
-void progress_change_cb(GtkMozEmbed *embed, gint cur, gint max, MinimoBrowser* browser);
-void title_changed_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
-void load_started_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
-void load_finished_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
-void location_changed_cb(GtkMozEmbed *embed, GtkLabel* label);
-void create_save_document(GtkMenuItem *button, MinimoBrowser *browser, gchar *location);
-void on_save_ok_cb(GtkWidget *button, OpenDialogParams *fs);
-void save_image_from_popup(GtkWidget *menuitem, MinimoBrowser *browser);
-void visibility_cb(GtkMozEmbed *embed, gboolean visibility, MinimoBrowser *browser);
-void set_browser_visibility(MinimoBrowser *browser, gboolean visibility);
-gint open_uri_cb(GtkMozEmbed *embed, const char *uri, MinimoBrowser *browser);
-void size_to_cb(GtkMozEmbed *embed, gint width, gint height, MinimoBrowser *browser);
+void pref_clicked_cb(GtkButton *, MinimoBrowser *);
+void quick_message(gchar* );
+
+/*callbacks from the menuToolButton */
+void show_hide_tabs_cb (GtkMenuItem *, MinimoBrowser *);
+void open_history_window (GtkButton *, MinimoBrowser *);
+void create_find_dialog (GtkWidget *, MinimoBrowser *);
+void create_open_document_from_file (GtkMenuItem *, MinimoBrowser *);
+void increase_font_size_cb (GtkMenuItem *, MinimoBrowser *);
+void decrease_font_size_cb (GtkMenuItem *, MinimoBrowser *);
+void full_screen_cb (GtkMenuItem *, MinimoBrowser *);
+void unfull_screen_cb (GtkMenuItem *, MinimoBrowser *);
+
+void info_clicked_cb(GtkButton *, MinimoBrowser *);
+void open_url_dialog_input_cb (GtkButton *, MinimoBrowser *);
+
+void net_state_change_cb(GtkMozEmbed *, gint , guint , GtkLabel* label);
+void progress_change_cb(GtkMozEmbed *, gint , gint , MinimoBrowser* );
+void title_changed_cb(GtkMozEmbed *, MinimoBrowser *);
+void load_started_cb(GtkMozEmbed *, MinimoBrowser *);
+void load_finished_cb(GtkMozEmbed *, MinimoBrowser *);
+void location_changed_cb(GtkMozEmbed *embed, GtkLabel *);
+void create_save_document_dialog (GtkMenuItem *, MinimoBrowser *, gchar *);
+void on_save_ok_cb(GtkWidget *, OpenDialogParams *);
+void save_image_from_popup(GtkWidget *, MinimoBrowser *);
+void visibility_cb(GtkMozEmbed *, gboolean , MinimoBrowser *);
+void set_browser_visibility(MinimoBrowser *, gboolean );
+gint open_uri_cb(GtkMozEmbed *, const char *, MinimoBrowser *);
+void size_to_cb(GtkMozEmbed *, gint , gint , MinimoBrowser *);
 void link_message_cb (GtkWidget *, MinimoBrowser *);
 
 /* callbacks from buttons (mouse or stylus) clicks */
@@ -95,3 +109,4 @@ gint on_button_pressed_cb(GtkWidget *, MinimoBrowser *);
 gint on_button_released_cb(GtkWidget *, gpointer *, MinimoBrowser *);
 
 #endif
+

@@ -70,104 +70,103 @@
 
 /* MINIMO TOOLBAR STRUCT */
 typedef struct _MinimoToolBar {
-  GtkWidget  *toolbar;
-  
-  GtkWidget *OpenButton;
-  GtkWidget *BackButton;
-  GtkWidget *ReloadButton;
-  GtkWidget *ForwardButton;
-  GtkWidget *StopButton;
-  GtkWidget *PrefsButton;
-  GtkWidget *InfoButton;
-  GtkWidget *QuitButton;  
+	GtkWidget  *toolbar;
+
+	GtkWidget *OpenButton;
+	GtkWidget *BackButton;
+	GtkWidget *ReloadButton;
+	GtkWidget *ForwardButton;
+	GtkWidget *StopButton;
+	GtkWidget *PrefsButton;
+	GtkWidget *InfoButton;
+	GtkWidget *QuitButton;  
 } MinimoToolbar;
 
 /* MINIMO STRUCT */
 typedef struct _MinimoBrowser {
   
-  GtkWidget  *topLevelWindow;
-  GtkWidget  *topLevelVBox;
-  GtkWidget  *mozEmbed;
-  
-  MinimoToolbar toolbar;
-  
-  gboolean    show_tabs;
-  GtkWidget  *notebook;
-  GtkWidget  *label_notebook;
-  GtkWidget  *active_page;
-  
-  GtkWidget  *progressPopup;
-  GtkWidget  *progressBar;
-  gint        totalBytes;
-  
-  GtkWidget  *link_menu;
-  GtkWidget  *image_menu;
-  GtkWidget  *doc_menu;
-  GtkWidget  *image_link_menu;
-  GtkWidget  *reload_menu;
-  
-  gboolean didFind;
+	GtkWidget  *topLevelWindow;
+	GtkWidget  *topLevelVBox;
+	GtkWidget  *mozEmbed;
+	
+	MinimoToolbar toolbar;
+	
+	gboolean    show_tabs;
+	GtkWidget  *notebook;
+	GtkWidget  *label_notebook;
+	GtkWidget  *active_page;
+	
+	GtkWidget  *progressPopup;
+	GtkWidget  *progressBar;
+	gint        totalBytes;
+	
+	GtkWidget  *link_menu;
+	GtkWidget  *image_menu;
+	GtkWidget  *doc_menu;
+	GtkWidget  *image_link_menu;
+	GtkWidget  *reload_menu;
+
+	gboolean didFind;
   
 } MinimoBrowser;
 
 typedef struct _PrefWindow 		/* configuration data struct */
 {
-  GtkWidget *dialog;
-  GtkWidget *okbutton;
-  GtkWidget *cancelbutton;
-  GtkWidget *applybutton;
-  GtkWidget *block_popup;
-  GtkWidget *vbox_popup;
-  GtkWidget *fr_connection;
-  GtkWidget *vbox_connection;
-  GtkWidget *hbox_connection;
-  GtkWidget *hbox_direct_connection;
-  GtkWidget *fr_popup;
-  GtkWidget *lb_popup;
-  
-  GtkWidget *vbox_manual;
-  GtkWidget *rb_manual_connection;
-  GtkWidget *hbox_http;
-  GtkWidget *lb_http;
-  GtkWidget *en_http_proxy;
-  GtkWidget *box_popup;
-  
-  GtkWidget *lb_port_http;
-  GtkWidget *en_http_port;
-  GtkWidget *hbox_ssl;
-  GtkWidget *lb_ssl;
-  GtkWidget *en_ssl;
-  GtkWidget *lb_ssl_port;
-  GtkWidget *en_ssl_port;
-  GtkWidget *hbox_ftp;
-  
-  GtkWidget *lb_ftp;
-  GtkWidget *en_ftp_proxy;
-  GtkWidget *lb_ftp_port;
-  GtkWidget *en_ftp_port;
-  GtkWidget *hbox_noproxy;
-  GtkWidget *lb_connection;
-  
-  GSList *rb_direct_connection_group;
-  GSList *rb_manual_connection_group;
-  GtkWidget *hbox_manual_connection;
-  GtkWidget *rb_direct_connection;
-  
+	GtkWidget *dialog;
+	GtkWidget *okbutton;
+	GtkWidget *cancelbutton;
+	GtkWidget *applybutton;
+	GtkWidget *block_popup;
+	GtkWidget *vbox_popup;
+	GtkWidget *fr_connection;
+	GtkWidget *vbox_connection;
+	GtkWidget *hbox_connection;
+	GtkWidget *hbox_direct_connection;
+	GtkWidget *fr_popup;
+	GtkWidget *lb_popup;
+
+	GtkWidget *vbox_manual;
+	GtkWidget *rb_manual_connection;
+	GtkWidget *hbox_http;
+	GtkWidget *lb_http;
+	GtkWidget *en_http_proxy;
+	GtkWidget *box_popup;
+
+	GtkWidget *lb_port_http;
+	GtkWidget *en_http_port;
+	GtkWidget *hbox_ssl;
+	GtkWidget *lb_ssl;
+	GtkWidget *en_ssl;
+	GtkWidget *lb_ssl_port;
+	GtkWidget *en_ssl_port;
+	GtkWidget *hbox_ftp;
+	
+	GtkWidget *lb_ftp;
+	GtkWidget *en_ftp_proxy;
+	GtkWidget *lb_ftp_port;
+	GtkWidget *en_ftp_port;
+	GtkWidget *hbox_noproxy;
+	GtkWidget *lb_connection;
+
+	GSList *rb_direct_connection_group;
+	GSList *rb_manual_connection_group;
+	GtkWidget *hbox_manual_connection;
+	GtkWidget *rb_direct_connection;
+
 } PrefWindow;
 
 /* SPECIFIC STRUCT FOR SPECIFY SOME PARAMETERS OF '_open_dialog_params' METHOD */
 typedef struct _open_dialog_params
 {
-  GtkWidget* dialog_combo;
-  GtkWidget* main_combo;
+	GtkWidget* dialog_combo;
+	GtkWidget* main_combo;
 } OpenDialogParams;
 
 /* SPECIFIC STRUCT FOR THE RIGHT CLICK BUTTON EMULATION */
 typedef struct _right_button_click
 {
-  GTimer *pressing_timer;
-  gulong sig_handler;
-  gboolean is_connected;
+	GTimer *pressing_timer;
+	gulong sig_handler;
 } RightButtonClick;
 
 
@@ -185,56 +184,56 @@ typedef struct _right_button_click
 #define DEFAULT_MONOSPACE_FONT "-adobe-times-medium-r-normal-*-14-*-*-*-p-*-iso8859-1"
 
 static const char *lang_font_item [LANG_FONT_NUM] =
-  {
-    "x-western",
-    "x-central-euro",
-    "ja",
-    "zh-TW",
-    "zh-CN",
-    "ko",
-    "x-cyrillic",
-    "x-baltic",
-    "el",
-    "tr",
-    "x-unicode",
-    "x-user-def",
-    "th",
-    "he",
-    "ar"
-  };
+{
+        "x-western",
+        "x-central-euro",
+        "ja",
+        "zh-TW",
+        "zh-CN",
+        "ko",
+        "x-cyrillic",
+        "x-baltic",
+        "el",
+        "tr",
+        "x-unicode",
+        "x-user-def",
+        "th",
+        "he",
+        "ar"
+};
 
 /**
- * configuration data struct
- */
+* configuration data struct
+*/
 typedef struct _ConfigData 		/* configuration data struct */
 {
-  /* minimo prefs */
-  gchar *home;
-  gchar *mailer;
-  gint xsize;
-  gint ysize;
-  gint layout;
-  gint maxpopupitems;
-  gint max_go;     
-  /* mozilla prefs */
-  gchar *http_proxy;
-  gchar *http_proxy_port;
-  gchar *ftp_proxy;
-  gchar *ftp_proxy_port;
-  gchar *ssl_proxy;
-  gchar *ssl_proxy_port;
-  gint font_size[LANG_FONT_NUM];
-  gint min_font_size[LANG_FONT_NUM];
-  gint current_font_size;
-  gboolean java;
-  gboolean javascript;
-  gboolean underline_links;
-  gchar *no_proxy_for;
-  gint direct_connection;
-  gint popup_in_new_window;
-  gint disable_popups;
-  gint tab_text_length;
-  
+	/* minimo prefs */
+     	gchar *home;
+	gchar *mailer;
+     	gint xsize;
+	gint ysize;
+	gint layout;
+	gint maxpopupitems;
+	gint max_go;     
+     	/* mozilla prefs */
+     	gchar *http_proxy;
+     	gchar *http_proxy_port;
+	gchar *ftp_proxy;
+	gchar *ftp_proxy_port;
+     	gchar *ssl_proxy;
+     	gchar *ssl_proxy_port;
+     	gint font_size[LANG_FONT_NUM];
+     	gint min_font_size[LANG_FONT_NUM];
+	gint current_font_size;
+     	gboolean java;
+     	gboolean javascript;
+     	gboolean underline_links;
+     	gchar *no_proxy_for;
+	gint direct_connection;
+     	gint popup_in_new_window;
+     	gint disable_popups;
+     	gint tab_text_length;
+
 } ConfigData;
 
 /****************/
@@ -243,21 +242,21 @@ typedef struct _ConfigData 		/* configuration data struct */
 
 /* History Window Structure */
 typedef struct _HistoryWindow{
-  GtkWidget *window;
-  GtkWidget *scrolled_window;
-  GtkWidget *clist;
-  GtkWidget *vbox;
-  GtkWidget *remove;
-  GtkWidget *close;
-  GtkWidget *btnbox;
-  GtkWidget *clear;
-  GtkWidget *search_label;
-  GtkWidget *search_entry;
-  GtkWidget *search_box;
-  GtkWidget *search_button;
-  GtkWidget *go_button;
-  GtkWidget *embed;
-  gchar *title;
+        GtkWidget *window;
+	GtkWidget *scrolled_window;
+	GtkWidget *clist;
+	GtkWidget *vbox;
+	GtkWidget *remove;
+	GtkWidget *close;
+	GtkWidget *btnbox;
+	GtkWidget *clear;
+     	GtkWidget *search_label;
+     	GtkWidget *search_entry;
+     	GtkWidget *search_box;
+     	GtkWidget *search_button;
+     	GtkWidget *go_button;
+     	GtkWidget *embed;
+     	gchar *title;
 }HistoryWindow;
 
 /****************/
@@ -267,48 +266,47 @@ typedef struct _HistoryWindow{
 
 /* represent a bookmark item */
 typedef struct _BookmarkData {
-  gchar *label;
-  gchar *url;
+	gchar *label;
+	gchar *url;
 } BookmarkData;
 
-/* Represents Bookmarks List View*/
-typedef struct _BookmarkCTreeData {
-  GtkWidget *ctree;
-  GtkCTreeNode *parent;
-} BookmarkCTreeData;
+/* Represents Bookmarks Tree View*/
+typedef struct _BookmarkTreeVData {
+	GtkTreeModel *treeStore;
+	GtkTreeIter *parentIter;
+} BookmarkTreeVData;
 
 /* Bookmarks Window Structure */
 typedef struct _BookmarkWindow {
-  GtkWidget *window;
-  GtkWidget *scrolled_window;
-  GtkWidget *vbox1;
-  GtkWidget *hbox1;
-  GtkWidget *hbox2;
-  GtkWidget *hbox3;
-  GtkWidget *text_label;
-  GtkWidget *text_entry;
-  GtkWidget *url_label;
-  GtkWidget *url_entry;
-  GtkWidget *add_button;
-  GtkWidget *edit_button;
-  GtkWidget *folder_entry;
-  GtkWidget *remove_button;
-  GtkWidget *ok_button;
-  GtkWidget *go_button;
-  GtkWidget *cancel_button;
-  GtkWidget *ctree;
-  GNode *temp_node;
-  GNode *parent_node;
-  GtkCTreeNode *menu_node;
-  BookmarkData *menu_node_data;
-  BookmarkCTreeData ctree_data;
-  
-  GtkWidget *reload_menu; /* context menu for reload flags */
-  GtkWidget *doc_menu; /* pointer to document popup menu */
-  GtkWidget *image_menu; /* pointer to image popup menu */
-  GtkWidget *link_menu; /* pointer to link popup menu */
-  GtkWidget *image_link_menu; /* pointer to image link popup menu */
-  
+	FILE *bookmark_file;
+	GtkWidget *window;
+	GtkWidget *menubar;
+	GtkWidget *menu_item_tools;
+	GtkWidget *menu_tools;
+	GtkWidget *menu_import;
+	GtkWidget *menu_export;
+	GtkWidget *scrolled_window;
+	GtkWidget *vbox1;
+	GtkWidget *hbox4;
+	GtkWidget *hbox1;
+	GtkWidget *hbox2;
+	GtkWidget *hbox3;
+	GtkWidget *text_label;
+	GtkWidget *text_entry;
+	GtkWidget *url_label;
+	GtkWidget *url_entry;
+	GtkWidget *add_button;
+	GtkWidget *edit_button;
+	GtkWidget *folder_entry;
+	GtkWidget *remove_button;
+	GtkWidget *ok_button;
+	GtkWidget *go_button;
+	GtkWidget *cancel_button;
+	GtkWidget *treev;
+	GtkTreeIter iter;
+	GtkTreeSelection *selection;
+	BookmarkTreeVData *treev_data;
+
 } BookmarkWindow;
 
 #endif

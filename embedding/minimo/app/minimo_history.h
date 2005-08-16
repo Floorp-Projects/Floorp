@@ -52,21 +52,19 @@
 
 #include "minimo_types.h"
 
-#include "gtkmozembed.h"
+/* History functions*/
+void history_write_in_file	(void);
+void history_read_from_file (void);
+void add_to_history		(const gchar *);
 
 /* History callbacks */
-void view_history(GtkWidget *embed);
-void clear_history(GtkWidget *b, HistoryWindow *hwin);
-void close_history_win(GtkWidget *button, HistoryWindow *hwin);
-void on_history_clist_button_go_cb(GtkWidget *button, HistoryWindow *hwin);
-void remove_from_history(GtkWidget *button, HistoryWindow *hwin);
-void remove_from_list(gchar *text);
-void on_history_destroy(GtkWidget *window);
-void on_search_button_cb(GtkWidget *button, HistoryWindow *hwin);
-
-/* History functions*/
-void add_to_history(const gchar *url);
-void write_history(void);
-void read_history(void);
+void history_create_dialog 	(GtkWidget *);
+void history_go_cb		(GtkWidget *, HistoryWindow *);
+void history_close_dialog_cb 	(GtkWidget *, HistoryWindow *);
+void history_remove_item_cb 	(GtkWidget *, HistoryWindow *);
+void remove_from_list		(gchar *);
+void history_cleanup_cb 	(GtkWidget *, HistoryWindow *);
+void history_search_cb		(GtkWidget *, HistoryWindow *);
+void history_destroy_cb		(GtkWidget *);
 
 #endif

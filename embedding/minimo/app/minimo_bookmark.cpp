@@ -1,8 +1,8 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this gBookmakeFile are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this gBookmakeFile except in compliance with
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
@@ -33,571 +33,876 @@
  *    Andre Pedralho    <andre.pedralho@indt.org.br>
  *
  *
- * Alternatively, the contents of this gBookmakeFile may be used under the terms of
+ * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this gBookmakeFile only
+ * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this gBookmakeFile under the terms of the MPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this gBookmakeFile under
+ * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "minimo_bookmark.h"
 
-/* Global variables */
-FILE *gBookmakeFilePath;
-gchar *gBookmakeFile;
-GNode *gBookmarkNodes;
+/* Bookmark global variables */
+FILE *gBookmarkFilePointer;
+gchar *gBookmarkFilePath;
 GtkMozEmbed *gBookmarkMozEmbed;
 
-/* Bookmarks Functions*/
-void initialize_bookmark(GtkWidget *embed)
+/* initialize the embed variable */
+void bookmark_moz_embed_initialize(GtkWidget *embed)
 {
-  gBookmarkMozEmbed= GTK_MOZ_EMBED(embed);
+	gBookmarkMozEmbed= GTK_MOZ_EMBED(embed);
 }
 
-/* verify if there is a bookmark gBookmakeFile */
-void open_bookmark()
+/* Create bookmarks manager window */
+void bookmark_create_dialog ()
 {
-  gBookmakeFile = g_strconcat(g_get_home_dir(),"/.Minimo/bookmark",NULL);
-  
-  if (!(g_file_test(gBookmakeFile,G_FILE_TEST_EXISTS)))
-  {
-    gBookmakeFilePath = fopen(gBookmakeFile,"w+");
-    fprintf(gBookmakeFilePath, "Bookmarks\n");
-    fclose(gBookmakeFilePath);
-    open_bookmark();
-  }
-  else
-  {
-    gBookmakeFilePath = fopen(gBookmakeFile,"r");
-    show_bookmark();
-  }
+	BookmarkWindow *bwin;
+	GtkTreeViewColumn *column1, *column2;
+	GtkCellRenderer *renderer1,*renderer2;
+
+	bookmark_open_file ();
+
+	bwin = g_new0(BookmarkWindow,1);
+
+	bwin->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        g_object_set_data(G_OBJECT(bwin->window),"window",bwin->window);
+	gtk_window_set_title(GTK_WINDOW(bwin->window),"Bookmarks");
+	gtk_widget_set_usize(bwin->window,230,350);
+	gtk_window_set_resizable(GTK_WINDOW(bwin->window),FALSE);
+	gtk_window_set_position (GTK_WINDOW(bwin->window),GTK_WIN_POS_CENTER_ON_PARENT);
+	gtk_window_set_modal (GTK_WINDOW (bwin->window), TRUE);
+	gtk_window_set_keep_above(GTK_WINDOW (bwin->window), TRUE);
+
+	bwin->vbox1 = gtk_vbox_new(FALSE,0);
+	gtk_widget_show(bwin->vbox1);
+	gtk_container_add(GTK_CONTAINER(bwin->window),bwin->vbox1);
+
+	bwin->hbox4 = gtk_hbox_new(FALSE,0);
+	gtk_widget_show(bwin->hbox4);
+	gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox4,FALSE,FALSE,0);
+
+	bwin->menubar = gtk_menu_bar_new();
+
+	bwin->menu_item_tools = gtk_menu_item_new_with_label("Tools");
+	gtk_menu_bar_append(GTK_MENU_BAR(bwin->menubar), bwin->menu_item_tools);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox4),bwin->menubar,FALSE,FALSE,0);
+	gtk_widget_show (bwin->menu_item_tools);
+	gtk_widget_show (bwin->menubar);
+
+	bwin->menu_tools = gtk_menu_new();
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(bwin->menu_item_tools),bwin->menu_tools);
+	gtk_widget_show (bwin->menu_tools);
+
+		bwin->menu_import = gtk_menu_item_new_with_label("Import bookmarks");
+		gtk_menu_bar_append(GTK_MENU(bwin->menu_tools), bwin->menu_import);
+		gtk_signal_connect (GTK_OBJECT (bwin->menu_import), "activate", GTK_SIGNAL_FUNC(bookmark_import_cb), bwin);
+		gtk_widget_show (bwin->menu_import);
+
+		bwin->menu_export = gtk_menu_item_new_with_label("Export bookmarks");
+		gtk_menu_bar_append(GTK_MENU(bwin->menu_tools), bwin->menu_export);
+		gtk_signal_connect (GTK_OBJECT (bwin->menu_export), "activate", GTK_SIGNAL_FUNC(bookmark_export_cb), bwin);
+		gtk_widget_show (bwin->menu_export);
+
+	bwin->scrolled_window = gtk_scrolled_window_new(NULL,NULL);
+	gtk_widget_show(bwin->scrolled_window);
+	gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->scrolled_window,TRUE,TRUE,0);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(bwin->scrolled_window),GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+
+	/* mount the bookmark treeview */
+	bwin->treev_data = g_new0(BookmarkTreeVData,1);
+	bwin->treev_data->treeStore = GTK_TREE_MODEL(gtk_tree_store_new(2,G_TYPE_STRING,G_TYPE_STRING));
+	bwin->treev = gtk_tree_view_new_with_model(GTK_TREE_MODEL(bwin->treev_data->treeStore));
+
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW (bwin->treev), TRUE);
+	gtk_tree_view_set_headers_clickable (GTK_TREE_VIEW (bwin->treev), TRUE);
+	gtk_tree_view_set_reorderable(GTK_TREE_VIEW (bwin->treev), TRUE);
+	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW (bwin->treev), TRUE);
+	gtk_widget_show(bwin->treev);
+
+	gtk_container_add(GTK_CONTAINER(bwin->scrolled_window),bwin->treev);
+
+	renderer1 = gtk_cell_renderer_text_new();
+	gtk_cell_renderer_set_fixed_size (renderer1,100,-1);
+	column1 = gtk_tree_view_column_new_with_attributes("Name", renderer1, "text", 0, NULL);
+	gtk_tree_view_column_set_resizable (column1, TRUE);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(bwin->treev),
+				column1);
+	gtk_tree_view_set_expander_column(GTK_TREE_VIEW(bwin->treev),column1);
+	gtk_tree_view_set_search_column (GTK_TREE_VIEW(bwin->treev),0);
+
+	renderer2 = gtk_cell_renderer_text_new();
+	column2 = gtk_tree_view_column_new_with_attributes("URL", renderer2, "text", 1, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(bwin->treev),
+				column2);
+
+	bwin->treev_data->parentIter = NULL;
+
+	bookmark_load_from_file(bwin->treev_data);
+
+	/* expand the main tree */
+	gtk_tree_view_expand_row(GTK_TREE_VIEW (bwin->treev),gtk_tree_path_new_from_string("0"),FALSE);
+
+	/* set selection mode */
+	bwin->selection= gtk_tree_view_get_selection(GTK_TREE_VIEW (bwin->treev));
+	gtk_tree_selection_set_mode (bwin->selection, GTK_SELECTION_SINGLE);
+
+	/* set find function */
+	gtk_tree_view_set_search_equal_func (GTK_TREE_VIEW(bwin->treev),bookmark_search_function,bwin,NULL);
+
+	/* set selection signal */
+	g_signal_connect(bwin->treev,"cursor-changed",G_CALLBACK(bookmark_on_treev_select_row_cb),bwin);
+
+	/* hbox1: name label, name entry, url label, url entry and add button */
+	bwin->hbox1 = gtk_hbox_new(FALSE,0);
+	gtk_widget_show(bwin->hbox1);
+	gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox1,FALSE,FALSE,0);
+
+	/* name label */
+	bwin->text_label = gtk_label_new("Name ");
+	gtk_widget_show(bwin->text_label);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->text_label,FALSE,FALSE,0);
+
+	/* name entry */
+	bwin->text_entry = gtk_entry_new();
+	gtk_widget_show(bwin->text_entry);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->text_entry,TRUE,TRUE,0);
+
+	/* url label */
+	bwin->url_label = gtk_label_new(" URL ");
+	gtk_widget_show(bwin->url_label);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->url_label,FALSE,FALSE,2);
+
+	/* url entry */
+	bwin->url_entry = gtk_entry_new();
+	gtk_widget_show(bwin->url_entry);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->url_entry,TRUE,TRUE,0);
+	gtk_entry_set_text(GTK_ENTRY(bwin->url_entry),"");
+
+	/* hbox 2: add folder button and folder name entry */
+	bwin->hbox2 = gtk_hbox_new(FALSE,0);
+	gtk_widget_show(bwin->hbox2);
+	gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox2,FALSE,FALSE,0);
+
+	/* folder name label */
+	bwin->text_label = gtk_label_new("Folder ");
+	gtk_widget_show(bwin->text_label);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->text_label,FALSE,FALSE,0);
+
+	/* folder name entry */
+	bwin->folder_entry = gtk_entry_new();
+	gtk_widget_show(bwin->folder_entry);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->folder_entry,TRUE,TRUE,0);
+
+	/* add button */
+	bwin->add_button = gtk_button_new_with_label("Add");
+	gtk_widget_show(bwin->add_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->add_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->add_button),"clicked",G_CALLBACK(bookmark_add_button_cb),bwin);
+	
+	/* edit button */
+	bwin->edit_button = gtk_button_new_with_label("Edit");
+	gtk_widget_show(bwin->edit_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->edit_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->edit_button),"clicked",G_CALLBACK(bookmark_edit_button_cb),bwin);
+
+	/* hbox 3: go, ok, remove buttons */
+	bwin->hbox3 = gtk_hbox_new(FALSE,0);
+	gtk_widget_show(bwin->hbox3);
+	gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox3,FALSE,FALSE,0);
+
+	/* go button */
+	bwin->go_button = gtk_button_new_with_label("Go");
+	gtk_widget_show(bwin->go_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->go_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->go_button),"clicked",G_CALLBACK(bookmark_go_button_cb),bwin);
+
+	/* ok button */
+	bwin->ok_button = gtk_button_new_with_label("Ok");
+	gtk_widget_show(bwin->ok_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->ok_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->ok_button),"clicked",G_CALLBACK(bookmark_ok_button_cb),bwin);
+
+	/* remove button */
+	bwin->remove_button = gtk_button_new_with_label("Remove");
+	gtk_widget_show(bwin->remove_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->remove_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->remove_button),"clicked",G_CALLBACK(bookmark_remove_button_cb),bwin);
+	
+	/* cancel button*/
+	bwin->cancel_button = gtk_button_new_with_label("Cancel");
+	gtk_widget_show(bwin->cancel_button);
+	gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->cancel_button,FALSE,FALSE,0);
+	g_signal_connect(G_OBJECT(bwin->cancel_button),"clicked",G_CALLBACK(bookmark_cancel_button_cb),bwin);
+	
+	gtk_widget_show(bwin->window);
 }
 
-/* Create gBookmarkNodes manager window */
-void show_bookmark()
+/* verify if there is a bookmark file */
+void bookmark_open_file ()
 {
-  BookmarkWindow *bwin;
-  
-  bwin = g_new0(BookmarkWindow,1);
-  
-  //	gBookmarkMozEmbed= GTK_MOZ_EMBED(embed);
-  //	bwin->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  
-  bwin->window = gtk_dialog_new();
-  g_object_set_data(G_OBJECT(bwin->window),"window",bwin->window);
-  gtk_window_set_title(GTK_WINDOW(bwin->window),"Bookmarks");
-  gtk_widget_set_usize(bwin->window,230,350);
-  gtk_window_set_resizable(GTK_WINDOW(bwin->window),FALSE);
-  gtk_window_set_position (GTK_WINDOW(bwin->window),GTK_WIN_POS_CENTER_ON_PARENT);
-  gtk_window_set_modal (GTK_WINDOW (bwin->window), TRUE);
-  gtk_window_set_keep_above(GTK_WINDOW (bwin->window), TRUE);
-  
-  bwin->vbox1 = gtk_vbox_new(FALSE,0);
-  gtk_widget_show(bwin->vbox1);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(bwin->window)->vbox),bwin->vbox1, TRUE, TRUE, 0);
-  
-  bwin->scrolled_window = gtk_scrolled_window_new(NULL,NULL);
-  gtk_widget_show(bwin->scrolled_window);
-  gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->scrolled_window,TRUE,TRUE,0);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(bwin->scrolled_window),GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
-  
-  gchar *titles[] = {("Name"),("URL")};
-  gchar *menur[] = {"Bookmarks",""};
-  
-  bwin->menu_node_data = g_new0(BookmarkData,1);
-  bwin->menu_node_data->label = g_strdup("Bookmarks");
-  bwin->menu_node_data->url = NULL;
-  
-  gBookmarkNodes= g_node_new(bwin->menu_node_data);
-  bwin->parent_node= gBookmarkNodes;
-  
-  read_bookmark();
-  
-  /* mount the bookmark ctree */
-  bwin->ctree = gtk_ctree_new_with_titles(2,0,titles);
-  gtk_container_add(GTK_CONTAINER(bwin->scrolled_window),bwin->ctree);
-  gtk_clist_set_column_width(GTK_CLIST(bwin->ctree),0,150);
-  gtk_clist_set_column_width(GTK_CLIST(bwin->ctree),1,150);
-  gtk_clist_column_titles_show(GTK_CLIST(bwin->ctree));
-  gtk_clist_set_reorderable(GTK_CLIST(bwin->ctree),TRUE);
-  gtk_clist_set_auto_sort(GTK_CLIST(bwin->ctree),TRUE);
-  
-  bwin->menu_node = gtk_ctree_insert_node(GTK_CTREE(bwin->ctree),NULL,NULL,menur,0,NULL,NULL,NULL,NULL,FALSE,TRUE);
-  gtk_ctree_node_set_row_data(GTK_CTREE(bwin->ctree),bwin->menu_node,bwin->menu_node_data);
-  gtk_ctree_node_set_selectable(GTK_CTREE(bwin->ctree),bwin->menu_node,FALSE);
-  bwin->ctree_data.ctree = bwin->ctree;
-  
-  /* show bookmark ctree */
-  if (gBookmarkNodes != NULL)
-  {
-    bwin->ctree_data.parent = bwin->menu_node;
-    g_node_children_foreach(gBookmarkNodes,G_TRAVERSE_ALL,(GNodeForeachFunc)generate_bookmark_ctree,&bwin->ctree_data);
-  }
-  
-  gtk_widget_show(bwin->ctree);
-  
-  g_signal_connect(G_OBJECT(bwin->ctree),"tree_select_row",G_CALLBACK(on_bookmark_ctree_select_row),bwin);
-  g_signal_connect(G_OBJECT(bwin->ctree),"tree_unselect_row",G_CALLBACK(on_bookmark_ctree_unselect_row),bwin);
-  g_signal_connect(G_OBJECT(bwin->ctree),"tree_move",G_CALLBACK(on_bookmark_ctree_move),bwin);
-  
-  /* hbox1: name label, name entry, url label, url entry and add button */
-  bwin->hbox1 = gtk_hbox_new(FALSE,0);
-  gtk_widget_show(bwin->hbox1);
-  gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox1,FALSE,FALSE,0);
-  
-  /* name label */
-  bwin->text_label = gtk_label_new("Name ");
-  gtk_widget_show(bwin->text_label);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->text_label,FALSE,FALSE,0);
-  
-  /* name entry */
-  bwin->text_entry = gtk_entry_new();
-  gtk_widget_show(bwin->text_entry);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->text_entry,TRUE,TRUE,0);
-  
-  /* url label */
-  bwin->url_label = gtk_label_new(" URL ");
-  gtk_widget_show(bwin->url_label);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->url_label,FALSE,FALSE,2);
-  
-  /* url entry */
-  bwin->url_entry = gtk_entry_new();
-  gtk_widget_show(bwin->url_entry);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox1),bwin->url_entry,TRUE,TRUE,0);
-  gtk_entry_set_text(GTK_ENTRY(bwin->url_entry)," ");
-  
-  /* hbox 2: add folder button and folder name entry */
-  bwin->hbox2 = gtk_hbox_new(FALSE,0);
-  gtk_widget_show(bwin->hbox2);
-  gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox2,FALSE,FALSE,0);
-  
-  /* folder name label */
-  bwin->text_label = gtk_label_new("Folder ");
-  gtk_widget_show(bwin->text_label);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->text_label,FALSE,FALSE,0);
-  
-  /* folder name entry */
-  bwin->folder_entry = gtk_entry_new();
-  gtk_widget_show(bwin->folder_entry);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->folder_entry,TRUE,TRUE,0);
-  
-  /* add button */
-  bwin->add_button = gtk_button_new_with_label("Add");
-  gtk_widget_show(bwin->add_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->add_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->add_button),"clicked",G_CALLBACK(on_bookmark_add_button_clicked),bwin);
-  
-  /* edit button */
-  bwin->edit_button = gtk_button_new_with_label("Edit");
-  gtk_widget_show(bwin->edit_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox2),bwin->edit_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->edit_button),"clicked",G_CALLBACK(on_bookmark_edit_button_clicked),bwin);
-  
-  /* hbox 3: go, ok, remove buttons */
-  bwin->hbox3 = gtk_hbox_new(FALSE,0);
-  gtk_widget_show(bwin->hbox3);
-  gtk_box_pack_start(GTK_BOX(bwin->vbox1),bwin->hbox3,FALSE,FALSE,0);
-  
-  /* go button */
-  bwin->go_button = gtk_button_new_with_label("Go");
-  gtk_widget_show(bwin->go_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->go_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->go_button),"clicked",G_CALLBACK(on_bookmark_go_button_clicked),bwin);
-  
-  /* ok button */
-  bwin->ok_button = gtk_button_new_with_label("Ok");
-  gtk_widget_show(bwin->ok_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->ok_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->ok_button),"clicked",G_CALLBACK(on_bookmark_ok_button_clicked),bwin);
-  
-  /* remove button */
-  bwin->remove_button = gtk_button_new_with_label("Remove");
-  gtk_widget_show(bwin->remove_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->remove_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->remove_button),"clicked",G_CALLBACK(on_bookmark_remove_button_clicked),bwin);
-  
-  /* cancel button*/
-  bwin->cancel_button = gtk_button_new_with_label("Cancel");
-  gtk_widget_show(bwin->cancel_button);
-  gtk_box_pack_start(GTK_BOX(bwin->hbox3),bwin->cancel_button,FALSE,FALSE,0);
-  g_signal_connect(G_OBJECT(bwin->cancel_button),"clicked",G_CALLBACK(on_bookmark_cancel_button_clicked),bwin);
-  
-  gtk_widget_show(bwin->window);
-  
+	gBookmarkFilePath = g_strconcat(g_get_home_dir(),"/.Minimo/bookmarks",NULL);
+
+	if (!(g_file_test(gBookmarkFilePath,G_FILE_TEST_EXISTS)))
+	{
+		gBookmarkFilePointer = fopen(gBookmarkFilePath,"w+");
+		fprintf(gBookmarkFilePointer, "folder Bookmarks\n");
+		fclose(gBookmarkFilePointer);
+		bookmark_open_file ();
+	}
+	else
+	{
+		gBookmarkFilePointer = fopen(gBookmarkFilePath,"r");
+	}
 }
 
-/* read gBookmarkNodes */
-void read_bookmark()
+/* load the treeview from the file */
+void bookmark_load_from_file(BookmarkTreeVData *treev_data)
 {
-  gchar *line;
-  BookmarkData *data;
-  GNode *parent;
-  
-  line = (gchar *)g_malloc(1024);
-  
-  parent= gBookmarkNodes;
-  
-  while(fgets(line,1023,gBookmakeFilePath)!= NULL)
-  {	
-    line = g_strstrip(line);
-    
-    if (g_strncasecmp(line,"folder",6) == 0)
-    {
-      data = g_new0(BookmarkData,1);
-      data->label = g_strdup(line+7);
-      data->url = " ";
-      
-      parent= g_node_append_data(parent, data);
-      
-      continue;
-    }
-    
-    if (g_strncasecmp(line,"url",3) == 0)
-    {
-      gchar **temp;
-      
-      data = g_new0(BookmarkData,1);
-      temp = g_strsplit(line+4," ",2);
-      data->url = g_strdup(temp[0]);
-      
-      if (temp[1] != NULL)
-        data->label = g_strdup(temp[1]);
-      else
-        data->label = g_strdup(temp[0]);
-      g_strfreev(temp);
-      
-      g_node_append_data(parent,data);
-      
-      continue;
-    }
-    
-    if (g_strncasecmp(line,"/folder",7) == 0)
-    {
-      parent= parent->parent;
-      continue;
-    }
-  }
-  g_free(line);
+	gchar *line = (gchar *)g_malloc(1024);
+	BookmarkData *data= g_new0(BookmarkData,1);
+	GtkTreeIter *parentIter= g_new0(GtkTreeIter,1);
+
+	while(fgets(line,1023,gBookmarkFilePointer)!= NULL)
+	{	
+		line = g_strstrip(line);
+
+		if (g_strncasecmp(line,"folder",6) == 0)
+		{
+			data->label = g_strdup(line+7);
+			data->url = "";
+			bookmark_insert_folder_on_treeview(data,treev_data);
+
+			continue;
+		}
+
+		if (g_strncasecmp(line,"url",3) == 0)
+		{
+			gchar **temp;
+
+			temp = g_strsplit(line+4," ",2);
+			data->url = g_strdup(temp[0]);
+
+			if (temp[1] != NULL)
+				data->label = g_strdup(temp[1]);
+			else
+				data->label = g_strdup(temp[0]);
+			g_strfreev(temp);
+
+			bookmark_insert_item_on_treeview(data,treev_data);
+
+			continue;
+		}
+
+		if (g_strncasecmp(line,"/folder",7) == 0)
+		{
+			if (gtk_tree_model_iter_parent(treev_data->treeStore, parentIter, treev_data->parentIter))
+			{
+				treev_data->parentIter= gtk_tree_iter_copy(parentIter);
+			}
+		}
+	}
+
+	g_free(line);
+	g_free(data);
+	g_free(parentIter);
 }
 
-/* generate bookmark ctree */
-void generate_bookmark_ctree(GNode *node, BookmarkCTreeData *ctree_data)
+/* the treeview internal search function */
+gboolean bookmark_search_function(GtkTreeModel *tree_view, gint column, const gchar *key, GtkTreeIter *iter,void *bwin)
 {
-  BookmarkData *data;
-  gchar *ctree_entry[2];
-  GtkCTreeNode *ctree_node;
-  
-  data= (BookmarkData*) node->data;
-  
-  ctree_entry[0] = data->label;
-  ctree_entry[1] = data->url;
-  
-  /* it's a folder */
-  if (g_ascii_strcasecmp(data->url," ") == 0)
-  {
-    BookmarkCTreeData new_ctree_data;
-    ctree_node = gtk_ctree_insert_node(GTK_CTREE(ctree_data->ctree),ctree_data->parent,NULL,ctree_entry,0,NULL,NULL,NULL,NULL,FALSE,TRUE);
-    new_ctree_data.ctree = ctree_data->ctree;
-    new_ctree_data.parent = ctree_node;
-    g_node_children_foreach(node,G_TRAVERSE_ALL,(GNodeForeachFunc)generate_bookmark_ctree,&new_ctree_data);
-  }/* it's a url */
-  else
-    ctree_node = gtk_ctree_insert_node(GTK_CTREE(ctree_data->ctree),ctree_data->parent,NULL,ctree_entry,0,NULL,NULL,NULL,NULL,TRUE,TRUE);
-  
-  gtk_ctree_node_set_row_data(GTK_CTREE(ctree_data->ctree),ctree_node,data);
+	BookmarkData *bmark = g_new0(BookmarkData,1);
+
+	gtk_tree_model_get(GTK_TREE_MODEL(tree_view), iter, 0, &bmark->label, 1, &bmark->url, -1);
+
+	if (g_str_has_prefix(g_ascii_strdown ((char *)(bmark->label),-1),g_ascii_strdown ((char *)key,-1)))
+	{
+		gtk_tree_selection_select_iter (((BookmarkWindow *)bwin)->selection, iter);
+		bookmark_on_treev_select_row_cb (NULL, (BookmarkWindow *)bwin);
+	}
+	
+	return TRUE;
+}
+
+/* insert a new folder on treeview */
+void bookmark_insert_folder_on_treeview(BookmarkData *data, BookmarkTreeVData *treev_data)
+{
+	GtkTreeIter *newIter= g_new0(GtkTreeIter,1);
+
+	gtk_tree_store_append(GTK_TREE_STORE(treev_data->treeStore),newIter,treev_data->parentIter);
+	gtk_tree_store_set(GTK_TREE_STORE(treev_data->treeStore), newIter, 0, data->label, 1, data->url, -1);
+
+	treev_data->parentIter= newIter;
+}
+
+/* insert a new url on treeview */
+void bookmark_insert_item_on_treeview(BookmarkData *data, BookmarkTreeVData *treev_data)
+{
+	GtkTreeIter *newIter= g_new0(GtkTreeIter,1);
+
+	gtk_tree_store_append(GTK_TREE_STORE(treev_data->treeStore),newIter,treev_data->parentIter);
+	gtk_tree_store_set(GTK_TREE_STORE(treev_data->treeStore), newIter, 0, data->label, 1, data->url, -1);
 }
 
 /* get selected data */
-void on_bookmark_ctree_select_row(GtkWidget *ctree,GtkCTreeNode *node,gint col,BookmarkWindow *bwin)
+void bookmark_on_treev_select_row_cb (GtkTreeView *view, BookmarkWindow *bwin)
 {
-  BookmarkData *bmark;
-  
-  bmark = (BookmarkData*) gtk_ctree_node_get_row_data(GTK_CTREE(bwin->ctree), node);
-  
-  if (g_ascii_strcasecmp(bmark->url," ") == 0)
-    gtk_entry_set_text(GTK_ENTRY(bwin->folder_entry), bmark->label);
-  else
-  {
-    gtk_entry_set_text(GTK_ENTRY(bwin->text_entry), bmark->label);
-    gtk_entry_set_text(GTK_ENTRY(bwin->url_entry), bmark->url);
-  } 
-  
-  bwin->temp_node= g_node_find(gBookmarkNodes,G_IN_ORDER,G_TRAVERSE_ALL,bmark);
-  if (G_NODE_IS_LEAF(bwin->temp_node))
-  {
-    bwin->parent_node= bwin->temp_node->parent;
-    bwin->menu_node= node;
-  }
-  else
-  {
-    bwin->parent_node= bwin->temp_node;
-    bwin->menu_node= node;
-  }
-}
+	BookmarkData *bmark;
 
-/* there isn't a selected raw on ctree */
-void on_bookmark_ctree_unselect_row(GtkWidget *ctree,GtkCTreeNode *node,gint col,BookmarkWindow *bwin)
-{	
-  bwin->menu_node= gtk_ctree_node_nth(GTK_CTREE(bwin->ctree),0);
-  gtk_ctree_unselect_recursive(GTK_CTREE(bwin->ctree),gtk_ctree_node_nth (GTK_CTREE(bwin->ctree),0));
-  gtk_entry_set_text(GTK_ENTRY(bwin->text_entry),"");
-  gtk_entry_set_text(GTK_ENTRY(bwin->url_entry)," ");
-  gtk_entry_set_text(GTK_ENTRY(bwin->folder_entry),"");
-}
+	bookmark_clear_all_entries(bwin);
 
-/* move a node */
-void on_bookmark_ctree_move(GtkWidget *ctree,GtkCTreeNode *node,GtkCTreeNode *parent,GtkCTreeNode *sibling,BookmarkWindow *bwin)
-{
-  BookmarkData *data, *parent_data;
-  GNode *menu_node, *old_node;
-  
-  data= (BookmarkData *) gtk_ctree_node_get_row_data(GTK_CTREE(ctree),node);
-  
-  if (parent== NULL) return;
-  
-  old_node= g_node_find(gBookmarkNodes,G_IN_ORDER,G_TRAVERSE_ALL,data);
-  
-  parent_data= (BookmarkData *) gtk_ctree_node_get_row_data(GTK_CTREE(ctree),parent);
-  menu_node= g_node_find(gBookmarkNodes, G_IN_ORDER, G_TRAVERSE_ALL, parent_data);
-  
-  if (old_node->children!= NULL)
-    move_folder(old_node,menu_node);
-  else
-    g_node_append_data(menu_node,old_node->data);
-  
-  g_node_destroy(old_node);
-  
-}
+	bmark = g_new0(BookmarkData,1);
 
-/* move a folder and its contents */
-void move_folder(GNode *old_node, GNode *new_parent_node)
-{
-  
-  if (old_node== NULL) return;
-  else if  (old_node->children!= NULL) 
-  {
-    new_parent_node= g_node_append_data(new_parent_node,old_node->data);
-    move_folder(old_node->children,new_parent_node);
-  }
-  else if (old_node->children== NULL)
-  {
-    g_node_append_data(new_parent_node,old_node->data);
-    move_folder(old_node->next,new_parent_node);
-  }	
+	gtk_tree_selection_get_selected(bwin->selection, &bwin->treev_data->treeStore, &bwin->iter);
+	gtk_tree_model_get(bwin->treev_data->treeStore, &bwin->iter, 0, &bmark->label, 1, &bmark->url, -1);
+
+	if (g_ascii_strcasecmp(bmark->url,"") == 0)
+	{
+		gtk_entry_set_text(GTK_ENTRY(bwin->folder_entry), g_strstrip(bmark->label));
+		gtk_entry_set_text(GTK_ENTRY(bwin->url_entry), "");
+	}
+	else
+	{
+        	gtk_entry_set_text(GTK_ENTRY(bwin->text_entry), g_strstrip(bmark->label));
+	        gtk_entry_set_text(GTK_ENTRY(bwin->url_entry), g_strstrip(bmark->url));
+	} 
+
+	bwin->treev_data->parentIter= &bwin->iter;
+	g_free(bmark);
 }
 
 /* add a bookmark */
-void on_bookmark_add_button_clicked(GtkWidget *button,BookmarkWindow *bwin)
+void bookmark_add_button_cb(GtkWidget *button,BookmarkWindow *bwin)
 {
-  BookmarkData *data;
-  gchar *ctree_entry[2];
-  GtkCTreeNode *node;
-  
-  data = g_new0(BookmarkData,1);
-  node= NULL;
-  
-  data->url = ctree_entry[1] = g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry)));
-  
-  if (((GtkCTreeRow *)(((GList *)(bwin->menu_node))->data))->is_leaf)
-    bwin->menu_node= ((GtkCTreeRow *)(((GList *)(bwin->menu_node))->data))->parent;
-  
-  /* it's a url */
-  if (g_ascii_strcasecmp(data->url," ")!=0)
-  {
-    data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
-    node = gtk_ctree_insert_node(GTK_CTREE(bwin->ctree),bwin->menu_node,NULL,ctree_entry,0,NULL,NULL,NULL,NULL,TRUE,FALSE);
-  }
-  else /* it's a folder */
-  {
-    data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->folder_entry))));
-    if (g_ascii_strcasecmp(data->label,"")==0)
-      data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
-    node = gtk_ctree_insert_node(GTK_CTREE(bwin->ctree),bwin->menu_node,NULL,ctree_entry,0,NULL,NULL,NULL,NULL,FALSE,TRUE);
-  }
-  
-  gtk_ctree_node_set_row_data(GTK_CTREE(bwin->ctree),node,data);
-  g_node_append_data(bwin->parent_node,data);
-  
-  clear_entries(bwin);
+	BookmarkData *data;
+	GtkTreeIter *iter;
+	
+	iter= g_new0(GtkTreeIter,1);
+	data = g_new0(BookmarkData,1);
+
+	data->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry)));
+
+	/* it's a url */
+	if (g_ascii_strcasecmp(data->url,"")!=0)
+	{
+		data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
+		gtk_tree_store_append(GTK_TREE_STORE(bwin->treev_data->treeStore),iter,bwin->treev_data->parentIter);
+		gtk_tree_store_set(GTK_TREE_STORE(bwin->treev_data->treeStore), iter, 0, data->label, 1, data->url, -1);
+	}
+	else /* it's a folder */
+	{
+		data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->folder_entry))));
+		if (g_ascii_strcasecmp(data->label,"")==0)
+			data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
+		gtk_tree_store_append(GTK_TREE_STORE(bwin->treev_data->treeStore),iter,bwin->treev_data->parentIter);
+		gtk_tree_store_set(GTK_TREE_STORE(bwin->treev_data->treeStore), iter, 0, data->label, 1, "", -1);
+	}
+
+	g_free(iter);
+	bookmark_clear_all_entries(bwin);
 }
 
-/* add a folder */
-void on_bookmark_edit_button_clicked(GtkWidget *button,BookmarkWindow *bwin)
+/* edit a url or a folder */
+void bookmark_edit_button_cb (GtkWidget *button,BookmarkWindow *bwin)
 {
-  BookmarkData *data;
-  gchar *ctree_entry[2];
-  GNode *parent;
-  data = g_new0(BookmarkData,1);
-  
-  data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
-  data->url = ctree_entry[1]= g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry)));
-  
-  /* it's a folder */
-  if (g_ascii_strcasecmp(data->url," ")==0)
-  {
-    data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->folder_entry))));
-    if (g_ascii_strcasecmp(data->label,"")==0)
-      data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
-    gtk_ctree_set_node_info(GTK_CTREE(bwin->ctree),bwin->menu_node,ctree_entry[0],0,NULL,NULL,NULL,NULL,FALSE,TRUE);
-  }
-  else /* it's a url */
-  {
-    data->label = ctree_entry[0] = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
-    gtk_ctree_set_node_info(GTK_CTREE(bwin->ctree),bwin->menu_node,ctree_entry[0],0,NULL,NULL,NULL,NULL,TRUE,FALSE);
-  }
-  
-  gtk_ctree_node_set_row_data(GTK_CTREE(bwin->ctree),bwin->menu_node,data);
-  
-  parent= g_node_append_data(bwin->temp_node->parent,data);
-  
-  if (bwin->temp_node->children!= NULL)
-    move_folder(bwin->temp_node->children,parent);
-  
-  g_node_destroy(bwin->temp_node);
-  
-  clear_entries(bwin);
+	BookmarkData *data;
+
+	data = g_new0(BookmarkData,1);
+
+	data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
+	data->url = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry))));
+
+	/* it's a folder */
+	if (g_ascii_strcasecmp(data->url,"")==0)
+	{
+		data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->folder_entry))));
+		if (g_ascii_strcasecmp(data->label,"")==0)
+			data->label= g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
+		gtk_tree_store_set(GTK_TREE_STORE(bwin->treev_data->treeStore), &bwin->iter, 0, data->label, 1, "", -1);
+	}
+	else /* it's a url */
+	{
+		data->label = g_strstrip(g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->text_entry))));
+		gtk_tree_store_set(GTK_TREE_STORE(bwin->treev_data->treeStore), &bwin->iter, 0, data->label, 1, data->url, -1);
+	}
+
+	bookmark_clear_all_entries(bwin);
 }
 
 /* a button to go to a selected url */
-void on_bookmark_go_button_clicked(GtkButton *button,BookmarkWindow *bwin)
+void bookmark_go_button_cb (GtkButton *button,BookmarkWindow *bwin)
 {
-  GList *selection;
-  gchar *url;
-  
-  /* case there isn't a selected url */
-  if (!(selection = GTK_CLIST(bwin->ctree)->selection)) return;
-  
-  url= g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry)));
-  
-  /* it isn't a folder */
-  if (g_ascii_strcasecmp(url," ") != 0)
-  {
-    gtk_moz_embed_stop_load(GTK_MOZ_EMBED(gBookmarkMozEmbed));
-    gtk_moz_embed_load_url(GTK_MOZ_EMBED(gBookmarkMozEmbed), url);
-  }
-  clear_entries(bwin);
+	gchar *url;
+
+	/* do not open folders */
+	if ((url= g_strdup(gtk_entry_get_text(GTK_ENTRY(bwin->url_entry)))))
+	{	
+		gtk_moz_embed_stop_load(GTK_MOZ_EMBED(gBookmarkMozEmbed));
+		gtk_moz_embed_load_url(GTK_MOZ_EMBED(gBookmarkMozEmbed), url);
+	}
+
+	g_free(url);
+	bookmark_clear_all_entries(bwin);
 }
 
 /* accept new edit configurations and update bookmark menu */
-void on_bookmark_ok_button_clicked(GtkWidget *button, BookmarkWindow *bwin)
+void bookmark_ok_button_cb (GtkWidget *button,BookmarkWindow *bwin)
 {
-  print_bookmarks ();
-  close_bookmark_window(bwin);
+	bookmark_write_on_file (bwin);
+	bookmark_close_dialog(bwin);
 }
 
 /* cancel user's operations */
-void on_bookmark_cancel_button_clicked(GtkWidget *button,BookmarkWindow *bwin)
+void bookmark_cancel_button_cb (GtkWidget *button,BookmarkWindow *bwin)
 {	
-  close_bookmark_window(bwin);
+	bookmark_close_dialog(bwin);
 }
 
 /* remove a selected bookmark */
-void on_bookmark_remove_button_clicked(GtkWidget *button,BookmarkWindow *bwin)
+void bookmark_remove_button_cb (GtkWidget *button,BookmarkWindow *bwin)
 {
-  GList *selection;
-  GtkCTreeNode *node;
-  BookmarkData *data;
-  GNode *menu_node;
-  
-  /* case there isn't a selected folder, url or separator to be removed */
-  if (!(selection = GTK_CLIST(bwin->ctree)->selection)) {
-    return;
-  }
-  
-  node = (GtkCTreeNode*) g_list_nth_data(selection,0);
-  
-  data = g_new0(BookmarkData,1);
-  data= (BookmarkData*) gtk_ctree_node_get_row_data(GTK_CTREE(bwin->ctree),node);
-  
-  gtk_ctree_remove_node(GTK_CTREE(bwin->ctree),node);
-  
-  menu_node= g_node_find(gBookmarkNodes, G_IN_ORDER, G_TRAVERSE_ALL, data);
-  
-  g_node_destroy(menu_node);
-  
-  clear_entries(bwin);
+	BookmarkData *data;
+
+	gtk_tree_selection_get_selected(bwin->selection, &bwin->treev_data->treeStore, &bwin->iter);
+
+	data = g_new0(BookmarkData,1);
+	gtk_tree_model_get(bwin->treev_data->treeStore, &bwin->iter, 0, &data->label, 1, &data->url, -1);
+
+	gtk_tree_store_remove(GTK_TREE_STORE(bwin->treev_data->treeStore), &bwin->iter);
+
+	bookmark_clear_all_entries(bwin);
 }
 
 /* write bookmarks on file */
-void print_bookmarks ()
+void bookmark_write_on_file (BookmarkWindow *bwin)
 {
-  fclose(gBookmakeFilePath);
-  gBookmakeFilePath = fopen(gBookmakeFile,"w");
-  
-  if (gBookmarkNodes != NULL)
-    g_node_children_foreach(gBookmarkNodes,G_TRAVERSE_ALL,(GNodeForeachFunc)print_node_data,gBookmakeFilePath);
+	fclose(gBookmarkFilePointer);
+	gBookmarkFilePointer = fopen(gBookmarkFilePath,"w");
+	GtkTreeIter *iter= g_new0(GtkTreeIter,1);
+
+	if (!gtk_tree_model_get_iter_first(bwin->treev_data->treeStore,iter)) return;
+
+	bookmark_write_node_data_on_file(bwin->treev_data->treeStore, iter);
+
+	g_free(iter);
 }
 
-/* print node data on gBookmakeFile */
-void print_node_data (GNode *node,FILE *gBookmakeFilePath)
+/* print node data on file */
+void bookmark_write_node_data_on_file (GtkTreeModel *treeStore, GtkTreeIter *iter)
 {
-  BookmarkData *data;
-  
-  data = (BookmarkData*) node->data;
-  
-  /* it's a url */
-  if (g_ascii_strcasecmp(data->url," ") != 0)
-    fprintf(gBookmakeFilePath,"url %s %s\n",data->url,data->label);
-  else /* it's a folder */
-  {
-    fprintf(gBookmakeFilePath,"folder %s\n",data->label);
-    g_node_children_foreach(node,G_TRAVERSE_ALL,(GNodeForeachFunc)print_node_data,gBookmakeFilePath);
-    fprintf(gBookmakeFilePath,"/folder\n");
-  }
+     	BookmarkData *data= g_new0(BookmarkData,1);
+	GtkTreeIter *newIter= g_new0(GtkTreeIter,1);
+
+	gtk_tree_model_get(treeStore, iter, 0, &data->label, 1, &data->url, -1);
+
+	/* it's a folder */
+	if (g_ascii_strcasecmp(data->url,"") == 0)
+	{
+		fprintf(gBookmarkFilePointer,"folder %s\n",data->label);
+		if (!gtk_tree_model_iter_children(treeStore,newIter,iter)) return;
+		bookmark_write_node_data_on_file(treeStore, newIter);
+		if (gtk_tree_model_iter_next(treeStore,newIter))
+			bookmark_write_node_data_on_file(treeStore, newIter);
+		if(g_ascii_strcasecmp(data->label,"Bookmarks") != 0)
+			fprintf(gBookmarkFilePointer,"/folder\n");			
+	}
+	else /* it's a url */
+	{
+		fprintf(gBookmarkFilePointer,"url %s %s\n",data->url, data->label);
+		if (gtk_tree_model_iter_next(treeStore,iter))
+		{
+			newIter= gtk_tree_iter_copy(iter);
+			bookmark_write_node_data_on_file(treeStore, newIter);
+		}
+	}
+
+	g_free(data);
+	g_free(newIter);
 }
 
-/* clear all the gBookmarkNodes entries */
-void clear_entries(BookmarkWindow *bwin)
+/* clear all the bookmarks entries */
+void bookmark_clear_all_entries(BookmarkWindow *bwin)
 {
-  bwin->menu_node= gtk_ctree_node_nth(GTK_CTREE(bwin->ctree),0);
-  bwin->parent_node= g_node_get_root(gBookmarkNodes);
-  gtk_ctree_unselect_recursive(GTK_CTREE(bwin->ctree),gtk_ctree_node_nth (GTK_CTREE(bwin->ctree),0));
-  gtk_entry_set_text(GTK_ENTRY(bwin->url_entry)," ");
-  gtk_editable_delete_text(GTK_EDITABLE(bwin->text_entry),0 ,-1);
-  gtk_editable_delete_text(GTK_EDITABLE(bwin->folder_entry),0 ,-1);
+	gtk_entry_set_text(GTK_ENTRY(bwin->url_entry),"");
+	gtk_editable_delete_text(GTK_EDITABLE(bwin->text_entry),0 ,-1);
+	gtk_editable_delete_text(GTK_EDITABLE(bwin->folder_entry),0 ,-1);
 }
 
 /* close the bookmark window */
-void close_bookmark_window(BookmarkWindow *bwin)
+void bookmark_close_dialog(BookmarkWindow *bwin)
 {	
-  /* close bookmark gBookmakeFile*/
-  fclose(gBookmakeFilePath);
-  
-  gtk_widget_destroy(bwin->window);
-  g_free(bwin);
+	/* close bookmark file*/
+	fclose(gBookmarkFilePointer);
+
+	gtk_widget_destroy(bwin->window);
+	g_free(bwin);
 }
 
-/* export gBookmarkNodes callback */
-void export_gBookmarkNodes(GtkButton *button,BookmarkWindow *bwin)
+/* function used for importing bookmarks */
+void bookmark_import_cb(GtkButton *button,BookmarkWindow *bwin)
 {
-  
+	FILE *inFile;
+	BookmarkData *data= g_new0(BookmarkData,1);
+        gchar *parsedname;
+	gchar *line = (gchar *)g_malloc(1024);
+	gchar *filename= g_strconcat(g_get_home_dir(),"/bookmarks.html",NULL);
+	GString *name = g_string_new (NULL);
+        GString *url = g_string_new (NULL);
+
+	fclose(gBookmarkFilePointer);
+
+	if (!(inFile = fopen(filename,"r"))) return;
+	if (!(gBookmarkFilePointer = fopen(gBookmarkFilePath,"a"))) return;
+
+	if(fgets(line, 256, inFile) != NULL)
+		if(!strstr(line, "NETSCAPE-Bookmark-file")) return;
+
+	while (!feof (inFile))
+	{
+		switch (bookmark_get_ns_item (inFile, name, url)) {
+                case NS_FOLDER: //While selected line is Folder
+                        data->label = g_strdup (g_strstrip(name->str));
+			fprintf(gBookmarkFilePointer,"folder %s\n",data->label);
+                        g_free (data->label);
+                        break;
+                case NS_SITE://While selected line in Bookmark			
+                        parsedname = bookmark_ns_parse_item (name);
+			data->label = g_strdup (g_strstrip(parsedname));
+			if (url->str)
+				data->url = g_strdup(g_strstrip(url->str));
+			else
+                                data->url = NULL;
+			fprintf(gBookmarkFilePointer,"url %s %s\n",data->url,data->label);
+			g_free (data->label);
+			g_free (data->url);
+			g_free (parsedname);
+			break;
+		case NS_FOLDER_END://While selected line is end of Folder.
+			fprintf(gBookmarkFilePointer,"/folder\n");
+			break;
+                default:
+                        break;
+		}
+        }
+        bookmark_close_dialog(bwin);
+
+        g_string_free (name, TRUE);
+        g_string_free (url, TRUE);
+	g_free(data);
+	g_free(filename);
 }
 
-/* the menu button to add a bookmark */
-void add_bookmark_cb(GtkWidget *menu_item,GtkWidget *embed)
+NSItemType bookmark_get_ns_item (FILE *inFile, GString *name, GString *url)
 {
-  gchar *url;
-  gchar *title;
-  
-  gBookmakeFile = g_strconcat(g_get_home_dir(),"/.Minimo/bookmark",NULL);
-  if (!(gBookmakeFilePath = fopen(gBookmakeFile,"a+"))) return;
-  
-  if (!(url= gtk_moz_embed_get_location(gBookmarkMozEmbed))) return;
-  
-  /* doesn't add an empty url or about:blank */
-  if ((g_ascii_strcasecmp(url," ") != 0) && (g_ascii_strcasecmp(url,"about:blank") != 0))
-  {
-    title= gtk_moz_embed_get_title (gBookmarkMozEmbed);
-    fprintf(gBookmakeFilePath, "url %s %s\n", url, title);
-  }
-  
-  fclose(gBookmakeFilePath);	
+	gchar *line = NULL;
+	gchar *found;
+	gchar *temp = NULL;
+	gchar *bm_temp = NULL;
+        GString *nick = g_string_new (NULL);
+
+	line = bookmark_read_line_from_html_file (inFile);
+
+	if ((found = (char *) bookmark_string_strcasestr (line, "<A HREF=")))
+	{  // declare site? 
+		g_string_assign (url, found+9);  // url=URL+ ADD_DATE ... 
+		g_string_truncate (url, strstr(url->str, "\"") - url->str);
+		found = (char *) strstr (found+9+url->len, "\">");
+		if (!found)
+		{
+			g_free (line);
+			return NS_UNKNOWN;
+		}
+		g_string_assign (name, found+2);
+		temp = (char *) bookmark_string_strcasestr(name->str,"</A>");
+		g_string_truncate (name, temp - (name->str));
+		if ((found = (char *) bookmark_string_strcasestr (line,"SHORTCUTURL=")))
+		{
+			g_string_assign (nick, found+13);
+			g_string_truncate (nick, strstr(nick->str, "\"") - nick->str);
+		}
+		else
+			g_string_assign (nick, "");
+		g_free (line);
+		return NS_SITE;
+	}
+	else if ((found = (char *) bookmark_string_strcasestr (line, "<DT><H3")))
+	{ //declare folder? 
+		found = (char *) strstr(found+7, ">");
+		if (!found) return NS_UNKNOWN;
+		g_string_assign (name, found+1);
+		bm_temp = (char *) bookmark_string_strcasestr (name->str, "</H3>");
+		g_string_truncate (name, bm_temp - (name->str));
+		g_free (line);
+		return NS_FOLDER;
+	}
+	else if ((found = (char *) bookmark_string_strcasestr (line, "</DL>")))
+	{    // end folder? 
+		g_free (line);
+		return NS_FOLDER_END;
+	}
+	else if ((found = (char *) bookmark_string_strcasestr (line, "<HR>")))
+	{    // separator 
+		g_free (line);
+		return NS_SEPARATOR;
+	}
+	else if ((found = (char *) bookmark_string_strcasestr (line, "<DD>")))
+	{    // comments 
+		g_string_assign (name, found+4);
+		g_free (line);
+		return NS_NOTES;
+	}
+	else if (strchr(line, '<')==NULL && strchr(line, '>')==NULL)
+	{    // continued comments (probably) 
+		g_string_assign (name, line);
+		g_free (line);
+		return NS_NOTES;
+	}
+	g_free (line);
+	g_string_free (nick, TRUE);
+	return NS_UNKNOWN;
+}
+
+/**
+ * bookmark_read_line_from_html_file: reads a line from an opened file and
+ * returns it in a new allocated string
+ */
+gchar *bookmark_read_line_from_html_file (FILE *inFile)
+{
+	gchar *line = g_strdup ("");
+	gchar *t;
+	gchar *buf = g_new0 (gchar, 256);
+
+        /* Read from the file unles endoffile has reached or newline has encountered */
+	while (!(strchr (buf, '\n') || feof (inFile)))
+	{
+		fgets(buf, 256, inFile);
+		t = line;
+		line = g_strconcat (line, buf, NULL);
+		g_free (t);
+	}
+	g_free (buf);
+	return line;
+}
+
+/**
+ * bookmark_string_strcasestr: test if a string b is a substring of string a,
+ * independent of case.
+ */
+const gchar *bookmark_string_strcasestr (const gchar *a, const gchar *b)
+{
+	gchar *down_a;
+	gchar *down_b;
+	gchar *ptr;
+	// copy and lower case the strings 
+	down_a = g_strdup (a);
+	down_b = g_strdup (b);
+	//down_a = g_utf8_strdown (down_a, strlen (down_a))
+	g_strdown (down_a);
+	g_strdown (down_b);
+	ptr = strstr (down_a, down_b);
+
+	g_free (down_a);
+	g_free (down_b);
+
+	return ptr == NULL ? NULL : (a + (ptr - down_a));
+}
+
+/**
+ * This function replaces some weird elements
+ * like &amp; &le;, etc..
+ * More info : http://www.w3.org/TR/html4/charset.html#h-5.3.2
+ */
+char *bookmark_ns_parse_item (GString *string)
+{
+	char *iterator, *temp;
+	int cnt = 0;
+	GString *result = g_string_new (NULL);
+
+
+	iterator = string->str;
+
+	for (cnt = 0, iterator = string->str;cnt <= (int)(strlen (string->str));cnt++, iterator++)
+	{
+		if (*iterator == '&')
+		{
+			int jump = 0;
+			int i;
+			if (g_strncasecmp (iterator, "&amp;", 5) == 0)
+			{
+
+				g_string_append_c (result, '&');
+				jump = 5;
+			}
+			else if (g_strncasecmp (iterator, "&lt;", 4) == 0)
+			{
+				g_string_append_c (result, '<');
+				jump = 4;
+                        }
+			else if (g_strncasecmp (iterator, "&gt;", 4) == 0)
+			{
+				g_string_append_c (result, '>');
+				jump = 4;
+			}
+			else if (g_strncasecmp (iterator, "&quot;", 6) == 0)
+			{
+				g_string_append_c (result, '\"');
+				jump = 6;
+			}
+			else
+			{
+				// It must be some numeric thing now 
+				iterator++;
+				if (iterator && *iterator == '#')
+				{
+					int val;
+					char *num, *tmp;
+
+					iterator++;
+
+					val = atoi (iterator);
+
+					tmp = g_strdup_printf ("%d", val);
+					jump = strlen (tmp);
+					g_free (tmp);
+
+					num = g_strdup_printf ("%c", (char) val);
+					g_string_append (result, num);
+					g_free (num);
+				}
+			}
+			for (i = jump - 1; i > 0; i--)
+			{
+				iterator++;
+				if (iterator == NULL) break;
+			}
+		}
+		else
+			g_string_append_c (result, *iterator);
+	}
+	temp = result->str;
+	g_string_free (result, FALSE);
+	return temp;
+}
+
+/* function used for exporting bookmarks */
+void bookmark_export_cb (GtkButton *button,BookmarkWindow *bwin)
+{
+	gchar *filename= g_strconcat(g_get_home_dir(),"/bookmarks.html",NULL);
+	BookmarkData *data= g_new0(BookmarkData,1);
+	gchar *line = (gchar *)g_malloc(1024);
+	gboolean isFolder= TRUE;
+	FILE *outFile;
+       
+	if (!(outFile = fopen (filename, "w"))) return;
+                          
+	fputs ("<!DOCTYPE NETSCAPE-Bookmark-file-1>\n", outFile);
+	fputs ("<!-- This file was automatically generated by Minimo\n", outFile);
+	fputs ("It will be read and overwritten.\n", outFile);
+	fputs ("Do Not Edit! -->\n", outFile);
+	fputs ("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html;"
+                          " charset=UTF-8\">\n", outFile);
+	fputs ("<TITLE>Bookmarks</TITLE>\n", outFile);
+	fputs ("<H1>Minimo Bookmarks</H1>\n", outFile);
+	fputs ("\n", outFile);
+	fputs ("<DL><p>\n", outFile);	 
+
+	rewind(gBookmarkFilePointer);
+
+	while(fgets(line,1023,gBookmarkFilePointer)!= NULL)
+	{	
+		line = g_strstrip(line);
+
+		if (g_strncasecmp(line,"folder",6) == 0)
+		{
+			data->label = g_strdup(line+7);
+			data->url = "";
+			isFolder = TRUE;
+		}
+
+		if (g_strncasecmp(line,"url",3) == 0)
+		{
+			gchar **temp;
+
+			temp = g_strsplit(line+4," ",2);
+			data->url = g_strdup(temp[0]);
+
+			if (temp[1] != NULL)
+				data->label = g_strdup(temp[1]);
+			else
+				data->label = g_strdup(temp[0]);
+			g_strfreev(temp);
+			isFolder = FALSE;
+
+		}
+
+		if (g_strncasecmp(line,"/folder",7) == 0)
+		{
+			fputs ("</DL><p>\n", outFile);
+		}
+
+		bookmark_export_items (outFile, data, isFolder);
+	}
+	fputs ("</DL><p>\n", outFile);
+	fputs ("</DL><p>\n", outFile);
+
+	fclose (outFile);
+	g_free(data);
+	g_free(line);
+	g_free(filename);
+}
+
+void bookmark_export_items (FILE *file, BookmarkData *data, gboolean isFolder)
+{
+
+	gchar *str;
+
+	/* it is a url */
+	if (isFolder == FALSE) {
+		fputs ("\t<DT><A HREF=\"", file);
+		fputs (data->url, file);
+		fputs ("\"", file);
+		fputs (">", file);
+		str = g_strdup(data->label);
+		fputs (str, file);
+		fputs ("</A>\n", file);
+	} /* it is a folder */
+	else
+	{
+		fputs ("<DT><H3 ADD_DATE=\"0\">", file);
+		str = g_strdup(data->label);
+		fputs (str, file);
+		fputs ("</H3>\n", file);
+		fputs ("<DL><p>\n", file);
+	}
+}
+
+void bookmark_add_url_directly_cb (GtkWidget *menu_item,GtkWidget *embed)
+{
+	gchar *url;
+	gchar *title;
+
+	bookmark_open_file ();
+	fclose(gBookmarkFilePointer);
+
+	if (!(gBookmarkFilePointer = fopen(gBookmarkFilePath,"a+"))) return;
+
+	if (!(url= gtk_moz_embed_get_location(gBookmarkMozEmbed))) return;
+
+	/* doesn't add an empty url or about:blank */
+	if ((g_ascii_strcasecmp(url,"") != 0) && (g_ascii_strcasecmp(url,"about:blank") != 0))
+	{
+		title= gtk_moz_embed_get_title (gBookmarkMozEmbed);
+		fprintf(gBookmarkFilePointer, "url %s %s\n", url, title);
+		g_free(title);
+	}
+
+	fclose(gBookmarkFilePointer);
+	g_free(url);
+	g_free(gBookmarkFilePath);
 }

@@ -47,18 +47,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef minimo_context_h
-#define minimo_context_h
+/* METHODS HEADERS  */
 
+/* Minimo's global types */
 #include "minimo_types.h"
 
-void context_initialize_timer		();
+GtkWidget* create_minimo_progress (MinimoBrowser* browser);
 
-GtkWidget * context_click_on_link 	(MinimoBrowser *, gchar *, gchar *);
-GtkWidget * context_click_on_image 	(MinimoBrowser *, gchar *);
-GtkWidget * context_click_doc 		(MinimoBrowser *, gchar *);
-GtkWidget * context_click_link_image 	(MinimoBrowser *, gchar *, gchar *);
+/* Building the Minimo Browser */
+MinimoBrowser *new_gtk_browser(guint32 chromeMask);
+//void new_window_cb(GtkMozEmbed *embed, GtkMozEmbed **retval, guint chromemask, MinimoBrowser *browser);
+void setup_toolbar(MinimoBrowser* browser);
 
-void context_destroy_popup 		(GtkWidget *, gchar *);
+GtkWidget *get_active_tab (MinimoBrowser *browser);
 
-#endif
+/* callbacks from the widget */
+void update_ui (MinimoBrowser *browser);
+void destroy_cb(GtkWidget *widget, MinimoBrowser *browser);

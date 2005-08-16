@@ -58,7 +58,7 @@ void add_to_history(const gchar *url) {
   GSList *list;
   gint equals = 0;
   
-  read_history();
+  history_read_from_file();
   
   if (!url || url == NULL) return ;
   if (!g_strncasecmp(url,"about:",6) || !g_strcasecmp(url,"")) return;
@@ -76,15 +76,14 @@ void add_to_history(const gchar *url) {
   }
   if (equals == 0) {
     gHistoryList = g_slist_prepend(gHistoryList,g_strdup(url));
-    write_history();
+    history_write_in_file();
   }
   gHistoryProt = 0;
-  
   
 }
 
 /* Create and show the History Window*/
-void view_history(GtkWidget *embed) {
+void history_create_dialog (GtkWidget *embed) {
   
   HistoryWindow *hwin;
   GSList *list;
@@ -92,7 +91,7 @@ void view_history(GtkWidget *embed) {
   
   hwin = g_new0(HistoryWindow,1);
   
-  read_history();
+  history_read_from_file();
   
   //hwin->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   hwin->window = gtk_dialog_new();
@@ -104,7 +103,7 @@ void view_history(GtkWidget *embed) {
   gtk_window_set_modal (GTK_WINDOW (hwin->window), TRUE);
   gtk_window_set_keep_above(GTK_WINDOW (hwin->window), TRUE);
   
-  g_signal_connect(G_OBJECT(hwin->window),"destroy", G_CALLBACK(on_history_destroy), NULL);
+  g_signal_connect(G_OBJECT(hwin->window),"destroy", G_CALLBACK(history_destroy_cb), NULL);
   hwin->title = g_strdup_printf(("Minimo - History (%d) items"), g_slist_length(gHistoryList));
   g_free(hwin->title);
   
@@ -135,8 +134,8 @@ void view_history(GtkWidget *embed) {
   
   hwin->embed = embed;
   
-  g_signal_connect(G_OBJECT(hwin->search_button), "clicked", G_CALLBACK(on_search_button_cb), hwin);
-  g_signal_connect(G_OBJECT(hwin->go_button), "clicked", G_CALLBACK(on_history_clist_button_go_cb), hwin);
+  g_signal_connect(G_OBJECT(hwin->search_button), "clicked", G_CALLBACK(history_search_cb), hwin);
+  g_signal_connect(G_OBJECT(hwin->go_button), "clicked", G_CALLBACK(history_go_cb), hwin);
   
   gtk_box_pack_start(GTK_BOX(hwin->search_box), hwin->search_label, FALSE, FALSE, 0);
   gtk_box_pack_start(GTK_BOX(hwin->search_box), hwin->search_entry, TRUE, TRUE, 0);
@@ -144,13 +143,13 @@ void view_history(GtkWidget *embed) {
   gtk_box_pack_start(GTK_BOX(hwin->search_box), hwin->go_button, FALSE, FALSE, 0);
   
   hwin->remove = gtk_button_new_from_stock(GTK_STOCK_REMOVE);
-  g_signal_connect(G_OBJECT(hwin->remove), "clicked", G_CALLBACK(remove_from_history), hwin);
+  g_signal_connect(G_OBJECT(hwin->remove), "clicked", G_CALLBACK(history_remove_item_cb), hwin);
   
   hwin->clear = gtk_button_new_from_stock(GTK_STOCK_CLEAR);
-  g_signal_connect(G_OBJECT(hwin->clear), "clicked", G_CALLBACK(clear_history), hwin);
+  g_signal_connect(G_OBJECT(hwin->clear), "clicked", G_CALLBACK(history_cleanup_cb), hwin);
   
   hwin->close = gtk_button_new_from_stock(GTK_STOCK_CLOSE);
-  g_signal_connect(G_OBJECT(hwin->close), "clicked", G_CALLBACK(close_history_win), hwin);
+  g_signal_connect(G_OBJECT(hwin->close), "clicked", G_CALLBACK(history_close_dialog_cb), hwin);
   
   hwin->btnbox = gtk_hbox_new(0,0);
   gtk_box_pack_start(GTK_BOX(hwin->vbox), hwin->search_box, FALSE, FALSE, 0);
@@ -174,7 +173,7 @@ void view_history(GtkWidget *embed) {
 }
 
 /* Go to URL selected in the history list */
-void on_history_clist_button_go_cb(GtkWidget *button, HistoryWindow *hwin) {
+void history_go_cb(GtkWidget *button, HistoryWindow *hwin) {
   GList *selection;
   gchar *location;
   gint row;
@@ -190,13 +189,13 @@ void on_history_clist_button_go_cb(GtkWidget *button, HistoryWindow *hwin) {
 }
 
 /* Close history window */
-void close_history_win(GtkWidget *button, HistoryWindow *hwin)
+void history_close_dialog_cb (GtkWidget *button, HistoryWindow *hwin)
 {
   gtk_widget_destroy(hwin->window);
 }
 
 /* Remove an URL from history list */
-void remove_from_history(GtkWidget *button, HistoryWindow *hwin)
+void history_remove_item_cb (GtkWidget *button, HistoryWindow *hwin)
 {
   GList *selection = GTK_CLIST(hwin->clist)->selection;
   gchar *text;
@@ -232,7 +231,7 @@ void remove_from_list(gchar *text)
 }
 
 /* Remove all URL from history list */
-void clear_history(GtkWidget *b, HistoryWindow *hwin)
+void history_cleanup_cb (GtkWidget *b, HistoryWindow *hwin)
 {
   gtk_clist_clear(GTK_CLIST(hwin->clist));
   g_slist_free(gHistoryList);
@@ -241,7 +240,7 @@ void clear_history(GtkWidget *b, HistoryWindow *hwin)
 }
 
 /* Search an URL in the history list */
-void on_search_button_cb(GtkWidget *button, HistoryWindow *hwin)
+void history_search_cb(GtkWidget *button, HistoryWindow *hwin)
 {
   gint rows, i;
   G_CONST_RETURN gchar *search_text;
@@ -264,18 +263,17 @@ void on_search_button_cb(GtkWidget *button, HistoryWindow *hwin)
       GTK_CLIST(hwin->clist)->focus_row = i;
       search_pos = i;
     }	       		     	
-    
   }
 }
 
 /* Close history window */
-void on_history_destroy(GtkWidget *window)
+void history_destroy_cb(GtkWidget *window)
 {
-  write_history();
+  history_write_in_file();
 }
 
 /* Read the history file */
-void read_history(void) {
+void history_read_from_file (void) {
   gchar *line;
   gchar *url;
   gchar *user_home = NULL;
@@ -312,7 +310,7 @@ void read_history(void) {
 }
 
 /* Write the history file */
-void write_history(void) {
+void history_write_in_file(void) {
   GSList *list;
   gchar *user_home= NULL;
   FILE   *g_history_file = NULL;
