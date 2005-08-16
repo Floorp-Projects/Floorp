@@ -239,7 +239,7 @@ public:
   typedef const nsID& KeyType;
   typedef const nsID* KeyTypePointer;
   
-  nsIDHashKey(const nsID* id) : mID(*id) { }
+  nsIDHashKey(const nsID* inID) : mID(*inID) { }
   nsIDHashKey(const nsIDHashKey& toCopy) : mID(toCopy.mID) { }
   ~nsIDHashKey() { }
 
