@@ -8145,7 +8145,7 @@ nsHTMLExternalObjSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     return *_retval ? NS_SUCCESS_I_DID_SOMETHING : NS_ERROR_FAILURE;
   }
 
-  return nsElementSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
