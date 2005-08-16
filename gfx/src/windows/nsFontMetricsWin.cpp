@@ -4221,6 +4221,32 @@ nsFontWin::GetBoundingMetrics(HDC                aDC,
 }
 #endif
 
+#ifdef DEBUG
+static void
+VerifyFontHasGlyph(nsFontWin* aFont, const PRUnichar* aString, PRInt32 aLength)
+{
+  const PRUnichar* curr = aString;
+  const PRUnichar* last = aString + aLength;
+  PRUint32 ch;
+  while (curr < last) {
+    if (IS_HIGH_SURROGATE(*curr) && (curr+1) < last && 
+        IS_LOW_SURROGATE(*(curr+1))) {
+      ch = SURROGATE_TO_UCS4(*curr, *(curr+1));
+      curr += 2;
+    }
+    else {
+      ch = *curr;
+      curr += 1;
+    }
+    NS_ASSERTION(aFont->HasGlyph(ch), "internal error");
+  }
+}
+#define DEBUG_VERIFY_FONT_HASGLYPH(font, string, length) \
+VerifyFontHasGlyph(font, string, length)
+#else
+#define DEBUG_VERIFY_FONT_HASGLYPH(font, string, length)
+#endif
+
 nsFontWinUnicode::nsFontWinUnicode(LOGFONT* aLogFont, HFONT aFont,
   PRUint16* aCCMap) : nsFontWin(aLogFont, aFont, aCCMap)
 {
@@ -4238,6 +4264,7 @@ nsFontWinUnicode::~nsFontWinUnicode()
 PRInt32
 nsFontWinUnicode::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   SIZE size;
   ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
   size.cx -= mOverhangCorrection;
@@ -4248,6 +4275,7 @@ void
 nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   // Due to a bug in WIN95 unicode rendering of truetype fonts
   // with underline or strikeout, we need to set a clip rect
   // to prevent the underline and/or strikethru from being rendered
@@ -4288,6 +4316,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
                                      PRUint32           aLength,
                                      nsBoundingMetrics& aBoundingMetrics)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   aBoundingMetrics.Clear();
   nsAutoChar16Buffer buffer;
 
@@ -4331,6 +4360,7 @@ PRInt32
 nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   nsAutoCharBuffer buffer;
 
   PRInt32 destLength = aLength;
@@ -4353,6 +4383,7 @@ void
 nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   nsAutoCharBuffer buffer;
   PRInt32 destLength = aLength;
 
@@ -4374,6 +4405,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
+  DEBUG_VERIFY_FONT_HASGLYPH(this, aString, aLength);
   aBoundingMetrics.Clear();
   nsAutoCharBuffer buffer;
   PRInt32 destLength = aLength;
