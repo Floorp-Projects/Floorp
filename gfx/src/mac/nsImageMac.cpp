@@ -48,6 +48,9 @@
 // Number of bits in a pixel.
 #define BITS_PER_PIXEL      BITS_PER_COMPONENT * COMPS_PER_PIXEL
 
+// MacOSX 10.2 supports CGPattern, which does image/pattern tiling for us, and
+// is much faster than doing it ourselves.
+#define USE_CGPATTERN_TILING
 
 #if 0
 
@@ -842,15 +845,8 @@ nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   PRUint32 tiledCols = (aTileRect.width + aSXOffset + mWidth - 1) / mWidth;
   PRUint32 tiledRows = (aTileRect.height + aSYOffset + mHeight - 1) / mHeight;
 
-  // The manual blitting that we do below can be expensive for large background
-  // images, for which we have few tiles.  Plus, the SlowTile call eventually
-  // calls the Quartz drawing functions, which can take advantage of hardware
-  // acceleration.  So if we have few tiles, we just call SlowTile.
-  const PRUint32 kTilingCopyThreshold = 64;
-  if (tiledCols * tiledRows < kTilingCopyThreshold) {
-    return SlowTile(aContext, aSurface, aSXOffset, aSYOffset, 0, 0, aTileRect);
-  }
-
+  // XXX note that this code tiles the entire image, even when we just
+  // need a small portion, which can get expensive
   PRUint32 bitmapWidth = tiledCols * mWidth;
   PRUint32 bitmapHeight = tiledRows * mHeight;
   PRUint32 bitmapRowBytes = tiledCols * mRowBytes;
@@ -953,14 +949,6 @@ nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   return NS_OK;
 }
 
-
-// MacOSX 10.2 supports CGPattern, which does image/pattern tiling for us, and
-// appears to be faster than doing it ourselves.  However, there are some
-// problems remaining with the implementation in this file (problems mostly
-// with scrolling and putting the image at the correct offset).
-//#define USE_CGPATTERN_TILING
-
-#ifdef USE_CGPATTERN_TILING
 void
 DrawTileAsPattern(void *aInfo, CGContextRef aContext)
 {
@@ -971,7 +959,52 @@ DrawTileAsPattern(void *aInfo, CGContextRef aContext)
   CGRect drawRect = ::CGRectMake(0, 0, width, height);
   ::CGContextDrawImage(aContext, drawRect, image);
 }
-#endif
+
+nsresult
+nsImageMac::DrawTileWithQuartz(nsIDrawingSurface* aSurface,
+                               PRInt32 aSXOffset, PRInt32 aSYOffset,
+                               PRInt32 aPadX, PRInt32 aPadY,
+                               const nsRect &aTileRect)
+{
+  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+  CGContextRef context = surface->StartQuartzDrawing();
+  ::CGContextSaveGState(context);
+
+  static const CGPatternCallbacks callbacks = {0, &DrawTileAsPattern, NULL};
+
+  // get the current transform from the context
+  CGAffineTransform patternTrans = CGContextGetCTM(context);
+  patternTrans = CGAffineTransformTranslate(patternTrans, aTileRect.x, aTileRect.y);
+
+  CGPatternRef pattern;
+  pattern = ::CGPatternCreate(mImage, ::CGRectMake(0, 0, mWidth, mHeight),
+                              patternTrans, mWidth + aPadX, mHeight + aPadY,
+                              kCGPatternTilingConstantSpacing,
+                              TRUE, &callbacks);
+
+  CGColorSpaceRef patternSpace = ::CGColorSpaceCreatePattern(NULL);
+  ::CGContextSetFillColorSpace(context, patternSpace);
+  ::CGColorSpaceRelease(patternSpace);
+
+  float alpha = 1.0f;
+  ::CGContextSetFillPattern(context, pattern, &alpha);
+  ::CGPatternRelease(pattern);
+  
+  // set the pattern phase (really -ve x and y offsets, but we negate
+  // the y offset again to take flipping into account)
+  ::CGContextSetPatternPhase(context, CGSizeMake(-aSXOffset, aSYOffset));
+
+  CGRect tileRect = ::CGRectMake(aTileRect.x,
+                                 aTileRect.y,
+                                 aTileRect.width,
+                                 aTileRect.height);
+
+  ::CGContextFillRect(context, tileRect);
+  
+  ::CGContextRestoreGState(context);
+  surface->EndQuartzDrawing(context);
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
@@ -986,50 +1019,30 @@ NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
+  PRUint32 tiledCols = (aTileRect.width + aSXOffset + mWidth - 1) / mWidth;
+  PRUint32 tiledRows = (aTileRect.height + aSYOffset + mHeight - 1) / mHeight;
+
+  // The tiling that we do below can be expensive for large background
+  // images, for which we have few tiles.  Plus, the SlowTile call eventually
+  // calls the Quartz drawing functions, which can take advantage of hardware
+  // acceleration.  So if we have few tiles, we just call SlowTile.
 #ifdef USE_CGPATTERN_TILING
-  // CGPattern is only available in 10.2 and higher
-
-  nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
-  CGContextRef context = surface->StartQuartzDrawing();
-
-  static const CGPatternCallbacks callbacks = {0, &DrawTileAsPattern, NULL};
-
-  CGAffineTransform trans;
-  float tx = -aSXOffset;
-//    float ty = (aTileRect.height % mHeight) - (mHeight - aSYOffset);
-  float ty = ((portRect.bottom - portRect.top) % mHeight) - (mHeight - aSYOffset);
-  trans = ::CGAffineTransformMake(1, 0, 0, -1, tx, ty);
-
-  CGPatternRef pattern;
-  pattern = ::CGPatternCreate(mImage, ::CGRectMake(0, 0, mWidth, mHeight),
-                              trans, mWidth + aPadX, mHeight + aPadY,
-                              kCGPatternTilingConstantSpacing,
-                              TRUE, &callbacks);
-
-  CGColorSpaceRef patternSpace = ::CGColorSpaceCreatePattern(NULL);
-  ::CGContextSetFillColorSpace(context, patternSpace);
-  ::CGColorSpaceRelease(patternSpace);
-
-  float alpha = 1;
-  ::CGContextSetFillPattern(context, pattern, &alpha);
-  ::CGPatternRelease(pattern);
-    
-  CGRect tileRect = ::CGRectMake(aTileRect.x,
-                                 aTileRect.y,
-                                 aTileRect.width,
-                                 aTileRect.height);
-  ::CGContextFillRect(context, tileRect);
-  surface->EndQuartzDrawing(context);
-
-  return NS_OK;
+  const PRUint32 kTilingCopyThreshold = 16;   // CG tiling is so much more efficient
+#else
+  const PRUint32 kTilingCopyThreshold = 64;
+#endif
+  if (tiledCols * tiledRows < kTilingCopyThreshold)
+    return SlowTile(aContext, aSurface, aSXOffset, aSYOffset, 0, 0, aTileRect);
+  
+#ifdef USE_CGPATTERN_TILING
+  rv = DrawTileWithQuartz(aSurface, aSXOffset, aSYOffset, aPadX, aPadY, aTileRect);
+#else
+  // use the manual methods of tiling
+  if (!aPadX && !aPadY)
+    rv = DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
+  else
+    rv = SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aPadX, aPadY, aTileRect);
 #endif /* USE_CGPATTERN_TILING */
 
-  // use the manual methods of tiling
-
-  if (!aPadX && !aPadY) {
-    return DrawTileQuickly(aContext, aSurface, aSXOffset, aSYOffset, aTileRect);
-  }
-
-  return SlowTile(aContext, aSurface, aSXOffset, aSYOffset, aPadX, aPadY,
-                  aTileRect);
+  return rv;
 }
