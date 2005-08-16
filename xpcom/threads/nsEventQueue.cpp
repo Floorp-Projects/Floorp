@@ -62,6 +62,8 @@ static PLEventQueue *gEventQueueLogQueue = 0;
 static PRThread *gEventQueueLogThread = 0;
 #endif
 
+#define MAX_EVENTQUEUE_NESTING_DEPTH 12
+
 // in a real system, these would be members in a header class...
 static const char gActivatedNotification[] = "nsIEventQueueActivated";
 static const char gDestroyedNotification[] = "nsIEventQueueDestroyed";
@@ -539,26 +541,32 @@ nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
 */
   rv = NS_ERROR_NO_INTERFACE;
 
-#ifdef NS_DEBUG
-  int depth = 0;
-  nsEventQueueImpl *next = this;
-  while (next && depth < 100) {
-    next = NS_STATIC_CAST(nsEventQueueImpl *, next->mYoungerQueue);
-    ++depth;
-  }
-  if (depth > 5) {
-    char warning[80];
-    PR_snprintf(warning, sizeof(warning),
-      "event queue chain length is %d. this is almost certainly a leak.", depth);
-    NS_WARNING(warning);
-  }
-#endif
-
-  // (be careful doing this outside nsEventQueueService's mEventQMonitor)
-
   GetYoungest(getter_AddRefs(end));
   nsCOMPtr<nsPIEventQueueChain> endChain(do_QueryInterface(end));
+  
+  // (be careful doing this outside nsEventQueueService's mEventQMonitor)
+
   if (endChain) {
+    int depth = 0;
+    nsCOMPtr<nsPIEventQueueChain> chain = endChain;
+    while (chain) {
+      nsCOMPtr<nsIEventQueue> q;
+      chain->GetElder(getter_AddRefs(q));
+      chain = do_QueryInterface(q);
+      ++depth;
+      if (depth > MAX_EVENTQUEUE_NESTING_DEPTH)
+        return NS_ERROR_FAILURE;
+    }
+  
+#ifdef NS_DEBUG
+    if (depth > 5) {
+      char warning[80];
+      PR_snprintf(warning, sizeof(warning),
+        "event queue chain length is %d. this is almost certainly a leak.", depth);
+      NS_WARNING(warning);
+    }
+#endif
+
     endChain->SetYounger(queueChain);
     queueChain->SetElder(endChain);
     rv = NS_OK;
@@ -643,7 +651,7 @@ nsEventQueueImpl::GetYounger(nsIEventQueue **aQueue)
     *aQueue = nsnull;
     return NS_OK;
   }
-  return mYoungerQueue->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&aQueue);
+  return CallQueryInterface(mYoungerQueue, aQueue);
 }
 
 NS_IMETHODIMP
@@ -653,7 +661,7 @@ nsEventQueueImpl::GetElder(nsIEventQueue **aQueue)
     *aQueue = nsnull;
     return NS_OK;
   }
-  return mElderQueue->QueryInterface(NS_GET_IID(nsIEventQueue), (void**)&aQueue);
+  return CallQueryInterface(mElderQueue, aQueue);
 }
 
 NS_IMETHODIMP

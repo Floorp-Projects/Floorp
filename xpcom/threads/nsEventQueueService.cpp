@@ -296,20 +296,24 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
       mEventQTable.Put(currentThread, newQueue);
     }
 
-      // append to the event queue chain -- QI the queue in the hash table
-      nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(queue));
+    // append to the event queue chain -- QI the queue in the hash table
+    nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(queue));
     if (ourChain)
-      ourChain->AppendQueue(newQueue); // append new queue to it
+      rv = ourChain->AppendQueue(newQueue); // append new queue to it
 
-    *aNewQueue = newQueue;
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(newQueue);
+    } else {
+      *aNewQueue = newQueue;
 
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
-    PLEventQueue *equeue;
-    (*aNewQueue)->GetPLEventQueue(&equeue);
-    PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
-           ("EventQueue: Service push queue [queue=%lx]",(long)equeue));
-    ++gEventQueueLogCount;
+      PLEventQueue *equeue;
+      (*aNewQueue)->GetPLEventQueue(&equeue);
+      PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+             ("EventQueue: Service push queue [queue=%lx]",(long)equeue));
+      ++gEventQueueLogCount;
 #endif
+    }
   }
 
   // Release the EventQ lock...
