@@ -132,7 +132,8 @@ ifeq ($(CPU_ARCH),x86_64)
     ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
     ASFLAGS += -march=opteron -m64 -fPIC
     DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
-    MPI_SRCS += mpi_amd64.c
+    DEFINES += -DNSS_USE_COMBA
+    MPI_SRCS += mpi_amd64.c mp_comba.c
 endif
 ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_x86.s
@@ -251,12 +252,15 @@ else
 	ifdef NS_USE_GCC
 	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
 	    ASFLAGS += -march=opteron -m64 -fPIC
+	    MPI_SRCS += mp_comba.c
 	else
 	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s sha-fast-amd64-sun.s
+	    ASFILES += mp_comba_amd64_sun.s
 	    ASFLAGS += -xarch=generic64 -K PIC
 	    SHA_SRCS =
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
+	DEFINES += -DNSS_USE_COMBA
 	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86
