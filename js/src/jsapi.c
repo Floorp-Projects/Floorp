@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -612,9 +613,15 @@ JS_TypeOfValue(JSContext *cx, jsval v)
             } else
 #endif
             {
+                /*
+                 * ECMA 262, 11.4.3 says that any native object that implements
+                 * [[Call]] should be of type "function". Note that RegExp and
+                 * Script are both of type "function" for compatibility with
+                 * older SpiderMonkeys.
+                 */
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if ((ops == &js_ObjectOps)
-                    ? clasp == &js_FunctionClass
+                    ? clasp == &js_FunctionClass || clasp->call
                     : ops->call != NULL) {
                     type = JSTYPE_FUNCTION;
                 } else {
