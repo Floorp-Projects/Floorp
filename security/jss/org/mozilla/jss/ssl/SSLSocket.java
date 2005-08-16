@@ -818,19 +818,30 @@ public class SSLSocket extends java.net.Socket {
         throws SocketException;
 
     /**
-     * Returns the addresses and ports of this socket.
+     * Returns the addresses and ports of this socket
+     * or an error message if the socket is not in a valid state.
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("SSLSocket[addr=");
-        buf.append(getInetAddress());
-        buf.append(getLocalAddress());
-        buf.append(",port=");
-        buf.append(getPort());
-        buf.append(",localport=");
-        buf.append(getLocalPort());
-        buf.append("]");
-        return buf.toString();
+
+        try {
+            InetAddress inetAddr  = getInetAddress();
+            InetAddress localAddr = getLocalAddress();
+            int port              = getPort();
+            int localPort         = getLocalPort();
+            StringBuffer buf      = new StringBuffer();
+            buf.append("SSLSocket[addr=");
+            buf.append(inetAddr);
+            buf.append(",localaddr=");
+            buf.append(localAddr);
+            buf.append(",port=");
+            buf.append(port);
+            buf.append(",localport=");
+            buf.append(localPort);
+            buf.append("]");
+            return buf.toString();
+        } catch (Exception e) {
+            return "Exception caught in toString(): " + e.getMessage();
+        }
     }
 
     /**

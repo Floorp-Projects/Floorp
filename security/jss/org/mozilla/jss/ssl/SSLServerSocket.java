@@ -434,15 +434,23 @@ public class SSLServerSocket extends java.net.ServerSocket {
     }
 
     /**
-     * Returns the addresses and ports of this socket.
+     * Returns the addresses and ports of this socket
+     * or an error message if the socket is not in a valid state.
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("SSLServerSocket[addr=");
-        buf.append(getInetAddress());
-        buf.append(",port=0,localport=");
-        buf.append(getLocalPort());
-        buf.append("]");
-        return buf.toString();
+
+        try {
+            InetAddress inetAddr  = getInetAddress();
+            int localPort         = getLocalPort();
+            StringBuffer buf      = new StringBuffer();
+            buf.append("SSLServerSocket[addr=");
+            buf.append(inetAddr);
+            buf.append(",localport=");
+            buf.append(localPort);
+            buf.append("]");
+            return buf.toString();
+        } catch (Exception e) {
+            return "Exception caught in toString(): " + e.getMessage();
+        }
     }
 }
