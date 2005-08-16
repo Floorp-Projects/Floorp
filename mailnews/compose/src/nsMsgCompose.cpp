@@ -539,6 +539,9 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
         m_editor->EndOfDocument();
       }
+
+      (void)TagEmbeddedObjects(mailEditor);
+
       if (!aSignature.IsEmpty())
         htmlEditor->InsertHTML(aSignature);
     }
