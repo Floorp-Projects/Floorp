@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Cealaigh">
+<!ENTITY mnEditUndo.accesskey "l">
+<!ENTITY mnEditRedo.label "Athfheidhmigh">
+<!ENTITY mnEditRedo.accesskey "f">
+<!ENTITY mnEditCut.label "Gearr">
+<!ENTITY mnEditCut.accesskey "G">
+<!ENTITY mnEditCopy.label "Cóipeáil">
+<!ENTITY mnEditCopy.accesskey "C">
+<!ENTITY mnEditPaste.label "Greamaigh">
+<!ENTITY mnEditPaste.accesskey "r">
+<!ENTITY mnEditInsert.label "Ionsáigh">
+<!ENTITY mnEditInsert.accesskey "I">
+<!ENTITY mnEditEdit.label "Eagar">
+<!ENTITY mnEditEdit.accesskey "E">
+<!ENTITY mnEditDelete.label "Dealaigh">
+<!ENTITY mnEditDelete.accesskey "D">
