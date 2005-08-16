@@ -74,7 +74,7 @@
             <xul:menuitem label="&setPriority.label;"  value="setpriorityto"/>
             <xul:menuitem label="&setJunkScore.label;" value="setjunkscore" enablefornews="false"/>
             <xul:menuseparator enableforpop3="true"/>
-            <xul:menuitem label="&deleteMessage.label;" value="deletemessage" enableforpop3="true"/>
+            <xul:menuitem label="&deleteMessage.label;" value="deletemessage"/>
             <xul:menuitem label="&deleteFromPOP.label;" value="deletefrompopserver" enableforpop3="true"/>
             <xul:menuitem label="&fetchFromPOP.label;"  value="fetchfrompopserver" enableforpop3="true"/>
             <xul:menuseparator enablefornews="true"/>
