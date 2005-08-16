@@ -859,10 +859,17 @@ XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
     return JS_FALSE;
   }
 
-  // Do our own thing...
-  XPC_NW_BYPASS_TEST(cx, obj, checkAccess, (cx, obj, id, mode, vp));
+  XPCWrappedNative *wrappedNative =
+    XPCNativeWrapper::GetWrappedNative(cx, obj);
+  if (!wrappedNative) {
+    return JS_TRUE;
+  }
 
-  return JS_TRUE;
+  JSObject *wrapperJSObject = wrappedNative->GetFlatJSObject();
+
+  JSClass *clazz = JS_GET_CLASS(cx, wrapperJSObject);
+  return !clazz->checkAccess ||
+    clazz->checkAccess(cx, wrapperJSObject, id, mode, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
