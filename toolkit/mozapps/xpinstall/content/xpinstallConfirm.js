@@ -100,22 +100,33 @@ XPInstallConfirm.init = function ()
       okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
   }
 
-  function myfocus() {
+  function myfocus(event) {
     if (_installCountdownInterval == -1)
       _installCountdownInterval = setInterval(okButtonCountdown, 100);
+
+    // When the dialog is focused, we get *three* focus events, two targeted
+    // at the document itself and one at the internal XUL element. Only reset
+    // the counter if the document itself is the target.
+    if (event.target == document) {
+      _installCountdown = 2;
+      okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
+      okButton.disabled = true;
+    }
   }
 
-  function myblur() {
-    if (_installCountdownInterval != -1)
+  function myblur() { 
+    // When the dialog is blurred, we only get one blur event, targeted
+    // a the currently focused XUL element. We cannot distinguish between
+    // an internal focus change and a window change. Stop the countdown, but
+    // don't disable.
+    if (_installCountdownInterval != -1) {
       clearInterval(_installCountdownInterval);
-
-    _installCountdown = 2;
-    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
-    okButton.disabled = true;
+      _installCountdownInterval = -1;
+    }
   }
 
-  window.addEventListener("focus", myfocus, true);
-  window.addEventListener("blur", myblur, true);
+  document.addEventListener("focus", myfocus, true);
+  document.addEventListener("blur", myblur, true);
 
   _installCountdownInterval = setInterval(okButtonCountdown, 100);
 }
