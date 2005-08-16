@@ -314,6 +314,12 @@ NS_IMETHODIMP nsIsIndexFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
+PRBool
+nsIsIndexFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsIsIndexFrame::AttributeChanged(nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,

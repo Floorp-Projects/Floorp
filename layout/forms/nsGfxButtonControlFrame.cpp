@@ -332,6 +332,12 @@ nsGfxButtonControlFrame::AttributeChanged(nsIContent*     aChild,
   return rv;
 }
 
+PRBool
+nsGfxButtonControlFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP 
 nsGfxButtonControlFrame::Reflow(nsPresContext*          aPresContext, 
                                 nsHTMLReflowMetrics&     aDesiredSize,

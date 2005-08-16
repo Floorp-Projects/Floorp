@@ -798,6 +798,16 @@ nsObjectFrame::CreateWidgetForView(nsIView* aView)
   return aView->CreateWidget(kWidgetCID, &initData);
 }
 
+PRBool
+nsObjectFrame::IsLeaf() const
+{
+  // We're actually a leaf.  We inherit from nsContainerFrame for
+  // convenience for now, but we construct our own kids and the frame
+  // constructor shouldn't be messing with them.
+  // XXXbz ideally, we wouldn't have this child frame thing at all.
+  return PR_TRUE;
+}
+
 nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth,
                             nscoord aHeight,

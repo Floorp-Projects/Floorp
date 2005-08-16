@@ -89,6 +89,8 @@ public:
   virtual PRBool NeedsView() { return PR_TRUE; }
   virtual nsresult CreateWidgetForView(nsIView* aView);
 
+  virtual PRBool IsLeaf() const;
+  
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif

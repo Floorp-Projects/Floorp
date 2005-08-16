@@ -2202,6 +2202,12 @@ nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   return NS_OK;
 }
 
+PRBool
+nsTextControlFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
+
 //IMPLEMENTING NS_IFORMCONTROLFRAME
 NS_IMETHODIMP
 nsTextControlFrame::GetName(nsAString* aResult)

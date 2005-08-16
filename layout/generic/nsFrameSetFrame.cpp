@@ -1263,6 +1263,13 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
+PRBool
+nsHTMLFramesetFrame::IsLeaf() const
+{
+  // We handle constructing our kids manually
+  return PR_TRUE;
+}
+
 PRBool 
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {

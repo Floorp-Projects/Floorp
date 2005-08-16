@@ -1086,6 +1086,17 @@ public:
   virtual PRBool IsFloatContainingBlock() const { return PR_FALSE; }
 
   /**
+   * Is this a leaf frame?  Frames that want the frame constructor to be able
+   * to construct kids for them should return false, all others should return
+   * true.  Note that returning true here does not mean that the frame _can't_
+   * have kids.  It could still have kids created via
+   * nsIAnonymousContentCreator.  Returning true indicates that "normal"
+   * (non-anonymous, XBL-bound, CSS generated content, etc) children should not
+   * be constructed.
+   */
+  virtual PRBool IsLeaf() const;
+
+  /**
    * Does this frame want to capture the mouse when the user clicks in
    * it or its children? If so, return the view which should be
    * targeted for mouse capture. The view need not be this frame's view,
