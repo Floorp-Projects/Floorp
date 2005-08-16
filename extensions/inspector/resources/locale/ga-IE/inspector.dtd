@@ -1,0 +1,52 @@
+<!ENTITY Inspector.title "Scrúdaitheoir DOM">
+<!ENTITY thDOMNodes.label "Nóid DOM">
+<!ENTITY btnInspect.label "Scrúdaigh">
+<!ENTITY bxDocPanel.title "Cáipéis">
+<!ENTITY bxObjectPanel.title "Réad">
+<!ENTITY btnSelecting.tooltip "Cuardaigh nód le scrúdú trí ghliogáil air">
+<!ENTITY btnFind.tooltip "Cuardaigh nód le scrúdú de réir aitheantais, clibe, nó aitreabúide">
+<!-- MAIN MENU ITEMS -->
+<!ENTITY mnFile.label "Comhad">
+<!ENTITY mnWindows.label "Scrúdaigh Fuinneog">
+<!ENTITY mnWindows.accesskey "F">
+<!ENTITY mnFile.accesskey "C">
+<!ENTITY cmdShowOpenURLDialog.label "Scrúdaigh URL...">
+<!ENTITY cmdShowOpenURLDialog.accesskey "U">
+<!ENTITY cmdClose.label "Dún">
+<!ENTITY cmdClose.accesskey "D">
+<!ENTITY cmdExit.label "Scoir">
+<!ENTITY cmdExit.accesskey "S">
+<!ENTITY mnEdit.label "Eagar">
+<!ENTITY mnEdit.accesskey "E">
+<!ENTITY cmdUndo.label "Cealaigh">
+<!ENTITY cmdUndo.accesskey "l">
+<!ENTITY cmdRedo.label "Athfheidhmigh">
+<!ENTITY cmdRedo.accesskey "f">
+<!ENTITY cmdCut.label "Gearr">
+<!ENTITY cmdCut.accesskey "G">
+<!ENTITY cmdCopy.label "Cóipeáil">
+<!ENTITY cmdCopy.accesskey "C">
+<!ENTITY cmdPaste.label "Greamaigh">
+<!ENTITY cmdPaste.accesskey "r">
+<!ENTITY cmdDelete.label "Dealaigh">
+<!ENTITY cmdDelete.accesskey "D">
+<!ENTITY mnSearch.label "Cuardaigh">
+<!ENTITY mnSearch.accesskey "u">
+<!ENTITY mnSearchPlugins.label "Eisínteachtaí">
+<!ENTITY mnSearchPlugins.accesskey "E">
+<!ENTITY cmdRunSearch.label "Rith...">
+<!ENTITY cmdRunSearch.accesskey "R">
+<!ENTITY mnView.label "Amharc">
+<!ENTITY mnView.accesskey "A">
+<!ENTITY cmdToggleBrowser.label "Brabhsálaí">
+<!ENTITY cmdToggleSearch.label "Torthaí Cuardaigh">
+<!ENTITY cmdViewSearchItem.label "Amharc...">
+<!ENTITY cmdEditSearchItem.label "Eagar...">
+<!ENTITY cmdCopySearchItemLine.label "Cóipeáil Líne">
+<!ENTITY cmdCopySearchItemAll.label "Cóipeáil Gach Rud">
+<!ENTITY cmdSaveSearchItemText.label "Sábháil...">
+<!ENTITY cmdClearSearch.label "Bánaigh">
+<!ENTITY cmdHideSearchItems.label "Folaigh">
+<!ENTITY browserPanel.label "Brabhsálaí">
+<!ENTITY inspectNewWindow.label "Scrúdaigh i bhFuinneog Nua">
+<!ENTITY closeCmd.key "D">
