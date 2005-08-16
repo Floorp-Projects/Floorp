@@ -98,7 +98,7 @@ public class MessagePanel extends GeneralPanel
     fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
 
     try {
-      fTextArea.setPage("/start.html");
+      fTextArea.setPage(getClass().getResource("/start.html"));
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
