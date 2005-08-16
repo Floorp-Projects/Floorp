@@ -974,8 +974,17 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
                              PRInt32      aModType)
 {
   // If the parent of the changing content node is our map then update
-  // the map.
-  MaybeUpdateAreas(aContent->GetParent());
+  // the map.  But only do this if the node is an HTML <area> or <a>
+  // and the attribute that's changing is "shape" or "coords" -- those
+  // are the only cases we care about.
+  if (aContent->IsContentOfType(nsIContent::eHTML) &&
+      (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::area) ||
+       aContent->GetNodeInfo()->Equals(nsHTMLAtoms::a)) &&
+      aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsHTMLAtoms::shape ||
+       aAttribute == nsHTMLAtoms::coords)) {
+    MaybeUpdateAreas(aContent->GetParent());
+  }
 }
 
 void
