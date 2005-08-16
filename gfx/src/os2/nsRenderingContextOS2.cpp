@@ -1464,7 +1464,7 @@ struct BreakGetTextDimensionsData {
   // Remember the fonts that we use so that we can deal with
   // line-breaking in-between fonts later. mOffsets[0] is also used
   // to initialize the current offset from where to start measuring
-  nsVoidArray* mFonts;   // OUT
+  nsVoidArray* mFonts;   // IN/OUT
   nsVoidArray* mOffsets; // IN/OUT
 };
 
@@ -1500,10 +1500,10 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
   PRInt32 numCharsFit = data->mNumCharsFit;
   nscoord width = data->mWidth;
   PRInt32 start = (PRInt32)(aSubstring - pstr);
-  PRInt32 i = start + aSubstringLength;
+  PRInt32 end = start + aSubstringLength;
   PRBool allDone = PR_FALSE;
 
-  while (start < i) {
+  while (start < end) {
     // Estimate how many characters will fit. Do that by dividing the
     // available space by the average character width
     PRInt32 estimatedNumChars = data->mEstimatedNumChars;
@@ -1523,9 +1523,9 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 
     // Avoid scanning the break array in the case where we think all
     // the text should fit
-    if (i <= estimatedBreakOffset) {
+    if (end <= estimatedBreakOffset) {
       // Everything should fit
-      numChars = i - start;
+      numChars = end - start;
     }
     else {
       // Find the nearest place to break that is less than or equal to
@@ -1545,20 +1545,20 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
       if (start < data->mBreaks[breakIndex]) {
         // The text crosses at least one segment boundary so measure to the
         // break point just before the estimated break offset
-        numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+        numChars = PR_MIN(data->mBreaks[breakIndex], end) - start;
       } 
       else {
         // See whether there is another segment boundary between this one
         // and the end of the text
-        if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < i)) {
+        if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < end)) {
           ++breakIndex;
-          numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+          numChars = PR_MIN(data->mBreaks[breakIndex], end) - start;
         }
         else {
-          NS_ASSERTION(i != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
+          NS_ASSERTION(end != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
 
           // The text is all within the same segment
-          numChars = i - start;
+          numChars = end - start;
 
           // Remember we're in the middle of a segment and not between
           // two segments
@@ -1622,17 +1622,15 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 
       // We can't just revert to the previous break state. Find the break
       // index just before the end of the text
-      i = start + numChars;
-      if (breakIndex == -1) {
-        breakIndex = 0;
-        if (data->mBreaks[breakIndex] < i) {
-          while ((breakIndex + 1 < data->mNumBreaks) && (data->mBreaks[breakIndex + 1] < i)) {
-            ++breakIndex;
-          }
+      end = start + numChars;
+      breakIndex = 0;
+      if (data->mBreaks[breakIndex] < end) {
+        while ((breakIndex + 1 < data->mNumBreaks) && (data->mBreaks[breakIndex + 1] < end)) {
+          ++breakIndex;
         }
       }
 
-      if ((0 == breakIndex) && (i <= data->mBreaks[0])) {
+      if ((0 == breakIndex) && (end <= data->mBreaks[0])) {
         // There's no place to back up to, so even though the text doesn't fit
         // return it anyway
         numCharsFit += numChars;
@@ -1661,21 +1659,54 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
       // all the way back to the first word
       width += twWidth;
       while ((breakIndex >= 0) && (width > data->mAvailWidth)) {
-        twWidth = 0;
         start = data->mBreaks[breakIndex];
-        numChars = i - start;
+        numChars = end - start;
+        numCharsFit = start;
         if ((1 == numChars) && (pstr[start] == ' ')) {
-          twWidth = data->mSpaceWidth;
+          width -= data->mSpaceWidth;
         }
-        else if (numChars > 0) {
+        else if (pstr + start >= aSubstring) {
+          // The entire fragment to chop is within the current font.
           pxWidth = font->GetWidth(data->mPS, &pstr[start], numChars);
-          twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+          width -= NSToCoordRound(float(pxWidth) * data->mP2T);
+        }
+        else {
+          // The fragment that we want to chop extends back into previous fonts.
+          // We need to reverse into previous fonts. Fortunately,
+          // data->mFonts[] and data->mOffsets[] tell us which fonts are used
+          // and when. 
+          end = data->mNumCharsFit; // same as aSubstring - pstr
+          data->mNumCharsFit = numCharsFit; // has got shorter...
+          PRInt32 k = data->mFonts->Count() - 1;
+          for ( ; k >= 0 && start < end; --k, end -= numChars) {
+            font = (nsFontOS2*)data->mFonts->ElementAt(k);
+            const PRUnichar* ps = (const PRUnichar*)data->mOffsets->ElementAt(k);
+            if (ps < pstr + start)
+              ps = pstr + start;
+
+            numChars = pstr + end - ps;
+            NS_ASSERTION(numChars > 0, "empty string");
+
+            data->mFont = font;
+            data->mSurface->SelectFont(data->mFont);
+            pxWidth = font->GetWidth(data->mPS, ps, numChars);
+            data->mWidth -= NSToCoordRound(float(pxWidth) * data->mP2T);
+
+            // By construction, mFonts[k] is the last font, and
+            // mOffsets[k+1] is the last offset.
+            data->mFonts->RemoveElementAt(k);
+            data->mOffsets->RemoveElementAt(k+1);
+          }
+
+          // We are done, update the data now because we won't do it later.
+          // The |if (data->mNumCharsFit != numCharsFit)| won't apply below
+          data->mFonts->AppendElement(fontWin);
+          data->mOffsets->AppendElement((void*)&pstr[numCharsFit]);
+          break;
         }
 
-        width -= twWidth;
-        numCharsFit = start;
         --breakIndex;
-        i = start;
+        end = start;
       }
     }
 
@@ -1683,7 +1714,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
   }
 
 #ifdef DEBUG_rbs
-  NS_ASSERTION(allDone || start == i, "internal error");
+  NS_ASSERTION(allDone || start == end, "internal error");
   NS_ASSERTION(allDone || data->mNumCharsFit != numCharsFit, "internal error");
 #endif /* DEBUG_rbs */
 
