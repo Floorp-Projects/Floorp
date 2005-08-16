@@ -45,23 +45,28 @@
 #define MG_2DIDENTITY     0
 #define MG_2DTRANSLATION  1
 #define MG_2DSCALE        2
-#define MG_2DGENERAL      4
 
 class NS_GFX nsTransform2D
 {
 private:
-  //accelerators
+ /**
+  * This represents the following matrix (note that the order of row/column
+  * indices is opposite to usual notation)
+  *
+  *      / m00   0   m20  \
+  * M =  |  0   m11  m21  |
+  *      \  0    0    1   /
+  *
+  * Transformation of a coordinate (x, y) is obtained by setting
+  * v = (x, y, 1)^T and evaluating  M . v
+  **/
 
-  float     m00, m01, m10, m11, m20, m21;
+  float     m00, m11, m20, m21;
   PRUint16  type;
 
 public:
-  //constructors
-
   nsTransform2D(void)                         { SetToIdentity(); }
   nsTransform2D(nsTransform2D *aTransform2D)  { SetMatrix(aTransform2D); }
-
-  //destructor
 
   ~nsTransform2D(void)                        { }
 
@@ -84,7 +89,7 @@ public:
   * @author     michaelp   09-25-97 1:56pm
   **/
 
-  void SetToIdentity(void)                    { m01 = m10 = m20 = m21 = 0.0f; m00 = m11 = 1.0f; type = MG_2DIDENTITY; }
+  void SetToIdentity(void)                    { m20 = m21 = 0.0f; m00 = m11 = 1.0f; type = MG_2DIDENTITY; }
 
  /**
   * set this transform to a scale
@@ -95,7 +100,8 @@ public:
   * @author     michaelp   09-25-97 1:56pm
   **/
 
-  void SetToScale(float sx, float sy);
+  void SetToScale(float sx, float sy)        { m00 = sx; m11 = sy; m20 = m21 = 0.0f; type = MG_2DSCALE; }
+  
 
  /**
   * set this transform to a translation
@@ -106,7 +112,8 @@ public:
   * @author     michaelp   09-25-97 1:56pm
   **/
 
-  void SetToTranslate(float tx, float ty);
+  void SetToTranslate(float tx, float ty)    { m00 = m11 = 1.0f; m20 = tx; m21 = ty; type = MG_2DTRANSLATION; }
+  
 
  /**
   * get the translation portion of this transform
