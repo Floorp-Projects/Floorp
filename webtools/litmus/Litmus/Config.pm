@@ -30,4 +30,7 @@ our $version = "0.0.1";
 # if true, then Litmus will not accept any requests
 our $disabled = 0;
 
+our $user_cookiename = "litmus_newlogincookie";
+our $sysconfig_cookiename = "litmus_sysconfig";
+
 1;
