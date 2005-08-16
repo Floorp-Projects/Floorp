@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpi.c,v 1.42 2004/04/27 23:04:36 gerv%gerv.net Exp $ */
+/* $Id: mpi.c,v 1.43 2005/08/16 19:25:48 saul.edwards%sun.com Exp $ */
 
 #include "mpi-priv.h"
 #if defined(OSF1)
@@ -844,6 +844,27 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
   if((res = s_mp_pad(c, USED(a) + USED(b))) != MP_OKAY)
     goto CLEANUP;
 
+#ifdef NSS_USE_COMBA
+  if ((MP_USED(a) == MP_USED(b)) && IS_POWER_OF_2(MP_USED(b))) {
+      if (MP_USED(a) == 4) {
+          s_mp_mul_comba_4(a, b, c);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 8) {
+          s_mp_mul_comba_8(a, b, c);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 16) {
+          s_mp_mul_comba_16(a, b, c);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 32) {
+          s_mp_mul_comba_32(a, b, c);
+          goto CLEANUP;
+      } 
+  }
+#endif
+
   pb = MP_DIGITS(b);
   s_mpv_mul_d(MP_DIGITS(a), MP_USED(a), *pb++, MP_DIGITS(c));
 
@@ -913,6 +934,27 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
   } 
   MP_USED(sqr) = ix;
   MP_DIGIT(sqr, 0) = 0;
+
+#ifdef NSS_USE_COMBA
+  if (IS_POWER_OF_2(MP_USED(a))) {
+      if (MP_USED(a) == 4) {
+          s_mp_sqr_comba_4(a, sqr);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 8) {
+          s_mp_sqr_comba_8(a, sqr);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 16) {
+          s_mp_sqr_comba_16(a, sqr);
+          goto CLEANUP;
+      }
+      if (MP_USED(a) == 32) {
+          s_mp_sqr_comba_32(a, sqr);
+          goto CLEANUP;
+      } 
+  }
+#endif
 
   pa = MP_DIGITS(a);
   count = MP_USED(a) - 1;
