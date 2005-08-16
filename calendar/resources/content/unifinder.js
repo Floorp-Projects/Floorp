@@ -48,6 +48,7 @@
 *   improve this to make it usable in general.
 */
 const UnifinderTreeName = "unifinder-search-results-listbox";
+const kEventStatusOrder = ["TENTATIVE", "CONFIRMED", "CANCELLED"];
 
 var gCalendarEventTreeClicked = false; //set this to true when the calendar event tree is clicked
                                        //to allow for multiple selection
@@ -505,7 +506,8 @@ function compareEvents( eventA, eventB )
                              eventB.getProperty("LOCATION")) * modifier;
    
       case "unifinder-search-results-tree-col-status":
-         return compareString(eventA.status, eventB.status) * modifier;
+        return compareNumber(kEventStatusOrder.indexOf(eventA.status),
+                             kEventStatusOrder.indexOf(eventB.status)) * modifier;
 
       case "unifinder-search-results-tree-col-calendarname":
         return compareString(eventA.calendar.name, eventB.calendar.name) * modifier;
