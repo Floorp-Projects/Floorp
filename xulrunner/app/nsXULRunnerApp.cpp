@@ -187,24 +187,25 @@ static int LoadAppData(const char* appDataFile, nsXREAppData* aResult,
   PRUint32 i;
 
   // Read string-valued fields
-  const struct {
+  const struct
+  {
     const char *key;
     const char **fill;
-    nsCString  &buf;
+    nsCString  *buf;
     PRBool      required;
   } string_fields[] = {
-    { "Vendor",    &aResult->vendor,    vendor,    PR_FALSE },
-    { "Name",      &aResult->name,      name,      PR_TRUE  },
-    { "Version",   &aResult->version,   version,   PR_FALSE },
-    { "BuildID",   &aResult->buildID,   buildID,   PR_TRUE  },
-    { "ID",        &aResult->ID,        appID,     PR_FALSE },
-    { "Copyright", &aResult->copyright, copyright, PR_FALSE }
+    { "Vendor",    &aResult->vendor,    &vendor,    PR_FALSE },
+    { "Name",      &aResult->name,      &name,      PR_TRUE  },
+    { "Version",   &aResult->version,   &version,   PR_FALSE },
+    { "BuildID",   &aResult->buildID,   &buildID,   PR_TRUE  },
+    { "ID",        &aResult->ID,        &appID,     PR_FALSE },
+    { "Copyright", &aResult->copyright, &copyright, PR_FALSE }
   };
   for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
     rv = parser.GetString("App", string_fields[i].key,
-                          string_fields[i].buf);
+                          *string_fields[i].buf);
     if (NS_SUCCEEDED(rv)) {
-      *string_fields[i].fill = string_fields[i].buf.get();
+      *string_fields[i].fill = string_fields[i].buf->get();
     }
     else if (string_fields[i].required) {
       Output(PR_TRUE, "Error: %x: No \"%s\" field.\n",
