@@ -8110,6 +8110,9 @@ nsDocShell::SetHasFocus(PRBool aHasFocus)
 NS_IMETHODIMP
 nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
 {
+  if (mEditorData && mEditorData->GetEditable())
+    return NS_ERROR_NOT_AVAILABLE;
+
   nsCOMPtr<nsIPresShell> presShell;
   GetPresShell(getter_AddRefs(presShell));
   if (!presShell) return NS_ERROR_FAILURE;
