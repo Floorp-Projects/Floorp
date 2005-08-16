@@ -460,7 +460,7 @@ var treeView =
             return( calendarEvent.categories );
          
          case "unifinder-search-results-tree-col-location":
-            return( calendarEvent.location );
+            return( calendarEvent.getProperty("LOCATION") );
          
          case "unifinder-search-results-tree-col-status":
             return getEventStatusString(calendarEvent);
@@ -501,13 +501,14 @@ function compareEvents( eventA, eventB )
          return compareString(eventA.categories, eventB.categories) * modifier;
    
       case "unifinder-search-results-tree-col-location":
-         return compareString(eventA.location, eventB.location) * modifier;
+        return compareString(eventA.getProperty("LOCATION"),
+                             eventB.getProperty("LOCATION")) * modifier;
    
       case "unifinder-search-results-tree-col-status":
          return compareString(eventA.status, eventB.status) * modifier;
 
       case "unifinder-search-results-tree-col-calendarname":
-        return compareString(eventA.parent.name, eventB.parent.name) * modifier;
+        return compareString(eventA.calendar.name, eventB.calendar.name) * modifier;
 
       default:
          return 0;
