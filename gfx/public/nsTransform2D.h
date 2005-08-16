@@ -74,7 +74,7 @@ public:
   * @author     michaelp   09-25-97 1:56pm
   **/
 
-  PRUint16 GetType(void)                      { return type; }
+  PRUint16 GetType(void) const                { return type; }
 
  /**
   * set this transform to identity
@@ -116,8 +116,8 @@ public:
   * @author     michaelp   09-25-97 1:56pm
   **/
 
-  void GetTranslation(float *ptX, float *ptY) { *ptX = m20; *ptY = m21; }
-  void GetTranslationCoord(nscoord *ptX, nscoord *ptY) { *ptX = NSToCoordRound(m20); *ptY = NSToCoordRound(m21); }
+  void GetTranslation(float *ptX, float *ptY) const { *ptX = m20; *ptY = m21; }
+  void GetTranslationCoord(nscoord *ptX, nscoord *ptY) const { *ptX = NSToCoordRound(m20); *ptY = NSToCoordRound(m21); }
 
  /**
   * set the translation portion of this transform
@@ -141,8 +141,8 @@ public:
   * @exception
   **/
 
-  float GetXTranslation(void)                 { return m20; }
-  nscoord GetXTranslationCoord(void)          { return NSToCoordRound(m20); }
+  float GetXTranslation(void)  const          { return m20; }
+  nscoord GetXTranslationCoord(void) const    { return NSToCoordRound(m20); }
 
  /**
   * get the Y translation portion of this transform
@@ -152,8 +152,8 @@ public:
   * @exception
   **/
 
-  float GetYTranslation(void)               { return m21; }
-  nscoord GetYTranslationCoord(void)        { return NSToCoordRound(m21); }
+  float GetYTranslation(void) const         { return m21; }
+  nscoord GetYTranslationCoord(void) const  { return NSToCoordRound(m21); }
 
  /**
   * set this matrix and type from another Transform2D
@@ -193,8 +193,8 @@ public:
   * @author   michaelp   09-25-97 1:56pm
   **/
 
-  void TransformNoXLate(float *ptX, float *ptY);
-  void TransformNoXLateCoord(nscoord *ptX, nscoord *ptY);
+  void TransformNoXLate(float *ptX, float *ptY) const;
+  void TransformNoXLateCoord(nscoord *ptX, nscoord *ptY) const;
 
  /**
   * apply matrix to vector
@@ -204,8 +204,8 @@ public:
   * @author   michaelp   09-25-97 1:56pm
   **/
 
-  void Transform(float *ptX, float *ptY);
-  void TransformCoord(nscoord *ptX, nscoord *ptY);
+  void Transform(float *ptX, float *ptY) const;
+  void TransformCoord(nscoord *ptX, nscoord *ptY) const;
 
  /**
   * apply matrix to rect
@@ -215,8 +215,8 @@ public:
   * @author   michaelp   09-25-97 1:56pm
   **/
 
-  void Transform(float *aX, float *aY, float *aWidth, float *aHeight);
-  void TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight);
+  void Transform(float *aX, float *aY, float *aWidth, float *aHeight) const;
+  void TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight) const;
 
   /**
    * Scale an array of X/Y coordinates by the X/Y scale factor in the
@@ -226,8 +226,8 @@ public:
    * @param aDst Base of coordinate output array
    * @param aNumCoords Number of coordinates to scale
    */
-  void ScaleXCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst);
-  void ScaleYCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst);
+  void ScaleXCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst) const;
+  void ScaleYCoords(const nscoord* aSrc, PRUint32 aNumCoords, PRIntn* aDst) const;
 
  /**
   * add a translation to a Transform via x, y pair
