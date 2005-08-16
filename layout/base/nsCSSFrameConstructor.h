@@ -103,7 +103,6 @@ public:
                            PRInt32         aNewIndexInContainer);
 
   nsresult ContentInserted(nsIContent*            aContainer,
-                           nsIFrame*              aContainerFrame,
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState,
