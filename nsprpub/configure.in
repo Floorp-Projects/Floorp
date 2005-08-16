@@ -655,10 +655,6 @@ OS_2)
     OS_ARCH=OS2
     OS_TARGET=OS2
     ;;
-WINCE)
-    OS_ARCH=WINCE
-    OS_TARGET=WINCE
-    ;;
 esac
 
 #
@@ -695,13 +691,10 @@ Windows_NT)
         CPU_ARCH=x86
     fi
     ;;
-CYGWIN32_NT|CYGWIN_NT*|MINGW*_NT*)
+CYGWIN_NT*|MINGW*_NT*)
 #
 # If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
 # the uname.exe in the Cygwin tools.
-# Prior to the Beta 20 release, Cygwin was called GNU-Win32.
-# If uname -s returns "CYGWIN32/NT", we assume that we are using
-# the uname.exe in the GNU-Win32 tools.
 # If uname -s returns MINGW32_NT-5.1, we assume that we are using
 # the uname.exe in the MSYS tools.
 #
