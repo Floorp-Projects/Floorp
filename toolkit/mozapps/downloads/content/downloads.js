@@ -550,6 +550,9 @@ function Startup()
   gDownloadsView.builder.rebuild();
   
   gDownloadsView.focus();
+  
+  // downloads can finish before Startup() does, so check if the window should close
+  autoClose();
 }
 
 function Shutdown() 
