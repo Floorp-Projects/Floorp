@@ -2469,7 +2469,7 @@ void nsComboboxControlFrame::FireValueChangeEvent()
   mContent->GetListenerManager(getter_AddRefs(manager));
   nsPresContext* presContext = GetPresContext();
   if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_CSTRING("Events"), getter_AddRefs(event)))) {
+      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
 
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
