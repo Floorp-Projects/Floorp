@@ -262,7 +262,7 @@ void nsTransform2D :: PreConcatenate(nsTransform2D *newxform)
   type |= newxform->type;
 }
 
-void nsTransform2D :: TransformNoXLate(float *ptX, float *ptY)
+void nsTransform2D :: TransformNoXLate(float *ptX, float *ptY) const
 {
   float x, y;
 
@@ -288,7 +288,7 @@ void nsTransform2D :: TransformNoXLate(float *ptX, float *ptY)
   }
 }
 
-void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY)
+void nsTransform2D :: TransformNoXLateCoord(nscoord *ptX, nscoord *ptY) const
 {
   float x, y;
 
@@ -321,7 +321,7 @@ inline PRIntn NSToIntNFloor(float aValue)
 
 void nsTransform2D :: ScaleXCoords(const nscoord* aSrc,
                                    PRUint32 aNumCoords,
-                                   PRIntn* aDst)
+                                   PRIntn* aDst) const
 {
 const nscoord* end = aSrc + aNumCoords;
 
@@ -340,7 +340,7 @@ const nscoord* end = aSrc + aNumCoords;
 
 void nsTransform2D :: ScaleYCoords(const nscoord* aSrc,
                                    PRUint32 aNumCoords,
-                                   PRIntn* aDst)
+                                   PRIntn* aDst) const
 {
 const nscoord* end = aSrc + aNumCoords;
 
@@ -358,7 +358,7 @@ const nscoord* end = aSrc + aNumCoords;
 }
   
 
-void nsTransform2D :: Transform(float *ptX, float *ptY)
+void nsTransform2D :: Transform(float *ptX, float *ptY) const
 {
   float x, y;
 
@@ -403,7 +403,7 @@ void nsTransform2D :: Transform(float *ptX, float *ptY)
   }
 }
 
-void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
+void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY) const
 {
   float x, y;
 
@@ -448,7 +448,7 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
   }
 }
 
-void nsTransform2D :: Transform(float *aX, float *aY, float *aWidth, float *aHeight)
+void nsTransform2D :: Transform(float *aX, float *aY, float *aWidth, float *aHeight) const
 {
   float x, y;
 
@@ -509,7 +509,7 @@ void nsTransform2D :: Transform(float *aX, float *aY, float *aWidth, float *aHei
   }
 }
 
-void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight)
+void nsTransform2D :: TransformCoord(nscoord *aX, nscoord *aY, nscoord *aWidth, nscoord *aHeight) const
 {
   nscoord x2 = *aX + *aWidth;
   nscoord y2 = *aY + *aHeight;
