@@ -257,7 +257,19 @@ typedef struct mozce_OUTLINETEXTMETRIC
   PSTR   otmpStyleName; 
   PSTR   otmpFullName; 
 } mozce_OUTLINETEXTMETRIC;
- 
+
+
+typedef struct _WINDOWPLACEMENT {
+    UINT  length;
+    UINT  flags;
+    UINT  showCmd;
+    POINT ptMinPosition;
+    POINT ptMaxPosition;
+    RECT  rcNormalPosition;
+} WINDOWPLACEMENT;
+typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
+
+#define SW_SHOWMINIMIZED 2 
 #define GGO_METRICS 0
 #define GGO_GLYPH_INDEX 1
 

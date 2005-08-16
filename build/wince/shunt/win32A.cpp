@@ -1170,19 +1170,6 @@ MOZCE_SHUNT_API BOOL mozce_GetVersionExA(LPOSVERSIONINFOA lpv)
     return TRUE;
 }
 
-MOZCE_SHUNT_API BOOL mozce_PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
-{
-    MOZCE_PRECHECK
-
-#ifdef LOUD_PEEKMESSAGE
-#ifdef DEBUG
-    mozce_printf("mozce_PeekMessageA called\n");
-#endif
-#endif
-
-    return PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-}
-
 
 MOZCE_SHUNT_API LRESULT mozce_DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
