@@ -8421,7 +8421,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
           nsIContent* item = nsCOMPtr<nsIContent>(*iter);
           if (item == child)
             // Call ContentInserted with this index.
-            ContentInserted(aContainer, nsnull, child,
+            ContentInserted(aContainer, child,
                             iter.index(), mTempFrameTreeState, PR_FALSE);
         }
       }
@@ -8934,7 +8934,6 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
 
 nsresult
 nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
-                                       nsIFrame*              aContainerFrame,
                                        nsIContent*            aChild,
                                        PRInt32                aIndexInContainer,
                                        nsILayoutHistoryState* aFrameState,
@@ -9021,13 +9020,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   }
 
   // Otherwise, we've got parent content. Find its frame.
-  nsIFrame* parentFrame = aContainerFrame;
-  if (!parentFrame) {
-    parentFrame = GetFrameFor(aContainer);
-    if (! parentFrame)
-      return NS_OK; // XXXwaterson will this break selects? (See ``Here
+  nsIFrame* parentFrame = GetFrameFor(aContainer);
+  if (! parentFrame)
+    return NS_OK; // XXXwaterson will this break selects? (See ``Here
     // we have been notified...'' below.)
-  }
 
   // See if we have an XBL insertion point. If so, then that's our
   // real parent frame; if not, then the frame hasn't been built yet
@@ -9360,7 +9356,7 @@ nsCSSFrameConstructor::ReinsertContent(nsIContent*     aContainer,
   nsresult res = ContentRemoved(aContainer, aChild, ix, PR_TRUE);
 
   if (NS_SUCCEEDED(res)) {
-    res = ContentInserted(aContainer, nsnull, aChild, ix, nsnull, PR_TRUE);
+    res = ContentInserted(aContainer, aChild, ix, nsnull, PR_TRUE);
   }
 
   return res;
@@ -11673,19 +11669,6 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     // ask them to save their state onto a temporary state object.
     CaptureStateForFramesOf(aContent, mTempFrameTreeState);
 
-    // Save parent frame because this frame is going away.  But if
-    // this is an out-of-flow, we want to get the _placeholder_'s
-    // parent.
-    nsIFrame* parent = nsnull;
-    if (frame) {
-      if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-        mPresShell->GetPlaceholderFrameFor(frame, &frame);
-        NS_ASSERTION(frame, "Out-of-flow with no placeholder?");
-      }
-
-      frame = frame->GetParent();
-    }
-
     // Remove the frames associated with the content object on which
     // the attribute change occurred.
     rv = ContentRemoved(container, aContent, indexInContainer,
@@ -11693,7 +11676,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
 
     if (NS_SUCCEEDED(rv)) {
       // Now, recreate the frames associated with this content object.
-      rv = ContentInserted(container, parent, aContent,
+      rv = ContentInserted(container, aContent,
                            indexInContainer, mTempFrameTreeState, PR_FALSE);
     }
   } else {

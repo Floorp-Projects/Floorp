@@ -2823,7 +2823,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     // Have the style sheet processor construct frame for the root
     // content object down
-    mFrameConstructor->ContentInserted(nsnull, nsnull, root, 0,
+    mFrameConstructor->ContentInserted(nsnull, root, 0,
                                        nsnull, PR_FALSE);
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
@@ -5486,7 +5486,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   }
   
   WillCauseReflow();
-  mFrameConstructor->ContentInserted(aContainer, nsnull, aChild,
+  mFrameConstructor->ContentInserted(aContainer, aChild,
                                      aIndexInContainer, nsnull, PR_FALSE);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
