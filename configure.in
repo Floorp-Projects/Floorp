@@ -358,12 +358,12 @@ case "$target" in
         AC_LANG_RESTORE
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep ' [0-9]\+\.[0-9]\+\.[0-9]' | sed -e 's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*|\1|'`
+        CC_VERSION=`"${CC}" -v 2>&1 | grep ' @<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@' | sed -e 's|.* \(@<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@\+\).*|\1|'`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | grep ' [0-9]\+\.[0-9]\+\.[0-9]' | sed -e 's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*|\1|'`
+        CXX_VERSION=`"${CXX}" -v 2>&1 | grep ' @<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@' | sed -e 's|.* \(@<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@\+\).*|\1|'`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
@@ -380,7 +380,7 @@ case "$target" in
         fi
 
         # Check linker version
-        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep ' [0-9]\+\.[0-9]\+\.[0-9]' | sed -e 's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*|\1|'`
+        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep ' @<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@' | sed -e 's|.* \(@<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@\+\).*|\1|'`
         _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
@@ -388,7 +388,7 @@ case "$target" in
         INCREMENTAL_LINKER=1
 
         # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep ' [0-9]\+\.[0-9]\+\.[0-9]' | sed -e 's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*|\1|'`
+        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep ' @<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@' | sed -e 's|.* \(@<:@0-9@:>@\+\.@<:@0-9@:>@\+\.@<:@0-9@:>@\+\).*|\1|'`
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
