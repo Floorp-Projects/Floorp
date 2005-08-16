@@ -3857,12 +3857,8 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // check and return.
 
       nsGlobalWindow *frameWin = (nsGlobalWindow *)frame.get();
-      nsGlobalWindow *frameInnerWin =
-        frameWin->GetCurrentInnerWindowInternal();
 
-      NS_ASSERTION(frameInnerWin, "No inner window in frame window!");
-
-      rv = WrapNative(cx, frameInnerWin->GetGlobalJSObject(), frame,
+      rv = WrapNative(cx, frameWin->GetGlobalJSObject(), frame,
                       NS_GET_IID(nsIDOMWindow), vp);
     }
 
