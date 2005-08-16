@@ -1700,7 +1700,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 
           // We are done, update the data now because we won't do it later.
           // The |if (data->mNumCharsFit != numCharsFit)| won't apply below
-          data->mFonts->AppendElement(fontWin);
+          data->mFonts->AppendElement(font);
           data->mOffsets->AppendElement((void*)&pstr[numCharsFit]);
           break;
         }
