@@ -45,12 +45,6 @@
  	border:1px solid black;
 }
 
-
-window {
-    width: 240px;
-    height: 320px;
-}
-
 #urlbar {
 	padding:1px;
 }
@@ -102,3 +96,4 @@ toolbar *, #appcontent * {
   {
 	  list-style-image      : url("chrome://minimo/skin/reload.gif");
   }
+

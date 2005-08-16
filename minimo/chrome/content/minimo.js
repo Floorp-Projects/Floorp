@@ -44,6 +44,7 @@ var gBrowserStatusHandlerArray=new Array();
 var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
+var gFullScreen=false;
 
 function nsBrowserStatusHandler()
 {
@@ -357,4 +358,13 @@ function BrowserPopupShowing () {
     document.getElementById("item_call").setAttribute("oncommand","BrowserTestSendCall("+selectedRange+")");
 }
 
+
+function DoFullScreen()
+{
+  gFullScreen = !gFullScreen;
+  
+  document.getElementById("nav-bar").hidden = gFullScreen;
+  getBrowser().setStripVisibilityTo(!gFullScreen);
+  window.fullScreen = gFullScreen;  
+}
 

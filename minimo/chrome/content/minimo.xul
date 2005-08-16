@@ -73,9 +73,7 @@
 	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
 	
     <toolbar id="nav-bar">
-
        <menubar  class="chromeclass-menubar">
-       
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="new Tab"  /> 
@@ -118,7 +116,7 @@
 <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
 	   <menuitem  id="item_call" insertbefore="context-sep-view" label="" oncommand=""/>
-	   <menuitem  id="item_test" label="Context Menu" oncommand=""/>
+	   <menuitem  id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
 	</popup>
 	 <popup id="menu_FilePopup">
              <menuitem id="menu_close"/>
