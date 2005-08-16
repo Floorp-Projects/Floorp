@@ -110,7 +110,6 @@ nsFormControlFrame::nsFormControlFrame()
   mDidInit        = PR_FALSE;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
-  mPresContext    = nsnull;
 
   // Reflow Optimization
   mCacheSize.width             = kSizeNotSet;
@@ -531,7 +530,6 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (!mDidInit) {
-    mPresContext = aPresContext;
     InitializeControl(aPresContext);
     mDidInit = PR_TRUE;
   }

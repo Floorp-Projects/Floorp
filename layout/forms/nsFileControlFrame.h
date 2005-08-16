@@ -65,7 +65,6 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow) {
-    mPresContext = aPresContext;
     return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   }
 
@@ -192,11 +191,6 @@ protected:
    * file frame is there but the input frame is not.
    */
   nsString*           mCachedState;
-  /**
-   * The current pres context.
-   * XXX Hack: pres context needed by function MouseClick() and SetFocus()
-   */
-  nsPresContext*     mPresContext;  // weak reference
 
 private:
   /**

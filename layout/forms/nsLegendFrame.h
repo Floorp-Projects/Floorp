@@ -55,9 +55,6 @@ struct nsRect;
 class nsLegendFrame : public nsAreaFrame {
 public:
 
-  nsLegendFrame();
-  virtual ~nsLegendFrame();
-
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -80,8 +77,6 @@ public:
 #endif
 
   PRInt32 GetAlign();
-
-  nsPresContext * mPresContext;
 };
 
 

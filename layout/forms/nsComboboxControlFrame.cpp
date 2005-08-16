@@ -322,7 +322,6 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 nsComboboxControlFrame::nsComboboxControlFrame()
   : nsAreaFrame() 
 {
-  mPresContext                 = nsnull;
   mListControlFrame            = nsnull;
   mDroppedDown                 = PR_FALSE;
   mDisplayFrame                = nsnull;
@@ -357,8 +356,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 nsComboboxControlFrame::~nsComboboxControlFrame()
 {
   REFLOW_COUNTER_DUMP("nsCCF");
-
-  NS_IF_RELEASE(mPresContext);
 }
 
 //--------------------------------------------------------------
@@ -404,7 +401,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateHTMLComboboxAccessible(node, mPresContext->PresShell(), aAccessible);
+    return accService->CreateHTMLComboboxAccessible(node, GetPresContext()->PresShell(), aAccessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -420,11 +417,6 @@ nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-   // Need to hold on the pres context because it is used later in methods
-   // which don't have it passed in.
-  mPresContext = aPresContext;
-  NS_ADDREF(mPresContext);
-
   mEventQueueService = do_GetService(kEventQueueServiceCID);
 
   //-------------------------------
@@ -571,7 +563,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
                      NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
 
-  nsIPresShell *shell = mPresContext->GetPresShell();
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
   if (shell) 
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }
@@ -1698,10 +1690,10 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame();
     }
-    ToggleList(mPresContext);
+    ToggleList(GetPresContext());
     return NS_OK;
   } else if (mDroppedDown && !aDoDropDown) {
-    ToggleList(mPresContext);
+    ToggleList(GetPresContext());
     return NS_OK;
   }
 
@@ -1748,8 +1740,8 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   nsRect absoluteTwips;
   nsRect absolutePixels;
 
-  if (NS_SUCCEEDED(nsFormControlFrame::GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, absolutePixels))) {
-    PositionDropdown(mPresContext, GetRect().height, absoluteTwips, absolutePixels);
+  if (NS_SUCCEEDED(nsFormControlFrame::GetAbsoluteFramePosition(GetPresContext(), this,  absoluteTwips, absolutePixels))) {
+    PositionDropdown(GetPresContext(), GetRect().height, absoluteTwips, absolutePixels);
   }
   return NS_OK;
 }
@@ -1758,7 +1750,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
 {
   nsRect absoluteTwips;
-  return nsFormControlFrame::GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, *aRect);
+  return nsFormControlFrame::GetAbsoluteFramePosition(GetPresContext(), this,  absoluteTwips, *aRect);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -2226,7 +2218,7 @@ nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
     }
   }
 
-  nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsFormControlFrame::RegUnRegAccessKey(GetPresContext(), NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   if (mDroppedDown) {
     // Get parent view
@@ -2328,7 +2320,7 @@ nsComboboxControlFrame::Rollup()
   if (mDroppedDown) {
     mListControlFrame->AboutToRollup();
     ShowDropDown(PR_FALSE);
-    mListControlFrame->CaptureMouseEvents(mPresContext, PR_FALSE);
+    mListControlFrame->CaptureMouseEvents(GetPresContext(), PR_FALSE);
   }
   return NS_OK;
 }
@@ -2477,7 +2469,7 @@ void nsComboboxControlFrame::FireValueChangeEvent()
   mContent->GetListenerManager(getter_AddRefs(manager));
   nsPresContext* presContext = GetPresContext();
   if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_CSTRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
 
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));

@@ -198,7 +198,7 @@ void
 nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   nsIFormControlFrame* frame = nsnull;
-  GetInputFrame(mPresContext, &frame);
+  GetInputFrame(GetPresContext(), &frame);
   if (frame) {
     frame->SetFocus(aOn, aRepaint);
   }
@@ -341,7 +341,7 @@ nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
       keyEvent->GetCharCode(&code);
     }
     if (nsIDOMKeyEvent::DOM_VK_RETURN == code) {
-      OnSubmit(mPresContext);
+      OnSubmit(GetPresContext());
       aEvent->PreventDefault(); // XXX Needed?
     }
   }

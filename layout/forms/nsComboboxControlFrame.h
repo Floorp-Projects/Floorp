@@ -262,7 +262,6 @@ protected:
                       PRBool                   aCheckHeight = PR_FALSE);
 
   nsFrameList              mPopupFrames;             // additional named child list
-  nsPresContext*          mPresContext;             // XXX: Remove the need to cache the pres context.
   nsCOMPtr<nsITextContent> mDisplayContent;          // Anonymous content used to display the current selection
   nsIFrame*                mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame

@@ -70,16 +70,6 @@ NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsLegendFrame::nsLegendFrame()
-  : nsAreaFrame()
-{
-  mPresContext    = nsnull;
-}
-
-nsLegendFrame::~nsLegendFrame()
-{
-}
-
 nsIAtom*
 nsLegendFrame::GetType() const
 {
@@ -117,7 +107,6 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsLegendFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   if (eReflowReason_Initial == aReflowState.reason) {
-    mPresContext = aPresContext;
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   } 
   return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
