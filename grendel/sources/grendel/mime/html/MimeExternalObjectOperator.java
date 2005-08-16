@@ -17,7 +17,7 @@
  * Copyright (C) 1997 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Created: Jamie Zawinski <jwz@netscape.com>, 26 Aug 1997.
  */
@@ -26,92 +26,105 @@ package grendel.mime.html;
 
 import grendel.mime.IMimeObject;
 import calypso.util.ByteBuf;
+import grendel.renderer.Attachment;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Enumeration;
+import javax.mail.Message;
+import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 import java.io.PrintStream;
+import javax.mail.Header;
+import javax.mail.Part;
+import javax.mail.internet.MimeBodyPart;
 
 /** This class converts unknown MIME types to HTML representing
-    an "attachment".
-    @see MimeHTMLOperator
+ * an "attachment".
+ * @see MimeHTMLOperator
  */
 
 class MimeExternalObjectOperator extends MimeLeafOperator {
-
-  String part_id;
-
-  MimeExternalObjectOperator(IMimeObject object, PrintStream out) {
-    super(object, out);
-    part_id = object.partID();
-    writeBoxEarly();
-  }
-
-  void writeBoxEarly() {
-    String url = "about:jwz";                   // ####
-    formatAttachmentBox(headers, content_type, part_id, url, null, false);
-  }
-
-  void formatAttachmentBox(InternetHeaders headers, String type,
-                           String link_name, String link_url, String body,
-                           boolean all_headers_p) {
-
-    String icon = "internal-gopher-binary";     // ####
-
-    getOut().print("<CENTER>" +
-                     "<TABLE CELLPADDING=8 CELLSPACING=1 BORDER=1>" +
-                     "<TR><TD NOWRAP>");
-
-//#### Temporarily removed because the current renderer doesn't get it --Edwin
-    if (icon != null) {
-      getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
-                       "<TR><TD NOWRAP VALIGN=CENTER>");
-      if (link_url != null)
-        getOut().print("<A HREF=\"" + link_url + "\">");
-      getOut().print("<IMG SRC=\"" + icon +
-                       "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
-      if (link_url != null) getOut().print("</A>");
-      getOut().print("</TD><TD VALIGN=CENTER>");
+    
+    String part_id;
+    String url;
+    
+    MimeExternalObjectOperator(IMimeObject object, PrintStream out) {
+        super(object, out);
+        part_id = object.partID();
+        writeBoxEarly();
     }
-//#### End of temporarily removed block --Edwin
-
-    if (link_url != null) getOut().print("<A HREF=\"" + link_url + "\">");
-    getOut().print(link_name);
-    if (link_url != null) getOut().print("</A>");
-
+    
+    void writeBoxEarly() {
+        //String url = "attachment://127.0.0.1/test";                   // ####
+        //String url = "file://temp/"+headers.getHeader("Message-Id")+"/"+part_id;                   // ####
+        url = "attachment://"+part_id;
+        formatAttachmentBox(headers, content_type, part_id, url, null, false);
+    }
+    
+    void formatAttachmentBox(InternetHeaders headers, String type,
+            String link_name, String link_url, String body,
+            boolean all_headers_p) {
+        
+        String icon = "internal-gopher-binary";     // ####
+        
+        getOut().print("<CENTER>" +
+                "<TABLE CELLPADDING=8 CELLSPACING=1 BORDER=1>" +
+                "<TR><TD NOWRAP>");
+        
 //#### Temporarily removed because the current renderer doesn't get it --Edwin
-    if (icon != null)
-      getOut().print("</TD></TR></TABLE>");
+        if (icon != null) {
+            getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
+                    "<TR><TD NOWRAP VALIGN=CENTER>");
+            if (link_url != null)
+                getOut().print("<A HREF=\"" + link_url + "\">");
+            getOut().print("<IMG SRC=\"" + icon +
+                    "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
+            if (link_url != null) getOut().print("</A>");
+            getOut().print("</TD><TD VALIGN=CENTER>");
+        }
 //#### End of temporarily removed block --Edwin
-    getOut().print("</TD><TD>");
-
-    if (all_headers_p) {
-
-      FullHeaderFormatter formatter = new FullHeaderFormatter();
-      StringBuffer output = new StringBuffer(200);
-      formatter.formatHeaders(headers, output);
-      getOut().print(output.toString());
-
-    } else {
-      String cde[] = headers.getHeader("Content-Description");
-      String desc = (cde == null || cde.length == 0 ? null : cde[0]);
-      String name = null;
-
-      ByteBuf buf = new ByteBuf(50);
-
-      String cdi[] = headers.getHeader("Content-Disposition");
-      String disp = (cdi == null || cdi.length == 0 ? null : cdi[0]);
+        
+        if (link_url != null) getOut().print("<A HREF=\"" + link_url + "\">");
+        getOut().print(link_name);
+        if (link_url != null) getOut().print("</A>");
+        
+//#### Temporarily removed because the current renderer doesn't get it --Edwin
+        if (icon != null)
+            getOut().print("</TD></TR></TABLE>");
+//#### End of temporarily removed block --Edwin
+        getOut().print("</TD><TD>");
+        
+        if (all_headers_p) {
+            
+            FullHeaderFormatter formatter = new FullHeaderFormatter();
+            StringBuffer output = new StringBuffer(200);
+            formatter.formatHeaders(headers, output);
+            getOut().print(output.toString());
+            
+        } else {
+            String cde[] = headers.getHeader("Content-Description");
+            String desc = (cde == null || cde.length == 0 ? null : cde[0]);
+            String name = null;
+            
+            ByteBuf buf = new ByteBuf(50);
+            
+            String cdi[] = headers.getHeader("Content-Disposition");
+            String disp = (cdi == null || cdi.length == 0 ? null : cdi[0]);
 // ####
-      if (disp != null)
-         name = headers.getHeader("filename", "\n");
-
+            if (disp != null)
+                name = headers.getHeader("filename", "\n");
+            
             if (name == null)
-              if ((type = headers.getHeader("Content-Type", "\n")) != null)
-                  name = headers.getHeader("name", "\n");
-
-      if (name == null) {
-        String n[] = headers.getHeader("Content-Name");
-        if (n != null && n.length != 0)
-          name = n[0];
-      }
-
+                if ((type = headers.getHeader("Content-Type", "\n")) != null)
+                    name = headers.getHeader("name", "\n");
+            
+            if (name == null) {
+                String n[] = headers.getHeader("Content-Name");
+                if (n != null && n.length != 0)
+                    name = n[0];
+            }
+            
 //#### Temporarily removed because the current renderer doesn't get it --Edwin
 //      getOut().print("<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>");
 //
@@ -138,35 +151,74 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
 //
 //      getOut().print("</TABLE>");
 //#### End of temporarily removed block --Edwin
-
+            
 //#### Temporarily inserted to get rendering working --Edwin
-      if (name != null)
-        getOut().print("<B>Name: </B>" + name + "<BR>");
-
-      if (type != null)
-        getOut().print("<B>Type: </B>" + type + "<BR>");
-
-      if (desc != null)
-        getOut().print("<B>Description: </B>" + desc + "<BR>");
+            if (name != null)
+            getOut().print("<B>Name: </B>" + name + "<BR>");
+            
+            if (type != null)
+            getOut().print("<B>Type: </B>" + type + "<BR>");
+            
+            if (desc != null)
+                getOut().print("<B>Description: </B>" + desc + "<BR>");
 //#### End of temporarily inserted block --Edwin
-
-    }
-
-    if (body != null) {
+            
+        }
+        
+        if (body != null) {
 //      getOut().print("<P><PRE>");
-      // #### quote HTML
-      getOut().print(body);
+            // #### quote HTML
+            getOut().print(body);
 //      getOut().print("</PRE>");
+        }
+        
+        getOut().print("</TD></TR></TABLE></CENTER>");
     }
+    
+    
+    //FileOutputStream fos = null;
+    private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    
+    public void pushBytes(ByteBuf b) {
+        /*try {*/
+            /*try {
+                if (fos == null) {
+                    Enumeration en = headers.getAllHeaders();
+                    for (;en.hasMoreElements();) {
+                        Object o = en.nextElement();
+                        System.out.println(o);
+                    }
+                    File f = new File("temp"+File.separator+headers.getHeader("Message-Id"));
+                    f.mkdirs();
+                    fos = new FileOutputStream("temp"+File.separator+headers.getHeader("Message-Id")+File.separator+part_id);
+                }
+                b.write(fos);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }*/
+            
+            baos.write(b.toBytes(),0,b.length());
+            
+        /*} catch (IOException ioe) {
+            ioe.printStackTrace();
+        }*/
+        // Nothing to do with the bytes -- we only use the headers.
+    }
+    
+    public void pushEOF() {
+        try {
+            Part p = new MimeBodyPart(headers,baos.toByteArray());
 
-//    getOut().print("</TD></TR></TABLE></CENTER>");
-  }
-
-
-  public void pushBytes(ByteBuf b) {
-    // Nothing to do with the bytes -- we only use the headers.
-  }
-
-  public void pushEOF() {
-  }
+            /*Enumeration enume = headers.getAllHeaders();
+            while (enume.hasMoreElements()) {
+                Header h = (Header)enume.nextElement();
+                p.setHeader(h.getName(),h.getValue());
+            } */           
+            
+            Attachment a = new Attachment(p,url.toString());
+        } catch (MessagingException ex) {
+            ex.printStackTrace();
+        }
+    }
 }
+

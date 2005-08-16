@@ -3,7 +3,7 @@
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
+ * the License at http://www.mozilla.org/MPL
  *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
@@ -21,54 +21,61 @@
  *               Joel York <yorkjoe@charlie.acc.iit.edu>
  *               Edwin Woudt <edwin@woudt.nl>
  */
-
 package grendel;
-
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
 
 import grendel.prefs.base.UIPrefs;
 
 import grendel.ui.MessageDisplayManager;
 import grendel.ui.MultiMessageDisplayManager;
-import grendel.ui.UnifiedMessageDisplayManager;
 import grendel.ui.Splash;
+import grendel.ui.UnifiedMessageDisplayManager;
+
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+
 
 /**
  * This launches the Grendel GUI.
  */
-
-public class Main {
+public class Main
+{
   static MessageDisplayManager fManager;
 
-  public static void main(String argv[]) {
-    
-    Splash splash = new Splash();
+  public static void main(String[] argv)
+  {
+    System.setProperty(
+                       "java.protocol.handler.pkgs",
+                       (System.getProperty("java.protocol.handler.pkgs")+
+                       "|grendel.renderer.URL"));
 
-    UIPrefs prefs = UIPrefs.GetMaster();
+    Splash splash=new Splash();
 
-    UIManager.LookAndFeelInfo[] info = UIManager.getInstalledLookAndFeels();
+    UIPrefs prefs=UIPrefs.GetMaster();
+
+    UIManager.LookAndFeelInfo[] info=UIManager.getInstalledLookAndFeels();
     LookAndFeel laf;
-    for (int i = 0; i < info.length; i++) {
+
+    for (int i=0; i<info.length; i++) {
       try {
-        String name = info[i].getClassName();
-        Class c = Class.forName(name);
-        laf = (LookAndFeel)c.newInstance();
+        String name=info[i].getClassName();
+        Class c=Class.forName(name);
+        laf=(LookAndFeel) c.newInstance();
+
         if (laf.getDescription().equals(prefs.getLookAndFeel())) {
           UIManager.setLookAndFeel(laf);
         }
-      } catch (Exception e){
+      } catch (Exception e) {
       }
     }
 
     if (prefs.getDisplayManager().equals("multi")) {
-      fManager = new MultiMessageDisplayManager();
+      fManager=new MultiMessageDisplayManager();
     } else {
-      fManager = new UnifiedMessageDisplayManager();
+      fManager=new UnifiedMessageDisplayManager();
     }
+
     MessageDisplayManager.SetDefaultManager(fManager);
     fManager.displayMaster();
     splash.dispose();
   }
 }
-

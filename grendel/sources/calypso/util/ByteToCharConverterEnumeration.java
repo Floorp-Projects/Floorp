@@ -32,30 +32,31 @@ import java.lang.String;
  * ByteToCharConverterEnumeration return a Enumeration of String which
  * represent ByteToCharConverter available in the classpath
  * @author ftang
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * @see
  *
  */
 public class ByteToCharConverterEnumeration extends PrefetchEnumeration {
     Enumeration fDelegate;
-/*
- *
- * @author ftang
- * @version $Revision: 1.2 $
- * @see
- *
- */
+  /*
+   *
+   * @author ftang
+   * @version $Revision: 1.3 $
+   * @see
+   *
+   */
     public ByteToCharConverterEnumeration()
     {
         fDelegate = new ClasspathEntryEnumeration("sun.io", "ByteToChar", ".class");
     }
-/*
- *
- * @author ftang
- * @version $Revision: 1.2 $
- * @see
- *
- */
+
+  /*
+   *
+   * @author ftang
+   * @version $Revision: 1.3 $
+   * @see
+   *
+   */
     protected boolean verify(Object obj)
     {
         try {
@@ -66,13 +67,14 @@ public class ByteToCharConverterEnumeration extends PrefetchEnumeration {
             return false;
         }
     }
-/*
- *
- * @author ftang
- * @version $Revision: 1.2 $
- * @see
- *
- */
+
+  /*
+   *
+   * @author ftang
+   * @version $Revision: 1.3 $
+   * @see
+   *
+   */
     protected Object fetch()
     {
         for(; fDelegate.hasMoreElements(); )

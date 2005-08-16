@@ -60,6 +60,7 @@
       <copy todir="dist">
         <fileset dir="sources/grendel">
           <include name="**/*.gif"/>
+          <include name="**/*.htm*"/>
           <include name="**/*.png"/>
           <include name="**/*.jpg"/>
           <include name="**/*.tmpl"/>

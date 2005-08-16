@@ -30,7 +30,7 @@ package grendel.mime.html;
 /** This class knows how to convert plain-text to HTML.
  */
 
-class TextHTMLConverter {
+public class TextHTMLConverter {
 
   /** Given a StringBuffer of text, alters that text in place to be displayable
       as HTML: the <, >, and & characters are converted to entities.
