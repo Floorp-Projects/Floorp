@@ -50,6 +50,15 @@ class nsIAtom;
  * be auto-generated.
  */
 
+#ifdef TX_EXE
+#define DOM_ATOMS                               \
+TX_ATOM(comment, "#comment")                    \
+TX_ATOM(document, "#document")                  \
+TX_ATOM(text, "#text")
+#else
+#define DOM_ATOMS
+#endif
+
 #define XML_ATOMS             \
 TX_ATOM(_empty, "")           \
 TX_ATOM(base, "base")         \
@@ -58,7 +67,8 @@ TX_ATOM(lang, "lang")         \
 TX_ATOM(preserve, "preserve") \
 TX_ATOM(space, "space")       \
 TX_ATOM(xml, "xml")           \
-TX_ATOM(xmlns, "xmlns")
+TX_ATOM(xmlns, "xmlns")       \
+DOM_ATOMS
 
 #define TX_ATOM(_name, _value) static nsIAtom* _name;
 

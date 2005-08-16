@@ -51,13 +51,11 @@
 //
 //Construct a text object with the specified document owner and data
 //
-ProcessingInstruction::ProcessingInstruction(const nsAString& theTarget,
+ProcessingInstruction::ProcessingInstruction(nsIAtom *theTarget,
                                              const nsAString& theData,
                                              Document* owner) :
-                       NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE,
-                                      theTarget, theData, owner)
+  NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE, theTarget, theData, owner)
 {
-  mLocalName = do_GetAtom(nodeName);
 }
 
 //

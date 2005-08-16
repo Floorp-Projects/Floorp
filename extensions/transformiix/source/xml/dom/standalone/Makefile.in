@@ -53,9 +53,7 @@ REQUIRES	= string \
 CPPSRCS = Attr.cpp \
         Document.cpp \
         Element.cpp \
-        NamedNodeMap.cpp \
         NodeDefinition.cpp \
-        NodeListDefinition.cpp \
         ProcessingInstruction.cpp
 
 # we don't want the shared lib, but we want to force the creation of a

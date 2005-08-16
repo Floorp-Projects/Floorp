@@ -59,6 +59,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "txCore.h"
+#include "nsAutoPtr.h"
 
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;
@@ -113,11 +114,7 @@ class Node : public TxObject
     virtual Node* getLastChild() const = 0;
     virtual Node* getPreviousSibling() const = 0;
     virtual Node* getNextSibling() const = 0;
-    virtual NamedNodeMap* getAttributes() = 0;
     virtual Document* getOwnerDocument() const = 0;
-
-    //Write functions
-    virtual void setNodeValue(const nsAString& nodeValue) = 0;
 
     //Node manipulation functions
     virtual Node* appendChild(Node* newChild) = 0;
@@ -133,101 +130,8 @@ class Node : public TxObject
     //txXPathNode functions
     virtual MBool getLocalName(nsIAtom** aLocalName) = 0;
     virtual PRInt32 getNamespaceID() = 0;
-    virtual PRInt32 lookupNamespaceID(nsIAtom* aPrefix) = 0;
     virtual Node* getXPathParent() = 0;
     virtual PRInt32 compareDocumentPosition(Node* aOther) = 0;
-};
-
-//
-// Abstract class containing the Interface for a NodeList.  See NodeDefinition
-// below for the actual implementation of a WC3 NodeList as it applies to the
-// getChildNodes Node function.  Also see NodeListDefinition for the
-// implementation of a NodeList as it applies to such functions as
-// getElementByTagName.
-//
-class NodeList
-{
-  public:
-    virtual Node* item(PRUint32 index) = 0;
-    virtual PRUint32 getLength() = 0;
-  protected:
-    PRUint32 length;
-};
-
-//
-//Definition of the implementation of a NodeList.  This class maintains a
-//linked list of pointers to Nodes.  "Friends" of the class can add and remove
-//pointers to Nodes as needed.
-//      *** NOTE: Is there any need for someone to "remove" a node from the
-//                list?
-//
-class NodeListDefinition : public NodeList
-{
-  friend class NamedNodeMap; //-- LF
-  friend class txXPathTreeWalker;
-  public:
-    NodeListDefinition();
-    virtual ~NodeListDefinition();
-
-    void append(Node& newNode);
-    void append(Node* newNode);
-
-    //Inherited from NodeList
-    Node* item(PRUint32 index);
-    PRUint32 getLength();
-
-  protected:
-    struct ListItem {
-      ListItem* next;
-      ListItem* prev;
-      Node* node;
-    };
-
-    ListItem* firstItem;
-    ListItem* lastItem;
-};
-
-//
-//Definition of a NamedNodeMap.  For the time being it builds off the
-//NodeListDefinition class.  This will probably change when NamedNodeMap needs
-//to move to a more efficient search algorithm for attributes.
-//
-class NamedNodeMap : public NodeListDefinition
-{
-  public:
-    NamedNodeMap();
-    virtual ~NamedNodeMap();
-
-    Node* getNamedItem(const nsAString& name);
-    virtual Node* setNamedItem(Node* arg);
-    virtual Node* removeNamedItem(const nsAString& name);
-
-  private:
-    NodeListDefinition::ListItem* findListItemByName(const nsAString& name);
-    // txXPathTreeWalker is friend to speed up attr iterations
-    friend class txXPathTreeWalker;
-};
-
-//
-// Subclass of NamedNodeMap that contains a list of attributes.
-// Whenever an attribute is added to or removed from the map, the attributes
-// ownerElement is updated.
-//
-class AttrMap : public NamedNodeMap
-{
-    // Elenent needs to be friend to be able to set the AttrMaps ownerElement
-    friend class Element;
-
-  public:
-    AttrMap();
-    virtual ~AttrMap();
-
-    Node* setNamedItem(Node* arg);
-    Node* removeNamedItem(const nsAString& name);
-    void clear();
-
-  private:
-    Element* ownerElement;
 };
 
 //
@@ -236,13 +140,13 @@ class AttrMap : public NamedNodeMap
 // Users of this DOM should work strictly with the Node interface and NodeList
 // interface (see above for those definitions)
 //
-class NodeDefinition : public Node, public NodeList
+class NodeDefinition : public Node
 {
   public:
     virtual ~NodeDefinition();      //Destructor, delete all children of node
 
     //Read functions
-    nsresult getNodeName(nsAString& aName) const;
+    virtual nsresult getNodeName(nsAString& aName) const;
     nsresult getNodeValue(nsAString& aValue);
     unsigned short getNodeType() const;
     Node* getParentNode() const;
@@ -250,11 +154,7 @@ class NodeDefinition : public Node, public NodeList
     Node* getLastChild() const;
     Node* getPreviousSibling() const;
     Node* getNextSibling() const;
-    virtual NamedNodeMap* getAttributes();
     Document* getOwnerDocument() const;
-
-    //Write functions
-    virtual void setNodeValue(const nsAString& nodeValue);
 
     //Child node manipulation functions
     virtual Node* appendChild(Node* newChild);
@@ -270,13 +170,8 @@ class NodeDefinition : public Node, public NodeList
     //txXPathNode functions
     virtual MBool getLocalName(nsIAtom** aLocalName);
     virtual PRInt32 getNamespaceID();
-    virtual PRInt32 lookupNamespaceID(nsIAtom*);
     virtual Node* getXPathParent();
     virtual PRInt32 compareDocumentPosition(Node* aOther);
-
-    //Inherited from NodeList
-    Node* item(PRUint32 index);
-    PRUint32 getLength();
 
     //Only to be used from XMLParser
     void appendData(const PRUnichar* aData, int aLength)
@@ -288,25 +183,19 @@ class NodeDefinition : public Node, public NodeList
     friend class Document;
     friend class txXPathTreeWalker;
     friend class txXPathNodeUtils;
-    NodeDefinition(NodeType type, const nsAString& name,
+    NodeDefinition(NodeType type, nsIAtom *aLocalName,
                    const nsAString& value, Document* owner);
-    NodeDefinition(NodeType aType, const nsAString& aValue,
-                   Document* aOwner);
 
     //Name, value, and attributes for this node.  Available to derrived
     //classes, since those derrived classes have a better idea how to use them,
     //than the generic node does.
-    nsString nodeName;
+    nsCOMPtr<nsIAtom> mLocalName;
     nsString nodeValue;
 
     NodeDefinition* implAppendChild(NodeDefinition* newChild);
     NodeDefinition* implRemoveChild(NodeDefinition* oldChild);
 
-    void DeleteChildren();
-
   private:
-    void Init(NodeType aType, const nsAString& aValue, Document* aOwner);
-
     //Type of node this is
     NodeType nodeType;
 
@@ -317,6 +206,8 @@ class NodeDefinition : public Node, public NodeList
 
     //Pointer to the node's document
     Document* ownerDocument;
+
+    PRUint32 length;
 
     //Data members for maintaining a list of child nodes
     NodeDefinition* firstChild;
@@ -335,46 +226,6 @@ class NodeDefinition : public Node, public NodeList
 
     // Helperfunction for compareDocumentOrder
     OrderInfo* getOrderInfo();
-};
-
-//
-//Definition and Implementation of a Document Fragment.  All functionality is
-//inherrited directly from NodeDefinition.  We just need to make sure the Type
-//of the node set to Node::DOCUMENT_FRAGMENT_NODE.
-//
-class DocumentFragment : public NodeDefinition
-{
-  public:
-    Node* appendChild(Node* newChild)
-    {
-      switch (newChild->getNodeType())
-        {
-          case Node::ELEMENT_NODE :
-          case Node::TEXT_NODE :
-          case Node::COMMENT_NODE :
-          case Node::PROCESSING_INSTRUCTION_NODE :
-            {
-              // Remove the "newChild" if it is already a child of this node
-              NodeDefinition* pNewChild = (NodeDefinition*)newChild;
-              if (pNewChild->getParentNode() == this)
-                pNewChild = implRemoveChild(pNewChild);
-
-              return implAppendChild(pNewChild);
-            }
-
-          default:
-            break;
-        }
-
-      return nsnull;
-    };
-
-  private:
-    friend class Document;
-    DocumentFragment(Document* aOwner) :
-      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, EmptyString(), aOwner)
-    {
-    };
 };
 
 //
@@ -412,19 +263,12 @@ class Document : public NodeDefinition
 
     //Factory functions for various node types
     Node* createComment(const nsAString& aData);
-    Node* createDocumentFragment();
-    ProcessingInstruction* createProcessingInstruction(const nsAString& aTarget,
+    ProcessingInstruction* createProcessingInstruction(nsIAtom *aTarget,
                                                        const nsAString& aData);
     Node* createTextNode(const nsAString& theData);
 
-    Element* createElement(const nsAString& tagName);
-    Attr* createAttribute(const nsAString& name);
-
-    // Introduced in DOM Level 2
-    Element* createElementNS(const nsAString& aNamespaceURI,
-                             const nsAString& aTagName);
-    Attr* createAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aName);
+    Element* createElementNS(nsIAtom *aPrefix, nsIAtom *aLocalName,
+                             PRInt32 aNamespaceID);
     Element* getElementById(const nsAString& aID);
 
     // Node manipulation functions
@@ -454,16 +298,15 @@ class Element : public NodeDefinition
     virtual ~Element();
 
     NamedNodeMap* getAttributes();
-    void setAttribute(const nsAString& name, const nsAString& value);
-    void setAttributeNS(const nsAString& aNamespaceURI,
-                        const nsAString& aName,
-                        const nsAString& aValue);
-    Attr* getAttributeNode(const nsAString& name);
+
+    nsresult appendAttributeNS(nsIAtom *aPrefix, nsIAtom *aLocalName,
+                               PRInt32 aNamespaceID, const nsAString& aValue);
 
     // Node manipulation functions
     Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
+    nsresult getNodeName(nsAString& aName) const;
     MBool getLocalName(nsIAtom** aLocalName);
     PRInt32 getNamespaceID();
     MBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
@@ -472,16 +315,21 @@ class Element : public NodeDefinition
     // ID getter
     PRBool getIDValue(nsAString& aValue);
 
+    Attr *getFirstAttribute()
+    {
+      return mFirstAttribute;
+    }
+
   private:
     friend class Document;
     void setIDValue(const nsAString& aValue);
-    Element(const nsAString& tagName, Document* owner);
-    Element(const nsAString& aNamespaceURI, const nsAString& aTagName,
+
+    Element(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
             Document* aOwner);
 
-    AttrMap mAttributes;
+    nsAutoPtr<Attr> mFirstAttribute;
     nsString mIDValue;
-    nsCOMPtr<nsIAtom> mLocalName;
+    nsCOMPtr<nsIAtom> mPrefix;
     PRInt32 mNamespaceID;
 };
 
@@ -495,33 +343,33 @@ class Attr : public NodeDefinition
   public:
     virtual ~Attr();
 
-    //Override the set and get member functions for a node's value to create a
-    //new TEXT node when set, and to interpret its children when read.
-    void setNodeValue(const nsAString& aValue);
-    nsresult getNodeValue(nsAString& aValue);
-
     // Node manipulation functions
     Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
+    nsresult getNodeName(nsAString& aName) const;
     MBool getLocalName(nsIAtom** aLocalName);
     PRInt32 getNamespaceID();
     Node* getXPathParent();
+    PRBool equals(nsIAtom *aLocalName, PRInt32 aNamespaceID)
+    {
+      return mLocalName == aLocalName && aNamespaceID == mNamespaceID;
+    }
+    Attr *getNextAttribute()
+    {
+      return mNextAttribute;
+    }
 
   private:
-    friend class Document;
-    Attr(const nsAString& name, Document* owner);
-    Attr(const nsAString& aNamespaceURI, const nsAString& aName,
-         Document* aOwner);
-
-    // These need to be friend to be able to update the ownerElement
-    friend class AttrMap;
     friend class Element;
 
-    Element* ownerElement;
+    Attr(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
+         Element *aOwnerElement, const nsAString &aValue);
 
-    nsCOMPtr<nsIAtom> mLocalName;
+    nsCOMPtr<nsIAtom> mPrefix;
     PRInt32 mNamespaceID;
+    Element *mOwnerElement;
+    nsAutoPtr<Attr> mNextAttribute;
 };
 
 //
@@ -542,10 +390,8 @@ class ProcessingInstruction : public NodeDefinition
 
   private:
     friend class Document;
-    ProcessingInstruction(const nsAString& theTarget, const nsAString& theData,
+    ProcessingInstruction(nsIAtom *theTarget, const nsAString& theData,
                           Document* owner);
-
-    nsCOMPtr<nsIAtom> mLocalName;
 };
 
 class txStandaloneNamespaceManager

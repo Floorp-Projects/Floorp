@@ -93,16 +93,13 @@ XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
      *    localName
      *    namespaceURI<separator>localName
      *    namespaceURI<separator>localName<separator>prefix
-     *
-     *  and we use 0xFFFF for the <separator>.
-     *
      */
 
     const PRUnichar *uriEnd = nsnull;
     const PRUnichar *nameEnd = nsnull;
     const PRUnichar *pos;
     for (pos = aExpatName; *pos; ++pos) {
-        if (*pos == 0xFFFF) {
+        if (*pos == kExpatSeparatorChar) {
             if (uriEnd) {
                 nameEnd = pos;
             }

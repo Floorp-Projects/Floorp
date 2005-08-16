@@ -53,6 +53,8 @@
 #include "nsIParserService.h"
 #endif
 
+#define kExpatSeparatorChar 0xFFFF
+
 class nsIAtom;
 class txNamespaceMap;
 

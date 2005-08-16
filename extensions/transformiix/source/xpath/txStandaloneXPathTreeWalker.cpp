@@ -89,18 +89,18 @@ txXPathTreeWalker::moveToFirstAttribute()
     }
 
     Element* element = NS_STATIC_CAST(Element*, INNER);
-    NamedNodeMap* attrs = element->getAttributes();
-    NodeListDefinition::ListItem* item = attrs->firstItem;
-    // skip XMLNS attributes
-    while (item && item->node->getNamespaceID() == kNameSpaceID_XMLNS) {
-        item = item->next;
-    }
-    if (!item) {
-        return PR_FALSE;
+    Attr *attribute = element->getFirstAttribute();
+    while (attribute) {
+        if (attribute->getNamespaceID() != kNameSpaceID_XMLNS) {
+            INNER = attribute;
+
+            return PR_TRUE;
+        }
+
+        attribute = attribute->getNextAttribute();
     }
 
-    INNER = NS_STATIC_CAST(NodeDefinition*, item->node);
-    return PR_TRUE;
+    return PR_FALSE;
 }
 
 PRBool
@@ -111,27 +111,26 @@ txXPathTreeWalker::moveToNextAttribute()
         return PR_FALSE;
     }
 
-    Node* element = INNER->getXPathParent();
-    NamedNodeMap* attrs = element->getAttributes();
-    // find the ListItem for the current Attr
-    NodeListDefinition::ListItem* item = attrs->firstItem;
-    while (item->node != INNER) {
-        item = item->next;
+    Element* element = NS_STATIC_CAST(Element*, INNER->getXPathParent());
+    Attr *attribute = element->getFirstAttribute();
+    while (attribute != INNER) {
+        attribute = attribute->getNextAttribute();
     }
-    NS_ASSERTION(item, "Attr not attribute of it's owner?");
-    // next item
-    item = item->next;
-    // skip XMLNS attributes
-    while (item && item->node->getNamespaceID() == kNameSpaceID_XMLNS) {
-        item = item->next;
-    }
-    if (!item) {
-        return PR_FALSE;
+    NS_ASSERTION(attribute, "Attr not attribute of it's owner?");
+
+    attribute = attribute->getNextAttribute();
+
+    while (attribute) {
+        if (attribute->getNamespaceID() != kNameSpaceID_XMLNS) {
+            INNER = attribute;
+
+            return PR_TRUE;
+        }
+
+        attribute = attribute->getNextAttribute();
     }
 
-    INNER = NS_STATIC_CAST(NodeDefinition*, item->node);
-
-    return PR_TRUE;
+    return PR_FALSE;
 }
 
 PRBool
