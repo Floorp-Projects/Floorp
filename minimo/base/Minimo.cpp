@@ -255,8 +255,8 @@ void DoPreferences()
   {0xa5, 0x9b, 0x93, 0x63, 0xa0, 0xbf, 0x9a, 0x87} \
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
 
 static const nsModuleComponentInfo defaultAppComps[] = {
   {
@@ -323,8 +323,12 @@ BOOL CALLBACK FindApplicationWindowProc(HWND hwnd, LPARAM lParam)
   return TRUE;
 } 
 
+#define USE_MUTEX
+
 PRBool DoesProcessAlreadyExist()
 {
+#ifdef USE_MUTEX
+
     const HANDLE hMutex = CreateMutexW(0, 0, L"_MINIMO_EXE_MUTEX_");
     
 	if(hMutex)
@@ -349,6 +353,9 @@ PRBool DoesProcessAlreadyExist()
     }
     MessageBox(0, "Can not start Minimo", "Unexpected Error", 0);
     return TRUE;
+#else
+    return FALSE;
+#endif
 }
 #else
 PRBool DoesProcessAlreadyExist() {return PR_FALSE;}
