@@ -4312,15 +4312,81 @@ NS_IMETHODIMP
 nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
 {
 #ifdef IBMBIDI
+  // XXX TODO: - this explanation may not be accurate
+  //           - need to better explain what aPos->mPreferLeft means
+  //             for two frames on the same line
+  //           - need to better explain for what happens when you move
+  //             from the end of a line to the beginning of the next 
+  //             despite not making a move logically within the text.
+  //           - need to explain why XORing with the embedding level
+  //             achieves the desired effect
+  //
+  // When you move your caret by in some visual direction, and you find the
+  // new position is at the edge of a line (beginning or end), you want to
+  // stay on the current line rather than move to the next or the previous
+  // one.
+  //
+  // When your frames are ordered the same way logically as they are
+  // visually (e.g. when they're frames of LTR text displayed in
+  // left-then-down order), this translates to terms of 'prefer left' or
+  // 'prefer right', i.e. if you move to the left and hit the beginning of
+  // the line you have to choose between the frame "on the left" - the last
+  // frame on the previous line - rather than the frame "on the right" - the
+  // first frame of the text line. So you could say that you always prefer
+  // the frame closer to where you are now, i.e. the frame opposite to the
+  // movement.
+  // (see nsSelection::MoveCaret() for an example in code)
+  //
+  // When the frames are displayed in right-then-down order (i.e. frames
+  // within an RTL line), the last sentence remains correct, but now
+  // the directions are reversed - if you're moving left, the frame
+  // closer to you is the one "on the right" - the last frame on the current
+  // line - rather than the one "on the left" - the first frame on the next
+  // line. Now, although this implementation of this method (i.e.
+  // for nsTextFrame) has no use itself for aPos->mPreferLeft, we may
+  // be delegating the PeekOffset to another frame, and nsFrame's
+  // implementation does use aPos->mPreferLeft, so we have to set it 
+  // here (why?), and we have to maintain consistency along calls
+  // to PeekOffset of nsTextFrames on the same line.
+  //
+  // Note:
+  // eDirPrevious actually means 'in the visual left-then-down direction'
+  // eDirNext actually means 'in the visual right-then-down direction'
+  // (this is again due to the LTRish bias of the nomenclature)
+
   PRBool isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
 
   if ((eSelectCharacter == aPos->mAmount)
       || (eSelectWord == aPos->mAmount))
-    aPos->mPreferLeft ^= isOddLevel;
+    aPos->mPreferLeft = (eDirPrevious == aPos->mDirection) ^ isOddLevel;
 #endif
 
   if (!aPos || !mContent)
     return NS_ERROR_NULL_POINTER;
+
+  // XXX TODO: explain this policy; why the assymetry between
+  // too high and too low start offsets?
+  //
+  // There are 4 possible ranges from  aPos->mStartOffset:
+  //
+  //            0    mContentLength   mContentLength+mContentLength
+  //            |          |               |
+  //   range #1 | range #2 |    range #3   | range #4
+  //                        ***************
+  //                       our frame's part
+  //                        of the content
+  //
+  // Range   Policy
+  // ------------------------------------------------------------------------
+  //  #1     Assume the start position is at the end of the content of 'this'
+  //  #2     Round up the position to the beginning of our frame
+  //  #3     No change necessary
+  //  #4     Delegate the PeekOffset() to the next frame (according
+  //         to the direction, either to our left or our right)
+  // 
+  // Note: the diagram above is drawn left-to-right, but advancing
+  // in the content may sometimes mean going right-to-left
+  
   if (aPos->mStartOffset < 0 )
     aPos->mStartOffset = mContentLength + mContentOffset;
   if (aPos->mStartOffset < mContentOffset){
@@ -4343,6 +4409,13 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }
     return nextInFlow->PeekOffset(aPresContext, aPos);
   }
+ 
+  // XXX TODO: explain the following:
+  //           - if this frame is the first of the last in the line according
+  //             to the content indices, why not handle the cases of
+  //             eSelectBeginLine/eSelectEndLine 
+  //           - why can't we make the hand-off to the parent class' method
+  //             before the of aPos->mStartOffset and aPos->mPreferLeft?
  
   if (aPos->mAmount == eSelectLine || aPos->mAmount == eSelectBeginLine 
       || aPos->mAmount == eSelectEndLine || aPos->mAmount == eSelectParagraph)
@@ -4531,6 +4604,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   */
           if (i > mContentLength){
             found = PR_FALSE;
+            // XXX TODO: explain why in this case GetNextInFlow() is good enough,
+            // but in the case of
+            // aPos->mStartOffset > (mContentOffset + mContentLength)
+            // above, we use the presentation context and get the 'nextBidi'
             frameUsed = GetNextInFlow();
             start = mContentOffset + mContentLength;
             aPos->mContentOffset = start;//in case next call fails we stop at this offset
@@ -4686,12 +4763,18 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             }
           } 
 
-  TryNextFrame:        
+  TryNextFrame:
+          // XXX TODO: explain why in this case GetNextInFlow() is good enough,
+          // but in the case of
+          // aPos->mStartOffset > (mContentOffset + mContentLength)
+          // above, we use the presentation context and get the 'nextBidi'
           frameUsed = GetNextInFlow();
           start = 0;
         }
       }
-      if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset))
+      if (!found ||
+          (aPos->mContentOffset > (mContentOffset + mContentLength)) ||
+          (aPos->mContentOffset < mContentOffset))
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
