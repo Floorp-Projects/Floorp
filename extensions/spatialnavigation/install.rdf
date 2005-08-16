@@ -6,7 +6,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>spatial-navigation@extensions.mozilla.org</em:id>
-    <em:version>1.7+</em:version>
+    <em:version>@EXTENSION_VERSION@</em:version>
 
 #ifdef EM_ABI
     <em:targetPlatform>@EM_ABI@</em:targetPlatform>

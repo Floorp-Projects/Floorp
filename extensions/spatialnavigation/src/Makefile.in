@@ -58,16 +58,6 @@ XPI_NAME               = snav
 endif
 endif
 
-# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
-# # browser/config/version.txt mail/config/version.txt but we can't be assured
-# # that we've even pulled those files. So we hardcode them.
-
-XULAPP_DEFINES = \
-	-DFIREFOX_VERSION=1.0+ \
-	-DTHUNDERBIRD_VERSION=1.0+ \
-	-DMOZILLA_VERSION_U=$(MOZILLA_VERSION) \
-	$(NULL)
-
 REQUIRES	= xpcom \
 		      string \
 			  pref \

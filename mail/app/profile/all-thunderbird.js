@@ -45,7 +45,6 @@ pref("browser.chromeURL", "chrome://messenger/content/messengercompose/messenger
 pref("mail.biff.animate_dock_icon", false);
 #endif
 
-pref("app.extensions.version", "1.0+");
 pref("update.app.enabled", true); // Whether or not app updates are enabled 
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");	
 pref("update.extensions.enabled", true);

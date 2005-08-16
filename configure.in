@@ -1218,15 +1218,14 @@ esac
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 
-dnl Get the major and minor versions from the MOZILLA_VERSION
-changequote(,)
-MOZILLA_VERSION_MAJOR=`echo $MOZILLA_VERSION | sed 's|^\([0-9]*\).*|\1|'`
-MOZILLA_VERSION_MINOR=`echo $MOZILLA_VERSION | sed 's|^[0-9]*\.\([0-9]*\).*|\1|'`
-changequote([,])
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION_MAJOR,$MOZILLA_VERSION_MAJOR)
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION_MINOR,$MOZILLA_VERSION_MINOR)
+dnl Get version of various core apps from the version files.
+FIREFOX_VERSION=`cat $topsrcdir/browser/config/version.txt`
+THUNDERBIRD_VERSION=`cat $topsrcdir/mail/config/version.txt`
+SEAMONKEY_VERSION=`cat $topsrcdir/xpfe/bootstrap/version.txt`
+
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
 dnl ========================================================
 dnl System overrides of the defaults for target
@@ -3995,7 +3994,7 @@ suite)
   MOZ_COMPOSER=1
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
-  MOZ_APP_VERSION=`cat $topsrcdir/xpfe/bootstrap/version.txt`
+  MOZ_APP_VERSION=$SEAMONKEY_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming permissions reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
@@ -4005,7 +4004,7 @@ browser)
   MOZ_APP_DISPLAYNAME=Firefox
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
-  MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
+  MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
@@ -4056,7 +4055,7 @@ mail)
   MOZ_LDAP_XPCOM=1
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
-  MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
+  MOZ_APP_VERSION=$THUNDERBIRD_VERSION
   MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck xmlextras pref webservices universalchardet"
   AC_DEFINE(MOZ_THUNDERBIRD)
   ;;
@@ -6742,6 +6741,9 @@ AC_SUBST(TARGET_DEVICE)
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_VERSION)
+AC_SUBST(FIREFOX_VERSION)
+AC_SUBST(THUNDERBIRD_VERSION)
+AC_SUBST(SEAMONKEY_VERSION)
 
 dnl win32 options
 AC_SUBST(MOZ_PROFILE)
@@ -6963,8 +6965,6 @@ AC_SUBST(CYGDRIVE_MOUNT)
 AC_SUBST(WIN_TOP_SRC)
 
 AC_SUBST(MOZILLA_VERSION)
-AC_SUBST(MOZILLA_VERSION_MAJOR)
-AC_SUBST(MOZILLA_VERSION_MINOR)
 
 . ${srcdir}/config/chrome-versions.sh
 AC_SUBST(MOZILLA_LOCALE_VERSION)

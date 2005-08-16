@@ -103,8 +103,10 @@ AVAILABLE_PROJECTS = \
   macbrowser \
   $(NULL)
 
-MODULES_core :=                                \
+MODULES_core :=                                 \
   SeaMonkeyAll                                  \
+  browser/config/version.txt                    \
+  mail/config/version.txt                       \
   mozilla/ipc/ipcd                              \
   mozilla/modules/libpr0n                       \
   mozilla/modules/libmar                        \

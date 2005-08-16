@@ -65,9 +65,9 @@ DIST_FILES = install.rdf
 # that we've even pulled those files. So we hardcode them.
 
 XULAPP_DEFINES = \
-	-DFIREFOX_VERSION=1.0+ \
-	-DTHUNDERBIRD_VERSION=1.0+ \
-	-DEXTENSION_VERSION=1.7+ \
+	-DFIREFOX_VERSION=$(FIREFOX_VERSION) \
+	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
+	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

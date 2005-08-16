@@ -59,11 +59,6 @@ pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/ex
 pref("xpinstall.dialog.progress.type.skin", "Extension:Manager-themes");
 pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager-extensions");
 
-// This is the version number used by the Extension Manager to check extension
-// compatibility.  An extensions minVersion and maxVersion fields will be
-// compared to this value.  A trailing "+" indicates the post-release trunk.
-pref("app.extensions.version", "1.0+");
-
 pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
 pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
 // Developers can set this to |true| if they are constantly changing files in their 

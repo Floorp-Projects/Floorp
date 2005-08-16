@@ -6,7 +6,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>reporter@mozilla.org</em:id>
-    <em:version>1.7+</em:version>
+    <em:version>@EXTENSION_VERSION@</em:version>
 
     <em:targetApplication>
       <!-- Firefox -->

@@ -99,9 +99,9 @@ DIST_FILES = install.rdf
 # # that we've even pulled those files. So we hardcode them.
 
 XULAPP_DEFINES = \
-	-DFIREFOX_VERSION=1.0+ \
-	-DTHUNDERBIRD_VERSION=1.0+ \
-	-DMOZILLA_VERSION_U=$(MOZILLA_VERSION) \
+	-DFIREFOX_VERSION=$(FIREFOX_VERSION) \
+	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
+	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
 	$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/resources/content/prefs/reporter.js
