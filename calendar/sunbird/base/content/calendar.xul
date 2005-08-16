@@ -437,7 +437,7 @@
   <hbox id="calendar-content-box" flex="1">
 
     <vbox id="left-hand-content" persist="width">
-      <tabbox id="tablist">
+      <tabbox id="tablist" persist="selectedIndex">
         <tabs>
           <tab label="&calendar.calendartab.label;"/>
           <tab label="&calendar.listofcalendarstab.label;"/>

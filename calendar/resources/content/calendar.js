@@ -190,6 +190,10 @@ function update_date()
 
 function calendarFinish()
 {
+   // Workaround to make the selected tab persist. See bug 249552.
+   var tabbox = document.getElementById("tablist");
+   tabbox.setAttribute("selectedIndex", tabbox.selectedIndex);
+
    finishCalendarUnifinder();
    
    finishCalendarToDoUnifinder();
