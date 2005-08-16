@@ -62,30 +62,41 @@
 
 #include "gtkmozembed.h"
 
-/* Callbacks from the UI */
-void initialize_bookmark(GtkWidget *embed);
-void open_bookmark(void);
-void show_bookmark(void);
-void read_bookmark(void);
-void generate_bookmark_ctree(GNode *node, BookmarkCTreeData *ctree_data);
-void add_bookmark_cb(GtkWidget *menu_item,GtkWidget *min);
-void on_bookmark_add_button_clicked(GtkWidget *button,BookmarkWindow *bwin);
-void on_bookmark_edit_button_clicked(GtkWidget *button,BookmarkWindow *bwin);
-void on_bookmark_ok_button_clicked(GtkWidget *button,BookmarkWindow *bwin);
-void on_bookmark_cancel_button_clicked(GtkWidget *button,BookmarkWindow *bwin);
-void on_bookmark_go_button_clicked(GtkButton *button,BookmarkWindow *bwin);
-void on_bookmark_remove_button_clicked(GtkWidget *button,BookmarkWindow *bwin);
-void export_bookmarks(GtkButton *button,BookmarkWindow *bwin);
+typedef enum
+{
+        NS_SITE,
+        NS_NOTES,
+        NS_FOLDER,
+        NS_FOLDER_END,
+        NS_SEPARATOR,
+        NS_UNKNOWN
+} NSItemType;
 
-/* Callbacks from widgets*/
-void on_bookmark_ctree_select_row(GtkWidget *ctree,GtkCTreeNode *node,gint col,BookmarkWindow *bwin);
-void on_bookmark_ctree_unselect_row(GtkWidget *ctree,GtkCTreeNode *node,gint col,BookmarkWindow *bwin);
-void on_bookmark_ctree_move(GtkWidget *ctree,GtkCTreeNode *node,GtkCTreeNode *parent,GtkCTreeNode *sibling,BookmarkWindow *bwin);
-void move_folder(GNode *old_node, GNode *new_parent_node);
-void print_bookmarks ();
-void print_node_data (GNode *node,FILE *file);
-void clear_entries(BookmarkWindow *bwin);
-void close_bookmark_window(BookmarkWindow *bwin);
-gboolean url_exists(BookmarkData *data);
+void 	bookmark_moz_embed_initialize		(GtkWidget *);
+void 	bookmark_create_dialog 			();
+void 	bookmark_open_file 			();
+void 	bookmark_load_from_file			(BookmarkTreeVData *);
+gboolean bookmark_search_function(GtkTreeModel *, gint, const gchar *, GtkTreeIter *,void *);
+void 	bookmark_insert_folder_on_treeview	(BookmarkData *, BookmarkTreeVData *);
+void 	bookmark_insert_item_on_treeview	(BookmarkData *, BookmarkTreeVData *);
+void 	bookmark_on_treev_select_row_cb 	(GtkTreeView *, BookmarkWindow *);
+void 	bookmark_add_button_cb			(GtkWidget *,BookmarkWindow *);
+void 	bookmark_edit_button_cb 		(GtkWidget * ,BookmarkWindow *);
+void 	bookmark_go_button_cb 			(GtkButton * ,BookmarkWindow *);
+void 	bookmark_ok_button_cb 			(GtkWidget * ,BookmarkWindow *);
+void 	bookmark_cancel_button_cb 		(GtkWidget * ,BookmarkWindow *);
+void 	bookmark_remove_button_cb 		(GtkWidget * ,BookmarkWindow *);
+void 	bookmark_write_on_file 			(BookmarkWindow *);
+void 	bookmark_write_node_data_on_file 	(GtkTreeModel *, GtkTreeIter *);
+void 	bookmark_clear_all_entries		(BookmarkWindow *);
+void 	bookmark_close_dialog			(BookmarkWindow *);
+void 	bookmark_import_cb			(GtkButton *,BookmarkWindow *);
+NSItemType bookmark_get_ns_item 		(FILE *, GString *, GString *);
+gchar * bookmark_read_line_from_html_file 	(FILE *);
+const gchar *bookmark_string_strcasestr 	(const gchar *, const gchar *);
+char  * bookmark_ns_parse_item 			(GString *);
+void 	bookmark_export_cb 			(GtkButton *,BookmarkWindow *);
+void 	bookmark_export_items 			(FILE *, BookmarkData *, gboolean );
+void 	bookmark_add_url_directly_cb 		(GtkWidget *,GtkWidget *);
 
 #endif

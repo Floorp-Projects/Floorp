@@ -47,18 +47,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef minimo_context_h
-#define minimo_context_h
+#ifndef minimo_support_h
+#define minimo_support_h
 
 #include "minimo_types.h"
 
-void context_initialize_timer		();
+void support_handle_remote		(int );
+void support_init_remote		();
+void support_cleanup_remote		();
 
-GtkWidget * context_click_on_link 	(MinimoBrowser *, gchar *, gchar *);
-GtkWidget * context_click_on_image 	(MinimoBrowser *, gchar *);
-GtkWidget * context_click_doc 		(MinimoBrowser *, gchar *);
-GtkWidget * context_click_link_image 	(MinimoBrowser *, gchar *, gchar *);
+void support_destroy_dialog_params_cb	(GtkWidget *, OpenDialogParams* );
 
-void context_destroy_popup 		(GtkWidget *, gchar *);
+void support_build_entry_completion 		(MinimoBrowser* );
+
+void support_autocomplete_populate	(gpointer , gpointer );
+void support_populate_autocomplete	(GtkCombo *);
+gint support_autocomplete_list_cmp	(gconstpointer , gconstpointer );
+void support_init_autocomplete		();
+void support_autocomplete_writer	(gpointer , gpointer );
+void support_autocomplete_destroy	(gpointer , gpointer );
+void support_cleanup_autocomplete	();
+void support_add_autocomplete		(const char* , OpenDialogParams* );
+
+void support_setup_escape_key_handler(GtkWidget *);
+gint support_escape_key_handler(GtkWidget *, GdkEventKey *);
+
+PangoFontDescription* getOrCreateDefaultMinimoFont();
 
 #endif

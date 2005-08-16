@@ -54,18 +54,16 @@
 #include "minimo_types.h"
 
 /* Callbacks */
-void close_preferences_cb (GtkButton *button, PrefWindow *pref);
-void ok_preferences_cb (GtkButton *button, PrefWindow *pref);
+void preferences_close_cb 		(GtkButton *, PrefWindow *);
+void preferences_ok_cb 			(GtkButton *, PrefWindow *);
 
 /* Support methods */
-void read_minimo_config(void);
-void write_minimo_config(void);
-void set_mozilla_prefs(void);
-void minimo_set_proxy_prefs(void);
+void preferences_read_config		(void);
+void preferences_write_config		(void);
+void preferences_set_mozilla_config	(void);
+void preferences_set_mozilla_proxy_config(void);
 
 /* UI Methods */
-PrefWindow * build_pref_window (GtkWidget *topLevelWindow);
-
-PangoFontDescription* getOrCreateDefaultMinimoFont();
+PrefWindow * preferences_build_dialog 	(GtkWidget *);
 
 #endif
