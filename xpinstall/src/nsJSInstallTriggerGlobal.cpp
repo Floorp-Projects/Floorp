@@ -290,7 +290,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   PRBool abortLoad = PR_FALSE;
 
   // parse associative array of installs
-  if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
+  if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) && JSVAL_TO_OBJECT(argv[0]) )
   {
     nsXPITriggerInfo *trigger = new nsXPITriggerInfo();
     if (!trigger)
@@ -312,7 +312,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
         URL = iconURL = nsnull;
         JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), NS_REINTERPRET_CAST(const jschar*, name), nsCRT::strlen(name), &v );
-        if ( JSVAL_IS_OBJECT(v) ) 
+        if ( JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) ) 
         {
           jsval v2;
           if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ))
