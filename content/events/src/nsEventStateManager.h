@@ -162,6 +162,14 @@ public:
   }
 
 protected:
+  /**
+   * In certain situations the focus controller's concept of focus gets out of
+   * whack with mCurrentFocus. This is used in known cases to reset the focus
+   * controller's focus. At some point we should probably move to a single
+   * focus storage mechanism because tracking it in several places is error-prone.
+   */
+  void EnsureFocusSynchronization();
+
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
