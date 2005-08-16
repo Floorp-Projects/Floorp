@@ -83,6 +83,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 #define PREF_BDM_OPENDELAY "browser.download.manager.openDelay"
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
+#define PREF_BDM_CLOSEWHENDONE "browser.download.manager.closeWhenDone"
 #define PREF_BDM_FLASHCOUNT "browser.download.manager.flashCount"
 #define INTERVAL 500
 
@@ -1106,8 +1107,6 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, const PRUnichar* aPath)
   if (pref)
     pref->GetIntPref(PREF_BDM_OPENDELAY, &delay);
 
-  params->AppendElement((void*)&delay);
-
   // 3). Look for an existing Download Manager window, if we find one we just 
   //     tell it that a new download has begun (we don't focus, that's 
   //     annoying), otherwise we need to open the window. We do this on a timer 
@@ -1125,18 +1124,21 @@ nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
   nsVoidArray* params = (nsVoidArray*)aClosure;
   nsIDOMWindow* parent = (nsIDOMWindow*)params->ElementAt(0);
   nsDownload* download = (nsDownload*)params->ElementAt(1);
-  PRInt32 openDelay = *(PRInt32*)params->ElementAt(2);
   
   PRInt32 complete;
   download->GetPercentComplete(&complete);
   
-  // We only show the download window if the download is taking more than a non-tiny
-  // amount of time to complete. 
-  if (!openDelay || complete < 100) {
+  PRBool closeDM = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pref)
+    pref->GetBoolPref(PREF_BDM_CLOSEWHENDONE, &closeDM);
+
+  // Check closeWhenDone pref before opening download manager
+  if (!closeDM || complete < 100) {
     PRBool focusDM = PR_FALSE;
     PRBool showDM = PR_TRUE;
     PRInt32 flashCount = -1;
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+
     if (pref) {
       pref->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focusDM);
 
