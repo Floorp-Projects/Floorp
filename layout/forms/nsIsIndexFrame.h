@@ -72,7 +72,6 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow) {
-    mPresContext = aPresContext;
     return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   }
 
@@ -135,9 +134,6 @@ public:
 protected:
   nsCOMPtr<nsITextContent> mTextContent;
   nsCOMPtr<nsIContent> mInputContent;
-
-  // XXX Hack: pres context needed by function KeyPress() and SetFocus()
-  nsPresContext*     mPresContext;  // weak reference
 
 private:
   NS_IMETHOD UpdatePromptLabel();

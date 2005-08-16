@@ -265,7 +265,7 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   if (mTextFrame) {
     nsIContent* content = mTextFrame->GetContent();
     if (content) {
-      content->SetFocus(mPresContext);
+      content->SetFocus(GetPresContext());
     }
   }
 }
@@ -378,7 +378,8 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     nsAutoString unicodePath;
     result = localFile->GetPath(unicodePath);
     if (!unicodePath.IsEmpty()) {
-      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, unicodePath);
+      mTextFrame->SetProperty(GetPresContext(), nsHTMLAtoms::value, 
+                              unicodePath);
       // May need to fire an onchange here
       mTextFrame->CheckFireOnChange();
       return NS_OK;
