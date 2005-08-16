@@ -462,7 +462,6 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
       NS_ASSERTION(PR_FALSE, "invalid search operator");
       return NS_ERROR_INVALID_ARG;
     }
-    excludeHeader = PR_TRUE;
     break;
   case nsMsgSearchAttrib::Size:
     switch (op)
@@ -699,7 +698,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
             PL_strcat(encoding, m_kImapOr);
           if (useNot)
             PL_strcat (encoding, m_kImapNot);
-		if (arbitraryHeader != nsnull)
+          if (!arbitraryHeader.IsEmpty())
             PL_strcat (encoding, m_kImapHeader);
           PL_strcat (encoding, whichMnemonic);
           if (!ignoreValue)
