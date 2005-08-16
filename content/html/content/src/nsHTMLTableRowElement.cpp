@@ -273,6 +273,9 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
                                IsCell,
                                EmptyString(),
                                this,
+                               PR_FALSE,
+                               nsnull,
+                               kNameSpaceID_None,
                                PR_FALSE);
 
     NS_ENSURE_TRUE(mCells, NS_ERROR_OUT_OF_MEMORY);

@@ -326,7 +326,8 @@ nsContentList::nsContentList(nsIDocument *aDocument,
     mFunc(nsnull),
     mData(nsnull),
     mState(LIST_DIRTY),
-    mDeep(aDeep)
+    mDeep(aDeep),
+    mFuncMayDependOnAttr(PR_FALSE)
 {
   NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
   if (nsLayoutAtoms::wildcard == mMatchAtom) {
@@ -344,14 +345,16 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              nsIContent* aRootContent,
                              PRBool aDeep,
                              nsIAtom* aMatchAtom,
-                             PRInt32 aMatchNameSpaceId)
+                             PRInt32 aMatchNameSpaceId,
+                             PRBool aFuncMayDependOnAttr)
   : nsBaseContentList(),
     nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent),
     mFunc(aFunc),
     mData(&EmptyString()),
     mMatchAll(PR_FALSE),
     mState(LIST_DIRTY),
-    mDeep(aDeep)
+    mDeep(aDeep),
+    mFuncMayDependOnAttr(aFuncMayDependOnAttr)
 {
   NS_ASSERTION(mDeep || mRootContent, "Must have root content for non-deep list!");
   if (!aData.IsEmpty()) {
@@ -526,7 +529,8 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
 {
   NS_PRECONDITION(aContent, "Must have a content node to work with");
   
-  if (!mFunc || mState == LIST_DIRTY || IsContentAnonymous(aContent)) {
+  if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
+      IsContentAnonymous(aContent)) {
     // Either we're already dirty or this notification doesn't affect
     // whether we might match aContent.
     return;

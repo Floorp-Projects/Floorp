@@ -173,7 +173,8 @@ public:
                 nsIContent* aRootContent = nsnull,
                 PRBool aDeep = PR_TRUE,
                 nsIAtom* aMatchAtom = nsnull,
-                PRInt32 aMatchNameSpaceId = kNameSpaceID_None);
+                PRInt32 aMatchNameSpaceId = kNameSpaceID_None,
+                PRBool aFuncMayDependOnAttr = PR_TRUE);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
@@ -333,6 +334,11 @@ protected:
    * consider grandkids of mRootContent.
    */
   PRPackedBool mDeep;
+  /**
+   * Whether the return value of mFunc could depend on the values of
+   * attributes.
+   */
+  PRPackedBool mFuncMayDependOnAttr;
 };
 
 /**
