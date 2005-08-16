@@ -111,14 +111,14 @@ int ssl2CipherSuites[] = {
 };
 
 int ssl3CipherSuites[] = {
-    SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,     /* a */
-    SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,          /* b */
+    -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
+    -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA     * b */
     SSL_RSA_WITH_RC4_128_MD5,                   /* c */
     SSL_RSA_WITH_3DES_EDE_CBC_SHA,              /* d */
     SSL_RSA_WITH_DES_CBC_SHA,                   /* e */
     SSL_RSA_EXPORT_WITH_RC4_40_MD5,             /* f */
     SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,         /* g */
-    SSL_FORTEZZA_DMS_WITH_NULL_SHA,             /* h */
+    -1, /* SSL_FORTEZZA_DMS_WITH_NULL_SHA        * h */
     SSL_RSA_WITH_NULL_MD5,                      /* i */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,         /* j */
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,              /* k */
@@ -1143,7 +1143,7 @@ client_main(
             cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
             for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; )
                 /* do nothing */;
-            if (cipher) {
+            if (cipher > 0) {
 		SECStatus rv;
                 rv = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
 		if (rv != SECSuccess) {

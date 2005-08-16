@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslauth.c,v 1.13 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslauth.c,v 1.14 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "ssl.h"
@@ -117,8 +117,7 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	    cipherName = ssl3_cipherName[ss->sec.cipherType];
 	}
 	if (cipherName && PORT_Strstr(cipherName, "DES")) isDes = PR_TRUE;
-	/* do same key stuff for fortezza */
-    
+
 	if (cp) {
 	    *cp = PORT_Strdup(cipherName);
 	}

@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsskea.c,v 1.6 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: nsskea.c,v 1.7 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"	/* for SSLKEAType */
@@ -57,12 +57,6 @@ NSS_FindCertKEAType(CERTCertificate * cert)
   case SEC_OID_X500_RSA_ENCRYPTION:
   case SEC_OID_PKCS1_RSA_ENCRYPTION:
     keaType = kt_rsa;
-    break;
-  case SEC_OID_MISSI_KEA_DSS_OLD:
-  case SEC_OID_MISSI_KEA_DSS:
-  case SEC_OID_MISSI_DSS_OLD:
-  case SEC_OID_MISSI_DSS:
-    keaType = kt_fortezza;
     break;
   case SEC_OID_X942_DIFFIE_HELMAN_KEY:
     keaType = kt_dh;
