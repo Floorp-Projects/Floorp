@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.12 2005/08/12 23:50:17 wtchang%redhat.com Exp $ */
+/* $Id: secsign.c,v 1.13 2005/08/16 01:52:17 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -313,57 +313,6 @@ SEC_SignData(SECItem *res, unsigned char *buf, int len,
 	goto loser;
 
     rv = SGN_End(sgn, res);
-
-  loser:
-    SGN_DestroyContext(sgn, PR_TRUE);
-    return rv;
-}
-
-/*
-** Sign the input file's contents returning in result a bunch of bytes
-** that are the signature. Returns zero on success, an error code on
-** failure.
-*/
-SECStatus
-SEC_SignFile(SECItem *result, FILE *input, 
-	     SECKEYPrivateKey *pk, SECOidTag algid)
-{
-    unsigned char buf[1024];
-    SECStatus rv;
-    int nb;
-    SGNContext *sgn;
-
-    sgn = SGN_NewContext(algid, pk);
-    if (sgn == NULL)
-	return SECFailure;
-    rv = SGN_Begin(sgn);
-    if (rv != SECSuccess)
-	goto loser;
-
-    /*
-    ** Now feed the contents of the input file into the digest
-    ** algorithm, one chunk at a time, until we have exhausted the
-    ** input
-    */
-    for (;;) {
-	if (feof(input)) break;
-	nb = fread(buf, 1, sizeof(buf), input);
-	if (nb == 0) {
-	    if (ferror(input)) {
-		PORT_SetError(SEC_ERROR_IO);
-		rv = SECFailure;
-		goto loser;
-	    }
-	    break;
-	}
-	rv = SGN_Update(sgn, buf, nb);
-	if (rv != SECSuccess)
-	    goto loser;
-    }
-
-    /* Sign the digest */
-    rv = SGN_End(sgn, result);
-    /* FALL THROUGH */
 
   loser:
     SGN_DestroyContext(sgn, PR_TRUE);
