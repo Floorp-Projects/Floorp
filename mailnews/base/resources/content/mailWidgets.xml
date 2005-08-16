@@ -1572,7 +1572,7 @@
       </constructor>
     </implementation>
     <handlers>
-	<handler event="keypress" keycode="VK_ENTER" action="onEnterInSearchTerm();"/>
+	<handler event="keypress" keycode="VK_RETURN" action="onEnterInSearchTerm();"/>
     </handlers>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
