@@ -609,12 +609,13 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
     if (weAreModal) {
       rv = queueGuard.Push();
-      if (NS_SUCCEEDED(rv)) {
-        windowIsModal = PR_TRUE;
-        // in case we added this because weAreModal
-        chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
-          nsIWebBrowserChrome::CHROME_DEPENDENT;
-      }
+      if (NS_FAILED(rv))
+        return rv;
+
+      windowIsModal = PR_TRUE;
+      // in case we added this because weAreModal
+      chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
+                     nsIWebBrowserChrome::CHROME_DEPENDENT;
     }
 
     NS_ASSERTION(mWindowCreator,
