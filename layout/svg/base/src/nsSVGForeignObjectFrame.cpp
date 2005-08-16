@@ -497,34 +497,29 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& di
   dirtyRect.x -= mRect.x;
   dirtyRect.y -= mRect.y;
 
-  // As described in nsContainerFrame, don't use PushState/PopState;
-  // instead save/restore the modified transform components:
-  float xMatrix;
-  float yMatrix;
-  nsTransform2D *theTransform;
-  ctx->GetCurrentTransform(theTransform);
-  theTransform->GetTranslation(&xMatrix, &yMatrix);
-  ctx->Translate(mRect.x, mRect.y);
+  {
+    nsIRenderingContext::AutoPushTranslation
+      translate(ctx, mRect.x, mRect.y);
   
-  nsSVGForeignObjectFrameBase::Paint(presContext,
-                                     *ctx,
-                                     dirtyRect,
-                                     NS_FRAME_PAINT_LAYER_BACKGROUND,
-                                     0);
+    nsSVGForeignObjectFrameBase::Paint(presContext,
+                                       *ctx,
+                                       dirtyRect,
+                                       NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                       0);
   
-  nsSVGForeignObjectFrameBase::Paint(presContext,
-                                     *ctx,
-                                     dirtyRect,
-                                     NS_FRAME_PAINT_LAYER_FLOATS,
-                                     0);
-  
-  nsSVGForeignObjectFrameBase::Paint(presContext,
-                                     *ctx,
-                                     dirtyRect,
-                                     NS_FRAME_PAINT_LAYER_FOREGROUND,
-                                     0);
+    nsSVGForeignObjectFrameBase::Paint(presContext,
+                                       *ctx,
+                                       dirtyRect,
+                                       NS_FRAME_PAINT_LAYER_FLOATS,
+                                       0);
+    
+    nsSVGForeignObjectFrameBase::Paint(presContext,
+                                       *ctx,
+                                       dirtyRect,
+                                       NS_FRAME_PAINT_LAYER_FOREGROUND,
+                                       0);
+  }
 
-  theTransform->SetTranslation(xMatrix, yMatrix);
   ctx = nsnull;
   canvas->UnlockRenderingContext();
   
