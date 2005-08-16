@@ -61,7 +61,8 @@
     // set up default menu
     NSMenu *menu = [[[NSMenu alloc] init] autorelease];
     NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...", @"")
-                                                       action:@selector(addFolder:) keyEquivalent:[NSString string]] autorelease];
+                                                       action:@selector(addFolder:)
+                                                keyEquivalent:@""] autorelease];
     [menuItem setTarget:[self delegate]];
     [menu addItem:menuItem];
     return menu;

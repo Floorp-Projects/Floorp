@@ -159,13 +159,14 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   if (!changedField) {
     if ((tabViewItem == mBookmarkInfoTabView) && isBookmark) {
       [mBookmarkItem setTitle:[mBookmarkNameField stringValue]];
-      [mBookmarkItem setItemDescription:[mBookmarkDescField string]];
+      // beware that [NSText string] can return a pointer to (mutable) internal strorage
+      [mBookmarkItem setItemDescription:[NSString stringWithString:[mBookmarkDescField string]]];
       [mBookmarkItem setKeyword:[mBookmarkKeywordField stringValue]];
       [(Bookmark *)mBookmarkItem setUrl:[mBookmarkLocationField stringValue]];
     }
     else if ([mDummyView contentView] == mFolderView && !isBookmark) {
       [mBookmarkItem setTitle:[mFolderNameField stringValue]];
-      [mBookmarkItem setItemDescription:[mFolderDescField string]];
+      [mBookmarkItem setItemDescription:[NSString stringWithString:[mFolderDescField string]]];
       if ([(BookmarkFolder *)mBookmarkItem isGroup])
         [mBookmarkItem setKeyword:[mFolderKeywordField stringValue]];
     }
@@ -175,7 +176,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   else if ((changedField == mBookmarkKeywordField) || (changedField == mFolderKeywordField))
     [mBookmarkItem setKeyword:[changedField stringValue]];
   else if ((changedField == mBookmarkDescField) || (changedField == mFolderDescField))
-    [mBookmarkItem setItemDescription:[changedField string]];
+    [mBookmarkItem setItemDescription:[NSString stringWithString:[changedField string]]];
   else if ((changedField == mBookmarkLocationField) && isBookmark)
     [(Bookmark *)mBookmarkItem setUrl:[changedField stringValue]];
     

@@ -45,7 +45,7 @@
 #import "PreferenceManager.h"
 #import "ProgressView.h"
 
-static NSString *ProgressWindowFrameSaveName = @"ProgressWindow";
+static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 
 @interface ProgressDlgController(PrivateProgressDlgController)
 
@@ -81,7 +81,7 @@ static id gSharedProgressController = nil;
     mDefaultWindowSize = [[self window] frame].size;
     // it would be nice if we could get the frame from the name, and then
     // mess with it before setting it.
-    [[self window] setFrameUsingName:ProgressWindowFrameSaveName];
+    [[self window] setFrameUsingName:kProgressWindowFrameSaveName];
     
     // We provide the views for the stack view, from mProgressViewControllers
     [mStackView setDataSource:self];
@@ -511,7 +511,7 @@ static id gSharedProgressController = nil;
 
 -(void)autosaveWindowFrame
 {
-  [[self window] saveFrameUsingName:ProgressWindowFrameSaveName];
+  [[self window] saveFrameUsingName:kProgressWindowFrameSaveName];
 }
 
 -(void)windowWillClose:(NSNotification *)notification

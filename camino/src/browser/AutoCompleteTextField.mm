@@ -863,9 +863,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     // Since we'll edit the text view as we add in autocomplete results,
     // we've got to make a copy of the string as it currently stands
     // to know what we were searching for in the first place.
-    NSString *searchString = [currentText copyWithZone:nil];
+    NSString *searchString = [NSString stringWithString:currentText];
     [self startSearch:searchString complete:!mBackspaced];
-    [searchString release];
   }
   else if (([mTableView selectedRow] == -1) || mBackspaced)
     [self clearResults];

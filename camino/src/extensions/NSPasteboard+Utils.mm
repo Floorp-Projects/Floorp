@@ -141,7 +141,7 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
       NSString *file = [files objectAtIndex:i];
       NSString *ext = [file pathExtension];
       NSString *urlString = nil;
-      NSString *title = [NSString string];
+      NSString *title = @"";
       
       // Check whether the file is a .webloc, a .url, or some other kind of file.
       if ([ext isEqualToString:@"webloc"]) {

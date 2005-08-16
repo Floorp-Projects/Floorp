@@ -428,7 +428,7 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   {
     NSString* requestURL = [curRequest objectForKey:@"request_uri"];
     if (!requestURL)
-      requestURL = [NSString string];
+      requestURL = @"";
     id requestor = [curRequest objectForKey:@"icon_requestor"];
     
     // if we got an image, cache the link url, if any

@@ -174,37 +174,34 @@
   id cell = [self cell];
   BOOL showGreyText = YES;
   NSFormatter *formatter = [cell formatter];
-  NSString *string = [[[[[self window] fieldEditor:YES forObject:self] string] copy] autorelease];
-
-  NSMutableDictionary *userInfo;
-  NSNumber *textMovement;
+  NSString* fieldValue = [NSString stringWithString:[[[self window] fieldEditor:YES forObject:self] string]];
   
   if (formatter == nil) 
-    [cell setStringValue:string];
+    [cell setStringValue:fieldValue];
   else {
     // If we have a special formatter, transform our string based on that method
     id newObjectValue;
     NSString *error;
     SEL controlFailedMethod = @selector(control:didFailToFormatString:errorDescription:);
 
-    if ([formatter getObjectValue:&newObjectValue forString:string errorDescription:&error])
+    if ([formatter getObjectValue:&newObjectValue forString:fieldValue errorDescription:&error])
       [cell setObjectValue:newObjectValue];
     else if ([[self delegate] respondsToSelector:controlFailedMethod] &&
-             [[self delegate] control:self didFailToFormatString:string
+             [[self delegate] control:self didFailToFormatString:fieldValue
                      errorDescription:error])
-      [cell setStringValue:string];
+      [cell setStringValue:fieldValue];
   }
 
   [cell endEditing:[aNotification object]];
 
   // Get information from the notifcation dictionary so that we can decide
   // what to do in response to the user's action
-  userInfo = [[NSMutableDictionary alloc] initWithDictionary:[aNotification userInfo]];
+  NSMutableDictionary* userInfo = [[NSMutableDictionary alloc] initWithDictionary:[aNotification userInfo]];
   [userInfo setObject:[aNotification object] forKey:@"NSFieldEditor"];
   [defaultCenter postNotificationName:NSControlTextDidEndEditingNotification
                                object:self
                              userInfo:userInfo];
-  textMovement = [[aNotification userInfo] objectForKey:@"NSTextMovement"];
+  NSNumber* textMovement = [[aNotification userInfo] objectForKey:@"NSTextMovement"];
   [userInfo release];
 
   if (textMovement) {

@@ -380,7 +380,7 @@ static BOOL gSuppressAllUpdates = NO;
 
 -(NSString *)writeHTML:(unsigned)aPad
 {
-  return [NSString string];
+  return @"";
 }
 
 - (id)savedTitle

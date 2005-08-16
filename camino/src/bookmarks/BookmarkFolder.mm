@@ -1113,7 +1113,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
       @"<H1>Bookmarks</H1>"];
    // Folder-Not-Appearing-In-This-File Folder (ie, smart folders)
    else if ([self isSmartFolder])
-     return [NSString string];
+     return @"";
   NSEnumerator* enumerator = [mChildArray objectEnumerator];
   //get chillins first
   while ((item = [enumerator nextObject]))

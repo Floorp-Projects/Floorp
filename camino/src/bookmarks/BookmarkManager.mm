@@ -495,7 +495,7 @@ static unsigned           gFirstUserCollection = 0;
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword
 {
   NSArray *resolvedArray = nil;
-  if (![keyword isEqualToString:@""]) {
+  if ([keyword length] > 0) {
     NSRange spaceRange = [keyword rangeOfString:@" "];
     NSString *firstWord = nil;
     NSString *secondWord = nil;

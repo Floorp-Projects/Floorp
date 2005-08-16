@@ -345,7 +345,9 @@ static const int kBMBarScanningStep = 5;
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   NSMenu* myMenu = [[NSMenu alloc] initWithTitle:@"snookums"];
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...",@"Create New Folder...") action:@selector(addFolder:) keyEquivalent:[NSString string]];
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...",@"Create New Folder...")
+                                                    action:@selector(addFolder:)
+                                             keyEquivalent:@""];
   [menuItem setTarget:self];
   [myMenu addItem:menuItem];
   [menuItem release];

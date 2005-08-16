@@ -157,7 +157,7 @@
   if ([[findPboard types] indexOfObject:NSStringPboardType] != NSNotFound) 
     searchText = [findPboard stringForType:NSStringPboardType];
   else
-    searchText = [NSString string];
+    searchText = @"";
   
   if (outIsNew)
     *outIsNew = !mLastFindString || (mLastFindString && ![mLastFindString isEqualToString:searchText]);

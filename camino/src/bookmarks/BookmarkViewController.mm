@@ -1276,7 +1276,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       [contextMenu addItem:[NSMenuItem separatorItem]];
       NSMenuItem *useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", @"Use as Dock Menu")
                                                              action:@selector(setAsDockMenuFolder:)
-                                                      keyEquivalent:[NSString string]];
+                                                      keyEquivalent:@""];
       [useAsDockItem setTarget:self];
       [contextMenu addItem:useAsDockItem];
       [useAsDockItem release];
@@ -1284,7 +1284,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       {
         NSMenuItem *deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", @"Delete")
                                                             action:@selector(deleteCollection:)
-                                                     keyEquivalent:[NSString string]];
+                                                     keyEquivalent:@""];
         [deleteItem setTarget:self];
         [contextMenu addItem:deleteItem];
         [deleteItem release];
