@@ -444,6 +444,7 @@ protected:
   static void             UnregisterSpecialDropdownHooks();
 
 #endif
+
   static BOOL             DealWithPopups (HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
 
   static PRBool           EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
@@ -555,7 +556,6 @@ protected:
   static        nsWindow* gCurrentWindow;
   nsPoint       mLastPoint;
   HWND          mWnd;
-  HWND          mBorderlessParent;
 #if 0
   HPALETTE      mPalette;
 #endif
