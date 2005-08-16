@@ -1021,18 +1021,12 @@ MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMi
 #endif
 
     BOOL b = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-
+    
     if (b && wRemoveMsg == PM_REMOVE)
         gGetMessageTime = lpMsg->time; 
-	
-	return b;
+    
+    return b;
 }
-
-MOZCE_SHUNT_API BOOL mozce_PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
-{
-	return mozce_PeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-}
-
 
 
 MOZCE_SHUNT_API LONG mozce_GetMessageTime(void)
