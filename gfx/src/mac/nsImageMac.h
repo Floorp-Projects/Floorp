@@ -126,6 +126,11 @@ protected:
                                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                                         const nsRect &aTileRect);
 
+  nsresult          DrawTileWithQuartz(nsIDrawingSurface* aSurface,
+                                        PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                        PRInt32 aPadX, PRInt32 aPadY,
+                                        const nsRect &aTileRect);
+  
   static PRInt32    CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth);
 
   inline static PRInt32 CalculateRowBytesInternal(PRUint32 aWidth,
@@ -169,7 +174,7 @@ private:
   PRInt8          mAlphaDepth;      // alpha layer depth
 
   PRPackedBool    mPendingUpdate;   // true when we need to recreate CGImageRef
-  PRBool          mOptimized;       // true when nsImage object has been
+  PRPackedBool    mOptimized;       // true when nsImage object has been
                                     // optimized (see |Optimize()|)
 
   PRInt32         mDecodedX1;       // Keeps track of what part of image
