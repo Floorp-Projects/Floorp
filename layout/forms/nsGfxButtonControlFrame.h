@@ -98,6 +98,8 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
+  virtual PRBool IsLeaf() const;
+  
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                    const nsHTMLReflowState& aSuggestedReflowState);

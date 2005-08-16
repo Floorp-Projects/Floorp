@@ -573,6 +573,12 @@ nsFileControlFrame::AttributeChanged(nsIContent*     aChild,
   return nsAreaFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
 }
 
+PRBool
+nsFileControlFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,

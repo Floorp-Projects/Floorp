@@ -2500,6 +2500,12 @@ nsFrame::GetType() const
   return nsnull;
 }
 
+PRBool
+nsIFrame::IsLeaf() const
+{
+  return PR_TRUE;
+}
+
 void
 nsIFrame::Invalidate(const nsRect& aDamageRect,
                      PRBool        aImmediate) const

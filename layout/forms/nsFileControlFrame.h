@@ -98,6 +98,7 @@ public:
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
+  virtual PRBool IsLeaf() const;
 
   NS_IMETHOD     GetName(nsAString* aName);
   NS_IMETHOD_(PRInt32) GetFormControlType() const;

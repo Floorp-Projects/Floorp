@@ -152,6 +152,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  virtual PRBool IsLeaf() const;
+  
   NS_IMETHOD  VerifyTree() const;
 
   void StartMouseDrag(nsPresContext*            aPresContext, 

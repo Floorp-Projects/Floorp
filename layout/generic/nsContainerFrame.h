@@ -78,6 +78,8 @@ public:
                           nsIFrame*       aNewFrame);
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
+  virtual PRBool IsLeaf() const;
+  
 #ifdef DEBUG
   NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 #endif  

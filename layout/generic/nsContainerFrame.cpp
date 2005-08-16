@@ -398,6 +398,11 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
   return NS_OK;
 }
 
+PRBool
+nsContainerFrame::IsLeaf() const
+{
+  return PR_FALSE;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
