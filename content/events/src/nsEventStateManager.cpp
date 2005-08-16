@@ -847,14 +847,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       if (focusController) {
 
-        // Make sure the focus controller is up-to-date, since restoring
-        // focus memory may have caused focus to go elsewhere.
-
-        if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
-          nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(mCurrentFocus);
-          focusController->SetFocusedElement(focusElement);
-        }
-
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
         while (isSuppressed) {
@@ -865,6 +857,14 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           focusController->GetSuppressFocus(&isSuppressed);
         }
         focusController->SetSuppressFocusScroll(PR_FALSE);
+
+        // Make sure the focus controller is up-to-date, since restoring
+        // focus memory may have caused focus to go elsewhere.
+
+        if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+          nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(mCurrentFocus);
+          focusController->SetFocusedElement(focusElement);
+        }
       }
     }
     break;
@@ -3892,6 +3892,20 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       // only raise window if the the focus controller is active
       SendFocusBlur(mPresContext, aContent, fcActive);
 
+#ifdef DEBUG_aleventhal
+      nsCOMPtr<nsPIDOMWindow> currentWindow =
+        do_QueryInterface(GetDocumentOuterWindow(mDocument));
+      if (currentWindow) {
+        nsIFocusController *fc = currentWindow->GetRootFocusController();
+        if (fc) {
+          nsCOMPtr<nsIDOMElement> focusedElement;
+          fc->GetFocusedElement(getter_AddRefs(focusedElement));
+          if (!SameCOMIdentity(mCurrentFocus, focusedElement)) {
+            printf("\n\nFocus out of whack!!!\n\n");
+          }
+        }
+      }
+#endif
       // If we now have focused content, ensure that the canvas focus ring
       // is removed.
       if (mDocument) {
@@ -4099,23 +4113,6 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 
           EnsureDocument(presShell);
 
-          // Make sure we're not switching command dispatchers, if so,
-          // surpress the blurred one
-          if(gLastFocusedDocument && mDocument) {
-            nsIFocusController *newFocusController = nsnull;
-            nsIFocusController *oldFocusController = nsnull;
-            nsCOMPtr<nsPIDOMWindow> newWindow =
-              do_QueryInterface(GetDocumentOuterWindow(mDocument));
-            nsCOMPtr<nsPIDOMWindow> oldWindow =
-              do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
-            if(newWindow)
-              newFocusController = newWindow->GetRootFocusController();
-            if(oldWindow)
-              oldFocusController = oldWindow->GetRootFocusController();
-            if(oldFocusController && oldFocusController != newFocusController)
-              oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch");
-          }
-
           nsCOMPtr<nsIEventStateManager> esm;
           esm = oldPresContext->EventStateManager();
           esm->SetFocusedContent(gLastFocusedContent);
@@ -4139,6 +4136,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       if (previousFocus && previousFocus != focusAfterBlur) {
         // The content node's blur handler focused something else.
         // In this case, abort firing any more blur or focus events.
+        EnsureFocusSynchronization();
         return NS_OK;
       }
     }
@@ -4155,23 +4153,6 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
 
-      // Make sure we're not switching command dispatchers, if so,
-      // surpress the blurred one
-      if (mDocument) {
-        nsIFocusController *newFocusController = nsnull;
-        nsIFocusController *oldFocusController = nsnull;
-        nsCOMPtr<nsPIDOMWindow> newWindow =
-          do_QueryInterface(GetDocumentOuterWindow(mDocument));
-        nsCOMPtr<nsPIDOMWindow> oldWindow =
-          do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
-
-        if (newWindow)
-          newFocusController = newWindow->GetRootFocusController();
-        oldFocusController = oldWindow->GetRootFocusController();
-        if (oldFocusController && oldFocusController != newFocusController)
-          oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
-      }
-
       gLastFocusedPresContext->EventStateManager()->SetFocusedContent(nsnull);
       nsCOMPtr<nsIDocument> temp = gLastFocusedDocument;
       NS_RELEASE(gLastFocusedDocument);
@@ -4183,7 +4164,10 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 
       if (previousFocus && mCurrentFocus != previousFocus) {
         // The document's blur handler focused something else.
-        // Abort firing any additional blur or focus events.
+        // Abort firing any additional blur or focus events, and make sure
+        // nsFocusController:mFocusedElement is not nulled out, but agrees
+        // with our current concept of focus.
+        EnsureFocusSynchronization();
         return NS_OK;
       }
 
@@ -4193,6 +4177,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       if (previousFocus && mCurrentFocus != previousFocus) {
         // The window's blur handler focused something else.
         // Abort firing any additional blur or focus events.
+        EnsureFocusSynchronization();
         return NS_OK;
       }
     }
@@ -4281,6 +4266,27 @@ nsEventStateManager::GetFocusedContent(nsIContent** aContent)
   *aContent = mCurrentFocus;
   NS_IF_ADDREF(*aContent);
   return NS_OK;
+}
+
+void nsEventStateManager::EnsureFocusSynchronization()
+{
+  // Sometimes the focus can get out of whack due to a blur handler
+  // resetting focus. In addition, we fire onchange from the blur handler
+  // for some controls, which is another place where focus can be changed.
+  // XXX Ideally we will eventually store focus in one place instead of
+  // the focus controller, esm, tabbrowser and some frames, so that it
+  // cannot get out of sync.
+  // See Bug 304751, calling FireOnChange() inside
+  //                 nsComboboxControlFrame::SetFocus() is bad
+  nsCOMPtr<nsPIDOMWindow> currentWindow =
+    do_QueryInterface(GetDocumentOuterWindow(mDocument));
+  if (currentWindow) {
+    nsIFocusController *fc = currentWindow->GetRootFocusController();
+    if (fc) {
+      nsCOMPtr<nsIDOMElement> focusedElement = do_QueryInterface(mCurrentFocus);
+      fc->SetFocusedElement(focusedElement);
+    }
+  }
 }
 
 NS_IMETHODIMP
