@@ -991,6 +991,50 @@ MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE
     return MsgWaitForMultipleObjects(nCount, (HANDLE*) pHandles, bWaitAll, dwMilliseconds, dwWakeMask);
 }
 
+static LONG gGetMessageTime = 0;
+
+MOZCE_SHUNT_API BOOL mozce_GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax )
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_GetMessage called\n");
+#endif
+
+    BOOL b = GetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMin);
+
+    if (b)
+        gGetMessageTime = lpMsg->time;
+
+    return b;
+}
+
+
+MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
+{
+    MOZCE_PRECHECK
+
+#ifdef LOUD_PEEKMESSAGE
+#ifdef DEBUG
+    mozce_printf("mozce_PeekMessageA called\n");
+#endif
+#endif
+
+    BOOL b = PeekMessageW(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+
+    if (b && wRemoveMsg == PM_REMOVE)
+        gGetMessageTime = lpMsg->time; 
+	
+	return b;
+}
+
+MOZCE_SHUNT_API BOOL mozce_PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg)
+{
+	return mozce_PeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+}
+
+
+
 MOZCE_SHUNT_API LONG mozce_GetMessageTime(void)
 {
     MOZCE_PRECHECK
@@ -998,8 +1042,8 @@ MOZCE_SHUNT_API LONG mozce_GetMessageTime(void)
 #ifdef DEBUG
     mozce_printf("mozce_GetMessageTime called\n");
 #endif
-  // Close enough guess?
-  return GetTickCount();
+
+  return gGetMessageTime;
 }
 
 MOZCE_SHUNT_API UINT mozce_GetACP(void)
@@ -1031,6 +1075,23 @@ MOZCE_SHUNT_API BOOL mozce_GdiFlush(void)
     MOZCE_PRECHECK
 
     return TRUE;
+}
+
+MOZCE_SHUNT_API BOOL mozce_GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndpl)
+{
+   MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_GetWindowPlacement called\n");
+#endif
+
+   memset(lpwndpl, 0, sizeof(WINDOWPLACEMENT));
+   
+   // This is wrong when the window is minimized.
+   lpwndpl->showCmd = SW_SHOWNORMAL;
+   GetWindowRect(hWnd, &lpwndpl->rcNormalPosition);
+   
+   return TRUE;
 }
 
 #if 0

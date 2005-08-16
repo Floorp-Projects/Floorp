@@ -510,6 +510,16 @@
 #endif
 #define GetMapMode                mozce_GetMapMode
 
+#ifdef GetMessageA
+#undef GetMessageA
+#endif
+#define GetMessageA               mozce_GetMessage
+
+#ifdef GetMessageW
+#undef GetMessageW
+#endif
+#define GetMessageW               mozce_GetMessage
+
 #ifdef GetMessageTime
 #undef GetMessageTime
 #endif
@@ -554,6 +564,12 @@
 #undef GetUserName
 #endif
 #define GetUserName               mozce_GetUserName
+
+
+#ifdef GetWindowPlacement
+#undef GetWindowPlacement
+#endif
+#define GetWindowPlacement       mozce_GetWindowPlacement
 
 #ifdef InvertRgn
 #undef InvertRgn
@@ -614,6 +630,16 @@
 #undef Pie
 #endif
 #define Pie                       mozce_Pie
+
+#ifdef PeekMessageA
+#undef PeekMessageA
+#endif
+#define PeekMessageA              mozce_PeekMessage
+
+#ifdef PeekMessageW
+#undef PeekMessageW
+#endif
+#define PeekMessageW              mozce_PeekMessage
 
 #ifdef RegCreateKey
 #undef RegCreateKey
@@ -1006,11 +1032,6 @@
 #endif
 #define OutputDebugStringA        mozce_OutputDebugStringA
 
-#ifdef PeekMessageA
-#undef PeekMessageA
-#endif
-#define PeekMessageA              mozce_PeekMessageA
-
 #ifdef PostMessageA
 #undef PostMessageA
 #endif
@@ -1131,11 +1152,6 @@
 #undef SystemParametersInfoA
 #endif
 #define SystemParametersInfoA      SystemParametersInfoW
-
-#ifdef GetMessageA
-#undef GetMessageA
-#endif
-#define GetMessageA                GetMessageW
 
 #ifdef DispatchMessageA
 #undef DispatchMessageA
@@ -1348,6 +1364,7 @@ extern "C" {
   MOZCE_SHUNT_API HHOOK mozce_SetWindowsHookEx(int inType, void* inFunc, HINSTANCE inMod, DWORD inThreadId);
   MOZCE_SHUNT_API BOOL mozce_UnhookWindowsHookEx(HHOOK inHook);
   MOZCE_SHUNT_API LRESULT mozce_CallNextHookEx(HHOOK inHook, int inCode, WPARAM wParam, LPARAM lParam);
+  MOZCE_SHUNT_API BOOL mozce_GetWindowPlacement(HWND window, WINDOWPLACEMENT *lpwndpl);
   MOZCE_SHUNT_API BOOL mozce_InvertRgn(HDC inDC, HRGN inRGN);
   MOZCE_SHUNT_API int mozce_GetScrollPos(HWND inWnd, int inBar);
   MOZCE_SHUNT_API BOOL mozce_GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos);
@@ -1377,6 +1394,8 @@ extern "C" {
 
   MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE* pHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD dwWakeMask);
 
+  MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
+  MOZCE_SHUNT_API BOOL mozce_GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
   MOZCE_SHUNT_API LONG mozce_GetMessageTime(void);
 
   // from win32a.cpp
@@ -1399,7 +1418,6 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_GetVersionExA(LPOSVERSIONINFOA lpv);
   MOZCE_SHUNT_API BOOL mozce_DeleteFileA(LPCSTR lpFileName);
   MOZCE_SHUNT_API BOOL mozce_MoveFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFileName);
-  MOZCE_SHUNT_API BOOL mozce_PeekMessageA(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
   MOZCE_SHUNT_API BOOL mozce_SetCurrentDirectoryA(LPCSTR inPathName);
   MOZCE_SHUNT_API BOOL mozce_VerQueryValueA(const LPVOID inBlock, LPSTR inSubBlock, LPVOID *outBuffer, PUINT outLen);
   MOZCE_SHUNT_API BOOL mozce_UnregisterClassA(LPCSTR lpClassName, HINSTANCE hInstance);
