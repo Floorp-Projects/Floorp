@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.33 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslsnce.c,v 1.34 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -147,7 +147,7 @@ struct sidCacheEntryStr {
 /*  2 */    PRUint16    compression; 	/* SSL3CompressionMethod */
 
 /*122 */    ssl3SidKeys keys;	/* keys and ivs, wrapped as needed. */
-/*  1 */    PRUint8     hasFortezza;
+/*  1 */    PRUint8     unused; /* was hasFortezza; */
 /*  1 */    PRUint8     resumable;
 
 /*  4 */    PRUint32    masterWrapMech; 
@@ -442,7 +442,6 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 	to->u.ssl3.cipherSuite      = from->u.ssl3.cipherSuite;
 	to->u.ssl3.compression      = (uint16)from->u.ssl3.compression;
 	to->u.ssl3.resumable        = from->u.ssl3.resumable;
-	to->u.ssl3.hasFortezza      = from->u.ssl3.hasFortezza;
 	to->u.ssl3.keys             = from->u.ssl3.keys;
 	to->u.ssl3.masterWrapMech   = from->u.ssl3.masterWrapMech;
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
@@ -518,7 +517,6 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 	to->u.ssl3.cipherSuite      = from->u.ssl3.cipherSuite;
 	to->u.ssl3.compression      = (SSL3CompressionMethod)from->u.ssl3.compression;
 	to->u.ssl3.resumable        = from->u.ssl3.resumable;
-	to->u.ssl3.hasFortezza      = from->u.ssl3.hasFortezza;
 	to->u.ssl3.keys             = from->u.ssl3.keys;
 	to->u.ssl3.masterWrapMech   = from->u.ssl3.masterWrapMech;
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
@@ -543,8 +541,6 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 	to->u.ssl3.clAuthSlotID     = (CK_SLOT_ID)-1;     /* invalid value */
 	to->u.ssl3.clAuthSeries     = 0;
 	to->u.ssl3.clAuthValid      = PR_FALSE;
-
-	to->u.ssl3.clientWriteSaveLen = 0;
 
 	if (from->u.ssl3.certIndex != -1 && pcce) {
 	    SECItem          derCert;

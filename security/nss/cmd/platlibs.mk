@@ -66,7 +66,6 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
-	$(DIST)/lib/$(LIB_PREFIX)swfci.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
@@ -112,7 +111,6 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)swfci.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \

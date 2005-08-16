@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.30 2005/06/28 17:48:26 wtchang%redhat.com Exp $ */
+/* $Id: sslsecur.c,v 1.31 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -576,12 +576,7 @@ ssl_FindCertKEAType(CERTCertificate * cert)
   case SEC_OID_PKCS1_RSA_ENCRYPTION:
     keaType = kt_rsa;
     break;
-  case SEC_OID_MISSI_KEA_DSS_OLD:
-  case SEC_OID_MISSI_KEA_DSS:
-  case SEC_OID_MISSI_DSS_OLD:
-  case SEC_OID_MISSI_DSS:
-    keaType = kt_fortezza;
-    break;
+
   case SEC_OID_X942_DIFFIE_HELMAN_KEY:
     keaType = kt_dh;
     break;

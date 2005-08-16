@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.38 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslimpl.h,v 1.39 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -84,7 +84,7 @@ typedef SSLSignType     SSL3SignType;
 #define calg_des	ssl_calg_des
 #define calg_3des	ssl_calg_3des
 #define calg_idea	ssl_calg_idea
-#define calg_fortezza	ssl_calg_fortezza
+#define calg_fortezza	ssl_calg_fortezza /* deprecated, must preserve */
 #define calg_aes	ssl_calg_aes
 
 #define mac_null	ssl_mac_null
@@ -414,7 +414,6 @@ typedef enum {
     cipher_3des, 
     cipher_des40,
     cipher_idea, 
-    cipher_fortezza,
     cipher_aes_128,
     cipher_aes_256,
     cipher_missing              /* reserved for no such supported cipher */
@@ -522,7 +521,6 @@ struct sslSessionIDStr {
 	    SSL3CompressionMethod compression;
 	    PRBool                resumable;
 	    int                   policy;
-	    PRBool                hasFortezza;
 	    ssl3SidKeys           keys;
 	    CK_MECHANISM_TYPE     masterWrapMech;
 				  /* mechanism used to wrap master secret */
@@ -560,11 +558,6 @@ struct sslSessionIDStr {
             char              masterValid;
 	    char              clAuthValid;
 
-	    /* the following values are used only in the client, and only 
-	     * with fortezza.
-	     */
-	    SSL3Opaque       clientWriteSave[80]; 
-	    int              clientWriteSaveLen;  
 	} ssl3;
     } u;
 };
@@ -660,12 +653,7 @@ const ssl3CipherSuiteDef *suite_def;
                                        /* protected by recvBufLock */
 } SSL3HandshakeState;
 
-struct SSL3FortezzaKEAParamsStr {
-    unsigned char R_s[128];		/* server's "random" public key	*/
-    PK11SymKey *  tek;
-};
 
-typedef struct SSL3FortezzaKEAParamsStr SSL3FortezzaKEAParams;
 
 /*
 ** This is the "ssl3" struct, as in "ss->ssl3".
@@ -704,7 +692,7 @@ struct ssl3StateStr {
 			    /* chain while we are trying to validate it.   */
     CERTDistNames *      ca_list; 
 			    /* used by server.  trusted CAs for this socket. */
-    SSL3FortezzaKEAParams fortezza;
+
 };
 
 typedef struct {

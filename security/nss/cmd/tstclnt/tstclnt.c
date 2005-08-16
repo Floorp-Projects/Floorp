@@ -108,14 +108,14 @@ int ssl2CipherSuites[] = {
 };
 
 int ssl3CipherSuites[] = {
-    SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,	/* a */
-    SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,		/* b */
+    -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
+    -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,	 * b */
     SSL_RSA_WITH_RC4_128_MD5,			/* c */
     SSL_RSA_WITH_3DES_EDE_CBC_SHA,		/* d */
     SSL_RSA_WITH_DES_CBC_SHA,			/* e */
     SSL_RSA_EXPORT_WITH_RC4_40_MD5,		/* f */
     SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,		/* g */
-    SSL_FORTEZZA_DMS_WITH_NULL_SHA,		/* h */
+    -1, /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,	 * h */
     SSL_RSA_WITH_NULL_MD5,			/* i */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,		/* j */
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,		/* k */
@@ -257,14 +257,11 @@ static void Usage(const char *progName)
 "T    TLS ECDHE RSA WITH AES 128 CBC SHA\n"
 #endif /* NSS_ENABLE_ECC */
 "\n"
-"a    SSL3 FORTEZZA DMS WITH FORTEZZA CBC SHA\n"
-"b    SSL3 FORTEZZA DMS WITH RC4 128 SHA\n"
 "c    SSL3 RSA WITH RC4 128 MD5\n"
 "d    SSL3 RSA WITH 3DES EDE CBC SHA\n"
 "e    SSL3 RSA WITH DES CBC SHA\n"
 "f    SSL3 RSA EXPORT WITH RC4 40 MD5\n"
 "g    SSL3 RSA EXPORT WITH RC2 CBC 40 MD5\n"
-"h    SSL3 FORTEZZA DMS WITH NULL SHA\n"
 "i    SSL3 RSA WITH NULL MD5\n"
 "j    SSL3 RSA FIPS WITH 3DES EDE CBC SHA\n"
 "k    SSL3 RSA FIPS WITH DES CBC SHA\n"
@@ -672,7 +669,7 @@ int main(int argc, char **argv)
 	    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
 	    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
 	    	/* do nothing */;
-	    if (cipher) {
+	    if (cipher > 0) {
 		SECStatus status;
 		status = SSL_CipherPrefSet(s, cipher, SSL_ALLOWED);
 		if (status != SECSuccess) 

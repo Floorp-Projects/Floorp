@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslenum.c,v 1.11 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslenum.c,v 1.12 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #include "ssl.h"
 #include "sslproto.h"
@@ -56,7 +56,6 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     TLS_RSA_WITH_AES_256_CBC_SHA,
 
     /* 128-bit */
-    SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,
 #ifdef NSS_ENABLE_ECC
     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
@@ -84,9 +83,6 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
     SSL_RSA_WITH_3DES_EDE_CBC_SHA,
 
-    /* 80 bit skipjack */
-    SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA, /* KEA + SkipJack */
-
     /* 56-bit DES "domestic" cipher suites */
     SSL_DHE_RSA_WITH_DES_CBC_SHA,
     SSL_DHE_DSS_WITH_DES_CBC_SHA,
@@ -106,7 +102,6 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
 
     /* ciphersuites with no encryption */
-    SSL_FORTEZZA_DMS_WITH_NULL_SHA,
 #ifdef NSS_ENABLE_ECC
     TLS_ECDH_RSA_WITH_NULL_SHA,
     TLS_ECDH_ECDSA_WITH_NULL_SHA,

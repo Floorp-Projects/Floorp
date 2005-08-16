@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.71 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3con.c,v 1.72 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -109,7 +109,6 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
 #endif /* NSS_ENABLE_ECC */
  { TLS_RSA_WITH_AES_256_CBC_SHA,     	   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
 
- { SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,      SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
 #ifdef NSS_ENABLE_ECC
  { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,   SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
  { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,     SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
@@ -136,7 +135,6 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,     SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_WITH_3DES_EDE_CBC_SHA,          SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
 
- { SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA, SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
 
  { SSL_DHE_RSA_WITH_DES_CBC_SHA,           SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
  { SSL_DHE_DSS_WITH_DES_CBC_SHA,           SSL_NOT_ALLOWED, PR_FALSE,PR_FALSE},
@@ -152,7 +150,6 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { SSL_RSA_EXPORT_WITH_RC4_40_MD5,         SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
  { SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,     SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
 
- { SSL_FORTEZZA_DMS_WITH_NULL_SHA,         SSL_NOT_ALLOWED, PR_TRUE, PR_FALSE},
 #ifdef NSS_ENABLE_ECC
  { TLS_ECDH_RSA_WITH_NULL_SHA,             SSL_NOT_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDH_ECDSA_WITH_NULL_SHA,           SSL_NOT_ALLOWED, PR_FALSE, PR_FALSE},
@@ -177,9 +174,6 @@ static const /*SSL3ClientCertificateType */ uint8 certificate_types [] = {
 #endif /* NSS_ENABLE_ECC */
 };
 
-static const /*SSL3ClientCertificateType */ uint8 fortezza_certificate_types [] = {
-    ct_Fortezza,
-};
 
 /*
  * make sure there is room in the write buffer for padding and
@@ -217,13 +211,13 @@ static const ssl3BulkCipherDef bulk_cipher_defs[] = {
     {cipher_3des,      calg_3des,     24, 24, type_block,   8, 8, kg_strong},
     {cipher_des40,     calg_des,       8,  5, type_block,   8, 8, kg_export},
     {cipher_idea,      calg_idea,     16, 16, type_block,   8, 8, kg_strong},
-    {cipher_fortezza,  calg_fortezza, 10, 10, type_block,  24, 8, kg_null},
     {cipher_aes_128,   calg_aes,      16, 16, type_block,  16,16, kg_strong},
     {cipher_aes_256,   calg_aes,      32, 32, type_block,  16,16, kg_strong},
     {cipher_missing,   calg_null,      0,  0, type_stream,  0, 0, kg_null},
 };
 
-static const ssl3KEADef kea_defs[] = { /* indexed by SSL3KeyExchangeAlgorithm */
+static const ssl3KEADef kea_defs[] = 
+{ /* indexed by SSL3KeyExchangeAlgorithm */
     /* kea              exchKeyType signKeyType is_limited limit  tls_keygen */
     {kea_null,           kt_null,     sign_null, PR_FALSE,   0, PR_FALSE},
     {kea_rsa,            kt_rsa,      sign_rsa,  PR_FALSE,   0, PR_FALSE},
@@ -239,7 +233,6 @@ static const ssl3KEADef kea_defs[] = { /* indexed by SSL3KeyExchangeAlgorithm */
     {kea_dhe_rsa_export, kt_dh,       sign_rsa,  PR_TRUE,  512, PR_FALSE},
     {kea_dh_anon,        kt_dh,       sign_null, PR_FALSE,   0, PR_FALSE},
     {kea_dh_anon_export, kt_dh,       sign_null, PR_TRUE,  512, PR_FALSE},
-    {kea_fortezza,       kt_fortezza, sign_dsa,  PR_FALSE,   0, PR_FALSE},
     {kea_rsa_fips,       kt_rsa,      sign_rsa,  PR_FALSE,   0, PR_TRUE },
 #ifdef NSS_ENABLE_ECC
     {kea_ecdh_ecdsa,     kt_ecdh,     sign_ecdsa,  PR_FALSE, 0, PR_FALSE},
@@ -250,7 +243,8 @@ static const ssl3KEADef kea_defs[] = { /* indexed by SSL3KeyExchangeAlgorithm */
 };
 
 /* must use ssl_LookupCipherSuiteDef to access */
-static const ssl3CipherSuiteDef cipher_suite_defs[] = {
+static const ssl3CipherSuiteDef cipher_suite_defs[] = 
+{
 /*  cipher_suite                    bulk_cipher_alg mac_alg key_exchange_alg */
 
     {SSL_NULL_WITH_NULL_NULL,       cipher_null,   mac_null, kea_null},
@@ -298,10 +292,6 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] = {
     {SSL_DH_ANON_3DES_CBC_SHA,      cipher_3des,   mac_sha, kea_dh_anon},
 #endif
 
-    {SSL_FORTEZZA_DMS_WITH_NULL_SHA, cipher_null,  mac_sha, kea_fortezza},
-    {SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,
-                                  cipher_fortezza, mac_sha, kea_fortezza},
-    {SSL_FORTEZZA_DMS_WITH_RC4_128_SHA, cipher_rc4, mac_sha, kea_fortezza},
 
 /* New TLS cipher suites */
     {TLS_RSA_WITH_AES_128_CBC_SHA,     	cipher_aes_128, mac_sha, kea_rsa},
@@ -362,14 +352,16 @@ typedef struct SSLCipher2MechStr {
     CK_MECHANISM_TYPE   cmech;
 } SSLCipher2Mech;
 
+/* indexed by type SSLCipherAlgorithm */
 static const SSLCipher2Mech alg2Mech[] = {
+    /* calg,          cmech  */
     { calg_null     , (CK_MECHANISM_TYPE)0x80000000L	},
     { calg_rc4      , CKM_RC4				},
     { calg_rc2      , CKM_RC2_CBC			},
     { calg_des      , CKM_DES_CBC			},
     { calg_3des     , CKM_DES3_CBC			},
     { calg_idea     , CKM_IDEA_CBC			},
-    { calg_fortezza , CKM_SKIPJACK_CBC64		},
+    { calg_fortezza , CKM_SKIPJACK_CBC64                },
     { calg_aes      , CKM_AES_CBC			},
 /*  { calg_init     , (CK_MECHANISM_TYPE)0x7fffffffL    }  */
 };
@@ -401,7 +393,6 @@ const char * const ssl3_cipherName[] = {
     "3DES-EDE-CBC",
     "DES-CBC-40",
     "IDEA-CBC",
-    "FORTEZZA",
     "AES-128",
     "AES-256",
     "missing"
@@ -838,7 +829,6 @@ ssl3_SignHashes(SSL3Hashes *hash, SECKEYPrivateKey *key, SECItem *buf,
     	hashItem.len = sizeof(SSL3Hashes);
 	break;
     case dsaKey:
-    case fortezzaKey:
 	doDerEncode = isTLS;
 	hashItem.data = hash->sha;
 	hashItem.len = sizeof(hash->sha);
@@ -911,7 +901,6 @@ ssl3_VerifySignedHashes(SSL3Hashes *hash, CERTCertificate *cert,
     	hashItem.len = sizeof(SSL3Hashes);
 	break;
     case dsaKey:
-    case fortezzaKey:
 	hashItem.data = hash->sha;
 	hashItem.len = sizeof(hash->sha);
 	if (isTLS) {
@@ -1211,30 +1200,6 @@ done:
     return rv;
 }
 #endif /* NSS_ENABLE_ECC */
-
-/* Caller must set hiLevel error code. */
-static SECStatus
-ssl3_ComputeFortezzaPublicKeyHash(SECItem publicValue, unsigned char * hash)
-{
-    PK11Context *sha 	= NULL;
-    SECStatus    rv	= SECFailure;
-    unsigned int outLen;
-
-    sha = PK11_CreateDigestContext(SEC_OID_SHA1);
-    if (sha == NULL) {
-	return rv; /* Caller must set hiLevel error code. */
-    }
-
-    rv  = PK11_DigestBegin(sha);
-    rv |= PK11_DigestOp(sha, (unsigned char *)publicValue.data, publicValue.len);
-    rv |= PK11_DigestFinal(sha, hash, &outLen, SHA1_LENGTH);
-    PORT_Assert(rv != SECSuccess || outLen == SHA1_LENGTH);
-    if (rv != SECSuccess)
-    	rv = SECFailure;
-    PK11_DestroyContext(sha, PR_TRUE);
-
-    return rv;
-}
 
 
 static void
@@ -1713,10 +1678,9 @@ ssl3_SendRecord(   sslSocket *        ss,
 	    }
 	}
 
-	/* This variable records 
-	 * the actual size of the buffer we allocated above. Some
-	 * algorithms (FORTEZZA) will expand the number of bytes it needs to
-	 * send data. If we only supply the output buffer with the same number
+	/* This variable records the actual size of the buffer allocated above.
+	 * Some algorithms may expand the number of bytes needed to send data. 
+	 * If we only supply the output buffer with the same number
 	 * of bytes as the input buffer, we will fail.
 	 */
 	bufSize = contentLen + SSL3_BUFFER_FUDGE;
@@ -1994,7 +1958,6 @@ ssl3_HandleNoCertificate(sslSocket *ss)
 **              ssl3_HandleClientHello	<-
 **              ssl3_HandleV2ClientHello <-
 **              ssl3_HandleCertificateVerify <-
-**              ssl3_HandleFortezzaClientKeyExchange <-
 **              ssl3_HandleClientKeyExchange <-
 **              ssl3_HandleCertificate	<-
 **              ssl3_HandleFinished	<-
@@ -2309,9 +2272,7 @@ ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms)
     void *            pwArg  = ss->pkcs11PinArg;
     PRBool            isTLS  = (PRBool)(kea_def->tls_keygen ||
                                 (pwSpec->version > SSL_LIBRARY_VERSION_3_0));
-    PRBool            skipKeysAndIVs = (PRBool)
-    					((cipher_def->calg == calg_fortezza) ||
-					 (cipher_def->calg == calg_null));
+    PRBool            skipKeysAndIVs = (PRBool)(cipher_def->calg == calg_null);
     /* 
      * Whenever isDH is true, we need to use CKM_TLS_MASTER_KEY_DERIVE_DH
      * which, unlike CKM_TLS_MASTER_KEY_DERIVE, converts arbitrary size
@@ -2999,8 +2960,7 @@ ssl3_SendClientHello(sslSocket *ss)
      * make sure the token that holds the master secret still exists ...
      * If we previously did client-auth, make sure that the token that holds
      * the private key still exists, is logged in, hasn't been removed, etc.
-     * Also for fortezza, make sure that the card that holds the session keys
-     * exist as well... */
+     */
     if (sid) {
 	PK11SlotInfo *slot;
 	PRBool sidOK = PR_TRUE;
@@ -3021,12 +2981,6 @@ ssl3_SendClientHello(sslSocket *ss)
 	    if (wrapKey) PK11_FreeSymKey(wrapKey);
 	    PK11_FreeSlot(slot);
 	    slot = NULL;
-	}
-	/* do sid-has-FORTEZZA-slot check */
-    	if (sid->u.ssl3.hasFortezza) {
-	    /* do has fortezza check */
-	    if (!PK11_VerifyKeyOK(sid->u.ssl3.tek))
-	    	sidOK = PR_FALSE;
 	}
 
 	/* If we previously did client-auth, make sure that the token that
@@ -3279,35 +3233,6 @@ ssl_UnwrapSymWrappingKey(
     PORT_Assert(wrappedKey.len <= sizeof pWswk->wrappedSymmetricWrappingkey);
 
     switch (exchKeyType) {
-    PK11SymKey *      Ks;
-    PK11SlotInfo *    slot;
-    SECItem           param;
-
-    case kt_fortezza:
-	/* get the slot that the fortezza server private key is in. */
-	slot = PK11_GetSlotFromPrivateKey(svrPrivKey);
-	if (slot == NULL) {
-	    SET_ERROR_CODE
-	    goto loser;
-	}
-
-	/* Look up the Token Fixed Key */
-	Ks = PK11_FindFixedKey(slot, CKM_SKIPJACK_CBC64, NULL, pwArg);
-	PK11_FreeSlot(slot);
-	if (Ks == NULL) {
-	    SET_ERROR_CODE
-	    goto loser;
-	}
-
-	/* unwrap client write key with the local Ks and IV */
-	param.type = siBuffer;
-    	param.data = pWswk->wrapIV;
-    	param.len  = pWswk->wrapIVLen;
-	unwrappedWrappingKey =
-	    PK11_UnwrapSymKey(Ks, CKM_SKIPJACK_CBC64, &param, &wrappedKey,
-			      masterWrapMech, CKA_UNWRAP, 0);
-	PK11_FreeSymKey(Ks);
-	break;
 
     case kt_rsa:
 	unwrappedWrappingKey =
@@ -3466,36 +3391,6 @@ getWrappingKey( sslSocket *       ss,
 
     /* wrap symmetric wrapping key in server's public key. */
     switch (exchKeyType) {
-    PK11SymKey *      Ks;
-    PK11SlotInfo *    fSlot;
-    SECItem           param;
-
-    case kt_fortezza:
-	/* get the slot that the fortezza server private key is in. */
-	fSlot = PK11_GetSlotFromPrivateKey(svrPrivKey);
-	if (fSlot == NULL) {
-	    SET_ERROR_CODE
-	    goto loser;
-	}
-
-	/* Look up the Token Fixed Key */
-	Ks = PK11_FindFixedKey(fSlot, CKM_SKIPJACK_CBC64, NULL, pwArg);
-	PK11_FreeSlot(fSlot);
-	if (Ks == NULL) {
-	    SET_ERROR_CODE
-	    goto loser;
-	}
-
-	/* wrap symmetricWrapping key with the local Ks */
-	param.type = siBuffer;
-    	param.data = wswk.wrapIV;
-    	param.len  = sizeof wswk.wrapIV;
-	rv = PK11_WrapSymKey(CKM_SKIPJACK_CBC64, &param, Ks,
-	                     unwrappedWrappingKey, &wrappedKey);
-	wswk.wrapIVLen = param.len;
-	PK11_FreeSymKey(Ks);
-	asymWrapMechanism = CKM_SKIPJACK_CBC64;
-	break;
 
     case kt_rsa:
 	asymWrapMechanism = CKM_RSA_PKCS;
@@ -3553,20 +3448,6 @@ done:
     return unwrappedWrappingKey;
 }
 
-
-static SECStatus
-ssl3_FortezzaAppendHandshake(sslSocket *ss, unsigned char * data, int len)
-{
-    SSL3FortezzaKeys *fortezza_CKE  = NULL;
-    SECStatus         rv            = SECFailure;
-
-    rv = ssl3_AppendHandshakeHeader(ss, client_key_exchange,
-	    (sizeof(*fortezza_CKE)-sizeof(fortezza_CKE->y_c)) + 1 + len);
-    if (rv == SECSuccess) {
-        rv = ssl3_AppendHandshakeVariable(ss, data, len, 1);
-    }
-    return rv;	/* err set by ssl3_AppendHandshake* */
-}
 
 /* Called from ssl3_SendClientKeyExchange(). */
 static SECStatus
@@ -3814,433 +3695,8 @@ loser:
 }
 #endif /* NSS_ENABLE_ECC */
 
-/* fortezza client-auth portion of ClientKeyExchange message
- * This function appends the KEA public key from the client's  V3 cert
- * (empty for a V1 cert) to the outgoing ClientKeyExchange message.
- * For a V3 cert, it also computes the Fortezza public key hash of that key
- * and signs that hash with the client's signing private key.
- * It also finds and returns the client's KEA private key.
- *
- * Called from sendFortezzaClientKeyExchange <- ssl3_SendClientKeyExchange()
- */
-static SECKEYPrivateKey *
-sendFortezzaCKXClientAuth(sslSocket *ss, SSL3FortezzaKeys * fortezza_CKE)
-{
-    SECKEYPublicKey *	pubKey 		= NULL;
-    SECKEYPrivateKey *	privKeaKey 	= NULL;
-    CERTCertificate *	peerCert 	= ss->sec.peerCert;
-    void *		pwArg 		= ss->pkcs11PinArg;
-    SECStatus 		rv 		= SECFailure;
-    SECItem 		sigItem;
-    SECItem 		hashItem;
-
-    /* extract our own local public key. */
-    pubKey = CERT_ExtractPublicKey(ss->ssl3->clientCertificate);
-    if (!pubKey) {
-	ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
-	goto loser;
-    }
-
-    if (pubKey->keyType == fortezzaKey) {
-	/* fortezza clientauth with fortezza V1 certificate */
-	rv = ssl3_FortezzaAppendHandshake(ss, NULL, 0);
-	if (rv != SECSuccess) {
-	    goto loser;	/* err was set by AppendHandshake. */
-	}
-	privKeaKey = PK11_FindKeyByAnyCert(ss->ssl3->clientCertificate, pwArg);
-	if (!privKeaKey) {
-	    ssl_MapLowLevelError(SEC_ERROR_NO_KEY);
-	}
-
-    } else {
-	/* fortezza clientauth w/ V3 certificate or non fortezza cert*/
-	CERTCertificate *   ccert 		= NULL;
-	SECKEYPublicKey *   foundPubKey 	= NULL;
-	unsigned char       hash[SHA1_LENGTH];
-
-	ccert = PK11_FindBestKEAMatch(peerCert, pwArg);
-	if (ccert == NULL) {
-	    PORT_SetError(SSL_ERROR_FORTEZZA_PQG);
-	    goto v3_loser;
-	}
-
-	foundPubKey = CERT_ExtractPublicKey(ccert);
-	if (foundPubKey == NULL) {
-	    ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
-	    goto v3_loser;
-	}
-
-	if (foundPubKey->keyType == keaKey) {
-	    rv = ssl3_FortezzaAppendHandshake(ss,
-			    foundPubKey->u.kea.publicValue.data,
-			    foundPubKey->u.kea.publicValue.len);
-	    if (rv != SECSuccess) {
-		goto v3_loser; /* err was set by AppendHandshake. */
-	    }
-
-	    rv = ssl3_ComputeFortezzaPublicKeyHash(
-			    foundPubKey->u.kea.publicValue, hash);
-	    if (rv != SECSuccess) {
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto v3_loser;
-	    }
-	} else {
-	    rv = ssl3_FortezzaAppendHandshake(ss,
-			    foundPubKey->u.fortezza.KEAKey.data,
-			    foundPubKey->u.fortezza.KEAKey.len);
-	    if (rv != SECSuccess) {
-		goto v3_loser; /* err was set by AppendHandshake. */
-	    }
-
-	    rv = ssl3_ComputeFortezzaPublicKeyHash(
-			    foundPubKey->u.fortezza.KEAKey, hash);
-	    if (rv != SECSuccess) {
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto v3_loser;
-	    }
-	}
-
-	hashItem.data = (unsigned char *) hash;
-	hashItem.len  = SHA1_LENGTH;
-
-	sigItem.data  = fortezza_CKE->y_signature;
-	sigItem.len   = sizeof fortezza_CKE->y_signature;
-
-	rv = PK11_Sign(ss->ssl3->clientPrivateKey, &sigItem, &hashItem);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto v3_loser;
-	}
-
-	privKeaKey = PK11_FindKeyByAnyCert(ccert, pwArg);
-	if (!privKeaKey) {
-	    ssl_MapLowLevelError(SEC_ERROR_NO_KEY);
-	}
-
-v3_loser:
-	if (foundPubKey)
-	    SECKEY_DestroyPublicKey(foundPubKey);
-	if (ccert)
-	    CERT_DestroyCertificate(ccert);
-    } /* fortezza clientauth w/ V3 certificate or non fortezza cert*/
-
-loser:
-
-    if (pubKey)
-	SECKEY_DestroyPublicKey(pubKey);
-    return privKeaKey;
-} /* End of fortezza client-auth. */
 
 
-/* fortezza without client-auth */
-/* fortezza client-auth portion of ClientKeyExchange message
- * This function appends the public KEA key from the client's cert
- * to the outgoing ClientKeyExchange message.
- * It also finds and returns the client's KEA private key.
- *
- * Called from sendFortezzaClientKeyExchange <- ssl3_SendClientKeyExchange()
- */
-static SECKEYPrivateKey *
-sendFortezzaCKXNoClientAuth(sslSocket *ss)
-{
-    SECKEYPublicKey *   foundPubKey 	= NULL;
-    SECKEYPrivateKey *	privKeaKey 	= NULL;
-    CERTCertificate *	ccert 		= NULL;
-    CERTCertificate *	peerCert 	= ss->sec.peerCert;
-    void *		pwArg 		= ss->pkcs11PinArg;
-    SECStatus 		rv 		= SECFailure;
-
-    ccert = PK11_FindBestKEAMatch(peerCert, pwArg);
-    if (ccert == NULL) {
-	PORT_SetError(SSL_ERROR_FORTEZZA_PQG);
-	goto loser;
-    }
-
-    foundPubKey = CERT_ExtractPublicKey(ccert);
-    if (foundPubKey == NULL) {
-	ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
-	goto loser;
-    }
-
-    if (foundPubKey->keyType == fortezzaKey) {
-	/* fortezza V1 cert */
-	rv = ssl3_FortezzaAppendHandshake(ss,
-				    foundPubKey->u.fortezza.KEAKey.data,
-				    foundPubKey->u.fortezza.KEAKey.len);
-	if (rv != SECSuccess) {
-	    goto loser; /* err was set by AppendHandshake. */
-	}
-	privKeaKey = PK11_FindKeyByAnyCert(ccert, pwArg);
-	if (!privKeaKey) {
-	    ssl_MapLowLevelError(SEC_ERROR_NO_KEY);
-	}
-    } else {
-	/* fortezza V3 cert */
-	rv = ssl3_FortezzaAppendHandshake(ss,
-				    foundPubKey->u.kea.publicValue.data,
-				    foundPubKey->u.kea.publicValue.len);
-	if (rv != SECSuccess) {
-	    goto loser; /* err was set by AppendHandshake. */
-	}
-	privKeaKey = PK11_FindKeyByAnyCert(ccert, pwArg);
-	if (!privKeaKey) {
-	    ssl_MapLowLevelError(SEC_ERROR_NO_KEY);
-	}
-    }
-
-loser:
-    if (foundPubKey)
-	SECKEY_DestroyPublicKey(foundPubKey);
-    if (ccert)
-	CERT_DestroyCertificate(ccert);
-    return privKeaKey;
-}
-
-/* Called from ssl3_SendClientKeyExchange().  */
-static SECStatus
-sendFortezzaClientKeyExchange(sslSocket * ss, SECKEYPublicKey * serverKey)
-{
-    ssl3CipherSpec *	pwSpec = NULL;
-    sslSessionID *	sid 		= ss->sec.ci.sid;
-    PK11SlotInfo *	slot		= NULL;
-    PK11SymKey *	pms 		= NULL;
-    PK11SymKey *	tek		= NULL;
-    PK11SymKey *	client_write_key = NULL;
-    PK11SymKey *	server_write_key = NULL;
-    SECKEYPrivateKey *	privKeaKey 	= NULL;
-    void *		pwArg 		= ss->pkcs11PinArg;
-    SECStatus 		rv 		= SECFailure;
-    CK_VERSION 		version;
-    SECItem 		param;
-    SECItem 		raItem;
-    SECItem 		rbItem;
-    SECItem 		enc_pms;
-    SECItem 		item;
-    SSL3FortezzaKeys	fortezza_CKE;
-    PRBool              releaseSpecWriteLock = PR_FALSE;
-
-    PORT_Assert( ssl_HaveXmitBufLock(ss));
-    PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
-
-    /* first get an appropriate slot for doing MACing.
-     * Note: This slot will NOT be a Fortezza slot because Fortezza
-     * cannot generate an SSL3 pre-master-secret.
-     */
-    slot = PK11_GetBestSlot(CKM_SSL3_PRE_MASTER_KEY_GEN, pwArg);
-    if (slot == NULL) {
-	PORT_SetError(SSL_ERROR_TOKEN_SLOT_NOT_FOUND);
-	goto loser;
-    }
-
-    /* create a pre-Master secret */
-    version.major = MSB(ss->version);
-    version.minor = LSB(ss->version);
-
-    param.data = (unsigned char *)&version;
-    param.len  = sizeof version;
-
-    pms = PK11_KeyGen(slot, CKM_SSL3_PRE_MASTER_KEY_GEN,
-			 &param, 0, pwArg);
-    PK11_FreeSlot(slot);
-    slot = NULL;
-    if (pms == NULL) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    /* If we don't have a certificate, we need to read out your public key.
-     * This changes a bit when we need to deal with the PQG stuff
-     */
-    PORT_Memset(fortezza_CKE.y_signature, 0, sizeof fortezza_CKE.y_signature);
-
-    /* Send the KEA public key and get the KEA private key. */
-    if (ss->ssl3->clientCertificate != NULL) {
-	/* with client-auth */
-	privKeaKey = sendFortezzaCKXClientAuth(ss, &fortezza_CKE);
-    } else {
-	/* without client-auth */
-	privKeaKey = sendFortezzaCKXNoClientAuth(ss);
-    }
-    if (privKeaKey == NULL) {
-	rv = SECFailure;
-	goto loser;	/* error was already set. */
-    }
-
-    /* Now we derive the TEK, and generate r_c the client's "random" public key.
-     * r_c is generated and filled in by the PubDerive call below.
-     */
-    raItem.data = fortezza_CKE.r_c;
-    raItem.len  = sizeof fortezza_CKE.r_c;
-
-    /* R_s == server's "random" public key, sent in the Server Key Exchange */
-    rbItem.data = ss->ssl3->fortezza.R_s;
-    rbItem.len  = sizeof ss->ssl3->fortezza.R_s;
-
-    tek = PK11_PubDerive(privKeaKey, serverKey, PR_TRUE, /* generate r_c */
-                         &raItem, &rbItem, CKM_KEA_KEY_DERIVE,
-			 CKM_SKIPJACK_WRAP, CKA_WRAP, 0, pwArg);
-    SECKEY_DestroyPrivateKey(privKeaKey);
-    privKeaKey = NULL;
-    if (tek == NULL) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    ss->ssl3->fortezza.tek = PK11_ReferenceSymKey(tek); /* can't fail. */
-
-    /* encrypt the pms with the TEK.
-     * NB: PK11_WrapSymKey will generate and output the encrypted PMS
-     *     AND the IV for decrypting the PMS.
-     */
-    param.data   = fortezza_CKE.master_secret_iv;
-    param.len    = sizeof fortezza_CKE.master_secret_iv;
-
-    enc_pms.data = fortezza_CKE.encrypted_preMasterSecret;
-    enc_pms.len  = sizeof fortezza_CKE.encrypted_preMasterSecret;
-
-    rv = PK11_WrapSymKey(CKM_SKIPJACK_CBC64, &param, tek, pms, &enc_pms);
-    if (rv != SECSuccess) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-    rv = SECFailure;	/* not there yet. */
-
-    slot = PK11_GetSlotFromKey(tek);
-
-    ssl_GetSpecWriteLock(ss); releaseSpecWriteLock = PR_TRUE;
-
-    pwSpec  = ss->ssl3->pwSpec;
-    pwSpec->client.write_key = client_write_key =
-		    PK11_KeyGen(slot, CKM_SKIPJACK_CBC64, NULL, 0, pwArg);
-    if (client_write_key == NULL) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-    /* the -1 is a hack. It's supposed to be key size, but we use it
-     * to tell the wrapper that we're doing a weird PKCS #11 key gen.
-     * Usually the result of key gen is an encrypt key. This is not
-     * the case with SSL, where this key is a decrypt key.
-     */
-    pwSpec->server.write_key = server_write_key =
-		    PK11_KeyGen(slot, CKM_SKIPJACK_CBC64, NULL, -1, pwArg);
-    if (server_write_key == NULL) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    rv = ssl3_InitPendingCipherSpec(ss,  pms);
-    PK11_FreeSymKey(pms); pms = NULL;
-    if (rv != SECSuccess) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    /* copy the keys and IVs out now */
-    item.data = fortezza_CKE.wrapped_client_write_key;
-    item.len  = sizeof fortezza_CKE.wrapped_client_write_key;
-    rv = PK11_WrapSymKey(CKM_SKIPJACK_WRAP, NULL, tek, client_write_key, &item);
-    if (rv != SECSuccess) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    item.data = fortezza_CKE.wrapped_server_write_key;
-    item.len  = sizeof fortezza_CKE.wrapped_server_write_key;
-    rv = PK11_WrapSymKey(CKM_SKIPJACK_WRAP, NULL, tek, server_write_key, &item);
-    if (rv != SECSuccess) {
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto loser;
-    }
-
-    /* we only get the generated IV's if we're doing skipjack.  */
-    if (pwSpec->cipher_def->calg == calg_fortezza) {
-	PORT_Memcpy(fortezza_CKE.client_write_iv, pwSpec->client.write_iv,
-				    sizeof fortezza_CKE.client_write_iv);
-	PORT_Memcpy(fortezza_CKE.server_write_iv, pwSpec->server.write_iv,
-				    sizeof fortezza_CKE.server_write_iv);
-    } else {
-	/* generate IVs to make old servers happy */
-	rv = PK11_GenerateFortezzaIV(client_write_key,
-	                             fortezza_CKE.client_write_iv,
-	                             sizeof fortezza_CKE.client_write_iv);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto loser;
-	}
-	rv = PK11_GenerateFortezzaIV(server_write_key,
-	                             fortezza_CKE.server_write_iv,
-	                             sizeof fortezza_CKE.server_write_iv);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto loser;
-	}
-    }
-
-    /* NOTE: This technique of writing out the struct, rather than writing
-     * out the individual members works only because all the rest of the
-     * values are fixed-length strings of well-defined byte order.
-     * Add one SECItem or one Number and we will need to break the elements out.
-     */
-    rv = ssl3_AppendHandshake(ss, &fortezza_CKE.r_c,
-			      (sizeof fortezza_CKE - sizeof fortezza_CKE.y_c));
-    if (rv != SECSuccess) {
-	goto loser;	/* err was set by AppendHandshake. */
-    }
-
-    /* now we initialize our contexts */
-    sid->u.ssl3.hasFortezza = PR_TRUE;
-    sid->u.ssl3.tek         = tek; tek = NULL; 	/* adopt.. */
-
-    if (pwSpec->cipher_def->calg == calg_fortezza) {
-	sid->u.ssl3.clientWriteKey =
-			    PK11_ReferenceSymKey(pwSpec->client.write_key);
-	sid->u.ssl3.serverWriteKey=
-			    PK11_ReferenceSymKey(pwSpec->server.write_key);
-
-	PORT_Memcpy(sid->u.ssl3.keys.client_write_iv,
-	            pwSpec->client.write_iv,
-		    sizeof sid->u.ssl3.keys.client_write_iv);
-	PORT_Memcpy(sid->u.ssl3.keys.server_write_iv,
-	            pwSpec->server.write_iv,
-		    sizeof sid->u.ssl3.keys.server_write_iv);
-
-	rv = PK11_SaveContext((PK11Context *)pwSpec->encodeContext,
-			      sid->u.ssl3.clientWriteSave,
-			      &sid->u.ssl3.clientWriteSaveLen,
-			      sizeof sid->u.ssl3.clientWriteSave);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto loser;
-	}
-    } else {
-	PK11_FreeSymKey(client_write_key);
-	pwSpec->client.write_key = client_write_key = NULL;
-
-	PK11_FreeSymKey(server_write_key);
-	pwSpec->server.write_key = server_write_key = NULL;
-
-	rv = SECSuccess;
-    }
-    /* FALL THROUGH */
-
-loser:
-    if (tek)    PK11_FreeSymKey(tek);
-    if (slot)   PK11_FreeSlot(slot);
-    if (pms)    PK11_FreeSymKey(pms);
-    if (rv != SECSuccess) {
-    	if (client_write_key) {
-	    PK11_FreeSymKey(client_write_key);
-	    pwSpec->client.write_key = client_write_key = NULL;
-	}
-    	if (server_write_key) {
-	    PK11_FreeSymKey(server_write_key);
-	    pwSpec->server.write_key = server_write_key = NULL;
-	}
-    }
-    if (releaseSpecWriteLock)
-	ssl_GetSpecWriteLock(ss);
-    return rv;
-}
 
 /* Called from ssl3_HandleServerHelloDone(). */
 static SECStatus
@@ -4288,10 +3744,6 @@ ssl3_SendClientKeyExchange(sslSocket *ss)
     switch (ss->ssl3->hs.kea_def->exchKeyType) {
     case kt_rsa:
 	rv = sendRSAClientKeyExchange(ss, serverKey);
-	break;
-
-    case kt_fortezza:
-	rv = sendFortezzaClientKeyExchange(ss, serverKey);
 	break;
 
     case kt_dh:
@@ -4361,7 +3813,7 @@ ssl3_SendCertificateVerify(sslSocket *ss)
 	PK11_FreeSlot(slot);
     }
     /* If we're doing RSA key exchange, we're all done with the private key
-     * here.  Diffie-Hellman & Fortezza key exchanges need the client's
+     * here.  Diffie-Hellman key exchanges need the client's
      * private key for the key exchange.
      */
     if (ssl3->hs.kea_def->exchKeyType == kt_rsa) {
@@ -4586,39 +4038,11 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    ss->sec.peerCert = CERT_DupCertificate(sid->peerCert);
 	}
 
-	/* reload the FORTEZZA key material. These keys aren't generated
-	 * by the master secret, but by the key exchange. We restart by
-	 * reusing these keys. */
-	if (sid->u.ssl3.hasFortezza) {
-	    ss->ssl3->fortezza.tek = PK11_ReferenceSymKey(sid->u.ssl3.tek);
-	}
-	if (ss->ssl3->hs.suite_def->bulk_cipher_alg == cipher_fortezza) {
-	    ss->ssl3->pwSpec->client.write_key =
-	    		PK11_ReferenceSymKey(sid->u.ssl3.clientWriteKey);
-	    ss->ssl3->pwSpec->server.write_key =
-	    		PK11_ReferenceSymKey(sid->u.ssl3.serverWriteKey);
-	    /* add the tek later for pre-encrypted files */
-	    PORT_Memcpy(ss->ssl3->pwSpec->client.write_iv,
-			sid->u.ssl3.keys.client_write_iv,
-			sizeof sid->u.ssl3.keys.client_write_iv);
-	    PORT_Memcpy(ss->ssl3->pwSpec->server.write_iv,
-			sid->u.ssl3.keys.server_write_iv,
-			sizeof sid->u.ssl3.keys.server_write_iv);
-	}
 
 	/* NULL value for PMS signifies re-use of the old MS */
 	rv = ssl3_InitPendingCipherSpec(ss,  NULL);
 	if (rv != SECSuccess) {
-	    goto alert_loser;	/* err code was set by ssl3_InitPendingCipherSpec */
-	}
-	if (ss->ssl3->hs.suite_def->bulk_cipher_alg == cipher_fortezza) {
-	    rv = PK11_RestoreContext(
-			(PK11Context *)ss->ssl3->pwSpec->encodeContext,
-			sid->u.ssl3.clientWriteSave,
-			sid->u.ssl3.clientWriteSaveLen);
-	    if (rv != SECSuccess) {
-		goto alert_loser;	/* err is set. */
-	    }
+	    goto alert_loser;	/* err code was set */
 	}
 	SECITEM_ZfreeItem(&sidBytes, PR_FALSE);	
 	return SECSuccess;
@@ -4973,26 +4397,6 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
 	return SECSuccess;
 #endif /* NSS_ENABLE_ECC */
-
-    case kt_fortezza:
-
-	/* Fortezza needs *BOTH* a server cert message
-	 * and a server key exchange message.
- 	 */
-	if (ss->ssl3->hs.ws == wait_server_cert) {
-	    errCode = SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH;
-	    desc    = unexpected_message;
-	    goto alert_loser;
-	}
-	/* Get the server's "random" public key. */
-    	rv = ssl3_ConsumeHandshake(ss, ss->ssl3->fortezza.R_s,
-				   sizeof ss->ssl3->fortezza.R_s, &b, &length);
-    	if (rv != SECSuccess) {
-	    goto loser;		/* malformed */
-	}
-
-    	ss->ssl3->hs.ws = wait_cert_request;
-    	return SECSuccess;
 
     default:
     	desc    = handshake_failure;
@@ -5407,7 +4811,6 @@ ssl3_NewSessionID(sslSocket *ss, PRBool is_server)
 
     sid->u.ssl3.resumable      = PR_TRUE;
     sid->u.ssl3.policy         = SSL_ALLOWED;
-    sid->u.ssl3.hasFortezza    = PR_FALSE;
     sid->u.ssl3.clientWriteKey = NULL;
     sid->u.ssl3.serverWriteKey = NULL;
     sid->u.ssl3.tek            = NULL;
@@ -5456,12 +4859,8 @@ ssl3_SendServerHelloSequence(sslSocket *ss)
      */
     kea_def = ss->ssl3->hs.kea_def;
     ss->ssl3->hs.usedStepDownKey = PR_FALSE;
-    if (kea_def->kea == kea_fortezza) {
-	rv = ssl3_SendServerKeyExchange(ss);
-	if (rv != SECSuccess) {
-	    return rv;	/* err code was set. */
-	}
-    } else if (kea_def->is_limited && kea_def->exchKeyType == kt_rsa) {
+
+    if (kea_def->is_limited && kea_def->exchKeyType == kt_rsa) {
 	/* see if we can legally use the key in the cert. */
 	int keyLen;  /* bytes */
 
@@ -5717,7 +5116,6 @@ compression_found:
      * as if the client had sent us no sid to begin with, and make a new one.
      */
     if (sid != NULL) do {
-	PK11SlotInfo *  slot;
 	PK11SymKey *    wrapKey; 	/* wrapping key */
 	SECItem         wrappedKey;  	/* wrapped key */
 	ssl3CipherSpec *pwSpec;
@@ -5796,74 +5194,6 @@ compression_found:
 	if (rv != SECSuccess) {
 	    errCode = PORT_GetError();
 	    goto loser;
-	}
-
-	/* reload the FORTEZZA key material.
-	 * On Fortezza, the following keys & IVs are generated by the KEA,
-	 * not from the PMS.  Since we're not going to redo the KEA, we
-	 * have to save & restore them for Fortezza.
-	 * use kea because we haven't call InitCipher Specs yet...?
-	 */
-	if (ssl3->hs.suite_def->bulk_cipher_alg == cipher_fortezza) {
-	    PK11SymKey *      Ks;
-	    SECItem           item;
-
-	    PORT_Memcpy(pwSpec->client.write_iv,
-		sid->u.ssl3.keys.client_write_iv,
-		sizeof sid->u.ssl3.keys.client_write_iv);
-	    PORT_Memcpy(pwSpec->server.write_iv,
-		sid->u.ssl3.keys.server_write_iv,
-		sizeof sid->u.ssl3.keys.server_write_iv);
-
-	    /* Now, unwrap the client and server write keys with Ks */
-
-	    /* get the slot that the fortezza server private key is in. */
-	    slot = PK11_GetSlotFromPrivateKey(
-	                                ss->serverCerts[kt_fortezza].serverKey);
-	    if (slot == NULL) {
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto loser;
-	    }
-
-	    /* Look up the Token Fixed Key */
-	    Ks = PK11_FindFixedKey(slot, CKM_SKIPJACK_WRAP, NULL,
-	                           ss->pkcs11PinArg);
-	    PK11_FreeSlot(slot);
-	    if (Ks == NULL) {
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto loser;
-	    }
-
-	    /* unwrap client write key with the local Ks */
-	    item.data = sid->u.ssl3.keys.wrapped_client_write_key;
-	    item.len  = sizeof sid->u.ssl3.keys.wrapped_client_write_key;
-
-	    pwSpec->client.write_key =
-		    PK11_UnwrapSymKey(Ks, CKM_SKIPJACK_WRAP, NULL, &item,
-				      CKM_SKIPJACK_CBC64, CKA_DECRYPT, 0);
-	    if (pwSpec->client.write_key == NULL) {
-		SEND_ALERT
-		ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_UNWRAP_FAILURE);
-		goto loser;
-	    }
-
-	    /* unwrap server write key with the local Ks */
-	    item.data = sid->u.ssl3.keys.wrapped_server_write_key;
-	    item.len  = sizeof sid->u.ssl3.keys.wrapped_server_write_key;
-
-	    pwSpec->server.write_key =
-		    PK11_UnwrapSymKey(Ks, CKM_SKIPJACK_WRAP, NULL, &item,
-				      CKM_SKIPJACK_CBC64, CKA_ENCRYPT, 0);
-	    if (pwSpec->server.write_key == NULL) {
-		PK11_FreeSymKey(pwSpec->client.write_key);
-		pwSpec->client.write_key = NULL;
-		SEND_ALERT
-		ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_UNWRAP_FAILURE);
-		goto loser;
-	    }
-	    /* Set flag that says "generate 8 byte random prefix plaintext." */
-	    PK11_SetFortezzaHack(pwSpec->server.write_key);	/* can't fail */
-
 	}
 
 	if (haveSpecWriteLock) {
@@ -6276,27 +5606,6 @@ const ssl3KEADef *     kea_def     = ss->ssl3->hs.kea_def;
 	PORT_Free(signed_hash.data);
 	return SECSuccess;
 
-    case kt_fortezza:
-
-	/* Set server's "random" public key R_s to the email value == 1 */
-	PORT_Memset(ss->ssl3->fortezza.R_s, 0, sizeof(ss->ssl3->fortezza.R_s));
-	ss->ssl3->fortezza.R_s[127] = 1;
-
-	/* don't waste time signing the random number */
-	length = sizeof (ss->ssl3->fortezza.R_s) /*+ 2 + signed_hash.len*/;
-
-	rv = ssl3_AppendHandshakeHeader(ss, server_key_exchange, length);
-	if (rv != SECSuccess) {
-	    goto loser; 	/* err set by AppendHandshake. */
-	}
-
-	rv = ssl3_AppendHandshake( ss, &ss->ssl3->fortezza.R_s,
-					sizeof(ss->ssl3->fortezza.R_s));
-	if (rv != SECSuccess) {
-	    goto loser; 	/* err set by AppendHandshake. */
-	}
-	return SECSuccess;
-
 #ifdef NSS_ENABLE_ECC
     case kt_ecdh:
 	/* Generate ephemeral ECDH key pair and send the public key */
@@ -6441,13 +5750,8 @@ const uint8 *      certTypes;
 	calen += 2 + name->len;
     }
 
-    if (ss->ssl3->hs.kea_def->exchKeyType == kt_fortezza) {
-	certTypes       = fortezza_certificate_types;
-	certTypesLength = sizeof fortezza_certificate_types;
-    } else {
-	certTypes       = certificate_types;
-	certTypesLength = sizeof certificate_types;
-    }
+    certTypes       = certificate_types;
+    certTypesLength = sizeof certificate_types;
 
     length = 1 + certTypesLength + 2 + calen;
 
@@ -6554,256 +5858,6 @@ loser:
     return SECFailure;
 }
 
-/*
-** Called from ssl3_HandleClientKeyExchange()
-*/
-static SECStatus
-ssl3_HandleFortezzaClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
-				     PRUint32 length,
-                                     SECKEYPrivateKey *serverKey)
-{
-    SECKEYPublicKey * pubKey            = NULL;
-    PK11SymKey *      tek               = NULL;
-    PK11SymKey *      pms;
-    PK11SymKey *      Ks		= NULL;
-    sslSessionID *    sid 		= ss->sec.ci.sid;
-    ssl3CipherSpec *  pwSpec 		= ss->ssl3->pwSpec;
-    void *            pwArg             = ss->pkcs11PinArg;
-    SECStatus         rv;
-    SECItem           raItem;
-    SECItem           rbItem;
-    SECItem           param;
-    SECItem           item;
-    SECItem           enc_pms;
-    SSL3FortezzaKeys  fortezza_CKE;
-
-    PORT_Assert( ssl_HaveRecvBufLock(ss) );
-    PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
-
-    fortezza_CKE.y_c.data = NULL;
-    rv = ssl3_ConsumeHandshakeVariable(ss, &fortezza_CKE.y_c, 1, &b, &length);
-    if (rv != SECSuccess) {
-	PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
-	goto fortezza_loser;
-    }
-    rv = ssl3_ConsumeHandshake(ss, &fortezza_CKE.r_c,
-	                       sizeof fortezza_CKE - sizeof fortezza_CKE.y_c,
-	                       &b, &length);
-    if (rv != SECSuccess) {
-	PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
-	goto fortezza_loser;
-    }
-
-    /* Build a Token Encryption key (tek). TEK's can never be unloaded
-     * from the card, but given these parameters, and *OUR* fortezza
-     * card, we can always regenerate the same one on the fly.
-     */
-    if (ss->sec.peerCert != NULL) {
-	/* client-auth case */
-
-	pubKey = CERT_ExtractPublicKey(ss->sec.peerCert);
-	if (pubKey == NULL) {
-	    SEND_ALERT
-	    PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
-	    rv = SECFailure;
-	    goto fortezza_loser;
-	}
-
-	if (pubKey->keyType != fortezzaKey) {
-	    /* handle V3 client-auth case */
-	    SECItem       sigItem;
-	    SECItem       hashItem;
-	    unsigned char hash[SHA1_LENGTH];
-
-	    rv = ssl3_ComputeFortezzaPublicKeyHash(fortezza_CKE.y_c, hash);
-	    if (rv != SECSuccess) {
-		SEND_ALERT
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto fortezza_loser;
-	    }
-	    sigItem.data  = fortezza_CKE.y_signature;
-	    sigItem.len   = sizeof fortezza_CKE.y_signature;
-
-	    hashItem.data = hash;
-	    hashItem.len  = sizeof hash;
-
-	    rv = PK11_Verify(pubKey, &sigItem, &hashItem, pwArg);
-	    if (rv != SECSuccess) {
-		SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
-		ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-		goto fortezza_loser;
-	    }
-	    SECKEY_DestroyPublicKey(pubKey); pubKey = NULL;
-	}
-    }
-    rv = SECFailure;
-
-    /* Make the public key if necessary */
-    if (fortezza_CKE.y_c.len != 0) {
-	if (pubKey != NULL) {
-	    /* The client is not allowed to send the public key
-	     * if it can be extracted from the certificate. */
-	    SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
-	    PORT_SetError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto fortezza_loser;
-	}
-	pubKey = PK11_MakeKEAPubKey(fortezza_CKE.y_c.data,
-				    fortezza_CKE.y_c.len);
-    }
-    if (pubKey == NULL) {
-	/* no public Key in either the cert or the protocol message*/
-	SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
-	PORT_SetError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto fortezza_loser;
-    }
-
-    /* Now we derive the TEK.  r_c is the client's "random" public key. */
-    raItem.data = fortezza_CKE.r_c;
-    raItem.len  = sizeof(fortezza_CKE.r_c);
-
-    /* R_s == server's "random" public key, sent in the Server Key Exchange */
-    rbItem.data = ss->ssl3->fortezza.R_s;
-    rbItem.len  = sizeof ss->ssl3->fortezza.R_s;
-
-    tek = PK11_PubDerive(serverKey, pubKey, PR_FALSE, /* don't gen r_c */
-                         &raItem, &rbItem, CKM_KEA_KEY_DERIVE,
-			 CKM_SKIPJACK_WRAP, CKA_WRAP, 0, pwArg);
-    SECKEY_DestroyPublicKey(pubKey); pubKey = NULL;
-    if (tek == NULL) {
-	SEND_ALERT
-	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	goto fortezza_loser;
-    }
-
-    ss->ssl3->fortezza.tek = PK11_ReferenceSymKey(tek);
-
-    if (pwSpec->cipher_def->calg == calg_fortezza) {
-	item.data = fortezza_CKE.wrapped_client_write_key;
-	item.len  = sizeof fortezza_CKE.wrapped_client_write_key;
-
-	pwSpec->client.write_key =
-		PK11_UnwrapSymKey(tek, CKM_SKIPJACK_WRAP, NULL, &item,
-		                  CKM_SKIPJACK_CBC64, CKA_DECRYPT, 0);
-	if (pwSpec->client.write_key == NULL) {
-	    SEND_ALERT
-	    ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_UNWRAP_FAILURE);
-	    goto fortezza_loser;
-	}
-
-	item.data = fortezza_CKE.wrapped_server_write_key;
-	item.len  = sizeof fortezza_CKE.wrapped_server_write_key;
-
-	pwSpec->server.write_key =
-		PK11_UnwrapSymKey(tek, CKM_SKIPJACK_WRAP, NULL, &item,
-		                  CKM_SKIPJACK_CBC64, CKA_ENCRYPT, 0);
-	if (pwSpec->server.write_key == NULL) {
-	    PK11_FreeSymKey(pwSpec->client.write_key);
-	    pwSpec->client.write_key = NULL;
-	    SEND_ALERT
-	    ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_UNWRAP_FAILURE);
-	    goto fortezza_loser;
-	}
-	/* Set a flag that says "generate 8 byte random prefix plaintext." */
-	PK11_SetFortezzaHack(pwSpec->server.write_key);	/* can't fail */
-
-	PORT_Memcpy(pwSpec->client.write_iv, fortezza_CKE.client_write_iv,
-		    sizeof fortezza_CKE.client_write_iv);
-	PORT_Memcpy(pwSpec->server.write_iv, fortezza_CKE.server_write_iv,
-		    sizeof fortezza_CKE.server_write_iv);
-
-    }
-
-    /* decrypt the pms with the TEK */
-    enc_pms.data = fortezza_CKE.encrypted_preMasterSecret;
-    enc_pms.len  = sizeof fortezza_CKE.encrypted_preMasterSecret;
-
-    param.data = fortezza_CKE.master_secret_iv;
-    param.len  = sizeof fortezza_CKE.master_secret_iv;
-
-    pms = PK11_UnwrapSymKey(tek, CKM_SKIPJACK_CBC64, &param, &enc_pms,
-			    CKM_SSL3_MASTER_KEY_DERIVE, CKA_DERIVE, 0);
-    if (pms == NULL) {
-	SEND_ALERT
-	ssl_MapLowLevelError(SSL_ERROR_SYM_KEY_UNWRAP_FAILURE);
-	goto fortezza_loser;
-    }
-
-    rv = ssl3_InitPendingCipherSpec(ss,  pms);
-    PK11_FreeSymKey(pms);
-    if (rv != SECSuccess) {
-	SEND_ALERT
-	goto fortezza_loser; 	/* err code is set. */
-    }
-
-    if (pwSpec->cipher_def->calg == calg_fortezza) {
-	PK11SlotInfo *    slot;
-
-	sid->u.ssl3.clientWriteKey =
-			    PK11_ReferenceSymKey(pwSpec->client.write_key);
-	sid->u.ssl3.serverWriteKey =
-			    PK11_ReferenceSymKey(pwSpec->server.write_key);
-
-	PORT_Memcpy(sid->u.ssl3.keys.client_write_iv, pwSpec->client.write_iv,
-		    sizeof sid->u.ssl3.keys.client_write_iv);
-	PORT_Memcpy(sid->u.ssl3.keys.server_write_iv, pwSpec->server.write_iv,
-		    sizeof sid->u.ssl3.keys.server_write_iv);
-
-	/* Now, wrap the client and server write keys in Ks for storage
-	 * in the on-disk sid.
-	 */
-
-	slot = PK11_GetSlotFromKey(tek); 	/* get ref to the slot */
-	if (slot == NULL) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto fortezza_loser;
-	}
-
-	/* Look up the Token Fixed Key */
-	Ks = PK11_FindFixedKey(slot, CKM_SKIPJACK_WRAP, NULL, ss->pkcs11PinArg);
-	PK11_FreeSlot(slot);
-	if (Ks == NULL) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto fortezza_loser;
-	}
-
-	/* rewrap server write key with the local Ks */
-	item.data = sid->u.ssl3.keys.wrapped_server_write_key;
-	item.len  = sizeof sid->u.ssl3.keys.wrapped_server_write_key;
-	rv = PK11_WrapSymKey(CKM_SKIPJACK_WRAP, NULL, Ks,
-	                     pwSpec->server.write_key, &item);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto fortezza_loser;
-	}
-
-	/* rewrap client write key with the local Ks */
-	item.data = sid->u.ssl3.keys.wrapped_client_write_key;
-	item.len  = sizeof sid->u.ssl3.keys.wrapped_client_write_key;
-	rv = PK11_WrapSymKey(CKM_SKIPJACK_WRAP, NULL, Ks,
-	                     pwSpec->client.write_key, &item);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-	    goto fortezza_loser;
-	}
-
-	/* wrap the master secret later, when we handle the client's
-	 * finished message.
-	 */
-    }
-
-    sid->u.ssl3.hasFortezza = PR_TRUE;
-    sid->u.ssl3.tek = tek; tek = NULL;
-
-    rv = SECSuccess;
-
-fortezza_loser:
-    if (Ks)  PK11_FreeSymKey(Ks);
-    if (tek) PK11_FreeSymKey(tek);
-    if (pubKey) SECKEY_DestroyPublicKey(pubKey);
-    if (fortezza_CKE.y_c.data != NULL)
-    	SECITEM_FreeItem(&fortezza_CKE.y_c, PR_FALSE);
-    return rv;
-}
 
 /* find a slot that is able to generate a PMS and wrap it with RSA.
  * Then generate and return the PMS.
@@ -7109,12 +6163,6 @@ const ssl3KEADef *    kea_def;
 	}
 	break;
 
-    case kt_fortezza:
-	rv = ssl3_HandleFortezzaClientKeyExchange(ss, b, length, serverKey);
-	if (rv != SECSuccess) {
-	    return SECFailure;	/* error code set */
-	}
-	break;
 
 #ifdef NSS_ENABLE_ECC
     case kt_ecdh:
@@ -7493,18 +6541,8 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECKEY_UpdateCertPQG(ss->sec.peerCert);
 
     /*
-     * We're making a fortezza connection, and the card hasn't unloaded it's
-     * certs, try to  unload those certs now.
+     * Ask caller-supplied callback function to validate cert chain.
      */
-    if (!trusted) {
-	CERTCertificate *ccert;
-
-	ccert = PK11_FindBestKEAMatch(ss->sec.peerCert, ss->pkcs11PinArg);
-	if (ccert) 
-	    CERT_DestroyCertificate(ccert);
-    }
-
-
     rv = (SECStatus)(*ss->authCertificate)(ss->authCertificateArg, ss->fd,
 					   PR_TRUE, isServer);
     if (rv) {
@@ -7597,7 +6635,6 @@ cert_block:
 	ssl3->hs.ws = wait_cert_request; /* disallow server_key_exchange */
 	if (ssl3->hs.kea_def->is_limited ||
 	    /* XXX OR server cert is signing only. */
-	    ssl3->hs.kea_def->kea == kea_fortezza ||
 #ifdef NSS_ENABLE_ECC
 	    ssl3->hs.kea_def->kea == kea_ecdhe_ecdsa ||
 	    ssl3->hs.kea_def->kea == kea_ecdhe_rsa ||
@@ -8625,7 +7662,6 @@ ssl3_InitState(sslSocket *ss)
     ssl3->hs.rehandshake = PR_FALSE;
     ssl3_InitCipherSpec(ss, ssl3->crSpec);
     ssl3_InitCipherSpec(ss, ssl3->prSpec);
-    ssl3->fortezza.tek = NULL;
 
     ssl3->hs.ws = (ss->sec.isServer) ? wait_client_hello : wait_server_hello;
     ssl_ReleaseSpecWriteLock(ss);
@@ -8994,9 +8030,6 @@ ssl3_DestroySSL3Info(ssl3State *ssl3)
 	PK11_DestroyContext(ssl3->hs.sha,PR_TRUE);
     }
 
-    if (ssl3->fortezza.tek != NULL) {
-	PK11_FreeSymKey(ssl3->fortezza.tek);
-    }
     /* free the SSL3Buffer (msg_body) */
     PORT_Free(ssl3->hs.msg_body.buf);
 

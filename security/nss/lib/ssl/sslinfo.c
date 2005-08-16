@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.11 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslinfo.c,v 1.12 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -100,8 +100,6 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     return SECSuccess;
 }
 
-#define kt_kea kt_fortezza
-#define calg_sj calg_fortezza
 
 #define CS(x) x, #x
 #define CK(x) x | 0xff00, #x
@@ -143,7 +141,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(TLS_DHE_DSS_WITH_AES_256_CBC_SHA),      S_DSA, K_DHE, C_AES, B_256, M_SHA, 0, 0, 0, },
 {0,CS(TLS_RSA_WITH_AES_256_CBC_SHA),          S_RSA, K_RSA, C_AES, B_256, M_SHA, 0, 0, 0, },
 
-{0,CS(SSL_FORTEZZA_DMS_WITH_RC4_128_SHA),     S_KEA, K_KEA, C_RC4, B_128, M_SHA, 0, 0, 0, },
 {0,CS(TLS_DHE_DSS_WITH_RC4_128_SHA),          S_DSA, K_DHE, C_RC4, B_128, M_SHA, 0, 0, 0, },
 {0,CS(TLS_DHE_RSA_WITH_AES_128_CBC_SHA),      S_RSA, K_DHE, C_AES, B_128, M_SHA, 0, 0, 0, },
 {0,CS(TLS_DHE_DSS_WITH_AES_128_CBC_SHA),      S_DSA, K_DHE, C_AES, B_128, M_SHA, 0, 0, 0, },
@@ -156,7 +153,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA),    S_RSA, K_RSA, C_3DES,B_3DES,M_SHA, 1, 0, 1, },
 {0,CS(SSL_RSA_WITH_3DES_EDE_CBC_SHA),         S_RSA, K_RSA, C_3DES,B_3DES,M_SHA, 1, 0, 0, },
 
-{0,CS(SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA),S_KEA, K_KEA, C_SJ,  B_SJ,  M_SHA, 1, 0, 0, },
 {0,CS(SSL_DHE_RSA_WITH_DES_CBC_SHA),          S_RSA, K_DHE, C_DES, B_DES, M_SHA, 0, 0, 0, },
 {0,CS(SSL_DHE_DSS_WITH_DES_CBC_SHA),          S_DSA, K_DHE, C_DES, B_DES, M_SHA, 0, 0, 0, },
 {0,CS(SSL_RSA_FIPS_WITH_DES_CBC_SHA),         S_RSA, K_RSA, C_DES, B_DES, M_SHA, 1, 0, 1, },
@@ -166,7 +162,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA),   S_RSA, K_RSA, C_DES, B_DES, M_SHA, 1, 1, 0, },
 {0,CS(SSL_RSA_EXPORT_WITH_RC4_40_MD5),        S_RSA, K_RSA, C_RC4, B_40,  M_MD5, 0, 1, 0, },
 {0,CS(SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5),    S_RSA, K_RSA, C_RC2, B_40,  M_MD5, 0, 1, 0, },
-{0,CS(SSL_FORTEZZA_DMS_WITH_NULL_SHA),        S_KEA, K_KEA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_SHA),                 S_RSA, K_RSA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_MD5),                 S_RSA, K_RSA, C_NULL,B_0,   M_MD5, 0, 1, 0, },
 

@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.8 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslt.h,v 1.9 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -66,7 +66,7 @@ typedef enum {
     ssl_kea_null     = 0,
     ssl_kea_rsa      = 1,
     ssl_kea_dh       = 2,
-    ssl_kea_fortezza = 3,
+    ssl_kea_fortezza = 3,       /* deprecated, now unused */
     ssl_kea_ecdh     = 4,
     ssl_kea_size		/* number of ssl_kea_ algorithms */
 } SSLKEAType;
@@ -79,7 +79,7 @@ typedef enum {
 #define kt_null   	ssl_kea_null
 #define kt_rsa   	ssl_kea_rsa
 #define kt_dh   	ssl_kea_dh
-#define kt_fortezza	ssl_kea_fortezza
+#define kt_fortezza	ssl_kea_fortezza       /* deprecated, now unused */
 #define kt_ecdh   	ssl_kea_ecdh
 #define kt_kea_size	ssl_kea_size
 
@@ -105,7 +105,7 @@ typedef enum {
     ssl_calg_des      = 3,
     ssl_calg_3des     = 4,
     ssl_calg_idea     = 5,
-    ssl_calg_fortezza = 6,      /* skipjack */
+    ssl_calg_fortezza = 6,      /* deprecated, now unused */
     ssl_calg_aes      = 7       /* coming soon */
 } SSLCipherAlgorithm;
 

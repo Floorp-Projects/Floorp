@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.21 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: ssl.h,v 1.22 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -190,7 +190,7 @@ SSL_IMPORT SECStatus SSL_SecurityStatus(PRFileDesc *fd, int *on, char **cipher,
 #define SSL_SECURITY_STATUS_OFF		0
 #define SSL_SECURITY_STATUS_ON_HIGH	1
 #define SSL_SECURITY_STATUS_ON_LOW	2
-#define SSL_SECURITY_STATUS_FORTEZZA	3
+#define SSL_SECURITY_STATUS_FORTEZZA	3 /* NO LONGER SUPPORTED */
 
 /*
 ** Return the certificate for our SSL peer. If the client calls this

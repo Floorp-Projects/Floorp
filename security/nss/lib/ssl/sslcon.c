@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.26 2005/04/06 21:35:45 nelsonb%netscape.com Exp $ */
+/* $Id: sslcon.c,v 1.27 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -145,7 +145,7 @@ const char * const ssl_cipherName[] = {
     "DES-CBC",
     "DES-EDE3-CBC",
     "unknown",
-    "Fortezza",
+    "unknown", /* was fortezza, NO LONGER USED */
 };
 
 
