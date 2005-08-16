@@ -1759,52 +1759,101 @@
               return (l < f + p ? l : f + p) - 1;
             },
             handleEvent: function handleEvent(event) {
+              var index;
+              var box = this.tree.treeBoxObject;
               if (this.parentNode.hasAttribute("open")) {
                 event.stopPropagation();
-                var index = this.tree.currentIndex;
-                var box = this.tree.treeBoxObject;
                 switch (event.keyCode) {
                   case event.DOM_VK_ESCAPE:
                     this.self.hidePopup();
                     return;
-                  case event.DOM_VK_UP:
-                    if (index <= 0) return;
-                    index--;
-                    break;
-                  case event.DOM_VK_DOWN:
-                    index++;
-                    if (index == box.view.rowCount) return;
-                    break;
-                  case event.DOM_VK_PAGE_UP:
-                    if (index == box.getFirstVisibleRow())
-                      box.scrollByPages(-1);
-                    index = box.getFirstVisibleRow();
-                    break;
-                  case event.DOM_VK_PAGE_DOWN:
-                    if (index == this.getLastVisibleRow(box))
-                      box.scrollByPages(1);
-                    index = this.getLastVisibleRow(box);
-                    break;
-                  case event.DOM_VK_HOME:
-                    index = 0;
-                    break;
-                  case event.DOM_VK_END:
-                    index = box.view.rowCount - 1;
-                    break;
                   case event.DOM_VK_ENTER:
                   case event.DOM_VK_RETURN:
                     this.self.fire();
                     return;
-                  default:
+                }
+                index = this.tree.currentIndex;
+              } else {
+                switch (event.keyCode) {
+                  case event.DOM_VK_PAGE_UP:
+                  case event.DOM_VK_PAGE_DOWN:
                     return;
                 }
-                box.view.selection.select(index);
-                box.ensureRowIsVisible(index);
+                index = this.self.setInitialSelection();
               }
+              switch (event.keyCode) {
+                case event.DOM_VK_UP:
+                  if (index <= 0)
+                    return;
+                  index--;
+                  break;
+                case event.DOM_VK_DOWN:
+                  index++;
+                  if (index == box.view.rowCount)
+                    return;
+                  break;
+                case event.DOM_VK_PAGE_UP:
+                  if (index == box.getFirstVisibleRow())
+                    box.scrollByPages(-1);
+                  index = box.getFirstVisibleRow();
+                  break;
+                case event.DOM_VK_PAGE_DOWN:
+                  if (index == this.getLastVisibleRow(box))
+                    box.scrollByPages(1);
+                  index = this.getLastVisibleRow(box);
+                  break;
+                case event.DOM_VK_HOME:
+                  index = 0;
+                  break;
+                case event.DOM_VK_END:
+                  index = box.view.rowCount - 1;
+                  break;
+                default:
+                  return;
+              }
+              box.view.selection.select(index);
+              if (this.parentNode.hasAttribute("open"))
+                box.ensureRowIsVisible(index);
+              else
+                this.self.fire();
             }
           })
         ]]>
       </field>
+      <method name="setInitialSelection">
+        <body>
+          <![CDATA[
+            var view = this.tree.view;
+            view.selection.selectEventsSuppressed = true;
+            for (var i = 0; i < view.rowCount; i++) {
+              if (view.isContainer(i)) {
+                if (view.isContainerEmpty(i) == view.isContainerOpen(i))
+                  view.toggleOpenState(i);
+                if (view.isContainerOpen(i)) {
+                  if (i + 1 == view.rowCount ||
+                      view.getLevel(i + 1) <= view.getLevel(i)) {
+                    view.toggleOpenState(i);
+                  }
+                }
+              }
+            }
+            var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+            var index = this.tree.builderView.getIndexOfResource(RDF.GetResource(this.parentNode.getAttribute("uri")));
+            view.selection.select(index);
+            return index;
+          ]]>
+        </body>
+      </method>
+      <constructor>
+        <![CDATA[
+          this.parentNode.addEventListener("keypress", this.onKeyPressMenuList, true);
+        ]]>
+      </constructor>
+      <destructor>
+        <![CDATA[
+          this.parentNode.removeEventListener("keypress", this.onKeyPressMenuList, true);
+        ]]>
+      </destructor>
     </implementation>
     <handlers>
       <handler event="mousemove" action="this.updateHover(event);"/>
@@ -1816,29 +1865,12 @@
           window.top.document.addEventListener("keypress", this.onKeyPressMenuList, true);
           var box = this.tree.treeBoxObject;
           box.focused = true;
-          var view = box.view;
-          view.selection.selectEventsSuppressed = true;
-          for (var i = 0; i < view.rowCount; i++) {
-            if (view.isContainer(i)) {
-              if (view.isContainerEmpty(i) == view.isContainerOpen(i))
-                view.toggleOpenState(i);
-              if (view.isContainerOpen(i)) {
-                if (i + 1 == view.rowCount ||
-                    view.getLevel(i + 1) <= view.getLevel(i)) {
-                  view.toggleOpenState(i);
-                }
-              }
-            }
-          }
-          var height = view.rowCount * box.rowHeight;
+          var index = this.setInitialSelection();
+          var height = box.view.rowCount * box.rowHeight;
           height += this.boxObject.height - box.treeBody.boxObject.height;
           this.height = height;
-          var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-          var index = this.tree.builderView.getIndexOfResource(RDF.GetResource(this.parentNode.getAttribute("uri")));
-          if (index >= 0) {
-            view.selection.select(index);
+          if (index >= 0)
             setTimeout(function() { box.ensureRowIsVisible(index); }, 0);
-          }
         ]]>
       </handler>
       <handler event="popuphiding">
