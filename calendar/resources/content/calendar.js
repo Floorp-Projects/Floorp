@@ -179,6 +179,8 @@ function update_date()
    
    gCalendarWindow.currentView.hiliteTodaysDate();
 
+   refreshEventTree();
+
    setTimeout( "update_date()", milliSecsTillTomorrow ); 
 }
 
