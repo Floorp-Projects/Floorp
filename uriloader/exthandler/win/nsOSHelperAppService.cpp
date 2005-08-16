@@ -234,12 +234,18 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
   if (!regKey) 
     return NS_ERROR_NOT_AVAILABLE;
 
-  // |getApplicationDescription| in nsIExternalProtocolService takes 
-  // |AUTF8String| for aScheme, but for now, we can assume that it's ASCII
-  NS_ConvertASCIItoUTF16 cmdString(aScheme);
-  cmdString.AppendLiteral("\\shell\\open\\command");
+  NS_ConvertASCIItoUTF16 buf(aScheme);
+
+  nsCOMPtr<nsIFile> app;
+  GetDefaultAppInfo(buf, _retval, getter_AddRefs(app));
+
+  if (!_retval.Equals(buf))
+    return NS_OK;
+
+  // Fall back to full path
+  buf.AppendLiteral("\\shell\\open\\command");
   nsresult rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
-                             cmdString,
+                             buf,
                              nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_FAILED(rv))
     return NS_ERROR_NOT_AVAILABLE;   
@@ -372,7 +378,8 @@ static void RemoveParameters(nsString& aPath)
 // are actually DLLs invoked via rundll32.exe) 
 //
 nsresult
-nsOSHelperAppService::GetDefaultAppInfo(nsAString& aTypeName, nsAString& aDefaultDescription, 
+nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aTypeName,
+                                        nsAString& aDefaultDescription, 
                                         nsIFile** aDefaultApplication)
 {
 #ifdef WINCE
