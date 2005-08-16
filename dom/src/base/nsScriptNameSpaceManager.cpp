@@ -502,6 +502,11 @@ nsScriptNameSpaceManager::Init()
   return NS_OK;
 }
 
+struct NameSetClosure {
+  nsIScriptContext* ctx;
+  nsresult rv;
+};
+
 PR_STATIC_CALLBACK(PLDHashOperator)
 NameSetInitCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                     PRUint32 number, void *arg)
@@ -514,9 +519,12 @@ NameSetInitCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
       do_CreateInstance(entry->mGlobalName.mCID, &rv);
     NS_ENSURE_SUCCESS(rv, PL_DHASH_NEXT);
 
-    rv = ns->InitializeNameSet(NS_STATIC_CAST(nsIScriptContext *, arg));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Initing external script classes failed!");
+    NameSetClosure *closure = NS_STATIC_CAST(NameSetClosure *, arg);
+    closure->rv = ns->InitializeNameSet(closure->ctx);
+    if (NS_FAILED(closure->rv)) {
+      NS_ERROR("Initing external script classes failed!");
+      return PL_DHASH_STOP;
+    }
   }
 
   return PL_DHASH_NEXT;
@@ -525,9 +533,12 @@ NameSetInitCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
 nsresult
 nsScriptNameSpaceManager::InitForContext(nsIScriptContext *aContext)
 {
-  PL_DHashTableEnumerate(&mGlobalNames, NameSetInitCallback, aContext);
+  NameSetClosure closure;
+  closure.ctx = aContext;
+  closure.rv = NS_OK;
+  PL_DHashTableEnumerate(&mGlobalNames, NameSetInitCallback, &closure);
 
-  return NS_OK;
+  return closure.rv;
 }
 
 nsresult
