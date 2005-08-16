@@ -2412,6 +2412,14 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
 #endif
   PRBool isPseudoElement = nsCSSPseudoElements::IsPseudoElement(pseudo);
   PRBool isAnonBox = nsCSSAnonBoxes::IsAnonBox(pseudo);
+  PRBool isPseudoClass = nsCSSPseudoClasses::IsPseudoClass(pseudo);
+
+  if (!isPseudoClass && !isPseudoElement && !isAnonBox) {
+    // Not a pseudo-class, not a pseudo-element.... forget it
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
+    UngetToken();
+    return eSelectorParsingStatus_Error;
+  }
 
   // If it's a function token, it better be on our "ok" list, and if the name
   // is that of a function pseudo it better be a function token
@@ -2436,7 +2444,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
-  if (nsCSSPseudoClasses::notPseudo == pseudo) {
+  if (!parsingPseudoElement && nsCSSPseudoClasses::notPseudo == pseudo) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelDoubleNot);
       UngetToken();
@@ -2449,8 +2457,7 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
       return parsingStatus;
     }
   }    
-  else if (!parsingPseudoElement &&
-           nsCSSPseudoClasses::IsPseudoClass(pseudo)) {
+  else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
     if (nsCSSPseudoClasses::lang == pseudo) {
       nsSelectorParsingStatus parsingStatus = ParseLangSelector(aSelector, aErrorCode);
@@ -2519,12 +2526,19 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
       UngetToken();
       return eSelectorParsingStatus_Error;
     }
-  } else {
-    // Not a pseudo-class, not a pseudo-element.... forget it
-    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
-    UngetToken();
-    return eSelectorParsingStatus_Error;
   }
+#ifdef DEBUG
+  else {
+    // We should never end up here.  Indeed, if we ended up here, we know (from
+    // the current if/else cascade) that !isPseudoElement and !isAnonBox.  But
+    // then due to our earlier check we know that isPseudoClass.  Since we
+    // didn't fall into the isPseudoClass case in this cascade, we must have
+    // parsingPseudoElement.  But we've already checked the
+    // parsingPseudoElement && !isPseudoClass && !isAnonBox case and bailed if
+    // it's happened.
+    NS_NOTREACHED("How did this happen?");
+  }
+#endif
   return eSelectorParsingStatus_Continue;
 }
 
