@@ -171,7 +171,6 @@ calItemBase.prototype = {
     // for subclasses to use; copies the ItemBase's values
     // into m. aNewParent is optional
     cloneItemBaseInto: function (m, aNewParent) {
-        this.updateStampTime();
         this.ensureNotDirty();
 
         m.mImmutable = false;
