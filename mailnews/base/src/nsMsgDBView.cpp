@@ -2880,12 +2880,11 @@ nsMsgDBView::PerformActionsOnJunkMsgs()
   {
     // notes on marking junk as read:
     // 1. there are 2 occasions on which junk messages are marked as 
-    //    read: here (after a manual marking) and after automatic
-    //    classification by the bayesian filter (see code for local
-    //    mail folders and for imap mail folders); it is perhaps
-    //    worth considering having a different 'mark as read'
-    //    preference for these 2 operations... for now, there's
-    //    but a single pref for both
+    //    read: after a manual marking (here and in the front end) and after
+    //    automatic classification by the bayesian filter (see code for local
+    //    mail folders and for imap mail folders). The markAsReadOnSpam pref
+    //    only applies to the latter, the former does not have a pref and is
+    //    default behaviour (see bug 220933).
     // 2. even though move/delete on manual mark may be
     //    turned off, we might still need to mark as read
 
@@ -2946,10 +2945,12 @@ nsMsgDBView::DetermineActionsForJunkMsgs(PRBool* movingJunkMessages, PRBool* mar
   if (!spamLevel)
     return NS_OK;
     
-  // now let's determine whether we'll be taking the first action,
-  // marking as read
-  
-  (void)spamSettings->GetMarkAsReadOnSpam(markingJunkMessagesRead);
+  // When the user explicitly marks a message as junk, he doesn't want it to
+  // stay unread (even if he does want that for automatically-classified ones),
+  // so we always mark as read here (pref-independent, see bug 220933).
+  // Note that this behaviour should match the one in the front end for marking
+  // as junk via toolbar/context menu.
+  *markingJunkMessagesRead = true;
 
 
   // now let's determine whether we'll be taking the second action,
