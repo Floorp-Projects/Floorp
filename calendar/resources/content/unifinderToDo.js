@@ -587,6 +587,17 @@ function contextChangeProgress( event, Progress )
           todoItem = tree.taskView.getCalendarTaskAtRow( v );
           var newItem = todoItem.clone().QueryInterface( Components.interfaces.calITodo );
           newItem.percentComplete = Progress;
+          switch (Progress) {
+              case 0:
+                  newItem.status = "NONE";
+                  break;
+              case 100:
+                  newItem.status = "COMPLETED";
+                  break;
+              default:
+                  newItem.status = "IN-PROCESS";
+                  break;
+          }
           doTransaction('modify', newItem, newItem.calendar, todoItem, null);
       }
    }
