@@ -350,7 +350,7 @@ public:
   virtual void WillInitializeContext() = 0;
 
   /**
-   * Dell the context we're done reinitializing it.
+   * Tell the context we're done reinitializing it.
    */
   virtual void DidInitializeContext() = 0;
 };
