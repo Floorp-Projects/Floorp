@@ -150,8 +150,8 @@ public:
 
   NS_IMETHOD SetParent(const nsIFrame* aParent);
 
-  NS_IMETHOD GetMenuParent(nsIMenuParent** aResult) { *aResult = mMenuParent; return NS_OK; };
-  NS_IMETHOD GetMenuChild(nsIFrame** aResult) { *aResult = mPopupFrames.FirstChild(); return NS_OK; }
+  virtual nsIMenuParent *GetMenuParent() { return mMenuParent; };
+  virtual nsIFrame *GetMenuChild() { return mPopupFrames.FirstChild(); }
   NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; };
   NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
   NS_IMETHOD MarkChildrenStyleChange();

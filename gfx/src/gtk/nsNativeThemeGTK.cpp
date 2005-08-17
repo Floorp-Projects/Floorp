@@ -249,8 +249,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         CallQueryInterface(aFrame, &menuFrame);
 
         if (menuFrame) {
-          nsIMenuParent *menuParent;
-          menuFrame->GetMenuParent(&menuParent);
+          nsIMenuParent *menuParent = menuFrame->GetMenuParent();
           if (menuParent)
             menuParent->IsMenuBar(isTopLevel);
         }

@@ -335,8 +335,7 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
 {
   // are we our menu parent's current menu item?
   if (mMenuParent) {
-    nsIMenuFrame *curItem = nsnull;
-    mMenuParent->GetCurrentMenuItem(&curItem);
+    nsIMenuFrame *curItem = mMenuParent->GetCurrentMenuItem();
     if (curItem == this) {
       // yes; tell it that we're going away
       mMenuParent->SetCurrentMenuItem(nsnull);
@@ -1261,9 +1260,7 @@ nsMenuFrame::SelectFirstItem()
   nsIFrame* frame = mPopupFrames.FirstChild();
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-    nsIMenuFrame* result;
-    popup->GetNextMenuItem(nsnull, &result);
-    popup->SetCurrentMenuItem(result);
+    popup->SetCurrentMenuItem(popup->GetNextMenuItem(nsnull));
   }
 
   return NS_OK;
@@ -1955,8 +1952,7 @@ nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsIMenuFrame* menuFrame;
-  menuPopup->GetCurrentMenuItem(&menuFrame);
+  nsIMenuFrame* menuFrame = menuPopup->GetCurrentMenuItem();
   
   if (!menuFrame) {
     *aResult = nsnull;
@@ -1992,9 +1988,10 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
   mPresContext->PresShell()->GetPrimaryFrameFor(child, &kid);
   if (!kid)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(kid));
-  if (!menuFrame)
-    return NS_ERROR_FAILURE;
+  nsIMenuFrame *menuFrame;
+  nsresult rv = CallQueryInterface(kid, &menuFrame);
+  if (NS_FAILED(rv))
+    return rv;
   menuPopup->SetCurrentMenuItem(menuFrame);
   return NS_OK;
 }

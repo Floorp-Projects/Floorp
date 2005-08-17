@@ -186,7 +186,10 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
   }
   else if (theChar == NS_VK_ESCAPE) {
     // Close one level.
+    // Prevents us from getting destroyed by Escape(), we need to return to ourselves
+    NS_ADDREF_THIS();
 	  mMenuParent->Escape(handled);
+    NS_RELEASE_THIS();
     if (!handled)
       mMenuParent->DismissChain();
   }

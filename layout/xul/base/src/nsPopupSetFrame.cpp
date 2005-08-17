@@ -177,8 +177,7 @@ nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
   if (mPopupList) {
     // Try to hide any active popups
     if (nsMenuFrame::sDismissalListener) {
-      nsCOMPtr<nsIMenuParent> menuParent;
-      nsMenuFrame::sDismissalListener->GetCurrentMenuParent(getter_AddRefs(menuParent));
+      nsIMenuParent *menuParent = nsMenuFrame::sDismissalListener->GetCurrentMenuParent();
       nsIFrame* frame;
       CallQueryInterface(menuParent, &frame);
       // Rollup popups, but only if they're ours
@@ -419,9 +418,10 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
       mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
                                                     &popupFrame);
       if (popupFrame) {
-        nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
-        if (menuParent)
+        nsIMenuParent *menuParent;
+        if (NS_SUCCEEDED(CallQueryInterface(popupFrame, &menuParent))) {
           menuParent->HideChain();
+        }
       }
     }
   }
@@ -450,9 +450,10 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
         mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
                                                       &popupFrame);
         if (popupFrame) {
-          nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
-          if (menuParent)
+          nsIMenuParent *menuParent;
+          if (NS_SUCCEEDED(CallQueryInterface(popupFrame, &menuParent))) {
             menuParent->DismissChain();
+          }
         }
       }
     }
