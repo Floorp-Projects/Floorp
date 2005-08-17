@@ -137,13 +137,13 @@ var gPrivacyPane = {
 
   showCertificates: function ()
   {
-    document.documentElement.openSubDialog("chrome://pippki/content/certManager.xul",
+    document.documentElement.openWindow("mozilla:certmanager", "chrome://pippki/content/certManager.xul",
                                         "width=600,height=400", null);
   },
   
   showCRLs: function ()
   {
-    document.documentElement.openSubDialog("chrome://pippki/content/crlManager.xul",
+    document.documentElement.openWindow("Mozilla:CRLManager", "chrome://pippki/content/crlManager.xul",
                                         "width=600,height=400", null);
   },
   
@@ -155,7 +155,7 @@ var gPrivacyPane = {
   
   showSecurityDevices: function ()
   {
-    document.documentElement.openSubDialog("chrome://pippki/content/device_manager.xul",
+    document.documentElement.openWindow("mozilla:devicemanager", "chrome://pippki/content/device_manager.xul",
                                         "width=600,height=400", null);
   }
 };
