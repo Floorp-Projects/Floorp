@@ -81,3 +81,14 @@ private:
     NSView*                   mFilterView;
 };
 
+
+@interface FilterViewController : NSObject
+{
+  IBOutlet NSPopUpButton* mSaveOptionsPopUpButton;
+  IBOutlet NSView*        mFilterView;
+}
+
+-(IBAction)setNewSaveOption:(id)sender;
+
+@end
+

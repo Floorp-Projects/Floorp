@@ -320,8 +320,15 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
     if (!defaultFileName.IsEmpty())
         file = [NSString stringWith_nsAString:defaultFileName];
         
-    if (isHTML)
+    if (isHTML) {
         [savePanel setAccessoryView: mFilterView];
+        // need this because the |stringWith_nsAString| returns a NSString 
+        // with an extension that the savePanel does not like and will add
+        // the extensions on top of an extensions
+        NSLog([file pathExtension]);
+        [savePanel setRequiredFileType: [file pathExtension]];
+        [savePanel setCanSelectHiddenExtension: YES];
+    }
         
     if ([savePanel runModalForDirectory: nil file: file] == NSFileHandlingPanelCancelButton)
         return NS_OK;
@@ -426,3 +433,25 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
   
   return rv;
 }
+
+#pragma mark -
+
+@implementation FilterViewController
+
+-(IBAction)setNewSaveOption:(id)sender
+{
+  if ([[mFilterView window] isKindOfClass:[NSSavePanel class]]) 
+  {
+    NSSavePanel* savePanel = (NSSavePanel*) [mFilterView window];
+    if (savePanel) 
+    { 
+      if ([mSaveOptionsPopUpButton indexOfSelectedItem] == eSaveFormatPlainText) 
+        [savePanel setRequiredFileType:@"txt"];
+      
+      else  // rest of the selections all use .html extension
+        [savePanel setRequiredFileType:@"html"];
+    }
+  }
+}
+
+@end

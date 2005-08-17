@@ -1,5 +1,12 @@
 {
     IBClasses = (
+        {
+            ACTIONS = {setNewSaveOption = id; }; 
+            CLASS = FilterViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mFilterView = NSView; mSaveOptionsPopUpButton = NSPopUpButton; }; 
+            SUPERCLASS = NSObject; 
+        }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
         {
             ACTIONS = {
