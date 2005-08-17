@@ -10,8 +10,8 @@
       <Description>
         <!-- thunderbird -->
         <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
-        <em:minVersion>0.6</em:minVersion>
-        <em:maxVersion>1.0+</em:maxVersion>
+        <em:minVersion>1.0+</em:minVersion>
+        <em:maxVersion>1.6a1</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -19,8 +19,8 @@
       <Description>
         <!-- firefox -->
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>0.6</em:minVersion>
-        <em:maxVersion>1.1+</em:maxVersion>
+        <em:minVersion>1.0+</em:minVersion>
+        <em:maxVersion>1.6a1</em:maxVersion>
       </Description>
     </em:targetApplication>
 
