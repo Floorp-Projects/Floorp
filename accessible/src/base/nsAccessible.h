@@ -185,7 +185,7 @@ protected:
 
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
-  nsresult DoCommand();
+  nsresult DoCommand(nsIContent *aContent = nsnull);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
