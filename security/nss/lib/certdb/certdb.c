@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.75 2005/07/09 00:34:43 julien.pierre.bugs%sun.com Exp $
+ * $Id: certdb.c,v 1.76 2005/08/17 02:04:12 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -1913,23 +1913,10 @@ CERT_IsRootDERCert(SECItem *derCert)
     return isRoot;
 }
 
-static CERTCompareValidityStatus GetNewestTime(PRTime a, PRTime b)
-{
-    if ( LL_CMP (a, == , b) ) {
-        return certValidityEqual;
-    } else if (LL_CMP(a, >, b)) {
-        return certValidityChooseA;
-    } else {
-        return certValidityChooseB;
-    }
-}
-
 CERTCompareValidityStatus
 CERT_CompareValidityTimes(CERTValidity* val_a, CERTValidity* val_b)
 {
     PRTime notBeforeA, notBeforeB, notAfterA, notAfterB;
-    SECStatus rv;
-    CERTCompareValidityStatus afterStatus, beforeStatus;
 
     if (!val_a || !val_b)
     {
@@ -1945,22 +1932,25 @@ CERT_CompareValidityTimes(CERTValidity* val_a, CERTValidity* val_b)
     }
 
     /* sanity check */
-    if (certValidityChooseA == GetNewestTime(notBeforeA, notAfterA) ||
-        certValidityChooseA == GetNewestTime(notBeforeB, notAfterB)) {
+    if (LL_CMP(notBeforeA,>,notAfterA) || LL_CMP(notBeforeB,>,notAfterB)) {
         PORT_SetError(SEC_ERROR_INVALID_TIME);
         return certValidityUndetermined;
     }
 
-    beforeStatus = GetNewestTime(notBeforeA, notBeforeB);
-    afterStatus = GetNewestTime(notAfterA, notAfterB);
-    if (afterStatus != certValidityEqual) {
-        /* one cert validity goes farthest into the future, select it */
-        return afterStatus;
+    if (LL_CMP(notAfterA,!=,notAfterB)) {
+        /* one cert validity goes farther into the future, select it */
+        return LL_CMP(notAfterA,<,notAfterB) ?
+            certValidityChooseB : certValidityChooseA;
     }
     /* the two certs have the same expiration date */
     PORT_Assert(LL_CMP(notAfterA, == , notAfterB));
-    /* choose cert with the latest start date */
-    return beforeStatus;
+    /* do they also have the same start date ? */
+    if (LL_CMP(notBeforeA,==,notBeforeB)) {
+	return certValidityEqual;
+    }
+    /* choose cert with the later start date */
+    return LL_CMP(notBeforeA,<,notBeforeB) ?
+        certValidityChooseB : certValidityChooseA;
 }
 
 /*

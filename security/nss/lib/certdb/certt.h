@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.32 2005/07/09 00:34:43 julien.pierre.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.33 2005/08/17 02:04:12 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -523,16 +523,18 @@ typedef enum SECCertTimeValidityEnum {
 } SECCertTimeValidity;
 
 /*
- * This is used with CERT_CompareValidityTimes when comparing the validity
- * periods of two certificates A and B.
+ * This is used as return status in functions that compare the validity
+ * periods of two certificates A and B, currently only
+ * CERT_CompareValidityTimes.
  */
 
 typedef enum CERTCompareValidityStatusEnum
 {
-    certValidityUndetermined = 0,
-    certValidityChooseB = 1,
-    certValidityEqual = 2,
-    certValidityChooseA = 3
+    certValidityUndetermined = 0, /* the function is unable to select one cert 
+                                     over another */
+    certValidityChooseB = 1,      /* cert B should be preferred */
+    certValidityEqual = 2,        /* both certs have the same validity period */
+    certValidityChooseA = 3       /* cert A should be preferred */
 } CERTCompareValidityStatus;
 
 /*
