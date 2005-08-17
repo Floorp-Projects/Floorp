@@ -169,7 +169,7 @@ nsContextMenu.prototype = {
         var isWin = navigator.appVersion.indexOf("Windows") != -1;
         this.showItem( "context-setWallpaper", isWin && (this.onLoadedImage || this.onStandaloneImage));
 
-        this.showItem( "context-sep-image", this.onImage || this.onStandaloneImage);
+        this.showItem( "context-sep-image", this.onLoadedImage || this.onStandaloneImage);
 
         if( isWin && this.onLoadedImage )
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
