@@ -219,6 +219,20 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
     imageLoader->RemoveObserver(imgDoc);
   }
 
+
+  if (NS_FAILED(status) && imgDoc->mStringBundle) {
+    nsCAutoString src;
+    imgDoc->mDocumentURI->GetSpec(src);
+    NS_ConvertUTF8toUCS2 srcString(src);
+    const PRUnichar* formatString[1] = { srcString.get() };
+    nsXPIDLString errorMsg;
+    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
+    imgDoc->mStringBundle->FormatStringFromName(str.get(), formatString, 1,
+                                        getter_Copies(errorMsg));
+    
+    imgDoc->mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
+  }
+
   return nsMediaDocumentStreamListener::OnStopRequest(request, ctxt, status);
 }
 
@@ -613,16 +627,7 @@ nsImageDocument::CreateSyntheticDocument()
   // Make sure not to start the image load from here...
   imageLoader->SetLoadingEnabled(PR_FALSE);
   mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, srcString, PR_FALSE);
-
-  if (mStringBundle) {
-    const PRUnichar* formatString[1] = { srcString.get() };
-    nsXPIDLString errorMsg;
-    NS_NAMED_LITERAL_STRING(str, "InvalidImage");
-    mStringBundle->FormatStringFromName(str.get(), formatString, 1,
-                                        getter_Copies(errorMsg));
-
-    mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
-  }
+  mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, srcString, PR_FALSE);
 
   body->AppendChildTo(mImageContent, PR_FALSE);
   imageLoader->SetLoadingEnabled(PR_TRUE);
