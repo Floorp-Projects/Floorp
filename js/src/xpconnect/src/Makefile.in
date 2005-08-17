@@ -144,6 +144,12 @@ endif
 
 endif
 
+# the windows ce compiler produces crap when compiling this
+# with any optimizations.  See bug 304714
+ifdef WINCE
+MOZ_OPTIMIZE_FLAGS=/Od
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CXX
 ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
