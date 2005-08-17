@@ -1549,7 +1549,6 @@ public:
 int main(int argc, char* argv[])
 {
   NS_TIMELINE_MARK("enter main");
-  int i; //Moved here due to portability guideline 20. See bug 258055
 
 #ifdef XP_WIN32
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
@@ -1594,22 +1593,25 @@ int main(int argc, char* argv[])
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif
 
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2) || defined(MOZ_X11)
+  int i;
+#endif
+
 #ifdef MOZ_X11
   /* Init threadsafe mode of Xlib API on demand
    * (currently this is only for testing, future builds may use this by
    * default) */
-  PRBool x11threadsafe = PR_FALSE;
-  for (i=1; i<argc; i++) {
-    if (PL_strcmp(argv[i], "-xinitthreads") == 0) {
-      x11threadsafe = PR_TRUE;
-      break;
-    }
-  }
-
-  if (PR_GetEnv("MOZILLA_X11_XINITTHREADS")) {
+  PRBool x11threadsafe;
+  if (PR_GetEnv("MOZILLA_X11_XINITTHREADS"))
     x11threadsafe = PR_TRUE;
+  else {
+    x11threadsafe = PR_FALSE;
+    for (i = 1; i < argc; ++i)
+      if (PL_strcmp(argv[i], "-xinitthreads") == 0) {
+        x11threadsafe = PR_TRUE;
+        break;
+      }
   }
-  
   if (x11threadsafe) {
     if (XInitThreads() == False) {
       fprintf(stderr, "%s: XInitThreads failure.", argv[0]);
