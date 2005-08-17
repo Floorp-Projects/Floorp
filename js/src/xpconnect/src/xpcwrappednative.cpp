@@ -408,7 +408,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         NS_ASSERTION(wrapper->GetFlatJSObject(), "eh?");
         printf("Created wrapped native %s, flat JSObject is %p\n",
                s, (void*)wrapper->GetFlatJSObject());
-        if (s)
+        if(s)
             JS_smprintf_free(s);
     }
 #endif
@@ -2663,6 +2663,8 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
             NS_RELEASE(ptr);
             continue;
         }
+        if(rv == NS_ERROR_OUT_OF_MEMORY)
+            continue;
 
         // Houston, We have a problem...
 
