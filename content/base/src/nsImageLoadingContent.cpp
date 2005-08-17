@@ -398,6 +398,7 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
                                        PRBool aForce)
 {
   if (!mLoadingEnabled) {
+    FireEvent(NS_LITERAL_STRING("error"));
     return NS_OK;
   }
 
@@ -454,6 +455,7 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
 
   if (!loadImage) {
     // Don't actually load anything!  This was blocked by CanLoadImage.
+    FireEvent(NS_LITERAL_STRING("error"));
     return NS_OK;
   }
 
@@ -473,6 +475,11 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   rv = nsContentUtils::LoadImage(imageURI, doc, doc->GetDocumentURI(),
                                  this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
+  if (NS_FAILED(rv)) {
+    FireEvent(NS_LITERAL_STRING("error"));
+    return NS_OK;
+  }
+
   // If we now have a current request, we don't need to store the URI, since
   // we can get it off the request. Release it.
   if (mCurrentRequest) {
