@@ -64,9 +64,9 @@ p#banner-version { font-size: 85%; }
 	padding: 10px;
 	background-color: #FFFF99;
 	width: 55%;
-	top: 5px;
-	left: 10px;
 	border: 1px solid #000;
+	position: absolute;
+	bottom: 5px;
 }
 
 .pagetitle
@@ -88,31 +88,19 @@ p#banner-version { font-size: 85%; }
     width: 220px;
     border: thin solid #000000;
     float: left;
-    position: absolute;
-    top: 90px;
+    position: relative;
     left: 10px;
     padding-left: 5px;
 }
 
 .menu_content
 {
-    left: 250px;
-    top: 90px;
-    position: absolute;
-}
-
-.content
-{
-    left: 0px;
-    top: 0px;
-    height: auto;
-    width: auto;
-    padding: 5px;
+	left: 250px;
+	position: absolute;
 }
 
 .key
 {
-    position: absolute;
     top: 80px;
     left: 10px;
 }
