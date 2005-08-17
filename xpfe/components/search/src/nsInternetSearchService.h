@@ -147,6 +147,8 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
   nsresult  BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
   nsresult  FindData(nsIRDFResource *engine, nsIRDFLiteral **data);
+  nsresult  EngineFileFromResource(nsIRDFResource *aEngineResource,
+                                   nsILocalFile **aResult);
   nsresult  updateDataHintsInGraph(nsIRDFResource *engine, const PRUnichar *data);
   nsresult  updateAtom(nsIRDFDataSource *db, nsIRDFResource *src, nsIRDFResource *prop, nsIRDFNode *newValue, PRBool *dirtyFlag);
   nsresult  validateEngine(nsIRDFResource *engine);
@@ -183,13 +185,14 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
 
 static  void    FireTimer(nsITimer* aTimer, void* aClosure);
 
-  // Just like AddSearchEngine, but with an extra fifth parameter to say
-  // whether it's our internal update or a new engine.
+  // Just like AddSearchEngine, but with an extra parameter to include the
+  // nsIRDFResource of an existing engines.  If this is a new search engine
+  // aOldEngineResource should be null.
   nsresult AddSearchEngineInternal(const char *engineURL,
                                    const char *iconURL,
                                    const PRUnichar *suggestedTitle,
                                    const PRUnichar *suggestedCategory,
-                                   PRBool isUpdate);
+                                   nsIRDFResource *aOldEngineResource);
 
 public:
   NS_DECL_ISUPPORTS
