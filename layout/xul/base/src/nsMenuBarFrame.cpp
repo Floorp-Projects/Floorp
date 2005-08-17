@@ -280,8 +280,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "menuactive" to track the current 
     // active menu.
-    nsIMenuFrame* firstFrame;
-    GetNextMenuItem(nsnull, &firstFrame);
+    nsIMenuFrame* firstFrame = GetNextMenuItem(nsnull);
     if (firstFrame) {
       firstFrame->SelectMenu(PR_TRUE);
       
@@ -328,10 +327,11 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
         if ( shortcutKey.Equals(Substring(&letter, &letter+1),
                                 nsCaseInsensitiveStringComparator()) )  {
           // We match!
-          nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-          if (menuFrame)
-            return menuFrame.get();
-          return nsnull;
+          nsIMenuFrame *menuFrame;
+          if (NS_FAILED(CallQueryInterface(currFrame, &menuFrame))) {
+            menuFrame = nsnull;
+          }
+          return menuFrame;
         }
       }
     }
@@ -405,11 +405,9 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 
   if NS_DIRECTION_IS_INLINE(theDirection) {
     
-    nsIMenuFrame* nextItem;
-    
-    if (theDirection == eNavigationDirection_End)
-      GetNextMenuItem(mCurrentMenu, &nextItem);
-    else GetPreviousMenuItem(mCurrentMenu, &nextItem);
+    nsIMenuFrame* nextItem = (theDirection == eNavigationDirection_End) ?
+                             GetNextMenuItem(mCurrentMenu) : 
+                             GetPreviousMenuItem(mCurrentMenu);
 
     SetCurrentMenuItem(nextItem);
     if (nextItem) {
@@ -430,8 +428,8 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
+/* virtual */ nsIMenuFrame*
+nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
   GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
@@ -453,10 +451,10 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   while (currFrame) {
     // See if it's a menu item.
     if (IsValidItem(currFrame->GetContent())) {
-      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-      *aResult = menuFrame.get();
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
+      nsIMenuFrame *menuFrame;
+      if (NS_FAILED(CallQueryInterface(currFrame, &menuFrame)))
+        menuFrame = nsnull;
+      return menuFrame;
     }
     currFrame = currFrame->GetNextSibling();
   }
@@ -467,22 +465,21 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   while (currFrame && currFrame != startFrame) {
     // See if it's a menu item.
     if (IsValidItem(currFrame->GetContent())) {
-      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-      *aResult = menuFrame.get();
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
+      nsIMenuFrame *menuFrame;
+      if (NS_FAILED(CallQueryInterface(currFrame, &menuFrame)))
+        menuFrame = nsnull;
+      return menuFrame;
     }
 
     currFrame = currFrame->GetNextSibling();
   }
 
   // No luck. Just return our start value.
-  *aResult = aStart;
-  return NS_OK;
+  return aStart;
 }
 
-NS_IMETHODIMP
-nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
+/* virtual */ nsIMenuFrame*
+nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
   GetInsertionPoint(mPresContext->PresShell(), this, nsnull, &immediateParent);
@@ -505,10 +502,10 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult
   while (currFrame) {
     // See if it's a menu item.
     if (IsValidItem(currFrame->GetContent())) {
-      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-      *aResult = menuFrame.get();
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
+      nsIMenuFrame *menuFrame;
+      if (NS_FAILED(CallQueryInterface(currFrame, &menuFrame)))
+        menuFrame = nsnull;
+      return menuFrame;
     }
     currFrame = frames.GetPrevSiblingFor(currFrame);
   }
@@ -519,25 +516,23 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult
   while (currFrame && currFrame != startFrame) {
     // See if it's a menu item.
     if (IsValidItem(currFrame->GetContent())) {
-      nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
-      *aResult = menuFrame.get();
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
+      nsIMenuFrame *menuFrame;
+      if (NS_FAILED(CallQueryInterface(currFrame, &menuFrame)))
+        menuFrame = nsnull;
+      return menuFrame;
     }
 
     currFrame = frames.GetPrevSiblingFor(currFrame);
   }
 
   // No luck. Just return our start value.
-  *aResult = aStart;
-  return NS_OK;
+  return aStart;
 }
 
-NS_IMETHODIMP nsMenuBarFrame::GetCurrentMenuItem(nsIMenuFrame** aResult)
+/* virtual */ nsIMenuFrame*
+nsMenuBarFrame::GetCurrentMenuItem()
 {
-  *aResult = mCurrentMenu;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+  return mCurrentMenu;
 }
 
 

@@ -40,9 +40,9 @@
 #define nsIMenuParent_h___
 
 
-// {D407BF61-3EFA-11d3-97FA-00400553EEF0}
+// {81C0BF71-9F50-4f4d-8B6A-D6B233C100C2}
 #define NS_IMENUPARENT_IID \
-{ 0xd407bf61, 0x3efa, 0x11d3, { 0x97, 0xfa, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+{ 0x81c0bf71, 0x9f50, 0x4f4d, { 0x8b, 0x6a, 0xd6, 0xb2, 0x33, 0xc1, 0x0, 0xc2 } };
 
 class nsIMenuFrame;
 class nsIDOMKeyEvent;
@@ -139,10 +139,10 @@ class nsIMenuParent : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUPARENT_IID)
 
-  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aMenuItem) = 0;
+  virtual nsIMenuFrame *GetCurrentMenuItem() = 0;
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;
-  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;
-  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult) = 0;
+  virtual nsIMenuFrame *GetNextMenuItem(nsIMenuFrame* aStart) = 0;
+  virtual nsIMenuFrame *GetPreviousMenuItem(nsIMenuFrame* aStart) = 0;
 
   NS_IMETHOD SetActive(PRBool aActiveFlag) = 0;
   NS_IMETHOD GetIsActive(PRBool& isActive) = 0;

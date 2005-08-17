@@ -68,10 +68,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
-  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aResult);
+  virtual nsIMenuFrame* GetCurrentMenuItem();
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
+  virtual nsIMenuFrame* GetNextMenuItem(nsIMenuFrame* aStart);
+  virtual nsIMenuFrame* GetPreviousMenuItem(nsIMenuFrame* aStart);
   NS_IMETHOD SetActive(PRBool aActiveFlag); 
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = IsActive(); return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_TRUE; return NS_OK; };

@@ -38,9 +38,9 @@
 #ifndef nsIMenuFrame_h___
 #define nsIMenuFrame_h___
 
-// {6A4CDE51-6C05-11d3-BB50-00104B7B7DEB}
+// {2281EFC8-A8BA-4a73-8CF7-DB4EECA5EAEC}
 #define NS_IMENUFRAME_IID \
-{ 0x6a4cde51, 0x6c05, 0x11d3, { 0xbb, 0x50, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } }
+{ 0x2281efc8, 0xa8ba, 0x4a73, { 0x8c, 0xf7, 0xdb, 0x4e, 0xec, 0xa5, 0xea, 0xec } };
 
 class nsIMenuParent;
 class nsIDOMElement;
@@ -73,8 +73,8 @@ public:
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
   NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag) = 0;
 
-  NS_IMETHOD GetMenuParent(nsIMenuParent** aMenuParent) = 0;
-  NS_IMETHOD GetMenuChild(nsIFrame** aResult) = 0;
+  virtual nsIMenuParent *GetMenuParent() = 0;
+  virtual nsIFrame *GetMenuChild() = 0;
  
   NS_IMETHOD GetRadioGroupName(nsString &aName) = 0;
   NS_IMETHOD GetMenuType(nsMenuType &aType) = 0;

@@ -84,10 +84,10 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   // nsIMenuParentInterface
-  NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aResult);
+  virtual nsIMenuFrame* GetCurrentMenuItem();
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult);
+  virtual nsIMenuFrame* GetNextMenuItem(nsIMenuFrame* aStart);
+  virtual nsIMenuFrame* GetPreviousMenuItem(nsIMenuFrame* aStart);
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; }; // We don't care.
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; };
@@ -161,7 +161,7 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
-  void GetContextMenu(nsIMenuParent** aContextMenu);
+  nsIMenuParent* GetContextMenu();
 
   NS_IMETHOD KillCloseTimer();
 
