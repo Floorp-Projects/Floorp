@@ -80,6 +80,9 @@ my $jarDir = $chromeDir;
 if (defined($::opt_j)) {
     $jarDir = $::opt_j;
 }
+if ($jarDir !~ /^\//) {
+    $jarDir = getcwd() . '/' . $jarDir;
+}
 
 my $verbose = 0;
 if (defined($::opt_v)) {
@@ -215,10 +218,7 @@ sub JarIt
 {
     my ($destPath, $jarPath, $jarfile, $args, $overrides) = @_;
     my $oldDir = cwd();
-    my @destPath = _moz_splitpath("$destPath/$jarfile");
-    my @jarchive = _moz_splitpath("$jarPath/$jarfile.jar");
-    shift @destPath, shift @jarchive while $destPath[0] eq $jarchive[0];
-    my $jarchive = "../" x @destPath . join("/", @jarchive);
+    my $jarchive = $jarPath . '/' . $jarfile . '.jar';
     chdir("$destPath/$jarfile");
 
     if ("$fileformat" eq "flat" || "$fileformat" eq "symlink") {
@@ -286,17 +286,6 @@ sub JarIt
     mozUnlock($lockfile) if (!$nofilelocks);
     chdir($oldDir);
     #print "cd $oldDir\n";
-}
-
-sub _moz_splitpath
-{
-    my ($path) = @_;
-    my @dirs = split(m:/:, $path);
-    foreach (reverse 0 .. $#dirs) {
-      splice(@dirs, $_, 1) if $dirs[$_] eq ".";
-      splice(@dirs, $_, 2) if $dirs[$_] eq "..";
-    }
-    return @dirs;
 }
 
 sub _moz_rel2abs
