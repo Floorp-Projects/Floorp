@@ -2679,7 +2679,7 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
         }
 
 
-        printf("\n!!! Object's nsIClassInfo lies about it's interfaces!!!\n"
+        printf("\n!!! Object's nsIClassInfo lies about its interfaces!!!\n"
                "   classname: %s \n"
                "   contractid: %s \n"
                "   unimplemented interface name: %s\n\n",
