@@ -63,6 +63,7 @@ public:
   NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
 
 protected:
+  void InternalClose();
   nsMsgGroupThread *AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pNewThread);
   nsHashKey *AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr); // caller must delete
   nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/);
@@ -74,8 +75,11 @@ protected:
                                             PRUint32 *pFlags = NULL);
 
   PRBool GroupViewUsesDummyRow(); // returns true if we are grouped by a sort attribute that uses a dummy row
+  nsresult HandleDayChange();
 
   nsHashtable  m_groupsTable;
+  PRExplodedTime m_lastCurExplodedTime;
+  PRBool m_dayChanged;
 
   static PRUnichar* kTodayString;
   static PRUnichar* kYesterdayString;
