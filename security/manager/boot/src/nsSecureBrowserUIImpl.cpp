@@ -1366,6 +1366,10 @@ NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
 
     rv = internal->GetPrompter(&prompt);
     *result = prompt;
+  } else if (uuid.Equals(NS_GET_IID(nsIDOMWindow))) {
+    *result = mWindow;
+    NS_ADDREF ((nsISupports*) *result);
+    rv = NS_OK;
   } else {
     rv = NS_ERROR_NO_INTERFACE;
   }
