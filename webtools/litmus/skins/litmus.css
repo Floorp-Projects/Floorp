@@ -61,12 +61,12 @@ p#banner-version { font-size: 85%; }
 
 .footer
 {
-    padding: 10px;
-    background-color: #FFFF99;
-    width: 75%;
-    position: relative;
-    top: 5px;
-    left: 10px;
+	padding: 10px;
+	background-color: #FFFF99;
+	width: 55%;
+	top: 5px;
+	left: 10px;
+	border: 1px solid #000;
 }
 
 .pagetitle
