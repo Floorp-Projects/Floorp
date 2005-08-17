@@ -3605,6 +3605,8 @@ nsScriptSecurityManager::PrintPolicyDB()
     if(mOriginToPolicyMap)
     {
         JSContext* cx = GetCurrentJSContext();
+        if (!cx)
+            cx = GetSafeJSContext();
         printf("----------------------------\n");
         printf("Domain: Default.\n");
         PL_DHashTableEnumerate(mDefaultPolicy, PrintClassPolicy, (void*)cx);
