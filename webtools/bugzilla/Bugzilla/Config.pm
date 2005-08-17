@@ -204,7 +204,7 @@ sub UpdateParams {
                 $param{'defaultplatform'} = 'Other';
             }
             if (!exists $param{'defaultopsys'}) {
-                $param{'defaultopsys'} = 'other';
+                $param{'defaultopsys'} = 'Other';
             }
         }
         delete $param{'usebrowserinfo'};

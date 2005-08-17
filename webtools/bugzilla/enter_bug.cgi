@@ -161,118 +161,150 @@ sub formvalue {
     return $cgi->param($name) || $default || "";
 }
 
+# Takes the name of a field and a list of possible values for that 
+# field. Returns the first value in the list that is actually a 
+# valid value for that field.
+# The field should be named after its DB table.
+# Returns undef if none of the platforms match.
+sub pick_valid_field_value (@) {
+    my ($field, @values) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    foreach my $value (@values) {
+        return $value if $dbh->selectrow_array(
+            "SELECT 1 FROM $field WHERE value = ?", undef, $value); 
+    }
+    return undef;
+}
+
 sub pickplatform {
     return formvalue("rep_platform") if formvalue("rep_platform");
 
+    my @platform;
+
     if (Param('defaultplatform')) {
-        return Param('defaultplatform');
+        @platform = Param('defaultplatform');
     } else {
+        # If @platform is a list, this function will return the first
+        # item in the list that is a valid platform choice. If
+        # no choice is valid, we return "Other".
         for ($ENV{'HTTP_USER_AGENT'}) {
         #PowerPC
-            /\(.*PowerPC.*\)/i && do {return "Macintosh";};
-            /\(.*PPC.*\)/ && do {return "Macintosh";};
-            /\(.*AIX.*\)/ && do {return "Macintosh";};
+            /\(.*PowerPC.*\)/i && do {@platform = "Macintosh"; last;};
+            /\(.*PPC.*\)/ && do {@platform = "Macintosh"; last;};
+            /\(.*AIX.*\)/ && do {@platform = "Macintosh"; last;};
         #Intel x86
-            /\(.*[ix0-9]86.*\)/ && do {return "PC";};
+            /\(.*[ix0-9]86.*\)/ && do {@platform = "PC"; last;};
         #Versions of Windows that only run on Intel x86
-            /\(.*Win(?:dows )[39M].*\)/ && do {return "PC";};
-            /\(.*Win(?:dows )16.*\)/ && do {return "PC";};
+            /\(.*Win(?:dows )[39M].*\)/ && do {@platform = "PC"; last};
+            /\(.*Win(?:dows )16.*\)/ && do {@platform = "PC"; last;};
         #Sparc
-            /\(.*sparc.*\)/ && do {return "Sun";};
-            /\(.*sun4.*\)/ && do {return "Sun";};
+            /\(.*sparc.*\)/ && do {@platform = "Sun"; last;};
+            /\(.*sun4.*\)/ && do {@platform = "Sun"; last;};
         #Alpha
-            /\(.*AXP.*\)/i && do {return "DEC";};
-            /\(.*[ _]Alpha.\D/i && do {return "DEC";};
-            /\(.*[ _]Alpha\)/i && do {return "DEC";};
+            /\(.*AXP.*\)/i && do {@platform = "DEC"; last;};
+            /\(.*[ _]Alpha.\D/i && do {@platform = "DEC"; last;};
+            /\(.*[ _]Alpha\)/i && do {@platform = "DEC"; last;};
         #MIPS
-            /\(.*IRIX.*\)/i && do {return "SGI";};
-            /\(.*MIPS.*\)/i && do {return "SGI";};
+            /\(.*IRIX.*\)/i && do {@platform = "SGI"; last;};
+            /\(.*MIPS.*\)/i && do {@platform = "SGI"; last;};
         #68k
-            /\(.*68K.*\)/ && do {return "Macintosh";};
-            /\(.*680[x0]0.*\)/ && do {return "Macintosh";};
+            /\(.*68K.*\)/ && do {@platform = "Macintosh"; last;};
+            /\(.*680[x0]0.*\)/ && do {@platform = "Macintosh"; last;};
         #HP
-            /\(.*9000.*\)/ && do {return "HP";};
+            /\(.*9000.*\)/ && do {@platform = "HP"; last;};
         #ARM
-#            /\(.*ARM.*\) && do {return "ARM";};
+#            /\(.*ARM.*\) && do {$platform = "ARM";};
         #Stereotypical and broken
-            /\(.*Macintosh.*\)/ && do {return "Macintosh";};
-            /\(.*Mac OS [89].*\)/ && do {return "Macintosh";};
-            /\(Win.*\)/ && do {return "PC";};
-            /\(.*Win(?:dows[ -])NT.*\)/ && do {return "PC";};
-            /\(.*OSF.*\)/ && do {return "DEC";};
-            /\(.*HP-?UX.*\)/i && do {return "HP";};
-            /\(.*IRIX.*\)/i && do {return "SGI";};
-            /\(.*(SunOS|Solaris).*\)/ && do {return "Sun";};
+            /\(.*Macintosh.*\)/ && do {@platform = "Macintosh"; last;};
+            /\(.*Mac OS [89].*\)/ && do {@platform = "Macintosh"; last;};
+            /\(Win.*\)/ && do {@platform = "PC"; last;};
+            /\(.*Win(?:dows[ -])NT.*\)/ && do {@platform = "PC"; last;};
+            /\(.*OSF.*\)/ && do {@platform = "DEC"; last;};
+            /\(.*HP-?UX.*\)/i && do {@platform = "HP"; last;};
+            /\(.*IRIX.*\)/i && do {@platform = "SGI"; last;};
+            /\(.*(SunOS|Solaris).*\)/ && do {@platform = "Sun"; last;};
         #Braindead old browsers who didn't follow convention:
-            /Amiga/ && do {return "Macintosh";};
-            /WinMosaic/ && do {return "PC";};
+            /Amiga/ && do {@platform = "Macintosh"; last;};
+            /WinMosaic/ && do {@platform = "PC"; last;};
         }
-        return "Other";
     }
+
+    return pick_valid_field_value('rep_platform', @platform) || "Other";
 }
 
 sub pickos {
     if (formvalue('op_sys') ne "") {
         return formvalue('op_sys');
     }
+
+    my @os;
+
     if (Param('defaultopsys')) {
-        return Param('defaultopsys');
+        @os = Param('defaultopsys');
     } else {
+        # This function will return the first
+        # item in @os that is a valid platform choice. If
+        # no choice is valid, we return "Other".
         for ($ENV{'HTTP_USER_AGENT'}) {
-            /\(.*IRIX.*\)/ && do {return "IRIX";};
-            /\(.*OSF.*\)/ && do {return "OSF/1";};
-            /\(.*Linux.*\)/ && do {return "Linux";};
-            /\(.*Solaris.*\)/ && do {return "Solaris";};
-            /\(.*SunOS 5.*\)/ && do {return "Solaris";};
-            /\(.*SunOS.*sun4u.*\)/ && do {return "Solaris";};
-            /\(.*SunOS.*\)/ && do {return "SunOS";};
-            /\(.*HP-?UX.*\)/ && do {return "HP-UX";};
-            /\(.*BSD\/(?:OS|386).*\)/ && do {return "BSDI";};
-            /\(.*FreeBSD.*\)/ && do {return "FreeBSD";};
-            /\(.*OpenBSD.*\)/ && do {return "OpenBSD";};
-            /\(.*NetBSD.*\)/ && do {return "NetBSD";};
-            /\(.*BeOS.*\)/ && do {return "BeOS";};
-            /\(.*AIX.*\)/ && do {return "AIX";};
-            /\(.*OS\/2.*\)/ && do {return "OS/2";};
-            /\(.*QNX.*\)/ && do {return "Neutrino";};
-            /\(.*VMS.*\)/ && do {return "OpenVMS";};
-            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
-            /\(.*Windows NT 5\.2.*\)/ && do {return "Windows Server 2003";};
-            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
-            /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
-            /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
-            /\(.*Win.*9[8x].*4\.9.*\)/ && do {return "Windows ME";};
-            /\(.*Win(?:dows )M[Ee].*\)/ && do {return "Windows ME";};
-            /\(.*Win(?:dows )98.*\)/ && do {return "Windows 98";};
-            /\(.*Win(?:dows )95.*\)/ && do {return "Windows 95";};
-            /\(.*Win(?:dows )16.*\)/ && do {return "Windows 3.1";};
-            /\(.*Win(?:dows[ -])NT.*\)/ && do {return "Windows NT";};
-            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
-            /\(.*32bit.*\)/ && do {return "Windows 95";};
-            /\(.*16bit.*\)/ && do {return "Windows 3.1";};
-            /\(.*Mac OS 9.*\)/ && do {return "Mac System 9.x";};
-            /\(.*Mac OS 8\.6.*\)/ && do {return "Mac System 8.6";};
-            /\(.*Mac OS 8\.5.*\)/ && do {return "Mac System 8.5";};
+            /\(.*IRIX.*\)/ && do {@os = "IRIX"; last;};
+            /\(.*OSF.*\)/ && do {@os = "OSF/1"; last;};
+            /\(.*Linux.*\)/ && do {@os = "Linux"; last;};
+            /\(.*Solaris.*\)/ && do {@os = "Solaris"; last;};
+            /\(.*SunOS 5.*\)/ && do {@os = "Solaris"; last;};
+            /\(.*SunOS.*sun4u.*\)/ && do {@os = "Solaris"; last;};
+            /\(.*SunOS.*\)/ && do {@os = "SunOS"; last;};
+            /\(.*HP-?UX.*\)/ && do {@os = "HP-UX"; last;};
+            /\(.*BSD\/(?:OS|386).*\)/ && do {@os = "BSDI"; last;};
+            /\(.*FreeBSD.*\)/ && do {@os = "FreeBSD"; last;};
+            /\(.*OpenBSD.*\)/ && do {@os = "OpenBSD"; last;};
+            /\(.*NetBSD.*\)/ && do {@os = "NetBSD"; last;};
+            /\(.*BeOS.*\)/ && do {@os = "BeOS"; last;};
+            /\(.*AIX.*\)/ && do {@os = "AIX"; last;};
+            /\(.*OS\/2.*\)/ && do {@os = "OS/2"; last;};
+            /\(.*QNX.*\)/ && do {@os = "Neutrino"; last;};
+            /\(.*VMS.*\)/ && do {@os = "OpenVMS"; last;};
+            /\(.*Windows XP.*\)/ && do {@os = "Windows XP"; last;};
+            /\(.*Windows NT 5\.2.*\)/ && do {@os = "Windows Server 2003"; last;};
+            /\(.*Windows NT 5\.1.*\)/ && do {@os = "Windows XP"; last;};
+            /\(.*Windows 2000.*\)/ && do {@os = "Windows 2000"; last;};
+            /\(.*Windows NT 5.*\)/ && do {@os = "Windows 2000"; last;};
+            /\(.*Win.*9[8x].*4\.9.*\)/ && do {@os = "Windows ME"; last;};
+            /\(.*Win(?:dows )M[Ee].*\)/ && do {@os = "Windows ME"; last;};
+            /\(.*Win(?:dows )98.*\)/ && do {@os = "Windows 98"; last;};
+            /\(.*Win(?:dows )95.*\)/ && do {@os = "Windows 95"; last;};
+            /\(.*Win(?:dows )16.*\)/ && do {@os = "Windows 3.1"; last;};
+            /\(.*Win(?:dows[ -])NT.*\)/ && do {@os = "Windows NT"; last;};
+            /\(.*Windows.*NT.*\)/ && do {@os = "Windows NT"; last;};
+            /\(.*32bit.*\)/ && do {@os = "Windows 95"; last;};
+            /\(.*16bit.*\)/ && do {@os = "Windows 3.1"; last;};
+            /\(.*Mac OS 9.*\)/ && do {@os = "Mac System 9.x"; last;};
+            /\(.*Mac OS 8\.6.*\)/ && do {@os = "Mac System 8.6"; last;};
+            /\(.*Mac OS 8\.5.*\)/ && do {@os = "Mac System 8.5"; last;};
         # Bugzilla doesn't have an entry for 8.1
-            /\(.*Mac OS 8\.1.*\)/ && do {return "Mac System 8.0";};
-            /\(.*Mac OS 8\.0.*\)/ && do {return "Mac System 8.0";};
-            /\(.*Mac OS 8[^.].*\)/ && do {return "Mac System 8.0";};
-            /\(.*Mac OS 8.*\)/ && do {return "Mac System 8.6";};
-            /\(.*Mac OS X.*\)/ && do {return "Mac OS X 10.0";};
-            /\(.*Darwin.*\)/ && do {return "Mac OS X 10.0";};
+            /\(.*Mac OS 8\.1.*\)/ && do {@os = "Mac System 8.0"; last;};
+            /\(.*Mac OS 8\.0.*\)/ && do {@os = "Mac System 8.0"; last;};
+            /\(.*Mac OS 8[^.].*\)/ && do {@os = "Mac System 8.0"; last;};
+            /\(.*Mac OS 8.*\)/ && do {@os = "Mac System 8.6"; last;};
+            /\(.*Mac OS X.*\)/ && do {@os = "Mac OS X 10.0"; last;};
+            /\(.*Darwin.*\)/ && do {@os = "Mac OS X 10.0"; last;};
         # Silly
-            /\(.*Mac.*PowerPC.*\)/ && do {return "Mac System 9.x";};
-            /\(.*Mac.*PPC.*\)/ && do {return "Mac System 9.x";};
-            /\(.*Mac.*68k.*\)/ && do {return "Mac System 8.0";};
+            /\(.*Mac.*PowerPC.*\)/ && do {@os = "Mac System 9.x"; last;};
+            /\(.*Mac.*PPC.*\)/ && do {@os = "Mac System 9.x"; last;};
+            /\(.*Mac.*68k.*\)/ && do {@os = "Mac System 8.0"; last;};
         # Evil
-            /Amiga/i && do {return "other";};
-            /WinMosaic/ && do {return "Windows 95";};
-            /\(.*PowerPC.*\)/ && do {return "Mac System 9.x";};
-            /\(.*PPC.*\)/ && do {return "Mac System 9.x";};
-            /\(.*68K.*\)/ && do {return "Mac System 8.0";};
+            /Amiga/i && do {@os = "Other"; last;};
+            /WinMosaic/ && do {@os = "Windows 95"; last;};
+            /\(.*PowerPC.*\)/ && do {@os = "Mac System 9.x"; last;};
+            /\(.*PPC.*\)/ && do {@os = "Mac System 9.x"; last;};
+            /\(.*68K.*\)/ && do {@os = "Mac System 8.0"; last;};
         }
-        return "other";
     }
+
+    push(@os, "Windows") if grep(/^Windows /, @os);
+    push(@os, "Mac OS") if grep(/^Mac /, @os);
+
+    return pick_valid_field_value('op_sys', @os) || "Other";
 }
 ##############################################################################
 # End of subroutines

@@ -3991,18 +3991,38 @@ if (!exists $dbh->bz_column_info('milestones', 'sortkey')->{DEFAULT}) {
 # when all bug fields have been correctly set.
 $dbh->bz_alter_column('bugs', 'creation_ts', {TYPE => 'DATETIME'});
 
+# Old Bugzillas have "other" as an OS choice, new ones have "Other"
+# (capital O).
+# XXX - This should be moved inside of a later schema change, once
+#       we have one to move it to the inside of.
+print "Setting any 'other' op_sys to 'Other'...\n";
+$dbh->do('UPDATE op_sys SET value = ? WHERE value = ?',
+         undef, "Other", "other");
+$dbh->do('UPDATE bugs SET op_sys = ? WHERE op_sys = ?',
+         undef, "Other", "other");
+if (Param('defaultopsys') eq 'other') {
+    # We can't actually fix the param here, because WriteParams() will
+    # make $datadir/params unwriteable to the webservergroup.
+    # It's too much of an ugly hack to copy the permission-fixing code
+    # down to here. (It would create more potential future bugs than
+    # it would solve problems.)
+    print "WARNING: Your 'defaultopsys' param is set to 'other', but"
+        . " Bugzilla now\n"
+        . "         uses 'Other' (capital O).\n";
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
 # That is: if you add a new field, you first search for the first occurrence
 # of --TABLE-- and add your field to into the table hash. This new setting
 # would be honored for every new installation. Then add your
-# bz_add_field/bz_drop_field/bz_change_field_type/bz_rename_field code above. 
+# bz_add_field/bz_drop_field/bz_change_field_type/bz_rename_field code above.
 # This would then be honored by everyone who updates his Bugzilla installation.
 #
 
 #
-# BugZilla uses --GROUPS-- to assign various rights to its users. 
+# BugZilla uses --GROUPS-- to assign various rights to its users.
 #
 
 AddGroup('tweakparams', 'Can tweak operating parameters');
