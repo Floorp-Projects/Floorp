@@ -464,14 +464,18 @@ confirm_overwrite_file (GtkWidget *parent, nsILocalFile* file)
                                formatStrings, NS_ARRAY_LENGTH(formatStrings),
                                getter_Copies(message));
 
+  GtkWindow *parent_window = GTK_WINDOW(parent);
   GtkWidget *dialog;
   
-  dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+  dialog = gtk_message_dialog_new(parent_window,
                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                   GTK_MESSAGE_QUESTION,
                                   GTK_BUTTONS_YES_NO,
                                   NS_ConvertUTF16toUTF8(message).get());
   gtk_window_set_title(GTK_WINDOW(dialog), NS_ConvertUTF16toUTF8(title).get());
+  if (parent_window && parent_window->group) {
+    gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
+  }
 
   PRBool result = (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_YES);
   gtk_widget_destroy (dialog);
@@ -497,6 +501,10 @@ nsFilePicker::Show(PRInt16 *aReturn)
                                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                    accept_button, GTK_RESPONSE_ACCEPT,
                                    NULL);
+
+  if (parent_widget && parent_widget->group) {
+    gtk_window_group_add_window(parent_widget->group, GTK_WINDOW(file_chooser));
+  }
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
     _gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(file_chooser), TRUE);
