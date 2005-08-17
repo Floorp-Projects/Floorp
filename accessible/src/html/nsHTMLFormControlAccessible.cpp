@@ -88,12 +88,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 index, nsAString& 
 NS_IMETHODIMP nsHTMLCheckboxAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {   // 0 is the magic value for default action
-    nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
-    if (htmlCheckboxElement) {
-      htmlCheckboxElement->Click();
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
+    return DoCommand();
   }
   return NS_ERROR_INVALID_ARG;
 }
@@ -123,11 +118,7 @@ nsRadioButtonAccessible(aNode, aShell)
 NS_IMETHODIMP nsHTMLRadioButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
-    if (element) {
-      element->Click();
-      return NS_OK;
-    }
+    return DoCommand();
   }
   return NS_ERROR_INVALID_ARG;
 }
@@ -270,13 +261,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 index, nsAString& _
 NS_IMETHODIMP nsHTML4ButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMNSHTMLButtonElement> buttonElement(do_QueryInterface(mDOMNode));
-    if ( buttonElement )
-    {
-      buttonElement->Click();
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
+    return DoCommand();
   }
   return NS_ERROR_INVALID_ARG;
 }

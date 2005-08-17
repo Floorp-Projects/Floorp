@@ -2166,17 +2166,29 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
 {
   NS_ASSERTION(gDoCommandTimer, "How did we get here if there was no gDoCommandTimer?");
   NS_RELEASE(gDoCommandTimer);
-  gDoCommandTimer = nsnull;
 
-  nsIDOMNode *node = NS_REINTERPRET_CAST(nsIDOMNode*, aClosure);
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(node));
+  nsIContent *content = NS_REINTERPRET_CAST(nsIContent*, aClosure);
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(content));
   if (xulElement) {
     xulElement->Click();
   }
   else {
-    nsCOMPtr<nsIDOMHTMLInputElement> htmlElement(do_QueryInterface(node));
-    if (htmlElement)
-      htmlElement->Click();
+    nsIDocument *doc = content->GetDocument();
+    if (!doc) {
+      return;
+    }
+    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsPIDOMWindow *outerWindow = doc->GetWindow();
+    if (presShell && outerWindow) {
+      nsAutoPopupStatePusher popupStatePusher(outerWindow, openAllowed);
+
+      nsMouseEvent clickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
+                              nsMouseEvent::eSynthesized);
+
+      nsEventStatus eventStatus = nsEventStatus_eIgnore;
+      content->HandleDOMEvent(presShell->GetPresContext(), &clickEvent, nsnull,
+                              NS_EVENT_FLAG_INIT, &eventStatus);
+    }
   }
 }
 
@@ -2188,9 +2200,12 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
  * nsXXXAccessible::DoAction, it will block AT-Tools(e.g. GOK) that invoke
  * "action" of mozilla accessibles direclty.
  */
-nsresult nsAccessible::DoCommand()
-
+nsresult nsAccessible::DoCommand(nsIContent *aContent)
 {
+  nsCOMPtr<nsIContent> content = aContent;
+  if (!content) {
+    content = do_QueryInterface(mDOMNode);
+  }
   if (gDoCommandTimer) {
     // Already have timer going for another command
     NS_WARNING("Doubling up on do command timers doesn't work. This wasn't expected.");
@@ -2204,7 +2219,7 @@ nsresult nsAccessible::DoCommand()
 
   NS_ADDREF(gDoCommandTimer = timer);
   return gDoCommandTimer->InitWithFuncCallback(DoCommandCallback,
-                                               (void*)mDOMNode, 0,
+                                               (void*)content, 0,
                                                nsITimer::TYPE_ONE_SHOT);
 }
 
