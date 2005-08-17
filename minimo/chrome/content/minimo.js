@@ -364,7 +364,8 @@ function DoFullScreen()
   gFullScreen = !gFullScreen;
   
   document.getElementById("nav-bar").hidden = gFullScreen;
+  document.getElementById("statusbar").hidden = gFullScreen;
+
   getBrowser().setStripVisibilityTo(!gFullScreen);
   window.fullScreen = gFullScreen;  
 }
-
