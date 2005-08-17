@@ -19,17 +19,26 @@
 #%]
   
 [%# INTERFACE:
-  # none
+  # @toptesters - an array of the top testers in the system, where each
+  #     		  element contains a hash with keys "email" and "numtests"
 #%]
 
-<form name="search" method="get" action="show_test.cgi">
-<div class="footer">
-<strong>Go:</strong> <a href="index.cgi">Home</a> | <a href="runtests.cgi">Run Tests</a> |
-    Test ID: <input name="id" type="text" size="6">
-    <input name="search" type="submit" id="search" value="View"> | 
-    <a href="stats.cgi">Statistics</a>
-</div>
-</form>
 
-</body>
-</html>
+[% INCLUDE global/header.html.tmpl title = 'Statistics' %] 
+
+<p class="pagetitle">Statistics</p>
+
+<div>
+<p><strong>Top Testers</strong></p>
+<table border="1">
+<tr><td><strong>Tester</strong></td><td><strong># Tests Run</strong></td></tr>
+[% FOREACH curtester = toptesters %]
+<tr><td>[% curtester.email FILTER html %]</td><td>[% curtester.numtests FILTER html %]</td></tr>
+[% END %]
+</table>
+</div>
+
+<div>
+</div>
+
+[% INCLUDE global/footer.html.tmpl %]
