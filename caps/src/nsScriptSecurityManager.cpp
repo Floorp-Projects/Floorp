@@ -949,21 +949,31 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         if (NS_FAILED(rv = aPrincipal->GetOrigin(getter_Copies(origin))))
             return rv;
  
-        const char *start = origin;
+        char *start = origin.BeginWriting();
         const char *nextToLastDot = nsnull;
         const char *lastDot = nsnull;
         const char *colon = nsnull;
-        const char *p = start;
-        while (*p)
+        char *p = start;
+
+        //-- skip (nested) jar schemes to reach the "real" URI
+        while (*p == 'j' && *(++p) == 'a' && *(++p) == 'r' && *(++p) == ':')
+            start = ++p;
+        
+        //-- search domain (stop at the end of the string or at the 3rd slash)
+        for (PRUint32 slashes=0; *p; p++)
         {
+            if (*p == '/' && ++slashes == 3) 
+            {
+                *p = '\0'; // truncate at 3rd slash
+                break;
+            }
             if (*p == '.')
             {
                 nextToLastDot = lastDot;
                 lastDot = p;
-            }
-            if (!colon && *p == ':')
+            } 
+            else if (!colon && *p == ':')
                 colon = p;
-            p++;
         }
 
         nsCStringKey key(nextToLastDot ? nextToLastDot+1 : start);
@@ -3126,7 +3136,7 @@ nsScriptSecurityManager::InitPolicies()
             delete domainPolicy;
             return NS_ERROR_UNEXPECTED;
         }
-
+        domainPolicy->Hold();
         //-- Parse list of sites and create an entry in mOriginToPolicyMap for each
         char* domainStart = domainList.BeginWriting();
         char* domainCurrent = domainStart;
@@ -3143,7 +3153,7 @@ nsScriptSecurityManager::InitPolicies()
                 DomainEntry *newEntry = new DomainEntry(domainStart, domainPolicy);
                 if (!newEntry)
                 {
-                    delete domainPolicy;
+                    domainPolicy->Drop();
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
 #ifdef DEBUG
@@ -3188,6 +3198,7 @@ nsScriptSecurityManager::InitPolicies()
         }
 
         rv = InitDomainPolicy(cx, nameBegin, domainPolicy);
+        domainPolicy->Drop();
         if (NS_FAILED(rv))
             return rv;
     }
