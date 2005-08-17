@@ -105,8 +105,8 @@ AVAILABLE_PROJECTS = \
 
 MODULES_core :=                                 \
   SeaMonkeyAll                                  \
-  browser/config/version.txt                    \
-  mail/config/version.txt                       \
+  mozilla/browser/config/version.txt            \
+  mozilla/mail/config/version.txt               \
   mozilla/ipc/ipcd                              \
   mozilla/modules/libpr0n                       \
   mozilla/modules/libmar                        \
