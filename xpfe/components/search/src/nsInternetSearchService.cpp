@@ -2442,14 +2442,15 @@ NS_IMETHODIMP
 InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *iconURL,
 					  const PRUnichar *suggestedTitle, const PRUnichar *suggestedCategory)
 {
-        return AddSearchEngineInternal(engineURL, iconURL, suggestedTitle, suggestedCategory, PR_FALSE);
+        return AddSearchEngineInternal(engineURL, iconURL, suggestedTitle,
+                                       suggestedCategory, nsnull);
 }
 
 nsresult
 InternetSearchDataSource::AddSearchEngineInternal(const char *engineURL, const char *iconURL,
                                                   const PRUnichar *suggestedTitle,
                                                   const PRUnichar *suggestedCategory,
-                                                  PRBool isUpdate)
+                                                  nsIRDFResource *aOldEngineResource)
 {
 	NS_PRECONDITION(engineURL != nsnull, "null ptr");
 	if (!engineURL)	return(NS_ERROR_NULL_POINTER);
@@ -2473,9 +2474,13 @@ InternetSearchDataSource::AddSearchEngineInternal(const char *engineURL, const c
 
 	// download engine
 	nsCOMPtr<nsIInternetSearchContext>	engineContext;
-	if (NS_FAILED(rv = NS_NewInternetSearchContext(isUpdate ? nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT : nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT,
-		nsnull, nsnull, nsnull, suggestedCategory, getter_AddRefs(engineContext))))
-		return(rv);
+  rv = NS_NewInternetSearchContext
+         (aOldEngineResource? nsIInternetSearchContext::ENGINE_DOWNLOAD_UPDATE_CONTEXT:
+                              nsIInternetSearchContext::ENGINE_DOWNLOAD_NEW_CONTEXT,
+          nsnull, aOldEngineResource, nsnull, suggestedCategory,
+          getter_AddRefs(engineContext));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 	if (!engineContext)	return(NS_ERROR_UNEXPECTED);
 
 	nsCOMPtr<nsIURI>	engineURI;
@@ -2491,9 +2496,13 @@ InternetSearchDataSource::AddSearchEngineInternal(const char *engineURL, const c
 
 	// download icon
 	nsCOMPtr<nsIInternetSearchContext>	iconContext;
-	if (NS_FAILED(rv = NS_NewInternetSearchContext(isUpdate ? nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT : nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT,
-		nsnull, nsnull, nsnull, nsnull, getter_AddRefs(iconContext))))
-		return(rv);
+  rv = NS_NewInternetSearchContext
+         (aOldEngineResource? nsIInternetSearchContext::ICON_DOWNLOAD_UPDATE_CONTEXT:
+                              nsIInternetSearchContext::ICON_DOWNLOAD_NEW_CONTEXT,
+          nsnull, aOldEngineResource, nsnull, suggestedCategory,
+          getter_AddRefs(iconContext));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 	if (!iconContext)	return(NS_ERROR_UNEXPECTED);
 
 	if (iconURL && (*iconURL))
@@ -2555,9 +2564,24 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	}
 
     nsCOMPtr<nsIFile> outFile;
+  // If the mode is "UPDATE", the output dir is same as the original file
+  // location. Otherwise ("NEW" mode), located in NS_APP_USER_SEARCH_DIR.
+  nsCOMPtr<nsIRDFResource> oldResource;
+  rv = context->GetEngine(getter_AddRefs(oldResource));
+
+  if (oldResource) {
+    nsCOMPtr<nsILocalFile> oldEngineFile;
+    rv = EngineFileFromResource(oldResource, getter_AddRefs(oldEngineFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = oldEngineFile->GetParent(getter_AddRefs(outFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
     rv = NS_GetSpecialDirectory(NS_APP_USER_SEARCH_DIR, getter_AddRefs(outFile));
     if (NS_FAILED(rv))
         return rv;
+  }
 
     PRBool exists;
     rv = outFile->Exists(&exists);
@@ -3368,35 +3392,13 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 		return(NS_OK);
 	}
 
-	// don't have the data, so try and read it in
-
-	const char	*engineURI = nsnull;
-	if (NS_FAILED(rv = engine->GetValueConst(&engineURI)))
-		return(rv);
-	nsAutoString	engineStr;
-	engineStr.AssignWithConversion(engineURI);
-	if (engineStr.Find(kEngineProtocol) != 0)
-		return(rv);
-	engineStr.Cut(0, sizeof(kEngineProtocol) - 1);
-	char	*baseFilename = ToNewCString(engineStr);
-	if (!baseFilename)
-		return(rv);
-	baseFilename = nsUnescape(baseFilename);
-	if (!baseFilename)
-		return(rv);
-
-#ifdef	DEBUG_SEARCH_OUTPUT
-	printf("InternetSearchDataSource::FindData - reading in '%s'\n", baseFilename);
-#endif
         nsCOMPtr<nsILocalFile> engineFile;
-        rv = NS_NewNativeLocalFile(nsDependentCString(baseFilename), PR_TRUE, getter_AddRefs(engineFile));
+        rv = EngineFileFromResource(engine, getter_AddRefs(engineFile));
         if (NS_FAILED(rv)) return rv;
 
         nsString	data;
         rv = ReadFileContents(engineFile, data);
 
-	nsCRT::free(baseFilename);
-	baseFilename = nsnull;
 	if (NS_FAILED(rv))
 	{
 		return(rv);
@@ -3415,6 +3417,40 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	}
 	
 	return(rv);
+}
+
+nsresult
+InternetSearchDataSource::EngineFileFromResource(nsIRDFResource *aResource,
+                                                 nsILocalFile **aResult)
+{
+  nsresult rv = NS_OK;
+
+  // get resource uri
+  const char *engineURI = nsnull;
+  rv = aResource->GetValueConst(&engineURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove protocol from uri and get escaped file path
+  nsCAutoString nativePath;
+  nativePath.Assign(engineURI);
+
+  NS_ENSURE_TRUE(StringBeginsWith(nativePath,
+                                  NS_LITERAL_CSTRING(kEngineProtocol)),
+                 NS_ERROR_FAILURE);
+  nativePath.Cut(0, sizeof(kEngineProtocol) - 1);
+
+  // unescape it
+  NS_UnescapeURL(nativePath);
+
+#ifdef DEBUG_SEARCH_OUTPUT
+  printf("InternetSearchDataSource::EngineFileFromResource\n"
+         "File Path: %s\n",
+         nativePath.get());
+#endif
+
+  rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, aResult);
+
+  return rv;
 }
 
 nsresult
@@ -5260,7 +5296,8 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			}
 
 			// download it!
-			AddSearchEngineInternal(updateURL.get(), updateIconURL.get(), nsnull, nsnull, PR_TRUE);
+      AddSearchEngineInternal(updateURL.get(), updateIconURL.get(),
+                              nsnull, nsnull, theEngine);
 		}
 		else
 		{
