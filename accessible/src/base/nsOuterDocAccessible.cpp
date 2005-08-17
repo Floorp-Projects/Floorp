@@ -61,7 +61,10 @@ NS_IMETHODIMP nsOuterDocAccessible::GetName(nsAString& aName)
   }
   nsresult rv = accDoc->GetTitle(aName);
   if (NS_FAILED(rv) || aName.IsEmpty()) {
-    rv = mRoleMapEntry ? nsAccessible::GetName(aName) : accDoc->GetURL(aName);
+    rv = nsAccessible::GetName(aName);
+    if (aName.IsEmpty()) {
+      rv = accDoc->GetURL(aName);
+    }
   }
   return rv;
 }
@@ -131,7 +134,6 @@ void nsOuterDocAccessible::CacheChildren(PRBool aWalkAnonContent)
   // Success getting inner document as first child -- now we cache it.
   mAccChildCount = 1;
   SetFirstChild(innerAccessible); // weak ref
-  SetNextSibling(nsnull);
   privateInnerAccessible->SetParent(this);
   privateInnerAccessible->SetNextSibling(nsnull);
 }
