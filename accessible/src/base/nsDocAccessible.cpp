@@ -140,6 +140,9 @@ NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
   if (aName.IsEmpty()) {
     rv = GetTitle(aName);
   }
+  if (aName.IsEmpty() && mParent) {
+    rv = mParent->GetName(aName);
+  }
 
   return rv;
 }
