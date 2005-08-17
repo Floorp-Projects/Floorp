@@ -65,6 +65,7 @@ p#banner-version { font-size: 85%; }
     background-color: #FFFF99;
     width: 55%;
     border: 1px solid #000;
+    bottom: 10px;
 }
 
 .pagetitle
