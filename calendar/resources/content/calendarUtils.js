@@ -219,7 +219,7 @@ function guessSystemTimezone()
         }
         if (winterOffset == standardTZOffset && winterOffset == summerOffset &&
            !daylight) {
-            if(!standardName || standardName == summerTZName)
+            if(!standardName || standardName == summerTZname)
                 return 2;
             return 1;
         }
