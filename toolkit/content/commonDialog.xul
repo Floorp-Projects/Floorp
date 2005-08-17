@@ -6,6 +6,9 @@
 
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xhtml2:role="wairole:alert"
         onload="commonDialogOnLoad();"
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
