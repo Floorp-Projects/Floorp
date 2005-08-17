@@ -19,11 +19,11 @@
 #%]
   
 [%# INTERFACE:
-  # none
+  # style (optional) - css to apply to the footer
 #%]
 
 <form name="search" method="get" action="show_test.cgi">
-<div class="footer">
+<div class="footer" style="[%style%]">
 <strong>Go:</strong> <a href="index.cgi">Home</a> | <a href="run_tests.cgi">Run Tests</a> |
     Test ID: <input name="id" type="text" size="6">
     <input name="search" type="submit" id="search" value="View"> | 
