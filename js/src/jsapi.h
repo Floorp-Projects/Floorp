@@ -377,6 +377,39 @@ JS_SuspendRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
 
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+class JSAutoRequest {
+  public:
+    JSAutoRequest(JSContext *cx) : mContext(cx), mSaveDepth(0) {
+        JS_BeginRequest(mContext);
+    }
+    ~JSAutoRequest() {
+        JS_EndRequest(mContext);
+    }
+
+    void suspend() {
+        mSaveDepth = JS_SuspendRequest(mContext);
+    }
+    void resume() {
+        JS_ResumeRequest(mContext, mSaveDepth);
+    }
+
+  protected:
+    JSContext *mContext;
+    jsrefcount mSaveDepth;
+
+#if 0
+  private:
+    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
+    static void operator delete(void *, size_t) { };
+#endif
+};
+
+JS_BEGIN_EXTERN_C
+#endif
+
 #endif /* JS_THREADSAFE */
 
 extern JS_PUBLIC_API(void)
@@ -647,6 +680,35 @@ JS_LeaveLocalRootScope(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
 JS_ForgetLocalRoot(JSContext *cx, void *thing);
+
+#ifdef __cplusplus
+JS_END_EXTERN_C
+
+class JSAutoLocalRootScope {
+  public:
+    JSAutoLocalRootScope(JSContext *cx) : mContext(cx) {
+        JS_EnterLocalRootScope(mContext);
+    }
+    ~JSAutoLocalRootScope() {
+        JS_LeaveLocalRootScope(mContext);
+    }
+
+    void forget(void *thing) {
+        JS_ForgetLocalRoot(mContext, thing);
+    }
+
+  protected:
+    JSContext *mContext;
+
+#if 0
+  private:
+    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
+    static void operator delete(void *, size_t) { };
+#endif
+};
+
+JS_BEGIN_EXTERN_C
+#endif
 
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
