@@ -915,7 +915,8 @@ use constant ABSTRACT_SCHEMA => {
                               DEFAULT => '0'},
             onemailperbug => {TYPE => 'BOOLEAN', NOTNULL => 1,
                               DEFAULT => 'FALSE'},
-            title         => {TYPE => 'varchar(128)', NOTNULL => 1},
+            title         => {TYPE => 'varchar(128)', NOTNULL => 1,
+                              DEFAULT => "''"},
         ],
         INDEXES => [
             whine_queries_eventid_idx => ['eventid'],

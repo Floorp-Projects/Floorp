@@ -4011,6 +4011,12 @@ if (Param('defaultopsys') eq 'other') {
         . "         uses 'Other' (capital O).\n";
 }
 
+# Add a DEFAULT to whine_queries stuff so that editwhines.cgi
+# works on PostgreSQL.
+$dbh->bz_alter_column('whine_queries', 'title', {TYPE => 'varchar(128)', 
+                      NOTNULL => 1, DEFAULT => "''"});
+
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
