@@ -662,6 +662,9 @@ protected:
                                   nsACString& aCharset);
   
   void UpdateLinkMap();
+  // Call this before the document does something that will unbind all content.
+  // That will stop us from resolving URIs for all links as they are removed.
+  void DestroyLinkMap();
 
   nsresult doCreateShell(nsPresContext* aContext,
                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
