@@ -206,7 +206,7 @@ var gAdvancedPane = {
         getService(Components.interfaces.nsIWindowMediator);
     var manager = wm.getMostRecentWindow("Extension:Manager-extensions");
     if (!manager) {
-      const features = "chrome,centerscreen,dialog,titlebar";
+      const features = "chrome,dialog=no,resizable";
       const URI_EXTENSIONS_WINDOW = 
         "chrome://mozapps/content/extensions/extensions.xul?type=extensions";
       openDialog(URI_EXTENSIONS_WINDOW, "", features, "updatecheck");
