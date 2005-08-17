@@ -41,6 +41,9 @@
 <window id="alertNotification"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         windowtype="alert:alert"
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xhtml2:role="wairole:alert"
         align="start"
         onload="onAlertLoad()">
   
