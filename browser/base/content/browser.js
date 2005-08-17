@@ -6081,13 +6081,6 @@ var FeedHandler = {
     if (!this._feedButton)
       this._feedButton = document.getElementById("feed-button");
 
-    // from tabbrowser.xml
-    // mechanism for reading properties of the underlying XPCOM object
-    // (ignoring potential getters/setters added by malicious content)
-    var safeGetProperty = function(obj, propname) {
-      return obj[propname];
-    }
-
     var erel = event.target.rel;
     var etype = event.target.type;
     var etitle = event.target.title;
@@ -6104,7 +6097,7 @@ var FeedHandler = {
           etitle.indexOf("Atom") != -1 ||
           etitle.indexOf("rss") != -1)))
     {
-      const targetDoc = safeGetProperty(event.target, "ownerDocument");
+      const targetDoc = event.target.ownerDocument;
 
       // find which tab this is for, and set the attribute on the browser
       // should there be a getTabForDocument method on tabbedbrowser?
