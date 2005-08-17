@@ -22,7 +22,7 @@
   # $test - the test object to display
   # @results - the list of all possible test results
   # $showallresults (optional) - if true, then all test results
-  #								 will be shown
+  #                                 will be shown
   # 
 #%]
 
@@ -63,7 +63,7 @@
 [% FOREACH curresult = test.testresults %]
 [% UNLESS showallresults %]
   [% IF curresult.isrecent == 0 && nonrecentcount >= 3 %]
-  	[% NEXT %]
+      [% NEXT %]
   [% ELSIF curresult.isrecent == 0 %]
     [% nonrecentcount = nonrecentcount+1 %]
   [% END %]

@@ -33,27 +33,37 @@ my $c = new CGI;
 
 print $c->header();
 
+# find the number of testcases in the database
+Litmus::DB::Test->set_sql('numtests', "SELECT COUNT(*) as count from __TABLE__");
+my $numtests = Litmus::DB::Test->search_numtests()->next()->count();
+
+# find the number of users in the database
+Litmus::DB::User->set_sql('numusers', "SELECT COUNT(*) as count from __TABLE__");
+my $numusers = Litmus::DB::User->search_numusers()->next()->count();
+
 # get a list of the top 15 testers of all time, sorted by the number 
 # of test results submitted:
 Litmus::DB::User->set_sql('toptesters', "SELECT users.userid, count(*) AS count
-										 FROM users, testresults 
-										 WHERE 
-										 	users.userid=testresults.user 
-										 GROUP BY user 
-										 ORDER BY count DESC 
- 										 LIMIT 15;");
+                                         FROM users, testresults 
+                                         WHERE 
+                                             users.userid=testresults.user 
+                                         GROUP BY user 
+                                         ORDER BY count DESC 
+                                          LIMIT 15;");
 my @testers = Litmus::DB::User->search_toptesters();
 my @toptesters;
 foreach my $curtester (@testers) {
-	my %testerinfo;
-	$testerinfo{"email"} = $curtester->email();
-	$testerinfo{"numtests"} = $curtester->count();
-	push(@toptesters, \%testerinfo);
+    my %testerinfo;
+    $testerinfo{"email"} = $curtester->email();
+    $testerinfo{"numtests"} = $curtester->count();
+    push(@toptesters, \%testerinfo);
 }
 
 
 my $vars = {
-	toptesters => \@toptesters,
+    numtests   => $numtests,
+    numusers   => $numusers,
+    toptesters => \@toptesters,
 };
 
 Litmus->template()->process("stats/stats.html.tmpl", $vars) || 

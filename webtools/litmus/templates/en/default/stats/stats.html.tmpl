@@ -19,21 +19,36 @@
 #%]
   
 [%# INTERFACE:
+  # $numtests - the number of tests in the database
+  # $numusers - the number of users in the database
   # @toptesters - an array of the top testers in the system, where each
-  #     		  element contains a hash with keys "email" and "numtests"
+  #               element contains a hash with keys "email" and "numtests"
 #%]
 
 
 [% INCLUDE global/header.html.tmpl title = 'Statistics' %] 
 
-<p class="pagetitle">Statistics</p>
+<p class="pagetitle">Litmus - Statistics</p>
 
+<p class="pageinstruction">General Statistics</p>
+<ul>
+<li>Testcases - [% numtests FILTER html %] testcases</li>
+<li>Users - [% numusers FILTER html %] users</li>
+</ul>
+
+<p class="pageinstruction">Tester Statistics</p>
 <div>
-<p><strong>Top Testers</strong></p>
+<p><strong>Top Testers:</strong></p>
 <table border="1">
-<tr><td><strong>Tester</strong></td><td><strong># Tests Run</strong></td></tr>
+<tr><td></td><td><strong>Tester</strong></td><td><strong># Tests Run</strong></td></tr>
+[% count = 1 %]
 [% FOREACH curtester = toptesters %]
-<tr><td>[% curtester.email FILTER html %]</td><td>[% curtester.numtests FILTER html %]</td></tr>
+<tr>
+    <td>[% count FILTER html %]</td>
+    <td>[% curtester.email FILTER html %]</td>
+    <td>[% curtester.numtests FILTER html %]</td>
+</tr>
+[% count = count+1 %]
 [% END %]
 </table>
 </div>

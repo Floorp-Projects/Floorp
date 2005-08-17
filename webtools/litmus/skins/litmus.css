@@ -61,12 +61,12 @@ p#banner-version { font-size: 85%; }
 
 .footer
 {
-	padding: 10px;
-	background-color: #FFFF99;
-	width: 55%;
-	border: 1px solid #000;
-	position: absolute;
-	bottom: 10px;
+    padding: 10px;
+    background-color: #FFFF99;
+    width: 55%;
+    border: 1px solid #000;
+    position: absolute;
+    bottom: 10px;
 }
 
 .pagetitle
@@ -95,8 +95,8 @@ p#banner-version { font-size: 85%; }
 
 .menu_content
 {
-	left: 250px;
-	position: absolute;
+    left: 250px;
+    position: absolute;
 }
 
 .key
