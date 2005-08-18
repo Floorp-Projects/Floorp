@@ -52,6 +52,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsCOMArray.h"
 
 #include "nsGUIEvent.h"
 
@@ -5247,7 +5248,7 @@ class URIVisitNotifier : public nsUint32ToContentHashEntry::Visitor
 {
 public:
   nsCAutoString matchURISpec;
-  nsIDocument* document;
+  nsCOMArray<nsIContent> contentVisited;
   
   virtual void Visit(nsIContent* aContent) {
     // Ensure that the URIs really match before we try to do anything
@@ -5269,7 +5270,7 @@ public:
     if (link) {
       link->SetLinkState(eLinkState_Unknown);
     }
-    document->ContentStatesChanged(aContent, nsnull, NS_EVENT_STATE_VISITED);
+    contentVisited.AppendObject(aContent);
   }
 };
 
@@ -5286,9 +5287,12 @@ nsDocument::NotifyURIVisitednessChanged(nsIURI* aURI)
     return;
   
   URIVisitNotifier visitor;
-  visitor.document = this;
   aURI->GetSpec(visitor.matchURISpec);
   entry->VisitContent(&visitor);
+  for (PRUint32 count = visitor.contentVisited.Count(), i = 0; i < count; ++i) {
+    ContentStatesChanged(visitor.contentVisited[i],
+                         nsnull, NS_EVENT_STATE_VISITED);
+  }
 }
 
 void
