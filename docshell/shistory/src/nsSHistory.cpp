@@ -232,7 +232,7 @@ nsSHistory::PrintHistory()
               nsXPIDLCString  url;
 
               entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
-              entry->GetUri(getter_AddRefs(uri));
+              entry->GetURI(getter_AddRefs(uri));
               entry->GetTitle(&title);
 
               nsString titlestr(title);
