@@ -39,7 +39,7 @@ CPPSRCS		= nsSHEntry.cpp        \
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
-		-lxpcom \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
