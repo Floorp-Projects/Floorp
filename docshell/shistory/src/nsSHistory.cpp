@@ -420,6 +420,23 @@ nsSHistory::LoadURI(const PRUnichar* aURI)
 
 
 NS_IMETHODIMP
+nsSHistory::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry)
+{
+
+  //XXX Not yet implemented
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
+{
+
+    // XXX Not yet implemented
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
    nsCOMPtr<nsIDocShell> docShell;
