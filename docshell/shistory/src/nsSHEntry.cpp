@@ -253,7 +253,7 @@ NS_IMETHODIMP nsSHEntry::SetExpirationStatus(PRBool  aFlag)
    return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState,
                nsISupports * aCacheKey)
@@ -282,6 +282,37 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
 	return NS_OK;
 	
 }
+
+NS_IMETHODIMP
+nsSHEntry::Clone(nsISHEntry ** aResult)
+{
+    nsresult rv;
+    nsSHEntry *dest;
+    
+    dest = new nsSHEntry();
+    if (!dest) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(dest);
+
+    dest->SetURI(mURI);
+    dest->SetReferrerURI(mReferrerURI);
+    dest->SetPostData(mPostData);
+    dest->SetLayoutHistoryState(mLayoutHistoryState);
+    dest->SetTitle(mTitle.get());
+    dest->SetParent(mParent);
+    dest->SetID(mID);
+    dest->SetIsSubFrame(mIsFrameNavigation);
+    dest->SetExpirationStatus(mExpired);
+    dest->SetSaveLayoutStateFlag(mSaveLayoutState);
+    dest->SetCacheKey(mCacheKey);
+
+    rv = dest->QueryInterface(NS_GET_IID(nsISHEntry), (void**) aResult);
+    NS_RELEASE(dest);
+
+    return rv;
+}
+
 
 NS_IMETHODIMP
 nsSHEntry::GetParent(nsISHEntry ** aResult)
