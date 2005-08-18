@@ -35,6 +35,11 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIServiceManager.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSHistoryLog)
+#define PRINTF NS_LOG_PRINTF(nsSHistoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsSHistoryLog)
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
@@ -263,10 +268,10 @@ nsSHistory::PrintHistory()
 
 			  nsString titlestr(title);
               titleCStr = titlestr.ToNewCString();
-              printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
-              printf("\t\t URL = %s\n", url);
-              printf("\t\t Title = %s\n", titleCStr);
-              printf("\t\t layout History Data = %x\n", layoutHistoryState);
+              PRINTF("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
+              PRINTF("\t\t URL = %s\n", url);
+              PRINTF("\t\t Title = %s\n", titleCStr);
+              PRINTF("\t\t layout History Data = %x\n", layoutHistoryState);
 			  Recycle(titleCStr);
               #endif
       
