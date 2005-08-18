@@ -57,13 +57,15 @@ private:
 	 
   nsCOMPtr<nsIURI>                mURI;
   nsCOMPtr<nsIURI>                mReferrerURI;
-	nsCOMPtr<nsIDOMDocument>        mDocument;
-	nsString                        mTitle;
-	nsCOMPtr<nsIInputStream>        mPostData;
-	nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-	nsVoidArray                     mChildren;
-	PRUint32                        mLoadType;  
-	PRUint32                        mID;
+  nsCOMPtr<nsIDOMDocument>        mDocument;
+  nsString                        mTitle;
+  nsCOMPtr<nsIInputStream>        mPostData;
+  nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+  nsVoidArray                     mChildren;
+  PRUint32                        mLoadType;  
+  PRUint32                        mID;
+  PRInt32                         mScrollPositionX;
+  PRInt32                         mScrollPositionY;
   PRPackedBool                    mIsFrameNavigation;
   PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
