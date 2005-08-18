@@ -43,8 +43,8 @@ protected:
 private:
     friend NS_IMETHODIMP
 		NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-    NS_IMETHOD GetRootEntry(nsISHTransaction ** aResult);
-    //nsISHTransaction *  mListRoot;
+      NS_IMETHOD PrintHistory();
+      NS_IMETHOD GetRootTransaction(nsISHTransaction ** aResult);
 	nsCOMPtr<nsISHTransaction> mListRoot;
 	PRInt32 mIndex;
 	PRInt32 mLength;
