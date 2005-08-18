@@ -86,6 +86,20 @@ class nsIKBStateControl : public nsISupports {
     NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
 
     /*
+     * Set the state to 'Enabled' or 'Disabled'.
+     * If aState is TRUE, IME enable state is set to 'Enabled'.
+     * If aState is FALSE, set to 'Disabled'.
+     */
+    NS_IMETHOD SetIMEEnabled(PRBool aState) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled'.
+     * If IME is 'Enabled', aState is set PR_TRUE.
+     * If IME is 'Disabled', aState is set PR_FALSE.
+     */
+    NS_IMETHOD GetIMEEnabled(PRBool* aState) = 0;
+
+    /*
      * Destruct and don't commit the IME composition string.
      */
     NS_IMETHOD CancelIMEComposition() = 0;
