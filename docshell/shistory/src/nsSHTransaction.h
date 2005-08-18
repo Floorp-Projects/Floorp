@@ -43,9 +43,11 @@ private:
 		NS_NewSHTransaction(nsISupports * aOuter, REFNSIID aIID, void** aResult);
 	nsresult SetChild(nsISHTransaction * aChild);
 	nsresult SetParent(nsISHTransaction * aParent);
-	nsresult SetSHEntry(nsISHEntry * aSHEntry);
+	//nsresult SetSHEntry(nsISHEntry * aSHEntry);
 	//nsresult SetLRVList(nsISHTransaction * aLRVList);
     
+   PRBool         mPersist;
+
 	/* Weak reference to parent */
 	nsISHTransaction * mParent;
 	nsISHTransaction * mChild;
