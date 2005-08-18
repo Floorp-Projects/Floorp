@@ -56,9 +56,6 @@ sub LoadConfig() {
 sub Run() {
     my $start_time = time();
     OUTER: while (1) {
-        # $BuildSleep is the minimum amount of time a build is allowed to take.
-        # It prevents sending too many messages to the tinderbox server when
-        # something is broken.
         foreach my $treeentry (@{$Settings::Tinderboxes}) {
 	    my $multidir = getcwd();
             chdir($treeentry->{tree}) or
@@ -77,6 +74,9 @@ sub Run() {
 	    }
         }
 
+        # $BuildSleep is the minimum amount of time a build is allowed to take.
+        # It prevents sending too many messages to the tinderbox server when
+        # something is broken.
         my $sleep_time = ($Settings::BuildSleep * 60) - (time() - $start_time);
         if ($sleep_time > 0) {
             print "\n\nSleeping $sleep_time seconds ...\n";
