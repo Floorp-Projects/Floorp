@@ -23,6 +23,7 @@
 #  Brian Ryner <bryner@brianryner.com>
 #  Jean-Jacques Enser <jj@netscape.com>
 #  Arthur Wiebe <artooro@gmail.com>
+#  Mark Mentovai <mark@moxienet.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,11 +51,8 @@
 # tip: use '-null-' for <eula-resource-file> if you only want to
 # provide <.dsstore_file> and <background_image_file>
 
-DMG_DIRNAME=`dirname $1`
-DMG_DIR=`cd $DMG_DIRNAME; pwd`
-DMG_NAME=`basename $1`
-DMG_TEMP_NAME=${DMG_DIR}/rw.${DMG_NAME}
-SRC_FOLDER=`cd $2; pwd`
+DMG_PATH=$1
+SRC_FOLDER=$2
 VOLUME_NAME=$3
 
 # optional arguments
@@ -62,79 +60,24 @@ EULA_RSRC=$4
 DMG_DSSTORE=$5
 DMG_BKGND_IMG=$6
 
-# Find the size of the folder contents
-FOLDER_SIZE=`du -s $SRC_FOLDER | sed s/[^0-9].*//`
+EXTRA_ARGS=
 
-# Allow for partition table and other overhead (3%)
-IMAGE_SIZE=$(($FOLDER_SIZE * 103/100))
-# minimum size for an HFS+ partition is 4Mb
-[ $IMAGE_SIZE -lt 8300 ] && IMAGE_SIZE=8300
-
-# Make sure NEXT_ROOT is not set (if we're building with an SDK)
-unset NEXT_ROOT
-
-echo FOLDER_SIZE=$FOLDER_SIZE
-echo IMAGE_SIZE=$IMAGE_SIZE
-
-# Create the image
-echo "creating disk image"
-hdiutil create -sectors $IMAGE_SIZE -fs HFS+ $DMG_TEMP_NAME -volname $VOLUME_NAME
-
-# mount it
-echo "mounting disk image"
-# `hdid -nomount rw.$DMG_NAME | grep "^/dev/disk.s2" | sed -e "s?^/dev/??" -e "s/[^0-9a-z].*//"`
-DEV_NAME=`hdid $DMG_TEMP_NAME | sed 1q | awk '{print $1}'`
-MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
-
-# copy content via ditto
-#
-# ditto fails when target has no space left or is read-only.  Let's capture
-# that condition and cause the build to fail instead of silently moving ahead.
-# - cmp
-echo "copying content to disk image"
-ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR
-rc=$?
-if [ $rc != "0" ]; then
-	echo "ERROR: 'ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR' failed ($rc)"
-	exit 1
+if test -n "$EULA_RSRC" && test "$EULA_RSRC" != "-null-" ; then
+  EXTRA_ARGS="--resource $EULA_RSRC"
 fi
 
-# add optional Finder window layout and background image
-if [ ! -z ${DMG_DSSTORE} ]; then
-	echo "adding .DS_Store"
-	cp -p ${DMG_DSSTORE} ${MOUNT_DIR}/.DS_Store
-fi
-if [ ! -z ${DMG_BKGND_IMG} ]; then
-	echo "adding background image"
-	mkdir ${MOUNT_DIR}/.background
-	cp -p ${DMG_BKGND_IMG} ${MOUNT_DIR}/.background/
+if test -n "$DMG_DSSTORE" ; then
+  EXTRA_ARGS="$EXTRA_ARGS --copy $DMG_DSSTORE:/.DS_Store"
 fi
 
-# make sure it's not world writeable
-echo "fixing permissions"
-chmod -R go-w ${MOUNT_DIR}
-
-# make the top window open itself on mount:
-if [ -x /usr/local/bin/openUp ]; then
-    /usr/local/bin/openUp ${MOUNT_DIR}
+if test -n "$DMG_BKGND_IMG" ; then
+  EXTRA_ARGS="$EXTRA_ARGS --mkdir /.background --copy $DMG_BKGND_IMG:/.background"
 fi
 
-# unmnount
-echo "unmounting disk image"
-hdiutil detach $DEV_NAME
+echo `dirname $0`/pkg-dmg --target "$DMG_PATH" --source "$SRC_FOLDER" \
+ --volname "$VOLUME_NAME" $EXTRA_ARGS
 
-# compress image
-echo "compressing disk image"
-hdiutil convert $DMG_TEMP_NAME -format UDZO -imagekey zlib-level=9 -o ${DMG_DIR}/${DMG_NAME}
-rm -f $DMG_TEMP_NAME
+`dirname $0`/pkg-dmg --target "$DMG_PATH" --source "$SRC_FOLDER" \
+ --volname "$VOLUME_NAME" $EXTRA_ARGS
 
-# adding EULA resources
-if [ ! -z "${EULA_RSRC}" -a "${EULA_RSRC}" != "-null-" ]; then
-	echo "adding EULA resources"
-	hdiutil unflatten ${DMG_DIR}/${DMG_NAME}
-	/Developer/Tools/ResMerger -a ${EULA_RSRC} -o ${DMG_DIR}/${DMG_NAME}
-	hdiutil flatten ${DMG_DIR}/${DMG_NAME}
-fi
-
-echo "disk image done"
-exit 0
+exit $?

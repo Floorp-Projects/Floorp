@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Benjamin Smedberg <bsmedberg@covad.net>
 #   Arthur Wiebe <artooro@gmail.com>
+#   Mark Mentovai <mark@moxienet.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -95,8 +96,25 @@ else
 _APPNAME	= $(MOZ_APP_DISPLAYNAME).app
 endif
 PKG_SUFFIX	= .dmg
-_ABS_TOPSRCDIR	= $(shell cd $(topsrcdir) && pwd)
-MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/make-diskimage $(PKG_BASENAME).dmg $(MOZ_PKG_APPNAME) $(MOZ_APP_DISPLAYNAME)
+PKG_DMG_FLAGS	=
+ifneq (,$(MOZ_PKG_MAC_DSSTORE))
+PKG_DMG_FLAGS += --copy "$(MOZ_PKG_MAC_DSSTORE):/.DS_Store"
+endif
+ifneq (,$(MOZ_PKG_MAC_BACKGROUND))
+PKG_DMG_FLAGS += --mkdir /.background --copy "$(MOZ_PKG_MAC_BACKGROUND):/.background"
+endif
+ifneq (,$(MOZ_PKG_MAC_ICON))
+PKG_DMG_FLAGS += --icon "$(MOZ_PKG_MAC_ICON)"
+endif
+ifneq (,$(MOZ_PKG_MAC_RSRC))
+PKG_DMG_FLAGS += --resource "$(MOZ_PKG_MAC_RSRC)"
+endif
+ifneq (,$(MOZ_PKG_MAC_EXTRA))
+PKG_DMG_FLAGS += $(MOZ_PKG_MAC_EXTRA)
+endif
+MAKE_PACKAGE	= $(topsrcdir)/build/package/mac_osx/pkg-dmg \
+  --source "$(MOZ_PKG_APPNAME)" --target "$(PACKAGE)" \
+  --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
 UNMAKE_PACKAGE	= \
   set -e; \
   unset NEXT_ROOT; \

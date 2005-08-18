@@ -1101,6 +1101,7 @@ calendar/sunbird/base/Makefile
 
 MAKEFILES_macbrowser="
 camino/Makefile
+camino/installer/Makefile
 "
 
 MAKEFILES_sql="
