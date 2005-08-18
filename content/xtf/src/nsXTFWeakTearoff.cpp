@@ -137,7 +137,8 @@ nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsXTFWeakTearoff::GetInterfaceInfo(nsIInterfaceInfo** info)
 {
-  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    getter_AddRefs(XPTI_GetInterfaceInfoManager());
   NS_ASSERTION(iim, "could not get interface info manager");
   return iim->GetInfoForIID( &mIID, info);
 }
