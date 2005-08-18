@@ -45,6 +45,10 @@ export::
 	cp $(srcdir)/thunderbird-os2.ico  $(DEPTH)/mail/app/icons/os2/messengerWindow.ico
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/thunderbird.icns  $(DIST)/branding/thunderbird.icns
+	cp $(srcdir)/dsstore $(DIST)/branding/dsstore
+	cp $(srcdir)/background.png $(DIST)/branding/background.png
+	cp $(srcdir)/disk.icns $(DIST)/branding/disk.icns
+	cp $(srcdir)/license.r $(DIST)/branding/license.r
 endif
 	cp $(srcdir)/thunderbird.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp

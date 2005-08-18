@@ -42,6 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+APP_NAME	= Camino
+
 ifdef MOZ_DEBUG
 BUILDSTYLE	= Development
 else
@@ -76,8 +78,14 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	ln -fs $(srcdir)/Info-*.plist .
 endif
 
+clean clobber repackage::
+	rm -rf $(DIST)/$(APP_NAME).app
+
 libs::
 	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_SETTINGS)
+
+libs repackage::
+	rsync -a --copy-unsafe-links $(XCODE_PRODUCT_DIR)/Camino.app/ $(DIST)/$(APP_NAME).app
 
 # convenience target for PB script build phases
 echo_srcdir:

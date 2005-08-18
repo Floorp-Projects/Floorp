@@ -19,8 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Benjamin Smedberg <bsmedberg@covad.net>
+#  Mark Mentovai <mark@moxienet.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,53 +36,32 @@
 # ***** END LICENSE BLOCK *****
 
 DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-NO_PKG_FILES = \
-	firefox-config \
-	regchrome* \
-	regxpcom* \
-	xpcshell* \
-	xpidl* \
-	xpt_dump* \
-	xpt_link* \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-ifdef BUILD_STATIC_LIBS
-ifeq (WINNT,$(OS_ARCH))
-MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
-else
-ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
-MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
-endif
-endif
-endif
+CAMINO_VERSION=0.9a2
+_RELNOTE_VERSION:=$(subst .,-,$(CAMINO_VERSION))
 
-DEFINES += -DAB_CD=$(AB_CD)
-
-ifdef MOZ_PKG_MANIFEST_P
-MOZ_PKG_MANIFEST = packages-static
-
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-MOZ_PKG_MAC_DSSTORE=branding/dsstore
-MOZ_PKG_MAC_BACKGROUND=branding/background.png
-MOZ_PKG_MAC_ICON=branding/disk.icns
-MOZ_PKG_MAC_RSRC=branding/license.r
-endif
+# The packager runs in the dist directory, paths must be relative to there.
+MOZ_PKG_MAC_DSSTORE=../camino/resources/package/dsstore
+MOZ_PKG_MAC_BACKGROUND=../camino/resources/package/background.jpg
+MOZ_PKG_MAC_ICON=../camino/resources/package/disk.icns
+MOZ_PKG_MAC_RSRC=../camino/resources/package/license.r
+# The docs aren't copied into an objdir, chase them in the srcdir.
+MOZ_PKG_MAC_EXTRA=--copy "$(topsrcdir)/camino/docs/ReadMe.rtf" --copy "$(topsrcdir)/camino/docs/Release Notes $(_RELNOTE_VERSION).rtf:Release Notes.rtf" --attribute "E:/ReadMe.rtf:/Release Notes.rtf"
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-installer:
-ifdef INSTALLER_DIR
-	$(MAKE) -C $(INSTALLER_DIR)
-endif
+# The core build system thinks it's Mozilla.  Override what's necessary.
+MOZ_APP_DISPLAYNAME=Camino
+MOZ_PKG_APPNAME=camino
+MOZ_PKG_VERSION=0.9a2
+
+# Override toolkit/mozapps/installer/package-name.mk - we're Mac-only, and
+# handle localizations differently, so just use name-version.
+PKG_BASENAME=$(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION)

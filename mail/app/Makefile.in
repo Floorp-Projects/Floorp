@@ -226,6 +226,10 @@ ifeq ($(OS_ARCH),WINNT)
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/thunderbird.icns  $(DIST)/branding/thunderbird.icns
+	cp $(srcdir)/macbuild/dsstore $(DIST)/branding/dsstore
+	cp $(srcdir)/macbuild/background.png $(DIST)/branding/background.png
+	cp $(srcdir)/macbuild/disk.icns $(DIST)/branding/disk.icns
+	cp $(srcdir)/macbuild/license.r $(DIST)/branding/license.r
 endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm

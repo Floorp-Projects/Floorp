@@ -102,6 +102,13 @@ $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
 endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_PKG_MAC_DSSTORE=branding/dsstore
+MOZ_PKG_MAC_BACKGROUND=branding/background.png
+MOZ_PKG_MAC_ICON=branding/disk.icns
+MOZ_PKG_MAC_RSRC=branding/license.r
+endif
+
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 installer:
