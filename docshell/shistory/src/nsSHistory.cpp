@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Radha Kulkarni <radha@netscape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsISupportsUtils.h"
@@ -67,7 +68,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry)
 	nsCOMPtr<nsISHTransaction>  txn;
     rv = nsComponentManager::CreateInstance(NS_SHTRANSACTION_PROGID,
 	                                      nsnull,
-										  nsISHTransaction::GetIID(),
+										  NS_GET_IID(nsISHTransaction),
 										  getter_AddRefs(txn));
 	nsCOMPtr<nsISHTransaction> parent;
 
