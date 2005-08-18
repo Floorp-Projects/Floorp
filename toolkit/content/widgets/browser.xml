@@ -312,7 +312,7 @@
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
-                  .getBranch(null).QueryInterface(Components.interfaces.nsIPrefBranch2);
+                  .getBranch(null);
       </field>
 
       <field name="mAtomService" readonly="true">
@@ -570,9 +570,6 @@
           this.addEventListener("pageshow", this.onPageShow, true);
           this.addEventListener("pagehide", this.onPageHide, true);
           this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
-          
-          mPrefs.addObserver("browser.display.background_color", this, false);
-          this.observe(null, "nsPref:changed", "browser.display.background_color");
         ]]>
       </constructor>
       
@@ -613,7 +610,6 @@
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
-          this.mPrefs.removeObserver("browser.display.background_color", this);
           ]]>
         </body>
       </method>
@@ -624,11 +620,6 @@
         <parameter name="aState"/>
         <body>
           <![CDATA[
-            if (aTopic == "nsPref:changed" && aState == "browser.display.background_color") {
-              this.style.backgroundColor = this.mPrefs.getCharPref("browser.display.background_color");
-              return;
-            }
-            
             if (aTopic != "browser:purge-session-history")
               return;
               

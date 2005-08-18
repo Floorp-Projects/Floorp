@@ -2124,6 +2124,37 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
   nsIView* containerView = nsView::GetViewFor(aParentWidget);
 
+  if (containerView) {
+    // see if the containerView has already been hooked into a foreign view manager hierarchy
+    // if it has, then we have to hook into the hierarchy too otherwise bad things will happen.
+    nsIViewManager* containerVM = containerView->GetViewManager();
+    nsIView* pView = containerView;
+    do {
+      pView = pView->GetParent();
+    } while (pView && pView->GetViewManager() == containerVM);
+
+    if (!pView) {
+      // OK, so the container is not already hooked up into a foreign view manager hierarchy.
+      // That means we can choose not to hook ourselves up.
+      //
+      // If the parent container is a chrome shell then we won't hook into its view
+      // tree. This will improve performance a little bit (especially given scrolling/painting perf bugs)
+      // but is really just for peace of mind. This check can be removed if we want to support fancy
+      // chrome effects like transparent controls floating over content, transparent Web browsers, and
+      // things like that, and the perf bugs are fixed.
+      nsCOMPtr<nsIDocShellTreeItem> container(do_QueryReferent(mContainer));
+      nsCOMPtr<nsIDocShellTreeItem> parentContainer;
+      PRInt32 itemType;
+      if (nsnull == container
+          || NS_FAILED(container->GetParent(getter_AddRefs(parentContainer)))
+          || nsnull == parentContainer
+          || NS_FAILED(parentContainer->GetItemType(&itemType))
+          || itemType != nsIDocShellTreeItem::typeContent) {
+        containerView = nsnull;
+      }
+    }
+  }
+
   // Create a view
   nsIView* view = mViewManager->CreateView(tbounds, containerView);
   if (!view)
