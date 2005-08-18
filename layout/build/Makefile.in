@@ -196,6 +196,12 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
+ifdef MOZ_ENABLE_XLIB
+EXTRA_DSO_LDOPTS += \
+		-lxlibrgb \
+		$(NULL)
+endif
+
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
 endif
