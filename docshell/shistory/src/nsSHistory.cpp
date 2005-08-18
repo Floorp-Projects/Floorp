@@ -360,11 +360,27 @@ nsSHistory::GoForward()
 }
 
 NS_IMETHODIMP
-nsSHistory::Reload(PRInt32 aReloadType)
+nsSHistory::Reload(PRUint32 aReloadFlags)
 {
-
-	return LoadEntry(mIndex, PR_TRUE, aReloadType);
-
+	nsDocShellInfoLoadType loadType;
+	if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
+	    aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+	{
+		loadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+	}
+	else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
+	{
+		loadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
+	}
+	else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+	{
+		loadType = nsIDocShellLoadInfo::loadReloadBypassCache;
+	}
+	else
+	{
+		loadType = nsIDocShellLoadInfo::loadReloadNormal;
+	}
+	return LoadEntry(mIndex, PR_TRUE, loadType);
 }
 
 NS_IMETHODIMP
@@ -410,7 +426,7 @@ nsSHistory::GetSessionHistory(nsISHistory** aSessionHistory)
 
 
 NS_IMETHODIMP
-nsSHistory::LoadURI(const PRUnichar* aURI)
+nsSHistory::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
 {
   return NS_OK;
 }
@@ -418,7 +434,6 @@ nsSHistory::LoadURI(const PRUnichar* aURI)
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
-
 	return LoadEntry(aIndex, PR_FALSE, nsIDocShellLoadInfo::loadHistory);
 }
 
@@ -487,7 +502,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    loadInfo->SetLoadType(aLoadType);
    loadInfo->SetSHEntry(nextEntry);
    // Time to initiate a document load
-   return docShell->LoadURI(nexturi, loadInfo);
+   return docShell->LoadURI(nexturi, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 
