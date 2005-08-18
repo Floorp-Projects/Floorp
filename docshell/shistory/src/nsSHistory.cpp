@@ -397,7 +397,7 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener * aListener)
   // Check if the listener supports Weak Reference. This is a must.
   // This listener functionality is used by embedders and we want to 
   // have the right ownership with who ever listens to SHistory
-  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));
+  nsWeakPtr listener = do_GetWeakReference(aListener);
   if (!listener) return NS_ERROR_FAILURE;
   mListener = listener;
   return NS_OK;
@@ -409,7 +409,7 @@ nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
 {
   // Make sure the listener that wants to be removed is the
   // one we have in store. 
-  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));  
+  nsWeakPtr listener = do_GetWeakReference(aListener);  
   if (listener == mListener) {
     mListener = nsnull;
     return NS_OK;
