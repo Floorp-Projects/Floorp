@@ -95,14 +95,18 @@ attribute boolean saveLayoutStateFlag;
 /** attribute to indicate whether the page is already expired in cache */
 attribute boolean expirationStatus;
 
+/** attribute to indicate the content-type of the document that this
+    is a session history entry for */
+attribute ACString contentType; 
+ 
 /** Set/Get scrollers' positon in anchored pages */
 void setScrollPosition(in PRInt32 x, in PRInt32 y);
 void getScrollPosition(out PRInt32 x, out PRInt32 y);
 
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
-			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,
-               in nsISupports aCacheKey);
+            in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,
+            in nsISupports aCacheKey, in ACString aContentType);
 
 nsISHEntry clone();
 
