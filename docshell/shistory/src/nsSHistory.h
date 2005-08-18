@@ -47,11 +47,11 @@ protected:
    virtual ~nsSHistory();
 
    // Could become part of nsIWebNavigation
-   NS_IMETHOD GotoIndex(PRInt32 aIndex);
    NS_IMETHOD PrintHistory();
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
    PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
 	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
+   NS_IMETHOD LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType);
 	
 protected:
    nsCOMPtr<nsISHTransaction> mListRoot;

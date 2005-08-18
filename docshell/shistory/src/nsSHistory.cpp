@@ -34,6 +34,7 @@
 #include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
+#include "nsIDocShellLoadInfo.h"
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
@@ -329,6 +330,7 @@ nsSHistory::GetCanGoForward(PRBool * aCanGoForward)
 
    return NS_OK;
 }
+
 NS_IMETHODIMP
 nsSHistory::GoBack()
 {
@@ -354,10 +356,10 @@ nsSHistory::GoForward()
 }
 
 NS_IMETHODIMP
-nsSHistory::Reload(PRInt32 reloadType)
+nsSHistory::Reload(PRInt32 aReloadType)
 {
-    // NOT implemented
-	return NS_OK;
+
+	return LoadEntry(mIndex, PR_TRUE, aReloadType);
 
 }
 
@@ -439,6 +441,13 @@ nsSHistory::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
+
+	return LoadEntry(aIndex, PR_FALSE, nsIDocShellLoadInfo::loadHistory);
+}
+
+NS_IMETHODIMP
+nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
+{
    nsCOMPtr<nsIDocShell> docShell;
    nsCOMPtr<nsISHEntry> shEntry;
    PRInt32 oldIndex = mIndex;
@@ -450,22 +459,26 @@ nsSHistory::GotoIndex(PRInt32 aIndex)
    nsCOMPtr<nsISHEntry> nextEntry;
    GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
 
-   PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, getter_AddRefs(docShell), getter_AddRefs(shEntry));
-
-   if (!result)  
-	   mIndex = oldIndex;
-
-   if (!docShell || !shEntry || !mRootDocShell)
-	   return NS_ERROR_FAILURE;
-
    nsCOMPtr<nsIURI> nexturi;
    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+   if (oldIndex != aIndex) {
+      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, getter_AddRefs(docShell), getter_AddRefs(shEntry));
+      if (!result)  
+	   mIndex = oldIndex;
 
-   shEntry->GetURI(getter_AddRefs(nexturi));       
+      if (!docShell || !shEntry || !mRootDocShell)
+	    return NS_ERROR_FAILURE;
+      
+
+      shEntry->GetURI(getter_AddRefs(nexturi));       
+   }	
+   else
+      nextEntry->GetURI(getter_AddRefs(nexturi));
+
    mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
    // This is not available yet
- //  loadInfo->SetSessionHistoryEntry(nextEntry);
-	 		   
+   loadInfo->SetLoadType(aLoadType);
+   loadInfo->SetSHEntry(nextEntry);
    // Time to initiate a document load
    return docShell->LoadURI(nexturi, loadInfo);
     
