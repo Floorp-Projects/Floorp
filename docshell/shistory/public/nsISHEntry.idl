@@ -39,13 +39,13 @@ interface nsISHEntry : nsISupports
 {
 
 /** URI for the document */
-attribute nsIURI URI;
+void SetURI(in nsIURI aURI);
 
 /**  DOM Document */
 attribute nsIDOMDocument document;
 
 /** Title for the document */
-attribute wstring title;
+void SetTitle(in wstring aTitle);
 
 /** Post Data for the document */
 attribute nsIInputStream postData;
@@ -61,6 +61,7 @@ attribute nsISHEntry parent;
  * when reload is pressed, it has the appropriate reload flag
  */
 attribute  unsigned long loadType;
+
 /**
  * An ID to help identify this entry from others during
  * subframe navigation
@@ -70,6 +71,10 @@ attribute unsigned long ID;
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
 			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState);
+
+/** Attribute that indicates if this entry is for a subframe navigation */
+void SetIsSubFrame(in boolean aFlag);
+
 
 };
 

@@ -55,10 +55,5 @@ interface nsISHContainer : nsISupports
 	 */
 	nsISHEntry GetChildAt(in long index);
 
-	/**
-	 * Enumerator to walk child list.
-	 */
-	readonly attribute nsIEnumerator childEnumerator;
-
 };
 
