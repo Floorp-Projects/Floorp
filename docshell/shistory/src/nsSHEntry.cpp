@@ -22,6 +22,7 @@
 
 // Local Includes
 #include "nsSHEntry.h"
+#include "nsXPIDLString.h"
 
 //*****************************************************************************
 //***    nsSHEntry: Object Management
@@ -97,6 +98,15 @@ NS_IMETHODIMP nsSHEntry::GetDocument(nsIDOMDocument** aResult)
 NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
+
+   // Check for empty title...
+   if ( mTitle.IsEmpty() && mURI ) {
+      // Default title is the URL.
+      nsXPIDLCString spec;
+      if ( NS_SUCCEEDED( mURI->GetSpec( getter_Copies( spec ) ) ) ) {
+          mTitle.AssignWithConversion( spec ); 
+      }
+   }
 
    *aTitle = mTitle.ToNewUnicode();
    return NS_OK;
