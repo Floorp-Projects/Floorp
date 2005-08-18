@@ -16200,7 +16200,7 @@ fi
 
 # Irix & OSF native compilers do not like exception declarations 
 # when exceptions are disabled
-if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX" -o -n "$VACPP"; then
+if test -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX" -o -n "$VACPP"; then
     cat >> confdefs.h <<\EOF
 #define CPP_THROW_NEW 
 EOF
