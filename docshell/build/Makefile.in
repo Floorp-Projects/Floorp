@@ -117,12 +117,12 @@ EXTRA_DSO_LDOPTS= \
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
-		-I$(srcdir)			\
-		-I$(srcdir)/../base		\
+		-I$(srcdir) \
+		-I$(srcdir)/../base \
+		-I$(srcdir)/../shistory/src \
 		-I$(topsrcdir)/uriloader/base \
 		-I$(topsrcdir)/uriloader/prefetch \
 		-I$(topsrcdir)/uriloader/exthandler \
-		-I$(topsrcdir)/xpfe/components/shistory/src \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
