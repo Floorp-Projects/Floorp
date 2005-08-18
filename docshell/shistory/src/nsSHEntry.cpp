@@ -223,6 +223,20 @@ NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsSHEntry::GetSaveHistoryStateFlag(PRBool * aFlag)
+{
+   NS_ENSURE_ARG_POINTER(aFlag);
+   
+   *aFlag = mSaveHistoryState;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetSaveHistoryStateFlag(PRBool  aFlag)
+{
+   mSaveHistoryState = aFlag;
+   return NS_OK;
+}
+
 nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState,
@@ -242,6 +256,9 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
   // nsDocShell::CloneAndReplace() which creates entries for
   // all subframe navigations, sets the flag to true.
   SetIsSubFrame(PR_FALSE);
+
+  // By default we save HistoryLayoutState
+  SetSaveHistoryStateFlag(PR_TRUE);
 
 	return NS_OK;
 	

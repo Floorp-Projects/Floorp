@@ -65,6 +65,7 @@ private:
 	PRUint32                        mLoadType;  
 	PRUint32                        mID;
   PRBool                          mIsFrameNavigation;
+  PRBool                          mSaveHistoryState;
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
 };
