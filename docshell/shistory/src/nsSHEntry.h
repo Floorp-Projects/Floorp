@@ -69,6 +69,7 @@ private:
   PRPackedBool                    mIsFrameNavigation;
   PRPackedBool                    mSaveLayoutState;
   PRPackedBool                    mExpired;
+  nsCString                       mContentType;
   nsCOMPtr<nsISupports>           mCacheKey;
   nsISHEntry *                    mParent;  // weak reference
 };
