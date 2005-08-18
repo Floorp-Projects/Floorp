@@ -25,8 +25,8 @@
 
 // Helper Classes
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
 
 // Interfaces needed
 #include "nsIDOMDocument.h"
@@ -61,7 +61,7 @@ private:
   nsString                        mTitle;
   nsCOMPtr<nsIInputStream>        mPostData;
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-  nsVoidArray                     mChildren;
+  nsCOMArray<nsISHEntry>          mChildren;
   PRUint32                        mLoadType;  
   PRUint32                        mID;
   PRInt32                         mScrollPositionX;
