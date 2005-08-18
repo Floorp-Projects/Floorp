@@ -436,6 +436,7 @@ protected:
   nsRefPtr<nsBarProp>           mStatusbar;
   nsRefPtr<nsBarProp>           mScrollbars;
   nsCOMPtr<nsIWeakReference>    mWindowUtils;
+  nsRefPtr<nsLocation>          mLocation;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
 
@@ -452,7 +453,6 @@ protected:
   nsTimeout**                   mTimeoutInsertionPoint;
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
-  nsRefPtr<nsLocation>          mLocation;
   PRPackedBool                  mIsFrozen;
 
   // These member variables are used on both inner and the outer windows.
@@ -627,6 +627,10 @@ public:
   NS_DECL_ISUPPORTS
 
   void SetDocShell(nsIDocShell *aDocShell);
+  nsIDocShell *GetDocShell()
+  {
+    return mDocShell;
+  }
 
   // nsIDOMLocation
   NS_DECL_NSIDOMLOCATION

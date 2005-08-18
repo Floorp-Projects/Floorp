@@ -426,15 +426,6 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
 
   mChromeEventHandler = nsnull;
 
-  if (mLocation) {
-    // Invalidate the inner window's location object now that
-    // the inner window is being torn down. We need to do this
-    // to prevent people from holding on to an old inner
-    // window's location object somehow and tracking the
-    // location of the docshell...
-    mLocation->SetDocShell(nsnull);
-  }
-
   if (mListenerManager) {
     mListenerManager->RemoveAllListeners(PR_FALSE);
     mListenerManager = nsnull;
@@ -582,7 +573,7 @@ nsGlobalWindow::GetPopupControlState() const
 }
 
 #define WINDOWSTATEHOLDER_IID \
-{0x2aa29291, 0x3ac9, 0x4d37, {0xa4, 0x3d, 0x45, 0x15, 0x2f, 0x16, 0x23, 0x04 }}
+{0x6fb7a1b5, 0x2dfe, 0x40a7, {0xbc, 0xee, 0x1f, 0xac, 0xd2, 0x8d, 0x47, 0x62}}
 
 class WindowStateHolder : public nsISupports
 {
@@ -592,7 +583,8 @@ public:
 
   WindowStateHolder(nsGlobalWindow *aWindow,
                     nsIXPConnectJSObjectHolder *aHolder,
-                    nsNavigator *aNavigator);
+                    nsNavigator *aNavigator,
+                    nsLocation *aLocation);
 
   // Get the contents of focus memory when the state was saved
   // (if the focus was inside of this window).
@@ -604,12 +596,14 @@ public:
   { return mInnerWindowHolder; }
 
   nsNavigator* GetNavigator() { return mNavigator; }
+  nsLocation* GetLocation() { return mLocation; }
 
   void DidRestoreWindow()
   {
     mInnerWindow = nsnull;
     mInnerWindowHolder = nsnull;
     mNavigator = nsnull;
+    mLocation = nsnull;
   }
 
 protected:
@@ -620,16 +614,19 @@ protected:
   // window ends up recalculating it anyway.
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
   nsRefPtr<nsNavigator> mNavigator;
+  nsRefPtr<nsLocation> mLocation;
   nsCOMPtr<nsIDOMElement> mFocusedElement;
   nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
 };
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
                                      nsIXPConnectJSObjectHolder *aHolder,
-                                     nsNavigator *aNavigator)
+                                     nsNavigator *aNavigator,
+                                     nsLocation *aLocation)
   : mInnerWindow(aWindow),
     mInnerWindowHolder(aHolder),
-    mNavigator(aNavigator)
+    mNavigator(aNavigator),
+    mLocation(aLocation)
 {
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
@@ -682,6 +679,11 @@ WindowStateHolder::~WindowStateHolder()
     }
 
     mInnerWindow->FreeInnerObjects(cx);
+
+    if (mLocation) {
+      // Don't leave the weak reference to the docshell lying around.
+      mLocation->SetDocShell(nsnull);
+    }
   }
 }
 
@@ -907,15 +909,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         currentInner->ClearAllTimeouts();
 
         currentInner->mChromeEventHandler = nsnull;
-
-        if (currentInner->mLocation) {
-          // Invalidate the inner window's location object now that
-          // the inner window is being torn down. We need to do this
-          // to prevent people from holding on to an old inner
-          // window's location object somehow and tracking the
-          // location of the docshell...
-          currentInner->mLocation->SetDocShell(nsnull);
-        }
       }
 
       if (aRemoveEventListeners && currentInner->mListenerManager) {
@@ -936,8 +929,10 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     PRUint32 flags = 0;
 
-    if (reUseInnerWindow && !currentInner->IsFrozen()) {
+    if (reUseInnerWindow) {
       // We're reusing the current inner window.
+      NS_ASSERTION(!currentInner->IsFrozen(),
+                   "We should never be reusing a shared inner window");
       newInnerWindow = currentInner;
     } else {
       if (aState) {
@@ -946,7 +941,10 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
         newInnerWindow = wsh->GetInnerWindow();
         mInnerWindowHolder = wsh->GetInnerWindowHolder();
-        mNavigator = wsh->GetNavigator(); // This assignment addrefs.
+
+        // These assignments addref.
+        mNavigator = wsh->GetNavigator(); 
+        mLocation = wsh->GetLocation();
 
         // Update mNavigator's docshell pointer now.
         mNavigator->SetDocShell(mDocShell);
@@ -959,6 +957,8 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         } else {
           newInnerWindow = new nsGlobalWindow(this);
         }
+
+        mLocation = nsnull;
       }
 
       if (!newInnerWindow) {
@@ -1006,12 +1006,13 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
           }
 
           nsIScriptContext *callerScx;
-          if (cx && (callerScx = GetScriptContextFromJSContext(cx)) &&
-              !currentInner->IsFrozen()) {
+          if (cx && (callerScx = GetScriptContextFromJSContext(cx))) {
             // We're called from document.open() (and document.open() is
             // called from JS), clear the scope etc in a termination
             // function on the calling context to prevent clearing the
             // calling scope.
+            NS_ASSERTION(!currentInner->IsFrozen(),
+                "How does this opened window get into session history");
             callerScx->SetTerminationFunction(ClearWindowScope,
                                               NS_STATIC_CAST(nsIDOMWindow *,
                                                              currentInner));
@@ -1207,10 +1208,10 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   mDocShell = aDocShell;        // Weak Reference
 
-  NS_ASSERTION(!mLocation, "Uh, outer window has location object!");
-
   if (mNavigator)
     mNavigator->SetDocShell(aDocShell);
+  if (mLocation)
+    mLocation->SetDocShell(aDocShell);
   if (mHistory)
     mHistory->SetDocShell(aDocShell);
   if (mFrames)
@@ -5074,12 +5075,12 @@ nsGlobalWindow::GetPrivateRoot()
 NS_IMETHODIMP
 nsGlobalWindow::GetLocation(nsIDOMLocation ** aLocation)
 {
-  FORWARD_TO_INNER(GetLocation, (aLocation), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(GetLocation, (aLocation), NS_ERROR_NOT_INITIALIZED);
 
   *aLocation = nsnull;
 
-  if (!mLocation && GetDocShellInternal()) {
-    mLocation = new nsLocation(GetDocShellInternal());
+  if (!mLocation && mDocShell) {
+    mLocation = new nsLocation(mDocShell);
     if (!mLocation) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -6614,22 +6615,13 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
 
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
                                                       mInnerWindowHolder,
-                                                      mNavigator);
+                                                      mNavigator,
+                                                      mLocation);
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE
   printf("saving window state, state = %p\n", (void*)state);
 #endif
-
-  if (inner->mLocation) {
-    // Invalidate the inner window's location object now that the inner window
-    // is being put into the bfcache. We need to do this to prevent people from
-    // holding on to an old inner window's location object somehow and tracking
-    // the location of the docshell. The docshell is restored when the window is
-    // taken out of the bfcache (meaning that any stale references to it will
-    // only see that particular document).
-    inner->mLocation->SetDocShell(nsnull);
-  }
 
   // Don't do anything else to this inner window!
   inner->Freeze();
@@ -6698,9 +6690,6 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 
   // And we're ready to go!
   inner->Thaw();
-
-  if (inner->mLocation)
-    inner->mLocation->SetDocShell(mDocShell);
 
   holder->DidRestoreWindow();
 

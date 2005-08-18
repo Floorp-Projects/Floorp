@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -496,7 +497,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Don't allow modifications to Location.prototype
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS &
+                           (DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                            nsIXPCScriptable::WANT_PRECREATE) &
                            ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE)
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
@@ -5840,6 +5842,36 @@ nsLocationSH::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return nsDOMGenericSH::CheckAccess(wrapper, cx, obj, id, mode, vp, _retval);
 }
 
+NS_IMETHODIMP
+nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                        JSObject *globalObj, JSObject **parentObj)
+{
+  // window.location can be held onto by both evil pages that want to track the
+  // user's progress on the web and bookmarklets that want to use the location
+  // object. Parent it to the inner window so that access checks do the Right
+  // Thing.
+  *parentObj = globalObj;
+
+  nsLocation *loc = (nsLocation *)(nsIDOMLocation *)nativeObj;
+  nsIDocShell *ds = loc->GetDocShell();
+  if (!ds) {
+    NS_WARNING("Refusing to create a location in the wrong scope");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
+
+  if (sgo) {
+    JSObject *global = sgo->GetGlobalJSObject();
+
+    if (global) {
+      *parentObj = global;
+    }
+  }
+
+  return NS_OK;
+}
+
 
 // DOM Navigator helper
 nsresult
@@ -5857,7 +5889,7 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsIDocShell *ds = nav->GetDocShell();
   if (!ds) {
     NS_WARNING("Refusing to create a navigator in the wrong scope");
-    return NS_ERROR_INVALID_POINTER;
+    return NS_ERROR_UNEXPECTED;
   }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
