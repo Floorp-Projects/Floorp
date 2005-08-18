@@ -237,6 +237,21 @@ NS_IMETHODIMP nsSHEntry::SetSaveHistoryStateFlag(PRBool  aFlag)
    return NS_OK;
 }
 
+
+NS_IMETHODIMP nsSHEntry::GetExpirationStatus(PRBool * aFlag)
+{
+   NS_ENSURE_ARG_POINTER(aFlag);
+   
+   *aFlag = mExpired;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetExpirationStatus(PRBool  aFlag)
+{
+   mExpired = aFlag;
+   return NS_OK;
+}
+
 nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState,
@@ -259,6 +274,9 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
 
   // By default we save HistoryLayoutState
   SetSaveHistoryStateFlag(PR_TRUE);
+
+  //By default the page is not expired
+  SetExpirationStatus(PR_FALSE);
 
 	return NS_OK;
 	
