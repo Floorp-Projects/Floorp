@@ -420,6 +420,31 @@ nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
   return NS_ERROR_FAILURE;
 }
 
+
+/* Replace an entry in the History list at a particular index.
+ * Do not update index or count.
+ */
+NS_IMETHODIMP
+nsSHistory::ReplaceEntry(PRInt32 aIndex, nsISHEntry * aReplaceEntry)
+{
+  NS_ENSURE_ARG(aReplaceEntry);
+  nsresult rv;
+  nsCOMPtr<nsISHTransaction> currentTxn;
+
+  if (!mListRoot) // Session History is not initialised.
+    return NS_ERROR_FAILURE;
+
+  rv = GetTransactionAtIndex(aIndex, getter_AddRefs(currentTxn));
+
+  if(currentTxn)
+  {
+    // Set the replacement entry in the transaction
+    rv = currentTxn->SetSHEntry(aReplaceEntry);
+    rv = currentTxn->SetPersist(PR_TRUE);
+  }
+  return rv;
+}
+
 //*****************************************************************************
 //    nsSHistory: nsIWebNavigation
 //*****************************************************************************
