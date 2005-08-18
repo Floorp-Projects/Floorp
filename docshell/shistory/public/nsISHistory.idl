@@ -24,7 +24,9 @@
 #include "nsIFactory.idl"
 #include "nsISHEntry.idl"
 #include "nsISHTransaction.idl"
+#include "nsIDocShell.idl"
 
+//interface nsIDocShell;
 
 %{C++
 #define NS_SHISTORY_CID \
@@ -74,5 +76,10 @@ interface nsISHistory: nsISupports
    * Get the root transaction
    */
    readonly attribute nsISHTransaction rootTransaction;
+
+  /**
+   * The toplevel docshell object to which this SHistory object belongs to.
+   */
+	attribute nsIDocShell rootDocShell;
 
 };
