@@ -40,7 +40,8 @@
 
 NS_IMPL_ISUPPORTS1(nsSHTransaction, nsISHTransaction)
 
-nsSHTransaction::nsSHTransaction() : mParent(nsnull), mChild(nsnull),mLRVList(nsnull), mSHEntry(nsnull)
+nsSHTransaction::nsSHTransaction() : mPersist(PR_TRUE), mParent(nsnull), 
+   mChild(nsnull), mLRVList(nsnull), mSHEntry(nsnull)
 {
 NS_INIT_REFCNT();
 }
@@ -154,6 +155,22 @@ nsSHTransaction::GetLrvList(nsISHTransaction ** aResult)
    NS_ENSURE_ARG_POINTER(aResult);
    *aResult = mLRVList;
    NS_IF_ADDREF(mLRVList);
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHTransaction::SetPersist(PRBool aPersist)
+{
+   mPersist = aPersist;
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHTransaction::GetPersist(PRBool* aPersist)
+{
+   NS_ENSURE_ARG_POINTER(aPersist);
+
+   *aPersist = mPersist;
    return NS_OK;
 }
 
