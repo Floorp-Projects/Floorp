@@ -658,7 +658,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
       }
       else if (aHistCmd == HIST_CMD_GOTOINDEX) {
         // We are going somewhere else. This is not reload either
-        listener->OnHistoryGotoIndex(mIndex, nextURI, &canNavigate);
+        listener->OnHistoryGotoIndex(aIndex, nextURI, &canNavigate);
       }
     }
   }
