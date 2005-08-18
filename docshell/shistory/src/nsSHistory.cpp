@@ -385,7 +385,7 @@ nsSHistory::GetDocument(nsIDOMDocument** aDocument)
 
 
 NS_IMETHODIMP
-nsSHistory::GetCurrentURI(PRUnichar** aCurrentURI)
+nsSHistory::GetCurrentURI(nsIURI** aCurrentURI)
 {
   // Not implemented
   return NS_OK;
