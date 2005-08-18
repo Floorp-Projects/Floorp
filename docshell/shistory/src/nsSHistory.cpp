@@ -716,24 +716,25 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	if (!prevContainer || !nextContainer)
 		return PR_FALSE;
 
-    prevContainer->GetChildCount(&pcnt);
-    nextContainer->GetChildCount(&ncnt);
-    dsTreeNode->GetChildCount(&dsCount);
+  prevContainer->GetChildCount(&pcnt);
+  nextContainer->GetChildCount(&ncnt);
+  dsTreeNode->GetChildCount(&dsCount);
 
-    //XXX What to do if the children count don't match
+  //XXX What to do if the children count don't match
     
-    for (PRInt32 i=0; i<ncnt; i++){
+  for (PRInt32 i=0; i<ncnt; i++){
 	  nsCOMPtr<nsISHEntry> pChild, nChild;
-      nsCOMPtr<nsIDocShellTreeItem> dsTreeItemChild;
+    nsCOMPtr<nsIDocShellTreeItem> dsTreeItemChild;
 	  
-      prevContainer->GetChildAt(i, getter_AddRefs(pChild));
+    prevContainer->GetChildAt(i, getter_AddRefs(pChild));
 	  nextContainer->GetChildAt(i, getter_AddRefs(nChild));
-	  dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
+    if (dsCount > 0)
+	    dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
 
 	  if (!dsTreeItemChild)
 		  return PR_FALSE;
 
-	  nsCOMPtr<nsIDocShell> dsChild(do_QueryInterface(dsTreeItemChild));
+    nsCOMPtr<nsIDocShell> dsChild(do_QueryInterface(dsTreeItemChild));
 
 	  result = CompareSHEntry(pChild, nChild, dsChild, aDSResult, aSHEResult);
 	  if (result)  // We have found the docshell in which loadUri is to be called.
