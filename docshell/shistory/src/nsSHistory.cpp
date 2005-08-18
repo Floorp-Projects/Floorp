@@ -44,7 +44,7 @@ static PRInt32  gHistoryMaxSize = 0;
 //***    nsSHistory: Object Management
 //*****************************************************************************
 
-nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0)
+nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0), mRequestedIndex(-1)
 {
   NS_INIT_REFCNT();
 }
@@ -513,6 +513,14 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
 }
 
 NS_IMETHODIMP
+nsSHistory::UpdateIndex()
+{
+  // Update the actual index with the right value. 
+  mIndex = mRequestedIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHistory::Stop(PRUint32 aStopFlags)
 {
 	//Not implemented
@@ -576,17 +584,17 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
 {
   nsCOMPtr<nsIDocShell> docShell;
   nsCOMPtr<nsISHEntry> shEntry;
-  PRInt32 oldIndex = mIndex;
+  // Keep note of requested history index in mRequestedIndex.
+  mRequestedIndex = aIndex;
 
   nsCOMPtr<nsISHEntry> prevEntry;
-  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));
-  mIndex = aIndex;
+  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));  
    
   nsCOMPtr<nsISHEntry> nextEntry;   
-  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
+  GetEntryAtIndex(mRequestedIndex, PR_FALSE, getter_AddRefs(nextEntry));
   nsCOMPtr<nsIHistoryEntry> nHEntry(do_QueryInterface(nextEntry));
-  if (!nextEntry || !prevEntry || !nHEntry) {
-    mIndex = oldIndex;
+  if (!nextEntry || !prevEntry || !nHEntry) {    
+    mRequestedIndex = -1;
     return NS_ERROR_FAILURE;
   }
   
@@ -595,18 +603,19 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   // Get the uri for the entry we are about to visit
   nsCOMPtr<nsIURI> nextURI;
   nHEntry->GetURI(getter_AddRefs(nextURI));
+ 
   if(mListener) {    
     nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
-      if (mIndex+1 == oldIndex) {
+      if (mIndex+1 == mRequestedIndex) {
         // We are going back one entry. Send GoBack notifications
         listener->OnHistoryGoBack(nextURI, &canNavigate);
       }
-      else if (mIndex-1 == oldIndex) {
+      else if (mIndex-1 == mRequestedIndex) {
         // We are going forward. Send GoForward notification
         listener->OnHistoryGoForward(nextURI, &canNavigate);
       }
-      else if (mIndex != oldIndex) {
+      else if (mIndex != mRequestedIndex) {
         // We are going somewhere else. This is not reload either
         listener->OnHistoryGotoIndex(mIndex, nextURI, &canNavigate);
       }
@@ -614,9 +623,8 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   }
 
   if (!canNavigate) {
-    // reset the index back to what it was, if the listener
-    // asked us not to proceed with the operation.
-    mIndex = oldIndex;
+    // If the listener asked us not to proceed with 
+    // the operation, simply return.    
     return NS_OK;  // XXX Maybe I can return some other error code?
   }
 
@@ -630,7 +638,7 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   }
   
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  if (oldIndex == aIndex) {
+  if (mRequestedIndex == mIndex) {
     // Possibly a reload case 
     docShell = mRootDocShell;
   }
@@ -642,17 +650,19 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
        */
       PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
                                       getter_AddRefs(docShell),
-                                      getter_AddRefs(shEntry));
-      if (!result) {
+                                      getter_AddRefs(shEntry)); 
+      if (!result || !shEntry) {
         /* There was an error in finding the entry and docshell
-         * where the load should happen. Reset the index back 
-         * to what it was. Return failure.
-         */
-        mIndex = oldIndex;   
+         * where the load should happen,return error.
+         */      
+        mRequestedIndex = -1;
         return NS_ERROR_FAILURE;
       }
-      else {        
+      else {                
         nextEntry = shEntry;
+        // Set the Subframe flag of the entry to indicate that
+        // it is subframe navigation        
+        nextEntry->SetIsSubFrame(PR_TRUE);
       }
     }   // (pCount >0)
     else
@@ -660,10 +670,10 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
     }
   
 
-  if (!docShell || !nextEntry || !mRootDocShell) {
+  if (!docShell || !mRootDocShell) {
      // we did not successfully go to the proper index.
-     // reset mIndex to what it was before returning error
-      mIndex = oldIndex;
+     // return error.
+      mRequestedIndex = -1;
       return NS_ERROR_FAILURE;
   }
 
@@ -671,21 +681,13 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
      * This will be passed on to child subframes later in nsDocShell,
      * so that proper loadType is maintained through out a frameset
      */
-    nextEntry->SetLoadType(aLoadType);
-
+    nextEntry->SetLoadType(aLoadType);    
     mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
 
     loadInfo->SetLoadType(aLoadType);
     loadInfo->SetSHEntry(nextEntry);
     // Time to initiate a document load
-    nsresult rv = docShell->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
-    /* If the loadURI call failed for some reason,
-     * reset mIndex to what it was. so that back/forward
-     * won't misbehave
-     */
-    if (!NS_SUCCEEDED(rv))
-      mIndex = oldIndex;
-    return rv;
+    return docShell->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 
