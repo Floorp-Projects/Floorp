@@ -34,10 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNegotiateAuth_h__
-#define nsNegotiateAuth_h__
+#ifndef nsAuth_h__
+#define nsAuth_h__
 
-#if defined( MOZ_LOGGING)
+/* types of packages */
+enum pType {
+     PACKAGE_TYPE_KERBEROS,
+     PACKAGE_TYPE_NEGOTIATE,
+     PACKAGE_TYPE_NTLM
+};
+
+#if defined(MOZ_LOGGING)
 #define FORCE_PR_LOG
 #endif
 
@@ -57,4 +64,4 @@ extern PRLogModuleInfo* gNegotiateLog;
 #define LOG(args)
 #endif
 
-#endif /* !defined( nsNegotiateAuth_h__ ) */
+#endif /* !defined( nsAuth_h__ ) */

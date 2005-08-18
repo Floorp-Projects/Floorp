@@ -45,7 +45,7 @@
 #include "nsIURI.h"
 #include "nsSubstring.h"
 
-// The nsGssapiAuth class provides responses for the GSS-API Negotiate method
+// The nsHttpNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
 class nsHttpNegotiateAuth : public nsIHttpAuthenticator

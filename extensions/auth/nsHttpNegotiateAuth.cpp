@@ -51,7 +51,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "nsNegotiateAuth.h"
+#include "nsAuth.h"
 #include "nsHttpNegotiateAuth.h"
 
 #include "nsIHttpChannel.h"
@@ -77,6 +77,7 @@ static const char kNegotiate[] = "Negotiate";
 static const char kNegotiateAuthTrustedURIs[] = "network.negotiate-auth.trusted-uris";
 static const char kNegotiateAuthDelegationURIs[] = "network.negotiate-auth.delegation-uris";
 static const char kNegotiateAuthAllowProxies[] = "network.negotiate-auth.allow-proxies";
+static const char kNegotiateAuthSSPI[] = "network.auth.use-sspi";
 
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
 
@@ -175,11 +176,25 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
     //
     service.Insert("HTTP@", 0);
 
-    rv = CallCreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate", &module);
-    if (NS_FAILED(rv))
+    const char *contractID;
+    if (TestBoolPref(kNegotiateAuthSSPI)) {
+	   LOG(("  using negotiate-sspi\n"));
+	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-sspi";
+    }
+    else {
+	   LOG(("  using negotiate-gss\n"));
+	   contractID = NS_AUTH_MODULE_CONTRACTID_PREFIX "negotiate-gss";
+    }
+
+    rv = CallCreateInstance(contractID, &module);
+
+    if (NS_FAILED(rv)) {
+        LOG(("  Failed to load Negotiate Module \n"));
         return rv;
+    }
 
     rv = module->Init(service.get(), req_flags, nsnull, nsnull, nsnull);
+
     if (NS_FAILED(rv)) {
         NS_RELEASE(module);
         return rv;
