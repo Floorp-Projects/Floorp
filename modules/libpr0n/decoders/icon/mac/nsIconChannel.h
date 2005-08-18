@@ -53,7 +53,7 @@
 
 class nsIFile;
 
-class nsIconChannel : public nsIChannel, public nsIStreamListener, public nsIStreamListener
+class nsIconChannel : public nsIChannel, public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
