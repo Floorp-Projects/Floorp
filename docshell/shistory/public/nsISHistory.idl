@@ -80,6 +80,16 @@ interface nsISHistory: nsISupports
   /**
    * The toplevel docshell object to which this SHistory object belongs to.
    */
-	attribute nsIDocShell rootDocShell;
+   attribute nsIDocShell rootDocShell;
+
+  /**
+   * Get/Set the Max entries Session History will hold per window
+   */
+   attribute long maxLength;
+
+  /**
+   * Purge the oldest numEntries from history list
+   */
+   void PurgeHistory(in long numEntries);
 
 };
