@@ -23,6 +23,7 @@
 // Local Includes
 #include "nsSHEntry.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIDocShellLoadInfo.h"
 
 PRUint32 gEntryID=0;
@@ -126,7 +127,7 @@ NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
       }
    }
 
-   *aTitle = mTitle.ToNewUnicode();
+   *aTitle = ToNewUnicode(mTitle);
    return NS_OK;
 }
 
