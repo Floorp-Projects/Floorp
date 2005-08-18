@@ -984,9 +984,10 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
                                     PRUint32 sourceOffset,
                                     PRUint32 length)
 {
-    PRUint32 amt;
+#define XPI_ODA_BUFFER_SIZE 8*1024
+    PRUint32 amt = PR_MIN(XPI_ODA_BUFFER_SIZE, length);
     nsresult err;
-    char buffer[8*1024];
+    char buffer[XPI_ODA_BUFFER_SIZE];
     PRUint32 writeCount;
 
     if (mCancelled)
@@ -999,19 +1000,20 @@ nsXPInstallManager::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 
     do
     {
-        err = pIStream->Read(buffer, sizeof(buffer), &amt);
+        err = pIStream->Read(buffer, amt, &amt);
+
         if (amt == 0) break;
-        if (NS_FAILED(err))
-        {
-            //printf("pIStream->Read Failed!  %d", err);
-            return err;
-        }
+        if (NS_FAILED(err)) return err;
+
         err = mItem->mOutStream->Write( buffer, amt, &writeCount);
         if (NS_FAILED(err) || writeCount != amt)
         {
             return NS_ERROR_FAILURE;
         }
         length -= amt;
+
+        amt = PR_MIN(XPI_ODA_BUFFER_SIZE, length);
+
     } while (length > 0);
 
     return NS_OK;
