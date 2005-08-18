@@ -501,20 +501,6 @@ nsSHEntry::ClearChildShells()
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetSecurityState(nsISupports **aState)
-{
-  NS_IF_ADDREF(*aState = mSecurityState);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetSecurityState(nsISupports *aState)
-{
-  mSecurityState = aState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHEntry::GetRefreshURIList(nsISupportsArray **aList)
 {
   NS_IF_ADDREF(*aList = mRefreshURIList);
@@ -545,7 +531,6 @@ nsSHEntry::SyncPresentationState()
   mWindowState = nsnull;
   mViewerBounds.SetRect(0, 0, 0, 0);
   mChildShells.Clear();
-  mSecurityState = nsnull;
   mRefreshURIList = nsnull;
   return NS_OK;
 }
