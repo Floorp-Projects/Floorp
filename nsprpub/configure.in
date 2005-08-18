@@ -1341,6 +1341,12 @@ case "$target" in
             CXX="$CXX -m32"
         fi
         ;;
+    powerpc64)
+        if test -n "$USE_64"; then
+            CC="$CC -m64"
+            CXX="$CXX -m64"
+        fi
+        ;;
     m68k)
         CFLAGS="$CFLAGS -m68020-60"
         CXXFLAGS="$CXXFLAGS -m68020-60"
