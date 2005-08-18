@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Radha Kulkarni <radha@netscape.com>
+ */
+
+/**
+ * The interface to nsIHistoryEntry. Each document or subframe in 
+ * Session History will have a nsIHistoryEntry associated with it which will
+ * hold only public information like URI and title for that document.
+ * More information like post data layout data are held in the private 
+ * interface nsISHEntry
+ * @status FROZEN
+ * @version 1.0
+ */
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+[scriptable, uuid(A41661D4-1417-11D5-9882-00C04FA02F40)]
+interface nsIHistoryEntry : nsISupports 
+{
+
+/** URI for the document */
+readonly attribute nsIURI URI;
+
+/** Title for the document */
+readonly attribute wstring title;
+
+/** Flag that indicates if the entry is for a subframe navigation */
+readonly attribute boolean isSubFrame;
+
+};
+
+
+%{ C++
+// {A41661D5-1417-11D5-9882-00C04FA02F40}
+#define NS_HISTORYENTRY_CID \
+{0xa41661d5, 0x1417, 0x11d5, {0x98, 0x82, 0x0, 0xc0, 0x4f, 0xa0, 0x2f, 0x40}}
+
+#define NS_HISTORYENTRY_CONTRACTID \
+    "@mozilla.org/browser/history-entry;1"
+
+%}
+
