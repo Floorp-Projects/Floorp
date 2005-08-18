@@ -42,88 +42,145 @@
  * hold all information required to recreate the document from history
  * 
  */
-#include "nsISupports.idl"
-#include "nsIURI.idl"
-#include "nsIInputStream.idl"
+#include "nsIHistoryEntry.idl"
 
 interface nsILayoutHistoryState;
-interface nsIDOMDocument;
+interface nsIContentViewer;
+interface nsIURI;
+interface nsIInputStream;
+interface nsIDocShellTreeItem;
+interface nsISecureBrowserUIState;
+interface nsISupportsArray;
+%{C++
+struct nsRect;
+%}
+[ref] native nsRect(nsRect);
 
-[scriptable, uuid(6b596e1f-a3bd-40f9-a7ee-ab3edc7f9960)]
-interface nsISHEntry : nsISupports 
+[scriptable, uuid(e47bf412-3bc2-4306-a82f-ea2bdf950432)]
+interface nsISHEntry : nsIHistoryEntry
 {
+    /** URI for the document */
+    void setURI(in nsIURI aURI);
 
-/** URI for the document */
-void SetURI(in nsIURI aURI);
+    /** Referrer URI */
+    attribute nsIURI referrerURI;
 
-/** Referrer URI */
-attribute nsIURI referrerURI;
+    /** Content viewer, for fast restoration of presentation */
+    attribute nsIContentViewer contentViewer;
 
-/**  DOM Document */
-attribute nsIDOMDocument document;
+    /** Whether the content viewer is marked "sticky" */
+    attribute boolean sticky;
 
-/** Title for the document */
-void SetTitle(in wstring aTitle);
+    /** Saved state of the global window object */
+    attribute nsISupports windowState;
 
-/** Post Data for the document */
-attribute nsIInputStream postData;
+    /**
+     * Saved position and dimensions of the content viewer; we must adjust the
+     * root view's widget accordingly if this has changed when the presentation
+     * is restored.
+     */
+    [noscript] void getViewerBounds(in nsRect bounds);
+    [noscript] void setViewerBounds([const] in nsRect bounds);
 
-/** LayoutHistoryState for scroll position and form values */
-attribute nsILayoutHistoryState layoutHistoryState;
+    /**
+     * Saved child docshells corresponding to contentViewer.  There are weak
+     * references since it's assumed that the content viewer's document has
+     * an owning reference to the subdocument for each shell.  The child shells
+     * are restored as children of the parent docshell, in this order, when the
+     * parent docshell restores a saved presentation.
+     */
 
-/** parent of this entry */
-attribute nsISHEntry parent;
+    /** Append a child shell to the end of our list. */
+    void addChildShell(in nsIDocShellTreeItem shell);
 
-/**
- * The loadType for this entry. This is typically loadHistory except
- * when reload is pressed, it has the appropriate reload flag
- */
-attribute  unsigned long loadType;
+    /**
+     * Get the child shell at |index|; returns null if |index| is out of bounds.
+     */
+    nsIDocShellTreeItem childShellAt(in long index);
 
-/**
- * An ID to help identify this entry from others during
- * subframe navigation
- */
-attribute unsigned long ID;
+    /**
+     * Clear the child shell list.
+     */
+    void clearChildShells();
 
-/**
- * pageIdentifier is an integer that should be the same for two entries
- * attached to the same docshell only if the two entries are entries for the
- * same page in the sense that one could go from the state represented by one
- * to the state represented by the other simply by scrolling (so the entries
- * are separated by an anchor traversal or a subframe navigation in some other
- * frame).
- */
-attribute unsigned long pageIdentifier;
+    /** Saved security state for the content viewer */
+    attribute nsISupports securityState;
 
-/** attribute to set and get the cache key for the entry */
-attribute nsISupports cacheKey;
+    /** Saved refresh URI list for the content viewer */
+    attribute nsISupportsArray refreshURIList;
 
-/** attribute to indicate whether layoutHistoryState should be saved */
-attribute boolean saveLayoutStateFlag;
+    /**
+     * Ensure that the cached presentation members are self-consistent.
+     * If either |contentViewer| or |windowState| are null, then all of the
+     * following members are cleared/reset:
+     *  contentViewer, sticky, windowState, viewerBounds, childShells,
+     *  refreshURIList.
+     */
+    void syncPresentationState();
 
-/** attribute to indicate whether the page is already expired in cache */
-attribute boolean expirationStatus;
+    /** Title for the document */
+    void setTitle(in AString aTitle);
 
-/** attribute to indicate the content-type of the document that this
-    is a session history entry for */
-attribute ACString contentType; 
+    /** Post Data for the document */
+    attribute nsIInputStream postData;
+
+    /** LayoutHistoryState for scroll position and form values */
+    attribute nsILayoutHistoryState layoutHistoryState;
+
+    /** parent of this entry */
+    attribute nsISHEntry parent;
+
+    /**
+     * The loadType for this entry. This is typically loadHistory except
+     * when reload is pressed, it has the appropriate reload flag
+     */
+    attribute unsigned long loadType;
+
+    /**
+     * An ID to help identify this entry from others during
+     * subframe navigation
+     */
+    attribute unsigned long ID;
+
+    /**
+     * pageIdentifier is an integer that should be the same for two entries
+     * attached to the same docshell only if the two entries are entries for
+     * the same page in the sense that one could go from the state represented
+     * by one to the state represented by the other simply by scrolling (so the
+     * entries are separated by an anchor traversal or a subframe navigation in
+     * some other frame).
+     */
+    attribute unsigned long pageIdentifier;
+
+    /** attribute to set and get the cache key for the entry */
+    attribute nsISupports cacheKey;
+
+    /** attribute to indicate whether layoutHistoryState should be saved */
+    attribute boolean saveLayoutStateFlag;
+
+    /** attribute to indicate whether the page is already expired in cache */
+    attribute boolean expirationStatus;
+
+    /**
+     * attribute to indicate the content-type of the document that this
+     * is a session history entry for
+     */
+    attribute ACString contentType; 
  
-/** Set/Get scrollers' positon in anchored pages */
-void setScrollPosition(in PRInt32 x, in PRInt32 y);
-void getScrollPosition(out PRInt32 x, out PRInt32 y);
+    /** Set/Get scrollers' positon in anchored pages */
+    void setScrollPosition(in long x, in long y);
+    void getScrollPosition(out long x, out long y);
 
-/** Additional ways to create an entry */
-void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
-            in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,
-            in nsISupports aCacheKey, in ACString aContentType);
+    /** Additional ways to create an entry */
+    void create(in nsIURI URI, in AString title,
+                in nsIInputStream inputStream,
+                in nsILayoutHistoryState layoutHistoryState,
+                in nsISupports cacheKey, in ACString contentType);
 
-nsISHEntry clone();
+    nsISHEntry clone();
 
-/** Attribute that indicates if this entry is for a subframe navigation */
-void SetIsSubFrame(in boolean aFlag);
-
-
+    /** Attribute that indicates if this entry is for a subframe navigation */
+    void setIsSubFrame(in boolean aFlag);
 };
 
 
