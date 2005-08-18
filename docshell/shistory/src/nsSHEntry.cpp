@@ -66,14 +66,7 @@ private:
 
 nsSHEntry::nsSHEntry() 
 {
-
-NS_INIT_REFCNT();
-mURI = (nsnull);
-mPostData = (nsnull);
-mDocument= (nsnull);
-mLayoutHistoryState= (nsnull);
-mTitle = nsnull;
-
+   NS_INIT_REFCNT();
 }
 
 
@@ -93,13 +86,7 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
 
 nsSHEntry::~nsSHEntry() 
 {
-  NS_IF_RELEASE(mURI);
-  NS_IF_RELEASE(mPostData);
-  NS_IF_RELEASE(mDocument);
-  if (mTitle)
-	  delete mTitle;
-
-  DestroyChildren();
+   DestroyChildren();
 }
 
 void
@@ -118,167 +105,160 @@ nsSHEntry::DestroyChildren() {
 
 }
 
-// nsSHEntry::nsISupports
+//*****************************************************************************
+//    nsSHEntry: nsISupports
+//*****************************************************************************
 
-NS_IMPL_ISUPPORTS2(nsSHEntry, nsISHEntry, nsISHContainer)
+NS_IMPL_ADDREF(nsSHEntry)
+NS_IMPL_RELEASE(nsSHEntry)
 
-NS_IMETHODIMP
-nsSHEntry::GetURI(nsIURI **aUri)
+NS_INTERFACE_MAP_BEGIN(nsSHEntry)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
+   NS_INTERFACE_MAP_ENTRY(nsISHEntry)
+   NS_INTERFACE_MAP_ENTRY(nsISHContainer)
+NS_INTERFACE_MAP_END
+
+//*****************************************************************************
+//    nsSHEntry: nsISupports
+//*****************************************************************************
+
+NS_IMETHODIMP nsSHEntry::GetURI(nsIURI** aURI)
 {
-  NS_ENSURE_ARG_POINTER(aUri);
-
-  *aUri = mURI;
-  NS_IF_ADDREF(mURI);
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aURI);
+  
+   *aURI = mURI;
+   NS_IF_ADDREF(*aURI);
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::SetURI(nsIURI * aUri)
+NS_IMETHODIMP nsSHEntry::SetURI(nsIURI* aURI)
 {
-
-  NS_IF_RELEASE(mURI);
-  mURI =  aUri;
-  NS_IF_ADDREF(mURI);
-  return NS_OK;
+   mURI = aURI;
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::SetDocument(nsIDOMDocument * aDocument)
+NS_IMETHODIMP nsSHEntry::SetDocument(nsIDOMDocument* aDocument)
 {
-  NS_IF_RELEASE(mDocument);
-  mDocument = aDocument;
-  NS_IF_ADDREF(mDocument);
-  return NS_OK;
+   mDocument = aDocument;
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::GetDocument(nsIDOMDocument ** aResult)
-{
-	NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = mDocument;
-    NS_IF_ADDREF(mDocument);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::GetTitle(PRUnichar** aTitle)
-{
-  NS_ENSURE_ARG_POINTER(aTitle);
-  if (mTitle)
-    *aTitle = mTitle->ToNewUnicode();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetTitle(const PRUnichar* aTitle)
-{
-
-  if (mTitle)
-    delete mTitle;
-  if (aTitle)
-    mTitle =  new nsString(aTitle);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::GetPostData(nsIInputStream ** aResult)
+NS_IMETHODIMP nsSHEntry::GetDocument(nsIDOMDocument** aResult)
 {
 	NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = mPostData;
-    NS_IF_ADDREF(mPostData);
-    return NS_OK;
+
+   *aResult = mDocument;
+   NS_IF_ADDREF(*aResult);
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::SetPostData(nsIInputStream * aPostData)
+NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
 {
-  NS_IF_RELEASE(mPostData);
-  mPostData = aPostData;
-  NS_IF_ADDREF(aPostData);
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aTitle);
+
+   *aTitle = mTitle.ToNewUnicode();
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState ** aResult)
+NS_IMETHODIMP nsSHEntry::SetTitle(const PRUnichar* aTitle)
+{
+   mTitle = aTitle;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetPostData(nsIInputStream** aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
+
+   *aResult = mPostData;
+   NS_IF_ADDREF(*aResult);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetPostData(nsIInputStream* aPostData)
+{
+   mPostData = aPostData;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult)
+{
+   NS_ENSURE_ARG_POINTER(aResult);
+   
    *aResult = mLayoutHistoryState;
    NS_IF_ADDREF(*aResult);
    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState * aState)
+NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
 {
-  mLayoutHistoryState = aState;
-  return NS_OK;
+   mLayoutHistoryState = aState;
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::GetParent(nsISHEntry ** aResult)
+NS_IMETHODIMP nsSHEntry::GetParent(nsISHEntry** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mParent;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aResult);
+   
+   *aResult = mParent;
+   NS_IF_ADDREF(*aResult);
+   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsSHEntry::SetParent(nsISHEntry * aParent)
+NS_IMETHODIMP nsSHEntry::SetParent(nsISHEntry* aParent)
 {
 	/* parent not Addrefed on purpose to avoid cyclic reference
 	 * Null parent is OK
 	 */
-  mParent = aParent;
-  return NS_OK;
+   mParent = aParent;
+   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsSHEntry::GetChildCount(PRInt32 * aCount)
+NS_IMETHODIMP nsSHEntry::GetChildCount(PRInt32* aCount)
 {
-	NS_ENSURE_ARG_POINTER(aCount);
-    *aCount = mChildren.Count();
-    return NS_OK;
+   NS_ENSURE_ARG_POINTER(aCount);
+   
+   *aCount = mChildren.Count();
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::AddChild(nsISHEntry * aChild)
+NS_IMETHODIMP nsSHEntry::AddChild(nsISHEntry* aChild)
 {
-    NS_ENSURE_ARG_POINTER(aChild);
+   NS_ENSURE_ARG_POINTER(aChild);
 
 	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
 	mChildren.AppendElement((void *)aChild);
 	NS_ADDREF(aChild);
 
-    return NS_OK;
+   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSHEntry::RemoveChild(nsISHEntry * aChild)
+NS_IMETHODIMP nsSHEntry::RemoveChild(nsISHEntry * aChild)
 {
-    NS_ENSURE_ARG_POINTER(aChild);
-	PRBool childRemoved = mChildren.RemoveElement((void *)aChild);
-	if (childRemoved) {
-	  aChild->SetParent(nsnull);
-	  NS_RELEASE(aChild);
-	}
-    return NS_OK;
+   NS_ENSURE_ARG_POINTER(aChild);
+	
+   PRBool childRemoved = mChildren.RemoveElement((void *)aChild);
+	if(childRemoved)
+      {
+	   aChild->SetParent(nsnull);
+	   NS_RELEASE(aChild);
+	   }
+   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsSHEntry::GetChildEnumerator(nsIEnumerator** aChildEnumerator)
+NS_IMETHODIMP nsSHEntry::GetChildEnumerator(nsIEnumerator** aChildEnumerator)
 {
-	nsresult status = NS_OK;
+   NS_ENSURE_ARG_POINTER(aChildEnumerator);
+   
+   nsresult status = NS_OK;
 
-    NS_ENSURE_ARG_POINTER(aChildEnumerator);
-	nsSHEnumerator * iterator = new nsSHEnumerator(this);
-	if (iterator && !!NS_SUCCEEDED(status = CallQueryInterface(iterator, aChildEnumerator)))
+	nsSHEnumerator* iterator = new nsSHEnumerator(this);
+	if(iterator && !!NS_SUCCEEDED(status = CallQueryInterface(iterator, aChildEnumerator)))
       delete iterator;
-    return status;
+   return status;
 }
-
 
 //*****************************************************************************
 //***    nsSHEnumerator: Object Management
