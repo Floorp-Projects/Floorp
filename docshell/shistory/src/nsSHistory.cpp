@@ -90,9 +90,9 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry)
    return NS_OK;
 }
 
-/* Get length of the history list */
+/* Get size of the history list */
 NS_IMETHODIMP
-nsSHistory::GetLength(PRInt32 * aResult)
+nsSHistory::GetCount(PRInt32 * aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = mLength;
@@ -106,20 +106,6 @@ nsSHistory::GetIndex(PRInt32 * aResult)
     NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = mIndex;
 	return NS_OK;
-}
-
-/* Get the root (the very first) entry in the history list */
-NS_IMETHODIMP
-nsSHistory::GetRootEntry(nsISHEntry ** aResult)
-{
-    nsresult rv;
-
-      /* GetSHEntry ensures aResult is valid */
-      if (mListRoot) {
-        rv = mListRoot->GetSHEntry(aResult);
-        return rv;
-      }
-      return NS_ERROR_FAILURE;
 }
 
 /* Get the entry prior to the current index */
