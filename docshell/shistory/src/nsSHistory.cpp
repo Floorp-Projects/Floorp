@@ -35,7 +35,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 static PRInt32  gHistoryMaxSize = 50;
@@ -84,12 +84,15 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSHistory::Init()
 {
-  nsresult res;
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res) && prefs) {
-    prefs->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    nsCOMPtr<nsIPrefBranch> defaultBranch;
+    prefs->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+    if (defaultBranch) {
+      defaultBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+    }
   }
-  return res;
+  return NS_OK;
 }
 
 
