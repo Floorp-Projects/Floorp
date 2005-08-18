@@ -28,6 +28,7 @@
 #include "nsISHContainer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsILayoutHistoryState.h"
 
 class nsSHEnumerator;
 class nsSHEntry : public nsISHEntry,
@@ -53,7 +54,7 @@ private:
 	 nsIDOMDocument *  mDocument;
 	 nsString *        mTitle;
 	 nsIInputStream *  mPostData;
-	 nsISupports *     mLayoutHistoryState;
+	 nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 	 nsVoidArray       mChildren;
 	 nsISHEntry *      mParent;   // weak reference to parent
 	 

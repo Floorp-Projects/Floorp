@@ -79,7 +79,7 @@ mTitle = nsnull;
 
 NS_IMETHODIMP
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
-			         nsIInputStream * aInputStream, nsISupports * aHistoryLayoutState)
+			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
 {
    SetURI(aURI);
 	SetTitle(aTitle);
@@ -96,7 +96,6 @@ nsSHEntry::~nsSHEntry()
   NS_IF_RELEASE(mURI);
   NS_IF_RELEASE(mPostData);
   NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mLayoutHistoryState);
   if (mTitle)
 	  delete mTitle;
 
@@ -200,20 +199,18 @@ nsSHEntry::SetPostData(nsIInputStream * aPostData)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetLayoutHistoryState(nsISupports ** aResult)
+nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState ** aResult)
 {
-	NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = mLayoutHistoryState;
-    NS_IF_ADDREF(mLayoutHistoryState);
-    return NS_OK;
+   NS_ENSURE_ARG_POINTER(aResult);
+   *aResult = mLayoutHistoryState;
+   NS_IF_ADDREF(*aResult);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetLayoutHistoryState(nsISupports * aState)
+nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState * aState)
 {
-  NS_IF_RELEASE(mLayoutHistoryState);
   mLayoutHistoryState = aState;
-  NS_IF_ADDREF(aState);
   return NS_OK;
 }
 
