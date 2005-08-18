@@ -1461,19 +1461,35 @@ nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName,
   JSObject *funobj = (JSObject*) aHandler;
   JSObject *target = (JSObject*) aTarget;
 
+  nsresult rv;
+
+  // Push our JSContext on our thread's context stack, in case native code
+  // called from JS calls back into JS via XPConnect.
+  nsCOMPtr<nsIJSContextStack> stack =
+           do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Make sure the handler function is parented by its event target object
   if (funobj && ::JS_GetParent(mContext, funobj) != target) {
     funobj = ::JS_CloneFunctionObject(mContext, funobj, target);
     if (!funobj)
-      return NS_ERROR_OUT_OF_MEMORY;
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!::JS_DefineProperty(mContext, target, charName,
+  if (NS_SUCCEEDED(rv) &&
+      !::JS_DefineProperty(mContext, target, charName,
                            OBJECT_TO_JSVAL(funobj), nsnull, nsnull,
                            JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
-    return NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
   }
-  return NS_OK;
+
+  if (NS_FAILED(stack->Pop(nsnull)) && NS_SUCCEEDED(rv)) {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 void
