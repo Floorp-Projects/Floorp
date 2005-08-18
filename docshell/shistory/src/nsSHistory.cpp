@@ -281,8 +281,6 @@ nsSHistory::PrintHistory()
               nsCOMPtr<nsIURI>  uri;
               PRUnichar *  title;
               
-              nsXPIDLCString  url;
-
               entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
               nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(entry));
               if (hEntry) {
@@ -290,10 +288,11 @@ nsSHistory::PrintHistory()
                 hEntry->GetTitle(&title);              
               }
               
-			  if (uri)
-                 uri->GetSpec(getter_Copies(url));
-
 #if 0
+              nsCAutoString url;
+			  if (uri)
+                 uri->GetSpec(url);
+
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
               printf("\t\t Title = %s\n", NS_LossyConvertUCS2toASCII(title).get());
