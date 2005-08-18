@@ -481,7 +481,6 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	if (!aPrevEntry || !aNextEntry || !aParent)
 	   return PR_FALSE;
 
-	nsresult rv;
 	PRBool result = PR_FALSE;
 	nsCOMPtr<nsIURI>   prevURI, nextURI;
 
