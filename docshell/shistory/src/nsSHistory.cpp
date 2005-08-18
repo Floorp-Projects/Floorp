@@ -421,24 +421,6 @@ nsSHistory::LoadURI(const PRUnichar* aURI)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsSHistory::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry, PRInt32 aChildOffset)
-{
-
-  //XXX Not yet implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHistory::GetSHEForChild(PRInt32 aChildOffset, nsISHEntry ** aResult)
-{
-
-    // XXX Not yet implemented
-	return NS_OK;
-
-}
-
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
@@ -449,9 +431,7 @@ nsSHistory::GotoIndex(PRInt32 aIndex)
 NS_IMETHODIMP
 nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
 {
-	// XXX I think the docshell should be a weakref here. The rootDocshell
-	// from which we start walking down the hierarchy is a weak ref.
-   nsIDocShell* docShell = nsnull;
+   nsCOMPtr<nsIDocShell> docShell;
    nsCOMPtr<nsISHEntry> shEntry;
    PRInt32 oldIndex = mIndex;
 
@@ -465,7 +445,9 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    nsCOMPtr<nsIURI> nexturi;
    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
    if (oldIndex != aIndex) {
-      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, (&docShell), getter_AddRefs(shEntry));
+      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
+                                     getter_AddRefs(docShell),
+                                     getter_AddRefs(shEntry));
       if (!result)  
 	    mIndex = oldIndex;
       
@@ -485,7 +467,6 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    loadInfo->SetSHEntry(nextEntry);
    // Time to initiate a document load
    return docShell->LoadURI(nexturi, loadInfo);
-    
 }
 
 
@@ -501,49 +482,33 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 
 	nsresult rv;
 	PRBool result = PR_FALSE;
-   	nsCOMPtr<nsIURI>   prevURI, nextURI;
-	nsXPIDLCString     prevUriSpec, nextUriSpec;
-	// Not reference counted on purpose
-	nsIDocShell * docshell = aParent;
-	nsCOMPtr<nsISHEntry> prevEntry = aPrevEntry;
-	nsCOMPtr<nsISHEntry> nextEntry = aNextEntry;
+	nsCOMPtr<nsIURI>   prevURI, nextURI;
 
-    prevEntry->GetURI(getter_AddRefs(prevURI));
-	nextEntry->GetURI(getter_AddRefs(nextURI));
+    aPrevEntry->GetURI(getter_AddRefs(prevURI));
+	aNextEntry->GetURI(getter_AddRefs(nextURI));
+
+    // If one of the URIs is not available, then the entries are not
+    // equal...
     if (!prevURI || !nextURI)
 	  return PR_FALSE;
 
-	prevURI->GetSpec(getter_Copies(prevUriSpec));
-	nextURI->GetSpec(getter_Copies(nextUriSpec));
-	   
-	if (!prevUriSpec || !nextUriSpec)
-		   return PR_FALSE;
-
-	// XXX for some reason PL_strcmp isn't returning right value
-    nsAutoString prevAutoStr(NS_ConvertASCIItoUCS2((const char *)prevUriSpec));
-	//nsAutoString nextAutoStr(nextUriSpec);
-
-    if (!(prevAutoStr.EqualsWithConversion((const char *)nextUriSpec))) {
-       *aDSResult = docshell;
-	   *aSHEResult = nextEntry;
+    prevURI->Equals(nextURI, &result);
+    if (!result) {
+       *aDSResult = aParent;
+	   *aSHEResult = aNextEntry;
 	   NS_IF_ADDREF(*aSHEResult);
-	   // XXX we don't addref docshell here. The rootDocShell from which we started
-	   // walking down the hierarchy is a weak ref.
-	   //NS_IF_ADDREF(*aDSResult);
+	   NS_IF_ADDREF(*aDSResult);
 	   return PR_TRUE;
     }
+    result = PR_FALSE;
 
-    /* compare the child frames */
+    /* The root entries are the same, so compare any child frames */
     PRInt32  cnt=0, pcnt=0, ncnt=0, dsCount=0;
-	nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(prevEntry));
-	nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(nextEntry));
-	//XXX Not ref counted on purpose. Is this correct.?
-	// How about AddRef in the QueryInterface?
-	nsIDocShellTreeNode *  dsTreeNode = nsnull;
-	
-	rv = docshell->QueryInterface(NS_GET_IID(nsIDocShellTreeNode), (void  **) &dsTreeNode);
+	nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(aPrevEntry));
+	nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(aNextEntry));
+	nsCOMPtr<nsIDocShellTreeNode> dsTreeNode(do_QueryInterface(aParent));
 
-	if (!NS_SUCCEEDED(rv) || !dsTreeNode)
+	if (!dsTreeNode)
 		return PR_FALSE;
 	if (!prevContainer || !nextContainer)
 		return PR_FALSE;
@@ -556,20 +521,16 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
     
     for (PRInt32 i=0; i<ncnt; i++){
 	  nsCOMPtr<nsISHEntry> pChild, nChild;
-      nsIDocShellTreeItem * dsTreeItemChild=nsnull;
+      nsCOMPtr<nsIDocShellTreeItem> dsTreeItemChild;
 	  
-
       prevContainer->GetChildAt(i, getter_AddRefs(pChild));
 	  nextContainer->GetChildAt(i, getter_AddRefs(nChild));
-	  dsTreeNode->GetChildAt(i, &dsTreeItemChild);
+	  dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
 
 	  if (!dsTreeItemChild)
 		  return PR_FALSE;
 
-	  // XXX How about AddRef in QueryInterface? Is this OK?
-	  nsIDocShell *  dsChild = nsnull;
-	  
-	  rv = dsTreeItemChild->QueryInterface(NS_GET_IID(nsIDocShell), (void **) &dsChild);
+	  nsCOMPtr<nsIDocShell> dsChild(do_QueryInterface(dsTreeItemChild));
 
 	  result = CompareSHEntry(pChild, nChild, dsChild, aDSResult, aSHEResult);
 	  if (result)  // We have found the docshell in which loadUri is to be called.
