@@ -232,11 +232,10 @@ function messagePaneOnClick(event)
 
   // try to determine the href for what you are clicking on.  
   // for example, it might be "" if you aren't left clicking on a link
-  var ceParams = {event: event, href: "", linkNode: null};
-  hrefAndLinkNodeForClickEvent(ceParams);
-  var href = ceParams.href;
-  if (!href)
+  var ceParams = hrefAndLinkNodeForClickEvent(event);
+  if (!ceParams)
     return true;
+  var href = ceParams.href;
 
   // we know that http://, https://, ftp://, file://, chrome://, 
   // resource://, about:, and gopher:// (as if), 
@@ -269,7 +268,7 @@ function messagePaneOnClick(event)
   // we want to preventDefault, so that in
   // nsGenericHTMLElement::HandleDOMEventForAnchors(), we don't try to handle the click again
   event.preventDefault();
-  if (isPhishingURL(ceParams.linkNode, false))
+  if (isPhishingURL(ceParams.linkNode, false, href))
     return false;
 
   openTopBrowserWith(href);

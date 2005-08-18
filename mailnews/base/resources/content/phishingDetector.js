@@ -87,15 +87,16 @@ function isMsgEmailScam(aUrl)
 //                   the URL is an email scam.
 // aLinkNode: the link node to examine
 // aSilentMode: don't prompt the user to confirm
+// aHref: optional href for XLinks
 //////////////////////////////////////////////////////////////////////////////
 
-function isPhishingURL(aLinkNode, aSilentMode)
+function isPhishingURL(aLinkNode, aSilentMode, aHref)
 {
   if (!gPrefBranch.getBoolPref("mail.phishing.detection.enabled"))
     return false;
 
   var phishingType = kPhishingNotSuspicious;
-  var href = aLinkNode.href;
+  var href = aHref || aLinkNode.href;
   if (!href)
     return false;
 
