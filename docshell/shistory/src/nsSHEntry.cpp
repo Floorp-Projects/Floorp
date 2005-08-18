@@ -52,6 +52,7 @@ static PRUint32 gEntryID = 0;
 nsSHEntry::nsSHEntry() 
   : mLoadType(0)
   , mID(gEntryID++)
+  , mPageIdentifier(mID)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
   , mIsFrameNavigation(PR_FALSE)
@@ -70,6 +71,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mLayoutHistoryState(other.mLayoutHistoryState)
   , mLoadType(0)         // XXX why not copy?
   , mID(other.mID)
+  , mPageIdentifier(other.mPageIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
   , mIsFrameNavigation(other.mIsFrameNavigation)
@@ -212,6 +214,18 @@ NS_IMETHODIMP nsSHEntry::GetID(PRUint32 * aResult)
 NS_IMETHODIMP nsSHEntry::SetID(PRUint32  aID)
 {
   mID = aID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetPageIdentifier(PRUint32 * aResult)
+{
+  *aResult = mPageIdentifier;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetPageIdentifier(PRUint32 aPageIdentifier)
+{
+  mPageIdentifier = aPageIdentifier;
   return NS_OK;
 }
 
