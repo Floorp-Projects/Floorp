@@ -440,6 +440,17 @@ nsSHistory::ReplaceEntry(PRInt32 aIndex, nsISHEntry * aReplaceEntry)
   return rv;
 }
 
+/* Get a handle to the Session history listener */
+NS_IMETHODIMP
+nsSHistory::GetListener(nsISHistoryListener ** aListener)
+{
+  NS_ENSURE_ARG_POINTER(aListener);
+  if (mListener) 
+    CallQueryReferent(mListener.get(),  aListener);
+  // Don't addref aListener. It is a weak pointer.
+  return NS_OK;
+}
+
 //*****************************************************************************
 //    nsSHistory: nsIWebNavigation
 //*****************************************************************************
