@@ -35,15 +35,13 @@ MySpell::MySpell(const char * affpath, const char * dpath)
 
 MySpell::~MySpell()
 {
-    if (pSMgr) delete pSMgr;
-    if (pAMgr) delete pAMgr;
-    if (pHMgr) delete pHMgr;
-    pSMgr = NULL;
-    pAMgr = NULL;
-    pHMgr = NULL;
+    delete pSMgr;
+    delete pAMgr;
+    delete pHMgr;
+    
     csconv= NULL;
-    if (encoding) free(encoding);
-    encoding = NULL;
+    if (encoding) 
+        free(encoding);
 }
 
 
