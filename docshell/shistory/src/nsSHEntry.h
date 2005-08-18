@@ -62,6 +62,7 @@ private:
 	nsCOMPtr<nsIInputStream>        mPostData;
 	nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
 	nsVoidArray                     mChildren;
+	PRUint32                        mLoadType;  
 	nsISHEntry *                    mParent;  // weak reference
 };
 
