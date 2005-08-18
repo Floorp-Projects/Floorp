@@ -51,6 +51,11 @@ interface nsISHContainer : nsISupports
 	void RemoveChild(in nsISHEntry child);
 
 	/**
+	 * Get child at an index
+	 */
+	nsISHEntry GetChildAt(in long index);
+
+	/**
 	 * Enumerator to walk child list.
 	 */
 	readonly attribute nsIEnumerator childEnumerator;

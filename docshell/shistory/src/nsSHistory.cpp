@@ -18,7 +18,6 @@
  * 
  * Contributor(s):
  *   Radha Kulkarni <radha@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Local Includes 
@@ -30,6 +29,11 @@
 // Interfaces Needed
 #include "nsIGenericFactory.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIDocShellLoadInfo.h"
+#include "nsXPIDLString.h"
+#include "nsISHContainer.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
@@ -231,7 +235,9 @@ nsSHistory::PrintHistory()
       txn = mListRoot;
     
       while (1) {
-        nsCOMPtr<nsISHEntry>  entry;
+		      if (!txn)
+			     break;
+              nsCOMPtr<nsISHEntry>  entry;
               rv = txn->GetSHEntry(getter_AddRefs(entry));
               if (!NS_SUCCEEDED(rv) && !entry)
                       return NS_ERROR_FAILURE;
@@ -249,7 +255,8 @@ nsSHistory::PrintHistory()
               nsString titlestr(title);
               titleCStr = titlestr.ToNewCString();
               
-              uri->GetSpec(getter_Copies(url));
+			  if (uri)
+                 uri->GetSpec(getter_Copies(url));
 
               #if 0
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
@@ -287,3 +294,260 @@ nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
       return NS_OK;
 }
 
+//*****************************************************************************
+//    nsSHistory: nsIWebNavigation
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsSHistory::GetCanGoBack(PRBool * aCanGoBack)
+{
+   NS_ENSURE_ARG_POINTER(aCanGoBack);
+   *aCanGoBack = PR_FALSE;
+
+   PRInt32 index = -1;
+   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
+   if(index > 0)
+      *aCanGoBack = PR_TRUE;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetCanGoForward(PRBool * aCanGoForward)
+{
+    NS_ENSURE_ARG_POINTER(aCanGoForward);
+   *aCanGoForward = PR_FALSE;
+
+   PRInt32 index = -1;
+   PRInt32 count = -1;
+
+   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
+
+   if((index >= 0) && (index < (count - 1)))
+      *aCanGoForward = PR_TRUE;
+
+   return NS_OK;
+}
+NS_IMETHODIMP
+nsSHistory::GoBack()
+{
+	PRBool canGoBack = PR_FALSE;
+
+	GetCanGoBack(&canGoBack);
+	if (!canGoBack)  // Can't go back
+		return NS_ERROR_UNEXPECTED;
+    return GotoIndex(mIndex-1);
+}
+
+
+NS_IMETHODIMP
+nsSHistory::GoForward()
+{
+	PRBool canGoForward = PR_FALSE;
+
+	GetCanGoForward(&canGoForward);
+	if (!canGoForward)  // Can't go forward
+		return NS_ERROR_UNEXPECTED;
+    return GotoIndex(mIndex+1);
+
+}
+
+NS_IMETHODIMP
+nsSHistory::Reload(PRInt32 reloadType)
+{
+    // NOT implemented
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsSHistory::Stop()
+{
+	//Not implemented
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::SetDocument(nsIDOMDocument* aDocument,
+   const PRUnichar* aContentType)
+{
+	// Not implemented
+  return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsSHistory::GetDocument(nsIDOMDocument** aDocument)
+{
+
+	// Not implemented
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::GetCurrentURI(PRUnichar** aCurrentURI)
+{
+  // Not implemented
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsSHistory::SetSessionHistory(nsISHistory* aSessionHistory)
+{
+   // Not implemented
+   return NS_OK;
+}
+
+	
+NS_IMETHODIMP
+nsSHistory::GetSessionHistory(nsISHistory** aSessionHistory)
+{
+  // Not implemented
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::LoadURI(const PRUnichar* aURI)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::GotoIndex(PRInt32 aIndex)
+{
+   nsCOMPtr<nsIDocShell> docShell;
+   nsCOMPtr<nsISHEntry> shEntry;
+   PRInt32 oldIndex = mIndex;
+
+   nsCOMPtr<nsISHEntry> prevEntry;
+   GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));
+   mIndex = aIndex;
+   
+   nsCOMPtr<nsISHEntry> nextEntry;
+   GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
+
+   PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, getter_AddRefs(docShell), getter_AddRefs(shEntry));
+
+   if (!result)  
+	   mIndex = oldIndex;
+
+   if (!docShell || !shEntry || !mRootDocShell)
+	   return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIURI> nexturi;
+   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+
+   shEntry->GetURI(getter_AddRefs(nexturi));       
+   mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
+   // This is not available yet
+ //  loadInfo->SetSessionHistoryEntry(nextEntry);
+	 		   
+   // Time to initiate a document load
+   return docShell->LoadURI(nexturi, loadInfo);
+    
+}
+
+
+PRBool
+nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsIDocShell * aParent,
+					nsIDocShell ** aDSResult, nsISHEntry ** aSHEResult)
+{
+	NS_ENSURE_ARG_POINTER(aDSResult);
+	NS_ENSURE_ARG_POINTER(aSHEResult);
+
+	if (!aPrevEntry || !aNextEntry || !aParent)
+	   return PR_FALSE;
+
+	nsresult rv;
+	PRBool result = PR_FALSE;
+   	nsCOMPtr<nsIURI>   prevURI, nextURI;
+	nsXPIDLCString     prevUriSpec, nextUriSpec;
+	// Not reference counted on purpose
+	nsIDocShell * docshell = aParent;
+	nsCOMPtr<nsISHEntry> prevEntry = aPrevEntry;
+	nsCOMPtr<nsISHEntry> nextEntry = aNextEntry;
+
+    prevEntry->GetURI(getter_AddRefs(prevURI));
+	nextEntry->GetURI(getter_AddRefs(nextURI));
+    if (!prevURI || !nextURI)
+	  return PR_FALSE;
+
+	prevURI->GetSpec(getter_Copies(prevUriSpec));
+	nextURI->GetSpec(getter_Copies(nextUriSpec));
+	   
+	if (!prevUriSpec || !nextUriSpec)
+		   return PR_FALSE;
+
+    if (prevUriSpec != nextUriSpec) {
+       *aDSResult = docshell;
+	   *aSHEResult = nextEntry;
+	   return PR_TRUE;
+    }
+
+    /* compare the child frames */
+    PRInt32  cnt=0, pcnt=0, ncnt=0, dsCount=0;
+	nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(prevEntry));
+	nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(nextEntry));
+	//XXX Not ref counted on purpose. Is this correct.?
+	// How about AddRef in the QueryInterface?
+	nsIDocShellTreeNode *  dsTreeNode = nsnull;
+	
+	rv = docshell->QueryInterface(NS_GET_IID(nsIDocShellTreeNode), (void  **) &dsTreeNode);
+
+	if (!NS_SUCCEEDED(rv) || !dsTreeNode)
+		return PR_FALSE;
+
+    prevContainer->GetChildCount(&pcnt);
+    nextContainer->GetChildCount(&ncnt);
+    dsTreeNode->GetChildCount(&dsCount);
+
+    //XXX What to do if the children count don't match
+    
+    for (PRInt32 i=0; i<ncnt; i++){
+	  nsCOMPtr<nsISHEntry> pChild, nChild;
+      nsIDocShellTreeItem * dsTreeItemChild=nsnull;
+	  
+
+      prevContainer->GetChildAt(i, getter_AddRefs(pChild));
+	  nextContainer->GetChildAt(i, getter_AddRefs(nChild));
+	  dsTreeNode->GetChildAt(i, &dsTreeItemChild);
+
+	  // XXX How about AddRef in QueryInterface? Is this OK?
+	  nsIDocShell *  dsChild = nsnull;
+	  
+	  rv = dsTreeItemChild->QueryInterface(NS_GET_IID(nsIDocShell), (void **) dsChild);
+
+	  result = CompareSHEntry(pChild, nChild, dsChild, aDSResult, aSHEResult);
+	  if (result)  // We have found the docshell in which loadUri is to be called.
+		  break;
+	}     
+    return result;
+}
+
+
+
+
+NS_IMETHODIMP
+nsSHistory::SetRootDocShell(nsIDocShell * aDocShell)
+{
+  mRootDocShell = aDocShell;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::GetRootDocShell(nsIDocShell ** aDocShell)
+{
+   NS_ENSURE_ARG_POINTER(aDocShell);
+
+   *aDocShell = mRootDocShell;
+   //Not refcounted. May this method should not be available for public
+  // NS_IF_ADDREF(*aDocShell);
+   return NS_OK;
+}
