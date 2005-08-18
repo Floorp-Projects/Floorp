@@ -585,8 +585,10 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   nsCOMPtr<nsISHEntry> nextEntry;   
   GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
   nsCOMPtr<nsIHistoryEntry> nHEntry(do_QueryInterface(nextEntry));
-  if (!nextEntry || !prevEntry || !nHEntry)
+  if (!nextEntry || !prevEntry || !nHEntry) {
+    mIndex = oldIndex;
     return NS_ERROR_FAILURE;
+  }
   
   // Send appropriate listener notifications
   PRBool canNavigate = PR_TRUE;
@@ -658,8 +660,12 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
     }
   
 
-    if (!docShell || !nextEntry || !mRootDocShell)
+  if (!docShell || !nextEntry || !mRootDocShell) {
+     // we did not successfully go to the proper index.
+     // reset mIndex to what it was before returning error
+      mIndex = oldIndex;
       return NS_ERROR_FAILURE;
+  }
 
     /* Set the loadType in the SHEntry too to  what was passed on.
      * This will be passed on to child subframes later in nsDocShell,
