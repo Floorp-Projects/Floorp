@@ -195,7 +195,6 @@ tier_9_dirs	+= \
 		widget \
 		content \
 		layout \
-		xpfe/components/shistory \
 		docshell \
 		webshell \
 		embedding \
