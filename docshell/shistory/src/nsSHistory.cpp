@@ -410,8 +410,14 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener * aListener)
 NS_IMETHODIMP
 nsSHistory::RemoveSHistoryListener(nsISHistoryListener * aListener)
 {
-  mListener = nsnull;
-  return NS_OK;
+  // Make sure the listener that wants to be removed is the
+  // one we have in store. 
+  nsWeakPtr listener = getter_AddRefs(NS_GetWeakReference(aListener));  
+  if (listener == mListener) {
+    mListener = nsnull;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
