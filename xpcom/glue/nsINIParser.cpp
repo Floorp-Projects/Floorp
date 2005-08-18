@@ -89,28 +89,37 @@ nsINIParser::Init(const char *aPath)
     return InitFromFILE(fd);
 }
 
-// copied from toolkit/mozapps/updater/src/updater/updater.cpp
+// Based on toolkit/mozapps/updater/src/updater/updater.cpp
 // we could use nsCRT::strtok except that nsCRT isn't part of the glue,
 // and may never be due to NSPR dependencies. This should probably be declared
 // and exported in a string-management glue header.
 
+/**
+ * Scan "str" for the first character that is not in "delims".
+ */
 static char*
-mstrtok(const char *delims, char **str)
+mstrspnp(const char *delims, char *str)
 {
-  if (!*str || !**str)
-    return NULL;
-
-  // skip leading "whitespace"
-  char *ret = *str;
   const char *d;
   do {
     for (d = delims; *d != '\0'; ++d) {
-      if (*ret == *d) {
-        ++ret;
+      if (*str == *d) {
+        ++str;
         break;
       }
     }
   } while (*d);
+
+  return str;
+}
+
+static char*
+mstrtok(const char *delims, char **str)
+{
+  if (!*str)
+    return NULL;
+
+  char *ret = mstrspnp(delims, *str);
 
   if (!*ret) {
     *str = ret;
@@ -119,7 +128,7 @@ mstrtok(const char *delims, char **str)
 
   char *i = ret;
   do {
-    for (d = delims; *d != '\0'; ++d) {
+    for (const char *d = delims; *d != '\0'; ++d) {
       if (*i == *d) {
         *i = '\0';
         *str = ++i;
@@ -172,12 +181,12 @@ nsINIParser::InitFromFILE(FILE *fd)
     INIValue *last = nsnull;
 
     // outer loop tokenizes into lines
-    while (char *line = mstrtok(kNL, &buffer)) {
-        if (line[0] == '#' || line[0] == ';') // it's a comment
+    while (char *token = mstrtok(kNL, &buffer)) {
+        if (token[0] == '#' || token[0] == ';') // it's a comment
             continue;
 
-        char *token = mstrtok(kWhitespace, &line);
-        if (!token) // empty line
+        token = mstrspnp(kWhitespace, token);
+        if (!*token) // empty line
             continue;
 
         if (token[0] == '[') { // section header!
