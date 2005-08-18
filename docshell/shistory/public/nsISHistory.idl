@@ -1,0 +1,59 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Radha Kulkarni (radha@netscape.com)
+ */
+ 
+#include "nsISupports.idl"
+#include "nsIFactory.idl"
+#include "nsISHEntry.idl"
+#include "nsISHTransaction.idl"
+
+
+%{C++
+#define NS_SHISTORY_CID \
+{0xdd335421, 0xb8b8, 0x11d3, {0xbd, 0xc8, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44}}
+
+#define NS_SHISTORY_PROGID "component://netscape/browser/shistory"
+%}
+
+[scriptable, uuid(DD335421-B8B8-11d3-BDC8-0050040A9B44)]
+interface nsISHistory: nsISupports
+{
+  /**
+   * Add a new Entry to the History List
+   */
+   void  add(in nsISHEntry aEntry);
+
+  /**
+   * Get the length of the History list
+   */
+   readonly attribute long length;
+
+  /**
+   * Get the index of the current document in the history list
+   */
+   readonly attribute long index;
+
+   /** 
+    * Get the Transaction for an index
+    */
+    nsISHTransaction getTransactionForIndex(in long aIndex);
+
+};
