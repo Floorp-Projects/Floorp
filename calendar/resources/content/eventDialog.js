@@ -516,6 +516,11 @@ function onOKCommand()
 
         event.status          = getElementValue("todo-status-field");
         event.percentComplete = getElementValue("percent-complete-menulist");
+        if ( event.status == "COMPLETED" && event.percentComplete == 100 ) {
+            event.completedDate = jsDateToDateTime(getElementValue("completed-date-picker"));
+        } else {
+            event.completedDate = null;
+        }
     } else {
         dump("eventDialog.js: ERROR! onOKCommand() found neither an event nor a todo!\n");
     }
