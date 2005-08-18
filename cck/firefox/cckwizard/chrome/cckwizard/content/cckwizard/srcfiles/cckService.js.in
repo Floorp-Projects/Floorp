@@ -90,9 +90,20 @@ CCKService.prototype={
     } catch (ex) {
       return;
     }
+
+    try {
+      sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService	);
+      bundle = sbs.createBundle("chrome://cck/content/cck.properties");
+      pm = Components.classes["@mozilla.org/permissionmanager;1"].getService(Components.interfaces.nsIPermissionManager);
+      ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);	  
+    } catch (ex) {
+      return;
+    }
+
 	var cckinited;
 	try {
-	  cckinited = prefbranch.getBoolPref("cck.initialized");
+	  cckinited = prefbranch.getBoolPref("cck." + bundle.GetStringFromName("OrganizationName") + ".initialized");
 	} catch (ex) {
 	  cckinited = false;
 	}
@@ -188,7 +199,7 @@ CCKService.prototype={
         addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
       }
 
-	  prefbranch.setBoolPref("cck.initialized", true);
+	  prefbranch.setBoolPref("cck." + bundle.GetStringFromName("OrganizationName") + ".initialized", true);
     }
   }
 }

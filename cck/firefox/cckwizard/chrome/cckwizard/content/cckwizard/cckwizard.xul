@@ -37,11 +37,14 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE prefwindow SYSTEM "chrome://cckwizard/locale/connection.dtd">
+
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <wizard id="example-window" title="Firefox Client Customization Kit"
-  height="480"
-  width="640"
+  height="600"
+  width="800"
   onwizardcancel="alert('All changed data will be saved');saveconfig();"
   onwizardfinish="CreateCCK();"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -139,7 +142,7 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage>
+  <wizardpage onpageadvanced="return Validate('OrganizationName','Company Identifier is required')">
     <groupbox>
       <caption label="Company Identifier"/>
       <description>
@@ -519,5 +522,107 @@
       </hbox>
     </groupbox>
   </wizardpage>
+  
+  <wizardpage>
+  <groupbox>
+      <caption label="&proxyTitle.label;"/>
+
+      <radiogroup id="ProxyType" preference="network.proxy.type"
+                  onpreferenceread="return gConnectionsDialog.readProxyType();">
+        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <grid class="indent" flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&http.label;" accesskey="&http.accesskey;" control="HTTPproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="HTTPproxyname" flex="1" preference="network.proxy.http"/>
+                <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="HTTPportno"/>
+                <textbox id="HTTPportno" size="5" preference="network.proxy.http_port"/>
+              </hbox>
+            </row>
+            <row>
+              <hbox/>
+              <hbox>
+                <checkbox id="shareAllProxies" label="&shareproxy.label;" accesskey="&shareproxy.accesskey;"
+                          preference="network.proxy.share_proxy_settings" oncommand="toggleProxySettings()"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="SSLproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="SSLproxyname" flex="1" preference="network.proxy.ssl"/>
+                <label value="&port.label;" accesskey="&SSLport.accesskey;" control="SSLportno"/>
+                <textbox id="SSLportno" size="5" preference="network.proxy.ssl_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="FTPproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="FTPproxyname" flex="1" preference="network.proxy.ftp"/>
+                <label value="&port.label;" accesskey="&FTPport.accesskey;" control="FTPportno"/>
+                <textbox id="FTPportno" size="5" preference="network.proxy.ftp_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&gopher.label;" accesskey="&gopher.accesskey;" control="Gopherproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="Gopherproxyname" flex="1" preference="network.proxy.gopher"/>
+                <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="Gopherportno"/>
+                <textbox id="Gopherportno" size="5" preference="network.proxy.gopher_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&socks.label;" accesskey="&socks.accesskey;" control="SOCKShostname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="SOCKShostname" flex="1" preference="network.proxy.socks"/>
+                <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="SOCKSportno"/>
+                <textbox id="SOCKSportno" size="5" preference="network.proxy.socks_port"/>
+              </hbox>
+            </row>
+            <row>
+              <spacer/>
+              <radiogroup id="socksv" orient="horizontal"
+                          preference="network.proxy.socks_version">
+                <radio id="SOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
+                <radio id="SOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
+              </radiogroup>
+            </row>
+
+            <row align="center"> 
+              <hbox align="center" pack="end">
+                <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+              </hbox>
+              <textbox id="NoProxyname" preference="network.proxy.no_proxies_on"/>
+            </row>
+            <row>
+              <spacer/>
+              <label value="&noproxyExplain.label;" control="networkProxyNone"/>
+            </row>
+          </rows>
+        </grid>
+        <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <hbox class="indent" flex="1" align="center">
+          <textbox id="autoproxyurl" flex="1" preference="network.proxy.autoconfig_url"/>
+        </hbox>
+      </radiogroup>
+    </groupbox>
+  </wizardpage>
+
 
 </wizard>

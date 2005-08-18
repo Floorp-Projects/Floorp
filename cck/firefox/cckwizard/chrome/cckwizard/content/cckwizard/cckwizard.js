@@ -371,12 +371,81 @@ function CCKCopyChromeToFile(chromefile, location)
   fos.close();
 }
 
+
 /* This function creates a given zipfile in a given location */
 /* It takes as parameters the names of all the files/directories to be contained in the ZIP file */
 /* It works by creating a CMD file to generate the ZIP */
+/* unless we have the spiffy ZipWriterCompoent from maf.mozdev.org */
 
 function CCKZip(zipfile, location)
 {
+  var file = location.clone();
+  file.append(zipfile);
+  try {
+    file.remove(false);
+  } catch (ex) {}
+
+  if (Components.interfaces.IZipWriterComponent) {
+    var archivefileobj = location.clone();
+    archivefileobj.append(zipfile);
+  
+    try {
+      var zipwriterobj = Components.classes["@ottley.org/libzip/zip-writer;1"]
+                                   .createInstance(Components.interfaces.IZipWriterComponent);
+                                
+      zipwriterobj.CURR_COMPRESS_LEVEL = Components.interfaces.IZipWriterComponent.COMPRESS_LEVEL9;
+        
+      var sourcepathobj = Components.classes["@mozilla.org/file/local;1"]
+                                    .createInstance(Components.interfaces.nsILocalFile);
+      sourcepathobj.initWithPath(location.path);
+  
+      zipwriterobj.init(archivefileobj);
+      
+      zipwriterobj.basepath = sourcepathobj;
+      
+      var zipentriestoadd = new Array();
+      
+      for (var i=2; i < arguments.length; i++) {
+        var sourcepathobj = location.clone();
+        sourcepathobj.append(arguments[i]);
+        if (sourcepathobj.exists() && sourcepathobj.isDirectory()) {
+          var entries = sourcepathobj.directoryEntries;
+  
+          while (entries.hasMoreElements()) {
+            zipentriestoadd.push(entries.getNext());
+          }
+        } else if (sourcepathobj.exists()) {
+            zipentriestoadd.push(sourcepathobj);
+        }
+      }
+      
+      // Add files depth first
+      while (zipentriestoadd.length > 0) {
+        var zipentry = zipentriestoadd.pop();
+        
+        zipentry.QueryInterface(Components.interfaces.nsILocalFile);
+       
+        if (!zipentry.isDirectory()) {
+          zipwriterobj.add(zipentry);
+        }
+        
+        if (zipentry.exists() && zipentry.isDirectory()) {
+          var entries = zipentry.directoryEntries;
+  
+          while (entries.hasMoreElements()) {
+            zipentriestoadd.push(entries.getNext());
+          }
+        }        
+      }
+  
+      zipwriterobj.commitUpdates();
+      
+    } catch (e) {
+      alert('ZIPWriterComponent error');
+    }
+    return;
+  }
+
   platform = navigator.platform;
   var file = location.clone();
              
@@ -401,20 +470,10 @@ function CCKZip(zipfile, location)
   fos.write(line, line.length);  
   fos.close();
 
-  var file = location.clone();
-  file.append(zipfile);
-  try {
-    file.remove(false);
-  } catch (ex) {}
-
   var sh;
 
   // create an nsILocalFile for the executable
-  var file = location.clone();
-  if (navigator.platform == "Win32")
-    file.append("ccktemp.cmd");
-  else {
-    file.append("ccktemp.sh");
+  if (navigator.platform != "Win32") {
     sh = Components.classes["@mozilla.org/file/local;1"]
                    .createInstance(Components.interfaces.nsILocalFile);
     sh.initWithPath("/bin/sh");
@@ -612,6 +671,7 @@ function CCKWriteProperties(destdir)
   scriptableStream.close();
   input.close();
 
+  str = str.replace(/%OrganizationName%/g, document.getElementById("OrganizationName").value);
   str = str.replace(/%browser.throbber.url%/g, document.getElementById("AnimatedLogoURL").value);
   str = str.replace(/%cckhelp.url%/g, document.getElementById("HelpMenuCommandURL").value);
   str = str.replace(/%browser.startup.homepage%/g, document.getElementById("HomePageURL").value);
@@ -727,7 +787,32 @@ function CCKWriteDefaultJS(destdir)
     fos.write(useragent2end, useragent2end.length);
   }
   
+  // For these guys Idid something a little clever - the preference name is stored in the XUL
 
+  var proxystringlist = ["HTTPproxyname","SSLproxyname","FTPproxyname","Gopherproxyname","NoProxyname","autoproxyurl" ];
+  
+  for (i = 0; i < proxystringlist.length; i++) {
+    var proxyitem = document.getElementById(proxystringlist[i]);
+    if (proxyitem.value.length > 0) {
+      var line = 'pref("' + proxyitem.getAttribute("preference") + '", "' + proxyitem.value + '");\n';
+      fos.write(line, line.length);
+    }
+  }
+  
+  var proxyintegerlist = ["HTTPportno","SSLportno","FTPportno","Gopherportno","socksv","ProxyType"];
+
+  for (i = 0; i < proxyintegerlist.length; i++) {
+    var proxyitem = document.getElementById(proxyintegerlist[i]);
+    if (proxyitem.value.length > 0) {
+      var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
+      fos.write(line, line.length);
+    }
+  }
+  
+  var proxyitem = document.getElementById("shareAllProxies");
+  var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
+  fos.write(line, line.length);
+  
   fos.close();
 }
 
@@ -950,8 +1035,18 @@ function CCKWriteConfigFile(destdir)
       var line = elements[i].getAttribute("id") + "=" + elements[i].value + "\n";
       fos.write(line, line.length);
     }
-  
   }
+  radiogroup = document.getElementById("ProxyType");
+  line = "ProxyType=" + radiogroup.value + "\n";
+  fos.write(line, line.length);
+
+  var radiogroup = document.getElementById("socksv");
+  line = "socksv=" + radiogroup.value + "\n";
+  fos.write(line, line.length);
+  
+  var radiogroup = document.getElementById("shareAllProxies");
+  line = "shareAllProxies=" + radiogroup.value + "\n";
+  fos.write(line, line.length);
 
   fos.close();
 }
@@ -975,10 +1070,120 @@ function CCKReadConfigFile(srcdir)
     var more = lis.readLine(line);
     var str = line.value;
     var linearray = str.split("=");
-    if (linearray[0].length)
+    if (linearray[0].length) {
       document.getElementById(linearray[0]).value = linearray[1];
+      if (linearray[0] == "ProxyType") {
+        DoEnabling();
+      }
+      if (linearray[0] == "shareAllProxies") {
+        toggleProxySettings();
+      }
+    }
   } while (more);
+  
+  
   
   stream.close();
 }
 
+function Validate(field, message)
+{
+  if (document.getElementById(field).value == '') {
+    alert(message);
+    return false;
+  }
+  return true;
+}
+
+function toggleProxySettings()
+{
+  var http = document.getElementById("HTTPproxyname");
+  var httpPort = document.getElementById("HTTPportno");
+  var ftp = document.getElementById("FTPproxyname");
+  var ftpPort = document.getElementById("FTPportno");
+  var gopher = document.getElementById("Gopherproxyname");
+  var gopherPort = document.getElementById("Gopherportno");
+  var ssl = document.getElementById("SSLproxyname");
+  var sslPort = document.getElementById("SSLportno");
+  var socks = document.getElementById("SOCKShostname");
+  var socksPort = document.getElementById("SOCKSportno");
+  var socksVersion = document.getElementById("socksv");
+  var socksVersion4 = document.getElementById("SOCKSVersion4");
+  var socksVersion5 = document.getElementById("SOCKSVersion5");
+  
+  // arrays
+  var urls = [ftp,gopher,ssl];
+  var ports = [ftpPort,gopherPort,sslPort];
+  var allFields = [ftp,gopher,ssl,ftpPort,gopherPort,sslPort,socks,socksPort,socksVersion,socksVersion4,socksVersion5];
+
+  if (document.getElementById("shareAllProxies").checked) {
+    for (i = 0; i < allFields.length; i++)
+      allFields[i].setAttribute("disabled", "true");
+  } else {
+    for (i = 0; i < allFields.length; i++) {
+      allFields[i].removeAttribute("disabled");
+    }
+  }
+}
+
+function DoEnabling()
+{
+  var i;
+  var ftp = document.getElementById("FTPproxyname");
+  var ftpPort = document.getElementById("FTPportno");
+  var gopher = document.getElementById("Gopherproxyname");
+  var gopherPort = document.getElementById("Gopherportno");
+  var http = document.getElementById("HTTPproxyname");
+  var httpPort = document.getElementById("HTTPportno");
+  var socks = document.getElementById("SOCKShostname");
+  var socksPort = document.getElementById("SOCKSportno");
+  var socksVersion = document.getElementById("socksv");
+  var socksVersion4 = document.getElementById("SOCKSVersion4");
+  var socksVersion5 = document.getElementById("SOCKSVersion5");
+  var ssl = document.getElementById("SSLproxyname");
+  var sslPort = document.getElementById("SSLportno");
+  var noProxy = document.getElementById("NoProxyname");
+  var autoURL = document.getElementById("autoproxyurl");
+  var shareAllProxies = document.getElementById("shareAllProxies");
+
+  // convenience arrays
+  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks, socksPort, socksVersion, socksVersion4, socksVersion5, ssl, sslPort, noProxy, shareAllProxies];
+  var manual2 = [http, httpPort, noProxy, shareAllProxies];
+  var auto = [autoURL];
+
+  // radio buttons
+  var radiogroup = document.getElementById("ProxyType");
+
+  switch ( radiogroup.value ) {
+    case "0":
+    case "4":
+      for (i = 0; i < manual.length; i++)
+        manual[i].setAttribute( "disabled", "true" );
+      for (i = 0; i < auto.length; i++)
+        auto[i].setAttribute( "disabled", "true" );
+      break;
+    case "1":
+      for (i = 0; i < auto.length; i++)
+        auto[i].setAttribute( "disabled", "true" );
+      if (!radiogroup.disabled && !shareAllProxies.checked) {
+        for (i = 0; i < manual.length; i++) {
+           manual[i].removeAttribute( "disabled" );
+        }
+      } else {
+        for (i = 0; i < manual.length; i++)
+          manual[i].setAttribute("disabled", "true");
+        for (i = 0; i < manual2.length; i++) {
+          manual2[i].removeAttribute( "disabled" );
+        }
+      }
+      break;
+    case "2":
+    default:
+      for (i = 0; i < manual.length; i++)
+        manual[i].setAttribute("disabled", "true");
+      if (!radiogroup.disabled)
+        for (i = 0; i < auto.length; i++)
+          auto[i].removeAttribute("disabled");
+      break;
+  }
+}
