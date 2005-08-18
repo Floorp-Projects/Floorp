@@ -496,6 +496,11 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
 	    return NS_ERROR_FAILURE;
 
    nextEntry->GetURI(getter_AddRefs(nexturi));
+   /* Set the loadType in the SHEntry too to  what was passed on.
+    * This will be passed on to child subframes later in nsDocShell,
+    * so that proper loadType is maintained through out a frameset
+    */
+   nextEntry->SetLoadType(aLoadType);
 
    mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
    // This is not available yet
