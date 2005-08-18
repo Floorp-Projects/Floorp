@@ -66,6 +66,7 @@ protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;
   PRInt32 mLength;
+  PRInt32 mRequestedIndex;
   // Session History listener
   nsWeakPtr mListener;
   // Weak reference. Do not refcount this.
@@ -88,7 +89,7 @@ protected:
   virtual ~nsSHEnumerator();
 private:
   PRInt32     mIndex;
-  nsSHistory *  mSHistory;
+  nsSHistory *  mSHistory;  
 };
 
 

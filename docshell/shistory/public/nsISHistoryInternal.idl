@@ -56,4 +56,9 @@ interface nsISHistoryInternal: nsISupports
    */
    attribute nsIDocShell rootDocShell;
 
+   /** 
+    * Update the index maintained by sessionHistory
+    */
+    void updateIndex();
+
 };
