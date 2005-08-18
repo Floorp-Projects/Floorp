@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.9 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3prot.h,v 1.10 2005/08/18 23:37:31 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -256,7 +256,7 @@ typedef enum {
      */
     ct_ECDSA_sign	=  7, 
     ct_RSA_fixed_ECDH	=  8, 
-    ct_ECDSA_fixed_ECDH	=  9, 
+    ct_ECDSA_fixed_ECDH	=  9 
 
 } SSL3ClientCertificateType;
      
