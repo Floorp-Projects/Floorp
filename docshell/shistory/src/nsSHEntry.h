@@ -36,27 +36,26 @@
 #include "nsISHContainer.h"
 #include "nsIURI.h"
 #include "nsIEnumerator.h"
+#include "nsIHistoryEntry.h"
 
-// I can probably get rid of the enumerator thing.
-class nsSHEnumerator;
-class nsSHEntry : public nsISHEntry,
+class nsSHEntry : public nsIHistoryEntry,
+                  public nsISHEntry,
                   public nsISHContainer
 {
 public: 
    nsSHEntry();
 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSISHENTRY
-   NS_DECL_NSISHCONTAINER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIHISTORYENTRY
+  NS_DECL_NSISHENTRY
+  NS_DECL_NSISHCONTAINER
 
 protected:
    virtual ~nsSHEntry();
-   friend class nsSHEnumerator;
-  
 private:
    
 	 
-    nsCOMPtr<nsIURI>                mURI;
+   nsCOMPtr<nsIURI>                mURI;
 	nsCOMPtr<nsIDOMDocument>        mDocument;
 	nsString                        mTitle;
 	nsCOMPtr<nsIInputStream>        mPostData;
@@ -64,29 +63,9 @@ private:
 	nsVoidArray                     mChildren;
 	PRUint32                        mLoadType;  
 	PRUint32                        mID;
+   PRBool                          mIsFrameNavigation;
 	nsISHEntry *                    mParent;  // weak reference
 };
 
-
-//*****************************************************************************
-//***    nsSHEnumerator: Object Management
-//*****************************************************************************
-class nsSHEnumerator : public nsIEnumerator
-{
-public:
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIENUMERATOR
-
-  nsSHEnumerator(nsSHEntry *  aEntry);
-  NS_IMETHOD CurrentItem(nsISHEntry ** aItem);
-
-protected:
-  friend class nsSHEntry;
-  virtual ~nsSHEnumerator();
-private:
-  PRInt32     mIndex;
-  nsSHEntry *  mSHEntry;  // what about reference?
-};
 
 #endif /* nsSHEntry_h */

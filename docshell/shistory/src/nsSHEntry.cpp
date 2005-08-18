@@ -59,9 +59,10 @@ NS_IMPL_ADDREF(nsSHEntry)
 NS_IMPL_RELEASE(nsSHEntry)
 
 NS_INTERFACE_MAP_BEGIN(nsSHEntry)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
-    NS_INTERFACE_MAP_ENTRY(nsISHContainer)
-   NS_INTERFACE_MAP_ENTRY(nsISHEntry)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
+  NS_INTERFACE_MAP_ENTRY(nsISHContainer)
+  NS_INTERFACE_MAP_ENTRY(nsISHEntry)
+  NS_INTERFACE_MAP_ENTRY(nsIHistoryEntry)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -179,17 +180,37 @@ NS_IMETHODIMP nsSHEntry::SetID(PRUint32  aID)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsSHEntry::GetIsSubFrame(PRBool * aFlag)
+{
+   NS_ENSURE_ARG_POINTER(aFlag);
+   
+   *aFlag = mIsFrameNavigation;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetIsSubFrame(PRBool  aFlag)
+{
+   mIsFrameNavigation = aFlag;
+   return NS_OK;
+}
 nsresult
 nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
 			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
 {
-   SetURI(aURI);
+    SetURI(aURI);
 	SetTitle(aTitle);
 	SetDocument(aDOMDocument);
 	SetPostData(aInputStream);
 	SetLayoutHistoryState(aHistoryLayoutState);
-	// Set the LoadType by default to loadHistory during creation
+	
+    // Set the LoadType by default to loadHistory during creation
 	SetLoadType((PRInt32)nsIDocShellLoadInfo::loadHistory);
+
+    // By default all entries are set false for subframe flag. 
+    // nsDocShell::CloneAndReplace() which creates entries for
+    // all subframe navigations, sets the flag to true.
+    SetIsSubFrame(PR_FALSE);
+
 	return NS_OK;
 	
 }
@@ -279,93 +300,3 @@ nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsSHEntry::GetChildEnumerator(nsIEnumerator** aChildEnumerator)
-{
-	nsresult status = NS_OK;
-
-    NS_ENSURE_ARG_POINTER(aChildEnumerator);
-	nsSHEnumerator * iterator = new nsSHEnumerator(this);
-	if (iterator && !!NS_SUCCEEDED(status = CallQueryInterface(iterator, aChildEnumerator)))
-      delete iterator;
-    return status;
-}
-
-
-//*****************************************************************************
-//***    nsSHEnumerator: Object Management
-//*****************************************************************************
-
-nsSHEnumerator::nsSHEnumerator(nsSHEntry * aEntry):mIndex(0)
-{
-  NS_INIT_REFCNT();
-  mSHEntry = aEntry;
-}
-
-nsSHEnumerator::~nsSHEnumerator()
-{
-mSHEntry = nsnull;
-}
-
-NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsIEnumerator)
-
-NS_IMETHODIMP
-nsSHEnumerator::Next()
-{
-  PRUint32 cnt=0;
-  cnt = mSHEntry->mChildren.Count();
-  if (mIndex < (PRInt32)(cnt-1))  {
-     mIndex++;
-     return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
-nsSHEnumerator::First()
-{
-  mIndex = 0;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSHEnumerator::IsDone()
-{
-  PRUint32 cnt;
-  cnt = mSHEntry->mChildren.Count();
-  if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
-    return NS_ENUMERATOR_FALSE;
-  }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsSHEnumerator::CurrentItem(nsISupports **aItem)
-{
-  NS_ENSURE_ARG_POINTER(aItem);
-  PRUint32 cnt= mSHEntry->mChildren.Count();
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    *aItem = (nsISupports *)mSHEntry->mChildren.ElementAt(mIndex);
-	NS_IF_ADDREF(*aItem);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
-
-NS_IMETHODIMP 
-nsSHEnumerator::CurrentItem(nsISHEntry **aItem)
-{
-  NS_ENSURE_ARG_POINTER(aItem);
-  PRUint32 cnt = mSHEntry->mChildren.Count();
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    nsCOMPtr<nsISupports> indexIsupports =  (nsISHEntry *) mSHEntry->mChildren.ElementAt(mIndex);
-    return indexIsupports->QueryInterface(NS_GET_IID(nsISHEntry),(void **)aItem);
-  }
-  return NS_ERROR_FAILURE;
-}
