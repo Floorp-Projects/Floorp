@@ -311,11 +311,9 @@ sub DoPermissions {
     my (@has_bits, @set_bits);
     
     SendSQL("SELECT DISTINCT name, description FROM groups " .
-            "INNER JOIN user_group_map " .
-            "ON user_group_map.group_id = groups.id " .
-            "WHERE user_id = $::userid " .
-            "AND isbless = 0 " .
-            "ORDER BY name");
+            "WHERE id IN (" . 
+            Bugzilla->user->groups_as_string .
+            ") ORDER BY name");
     while (MoreSQLData()) {
         my ($nam, $desc) = FetchSQLData();
         push(@has_bits, {"desc" => $desc, "name" => $nam});

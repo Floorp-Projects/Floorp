@@ -56,20 +56,21 @@ sub RederiveRegexp
     my $regexp = shift;
     my $gid = shift;
     my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare("SELECT userid, login_name FROM profiles");
-    my $sthqry = $dbh->prepare("SELECT 1 FROM user_group_map
-                                 WHERE user_id = ? AND group_id = ?
-                                 AND grant_type = ? and isbless = 0");
+    my $sth = $dbh->prepare("SELECT userid, login_name, group_id
+                               FROM profiles
+                          LEFT JOIN user_group_map
+                                 ON user_group_map.user_id = profiles.userid
+                                AND group_id = ?
+                                AND grant_type = ?
+                                AND isbless = 0");
     my $sthadd = $dbh->prepare("INSERT INTO user_group_map
                                  (user_id, group_id, grant_type, isbless)
                                  VALUES (?, ?, ?, 0)");
     my $sthdel = $dbh->prepare("DELETE FROM user_group_map
                                  WHERE user_id = ? AND group_id = ?
                                  AND grant_type = ? and isbless = 0");
-    $sth->execute();
-    while (my ($uid, $login) = $sth->fetchrow_array()) {
-        my $present = $dbh->selectrow_array($sthqry, undef,
-                                            $uid, $gid, GRANT_REGEXP);
+    $sth->execute($gid, GRANT_REGEXP);
+    while (my ($uid, $login, $present) = $sth->fetchrow_array()) {
         if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i))
         {
             $sthadd->execute($uid, $gid, GRANT_REGEXP) unless $present;

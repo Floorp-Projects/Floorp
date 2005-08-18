@@ -118,66 +118,6 @@ if (defined $cgi->param('rebuildvotecache')) {
 }
 
 ###########################################################################
-# Fix group derivations
-###########################################################################
-
-if (defined $cgi->param('rederivegroups')) {
-    Status("OK, All users' inherited permissions will be rechecked when " .
-           "they next access Bugzilla.");
-    SendSQL("UPDATE groups SET last_changed = NOW() " . $dbh->sql_limit(1));
-}
-
-# rederivegroupsnow is REALLY only for testing.
-# If it wasn't, then we'd do this the faster way as a per-group
-# thing rather than per-user for group inheritance
-if (defined $cgi->param('rederivegroupsnow')) {
-    require Bugzilla::User;
-    Status("OK, now rederiving groups.");
-    SendSQL("SELECT userid FROM profiles");
-    while ((my $id) = FetchSQLData()) {
-        my $user = new Bugzilla::User($id);
-        $user->derive_groups();
-        Status("User $id");
-    }
-}
-
-if (defined $cgi->param('cleangroupsnow')) {
-    Status("OK, now cleaning stale groups.");
-    # Only users that were out of date already long ago should be cleaned
-    # and the cleaning is done with tables locked.  This is require in order
-    # to keep another session from proceeding with permission checks
-    # after the groups have been cleaned unless it first had an opportunity
-    # to get the groups up to date.
-    # If any page starts taking longer than one hour to load, this interval
-    # should be revised.
-    SendSQL("SELECT MAX(last_changed) FROM groups WHERE last_changed < NOW() - " . 
-            $dbh->sql_interval('1 HOUR'));
-    (my $cutoff) = FetchSQLData();
-    Status("Cutoff is $cutoff");
-    SendSQL("SELECT COUNT(*) FROM user_group_map");
-    (my $before) = FetchSQLData();
-    $dbh->bz_lock_tables('user_group_map WRITE', 'profiles WRITE');
-    SendSQL("SELECT userid FROM profiles " .
-            "WHERE refreshed_when > 0 " .
-            "AND refreshed_when < " . SqlQuote($cutoff) . " " .
-            $dbh->sql_limit(1000));
-    my $count = 0;
-    while ((my $id) = FetchSQLData()) {
-        $count++;
-        PushGlobalSQLState();
-        SendSQL("DELETE FROM user_group_map WHERE " .
-            "user_id = $id AND isderived = 1 AND isbless = 0");
-        SendSQL("UPDATE profiles SET refreshed_when = 0 WHERE userid = $id");
-        PopGlobalSQLState();
-    }
-    $dbh->bz_unlock_tables();
-    SendSQL("SELECT COUNT(*) FROM user_group_map");
-    (my $after) = FetchSQLData();
-    Status("Cleaned table for $count users " .
-           "- reduced from $before records to $after records");
-}
-
-###########################################################################
 # Create missing group_control_map entries
 ###########################################################################
 

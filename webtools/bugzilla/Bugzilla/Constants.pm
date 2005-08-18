@@ -53,7 +53,6 @@ use base qw(Exporter);
     LOGOUT_KEEP_CURRENT
 
     GRANT_DIRECT
-    GRANT_DERIVED
     GRANT_REGEXP
 
     GROUP_MEMBERSHIP
@@ -67,8 +66,6 @@ use base qw(Exporter);
     DEFAULT_QUERY_NAME
 
     COMMENT_COLS
-
-    DERIVE_GROUPS_TABLES_ALREADY_LOCKED
 
     UNLOCK_ABORT
     
@@ -157,7 +154,6 @@ use constant contenttypes =>
   };
 
 use constant GRANT_DIRECT => 0;
-use constant GRANT_DERIVED => 1;
 use constant GRANT_REGEXP => 2;
 
 use constant GROUP_MEMBERSHIP => 0;
@@ -179,10 +175,6 @@ use constant DEFAULT_QUERY_NAME => '(Default query)';
 
 # The column length for displayed (and wrapped) bug comments.
 use constant COMMENT_COLS => 80;
-
-# Used to indicate to User::new and User::new_from_login calls
-# that the derive_groups tables are already locked
-use constant DERIVE_GROUPS_TABLES_ALREADY_LOCKED => 1;
 
 # used by Bugzilla::DB to indicate that tables are being unlocked
 # because of error

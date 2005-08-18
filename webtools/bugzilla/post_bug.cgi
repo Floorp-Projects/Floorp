@@ -335,11 +335,7 @@ foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
             $vars->{'bit'} = $v;
             ThrowCodeError("inactive_group");
         }
-        SendSQL("SELECT user_id FROM user_group_map 
-                 WHERE user_id = $::userid
-                 AND group_id = $v
-                 AND isbless = 0");
-        my ($permit) = FetchSQLData();
+        my ($permit) = $user->in_group_id($v);
         if (!$permit) {
             SendSQL("SELECT othercontrol FROM group_control_map
                      WHERE group_id = $v AND product_id = $product_id");

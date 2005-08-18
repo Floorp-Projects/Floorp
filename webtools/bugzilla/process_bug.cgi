@@ -73,6 +73,7 @@ use vars qw(@legal_product
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
+my $grouplist = $user->groups_as_string;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -704,10 +705,9 @@ sub ChangeResolution {
 my @groupAdd = ();
 my @groupDel = ();
 
-SendSQL("SELECT groups.id, isactive FROM groups INNER JOIN user_group_map " .
-        "ON groups.id = user_group_map.group_id " .
-        "WHERE user_group_map.user_id = $whoid " .
-        "AND isbless = 0 AND isbuggroup = 1");
+SendSQL("SELECT groups.id, isactive FROM groups " .
+        "WHERE id IN($grouplist) " .
+        "AND isbuggroup = 1");
 while (my ($b, $isactive) = FetchSQLData()) {
     # The multiple change page may not show all groups a bug is in
     # (eg product groups when listing more than one product)
@@ -1560,7 +1560,7 @@ foreach my $id (@idlist) {
         # - Is the bug in this group?
         SendSQL("SELECT DISTINCT groups.id, isactive, " .
                 "oldcontrolmap.membercontrol, newcontrolmap.membercontrol, " .
-                "user_group_map.user_id IS NOT NULL, " .
+                "CASE WHEN groups_id IN ($grouplist) THEN 1 ELSE 0 END, " .
                 "bug_group_map.group_id IS NOT NULL " .
                 "FROM groups " .
                 "LEFT JOIN group_control_map AS oldcontrolmap " .
@@ -1569,10 +1569,6 @@ foreach my $id (@idlist) {
                 " LEFT JOIN group_control_map AS newcontrolmap " .
                 "ON newcontrolmap.group_id = groups.id " .
                 "AND newcontrolmap.product_id = $newproduct_id " .
-                "LEFT JOIN user_group_map " .
-                "ON user_group_map.group_id = groups.id " .
-                "AND user_group_map.user_id = $whoid " .
-                "AND user_group_map.isbless = 0 " .
                 "LEFT JOIN bug_group_map " .
                 "ON bug_group_map.group_id = groups.id " .
                 "AND bug_group_map.bug_id = $id "

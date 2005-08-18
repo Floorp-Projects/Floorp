@@ -906,9 +906,7 @@ sub notify {
     {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
-            my $ccuser = Bugzilla::User->new_from_login($cc,
-                                                        DERIVE_GROUPS_TABLES_ALREADY_LOCKED)
-              || next;
+            my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
             next if $flag->{'target'}->{'bug'}->{'restricted'}
               && !$ccuser->can_see_bug($flag->{'target'}->{'bug'}->{'id'});

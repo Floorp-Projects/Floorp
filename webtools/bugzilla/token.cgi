@@ -268,7 +268,7 @@ sub changeEmail {
 
     # The email address has been changed, so we need to rederive the groups
     my $user = new Bugzilla::User($userid);
-    $user->derive_groups;
+    $user->derive_regexp_groups;
 
     # Return HTTP response headers.
     print $cgi->header();
@@ -313,7 +313,7 @@ sub cancelChangeEmail {
             # issue
 
             my $user = new Bugzilla::User($userid);
-            $user->derive_groups;
+            $user->derive_regexp_groups;
 
             $vars->{'message'} = "email_change_cancelled_reinstated";
         } 

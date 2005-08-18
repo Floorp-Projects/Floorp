@@ -111,8 +111,6 @@ sub _create {
     # We're checking for validity here, so any value is OK
     trick_taint($val);
 
-    my $tables_locked_for_derive_groups = shift;
-
     my $dbh = Bugzilla->dbh;
 
     my ($id,
@@ -136,26 +134,6 @@ sub _create {
     $self->{'login'}          = $login;
     $self->{'disabledtext'}   = $disabledtext;
     $self->{'showmybugslink'} = $mybugslink;
-
-    # Now update any old group information if needed
-    my $result = $dbh->selectrow_array(q{SELECT 1
-                                           FROM profiles, groups
-                                          WHERE userid=?
-                                            AND profiles.refreshed_when <=
-                                                  groups.last_changed},
-                                       undef,
-                                       $id);
-
-    if ($result) {
-        my $is_main_db;
-        unless ($is_main_db = Bugzilla->dbwritesallowed()) {
-            Bugzilla->switch_to_main_db();
-        }
-        $self->derive_groups($tables_locked_for_derive_groups);
-        unless ($is_main_db) {
-            Bugzilla->switch_to_shadow_db();
-        }
-    }
 
     return $self;
 }
@@ -283,9 +261,34 @@ sub groups {
     # The above gives us an arrayref [name, id, name, id, ...]
     # Convert that into a hashref
     my %groups = @$groups;
+    my $sth;
+    my @groupidstocheck = values(%groups);
+    my %groupidschecked = ();
+    $sth = $dbh->prepare("SELECT groups.name, groups.id
+                            FROM group_group_map
+                      INNER JOIN groups
+                              ON groups.id = grantor_id
+                           WHERE member_id = ? 
+                             AND grant_type = " . GROUP_MEMBERSHIP);
+    while (my $node = shift @groupidstocheck) {
+        $sth->execute($node);
+        my ($member_name, $member_id);
+        while (($member_name, $member_id) = $sth->fetchrow_array) {
+            if (!$groupidschecked{$member_id}) {
+                $groupidschecked{$member_id} = 1;
+                push @groupidstocheck, $member_id;
+                $groups{$member_name} = $member_id;
+            }
+        }
+    }
     $self->{groups} = \%groups;
 
     return $self->{groups};
+}
+
+sub groups_as_string {
+    my $self = shift;
+    return (join(',',values(%{$self->groups})) || '-1');
 }
 
 sub bless_groups {
@@ -308,8 +311,6 @@ sub bless_groups {
         # Get all groups for the user where:
         #    + They have direct bless privileges
         #    + They are a member of a group that inherits bless privs.
-        # Because of the second requirement, derive_groups must be up-to-date
-        # for this to function properly in all circumstances.
         $query = q{
             SELECT DISTINCT groups.id, groups.name, groups.description
                        FROM groups, user_group_map, group_group_map AS ggm
@@ -318,8 +319,9 @@ sub bless_groups {
                               AND groups.id=user_group_map.group_id)
                              OR (groups.id = ggm.grantor_id
                                  AND ggm.grant_type = ?
-                                 AND user_group_map.group_id = ggm.member_id
-                                 AND user_group_map.isbless = 0))};
+                                 AND ggm.member_id IN(} .
+                                 $self->groups_as_string . 
+                               q{)))};
         $connector = 'AND';
         @bindValues = ($self->id, GROUP_BLESS);
     }
@@ -340,26 +342,13 @@ sub bless_groups {
 
 sub in_group {
     my ($self, $group) = @_;
+    return exists $self->groups->{$group} ? 1 : 0;
+}
 
-    # If we already have the info, just return it.
-    return defined($self->{groups}->{$group}) if defined $self->{groups};
-    return 0 unless $self->id;
-
-    # Otherwise, go check for it
-
-    my $dbh = Bugzilla->dbh;
-
-    my ($res) = $dbh->selectrow_array(q{SELECT 1
-                                  FROM groups, user_group_map
-                                 WHERE groups.id=user_group_map.group_id
-                                   AND user_group_map.user_id=?
-                                   AND isbless=0
-                                   AND groups.name=?},
-                              undef,
-                              $self->id,
-                              $group);
-
-    return defined($res);
+sub in_group_id {
+    my ($self, $id) = @_;
+    my %j = reverse(%{$self->groups});
+    return exists $j{$id} ? 1 : 0;
 }
 
 sub can_see_user {
@@ -405,7 +394,7 @@ sub can_see_bug {
                              LEFT JOIN bug_group_map 
                                ON bugs.bug_id = bug_group_map.bug_id
                                AND bug_group_map.group_ID NOT IN(" .
-                               join(',',(-1, values(%{$self->groups}))) .
+                               $self->groups_as_string .
                                ") WHERE bugs.bug_id = ? 
                                AND creation_ts IS NOT NULL " .
                              $dbh->sql_group_by('bugs.bug_id', 'reporter, ' .
@@ -445,7 +434,7 @@ sub get_selectable_products {
                   CONTROLMAPMANDATORY . " ";
     }
     $query .= "AND group_id NOT IN(" . 
-               join(',', (-1,values(%{Bugzilla->user->groups}))) . ") " .
+               $self->groups_as_string . ") " .
               "WHERE group_id IS NULL ORDER BY name";
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare($query);
@@ -501,8 +490,8 @@ sub visible_groups_as_string {
     return join(', ', @{$self->visible_groups_inherited()});
 }
 
-sub derive_groups {
-    my ($self, $already_locked) = @_;
+sub derive_regexp_groups {
+    my ($self) = @_;
 
     my $id = $self->id;
     return unless $id;
@@ -511,71 +500,32 @@ sub derive_groups {
 
     my $sth;
 
-    $dbh->bz_lock_tables('profiles WRITE', 'user_group_map WRITE',
-                         'group_group_map READ',
-                         'groups READ') unless $already_locked;
-
     # avoid races, we are only up to date as of the BEGINNING of this process
     my $time = $dbh->selectrow_array("SELECT NOW()");
 
-    # first remove any old derived stuff for this user
-    $dbh->do(q{DELETE FROM user_group_map
-                      WHERE user_id = ?
-                        AND grant_type != ?},
-             undef,
-             $id,
-             GRANT_DIRECT);
-
-    my %groupidsadded = ();
     # add derived records for any matching regexps
 
-    $sth = $dbh->prepare("SELECT id, userregexp FROM groups WHERE userregexp != ''");
-    $sth->execute;
+    $sth = $dbh->prepare("SELECT id, userregexp, user_group_map.group_id
+                            FROM groups
+                       LEFT JOIN user_group_map
+                              ON groups.id = user_group_map.group_id
+                             AND user_group_map.user_id = ?
+                             AND user_group_map.grant_type = ?");
+    $sth->execute($id, GRANT_REGEXP);
 
-    my $group_insert;
-    while (my $row = $sth->fetch) {
-        if ($self->{login} =~ m/$row->[1]/i) {
-            $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
-                                              (user_id, group_id, isbless, grant_type)
-                                              VALUES (?, ?, 0, ?)});
-            $groupidsadded{$row->[0]} = 1;
-            $group_insert->execute($id, $row->[0], GRANT_REGEXP);
-        }
-    }
-
-    # Get a list of the groups of which the user is a member.
-    my %groupidschecked = ();
-
-    my @groupidstocheck = @{$dbh->selectcol_arrayref(q{SELECT group_id
-                                                         FROM user_group_map
-                                                        WHERE user_id=?},
-                                                     undef,
-                                                     $id)};
-
-    # Each group needs to be checked for inherited memberships once.
-    my $group_sth;
-    while (@groupidstocheck) {
-        my $group = shift @groupidstocheck;
-        if (!defined($groupidschecked{"$group"})) {
-            $groupidschecked{"$group"} = 1;
-            $group_sth ||= $dbh->prepare(q{SELECT grantor_id
-                                             FROM group_group_map
-                                            WHERE member_id=?
-                                              AND grant_type = } .
-                                                  GROUP_MEMBERSHIP);
-            $group_sth->execute($group);
-            while (my ($groupid) = $group_sth->fetchrow_array) {
-                if (!defined($groupidschecked{"$groupid"})) {
-                    push(@groupidstocheck,$groupid);
-                }
-                if (!$groupidsadded{$groupid}) {
-                    $groupidsadded{$groupid} = 1;
-                    $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
-                                                      (user_id, group_id, isbless, grant_type)
-                                                      VALUES (?, ?, 0, ?)});
-                    $group_insert->execute($id, $groupid, GRANT_DERIVED);
-                }
-            }
+    my $group_insert = $dbh->prepare(q{INSERT INTO user_group_map
+                                       (user_id, group_id, isbless, grant_type)
+                                       VALUES (?, ?, 0, ?)});
+    my $group_delete = $dbh->prepare(q{DELETE FROM user_group_map
+                                       WHERE user_id = ?
+                                         AND group_id = ?
+                                         AND isbless = 0
+                                         AND grant_type = ?});
+    while (my ($group, $regexp, $present) = $sth->fetchrow_array()) {
+        if (($regexp ne '') && ($self->{login} =~ m/$regexp/i)) {
+            $group_insert->execute($id, $group, GRANT_REGEXP) unless $present;
+        } else {
+            $group_delete->execute($id, $group, GRANT_REGEXP) if $present;
         }
     }
 
@@ -585,7 +535,6 @@ sub derive_groups {
              undef,
              $time,
              $id);
-    $dbh->bz_unlock_tables() unless $already_locked;
 }
 
 sub product_responsibilities {
@@ -690,8 +639,8 @@ sub match {
             $query .= "AND user_group_map.user_id = userid " .
                       "AND isbless = 0 " .
                       "AND group_id IN(" .
-                      join(', ', (-1, @{$user->visible_groups_inherited})) . ") " .
-                      "AND grant_type <> " . GRANT_DERIVED;
+                      join(', ', (-1, @{$user->visible_groups_inherited})) . 
+                      ")";
         }
         $query    .= " AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY namelength ";
@@ -743,8 +692,7 @@ sub match {
             $query .= " AND user_group_map.user_id = userid" .
                       " AND isbless = 0" .
                       " AND group_id IN(" .
-                join(', ', (-1, @{$user->visible_groups_inherited})) . ")" .
-                      " AND grant_type <> " . GRANT_DERIVED;
+                join(', ', (-1, @{$user->visible_groups_inherited})) . ")";
         }
         $query     .= " AND disabledtext = ''" if $exclude_disabled;
         $query     .= " ORDER BY namelength";
@@ -1151,8 +1099,7 @@ sub get_userlist {
         $query .= "LEFT JOIN user_group_map " .
                   "ON user_group_map.user_id = userid AND isbless = 0 " .
                   "AND group_id IN(" .
-                  join(', ', (-1, @{$self->visible_groups_inherited})) . ") " .
-                  "AND grant_type <> " . GRANT_DERIVED;
+                  join(', ', (-1, @{$self->visible_groups_inherited})) . ")";
     }
     $query    .= " WHERE disabledtext = '' ";
     $query    .= $dbh->sql_group_by('userid', 'login_name, realname');
@@ -1271,7 +1218,7 @@ sub login_to_id {
 }
 
 sub UserInGroup {
-    return defined Bugzilla->user->groups->{$_[0]} ? 1 : 0;
+    return exists Bugzilla->user->groups->{$_[0]} ? 1 : 0;
 }
 
 1;
@@ -1345,10 +1292,6 @@ C<undef> if no matching user is found.
 
 This routine should not be required in general; most scripts should be using
 userids instead.
-
-This routine and C<new> both take an extra optional argument, which is
-passed as the argument to C<derive_groups> to avoid locking. See that
-routine's documentation for details.
 
 =end undocumented
 
@@ -1439,12 +1382,19 @@ are the names of the groups, whilst the values are the respective group ids.
 (This is so that a set of all groupids for groups the user is in can be
 obtained by C<values(%{$user-E<gt>groups})>.)
 
+=item C<groups_as_string>
+
+Returns a string containing a comma-seperated list of numeric group ids.  If
+the user is not a member of any groups, returns "-1". This is most often used
+within an SQL IN() function.
+
 =item C<in_group>
 
-Determines whether or not a user is in the given group. This method is mainly
-intended for cases where we are not looking at the currently logged in user,
-and only need to make a quick check for the group, where calling C<groups>
-and getting all of the groups would be overkill.
+Determines whether or not a user is in the given group by name. 
+
+=item C<in_group_id>
+
+Determines whether or not a user is in the given group by id. 
 
 =item C<bless_groups>
 
@@ -1464,7 +1414,7 @@ Returns 1 if the specified user account exists and is visible to the user,
 
 Determines if the user can see the specified bug.
 
-=item C<derive_groups>
+=item C<derive_regexp_groups>
 
 Bugzilla allows for group inheritance. When data about the user (or any of the
 groups) changes, the database must be updated. Handling updated groups is taken
@@ -1507,23 +1457,6 @@ Returns a list of groups that the user is aware of.
 
 Returns the result of C<visible_groups_direct> as a string (a comma-separated
 list).
-
-=begin undocumented
-
-This routine takes an optional argument. If true, then this routine will not
-lock the tables, but will rely on the caller to have done so itsself.
-
-This is required because mysql will only execute a query if all of the tables
-are locked, or if none of them are, not a mixture. If the caller has already
-done some locking, then this routine would fail. Thus the caller needs to lock
-all the tables required by this method, and then C<derive_groups> won't do
-any locking.
-
-This is a really ugly solution, and when Bugzilla supports transactions
-instead of using the explicit table locking we were forced to do when thats
-all MySQL supported, this will go away.
-
-=end undocumented
 
 =item C<product_responsibilities>
 

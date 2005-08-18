@@ -38,6 +38,7 @@ sub login {
     my $matched_userid    = '';
     my $matched_extern_id = '';
     my $disabledtext      = '';
+    my $new_login_name = 0;
 
     my $dbh = Bugzilla->dbh;
     my $sth;
@@ -122,6 +123,7 @@ sub login {
                                      ") VALUES ( ?, ?, ?, '' )");
                 $sth->execute($env_email, '*', $env_realname);
                 $matched_userid = $dbh->bz_last_key('profiles', 'userid');
+                $new_login_name = $matched_userid;
             }
         }
     }
@@ -147,7 +149,14 @@ sub login {
                           ($env_realname || $this_realname),
                           $matched_userid);
             $sth->execute;
+            $new_login_name = $matched_userid;
         }
+    }
+
+    # If the login name may be new, make sure the regexp groups are current
+    if ($new_login_name) {
+        my $userprofile = new Bugzilla::User($matched_userid);
+        $userprofile->derive_regexp_groups;
     }
 
     # Now we throw an error if the user has been disabled

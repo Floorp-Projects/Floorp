@@ -185,6 +185,8 @@ if ($action eq 'search') {
     insert_new_user($login, $realname, $password, $disabledtext);
     $otherUserID = $dbh->bz_last_key('profiles', 'userid');
     $dbh->bz_unlock_tables();
+    my $newprofile = new Bugzilla::User($otherUserID);
+    $newprofile->derive_regexp_groups();
     userDataToVars($otherUserID);
 
     $vars->{'message'} = 'account_created';
@@ -290,6 +292,12 @@ if ($action eq 'search') {
                      'WHERE userid = ?',
                      undef, @values);
             # XXX: should create profiles_activity entries.
+            #
+            # We create a new user object here because it needs to
+            # read information that may have changed since this
+            # script started.
+            my $newprofile = new Bugzilla::User($otherUserID);
+            $newprofile->derive_regexp_groups();
         }
     }
 
@@ -639,7 +647,7 @@ sub userDataToVars {
     my $query;
     my $dbh = Bugzilla->dbh;
 
-    $otheruser->derive_groups();
+    my $grouplist = $otheruser->groups_as_string;
 
     $vars->{'otheruser'} = $otheruser;
     $vars->{'groups'} = $user->bless_groups();
@@ -648,7 +656,7 @@ sub userDataToVars {
         qq{SELECT id,
                   COUNT(directmember.group_id) AS directmember,
                   COUNT(regexpmember.group_id) AS regexpmember,
-                  COUNT(derivedmember.group_id) AS derivedmember,
+                  CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END,
                   COUNT(directbless.group_id) AS directbless
            FROM groups
            LEFT JOIN user_group_map AS directmember
@@ -661,11 +669,6 @@ sub userDataToVars {
                  AND regexpmember.user_id = ?
                  AND regexpmember.isbless = 0
                  AND regexpmember.grant_type = ?
-           LEFT JOIN user_group_map AS derivedmember
-                  ON derivedmember.group_id = id
-                 AND derivedmember.user_id = ?
-                 AND derivedmember.isbless = 0
-                 AND derivedmember.grant_type = ?
            LEFT JOIN user_group_map AS directbless
                   ON directbless.group_id = id
                  AND directbless.user_id = ?
@@ -675,20 +678,17 @@ sub userDataToVars {
         'id', undef,
         ($otheruserid, GRANT_DIRECT,
          $otheruserid, GRANT_REGEXP,
-         $otheruserid, GRANT_DERIVED,
          $otheruserid, GRANT_DIRECT));
 
     # Find indirect bless permission.
     $query = qq{SELECT groups.id
-                FROM groups, user_group_map AS ugm, group_group_map AS ggm
-                WHERE ugm.user_id = ?
-                  AND groups.id = ggm.grantor_id
-                  AND ggm.member_id = ugm.group_id
-                  AND ugm.isbless = 0
+                FROM groups, group_group_map AS ggm
+                WHERE groups.id = ggm.grantor_id
+                  AND ggm.member_id IN ($grouplist)
                   AND ggm.grant_type = ?
                } . $dbh->sql_group_by('id');
     foreach (@{$dbh->selectall_arrayref($query, undef,
-                                        ($otheruserid, GROUP_BLESS))}) {
+                                        (GROUP_BLESS))}) {
         # Merge indirect bless permissions into permission variable.
         $vars->{'permissions'}{${$_}[0]}{'indirectbless'} = 1;
     }

@@ -31,6 +31,7 @@
 #                 Erik Stambaugh <erik@dasbistro.com>
 #                 Dave Lawrence <dkl@redhat.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Joel Peshkin <bugreport@peshkin.net>
 #
 #
 #
@@ -3557,32 +3558,14 @@ AddFDef("owner_idle_time", "Time Since Assignee Touched", 0);
 if ($dbh->bz_column_info("user_group_map", "isderived")) {
     $dbh->bz_add_column('user_group_map', 'grant_type', 
         {TYPE => 'INT1', NOTNULL => 1, DEFAULT => '0'});
-    $dbh->do("UPDATE user_group_map SET grant_type = " .
-                             "IF(isderived, " . GRANT_DERIVED . ", " .
-                             GRANT_DIRECT . ")");
-    $dbh->do("DELETE FROM user_group_map 
-              WHERE isbless = 0 AND grant_type != " . GRANT_DIRECT);
+    $dbh->do("DELETE FROM user_group_map WHERE isderived != 0");
+    $dbh->do("UPDATE user_group_map SET grant_type = " . GRANT_DIRECT);
     $dbh->bz_drop_column("user_group_map", "isderived");
 
     $dbh->bz_drop_index('user_group_map', 'user_group_map_user_id_idx');
     $dbh->bz_add_index('user_group_map', 'user_group_map_user_id_idx',
         {TYPE => 'UNIQUE', 
          FIELDS => [qw(user_id group_id grant_type isbless)]});
-
-    # Evaluate regexp-based group memberships
-    my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
-                             groups.id, groups.userregexp 
-                             FROM profiles, groups
-                             WHERE userregexp != ''");
-    $sth->execute();
-    my $sth2 = $dbh->prepare("INSERT IGNORE INTO user_group_map 
-                           (user_id, group_id, isbless, grant_type) 
-                           VALUES(?, ?, 0, " . GRANT_REGEXP . ")");
-    while (my ($uid, $login, $gid, $rexp) = $sth->fetchrow_array()) {
-        if ($login =~ m/$rexp/i) {
-            $sth2->execute($uid, $gid);
-        }
-    }
 
     # Make sure groups get rederived
     $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
@@ -4088,6 +4071,42 @@ if (!GroupDoesExist('bz_canusewhines')) {
              "(member_id, grantor_id, grant_type) " .
              "VALUES (${whineatothers_group}, ${whine_group}, " .
              GROUP_MEMBERSHIP . ")") unless $group_exists;
+}
+
+# 2005-08-14 bugreport@peshkin.net -- Bug 304583
+use constant GRANT_DERIVED => 1;
+# Get rid of leftover DERIVED group permissions
+$dbh->do("DELETE FROM user_group_map WHERE grant_type = " . GRANT_DERIVED);
+# Evaluate regexp-based group memberships
+$sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
+                         groups.id, groups.userregexp,
+                         user_group_map.group_id
+                         FROM profiles
+                         CROSS JOIN groups
+                         LEFT JOIN user_group_map
+                         ON user_group_map.user_id = profiles.userid
+                         AND user_group_map.group_id = groups.id
+                         AND user_group_map.grant_type = ?
+                         WHERE (userregexp != ''
+                         OR user_group_map.group_id IS NOT NULL)");
+
+my $sth_add = $dbh->prepare("INSERT INTO user_group_map 
+                       (user_id, group_id, isbless, grant_type) 
+                       VALUES(?, ?, 0, " . GRANT_REGEXP . ")");
+
+my $sth_del = $dbh->prepare("DELETE FROM user_group_map 
+                       WHERE user_id  = ? 
+                       AND group_id = ? 
+                       AND isbless = 0
+                       AND grant_type = " . GRANT_REGEXP);
+
+$sth->execute(GRANT_REGEXP);
+while (my ($uid, $login, $gid, $rexp, $present) = $sth->fetchrow_array()) {
+    if ($login =~ m/$rexp/i) {
+        $sth_add->execute($uid, $gid) unless $present;
+    } else {
+        $sth_del->execute($uid, $gid) if $present;
+    }
 }
 
 ###########################################################################

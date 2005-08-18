@@ -541,25 +541,22 @@ sub groups {
     # user_group_map record putting the user in that group.
     # The LEFT JOINs are checking for record existence.
     #
+    my $grouplist = Bugzilla->user->groups_as_string;
     my $sth = $dbh->prepare(
              "SELECT DISTINCT groups.id, name, description," .
              " bug_group_map.group_id IS NOT NULL," .
-             " user_group_map.group_id IS NOT NULL," .
+             " CASE WHEN groups.id IN($grouplist) THEN 1 ELSE 0 END," .
              " isactive, membercontrol, othercontrol" .
              " FROM groups" . 
              " LEFT JOIN bug_group_map" .
              " ON bug_group_map.group_id = groups.id" .
              " AND bug_id = ?" .
-             " LEFT JOIN user_group_map" .
-             " ON user_group_map.group_id = groups.id" .
-             " AND user_id = ?" .
-             " AND isbless = 0" .
              " LEFT JOIN group_control_map" .
              " ON group_control_map.group_id = groups.id" .
              " AND group_control_map.product_id = ? " .
              " WHERE isbuggroup = 1" .
              " ORDER BY description");
-    $sth->execute($self->{'bug_id'}, Bugzilla->user->id,
+    $sth->execute($self->{'bug_id'},
                   $self->{'product_id'});
 
     while (my ($groupid, $name, $description, $ison, $ingroup, $isactive,

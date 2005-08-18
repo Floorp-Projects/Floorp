@@ -240,8 +240,7 @@ sub get_next_event {
         return undef unless $fetched;
         my ($eventid, $owner_id, $subject, $body) = @{$fetched};
 
-        my $owner = Bugzilla::User->new($owner_id,
-                                        DERIVE_GROUPS_TABLES_ALREADY_LOCKED);
+        my $owner = Bugzilla::User->new($owner_id);
 
         my $whineatothers = $owner->in_group('bz_canusewhineatothers');
 
@@ -275,10 +274,13 @@ sub get_next_event {
                     my $group_id = Bugzilla::Group::ValidateGroupName(
                         $groupname, $owner);
                     if ($group_id) {
+                        my $glist = join(',',
+                            Bugzilla::User->flatten_group_membership(
+                            $group_id));
                         $sth = $dbh->prepare("SELECT user_id FROM " .
                                              "user_group_map " .
-                                             "WHERE group_id=?");
-                        $sth->execute($group_id);
+                                             "WHERE group_id IN ($glist)");
+                        $sth->execute();
                         for my $row (@{$sth->fetchall_arrayref}) {
                             if (not defined $user_objects{$row->[0]}) {
                                 $user_objects{$row->[0]} =
