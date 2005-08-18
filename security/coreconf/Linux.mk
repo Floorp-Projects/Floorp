@@ -55,10 +55,13 @@ DEFAULT_COMPILER = gcc
 ifeq ($(OS_TEST),m68k)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= m68k
-else
+else	
 ifeq ($(OS_TEST),ppc64)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
-	CPU_ARCH	= ppc64
+	CPU_ARCH	= ppc
+ifeq ($(USE_64),1)
+	ARCHFLAG	= -m64
+endif
 else
 ifeq ($(OS_TEST),ppc)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
@@ -79,7 +82,7 @@ ifeq ($(USE_64),1)
 else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
-	ARCHFLAG    = -m32
+	ARCHFLAG	= -m32
 endif
 else
 ifeq ($(OS_TEST),sparc)
@@ -163,7 +166,7 @@ ARCH			= linux
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -shared $(ARCHFLAG)
 DSO_LDFLAGS		=
-LDFLAGS += $(ARCHFLAG)
+LDFLAGS			+= $(ARCHFLAG)
 
 # INCLUDES += -I/usr/include -Y/usr/include/linux
 G++INCLUDES		= -I/usr/include/g++
