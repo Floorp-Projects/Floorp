@@ -51,6 +51,12 @@
 #include "nsISVGCairoSurface.h"
 #include <cairo.h>
 
+#ifdef MOZ_X11
+extern "C" {
+#include <cairo-xlib.h>
+}
+#endif
+
 #include "nsIImage.h"
 #include "nsIComponentManager.h"
 #include "imgIContainer.h"
@@ -63,6 +69,11 @@
 extern "C" {
 #include <cairo-quartz.h>
 }
+#elif defined(MOZ_WIDGET_XLIB)
+#include "nsDrawingSurfaceXlib.h"
+#elif defined(MOZ_WIDGET_QT)
+#undef CursorShape
+#include "nsDrawingSurfaceQt.h"
 #elif defined(XP_WIN)
 #include "nsDrawingSurfaceWin.h"
 extern "C" {
@@ -71,9 +82,6 @@ extern "C" {
 #else
 #include "nsRenderingContextGTK.h"
 #include <gdk/gdkx.h>
-extern "C" {
-#include <cairo-xlib.h>
-}
 #endif
 
 /**
@@ -202,6 +210,31 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   cairoSurf = cairo_quartz_surface_create(mQuartzRef,
                                           portRect.right - portRect.left,
                                           portRect.bottom - portRect.top);
+
+#elif defined(MOZ_WIDGET_XLIB)
+  nsIDrawingSurfaceXlib* surface;
+  ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
+
+  surface->GetDimensions(&mWidth, &mHeight);
+
+  XlibRgbHandle* handle;
+  surface->GetXlibRgbHandle(handle);
+  Drawable drawable = surface->GetDrawable();
+  cairoSurf = cairo_xlib_surface_create(xxlib_rgb_get_display(handle),
+                                        drawable,
+                                        xxlib_rgb_get_visual(handle),
+                                        mWidth, mHeight);
+#elif defined(MOZ_WIDGET_QT)
+  nsDrawingSurfaceQt* surface;
+  ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
+  surface->GetDimensions(&mWidth, &mHeight);
+
+  QPaintDevice* dev = surface->GetPaintDevice();
+
+  cairoSurf = cairo_xlib_surface_create(dev->x11Display(),
+                                        dev->handle(),
+                                        (Visual*)dev->x11Visual(),
+                                        mWidth, mHeight);
 #elif defined(XP_WIN)
   nsDrawingSurfaceWin *surface;
   HDC hdc;
