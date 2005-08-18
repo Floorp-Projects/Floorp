@@ -57,7 +57,6 @@ protected:
   friend class nsSHEnumerator;
 
    // Could become part of nsIWebNavigation
-   NS_IMETHOD PrintHistory();
    NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
    nsresult CompareFrames(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell, long aLoadType, PRBool * aIsFrameFound);
@@ -65,6 +64,10 @@ protected:
 
    NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 histCmd);
 	
+#ifdef DEBUG
+   nsresult PrintHistory();
+#endif
+
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
   PRInt32 mIndex;
