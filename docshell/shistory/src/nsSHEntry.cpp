@@ -354,13 +354,8 @@ NS_IMETHODIMP
 nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
 {
 	NS_ENSURE_ARG_POINTER(aResult);
-    if (PRUint32(aIndex) >= PRUint32(mChildren.Count())) {
-      *aResult = nsnull;
-	}
-    else {
-      *aResult = (nsISHEntry*) mChildren.ElementAt(aIndex);
-      NS_IF_ADDREF(*aResult);
-	}
+    *aResult = (nsISHEntry*) mChildren.SafeElementAt(aIndex);
+    NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
 
