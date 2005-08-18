@@ -37,7 +37,7 @@ interface nsISHEntry : nsISupports
 {
 
 /** URI for the document */
-attribute nsIURI uri;
+attribute nsIURI URI;
 
 /**  DOM Document */
 attribute nsIDOMDocument document;
