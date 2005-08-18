@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= shistory
 LIBRARY_NAME	= shistory
 IS_COMPONENT	= 1
+REQUIRES	= xpcom necko dom js layout docshell locale widget uriloader
 
 CPPSRCS		= nsSHEntry.cpp        \
             nsSHTransaction.cpp   \
