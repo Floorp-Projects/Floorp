@@ -53,30 +53,30 @@ interface nsIURI;
 interface nsIHistoryEntry : nsISupports 
 {
 
-/** 
- * A readonly property that returns the URI
- * of the current entry. The object returned is
- * of type nsIURI
- */
-readonly attribute nsIURI URI;
+    /** 
+     * A readonly property that returns the URI
+     * of the current entry. The object returned is
+     * of type nsIURI
+     */
+    readonly attribute nsIURI URI;
 
-/** 
- * A readonly property that returns the title
- * of the current entry.  The object returned
- * is a encoded string
- */
-readonly attribute wstring title;
+    /** 
+     * A readonly property that returns the title
+     * of the current entry.  The object returned
+     * is a encoded string
+     */
+    readonly attribute wstring title;
 
-/** 
- * A readonly property that returns a boolean
- * flag which indicates if the entry was created as a 
- * result of a subframe navigation. This flag will be
- * 'false' when a frameset page is visited for
- * the first time. This flag will be 'true' for all
- * history entries created as a result of a subframe
- * navigation.
- */
-readonly attribute boolean isSubFrame;
+    /** 
+     * A readonly property that returns a boolean
+     * flag which indicates if the entry was created as a 
+     * result of a subframe navigation. This flag will be
+     * 'false' when a frameset page is visited for
+     * the first time. This flag will be 'true' for all
+     * history entries created as a result of a subframe
+     * navigation.
+     */
+    readonly attribute boolean isSubFrame;
 
 };
 
