@@ -49,7 +49,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "PLEvent.h"
+#include "plevent.h"
 #include "nsAutoPtr.h"
 #include "nsIEventQueue.h"
 #include "nsEventQueueUtils.h"
