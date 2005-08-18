@@ -38,7 +38,7 @@
 #include "nsIPref.h"
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
-static PRInt32  gHistoryMaxSize = 0;
+static PRInt32  gHistoryMaxSize = 50;
 
 enum HistCmd{
   HIST_CMD_BACK,
