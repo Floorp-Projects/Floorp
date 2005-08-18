@@ -1389,7 +1389,9 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
       //       and |PeekOffset| is called recursively, pos.mResultFrame on exit is sometimes set to the original
       //       frame, not the frame that we ended up in, so I need this call to |GetFrameForNodeOffset|.
       //       I don't know if that could or should be changed or if it would break something else.
-      GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, tHint, &theFrame, &currentOffset);
+      result = GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, tHint, &theFrame, &currentOffset);
+      if (NS_FAILED(result))
+        return result;
       theFrame->GetOffsets(frameStart, frameEnd);
 
       // the hint might have been reversed by an RTL frame, so make sure of it
@@ -2734,8 +2736,14 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
   if (aNode->IsContentOfType(nsIContent::eELEMENT))
   {
     PRInt32 childIndex  = 0;
-    PRInt32 numChildren = 0;
+    PRInt32 numChildren = theNode->GetChildCount();
 
+    if (numChildren == 0)
+    {
+      *aReturnOffset = 0;
+      return mShell->GetPrimaryFrameFor(theNode, aReturnFrame);
+    }
+    
     if (aHint == HINTLEFT)
     {
       if (aOffset > 0)
@@ -2745,15 +2753,8 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
     }
     else // HINTRIGHT
     {
-      numChildren = theNode->GetChildCount();
-
       if (aOffset >= numChildren)
-      {
-        if (numChildren > 0)
-          childIndex = numChildren - 1;
-        else
-          childIndex = 0;
-      }
+        childIndex = numChildren - 1;
       else
         childIndex = aOffset;
     }

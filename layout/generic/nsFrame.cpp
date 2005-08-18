@@ -3626,71 +3626,56 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+static nsresult
+DrillDownToBeginningOfLine(nsIFrame* aFrame,
+                           nsPeekOffsetStruct* aPos)
+{
+  if (!aFrame)
+    return NS_ERROR_UNEXPECTED;
+
+  nsIFrame *firstFrame = aFrame;
+  nsFrame::GetFirstLeaf(aFrame->GetPresContext(), &firstFrame);
+  
+  aPos->mResultContent = firstFrame->GetContent();
+  PRInt32 startOffset, endOffset;
+  nsresult rv = firstFrame->GetOffsets(startOffset, endOffset);
+  if (NS_FAILED(rv))
+    return rv;
+  aPos->mContentOffset = startOffset;
+  
+  return NS_OK;
+}
+
+
 // Line and paragraph selection (and probably several other cases)
 // can get a containing frame from a line iterator, but then need
 // to "drill down" to get the content and offset corresponding to
 // the last child subframe.  Hence:
-// Alas, this doesn't entirely work; it's blocked by some style changes.
 static nsresult
-DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
-                     nsRect& aUsedRect, nsPeekOffsetStruct* aPos)
+DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineFrameCount,
+                     nsPeekOffsetStruct* aPos)
 {
   if (!aFrame)
     return NS_ERROR_UNEXPECTED;
-  nsresult rv = NS_ERROR_FAILURE;
-  PRBool found = PR_FALSE;
-  nsCOMPtr<nsIAtom> frameType;
-  while (!found)  // this loop searches for a valid point to leave the peek offset struct.
+
+  nsIFrame *currentFrame = aFrame;
+  PRInt32 i;
+
+  for (i = 1; i < aLineFrameCount; i++) //already have 1st frame
   {
-    nsIFrame *nextFrame = aFrame;
-    nsIFrame *currentFrame = aFrame;
-    PRInt32 i;
-    for (i=1; i<aLineFrameCount && nextFrame; i++) //already have 1st frame
-    {
-		  currentFrame = nextFrame;
-      // If we do GetNextSibling, we don't go far enough
-      // (is aLineFrameCount too small?)
-      // If we do GetNextInFlow, we hit a null.
-      nextFrame = currentFrame->GetNextSibling();
-    }
-    if (!nextFrame) //premature leaving of loop.
-    {
-      nextFrame = currentFrame; //back it up. lets show a warning
-      NS_WARNING("lineFrame Count lied to us from nsILineIterator!\n");
-    }
-    if (!nextFrame->GetRect().width) //this can happen with BR frames and or empty placeholder frames.
-    {
-      //if we do hit an empty frame then back up the current frame to the frame before it if there is one.
-      nextFrame = currentFrame; 
-    }
-      
-    nsPoint offsetPoint; //used for offset of result frame
-    nsIView * view; //used for call of get offset from view
-    nextFrame->GetOffsetFromView(offsetPoint, &view);
-
-    offsetPoint.x += 2* aUsedRect.width; //2* just to be sure we are off the edge
-    // This doesn't seem very efficient since GetPosition
-    // has to do a binary search.
-
-    nsPresContext *context = aPos->mShell->GetPresContext();
-    PRInt32 endoffset;
-    rv = nextFrame->GetContentAndOffsetsFromPoint(context,
-                                                  offsetPoint,
-                                                  getter_AddRefs(aPos->mResultContent),
-                                                  aPos->mContentOffset,
-                                                  endoffset,
-                                                  aPos->mPreferLeft);
-    if (NS_SUCCEEDED(rv))
-      return PR_TRUE;
-
-#ifdef DEBUG_paragraph
-    NS_ASSERTION(PR_FALSE, "Looping around in PeekOffset\n");
-#endif
-    aLineFrameCount--;
-    if (aLineFrameCount == 0)
-      break;//just fail out
+    currentFrame = currentFrame->GetNextSibling();
+    NS_ASSERTION(currentFrame, "lineFrame Count lied to us from nsILineIterator!\n");
   }
-  return rv;
+  nsFrame::GetLastLeaf(aFrame->GetPresContext(), &currentFrame);
+    
+  aPos->mResultContent = currentFrame->GetContent();
+  PRInt32 startOffset, endOffset;
+  nsresult rv = currentFrame->GetOffsets(startOffset, endOffset);
+  if (NS_FAILED(rv))
+    return rv;
+  aPos->mContentOffset = endOffset;
+  
+  return NS_OK;
 }
 
 
@@ -3910,37 +3895,11 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
       if (eSelectBeginLine == aPos->mAmount)
       {
-        nsPresContext *context = aPos->mShell->GetPresContext();
-        if (!context)
-          return NS_OK;
-
-        while (firstFrame)
-        {
-          nsPoint offsetPoint; //used for offset of result frame
-          nsIView * view; //used for call of get offset from view
-          firstFrame->GetOffsetFromView(offsetPoint, &view);
-
-          offsetPoint.x = 0;//all the way to the left
-          result = firstFrame->GetContentAndOffsetsFromPoint(context,
-                                                             offsetPoint,
-                                           getter_AddRefs(aPos->mResultContent),
-                                           aPos->mContentOffset,
-                                           endoffset,
-                                           aPos->mPreferLeft);
-          if (NS_SUCCEEDED(result))
-            break;
-          result = it->GetNextSiblingOnLine(firstFrame,thisLine);
-          if (NS_FAILED(result))
-            break;
-        }
+        return DrillDownToBeginningOfLine(firstFrame, aPos);
       }
       else  // eSelectEndLine
       {
-        // We have the last frame, but we need to drill down
-        // to get the last offset in the last content represented
-        // by that frame.
-        return DrillDownToEndOfLine(firstFrame, thisLine, lineFrameCount,
-                                    usedRect, aPos);
+        return DrillDownToEndOfLine(firstFrame, lineFrameCount, aPos);
       }
       return result;
     }
