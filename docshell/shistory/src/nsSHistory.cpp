@@ -88,6 +88,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
       {
       NS_ENSURE_SUCCESS(currentTxn->SetSHEntry(aSHEntry),
          NS_ERROR_FAILURE);
+	  currentTxn->SetPersist(aPersist);
       return NS_OK;
       }
 
@@ -107,7 +108,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
    // If this is the very first transaction, initialize the list
    if(!mListRoot)
       mListRoot = txn;
-   PrintHistory();
+ //  PrintHistory();
 
    return NS_OK;
 }
