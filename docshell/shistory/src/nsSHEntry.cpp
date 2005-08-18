@@ -121,9 +121,9 @@ NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
    // Check for empty title...
    if ( mTitle.IsEmpty() && mURI ) {
       // Default title is the URL.
-      nsXPIDLCString spec;
-      if ( NS_SUCCEEDED( mURI->GetSpec( getter_Copies( spec ) ) ) ) {
-          mTitle.AssignWithConversion( spec ); 
+      nsCAutoString spec;
+      if ( NS_SUCCEEDED( mURI->GetSpec( spec ) ) ) {
+          mTitle = NS_ConvertUTF8toUCS2( spec ); 
       }
    }
 
