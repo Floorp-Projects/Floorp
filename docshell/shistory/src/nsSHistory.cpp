@@ -53,7 +53,7 @@ enum HistCmd{
 
 nsSHistory::nsSHistory() : mListRoot(nsnull), mIndex(-1), mLength(0), mRequestedIndex(-1)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 
@@ -858,7 +858,7 @@ nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 
 nsSHEnumerator::nsSHEnumerator(nsSHistory * aSHistory):mIndex(-1)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mSHistory = aSHistory;
 }
 
