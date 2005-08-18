@@ -76,6 +76,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mSaveLayoutState(other.mSaveLayoutState)
   , mExpired(other.mExpired)
   // XXX why not copy mContentType?
+  , mCacheKey(other.mCacheKey)
   , mParent(other.mParent)
 {
 }
