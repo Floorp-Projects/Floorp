@@ -56,6 +56,7 @@ private:
    
 	 
   nsCOMPtr<nsIURI>                mURI;
+  nsCOMPtr<nsIURI>                mReferrerURI;
 	nsCOMPtr<nsIDOMDocument>        mDocument;
 	nsString                        mTitle;
 	nsCOMPtr<nsIInputStream>        mPostData;

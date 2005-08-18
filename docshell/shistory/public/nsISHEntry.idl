@@ -41,6 +41,9 @@ interface nsISHEntry : nsISupports
 /** URI for the document */
 void SetURI(in nsIURI aURI);
 
+/** Referrer URI */
+attribute nsIURI referrerURI;
+
 /**  DOM Document */
 attribute nsIDOMDocument document;
 
