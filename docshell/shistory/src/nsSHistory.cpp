@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -293,19 +293,14 @@ nsSHistory::PrintHistory()
 			  if (uri)
                  uri->GetSpec(getter_Copies(url));
 
-              #if 0
-			  char * titleCStr=nsnull;
-
-			  nsString titlestr(title);
-              titleCStr = ToNewCString(titlestr);
+#if 0
               printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
               printf("\t\t URL = %s\n", url);
-              printf("\t\t Title = %s\n", titleCStr);
+              printf("\t\t Title = %s\n", NS_LossyConvertUCS2toASCII(title).get());
               printf("\t\t layout History Data = %x\n", layoutHistoryState);
-			  Recycle(titleCStr);
-              #endif
+#endif
       
-              Recycle(title);
+              nsMemory::Free(title);
               
 
               nsCOMPtr<nsISHTransaction> next;
