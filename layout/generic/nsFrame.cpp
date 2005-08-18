@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Uri Bernstein <uriber@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -108,6 +109,7 @@
 #include "nsLayoutErrors.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxLayoutState.h"
+#include "nsBlockFrame.h"
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -1570,9 +1572,9 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   }
 
   // Find out whether we're doing line or paragraph selection.
-  // Currently, triple-click selects line unless the user sets
-  // browser.triple_click_selects_paragraph; quadruple-click
-  // selects paragraph, if any platform actually implements it.
+  // If browser.triple_click_selects_paragraph is true, triple-click selects paragraph.
+  // Otherwise, triple-click selects line, and quadruple-click selects paragraph
+  // (on platforms that support quadruple-click).
   PRBool selectPara = PR_FALSE;
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (!me) return NS_OK;
@@ -1586,11 +1588,14 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   }
   else
     return NS_OK;
-#ifdef DEBUG_akkana
-  if (selectPara) printf("Selecting Paragraph\n");
-  else printf("Selecting Line\n");
-#endif
 
+  // Hack: If this is a white-space:pre styled element, force line selection.
+  // Correct solution would be to treat newlines in preformatted text
+  // elements as if they were BRFrames when finding paragraph boundaries.
+  if (selectPara && 
+      NS_STYLE_WHITESPACE_PRE == mStyleContext->GetStyleText()->mWhiteSpace)
+    selectPara = PR_FALSE;
+  
   // Line or paragraph selection:
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
@@ -3471,158 +3476,97 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
   return result;
 }
 
-// Get a frame which can contain a line iterator
-// (which generally means it's a block frame).
-static nsILineIterator*
-GetBlockFrameAndLineIter(nsIFrame* aFrame, nsIFrame** aBlockFrame)
+// Find the first (or last) descendant of the given frame
+// which is either a block frame or a BRFrame.
+static nsIFrame*
+FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 {
-  nsILineIterator* it;
-  nsIFrame *blockFrame = aFrame;
-
-  blockFrame = blockFrame->GetParent();
-  if (!blockFrame) //if at line 0 then nothing to do
-    return 0;
-  nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&it);
-  if (NS_SUCCEEDED(result) && it)
-  {
-    if (aBlockFrame)
-      *aBlockFrame = blockFrame;
-    return it;
-  }
-
-  while (blockFrame)
-  {
-    blockFrame = blockFrame->GetParent();
-    if (blockFrame) {
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),
-                                          (void**)&it);
-      if (NS_SUCCEEDED(result) && it)
-      {
-        if (aBlockFrame)
-          *aBlockFrame = blockFrame;
-        return it;
-      }
+  // first check the frame itself
+  nsBlockFrame* bf; // used only for QI
+  nsresult rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
+  // Fall through "special" block frames because their mContent is the content
+  // of the inline frames they were created from. The first/last child of
+  // such frames is the real block frame we're looking for.
+  if (NS_SUCCEEDED(rv) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL))
+    return aFrame;
+  if (aFrame->GetType() == nsLayoutAtoms::brFrame)
+    return aFrame;
+  
+  // iterate over children and call ourselves recursively
+  nsIFrame* stopFrame = nsnull;
+  if (aDirection == eDirPrevious) {
+    nsFrameList children(aFrame->GetFirstChild(nsnull));
+    nsIFrame* child = children.LastChild();
+    while(child && !stopFrame) {
+      stopFrame = FindBlockFrameOrBR(child, aDirection);
+      child = children.GetPrevSiblingFor(child);
+    }
+  } else { // eDirNext
+    nsIFrame* child = aFrame->GetFirstChild(nsnull);
+    while(child && !stopFrame) {
+      stopFrame = FindBlockFrameOrBR(child, aDirection);
+      child = child->GetNextSibling();
     }
   }
-  return 0;
+  return stopFrame;
 }
 
 nsresult
 nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
                              nsPeekOffsetStruct *aPos)
 {
-#ifdef DEBUG_paragraph
-  printf("Selecting paragraph\n");
-#endif
-  nsIFrame* blockFrame;
-  nsCOMPtr<nsILineIterator> iter (getter_AddRefs(GetBlockFrameAndLineIter(this, &blockFrame)));
-  if (!blockFrame || !iter)
-    return NS_ERROR_UNEXPECTED;
+  nsIFrame* frame = this;
+  nsBlockFrame* bf;  // used only for QI
+  nsIFrame* stopFrame = nsnull;
+  PRBool reachedBlockAncestor = PR_FALSE;
 
-  PRInt32 thisLine;
-  nsresult result = iter->FindLineContaining(this, &thisLine);
-#ifdef DEBUG_paragraph
-  printf("Looping %s from line %d\n",
-         aPos->mDirection == eDirPrevious ? "back" : "forward",
-         thisLine);
-#endif
-  if (NS_FAILED(result) || thisLine < 0)
-    return result ? result : NS_ERROR_UNEXPECTED;
-
-  // Now, theoretically, we should be able to loop over lines
-  // looking for lines that end in breaks.
-  PRInt32 di = (aPos->mDirection == eDirPrevious ? -1 : 1);
-  for (PRInt32 i = thisLine; ; i += di)
-  {
-    nsIFrame* firstFrameOnLine;
-    PRInt32 numFramesOnLine;
-    nsRect lineBounds;
-    PRUint32 lineFlags;
-    if (i >= 0)
-    {
-      result = iter->GetLine(i, &firstFrameOnLine, &numFramesOnLine,
-                             lineBounds, &lineFlags);
-      if (NS_FAILED(result) || !firstFrameOnLine || !numFramesOnLine)
-      {
-#ifdef DEBUG_paragraph
-        printf("End loop at line %d\n", i);
-#endif
+  // Go through containing frames until reaching a block frame.
+  // In each step, search the previous (or next) siblings for the closest
+  // "stop frame" (a block frame or a BRFrame).
+  // If found, set it to be the selection boundray and abort.
+  
+  if (aPos->mDirection == eDirPrevious) {
+    while (!reachedBlockAncestor) {
+      nsFrameList siblings(frame->GetParent()->GetFirstChild(nsnull));
+      nsIFrame* sibling = siblings.GetPrevSiblingFor(frame);
+      while (sibling && !stopFrame) {
+        stopFrame = FindBlockFrameOrBR(sibling, eDirPrevious);
+        sibling = siblings.GetPrevSiblingFor(sibling);
+      }
+      if (stopFrame) {
+        nsIContent* startContent = stopFrame->GetContent();
+        aPos->mResultContent = startContent->GetParent();
+        aPos->mContentOffset = aPos->mResultContent->IndexOf(startContent) + 1;
         break;
       }
+      frame = frame->GetParent();
+      reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
     }
-    if (lineFlags & NS_LINE_FLAG_ENDS_IN_BREAK || i < 0)
-    {
-      // Fill in aPos with the info on the new position
-#ifdef DEBUG_paragraph
-      printf("Found a paragraph break at line %d\n", i);
-#endif
-
-      // Save the old direction, but now go one line back the other way
-      nsDirection oldDirection = aPos->mDirection;
-      if (oldDirection == eDirPrevious)
-        aPos->mDirection = eDirNext;
-      else
-        aPos->mDirection = eDirPrevious;
-#ifdef SIMPLE /* nope */
-      result = GetNextPrevLineFromeBlockFrame(aPresContext,
-                                              aPos,
-                                              blockFrame,
-                                              i,
-                                              0);
-      if (NS_FAILED(result))
-        printf("GetNextPrevLineFromeBlockFrame failed\n");
-
-#else /* SIMPLE -- alas, nope */
-      int edgeCase = 0;//no edge case. this should look at thisLine
-      PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
-      //this part will find a frame or a block frame. if its a block frame
-      //it will "drill down" to find a viable frame or it will return an error.
-      do {
-        result = GetNextPrevLineFromeBlockFrame(aPresContext,
-                                                aPos, 
-                                                blockFrame, 
-                                                thisLine, 
-                                                edgeCase //start from thisLine
-          );
-        if (aPos->mResultFrame == this)//we came back to same spot! keep going
-        {
-          aPos->mResultFrame = nsnull;
-          if (aPos->mDirection == eDirPrevious)
-            thisLine--;
-          else
-            thisLine++;
-        }
-        else
-          doneLooping = PR_TRUE; //do not continue with while loop
-        if (NS_SUCCEEDED(result) && aPos->mResultFrame)
-        {
-          result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),
-                                                      getter_AddRefs(iter));
-          if (NS_SUCCEEDED(result) && iter)//we've struck another block element!
-          {
-            doneLooping = PR_FALSE;
-            if (aPos->mDirection == eDirPrevious)
-              edgeCase = 1;//far edge, search from end backwards
-            else
-              edgeCase = -1;//near edge search from beginning onwards
-            thisLine=0;//this line means nothing now.
-            //everything else means something so keep looking "inside" the block
-            blockFrame = aPos->mResultFrame;
-
-          }
-          else
-            result = NS_OK;//THIS is to mean that everything is ok to the containing while loop
-        }
-      } while (!doneLooping);
-
-#endif /* SIMPLE -- alas, nope */
-
-      // Restore old direction before returning:
-      aPos->mDirection = oldDirection;
-      return result;
+    if (reachedBlockAncestor) { // no "stop frame" found
+      aPos->mResultContent = frame->GetContent();
+      aPos->mContentOffset = 0;
+    }
+  } else { // eDirNext
+    while (!reachedBlockAncestor) {
+      nsIFrame* sibling = frame->GetNextSibling();
+      while (sibling && !stopFrame) {
+        stopFrame = FindBlockFrameOrBR(sibling, eDirNext);
+        sibling = sibling->GetNextSibling();
+      }
+      if (stopFrame) {
+        nsIContent* endContent = stopFrame->GetContent();
+        aPos->mResultContent = endContent->GetParent();
+        aPos->mContentOffset = aPos->mResultContent->IndexOf(endContent);
+        break;
+      }
+      frame = frame->GetParent();
+      reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
+    }
+    if (reachedBlockAncestor) { // no "stop frame" found
+      aPos->mResultContent = frame->GetContent();
+      aPos->mContentOffset = aPos->mResultContent->GetChildCount();
     }
   }
-
   return NS_OK;
 }
 
