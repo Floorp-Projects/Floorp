@@ -20,45 +20,9 @@
  *   Radha Kulkarni <radha@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nsISupportsUtils.h"
-#include "nsIDOMDocument.h"
+
+// Local Includes
 #include "nsSHEntry.h"
-#include "nsIGenericFactory.h"
-
-#ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
-#define WEB_TRACE(_bit,_args)            \
-   PR_BEGIN_MACRO                         \
-     if (WEB_LOG_TEST(gLogModule,_bit)) { \
-       PR_LogPrint _args;                 \
-     }                                    \
-   PR_END_MACRO
-#else
-#define WEB_TRACE(_bit,_args)
-#endif
-
-//*****************************************************************************
-//***    nsSHEnumerator: Object Management
-//*****************************************************************************
-class nsSHEnumerator : public nsIEnumerator
-{
-public:
-
-  NS_DECL_ISUPPORTS
-
-  NS_DECL_NSIENUMERATOR
-  NS_IMETHOD CurrentItem(nsISHEntry ** aItem);
-
-private:
-  friend class nsSHEntry;
-
-  nsSHEnumerator(nsSHEntry *  aEntry);
-  virtual ~nsSHEnumerator();
-
-  PRInt32     mIndex;
-  nsSHEntry * mSHEntry;
-};
-
-
 
 //*****************************************************************************
 //***    nsSHEntry: Object Management
@@ -69,40 +33,8 @@ nsSHEntry::nsSHEntry()
    NS_INIT_REFCNT();
 }
 
-
-NS_IMETHODIMP
-nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
-			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
-{
-   SetURI(aURI);
-	SetTitle(aTitle);
-	SetDocument(aDOMDocument);
-	SetPostData(aInputStream);
-	SetLayoutHistoryState(aHistoryLayoutState);
-	return NS_OK;
-	
-}
-
-
 nsSHEntry::~nsSHEntry() 
 {
-   DestroyChildren();
-}
-
-void
-nsSHEntry::DestroyChildren() {
-
-  PRInt32 i, n;
-
-  n = GetChildCount(&n);
-  for (i = 0; i < n; i++) {
-    nsISHEntry* child = (nsISHEntry *) mChildren.ElementAt(i);
-    child->SetParent(nsnull);    // Weak reference to parent 
-    delete child;
-  }
-  mChildren.Clear();
-  
-
 }
 
 //*****************************************************************************
@@ -115,11 +47,10 @@ NS_IMPL_RELEASE(nsSHEntry)
 NS_INTERFACE_MAP_BEGIN(nsSHEntry)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
    NS_INTERFACE_MAP_ENTRY(nsISHEntry)
-   NS_INTERFACE_MAP_ENTRY(nsISHContainer)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
-//    nsSHEntry: nsISupports
+//    nsSHEntry: nsISHEntry
 //*****************************************************************************
 
 NS_IMETHODIMP nsSHEntry::GetURI(nsIURI** aURI)
@@ -196,218 +127,15 @@ NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetParent(nsISHEntry** aResult)
+NS_IMETHODIMP
+nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOMDocument,
+			         nsIInputStream * aInputStream, nsILayoutHistoryState * aHistoryLayoutState)
 {
-   NS_ENSURE_ARG_POINTER(aResult);
-   
-   *aResult = mParent;
-   NS_IF_ADDREF(*aResult);
-   return NS_OK;
-}
-
-
-NS_IMETHODIMP nsSHEntry::SetParent(nsISHEntry* aParent)
-{
-	/* parent not Addrefed on purpose to avoid cyclic reference
-	 * Null parent is OK
-	 */
-   mParent = aParent;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::GetChildCount(PRInt32* aCount)
-{
-   NS_ENSURE_ARG_POINTER(aCount);
-   
-   *aCount = mChildren.Count();
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::AddChild(nsISHEntry* aChild)
-{
-   NS_ENSURE_ARG_POINTER(aChild);
-
-	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-	mChildren.AppendElement((void *)aChild);
-	NS_ADDREF(aChild);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::RemoveChild(nsISHEntry * aChild)
-{
-   NS_ENSURE_ARG_POINTER(aChild);
+   SetURI(aURI);
+	SetTitle(aTitle);
+	SetDocument(aDOMDocument);
+	SetPostData(aInputStream);
+	SetLayoutHistoryState(aHistoryLayoutState);
+	return NS_OK;
 	
-   PRBool childRemoved = mChildren.RemoveElement((void *)aChild);
-	if(childRemoved)
-      {
-	   aChild->SetParent(nsnull);
-	   NS_RELEASE(aChild);
-	   }
-   return NS_OK;
-}
-
-
-NS_IMETHODIMP nsSHEntry::GetChildEnumerator(nsIEnumerator** aChildEnumerator)
-{
-   NS_ENSURE_ARG_POINTER(aChildEnumerator);
-   
-   nsresult status = NS_OK;
-
-	nsSHEnumerator* iterator = new nsSHEnumerator(this);
-	if(iterator && !!NS_SUCCEEDED(status = CallQueryInterface(iterator, aChildEnumerator)))
-      delete iterator;
-   return status;
-}
-
-//*****************************************************************************
-//***    nsSHEnumerator: Object Management
-//*****************************************************************************
-
-nsSHEnumerator::nsSHEnumerator(nsSHEntry * aEntry):mIndex(0)
-{
-  NS_INIT_REFCNT();
-  mSHEntry = aEntry;
-}
-
-nsSHEnumerator::~nsSHEnumerator()
-{
-}
-
-
-NS_IMETHODIMP
-nsSHEnumerator::Next()
-{
-  mIndex++;
-  PRUint32 cnt=0;
-  cnt = mSHEntry->mChildren.Count();
-  if (mIndex < (PRInt32)cnt)
-    return NS_OK;
-  return NS_ERROR_FAILURE;
-}
-
-
-#if 0
-NS_IMETHODIMP
-nsSHEnumerator::Prev()
-{
-  mIndex--;
-  if (mIndex >= 0 )
-    return NS_OK;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSHEnumerator::Last()
-{ 
-  PRUint32 cnt;
-  nsresult rv = mSHEntry->mChildren.Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  mIndex = (PRInt32)cnt-1;
-  return NS_OK;
-}
-#endif  /* 0 */
-
-NS_IMETHODIMP
-nsSHEnumerator::First()
-{
-  mIndex = 0;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsSHEnumerator::CurrentItem(nsISupports **aItem)
-{
-  if (!aItem)
-    return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt= mSHEntry->mChildren.Count();
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    *aItem = (nsISupports *)mSHEntry->mChildren.ElementAt(mIndex);
-	NS_IF_ADDREF(*aItem);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMPL_ISUPPORTS1(nsSHEnumerator, nsIEnumerator)
-
-
-NS_IMETHODIMP 
-nsSHEnumerator::CurrentItem(nsISHEntry **aItem)
-{
-  if (!aItem)
-    return NS_ERROR_NULL_POINTER;
-  PRUint32 cnt = mSHEntry->mChildren.Count();
-  if (mIndex >=0 && mIndex < (PRInt32)cnt){
-    nsCOMPtr<nsISupports> indexIsupports =  (nsISHEntry *) mSHEntry->mChildren.ElementAt(mIndex);
-    return indexIsupports->QueryInterface(NS_GET_IID(nsISHEntry),(void **)aItem);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
-
-NS_IMETHODIMP
-nsSHEnumerator::IsDone()
-{
-  PRUint32 cnt;
-  cnt = mSHEntry->mChildren.Count();
-  if (mIndex >= 0 && mIndex < (PRInt32)cnt ) { 
-    return NS_ENUMERATOR_FALSE;
-  }
-  return NS_OK;
-}
-
-
-#if 0
-NS_IMETHODIMP
-nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEnumerator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIEnumerator*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIBidirectionalEnumerator*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return mDomSelection->QueryInterface(aIID, aInstancePtr);
-}
-#endif
-
-////////////END nsSHEnumerator methods
-
-NS_IMETHODIMP
-NS_NewSHEntry(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv = NS_OK;
-
-  nsSHEntry* result = new nsSHEntry();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-
-  rv = result->QueryInterface(aIID, aResult);
-
-  if (NS_FAILED(rv)) {
-    delete result;
-    *aResult = nsnull;
-    return rv;
-  }
-
-  return rv;
 }
