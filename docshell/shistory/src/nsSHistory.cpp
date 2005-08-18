@@ -92,7 +92,7 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
       return NS_OK;
       }
 
-	nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_PROGID));
+	nsCOMPtr<nsISHTransaction> txn(do_CreateInstance(NS_SHTRANSACTION_CONTRACTID));
    NS_ENSURE_TRUE(txn, NS_ERROR_FAILURE);
 
    // Set the ShEntry and parent for the transaction. setting the 
