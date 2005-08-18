@@ -483,7 +483,11 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
 	{
 		loadType = nsIDocShellLoadInfo::loadReloadBypassCache;
 	}
-	else
+  else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE)
+  {
+		loadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+  }
+  else
 	{
 		loadType = nsIDocShellLoadInfo::loadReloadNormal;
 	}
