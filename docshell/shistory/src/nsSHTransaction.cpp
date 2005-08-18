@@ -29,7 +29,6 @@
 
 nsSHTransaction::nsSHTransaction() : mPersist(PR_TRUE), mPrev(nsnull) 
 {
-   NS_INIT_ISUPPORTS();
 }
 
 
