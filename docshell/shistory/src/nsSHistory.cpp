@@ -27,7 +27,6 @@
 #include "nsXPIDLString.h"
 
 // Interfaces Needed
-#include "nsIGenericFactory.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsXPIDLString.h"
@@ -35,6 +34,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellLoadInfo.h"
+#include "nsIServiceManager.h"
 
 //*****************************************************************************
 //***    nsSHistory: Object Management
