@@ -227,8 +227,9 @@ AC_ARG_ENABLE(mdupdate,
       fi ])
 
 AC_ARG_ENABLE(macos-target,
-             [  --enable-macos-target=VER (default=10.1 for ppc, 10.4 for x86)
-                          Set the minimum MacOS version needed at runtime],
+             [  --enable-macos-target=VER
+                          Set the minimum MacOS version needed at runtime
+                          [10.1 for ppc, 10.4 for x86]],
              [_MACOSX_DEPLOYMENT_TARGET=$enableval])
 
 dnl ========================================================
@@ -2237,7 +2238,8 @@ AC_ARG_ENABLE(nspr-threads,
 case "$target" in
 *-beos*)
     AC_ARG_WITH(bthreads,
-    [  --with-bthreads         Use system bthreads library as thread subsystem (BeOS only)],
+    [  --with-bthreads         Use system bthreads library as thread subsystem
+                          (BeOS only)],
     [	if test "$withval" = "yes"; then
     	    USE_BTHREADS=1
 	        USE_USER_PTHREADS=
@@ -2247,7 +2249,8 @@ case "$target" in
 
 *-solaris*)
     AC_ARG_WITH(native-threads,
-    [  --with-native-threads   Use native system threads as thread subsystem (Solaris only)],
+    [  --with-native-threads   Use native system threads as thread subsystem
+                          (Solaris only)],
     [ if test "$withval" = "yes"; then
 	    USE_NATIVE_THREADS=1
 	    USE_USER_PTHREADS=
