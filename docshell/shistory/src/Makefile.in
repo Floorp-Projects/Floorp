@@ -31,7 +31,14 @@ LIBRARY_NAME	= shistory
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= Session_History_Module
-REQUIRES	= xpcom string necko dom layout docshell pref
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  layout \
+		  docshell \
+		  pref \
+		  $(NULL)
 
 CPPSRCS		= nsSHEntry.cpp        \
             nsSHTransaction.cpp   \
