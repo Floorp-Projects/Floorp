@@ -94,23 +94,6 @@ nsSHTransaction::GetNext(nsISHTransaction * * aResult)
 NS_IMETHODIMP
 nsSHTransaction::SetNext(nsISHTransaction * aNext)
 {
-   if(mNext)
-      {   
-	   /* We do not want to maintain the previous traversals
-	    * and make SessionHistory grow unboundewd for the 
-		* seamonkey release. We will let go off 
-		* all previous traversals. However, based on a pref
-		* previous traversals can be maintained. The Pref
-		* work will be done at a future date.Commenting off 
-		* the following lines will delete previous traversals
-		*/
-#if 0
-		// There is already a child. Move the child to the LRV list
-      mLRVList = mNext;
-#endif 
-
-	   }
-
    NS_ENSURE_SUCCESS(aNext->SetPrev(this), NS_ERROR_FAILURE);
 
    mNext = aNext;
@@ -130,15 +113,6 @@ nsSHTransaction::GetPrev(nsISHTransaction ** aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
    *aResult  = mPrev;
-   NS_IF_ADDREF(*aResult);
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHTransaction::GetLrvList(nsISHTransaction ** aResult)
-{
-   NS_ENSURE_ARG_POINTER(aResult);
-   *aResult = mLRVList;
    NS_IF_ADDREF(*aResult);
    return NS_OK;
 }

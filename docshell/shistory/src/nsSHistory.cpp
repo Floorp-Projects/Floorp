@@ -259,7 +259,8 @@ nsSHistory::GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
    return NS_OK;
 }
 
-NS_IMETHODIMP
+#ifdef DEBUG
+nsresult
 nsSHistory::PrintHistory()
 {
 
@@ -318,13 +319,12 @@ nsSHistory::PrintHistory()
       
   return NS_OK;
 }
+#endif
 
 
 NS_IMETHODIMP
 nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
 {
-    nsCOMPtr<nsISHEntry>   entry;
-
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult=mListRoot;
       NS_IF_ADDREF(*aResult);
