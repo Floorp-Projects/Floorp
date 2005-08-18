@@ -42,7 +42,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
-    <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider, nsIObserver">
       <property name="accessible">
         <getter>
           <![CDATA[
@@ -256,7 +256,7 @@
       <field name="mPrefs" readonly="true">
         Components.classes['@mozilla.org/preferences-service;1']
                   .getService(Components.interfaces.nsIPrefService)
-                  .getBranch(null);
+                  .getBranch(null).QueryInterface(Components.interfaces.nsIPrefBranch2);
       </field>
 
       <field name="mAtomService" readonly="true">
@@ -362,6 +362,9 @@
           }
           catch (e) {
           }
+          
+          mPrefs.addObserver("browser.display.background_color", this, false);
+          this.observe(null, "nsPref:changed", "browser.display.background_color");
         ]]>
       </constructor>
       
@@ -389,7 +392,22 @@
           this.focusedWindow = null;
           this.focusedElement = null;
           this._webBrowserFind = null;
+          this.mPrefs.removeObserver("browser.display.background_color", this);
         ]]>
+        </body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aState"/>
+        <body>
+          <![CDATA[
+            if (aTopic == "nsPref:changed" && aState == "browser.display.background_color") {
+              this.style.backgroundColor = this.mPrefs.getCharPref("browser.display.background_color");
+              return;
+            }
+          ]]>
         </body>
       </method>
     </implementation>
