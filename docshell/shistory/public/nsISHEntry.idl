@@ -68,9 +68,13 @@ attribute  unsigned long loadType;
  */
 attribute unsigned long ID;
 
+/** attribute to set and get the cache key for the entry */
+attribute nsISupports cacheKey;
+
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
-			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState);
+			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,
+               in nsISupports aCacheKey);
 
 /** Attribute that indicates if this entry is for a subframe navigation */
 void SetIsSubFrame(in boolean aFlag);
