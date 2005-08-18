@@ -72,7 +72,7 @@ interface nsISHTransaction : nsISupports
 #define NS_SHTRANSACTION_CID \
 {0xbfd1a792, 0xad9f, 0x11d3, {0xbd, 0xc7, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44}}
 
-#define NS_SHTRANSACTION_PROGID \
-    "component://netscape/browser/session-history-transaction"
+#define NS_SHTRANSACTION_CONTRACTID \
+    "@mozilla.org/browser/session-history-transaction;1"
 
 %}
