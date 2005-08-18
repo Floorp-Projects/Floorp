@@ -175,6 +175,8 @@ PLDHashTable* nsWindow::sIconCache;
 PRBool gJustGotDeactivate = PR_FALSE;
 PRBool gJustGotActivate   = PR_FALSE;
 
+#define NS_WINDOW_TITLE_MAX_LENGTH 4095
+
 #ifdef USE_XIM
 
 struct nsXICLookupEntry : public PLDHashEntryHdr {
@@ -2319,19 +2321,29 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
   PRInt32 platformLen;
 
   // Set UTF8_STRING title for NET_WM-supporting window managers
-  NS_ConvertUTF16toUTF8 utf8_title(aTitle);
+#define UTF8_FOLLOWBYTE(ch) (((ch) & 0xC0) == 0x80)
+  NS_ConvertUTF16toUTF8 titleUTF8(aTitle);
+  if (titleUTF8.Length() > NS_WINDOW_TITLE_MAX_LENGTH) {
+    // Truncate overlong titles (bug 167315). Make sure we chop after a
+    // complete sequence by making sure the next char isn't a follow-byte.
+    PRUint32 len = NS_WINDOW_TITLE_MAX_LENGTH;
+    while(UTF8_FOLLOWBYTE(titleUTF8[len]))
+      --len;
+    titleUTF8.Truncate(len);
+  }
+
   XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                 XInternAtom(GDK_DISPLAY(), "_NET_WM_NAME", False),
                 XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
-                8, PropModeReplace, (unsigned char *) utf8_title.get(),
-                utf8_title.Length());
+                8, PropModeReplace, (unsigned char *) titleUTF8.get(),
+                titleUTF8.Length());
 
   // Set UTF8_STRING title for _NET_WM_ICON_NAME as well
   XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                 XInternAtom(GDK_DISPLAY(), "_NET_WM_ICON_NAME", False),
                 XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
-                8, PropModeReplace, (unsigned char *) utf8_title.get(),
-                utf8_title.Length());
+                8, PropModeReplace, (unsigned char *) titleUTF8.get(),
+                titleUTF8.Length());
 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   // get the charset
@@ -2359,6 +2371,10 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
   PRInt32 len = (PRInt32)aTitle.Length();
   encoder->GetMaxLength(title, len, &platformLen);
   if (platformLen) {
+    // Truncate overlong titles (bug 167315).
+    if (platformLen > NS_WINDOW_TITLE_MAX_LENGTH) {
+      platformLen = NS_WINDOW_TITLE_MAX_LENGTH;
+    }
     platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
     if (platformText) {
       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
