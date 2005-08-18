@@ -47,6 +47,13 @@
 #include "nsReadableUtils.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "PLEvent.h"
+#include "nsAutoPtr.h"
+#include "nsIEventQueue.h"
+#include "nsEventQueueUtils.h"
+
 
 static PRUint32 gEntryID = 0;
 
@@ -95,6 +102,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
 nsSHEntry::~nsSHEntry()
 {
   mChildren.Clear();
+  RemoveDocumentObserver();
   if (mContentViewer)
     mContentViewer->Destroy();
 }
@@ -103,7 +111,8 @@ nsSHEntry::~nsSHEntry()
 //    nsSHEntry: nsISupports
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS3(nsSHEntry, nsISHContainer, nsISHEntry, nsIHistoryEntry)
+NS_IMPL_ISUPPORTS4(nsSHEntry, nsISHContainer, nsISHEntry, nsIHistoryEntry,
+                   nsIDocumentObserver)
 
 //*****************************************************************************
 //    nsSHEntry: nsISHEntry
@@ -152,7 +161,21 @@ NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
 NS_IMETHODIMP
 nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
+  RemoveDocumentObserver();
   mContentViewer = aViewer;
+
+  mDocument = nsnull;
+  if (mContentViewer) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+    // Store observed document in strong pointer in case it is removed from
+    // the contentviewer
+    mDocument = do_QueryInterface(domDoc);
+    if (mDocument) {
+      mDocument->AddObserver(this);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -522,15 +545,149 @@ nsSHEntry::SyncPresentationState()
     return NS_OK;
   }
 
-  // If not, then nuke all of the presentation-related members.
+  DropPresentationState();
+
+  return NS_OK;
+}
+
+void
+nsSHEntry::DropPresentationState()
+{
+  RemoveDocumentObserver();
   if (mContentViewer)
     mContentViewer->ClearHistoryEntry();
 
   mContentViewer = nsnull;
+  mDocument = nsnull;
   mSticky = PR_TRUE;
   mWindowState = nsnull;
   mViewerBounds.SetRect(0, 0, 0, 0);
   mChildShells.Clear();
   mRefreshURIList = nsnull;
-  return NS_OK;
+}
+
+void
+nsSHEntry::RemoveDocumentObserver()
+{
+  if (mDocument) {
+    mDocument->RemoveObserver(this);
+    mDocument = nsnull;
+  }
+}
+
+//*****************************************************************************
+//    nsSHEntry: nsIDocumentObserver
+//*****************************************************************************
+
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsSHEntry)
+NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsSHEntry)
+NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsSHEntry)
+NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsSHEntry)
+NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsSHEntry)
+
+void
+nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,
+                                nsIContent* aContent,
+                                PRBool aAppend)
+{
+  DocumentMutated();
+}
+
+void
+nsSHEntry::AttributeChanged(nsIDocument* aDocument,
+                            nsIContent* aContent,
+                            PRInt32 aNameSpaceID,
+                            nsIAtom* aAttribute,
+                            PRInt32 aModType)
+{
+  DocumentMutated();
+}
+
+void
+nsSHEntry::ContentAppended(nsIDocument* aDocument,
+                        nsIContent* aContainer,
+                        PRInt32 aNewIndexInContainer)
+{
+  DocumentMutated();
+}
+
+void
+nsSHEntry::ContentInserted(nsIDocument* aDocument,
+                           nsIContent* aContainer,
+                           nsIContent* aChild,
+                           PRInt32 aIndexInContainer)
+{
+  DocumentMutated();
+}
+
+void
+nsSHEntry::ContentRemoved(nsIDocument* aDocument,
+                          nsIContent* aContainer,
+                          nsIContent* aChild,
+                          PRInt32 aIndexInContainer)
+{
+  DocumentMutated();
+}
+
+class DropPresentationEvent : public PLEvent
+{
+public:
+  DropPresentationEvent(nsSHEntry* aSHEntry);
+
+  nsRefPtr<nsSHEntry> mSHEntry;
+};
+
+PR_STATIC_CALLBACK(void*)
+HandleDropPresentationEvent(PLEvent *aEvent)
+{
+  nsSHEntry* entry = NS_STATIC_CAST(DropPresentationEvent*, aEvent)->mSHEntry;
+  nsCOMPtr<nsIContentViewer> viewer;
+  entry->GetContentViewer(getter_AddRefs(viewer));
+  if (viewer) {
+    viewer->Destroy();
+  }
+  entry->DropPresentationState();
+
+  return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DestroyDropPresentationEvent(PLEvent *aEvent)
+{
+    delete NS_STATIC_CAST(DropPresentationEvent*, aEvent);
+}
+
+DropPresentationEvent::DropPresentationEvent(nsSHEntry* aSHEntry)
+    : mSHEntry(aSHEntry)
+{
+    PL_InitEvent(this, mSHEntry, ::HandleDropPresentationEvent,
+                 ::DestroyDropPresentationEvent);
+}
+
+void
+nsSHEntry::DocumentMutated()
+{
+  NS_ASSERTION(mContentViewer && mDocument,
+               "we shouldn't still be observing the doc");
+
+  // Release the reference to the contentviewer asynconously so that the
+  // document doesn't get nuked mid-mutation.
+  nsCOMPtr<nsIEventQueue> uiThreadQueue;
+  NS_GetMainEventQ(getter_AddRefs(uiThreadQueue));
+  if (!uiThreadQueue) {
+    return;
+  }
+
+  PLEvent *evt = new DropPresentationEvent(this);
+  if (!evt) {
+    return;
+  }
+
+  nsresult rv = uiThreadQueue->PostEvent(evt);
+  if (NS_FAILED(rv)) {
+    PL_DestroyEvent(evt);
+  }
+
+  // Ensure that we don't post more then one PLEvent
+  RemoveDocumentObserver();
 }
