@@ -25,6 +25,7 @@
  *   B.J. Rossiter <bj@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,6 +50,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
+
+#define NS_WINDOW_TITLE_MAX_LENGTH 4095
 
 // Variables for grabbing
 PRBool   nsWindow::sIsGrabbing = PR_FALSE;
@@ -751,6 +754,10 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
   PRInt32 len = (PRInt32)aTitle.Length();
   encoder->GetMaxLength(title, len, &platformLen);
   if (platformLen) {
+    // Truncate overlong titles (bug 167315).
+    if (platformLen > NS_WINDOW_TITLE_MAX_LENGTH) {
+      platformLen = NS_WINDOW_TITLE_MAX_LENGTH;
+    }
     platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
     if (platformText) {
       rv = encoder->Convert(title, &len, platformText, &platformLen);

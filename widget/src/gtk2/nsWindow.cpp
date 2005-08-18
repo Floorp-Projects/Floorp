@@ -211,6 +211,8 @@ static nsWindow         *gPluginFocusWindow    = NULL;
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
 
+#define NS_WINDOW_TITLE_MAX_LENGTH 4095
+
 #ifdef USE_XIM
 
 static nsWindow    *gIMEFocusWindow = NULL;
@@ -1078,8 +1080,17 @@ nsWindow::SetTitle(const nsAString& aTitle)
         return NS_OK;
 
     // convert the string into utf8 and set the title.
-    NS_ConvertUCS2toUTF8 utf8title(aTitle);
-    gtk_window_set_title(GTK_WINDOW(mShell), (const char *)utf8title.get());
+#define UTF8_FOLLOWBYTE(ch) (((ch) & 0xC0) == 0x80)
+    NS_ConvertUTF16toUTF8 titleUTF8(aTitle);
+    if (titleUTF8.Length() > NS_WINDOW_TITLE_MAX_LENGTH) {
+        // Truncate overlong titles (bug 167315). Make sure we chop after a
+        // complete sequence by making sure the next char isn't a follow-byte.
+        PRUint32 len = NS_WINDOW_TITLE_MAX_LENGTH;
+        while(UTF8_FOLLOWBYTE(titleUTF8[len]))
+            --len;
+        titleUTF8.Truncate(len);
+    }
+    gtk_window_set_title(GTK_WINDOW(mShell), (const char *)titleUTF8.get());
 
     return NS_OK;
 }
