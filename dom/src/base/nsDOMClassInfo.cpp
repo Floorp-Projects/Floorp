@@ -5855,6 +5855,10 @@ nsNavigatorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   nsNavigator *nav = (nsNavigator *)(nsIDOMNavigator *)nativeObj;
   nsIDocShell *ds = nav->GetDocShell();
+  if (!ds) {
+    NS_WARNING("Refusing to create a navigator in the wrong scope");
+    return NS_ERROR_INVALID_POINTER;
+  }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
 
