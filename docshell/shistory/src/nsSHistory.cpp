@@ -444,18 +444,45 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(nextEntry));
 
    nsCOMPtr<nsIURI> nexturi;
+   PRInt32 pCount=0, nCount=0;
+   nsCOMPtr<nsISHContainer> prevAsContainer(do_QueryInterface(prevEntry));
+   nsCOMPtr<nsISHContainer> nextAsContainer(do_QueryInterface(nextEntry));
+
+   if (prevAsContainer && nextAsContainer) {
+	   prevAsContainer->GetChildCount(&pCount);
+	   nextAsContainer->GetChildCount(&nCount);
+   }
+  
    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-   if (oldIndex != aIndex) {
-      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
+   if (oldIndex == aIndex) {
+	   // Possibly a reload case 
+	   docShell = mRootDocShell;
+   }
+   else {
+	   // Going back or forward.
+	   if ((pCount > 0) && (nCount > 0)) {
+		 /* THis is a subframe navigation. Go find 
+		  * the docshell in which load should happen
+		  */
+		  PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
                                      getter_AddRefs(docShell),
                                      getter_AddRefs(shEntry));
-      if (!result)  
-	    mIndex = oldIndex;
-      
-      nextEntry = shEntry;        
+		  if (!result) {
+		    /* There was an error in finding the entry and docshell
+			 * where the load should happen. Reset the index back 
+			 * to what it was. Return failure.
+		     */
+	        mIndex = oldIndex;   
+		    return NS_ERROR_FAILURE;
+		  }
+		  else {
+		    nextEntry = shEntry;
+		  }
+	   }
+	   else
+		   docShell = mRootDocShell;
    }
-   else
-	   docShell = mRootDocShell;
+  
 
    if (!docShell || !nextEntry || !mRootDocShell)
 	    return NS_ERROR_FAILURE;
