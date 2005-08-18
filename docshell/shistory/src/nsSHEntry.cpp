@@ -538,7 +538,7 @@ nsSHEntry::SyncPresentationState()
 
   // If not, then nuke all of the presentation-related members.
   if (mContentViewer)
-    mContentViewer->SetHistoryEntry(nsnull);
+    mContentViewer->ClearHistoryEntry();
 
   mContentViewer = nsnull;
   mSticky = PR_TRUE;
