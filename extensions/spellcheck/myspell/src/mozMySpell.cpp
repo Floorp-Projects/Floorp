@@ -78,11 +78,13 @@ NS_IMPL_ISUPPORTS1(mozMySpell, mozISpellCheckingEngine)
 
 mozMySpell::mozMySpell()
 {
+  mMySpell = NULL;
 }
 
 mozMySpell::~mozMySpell()
 {
   mPersonalDictionary = nsnull;
+  delete mMySpell;
 }
 
 /* attribute wstring dictionary; */
@@ -133,6 +135,11 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar *aDictionary)
     rv = file->Append(mDictionary + NS_LITERAL_STRING(".dic"));
     NS_ENSURE_SUCCESS(rv, rv);
     file->GetPath(dictFileName);
+
+    // SetDictionary can be called multiple times, so we might have a valid mMySpell instance 
+    // which needs cleaned up.
+    if (mMySpell)
+      delete mMySpell;
 
     mMySpell = new MySpell(NS_ConvertUTF16toUTF8(affFileName).get(), NS_ConvertUTF16toUTF8(dictFileName).get());
     if (!mMySpell)
