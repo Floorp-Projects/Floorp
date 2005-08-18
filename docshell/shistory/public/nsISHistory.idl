@@ -113,8 +113,8 @@ interface nsISHistory: nsISupports
    *                          purged from history. During purge operation,
    *                          the latest documents are maintained and older 
    *                          'numEntries' documents are removed from history.
-   * @return                  <code>NS_OK</code> Purging was successfull
-   *                          <code>NS_ERROR_FAILURE</code> numEntries is
+   * @throws                  <code>NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA</code> Purge was vetod.
+   * @throws                  <code>NS_ERROR_FAILURE</code> numEntries is
    *                          invalid or out of bounds with the size of history.
    *                          
    */
