@@ -2000,16 +2000,6 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsChildView::SetIMEEnabled(PRBool aState)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsChildView::GetIMEEnabled(PRBool* aState)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //
 // Destruct and don't commit the IME composition string.
 //

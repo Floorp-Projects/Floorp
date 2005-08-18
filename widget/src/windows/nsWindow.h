@@ -57,6 +57,8 @@
 
 #include "nsVoidArray.h"
 
+#include <imm.h>
+
 class nsNativeDragTarget;
 class nsIRollupListener;
 
@@ -94,6 +96,185 @@ const LPCSTR kClassNameUI             = "MozillaUIWindowClass";
 const LPCSTR kClassNameContent        = "MozillaContentWindowClass";
 const LPCSTR kClassNameContentFrame   = "MozillaContentFrameWindowClass";
 const LPCSTR kClassNameGeneral        = "MozillaWindowClass";
+
+/**
+* Native IMM wrapper
+*/
+class nsIMM
+{
+  //prototypes for DLL function calls...
+  typedef LONG (CALLBACK *GetCompStrPtr)  (HIMC, DWORD, LPVOID, DWORD);
+  typedef LONG (CALLBACK *GetContextPtr)  (HWND);
+  typedef LONG (CALLBACK *RelContextPtr)  (HWND, HIMC);
+  typedef LONG (CALLBACK *NotifyIMEPtr)   (HIMC, DWORD, DWORD, DWORD);
+  typedef LONG (CALLBACK *SetCandWindowPtr)(HIMC, LPCANDIDATEFORM);
+  typedef LONG (CALLBACK *SetCompWindowPtr)(HIMC, LPCOMPOSITIONFORM);
+  typedef LONG (CALLBACK *GetCompWindowPtr)(HIMC, LPCOMPOSITIONFORM);
+  typedef LONG (CALLBACK *GetPropertyPtr)  (HKL, DWORD);
+  typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
+  typedef BOOL (CALLBACK *GetOpenStatusPtr)  (HIMC);
+  typedef BOOL (CALLBACK *SetOpenStatusPtr)  (HIMC, BOOL);
+public:
+
+  static nsIMM& LoadModule() {
+    static nsIMM gIMM;
+    return gIMM;
+  }
+
+  nsIMM(const char* aModuleName="IMM32.DLL") {
+#ifndef WINCE
+    mInstance=::LoadLibrary(aModuleName);
+    NS_ASSERTION(mInstance!=NULL, "nsIMM.LoadLibrary failed.");
+
+    mGetCompositionStringA=(mInstance) ? (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringA") : 0;
+    NS_ASSERTION(mGetCompositionStringA!=NULL, "nsIMM.ImmGetCompositionStringA failed.");
+
+    mGetCompositionStringW=(mInstance) ? (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringW") : 0;
+    NS_ASSERTION(mGetCompositionStringW!=NULL, "nsIMM.ImmGetCompositionStringW failed.");
+
+    mGetContext=(mInstance) ? (GetContextPtr)GetProcAddress(mInstance, "ImmGetContext") : 0;
+    NS_ASSERTION(mGetContext!=NULL, "nsIMM.ImmGetContext failed.");
+
+    mReleaseContext=(mInstance) ? (RelContextPtr)GetProcAddress(mInstance, "ImmReleaseContext") : 0;
+    NS_ASSERTION(mReleaseContext!=NULL, "nsIMM.ImmReleaseContext failed.");
+
+    mNotifyIME=(mInstance) ? (NotifyIMEPtr)GetProcAddress(mInstance, "ImmNotifyIME") : 0;
+    NS_ASSERTION(mNotifyIME!=NULL, "nsIMM.ImmNotifyIME failed.");
+
+    mSetCandiateWindow=(mInstance) ? (SetCandWindowPtr)GetProcAddress(mInstance, "ImmSetCandidateWindow") : 0;
+    NS_ASSERTION(mSetCandiateWindow!=NULL, "nsIMM.ImmSetCandidateWindow failed.");
+
+    mGetCompositionWindow=(mInstance) ? (GetCompWindowPtr)GetProcAddress(mInstance, "ImmGetCompositionWindow") : 0;
+    NS_ASSERTION(mGetCompositionWindow!=NULL, "nsIMM.ImmGetCompositionWindow failed.");
+
+    mSetCompositionWindow=(mInstance) ? (SetCompWindowPtr)GetProcAddress(mInstance, "ImmSetCompositionWindow") : 0;
+    NS_ASSERTION(mSetCompositionWindow!=NULL, "nsIMM.ImmSetCompositionWindow failed.");
+
+    mGetProperty=(mInstance) ? (GetPropertyPtr)GetProcAddress(mInstance, "ImmGetProperty") : 0;
+    NS_ASSERTION(mGetProperty!=NULL, "nsIMM.ImmGetProperty failed.");
+
+    mGetDefaultIMEWnd=(mInstance) ? (GetDefaultIMEWndPtr)GetProcAddress(mInstance, "ImmGetDefaultIMEWnd") : 0;
+    NS_ASSERTION(mGetDefaultIMEWnd!=NULL, "nsIMM.ImmGetDefaultIMEWnd failed.");
+
+    mGetOpenStatus=(mInstance) ? (GetOpenStatusPtr)GetProcAddress(mInstance,"ImmGetOpenStatus") : 0;
+    NS_ASSERTION(mGetOpenStatus!=NULL, "nsIMM.ImmGetOpenStatus failed.");
+
+    mSetOpenStatus=(mInstance) ? (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus") : 0;
+    NS_ASSERTION(mSetOpenStatus!=NULL, "nsIMM.ImmSetOpenStatus failed.");
+#elif WINCE_EMULATOR
+    mInstance=NULL;
+    mGetCompositionStringA=NULL;
+    mGetCompositionStringW=NULL;
+    mGetContext=NULL;
+    mReleaseContext=NULL;
+    mNotifyIME=NULL;
+    mSetCandiateWindow=NULL;
+    mGetCompositionWindow=NULL;
+    mSetCompositionWindow=NULL;
+    mGetProperty=NULL;
+    mGetDefaultIMEWnd=NULL;
+    mGetOpenStatus=NULL;
+    mSetOpenStatus=NULL;
+#else // WinCE
+    mInstance=NULL;
+
+    mGetCompositionStringA=NULL;
+    mGetCompositionStringW=(GetCompStrPtr)ImmGetCompositionStringW;
+    mGetContext=(GetContextPtr)ImmGetContext;
+    mReleaseContext=(RelContextPtr)ImmReleaseContext;
+    mNotifyIME=(NotifyIMEPtr)ImmNotifyIME;
+    mSetCandiateWindow=(SetCandWindowPtr)ImmSetCandidateWindow;
+    mGetCompositionWindow=(GetCompWindowPtr)ImmGetCompositionWindow;
+    mSetCompositionWindow=(SetCompWindowPtr)ImmSetCompositionWindow;
+    mGetProperty=(GetPropertyPtr)ImmGetProperty;
+    mGetDefaultIMEWnd=(GetDefaultIMEWndPtr)ImmGetDefaultIMEWnd;
+    mGetOpenStatus=(GetOpenStatusPtr)ImmGetOpenStatus;
+    mSetOpenStatus=(SetOpenStatusPtr)ImmSetOpenStatus;
+#endif
+  }
+
+  ~nsIMM() {
+    if(mInstance) {
+      ::FreeLibrary(mInstance);
+    }
+    mGetCompositionStringA=0;
+    mGetCompositionStringW=0;
+    mGetContext=0;
+    mReleaseContext=0;
+    mNotifyIME=0;
+    mSetCandiateWindow=0;
+    mGetCompositionWindow=0;
+    mSetCompositionWindow=0;
+    mGetProperty=0;
+    mGetDefaultIMEWnd=0;
+    mGetOpenStatus=0;
+    mSetOpenStatus=0;
+  }
+
+  LONG GetCompositionStringA(HIMC h, DWORD d1, LPVOID v, DWORD d2) {
+    return (mGetCompositionStringA) ? mGetCompositionStringA(h, d1, v, d2) : 0L;
+  }
+
+  LONG GetCompositionStringW(HIMC h, DWORD d1, LPVOID v, DWORD d2) {
+    return (mGetCompositionStringW) ? mGetCompositionStringW(h, d1, v, d2) : 0L;
+  }
+
+  LONG GetContext(HWND anHWND) {
+    return (mGetContext) ? mGetContext(anHWND) : 0L;
+  }
+
+  LONG ReleaseContext(HWND anHWND, HIMC anIMC) {
+    return (mReleaseContext) ? mReleaseContext(anHWND, anIMC) : 0L;
+  }
+
+  LONG NotifyIME(HIMC h, DWORD d1, DWORD d2, DWORD d3) {
+    return (mNotifyIME) ? mNotifyIME(h, d1, d2, d3) : 0L;
+  }
+
+  LONG SetCandidateWindow(HIMC h, LPCANDIDATEFORM l) {
+    return (mSetCandiateWindow) ? mSetCandiateWindow(h, l) : 0L;
+  }
+
+  LONG SetCompositionWindow(HIMC h, LPCOMPOSITIONFORM l) {
+    return (mSetCompositionWindow) ? mSetCompositionWindow(h, l) : 0L;
+  }
+
+  LONG GetCompositionWindow(HIMC h,LPCOMPOSITIONFORM l) {
+    return (mGetCompositionWindow) ? mGetCompositionWindow(h, l) : 0L;
+  }
+
+  LONG GetProperty(HKL hKL, DWORD dwIndex) {
+    return (mGetProperty) ? mGetProperty(hKL, dwIndex) : 0L;
+  }
+
+  LONG GetDefaultIMEWnd(HWND hWnd) {
+    return (mGetDefaultIMEWnd) ? mGetDefaultIMEWnd(hWnd) : 0L;
+  }
+
+  BOOL GetOpenStatus(HIMC h) {
+    return (mGetOpenStatus) ? mGetOpenStatus(h) : FALSE;
+  }
+
+  BOOL SetOpenStatus(HIMC h, BOOL b) {
+    return (mSetOpenStatus) ? mSetOpenStatus(h,b) : FALSE;
+  }
+
+private:
+
+  HINSTANCE           mInstance;
+  GetCompStrPtr       mGetCompositionStringA;
+  GetCompStrPtr       mGetCompositionStringW;
+  GetContextPtr       mGetContext;
+  RelContextPtr       mReleaseContext;
+  NotifyIMEPtr        mNotifyIME;
+  SetCandWindowPtr    mSetCandiateWindow;
+  SetCompWindowPtr    mSetCompositionWindow;
+  GetCompWindowPtr    mGetCompositionWindow;
+  GetPropertyPtr      mGetProperty;
+  GetDefaultIMEWndPtr mGetDefaultIMEWnd;
+  GetOpenStatusPtr    mGetOpenStatus;
+  SetOpenStatusPtr    mSetOpenStatus;
+};
 
 /**
  * Native WIN32 window wrapper.
@@ -220,8 +401,6 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(PRBool aState);
   NS_IMETHOD GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD SetIMEEnabled(PRBool aState);
-  NS_IMETHOD GetIMEEnabled(PRBool* aState);
   NS_IMETHOD CancelIMEComposition();
 
   PRBool IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam);
