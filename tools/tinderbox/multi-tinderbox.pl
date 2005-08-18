@@ -57,21 +57,21 @@ sub Run() {
     my $start_time = time();
     OUTER: while (1) {
         foreach my $treeentry (@{$Settings::Tinderboxes}) {
-	    my $multidir = getcwd();
+            my $multidir = getcwd();
             chdir($treeentry->{tree}) or
                 die "Tree $treeentry->{tree} does not exist";
             system("./build-seamonkey.pl --once $treeentry->{args}");
             chdir($multidir);
 
-	    # We sleep 15 seconds to open up a window for stopping a build.
-	    sleep 15;
+            # We sleep 15 seconds to open up a window for stopping a build.
+            sleep 15;
 
-	    # Provide a fall-over technique that stops the multi-tinderbox
-	    # script once the current build cycle has completed.
-	    if ( -e "fall-over" ) {
-		system("mv fall-over fall-over.$$.done");
-		last OUTER;
-	    }
+            # Provide a fall-over technique that stops the multi-tinderbox
+            # script once the current build cycle has completed.
+            if ( -e "fall-over" ) {
+                system("mv fall-over fall-over.$$.done");
+                last OUTER;
+            }
         }
 
         # $BuildSleep is the minimum amount of time a build is allowed to take.
