@@ -29,7 +29,7 @@
 
 nsSHTransaction::nsSHTransaction() : mPersist(PR_TRUE), mPrev(nsnull) 
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 
