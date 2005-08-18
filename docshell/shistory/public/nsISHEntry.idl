@@ -49,7 +49,7 @@
 interface nsILayoutHistoryState;
 interface nsIDOMDocument;
 
-[scriptable, uuid(65281BA1-988A-11d3-BDC7-0050040A9B44)]
+[scriptable, uuid(6b596e1f-a3bd-40f9-a7ee-ab3edc7f9960)]
 interface nsISHEntry : nsISupports 
 {
 
@@ -85,6 +85,16 @@ attribute  unsigned long loadType;
  * subframe navigation
  */
 attribute unsigned long ID;
+
+/**
+ * pageIdentifier is an integer that should be the same for two entries
+ * attached to the same docshell only if the two entries are entries for the
+ * same page in the sense that one could go from the state represented by one
+ * to the state represented by the other simply by scrolling (so the entries
+ * are separated by an anchor traversal or a subframe navigation in some other
+ * frame).
+ */
+attribute unsigned long pageIdentifier;
 
 /** attribute to set and get the cache key for the entry */
 attribute nsISupports cacheKey;
