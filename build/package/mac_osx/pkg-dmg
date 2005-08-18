@@ -330,14 +330,7 @@ my(@gCleanup, %gConfig, $gDarwinMajor, $gDryRun, $gVerbosity);
             # it's available, but that's only on >= 10.3 (Panther).
             # If false, hdiutil create is used instead.  Fixed up for
             # earlier systems below.
-            #
-            # This is presently turned off for all systems.  When it's
-            # enabled, compressed images produced from makehybid output
-            # always mount on 10.4.2 (and maybe other releases?) with
-            # the view set to column view if the column view preference
-            # is set in the Finder.  That's bad.  They need to respect
-            # the view setting (probably icon view) in the .DS_Store file.
-            'makehybrid'         => 0,
+            'makehybrid'         => 1,
 
             # hdiutil create doesn't allow specifying a folder to open
             # at volume mount time, so those images are mounted and
@@ -880,7 +873,7 @@ sub diskImageMaker($$$$$$$$) {
       $hybridImage = giveExtension($tempDir.'/hybrid', '.dmg');
 
       if(command($gConfig{'cmd_hdiutil'}, 'makehybrid', '-hfs',
-       '-hfs-volume-name', $name, '-hfs-openfolder', '/', '-ov',
+       '-hfs-volume-name', $name, '-hfs-openfolder', $source, '-ov',
        $source, '-o', $hybridImage) != 0) {
         cleanupDie('hdiutil makehybrid failed');
       }
