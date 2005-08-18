@@ -40,6 +40,13 @@
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 static PRInt32  gHistoryMaxSize = 0;
 
+enum HistCmd{
+  HIST_CMD_BACK,
+  HIST_CMD_FORWARD,
+  HIST_CMD_GOTOINDEX,
+  HIST_CMD_RELOAD
+} ;
+
 //*****************************************************************************
 //***    nsSHistory: Object Management
 //*****************************************************************************
@@ -344,6 +351,8 @@ nsSHistory::SetMaxLength(PRInt32 aMaxSize)
     return NS_ERROR_ILLEGAL_VALUE;
 
   gHistoryMaxSize = aMaxSize;
+  if (mLength > aMaxSize)
+    PurgeHistory(mLength-aMaxSize);
   return NS_OK;
 }
 
@@ -449,7 +458,7 @@ nsSHistory::GoBack()
 	GetCanGoBack(&canGoBack);
 	if (!canGoBack)  // Can't go back
 		return NS_ERROR_UNEXPECTED;
-  return GotoIndex(mIndex-1);
+  return LoadEntry(mIndex-1, nsIDocShellLoadInfo::loadHistory, HIST_CMD_BACK);
 }
 
 
@@ -461,7 +470,7 @@ nsSHistory::GoForward()
 	GetCanGoForward(&canGoForward);
 	if (!canGoForward)  // Can't go forward
 		return NS_ERROR_UNEXPECTED;
-  return GotoIndex(mIndex+1);
+  return LoadEntry(mIndex+1, nsIDocShellLoadInfo::loadHistory, HIST_CMD_FORWARD);
 
 }
 
@@ -509,7 +518,7 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
   if (!canNavigate)
     return NS_OK;
 
-	return LoadEntry(mIndex, loadType);
+	return LoadEntry(mIndex, loadType, HIST_CMD_RELOAD);
 }
 
 NS_IMETHODIMP
@@ -576,11 +585,11 @@ nsSHistory::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
-	return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory);
+	return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_GOTOINDEX);
 }
 
 NS_IMETHODIMP
-nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
+nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
 {
   nsCOMPtr<nsIDocShell> docShell;
   nsCOMPtr<nsISHEntry> shEntry;
@@ -607,15 +616,15 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType)
   if(mListener) {    
     nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
-      if (mIndex+1 == mRequestedIndex) {
+      if (aHistCmd == HIST_CMD_BACK) {
         // We are going back one entry. Send GoBack notifications
         listener->OnHistoryGoBack(nextURI, &canNavigate);
       }
-      else if (mIndex-1 == mRequestedIndex) {
+      else if (aHistCmd == HIST_CMD_FORWARD) {
         // We are going forward. Send GoForward notification
         listener->OnHistoryGoForward(nextURI, &canNavigate);
       }
-      else if (mIndex != mRequestedIndex) {
+      else if (aHistCmd == HIST_CMD_GOTOINDEX) {
         // We are going somewhere else. This is not reload either
         listener->OnHistoryGotoIndex(mIndex, nextURI, &canNavigate);
       }

@@ -60,7 +60,7 @@ protected:
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
    PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
 	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
-   NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType);
+   NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 histCmd);
 	
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
