@@ -27,6 +27,7 @@
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsILayoutHistoryState.h"
 
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
@@ -225,7 +226,7 @@ nsSHistory::PrintHistory()
               if (!NS_SUCCEEDED(rv) && !entry)
                       return NS_ERROR_FAILURE;
 
-              nsCOMPtr<nsISupports> layoutHistoryState;
+              nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
               nsCOMPtr<nsIURI>  uri;
               PRUnichar *  title;
               char * titleCStr=nsnull;
