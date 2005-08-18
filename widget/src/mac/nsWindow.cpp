@@ -2442,6 +2442,14 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsWindow::GetIMEEnabled(PRBool* aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsWindow::CancelIMEComposition() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
