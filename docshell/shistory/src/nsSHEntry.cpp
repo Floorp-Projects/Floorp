@@ -214,9 +214,23 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
 	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
 	PRInt32 childCount = mChildren.Count();
 	if (aOffset < childCount)
-		mChildren.InsertElementAt((void *) aChild, aOffset);
+	  mChildren.ReplaceElementAt((void *) aChild, aOffset);
 	else
+        {
+          //
+          // Bug 52670: Ensure children are added in order.
+          //
+          //  Later frames in the child list may load faster and get appended
+          //  before earlier frames, causing session history to be scrambled.
+          //  By growing the list here, they are added to the right position.
+          //
+          //  Assert that aOffset will not be so high as to grow us a lot.
+          //
+          NS_ASSERTION(aOffset < (childCount + 1023), "Large frames array!\n");
+          while (aOffset > childCount++) 
+            mChildren.AppendElement(nsnull);
 	  mChildren.AppendElement((void *)aChild);
+        }
 	NS_ADDREF(aChild);
 
     return NS_OK;
