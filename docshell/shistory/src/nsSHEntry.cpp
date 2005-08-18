@@ -25,6 +25,7 @@
 #include "nsXPIDLString.h"
 #include "nsIDocShellLoadInfo.h"
 
+PRUint32 gEntryID=0;
 //*****************************************************************************
 //***    nsSHEntry: Object Management
 //*****************************************************************************
@@ -33,6 +34,7 @@ nsSHEntry::nsSHEntry()
 {
    NS_INIT_REFCNT();
    mParent = nsnull;
+   mID = gEntryID++;
 }
 
 nsSHEntry::~nsSHEntry() 
@@ -160,6 +162,20 @@ NS_IMETHODIMP nsSHEntry::GetLoadType(PRUint32 * aResult)
 NS_IMETHODIMP nsSHEntry::SetLoadType(PRUint32  aLoadType)
 {
    mLoadType = aLoadType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetID(PRUint32 * aResult)
+{
+   NS_ENSURE_ARG_POINTER(aResult);
+   
+   *aResult = mID;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetID(PRUint32  aID)
+{
+   mID = aID;
    return NS_OK;
 }
 

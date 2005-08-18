@@ -61,6 +61,11 @@ attribute nsISHEntry parent;
  * when reload is pressed, it has the appropriate reload flag
  */
 attribute  unsigned long loadType;
+/**
+ * An ID to help identify this entry from others during
+ * subframe navigation
+ */
+attribute unsigned long ID;
 
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
