@@ -46,7 +46,7 @@ NS_IMPL_RELEASE(nsSHEntry)
 
 NS_INTERFACE_MAP_BEGIN(nsSHEntry)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHEntry)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHContainer)
+    NS_INTERFACE_MAP_ENTRY(nsISHContainer)
    NS_INTERFACE_MAP_ENTRY(nsISHEntry)
 NS_INTERFACE_MAP_END
 
@@ -171,12 +171,16 @@ nsSHEntry::GetChildCount(PRInt32 * aCount)
 }
 
 NS_IMETHODIMP
-nsSHEntry::AddChild(nsISHEntry * aChild)
+nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
 {
-    NS_ENSURE_ARG_POINTER(aChild);
+    NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
 
 	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
-	mChildren.AppendElement((void *)aChild);
+	PRInt32 childCount = mChildren.Count();
+	if (aOffset < childCount)
+		mChildren.InsertElementAt((void *) aChild, aOffset);
+	else
+	  mChildren.AppendElement((void *)aChild);
 	NS_ADDREF(aChild);
 
     return NS_OK;
@@ -185,7 +189,7 @@ nsSHEntry::AddChild(nsISHEntry * aChild)
 NS_IMETHODIMP
 nsSHEntry::RemoveChild(nsISHEntry * aChild)
 {
-    NS_ENSURE_ARG_POINTER(aChild);
+    NS_ENSURE_TRUE(aChild, NS_ERROR_FAILURE);
 	PRBool childRemoved = mChildren.RemoveElement((void *)aChild);
 	if (childRemoved) {
 	  aChild->SetParent(nsnull);
