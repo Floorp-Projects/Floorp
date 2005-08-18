@@ -28,13 +28,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= shistory
 
-XPIDLSRCS	= nsISHEntry.idl        \
-            nsISHContainer.idl    \
-            nsISHTransaction.idl  \
-            nsISHistory.idl       \
-            nsISHistoryListener.idl   \
-            nsIHistoryEntry.idl \
-            nsISHistoryInternal.idl \
+SDK_XPIDLSRCS   = \
+                  nsIHistoryEntry.idl \
+                  nsISHistory.idl       \
+                  nsISHistoryListener.idl   \
+                  $(NULL)
+
+XPIDLSRCS	= \
+		  nsISHEntry.idl        \
+                  nsISHContainer.idl    \
+                  nsISHTransaction.idl  \
+                  nsISHistoryInternal.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
