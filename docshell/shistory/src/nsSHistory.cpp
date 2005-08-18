@@ -176,7 +176,7 @@ nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aR
   rv = GetTransactionAtIndex(aIndex, getter_AddRefs(txn));
   if (NS_SUCCEEDED(rv) && txn) {
     //Get the Entry from the transaction
-    rv = txn->GetSHEntry(getter_AddRefs(aResult));
+    rv = txn->GetSHEntry(aResult);
     if (NS_SUCCEEDED(rv) && (*aResult)) {
       // Set mIndex to the requested index, if asked to do so..
       if (aModifyIndex) {
