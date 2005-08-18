@@ -112,7 +112,8 @@ endif
 ifneq (,$(MOZ_PKG_MAC_EXTRA))
 PKG_DMG_FLAGS += $(MOZ_PKG_MAC_EXTRA)
 endif
-MAKE_PACKAGE	= $(topsrcdir)/build/package/mac_osx/pkg-dmg \
+_ABS_TOPSRCDIR = $(shell cd $(topsrcdir) && pwd)
+MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/pkg-dmg \
   --source "$(MOZ_PKG_APPNAME)" --target "$(PACKAGE)" \
   --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
 UNMAKE_PACKAGE	= \
