@@ -67,7 +67,7 @@ public:
     // nsIAbDirectory methods
     NS_IMETHOD GetOperations(PRInt32 *aOperations);
     NS_IMETHOD GetChildNodes(nsISimpleEnumerator* *result);
-    NS_IMETHOD GetChildCards(nsIEnumerator* *result);
+    NS_IMETHOD GetChildCards(nsISimpleEnumerator* *result);
      NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
     NS_IMETHOD GetSupportsMailingLists(PRBool *aSupportsMailingsLists);
     NS_IMETHOD GetIsRemote(PRBool *aIsRemote);

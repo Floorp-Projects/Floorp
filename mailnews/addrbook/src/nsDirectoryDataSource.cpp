@@ -48,7 +48,6 @@
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
 #include "nsEnumeratorUtils.h"
-#include "nsAdapterEnumerator.h"
 #include "nsIObserverService.h"
 
 #include "nsString.h"
@@ -256,19 +255,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
     }
     else if((kNC_CardChild == property))
     { 
-      nsCOMPtr<nsIEnumerator> cardChild;
-      
-      rv = directory->GetChildCards(getter_AddRefs(cardChild));
-      if (NS_SUCCEEDED(rv) && cardChild)
-      {
-        nsAdapterEnumerator* cursor =
-          new nsAdapterEnumerator(cardChild);
-        if (cursor == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(cursor);
-        *targets = cursor;
-        return NS_OK;
-      }
+      return directory->GetChildCards(targets);
     }
   }
   return NS_NewEmptyEnumerator(targets);

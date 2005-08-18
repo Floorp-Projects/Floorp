@@ -163,7 +163,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildNodes(nsISimpleEnumerator **aNodes)
     return retCode;
 }
 
-NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
+NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsISimpleEnumerator **aCards)
 {
     if (!aCards) { return NS_ERROR_NULL_POINTER ; }
     *aCards = nsnull ;
@@ -184,7 +184,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::GetChildCards(nsIEnumerator **aCards)
         PRUint32 nbCards = 0 ;
         nsCOMPtr<nsISupports> element ;
         
-        cardList->Enumerate(aCards) ;
+        NS_NewArrayEnumerator(aCards, cardList);
         cardList->Count(&nbCards) ;
         for (PRUint32 i = 0 ; i < nbCards ; ++ i) {
             cardList->GetElementAt(i, getter_AddRefs(element)) ;

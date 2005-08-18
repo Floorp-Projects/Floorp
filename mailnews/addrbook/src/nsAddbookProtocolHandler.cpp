@@ -259,7 +259,7 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
   NS_ENSURE_ARG_POINTER(aDirectory);
 
   nsresult rv;    
-  nsCOMPtr<nsIEnumerator> cardsEnumerator;
+  nsCOMPtr<nsISimpleEnumerator> cardsEnumerator;
   nsCOMPtr<nsIAbCard> card;
 
   aOutput.AppendLiteral("<?xml version=\"1.0\"?>\n"
@@ -287,9 +287,10 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
   {
     nsCOMPtr<nsISupports> item;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
+    PRBool more;
+    while (NS_SUCCEEDED(cardsEnumerator->HasMoreElements(&more)) && more)
     {
-      rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+      rv = cardsEnumerator->GetNext(getter_AddRefs(item));
       if (NS_SUCCEEDED(rv))
       {
         nsCOMPtr <nsIAbCard> card = do_QueryInterface(item);

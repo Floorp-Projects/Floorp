@@ -221,7 +221,7 @@ nsAbDirProperty::GetChildNodes(nsISimpleEnumerator **childList)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-nsAbDirProperty::GetChildCards(nsIEnumerator **childCards)
+nsAbDirProperty::GetChildCards(nsISimpleEnumerator **childCards)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP

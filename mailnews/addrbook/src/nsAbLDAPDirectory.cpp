@@ -217,7 +217,7 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
     return NS_NewArrayEnumerator(aResult, children);
 }
 
-NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
+NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsISimpleEnumerator** result)
 {
     nsresult rv;
     
@@ -264,13 +264,8 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetChildCards(nsIEnumerator** result)
       // Start the search
       rv = StartSearch();
       NS_ENSURE_SUCCESS(rv, rv);
-      
-      nsCOMPtr<nsISupportsArray> array;
-      NS_NewISupportsArray(getter_AddRefs(array));
-      if (!array)
-        return NS_ERROR_OUT_OF_MEMORY;
-      
-      rv = array->Enumerate(result);
+
+      rv = NS_NewEmptyEnumerator(result);
     }
 
     NS_ENSURE_SUCCESS(rv,rv);

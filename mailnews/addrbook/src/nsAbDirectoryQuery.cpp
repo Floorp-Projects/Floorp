@@ -441,7 +441,7 @@ nsresult nsAbDirectoryQuery::queryCards (nsIAbDirectory* directory,
 {
     nsresult rv = NS_OK;
 
-    nsCOMPtr<nsIEnumerator> cards;
+    nsCOMPtr<nsISimpleEnumerator> cards;
     rv = directory->GetChildCards(getter_AddRefs(cards));
     if (NS_FAILED(rv))
     {
@@ -454,14 +454,11 @@ nsresult nsAbDirectoryQuery::queryCards (nsIAbDirectory* directory,
     if (!cards)
         return NS_OK;
 
-    rv = cards->First();
-    if (NS_FAILED(rv))
-        return NS_OK;
-
-    do
+    PRBool more;
+    while (NS_SUCCEEDED(cards->HasMoreElements(&more)) && more)
     {
         nsCOMPtr<nsISupports> item;
-        rv = cards->CurrentItem(getter_AddRefs(item));
+        rv = cards->GetNext(getter_AddRefs(item));
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIAbCard> card(do_QueryInterface(item, &rv));
@@ -472,8 +469,6 @@ nsresult nsAbDirectoryQuery::queryCards (nsIAbDirectory* directory,
 
         if (*resultLimit == 0)
             return NS_OK;
-
-        rv = cards->Next ();
     }
     while (rv == NS_OK);
 

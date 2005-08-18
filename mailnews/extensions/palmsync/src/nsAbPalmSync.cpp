@@ -365,7 +365,7 @@ nsresult nsAbPalmHotSync::GetAllCards(PRInt32 * aCount, lpnsABCOMCardStruct * aC
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIEnumerator> cardsEnumerator;
+    nsCOMPtr<nsISimpleEnumerator> cardsEnumerator;
     rv = mABDB->EnumerateCards(mDirectory, getter_AddRefs(cardsEnumerator));
     if (NS_FAILED(rv) || !cardsEnumerator) {
         mABDB->Close(PR_FALSE);
@@ -374,8 +374,9 @@ nsresult nsAbPalmHotSync::GetAllCards(PRInt32 * aCount, lpnsABCOMCardStruct * aC
 
     nsCOMPtr<nsISupports> item;
     nsCOMPtr<nsIAbCard> card;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) {
-        rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+    PRBool more;
+    while (NS_SUCCEEDED(cardsEnumerator->HasMoreElements(&more)) && more) {
+        rv = cardsEnumerator->GetNext(getter_AddRefs(item));
         if (NS_FAILED(rv)) 
             continue;
 
@@ -561,7 +562,7 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
     if(!mDBOpen || !mABDB || !mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsCOMPtr<nsIEnumerator> cardsEnumerator;
+    nsCOMPtr<nsISimpleEnumerator> cardsEnumerator;
     nsresult rv = mABDB->EnumerateCards(mDirectory, getter_AddRefs(cardsEnumerator));
     if (NS_FAILED(rv) || !cardsEnumerator) 
         return NS_ERROR_NOT_AVAILABLE; // no cards available
@@ -569,9 +570,10 @@ nsresult nsAbPalmHotSync::LoadNewModifiedCardsSinceLastSync()
     // create the list of cards to be sent to Palm
     nsCOMPtr<nsISupports> item;
     nsCOMPtr<nsIAbCard> card;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) 
+    PRBool more;
+    while (NS_SUCCEEDED(cardsEnumerator->HasMoreElements(&more)) && more) 
     {
-        rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+        rv = cardsEnumerator->GetNext(getter_AddRefs(item));
         if (NS_FAILED(rv)) 
             return rv;
 

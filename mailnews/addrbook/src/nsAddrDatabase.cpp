@@ -3098,233 +3098,221 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
     return err;
 }
 
-class nsAddrDBEnumerator : public nsIEnumerator 
+class nsAddrDBEnumerator : public nsISimpleEnumerator 
 {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIEnumerator methods:
-    NS_DECL_NSIENUMERATOR
+    // nsISimpleEnumerator methods:
+    NS_DECL_NSISIMPLEENUMERATOR
 
     // nsAddrDBEnumerator methods:
 
-    nsAddrDBEnumerator(nsAddrDatabase* db);
-    virtual ~nsAddrDBEnumerator();
+    nsAddrDBEnumerator(nsAddrDatabase* aDb);
 
 protected:
-    nsCOMPtr<nsAddrDatabase>    mDB;
-    nsCOMPtr<nsIAbDirectory>    mResultList;
-    nsCOMPtr<nsIAbCard>            mResultCard;
-    nsIMdbTable*                mDbTable;
-    nsIMdbTableRowCursor*       mRowCursor;
-    nsIMdbRow*                    mCurrentRow;
-     mdb_pos                        mRowPos;
-    PRBool                      mDone;
-    PRBool                      mCurrentRowIsList;
+    nsRefPtr<nsAddrDatabase> mDb;
+    nsIMdbTable *mDbTable;
+    nsCOMPtr<nsIMdbTableRowCursor> mRowCursor;
+    nsCOMPtr<nsIMdbRow> mCurrentRow;
+    mdb_pos mRowPos;
 };
 
-nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* db)
-    : mDB(db), mRowCursor(nsnull), mCurrentRow(nsnull), mDone(PR_FALSE)
+nsAddrDBEnumerator::nsAddrDBEnumerator(nsAddrDatabase* aDb)
+    : mDb(aDb),
+      mDbTable(aDb->GetPabTable()),
+      mRowPos(-1)
 {
-    mDbTable = mDB->GetPabTable();
-    mCurrentRowIsList = PR_FALSE;
 }
 
-nsAddrDBEnumerator::~nsAddrDBEnumerator()
+NS_IMPL_ISUPPORTS1(nsAddrDBEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsAddrDBEnumerator::HasMoreElements(PRBool *aResult)
 {
-  NS_IF_RELEASE(mRowCursor);
-}
+    *aResult = PR_FALSE;
 
-NS_IMPL_ISUPPORTS1(nsAddrDBEnumerator, nsIEnumerator)
-
-NS_IMETHODIMP nsAddrDBEnumerator::First(void)
-{
-    nsresult rv = 0;
-    mDone = PR_FALSE;
-
-    if (!mDB || !mDbTable || !mDB->GetEnv())
-        return NS_ERROR_NULL_POINTER;
-        
-    mDbTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
-    if (rv != NS_OK) return NS_ERROR_FAILURE;
-    return Next();
-}
-
-NS_IMETHODIMP nsAddrDBEnumerator::Next(void)
-{
-    if (!mRowCursor)
+    if (!mDb || !mDbTable || !mDb->GetEnv())
     {
-        mDone = PR_TRUE;
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_NULL_POINTER;
     }
-    NS_IF_RELEASE(mCurrentRow);
-    nsresult rv = mRowCursor->NextRow(mDB->GetEnv(), &mCurrentRow, &mRowPos);
-    if (mCurrentRow && NS_SUCCEEDED(rv))
+
+    nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
+    mDbTable->GetTableRowCursor(mDb->GetEnv(), mRowPos,
+                                getter_AddRefs(mRowCursor));
+    NS_ENSURE_TRUE(rowCursor, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIMdbRow> currentRow;
+    mdb_pos rowPos;
+    rowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(currentRow), &rowPos);
+    while (currentRow)
     {
         mdbOid rowOid;
-
-        if (mCurrentRow->GetOid(mDB->GetEnv(), &rowOid) == NS_OK)
+        if (NS_SUCCEEDED(mCurrentRow->GetOid(mDb->GetEnv(), &rowOid)))
         {
-            if (mDB->IsListRowScopeToken(rowOid.mOid_Scope))
+            if (mDb->IsListRowScopeToken(rowOid.mOid_Scope) ||
+                mDb->IsCardRowScopeToken(rowOid.mOid_Scope))
             {
-                mCurrentRowIsList = PR_TRUE;
+                *aResult = PR_TRUE;
+
                 return NS_OK;
             }
-            else if (mDB->IsCardRowScopeToken(rowOid.mOid_Scope))
+
+            if (!mDb->IsDataRowScopeToken(rowOid.mOid_Scope))
             {
-                mCurrentRowIsList = PR_FALSE;
-                return NS_OK;
-            }
-            else if (mDB->IsDataRowScopeToken(rowOid.mOid_Scope))
-            {
-                return Next();
-            }
-            else
                 return NS_ERROR_FAILURE;
+            }
         }
+
+        mRowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(currentRow), &rowPos);
     }
-    else if (!mCurrentRow) 
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAddrDBEnumerator::GetNext(nsISupports **aResult)
+{
+    *aResult = nsnull;
+
+    if (!mDb || !mDbTable || !mDb->GetEnv())
     {
-        mDone = PR_TRUE;
         return NS_ERROR_NULL_POINTER;
     }
-    else if (NS_FAILED(rv)) 
+
+    if (!mRowCursor)
     {
-        mDone = PR_TRUE;
-        return NS_ERROR_FAILURE;
+         mDbTable->GetTableRowCursor(mDb->GetEnv(), -1,
+                                     getter_AddRefs(mRowCursor));
+         NS_ENSURE_TRUE(mRowCursor, NS_ERROR_FAILURE);
     }
+
+    nsCOMPtr<nsIAbCard> resultCard;
+    mRowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(mCurrentRow), &mRowPos);
+    while (mCurrentRow)
+    {
+        mdbOid rowOid;
+        if (NS_SUCCEEDED(mCurrentRow->GetOid(mDb->GetEnv(), &rowOid)))
+        {
+            nsresult rv;
+            if (mDb->IsListRowScopeToken(rowOid.mOid_Scope))
+            {
+                rv = mDb->CreateABListCard(mCurrentRow,
+                                           getter_AddRefs(resultCard));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else if (mDb->IsCardRowScopeToken(rowOid.mOid_Scope))
+            {
+                rv = mDb->CreateABCard(mCurrentRow, 0,
+                                       getter_AddRefs(resultCard));
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else if (!mDb->IsDataRowScopeToken(rowOid.mOid_Scope))
+            {
+                return NS_ERROR_FAILURE;
+            }
+
+            if (resultCard)
+            {
+                return CallQueryInterface(resultCard, aResult);
+            }
+        }
+
+        mRowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(mCurrentRow),
+                            &mRowPos);
+    }
+
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
-{
-    if (mCurrentRow) 
-    {
-        nsresult rv;
-        if (mCurrentRowIsList)
-        {
-            rv = mDB->CreateABListCard(mCurrentRow, getter_AddRefs(mResultCard));
-            *aItem = mResultCard;
-        }
-        else
-        {
-            rv = mDB->CreateABCard(mCurrentRow, 0, getter_AddRefs(mResultCard));
-            *aItem = mResultCard;
-        }
-        NS_IF_ADDREF(*aItem);
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsAddrDBEnumerator::IsDone(void)
-{
-    return mDone ? NS_OK : NS_ERROR_FAILURE;
-}
-
-class nsListAddressEnumerator : public nsIEnumerator 
+class nsListAddressEnumerator : public nsISimpleEnumerator 
 {
 public:
     NS_DECL_ISUPPORTS
 
     // nsIEnumerator methods:
-    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSISIMPLEENUMERATOR
 
-    // nsAddrDBEnumerator methods:
+    // nsListAddressEnumerator methods:
 
-    nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID);
-    virtual ~nsListAddressEnumerator();
+    nsListAddressEnumerator(nsAddrDatabase* aDb, mdb_id aRowID);
 
 protected:
-    nsCOMPtr<nsAddrDatabase>    mDB;
-    nsCOMPtr<nsIAbCard>            mResultCard;
-    nsIMdbTable*                mDbTable;
-    nsIMdbRow*                    mListRow;
-    nsIMdbRow*                    mCurrentRow;
-    mdb_id                        mListRowID;
-    PRBool                      mDone;
-    PRUint32                    mAddressTotal;
-    PRUint16                    mAddressPos;
+    nsRefPtr<nsAddrDatabase> mDb;
+    nsIMdbTable *mDbTable;
+    nsCOMPtr<nsIMdbRow> mListRow;
+    mdb_id mListRowID;
+    PRUint32 mAddressTotal;
+    PRUint16 mAddressPos;
 };
 
-nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* db, mdb_id rowID)
-    : mDB(db), mCurrentRow(nsnull), mListRowID(rowID), mDone(PR_FALSE)
+nsListAddressEnumerator::nsListAddressEnumerator(nsAddrDatabase* aDb,
+                                                 mdb_id aRowID)
+    : mDb(aDb),
+      mDbTable(aDb->GetPabTable()),
+      mListRowID(aRowID),
+      mAddressPos(0)
 {
-    mDbTable = mDB->GetPabTable();
-    mDB->GetListRowByRowID(mListRowID, &mListRow);
-    mAddressTotal = mDB->GetListAddressTotal(mListRow);
-    mAddressPos = 0;
+    mDb->GetListRowByRowID(mListRowID, getter_AddRefs(mListRow));
+    mAddressTotal = aDb->GetListAddressTotal(mListRow);
 }
 
-nsListAddressEnumerator::~nsListAddressEnumerator()
+NS_IMPL_ISUPPORTS1(nsListAddressEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+nsListAddressEnumerator::HasMoreElements(PRBool *aResult)
 {
-  NS_IF_RELEASE(mListRow);
-}
+    *aResult = PR_FALSE;
 
-NS_IMPL_ISUPPORTS1(nsListAddressEnumerator, nsIEnumerator)
-
-NS_IMETHODIMP nsListAddressEnumerator::First(void)
-{
-    mDone = PR_FALSE;
-
-    if (!mDB || !mDbTable || !mDB->GetEnv())
+    if (!mDb || !mDbTable || !mDb->GetEnv())
+    {
         return NS_ERROR_NULL_POINTER;
-    
-    //got total address count and start
-    if (mAddressTotal)
-        return Next();
-    else
-        return NS_ERROR_FAILURE;
-}
+    }
 
-NS_IMETHODIMP nsListAddressEnumerator::Next(void)
-{
-    //go to the next address column
-    if (mCurrentRow)
+    if (mAddressPos + 1 <= mAddressTotal)
     {
-                NS_RELEASE(mCurrentRow);
-        mCurrentRow = nsnull;
-    }
-    mAddressPos++;
-    if (mAddressPos <= mAddressTotal)
-    {
-        nsresult err;
-        err = mDB->GetAddressRowByPos(mListRow, mAddressPos, &mCurrentRow);
-        if (mCurrentRow)
-            return NS_OK;
-        else
-        {
-            mDone = PR_TRUE;
-            return NS_ERROR_FAILURE;
-        }
-    }
-    else
-    {
-        mDone = PR_TRUE;
-        return NS_ERROR_FAILURE;
-    }
-}
+        nsCOMPtr<nsIMdbRow> currentRow;
+        nsresult rv = mDb->GetAddressRowByPos(mListRow, mAddressPos + 1,
+                                              getter_AddRefs(currentRow));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP nsListAddressEnumerator::CurrentItem(nsISupports **aItem)
-{
-  if (mCurrentRow) 
-  {
-    nsresult rv;
-    rv = mDB->CreateABCard(mCurrentRow, mListRowID, getter_AddRefs(mResultCard));
-    NS_IF_ADDREF(*aItem = mResultCard);
+        *aResult = currentRow == nsnull;
+    }
+
     return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsListAddressEnumerator::IsDone(void)
+NS_IMETHODIMP
+nsListAddressEnumerator::GetNext(nsISupports **aResult)
 {
-    return mDone ? NS_OK : NS_ERROR_FAILURE;
+    *aResult = nsnull;
+
+    if (!mDb || !mDbTable || !mDb->GetEnv())
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if (++mAddressPos <= mAddressTotal)
+    {
+        nsCOMPtr<nsIMdbRow> currentRow;
+        nsresult rv = mDb->GetAddressRowByPos(mListRow, mAddressPos,
+                                              getter_AddRefs(currentRow));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIAbCard> resultCard;
+        rv = mDb->CreateABCard(currentRow, mListRowID,
+                               getter_AddRefs(resultCard));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return CallQueryInterface(resultCard, aResult);
+    }
+
+    return NS_ERROR_FAILURE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
+NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsISimpleEnumerator **result)
 {
     nsAddrDBEnumerator* e = new nsAddrDBEnumerator(this);
     m_dbDirectory = directory;
@@ -3374,7 +3362,7 @@ NS_IMETHODIMP nsAddrDatabase::GetMailingListsFromDB(nsIAbDirectory *parentDir)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, nsIEnumerator **result)
+NS_IMETHODIMP nsAddrDatabase::EnumerateListAddresses(nsIAbDirectory *directory, nsISimpleEnumerator **result)
 {
     nsresult rv = NS_OK; 
     mdb_id rowID;

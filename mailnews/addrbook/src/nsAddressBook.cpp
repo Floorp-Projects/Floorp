@@ -638,7 +638,7 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIDOMWindow *aParentWin, nsIAbDi
 nsresult
 nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile)
 {
-  nsCOMPtr <nsIEnumerator> cardsEnumerator;
+  nsCOMPtr <nsISimpleEnumerator> cardsEnumerator;
   nsCOMPtr <nsIAbCard> card;
 
   nsresult rv;
@@ -695,8 +695,9 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
   rv = aDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator) {
     nsCOMPtr<nsISupports> item;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) {
-      rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+    PRBool more;
+    while (NS_SUCCEEDED(cardsEnumerator->HasMoreElements(&more)) && more) {
+      rv = cardsEnumerator->GetNext(getter_AddRefs(item));
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr <nsIAbCard> card = do_QueryInterface(item, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
@@ -809,7 +810,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
 nsresult
 nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *aLocalFile)
 {
-  nsCOMPtr <nsIEnumerator> cardsEnumerator;
+  nsCOMPtr <nsISimpleEnumerator> cardsEnumerator;
   nsCOMPtr <nsIAbCard> card;
 
   nsresult rv;
@@ -831,8 +832,9 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
   rv = aDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator) {
     nsCOMPtr<nsISupports> item;
-    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next()) {
-      rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+    PRBool more;
+    while (NS_SUCCEEDED(cardsEnumerator->HasMoreElements(&more)) && more) {
+      rv = cardsEnumerator->GetNext(getter_AddRefs(item));
       if (NS_SUCCEEDED(rv)) {
         nsCOMPtr <nsIAbCard> card = do_QueryInterface(item, &rv);
         NS_ENSURE_SUCCESS(rv,rv);

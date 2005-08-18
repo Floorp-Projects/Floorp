@@ -56,7 +56,7 @@
 #include "nsAbQueryStringToExpression.h"
 #include "nsArrayEnumerator.h"
 #include "nsAbMDBCardProperty.h"
-
+#include "nsEnumeratorUtils.h"
 #include "mdb.h"
 #include "prprf.h"
 
@@ -386,7 +386,7 @@ PR_STATIC_CALLBACK(PRBool) enumerateSearchCache(nsHashKey *aKey, void *aData, vo
         return PR_TRUE;
 }
 
-NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
+NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsISimpleEnumerator* *result)
 {
   if (mIsQueryURI)
   {
@@ -400,7 +400,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
     nsCOMPtr<nsISupportsArray> array;
     NS_NewISupportsArray(getter_AddRefs(array));
     mSearchCache.Enumerate(enumerateSearchCache, (void*)array);
-    return array->Enumerate(result);
+    return NS_NewArrayEnumerator(result, array);
   }
 
   NS_ASSERTION(!mURI.IsEmpty(), "Not Initialized?");

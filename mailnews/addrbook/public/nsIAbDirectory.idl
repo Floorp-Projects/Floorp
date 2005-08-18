@@ -63,7 +63,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(AA920C90-1DD1-11B2-96D3-AA81268ADAFC)]
+[scriptable, uuid(2edfc712-e6c5-11d8-9a39-000a95dc234c)]
 interface nsIAbDirectory : nsISupports {
 
 	// Types of operation
@@ -97,10 +97,11 @@ interface nsIAbDirectory : nsISupports {
 	// Get the children directories
 	readonly attribute nsISimpleEnumerator childNodes;
 
-	// Get the cards associated with the directory
-	// This will return the cards associated with
-	// the mailing lists too
-	readonly attribute nsIEnumerator childCards;
+  /**
+   * Get the cards associated with the directory. This will return the cards
+   * associated with the mailing lists too.
+   */
+	readonly attribute nsISimpleEnumerator childCards;
 
   // Modifies a top level directory, 
   // which also updates the preferences

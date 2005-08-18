@@ -128,7 +128,7 @@ interface nsIMdbRow;
 
 %}
 
-[scriptable, uuid(ca536e0e-1dd1-11b2-951a-e02b86e4f60e)]
+[scriptable, uuid(14d89995-e6c5-11d8-9a39-000a95dc234c)]
 interface nsAddrDBCommitType 
 {
   const long kSmallCommit = 0;
@@ -155,8 +155,24 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void createNewListCardAndAddToDB(in nsIAbDirectory list, in unsigned long listRowID, in nsIAbCard newCard, in boolean aNotify);
 	void createMailListAndAddToDB(in nsIAbDirectory newList, in boolean aNotify);
   void createMailListAndAddToDBWithKey(in nsIAbDirectory newList, in boolean aNotify, out PRUint32 key);
-	nsIEnumerator enumerateCards(in nsIAbDirectory directory);
-	nsIEnumerator enumerateListAddresses(in nsIAbDirectory directory);
+
+  /**
+   * Enumerate the cards in the directory. The enumerator will return the
+   * cards associated with mailing lists too.
+   *
+   * @param directory the directory of which to enumerate the cards.
+   * @return an enumerator.
+   */
+	nsISimpleEnumerator enumerateCards(in nsIAbDirectory directory);
+
+  /**
+   * Enumerate the cards associated with the mailing lists in the directory.
+   *
+   * @param directory the directory of which to enumerate the cards.
+   * @return an enumerator.
+   */
+	nsISimpleEnumerator enumerateListAddresses(in nsIAbDirectory directory);
+
 	void getMailingListsFromDB(in nsIAbDirectory parentDir);
 	void deleteCard(in nsIAbCard card, in boolean aNotify);
 	void editCard(in nsIAbCard card, in boolean aNotify);
