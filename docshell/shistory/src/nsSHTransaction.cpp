@@ -20,131 +20,106 @@
  *   Radha Kulkarni <radha@netscape.com>
  */
 
-#include "nsISupportsUtils.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMDocument.h"
+// Local Includes
 #include "nsSHTransaction.h"
-#include "nsIGenericFactory.h"
 
+//*****************************************************************************
+//***    nsSHTransaction: Object Management
+//*****************************************************************************
 
-#ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
-#define WEB_TRACE(_bit,_args)            \
-   PR_BEGIN_MACRO                         \
-     if (WEB_LOG_TEST(gLogModule,_bit)) { \
-       PR_LogPrint _args;                 \
-     }                                    \
-   PR_END_MACRO
-#else
-#define WEB_TRACE(_bit,_args)
-#endif
-
-NS_IMPL_ISUPPORTS1(nsSHTransaction, nsISHTransaction)
-
-nsSHTransaction::nsSHTransaction() : mPersist(PR_TRUE), mParent(nsnull), 
-   mChild(nsnull), mLRVList(nsnull), mSHEntry(nsnull)
+nsSHTransaction::nsSHTransaction() : mPersist(PR_TRUE), mPrev(nsnull) 
 {
-NS_INIT_REFCNT();
+   NS_INIT_REFCNT();
 }
 
 
 nsSHTransaction::~nsSHTransaction()
 {
-
-  NS_IF_RELEASE(mSHEntry);
-  mParent = nsnull; //Weak reference to parent transaction
-  NS_IF_RELEASE(mChild);
-  NS_IF_RELEASE(mLRVList);
-  
 }
 
+//*****************************************************************************
+//    nsSHTransaction: nsISupports
+//*****************************************************************************
+
+NS_IMPL_ADDREF(nsSHTransaction)
+NS_IMPL_RELEASE(nsSHTransaction)
+
+NS_INTERFACE_MAP_BEGIN(nsSHTransaction)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHTransaction)
+   NS_INTERFACE_MAP_ENTRY(nsISHTransaction)
+NS_INTERFACE_MAP_END
+
+//*****************************************************************************
+//    nsSHTransaction: nsISHTransaction
+//*****************************************************************************
+
 NS_IMETHODIMP
-nsSHTransaction::Create(nsISHEntry * aSHEntry, nsISHTransaction * aParent)
+nsSHTransaction::Create(nsISHEntry* aSHEntry, nsISHTransaction* aPrev)
 {
-     SetSHEntry(aSHEntry);
-	 if (aParent) {
-		 // This will correctly set the parent child pointers 		
-        ((nsSHTransaction *)aParent)->SetChild(this);
-	 }
-	 else
-		 SetParent(nsnull);
-	 return NS_OK;
+   SetSHEntry(aSHEntry);
+	if(aPrev)
+      aPrev->SetNext(this);
+
+   SetPrev(aPrev);
+	return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHTransaction::GetSHEntry(nsISHEntry ** aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
+   NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = mSHEntry;
-	NS_IF_ADDREF(mSHEntry);
-	return NS_OK;
-}
-
-
-nsresult
-nsSHTransaction::SetSHEntry(nsISHEntry * aSHEntry)
-{
-	NS_IF_RELEASE(mSHEntry);
-	mSHEntry = aSHEntry;
-	NS_IF_ADDREF(mSHEntry);
+	NS_IF_ADDREF(*aResult);
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSHTransaction::GetChild(nsISHTransaction * * aResult)
+nsSHTransaction::SetSHEntry(nsISHEntry * aSHEntry)
+{
+	mSHEntry = aSHEntry;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHTransaction::GetNext(nsISHTransaction * * aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
-   *aResult = mChild;
-   NS_IF_ADDREF(mChild);
+   *aResult = mNext;
+   NS_IF_ADDREF(*aResult);
    return NS_OK;
 }
 
 
-nsresult
-nsSHTransaction::SetChild(nsISHTransaction * aChild)
+NS_IMETHODIMP
+nsSHTransaction::SetNext(nsISHTransaction * aNext)
 {
-	if (mChild) {
+   if(mNext)
+      {   
 		// There is already a child. Move the child to the LRV list
-		NS_IF_RELEASE(mLRVList);
-		mLRVList = mChild;
-		NS_ADDREF(mLRVList);		
-		//SetLRVList(mChild);
-	}
+      mLRVList = mNext;
+	   }
 
-   NS_ENSURE_SUCCESS(((nsSHTransaction *)aChild)->SetParent(this), NS_ERROR_FAILURE);
-   NS_IF_RELEASE(mChild);
-   mChild = aChild;
-   NS_IF_ADDREF(aChild);
+   NS_ENSURE_SUCCESS(aNext->SetPrev(this), NS_ERROR_FAILURE);
+
+   mNext = aNext;
    return NS_OK;
 }
 
-
-
-nsresult
-nsSHTransaction::SetParent(nsISHTransaction * aParent)
+NS_IMETHODIMP
+nsSHTransaction::SetPrev(nsISHTransaction * aPrev)
 {
 	/* This is weak reference to parent. Do not Addref it */
-     mParent = aParent;
+     mPrev = aPrev;
 	 return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP
-nsSHTransaction::SetLRVList(nsISHTransaction * aLRVList) {
-	
-   NS_IF_RELEASE(mLRVList);
-   mLRVList = aLRVList;
-   NS_IF_ADDREF(mLRVList);
-   return NS_OK;
-   
-}
-#endif  /* 0 */
-
 nsresult
-nsSHTransaction::GetParent(nsISHTransaction ** aResult)
+nsSHTransaction::GetPrev(nsISHTransaction ** aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
-   *aResult  = mParent;
+   *aResult  = mPrev;
    NS_IF_ADDREF(*aResult);
    return NS_OK;
 }
@@ -154,7 +129,7 @@ nsSHTransaction::GetLrvList(nsISHTransaction ** aResult)
 {
    NS_ENSURE_ARG_POINTER(aResult);
    *aResult = mLRVList;
-   NS_IF_ADDREF(mLRVList);
+   NS_IF_ADDREF(*aResult);
    return NS_OK;
 }
 
@@ -172,34 +147,4 @@ nsSHTransaction::GetPersist(PRBool* aPersist)
 
    *aPersist = mPersist;
    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-NS_NewSHTransaction(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv = NS_OK;
-
-  nsSHTransaction* result = new nsSHTransaction();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-
-  rv = result->QueryInterface(aIID, aResult);
-
-  if (NS_FAILED(rv)) {
-    delete result;
-    *aResult = nsnull;
-    return rv;
-  }
-
-  return rv;
 }
