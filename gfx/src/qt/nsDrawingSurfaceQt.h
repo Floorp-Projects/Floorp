@@ -95,8 +95,10 @@ public:
 
     // utility functions.
     PRInt32 GetDepth() { return mDepth; }
-    QPainter *GetGC(void);
-    QPaintDevice  *GetPaintDevice(void);
+    // These two are only virtual so that they can be called from outside of
+    // this DSO
+    virtual QPainter *GetGC(void);
+    virtual QPaintDevice  *GetPaintDevice(void);
 
 protected:
     NS_IMETHOD CommonInit();
