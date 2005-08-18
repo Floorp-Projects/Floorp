@@ -415,7 +415,7 @@ var toDoTreeView =
          case "unifinder-todo-tree-col-duedate":
             return( formatUnifinderToDoDateTime( calendarToDo.due ) );
          case "unifinder-todo-tree-col-completeddate":
-            return( formatUnifinderToDoDateTime( calendarToDo.completed ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.completedDate ) );
          case "unifinder-todo-tree-col-percentcomplete":
             return( calendarToDo.percent+"%" );
          case "unifinder-todo-tree-col-categories":
@@ -456,7 +456,7 @@ function compareTasks( taskA, taskB )
    
       case "unifinder-todo-tree-col-completed": // checkbox if date exists
       case "unifinder-todo-tree-col-completeddate":
-         return compareDate(taskA.completed, taskB.completed) * modifier;
+         return compareDate(taskA.completedDate, taskB.completedDate) * modifier;
       
       case "unifinder-todo-tree-col-percentcomplete":
          return compareNumber(taskA.percent, taskB.percent) * modifier;
@@ -466,8 +466,10 @@ function compareTasks( taskA, taskB )
 
       case "unifinder-todo-tree-col-location":
          return compareString(taskA.getProperty("LOCATION"), taskB.getProperty("LOCATION")) * modifier;
+
       case "unifinder-todo-tree-col-status":
         return compareNumber(kStatusOrder.indexOf(taskA.status), kStatusOrder.indexOf(taskB.status)) * modifier;
+
       case "unifinder-todo-tree-col-calendarname":
         return compareString(taskA.calendar.name, taskB.calendar.name) * modifier;
 
