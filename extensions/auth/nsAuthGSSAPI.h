@@ -38,37 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGssapiAuth_h__
-#define nsGssapiAuth_h__
+#ifndef nsAuthGSSAPI_h__
+#define nsAuthGSSAPI_h__
 
+#include "nsAuth.h"
 #include "nsIAuthModule.h"
 #include "nsString.h"
 
-#if defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#elif defined(HAVE_GSSAPI_GSSAPI_H)
-#include <gssapi/gssapi.h>
-#endif
+#define GSS_USE_FUNCTION_POINTERS 1
 
-#if defined(HAVE_GSSAPI_GENERIC_H)
-#include <gssapi_generic.h>
-#elif defined(HAVE_GSSAPI_GSSAPI_GENERIC_H)
-#include <gssapi/gssapi_generic.h> 
-#endif
+#include "gssapi.h"
 
-// The nsNegotiateAuth class provides responses for the GSS-API Negotiate method
+// The nsAuthGSSAPI class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
-class nsNegotiateAuth : public nsIAuthModule
+class nsAuthGSSAPI : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
-    nsNegotiateAuth();
+    nsAuthGSSAPI(pType package);
 
 private:
-    ~nsNegotiateAuth() { Reset(); }
+    ~nsAuthGSSAPI() { Reset(); }
 
     void    Reset();
     gss_OID GetOID() { return mMechOID; }
@@ -78,6 +71,8 @@ private:
     gss_OID      mMechOID;
     nsCString    mServiceName;
     PRUint32     mServiceFlags;
+    nsString     mUsername;
+    PRBool       mComplete;
 };
 
-#endif /* nsGssapiAuth_h__ */
+#endif /* nsAuthGSSAPI_h__ */

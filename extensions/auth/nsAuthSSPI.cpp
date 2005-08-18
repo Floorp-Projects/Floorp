@@ -45,15 +45,34 @@
 // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnsecure/html/http-sso-1.asp
 //
 
-#include "nsNegotiateAuth.h"
-#include "nsNegotiateAuthSSPI.h"
+#include "nsAuthSSPI.h"
 #include "nsIServiceManager.h"
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 
+#define SEC_SUCCESS(Status) ((Status) >= 0)
+
+#ifndef KERB_WRAP_NO_ENCRYPT
+#define KERB_WRAP_NO_ENCRYPT 0x80000001
+#endif
+
+#ifndef SECBUFFER_PADDING
+#define SECBUFFER_PADDING 9
+#endif
+
+#ifndef SECBUFFER_STREAM
+#define SECBUFFER_STREAM 10
+#endif
+
 //-----------------------------------------------------------------------------
+
+static const char *const pTypeName [] = {
+    "Kerberos",
+    "Negotiate",
+    "NTLM"
+};
 
 #ifdef DEBUG
 #define CASE_(_x) case _x: return # _x;
@@ -90,6 +109,8 @@ static nsresult
 InitSSPI()
 {
     PSecurityFunctionTable (*initFun)(void);
+
+    LOG(("  InitSSPI\n"));
 
     sspi_lib = LoadLibrary("secur32.dll");
     if (!sspi_lib) {
@@ -162,16 +183,16 @@ MakeSN(const char *principal, nsCString &result)
 
 //-----------------------------------------------------------------------------
 
-nsNegotiateAuth::nsNegotiateAuth(PRBool useNTLM)
+nsAuthSSPI::nsAuthSSPI(pType package)
     : mServiceFlags(REQ_DEFAULT)
     , mMaxTokenLen(0)
-    , mUseNTLM(useNTLM)
+    , mPackage(package)
 {
     memset(&mCred, 0, sizeof(mCred));
     memset(&mCtxt, 0, sizeof(mCtxt));
 }
 
-nsNegotiateAuth::~nsNegotiateAuth()
+nsAuthSSPI::~nsAuthSSPI()
 {
     Reset();
 
@@ -186,7 +207,7 @@ nsNegotiateAuth::~nsNegotiateAuth()
 }
 
 void
-nsNegotiateAuth::Reset()
+nsAuthSSPI::Reset()
 {
     if (mCtxt.dwLower || mCtxt.dwUpper) {
         (sspi->DeleteSecurityContext)(&mCtxt);
@@ -194,21 +215,23 @@ nsNegotiateAuth::Reset()
     }
 }
 
-NS_IMPL_ISUPPORTS1(nsNegotiateAuth, nsIAuthModule)
+NS_IMPL_ISUPPORTS1(nsAuthSSPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsNegotiateAuth::Init(const char *serviceName,
-                      PRUint32    serviceFlags,
-                      const PRUnichar *domain,
-                      const PRUnichar *username,
-                      const PRUnichar *password)
+nsAuthSSPI::Init(const char *serviceName,
+                 PRUint32    serviceFlags,
+                 const PRUnichar *domain,
+                 const PRUnichar *username,
+                 const PRUnichar *password)
 {
+    LOG(("  nsAuthSSPI::Init\n"));
+
     // we don't expect to be passed any user credentials
     NS_ASSERTION(!domain && !username && !password, "unexpected credentials");
 
-    // if we're configured for SPNEGO, then it's critial that the caller
-    // supply a service name to be used.
-    if (!mUseNTLM)
+    // if we're configured for SPNEGO (Negotiate) or Kerberos, then it's critical 
+    // that the caller supply a service name to be used.
+    if (mPackage != PACKAGE_TYPE_NTLM)
         NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
     nsresult rv;
@@ -221,11 +244,11 @@ nsNegotiateAuth::Init(const char *serviceName,
     }
 
     SEC_CHAR *package;
-    if (mUseNTLM)
-        package = "NTLM";
-    else {
-        package = "Negotiate";
 
+    package = (SEC_CHAR *) pTypeName[(int)mPackage];
+
+    if (mPackage != PACKAGE_TYPE_NTLM)
+    {
         rv = MakeSN(serviceName, mServiceName);
         if (NS_FAILED(rv))
             return rv;
@@ -261,10 +284,10 @@ nsNegotiateAuth::Init(const char *serviceName,
 }
 
 NS_IMETHODIMP
-nsNegotiateAuth::GetNextToken(const void *inToken,
-                              PRUint32    inTokenLen,
-                              void      **outToken,
-                              PRUint32   *outTokenLen)
+nsAuthSSPI::GetNextToken(const void *inToken,
+                         PRUint32    inTokenLen,
+                         void      **outToken,
+                         PRUint32   *outTokenLen)
 {
     SECURITY_STATUS rc;
 
@@ -273,7 +296,7 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     SecBufferDesc ibd, obd;
     SecBuffer ib, ob;
 
-    LOG(("entering nsNegotiateAuth::GetNextToken()\n"));
+    LOG(("entering nsAuthSSPI::GetNextToken()\n"));
 
     if (mServiceFlags & REQ_DELEGATE)
         ctxReq |= ISC_REQ_DELEGATE;
@@ -314,7 +337,8 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     memset(ob.pvBuffer, 0, ob.cbBuffer);
 
     SEC_CHAR *sn;
-    if (mUseNTLM)
+
+    if (mPackage == PACKAGE_TYPE_NTLM)
         sn = NULL;
     else
         sn = (SEC_CHAR *) mServiceName.get();
@@ -334,6 +358,10 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     if (rc == SEC_I_CONTINUE_NEEDED || rc == SEC_E_OK) {
         *outToken = ob.pvBuffer;
         *outTokenLen = ob.cbBuffer;
+
+        if (rc == SEC_E_OK)
+            return NS_SUCCESS_AUTH_FINISHED;
+
         return NS_OK;
     }
 
@@ -341,4 +369,145 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     Reset();
     nsMemory::Free(ob.pvBuffer);
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAuthSSPI::Unwrap(const void *inToken,
+                   PRUint32    inTokenLen,
+                   void      **outToken,
+                   PRUint32   *outTokenLen)
+{
+    SECURITY_STATUS rc;
+    SecBufferDesc ibd;
+    SecBuffer ib[2];
+
+    ibd.cBuffers = 2;
+    ibd.pBuffers = ib;
+    ibd.ulVersion = SECBUFFER_VERSION; 
+
+    // SSPI Buf
+    ib[0].BufferType = SECBUFFER_STREAM;
+    ib[0].cbBuffer = inTokenLen;
+    ib[0].pvBuffer = nsMemory::Alloc(ib[0].cbBuffer);
+    memcpy(ib[0].pvBuffer, inToken, inTokenLen);
+
+    // app data
+    ib[1].BufferType = SECBUFFER_DATA;
+    ib[1].cbBuffer = 0;
+    ib[1].pvBuffer = NULL;
+
+    rc = (sspi->DecryptMessage)(
+                                &mCtxt,
+                                &ibd,
+                                0, // no sequence numbers
+                                NULL
+                                );
+
+    if (SEC_SUCCESS(rc)) {
+        *outToken = ib[1].pvBuffer;
+        *outTokenLen = ib[1].cbBuffer;
+    }
+    else
+        nsMemory::Free(ib[1].pvBuffer);
+
+    nsMemory::Free(ib[0].pvBuffer);
+
+    return rc;
+}
+
+// utility class used to free memory on exit
+class secBuffers
+{
+public:
+
+    SecBuffer ib[3];
+
+    secBuffers() { memset(&ib, 0, sizeof(ib)); }
+
+    ~secBuffers() 
+    {
+        if (ib[0].pvBuffer)
+            nsMemory::Free(ib[0].pvBuffer);
+
+        if (ib[1].pvBuffer)
+            nsMemory::Free(ib[1].pvBuffer);
+
+        if (ib[2].pvBuffer)
+            nsMemory::Free(ib[2].pvBuffer);
+    }
+};
+
+NS_IMETHODIMP
+nsAuthSSPI::Wrap(const void *inToken,
+                 PRUint32    inTokenLen,
+                 PRBool      confidential,
+                 void      **outToken,
+                 PRUint32   *outTokenLen)
+{
+    SECURITY_STATUS rc;
+
+    SecBufferDesc ibd;
+    secBuffers bufs;
+    SecPkgContext_Sizes sizes;
+
+    rc = (sspi->QueryContextAttributes)(
+         &mCtxt,
+         SECPKG_ATTR_SIZES,
+         &sizes);
+
+    if (!SEC_SUCCESS(rc))  
+        return rc;
+    
+    ibd.cBuffers = 3;
+    ibd.pBuffers = bufs.ib;
+    ibd.ulVersion = SECBUFFER_VERSION;
+    
+    // SSPI
+    bufs.ib[0].cbBuffer = sizes.cbSecurityTrailer;
+    bufs.ib[0].BufferType = SECBUFFER_TOKEN;
+    bufs.ib[0].pvBuffer = nsMemory::Alloc(sizes.cbSecurityTrailer);
+
+    if (!bufs.ib[0].pvBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // APP Data
+    bufs.ib[1].BufferType = SECBUFFER_DATA;
+    bufs.ib[1].pvBuffer = nsMemory::Alloc(inTokenLen);
+    bufs.ib[1].cbBuffer = inTokenLen;
+    
+    if (!bufs.ib[1].pvBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    memcpy(bufs.ib[1].pvBuffer, inToken, inTokenLen);
+
+    // SSPI
+    bufs.ib[2].BufferType = SECBUFFER_PADDING;
+    bufs.ib[2].cbBuffer = sizes.cbBlockSize;
+    bufs.ib[2].pvBuffer = nsMemory::Alloc(bufs.ib[2].cbBuffer);
+
+    if (!bufs.ib[2].pvBuffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rc = (sspi->EncryptMessage)(&mCtxt,
+          confidential ? 0 : KERB_WRAP_NO_ENCRYPT,
+         &ibd, 0);
+
+    if (SEC_SUCCESS(rc)) {
+        int len  = bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer + bufs.ib[2].cbBuffer;
+
+        *outToken = nsMemory::Alloc(len);
+
+        if (!*outToken)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        memcpy(outToken, bufs.ib[0].pvBuffer, bufs.ib[0].cbBuffer);
+
+        memcpy(outToken + bufs.ib[0].cbBuffer,
+               bufs.ib[1].pvBuffer, bufs.ib[1].cbBuffer);
+
+        memcpy(outToken + bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer,
+               bufs.ib[2].pvBuffer, bufs.ib[2].cbBuffer);
+    }
+
+    return rc;
 }

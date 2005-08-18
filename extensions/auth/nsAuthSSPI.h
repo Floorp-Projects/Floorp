@@ -35,9 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsNegotiateAuthSSPI_h__
-#define nsNegotiateAuthSSPI_h__
+#ifndef nsAuthSSPI_h__
+#define nsAuthSSPI_h__
 
+#include "nsAuth.h"
 #include "nsIAuthModule.h"
 #include "nsString.h"
 
@@ -56,16 +57,16 @@
 // avoided when authenticating over the internet since it may use a lower-grade
 // version of password hashing depending on the version of Windows being used.
 
-class nsNegotiateAuth : public nsIAuthModule
+class nsAuthSSPI : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
-    nsNegotiateAuth(PRBool useNTLM = PR_FALSE);
+    nsAuthSSPI(pType package = PACKAGE_TYPE_NEGOTIATE);
 
 private:
-    ~nsNegotiateAuth();
+    ~nsAuthSSPI();
 
     void Reset();
 
@@ -75,7 +76,7 @@ private:
     nsCString    mServiceName;
     PRUint32     mServiceFlags;
     PRUint32     mMaxTokenLen;
-    PRBool       mUseNTLM;
+    pType        mPackage;
 };
 
-#endif /* nsNegotiateAuthSSPI_h__ */
+#endif /* nsAuthSSPI_h__ */

@@ -55,65 +55,13 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsNativeCharsetUtils.h"
 
-#include "nsNegotiateAuth.h"
-#include "nsNegotiateAuthGSSAPI.h"
+#include "nsAuthGSSAPI.h"
 
 #ifdef XP_MACOSX
 #include <Kerberos/Kerberos.h>
 #endif
-
-// function pointers for gss functions
-//
-typedef OM_uint32 (*gss_display_status_type)(
-    OM_uint32 *,
-    OM_uint32,
-    int,
-    gss_OID,
-    OM_uint32 *,
-    gss_buffer_t);
-
-typedef OM_uint32 (*gss_init_sec_context_type)(
-    OM_uint32 *,
-    gss_cred_id_t,
-    gss_ctx_id_t *,
-    gss_name_t,
-    gss_OID,
-    OM_uint32,
-    OM_uint32,
-    gss_channel_bindings_t,
-    gss_buffer_t,
-    gss_OID *,
-    gss_buffer_t,
-    OM_uint32 *,
-    OM_uint32 *);
-     
-typedef OM_uint32 (*gss_indicate_mechs_type)(
-    OM_uint32 *,
-    gss_OID_set *);
-
-typedef OM_uint32 (*gss_release_oid_set_type)(
-    OM_uint32 *,
-    gss_OID_set *);
-
-typedef OM_uint32 (*gss_delete_sec_context_type)(
-    OM_uint32 *,
-    gss_ctx_id_t *,
-    gss_buffer_t);
-
-typedef OM_uint32 (*gss_import_name_type)(
-    OM_uint32 *,
-    gss_buffer_t,
-    gss_OID,
-    gss_name_t *);
-
-typedef OM_uint32 (*gss_release_buffer_type)(
-    OM_uint32 *,
-    gss_buffer_t);
-
-typedef OM_uint32 (*gss_release_name_type)(
-    OM_uint32 *, 
-    gss_name_t *);
 
 #ifdef XP_MACOSX
 typedef KLStatus (*KLCacheHasValidTickets_type)(
@@ -146,7 +94,9 @@ static const char *gssFuncStr[] = {
     "gss_delete_sec_context",
     "gss_import_name",
     "gss_release_buffer",
-    "gss_release_name"
+    "gss_release_name",
+    "gss_wrap",
+    "gss_unwrap"
 };
 
 #define gssFuncItems NS_ARRAY_LENGTH(gssFuncStr)
@@ -163,6 +113,8 @@ static PRBool    gssFunInit = PR_FALSE;
 #define gss_import_name_ptr         ((gss_import_name_type)*gssFunPtr[5])
 #define gss_release_buffer_ptr      ((gss_release_buffer_type)*gssFunPtr[6])
 #define gss_release_name_ptr        ((gss_release_name_type)*gssFunPtr[7])
+#define gss_wrap_ptr                ((gss_wrap_type)*gssFunPtr[8])
+#define gss_unwrap_ptr              ((gss_unwrap_type)*gssFunPtr[9])
 
 #ifdef XP_MACOSX
 static PRFuncPtr KLCacheHasValidTicketsPtr;
@@ -189,9 +141,13 @@ gssInit()
     }
     else {
         const char *const libNames[] = {
+#ifdef XP_WIN
+            "gssapi32"
+#else
             "gss",
             "gssapi_krb5",
             "gssapi"
+#endif
         };
 
         for (size_t i = 0; i < NS_ARRAY_LENGTH(libNames) && !lib; ++i) {
@@ -244,12 +200,13 @@ LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
     gss_buffer_desc status1_string;
     gss_buffer_desc status2_string;
     OM_uint32 ret;
-    nsCAutoString error(prefix);
+    nsCAutoString errorStr;
+    errorStr.Assign(prefix);
 
     if (!gssFunInit)
         return;
 
-    error += ": ";
+    errorStr += ": ";
     do {
         ret = gss_display_status_ptr(&new_stat,
                                      maj_stat,
@@ -257,19 +214,21 @@ LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
                                      GSS_C_NULL_OID,
                                      &msg_ctx,
                                      &status1_string);
-        error += (const char *) status1_string.value;
-        error += '\n';
+        errorStr.Append((const char *) status1_string.value, status1_string.length);
+        gss_release_buffer_ptr(&new_stat, &status1_string);
+
+        errorStr += '\n';
         ret = gss_display_status_ptr(&new_stat,
                                      min_stat,
                                      GSS_C_MECH_CODE,
                                      GSS_C_NULL_OID,
                                      &msg_ctx,
                                      &status2_string);
-        error += (const char *) status2_string.value;
-        error += '\n';
+        errorStr.Append((const char *) status2_string.value, status2_string.length);
+        errorStr += '\n';
     } while (!GSS_ERROR(ret) && msg_ctx != 0);
 
-    LOG(("%s\n", error.get()));
+    LOG(("%s\n", errorStr.get()));
 }
 
 #else /* PR_LOGGING */
@@ -280,19 +239,23 @@ LogGssError(OM_uint32 maj_stat, OM_uint32 min_stat, const char *prefix)
 
 //-----------------------------------------------------------------------------
 
-nsNegotiateAuth::nsNegotiateAuth()
+nsAuthGSSAPI::nsAuthGSSAPI(pType package)
     : mServiceFlags(REQ_DEFAULT)
 {
-    OM_uint32 minstat, majstat;
+    OM_uint32 minstat;
+    OM_uint32 majstat;
     gss_OID_set mech_set;
     gss_OID item;
+
     unsigned int i;
     static gss_OID_desc gss_krb5_mech_oid_desc =
         { 9, (void *) "\x2a\x86\x48\x86\xf7\x12\x01\x02\x02" };
     static gss_OID_desc gss_spnego_mech_oid_desc =
         { 6, (void *) "\x2b\x06\x01\x05\x05\x02" };
 
-    LOG(("entering nsNegotiateAuth::nsNegotiateAuth()\n"));
+    LOG(("entering nsAuthGSSAPI::nsAuthGSSAPI()\n"));
+
+    mComplete = PR_FALSE;
 
     if (!gssFunInit && NS_FAILED(gssInit()))
         return;
@@ -300,7 +263,12 @@ nsNegotiateAuth::nsNegotiateAuth()
     mCtx = GSS_C_NO_CONTEXT;
     mMechOID = &gss_krb5_mech_oid_desc;
 
-    //
+    // if the type is kerberos we accept it as default
+    // and exit 
+
+    if (package == PACKAGE_TYPE_KERBEROS)
+        return;
+
     // Now, look at the list of supported mechanisms,
     // if SPNEGO is found, then use it.
     // Otherwise, set the desired mechanism to
@@ -310,42 +278,45 @@ nsNegotiateAuth::nsNegotiateAuth()
     // Using Kerberos directly (instead of negotiating
     // with SPNEGO) may work in some cases depending
     // on how smart the server side is.
-    //
+    
     majstat = gss_indicate_mechs_ptr(&minstat, &mech_set);
     if (GSS_ERROR(majstat))
         return;
 
-    for (i=0; i<mech_set->count; i++) {
-        item = &mech_set->elements[i];    
-        if (item->length == gss_spnego_mech_oid_desc.length &&
-            !memcmp(item->elements, gss_spnego_mech_oid_desc.elements,
-            item->length)) {
-            // ok, we found it
-            mMechOID = &gss_spnego_mech_oid_desc;
-            break;
+    if (mech_set) {
+        for (i=0; i<mech_set->count; i++) {
+            item = &mech_set->elements[i];    
+            if (item->length == gss_spnego_mech_oid_desc.length &&
+                !memcmp(item->elements, gss_spnego_mech_oid_desc.elements,
+                item->length)) {
+                // ok, we found it
+                mMechOID = &gss_spnego_mech_oid_desc;
+                break;
+            }
         }
+        gss_release_oid_set_ptr(&minstat, &mech_set);
     }
-    gss_release_oid_set_ptr(&minstat, &mech_set);
 }
 
 void
-nsNegotiateAuth::Reset()
+nsAuthGSSAPI::Reset()
 {
     if (gssFunInit && mCtx != GSS_C_NO_CONTEXT) {
         OM_uint32 minor_status;
         gss_delete_sec_context_ptr(&minor_status, &mCtx, GSS_C_NO_BUFFER);
     }
     mCtx = GSS_C_NO_CONTEXT;
+    mComplete = PR_FALSE;
 }
 
-NS_IMPL_ISUPPORTS1(nsNegotiateAuth, nsIAuthModule)
+NS_IMPL_ISUPPORTS1(nsAuthGSSAPI, nsIAuthModule)
 
 NS_IMETHODIMP
-nsNegotiateAuth::Init(const char *serviceName,
-                      PRUint32    serviceFlags,
-                      const PRUnichar *domain,
-                      const PRUnichar *username,
-                      const PRUnichar *password)
+nsAuthGSSAPI::Init(const char *serviceName,
+                   PRUint32    serviceFlags,
+                   const PRUnichar *domain,
+                   const PRUnichar *username,
+                   const PRUnichar *password)
 {
     // we don't expect to be passed any user credentials
     NS_ASSERTION(!domain && !username && !password, "unexpected credentials");
@@ -353,7 +324,7 @@ nsNegotiateAuth::Init(const char *serviceName,
     // it's critial that the caller supply a service name to be used
     NS_ENSURE_TRUE(serviceName && *serviceName, NS_ERROR_INVALID_ARG);
 
-    LOG(("entering nsNegotiateAuth::Init()\n"));
+    LOG(("entering nsAuthGSSAPI::Init()\n"));
 
     if (!gssFunInit)
        return NS_ERROR_NOT_INITIALIZED;
@@ -364,10 +335,10 @@ nsNegotiateAuth::Init(const char *serviceName,
 }
 
 NS_IMETHODIMP
-nsNegotiateAuth::GetNextToken(const void *inToken,
-                              PRUint32    inTokenLen,
-                              void      **outToken,
-                              PRUint32   *outTokenLen)
+nsAuthGSSAPI::GetNextToken(const void *inToken,
+                           PRUint32    inTokenLen,
+                           void      **outToken,
+                           PRUint32   *outTokenLen)
 {
     OM_uint32 major_status, minor_status;
     OM_uint32 req_flags = 0;
@@ -375,14 +346,23 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
     gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_t  in_token_ptr = GSS_C_NO_BUFFER;
     gss_name_t server;
+    nsCAutoString userbuf;
+    nsresult rv;
 
-    LOG(("entering nsNegotiateAuth::GetNextToken()\n"));
+    LOG(("entering nsAuthGSSAPI::GetNextToken()\n"));
 
     if (!gssFunInit)
        return NS_ERROR_NOT_INITIALIZED;
 
+    // If they've called us again after we're complete, reset to start afresh.
+    if (mComplete)
+        Reset();
+    
     if (mServiceFlags & REQ_DELEGATE)
         req_flags |= GSS_C_DELEG_FLAG;
+
+    if (mServiceFlags & REQ_MUTUAL_AUTH)
+        req_flags |= GSS_C_MUTUAL_FLAG;
 
     input_token.value = (void *)mServiceName.get();
     input_token.length = mServiceName.Length() + 1;
@@ -420,8 +400,8 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
 
     KLBoolean found;
     if (gssNativeImp &&
-        (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL,
-                                    NULL)
+         (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL,
+                                NULL)
          != klNoErr || !found))
     {
         major_status = GSS_S_FAILURE;
@@ -443,7 +423,6 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
                                             nsnull,
                                             nsnull);
 
-    nsresult rv;
     if (GSS_ERROR(major_status)) {
         LogGssError(major_status, minor_status, "gss_init_sec_context() failed");
         Reset();
@@ -451,10 +430,9 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
         goto end;
     }
     if (major_status == GSS_S_COMPLETE) {
-        //
-        // We are done with this authentication, reset the context. 
-        //
-        Reset();
+        // Mark ourselves as being complete, so that if we're called again
+        // we know to start afresh.
+        mComplete = PR_TRUE;
     }
     else if (major_status == GSS_S_CONTINUE_NEEDED) {
         //
@@ -463,22 +441,102 @@ nsNegotiateAuth::GetNextToken(const void *inToken,
         // next call.
         //
     } 
-
-    if (output_token.length == 0) {
-        LOG(("  No GSS output token to send, exiting"));
-        rv = NS_ERROR_FAILURE;
-        goto end;
-    }
-
+    
     *outTokenLen = output_token.length;
-    *outToken = nsMemory::Clone(output_token.value, output_token.length);
-
+    if (output_token.length != 0)
+        *outToken = nsMemory::Clone(output_token.value, output_token.length);
+    else
+        *outToken = NULL;
+    
     gss_release_buffer_ptr(&minor_status, &output_token);
-    rv = NS_OK;
+
+    if (major_status == GSS_S_COMPLETE)
+        rv = NS_SUCCESS_AUTH_FINISHED;
+    else
+        rv = NS_OK;
 
 end:
     gss_release_name_ptr(&minor_status, &server);
 
-    LOG(("  leaving nsNegotiateAuth::GetNextToken [rv=%x]", rv));
+    LOG(("  leaving nsAuthGSSAPI::GetNextToken [rv=%x]", rv));
     return rv;
 }
+
+NS_IMETHODIMP
+nsAuthGSSAPI::Unwrap(const void *inToken,
+                     PRUint32    inTokenLen,
+                     void      **outToken,
+                     PRUint32   *outTokenLen)
+{
+    OM_uint32 major_status, minor_status;
+
+    gss_buffer_desc input_token;
+    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
+
+    input_token.value = (void *) inToken;
+    input_token.length = inTokenLen;
+
+    major_status = gss_unwrap_ptr(&minor_status,
+                                  mCtx,
+                                  &input_token,
+                                  &output_token,
+                                  NULL,
+                                  NULL);
+    if (GSS_ERROR(major_status)) {
+        LogGssError(major_status, minor_status, "gss_unwrap() failed");
+        Reset();
+        gss_release_buffer_ptr(&minor_status, &output_token);
+        return NS_ERROR_FAILURE;
+    }
+
+    *outTokenLen = output_token.length;
+
+    if (output_token.length)
+        *outToken = nsMemory::Clone(output_token.value, output_token.length);
+    else
+        *outToken = NULL;
+
+    gss_release_buffer_ptr(&minor_status, &output_token);
+
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsAuthGSSAPI::Wrap(const void *inToken,
+                   PRUint32    inTokenLen,
+                   PRBool      confidential,
+                   void      **outToken,
+                   PRUint32   *outTokenLen)
+{
+    OM_uint32 major_status, minor_status;
+
+    gss_buffer_desc input_token;
+    gss_buffer_desc output_token = GSS_C_EMPTY_BUFFER;
+
+    input_token.value = (void *) inToken;
+    input_token.length = inTokenLen;
+
+    major_status = gss_wrap_ptr(&minor_status,
+                                mCtx,
+                                confidential,
+                                GSS_C_QOP_DEFAULT,
+                                &input_token,
+                                NULL,
+                                &output_token);
+    
+    if (GSS_ERROR(major_status)) {
+        LogGssError(major_status, minor_status, "gss_wrap() failed");
+        Reset();
+        gss_release_buffer_ptr(&minor_status, &output_token);
+        return NS_ERROR_FAILURE;
+    }
+
+    *outTokenLen = output_token.length;
+
+    /* it is not possible for output_token.length to be zero */
+    *outToken = nsMemory::Clone(output_token.value, output_token.length);
+    gss_release_buffer_ptr(&minor_status, &output_token);
+
+    return NS_OK;
+}
+
