@@ -40,9 +40,9 @@
 #include "nsIFactory.idl"
 #include "nsISHEntry.idl"
 #include "nsISHTransaction.idl"
-#include "nsIDocShell.idl"
 
 interface nsISHistoryListener;
+interface nsIDocShell;
 
 %{C++
 #define NS_SHISTORY_INTERNAL_CID \

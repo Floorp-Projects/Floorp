@@ -29,6 +29,7 @@
 
 // Interfaces Needed
 #include "nsILayoutHistoryState.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellTreeItem.h"
