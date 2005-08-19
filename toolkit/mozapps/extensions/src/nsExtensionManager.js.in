@@ -6457,12 +6457,13 @@ ExtensionsDataSource.prototype = {
    * Get the em:iconURL property (icon url of the item)
    */
   _rdfGet_iconURL: function(item, property) {
-    var type = this.getItemProperty(stripPrefix(item.Value, PREFIX_ITEM_URI), "type");
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    var type = this.getItemProperty(id, "type");
     if (type != -1 && type & nsIUpdateItem.TYPE_EXTENSION) {
       var hasIconURL = this._inner.hasArcOut(item, property);
       // If the download entry doesn't have a IconURL property, use a
       // generic icon URL instead.
-      if (!hasIconURL)
+      if (!hasIconURL || this.getItemProperty(id, "disabled") == "true")
         return gRDF.GetResource(URI_GENERIC_ICON_XPINSTALL);
       var iconURL = this._inner.GetTarget(item, property, true);
       iconURL = iconURL.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
