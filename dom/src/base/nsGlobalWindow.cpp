@@ -948,9 +948,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         mInnerWindowHolder = wsh->GetInnerWindowHolder();
         mNavigator = wsh->GetNavigator(); // This assignment addrefs.
 
-        // Update mNavigator's docshell pointer now.
-        mNavigator->SetDocShell(mDocShell);
-        mNavigator->LoadingNewDocument();
+        if (mNavigator) {
+          // Update mNavigator's docshell pointer now.
+          mNavigator->SetDocShell(mDocShell);
+          mNavigator->LoadingNewDocument();
+        }
       } else {
         if (thisChrome) {
           newInnerWindow = new nsGlobalChromeWindow(this);
