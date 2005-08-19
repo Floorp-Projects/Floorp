@@ -209,6 +209,8 @@ $update_package = 0;
 #$update_product = "Firefox";
 #$update_version = "trunk";
 #$update_platform = "WINNT_x86-msvc";
+#$update_hash = "md5";
+#$update_filehost = "ftp.mozilla.org";
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
