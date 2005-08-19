@@ -238,12 +238,16 @@ void InitSequence(HINSTANCE hInstance)
 
 
   // Start the Wizard.
-  if (psh.nPages > 0) {
+  if (psh.nPages > 1) {
     PropertySheet(&psh);
   } else {
-    // Silent install
-
-    InstallFiles(NULL);
+    if (psh.nPages == 1) {
+      // Auto install
+      CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), NULL, DlgProcInstalling);
+    } else {
+      // Silent install
+      InstallFiles(NULL);
+    }
 
     gbIgnoreRunAppX = TRUE;
     // Apply settings and close. 
@@ -1913,7 +1917,9 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     initialized = TRUE;
 
     if (InstallFiles(hDlg)) {
-      PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
+      if (sgProduct.mode != AUTO) {
+        PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
+      }
       break;
     }
     else {
@@ -1937,12 +1943,14 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 
       SetDlgItemText(hDlg, IDC_STATUS0, installStart);
 
-      // Disable the Cancel button. This leaves the button disabled for
-      // this page (Installing) and the final page (Finish) because it 
-      // is meaningless and potentially damaging in both places. 
-      EnumChildWindows(parent, DisableCancelButton, (LPARAM)parent);
+      if (sgProduct.mode != AUTO) {
+        // Disable the Cancel button. This leaves the button disabled for
+        // this page (Installing) and the final page (Finish) because it 
+        // is meaningless and potentially damaging in both places. 
+        EnumChildWindows(parent, DisableCancelButton, (LPARAM)parent);
 
-      PropSheet_SetWizButtons(parent, 0);
+        PropSheet_SetWizButtons(parent, 0);
+      }
 
       break;
 
