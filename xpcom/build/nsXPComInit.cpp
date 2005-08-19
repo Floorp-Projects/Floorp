@@ -579,8 +579,6 @@ nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
       if ( NS_FAILED(rv) ) return rv;
     }
 
-    // what I want to do here is QI for a Component Registration Manager.  Since this
-    // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(
         NS_STATIC_CAST(nsIComponentManager*,compMgr), &rv);
     if (registrar) {
