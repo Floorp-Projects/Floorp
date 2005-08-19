@@ -54,9 +54,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetChildCount(PRInt32 *_retval);
+  void CacheChildren(PRBool aWalkAnonContent);
 };
 
 class nsXULCheckboxAccessible : public nsFormControlAccessible

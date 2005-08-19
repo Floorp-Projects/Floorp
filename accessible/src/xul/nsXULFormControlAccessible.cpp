@@ -155,12 +155,16 @@ NS_IMETHODIMP nsXULButtonAccessible::GetState(PRUint32 *aState)
   return NS_OK;
 }
 
-/**
-  * Perhaps 1 child - if there's a <dropmarker>
-  */
-NS_IMETHODIMP nsXULButtonAccessible::GetFirstChild(nsIAccessible **aResult)
+void nsXULButtonAccessible::CacheChildren(PRBool aWalkAnonContent)
 {
-  if (!mFirstChild) {
+  // An XUL button accessible may have 1 child dropmarker accessible
+  if (!mWeakShell) {
+    mAccChildCount = eChildCountUninitialized;
+    return;   // This outer doc node has been shut down
+  }
+  if (mAccChildCount == eChildCountUninitialized) {
+    mAccChildCount = 0;
+    SetFirstChild(nsnull);
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
     walker.GetFirstChild();
     nsCOMPtr<nsIAccessible> dropMarkerAccessible;
@@ -176,30 +180,14 @@ NS_IMETHODIMP nsXULButtonAccessible::GetFirstChild(nsIAccessible **aResult)
     if (dropMarkerAccessible) {    
       PRUint32 role;
       if (NS_SUCCEEDED(dropMarkerAccessible->GetRole(&role)) && role == ROLE_PUSHBUTTON) {
-        mFirstChild = dropMarkerAccessible;
+        SetFirstChild(dropMarkerAccessible);
         nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(dropMarkerAccessible);
         privChildAcc->SetNextSibling(nsnull);
+        privChildAcc->SetParent(this);
+        mAccChildCount = 1;
       }
     }
   }
-
-  mAccChildCount = (mFirstChild != nsnull);
-  NS_IF_ADDREF(*aResult = mFirstChild);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULButtonAccessible::GetLastChild(nsIAccessible **aResult)
-{
-  return GetFirstChild(aResult);
-}
-
-NS_IMETHODIMP nsXULButtonAccessible::GetChildCount(PRInt32 *aResult)
-{
-  nsCOMPtr<nsIAccessible> accessible;
-  GetFirstChild(getter_AddRefs(accessible));
-  *aResult = mAccChildCount;
-
-  return NS_OK;
 }
 
 /**
