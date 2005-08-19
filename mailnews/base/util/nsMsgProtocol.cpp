@@ -885,6 +885,90 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
     return NS_OK;
 }
 
+nsresult nsMsgProtocol::DoGSSAPIStep1(const char *service, const char *username, nsCString &response)
+{
+    nsresult rv;
+
+    // if this fails, then it means that we cannot do GSSAPI SASL.
+    m_authModule = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "sasl-gssapi", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    m_authModule->Init(service, nsIAuthModule::REQ_DEFAULT, nsnull, NS_ConvertUTF8toUCS2(username).get(), nsnull);
+
+    void *outBuf;
+    PRUint32 outBufLen;
+    rv = m_authModule->GetNextToken((void *)nsnull, 0, &outBuf, &outBufLen);
+    if (NS_SUCCEEDED(rv) && outBuf)
+    {
+        char *base64Str = PL_Base64Encode((char *)outBuf, outBufLen, nsnull);
+        if (base64Str)
+            response.Adopt(base64Str);
+        else 
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        nsMemory::Free(outBuf);
+    }
+
+    return rv;
+}
+
+nsresult nsMsgProtocol::DoGSSAPIStep2(nsCString &commandResponse, nsCString &response)
+{
+    nsresult rv;
+    void *inBuf, *outBuf;
+    PRUint32 inBufLen, outBufLen;
+    PRUint32 len = commandResponse.Length();
+
+    // Cyrus SASL may send us zero length tokens (grrrr)
+    if (len > 0) {
+        // decode into the input secbuffer
+        inBufLen = (len * 3)/4;      // sufficient size (see plbase64.h)
+        inBuf = nsMemory::Alloc(inBufLen);
+        if (!inBuf)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        // strip off any padding (see bug 230351)
+        const char *challenge = commandResponse.get();
+        while (challenge[len - 1] == '=')
+            len--;
+
+        // We need to know the exact length of the decoded string to give to
+        // the GSSAPI libraries. But NSPR's base64 routine doesn't seem capable
+        // of telling us that. So, we figure it out for ourselves.
+
+        // For every 4 characters, add 3 to the destination
+        // If there are 3 remaining, add 2
+        // If there are 2 remaining, add 1
+        // 1 remaining is an error
+        inBufLen = (len / 4)*3 + ((len % 4 == 3)?2:0) + ((len % 4 == 2)?1:0);
+
+        rv = (PL_Base64Decode(challenge, len, (char *)inBuf))
+             ? m_authModule->GetNextToken(inBuf, inBufLen, &outBuf, &outBufLen)
+             : NS_ERROR_FAILURE;
+
+        nsMemory::Free(inBuf);
+    }
+    else 
+    {
+        rv = m_authModule->GetNextToken(NULL, 0, &outBuf, &outBufLen);
+    }
+    if (NS_SUCCEEDED(rv)) 
+    {
+        // And in return, we may need to send Cyrus zero length tokens back
+        if (outBuf) 
+        {
+            char *base64Str = PL_Base64Encode((char *)outBuf, outBufLen, nsnull);
+            if (base64Str)
+                response.Adopt(base64Str);
+            else 
+                rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        else
+            response.Adopt((char *)nsMemory::Clone("",1));
+    }
+
+    return rv;
+}
+
 nsresult nsMsgProtocol::DoNtlmStep1(const char *username, const char *password, nsCString &response)
 {
     nsresult rv;

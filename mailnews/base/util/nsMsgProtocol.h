@@ -149,6 +149,8 @@ protected:
   nsresult DoNtlmStep1(const char *username, const char *password, nsCString &response);
   nsresult DoNtlmStep2(nsCString &commandResponse, nsCString &response);
 
+  nsresult DoGSSAPIStep1(const char *service, const char *username, nsCString &response);
+  nsresult DoGSSAPIStep2(nsCString &commandResponse, nsCString &response);
   // Ouput stream for writing commands to the socket	
   nsCOMPtr<nsIOutputStream>   m_outputStream;   // this will be obtained from the transport interface
   nsCOMPtr<nsIInputStream>    m_inputStream;
