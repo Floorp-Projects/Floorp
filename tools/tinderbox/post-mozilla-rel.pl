@@ -407,6 +407,8 @@ sub packit {
         goto NOUPDATE;
     }
 
+    # We're making an update.
+    TinderUtils::print_log "\nGenerating complete update...\n";
     TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
 
     my $update_file = "update.mar";
@@ -425,6 +427,7 @@ sub packit {
       TinderUtils::run_shell_command "mkdir -p $builddir/dist/update/";
       my $buildid = `cd $builddir/config/ && cat build_number`;
       chomp($buildid);
+      TinderUtils::print_log "\nGathering complete update info...\n";
       TinderUtils::print_log "Got build ID $buildid.\n";
       # Gather stats for update file.
       update_create_stats( update => $update_path,
@@ -438,6 +441,7 @@ sub packit {
 
       # Only push the build schema 0 data if this is a trunk build.
       if ( $update_version eq "trunk" ) {
+          TinderUtils::print_log "\nPushing first-gen update info...\n";
           my $path = "/opt/aus2/incoming/0";
           $path = "$path/$update_product/$update_platform";
 
@@ -447,14 +451,13 @@ sub packit {
 
       # Push the build schema 1 data.
       {
+          TinderUtils::print_log "\nPushing second-gen update info...\n";
           my $path = "/opt/aus2/incoming/1";
           $path = "$path/$update_product/$update_version/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
           TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
       }
-
-#      TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
     } else {
       TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
@@ -493,6 +496,10 @@ sub update_create_stats {
 
   $hashvalue =~ s:^(\w+)\s.*$:$1:g;
   $hashfunction = uc($hashfunction);
+
+  if ( defined($Settings::update_filehost) ) {
+    $url =~ s|^([^:]*)://([^/:]*)(.*)$|$1://$Settings::update_filehost$2|g;
+  }
 
   $output  = "$type\n";
   $output .= "$url\n";
