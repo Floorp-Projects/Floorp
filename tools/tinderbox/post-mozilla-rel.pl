@@ -318,6 +318,15 @@ sub packit {
 
     my(@xforms_xpi);
     if ($Settings::BuildXForms) {
+    TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
+
+    TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
+
+    TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile -t $builddir -d ../../..";
+    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
+
       @xforms_xpi = grep { -f $_ } <${builddir}/extensions/xforms/package/stage/xforms/xforms.xpi>;
     }
 
@@ -375,6 +384,29 @@ sub packit {
   }
 
   if ($cachebuild and $Settings::update_package) {
+    my($update_product, $update_version, $update_platform);
+
+    if ( defined($Settings::update_product) ) {
+        $update_product = $Settings::update_product;
+    } else {
+        TinderUtils::print_log "update_product is undefined, skipping update generation.\n";
+        goto NOUPDATE;
+    }
+
+    if ( defined($Settings::update_version) ) {
+        $update_version = $Settings::update_version;
+    } else {
+        TinderUtils::print_log "update_version is undefined, skipping update generation.\n";
+        goto NOUPDATE;
+    }
+
+    if ( defined($Settings::update_platform) ) {
+        $update_platform = $Settings::update_platform;
+    } else {
+        TinderUtils::print_log "update_platform is undefined, skipping update generation.\n";
+        goto NOUPDATE;
+    }
+
     TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
 
     my $update_file = "update.mar";
@@ -403,12 +435,32 @@ sub packit {
                          );
 
       # Push update information to update-staging/auslite.
-      TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:/opt/auslite/data/Firefox/WINNT_x86-msvc/en-US.txt";
+
+      # Only push the build schema 0 data if this is a trunk build.
+      if ( $update_version eq "trunk" ) {
+          my $path = "/opt/aus2/incoming/0";
+          $path = "$path/$update_product/$update_platform";
+
+          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+      }
+
+      # Push the build schema 1 data.
+      {
+          my $path = "/opt/aus2/incoming/1";
+          $path = "$path/$update_product/$update_version/$update_platform";
+
+          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+      }
+
 #      TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org svn commit -m \"commit latest version of update snippet\" /opt/auslite/data/Firefox/Linux_x86-gcc3/en-US.txt";
     } else {
       TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
-  }
+  } # end if $update_package
+
+  NOUPDATE:
 
   # need to reverse status, since it's a "unix" truth value, where 0 means 
   # success
@@ -425,7 +477,10 @@ sub update_create_stats {
 
   my($hashfunction, $hashvalue, $size, $output);
 
-  $hashfunction = "sha1";
+  $hashfunction = "md5";
+  if ( defined($Settings::update_hash) ) {
+    $hashfunction = $Settings::update_hash;
+  }
   ($size) = (stat($update))[7];
   $hashvalue;
 
@@ -817,17 +872,6 @@ sub main {
   $c_day        = pad_digit($c_day);
   $c_month      = pad_digit($c_month);
   my $datestamp = "$c_year-$c_month-$c_day-$c_hour-$Settings::milestone";
-
-  if ($Settings::BuildXForms) {
-    TinderUtils::run_shell_command "cd $objdir/extensions/schema-validation; $objdir/build/autoconf/make-makefile -t $objdir -d ../..";
-    TinderUtils::run_shell_command "make -C $objdir/extensions/schema-validation";
-
-    TinderUtils::run_shell_command "cd $objdir/extensions/xforms; $objdir/build/autoconf/make-makefile -t $objdir -d ../..";
-    TinderUtils::run_shell_command "make -C $objdir/extensions/xforms";
-
-    TinderUtils::run_shell_command "cd $objdir/extensions/xforms/package; $objdir/build/autoconf/make-makefile -t $objdir -d ../../..";
-    TinderUtils::run_shell_command "make -C $objdir/extensions/xforms/package xpi";
-  }
 
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
