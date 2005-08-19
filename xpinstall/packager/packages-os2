@@ -80,6 +80,7 @@ bin/mozturbo.exe
 bin/regxpcom.exe
 bin/xpicleanup.exe
 bin/res/cmessage.txt
+bin/components/alerts.xpt
 bin/components/access.dll
 bin/components/accessibility.xpt
 ;bin/components/AcctIdl.dll
@@ -124,10 +125,12 @@ bin/components/jsd.dll
 bin/components/jsdservice.xpt
 bin/components/dom.xpt
 bin/components/dom_base.xpt
+bin/components/dom_canvas.xpt
 bin/components/dom_core.xpt
 bin/components/dom_css.xpt
 bin/components/dom_events.xpt
 bin/components/dom_html.xpt
+bin/components/dom_loadsave.xpt
 bin/components/dom_range.xpt
 bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
@@ -140,6 +143,7 @@ bin/components/editor.dll
 ;bin/components/evntloop.dll
 bin/components/find.xpt
 bin/components/gfx.xpt
+bin/components/gksvgrenderer.xpt
 bin/components/content_base.xpt
 bin/components/content_html.xpt
 bin/components/content_htmldoc.xpt
@@ -158,6 +162,7 @@ bin/components/imgicon.xpt
 bin/components/intl.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
+bin/components/jsconsole.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/layout_base.xpt
 bin/components/layout_printing.xpt
@@ -269,9 +274,21 @@ bin/components/t8iix.dll
 bin/components/typeaheadfind.xpt
 bin/components/typahead.dll
 bin/components/nsCloseAllWindows.js
+bin/components/htmlparser.xpt
+bin/components/lwbrk.xpt
+bin/components/nsInterfaceInfoToIDL.js
+bin/components/nsResetPref.js
+bin/components/nsUpdateNotifier.js
+bin/components/plugin.xpt
+bin/components/prefetch.xpt
+bin/components/imgicon.xpt
+bin/components/libimgicon.dll
 
 bin/components/websrvcs.dll
 bin/components/websrvcs.xpt
+
+bin/components/xulappinfo.js
+bin/components/xulappinfo.xpt
 
 ; Roaming
 bin/components/sroaming.dll
@@ -347,6 +364,7 @@ bin/res/table-remove-row.gif
 bin/res/viewsource.css
 bin/res/mathml.css
 bin/res/arrow.gif
+bin/res/arrowd.gif
 bin/res/loading-image.gif
 bin/res/broken-image.gif
 bin/res/html/*
@@ -406,6 +424,7 @@ bin/components/impText.dll
 ;bin/components/impComm4xMail.dll
 bin/components/imp4Mail.dll
 bin/components/impComm4xMail.xpt
+bin/components/nsAbLDAPAttributeMap.js
 bin/components/nsLDAPPrefsService.js
 bin/chrome/messenger.jar
 bin/chrome/icons/default/abcardWindow.ico
@@ -478,14 +497,11 @@ bin/chrome/reporter.jar
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
 ;accessproxy.xpt - I don't know
-;htmlparser.xpt - I don't know
 ;iiextras.dll - I don't know
 ;iiextras.xpt - I don't know
-;jsconsole.xpt - I don't know
 ;MyServce.dll - Sample
 ;p3p.dll - I don't know
 ;p3p.xpt - I don't know
-;plugin.xpt - I don't know
 ;proxytext.xpt - Test
 ;tdynamic.dll - Test
 ;xpcomsmp.dll - Sample

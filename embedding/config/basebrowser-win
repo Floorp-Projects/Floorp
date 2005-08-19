@@ -91,6 +91,8 @@ res\dtd\xhtml11.dtd
 ; 
 mozz.dll
 components\imglib2.dll
+components\imgicon.xpt
+components\libimgicon.dll
 
 ; 
 ; Components: (need to trim fat)
@@ -172,16 +174,19 @@ components\unicharutil.xpt
 ; dom
 components\dom.xpt                      
 components\dom_base.xpt
+components\dom_canvas.xpt
 components\dom_core.xpt
 components\dom_css.xpt
 components\dom_events.xpt
 components\dom_html.xpt
+components\dom_loadsave.xpt
 components\dom_range.xpt
 components\dom_stylesheets.xpt
 components\dom_traversal.xpt
 components\dom_views.xpt
 components\dom_xbl.xpt
 components\dom_xul.xpt
+components\gksvgrenderer.xpt
 
 ; editor
 components\editor.dll                   

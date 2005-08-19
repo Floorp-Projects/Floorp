@@ -84,6 +84,7 @@ bin/libgtkembedmoz.so
 bin/libxlibrgb.so
 ; This is used by libgfxps and libgfx_gtk
 bin/libgfxpsshar.so
+bin/components/alerts.xpt
 bin/components/libaccessibility.so
 bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
@@ -106,10 +107,12 @@ bin/components/libjsd.so
 bin/components/jsdservice.xpt
 bin/components/dom.xpt
 bin/components/dom_base.xpt
+bin/components/dom_canvas.xpt
 bin/components/dom_core.xpt
 bin/components/dom_css.xpt
 bin/components/dom_events.xpt
 bin/components/dom_html.xpt
+bin/components/dom_loadsave.xpt
 bin/components/dom_range.xpt
 bin/components/dom_stylesheets.xpt
 bin/components/dom_traversal.xpt
@@ -120,10 +123,12 @@ bin/components/dom_xul.xpt
 bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
+bin/components/gksvgrenderer.xpt
 bin/components/intl.xpt
 bin/components/imglib2.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
+bin/components/jsconsole.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/libnsappshell.so
 bin/components/libcaps.so
@@ -257,6 +262,19 @@ bin/components/libtypeaheadfind.so
 bin/components/nsCloseAllWindows.js
 bin/components/extensions.xpt
 bin/components/nsExtensionManager.js
+bin/components/libsystem-pref.so
+bin/components/htmlparser.xpt
+bin/components/lwbrk.xpt
+bin/components/nsInterfaceInfoToIDL.js
+bin/components/nsResetPref.js
+bin/components/nsUpdateNotifier.js
+bin/components/plugin.xpt
+bin/components/prefetch.xpt
+bin/components/imgicon.xpt
+bin/components/libimgicon.so
+
+bin/components/xulappinfo.js
+bin/components/xulappinfo.xpt
 
 ; NegotiateAuth
 bin/components/libauth.so
@@ -325,6 +343,7 @@ bin/defaults/wallet/PositionalSchema.tbl
 bin/defaults/wallet/StateSchema.tbl
 bin/res/hiddenWindow.html
 bin/res/arrow.gif
+bin/res/arrowd.gif
 bin/res/loading-image.gif
 bin/res/broken-image.gif
 bin/res/charsetalias.properties
@@ -395,6 +414,7 @@ bin/components/msgimap.xpt
 bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
+bin/components/nsAbLDAPAttributeMap.js
 bin/components/nsLDAPPrefsService.js
 bin/components/import.xpt
 bin/components/impComm4xMail.xpt

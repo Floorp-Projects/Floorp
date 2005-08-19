@@ -110,6 +110,7 @@ bin\components\content_xslt.xpt
 bin\components\content_xtf.xpt
 bin\components\xultmpl.xpt
 bin\components\chardet.xpt
+bin\components\jsconsole.xpt
 bin\components\jsconsole-clhandler.js
 bin\components\layout_xul_tree.xpt
 bin\components\mork.dll
@@ -135,6 +136,7 @@ bin\components\tridentprofile.xpt
 bin\components\txmgr.dll
 bin\components\txmgr.xpt
 bin\components\exthandler.xpt
+bin\components\prefetch.xpt
 bin\components\util.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
@@ -163,6 +165,12 @@ bin\components\nsAxSecurityPolicy.js
 bin\components\nsCloseAllWindows.js
 bin\components\extensions.xpt
 bin\components\nsExtensionManager.js
+bin\components\nsInterfaceInfoToIDL.js
+bin\components\nsResetPref.js
+bin\components\nsUpdateNotifier.js
+
+bin\components\xulappinfo.js
+bin\components\xulappinfo.xpt
 
 ; NegotiateAuth
 bin\components\auth.dll
@@ -308,6 +316,7 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\impComm4xMail.dll
 bin\components\impComm4xMail.xpt
+bin\components\nsAbLDAPAttributeMap.js
 bin\components\nsLDAPPrefsService.js
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
