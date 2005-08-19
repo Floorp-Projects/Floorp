@@ -646,10 +646,6 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
                 NS_WARNING("Timezone was not found in database!");      \
                 wantTz = PR_FALSE;                                      \
             } else {                                                    \
-                icalcomponent *tzcomp = tz->GetIcalComponent();         \
-                icaltimezone *zone = icalcomponent_get_timezone(tzcomp, nsPromiseFlatCString(tzid).get()); \
-                icaltimezone_convert_time(&itt, icaltimezone_get_utc_timezone(), zone); \
-                itt.is_utc = 0;                                         \
                 AddTimezoneReference(tz);                               \
             }                                                           \
         }                                                               \
