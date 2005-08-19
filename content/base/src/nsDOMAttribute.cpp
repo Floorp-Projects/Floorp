@@ -48,6 +48,7 @@
 #include "nsIDOMDocument.h"
 
 //----------------------------------------------------------------------
+PRBool nsDOMAttribute::sInitialized;
 
 nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
                                nsINodeInfo       *aNodeInfo,
@@ -87,11 +88,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE(nsDOMAttribute)
 
-
 void
 nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
 {
-  if (mAttrMap && !aMap) {
+  if (mAttrMap && !aMap && sInitialized) {
     // We're breaking a relationship with content and not getting a new one,
     // need to locally cache value. GetValue() does that.
     nsAutoString tmp;
@@ -724,6 +724,18 @@ nsDOMAttribute::UnsetProperty(nsIAtom* aPropertyName, nsresult* aStatus)
     return nsnull;
 
   return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
+}
+
+void
+nsDOMAttribute::Initialize()
+{
+  sInitialized = PR_TRUE;
+}
+
+void
+nsDOMAttribute::Shutdown()
+{
+  sInitialized = PR_FALSE;
 }
 
 //----------------------------------------------------------------------

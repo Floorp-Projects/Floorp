@@ -146,6 +146,7 @@
 #include "nsIControllerContext.h"
 #include "nsDOMScriptObjectFactory.h"
 #include "nsAutoCopyListener.h"
+#include "nsDOMAttribute.h"
 
 #include "nsHTMLCanvasFrame.h"
 
@@ -335,6 +336,7 @@ Initialize(nsIModule* aSelf)
 
     return rv;
   }
+  nsDOMAttribute::Initialize();
 
   // Add our shutdown observer.
   nsCOMPtr<nsIObserverService> observerService =
@@ -370,6 +372,7 @@ Shutdown()
 
   gInitialized = PR_FALSE;
 
+  nsDOMAttribute::Shutdown();
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
   nsEventListenerManager::Shutdown();

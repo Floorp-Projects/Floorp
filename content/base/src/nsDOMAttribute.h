@@ -102,6 +102,11 @@ public:
   virtual nsresult DeleteProperty(nsIAtom  *aPropertyName);
   virtual void*    UnsetProperty(nsIAtom *aPropertyName,
                                  nsresult *aStatus = nsnull);
+  static void Initialize();
+  static void Shutdown();
+
+protected:
+  static PRBool sInitialized;
 
 private:
   nsString mValue;
