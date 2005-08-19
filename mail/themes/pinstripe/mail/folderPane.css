@@ -75,10 +75,11 @@ treechildren::-moz-tree-cell(folderNameCol, specialFolder-Inbox, newMessages-tru
 
 }
 
+/* Disable Shared Folder Rule for now
 treechildren::-moz-tree-image(folderNameCol, imapShared-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-share.png");
 }
-
+*/
 
 /* ..... Server Folders ..... */
 
