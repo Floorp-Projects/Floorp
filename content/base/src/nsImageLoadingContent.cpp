@@ -375,6 +375,9 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
     // Don't bother
     return NS_OK;
   }
+
+  // Null out our mCurrentURI, in case we have no image requests right now.
+  mCurrentURI = nsnull;
   
   CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED, PR_FALSE,
                       nsIContentPolicy::ACCEPT);
@@ -525,6 +528,14 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   }
 
   return NS_OK;
+}
+
+void
+nsImageLoadingContent::CancelImageRequests()
+{
+  // Make sure to null out mCurrentURI here, so we no longer look like an image
+  mCurrentURI = nsnull;
+  CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
 }
 
 void

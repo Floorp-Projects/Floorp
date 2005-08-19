@@ -87,6 +87,13 @@ protected:
   nsresult ImageURIChanged(const nsAString& aNewURI,
                            PRBool aForce);
 
+  /**
+   * CancelImageRequests is called by subclasses when they want to
+   * cancel all image requests (for example when the subclass is
+   * somehow not an image anymore).
+   */
+  void CancelImageRequests();
+
 private:
   /**
    * Struct used to manage the image observers.

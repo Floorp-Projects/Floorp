@@ -531,6 +531,13 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
     }
 
+    if (mType != NS_FORM_INPUT_IMAGE) {
+      // We're no longer an image input.  Cancel our image requests, if we have
+      // any.  Note that doing this when we already weren't an image is ok --
+      // just does nothing.
+      CancelImageRequests();
+    }
+    
     if (aNotify && mType == NS_FORM_INPUT_IMAGE && !mCurrentRequest) {
       // We just got switched to be an image input; we should see
       // whether we have an image to load;
