@@ -860,7 +860,8 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
                                  aContext,
                                  NS_LITERAL_CSTRING("text/css"),
                                  nsnull,                        //extra param
-                                 &shouldLoad);
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy());
 
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     LOG(("  Load blocked by content policy"));

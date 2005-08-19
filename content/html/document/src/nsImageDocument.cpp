@@ -190,7 +190,8 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
                                              domWindow->GetFrameElementInternal(),
                                              mimeType,
                                              nsnull,
-                                             &decision);
+                                             &decision,
+                                             nsContentUtils::GetContentPolicy());
                                                
   if (NS_FAILED(rv) || NS_CP_REJECTED(decision)) {
     request->Cancel(NS_ERROR_CONTENT_BLOCKED);

@@ -141,17 +141,28 @@ NS_CP_ContentTypeName(PRUint32 contentType)
 
 /* Passes on parameters from its "caller"'s context. */
 #define CHECK_CONTENT_POLICY(action)                                          \
+  PR_BEGIN_MACRO                                                              \
     nsCOMPtr<nsIContentPolicy> policy =                                       \
          do_GetService(NS_CONTENTPOLICY_CONTRACTID);                          \
     if (!policy)                                                              \
         return NS_ERROR_FAILURE;                                              \
                                                                               \
     return policy-> action (contentType, contentLocation, requestOrigin,      \
-                            context, mimeType, extra, decision);
+                            context, mimeType, extra, decision);              \
+  PR_END_MACRO
+
+/* Passes on parameters from its "caller"'s context. */
+#define CHECK_CONTENT_POLICY_WITH_SERVICE(action, _policy)                    \
+  PR_BEGIN_MACRO                                                              \
+    return _policy-> action (contentType, contentLocation, requestOrigin,     \
+                             context, mimeType, extra, decision);             \
+  PR_END_MACRO
 
 /**
  * Alias for calling ShouldLoad on the content policy service.
- * Parameters are the same as nsIContentPolicy::shouldLoad.
+ * Parameters are the same as nsIContentPolicy::shouldLoad, except for
+ * the last parameter, which can be used to pass in a pointer to the
+ * service if the caller already has one.
  */
 inline nsresult
 NS_CheckContentLoadPolicy(PRUint32          contentType,
@@ -160,8 +171,12 @@ NS_CheckContentLoadPolicy(PRUint32          contentType,
                           nsISupports      *context,
                           const nsACString &mimeType,
                           nsISupports      *extra,
-                          PRInt16          *decision)
+                          PRInt16          *decision,
+                          nsIContentPolicy *policyService = nsnull)
 {
+    if (policyService) {
+        CHECK_CONTENT_POLICY_WITH_SERVICE(ShouldLoad, policyService);
+    }
     CHECK_CONTENT_POLICY(ShouldLoad);
 }
 
@@ -176,12 +191,17 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
                              nsISupports      *context,
                              const nsACString &mimeType,
                              nsISupports      *extra,
-                             PRInt16          *decision)
+                             PRInt16          *decision,
+                             nsIContentPolicy *policyService = nsnull)
 {
+    if (policyService) {
+        CHECK_CONTENT_POLICY_WITH_SERVICE(ShouldProcess, policyService);
+    }
     CHECK_CONTENT_POLICY(ShouldProcess);
 }
 
 #undef CHECK_CONTENT_POLICY
+#undef CHECK_CONTENT_POLICY_WITH_SERVICE
 
 /**
  * Helper function to get an nsIDocShell given a context.
