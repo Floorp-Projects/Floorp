@@ -289,41 +289,41 @@ Litmus::DB::Status->find_or_create({name => "Unconfirmed"});
 my %platforms;
 $platforms{"ff_Windows"} = Litmus::DB::Platform->find_or_create({name    => "Windows", 
                                                                  product => $products{"firefox"}, 
-                                                                 detect_regexp  => "%Windows%",
+                                                                 detect_regexp  => "Windows",
                                                                  iconpath => "win.png"});
 $platforms{"ff_Linux"} = Litmus::DB::Platform->find_or_create({name => "Linux",
                                                                product => $products{"firefox"},
-                                                               detect_regexp  => "%Linux%",
+                                                               detect_regexp  => "Linux",
                                                                iconpath => "lin.png"});
 $platforms{"ff_Mac"} = Litmus::DB::Platform->find_or_create({name    => "Mac",
                                                              product => $products{"firefox"},
-                                                             detect_regexp  => "%Macintosh%",
+                                                             detect_regexp  => "Macintosh",
                                                             iconpath => "mac.png"});
 
 $platforms{"sm_Windows"} = Litmus::DB::Platform->find_or_create({name    => "Windows",
                                                                  product => $products{"seamonkey"},
-                                                                 detect_regexp  => "%Windows%",
+                                                                 detect_regexp  => "Windows",
                                                                 iconpath => "win.png"});
 $platforms{"sm_Linux"} = Litmus::DB::Platform->find_or_create({name    => "Linux",
                                                                product => $products{"seamonkey"},
-                                                               detect_regexp  => "%Linux%",
+                                                               detect_regexp  => "Linux",
                                                             iconpath => "lin.png"});
 $platforms{"sm_Mac"} = Litmus::DB::Platform->find_or_create({name    => "Mac", 
                                                              product => $products{"seamonkey"},
-                                                             detect_regexp  => "%Macintosh%",
+                                                             detect_regexp  => "Macintosh",
                                                             iconpath => "mac.png"});
 
 $platforms{"tb_Windows"} = Litmus::DB::Platform->find_or_create({name    => "Windows",
                                                                  product => $products{"thunderbird"},
-                                                                 detect_regexp  => "%Windows%",
+                                                                 detect_regexp  => "Windows",
                                                             iconpath => "win.png"});
 $platforms{"tb_Linux"} = Litmus::DB::Platform->find_or_create({name    => "Linux",
                                                                product => $products{"thunderbird"},
-                                                               detect_regexp  => "%Linux%",
+                                                               detect_regexp  => "Linux",
                                                             iconpath => "lin.png"});
 $platforms{"tb_Mac"} = Litmus::DB::Platform->find_or_create({name    => "Mac", 
                                                              product => $products{"thunderbird"},
-                                                             detect_regexp  => "%Macintosh%",
+                                                             detect_regexp  => "Macintosh",
                                                             iconpath => "mac.png"});
 
 # opsyses
