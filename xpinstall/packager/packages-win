@@ -165,7 +165,7 @@ bin\components\extensions.xpt
 bin\components\nsExtensionManager.js
 
 ; NegotiateAuth
-bin\components\negotiateauth.dll
+bin\components\auth.dll
 
 ; webservices
 bin\components\websrvcs.dll

@@ -259,7 +259,7 @@ bin/components/extensions.xpt
 bin/components/nsExtensionManager.js
 
 ; NegotiateAuth
-bin/components/libnegotiateauth.so
+bin/components/libauth.so
 
 ; GnomeVFS support
 bin/components/libnkgnomevfs.so
