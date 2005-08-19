@@ -847,7 +847,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSObject *obj;
     JSFunction *fun;
     JSString *str;
-    JSBool ok, inXML, quoteAttr;
+    JSBool ok;
+#if JS_HAS_XML_SUPPORT
+    JSBool inXML, quoteAttr;
+#endif
     jsval val;
     static const char catch_cookie[] = "/*CATCH*/";
     static const char with_cookie[] = "/*WITH*/";
@@ -905,7 +908,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     op = JSOP_NOP;
     sn = NULL;
     rval = NULL;
-    inXML = JS_FALSE;
+#if JS_HAS_XML_SUPPORT
+    inXML = quoteAttr = JS_FALSE;
+#endif
 
     while (pc < endpc) {
         lastop = op;
