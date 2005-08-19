@@ -4390,7 +4390,9 @@ ExtensionManager.prototype = {
    */
   enableItem: function(id) {
     var ds = this.datasource;
-    if (ds.getItemProperty(id, "userDisabled") == "true") {
+    if (ds.getItemProperty(id, "userDisabled") == "true" ||
+        ds.getItemProperty(id, "appDisabled") == "true" &&
+        ds.getItemProperty(id, "compatible") == "true") {
       this._setOp(id, OP_NEEDS_ENABLE);
       this._notifyAction(id, EM_ITEM_ENABLED);
     }
