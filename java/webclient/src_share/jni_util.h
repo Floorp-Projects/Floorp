@@ -101,6 +101,7 @@ extern jobject BM_NAME_VALUE;
 extern jobject BM_URL_VALUE;
 extern jobject BM_DESCRIPTION_VALUE;
 extern jobject BM_IS_FOLDER_VALUE;
+extern jobject NODE_LONG_KEY;
 
 
 /**

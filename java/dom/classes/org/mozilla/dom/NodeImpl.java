@@ -75,7 +75,7 @@ public class NodeImpl implements Node, EventTarget {
     static private Hashtable javaDOMlisteners = new Hashtable();
 
     // instantiated from JNI only
-    protected NodeImpl() {}
+    protected NodeImpl() { }
     protected NodeImpl(long p) {
 	p_nsIDOMNode = p;
     }
@@ -218,4 +218,41 @@ public class NodeImpl implements Node, EventTarget {
     public void         normalize() {
         throw new UnsupportedOperationException();
     };
+
+    /**** level 3 methods
+public short compareDocumentPosition(Node other)  {
+  throw new UnsupportedOperationException();
 }
+public String getBaseURI()  {
+  throw new UnsupportedOperationException();
+}
+public Object getFeature(String feature, String version)  {
+  throw new UnsupportedOperationException();
+}
+public Object getUserData(String key)  {
+  throw new UnsupportedOperationException();
+}
+public boolean isDefaultNamespace(String namespaceURI) {
+  throw new UnsupportedOperationException();
+}
+public boolean isEqualNode(Node arg)  {
+  throw new UnsupportedOperationException();
+}
+public boolean isSameNode(Node other) {
+  throw new UnsupportedOperationException();
+}
+public String lookupNamespaceURI(String prefix)  {
+  throw new UnsupportedOperationException();
+}
+public String lookupPrefix(String namespaceURI)  {
+  throw new UnsupportedOperationException();
+}
+public void setTextContent(String textContent)  {
+  throw new UnsupportedOperationException();
+}
+public Object setUserData(String key, Object data, UserDataHandler handler)  {
+  throw new UnsupportedOperationException();
+}
+****/
+}
+

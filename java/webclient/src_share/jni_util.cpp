@@ -86,6 +86,7 @@ jobject BM_NAME_VALUE;
 jobject BM_URL_VALUE;
 jobject BM_DESCRIPTION_VALUE;
 jobject BM_IS_FOLDER_VALUE;
+jobject NODE_LONG_KEY;
 
 
 jstring DOCUMENT_LOAD_LISTENER_CLASSNAME;
@@ -357,6 +358,11 @@ jboolean util_InitStringConstants()
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, 
                                                            NEW_WINDOW_LISTENER_CLASSNAME_VALUE)))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (NODE_LONG_KEY = 
+                   ::util_NewGlobalRef(env, (jobject) 
+                                       ::util_NewStringUTF(env, "NodeLong")))) {
         return JNI_FALSE;
     }
 

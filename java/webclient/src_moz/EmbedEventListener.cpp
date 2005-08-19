@@ -356,6 +356,8 @@ nsresult EmbedEventListener::PopulatePropertiesFromEvent(nsIDOMEvent *event)
     }
     mInverseDepth = 0;
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    char buf[20];
+    jstring strVal;
 
     if (mProperties) {
         util_ClearPropertiesObject(env, mProperties, (jobject) 
@@ -368,6 +370,18 @@ nsresult EmbedEventListener::PopulatePropertiesFromEvent(nsIDOMEvent *event)
             return rv;
         }
     }
+
+    // Store a Long into the properties under the key: NODE_LONG_KEY
+    jlong longVal = (jlong) currentNode.get();
+    WC_ITOA(longVal, buf, 10);
+    strVal = ::util_NewStringUTF(env, buf);
+    
+    ::util_StoreIntoPropertiesObject(env, mProperties, NODE_LONG_KEY,
+				     (jobject) strVal, 
+				     (jobject) 
+				     &(mOwner->GetWrapperFactory()->shareContext));
+    
+    // populate the properties table with information about the node
     dom_iterateToRoot(currentNode, EmbedEventListener::takeActionOnNode, 
                       (void *)this);
 

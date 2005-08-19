@@ -21,10 +21,6 @@
  */
 
 package org.mozilla.webclient.impl.wrapper_native;
-
-
-import org.mozilla.util.Assert;
-import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import java.util.ArrayList;
@@ -42,6 +38,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.Component;
+import org.mozilla.dom.DOMAccessor;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
@@ -55,7 +52,7 @@ import org.mozilla.webclient.NewWindowListener;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WCMouseEvent;
 import org.mozilla.webclient.WebclientEventListener;
-import org.mozilla.webclient.UnimplementedException;
+import org.w3c.dom.Node;
 
 public class EventRegistrationImpl extends ImplObjectNative implements EventRegistration2
 {
@@ -167,6 +164,12 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
 	
 	documentLoadListeners.add(listener);
     }
+}
+
+public void pushRunnable(Runnable runnable) {
+    
+    NativeEventThread.instance.pushRunnable(runnable);
+    
 }
 
 public void removeDocumentLoadListener(DocumentLoadListener listener)
@@ -316,9 +319,20 @@ private EventObject createMouseEvent(long eventType, Object eventData) {
     WCMouseEvent mouseEvent = null;
     Properties props = (Properties) eventData;
     int modifiers = 0, x = -1, y = -1, clickCount = 0;
+    Node domNode = null;
     String str;
     boolean bool;
     if (null != props) { 
+        if (null != (str = props.getProperty("NodeLong"))) {
+            long nodeLong = -1;
+            try {
+                nodeLong = Long.valueOf(str).longValue();
+            }
+            catch (NumberFormatException nfe) {
+                throw new RuntimeException(nfe);
+            }
+            domNode = DOMAccessor.getNodeByHandle(nodeLong);
+        }
 	if (null != (str = props.getProperty("ClientX"))) {
 	    x = Integer.valueOf(str).intValue();
 	}
@@ -365,7 +379,14 @@ private EventObject createMouseEvent(long eventType, Object eventData) {
 	    }
 	}
     }
-    WebclientEvent event = new WebclientEvent(browserControlCanvas, eventType,
+    Object source = null;
+    if (null != domNode) {
+        source = domNode;
+    }
+    else {
+        source = browserControlCanvas;
+    }
+    WebclientEvent event = new WebclientEvent(source, eventType,
 					      eventData);
     switch ((int) eventType) {
     case (int) WCMouseEvent.MOUSE_DOWN_EVENT_MASK:
@@ -409,8 +430,19 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
     int modifiers = 0, keyCode = 0;
     char keyChar = 0;
     String str;
+    Node domNode = null;
     boolean bool;
     if (null != props) { 
+        if (null != (str = props.getProperty("NodeLong"))) {
+            long nodeLong = -1;
+            try {
+                nodeLong = Long.valueOf(str).longValue();
+            }
+            catch (NumberFormatException nfe) {
+                throw new RuntimeException(nfe);
+            }
+            domNode = DOMAccessor.getNodeByHandle(nodeLong);
+        }
 	if (null != (str = props.getProperty("Button"))) {
 	    int button = Integer.valueOf(str).intValue();
 	    if (1 == button) {
@@ -485,8 +517,15 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
 			   " keyCode: " + keyCode +
 			   " keyChar: " + keyChar);
     }
+    Object source = null;
+    if (null != domNode) {
+        source = domNode;
+    }
+    else {
+        source = browserControlCanvas;
+    }
 
-    WebclientEvent event = new WebclientEvent(browserControlCanvas, eventType,
+    WebclientEvent event = new WebclientEvent(source, eventType,
 					      keyEvent);
     return event;
 }

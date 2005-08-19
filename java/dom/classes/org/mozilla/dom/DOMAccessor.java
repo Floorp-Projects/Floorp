@@ -99,7 +99,7 @@ public final class DOMAccessor {
 
     private static native void register();
     private static native void unregister();
-    private static native Node getNodeByHandle(long p);
+    public static native Node getNodeByHandle(long p);
     private static native void doGC();
 
     public static native void initialize();

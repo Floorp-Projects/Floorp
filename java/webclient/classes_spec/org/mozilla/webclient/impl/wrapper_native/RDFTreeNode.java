@@ -150,11 +150,11 @@ public String toString()
 public Enumeration children() 
 {
     Assert.assert_it(-1 != nativeRDFNode);
-    Enumeration enum = null;
+    Enumeration enumer = null;
 
-    enum = new RDFEnumeration(nativeContext, this);
+    enumer = new RDFEnumeration(nativeContext, this);
 
-    return enum;
+    return enumer;
 }
 
 public boolean getAllowsChildren()
