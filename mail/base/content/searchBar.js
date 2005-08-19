@@ -365,6 +365,8 @@ function createSearchTermsWithList(aTermsArray)
   var selectedFolder = GetThreadPaneFolder();
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
+  
+  var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
 
   if (gXFVirtualFolderTerms)
   {
@@ -380,26 +382,34 @@ function createSearchTermsWithList(aTermsArray)
         var realFolderRes = GetResourceFromUri(srchFolderUriArray[i]);
         var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (!realFolder.isServer)
-          gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && 
-                              !ioService.offline && 
-                              realFolder.server.type == 'imap' ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, 
-                              realFolder);
+          gSearchSession.addScopeTerm(getScopeToUse(termsArray, realFolder, ioService.offline), realFolder);
       }
     }
   }
   else
   {
     viewDebug ("in createSearchTermsWithList, adding scope term for selected folder\n");
-    gSearchSession.addScopeTerm(gSearchInput.searchMode == kQuickSearchBody && 
-                              !ioService.offline && 
-                              selectedFolder.server.type == 'imap' ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail, 
-                              selectedFolder);
+    gSearchSession.addScopeTerm(getScopeToUse(termsArray, selectedFolder, ioService.offline), selectedFolder);
   }
-  // add each item in termsArray to the search session
 
-  var termsArray = aTermsArray.QueryInterface(Components.interfaces.nsISupportsArray);
+  // add each item in termsArray to the search session
   for (var i = 0; i < termsArray.Count(); i++)
     gSearchSession.appendTerm(termsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm));
+}
+
+function getScopeToUse(aTermsArray, aFolderToSearch, aIsOffline)
+{
+  if (aIsOffline || aFolderToSearch.server.type != 'imap')
+    return nsMsgSearchScope.offlineMail;
+
+  var scopeToUse = gSearchInput.searchMode == kQuickSearchBody ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail;
+
+  // it's possible one of our search terms may require us to use an online mail scope (such as imap body searches)
+  for (var i = 0; scopeToUse != nsMsgSearchScope.onlineMail && i < aTermsArray.Count(); i++)
+    if (aTermsArray.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgSearchTerm).attrib == nsMsgSearchAttrib.Body)
+      scopeToUse = nsMsgSearchScope.onlineMail;
+  
+  return scopeToUse;
 }
 
 function createSearchTerms()
