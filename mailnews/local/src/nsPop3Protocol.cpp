@@ -1203,6 +1203,8 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
         if (NS_SUCCEEDED(rv))
             SetCapFlag(POP3_HAS_AUTH_NTLM|POP3_HAS_AUTH_MSN);
     }
+    else if (!PL_strcasecmp (line, "GSSAPI"))
+        SetCapFlag(POP3_HAS_AUTH_GSSAPI);
     else if (!PL_strcasecmp (line, "PLAIN")) 
         SetCapFlag(POP3_HAS_AUTH_PLAIN);
     else if (!PL_strcasecmp (line, "LOGIN")) 
@@ -1311,6 +1313,9 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
         if (responseLine.Find("LOGIN", PR_TRUE) >= 0)  
             SetCapFlag(POP3_HAS_AUTH_LOGIN);
 
+        if (responseLine.Find("GSSAPI", PR_TRUE) >= 0)
+            SetCapFlag(POP3_HAS_AUTH_GSSAPI);
+
         nsresult rv;
         nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
         // this checks if psm is installed...
@@ -1404,7 +1409,9 @@ PRInt32 nsPop3Protocol::ProcessAuth()
 
     if(m_useSecAuth)
     {
-      if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+      if (TestCapFlag(POP3_HAS_AUTH_GSSAPI))
+          m_pop3ConData->next_state = POP3_AUTH_GSSAPI;
+      else if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
           m_pop3ConData->next_state = POP3_SEND_USERNAME;
       else
         if (TestCapFlag(POP3_HAS_AUTH_NTLM))
@@ -1488,7 +1495,9 @@ PRInt32 nsPop3Protocol::AuthFallback()
         {
             // If one authentication failed, we're going to
             // fall back on a less secure login method.
-            if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+            if (TestCapFlag(POP3_HAS_AUTH_GSSAPI))
+                ClearCapFlag(POP3_HAS_AUTH_GSSAPI);
+            else if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
                 // if CRAM-MD5 enabled, disable it
                 ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
             else if (TestCapFlag(POP3_HAS_AUTH_NTLM))
@@ -1636,6 +1645,70 @@ PRInt32 nsPop3Protocol::AuthNtlmResponse()
     m_pop3ConData->pause_for_read = PR_FALSE;
 
     return 0;
+}
+
+PRInt32 nsPop3Protocol::AuthGSSAPI()
+{
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+    if (server) {
+        nsCAutoString cmd;
+        nsCAutoString service("pop@");
+        nsXPIDLCString hostName;
+        nsresult rv;
+
+        server->GetRealHostName(getter_Copies(hostName));
+        service.Append(hostName);
+        rv = DoGSSAPIStep1(service.get(), m_username.get(), cmd);
+        if (NS_SUCCEEDED(rv)) {
+            m_GSSAPICache.Assign(cmd);
+            m_pop3ConData->next_state_after_response = POP3_AUTH_GSSAPI_FIRST;
+            m_pop3ConData->pause_for_read = PR_TRUE;
+            return SendData(m_url, "AUTH GSSAPI" CRLF);
+        }
+    }
+
+    ClearCapFlag(POP3_HAS_AUTH_GSSAPI);
+    m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+    m_pop3ConData->pause_for_read = PR_FALSE;
+    return NS_OK;
+}
+
+PRInt32 nsPop3Protocol::AuthGSSAPIResponse(PRBool first)
+{
+    if (!m_pop3ConData->command_succeeded)
+    {
+        if (first)
+            m_GSSAPICache.Truncate();
+        ClearCapFlag(POP3_HAS_AUTH_GSSAPI);
+        m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+        m_pop3ConData->pause_for_read = PR_FALSE;
+        return NS_OK;
+    }
+    
+    nsresult rv;
+
+    m_pop3ConData->next_state_after_response = POP3_AUTH_GSSAPI_STEP;
+    m_pop3ConData->pause_for_read = PR_TRUE;
+
+    if (first) {
+        m_GSSAPICache += CRLF;
+        rv = SendData(m_url, m_GSSAPICache.get());
+        m_GSSAPICache.Truncate();
+    }
+    else {
+        nsCAutoString cmd;
+        rv = DoGSSAPIStep2(m_commandResponse, cmd);
+        if (NS_FAILED(rv))
+            cmd = "*";
+        if (rv == NS_SUCCESS_AUTH_FINISHED) {
+            m_pop3ConData->next_state_after_response = POP3_AUTH_FALLBACK;
+            m_password_already_sent = PR_TRUE;
+        }
+        cmd += CRLF;
+        rv = SendData(m_url, cmd.get());
+    }
+
+    return rv;
 }
 
 PRInt32 nsPop3Protocol::SendUsername()
@@ -3622,6 +3695,19 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       status = AuthNtlmResponse();
       break;
       
+    case POP3_AUTH_GSSAPI:
+      status = AuthGSSAPI();
+      break;
+
+    case POP3_AUTH_GSSAPI_FIRST:
+      UpdateStatus(POP3_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION);
+      status = AuthGSSAPIResponse(true);
+      break;
+ 
+    case POP3_AUTH_GSSAPI_STEP:
+      status = AuthGSSAPIResponse(false);
+      break;
+
     case POP3_SEND_USERNAME:
       UpdateStatus(POP3_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION);
       status = SendUsername();

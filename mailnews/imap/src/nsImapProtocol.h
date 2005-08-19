@@ -459,7 +459,7 @@ private:
   void Language(); // set the language on the server if it supports it
   void Namespace();
   void InsecureLogin(const char *userName, const char *password);
-  void AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag);
+  nsresult AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag);
   void ProcessAuthenticatedStateURL();
   void ProcessAfterAuthenticated();
   void ProcessSelectedStateURL();

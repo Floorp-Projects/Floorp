@@ -718,6 +718,10 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
             if(m_prefTrySecAuth)
             {
+
+                if (responseLine.Find("GSSAPI", PR_TRUE, 5) >= 0)
+                    SetFlag(SMTP_AUTH_GSSAPI_ENABLED);
+
                 nsresult rv;
                 nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
                 // this checks if psm is installed...
@@ -856,7 +860,9 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
     else
     if (m_prefAuthMethod == PREF_AUTH_ANY)
     {
-        if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
+        if (TestFlag(SMTP_AUTH_GSSAPI_ENABLED)) 
+            m_nextState = SMTP_SEND_AUTH_GSSAPI_FIRST;
+        else if (TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED) ||
             TestFlag(SMTP_AUTH_NTLM_ENABLED) ||
             TestFlag(SMTP_AUTH_PLAIN_ENABLED))
             m_nextState = SMTP_SEND_AUTH_LOGIN_STEP1;
@@ -904,7 +910,9 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
       {
         // If one authentication failed, we're going to
         // fall back on a less secure login method.
-        if(TestFlag(SMTP_AUTH_DIGEST_MD5_ENABLED))
+        if(TestFlag(SMTP_AUTH_GSSAPI_ENABLED))
+          ClearFlag(SMTP_AUTH_GSSAPI_ENABLED);
+        else if(TestFlag(SMTP_AUTH_DIGEST_MD5_ENABLED))
           // if DIGEST-MD5 enabled, clear it if we failed.
           ClearFlag(SMTP_AUTH_DIGEST_MD5_ENABLED);
         else if(TestFlag(SMTP_AUTH_CRAM_MD5_ENABLED))
@@ -946,6 +954,64 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   return (status);
 }
 
+// GSSAPI may consist of multiple round trips
+
+PRInt32 nsSmtpProtocol::AuthGSSAPIFirst()
+{
+  nsCAutoString command("AUTH GSSAPI ");
+  nsCAutoString resp;
+  nsCAutoString service("smtp@");
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
+  nsresult rv;
+  nsCOMPtr<nsISmtpServer> smtpServer;
+  rv = m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  rv = smtpServer->GetUsername(getter_Copies(userName));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  rv = smtpServer->GetHostname(getter_Copies(hostName));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+ service.Append(hostName);
+  rv = DoGSSAPIStep1(service.get(), userName, resp);
+  if (NS_FAILED(rv))
+    command.Append("*");
+  else
+    command.Append(resp);
+  command.Append(CRLF);
+  m_nextState = SMTP_RESPONSE;
+  m_nextStateAfterResponse = SMTP_SEND_AUTH_GSSAPI_STEP;
+  SetFlag(SMTP_PAUSE_FOR_READ);
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  return SendData(url, command.get());
+}
+
+PRInt32 nsSmtpProtocol::AuthGSSAPIStep()
+{
+  nsresult rv;
+  nsCAutoString cmd;
+
+  // Check to see what the server said
+  if (m_responseCode / 100 != 3) {
+    m_nextState = SMTP_AUTH_LOGIN_RESPONSE;
+    return 0;
+  }
+
+  rv = DoGSSAPIStep2(m_responseText, cmd);
+  if (NS_FAILED(rv))
+    cmd = "*";
+  cmd += CRLF;
+
+  m_nextStateAfterResponse = (rv == NS_SUCCESS_AUTH_FINISHED)?SMTP_AUTH_LOGIN_RESPONSE:SMTP_SEND_AUTH_GSSAPI_STEP;
+  m_nextState = SMTP_RESPONSE;
+  SetFlag(SMTP_PAUSE_FOR_READ);
+
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  return SendData(url, cmd.get());
+}
+
+       
 // LOGIN and MSN consist of three steps (MSN not through the mechanism
 // but by non-RFC2821 compliant implementation in M$ servers) not two as
 // PLAIN or CRAM-MD5, so we've to start here and continue with AuthStep1
@@ -1543,6 +1609,14 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
        status = ProcessAuth();
        break;
        
+      case SMTP_SEND_AUTH_GSSAPI_FIRST:
+        status = AuthGSSAPIFirst();
+        break;
+
+      case SMTP_SEND_AUTH_GSSAPI_STEP:
+        status = AuthGSSAPIStep();
+        break;
+      
       case SMTP_SEND_AUTH_LOGIN_STEP0:
         status = AuthLoginStep0();
         break;

@@ -76,7 +76,9 @@ SMTP_AUTH_LOGIN_RESPONSE,                           // 19
 SMTP_TLS_RESPONSE,                                  // 20
 SMTP_AUTH_EXTERNAL_RESPONSE,                        // 21
 SMTP_AUTH_PROCESS_STATE,                            // 22
-SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 23
+SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE,              // 23
+SMTP_SEND_AUTH_GSSAPI_FIRST,                        // 24
+SMTP_SEND_AUTH_GSSAPI_STEP                          // 25
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -107,8 +109,9 @@ SMTP_AUTH_CRAM_MD5_CHALLENGE_RESPONSE               // 23
 #define SMTP_AUTH_DIGEST_MD5_ENABLED    0x00000800
 #define SMTP_AUTH_NTLM_ENABLED          0x00001000
 #define SMTP_AUTH_MSN_ENABLED           0x00002000
-#define SMTP_AUTH_ANY_ENABLED           0x00003C1C
+#define SMTP_AUTH_ANY_ENABLED           0x0000BC1C
 #define SMTP_EHLO_SIZE_ENABLED          0x00004000
+#define SMTP_AUTH_GSSAPI_ENABLED        0x00008000
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -228,6 +231,8 @@ private:
     PRInt32 SendHeloResponse(nsIInputStream * inputStream, PRUint32 length);
     PRInt32 SendEhloResponse(nsIInputStream * inputStream, PRUint32 length);	
 
+    PRInt32 AuthGSSAPIFirst();
+    PRInt32 AuthGSSAPIStep();
     PRInt32 AuthLoginStep0();
     PRInt32 AuthLoginStep0Response();
     PRInt32 AuthLoginStep1();

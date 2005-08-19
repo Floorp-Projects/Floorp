@@ -110,11 +110,12 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_MSN           = 0x00010000,
     POP3_HAS_RESP_CODES         = 0x00020000,
     POP3_HAS_AUTH_RESP_CODE     = 0x00040000,
-    POP3_HAS_STLS               = 0x00080000
+    POP3_HAS_STLS               = 0x00080000,
+    POP3_HAS_AUTH_GSSAPI        = 0x00100000
 };
 
 #define POP3_HAS_AUTH_ANY         0x00001C00
-#define POP3_HAS_AUTH_ANY_SEC     0x0001E000
+#define POP3_HAS_AUTH_ANY_SEC     0x0011E000
 
 enum Pop3StatesEnum {
     POP3_READ_PASSWORD,                         // 0
@@ -171,7 +172,11 @@ enum Pop3StatesEnum {
     POP3_GURL_RESPONSE,                         // 42
     POP3_QUIT_RESPONSE,                         // 43
     POP3_INTERRUPTED,                           // 44
-    POP3_TLS_RESPONSE                           // 45
+    POP3_TLS_RESPONSE,                          // 45
+    
+    POP3_AUTH_GSSAPI,                           // 46
+    POP3_AUTH_GSSAPI_FIRST,                     // 47
+    POP3_AUTH_GSSAPI_STEP                       // 48
 };
 
 
@@ -319,6 +324,7 @@ private:
   nsCString m_senderInfo;
   nsCString m_commandResponse;
   nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+  nsCString m_GSSAPICache;
 
   // progress state information
   void UpdateProgressPercent (PRUint32 totalDone, PRUint32 total);
@@ -383,6 +389,8 @@ private:
   PRInt32 AuthLoginResponse();
   PRInt32 AuthNtlm();
   PRInt32 AuthNtlmResponse();
+  PRInt32 AuthGSSAPI();
+  PRInt32 AuthGSSAPIResponse(PRBool first);
   PRInt32 SendUsername();
   PRInt32 SendPassword();
   PRInt32 SendStatOrGurl(PRBool sendStat);

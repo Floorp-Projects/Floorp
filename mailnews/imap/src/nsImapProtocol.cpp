@@ -4973,7 +4973,7 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
      ParseIMAPandCheckForNewMail();
 }
 
-void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag)
+nsresult nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAPCapabilityFlag flag)
 {
   ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_AUTH_LOGIN);
   IncrementCommandTagNumber();
@@ -5018,12 +5018,61 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
           if (NS_SUCCEEDED(rv))
             ParseIMAPandCheckForNewMail(command.get());
           if (GetServerStateParser().LastCommandSuccessful())
-            return;
+            return NS_OK;
           GetServerStateParser().SetCapabilityFlag(GetServerStateParser().GetCapabilityFlag() & ~kHasCRAMCapability);
 
         }
     }
   } // if CRAM response was received
+  else if (flag & kHasAuthGssApiCapability)
+  {
+    // Only try GSSAPI once - if it fails, its going to be because we don't
+    // have valid credentials
+    GetServerStateParser().SetCapabilityFlag(GetServerStateParser().GetCapabilityFlag() & ~(kHasAuthGssApiCapability));
+
+    // We do step1 first, so we don't try GSSAPI against a server which
+    // we can't get credentials for.
+    nsCAutoString response;
+    nsresult gssrv;
+
+    nsCAutoString service("imap@");
+    service.Append(GetImapHostName());
+    gssrv = DoGSSAPIStep1(service.get(), userName, response);
+    NS_ENSURE_SUCCESS(gssrv, gssrv);
+    
+    nsCAutoString command (GetServerCommandTag());
+    command.Append(" authenticate GSSAPI" CRLF);
+    rv = SendData(command.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ParseIMAPandCheckForNewMail("AUTH GSSAPI");
+    if (GetServerStateParser().LastCommandSuccessful())
+    {
+      response += CRLF;
+      rv = SendData(response.get());
+      NS_ENSURE_SUCCESS(rv, rv);
+      ParseIMAPandCheckForNewMail(command.get());
+
+      while (GetServerStateParser().LastCommandSuccessful() && 
+             NS_SUCCEEDED(gssrv) && gssrv != NS_SUCCESS_AUTH_FINISHED)
+      {
+        nsCString challengeStr(GetServerStateParser().fAuthChallenge);
+        gssrv = DoGSSAPIStep2(challengeStr, response);
+        if (NS_SUCCEEDED(gssrv)) 
+        {
+          response += CRLF;
+          rv = SendData(response.get());
+        }
+        else
+          rv = SendData("*" CRLF);
+
+        NS_ENSURE_SUCCESS(rv, rv);
+        ParseIMAPandCheckForNewMail(command.get());
+      }
+      rv = gssrv;
+    }
+    return rv;
+  }
   else if (flag & (kHasAuthNTLMCapability|kHasAuthMSNCapability))
   {
     nsCAutoString command (GetServerCommandTag());
@@ -5064,7 +5113,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   {
     PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate plain" CRLF, GetServerCommandTag());
     rv = SendData(m_dataOutputBuf);
-    if (NS_FAILED(rv)) return;
+    NS_ENSURE_SUCCESS(rv, rv);
     currentCommand = PL_strdup(m_dataOutputBuf); /* StrAllocCopy(currentCommand, GetOutputBuffer()); */
     ParseIMAPandCheckForNewMail();
     if (GetServerStateParser().LastCommandSuccessful()) 
@@ -5089,7 +5138,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
         if (GetServerStateParser().LastCommandSuccessful())
         {
           PR_Free(currentCommand);
-          return;
+          return NS_OK;
         } // if the last command succeeded
       } // if we got a base 64 encoded string
     } // if the last command succeeded
@@ -5099,7 +5148,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   {
     PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate login" CRLF, GetServerCommandTag());
     rv = SendData(m_dataOutputBuf);
-    if (NS_FAILED(rv)) return;
+    NS_ENSURE_SUCCESS(rv, rv);
     currentCommand = PL_strdup(m_dataOutputBuf);
     ParseIMAPandCheckForNewMail();
 
@@ -5125,7 +5174,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
         if (GetServerStateParser().LastCommandSuccessful())
         {
           PR_Free(currentCommand);
-          return;
+          return NS_OK;
         }
       } // if last command successful
     } // if last command successful
@@ -5136,6 +5185,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
     InsecureLogin(userName, password);
 
   PR_Free(currentCommand);
+  return NS_OK;
 }
 
 void nsImapProtocol::OnLSubFolders()
@@ -7406,6 +7456,7 @@ PRBool nsImapProtocol::TryToLogon()
 {
   PRInt32 logonTries = 0;
   PRBool loginSucceeded = PR_FALSE;
+  PRBool clientSucceeded = PR_TRUE;
   nsXPIDLCString password;
   char * userName = nsnull;
   nsresult rv = NS_OK;
@@ -7450,7 +7501,7 @@ PRBool nsImapProtocol::TryToLogon()
         // supports it. This avoids fallback to insecure login in case
         // authentication fails.
         if(m_useSecAuth && !(GetServerStateParser().GetCapabilityFlag() 
-            & (kHasCRAMCapability|kHasAuthNTLMCapability|kHasAuthMSNCapability)))
+            & (kHasCRAMCapability|kHasAuthNTLMCapability|kHasAuthMSNCapability|kHasAuthGssApiCapability)))
         {
           AlertUserEventUsingId(IMAP_AUTH_SECURE_NOTSUPPORTED);
           break;
@@ -7463,7 +7514,8 @@ PRBool nsImapProtocol::TryToLogon()
           m_hostSessionList->SetCapabilityForHost(GetImapServerKey(), kCapabilityUndefined);
           break;
         }
-        if (password.IsEmpty() && m_imapServerSink)
+        if (password.IsEmpty() && m_imapServerSink &&
+            !(m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kHasAuthGssApiCapability))
         {
           if (!aMsgWindow)
           {
@@ -7475,10 +7527,15 @@ PRBool nsImapProtocol::TryToLogon()
             break;
          }
 
+        clientSucceeded = PR_TRUE;
         // Use CRAM/NTLM/MSN only if secure auth is enabled. This is for servers that
         // say they support CRAM but are so badly broken that trying it causes
         // all subsequent login attempts to fail (bug 231303, bug 227560)
-        if (m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
+        if (m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kHasAuthGssApiCapability)
+        {
+          clientSucceeded = NS_SUCCEEDED(AuthLogin(userName, password, kHasAuthGssApiCapability));
+        }
+        else if (m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
         {
           AuthLogin (userName, password, kHasCRAMCapability);
           logonTries++;
@@ -7509,14 +7566,15 @@ PRBool nsImapProtocol::TryToLogon()
       else if (! (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled))
         InsecureLogin(userName, password);
 
-      if (!GetServerStateParser().LastCommandSuccessful())
+      if (!clientSucceeded || !GetServerStateParser().LastCommandSuccessful())
       {
           // login failed!
           // if we failed because of an interrupt, then do not bother the user
-          if (m_imapServerSink && !DeathSignalReceived())
+          // similarly - if we failed due to a local error, don't bug them
+          if (m_imapServerSink && !DeathSignalReceived() && clientSucceeded)
             rv = m_imapServerSink->ForgetPassword();
 
-          if (!DeathSignalReceived())
+          if (!DeathSignalReceived() && clientSucceeded)
           {
             AlertUserEventUsingId(IMAP_LOGIN_FAILED);
             m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);

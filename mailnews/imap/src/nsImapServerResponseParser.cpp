@@ -254,6 +254,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
           if (commandToken && !nsCRT::strcasecmp(commandToken, "authenticate") && placeInTokenString && 
             (!nsCRT::strncasecmp(placeInTokenString, "CRAM-MD5", strlen("CRAM-MD5"))
              || !nsCRT::strncasecmp(placeInTokenString, "NTLM", strlen("NTLM"))
+             || !nsCRT::strncasecmp(placeInTokenString, "GSSAPI", strlen("GSSAPI"))
              || !nsCRT::strncasecmp(placeInTokenString, "MSN", strlen("MSN"))))
           {
             // we need to store the challenge from the server if we are using CRAM-MD5 or NTLM. 
@@ -2134,6 +2135,8 @@ void nsImapServerResponseParser::capability_data()
         fCapabilityFlag |= kHasCRAMCapability;
       else if (! PL_strcasecmp(fNextToken, "AUTH=NTLM"))
         fCapabilityFlag |= kHasAuthNTLMCapability;
+      else if (! PL_strcasecmp(fNextToken, "AUTH=GSSAPI"))
+        fCapabilityFlag |= kHasAuthGssApiCapability;
       else if (! PL_strcasecmp(fNextToken, "AUTH=MSN"))
         fCapabilityFlag |= kHasAuthMSNCapability;
       else if (! PL_strcasecmp(fNextToken, "STARTTLS"))
