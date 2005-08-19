@@ -233,4 +233,4 @@ InitNegotiateAuth(nsIModule *self)
 }
 #endif
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(nsAuthGSSAPIModule, components, InitNegotiateAuth)
+NS_IMPL_NSGETMODULE_WITH_CTOR(nsAuthModule, components, InitNegotiateAuth)
