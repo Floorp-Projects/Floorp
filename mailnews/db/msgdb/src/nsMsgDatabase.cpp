@@ -118,9 +118,16 @@ nsMsgDBService::~nsMsgDBService()
 NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase **_retval)
 {
   NS_ENSURE_ARG(aFolder);
-  *_retval = nsMsgDatabase::FindInCache(aFolder);
-  if (*_retval)
+  nsMsgDatabase *cacheDB = (nsMsgDatabase *) nsMsgDatabase::FindInCache(aFolder);
+  if (cacheDB)
+  {
+    // this db could have ended up in the folder cache w/o an m_folder pointer via
+    // OpenMailDBFromFileSpec. If so, take this chance to fix the folder.
+    if (!cacheDB->m_folder)
+      cacheDB->m_folder = aFolder;
+    *_retval = cacheDB; // FindInCache already addRefed.
     return NS_OK;
+  }
 
   nsCOMPtr <nsIMsgIncomingServer> incomingServer;
   nsresult rv = aFolder->GetServer(getter_AddRefs(incomingServer));
