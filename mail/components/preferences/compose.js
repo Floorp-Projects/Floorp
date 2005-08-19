@@ -259,7 +259,7 @@ var gComposePane = {
 
   initLanguageMenu: function ()
   {
-    this.mSpellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].createInstance(Components.interfaces.mozISpellCheckingEngine);
+    this.mSpellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].getService(Components.interfaces.mozISpellCheckingEngine);
     var o1 = {};
     var o2 = {};
     var languageMenuList = document.getElementById('LanguageMenulist');

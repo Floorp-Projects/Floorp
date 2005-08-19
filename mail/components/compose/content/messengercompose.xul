@@ -66,7 +66,8 @@
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
-  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_messenger"   src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="languageBundle"     src="chrome://global/locale/languageNames.properties"/>
 </stringbundleset>
 
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
@@ -602,9 +603,13 @@
          </menupopup>
     </toolbarbutton>
     
-    <toolbarbutton class="toolbarbutton-1"
+    <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="spellingButton" label="&spellingButton.label;" 
-               command="cmd_spelling"/>
+               command="cmd_spelling">
+      <menupopup id="LanguageMenulist" onpopupshowing="onShowDictionaryMenu();">
+        <!-- this popup gets dynamically generated -->
+      </menupopup>
+    </toolbarbutton>
     
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-save" label="&saveButton.label;" 

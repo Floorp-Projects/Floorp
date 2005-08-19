@@ -1334,7 +1334,8 @@ function ComposeStartup(recycled, aParams)
            initLocalFontFaceMenu(fontsList);
         }
         // Do setup common to Message Composer and Web Composer
-        EditorSharedStartup();   
+        EditorSharedStartup();
+        initLanguageMenu();
       }
 
       var msgCompFields = gMsgCompose.compFields;
@@ -2139,6 +2140,113 @@ function ToggleInlineSpellChecker(target)
     if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
       InlineSpellChecker.checkDocument(window.content.document);
   }
+}
+
+function initLanguageMenu()
+{
+  var spellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].getService(Components.interfaces.mozISpellCheckingEngine);
+  var o1 = {};
+  var o2 = {};
+  var languageMenuList = document.getElementById('LanguageMenulist');
+
+  // Get the list of dictionaries from
+  // the spellchecker.
+
+  spellChecker.getDictionaryList(o1, o2);
+
+  var dictList = o1.value;
+  var count    = o2.value;
+
+  // Load the string bundles that will help us map
+  // RFC 1766 strings to UI strings.
+
+  // Load the language string bundle.
+  var languageBundle = document.getElementById("languageBundle");
+  var regionBundle;
+  // If we have a language string bundle, load the region string bundle.
+  if (languageBundle)
+    regionBundle = document.getElementById("regionBundle");
+
+  var menuStr2;
+  var isoStrArray;
+  var defaultItem = null;
+  var langId;
+  var i;
+
+  for (i = 0; i < dictList.length; i++)
+  {
+    try {
+      langId = dictList[i];
+      isoStrArray = dictList[i].split("-");
+
+      dictList[i] = new Array(2); // first subarray element - pretty name
+      dictList[i][1] = langId;    // second subarray element - language ID
+
+      if (languageBundle && isoStrArray[0])
+        dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
+
+      if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
+      {
+        menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
+        if (menuStr2)
+          dictList[i][0] = dictList[i][0] + "/" + menuStr2;
+      }
+
+      if (!dictList[i][0])
+        dictList[i][0] = dictList[i][1];
+    } catch (ex) {
+      // GetString throws an exception when
+      // a key is not found in the bundle. In that
+      // case, just use the original dictList string.
+
+      dictList[i][0] = dictList[i][1];
+    }
+  }
+
+  // note this is not locale-aware collation, just simple ASCII-based sorting
+  // we really need to add locale-aware JS collation
+  dictList.sort();
+ 
+  // now select the dictionary we are currently using
+  for (i = 0; i < dictList.length; i++)
+  {
+    var item = document.createElement("menuitem");
+    item.setAttribute("label", dictList[i][0]);
+    item.setAttribute("value", dictList[i][1]);
+    item.setAttribute('type', 'radio');
+    item.setAttribute('oncommand', "changeLanguage(event)");
+    languageMenuList.appendChild(item);
+  }      
+}
+
+function onShowDictionaryMenu()
+{
+  var curLang = sPrefs.getComplexValue("spellchecker.dictionary", Components.interfaces.nsISupportsString).data;
+  var languageMenuList = document.getElementById('LanguageMenulist');
+
+  var languages = languageMenuList.getElementsByAttribute('value', curLang);
+  languages[0].setAttribute('checked', true);
+}
+
+function changeLanguage(event)
+{
+  // We need to change the dictionary language and if we are using inline spell check,
+  // recheck the message
+
+  var spellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].getService(Components.interfaces.mozISpellCheckingEngine);
+  if (spellChecker.dictionary != event.target.value)
+  {
+    spellChecker.dictionary = event.target.value;
+    var str = Components.classes["@mozilla.org/supports-string;1"]
+              .createInstance(Components.interfaces.nsISupportsString);
+    str.data = event.target.value;
+    sPrefs.setComplexValue("spellchecker.dictionary", Components.interfaces.nsISupportsString, str);
+
+    // now check the document over again with the new dictionary
+    InlineSpellChecker.checkDocument(window.content.document);
+  }
+
+  event.preventBubble();
 }
 
 function ToggleReturnReceipt(target)
