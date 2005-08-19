@@ -398,8 +398,15 @@ function pokeMultiStateUI(uiID, cmdParams)
     var desiredAttrib;
     if (isMixed)
       desiredAttrib = "mixed";
-    else
-      desiredAttrib = cmdParams.getStringValue("state_attribute");
+    else {
+      var valuetype = cmdParams.getValueType("state_attribute");
+      if (valuetype == Components.interfaces.nsICommandParams.eStringType) {
+        desiredAttrib = cmdParams.getCStringValue("state_attribute");      
+      } else {
+        desiredAttrib = cmdParams.getStringValue("state_attribute");      
+      }
+
+    }
 
     var uiState = commandNode.getAttribute("state");
     if (desiredAttrib != uiState)
