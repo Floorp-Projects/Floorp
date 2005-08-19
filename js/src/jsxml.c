@@ -7807,9 +7807,9 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 {
     JSBool ok, match;
     JSStackFrame *fp;
+    jsval *spbase;
     JSObject *scobj, *listobj, *resobj, *withobj, *kidobj;
     JSXML *xml, *list, *result, *kid;
-    jsval *spbase;
     uint32 i, n;
 
     ok = JS_EnterLocalRootScope(cx);
@@ -7818,6 +7818,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 
     /* All control flow after this point must exit via label out or bad. */
     fp = cx->fp;
+    spbase = fp->spbase;
     scobj = fp->scopeChain;
     xml = GetPrivate(cx, obj, "filtering predicate operator");
     if (!xml)
@@ -7845,9 +7846,6 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     if (!withobj)
         goto bad;
     fp->scopeChain = withobj;
-
-    /* Save and restore fp->spbase, as js_Interpret sets and clears it. */
-    spbase = fp->spbase;
 
     for (i = 0, n = list->xml_kids.length; i < n; i++) {
         kid = XMLARRAY_MEMBER(&list->xml_kids, i, JSXML);
