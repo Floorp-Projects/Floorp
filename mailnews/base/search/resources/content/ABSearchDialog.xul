@@ -39,7 +39,6 @@
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
@@ -73,8 +72,6 @@
   <script src="chrome://messenger/content/mailWindow.js"/>
   <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://messenger/content/mailCommands.js"/>
-  <script src="chrome://messenger/content/mailWindowOverlay.js"/>
   <script src="chrome://messenger/content/commandglue.js"/>
   <script src="chrome://messenger/content/ABSearchDialog.js"/>
   <script src="chrome://messenger/content/addressbook/abCommon.js"/>
@@ -136,6 +133,9 @@
       </hbox>      
     </vbox>
 
-    <statusbar class="chromeclass-status" id="status-bar"/>
+  <statusbar class="chromeclass-status" id="status-bar">
+    <statusbarpanel id="statusText" crop="right" flex="1"/>
+    <statusbarpanel id="offline-status" class="statusbarpanel-iconic"/>
+  </statusbar>
 
 </window>
