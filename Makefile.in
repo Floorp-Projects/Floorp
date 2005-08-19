@@ -338,9 +338,7 @@ endif
 
 # Java Embedding Plugin
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-ifneq (,$(filter macbrowser browser,$(MOZ_BUILD_APP)))
 tier_99_dirs += plugin/oji/JEP
-endif
 endif
 
 ifneq (,$(filter browser suite,$(MOZ_BUILD_APP)))
