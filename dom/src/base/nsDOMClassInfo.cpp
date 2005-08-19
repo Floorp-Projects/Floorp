@@ -5320,16 +5320,18 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsGlobalWindow *innerWin = win->GetCurrentInnerWindowInternal();
 
-    if (!innerWin || !innerWin->GetExtantDocument()) {
+    if ((!innerWin || !innerWin->GetExtantDocument()) && !win->IsFrozen()) {
       // We're resolving a property on an outer window for which there
-      // is no inner window yet. If the context is already initalized,
-      // trigger creation of a new inner window by calling
-      // GetDocument() on the outer window. This will create a
-      // synthetic about:blank document, and an inner window which may
-      // be reused by the actual document being loaded into this outer
-      // window. This way properties defined on the window before the
-      // document load started will be visible to the document once
-      // it's loaded, assuming same origin etc.
+      // is no inner window yet, and the window is not frozen
+      // (i.e. we're not in the middle of initializing XPConnect
+      // classes on it). If the context is already initalized, trigger
+      // creation of a new inner window by calling GetDocument() on
+      // the outer window. This will create a synthetic about:blank
+      // document, and an inner window which may be reused by the
+      // actual document being loaded into this outer window. This way
+      // properties defined on the window before the document load
+      // started will be visible to the document once it's loaded,
+      // assuming same origin etc.
       nsIScriptContext *scx = win->GetContextInternal();
 
       if (scx && scx->IsContextInitialized()) {

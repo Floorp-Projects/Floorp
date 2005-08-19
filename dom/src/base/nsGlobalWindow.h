@@ -268,6 +268,11 @@ public:
     return mDocShell;
   }
 
+  PRBool IsFrozen() const
+  {
+    return mIsFrozen;
+  }
+
   static void ShutDown();
   static PRBool IsCallerChrome();
 
@@ -389,21 +394,12 @@ protected:
 
   void Freeze()
   {
-    NS_ASSERTION(IsInnerWindow(), "Freeze called on an outer window");
     mIsFrozen = PR_TRUE;
   }
 
   void Thaw()
   {
-    NS_ASSERTION(IsInnerWindow(), "Freeze called on an outer window");
     mIsFrozen = PR_FALSE;
-  }
-
-  PRBool IsFrozen() const
-  {
-    NS_ASSERTION(IsInnerWindow(),
-                 "Why do you care if an outer window is frozen?");
-    return mIsFrozen;
   }
 
   // When adding new member variables, be careful not to create cycles
@@ -412,6 +408,14 @@ protected:
   // objects will keep the global object (this object) alive.  To prevent
   // these cycles, ownership of such members must be released in
   // |CleanUp| and |SetDocShell|.
+
+  // This member is also used on both inner and outer windows, but
+  // for slightly different purposes. On inner windows it means the
+  // inner window is held onto by session history and should not
+  // change. On outer windows it means that the window is in a state
+  // where we don't want to force creation of a new inner window since
+  // we're in the middle of doing just that.
+  PRPackedBool                  mIsFrozen;
 
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
@@ -453,7 +457,6 @@ protected:
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
   nsRefPtr<nsLocation>          mLocation;
-  PRPackedBool                  mIsFrozen;
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
