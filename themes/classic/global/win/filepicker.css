@@ -67,21 +67,21 @@ treechildren::-moz-tree-image(FilenameColumn, file) {
 
 .up-button {
   list-style-image: url("chrome://global/skin/filepicker/folder-up.gif");
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-width: 0%; /* don't let XUL layout min-size override our max-width setting */
   min-height: 0%;
   max-width: 36px;
 }
 
 .home-button {
   list-style-image: url("chrome://global/skin/filepicker/folder-home.gif");
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-width: 0%; /* don't let XUL layout min-size override our max-width setting */
   min-height: 0%;
   max-width: 36px;
 }
 
 .new-dir-button {
   list-style-image: url("chrome://global/skin/filepicker/folder-new.gif");
-  min-width: 0%; // don't let XUL layout min-size override our max-width setting
+  min-width: 0%; /* don't let XUL layout min-size override our max-width setting */
   min-height: 0%;
   max-width: 36px;
 }
