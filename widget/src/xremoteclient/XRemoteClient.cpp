@@ -262,8 +262,10 @@ XRemoteClient::CheckWindow(Window aWindow)
 		     0, 0, False, AnyPropertyType,
 		     &type, &format, &nitems, &bytesafter, &data);
 
-  if (type)
+  if (type) {
+    XFree(data);
     return aWindow;
+  }
 
   // didn't find it here so check the children of this window
   innerWindow = CheckChildren(aWindow);
@@ -297,8 +299,10 @@ XRemoteClient::CheckChildren(Window aWindow)
     XGetWindowProperty(mDisplay, children[i], mMozWMStateAtom,
 		       0, 0, False, AnyPropertyType, &type, &format,
 		       &nitems, &after, &data);
-    if (type)
+    if (type) {
+      XFree(data);
       retval = children[i];
+    }
   }
 
   // otherwise recurse into the list
@@ -581,6 +585,9 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     // all the tests.
     bestWindow = w;
   }
+
+  if (kids)
+    XFree((char *) kids);
 
   return bestWindow;
 }
