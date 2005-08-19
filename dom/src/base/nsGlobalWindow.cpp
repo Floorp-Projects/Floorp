@@ -764,7 +764,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     // First document load.
 
     // Get our private root. If it is equal to us, then we need to
-    // attach our global key bindings that handle browser scrolling
+    // attach our global key bindings that handles browser scrolling
     // and other browser commands.
     nsIDOMWindowInternal *internal = nsGlobalWindow::GetPrivateRoot();
 
@@ -2217,9 +2217,9 @@ nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
                     NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 notused, cy = 0;
-  docShellAsWin->GetSize(&notused, &cy);
-  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, aInnerWidth, cy),
+  PRInt32 notused, height = 0;
+  docShellAsWin->GetSize(&notused, &height);
+  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, aInnerWidth, height),
                     NS_ERROR_FAILURE);
   return NS_OK;
 }
@@ -2265,10 +2265,10 @@ nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
                     NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-  PRInt32 cx = 0, notused;
-  docShellAsWin->GetSize(&cx, &notused);
+  PRInt32 width = 0, notused;
+  docShellAsWin->GetSize(&width, &notused);
   NS_ENSURE_SUCCESS(treeOwner->
-                    SizeShellTo(docShellAsItem, cx, aInnerHeight),
+                    SizeShellTo(docShellAsItem, width, aInnerHeight),
                     NS_ERROR_FAILURE);
   return NS_OK;
 }
@@ -2315,10 +2315,10 @@ nsGlobalWindow::SetOuterWidth(PRInt32 aOuterWidth)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aOuterWidth, nsnull),
                     NS_ERROR_FAILURE);
 
-  PRInt32 notused, cy;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&notused, &cy), NS_ERROR_FAILURE);
+  PRInt32 notused, height;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&notused, &height), NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aOuterWidth, cy, PR_TRUE),
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(aOuterWidth, height, PR_TRUE),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -2367,10 +2367,10 @@ nsGlobalWindow::SetOuterHeight(PRInt32 aOuterHeight)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nsnull, &aOuterHeight),
                     NS_ERROR_FAILURE);
 
-  PRInt32 cx, notused;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, &notused), NS_ERROR_FAILURE);
+  PRInt32 width, notused;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&width, &notused), NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(cx, aOuterHeight, PR_TRUE),
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(width, aOuterHeight, PR_TRUE),
                     NS_ERROR_FAILURE);
 
   return NS_OK;
@@ -3521,15 +3521,15 @@ nsGlobalWindow::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  PRInt32 cx, cy;
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&cx, &cy), NS_ERROR_FAILURE);
+  PRInt32 width, height;
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(&width, &height), NS_ERROR_FAILURE);
 
-  PRInt32 newCX = cx + aWidthDif;
-  PRInt32 newCY = cy + aHeightDif;
-  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&newCX, &newCY),
+  PRInt32 newWidth = width + aWidthDif;
+  PRInt32 newHeight = height + aHeightDif;
+  NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&newWidth, &newHeight),
                     NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(newCX, newCY,
+  NS_ENSURE_SUCCESS(treeOwnerAsWin->SetSize(newWidth, newHeight,
                                             PR_TRUE), NS_ERROR_FAILURE);
 
   return NS_OK;
