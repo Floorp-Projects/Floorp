@@ -65,18 +65,21 @@ $products{"thunderbird"} = Litmus::DB::Product->find_or_create({name => "Thunder
 # branches
 Litmus::DB::Branch->find_or_create({product => $products{"firefox"}, 
                             name => "Trunk", 
-                            detect_regexp => "%Firefox/1.0+%"});
+                            detect_regexp => "Firefox/1\\.6a1"});
+Litmus::DB::Branch->find_or_create({product => $products{"firefox"}, 
+                            name => "1.5 Branch",
+                            detect_regexp => "Firefox/1\.(0\\+|4)"});
 Litmus::DB::Branch->find_or_create({product => $products{"firefox"}, 
                             name => "1.0.x Branch",
-                            detect_regexp => "%Firefox/1.0.%"});
+                            detect_regexp => "Firefox/1\\.0\\."});
                             
 Litmus::DB::Branch->find_or_create({product => $products{"seamonkey"}, 
                             name => "Trunk", 
-                            detect_regexp => "%"});
+                            detect_regexp => "."});
 
 Litmus::DB::Branch->find_or_create({product => $products{"thunderbird"}, 
                             name => "Trunk",
-                            detect_regexp => "%"});
+                            detect_regexp => "."});
 Litmus::DB::Branch->find_or_create({product => $products{"thunderbird"}, 
                             name => "1.0.x Branch"},
                             detect_regexp => "");

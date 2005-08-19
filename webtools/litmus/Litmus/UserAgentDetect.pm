@@ -39,14 +39,14 @@ Litmus::DB::Platform->set_sql(detectplatform => qq{
                                                   SELECT __ESSENTIAL__
                                                   FROM __TABLE__
                                                   WHERE 
-                                                      ? LIKE detect_regexp AND 
+                                                      ? REGEXP detect_regexp AND 
                                                       product LIKE ?
                                                 });
 Litmus::DB::Branch->set_sql(detectbranch => qq{
                                                 SELECT __ESSENTIAL__
                                                 FROM __TABLE__
                                                 WHERE 
-                                                    ? LIKE detect_regexp AND 
+                                                    ? REGEXP detect_regexp AND 
                                                     product LIKE ?
                                             });                                                
 
