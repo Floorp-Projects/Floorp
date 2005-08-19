@@ -67,7 +67,7 @@ $DHTMLPerformanceTest     = 0;  # Tdhtml
 $QATest                   = 0;  
 $XULWindowOpenTest        = 0;  # Txul
 $StartupPerformanceTest   = 0;  # Ts
-$NeckoUnitTest            = 1;
+$NeckoUnitTest            = 0;
 @CompareLocaleDirs        = (); # Run compare-locales test on these directories
 # ("network","dom","toolkit","security/manager");
 $CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
@@ -205,6 +205,8 @@ $stub_installer = 1;
 $sea_installer = 1;
 $archive       = 0;
 $push_raw_xpis = 1;
+$update_package = 0;
+$update_version = "trunk";
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
