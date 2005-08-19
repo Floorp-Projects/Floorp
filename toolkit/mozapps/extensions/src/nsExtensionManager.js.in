@@ -2336,6 +2336,10 @@ ExtensionManager.prototype = {
     if (iniExists)
       extensionsINI.remove(false);
 
+    // If the extensions datasource is missing remove the .cache file if it exists
+    if (!dsExists && cacheExists)
+      extensionsCache.remove(false);
+
     return true;
   },
   
