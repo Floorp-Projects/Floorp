@@ -548,7 +548,6 @@ nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
 
     nsCOMPtr<nsIMemory> memory;
     NS_GetMemoryManager(getter_AddRefs(memory));
-    // dougt - these calls will be moved into a new interface when nsIComponentManager is frozen.
     rv = compMgr->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
 
