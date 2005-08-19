@@ -93,9 +93,8 @@ private:
     void        Close();
     nsresult    OpenCacheFile(PRIntn flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks();
-    nsresult    FlushBufferToFile(PRBool  clearBuffer); // XXX clearBuffer is always PR_TRUE
-    PRUint32    WriteToBuffer(const char * buffer, PRUint32 count);
-    nsresult    UpdateFileSize();
+    nsresult    FlushBufferToFile();
+    void        UpdateFileSize();
     void        DeleteBuffer();
     nsresult    Flush();
 

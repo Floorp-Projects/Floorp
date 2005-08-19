@@ -481,11 +481,15 @@ nsDiskCacheStreamIO::Flush()
     if ((mStreamEnd > kMaxBufferSize) ||
         (mBinding->mCacheEntry->StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE)) {
         // make sure we save as separate file
-        rv = FlushBufferToFile(PR_TRUE);       // will initialize DataFileLocation() if necessary
+        rv = FlushBufferToFile();       // will initialize DataFileLocation() if necessary
         NS_ASSERTION(NS_SUCCEEDED(rv), "FlushBufferToFile() failed");
-        
-        // close file descriptor
+
         NS_ASSERTION(mFD, "no file descriptor");
+
+        // Update the file size of the disk file in the cache
+        UpdateFileSize();
+
+        // close file descriptor
         (void) PR_Close(mFD);
         mFD = nsnull;
 
@@ -558,8 +562,46 @@ nsDiskCacheStreamIO::Write( const char * buffer,
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    *bytesWritten = WriteToBuffer(buffer, count);
-    if (*bytesWritten != count)  return NS_ERROR_FAILURE;
+    NS_ASSERTION(count, "Write called with count of zero");
+    NS_ASSERTION(mBufPos <= mBufEnd, "streamIO buffer corrupted");
+
+    PRUint32 bytesLeft = count;
+    PRBool   flushed = PR_FALSE;
+    
+    while (bytesLeft) {
+        if (mBufPos == mBufSize) {
+            if (mBufSize < kMaxBufferSize) {
+                mBufSize = kMaxBufferSize;
+                mBuffer  = (char *) realloc(mBuffer, mBufSize);
+                if (!mBuffer)  {
+                    mBufSize = 0;
+                    break;
+                }
+            } else {
+                nsresult rv = FlushBufferToFile();
+                if (NS_FAILED(rv))  break;
+                flushed = PR_TRUE;
+            }
+        }
+        
+        PRUint32 chunkSize = bytesLeft;
+        if (chunkSize > (mBufSize - mBufPos))
+            chunkSize =  mBufSize - mBufPos;
+        
+        memcpy(mBuffer + mBufPos, buffer, chunkSize);
+        mBufDirty = PR_TRUE;
+        mBufPos += chunkSize;
+        bytesLeft -= chunkSize;
+        buffer += chunkSize;
+        
+        if (mBufEnd < mBufPos)
+            mBufEnd = mBufPos;
+    }
+    if (bytesLeft) {
+        *bytesWritten = 0;
+        return NS_ERROR_FAILURE;
+    }
+    *bytesWritten = count;
 
     // update mStreamPos, mStreamEnd
     mStreamPos += count;
@@ -567,9 +609,9 @@ nsDiskCacheStreamIO::Write( const char * buffer,
         mStreamEnd = mStreamPos;
         NS_ASSERTION(mBinding->mCacheEntry->DataSize() == mStreamEnd, "bad stream");
 
-        // if we have a separate file, we need to adjust the disk cache size totals here
-        if (mFD) {
-            rv = UpdateFileSize();
+        // If we have flushed to a file, update the file size
+        if (flushed && mFD) {
+            UpdateFileSize();
         }
     }
     
@@ -577,17 +619,16 @@ nsDiskCacheStreamIO::Write( const char * buffer,
 }
 
 
-nsresult
+void
 nsDiskCacheStreamIO::UpdateFileSize()
 {
     NS_ASSERTION(mFD, "nsDiskCacheStreamIO::UpdateFileSize should not have been called");
-    if (!mFD)  return NS_ERROR_UNEXPECTED;
     
     nsDiskCacheRecord * record = &mBinding->mRecord;
-    PRUint32            oldSizeK  = record->DataFileSize();
-    PRUint32            newSizeK  = (mStreamEnd + 0x03FF) >> 10;
+    const PRUint32      oldSizeK  = record->DataFileSize();
+    const PRUint32      newSizeK  = (mStreamEnd + 0x03FF) >> 10;
     
-    if (newSizeK == oldSizeK)  return NS_OK;
+    if (newSizeK == oldSizeK)  return;
     
     record->SetDataFileSize(newSizeK);
 
@@ -597,14 +638,12 @@ nsDiskCacheStreamIO::UpdateFileSize()
     cacheMap->IncrementTotalSize(newSizeK * 1024);       // increment new size
     
     if (!mBinding->mDoomed) {
-        nsresult rv = cacheMap->UpdateRecord(&mBinding->mRecord);
+        nsresult rv = cacheMap->UpdateRecord(record);
         if (NS_FAILED(rv)) {
             NS_WARNING("cacheMap->UpdateRecord() failed.");
             // XXX doom cache entry?
-            return rv;
         }
     }
-    return NS_OK;
 }
 
 
@@ -667,7 +706,7 @@ nsDiskCacheStreamIO::ReadCacheBlocks()
 
 
 nsresult
-nsDiskCacheStreamIO::FlushBufferToFile(PRBool  clearBuffer)
+nsDiskCacheStreamIO::FlushBufferToFile()
 {
     nsresult  rv;
     nsDiskCacheRecord * record = &mBinding->mRecord;
@@ -694,55 +733,13 @@ nsDiskCacheStreamIO::FlushBufferToFile(PRBool  clearBuffer)
     }
     mBufDirty = PR_FALSE;
     
-    if (clearBuffer) {
-        // reset buffer
-        mBufPos = 0;
-        mBufEnd = 0;
-    }
+    // reset buffer
+    mBufPos = 0;
+    mBufEnd = 0;
     
     return NS_OK;
 }
 
-
-PRUint32
-nsDiskCacheStreamIO::WriteToBuffer(const char * buffer, PRUint32 count)
-{
-    NS_ASSERTION(count, "WriteToBuffer called with count of zero");
-    NS_ASSERTION(mBufPos <= mBufEnd, "streamIO buffer corrupted");
-
-    PRUint32 bytesLeft = count;
-    
-    while (bytesLeft) {
-        if (mBufPos == mBufSize) {
-            if (mBufSize < kMaxBufferSize) {
-                mBufSize = kMaxBufferSize;
-                mBuffer  = (char *) realloc(mBuffer, mBufSize);
-                if (!mBuffer)  {
-                    mBufSize = 0;
-                    return 0;
-                }
-            } else {
-                nsresult rv = FlushBufferToFile(PR_TRUE);
-                if (NS_FAILED(rv))  return 0;
-            }
-        }
-        
-        PRUint32 chunkSize = bytesLeft;
-        if (chunkSize > (mBufSize - mBufPos))
-            chunkSize =  mBufSize - mBufPos;
-        
-        memcpy(mBuffer + mBufPos, buffer, chunkSize);
-        mBufDirty = PR_TRUE;
-        mBufPos += chunkSize;
-        bytesLeft -= chunkSize;
-        buffer += chunkSize;
-        
-        if (mBufEnd < mBufPos)
-            mBufEnd = mBufPos;
-    }
-    
-    return count;
-}
 
 void
 nsDiskCacheStreamIO::DeleteBuffer()
@@ -781,7 +778,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
         // do we have data in the buffer that needs to be flushed?
         if (mBufDirty) {
             // XXX optimization: are we just moving within the current buffer?
-            nsresult rv = FlushBufferToFile(PR_TRUE);
+            nsresult rv = FlushBufferToFile();
             if (NS_FAILED(rv))  return rv;
         }
     
