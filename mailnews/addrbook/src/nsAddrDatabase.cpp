@@ -3132,39 +3132,34 @@ nsAddrDBEnumerator::HasMoreElements(PRBool *aResult)
 {
     *aResult = PR_FALSE;
 
-    if (!mDb || !mDbTable || !mDb->GetEnv())
+    if (!mDbTable || !mDb->GetEnv())
     {
         return NS_ERROR_NULL_POINTER;
     }
 
     nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
     mDbTable->GetTableRowCursor(mDb->GetEnv(), mRowPos,
-                                getter_AddRefs(mRowCursor));
+                                getter_AddRefs(rowCursor));
     NS_ENSURE_TRUE(rowCursor, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIMdbRow> currentRow;
-    mdb_pos rowPos;
-    rowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(currentRow), &rowPos);
-    while (currentRow)
+    mdbOid rowOid;
+    rowCursor->NextRowOid(mDb->GetEnv(), &rowOid, nsnull);
+    while (rowOid.mOid_Id != (mdb_id)-1)
     {
-        mdbOid rowOid;
-        if (NS_SUCCEEDED(mCurrentRow->GetOid(mDb->GetEnv(), &rowOid)))
+        if (mDb->IsListRowScopeToken(rowOid.mOid_Scope) ||
+            mDb->IsCardRowScopeToken(rowOid.mOid_Scope))
         {
-            if (mDb->IsListRowScopeToken(rowOid.mOid_Scope) ||
-                mDb->IsCardRowScopeToken(rowOid.mOid_Scope))
-            {
-                *aResult = PR_TRUE;
+            *aResult = PR_TRUE;
 
-                return NS_OK;
-            }
-
-            if (!mDb->IsDataRowScopeToken(rowOid.mOid_Scope))
-            {
-                return NS_ERROR_FAILURE;
-            }
+            return NS_OK;
         }
 
-        mRowCursor->NextRow(mDb->GetEnv(), getter_AddRefs(currentRow), &rowPos);
+        if (!mDb->IsDataRowScopeToken(rowOid.mOid_Scope))
+        {
+            return NS_ERROR_FAILURE;
+        }
+
+        rowCursor->NextRowOid(mDb->GetEnv(), &rowOid, nsnull);
     }
 
     return NS_OK;
@@ -3175,7 +3170,7 @@ nsAddrDBEnumerator::GetNext(nsISupports **aResult)
 {
     *aResult = nsnull;
 
-    if (!mDb || !mDbTable || !mDb->GetEnv())
+    if (!mDbTable || !mDb->GetEnv())
     {
         return NS_ERROR_NULL_POINTER;
     }
@@ -3264,7 +3259,7 @@ nsListAddressEnumerator::HasMoreElements(PRBool *aResult)
 {
     *aResult = PR_FALSE;
 
-    if (!mDb || !mDbTable || !mDb->GetEnv())
+    if (!mDbTable || !mDb->GetEnv())
     {
         return NS_ERROR_NULL_POINTER;
     }
@@ -3276,7 +3271,7 @@ nsListAddressEnumerator::HasMoreElements(PRBool *aResult)
                                               getter_AddRefs(currentRow));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        *aResult = currentRow == nsnull;
+        *aResult = currentRow != nsnull;
     }
 
     return NS_OK;
@@ -3287,7 +3282,7 @@ nsListAddressEnumerator::GetNext(nsISupports **aResult)
 {
     *aResult = nsnull;
 
-    if (!mDb || !mDbTable || !mDb->GetEnv())
+    if (!mDbTable || !mDb->GetEnv())
     {
         return NS_ERROR_NULL_POINTER;
     }
