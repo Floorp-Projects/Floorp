@@ -5490,66 +5490,69 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSString *str = JSVAL_TO_STRING(id);
 
-  nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
+  // Don't resolve named frames on native wrappers
+  if (!ObjectIsNativeWrapper(cx, obj)) {
+    nsCOMPtr<nsIDocShellTreeNode> dsn(do_QueryInterface(win->GetDocShell()));
 
-  PRInt32 count = 0;
+    PRInt32 count = 0;
 
-  if (dsn) {
-    dsn->GetChildCount(&count);
-  }
+    if (dsn) {
+      dsn->GetChildCount(&count);
+    }
 
-  if (count > 0) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
+    if (count > 0) {
+      nsCOMPtr<nsIDocShellTreeItem> child;
 
-    const jschar *chars = ::JS_GetStringChars(str);
+      const jschar *chars = ::JS_GetStringChars(str);
 
-    dsn->FindChildWithName(NS_REINTERPRET_CAST(const PRUnichar*, chars),
-                           PR_FALSE, PR_TRUE, nsnull, nsnull,
-                           getter_AddRefs(child));
+      dsn->FindChildWithName(NS_REINTERPRET_CAST(const PRUnichar*, chars),
+                             PR_FALSE, PR_TRUE, nsnull, nsnull,
+                             getter_AddRefs(child));
 
-    nsCOMPtr<nsIDOMWindow> child_win(do_GetInterface(child));
+      nsCOMPtr<nsIDOMWindow> child_win(do_GetInterface(child));
 
-    if (child_win) {
-      // We found a subframe of the right name, define the property
-      // on the wrapper so that ::NewResolve() doesn't get called
-      // again for this property name.
+      if (child_win) {
+        // We found a subframe of the right name, define the property
+        // on the wrapper so that ::NewResolve() doesn't get called
+        // again for this property name.
 
-      JSObject *wrapperObj;
-      wrapper->GetJSObject(&wrapperObj);
+        JSObject *wrapperObj;
+        wrapper->GetJSObject(&wrapperObj);
 
-      jsval v;
-      rv = WrapNative(cx, wrapperObj, child_win,
-                      NS_GET_IID(nsIDOMWindowInternal), &v);
-      NS_ENSURE_SUCCESS(rv, rv);
+        jsval v;
+        rv = WrapNative(cx, wrapperObj, child_win,
+                        NS_GET_IID(nsIDOMWindowInternal), &v);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      // Script is accessing a child frame and this access can
-      // potentially come from a context from a different domain.
-      // ::JS_DefineUCProperty() will call
-      // nsWindowSH::AddProperty(), and that method will do a
-      // security check and that security check will fail since
-      // other domains can't add properties to a global object in
-      // this domain. Set the sDoSecurityCheckInAddProperty flag to
-      // false (and set it to true immediagtely when we're done) to
-      // tell nsWindowSH::AddProperty() that defining this new
-      // property is 'ok' in this case, even if the call comes from
-      // a different context.
+        // Script is accessing a child frame and this access can
+        // potentially come from a context from a different domain.
+        // ::JS_DefineUCProperty() will call
+        // nsWindowSH::AddProperty(), and that method will do a
+        // security check and that security check will fail since
+        // other domains can't add properties to a global object in
+        // this domain. Set the sDoSecurityCheckInAddProperty flag to
+        // false (and set it to true immediagtely when we're done) to
+        // tell nsWindowSH::AddProperty() that defining this new
+        // property is 'ok' in this case, even if the call comes from
+        // a different context.
 
-      PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-      sDoSecurityCheckInAddProperty = PR_FALSE;
+        PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+        sDoSecurityCheckInAddProperty = PR_FALSE;
 
-      PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
-                                        ::JS_GetStringLength(str), v, nsnull,
-                                        nsnull, 0);
+        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
+                                          ::JS_GetStringLength(str), v, nsnull,
+                                          nsnull, 0);
 
-      sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+        sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
-      if (!ok) {
-        return NS_ERROR_FAILURE;
+        if (!ok) {
+          return NS_ERROR_FAILURE;
+        }
+
+        *objp = obj;
+
+        return NS_OK;
       }
-
-      *objp = obj;
-
-      return NS_OK;
     }
   }
 
@@ -7480,21 +7483,24 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // are accessed, we'll do the necessary security check.
 
   if (!(flags & JSRESOLVE_ASSIGNING)) {
-    nsCOMPtr<nsISupports> result;
+    // For native wrappers, do not resolve random names on document
+    if (!ObjectIsNativeWrapper(cx, obj)) {
+      nsCOMPtr<nsISupports> result;
 
-    nsresult rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (result) {
-      JSString *str = JS_ValueToString(cx, id);
+      if (result) {
+        JSString *str = JS_ValueToString(cx, id);
 
-      JSBool ok = *_retval =
-        ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                              ::JS_GetStringLength(str), JSVAL_VOID, nsnull,
-                              nsnull, 0);
-      *objp = obj;
+        JSBool ok = *_retval =
+          ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                ::JS_GetStringLength(str), JSVAL_VOID, nsnull,
+                                nsnull, 0);
+        *objp = obj;
 
-      return ok ? NS_OK : NS_ERROR_FAILURE;
+        return ok ? NS_OK : NS_ERROR_FAILURE;
+      }
     }
 
     if (id == sOpen_id) {
@@ -7593,6 +7599,11 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     return rv;
   }
 
+  // For native wrappers, do not get random names on document
+  if (ObjectIsNativeWrapper(cx, obj)) {
+    return rv;
+  }
+  
   nsCOMPtr<nsISupports> result;
 
   rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
@@ -7695,7 +7706,9 @@ nsHTMLFormElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                                 PRUint32 flags, JSObject **objp,
                                 PRBool *_retval)
 {
-  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSVAL_IS_STRING(id)) {
+  // For native wrappers, do not resolve random names on form
+  if ((!(JSRESOLVE_ASSIGNING & flags)) && JSVAL_IS_STRING(id) &&
+      !ObjectIsNativeWrapper(cx, obj)) {
     nsCOMPtr<nsIForm> form(do_QueryWrappedNative(wrapper));
     nsCOMPtr<nsISupports> result;
 
@@ -7726,16 +7739,19 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIForm> form(do_QueryWrappedNative(wrapper));
 
   if (JSVAL_IS_STRING(id)) {
-    nsCOMPtr<nsISupports> result;
+    // For native wrappers, do not get random names on form
+    if (!ObjectIsNativeWrapper(cx, obj)) {
+      nsCOMPtr<nsISupports> result;
 
-    JSString *str = JSVAL_TO_STRING(id);
-    FindNamedItem(form, str, getter_AddRefs(result));
+      JSString *str = JSVAL_TO_STRING(id);
+      FindNamedItem(form, str, getter_AddRefs(result));
 
-    if (result) {
-      // Wrap result, result can be either an element or a list of
-      // elements
-      nsresult rv = WrapNative(cx, obj, result, NS_GET_IID(nsISupports), vp);
-      return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+      if (result) {
+        // Wrap result, result can be either an element or a list of
+        // elements
+        nsresult rv = WrapNative(cx, obj, result, NS_GET_IID(nsISupports), vp);
+        return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
+      }
     }
 
     return NS_OK; // Don't fall through
