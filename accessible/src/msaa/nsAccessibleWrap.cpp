@@ -183,16 +183,21 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
       // object as well as any layout that creates its own window (e.g. via overflow: scroll)
       nsIWidget *widget = view->GetWidget();
       if (widget) {
-        // If frame has a widget that means we're at the root
-        // of a document or application, where there are 2 windows, one
-        // containing the scrollbars and one for the client area inside
         hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WINDOW);
         NS_ASSERTION(hwnd, "No window handle for window");
-        hwnd = ::GetParent(hwnd); // We want the scrollable window
-        NS_ASSERTION(hwnd, "No window handle for window");
+        nsIView *rootView;
+        view->GetViewManager()->GetRootView(rootView);
+        if (rootView == view) {
+          // If the current object has a widget but was created by an
+          // outer object with its own outer window, then
+          // we want the native accessible for that outer window
+          hwnd = ::GetParent(hwnd);
+          NS_ASSERTION(hwnd, "No window handle for window");
+        }
       }
       else {
-        // If a frame is a scrollable frame, then it has one window with the scrollbars
+        // If a frame is a scrollable frame, then it has one window for the client area,
+        // not an extra parent window for just the scrollbars
         nsIScrollableFrame *scrollFrame = nsnull;
         CallQueryInterface(frame, &scrollFrame);
         if (scrollFrame) {
