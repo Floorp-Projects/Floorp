@@ -445,6 +445,7 @@ nsresult nsMsgGroupView::HandleDayChange()
 
     return RestoreSelection(curSelectedKey, &keyArray);
   }
+  return NS_OK;
 }
 
 nsresult nsMsgGroupView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/)
