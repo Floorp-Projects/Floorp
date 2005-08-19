@@ -1,0 +1,82 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # $product - the product under test
+  # $testcount (optional) - the number of test results submitted
+  # %resultcounts (optional) - a summary of how many results were submitted
+  #     from each status where the key is the result name and the value is 
+  #     the number of results submitted. 
+  # @changedlist (optional) - an array of testids that were edited
+  # $testgroup (optional) - the group the tests were from
+  # $return (optional) - a url to return to. the default is to run more tests
+  #                         from the current group
+#%]
+
+
+[% INCLUDE global/header.html.tmpl title = 'Run Tests' %] 
+
+<p class="pagetitle">Run Tests</p>
+<p class="pageinstruction">Thank you for your testing.</p> 
+
+[% IF testcount %]
+    [% IF testcount > 1 %] [% plural = 's' %] [% END %]
+    <p class="pageinstruction"> You have submitted [% testcount FILTER html %] test
+        result[% plural %]. 
+    </p>
+[% END %]
+
+[% IF resultcounts.keys.0 %]
+    <p><strong>Result Summary:</strong></p>
+    <table border="0">
+    [% FOREACH curresult = resultcounts.keys %]
+        [% IF resultcounts.$curresult %]
+            [% count = resultcounts.$curresult %]
+        [% ELSE %]
+            [% count = 0 %]
+        [% END %]
+        <tr>
+        <td><strong>[% curresult FILTER html %]:</strong></td>
+        <td>[% count FILTER html %]</td>
+        </tr>
+    [% END %]
+    </table>
+[% END %]
+
+[% IF changedlist %]
+    <table border="1">
+    [% FOREACH curchange=changedlist %]
+        <tr><td>
+            <strong>Changes recorded for Test [% curchange FILTER html %]</strong>
+        </td></tr>
+    [% END %]
+    </table>
+[% END %]
+
+<p class="pageinstruction">Go <a href="index.cgi">Home</a> or 
+    [% IF return %]
+        <a href="[% return | uri | html %]">go back.</a>
+    [% ELSE %]
+    <a href="run_tests.cgi?product=[% product.productid | uri | html %]&continuetesting=1&defaulttestgroup=[% testgroup.testgroupid | uri | html %]">
+run some more tests</a>.
+    [% END %]
+</p>
+
+[% INCLUDE global/footer.html.tmpl %]
