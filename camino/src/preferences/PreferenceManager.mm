@@ -55,12 +55,16 @@
 #include "AppDirServiceProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIRegistry.h"
+#include "nsIStyleSheetService.h"
+#include "nsNetUtil.h"
 #include "nsStaticComponents.h"
 
 #ifndef _BUILD_STATIC_BIN
 nsStaticModuleInfo const *const kPStaticModules = nsnull;
 PRUint32 const kStaticModuleCount = 0;
 #endif
+
+static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
 // This is an arbitrary version stamp that gets written to the prefs file.
 // It can be used to detect when a new version of Camino is run that needs
@@ -87,6 +91,9 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 
 - (void)registerForProxyChanges;
 - (BOOL)readSystemProxySettings;
+
+- (BOOL)cleanupUserContentCSS;
+- (void)refreshAdBlockingStyleSheet:(BOOL)inLoad;
 
 @end
 
@@ -191,6 +198,12 @@ static BOOL gMadePrefManager;
                                         selector:     @selector(xpcomTerminate:)
                                         name:         XPCOMShutDownNotificationName
                                         object:       nil];
+
+  [[NSNotificationCenter defaultCenter] addObserver:  self
+                                        selector:     @selector(adBlockingPrefChanged:)
+                                        name:         AdBlockingChangedNotificationName
+                                        object:       nil];
+
 }
 
 - (void)savePrefsFile
@@ -418,6 +431,18 @@ static BOOL gMadePrefManager;
         [self setPref:"intl.accept_languages" toString:acceptLangHeader];
       }
     }
+    
+    // load up the default stylesheet (is this the best place to do this?)
+    BOOL prefExists = NO;
+    BOOL enableAdBlocking = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&prefExists];
+    if (!prefExists)
+    {
+      enableAdBlocking = [self cleanupUserContentCSS];
+      [self setPref:"camino.enable_ad_blocking" toBoolean:enableAdBlocking];
+    }
+
+    if (enableAdBlocking)
+      [self refreshAdBlockingStyleSheet:YES];
 }
 
 #pragma mark -
@@ -569,6 +594,74 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
   }
   
   return usingProxies;
+}
+
+#pragma mark -
+
+- (void)adBlockingPrefChanged:(NSNotification*)inNotification
+{
+  BOOL adBlockingEnabled = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:nil];
+  [self refreshAdBlockingStyleSheet:adBlockingEnabled];
+}
+
+// some versions of 0.9a copied ad_blocking.css into <profile>/chrome/userContent.css.
+// now that we load ad_blocking.css dynamically, we have to move that file aside to
+// avoid loading it.
+// returns YES if there was a userContent.css in the chrome dir.
+- (BOOL)cleanupUserContentCSS
+{
+  NSString* profilePath = [self newProfilePath];
+  NSString* chromeDirPath = [profilePath stringByAppendingPathComponent:@"chrome"];
+  NSString* userContentCSSPath = [chromeDirPath stringByAppendingPathComponent:@"userContent.css"];
+  
+  if ([[NSFileManager defaultManager] fileExistsAtPath:userContentCSSPath])
+  {
+    NSString* userContentBackPath = [chromeDirPath stringByAppendingPathComponent:@"userContent_unused.css"];
+    BOOL moveSucceeded = [[NSFileManager defaultManager] movePath:userContentCSSPath toPath:userContentBackPath handler:nil];
+    NSLog(@"Ad blocking now users a built-in CSS file; moving previous userContent.css file at\n  %@\nto\n  %@",
+      userContentCSSPath, userContentBackPath);
+    if (!moveSucceeded)
+      NSLog(@"Move failed; does %@ exist already?", userContentBackPath);
+    return YES;
+  }
+  
+  return NO;
+}
+
+// this will reload the sheet if it's already registered, or unload it if the 
+// param is NO
+- (void)refreshAdBlockingStyleSheet:(BOOL)inLoad
+{
+  nsCOMPtr<nsIStyleSheetService> ssService = do_GetService("@mozilla.org/content/style-sheet-service;1");
+  if (!ssService)
+    return;
+
+  // the the uri of the sheet in our bundle
+  NSString* cssFilePath = [[NSBundle mainBundle] pathForResource:@"ad_blocking" ofType:@"css"];
+  if (![[NSFileManager defaultManager] isReadableFileAtPath:cssFilePath])
+  {
+    NSLog(@"ad_blocking.css file not found; ad blocking will be disabled");
+    return;
+  }
+  
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> cssFile;
+  rv = NS_NewNativeLocalFile(nsDependentCString([cssFilePath fileSystemRepresentation]), PR_TRUE, getter_AddRefs(cssFile));
+  if (NS_FAILED(rv))
+    return;
+  
+  nsCOMPtr<nsIURI> cssFileURI;
+  rv = NS_NewFileURI(getter_AddRefs(cssFileURI), cssFile);
+  if (NS_FAILED(rv))
+    return;
+  
+  PRBool alreadyRegistered = PR_FALSE;
+  rv = ssService->SheetRegistered(cssFileURI, nsIStyleSheetService::USER_SHEET, &alreadyRegistered);
+  if (alreadyRegistered)
+    ssService->UnregisterSheet(cssFileURI, nsIStyleSheetService::USER_SHEET);
+  
+  if (inLoad)
+    ssService->LoadAndRegisterSheet(cssFileURI, nsIStyleSheetService::USER_SHEET);
 }
 
 #pragma mark -

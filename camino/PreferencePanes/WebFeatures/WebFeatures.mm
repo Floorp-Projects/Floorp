@@ -56,6 +56,9 @@
 // but that requires linkage and extra search paths.                            
 static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";              
 
+// needs to match the string in PreferenceManager.mm
+static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
+
 @interface OrgMozillaChimeraPreferenceWebFeatures(PRIVATE)
 -(NSString*)profilePath;
 @end
@@ -116,11 +119,7 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
   BOOL preventAnimation = [[self getStringPref:"image.animation_mode" withSuccess:&gotPref] isEqualToString:@"once"];
   [mPreventAnimation setState:preventAnimation];
   
-  // check if userContent.css is in the profile. Yes, this will give false positives if the
-  // user has made their own, but that's their problem. 
-  NSString* adBlockFile = [[[self profilePath] stringByAppendingPathComponent:@"chrome"] 
-                            stringByAppendingPathComponent:@"userContent.css"];
-  BOOL enableAdBlock = [[NSFileManager defaultManager] fileExistsAtPath:adBlockFile]; 
+  BOOL enableAdBlock = [self getBooleanPref:"camino.enable_ad_blocking" withSuccess:&gotPref];
   [mEnableAdBlocking setState:enableAdBlock];
 
   // store permission manager service and cache the enumerator.
@@ -158,16 +157,8 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 //
 - (IBAction)clickEnableAdBlocking:(id)sender
 {
-  NSString* adBlockFileInProfile = [[[self profilePath] stringByAppendingPathComponent:@"chrome"] 
-                                        stringByAppendingPathComponent:@"userContent.css"];
-  if ([sender state]) {
-    NSString* sourcePath = [[NSBundle mainBundle] pathForResource:@"ad_blocking" ofType:@"css"];
-    [[NSFileManager defaultManager] removeFileAtPath:adBlockFileInProfile handler:nil];
-    [[NSFileManager defaultManager] copyPath:sourcePath toPath:adBlockFileInProfile handler:nil];
-  }
-  else {
-    [[NSFileManager defaultManager] removeFileAtPath:adBlockFileInProfile handler:nil];
-  }
+  [self setPref:"camino.enable_ad_blocking" toBoolean:[sender state] == NSOnState];
+  [[NSNotificationCenter defaultCenter] postNotificationName:AdBlockingChangedNotificationName object:nil]; 
 }
 
 //
@@ -178,10 +169,7 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 //
 - (IBAction)clickEnablePopupBlocking:(id)sender
 {
-  if ( [sender state] )
-    [self setPref:"dom.disable_open_during_load" toBoolean: YES];
-  else
-    [self setPref:"dom.disable_open_during_load" toBoolean: NO];
+  [self setPref:"dom.disable_open_during_load" toBoolean:[sender state] == NSOnState];
   [mEditWhitelist setEnabled:[sender state]];
 }
 
@@ -192,7 +180,7 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 //
 -(IBAction) clickEnableImageResizing:(id)sender
 {
-  [self setPref:"browser.enable_automatic_image_resizing" toBoolean:[sender state] ? YES : NO];
+  [self setPref:"browser.enable_automatic_image_resizing" toBoolean:[sender state] == NSOnState];
 }
 
 //
@@ -315,7 +303,7 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
     if ( ![url rangeOfString:@"http://"].length && ![url rangeOfString:@"https://"].length )
       url = [NSString stringWithFormat:@"http://%@", url];
     
-    const char* siteURL = [url cString];
+    const char* siteURL = [url UTF8String];
     nsCOMPtr<nsIURI> newURI;
     NS_NewURI(getter_AddRefs(newURI), siteURL);
     if ( newURI ) {
