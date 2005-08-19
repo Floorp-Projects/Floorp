@@ -741,8 +741,6 @@ MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
 
 USE_DEPENDENT_LIBS=1
 
-USE_GSSAPI=1
-
 _PLATFORM_DEFAULT_TOOLKIT=gtk2
 MOZ_GFX_TOOLKIT='$(MOZ_WIDGET_TOOLKIT)'
 MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
@@ -1639,9 +1637,6 @@ case "$target" in
     USE_SHORT_LIBNAME=1
     MOZ_ENABLE_POSTSCRIPT=
     MOZ_USER_DIR="Mozilla"
-
-    dnl Do not perform checks for GSSAPI.  We're going to use SSPI instead.
-    USE_GSSAPI=
 
     dnl Hardcode to win95 for now - cls
     TARGET_NSPR_MDCPUCFG='\"md/_win95.cfg\"'
@@ -3926,7 +3921,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
-MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 MOZ_IPCD=
 MOZ_JSDEBUGGER=1
@@ -3995,7 +3990,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4005,7 +4000,7 @@ browser)
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs negotiateauth permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs auth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4088,7 +4083,7 @@ xulrunner)
   MOZ_XULRUNNER=1
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref transformiix universalchardet webservices gnomevfs negotiateauth"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref transformiix universalchardet webservices gnomevfs auth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
@@ -4807,92 +4802,6 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
     AC_MSG_ERROR([The programs javac and jar were not found.  Set \$JAVA_HOME or use --with-java-bin-path={java-bin-dir}.])
   fi
 fi
-
-dnl ========================================================
-dnl Check for GSSAPI libraries and headers needed for
-dnl integrated windows authentication support (disable
-dnl negotiateauth extension if GSSAPI is not available).
-dnl
-dnl If we are not using GSSAPI to implement this extension,
-dnl then we can obviously skip these checks.
-dnl ========================================================
-
-if test -n "$USE_GSSAPI" && test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
-    dnl
-    dnl Check for alternative location for GSSAPI libraries.
-    dnl
-    MOZ_ARG_WITH_STRING(gssapi,
-        [  --with-gssapi=PFX	   Location of GSSAPI libraries],
-        GSSAPI_DIR=$withval)
-
-    if test -z "$GSSAPI_DIR"; then
-        dnl
-        dnl RedHat Linux 7, 8, and 9 install GSSAPI headers and libraries under
-        dnl /usr/kerberos -- perhaps other platforms do the same.  If not, then
-        dnl we count on the default search paths.  Fedora Core 1, at least,
-        dnl puts the headers and libraries under /usr, but it still has
-        dnl /usr/kerberos for the other KRB5 components.
-        dnl
-        if test -d "/usr/kerberos/include"; then
-            GSSAPI_DIR="/usr/kerberos"
-        fi
-    fi
-
-    dnl
-    dnl If not specified, assume GSSAPI is in the system directories
-    dnl
-    if test -n "$GSSAPI_DIR"; then
-        _GSSAPI_INC="-I$GSSAPI_DIR/include"
-    else
-        _GSSAPI_INC=
-    fi
-
-    _SAVE_CPPFLAGS="$CPPFLAGS"
-    _SAVE_LDFLAGS="$LDFLAGS"
-    _SAVE_LIBS="$LIBS"
-
-    CPPFLAGS="$CPPFLAGS $_GSSAPI_INC"
-
-    dnl
-    dnl Try to set GSSAPI_INCLUDES ...
-    dnl
-    AC_CHECK_HEADERS(gssapi.h,
-        [GSSAPI_INCLUDES="$_GSSAPI_INC" _GSSAPI_FOUND=1])
-    if test -z "$_GSSAPI_FOUND" ; then
-        AC_CHECK_HEADERS(gssapi/gssapi.h,
-            [GSSAPI_INCLUDES="$_GSSAPI_INC" _GSSAPI_FOUND=1])
-    fi
-
-    if test -z "$_GSSAPI_FOUND" ; then
-        if test -n "$GSSAPI_DIR" ; then
-            AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$GSSAPI_DIR/bin:$PATH:/usr/bin])
-        else
-            AC_PATH_PROG(KRB5CONFIG, krb5-config, :, [$PATH:/usr/bin])
-        fi
-        if test -n "$KRB5CONFIG" -a -x "$KRB5CONFIG" ; then
-            GSSAPI_INCLUDES=`$KRB5CONFIG --cflags gssapi 2>/dev/null`
-            _GSSAPI_FOUND=1
-        fi
-    fi
-
-    dnl
-    dnl If GSSAPI libs were not found, remove extension from the list to be
-    dnl built.
-    dnl
-    if test -z "$_GSSAPI_FOUND" ; then
-        AC_MSG_WARN([Cannot build negotiateauth without GSSAPI. Removing negotatiate from MOZ_EXTENSIONS.])
-        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|negotiateauth||'`
-        USE_GSSAPI=
-    fi
-
-    LIBS="$_SAVE_LIBS"
-    LDFLAGS="$_SAVE_LDFLAGS"
-    CPPFLAGS="$_SAVE_CPPFLAGS"
-
-    AC_SUBST(GSSAPI_INCLUDES)
-fi
-AC_SUBST(USE_GSSAPI)
-
 
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`

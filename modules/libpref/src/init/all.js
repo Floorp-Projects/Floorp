@@ -653,6 +653,13 @@ pref("network.negotiate-auth.gsslib", "");
 // Specify if the gss lib comes standard with the OS
 pref("network.negotiate-auth.using-native-gsslib", true);
 
+#ifdef XP_WIN
+
+// Default to using the SSPI intead of GSSAPI on windows 
+pref("network.auth.use-sspi", true);
+
+#endif
+
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
 // Window's domain logon.  The trusted-uris pref follows the format of the

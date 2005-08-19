@@ -827,6 +827,25 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
   return rv;
 }
 
+NS_IMETHODIMP
+nsNTLMAuthModule::Unwrap(const void *inToken,
+                        PRUint32    inTokenLen,
+                        void      **outToken,
+                        PRUint32   *outTokenLen)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNTLMAuthModule::Wrap(const void *inToken,
+                       PRUint32    inTokenLen,
+                       PRBool      confidential,
+                       void      **outToken,
+                       PRUint32   *outTokenLen)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //-----------------------------------------------------------------------------
 // DES support code
 
