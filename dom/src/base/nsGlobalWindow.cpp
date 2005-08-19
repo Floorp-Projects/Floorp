@@ -894,10 +894,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
-    // In case we're not removing event listeners, move the event
-    // listener manager over to the new inner window.
-    nsCOMPtr<nsIEventListenerManager> listenerManager;
-
     if (currentInner && !currentInner->IsFrozen()) {
       if (!reUseInnerWindow) {
         currentInner->ClearAllTimeouts();
@@ -917,8 +913,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       if (aRemoveEventListeners && currentInner->mListenerManager) {
         currentInner->mListenerManager->RemoveAllListeners(PR_FALSE);
         currentInner->mListenerManager = nsnull;
-      } else {
-        listenerManager = currentInner->mListenerManager;
       }
 
       nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
@@ -1068,8 +1062,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
                                              html_doc);
     }
-
-    newInnerWindow->mListenerManager = listenerManager;
 
     // InitClassesWithNewWrappedGlobal() for the new inner window sets
     // the global object in cx to be the new wrapped global. We don't
