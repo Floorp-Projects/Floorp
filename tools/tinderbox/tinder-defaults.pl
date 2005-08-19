@@ -206,7 +206,9 @@ $sea_installer = 1;
 $archive       = 0;
 $push_raw_xpis = 1;
 $update_package = 0;
-$update_version = "trunk";
+#$update_product = "Firefox";
+#$update_version = "trunk";
+#$update_platform = "WINNT_x86-msvc";
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before
