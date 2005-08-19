@@ -268,6 +268,7 @@ static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   : nsPIDOMWindow(aOuterWindow),
+    mIsFrozen(PR_FALSE),
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE), 
     mInClose(PR_FALSE), 
@@ -280,7 +281,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mIsFrozen(PR_FALSE),
     mJSObject(nsnull)
 {
   // Initialize the PRCList (this).
@@ -747,13 +747,11 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // when those sub-window objects are finalized, after JS_ClearScope and
   // a GC run that finds them to be garbage.
 
-  JSContext *cx = nsnull;
-
   // XXXjst: Update above comment.
   nsIScriptContext *scx = GetContextInternal();
-  if (scx) {
-    cx = (JSContext *)scx->GetNativeContext();
-  }
+  NS_ENSURE_TRUE(scx, NS_ERROR_NOT_INITIALIZED);
+
+  JSContext *cx = (JSContext *)scx->GetNativeContext();
 
   // clear smartcard events, our document has gone away.
   if (mCrypto) {
@@ -893,9 +891,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
   if (IsOuterWindow()) {
     scx->WillInitializeContext();
-  }
 
-  if (IsOuterWindow()) {
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
     // In case we're not removing event listeners, move the event
@@ -936,6 +932,17 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
     PRUint32 flags = 0;
 
+    // Make sure to clear scope on the outer window *before* we
+    // initialize the new inner window. If we don't, things
+    // (Object.prototype etc) could leak from the old outer to the new
+    // inner scope.
+    ::JS_ClearScope(cx, mJSObject);
+    ::JS_ClearWatchPointsForObject(cx, mJSObject);
+
+    // Clear the regexp statics for the new page unconditionally.
+    // XXX They don't get restored on the inner window when we go back.
+    ::JS_ClearRegExpStatics(cx);
+
     if (reUseInnerWindow && !currentInner->IsFrozen()) {
       // We're reusing the current inner window.
       newInnerWindow = currentInner;
@@ -972,10 +979,25 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         nsIScriptGlobalObject *sgo =
           (nsIScriptGlobalObject *)newInnerWindow.get();
 
+        // Freeze the outer window and null out the inner window so
+        // that initializing classes on the new inner doesn't end up
+        // reaching into the old inner window for classes etc.
+        //
+        // [This happens with Object.prototype when XPConnect creates
+        // a temporary global while initializing classes; the reason
+        // being that xpconnect creates the temp global w/o a parent
+        // and proto, which makes the JS engine look up classes in
+        // cx->globalObject, i.e. this outer window].
+
+        Freeze();
+        mInnerWindow = nsnull;
+
         nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(cx, sgo, NS_GET_IID(nsISupports),
                                           flags,
                                           getter_AddRefs(mInnerWindowHolder));
+        Thaw();
+
         NS_ENSURE_SUCCESS(rv, rv);
 
         mInnerWindowHolder->GetJSObject(&newInnerWindow->mJSObject);
@@ -1022,16 +1044,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
           }
         }
 
-        // Clear scope on the outer window
-        ::JS_ClearScope(cx, mJSObject);
-        ::JS_ClearWatchPointsForObject(cx, mJSObject);
-        // Clear the regexp statics for the new page unconditionally.
-        // XXX They don't get restored on the inner window when we go back.
-        ::JS_ClearRegExpStatics(cx);
-
-        // Re-initialize the outer window.
-        scx->InitContext(this);
-
         // Don't clear scope on our current inner window if it's going to be
         // held in the bfcache.
         if (!currentInner->IsFrozen()) {
@@ -1049,21 +1061,22 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       }
 
       mInnerWindow = newInnerWindow;
-
-      // InitClassesWithNewWrappedGlobal() sets the global object in
-      // cx to be the new wrapped global. We don't want that, so set
-      // it back to our own JS object.
-
-      ::JS_SetGlobalObject(cx, mJSObject);
-
-      if (newDoc != oldDoc && !aState) {
-        nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
-        nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
-                                               html_doc);
-      }
-
-      newInnerWindow->mListenerManager = listenerManager;
     }
+
+    if (newDoc != oldDoc && !aState) {
+      nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
+      nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
+                                             html_doc);
+    }
+
+    newInnerWindow->mListenerManager = listenerManager;
+
+    // InitClassesWithNewWrappedGlobal() for the new inner window sets
+    // the global object in cx to be the new wrapped global. We don't
+    // want that, but re-initializing the outer window will fix that
+    // for us. This has to happen unconditionally since we clear the
+    // outer window's scope unconditionally.
+    scx->InitContext(this);
 
     if (newDoc) {
       newDoc->SetScriptGlobalObject(newInnerWindow);
@@ -1072,6 +1085,12 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     if (!aState) {
       if (reUseInnerWindow) {
         newInnerWindow->mDocument = aDocument;
+
+        // We're reusing the inner window for a new document. In this
+        // case we don't clear the inner window's scope, but we must
+        // make sure the cached document property gets updated.
+
+        ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       } else {
         rv = newInnerWindow->SetNewDocument(aDocument, nsnull,
                                             aRemoveEventListeners,
@@ -1107,9 +1126,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       // doesn't have one).
       newInnerWindow->mChromeEventHandler = mChromeEventHandler;
     }
-  }
 
-  if (scx && IsOuterWindow()) {
     // Add an extra ref in case we release mContext during GC.
     nsCOMPtr<nsIScriptContext> kungFuDeathGrip = scx;
     scx->GC();
