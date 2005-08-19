@@ -1363,7 +1363,8 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
                                 mContent,
                                 nsDependentCString(aMimeType ? aMimeType : ""),
                                 nsnull, //extra
-                                &shouldLoad);
+                                &shouldLoad,
+                                nsContentUtils::GetContentPolicy());
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
     }

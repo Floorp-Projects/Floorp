@@ -77,6 +77,7 @@ class nsIDOMDocument;
 class nsIConsoleService;
 class nsIStringBundleService;
 class nsIStringBundle;
+class nsIContentPolicy;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -554,7 +555,15 @@ public:
     return sPtrsToPtrsToRelease->AppendElement(aSupportsPtr) ? NS_OK :
       NS_ERROR_OUT_OF_MEMORY;
   }
-   
+
+  /**
+   * Return the content policy service
+   */
+  static nsIContentPolicy *GetContentPolicy()
+  {
+    return sContentPolicyService;
+  }
+  
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -593,6 +602,8 @@ private:
 
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
+
+  static nsIContentPolicy* sContentPolicyService;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;

@@ -576,7 +576,8 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
                                  document,        // context
                                  EmptyCString(),  // mime guess
                                  nsnull,          // extra
-                                 &decision);
+                                 &decision,
+                                 nsContentUtils::GetContentPolicy());
 
   if (NS_SUCCEEDED(rv) && !NS_CP_ACCEPTED(decision))
     rv = NS_ERROR_NOT_AVAILABLE;

@@ -530,7 +530,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
                                      aElement,
                                      NS_LossyConvertUCS2toASCII(type),
                                      nsnull,    //extra
-                                     &shouldLoad);
+                                     &shouldLoad,
+                                     nsContentUtils::GetContentPolicy());
       if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
         if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
           return FireErrorNotification(NS_ERROR_CONTENT_BLOCKED, aElement,
