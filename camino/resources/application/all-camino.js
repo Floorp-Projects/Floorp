@@ -60,8 +60,14 @@ pref("browser.quartz.enable.all_font_sizes", true);
 pref("chimera.store_passwords_with_keychain", true);
 pref("chimera.keychain_passwords_autofill", true);
 
+// by default, Camino will take proxy settings (including PAC) from the OS.
+// set this pref to false if you want to specify proxy settings by hand.
+pref("camino.use_system_proxy_settings", true);
+
 pref("camino.enable_plugins", true);
-pref("chimera.log_js_to_console", true);
+
+// turn off dumping of JS and CSS errors to the console
+pref("chimera.log_js_to_console", false);
 
 // Identify Camino in the UA string
 pref("general.useragent.vendor", "Camino");

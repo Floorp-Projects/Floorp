@@ -66,6 +66,14 @@ PRUint32 const kStaticModuleCount = 0;
 
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
+// These are not available for linkage before the 10.4 SDK, but the feature is in 10.3.2 and later;
+// the strings were obtained by inspection.
+static NSString* const kSCPropNetProxiesProxyAutoConfigEnable    = @"ProxyAutoConfigEnable";
+static NSString* const kSCPropNetProxiesProxyAutoConfigURLString = @"ProxyAutoConfigURLString";
+static NSString* const kSCPropNetProxiesProxyAutoDiscoveryEnable = @"ProxyAutoDiscoveryEnable";
+#endif
+
 // This is an arbitrary version stamp that gets written to the prefs file.
 // It can be used to detect when a new version of Camino is run that needs
 // some prefs to be upgraded.
@@ -90,7 +98,7 @@ static const PRInt32 kCurrentPrefsVersion = 1;
     proxyPortKey:(NSString*)portKey;
 
 - (void)registerForProxyChanges;
-- (BOOL)readSystemProxySettings;
+- (void)readSystemProxySettings;
 
 - (BOOL)cleanupUserContentCSS;
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad;
@@ -516,30 +524,52 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
   return gotProxy;
 }
 
-- (BOOL)readSystemProxySettings
-{
-  BOOL usingProxies = NO;
-  
-  PRInt32 proxyType, newProxyType;
-  mPrefs->GetIntPref("network.proxy.type", &proxyType);
-  newProxyType = proxyType;
-  if (proxyType == 0 || proxyType == 1)
-  {
-    // get proxies from SystemConfiguration
-    mPrefs->ClearUserPref("network.proxy.http");
-    mPrefs->ClearUserPref("network.proxy.http_port");
-    mPrefs->ClearUserPref("network.proxy.ssl");
-    mPrefs->ClearUserPref("network.proxy.ssl_port");
-    mPrefs->ClearUserPref("network.proxy.ftp");
-    mPrefs->ClearUserPref("network.proxy.ftp_port");
-    mPrefs->ClearUserPref("network.proxy.gopher");
-    mPrefs->ClearUserPref("network.proxy.gopher_port");
-    mPrefs->ClearUserPref("network.proxy.socks");
-    mPrefs->ClearUserPref("network.proxy.socks_port");
-    mPrefs->ClearUserPref("network.proxy.no_proxies_on");
+typedef enum EProxyConfig {
+  eProxyConfig_Direct = 0,
+  eProxyConfig_Manual,
+  eProxyConfig_PAC,
+  eProxyConfig_Direct4x,
+  eProxyConfig_WPAD,
+  eProxyConfig_Last
+} EProxyConfig;
 
-    NSDictionary* proxyConfigDict = (NSDictionary*)SCDynamicStoreCopyProxies(NULL);
-    if (proxyConfigDict)
+- (void)readSystemProxySettings
+{
+  // if the user has set "camino.use_system_proxy_settings" to false, they want
+  // to specify their own proxies (or a PAC), so don't read the OS proxy settings
+  if (![self getBooleanPref:"camino.use_system_proxy_settings" withSuccess:NULL])
+    return;
+  
+  PRInt32 curProxyType, newProxyType;
+  mPrefs->GetIntPref("network.proxy.type", &curProxyType);
+  newProxyType = curProxyType;
+
+  mPrefs->ClearUserPref("network.proxy.http");
+  mPrefs->ClearUserPref("network.proxy.http_port");
+  mPrefs->ClearUserPref("network.proxy.ssl");
+  mPrefs->ClearUserPref("network.proxy.ssl_port");
+  mPrefs->ClearUserPref("network.proxy.ftp");
+  mPrefs->ClearUserPref("network.proxy.ftp_port");
+  mPrefs->ClearUserPref("network.proxy.gopher");
+  mPrefs->ClearUserPref("network.proxy.gopher_port");
+  mPrefs->ClearUserPref("network.proxy.socks");
+  mPrefs->ClearUserPref("network.proxy.socks_port");
+  mPrefs->ClearUserPref("network.proxy.no_proxies_on");
+
+  // get proxies from SystemConfiguration
+  NSDictionary* proxyConfigDict = (NSDictionary*)SCDynamicStoreCopyProxies(NULL);
+  if (proxyConfigDict)
+  {
+    // look for PAC
+    NSNumber* proxyAutoConfig = (NSNumber*)[proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesProxyAutoConfigEnable];
+    NSString* proxyURLString  = (NSString*)[proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesProxyAutoConfigURLString];
+    if ([proxyAutoConfig intValue] != 0 && [proxyURLString length] > 0)
+    {
+      NSLog(@"Using Proxy Auto-Config (PAC) file %@", proxyURLString);
+      [self setPref:"network.proxy.autoconfig_url" toString:proxyURLString];
+      newProxyType = eProxyConfig_PAC;
+    }
+    else
     {
       BOOL gotAProxy = NO;
       
@@ -570,7 +600,7 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
 
       if (gotAProxy)
       {
-        newProxyType = 1;
+        newProxyType = eProxyConfig_Manual;
 
         NSArray* exceptions = [proxyConfigDict objectForKey:(NSString*)kSCPropNetProxiesExceptionsList];
         if (exceptions)
@@ -579,21 +609,19 @@ static void SCProxiesChangedCallback(SCDynamicStoreRef store, CFArrayRef changed
           if ([sitesList length] > 0)
             [self setPref:"network.proxy.no_proxies_on" toString:sitesList];
         }
-        usingProxies = YES;
       }
       else
       {
-        newProxyType = 0;
+        // no proxy hosts found; turn them off
+        newProxyType = eProxyConfig_Direct;
       }
-      
-      [proxyConfigDict release];
     }
-
-    if (newProxyType != proxyType)
-      mPrefs->SetIntPref("network.proxy.type", 1);    
+    
+    [proxyConfigDict release];
   }
-  
-  return usingProxies;
+
+  if (newProxyType != curProxyType)
+    mPrefs->SetIntPref("network.proxy.type", newProxyType);
 }
 
 #pragma mark -
