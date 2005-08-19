@@ -252,19 +252,7 @@ NS_IMETHODIMP nsLinkableAccessible::DoAction(PRUint8 index)
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {
     if (mActionContent) {
-      nsCOMPtr<nsPresContext> presContext(GetPresContext());
-      if (presContext) {
-        nsMouseEvent clickEvent(PR_TRUE, NS_MOUSE_LEFT_CLICK, nsnull,
-                                nsMouseEvent::eReal);
-
-        nsEventStatus eventStatus = nsEventStatus_eIgnore;
-        mActionContent->HandleDOMEvent(presContext, 
-                                     &clickEvent, 
-                                     nsnull, 
-                                     NS_EVENT_FLAG_INIT, 
-                                     &eventStatus);
-        return NS_OK;
-      }
+      return DoCommand(mActionContent);
     }
   }
   return NS_ERROR_INVALID_ARG;
