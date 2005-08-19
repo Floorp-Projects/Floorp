@@ -4846,6 +4846,19 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
     if (maxViewers == 0)
         return PR_FALSE;
 
+    // Don't cache the content viewer if we're in a subframe and the subframe
+    // pref is disabled.
+    PRBool cacheFrames = PR_FALSE;
+    mPrefs->GetBoolPref("browser.sessionhistory.cache_subframes",
+                        &cacheFrames);
+    if (!cacheFrames) {
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        GetSameTypeParent(getter_AddRefs(root));
+        if (root && root != this) {
+            return PR_FALSE;  // this is a subframe load
+        }
+    }
+
     // If the document does not want its presentation cached, then don't.
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(pWin->GetExtantDocument());
     if (!doc || !doc->CanSavePresentation(aNewRequest))
