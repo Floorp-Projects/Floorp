@@ -1561,8 +1561,10 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         *rval = OBJECT_TO_JSVAL(newarr);
         break;
       case SOME:
-      case EVERY:
         *rval = JSVAL_FALSE;
+        break;
+      case EVERY:
+        *rval = JSVAL_TRUE;
         break;
       case FOREACH:
         break;
@@ -1664,11 +1666,6 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         }
     }
 
-        
-    if (mode == SOME)
-        *rval = JSVAL_FALSE;
-    else if (mode == EVERY)
-        *rval = JSVAL_TRUE;
  out:
     js_FreeStack(cx, mark);
     if (ok && mode == FILTER)
