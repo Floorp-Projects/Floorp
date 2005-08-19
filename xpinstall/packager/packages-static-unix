@@ -74,6 +74,7 @@ bin/libldap50.so
 bin/libprldap50.so
 bin/liblber50.so
 
+bin/components/alerts.xpt
 bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
 bin/components/bookmarks.xpt
@@ -90,9 +91,11 @@ bin/components/jsdservice.xpt
 bin/components/libjsd.so
 bin/components/dom.xpt
 bin/components/dom_base.xpt
+bin/components/dom_canvas.xpt
 bin/components/dom_core.xpt
 bin/components/dom_css.xpt
 bin/components/dom_events.xpt
+bin/components/dom_loadsave.xpt
 bin/components/dom_html.xpt
 bin/components/dom_range.xpt
 bin/components/dom_stylesheets.xpt
@@ -105,10 +108,12 @@ bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
 bin/components/gfx2.xpt
+bin/components/gksvgrenderer.xpt
 bin/components/intl.xpt
 bin/components/imglib2.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
+bin/components/jsconsole.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/content_base.xpt
 bin/components/content_html.xpt
@@ -194,6 +199,15 @@ bin/components/typeaheadfind.xpt
 bin/components/nsCloseAllWindows.js
 bin/components/extensions.xpt
 bin/components/nsExtensionManager.js
+bin/components/htmlparser.xpt
+bin/components/lwbrk.xpt
+bin/components/nsInterfaceInfoToIDL.js
+bin/components/nsResetPrefs.js
+bin/components/nsUpdateNotifier.js
+bin/components/plugin.xpt
+bin/components/prefetch.xpt
+bin/copmonents/imgicon.xpt
+
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
@@ -202,6 +216,9 @@ bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/installed-chrome.txt
 bin/chrome/chromelist.txt
+
+bin/components/xulappinfo.js
+bin/components/xulappinfo.xpt
 
 ; webservices
 bin/components/libwebsrvcs.so
@@ -232,6 +249,7 @@ bin/defaults/wallet/PositionalSchema.tbl
 bin/defaults/wallet/StateSchema.tbl
 bin/res/hiddenWindow.html
 bin/res/arrow.gif
+bin/res/arrowd.gif
 bin/res/loading-image.gif
 bin/res/broken-image.gif
 bin/res/charsetalias.properties
@@ -288,6 +306,7 @@ bin/components/msgimap.xpt
 bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
+bin/components/nsAbLDAPAttributeMap.js
 bin/components/nsLDAPPrefsService.js
 bin/components/import.xpt
 bin/chrome/messenger.jar
