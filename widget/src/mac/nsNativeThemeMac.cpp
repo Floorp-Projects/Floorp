@@ -491,11 +491,8 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
-      if ( nsRenderingContextMac::OnMacOSX() )
-        aResult->SizeTo(kAquaPushButtonEndcaps, kAquaPushButtonTopBottom, 
-                            kAquaPushButtonEndcaps, kAquaPushButtonTopBottom);
-      else
-        aResult->SizeTo(5,2,5,2);     // 5px for AGA
+      aResult->SizeTo(kAquaPushButtonEndcaps, kAquaPushButtonTopBottom, 
+                          kAquaPushButtonEndcaps, kAquaPushButtonTopBottom);
       break;
 
     case NS_THEME_BUTTON_SMALL:
@@ -508,11 +505,8 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
 
     case NS_THEME_DROPDOWN:
-      if ( nsRenderingContextMac::OnMacOSX() )
-        aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
-                          kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
-      else
-        aResult->SizeTo(3,0,3,0);     // 3px for AGA
+      aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
+                        kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       break;
     
     case NS_THEME_TEXTFIELD:
