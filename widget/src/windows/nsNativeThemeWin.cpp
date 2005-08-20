@@ -55,6 +55,7 @@
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsIMenuFrame.h"
+#include "nsUnicharUtils.h"
 #include <malloc.h>
 
 #define THEME_COLOR 204
@@ -315,13 +316,6 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   return flags;
 }
 
-static PRBool HasAttrValue(nsIContent* aContent, nsIAtom* aAtom, const char* aStr)
-{
-  nsAutoString attr;
-  aContent->GetAttr(kNameSpaceID_None, aAtom, attr);
-  return attr.EqualsIgnoreCase(aStr);
-}
-
 static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 {
   if (!aFrame)
@@ -333,7 +327,8 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (res == NS_CONTENT_ATTR_NO_VALUE ||
       (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
     return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
-  return attr.EqualsIgnoreCase("true"); // This handles the XUL case.
+  return attr.Equals(NS_LITERAL_STRING("true"), // This handles the XUL case.
+                     nsCaseInsensitiveStringComparator()); 
 }
 
 PRBool nsNativeThemeWin::IsDisabled(nsIFrame* aFrame)
@@ -358,7 +353,8 @@ PRBool nsNativeThemeWin::IsChecked(nsIFrame* aFrame)
     return PR_TRUE; // XXXdwh Can the HTML form control's checked property differ
                     // from the checked attribute?  If so, will need an IsContentofType
                     // HTML followed by a QI to nsIDOMHTMLInputElement to grab the prop.
-  return checked.EqualsIgnoreCase("true"); // This handles the XUL case.
+  return checked.Equals(NS_LITERAL_STRING("true"), // This handles the XUL case
+                        nsCaseInsensitiveStringComparator()); 
 }
 
 PRBool nsNativeThemeWin::IsSelected(nsIFrame* aFrame)
