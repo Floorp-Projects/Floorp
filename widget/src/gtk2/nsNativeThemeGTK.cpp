@@ -61,6 +61,10 @@ GtkWidget* gButtonWidget = nsnull;
 GtkWidget* gCheckboxWidget = nsnull;
 GtkWidget* gScrollbarWidget = nsnull;
 GtkWidget* gGripperWidget = nsnull;
+GtkWidget* gEntryWidget = nsnull;
+GtkWidget* gDropdownButonWidget = nsnull;
+GtkWidget* gArrowWidget = nsnull;
+GtkWidget* gDropdownButtonWidget = nsnull;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoWindow(nsnull),
@@ -346,6 +350,30 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
     break;
 
+  case NS_THEME_TEXTFIELD:
+    {
+      EnsureEntryWidget();
+
+      GtkWidgetState state;
+      GetGtkWidgetState(aFrame, &state);
+
+      moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect,
+                          &gdk_clip, &state);
+    }
+    break;
+
+  case NS_THEME_DROPDOWN_BUTTON:
+    {
+      EnsureArrowWidget();
+
+      GtkWidgetState state;
+      GetGtkWidgetState(aFrame, &state);
+
+      moz_gtk_dropdown_arrow_paint(window, gArrowWidget->style, &gdk_rect,
+                                   &gdk_clip, &state);
+    }
+    break;
+
   }
 
   return NS_OK;
@@ -400,6 +428,13 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext,
       aResult->top = aResult->bottom = aResult->left = aResult->right = trough_border;
     }
     break;
+  case NS_THEME_TEXTFIELD:
+    {
+      EnsureEntryWidget();
+      aResult->top = aResult->bottom = gEntryWidget->style->klass->ythickness;
+      aResult->left = aResult->right = gEntryWidget->style->klass->xthickness;
+    }
+    break;
   }
 
   return NS_OK;
@@ -452,6 +487,20 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
         *aIsOverridable = PR_FALSE;
       }
       break;
+  case NS_THEME_DROPDOWN_BUTTON:
+    {
+      EnsureArrowWidget();
+
+      aResult->width = (GTK_CONTAINER(gDropdownButtonWidget)->border_width + 1 +
+                        GTK_WIDGET(gDropdownButtonWidget)->style->klass->xthickness) * 2;
+      aResult->height = (GTK_CONTAINER(gDropdownButtonWidget)->border_width + 1 +
+                         GTK_WIDGET(gDropdownButtonWidget)->style->klass->ythickness) * 2;
+
+      GtkRequisition child_requisition;
+      gtk_widget_size_request(gArrowWidget, &child_requisition);
+      aResult->width += child_requisition.width;
+      aResult->height += child_requisition.height;
+    }
   }
 
   return NS_OK;
@@ -519,6 +568,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_TOOLBAR_BUTTON:
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_RADIO:
+  case NS_THEME_TEXTFIELD:
+  case NS_THEME_DROPDOWN_BUTTON:
     return PR_TRUE;
   }
 
@@ -586,3 +637,24 @@ nsNativeThemeGTK::EnsureGripperWidget()
   }
 }
 
+void
+nsNativeThemeGTK::EnsureEntryWidget()
+{
+  if (!gEntryWidget) {
+    gEntryWidget = gtk_entry_new();
+    SetupWidgetPrototype(gEntryWidget);
+  }
+}
+
+void
+nsNativeThemeGTK::EnsureArrowWidget()
+{
+  if (!gArrowWidget) {
+    gDropdownButtonWidget = gtk_button_new();
+    SetupWidgetPrototype(gDropdownButtonWidget);
+    gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
+    gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
+    gtk_widget_set_rc_style(gArrowWidget);
+    gtk_widget_realize(gArrowWidget);
+  }
+}   
