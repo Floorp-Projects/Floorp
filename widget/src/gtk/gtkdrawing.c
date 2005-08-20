@@ -102,10 +102,11 @@ TSOffsetStyleGCs(GtkStyle* style, gint xorigin, gint yorigin)
   gdk_gc_set_ts_origin(style->white_gc, xorigin, yorigin);
 }
 
-void
-moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
-                     GdkRectangle* rect, GdkRectangle* cliprect,
-                     GtkWidgetState* state, GtkReliefStyle relief)
+static void
+moz_gtk_button_paint_internal(GdkWindow* window, GtkStyle* style,
+                              GdkRectangle* rect, GdkRectangle* cliprect,
+                              GtkWidgetState* state, GtkReliefStyle relief,
+                              GtkWidget* widget)
 {
   GtkShadowType shadow_type;
   gint default_spacing = 7; /* xxx fix me */
@@ -118,11 +119,11 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
                           cliprect->height);
   }
 
-  gtk_widget_set_state(gButtonWidget, button_state);
+  gtk_widget_set_state(widget, button_state);
   if (state->isDefault) {
     TSOffsetStyleGCs(style, x, y);
     gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
-                  gButtonWidget, "buttondefault", x, y, width, height);
+                  widget, "buttondefault", x, y, width, height);
   }
 
   if (state->canDefault) {
@@ -147,7 +148,7 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
                                     button_state != GTK_STATE_INSENSITIVE)) {
     TSOffsetStyleGCs(style, x, y);
     gtk_paint_box(style, window, button_state, shadow_type, cliprect,
-                  gButtonWidget, "button", x, y, width, height);
+                  widget, "button", x, y, width, height);
   }
 
   if (state->focused) {
@@ -157,9 +158,18 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
     height += 2;
     
     TSOffsetStyleGCs(style, x, y);
-    gtk_paint_focus(style, window, cliprect, gButtonWidget, "button", x, y,
+    gtk_paint_focus(style, window, cliprect, widget, "button", x, y,
                     width - 1, height - 1);
   }
+}
+
+void
+moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
+                     GdkRectangle* rect, GdkRectangle* cliprect,
+                     GtkWidgetState* state, GtkReliefStyle relief)
+{
+  moz_gtk_button_paint_internal(window, style, rect, cliprect,
+                                state, relief, gButtonWidget);
 }
 
 void
@@ -412,8 +422,9 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
 
-  moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, cliprect,
-                       state, GTK_RELIEF_NORMAL);
+  moz_gtk_button_paint_internal(window, gDropdownButtonWidget->style,
+                                rect, cliprect, state, GTK_RELIEF_NORMAL,
+                                gDropdownButtonWidget);
 
   /* This mirrors gtkbutton's child positioning */
   arrow_rect.x = rect->x + 1 + gDropdownButtonWidget->style->klass->xthickness;
