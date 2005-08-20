@@ -303,6 +303,8 @@
                 <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
                 <menuitem accesskey="&fullScreenCmd.accesskey;"
                           label="&fullScreenCmd.label;" key="key_fullScreen"
+                          id="fullScreenItem"
+                          type="checkbox"
                           command="View:FullScreen"/>
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem hidden="true" id="documentDirection-swap" 
