@@ -663,6 +663,12 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       ::EraseRect(&macRect);
       break;
 
+    case NS_THEME_TOOLTIP:
+      RGBColor yellow = {65535,65535,45000};
+      ::RGBBackColor(&yellow);
+      ::EraseRect(&macRect);
+      break;
+
     case NS_THEME_CHECKBOX:
       DrawCheckbox ( macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState );
       break;    
@@ -1036,6 +1042,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
     case NS_THEME_MENU:
+    case NS_THEME_TOOLTIP:
     
     case NS_THEME_CHECKBOX:
     case NS_THEME_CHECKBOX_CONTAINER:
