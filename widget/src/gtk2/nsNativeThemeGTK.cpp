@@ -109,7 +109,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 #ifdef DEBUG
       printf("Disabling GTK themed widgets due to blacklisted theme engine: %s\n", eng);
 #endif
-      memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+      memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
       break;
     }
   }
