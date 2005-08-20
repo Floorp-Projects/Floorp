@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes gfx
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIRORENDERINGCONTEXT__H__
-#define NSCAIRORENDERINGCONTEXT__H__
-
-#include <cairo.h>
+#ifndef NSTHEBESRENDERINGCONTEXT__H__
+#define NSTHEBESRENDERINGCONTEXT__H__
 
 #include "nsCOMPtr.h"
 #include "nsIRenderingContext.h"
@@ -54,17 +51,19 @@
 #include "nsIRegion.h"
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
-#include "nsICairoFontMetrics.h"
+#include "nsIThebesFontMetrics.h"
+#include "nsIThebesRenderingContext.h"
+#include "gfxContext.h"
 
 class nsIImage;
 
-class nsCairoDrawingSurface;
+class nsThebesDrawingSurface;
 
-class nsCairoRenderingContext : public nsIRenderingContext
+class nsThebesRenderingContext : public nsIRenderingContext, public nsIThebesRenderingContext
 {
 public:
-    nsCairoRenderingContext();
-    virtual ~nsCairoRenderingContext();
+    nsThebesRenderingContext();
+    virtual ~nsThebesRenderingContext();
 
     NS_DECL_ISUPPORTS
 
@@ -82,6 +81,10 @@ public:
     NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface);
     NS_IMETHOD GetDrawingSurface(nsIDrawingSurface **aSurface);
     NS_IMETHOD GetHints(PRUint32& aResult);
+    NS_IMETHOD DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
+                                      void* aSrcSurfaceWhite,
+                                      const nsIntSize& aSrcSize, 
+                                      const nsPoint& aDestPos);
     NS_IMETHOD PushState(void);
     NS_IMETHOD PopState(void);
     NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible);
@@ -103,7 +106,9 @@ public:
     NS_IMETHOD Scale(float aSx, float aSy);
     NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
     NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
+    NS_IMETHOD CreateDrawingSurface(nsNativeWidget aWidget, nsIDrawingSurface* &aSurface);
     NS_IMETHOD DestroyDrawingSurface(nsIDrawingSurface *aDS);
+
     NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
     NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
     NS_IMETHOD DrawRect(const nsRect& aRect);
@@ -143,6 +148,9 @@ public:
     NS_IMETHOD GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
                                  nsTextDimensions& aDimensions, PRInt32* aFontID = nsnull);
 
+    NS_IMETHOD PushFilter(const nsRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
+    NS_IMETHOD PopFilter();
+
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
     NS_IMETHOD GetTextDimensions(const char*     aString,
                                  PRInt32           aLength,
@@ -179,7 +187,7 @@ public:
                                  PRInt32 aSrcX, PRInt32 aSrcY,
                                  const nsRect &aDestBounds,
                                  PRUint32 aCopyFlags);
-    NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
+    virtual void* GetNativeGraphicData(GraphicDataType aType);
     NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize,
                              const nsRect &aMaxSize,
                              PRBool aForBlending,
@@ -205,7 +213,6 @@ public:
                          const nsRect &aDestRect);
     NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset,
                         const nsRect * aTargetRect);
-
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
 
     NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
@@ -227,37 +234,33 @@ public:
 
     NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
-    // Cairo specific stuff
+    // Thebes specific stuff
 
-    cairo_t *GetCairo() { return mCairo; }
+    gfxContext *Thebes() { return mThebes; }
 
     nsTransform2D& CurrentTransform();
 
     void TransformCoord (nscoord *aX, nscoord *aY);
 
-protected:
-    PRBool DoCairoDrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-    void DoCairoDrawEllipse (double aX, double aY, double aWidth, double aHeight);
-    void DoCairoDrawArc (double aX, double aY, double aWidth, double aHeight,
-                         double aStartAngle, double aEndAngle);
-    void DoCairoClip ();
+    nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer, PRUint32 aSurfFlags);
 
+
+protected:
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
+    // cached pixels2twips, twips2pixels values
+    double mP2T, mT2P;
+
     nsCOMPtr<nsIWidget> mWidget;
 
     // we need to manage our own clip region (since we can't get at
     // the old one from cairo)
-    nsCOMPtr<nsIRegion> mClipRegion;
-    nsCOMPtr<nsICairoFontMetrics> mFontMetrics;
+    nsCOMPtr<nsIThebesFontMetrics> mFontMetrics;
 
     nsLineStyle mLineStyle;
     nscolor mColor;
 
-    cairo_t *mCairo;
-
-    nsCOMPtr<nsCairoDrawingSurface> mDrawingSurface;
-    nsCOMPtr<nsCairoDrawingSurface> mOffscreenSurface;
-    nsCOMPtr<nsCairoDrawingSurface> mBackBufferSurface;
+    nsRefPtr<gfxContext> mThebes;
+    nsCOMPtr<nsThebesDrawingSurface> mDrawingSurface;
 
     // for handing out to people
     void UpdateTempTransformMatrix();

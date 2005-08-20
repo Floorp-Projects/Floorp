@@ -43,17 +43,25 @@
 
 // ARGB -- raw buffer.. wont be changed.. good for storing data.
 
+/**
+ * A raw image buffer. The format can be set in the constructor. Its main
+ * purpose is for storing read-only images and using it as a source surface,
+ * but it can also be drawn to.
+ */
 class gfxImageSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    typedef enum {
-        ImageFormatARGB32,
-        ImageFormatRGB24,
-        ImageFormatA8,
-        ImageFormatA1
-    } gfxImageFormat;
-
+    /**
+     * Construct an image surface.
+     * @param format Format of the data
+     * @param width Width of the surface in pixels
+     * @param height Height in pixels
+     *
+     * @see gfxImageFormat
+     *
+     * XXX why not unsigned long for the dimensions? And, why not gfxSize?
+     */
     gfxImageSurface(gfxImageFormat format, long width, long height);
     virtual ~gfxImageSurface();
 
@@ -61,7 +69,15 @@ public:
     int Format() const { return mFormat; }
     long Width() const { return mWidth; }
     long Height() const { return mHeight; }
+    /**
+     * Distance in bytes between the start of a line and the start of the
+     * next line.
+     */
     long Stride() const;
+    /**
+     * Returns a pointer for the image data. Users of this function can
+     * write to it, but must not attempt to free the buffer.
+     */
     unsigned char* Data() { return mData; } // delete this data under us and die.
 
 private:

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,7 @@
 #include "gfxASurface.h"
 
 #include <cairo-xlib.h>
+#include <cairo-xlib-xrender.h>
 
 class gfxXlibSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
@@ -59,6 +61,12 @@ public:
     // for the default screen, and attach the given visual
     gfxXlibSurface(Display *dpy, Visual *visual, unsigned long width, unsigned long height);
 
+    gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictFormat *format,
+                   unsigned long width, unsigned long height);
+
+    gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
+                   unsigned long width, unsigned long height);
+
     virtual ~gfxXlibSurface();
 
     unsigned long Width() { return mWidth; }
@@ -66,6 +74,8 @@ public:
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
+
+    static XRenderPictFormat *FindRenderFormat(Display *dpy, gfxImageFormat format);
 
 protected:
     PRBool mOwnsPixmap;

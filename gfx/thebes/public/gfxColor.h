@@ -42,18 +42,39 @@
 
 #include "gfxTypes.h"
 
+/**
+ * A color value, storing red, green, blue and alpha components.
+ * This class does not use premultiplied alpha.
+ *
+ * XXX should this use doubles (instead of gfxFloat), for consistency with
+ * cairo?
+ */
 struct gfxRGBA {
     gfxFloat r, g, b, a;
 
     gfxRGBA() { }
     gfxRGBA(const gfxRGBA& c) : r(c.r), g(c.g), b(c.b), a(c.a) {}
+    /**
+     * Intialize this color using explicit red, green, blue and alpha
+     * values.
+     */
     gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
+    /**
+     * Initialize this color from a packed 32-bit color.
+     * Premultiplied alpha isn't used.
+     * This uses ABGR byte order in the native endianness.
+     *
+     * @see gfxRGBA::Packed
+     */
     gfxRGBA(PRUint32 c) {
         r = ((c >> 0) & 0xff) / 255.0;
         g = ((c >> 8) & 0xff) / 255.0;
         b = ((c >> 16) & 0xff) / 255.0;
         a = ((c >> 24) & 0xff) / 255.0;
     }
+    /**
+     * Initialize this color by parsing the given string.
+     */
     gfxRGBA(const char* str) {
         a = 1.0;
         // if aString[0] is a #, parse it as hex
@@ -61,6 +82,11 @@ struct gfxRGBA {
         // if aString[0] is a number, parse it loosely as hex
     }
 
+    /**
+     * Returns this color value as a packed 32-bit integer. This uses ABGR
+     * byte order in the native endianness, as accepted by the corresponding
+     * constructor of this class.
+     */
     PRUint32 Packed() const {
         return (((PRUint8)(a * 255.0) << 24) |
                 ((PRUint8)(b * 255.0) << 16) |
@@ -68,6 +94,10 @@ struct gfxRGBA {
                 ((PRUint8)(r * 255.0)));
     }
 
+    /**
+     * Convert this color to a hex value. For example, for rgb(255,0,0),
+     * this will return FF0000.
+     */
     // XXX I'd really prefer to just have this return an nsACString
     // Does this function even make sense, since we're just ignoring the alpha value?
     void Hex(nsACString& result) const {

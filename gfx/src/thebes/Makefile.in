@@ -11,16 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is thebes gfx
 #
 # The Initial Developer of the Original Code is
 # mozilla.org.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Stuart Parmenter <pavlov@netscape.com>
-#   Joe Hewitt <hewitt@netscape.com>
+#   Vladimir Vukicevic <vladimir@pobox.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = gfx
-LIBRARY_NAME = gkgfxcairo
+LIBRARY_NAME = gkgfxthebes
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME = nsGfxModule
@@ -55,6 +54,8 @@ REQUIRES =  xpcom \
             string \
             cairo \
             libpixman \
+            glitz \
+            thebes \
             gfx \
             widget \
             intl \
@@ -73,21 +74,59 @@ REQUIRES =  xpcom \
             $(NULL)
 
 CPPSRCS		= \
-		nsCairoDeviceContext.cpp \
-		nsCairoRenderingContext.cpp \
-		nsCairoImage.cpp \
-		nsCairoRegion.cpp \
-		nsCairoScreen.cpp \
-		nsCairoScreenManager.cpp \
-		nsCairoDrawingSurface.cpp \
-		nsCairoGfxFactory.cpp \
-		nsCairoSurfaceManager.cpp \
-		nsCairoBlender.cpp \
-		nsFontMetricsUtils.cpp \
-		nsFontMetricsXft.cpp \
+		nsThebesDeviceContext.cpp \
+		nsThebesDrawingSurface.cpp \
+		nsThebesImage.cpp \
+		nsThebesRegion.cpp \
+		nsThebesBlender.cpp \
+		nsThebesGfxFactory.cpp \
+		nsThebesRenderingContext.cpp \
+		nsThebesScreen.cpp \
+		nsThebesScreenManager.cpp \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
+
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)thebes.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifdef MOZ_ENABLE_GLITZ
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
+endif
+
+EXTRA_DSO_LIBS	= gkgfx
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+CPPSRCS		+= nsSystemFontsGTK2.cpp
+
+ifdef MOZ_ENABLE_PANGO
+CPPSRCS         += nsFontMetricsPango.cpp \
+                   mozilla-decoder.cpp \
+                   $(NULL)
+endif
+
+ifdef MOZ_ENABLE_GLITZ
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
+REQUIRES            += glitzglx
+endif
+
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS		+= nsFontMetricsWin2.cpp \
+		   nsSystemFontsWin.cpp \
+		   $(NULL)
+REQUIRES        += glitzwgl
+
+_OS_LIBS	= usp10
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+endif
+
+EXPORTS		+= nsIThebesRenderingContext.h
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/. \
@@ -99,21 +138,15 @@ EXTRA_DSO_LDOPTS += \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
-                $(MOZ_CAIRO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS  += $(TK_CFLAGS)
 CFLAGS    += $(TK_CFLAGS)
-
-ifdef MOZ_ENABLE_XFT
-CXXFLAGS  += $(MOZ_XFT_CFLAGS)
-CFLAGS    += $(MOZ_XFT_CFLAGS)
-EXTRA_DSO_LDOPTS += $(MOZ_XFT_LIBS)
-endif
 
 ifdef MOZ_ENABLE_GTK2
 DEFINES += -DMOZ_ENABLE_GTK2

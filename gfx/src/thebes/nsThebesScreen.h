@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,17 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIROSCREEN__H__
-#define NSCAIROSCREEN__H__
+#ifndef NSTHEBESSCREEN__H__
+#define NSTHEBESSCREEN__H__
 
 #include "nsIScreen.h"
 #include "nsRect.h"
 
-class nsCairoScreen : public nsIScreen
+class nsThebesScreen : public nsIScreen
 {
 public:
-    nsCairoScreen();
-    virtual ~nsCairoScreen();
+    nsThebesScreen();
+    virtual ~nsThebesScreen();
 
     void Init();
 
@@ -59,4 +59,4 @@ private:
     nsRect mAvailRect; // in pixels, not twips
 };
 
-#endif  /* NSCAIROSCREEN__H__ */
+#endif  /* NSTHEBESSCREEN__H__ */

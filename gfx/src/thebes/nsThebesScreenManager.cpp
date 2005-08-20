@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,42 +37,55 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIROREGION__H__
-#define NSCAIROREGION__H__
+#include "nsThebesScreenManager.h"
+#include "nsThebesScreen.h"
 
-#include "nsIRegion.h"
-#include "nsRegion.h"
+NS_IMPL_ISUPPORTS1(nsThebesScreenManager, nsIScreenManager)
 
-class nsCairoRegion : public nsIRegion
+nsThebesScreenManager::nsThebesScreenManager()
 {
-public:
-    nsCairoRegion();
+    NS_INIT_ISUPPORTS();
+}
 
-    NS_DECL_ISUPPORTS
+nsThebesScreenManager::~nsThebesScreenManager()
+{
+}
 
-    // nsIRegion
-    nsresult Init (void);
-    void SetTo (const nsIRegion &aRegion);
-    void SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    void Intersect (const nsIRegion &aRegion);
-    void Intersect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    void Union (const nsIRegion &aRegion);
-    void Union (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    void Subtract (const nsIRegion &aRegion);
-    void Subtract (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    PRBool IsEmpty (void);
-    PRBool IsEqual (const nsIRegion &aRegion);
-    void GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
-    void Offset (PRInt32 aXOffset, PRInt32 aYOffset);
-    PRBool ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    NS_IMETHOD GetRects (nsRegionRectSet **aRects);
-    NS_IMETHOD FreeRects (nsRegionRectSet *aRects);
-    NS_IMETHOD GetNativeRegion (void *&aRegion) const;
-    NS_IMETHOD GetRegionComplexity (nsRegionComplexity &aComplexity) const;
-    NS_IMETHOD GetNumRects (PRUint32 *aRects) const;
+nsIScreen* 
+nsThebesScreenManager::CreateNewScreenObject()
+{
+    nsIScreen* retval = nsnull;
+    if (!mCachedMainScreen) {
+        nsThebesScreen *ncs = new nsThebesScreen();
+        ncs->Init();
+        mCachedMainScreen = ncs;
+    }
 
-protected:
-    nsRegion mRegion;
-};
+    NS_IF_ADDREF(retval = mCachedMainScreen.get());
 
-#endif
+    return retval;
+}
+
+
+NS_IMETHODIMP
+nsThebesScreenManager::ScreenForRect(PRInt32 inLeft, PRInt32 inTop,
+                                     PRInt32 inWidth, PRInt32 inHeight,
+                                     nsIScreen **outScreen)
+{
+    GetPrimaryScreen(outScreen);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsThebesScreenManager::GetPrimaryScreen(nsIScreen **aPrimaryScreen) 
+{
+    *aPrimaryScreen = CreateNewScreenObject();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThebesScreenManager::GetNumberOfScreens(PRUint32 *aNumberOfScreens)
+{
+    *aNumberOfScreens = 1;
+    return NS_OK;
+}

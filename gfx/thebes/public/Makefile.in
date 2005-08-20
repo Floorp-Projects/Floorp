@@ -30,4 +30,8 @@ ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 EXPORTS	+=	gfxXlibSurface.h
 endif
 
+ifdef MOZ_ENABLE_GLITZ
+EXPORTS +=	gfxGlitzSurface.h
+endif
+
 include $(topsrcdir)/config/rules.mk

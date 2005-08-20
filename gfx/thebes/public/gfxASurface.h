@@ -42,10 +42,25 @@
 
 #include "gfxTypes.h"
 
+/**
+ * A surface is something you can draw on. Instantiate a subclass of this
+ * abstract class, and use gfxContext to draw on this surface.
+ */
 class gfxASurface {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
+    /**
+     * The format for an image surface. For all formats with alpha data, 0
+     * means transparent, 1 or 255 means fully opaque.
+     */
+    typedef enum {
+        ImageFormatARGB32, ///< ARGB data in native endianness, using premultiplied alpha
+        ImageFormatRGB24,  ///< xRGB data in native endianness
+        ImageFormatA8,     ///< Only an alpha channel
+        ImageFormatA1      ///< Packed transparency information (one byte refers to 8 pixels)
+    } gfxImageFormat;
+
     /*** this DOES NOT addref the surface */
     cairo_surface_t* CairoSurface() { return mSurface; }
 

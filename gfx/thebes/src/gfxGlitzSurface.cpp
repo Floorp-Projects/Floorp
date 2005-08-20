@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes
  *
  * The Initial Developer of the Original Code is
- * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ *   mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,25 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIROSCREENMANAGER__H__
-#define NSCAIROSCREENMANAGER__H__
+#include "gfxGlitzSurface.h"
 
-#include "nsIScreenManager.h"
-#include "nsIScreen.h"
-#include "nsCOMPtr.h"
+THEBES_IMPL_REFCOUNTING(gfxGlitzSurface)
 
-class nsCairoScreenManager : public nsIScreenManager
+gfxGlitzSurface::gfxGlitzSurface(glitz_drawable_t *drawable, glitz_surface_t *surface, PRBool takeOwnership)
+    : mGlitzDrawable (drawable), mGlitzSurface(surface), mOwnsSurface(takeOwnership)
 {
-public:
-    nsCairoScreenManager();
-    virtual ~nsCairoScreenManager();
+    cairo_surface_t *surf = cairo_glitz_surface_create (mGlitzSurface);
+    Init(surf);
+}
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISCREENMANAGER
+gfxGlitzSurface::~gfxGlitzSurface()
+{
+    Destroy();
 
-private:
-    nsIScreen* CreateNewScreenObject();
-    nsCOMPtr<nsIScreen> mCachedMainScreen;
-};
+    if (mOwnsSurface) {
+        if (mGlitzSurface) {
+            glitz_surface_flush(mGlitzSurface);
+            glitz_surface_destroy(mGlitzSurface);
+        }
 
-#endif  /* NSCAIROSCREENMANAGER__H__ */
+        if (mGlitzDrawable) {
+            glitz_drawable_flush(mGlitzDrawable);
+            glitz_drawable_finish(mGlitzDrawable);
+            glitz_drawable_destroy(mGlitzDrawable);
+        }
+    }
+}
+
+void
+gfxGlitzSurface::SwapBuffers()
+{
+    glitz_drawable_swap_buffers (GlitzDrawable());
+}
+
+unsigned long
+gfxGlitzSurface::Width()
+{
+    return glitz_drawable_get_width (GlitzDrawable());
+}
+
+unsigned long
+gfxGlitzSurface::Height()
+{
+    return glitz_drawable_get_height (GlitzDrawable());
+}

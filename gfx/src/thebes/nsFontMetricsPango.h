@@ -43,24 +43,17 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsICairoFontMetrics.h"
+#include "nsIThebesFontMetrics.h"
 
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
+#include <pango/pango.h>
 
-class nsFontXft;
-class nsFontMetricsXft;
+class nsThebesRenderingContext;
 
-typedef nsresult (nsFontMetricsXft::*GlyphEnumeratorCallback)
-                                            (const FcChar32 *aString, 
-                                             PRUint32 aLen, nsFontXft *aFont, 
-                                             void *aData);
-
-class nsFontMetricsXft : public nsICairoFontMetrics
+class nsFontMetricsPango : public nsIThebesFontMetrics
 {
 public:
-    nsFontMetricsXft();
-    virtual ~nsFontMetricsXft();
+    nsFontMetricsPango();
+    virtual ~nsFontMetricsPango();
 
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -143,11 +136,19 @@ public:
                                      { aAveCharWidth = mAveCharWidth;
                                        return NS_OK; };
 
-    // nsIFontMetricsGTK (calls from the font rendering layer)
+    nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth) {
+        return GetWidth(aString, aLength, aWidth, nsnull);
+    }
+    nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                      nscoord& aWidth, PRInt32 *aFontID) {
+        return GetWidth(aString, aLength, aWidth, aFontID, nsnull);
+    }
+
     virtual nsresult GetWidth(const char* aString, PRUint32 aLength,
-                              nscoord& aWidth);
+                              nscoord& aWidth, nsThebesRenderingContext* aCtx);
     virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                              nscoord& aWidth, PRInt32 *aFontID);
+                              nscoord& aWidth, PRInt32 *aFontID,
+                              nsThebesRenderingContext* aCtx);
 
     virtual nsresult GetTextDimensions(const PRUnichar* aString,
                                        PRUint32 aLength,
@@ -175,88 +176,56 @@ public:
     virtual nsresult DrawString(const char *aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
-                                nsCairoRenderingContext *aContext,
-                                nsCairoDrawingSurface *aSurface);
+                                nsThebesRenderingContext* aCtx);
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
                                 const nscoord* aSpacing,
-                                nsCairoRenderingContext *aContext,
-                                nsCairoDrawingSurface *aSurface);
+                                nsThebesRenderingContext* aCtx);
 
 #ifdef MOZ_MATHML
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        nsCairoRenderingContext *aContext);
+                                        nsBoundingMetrics &aBoundingMetrics);
     virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
                                         PRUint32 aLength,
                                         nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID,
-                                        nsCairoRenderingContext *aContext);
+                                        PRInt32 *aFontID);
 #endif /* MOZ_MATHML */
 
     virtual nsresult SetRightToLeftText(PRBool aIsRTL);
 
+    virtual nsresult GetClusterInfo(const PRUnichar *aText,
+                                    PRUint32 aLength,
+                                    PRUint8 *aClusterStarts)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    virtual PRInt32 GetPosition(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                nsPoint aPt)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    virtual nsresult GetRangeWidth(const PRUnichar *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+
+    virtual nsresult GetRangeWidth(const char *aText,
+                                   PRUint32 aLength,
+                                   PRUint32 aStart,
+                                   PRUint32 aEnd,
+                                   PRUint32 &aWidth)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+
     // get hints for the font
-    static PRUint32    GetHints  (void);
+    static PRUint32    GetHints     (void);
 
     // drawing surface methods
-    static nsresult FamilyExists (nsIDeviceContext *aDevice,
-                                  const nsString &aName);
-
-    nsresult    DrawStringCallback      (const FcChar32 *aString, PRUint32 aLen,
-                                         nsFontXft *aFont, void *aData);
-    nsresult    TextDimensionsCallback  (const FcChar32 *aString, PRUint32 aLen,
-                                         nsFontXft *aFont, void *aData);
-    nsresult    GetWidthCallback        (const FcChar32 *aString, PRUint32 aLen,
-                                         nsFontXft *aFont, void *aData);
-#ifdef MOZ_MATHML
-    nsresult    BoundingMetricsCallback (const FcChar32 *aString, PRUint32 aLen,
-                                         nsFontXft *aFont, void *aData);
-#endif /* MOZ_MATHML */
+    static nsresult FamilyExists    (nsIDeviceContext *aDevice,
+                                     const nsString &aName);
 
 private:
-    enum FontMatch {
-        eNoMatch,
-        eBestMatch,
-        eAllMatching
-    };
-
-    // local methods
-    nsresult    RealizeFont        (void);
-    nsresult    CacheFontMetrics   (void);
-    nsFontXft  *FindFont           (PRUint32);
-    void        SetupFCPattern     (void);
-    void        DoMatch            (PRBool aMatchAll);
-
-    int         RawGetWidth        (const PRUnichar* aString,
-                                    PRUint32         aLength);
-    nsresult    SetupMiniFont      (void);
-    nsresult    DrawUnknownGlyph   (FcChar32   aChar,
-                                    nscoord    aX,
-                                    nscoord    aY,
-                                    XftColor  *aColor,
-                                    XftDraw   *aDraw);
-    nsresult    EnumerateXftGlyphs (const FcChar32 *aString,
-                                    PRUint32  aLen,
-                                    GlyphEnumeratorCallback aCallback,
-                                    void     *aCallbackData);
-    nsresult    EnumerateGlyphs    (const char *aString,
-                                    PRUint32  aLen,
-                                    GlyphEnumeratorCallback aCallback,
-                                    void     *aCallbackData);
-    nsresult    EnumerateGlyphs    (const PRUnichar *aString,
-                                    PRUint32  aLen,
-                                    GlyphEnumeratorCallback aCallback,
-                                    void     *aCallbackData);
-    void        PrepareToDraw      (nsCairoRenderingContext *aContext,
-                                    nsCairoDrawingSurface *aSurface,
-                                    XftDraw **aDraw, XftColor &aColor);
-
-    // called when enumerating font families
-    static PRBool   EnumFontCallback (const nsString &aFamily,
-                                      PRBool aIsGeneric, void *aData);
-
 
     // generic font metrics class bits
     nsCStringArray       mFontList;
@@ -265,28 +234,17 @@ private:
     nsIDeviceContext    *mDeviceContext;
     nsCOMPtr<nsIAtom>    mLangGroup;
     nsCString           *mGenericFont;
-    float                mPixelSize;
+    float                mPointSize;
 
     nsCAutoString        mDefaultFont;
 
-    // private to DoMatch and FindFont; this array may contain fonts
-    // for which |GetXftFont| returns null (which are not allowed outside
-    // of those two functions).
-    nsVoidArray          mLoadedFonts;
-
-    // Xft-related items
-    nsFontXft           *mWesternFont;
-    FcPattern           *mPattern;
-    FontMatch            mMatchType;
-
-    // for rendering unknown fonts
-    XftFont                 *mMiniFont;
-    nscoord                  mMiniFontWidth;
-    nscoord                  mMiniFontHeight;
-    nscoord                  mMiniFontPadding;
-    nscoord                  mMiniFontYOffset;
-    nscoord                  mMiniFontAscent;
-    nscoord                  mMiniFontDescent;
+    // Pango-related items
+    PangoFontDescription *mPangoFontDesc;
+    PangoContext         *mPangoContext;
+    PangoContext         *mLTRPangoContext;
+    PangoContext         *mRTLPangoContext;
+    PangoAttrList        *mPangoAttrList;
+    PRBool                mIsRTL;
 
     // Cached font metrics
     nscoord                  mXHeight;
@@ -305,13 +263,40 @@ private:
     nscoord                  mMaxDescent;
     nscoord                  mMaxAdvance;
     nscoord                  mSpaceWidth;
+    nscoord                  mPangoSpaceWidth;
     nscoord                  mAveCharWidth;
+
+    // Private methods
+    nsresult RealizeFont(void);
+    nsresult CacheFontMetrics(void);
+
+    static PRBool EnumFontCallback(const nsString &aFamily,
+                                   PRBool aIsGeneric, void *aData);
+
+    void     DrawStringSlowly(const gchar *aText,
+                              const PRUnichar *aOrigString,
+                              PRUint32 aLength,
+                              nsThebesRenderingContext* aCtx,
+                              nscoord aX, nscoord aY,
+                              PangoLayoutLine *aLine,
+                              const nscoord *aSpacing);
+
+    nsresult GetTextDimensionsInternal(const gchar*        aString,
+                                       PRInt32             aLength,
+                                       PRInt32             aAvailWidth,
+                                       PRInt32*            aBreaks,
+                                       PRInt32             aNumBreaks,
+                                       nsTextDimensions&   aDimensions,
+                                       PRInt32&            aNumCharsFit,
+                                       nsTextDimensions&   aLastWordDimensions);
+
+    void FixupSpaceWidths (PangoLayout *aLayout, const char *aString);
 };
 
-class nsFontEnumeratorXft : public nsIFontEnumerator
+class nsFontEnumeratorPango : public nsIFontEnumerator
 {
 public:
-    nsFontEnumeratorXft();
+    nsFontEnumeratorPango();
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFONTENUMERATOR
 };

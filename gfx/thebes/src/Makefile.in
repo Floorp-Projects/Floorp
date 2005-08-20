@@ -14,7 +14,8 @@ REQUIRES = \
 	cairo \
 	libpixman \
 	string \
-	xpcom
+	xpcom \
+	$(NULL)
 
 CPPSRCS	= \
 	gfxContext.cpp \
@@ -29,6 +30,15 @@ endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 CPPSRCS	+= 	gfxXlibSurface.cpp
+endif
+
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += 	glitz
+CPPSRCS +=	gfxGlitzSurface.cpp
+
+ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+REQUIRES +=	glitzglx
+endif
 endif
 
 FORCE_STATIC_LIB = 1

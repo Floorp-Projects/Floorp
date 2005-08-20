@@ -12,17 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes gfx
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
  *   Vladimir Vukicevic <vladimir@pobox.com>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Stuart Parmenter <pavlov@pavlov.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,31 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NS_CAIRODEVICECONTEXT_H_
-#define _NS_CAIRODEVICECONTEXT_H_
+#ifndef _NS_THEBESDEVICECONTEXT_H_
+#define _NS_THEBESDEVICECONTEXT_H_
 
 #include "nsIScreenManager.h"
 
 #include "nsDeviceContext.h"
 
-#include <cairo.h>
-#ifdef MOZ_X11
-#include <cairo-xlib.h>
+#include "nsRefPtrHashtable.h"
+#include "nsHashKeys.h"
+
+#include "prlog.h"
+
+#include <gfxContext.h>
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gThebesGFXLog;
 #endif
 
-#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
-#include <X11/Xlib.h>
-#endif
-
-#ifdef MOZ_ENABLE_XLIB
-#include "xlibrgb.h"
-#endif
-
-class nsCairoDeviceContext : public DeviceContextImpl
+class nsThebesDeviceContext : public DeviceContextImpl
 {
 public:
-    nsCairoDeviceContext();
-    virtual ~nsCairoDeviceContext();
+    nsThebesDeviceContext();
+    virtual ~nsThebesDeviceContext();
 
     NS_DECL_ISUPPORTS_INHERITED
 
@@ -75,6 +72,7 @@ public:
     NS_IMETHOD CreateRenderingContextInstance(nsIRenderingContext *&aContext);
 
     NS_IMETHOD SupportsNativeWidgets(PRBool &aSupportsWidgets);
+    NS_IMETHOD PrepareNativeWidget(nsIWidget* aWidget, void** aOut);
 
     NS_IMETHOD GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
@@ -92,6 +90,15 @@ public:
     NS_IMETHOD GetRect(nsRect &aRect);
     NS_IMETHOD GetClientRect(nsRect &aRect);
 
+#ifdef MOZ_ENABLE_GLITZ
+    /* glitz_drawable_format_t */ void* GetGlitzDrawableFormat();
+
+#ifdef MOZ_ENABLE_GTK2
+    /* GdkVisual */ void* GetDesiredVisual();
+#endif
+#endif
+
+    /* printing goop */
     NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                    nsIDeviceContext *&aContext);
 
@@ -110,14 +117,12 @@ public:
     NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC);
     NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC);
     NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
+    /* end printing goop */
 
-#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
-    Display *GetXDisplay();
-    Visual *GetXVisual();
-    Colormap GetXColormap();
-    Drawable GetXPixmapParentDrawable();
-#endif
+    static void DebugShowCairoSurface (const char *aName, cairo_surface_t *aSurface);
 
+
+    nsNativeWidget GetWidget() { return mWidget; }
 private:
     nsNativeWidget mWidget;
 
@@ -128,14 +133,7 @@ private:
     PRInt32 mWidth;
     PRInt32 mHeight;
 
-#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
-    Drawable mPixmapParentDrawable;
-#endif
-
-#ifdef MOZ_ENABLE_XLIB
-    XlibRgbHandle *mXlibRgbHandle;
-#endif
-
+    nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 };
 
 #endif /* _NS_CAIRODEVICECONTEXT_H_ */

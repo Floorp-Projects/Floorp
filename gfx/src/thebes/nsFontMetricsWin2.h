@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard <blizzard@mozilla.org>.  
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stuart Parmenter <pavlov@pavlov.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +36,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsICairoFontMetrics_h
-#define __nsICairoFontMetrics_h
+#ifndef NSTHEBESFONTMETRICS__H__
+#define NSTHEBESFONTMETRICS__H__
 
-#include "nsIFontMetrics.h"
-#include "nsIRenderingContext.h"
+#include "nsIThebesFontMetrics.h"
+#include "nsThebesRenderingContext.h"
+#include "nsCOMPtr.h"
+#include "nsThebesDeviceContext.h"
+#include "nsIAtom.h"
 
-class nsCairoDrawingSurface;
-class nsCairoRenderingContext;
+#include <windows.h>
 
-class nsICairoFontMetrics : public nsIFontMetrics {
+class nsFontMetricsWin : public nsIThebesFontMetrics
+{
 public:
-    // Get the width for this string.  aWidth will be updated with the
-    // width in points, not twips.  Callers must convert it if they
-    // want it in another format.
-    virtual nsresult GetWidth(const char* aString, PRUint32 aLength,
-                              nscoord& aWidth) = 0;
+    nsFontMetricsWin();
+    virtual ~nsFontMetricsWin();
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                     nsIDeviceContext *aContext);
+    NS_IMETHOD  Destroy();
+    NS_IMETHOD  GetXHeight(nscoord& aResult);
+    NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
+    NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
+    NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
+    NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
+    NS_IMETHOD  GetHeight(nscoord &aHeight);
+    NS_IMETHOD  GetInternalLeading(nscoord &aLeading);
+    NS_IMETHOD  GetExternalLeading(nscoord &aLeading);
+    NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+    NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+    NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+    NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
+    NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
+    NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
+    NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
+    NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
+    NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth);
+    NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
+    NS_IMETHOD  GetLeading(nscoord& aLeading);
+    NS_IMETHOD  GetNormalLineHeight(nscoord& aLineHeight);
+
+
+
+
+    virtual nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
+                              nsThebesRenderingContext *aContext);
     // aCachedOffset will be updated with a new offset.
     virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                              nscoord& aWidth, PRInt32 *aFontID) = 0;
+                              nscoord& aWidth, PRInt32 *aFontID,
+                              nsThebesRenderingContext *aContext);
 
     // Get the text dimensions for this string
     virtual nsresult GetTextDimensions(const PRUnichar* aString,
                                        PRUint32 aLength,
                                        nsTextDimensions& aDimensions, 
-                                       PRInt32* aFontID) = 0;
+                                       PRInt32* aFontID);
     virtual nsresult GetTextDimensions(const char*         aString,
                                        PRInt32             aLength,
                                        PRInt32             aAvailWidth,
@@ -70,7 +103,7 @@ public:
                                        nsTextDimensions&   aDimensions,
                                        PRInt32&            aNumCharsFit,
                                        nsTextDimensions&   aLastWordDimensions,
-                                       PRInt32*            aFontID) = 0;
+                                       PRInt32*            aFontID);
     virtual nsresult GetTextDimensions(const PRUnichar*    aString,
                                        PRInt32             aLength,
                                        PRInt32             aAvailWidth,
@@ -79,21 +112,19 @@ public:
                                        nsTextDimensions&   aDimensions,
                                        PRInt32&            aNumCharsFit,
                                        nsTextDimensions&   aLastWordDimensions,
-                                       PRInt32*            aFontID) = 0;
+                                       PRInt32*            aFontID);
 
     // Draw a string using this font handle on the surface passed in.  
     virtual nsresult DrawString(const char *aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
-                                nsCairoRenderingContext *aContext,
-                                nsCairoDrawingSurface *aSurface) = 0;
+                                nsThebesRenderingContext *aContext);
     // aCachedOffset will be updated with a new offset.
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
                                 const nscoord* aSpacing,
-                                nsCairoRenderingContext *aContext,
-                                nsCairoDrawingSurface *aSurface) = 0;
+                                nsThebesRenderingContext *aContext);
 
 #ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,
@@ -101,19 +132,66 @@ public:
     // caller will have to update them to twips before passing it
     // back.
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        nsCairoRenderingContext *aContext) = 0;
+                                        nsBoundingMetrics &aBoundingMetrics);
     // aCachedOffset will be updated with a new offset.
     virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
                                         PRUint32 aLength,
                                         nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID,
-                                        nsCairoRenderingContext *aContext) = 0;
+                                        PRInt32 *aFontID);
 #endif /* MOZ_MATHML */
 
     // Set the direction of the text rendering
-    virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
+    virtual nsresult SetRightToLeftText(PRBool aIsRTL);
 
+
+
+
+protected:
+    void RealizeFont(HDC dc);
+    void FillLogFont(LOGFONTW* logFont, const nsString *aFontName);
+    PRInt32 MeasureOrDrawUniscribe(nsThebesRenderingContext *aContext,
+                                   const PRUnichar *aString, PRUint32 aLength,
+                                   PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing);
+
+    cairo_font_face_t   *MakeCairoFontFace(const nsString *aFontName);
+    cairo_scaled_font_t *MakeCairoScaledFont(cairo_t *cr, cairo_font_face_t *aFontFace);
+
+
+public:
+    nsStringArray       mFonts;
+    nsString            mGeneric;
+    PRInt32             mGenericIndex;
+
+
+private:
+    LOGFONTW mLogFont;
+    cairo_font_face_t *mCairoFontFace;
+    cairo_scaled_font_t *mCairoFont;
+
+
+    nsThebesDeviceContext *mDeviceContext;
+    nsCOMPtr<nsIAtom> mLangGroup;
+    float mDev2App;
+
+
+    nscoord             mExternalLeading;
+    nscoord             mInternalLeading;
+    nscoord             mEmHeight;
+    nscoord             mEmAscent;
+    nscoord             mEmDescent;
+    nscoord             mMaxHeight;
+    nscoord             mMaxAscent;
+    nscoord             mMaxDescent;
+    nscoord             mMaxAdvance;
+    nscoord             mAveCharWidth;
+    nscoord             mXHeight;
+    nscoord             mSuperscriptOffset;
+    nscoord             mSubscriptOffset;
+    nscoord             mStrikeoutSize;
+    nscoord             mStrikeoutOffset;
+    nscoord             mUnderlineSize;
+    nscoord             mUnderlineOffset;
+    nscoord             mSpaceWidth;
 };
 
-#endif /* __nsICairoFontMetrics_h */
+#endif /* NSTHEBESFONTMETRICS__H__ */
