@@ -280,7 +280,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     {
       EnsureScrollbarWidget();
-      
+      EnsureButtonWidget();
+
       GtkWidgetState buttonState;
       GetGtkWidgetState(aFrame, &buttonState);
       
