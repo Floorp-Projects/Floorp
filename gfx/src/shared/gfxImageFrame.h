@@ -77,6 +77,7 @@ private:
   PRPackedBool mInitalized;
   PRPackedBool mMutable;
   PRPackedBool mHasBackgroundColor;
+  PRPackedBool mTopToBottom;
   gfx_format   mFormat;
 
   PRInt32 mTimeout; // -1 means display forever

@@ -141,6 +141,8 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   rv = mImage->Init(aWidth, aHeight, depth, maskReq);
   if (NS_FAILED(rv)) return rv;
 
+  mTopToBottom = mImage->GetIsRowOrderTopToBottom();
+
   mInitalized = PR_TRUE;
   return NS_OK;
 }
@@ -299,13 +301,13 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   PRInt32 imgLen = row_stride * mSize.height;
 
   PRInt32 newOffset;
-#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
-  // Adjust: We need offset to be top-down rows & LTR within each row
-  PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
-  newOffset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
-#else
-  newOffset = aOffset;
-#endif
+
+  if (!mTopToBottom) {
+    // Adjust: We need offset to be top-down rows & LTR within each row
+    PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
+    newOffset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
+  } else
+    newOffset = aOffset;
 
   if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
     mImage->UnlockImagePixels(PR_FALSE);
@@ -397,13 +399,12 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
   PRInt32 alphaLen = row_stride * mSize.height;
 
   PRInt32 offset;
-#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
-  // Adjust: We need offset to be top-down rows & LTR within each row
-  PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
-  offset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
-#else
-  offset = aOffset;
-#endif
+  if (!mTopToBottom) {
+    // Adjust: We need offset to be top-down rows & LTR within each row
+    PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
+    offset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
+  } else
+    offset = aOffset;
 
   if (((offset + (PRInt32)aLength) > alphaLen) || !alphaData) {
     mImage->UnlockImagePixels(PR_TRUE);
