@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/Xlib.h>
 
@@ -55,6 +55,7 @@ cairo_xlib_surface_create (Display     *dpy,
 cairo_surface_t *
 cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      Pixmap	bitmap,
+				      Screen	*screen,
 				      int	width,
 				      int	height);
 
@@ -62,6 +63,12 @@ void
 cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              width,
 			     int              height);
+
+void
+cairo_xlib_surface_set_drawable (cairo_surface_t *surface,
+				 Drawable	  drawable,
+				 int              width,
+				 int              height);
 
 CAIRO_END_DECLS
 

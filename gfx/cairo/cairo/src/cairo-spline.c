@@ -64,23 +64,21 @@ _cairo_spline_init (cairo_spline_t *spline,
     spline->c = *c;
     spline->d = *d;
 
-    if (a->x != b->x || a->y != b->y) {
+    if (a->x != b->x || a->y != b->y)
 	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->b);
-    } else if (a->x != c->x || a->y != c->y) {
+    else if (a->x != c->x || a->y != c->y)
 	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->c);
-    } else if (a->x != d->x || a->y != d->y) {
+    else if (a->x != d->x || a->y != d->y)
 	_cairo_slope_init (&spline->initial_slope, &spline->a, &spline->d);
-    } else {
+    else
 	return CAIRO_INT_STATUS_DEGENERATE;
-    }
 
-    if (c->x != d->x || c->y != d->y) {
+    if (c->x != d->x || c->y != d->y)
 	_cairo_slope_init (&spline->final_slope, &spline->c, &spline->d);
-    } else if (b->x != d->x || b->y != d->y) {
+    else if (b->x != d->x || b->y != d->y)
 	_cairo_slope_init (&spline->final_slope, &spline->b, &spline->d);
-    } else {
+    else
 	_cairo_slope_init (&spline->final_slope, &spline->a, &spline->d);
-    }
 
     spline->num_points = 0;
     spline->points_size = 0;

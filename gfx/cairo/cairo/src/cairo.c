@@ -43,37 +43,116 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
+static const cairo_t cairo_nil = {
+  (unsigned int)-1,		/* ref_count */
+  CAIRO_STATUS_NO_MEMORY,	/* status */
+  { 				/* path */
+    NULL, NULL,			/* op_buf_head, op_buf_tail */
+    NULL, NULL,			/* arg_buf_head, arg_buf_tail */
+    { 0, 0 },			/* last_move_point */
+    { 0, 0 },			/* current point */
+    FALSE,			/* has_current_point */
+  },
+  NULL				/* gstate */
+};
+
 #include <assert.h>
-#ifdef NDEBUG
-#define CAIRO_CHECK_SANITY(cr) 
-#else
-static int 
-cairo_sane_state (cairo_t *cr)
-{    
-    if (cr == NULL)
-	return 0;
 
-    switch (cr->status) {
-    case CAIRO_STATUS_SUCCESS:
-    case CAIRO_STATUS_NO_MEMORY:
-    case CAIRO_STATUS_INVALID_RESTORE:
-    case CAIRO_STATUS_INVALID_POP_GROUP:
-    case CAIRO_STATUS_NO_CURRENT_POINT:
-    case CAIRO_STATUS_INVALID_MATRIX:
-    case CAIRO_STATUS_NO_TARGET_SURFACE:
-    case CAIRO_STATUS_NULL_POINTER:
-    case CAIRO_STATUS_INVALID_STRING:
-    case CAIRO_STATUS_INVALID_PATH_DATA:
-	break;
-    default:
-	return 0;
-    }
-    return 1;
+/* This has to be updated whenever cairo_status_t is extended.  That's
+ * a bit of a pain, but it should be easy to always catch as long as
+ * one adds a new test case to test a trigger of the new status value.
+ */
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_FILE_NOT_FOUND
+
+/**
+ * _cairo_error:
+ * @status: a status value indicating an error, (eg. not
+ * CAIRO_STATUS_SUCCESS)
+ * 
+ * Checks that status is an error status, but does nothing else.
+ *
+ * All assignments of an error status to any user-visible object
+ * within the cairo application should result in a call to
+ * _cairo_error().
+ *
+ * The purpose of this function is to allow the user to set a
+ * breakpoint in _cairo_error() to generate a stack trace for when the
+ * user causes cairo to detect an error.
+ **/
+void
+_cairo_error (cairo_status_t status)
+{
+    assert (status > CAIRO_STATUS_SUCCESS &&
+	    status <= CAIRO_STATUS_LAST_STATUS);
 }
-#define CAIRO_CHECK_SANITY(cr) assert(cairo_sane_state ((cr)))
-#endif
 
-/*
+/**
+ * _cairo_set_error:
+ * @cr: a cairo context
+ * @status: a status value indicating an error, (eg. not
+ * CAIRO_STATUS_SUCCESS)
+ * 
+ * Sets cr->status to @status and calls _cairo_error;
+ *
+ * All assignments of an error status to cr->status should happen
+ * through _cairo_set_error() or else _cairo_error() should be
+ * called immediately after the assignment.
+ *
+ * The purpose of this function is to allow the user to set a
+ * breakpoint in _cairo_error() to generate a stack trace for when the
+ * user causes cairo to detect an error.
+ **/
+static void
+_cairo_set_error (cairo_t *cr, cairo_status_t status)
+{
+    cr->status = status;
+
+    _cairo_error (status);
+}
+
+/**
+ * cairo_version:
+ * 
+ * Returns the version of the cairo library encoded in a single
+ * integer as per CAIRO_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that cairo's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (cairo_version() >= CAIRO_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also cairo_version_string() as well as the compile-time
+ * equivalents %CAIRO_VERSION and %CAIRO_VERSION_STRING.
+ * 
+ * Return value: the encoded version.
+ **/
+int
+cairo_version (void)
+{
+    return CAIRO_VERSION;
+}
+
+/**
+ * cairo_version_string:
+ * 
+ * Returns the version of the cairo library as a human-readable string
+ * of the form "X.Y.Z".
+ *
+ * See also cairo_version() as well as the compile-time equivalents
+ * %CAIRO_VERSION_STRING and %CAIRO_VERSION.
+ * 
+ * Return value: a string containing the version.
+ **/
+const char*
+cairo_version_string (void)
+{
+    return CAIRO_VERSION_STRING;
+}
+
+/**
  * cairo_create:
  * @target: target surface for the context
  * 
@@ -81,7 +160,7 @@ cairo_sane_state (cairo_t *cr)
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
  * as cairo_image_surface_create (or any other
- * cairo_<backend>_surface_create variant).
+ * cairo_&lt;backend&gt;_surface_create variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
@@ -100,7 +179,12 @@ cairo_sane_state (cairo_t *cr)
  * Return value: a newly allocated #cairo_t with a reference
  *  count of 1. The initial reference count should be released
  *  with cairo_destroy() when you are done using the #cairo_t.
- */
+ *  This function never returns %NULL. If memory cannot be
+ *  allocated, a special #cairo_t object will be returned on
+ *  which cairo_status() returns %CAIRO_STATUS_NO_MEMORY.
+ *  You can use this object normally, but no drawing will
+ *  be done.
+ **/
 cairo_t *
 cairo_create (cairo_surface_t *target)
 {
@@ -108,18 +192,24 @@ cairo_create (cairo_surface_t *target)
 
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL)
-	return NULL;
+	return (cairo_t *) &cairo_nil;
+
+    cr->ref_count = 1;
 
     cr->status = CAIRO_STATUS_SUCCESS;
-    cr->ref_count = 1;
 
     _cairo_path_fixed_init (&cr->path);
 
+    if (target == NULL) {
+	cr->gstate = NULL;
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return cr;
+    }
+
     cr->gstate = _cairo_gstate_create (target);
     if (cr->gstate == NULL)
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_set_error (cr, CAIRO_STATUS_NO_MEMORY);
 
-    CAIRO_CHECK_SANITY (cr);
     return cr;
 }
 
@@ -130,16 +220,18 @@ cairo_create (cairo_surface_t *target)
  * Increases the reference count on @cr by one. This prevents
  * @cr from being destroyed until a matching call to cairo_destroy() 
  * is made.
+ *
+ * Return value: the referenced #cairo_t.
  **/
-void
+cairo_t *
 cairo_reference (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
+    if (cr->ref_count == (unsigned int)-1)
+	return cr;
+    
     cr->ref_count++;
-    CAIRO_CHECK_SANITY (cr);
+
+    return cr;
 }
 
 /**
@@ -153,7 +245,9 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->ref_count == (unsigned int)-1)
+	return;
+    
     cr->ref_count--;
     if (cr->ref_count)
 	return;
@@ -191,21 +285,20 @@ cairo_save (cairo_t *cr)
 {
     cairo_gstate_t *top;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     top = _cairo_gstate_clone (cr->gstate);
 
     if (top == NULL) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
-	CAIRO_CHECK_SANITY (cr);
+	_cairo_set_error (cr, CAIRO_STATUS_NO_MEMORY);
 	return;
     }
 
     top->next = cr->gstate;
     cr->gstate = top;
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_save);
 
@@ -222,9 +315,10 @@ cairo_restore (cairo_t *cr)
 {
     cairo_gstate_t *top;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     top = cr->gstate;
     cr->gstate = top->next;
@@ -232,12 +326,7 @@ cairo_restore (cairo_t *cr)
     _cairo_gstate_destroy (top);
 
     if (cr->gstate == NULL)
-	cr->status = CAIRO_STATUS_INVALID_RESTORE;
-    
-    if (cr->status)
-	return;
-   
-    CAIRO_CHECK_SANITY (cr);
+	_cairo_set_error (cr, CAIRO_STATUS_INVALID_RESTORE);
 }
 slim_hidden_def(cairo_restore);
 
@@ -285,12 +374,14 @@ cairo_pop_group (cairo_t *cr)
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_operator (cr->gstate, op);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -311,21 +402,16 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
-    cairo_color_t color;
+    cairo_pattern_t *pattern;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
-    _cairo_restrict_value (&red, 0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue, 0.0, 1.0);
-
-    _cairo_color_init_rgb (&color, red, green, blue);
-
-    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
-    
-    CAIRO_CHECK_SANITY (cr);
+    pattern = cairo_pattern_create_rgb (red, green, blue);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
 /**
@@ -349,24 +435,41 @@ cairo_set_source_rgba (cairo_t *cr,
 		       double red, double green, double blue,
 		       double alpha)
 {
-    cairo_color_t color;
+    cairo_pattern_t *pattern;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
-    _cairo_restrict_value (&red,   0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue,  0.0, 1.0);
-    _cairo_restrict_value (&alpha, 0.0, 1.0);
-
-    _cairo_color_init_rgba (&color, red, green, blue, alpha);
-
-    cr->status = _cairo_gstate_set_source_solid (cr->gstate, &color);
-    
-    CAIRO_CHECK_SANITY (cr);
+    pattern = cairo_pattern_create_rgba (red, green, blue, alpha);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 }
 
+/**
+ * cairo_set_source_surface:
+ * @cr: a cairo context
+ * @surface: a surface to be used to set the source pattern
+ * @x: User-space X coordinate for surface origin
+ * @y: User-space Y coordinate for surface origin
+ * 
+ * This is a convenience function for creating a pattern from @surface
+ * and setting it as the source in @cr with cairo_set_source().
+ *
+ * The @x and @y parameters give the user-space coordinate at which
+ * the surface origin should appear. (The surface origin is its
+ * upper-left corner before any transformation has been applied.) The
+ * @x and @y patterns are negated and then set as translation values
+ * in the pattern matrix.
+ *
+ * Other than the initial translation pattern matrix, as described
+ * above, all other pattern attributes, (such as its extend mode), are
+ * set to the default values as in cairo_pattern_create_for_surface.
+ * The resulting pattern can be queried with cairo_get_source() so
+ * that these attributes can be modified if desired, (eg. to create a
+ * repeating pattern with cairo_pattern_set_extend()).
+ **/
 void
 cairo_set_source_surface (cairo_t	  *cr,
 			  cairo_surface_t *surface,
@@ -376,23 +479,18 @@ cairo_set_source_surface (cairo_t	  *cr,
     cairo_pattern_t *pattern;
     cairo_matrix_t matrix;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    pattern = cairo_pattern_create_for_surface (surface);
-    if (!pattern) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
     }
+
+    pattern = cairo_pattern_create_for_surface (surface);
 
     cairo_matrix_init_translate (&matrix, -x, -y);
     cairo_pattern_set_matrix (pattern, &matrix);
 
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -405,6 +503,11 @@ cairo_set_source_surface (cairo_t	  *cr,
  * will then be used for any subsequent drawing operation until a new
  * source pattern is set.
  *
+ * Note: The pattern's transformation matrix will be locked to the
+ * user space in effect at the time of cairo_set_source(). This means
+ * that further modifications of the CTM will not affect the source
+ * pattern. See cairo_pattern_set_matrix().
+ *
  * XXX: I'd also like to direct the reader's attention to some
  * (not-yet-written) section on cairo's imaging model. How would I do
  * that if such a section existed? (cworth).
@@ -412,12 +515,24 @@ cairo_set_source_surface (cairo_t	  *cr,
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
+
+    if (source == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
+    if (source->status) {
+	_cairo_set_error (cr, source->status);
+	return;
+    }
 
     cr->status = _cairo_gstate_set_source (cr->gstate, source);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -433,11 +548,8 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    /* XXX: We'll want to do something like this:
     if (cr->status)
-	return cairo_pattern_nil;
-    */
+	return (cairo_pattern_t*) &cairo_solid_pattern_nil.base;
 
     return _cairo_gstate_get_source (cr->gstate);
 }
@@ -458,14 +570,42 @@ cairo_get_source (cairo_t *cr)
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
 
     cr->status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_set_antialias:
+ * @cr: a #cairo_t
+ * @antialias: the new antialiasing mode
+ * 
+ * Set the antialiasing mode of the rasterizer used for drawing shapes.
+ * This value is a hint, and a particular backend may or may not support
+ * a particular value.  At the current time, no backend supports
+ * %CAIRO_ANTIALIAS_SUBPIXEL when drawing shapes.
+ *
+ * Note that this option does not affect text rendering, instead see
+ * cairo_font_options_set_antialias().
+ **/
+void
+cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
+{
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return;
+    }
+
+    cr->status = _cairo_gstate_set_antialias (cr->gstate, antialias);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -482,12 +622,14 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 void
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_fill_rule (cr->gstate, fill_rule);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -507,14 +649,16 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 void
 cairo_set_line_width (cairo_t *cr, double width)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_restrict_value (&width, 0.0, width);
 
     cr->status = _cairo_gstate_set_line_width (cr->gstate, width);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -534,12 +678,14 @@ cairo_set_line_width (cairo_t *cr, double width)
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_line_cap (cr->gstate, line_cap);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -559,34 +705,40 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_line_join (cr->gstate, line_join);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_set_dash (cairo_t *cr, double *dashes, int ndash, double offset)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_dash (cr->gstate, dashes, ndash, offset);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_set_miter_limit (cairo_t *cr, double limit)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_miter_limit (cr->gstate, limit);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 
@@ -596,7 +748,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
  * @tx: amount to translate in the X direction
  * @ty: amount to translate in the Y direction
  * 
- * Modifies the current transformation matrix (CTM) by tanslating the
+ * Modifies the current transformation matrix (CTM) by translating the
  * user-space origin by (@tx, @ty). This offset is interpreted as a
  * user-space coordinate according to the CTM in place before the new
  * call to cairo_translate. In other words, the translation of the
@@ -605,12 +757,14 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 void
 cairo_translate (cairo_t *cr, double tx, double ty)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_translate (cr->gstate, tx, ty);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -627,12 +781,14 @@ cairo_translate (cairo_t *cr, double tx, double ty)
 void
 cairo_scale (cairo_t *cr, double sx, double sy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_scale (cr->gstate, sx, sy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 
@@ -651,12 +807,14 @@ cairo_scale (cairo_t *cr, double sx, double sy)
 void
 cairo_rotate (cairo_t *cr, double angle)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_rotate (cr->gstate, angle);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -672,12 +830,14 @@ void
 cairo_transform (cairo_t	      *cr,
 		 const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_transform (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -692,12 +852,14 @@ void
 cairo_set_matrix (cairo_t	       *cr,
 		  const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_matrix (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -712,12 +874,14 @@ cairo_set_matrix (cairo_t	       *cr,
 void
 cairo_identity_matrix (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_identity_matrix (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -733,12 +897,14 @@ cairo_identity_matrix (cairo_t *cr)
 void
 cairo_user_to_device (cairo_t *cr, double *x, double *y)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_user_to_device (cr->gstate, x, y);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -755,12 +921,14 @@ cairo_user_to_device (cairo_t *cr, double *x, double *y)
 void
 cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -776,12 +944,14 @@ cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 void
 cairo_device_to_user (cairo_t *cr, double *x, double *y)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_device_to_user (cr->gstate, x, y);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -798,24 +968,25 @@ cairo_device_to_user (cairo_t *cr, double *x, double *y)
 void
 cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_new_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_path_fixed_fini (&cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_new_path);
 
@@ -824,17 +995,18 @@ cairo_move_to (cairo_t *cr, double x, double y)
 {
     cairo_fixed_t x_fixed, y_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
     cr->status = _cairo_path_fixed_move_to (&cr->path, x_fixed, y_fixed);
-    
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_move_to);
 
@@ -843,17 +1015,18 @@ cairo_line_to (cairo_t *cr, double x, double y)
 {
     cairo_fixed_t x_fixed, y_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x, &y);
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
     cr->status = _cairo_path_fixed_line_to (&cr->path, x_fixed, y_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
@@ -866,9 +1039,10 @@ cairo_curve_to (cairo_t *cr,
     cairo_fixed_t x2_fixed, y2_fixed;
     cairo_fixed_t x3_fixed, y3_fixed;
 	
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_backend (cr->gstate, &x1, &y1);
     _cairo_gstate_user_to_backend (cr->gstate, &x2, &y2);
@@ -887,8 +1061,8 @@ cairo_curve_to (cairo_t *cr,
 					     x1_fixed, y1_fixed,
 					     x2_fixed, y2_fixed,
 					     x3_fixed, y3_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -930,9 +1104,10 @@ cairo_arc (cairo_t *cr,
 	   double radius,
 	   double angle1, double angle2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     /* Do nothing, successfully, if radius is <= 0 */
     if (radius <= 0.0)
@@ -947,8 +1122,6 @@ cairo_arc (cairo_t *cr,
 
     _cairo_arc_path (cr, xc, yc, radius,
 		     angle1, angle2);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /**
@@ -971,9 +1144,10 @@ cairo_arc_negative (cairo_t *cr,
 		    double radius,
 		    double angle1, double angle2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     /* Do nothing, successfully, if radius is <= 0 */
     if (radius <= 0.0)
@@ -988,8 +1162,6 @@ cairo_arc_negative (cairo_t *cr,
 
      _cairo_arc_path_negative (cr, xc, yc, radius,
 			       angle1, angle2);
-
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /* XXX: NYI
@@ -1014,17 +1186,18 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
     cr->status = _cairo_path_fixed_rel_move_to (&cr->path, dx_fixed, dy_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
@@ -1032,17 +1205,18 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
     cr->status = _cairo_path_fixed_rel_line_to (&cr->path, dx_fixed, dy_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_rel_line_to);
 
@@ -1056,9 +1230,10 @@ cairo_rel_curve_to (cairo_t *cr,
     cairo_fixed_t dx2_fixed, dy2_fixed;
     cairo_fixed_t dx3_fixed, dy3_fixed;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
     _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
@@ -1077,8 +1252,8 @@ cairo_rel_curve_to (cairo_t *cr,
 						 dx1_fixed, dy1_fixed,
 						 dx2_fixed, dy2_fixed,
 						 dx3_fixed, dy3_fixed);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
@@ -1086,16 +1261,16 @@ cairo_rectangle (cairo_t *cr,
 		 double x, double y,
 		 double width, double height)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cairo_move_to (cr, x, y);
     cairo_rel_line_to (cr, width, 0);
     cairo_rel_line_to (cr, 0, height);
     cairo_rel_line_to (cr, -width, 0);
     cairo_close_path (cr);
-    CAIRO_CHECK_SANITY (cr);
 }
 
 /* XXX: NYI
@@ -1106,19 +1281,22 @@ cairo_stroke_to_path (cairo_t *cr)
 	return;
 
     cr->status = _cairo_gstate_stroke_path (cr->gstate);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 */
 
 void
 cairo_close_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_path_fixed_close_path (&cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_close_path);
 
@@ -1132,13 +1310,14 @@ slim_hidden_def(cairo_close_path);
 void
 cairo_paint (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_paint (cr->gstate);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1158,22 +1337,24 @@ cairo_paint_with_alpha (cairo_t *cr,
     cairo_color_t color;
     cairo_pattern_union_t pattern;
   
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
-
-    if (alpha == 1.0) {
-        cr->status = _cairo_gstate_paint (cr->gstate);
-    } else {
-        _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
-        _cairo_pattern_init_solid (&pattern.solid, &color);
-
-        cr->status = _cairo_gstate_mask (cr->gstate, &pattern.base);
-
-        _cairo_pattern_fini (&pattern.base);
     }
 
-    CAIRO_CHECK_SANITY (cr);
+    if (CAIRO_ALPHA_IS_OPAQUE (alpha)) {
+	cairo_paint (cr);
+	return;
+    }
+
+    _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
+    _cairo_pattern_init_solid (&pattern.solid, &color);
+
+    cr->status = _cairo_gstate_mask (cr->gstate, &pattern.base);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+
+    _cairo_pattern_fini (&pattern.base);
 }
 
 /**
@@ -1190,13 +1371,24 @@ void
 cairo_mask (cairo_t         *cr,
 	    cairo_pattern_t *pattern)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
+
+    if (pattern == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+    
+    if (pattern->status) {
+	_cairo_set_error (cr, pattern->status);
+	return;
+    }
 
     cr->status = _cairo_gstate_mask (cr->gstate, pattern);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1220,15 +1412,12 @@ cairo_mask_surface (cairo_t         *cr,
     cairo_pattern_t *pattern;
     cairo_matrix_t matrix;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    pattern = cairo_pattern_create_for_surface (surface);
-    if (!pattern) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
     }
+
+    pattern = cairo_pattern_create_for_surface (surface);
 
     cairo_matrix_init_translate (&matrix, - surface_x, - surface_y);
     cairo_pattern_set_matrix (pattern, &matrix);
@@ -1273,13 +1462,14 @@ cairo_stroke (cairo_t *cr)
 void
 cairo_stroke_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_stroke (cr->gstate, &cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_stroke_preserve);
 
@@ -1288,8 +1478,9 @@ slim_hidden_def(cairo_stroke_preserve);
  * @cr: a cairo context
  * 
  * A drawing operator that fills the current path according to the
- * current fill rule. After cairo_fill, the current path will be
- * cleared from the cairo context. See cairo_set_fill_rule() and
+ * current fill rule, (each sub-path is implicitly closed before being
+ * filled). After cairo_fill, the current path will be cleared from
+ * the cairo context. See cairo_set_fill_rule() and
  * cairo_fill_preserve().
  **/
 void
@@ -1305,44 +1496,50 @@ cairo_fill (cairo_t *cr)
  * @cr: a cairo context
  * 
  * A drawing operator that fills the current path according to the
- * current fill rule. Unlike cairo_fill(), cairo_fill_preserve
- * preserves the path within the cairo context.
+ * current fill rule, (each sub-path is implicitly closed before being
+ * filled). Unlike cairo_fill(), cairo_fill_preserve preserves the
+ * path within the cairo context.
  *
  * See cairo_set_fill_rule() and cairo_fill().
  **/
 void
 cairo_fill_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_fill (cr->gstate, &cr->path);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_fill_preserve);
 
 void
 cairo_copy_page (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_copy_page (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_show_page (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_show_page (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 cairo_bool_t
@@ -1350,39 +1547,39 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
 {
     int inside;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return 0;
+    }
 
     cr->status = _cairo_gstate_in_stroke (cr->gstate,
 					  &cr->path,
 					  x, y, &inside);
-
-    CAIRO_CHECK_SANITY (cr);
-
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return 0;
+    }
 
     return inside;
 }
 
-int
+cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
     int inside;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return 0;
+    }
 
     cr->status = _cairo_gstate_in_fill (cr->gstate,
 					&cr->path,
 					x, y, &inside);
-
-    CAIRO_CHECK_SANITY (cr);
-
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return 0;
+    }
 
     return inside;
 }
@@ -1391,28 +1588,32 @@ void
 cairo_stroke_extents (cairo_t *cr,
                       double *x1, double *y1, double *x2, double *y2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
     
     cr->status = _cairo_gstate_stroke_extents (cr->gstate,
 					       &cr->path,
 					       x1, y1, x2, y2);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_fill_extents (cairo_t *cr,
                     double *x1, double *y1, double *x2, double *y2)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
     
     cr->status = _cairo_gstate_fill_extents (cr->gstate,
 					     &cr->path,
 					     x1, y1, x2, y2);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1432,7 +1633,7 @@ cairo_fill_extents (cairo_t *cr,
  *
  * Calling cairo_clip() can only make the clip region smaller, never
  * larger. But the current clip is part of the graphics state, so a
- * tempoarary restriction of the clip region can be achieved by
+ * temporary restriction of the clip region can be achieved by
  * calling cairo_clip() within a cairo_save()/cairo_restore()
  * pair. The only other means of increasing the size of the clip
  * region is cairo_reset_clip().
@@ -1462,7 +1663,7 @@ cairo_clip (cairo_t *cr)
  *
  * Calling cairo_clip() can only make the clip region smaller, never
  * larger. But the current clip is part of the graphics state, so a
- * tempoarary restriction of the clip region can be achieved by
+ * temporary restriction of the clip region can be achieved by
  * calling cairo_clip() within a cairo_save()/cairo_restore()
  * pair. The only other means of increasing the size of the clip
  * region is cairo_reset_clip().
@@ -1470,12 +1671,14 @@ cairo_clip (cairo_t *cr)
 void
 cairo_clip_preserve (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_clip (cr->gstate, &cr->path);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 slim_hidden_def(cairo_clip_preserve);
 
@@ -1498,12 +1701,14 @@ slim_hidden_def(cairo_clip_preserve);
 void
 cairo_reset_clip (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_reset_clip (cr->gstate);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1519,7 +1724,7 @@ cairo_reset_clip (cairo_t *cr)
  * for operations such as listing all available fonts on the system,
  * and it is expected that most applications will need to use a more
  * comprehensive font handling and text layout library in addition to
- * Cairo.
+ * cairo.
  **/
 void
 cairo_select_font_face (cairo_t              *cr, 
@@ -1527,12 +1732,14 @@ cairo_select_font_face (cairo_t              *cr,
 			cairo_font_slant_t    slant, 
 			cairo_font_weight_t   weight)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1544,19 +1751,24 @@ cairo_select_font_face (cairo_t              *cr,
  * Return value: the current font object. Can return %NULL
  *   on out-of-memory or if the context is already in
  *   an error state. This object is owned by cairo. To keep
- *   a reference to it, you must call cairo_font_reference().
+ *   a reference to it, you must call cairo_font_face_reference().
  **/
 cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr)
 {
     cairo_font_face_t *font_face;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return NULL;
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+    }
 
     cr->status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return (cairo_font_face_t*) &_cairo_font_face_nil;
+    }
+
     return font_face;
 }
 
@@ -1572,12 +1784,14 @@ void
 cairo_font_extents (cairo_t              *cr, 
 		    cairo_font_extents_t *extents)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_get_font_extents (cr->gstate, extents);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1593,12 +1807,14 @@ void
 cairo_set_font_face (cairo_t           *cr,
 		     cairo_font_face_t *font_face)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_face (cr->gstate, font_face);  
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1615,12 +1831,14 @@ cairo_set_font_face (cairo_t           *cr,
 void
 cairo_set_font_size (cairo_t *cr, double size)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_size (cr->gstate, size);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1640,12 +1858,14 @@ void
 cairo_set_font_matrix (cairo_t		    *cr,
 		       const cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_set_font_matrix (cr->gstate, matrix);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1659,8 +1879,50 @@ cairo_set_font_matrix (cairo_t		    *cr,
 void
 cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
     _cairo_gstate_get_font_matrix (cr->gstate, matrix);
+}
+
+/**
+ * cairo_set_font_options:
+ * @cr: a #cairo_t
+ * @options: font options to use
+ * 
+ * Sets a set of custom font rendering options for the #cairo_t.
+ * Rendering options are derived by merging these options with the
+ * options derived from underlying surface; if the value in @options
+ * has a default value (like %CAIRO_ANTIALIAS_DEFAULT), then the value
+ * from the surface is used.
+ **/
+void
+cairo_set_font_options (cairo_t                    *cr,
+			const cairo_font_options_t *options)
+{
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
+	return;
+    }
+
+    cr->status = _cairo_gstate_set_font_options (cr->gstate, options);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+}
+
+/**
+ * cairo_get_font_options:
+ * @cr: a #cairo_t
+ * @options: a #cairo_font_options_t object into which to store
+ *   the retrieved options. All existing values are overwritten
+ * 
+ * Retrieves font rendering options set via #cairo_set_font_options.
+ * Note that the returned options do not include any options derived
+ * from the underlying surface; they are literally the options
+ * passed to cairo_set_font_options().
+ **/
+void
+cairo_get_font_options (cairo_t              *cr,
+			cairo_font_options_t *options)
+{
+    _cairo_gstate_get_font_options (cr->gstate, options);
 }
 
 /**
@@ -1692,9 +1954,10 @@ cairo_text_extents (cairo_t              *cr,
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     if (utf8 == NULL) {
 	extents->x_bearing = 0.0;
@@ -1711,19 +1974,20 @@ cairo_text_extents (cairo_t              *cr,
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
 	if (glyphs)
 	    free (glyphs);
+	_cairo_set_error (cr, cr->status);
 	return;
     }
 	
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
-    CAIRO_CHECK_SANITY (cr);
-    
     if (glyphs)
 	free (glyphs);
+
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1750,13 +2014,15 @@ cairo_glyph_extents (cairo_t                *cr,
 		     int                    num_glyphs,
 		     cairo_text_extents_t   *extents)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
 					      extents);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
@@ -1766,9 +2032,10 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     if (utf8 == NULL)
 	return;
@@ -1778,30 +2045,34 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
 	if (glyphs)
 	    free (glyphs);
+	_cairo_set_error (cr, cr->status);
 	return;
     }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (glyphs)
 	free (glyphs);
+
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
 cairo_show_glyphs (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 void
@@ -1811,44 +2082,48 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     int num_glyphs;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cairo_get_current_point (cr, &x, &y);
 
     cr->status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
 					       &glyphs, &num_glyphs);
-    CAIRO_CHECK_SANITY (cr);
 
     if (cr->status) {
 	if (glyphs)
 	    free (glyphs);
+	_cairo_set_error (cr, cr->status);
 	return;
     }
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
-    CAIRO_CHECK_SANITY (cr);
-
     if (glyphs)
 	free (glyphs);
+
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
+
 }
 
 void
 cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
+    }
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
 					   &cr->path);
-    
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 /**
@@ -1862,7 +2137,6 @@ cairo_glyph_path (cairo_t *cr, cairo_glyph_t *glyphs, int num_glyphs)
 cairo_operator_t
 cairo_get_operator (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_operator (cr->gstate);
 }
 
@@ -1877,8 +2151,21 @@ cairo_get_operator (cairo_t *cr)
 double
 cairo_get_tolerance (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_tolerance (cr->gstate);
+}
+
+/**
+ * cairo_get_antialias:
+ * @cr: a cairo context
+ * 
+ * Gets the current shape antialiasing mode, as set by cairo_set_shape_antialias().
+ * 
+ * Return value: the current shape antialiasing mode.
+ **/
+cairo_antialias_t
+cairo_get_antialias (cairo_t *cr)
+{
+    return _cairo_gstate_get_antialias (cr->gstate);
 }
 
 /**
@@ -1909,8 +2196,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
-    CAIRO_CHECK_SANITY (cr);
-
     status = _cairo_path_fixed_get_current_point (&cr->path, &x_fixed, &y_fixed);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
@@ -1925,8 +2210,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 	*x_ret = x;
     if (y_ret)
 	*y_ret = y;
-
-    CAIRO_CHECK_SANITY (cr);
 }
 slim_hidden_def(cairo_get_current_point);
 
@@ -1941,7 +2224,6 @@ slim_hidden_def(cairo_get_current_point);
 cairo_fill_rule_t
 cairo_get_fill_rule (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_fill_rule (cr->gstate);
 }
 
@@ -1956,7 +2238,6 @@ cairo_get_fill_rule (cairo_t *cr)
 double
 cairo_get_line_width (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_width (cr->gstate);
 }
 
@@ -1971,7 +2252,6 @@ cairo_get_line_width (cairo_t *cr)
 cairo_line_cap_t
 cairo_get_line_cap (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_cap (cr->gstate);
 }
 
@@ -1986,7 +2266,6 @@ cairo_get_line_cap (cairo_t *cr)
 cairo_line_join_t
 cairo_get_line_join (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_line_join (cr->gstate);
 }
 
@@ -2001,7 +2280,6 @@ cairo_get_line_join (cairo_t *cr)
 double
 cairo_get_miter_limit (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
 
@@ -2015,7 +2293,6 @@ cairo_get_miter_limit (cairo_t *cr)
 void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
-    CAIRO_CHECK_SANITY (cr);
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
 
@@ -2026,16 +2303,19 @@ cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
  * Gets the target surface for the cairo context as passed to
  * cairo_create().
  * 
- * Return value: the target surface, (or NULL if @cr is in an error
- * state). This object is owned by cairo. To keep a reference to it,
- * you must call cairo_pattern_reference().
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
+ *
+ * This function will always return a valid pointer, but the result
+ * can be a "nil" surface if @cr is already in an error state,
+ * (ie. cairo_status(cr) != CAIRO_STATUS_SUCCESS). A nil surface is
+ * indicated by cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS.
  **/
 cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return NULL;
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     return _cairo_gstate_get_target (cr->gstate);
 }
@@ -2051,13 +2331,23 @@ cairo_get_target (cairo_t *cr)
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
+ *
+ * This function will always return a valid pointer, but the result
+ * will have no data, (data==NULL and num_data==0), if either of the
+ * following conditions hold:
+ *
+ * 1) If there is insufficient memory to copy the path.
+ *
+ * 2) If @cr is already in an error state.
+ *
+ * In either case, path->status will be set to CAIRO_STATUS_NO_MEMORY,
+ * (regardless of what the error status in @cr might have been).
  **/
 cairo_path_t *
 cairo_copy_path (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return &_cairo_path_nil;
+	return (cairo_path_t*) &_cairo_path_nil;
 
     return _cairo_path_data_create (&cr->path, cr->gstate);
 }
@@ -2080,15 +2370,25 @@ cairo_copy_path (cairo_t *cr)
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
+ *
+ * This function will always return a valid pointer, but the result
+ * will have no data, (data==NULL and num_data==0), if either of the
+ * following conditions hold:
+ *
+ * 1) If there is insufficient memory to copy the path. In this case
+ *    path->status will be set to CAIRO_STATUS_NO_MEMORY.
+ *
+ * 2) If @cr is already in an error state. In this case path->status
+ *    will contain the same status that would be returned by
+ *    cairo_status(cr).
  **/
 cairo_path_t *
 cairo_copy_path_flat (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     if (cr->status)
-	return &_cairo_path_nil;
-
-    return _cairo_path_data_create_flat (&cr->path, cr->gstate);
+	return (cairo_path_t*) &_cairo_path_nil;
+    else
+	return _cairo_path_data_create_flat (&cr->path, cr->gstate);
 }
 
 /**
@@ -2096,43 +2396,55 @@ cairo_copy_path_flat (cairo_t *cr)
  * @cr: a cairo context
  * @path: path to be appended
  * 
- * Append the @path onto the current path. See #cairo_path_t
- * for details on how the path data structure must be initialized.
+ * Append the @path onto the current path. The @path may be either the
+ * return value from one of cairo_copy_path() or
+ * cairo_copy_path_flat() or it may be constructed manually.  See
+ * #cairo_path_t for details on how the path data structure should be
+ * initialized, and note that path->status must be initialized to
+ * CAIRO_STATUS_SUCCESS.
  **/
 void
 cairo_append_path (cairo_t	*cr,
 		   cairo_path_t *path)
 {
-    CAIRO_CHECK_SANITY (cr);
-    if (cr->status)
-	return;
-
-    if (path == NULL || path->data == NULL) {
-	cr->status = CAIRO_STATUS_NULL_POINTER;
+    if (cr->status) {
+	_cairo_set_error (cr, cr->status);
 	return;
     }
 
-    if (path == &_cairo_path_nil) {
-	cr->status = CAIRO_STATUS_NO_MEMORY;
+    if (path == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
+    if (path->status) {
+	if (path->status <= CAIRO_STATUS_LAST_STATUS)
+	    _cairo_set_error (cr, path->status);
+	else
+	    _cairo_set_error (cr, CAIRO_STATUS_INVALID_STATUS);
+	return;
+    }
+
+    if (path->data == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
     cr->status = _cairo_path_data_append_to_context (path, cr);
-
-    CAIRO_CHECK_SANITY (cr);
+    if (cr->status)
+	_cairo_set_error (cr, cr->status);
 }
 
 cairo_status_t
 cairo_status (cairo_t *cr)
 {
-    CAIRO_CHECK_SANITY (cr);
     return cr->status;
 }
 
 const char *
-cairo_status_string (cairo_t *cr)
+cairo_status_to_string (cairo_status_t status)
 {
-    switch (cr->status) {
+    switch (status) {
     case CAIRO_STATUS_SUCCESS:
 	return "success";
     case CAIRO_STATUS_NO_MEMORY:
@@ -2145,8 +2457,8 @@ cairo_status_string (cairo_t *cr)
 	return "no current point defined";
     case CAIRO_STATUS_INVALID_MATRIX:
 	return "invalid matrix (not invertible)";
-    case CAIRO_STATUS_NO_TARGET_SURFACE:
-	return "no target surface has been set";
+    case CAIRO_STATUS_INVALID_STATUS:
+	return "invalid value for an input cairo_status_t";
     case CAIRO_STATUS_NULL_POINTER:
 	return "NULL pointer";
     case CAIRO_STATUS_INVALID_STRING:
@@ -2161,8 +2473,16 @@ cairo_status_string (cairo_t *cr)
 	return "the target surface has been finished";
     case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
 	return "the surface type is not appropriate for the operation";
-    case CAIRO_STATUS_BAD_NESTING:
-	return "drawing operations interleaved for two contexts for the same surface";
+    case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
+	return "the pattern type is not appropriate for the operation";
+    case CAIRO_STATUS_INVALID_CONTENT:
+	return "invalid value for an input cairo_content_t";
+    case CAIRO_STATUS_INVALID_FORMAT:
+	return "invalid value for an input cairo_format_t";
+    case CAIRO_STATUS_INVALID_VISUAL:
+	return "invalid value for an input Visual*";
+    case CAIRO_STATUS_FILE_NOT_FOUND:
+	return "file not found";
     }
 
     return "<unknown error status>";

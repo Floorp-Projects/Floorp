@@ -21,113 +21,146 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
+#include "fbpict.h"
 
 #define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
 			     (((s) >> 8) & 0xf800))
-#define cvt0565to8888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
 			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
 			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
 
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch24(a)  ((unsigned long) (a) & 1 ? \
-		     ((*(a) << 16) | *((uint16_t *) ((a)+1))) : \
-		     ((*((uint16_t *) (a)) << 8) | *((a)+2)))
+		     ((*(a) << 16) | *((CARD16 *) ((a)+1))) : \
+		     ((*((CARD16 *) (a)) << 8) | *((a)+2)))
 #define Store24(a,v) ((unsigned long) (a) & 1 ? \
-		      ((*(a) = (uint8_t) ((v) >> 16)), \
-		       (*((uint16_t *) ((a)+1)) = (uint16_t) (v))) : \
-		      ((*((uint16_t *) (a)) = (uint16_t) ((v) >> 8)), \
-		       (*((a)+2) = (uint8_t) (v))))
+		      ((*(a) = (CARD8) ((v) >> 16)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) (v))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) ((v) >> 8)), \
+		       (*((a)+2) = (CARD8) (v))))
 #else
 #define Fetch24(a)  ((unsigned long) (a) & 1 ? \
-		     ((*(a)) | (*((uint16_t *) ((a)+1)) << 8)) : \
-		     ((*((uint16_t *) (a))) | (*((a)+2) << 16)))
+		     ((*(a)) | (*((CARD16 *) ((a)+1)) << 8)) : \
+		     ((*((CARD16 *) (a))) | (*((a)+2) << 16)))
 #define Store24(a,v) ((unsigned long) (a) & 1 ? \
-		      ((*(a) = (uint8_t) (v)), \
-		       (*((uint16_t *) ((a)+1)) = (uint16_t) ((v) >> 8))) : \
-		      ((*((uint16_t *) (a)) = (uint16_t) (v)),\
-		       (*((a)+2) = (uint8_t) ((v) >> 16))))
+		      ((*(a) = (CARD8) (v)), \
+		       (*((CARD16 *) ((a)+1)) = (CARD16) ((v) >> 8))) : \
+		      ((*((CARD16 *) (a)) = (CARD16) (v)),\
+		       (*((a)+2) = (CARD8) ((v) >> 16))))
 #endif
 		      
-static uint32_t
-IcOver (uint32_t x, uint32_t y)
+static CARD32
+fbOver (CARD32 x, CARD32 y)
 {
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
+    CARD16  a = ~x >> 24;
+    CARD16  t;
+    CARD32  m,n,o,p;
 
-    m = IcOverU(x,y,0,a,t);
-    n = IcOverU(x,y,8,a,t);
-    o = IcOverU(x,y,16,a,t);
-    p = IcOverU(x,y,24,a,t);
+    m = FbOverU(x,y,0,a,t);
+    n = FbOverU(x,y,8,a,t);
+    o = FbOverU(x,y,16,a,t);
+    p = FbOverU(x,y,24,a,t);
     return m|n|o|p;
 }
 
-static uint32_t
-IcOver24 (uint32_t x, uint32_t y)
+static CARD32
+fbOver24 (CARD32 x, CARD32 y)
 {
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o;
+    CARD16  a = ~x >> 24;
+    CARD16  t;
+    CARD32  m,n,o;
 
-    m = IcOverU(x,y,0,a,t);
-    n = IcOverU(x,y,8,a,t);
-    o = IcOverU(x,y,16,a,t);
+    m = FbOverU(x,y,0,a,t);
+    n = FbOverU(x,y,8,a,t);
+    o = FbOverU(x,y,16,a,t);
     return m|n|o;
 }
 
-static uint32_t
-IcIn (uint32_t x, uint8_t y)
+static CARD32
+fbIn (CARD32 x, CARD8 y)
 {
-    uint16_t  a = y;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
+    CARD16  a = y;
+    CARD16  t;
+    CARD32  m,n,o,p;
 
-    m = IcInU(x,0,a,t);
-    n = IcInU(x,8,a,t);
-    o = IcInU(x,16,a,t);
-    p = IcInU(x,24,a,t);
+    m = FbInU(x,0,a,t);
+    n = FbInU(x,8,a,t);
+    o = FbInU(x,16,a,t);
+    p = FbInU(x,24,a,t);
     return m|n|o|p;
 }
 
-#define IcComposeGetSolid(image, bits) { \
-    pixman_bits_t	*__bits__; \
-    IcStride	__stride__; \
-    int		__bpp__; \
-    int		__xoff__,__yoff__; \
-\
-    IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    switch (__bpp__) { \
-    case 32: \
-	(bits) = *(uint32_t *) __bits__; \
-	break; \
-    case 24: \
-	(bits) = Fetch24 ((uint8_t *) __bits__); \
-	break; \
-    case 16: \
-	(bits) = *(uint16_t *) __bits__; \
-	(bits) = cvt0565to8888(bits); \
-	break; \
-    default: \
-	return; \
-    } \
-    /* manage missing src alpha */ \
-    if ((image)->image_format.alphaMask == 0) \
-	(bits) |= 0xff000000; \
+static CARD32
+fbIn24 (CARD32 x, CARD8 y)
+{
+    CARD16  a = y;
+    CARD16  t;
+    CARD32  m,n,o,p;
+
+    m = FbInU(x,0,a,t);
+    n = FbInU(x,8,a,t);
+    o = FbInU(x,16,a,t);
+    p = (y << 24);
+    return m|n|o|p;
 }
 
-#define IcComposeGetStart(image,x,y,type,stride,line,mul) {\
-    pixman_bits_t	*__bits__; \
-    IcStride	__stride__; \
-    int		__bpp__; \
-    int		__xoff__,__yoff__; \
-\
-    IcGetPixels((image)->pixels,__bits__,__stride__,__bpp__,__xoff__,__yoff__); \
-    (stride) = __stride__ * sizeof (pixman_bits_t) / sizeof (type); \
-    (line) = ((type *) __bits__) + (stride) * ((y) - __yoff__) + (mul) * ((x) - __xoff__); \
-}
+#define genericCombine24(a,b,c,d) (((a)*(c)+(b)*(d)))
 
+/*
+ * This macro does src IN mask OVER dst when src and dst are 0888.
+ * If src has alpha, this will not work
+ */
+#define inOver0888(alpha, source, destval, dest) { \
+	CARD32 dstrb=destval&0xFF00FF; CARD32 dstag=(destval>>8)&0xFF00FF; \
+	CARD32 drb=((source&0xFF00FF)-dstrb)*alpha; CARD32 dag=(((source>>8)&0xFF00FF)-dstag)*alpha; \
+	dest =((((drb>>8) + dstrb) & 0x00FF00FF) | ((((dag>>8) + dstag) << 8) & 0xFF00FF00)); \
+	}
+
+/*
+ * This macro does src IN mask OVER dst when src and dst are 0565 and
+ * mask is a 5-bit alpha value.  Again, if src has alpha, this will not
+ * work.
+ */
+#define inOver0565(alpha, source, destval, dest) { \
+	CARD16 dstrb = destval & 0xf81f; CARD16 dstg  = destval & 0x7e0; \
+	CARD32 drb = ((source&0xf81f)-dstrb)*alpha; CARD32 dg=((source & 0x7e0)-dstg)*alpha; \
+	dest = ((((drb>>5) + dstrb)&0xf81f) | (((dg>>5)  + dstg) & 0x7e0)); \
+	}
+
+#define inOver2x0565(alpha, source, destval, dest) { \
+	CARD32 dstrb = destval & 0x07e0f81f; CARD32 dstg  = (destval & 0xf81f07e0)>>5; \
+	CARD32 drb = ((source&0x07e0f81f)-dstrb)*alpha; CARD32 dg=(((source & 0xf81f07e0)>>5)-dstg)*alpha; \
+	dest = ((((drb>>5) + dstrb)&0x07e0f81f) | ((((dg>>5)  + dstg)<<5) & 0xf81f07e0)); \
+	}
+
+#if IMAGE_BYTE_ORDER == LSBFirst
+	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(int)where; \
+					temp=count&3; \
+					where-=temp; \
+					workingWhere=(CARD32 *)where; \
+					workingVal=*workingWhere++; \
+					count=4-temp; \
+					workingVal>>=(8*temp)
+	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)&0xff; (y)>>=8; (x)--;}
+	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+	#define writePacked(what) workingoDest>>=8; workingoDest|=(what<<24); ww--; if(!ww) { ww=4; *wodst++=workingoDest; } 
+#else
+	#warning "I havn't tested fbCompositeTrans_0888xnx0888() on big endian yet!"
+	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(int)where; \
+					temp=count&3; \
+					where-=temp; \
+					workingWhere=(CARD32 *)where; \
+					workingVal=*workingWhere++; \
+					count=4-temp; \
+					workingVal<<=(8*temp)
+	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)>>24; (y)<<=8; (x)--;}
+	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+	#define writePacked(what) workingoDest<<=8; workingoDest|=what; ww--; if(!ww) { ww=4; *wodst++=workingoDest; } 
+#endif
 /*
  * Naming convention:
  *
@@ -135,35 +168,35 @@ IcIn (uint32_t x, uint8_t y)
  */
 
 static void
-pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
-			       pixman_image_t    *iSrc,
-			       pixman_image_t    *iMask,
-			       pixman_image_t    *iDst,
-			       int16_t      xSrc,
-			       int16_t      ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+fbCompositeSolidMask_nx8x8888 (pixman_operator_t   op,
+			       PicturePtr pSrc,
+			       PicturePtr pMask,
+			       PicturePtr pDst,
+			       INT16      xSrc,
+			       INT16      ySrc,
+			       INT16      xMask,
+			       INT16      yMask,
+			       INT16      xDst,
+			       INT16      yDst,
+			       CARD16     width,
+			       CARD16     height)
 {
-    uint32_t	src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
-    uint8_t	*maskLine, *mask, m;
-    IcStride	dstStride, maskStride;
-    uint16_t	w;
+    CARD32	src, srca;
+    CARD32	*dstLine, *dst, d, dstMask;
+    CARD8	*maskLine, *mask, m;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
 
-    IcComposeGetSolid(iSrc, src);
+    fbComposeGetSolid(pSrc, src);
     
-    dstMask = IcFullMask (iDst->pixels->depth);
+    dstMask = FbFullMask (pDst->pixels->depth);
     srca = src >> 24;
     if (src == 0)
 	return;
     
-    IcComposeGetStart (iDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    IcComposeGetStart (iMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    
+    fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+	
     while (height--)
     {
 	dst = dstLine;
@@ -180,12 +213,12 @@ pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
 		if (srca == 0xff)
 		    *dst = src & dstMask;
 		else
-		    *dst = IcOver (src, *dst) & dstMask;
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (m)
 	    {
-		d = IcIn (src, m);
-		*dst = IcOver (d, *dst) & dstMask;
+		d = fbIn (src, m);
+		*dst = fbOver (d, *dst) & dstMask;
 	    }
 	    dst++;
 	}
@@ -193,35 +226,35 @@ pixman_compositeSolidMask_nx8x8888 (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
-				   pixman_image_t    *iSrc,
-				   pixman_image_t    *iMask,
-				   pixman_image_t    *iDst,
-				   int16_t      xSrc,
-				   int16_t      ySrc,
-				   int16_t      xMask,
-				   int16_t      yMask,
-				   int16_t      xDst,
-				   int16_t      yDst,
-				   uint16_t     width,
-				   uint16_t     height)
+fbCompositeSolidMask_nx8888x8888C (pixman_operator_t   op,
+				   PicturePtr pSrc,
+				   PicturePtr pMask,
+				   PicturePtr pDst,
+				   INT16      xSrc,
+				   INT16      ySrc,
+				   INT16      xMask,
+				   INT16      yMask,
+				   INT16      xDst,
+				   INT16      yDst,
+				   CARD16     width,
+				   CARD16     height)
 {
-    uint32_t	src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
-    uint32_t	*maskLine, *mask, ma;
-    IcStride	dstStride, maskStride;
-    uint16_t	w;
-    uint32_t	m, n, o, p;
+    CARD32	src, srca;
+    CARD32	*dstLine, *dst, d, dstMask;
+    CARD32	*maskLine, *mask, ma;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	m, n, o, p;
 
-    IcComposeGetSolid(iSrc, src);
+    fbComposeGetSolid(pSrc, src);
     
-    dstMask = IcFullMask (iDst->pixels->depth);
+    dstMask = FbFullMask (pDst->pixels->depth);
     srca = src >> 24;
     if (src == 0)
 	return;
     
-    IcComposeGetStart (iDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    IcComposeGetStart (iMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD32, maskStride, maskLine, 1);
     
     while (height--)
     {
@@ -239,25 +272,25 @@ pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
 		if (srca == 0xff)
 		    *dst = src & dstMask;
 		else
-		    *dst = IcOver (src, *dst) & dstMask;
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (ma)
 	    {
 		d = *dst;
-#define IcInOverC(src,srca,msk,dst,i,result) { \
-    uint16_t  __a = IcGet8(msk,i); \
-    uint32_t  __t, __ta; \
-    uint32_t  __i; \
-    __t = IcIntMult (IcGet8(src,i), __a,__i); \
-    __ta = (uint8_t) ~IcIntMult (srca, __a,__i); \
-    __t = __t + IcIntMult(IcGet8(dst,i),__ta,__i); \
-    __t = (uint32_t) (uint8_t) (__t | (-(__t >> 8))); \
+#define FbInOverC(src,srca,msk,dst,i,result) { \
+    CARD16  __a = FbGet8(msk,i); \
+    CARD32  __t, __ta; \
+    CARD32  __i; \
+    __t = FbIntMult (FbGet8(src,i), __a,__i); \
+    __ta = (CARD8) ~FbIntMult (srca, __a,__i); \
+    __t = __t + FbIntMult(FbGet8(dst,i),__ta,__i); \
+    __t = (CARD32) (CARD8) (__t | (-(__t >> 8))); \
     result = __t << (i); \
 }
-		IcInOverC (src, srca, ma, d, 0, m);
-		IcInOverC (src, srca, ma, d, 8, n);
-		IcInOverC (src, srca, ma, d, 16, o);
-		IcInOverC (src, srca, ma, d, 24, p);
+		FbInOverC (src, srca, ma, d, 0, m);
+		FbInOverC (src, srca, ma, d, 8, n);
+		FbInOverC (src, srca, ma, d, 16, o);
+		FbInOverC (src, srca, ma, d, 24, p);
 		*dst = m|n|o|p;
 	    }
 	    dst++;
@@ -265,36 +298,136 @@ pixman_compositeSolidMask_nx8888x8888C (pixman_operator_t   op,
     }
 }
 
+#define srcAlphaCombine24(a,b) genericCombine24(a,b,srca,srcia)
 static void
-pixman_compositeSolidMask_nx8x0888 (pixman_operator_t   op,
-			       pixman_image_t    *iSrc,
-			       pixman_image_t    *iMask,
-			       pixman_image_t    *iDst,
-			       int16_t      xSrc,
-			       int16_t      ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+fbCompositeSolidMask_nx8x0888 (pixman_operator_t   op,
+			       PicturePtr pSrc,
+			       PicturePtr pMask,
+			       PicturePtr pDst,
+			       INT16      xSrc,
+			       INT16      ySrc,
+			       INT16      xMask,
+			       INT16      yMask,
+			       INT16      xDst,
+			       INT16      yDst,
+			       CARD16     width,
+			       CARD16     height)
 {
-    uint32_t	src, srca;
-    uint8_t	*dstLine, *dst;
-    uint32_t	d;
-    uint8_t	*maskLine, *mask, m;
-    IcStride	dstStride, maskStride;
-    uint16_t	w;
+    CARD32	src, srca, srcia;
+    CARD8	*dstLine, *dst, *edst;
+    CARD8	*maskLine, *mask, m;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
+	CARD32 rs,gs,bs,rd,gd,bd;
 
-    IcComposeGetSolid(iSrc, src);
+    fbComposeGetSolid(pSrc, src);
     
     srca = src >> 24;
+    srcia = 255-srca;
+    if (src == 0)
+	return;
+
+	rs=src&0xff;
+	gs=(src>>8)&0xff;
+	bs=(src>>16)&0xff;
+    
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 3);
+    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
+
+    while (height--)
+	{
+		/* fixme: cleanup unused */
+		unsigned int wt,wd;
+		CARD32 workingiDest;
+		CARD32 *widst;
+		
+		edst=dst = dstLine;
+		dstLine += dstStride;
+		mask = maskLine;
+		maskLine += maskStride;
+		w = width;
+		
+#ifndef NO_MASKED_PACKED_READ
+		setupPackedReader(wd,wt,edst,widst,workingiDest);
+#endif
+				
+		while (w--)
+		{
+#ifndef NO_MASKED_PACKED_READ
+			readPackedDest(rd);
+			readPackedDest(gd);
+			readPackedDest(bd);
+#else
+			rd= *edst++;
+			gd= *edst++;
+			bd= *edst++;
+#endif
+			m = *mask++;
+			if (m == 0xff)
+			{
+				if (srca == 0xff)
+				{
+					*dst++=rs;
+					*dst++=gs;
+					*dst++=bs;
+				}
+				else
+				{
+					*dst++=(srcAlphaCombine24(rs, rd)>>8);
+					*dst++=(srcAlphaCombine24(gs, gd)>>8);
+					*dst++=(srcAlphaCombine24(bs, bd)>>8);
+				}
+			}
+			else if (m)
+			{
+				int na=(srca*(int)m)>>8;
+				int nia=255-na;
+				*dst++=(genericCombine24(rs, rd, na, nia)>>8);
+				*dst++=(genericCombine24(gs, gd, na, nia)>>8);
+				*dst++=(genericCombine24(bs, bd, na, nia)>>8);
+			}
+			else
+			{
+				dst+=3;
+			}
+		}
+	}
+}
+
+static void
+fbCompositeSolidMask_nx8x0565 (pixman_operator_t      op,
+				  PicturePtr pSrc,
+				  PicturePtr pMask,
+				  PicturePtr pDst,
+				  INT16      xSrc,
+				  INT16      ySrc,
+				  INT16      xMask,
+				  INT16      yMask,
+				  INT16      xDst,
+				  INT16      yDst,
+				  CARD16     width,
+				  CARD16     height)
+{
+    CARD32	src, srca8, srca5;
+    CARD16	*dstLine, *dst;
+    CARD16	d;
+    CARD32	t;
+    CARD8	*maskLine, *mask, m;
+    FbStride	dstStride, maskStride;
+    CARD16	w,src16;
+
+    fbComposeGetSolid(pSrc, src);
+
     if (src == 0)
 	return;
     
-    IcComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 3);
-    IcComposeGetStart (iMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    srca8 = (src >> 24);
+    srca5 = (srca8 >> 3);
+
+    src16 = cvt8888to0565(src);
     
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD8, maskStride, maskLine, 1);
     while (height--)
     {
 	dst = dstLine;
@@ -306,57 +439,72 @@ pixman_compositeSolidMask_nx8x0888 (pixman_operator_t   op,
 	while (w--)
 	{
 	    m = *mask++;
-	    if (m == 0xff)
+	    if (m == 0)
+		dst++;
+	    else if (srca5 == (0xff >> 3))
 	    {
-		if (srca == 0xff)
-		    d = src;
+		if (m == 0xff)
+		    *dst++ = src16;
+		else 
+		{
+		    d = *dst;
+		    m >>= 3;
+		    inOver0565 (m, src16, d, *dst++);
+		}
+	    }
+	    else
+	    {
+		d = *dst;
+		if (m == 0xff) 
+		{
+		    t = fbOver24 (src, cvt0565to0888 (d));
+		}
 		else
 		{
-		    d = Fetch24(dst);
-		    d = IcOver24 (src, d);
+		    t = fbIn (src, m);
+		    t = fbOver (t, cvt0565to0888 (d));
 		}
-		Store24(dst,d);
+		*dst++ = cvt8888to0565 (t);
 	    }
-	    else if (m)
-	    {
-		d = IcOver24 (IcIn(src,m), Fetch24(dst));
-		Store24(dst,d);
-	    }
-	    dst += 3;
 	}
     }
 }
 
 static void
-pixman_compositeSolidMask_nx8x0565 (pixman_operator_t      op,
-				  pixman_image_t    *iSrc,
-				  pixman_image_t    *iMask,
-				  pixman_image_t    *iDst,
-				  int16_t      xSrc,
-				  int16_t      ySrc,
-				  int16_t      xMask,
-				  int16_t      yMask,
-				  int16_t      xDst,
-				  int16_t      yDst,
-				  uint16_t     width,
-				  uint16_t     height)
+fbCompositeSolidMask_nx8888x0565 (pixman_operator_t      op,
+				  PicturePtr pSrc,
+				  PicturePtr pMask,
+				  PicturePtr pDst,
+				  INT16      xSrc,
+				  INT16      ySrc,
+				  INT16      xMask,
+				  INT16      yMask,
+				  INT16      xDst,
+				  INT16      yDst,
+				  CARD16     width,
+				  CARD16     height)
 {
-    uint32_t	src, srca;
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint8_t	*maskLine, *mask, m;
-    IcStride	dstStride, maskStride;
-    uint16_t	w;
+    CARD32	src, srca8, srca5;
+    CARD16	*dstLine, *dst;
+    CARD16	d;
+    CARD32	*maskLine, *mask;
+    CARD32	t;
+    CARD8	m;
+    FbStride	dstStride, maskStride;
+    CARD16	w, src16;
 
-    IcComposeGetSolid(iSrc, src);
-    
-    srca = src >> 24;
+    fbComposeGetSolid(pSrc, src);
+
     if (src == 0)
 	return;
-    
-    IcComposeGetStart (iDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    IcComposeGetStart (iMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    
+
+    srca8 = src >> 24;
+    srca5 = srca8 >> 3;
+    src16 = cvt8888to0565(src);
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD32, maskStride, maskLine, 1);
+
     while (height--)
     {
 	dst = dstLine;
@@ -367,53 +515,64 @@ pixman_compositeSolidMask_nx8x0565 (pixman_operator_t      op,
 
 	while (w--)
 	{
-	    m = *mask++;
-	    if (m == 0xff)
+	    m = *mask++ >> 24;
+	    if (m == 0)
+		dst++;
+	    else if (srca5 == (0xff >> 3))
 	    {
-		if (srca == 0xff)
-		    d = src;
+		if (m == 0xff)
+		    *dst++ = src16;
 		else
 		{
 		    d = *dst;
-		    d = IcOver24 (src, cvt0565to8888(d));
+		    m >>= 3;
+		    inOver0565 (m, src16, d, *dst++);
 		}
-		*dst = cvt8888to0565(d);
 	    }
-	    else if (m)
+	    else
 	    {
-		d = *dst;
-		d = IcOver24 (IcIn(src,m), cvt0565to8888(d));
-		*dst = cvt8888to0565(d);
+		if (m == 0xff) 
+		{
+		    d = *dst;
+		    t = fbOver24 (src, cvt0565to0888 (d));
+		    *dst++ = cvt8888to0565 (t);
+		}
+		else
+		{
+		    d = *dst;
+		    t = fbIn (src, m);
+		    t = fbOver (t, cvt0565to0888 (d));
+		    *dst++ = cvt8888to0565 (t);
+		}
 	    }
-	    dst++;
 	}
     }
 }
 
 static void
-pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
-				   pixman_image_t    *iSrc,
-				   pixman_image_t    *iMask,
-				   pixman_image_t    *iDst,
-				   int16_t      xSrc,
-				   int16_t      ySrc,
-				   int16_t      xMask,
-				   int16_t      yMask,
-				   int16_t      xDst,
-				   int16_t      yDst,
-				   uint16_t     width,
-				   uint16_t     height)
+fbCompositeSolidMask_nx8888x0565C (pixman_operator_t      op,
+				   PicturePtr pSrc,
+				   PicturePtr pMask,
+				   PicturePtr pDst,
+				   INT16      xSrc,
+				   INT16      ySrc,
+				   INT16      xMask,
+				   INT16      yMask,
+				   INT16      xDst,
+				   INT16      yDst,
+				   CARD16     width,
+				   CARD16     height)
 {
-    uint32_t	src, srca;
-    uint16_t	src16;
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*maskLine, *mask, ma;
-    IcStride	dstStride, maskStride;
-    uint16_t	w;
-    uint32_t	m, n, o;
+    CARD32	src, srca;
+    CARD16	src16;
+    CARD16	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*maskLine, *mask, ma;
+    FbStride	dstStride, maskStride;
+    CARD16	w;
+    CARD32	m, n, o;
 
-    IcComposeGetSolid(iSrc, src);
+    fbComposeGetSolid(pSrc, src);
     
     srca = src >> 24;
     if (src == 0)
@@ -421,8 +580,8 @@ pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
     
     src16 = cvt8888to0565(src);
     
-    IcComposeGetStart (iDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    IcComposeGetStart (iMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, CARD32, maskStride, maskLine, 1);
     
     while (height--)
     {
@@ -444,17 +603,17 @@ pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
 		else
 		{
 		    d = *dst;
-		    d = IcOver24 (src, cvt0565to8888(d));
+		    d = fbOver24 (src, cvt0565to0888(d));
 		    *dst = cvt8888to0565(d);
 		}
 	    }
 	    else if (ma)
 	    {
 		d = *dst;
-		d = cvt0565to8888(d);
-		IcInOverC (src, srca, ma, d, 0, m);
-		IcInOverC (src, srca, ma, d, 8, n);
-		IcInOverC (src, srca, ma, d, 16, o);
+		d = cvt0565to0888(d);
+		FbInOverC (src, srca, ma, d, 0, m);
+		FbInOverC (src, srca, ma, d, 8, n);
+		FbInOverC (src, srca, ma, d, 16, o);
 		d = m|n|o;
 		*dst = cvt8888to0565(d);
 	    }
@@ -464,29 +623,29 @@ pixman_compositeSolidMask_nx8888x0565C (pixman_operator_t   op,
 }
 
 static void
-pixman_compositeSrc_8888x8888 (pixman_operator_t  op,
-			 pixman_image_t    *iSrc,
-			 pixman_image_t    *iMask,
-			 pixman_image_t    *iDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
+fbCompositeSrc_8888x8888 (pixman_operator_t  op,
+			 PicturePtr pSrc,
+			 PicturePtr pMask,
+			 PicturePtr pDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
 {
-    uint32_t	*dstLine, *dst, dstMask;
-    uint32_t	*srcLine, *src, s;
-    IcStride	dstStride, srcStride;
-    uint8_t	a;
-    uint16_t	w;
+    CARD32	*dstLine, *dst, dstMask;
+    CARD32	*srcLine, *src, s;
+    FbStride	dstStride, srcStride;
+    CARD8	a;
+    CARD16	w;
     
-    IcComposeGetStart (iDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
     
-    dstMask = IcFullMask (iDst->pixels->depth);
+    dstMask = FbFullMask (pDst->pixels->depth);
 
     while (height--)
     {
@@ -503,35 +662,35 @@ pixman_compositeSrc_8888x8888 (pixman_operator_t  op,
 	    if (a == 0xff)
 		*dst = s & dstMask;
 	    else if (a)
-		*dst = IcOver (s, *dst) & dstMask;
+		*dst = fbOver (s, *dst) & dstMask;
 	    dst++;
 	}
     }
 }
 
 static void
-pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
-			 pixman_image_t    *iSrc,
-			 pixman_image_t    *iMask,
-			 pixman_image_t    *iDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
+fbCompositeSrc_8888x0888 (pixman_operator_t  op,
+			 PicturePtr pSrc,
+			 PicturePtr pMask,
+			 PicturePtr pDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*srcLine, *src, s;
-    uint8_t	a;
-    IcStride	dstStride, srcStride;
-    uint16_t	w;
+    CARD8	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*srcLine, *src, s;
+    CARD8	a;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
     
-    IcComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 3);
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 3);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
     
     while (height--)
     {
@@ -550,7 +709,7 @@ pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
 		if (a == 0xff)
 		    d = s;
 		else
-		    d = IcOver24 (s, Fetch24(dst));
+		    d = fbOver24 (s, Fetch24(dst));
 		Store24(dst,d);
 	    }
 	    dst += 3;
@@ -559,28 +718,28 @@ pixman_compositeSrc_8888x0888 (pixman_operator_t  op,
 }
 
 static void
-pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
-			 pixman_image_t    *iSrc,
-			 pixman_image_t    *iMask,
-			 pixman_image_t    *iDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
+fbCompositeSrc_8888x0565 (pixman_operator_t  op,
+			 PicturePtr pSrc,
+			 PicturePtr pMask,
+			 PicturePtr pDst,
+			 INT16      xSrc,
+			 INT16      ySrc,
+			 INT16      xMask,
+			 INT16      yMask,
+			 INT16      xDst,
+			 INT16      yDst,
+			 CARD16     width,
+			 CARD16     height)
 {
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*srcLine, *src, s;
-    uint8_t	a;
-    IcStride	dstStride, srcStride;
-    uint16_t	w;
+    CARD16	*dstLine, *dst;
+    CARD32	d;
+    CARD32	*srcLine, *src, s;
+    CARD8	a;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
     
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    IcComposeGetStart (iDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -601,7 +760,7 @@ pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
 		else
 		{
 		    d = *dst;
-		    d = IcOver24 (s, cvt0565to8888(d));
+		    d = fbOver24 (s, cvt0565to0888(d));
 		}
 		*dst = cvt8888to0565(d);
 	    }
@@ -610,65 +769,31 @@ pixman_compositeSrc_8888x0565 (pixman_operator_t  op,
     }
 }
 
-static void
-pixman_compositeSrc_0565x0565 (pixman_operator_t   op,
-			  pixman_image_t    *iSrc,
-			  pixman_image_t    *iMask,
-			  pixman_image_t    *iDst,
-			  int16_t      xSrc,
-			  int16_t      ySrc,
-			  int16_t      xMask,
-			  int16_t      yMask,
-			  int16_t      xDst,
-			  int16_t      yDst,
-			  uint16_t     width,
-			  uint16_t     height)
-{
-    uint16_t	*dstLine, *dst;
-    uint16_t	*srcLine, *src;
-    IcStride	dstStride, srcStride;
-    uint16_t	w;
-    
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint16_t, srcStride, srcLine, 1);
 
-    IcComposeGetStart (iDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-
-    while (height--)
-    {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
-	w = width;
-
-	while (w--)
-	    *dst++ = *src++;
-    }
-}
 
 static void
-pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
-			     pixman_image_t    *iSrc,
-			     pixman_image_t    *iMask,
-			     pixman_image_t    *iDst,
-			     int16_t      xSrc,
-			     int16_t      ySrc,
-			     int16_t      xMask,
-			     int16_t      yMask,
-			     int16_t      xDst,
-			     int16_t      yDst,
-			     uint16_t     width,
-			     uint16_t     height)
+fbCompositeSrcAdd_8000x8000 (pixman_operator_t	  op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    IcStride	dstStride, srcStride;
-    uint8_t	w;
-    uint8_t	s, d;
-    uint16_t	t;
+    CARD8	*dstLine, *dst;
+    CARD8	*srcLine, *src;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
+    CARD8	s, d;
+    CARD16	t;
     
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    IcComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD8, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -681,95 +806,103 @@ pixman_compositeSrcAdd_8000x8000 (pixman_operator_t	  op,
 	while (w--)
 	{
 	    s = *src++;
-	    if (s != 0xff)
+	    if (s)
 	    {
-		d = *dst;
-		t = d + s;
-		s = t | (0 - (t >> 8));
-	    }
-	    *dst++ = s;
-	}
-    }
-}
-
-static void
-pixman_compositeSrcAdd_8888x8888 (pixman_operator_t   op,
-			     pixman_image_t    *iSrc,
-			     pixman_image_t    *iMask,
-			     pixman_image_t    *iDst,
-			     int16_t      xSrc,
-			     int16_t      ySrc,
-			     int16_t      xMask,
-			     int16_t      yMask,
-			     int16_t      xDst,
-			     int16_t      yDst,
-			     uint16_t     width,
-			     uint16_t     height)
-{
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
-    IcStride	dstStride, srcStride;
-    uint16_t	w;
-    uint32_t	s, d;
-    uint16_t	t;
-    uint32_t	m,n,o,p;
-    
-    IcComposeGetStart (iSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    IcComposeGetStart (iDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-
-    while (height--)
-    {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
-	w = width;
-
-	while (w--)
-	{
-	    s = *src++;
-	    if (s != 0xffffffff)
-	    {
-		d = *dst;
-		if (d)
+		if (s != 0xff)
 		{
-		    m = IcAdd(s,d,0,t);
-		    n = IcAdd(s,d,8,t);
-		    o = IcAdd(s,d,16,t);
-		    p = IcAdd(s,d,24,t);
-		    s = m|n|o|p;
+		    d = *dst;
+		    t = d + s;
+		    s = t | (0 - (t >> 8));
 		}
+		*dst = s;
 	    }
-	    *dst++ = s;
+	    dst++;
 	}
     }
 }
 
 static void
-pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
-			     pixman_image_t    *iSrc,
-			     pixman_image_t    *iMask,
-			     pixman_image_t    *iDst,
-			     int16_t      xSrc,
-			     int16_t      ySrc,
-			     int16_t      xMask,
-			     int16_t      yMask,
-			     int16_t      xDst,
-			     int16_t      yDst,
-			     uint16_t     width,
-			     uint16_t     height)
+fbCompositeSrcAdd_8888x8888 (pixman_operator_t   op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
 {
-    pixman_bits_t	*dstBits, *srcBits;
-    IcStride	dstStride, srcStride;
+    CARD32	*dstLine, *dst;
+    CARD32	*srcLine, *src;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
+    CARD32	s, d;
+    CARD16	t;
+    CARD32	m,n,o,p;
+    
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    if (s)
+	    {
+		if (s != 0xffffffff)
+		{
+		    d = *dst;
+		    if (d)
+		    {
+			m = FbAdd(s,d,0,t);
+			n = FbAdd(s,d,8,t);
+			o = FbAdd(s,d,16,t);
+			p = FbAdd(s,d,24,t);
+			s = m|n|o|p;
+		    }
+		}
+		*dst = s;
+	    }
+	    dst++;
+	}
+    }
+}
+
+static void
+fbCompositeSrcAdd_1000x1000 (pixman_operator_t   op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    FbBits	*dstBits, *srcBits;
+    FbStride	dstStride, srcStride;
     int		dstBpp, srcBpp;
     int		dstXoff, dstYoff;
     int		srcXoff, srcYoff;
     
-    IcGetPixels(iSrc->pixels, srcBits, srcStride, srcBpp, srcXoff, srcYoff);
+    FbGetPixels(pSrc->pixels, srcBits, srcStride, srcBpp, srcXoff, srcYoff);
 
-    IcGetPixels(iDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
+    FbGetPixels(pDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
 
-    IcBlt (srcBits + srcStride * (ySrc + srcYoff),
+    fbBlt (srcBits + srcStride * (ySrc + srcYoff),
 	   srcStride,
 	   xSrc + srcXoff,
 
@@ -781,46 +914,46 @@ pixman_compositeSrcAdd_1000x1000 (pixman_operator_t   op,
 	   height,
 
 	   GXor,
-	   IC_ALLONES,
+	   FB_ALLONES,
 	   srcBpp,
 
-	   0,
-	   0);
+	   FALSE,
+	   FALSE);
 }
 
 static void
-pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
-			    pixman_image_t    *iSrc,
-			    pixman_image_t    *iMask,
-			    pixman_image_t    *iDst,
-			    int16_t      xSrc,
-			    int16_t      ySrc,
-			    int16_t      xMask,
-			    int16_t      yMask,
-			    int16_t      xDst,
-			    int16_t      yDst,
-			    uint16_t     width,
-			    uint16_t     height)
+fbCompositeSolidMask_nx1xn (pixman_operator_t   op,
+			    PicturePtr pSrc,
+			    PicturePtr pMask,
+			    PicturePtr pDst,
+			    INT16      xSrc,
+			    INT16      ySrc,
+			    INT16      xMask,
+			    INT16      yMask,
+			    INT16      xDst,
+			    INT16      yDst,
+			    CARD16     width,
+			    CARD16     height)
 {
-    pixman_bits_t	*dstBits;
-    IcStip	*maskBits;
-    IcStride	dstStride, maskStride;
+    FbBits	*dstBits;
+    FbStip	*maskBits;
+    FbStride	dstStride, maskStride;
     int		dstBpp, maskBpp;
     int		dstXoff, dstYoff;
     int		maskXoff, maskYoff;
-    pixman_bits_t	src;
-    
-    IcComposeGetSolid(iSrc, src);
+    FbBits	src;
+
+    fbComposeGetSolid(pSrc, src);
 
     if ((src & 0xff000000) != 0xff000000)
     {
-	pixman_compositeGeneral  (op, iSrc, iMask, iDst,
+	pixman_compositeGeneral  (op, pSrc, pMask, pDst,
 			     xSrc, ySrc, xMask, yMask, xDst, yDst, 
 			     width, height);
 	return;
     }
-    IcGetStipPixels (iMask->pixels, maskBits, maskStride, maskBpp, maskXoff, maskYoff);
-    IcGetPixels (iDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
+    FbGetStipPixels (pMask->pixels, maskBits, maskStride, maskBpp, maskXoff, maskYoff);
+    FbGetPixels (pDst->pixels, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
 
     switch (dstBpp) {
     case 32:
@@ -832,9 +965,9 @@ pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
 	break;
     }
 
-    src = IcReplicatePixel (src, dstBpp);
+    src = fbReplicatePixel (src, dstBpp);
 
-    IcBltOne (maskBits + maskStride * (yMask + maskYoff),
+    fbBltOne (maskBits + maskStride * (yMask + maskYoff),
 	      maskStride,
 	      xMask + maskXoff,
 
@@ -848,15 +981,388 @@ pixman_compositeSolidMask_nx1xn (pixman_operator_t   op,
 
 	      0x0,
 	      src,
-	      IC_ALLONES,
+	      FB_ALLONES,
 	      0x0);
 }
 
+/* prototype to help with merging */
+static void
+fbCompositeSrcSrc_nxn  (pixman_operator_t	op,
+			PicturePtr pSrc,
+			PicturePtr pMask,
+			PicturePtr pDst,
+			INT16      xSrc,
+			INT16      ySrc,
+			INT16      xMask,
+			INT16      yMask,
+			INT16      xDst,
+			INT16      yDst,
+			CARD16     width,
+			CARD16     height);
+/*
+ * Apply a constant alpha value in an over computation
+ */
+static void
+fbCompositeTrans_0565xnx0565(pixman_operator_t      op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD16	*dstLine, *dst;
+    CARD16	*srcLine, *src;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
+    FbBits	mask;
+    CARD8	maskAlpha;
+    CARD16	s_16, d_16;
+    CARD32	s_32, d_32;
+    
+    fbComposeGetSolid (pMask, mask);
+    maskAlpha = mask >> 27;
+    
+    if (!maskAlpha)
+	return;
+    if (maskAlpha == 0xff)
+    {
+	fbCompositeSrcSrc_nxn (PIXMAN_OPERATOR_SRC, pSrc, pMask, pDst,
+			       xSrc, ySrc, xMask, yMask, xDst, yDst, 
+			       width, height);
+	return;
+    }
+
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD16, srcStride, srcLine, 1);
+    fbComposeGetStart (pDst, xDst, yDst, CARD16, dstStride, dstLine, 1);
+
+    while (height--)
+	{
+		CARD32 *isrc, *idst;
+		dst = dstLine;
+		dstLine += dstStride;
+		src = srcLine;
+		srcLine += srcStride;
+		w = width;
+		
+		if(((int)src&1)==1)
+		{
+			s_16 = *src++;
+			d_16 = *dst;
+			inOver0565(maskAlpha, s_16, d_16, *dst++);
+			w--;
+		}
+		isrc=(CARD32 *)src;
+		if(((int)dst&1)==0)
+		{
+			idst=(CARD32 *)dst;
+			while (w>1)
+			{
+				s_32 = *isrc++;
+				d_32 = *idst;
+				inOver2x0565(maskAlpha,s_32,d_32,*idst++);
+				w-=2;
+			}
+			dst=(CARD16 *)idst;
+		}
+		else
+		{
+		    while (w > 1)
+		    {
+			s_32 = *isrc++;
+#if IMAGE_BYTE_ORDER == LSBFirst
+				s_16=s_32&0xffff;
+#else
+				s_16=s_32>>16;
+#endif
+				d_16 = *dst;
+				inOver0565(maskAlpha, s_16, d_16, *dst++);
+#if IMAGE_BYTE_ORDER == LSBFirst
+				s_16=s_32>>16;
+#else
+				s_16=s_32&0xffff;
+#endif
+			d_16 = *dst;
+			inOver0565(maskAlpha, s_16, d_16, *dst++);
+			w-=2;
+		    }
+		}
+		src=(CARD16 *)isrc;
+		if(w!=0)
+		{
+			s_16 = *src;
+			d_16 = *dst;
+			inOver0565(maskAlpha, s_16, d_16, *dst);
+		}
+	}
+}
+
+
+
+/* macros for "i can't believe it's not fast" packed pixel handling */
+#define alphamaskCombine24(a,b) genericCombine24(a,b,maskAlpha,maskiAlpha)
+static void
+fbCompositeTrans_0888xnx0888(pixman_operator_t      op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD8	*dstLine, *dst,*idst;
+    CARD8	*srcLine, *src;
+    FbStride	dstStride, srcStride;
+    CARD16	w;
+    FbBits	mask;
+    CARD16	maskAlpha,maskiAlpha;
+    
+    fbComposeGetSolid (pMask, mask);
+    maskAlpha = mask >> 24;
+	maskiAlpha= 255-maskAlpha;
+    
+    if (!maskAlpha)
+	return;
+    /*
+    if (maskAlpha == 0xff)
+    {
+	fbCompositeSrc_0888x0888 (op, pSrc, pMask, pDst,
+				  xSrc, ySrc, xMask, yMask, xDst, yDst, 
+				  width, height);
+	return;
+    }
+    */
+	
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD8, srcStride, srcLine, 3);
+    fbComposeGetStart (pDst, xDst, yDst, CARD8, dstStride, dstLine, 3);
+
+	{
+		unsigned int ws,wt;
+		CARD32 workingSource;
+		CARD32 *wsrc, *wdst, *widst;
+		CARD32 rs, rd, nd;
+		CARD8 *isrc;
+
+		/* are xSrc and xDst at the same alignment?  if not, we need to be complicated :)*/
+		/* if(0==0) */
+		if( (((xSrc*3)&3)!=((xDst*3)&3)) || ((srcStride&3)!=(dstStride&3)))
+		{
+			while (height--)
+			{
+				dst = dstLine;
+				dstLine += dstStride;
+				isrc = src = srcLine;
+				srcLine += srcStride;
+				w = width*3;
+				
+				setupPackedReader(ws,wt,isrc,wsrc,workingSource);
+
+				/* get to word aligned */
+				switch(!(int)dst&3)
+				{
+					case 1:
+						readPackedSource(rs);
+						/* *dst++=alphamaskCombine24(rs, *dst)>>8; */
+						rd=*dst;  /* make gcc happy.  hope it doens't cost us too much performance*/
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+						w--; if(w==0) break;
+					case 2:
+						readPackedSource(rs);
+						rd=*dst;  
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+						w--; if(w==0) break;
+					case 3:
+						readPackedSource(rs);
+						rd=*dst;  
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+						w--; if(w==0) break;
+				}
+				wdst=(CARD32 *)dst;
+				while (w>3)
+				{
+					/* FIXME: write a special readPackedWord macro, which knows how to 
+					 * halfword combine
+					 */
+
+#if IMAGE_BYTE_ORDER == LSBFirst
+					rd=*wdst;
+					readPackedSource(nd);
+					readPackedSource(rs);
+					nd|=rs<<8;
+					readPackedSource(rs);
+					nd|=rs<<16;
+					readPackedSource(rs);
+					nd|=rs<<24;
+#else
+					readPackedSource(nd);
+					nd<<=24;
+					readPackedSource(rs);
+					nd|=rs<<16;
+					readPackedSource(rs);
+					nd|=rs<<8;
+					readPackedSource(rs);
+					nd|=rs;
+#endif
+					inOver0888(maskAlpha, nd, rd, *wdst++)
+					w-=4;
+				}
+				dst=(CARD8 *)wdst;
+				switch(w)
+				{
+					case 3:
+						readPackedSource(rs);
+						rd=*dst;  
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+					case 2:
+						readPackedSource(rs);
+						rd=*dst;  
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+					case 1:
+						readPackedSource(rs);
+						rd=*dst;  
+						*dst++=alphamaskCombine24(rs, rd)>>8;
+				}
+			}
+		}
+		else
+		{
+			while (height--)
+			{
+				idst=dst = dstLine;
+				dstLine += dstStride;
+				src = srcLine;
+				srcLine += srcStride;
+				w = width*3;
+				/* get to word aligned */
+				switch(!(int)src&3)
+				{
+					case 1:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+						w--; if(w==0) break;
+					case 2:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+						w--; if(w==0) break;
+					case 3:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+						w--; if(w==0) break;
+				}
+				wsrc=(CARD32 *)src;
+				widst=(CARD32 *)dst;
+
+				while(w>3)
+				{
+					rs = *wsrc++;
+					rd = *widst;
+					inOver0888(maskAlpha, rs, rd, *widst++);
+					w-=4;
+				}
+				src=(CARD8 *)wsrc;
+				dst=(CARD8 *)widst;
+				switch(w)
+				{
+					case 3:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+					case 2:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+					case 1:
+						rd=alphamaskCombine24(*src++, *dst)>>8;
+						*dst++=rd;
+				}
+			}
+		}
+	}
+}
+
+/*
+ * Simple bitblt
+ */
+
+static void
+fbCompositeSrcSrc_nxn  (pixman_operator_t	op,
+			PicturePtr pSrc,
+			PicturePtr pMask,
+			PicturePtr pDst,
+			INT16      xSrc,
+			INT16      ySrc,
+			INT16      xMask,
+			INT16      yMask,
+			INT16      xDst,
+			INT16      yDst,
+			CARD16     width,
+			CARD16     height)
+{
+    FbBits	*dst;
+    FbBits	*src;
+    FbStride	dstStride, srcStride;
+    int		srcXoff, srcYoff;
+    int		dstXoff, dstYoff;
+    int		srcBpp;
+    int		dstBpp;
+    Bool	reverse = FALSE;
+    Bool	upsidedown = FALSE;
+    
+    FbGetPixels(pSrc->pixels,src,srcStride,srcBpp,srcXoff,srcYoff);
+    FbGetPixels(pDst->pixels,dst,dstStride,dstBpp,dstXoff,dstYoff);
+
+    fbBlt (src + (ySrc + srcYoff) * srcStride,
+	   srcStride,
+	   (xSrc + srcXoff) * srcBpp,
+
+	   dst + (yDst + dstYoff) * dstStride,
+	   dstStride,
+	   (xDst + dstXoff) * dstBpp,
+
+	   (width) * dstBpp,
+	   (height),
+
+	   GXcopy,
+	   FB_ALLONES,
+	   dstBpp,
+
+	   reverse,
+	   upsidedown);
+}
+
+/*
+ * Solid fill
+void
+fbCompositeSolidSrc_nxn  (CARD8	op,
+			  PicturePtr pSrc,
+			  PicturePtr pMask,
+			  PicturePtr pDst,
+			  INT16      xSrc,
+			  INT16      ySrc,
+			  INT16      xMask,
+			  INT16      yMask,
+			  INT16      xDst,
+			  INT16      yDst,
+			  CARD16     width,
+			  CARD16     height)
+{
+    
+}
+ */
+
 void
 pixman_composite (pixman_operator_t	op,
-	     pixman_image_t	*iSrc,
-	     pixman_image_t	*iMask,
-	     pixman_image_t	*iDst,
+	     PicturePtr pSrc,
+	     PicturePtr pMask,
+	     PicturePtr pDst,
 	     int	xSrc,
 	     int	ySrc,
 	     int	xMask,
@@ -870,39 +1376,39 @@ pixman_composite (pixman_operator_t	op,
     int		    n;
     pixman_box16_t    *pbox;
     CompositeFunc   func;
-    int	    srcRepeat = iSrc->repeat;
-    int	    maskRepeat = 0;
-    int	    srcAlphaMap = iSrc->alphaMap != 0;
-    int	    maskAlphaMap = 0;
-    int	    dstAlphaMap = iDst->alphaMap != 0;
+    int	    srcRepeat = pSrc->repeat;
+    int	    maskRepeat = FALSE;
+    int	    srcAlphaMap = pSrc->alphaMap != 0;
+    int	    maskAlphaMap = FALSE;
+    int	    dstAlphaMap = pDst->alphaMap != 0;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     int		    w, h, w_this, h_this;
 
-    if (iSrc->pixels->width == 0 ||
-	iSrc->pixels->height == 0)
+    if (pSrc->pixels->width == 0 ||
+	pSrc->pixels->height == 0)
     {
 	return;
     }
     
-    xDst += iDst->pixels->x;
-    yDst += iDst->pixels->y;
-    xSrc += iSrc->pixels->x;
-    ySrc += iSrc->pixels->y;
-    if (iMask)
+    xDst += pDst->pixels->x;
+    yDst += pDst->pixels->y;
+    xSrc += pSrc->pixels->x;
+    ySrc += pSrc->pixels->y;
+    if (pMask)
     {
-	xMask += iMask->pixels->x;
-	yMask += iMask->pixels->y;
-	maskRepeat = iMask->repeat;
-	maskAlphaMap = iMask->alphaMap != 0;
+	xMask += pMask->pixels->x;
+	yMask += pMask->pixels->y;
+	maskRepeat = pMask->repeat;
+	maskAlphaMap = pMask->alphaMap != 0;
     }
 
     region = pixman_region_create();
     pixman_region_union_rect (region, region, xDst, yDst, width, height);
     
-    if (!IcComputeCompositeRegion (region,
-				   iSrc,
-				   iMask,
-				   iDst,
+    if (!FbComputeCompositeRegion (region,
+				   pSrc,
+				   pMask,
+				   pDst,
 				   xSrc,
 				   ySrc,
 				   xMask,
@@ -914,65 +1420,80 @@ pixman_composite (pixman_operator_t	op,
 	return;
 				   
     func = pixman_compositeGeneral;
-    if (!iSrc->transform && !(iMask && iMask->transform))
+    if (!pSrc->transform && !(pMask && pMask->transform))
     if (!maskAlphaMap && !srcAlphaMap && !dstAlphaMap)
     switch (op) {
     case PIXMAN_OPERATOR_OVER:
-	if (iMask)
+	if (pMask)
 	{
 	    if (srcRepeat && 
-		iSrc->pixels->width == 1 &&
-		iSrc->pixels->height == 1)
+		pSrc->pixels->width == 1 &&
+		pSrc->pixels->height == 1)
 	    {
-		srcRepeat = 0;
-		if (PICT_FORMAT_COLOR(iSrc->format_code)) {
-		    switch (iMask->format_code) {
+		if (PICT_FORMAT_COLOR(pSrc->format_code)) {
+		    switch (pMask->format_code) {
 		    case PICT_a8:
-			switch (iDst->format_code) {
+			switch (pDst->format_code) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
-			    func = pixman_compositeSolidMask_nx8x0565;
+			    func = fbCompositeSolidMask_nx8x0565;
 			    break;
 			case PICT_r8g8b8:
 			case PICT_b8g8r8:
-			    func = pixman_compositeSolidMask_nx8x0888;
+			    func = fbCompositeSolidMask_nx8x0888;
 			    break;
 			case PICT_a8r8g8b8:
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = pixman_compositeSolidMask_nx8x8888;
+			    func = fbCompositeSolidMask_nx8x8888;
 			    break;
 			}
 			break;
 		    case PICT_a8r8g8b8:
-			if (iMask->componentAlpha) {
-			    switch (iDst->format_code) {
+			if (pMask->componentAlpha) {
+			    switch (pDst->format_code) {
 			    case PICT_a8r8g8b8:
 			    case PICT_x8r8g8b8:
-				func = pixman_compositeSolidMask_nx8888x8888C;
+				func = fbCompositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_r5g6b5:
-				func = pixman_compositeSolidMask_nx8888x0565C;
+				func = fbCompositeSolidMask_nx8888x0565C;
+				break;
+			    }
+			}
+			else 
+			{
+			    switch (pDst->format_code) {
+			    case PICT_r5g6b5:
+				func = fbCompositeSolidMask_nx8888x0565;
 				break;
 			    }
 			}
 			break;
 		    case PICT_a8b8g8r8:
-			if (iMask->componentAlpha) {
-			    switch (iDst->format_code) {
+			if (pMask->componentAlpha) {
+			    switch (pDst->format_code) {
 			    case PICT_a8b8g8r8:
 			    case PICT_x8b8g8r8:
-				func = pixman_compositeSolidMask_nx8888x8888C;
+				func = fbCompositeSolidMask_nx8888x8888C;
 				break;
 			    case PICT_b5g6r5:
-				func = pixman_compositeSolidMask_nx8888x0565C;
+				func = fbCompositeSolidMask_nx8888x0565C;
+				break;
+			    }
+			}
+			else 
+			{
+			    switch (pDst->format_code) {
+			    case PICT_r5g6b5:
+				func = fbCompositeSolidMask_nx8888x0565;
 				break;
 			    }
 			}
 			break;
 		    case PICT_a1:
-			switch (iDst->format_code) {
+			switch (pDst->format_code) {
 			case PICT_r5g6b5:
 			case PICT_b5g6r5:
 			case PICT_r8g8b8:
@@ -981,55 +1502,70 @@ pixman_composite (pixman_operator_t	op,
 			case PICT_x8r8g8b8:
 			case PICT_a8b8g8r8:
 			case PICT_x8b8g8r8:
-			    func = pixman_compositeSolidMask_nx1xn;
+			    func = fbCompositeSolidMask_nx1xn;
 			    break;
 			}
 		    }
 		}
+		if (func != pixman_compositeGeneral)
+		    srcRepeat = FALSE;
+	    }
+	    else if (maskRepeat &&
+		     pMask->pDrawable->width == 1 &&
+		     pMask->pDrawable->height == 1)
+	    {
+		switch (pSrc->format_code) {
+		case PICT_r5g6b5:
+		case PICT_b5g6r5:
+		    if (pDst->format_code == pSrc->format_code)
+		        func = fbCompositeTrans_0565xnx0565;
+		    break;
+		case PICT_r8g8b8:
+		case PICT_b8g8r8:
+		    if (pDst->format_code == pSrc->format_code)
+		        func = fbCompositeTrans_0888xnx0888;
+		    break;
+		}
+
+		if (func != pixman_compositeGeneral)
+		    maskRepeat = FALSE;
 	    }
 	}
 	else
 	{
-	    switch (iSrc->format_code) {
+	    /*
+	     * Formats without alpha bits are just Copy with Over
+	     */
+	    if (pSrc->format_code == pDst->format_code && !PICT_FORMAT_A(pSrc->format_code))
+	    {
+		func = fbCompositeSrcSrc_nxn;
+	    }
+	    else switch (pSrc->format_code) {
 	    case PICT_a8r8g8b8:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a8r8g8b8:
 		case PICT_x8r8g8b8:
-		    func = pixman_compositeSrc_8888x8888;
+		    func = fbCompositeSrc_8888x8888;
 		    break;
 		case PICT_r8g8b8:
-		    func = pixman_compositeSrc_8888x0888;
+		    func = fbCompositeSrc_8888x0888;
 		    break;
 		case PICT_r5g6b5:
-		    func = pixman_compositeSrc_8888x0565;
+		    func = fbCompositeSrc_8888x0565;
 		    break;
 		}
 		break;
 	    case PICT_a8b8g8r8:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a8b8g8r8:
 		case PICT_x8b8g8r8:
-		    func = pixman_compositeSrc_8888x8888;
+		    func = fbCompositeSrc_8888x8888;
 		    break;
 		case PICT_b8g8r8:
-		    func = pixman_compositeSrc_8888x0888;
+		    func = fbCompositeSrc_8888x0888;
 		    break;
 		case PICT_b5g6r5:
-		    func = pixman_compositeSrc_8888x0565;
-		    break;
-		}
-		break;
-	    case PICT_r5g6b5:
-		switch (iDst->format_code) {
-		case PICT_r5g6b5:
-		    func = pixman_compositeSrc_0565x0565;
-		    break;
-		}
-		break;
-	    case PICT_b5g6r5:
-		switch (iDst->format_code) {
-		case PICT_b5g6r5:
-		    func = pixman_compositeSrc_0565x0565;
+		    func = fbCompositeSrc_8888x0565;
 		    break;
 		}
 		break;
@@ -1037,50 +1573,56 @@ pixman_composite (pixman_operator_t	op,
 	}
 	break;
     case PIXMAN_OPERATOR_ADD:
-	if (iMask == 0)
+	if (pMask == 0)
 	{
-	    switch (iSrc->format_code) {
+	    switch (pSrc->format_code) {
 	    case PICT_a8r8g8b8:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a8r8g8b8:
-		    func = pixman_compositeSrcAdd_8888x8888;
+		    func = fbCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8b8g8r8:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a8b8g8r8:
-		    func = pixman_compositeSrcAdd_8888x8888;
+		    func = fbCompositeSrcAdd_8888x8888;
 		    break;
 		}
 		break;
 	    case PICT_a8:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a8:
-		    func = pixman_compositeSrcAdd_8000x8000;
+		    func = fbCompositeSrcAdd_8000x8000;
 		    break;
 		}
 		break;
 	    case PICT_a1:
-		switch (iDst->format_code) {
+		switch (pDst->format_code) {
 		case PICT_a1:
-		    func = pixman_compositeSrcAdd_1000x1000;
+		    func = fbCompositeSrcAdd_1000x1000;
 		    break;
 		}
 		break;
 	    }
 	}
 	break;
+    case PIXMAN_OPERATOR_SRC:
+	if (pMask == 0)
+	{
+	    if (pSrc->format_code == pDst->format_code)
+		func = fbCompositeSrcSrc_nxn;
+	}
     default:
 	func = pixman_compositeGeneral;
 	break;
     }
     /* if we are transforming, we handle repeats in
-     * IcFetch[a]_transform
+     * FbFetch[a]_transform
      */
-    if (iSrc->transform)
+    if (pSrc->transform)
       srcRepeat = 0;
-    if (iMask && iMask->transform)
+    if (pMask && pMask->transform)
       maskRepeat = 0;
     
     n = pixman_region_num_rects (region);
@@ -1100,32 +1642,32 @@ pixman_composite (pixman_operator_t	op,
 	    x_dst = pbox->x1;
 	    if (maskRepeat)
 	    {
-		y_msk = MOD (y_msk, iMask->pixels->height);
-		if (h_this > iMask->pixels->height - y_msk)
-		    h_this = iMask->pixels->height - y_msk;
+		y_msk = MOD (y_msk, pMask->pixels->height);
+		if (h_this > pMask->pixels->height - y_msk)
+		    h_this = pMask->pixels->height - y_msk;
 	    }
 	    if (srcRepeat)
 	    {
-		y_src = MOD (y_src, iSrc->pixels->height);
-		if (h_this > iSrc->pixels->height - y_src)
-		    h_this = iSrc->pixels->height - y_src;
+		y_src = MOD (y_src, pSrc->pixels->height);
+		if (h_this > pSrc->pixels->height - y_src)
+		    h_this = pSrc->pixels->height - y_src;
 	    }
 	    while (w)
 	    {
 		w_this = w;
 		if (maskRepeat)
 		{
-		    x_msk = MOD (x_msk, iMask->pixels->width);
-		    if (w_this > iMask->pixels->width - x_msk)
-			w_this = iMask->pixels->width - x_msk;
+		    x_msk = MOD (x_msk, pMask->pixels->width);
+		    if (w_this > pMask->pixels->width - x_msk)
+			w_this = pMask->pixels->width - x_msk;
 		}
 		if (srcRepeat)
 		{
-		    x_src = MOD (x_src, iSrc->pixels->width);
-		    if (w_this > iSrc->pixels->width - x_src)
-			w_this = iSrc->pixels->width - x_src;
+		    x_src = MOD (x_src, pSrc->pixels->width);
+		    if (w_this > pSrc->pixels->width - x_src)
+			w_this = pSrc->pixels->width - x_src;
 		}
-		(*func) (op, iSrc, iMask, iDst,
+		(*func) (op, pSrc, pMask, pDst,
 			 x_src, y_src, x_msk, y_msk, x_dst, y_dst, 
 			 w_this, h_this);
 		w -= w_this;

@@ -1,5 +1,5 @@
 /*
- * $Id: cairo-wideint.h,v 1.6 2005/06/04 07:03:27 vladimir%pobox.com Exp $
+ * $Id: cairo-wideint.h,v 1.11 2006/02/03 04:49:23 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -44,8 +44,20 @@
 # include <inttypes.h>
 #elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
+#elif defined(_MSC_VER)
+  typedef __int8 int8_t;
+  typedef unsigned __int8 uint8_t;
+  typedef __int16 int16_t;
+  typedef unsigned __int16 uint16_t;
+  typedef __int32 int32_t;
+  typedef unsigned __int32 uint32_t;
+  typedef __int64 int64_t;
+  typedef unsigned __int64 uint64_t;
+# ifndef HAVE_UINT64_T
+#  define HAVE_UINT64_T 1
+# endif
 #else
-# include "mozstdint.h"
+#error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
 /*
@@ -85,7 +97,7 @@ cairo_int64_t  I	_cairo_int32_to_int64(int32_t i);
 #define			_cairo_int64_add(a,b)	    _cairo_uint64_add (a,b)
 #define			_cairo_int64_sub(a,b)	    _cairo_uint64_sub (a,b)
 #define			_cairo_int64_mul(a,b)	    _cairo_uint64_mul (a,b)
-int	       I	  _cairo_int32x32_64_mul (int32_t a, int32_t b);
+cairo_int64_t  I	_cairo_int32x32_64_mul (int32_t a, int32_t b);
 int	       I	_cairo_int64_lt (cairo_uint64_t a, cairo_uint64_t b);
 #define			_cairo_int64_eq(a,b)	    _cairo_uint64_eq (a,b)
 #define			_cairo_int64_lsl(a,b)	    _cairo_uint64_lsl (a,b)
@@ -208,7 +220,7 @@ cairo_int128_t  I	_cairo_int64_to_int128 (cairo_int64_t i);
 #define			_cairo_int128_add(a,b)	    _cairo_uint128_add(a,b)
 #define			_cairo_int128_sub(a,b)	    _cairo_uint128_sub(a,b)
 #define			_cairo_int128_mul(a,b)	    _cairo_uint128_mul(a,b)
-cairo_uint128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
+cairo_int128_t I _cairo_int64x64_128_mul (cairo_int64_t a, cairo_int64_t b);
 #define			_cairo_int128_lsl(a,b)	    _cairo_uint128_lsl(a,b)
 #define			_cairo_int128_rsl(a,b)	    _cairo_uint128_rsl(a,b)
 #define			_cairo_int128_rsa(a,b)	    _cairo_uint128_rsa(a,b)

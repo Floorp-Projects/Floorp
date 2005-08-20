@@ -38,7 +38,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_ATSUI_FONT
 
 /* ATSUI platform-specific font interface */
 

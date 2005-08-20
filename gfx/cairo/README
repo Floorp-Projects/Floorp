@@ -1,4 +1,4 @@
-Snapshots of cairo and libpixman for mozilla usage.  Where possible,
+Snapshots of cairo, libpixman, and glitz for mozilla usage.  Where possible,
 these should be official releases from the cairo project as-is.  If
 changes are necessary, they should be documented below and the patch
 file included in this directory.
@@ -10,8 +10,9 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo 0.5.0
+  cairo 0.9.1
   libpixman 0.1.5
+  glitz 0.4.0
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 
@@ -34,11 +35,4 @@ PATCHES:
 
   allow-null-surface.diff - allow creating a cairo_t with a NULL
       target surface
-
-  optimize-opaque-paint.diff - if cairo_paint_with_alpha is called
-      with alpha == 1.0, turn it into cairo_paint
-
-  win32-extents.diff - correct text extents for general tranforms
-      (upstream patch)
-
   atsui-empty.diff - prevent OS-X crash with empty string

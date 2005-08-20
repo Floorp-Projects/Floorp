@@ -36,10 +36,13 @@
 #ifndef CAIRO_GSTATE_PRIVATE_H
 #define CAIRO_GSTATE_PRIVATE_H
 
+#include "cairo-clip-private.h"
+
 struct _cairo_gstate {
     cairo_operator_t operator;
     
     double tolerance;
+    cairo_antialias_t antialias;
 
     /* stroke style */
     double line_width;
@@ -52,29 +55,23 @@ struct _cairo_gstate {
     double *dash;
     int num_dashes;
     double dash_offset;
-    double max_dash_length;
-    double fraction_dash_lit;
-
-    char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
-    cairo_font_slant_t font_slant; 
-    cairo_font_weight_t font_weight;
 
     cairo_font_face_t *font_face;
     cairo_scaled_font_t *scaled_font;	/* Specific to the current CTM */
-
-    cairo_surface_t *surface;
-    int surface_level;		/* Used to detect bad nested use */
-
-    cairo_pattern_t *source;
-
-    cairo_clip_rec_t clip;
-
     cairo_matrix_t font_matrix;
+    cairo_font_options_t font_options;
+
+    cairo_clip_t clip;
 
     cairo_matrix_t ctm;
     cairo_matrix_t ctm_inverse;
+    cairo_matrix_t source_ctm_inverse; /* At the time ->source was set */
 
     cairo_pen_t pen_regular;
+
+    cairo_surface_t *target;
+
+    cairo_pattern_t *source;
 
     struct _cairo_gstate *next;
 };

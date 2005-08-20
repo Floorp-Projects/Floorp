@@ -58,17 +58,6 @@ ImageDataReleaseFunc(void *info, const void *data, size_t size)
     }
 }
 
-static cairo_surface_t *_cairo_quartz_surface_create_similar(void
-                                                             *abstract_src,
-                                                             cairo_format_t
-                                                             format,
-                                                             int drawable,
-                                                             int width,
-                                                             int height)
-{
-    return NULL;
-}
-
 static cairo_status_t
 _cairo_quartz_surface_finish(void *abstract_surface)
 {
@@ -135,12 +124,11 @@ _cairo_quartz_surface_acquire_source_image(void *abstract_surface,
                                             CAIRO_FORMAT_ARGB32,
                                             surface->width,
                                             surface->height, rowBytes);
-
-
-    // Set the image surface Cairo state to match our own. 
-    _cairo_image_surface_set_repeat(surface->image, surface->base.repeat);
-    _cairo_image_surface_set_matrix(surface->image,
-                                    &(surface->base.matrix));
+    if (surface->image->base.status) {
+	/* XXX: I assume we're leaking memory here, but I don't know
+	 * the right call to use to clean up from CGImageCreate. */
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     *image_out = surface->image;
     *image_extra = NULL;
@@ -164,6 +152,8 @@ _cairo_quartz_surface_acquire_dest_image(void *abstract_surface,
     image_rect->height = surface->image->height;
 
     *image_out = surface->image;
+    if (image_extra)
+	*image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -195,8 +185,11 @@ _cairo_quartz_surface_set_clip_region(void *abstract_surface,
                                       pixman_region16_t * region)
 {
     cairo_quartz_surface_t *surface = abstract_surface;
+    unsigned int serial;
 
-    return _cairo_surface_set_clip_region(&surface->image->base, region);
+    serial = _cairo_surface_allocate_clip_serial (&surface->image->base);
+    return _cairo_surface_set_clip_region(&surface->image->base,
+					  region, serial);
 }
 
 static cairo_int_status_t
@@ -214,7 +207,7 @@ _cairo_quartz_surface_get_extents (void *abstract_surface,
 }
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
-    _cairo_quartz_surface_create_similar,
+    NULL, /* create_similar */
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,
     NULL, /* release_source_image */
@@ -227,6 +220,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_quartz_surface_set_clip_region,
+    NULL, /* intersect_clip_path */
     _cairo_quartz_surface_get_extents,
     NULL  /* show_glyphs */
 };
@@ -238,8 +232,10 @@ cairo_surface_t *cairo_quartz_surface_create(CGContextRef context,
     cairo_quartz_surface_t *surface;
 
     surface = malloc(sizeof(cairo_quartz_surface_t));
-    if (surface == NULL)
-        return NULL;
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+        return (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     _cairo_surface_init(&surface->base, &cairo_quartz_surface_backend);
 

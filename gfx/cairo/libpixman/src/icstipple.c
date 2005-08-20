@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 #ifndef ICNOPIXADDR
 /*
@@ -31,7 +31,7 @@
  * transparent stipple
  */
 #define LaneCases1(c,a)	    case c: \
-				while (n--) { (void)IcLaneCase(c,a); a++; } \
+				while (n--) { (void)FbLaneCase(c,a); a++; } \
 				break
 #define LaneCases2(c,a)	    LaneCases1(c,a); LaneCases1(c+1,a)
 #define LaneCases4(c,a)	    LaneCases2(c,a); LaneCases2(c+2,a)
@@ -42,11 +42,11 @@
 #define LaneCases128(c,a)   LaneCases64(c,a); LaneCases64(c+64,a)
 #define LaneCases256(c,a)   LaneCases128(c,a); LaneCases128(c+128,a)
     
-#if IC_SHIFT == 6
+#if FB_SHIFT == 6
 #define LaneCases(a)	    LaneCases256(0,a)
 #endif
     
-#if IC_SHIFT == 5
+#if FB_SHIFT == 5
 #define LaneCases(a)	    LaneCases16(0,a)
 #endif
 							   
@@ -55,22 +55,22 @@
  */
 
 void
-IcTransparentSpan (pixman_bits_t   *dst,
-		   pixman_bits_t   stip,
-		   pixman_bits_t   fgxor,
+fbTransparentSpan (FbBits   *dst,
+		   FbBits   stip,
+		   FbBits   fgxor,
 		   int	    n)
 {
-    IcStip  s;
+    FbStip  s;
 
-    s  = ((IcStip) (stip      ) & 0x01);
-    s |= ((IcStip) (stip >>  8) & 0x02);
-    s |= ((IcStip) (stip >> 16) & 0x04);
-    s |= ((IcStip) (stip >> 24) & 0x08);
-#if IC_SHIFT > 5
-    s |= ((IcStip) (stip >> 32) & 0x10);
-    s |= ((IcStip) (stip >> 40) & 0x20);
-    s |= ((IcStip) (stip >> 48) & 0x40);
-    s |= ((IcStip) (stip >> 56) & 0x80);
+    s  = ((FbStip) (stip      ) & 0x01);
+    s |= ((FbStip) (stip >>  8) & 0x02);
+    s |= ((FbStip) (stip >> 16) & 0x04);
+    s |= ((FbStip) (stip >> 24) & 0x08);
+#if FB_SHIFT > 5
+    s |= ((FbStip) (stip >> 32) & 0x10);
+    s |= ((FbStip) (stip >> 40) & 0x20);
+    s |= ((FbStip) (stip >> 48) & 0x40);
+    s |= ((FbStip) (stip >> 56) & 0x80);
 #endif
     switch (s) {
 	LaneCases(dst);

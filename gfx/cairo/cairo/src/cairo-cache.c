@@ -182,19 +182,25 @@ _cache_lookup (cairo_cache_t *cache,
 	{
 	    /* We are looking up an exact entry. */
 	    if (*probe == NULL)
+	    {
 		/* Found an empty spot, there can't be a match */
 		break;
+	    }
 	    else if (*probe != DEAD_ENTRY 
 		     && (*probe)->hashcode == hash
 		     && predicate (cache, key, *probe))
+	    {
 		return probe;
+	    }
 	}
 	else
 	{
 	    /* We are just looking for a free slot. */
 	    if (*probe == NULL 
 		|| *probe == DEAD_ENTRY)
+	    {
 		return probe;
+	    }
 	}
 
 	if (step == 0) { 	    
@@ -339,7 +345,6 @@ _cairo_cache_init (cairo_cache_t *cache,
 
     if (cache != NULL){
 	cache->arrangement = &cache_arrangements[0];
-	cache->refcount = 1;
 	cache->max_memory = max_memory;
 	cache->used_memory = 0;
 	cache->live_entries = 0;
@@ -362,30 +367,32 @@ _cairo_cache_init (cairo_cache_t *cache,
 }
 
 void
-_cairo_cache_reference (cairo_cache_t *cache)
-{
-    _cache_sane_state (cache);
-    cache->refcount++;
-}
-
-void
 _cairo_cache_destroy (cairo_cache_t *cache)
 {
     unsigned long i;
-    if (cache != NULL) {
+    if (cache == NULL)
+	return;
 	
-	_cache_sane_state (cache);
+    _cache_sane_state (cache);
 
-	if (--cache->refcount > 0)
-	    return;
+    for (i = 0; i < cache->arrangement->size; ++i)
+	_entry_destroy (cache, i);
 	
-	for (i = 0; i < cache->arrangement->size; ++i) {
-	    _entry_destroy (cache, i);
-	}
-	
-	free (cache->entries);
-	cache->entries = NULL;
-	cache->backend->destroy_cache (cache);
+    free (cache->entries);
+    cache->entries = NULL;
+    cache->backend->destroy_cache (cache);
+}
+
+void
+_cairo_cache_shrink_to (cairo_cache_t *cache,
+			unsigned long max_memory)
+{
+    unsigned long idx;
+    /* Make some entries die if we're under memory pressure. */
+    while (cache->live_entries > 0 && cache->used_memory > max_memory) {
+	idx =  _random_entry (cache, NULL) - cache->entries;
+	assert (idx < cache->arrangement->size);
+	_entry_destroy (cache, idx);
     }
 }
 
@@ -396,7 +403,6 @@ _cairo_cache_lookup (cairo_cache_t *cache,
 		     int           *created_entry)
 {
 
-    unsigned long idx;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_cache_entry_base_t **slot = NULL, *new_entry;
 
@@ -446,14 +452,8 @@ _cairo_cache_lookup (cairo_cache_t *cache,
     /* Store the hash value in case the backend forgot. */
     new_entry->hashcode = cache->backend->hash (cache, key);
 
-    /* Make some entries die if we're under memory pressure. */
-    while (cache->live_entries > 0 &&
-	   cache->max_memory > 0 &&
-	   ((cache->max_memory - cache->used_memory) < new_entry->memory)) {
-	idx =  _random_entry (cache, NULL) - cache->entries;
-	assert (idx < cache->arrangement->size);
-	_entry_destroy (cache, idx);
-    }
+    if (cache->live_entries && cache->max_memory)
+        _cairo_cache_shrink_to (cache, cache->max_memory);
     
     /* Can't assert this; new_entry->memory may be larger than max_memory */
     /* assert(cache->max_memory >= (cache->used_memory + new_entry->memory)); */
@@ -512,7 +512,7 @@ _cairo_hash_string (const char *c)
 {
     /* This is the djb2 hash. */
     unsigned long hash = 5381;
-    while (*c)
+    while (c && *c)
 	hash = ((hash << 5) + hash) + *c++;
     return hash;
 }

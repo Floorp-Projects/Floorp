@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_XCB_SURFACE
+#if CAIRO_HAS_XCB_SURFACE
 
 #include <X11/XCB/xcb.h>
 #include <X11/XCB/render.h>

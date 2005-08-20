@@ -22,58 +22,82 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 #define InitializeShifts(sx,dx,ls,rs) { \
     if (sx != dx) { \
 	if (sx > dx) { \
 	    ls = sx - dx; \
-	    rs = IC_UNIT - ls; \
+	    rs = FB_UNIT - ls; \
 	} else { \
 	    rs = dx - sx; \
-	    ls = IC_UNIT - rs; \
+	    ls = FB_UNIT - rs; \
 	} \
     } \
 }
 
 void
-IcBlt (pixman_bits_t   *srcLine,
-       IcStride	srcStride,
+fbBlt (FbBits   *srcLine,
+       FbStride	srcStride,
        int	srcX,
        
-       pixman_bits_t   *dstLine,
-       IcStride dstStride,
+       FbBits   *dstLine,
+       FbStride dstStride,
        int	dstX,
        
        int	width, 
        int	height,
        
        int	alu,
-       pixman_bits_t	pm,
+       FbBits	pm,
        int	bpp,
        
-       int	reverse,
-       int	upsidedown)
+       Bool	reverse,
+       Bool	upsidedown)
 {
-    pixman_bits_t  *src, *dst;
+    FbBits  *src, *dst;
     int	    leftShift, rightShift;
-    pixman_bits_t  startmask, endmask;
-    pixman_bits_t  bits, bits1;
+    FbBits  startmask, endmask;
+    FbBits  bits, bits1;
     int	    n, nmiddle;
-    int    destInvarient;
+    Bool    destInvarient;
     int	    startbyte, endbyte;
-    IcDeclareMergeRop ();
-
-#ifdef IC_24BIT
-    if (bpp == 24 && !IcCheck24Pix (pm))
+    FbDeclareMergeRop ();
+ 
+    /* are we just copying multiples of 8 bits?  if so, run, forrest, run!
+       the memcpy()'s should be pluggable ala mplayer|xine - perhaps we can get
+       one of the above to give up their code for us.
+     */
+    if((pm==FB_ALLONES) && (alu==GXcopy) && !reverse && (srcX&7)==0 && (dstX&7)==0 && (width&7)==0)
     {
-	IcBlt24 (srcLine, srcStride, srcX, dstLine, dstStride, dstX,
+		CARD8 *isrc=(CARD8 *)srcLine;
+		CARD8 *idst=(CARD8 *)dstLine;
+		int sstride=srcStride*sizeof(FbBits);
+		int dstride=dstStride*sizeof(FbBits);
+		int j;
+		width>>=3;
+		isrc+=(srcX>>3);
+		idst+=(dstX>>3);
+		if(!upsidedown)
+			for(j=0;j<height;j++)
+				memcpy(idst+j*dstride, isrc+j*sstride, width);
+		else
+			for(j=(height-1);j>=0;j--)
+				memcpy(idst+j*dstride, isrc+j*sstride, width);
+	
+		return;
+    }
+    
+#ifdef FB_24BIT
+    if (bpp == 24 && !FbCheck24Pix (pm))
+    {
+	fbBlt24 (srcLine, srcStride, srcX, dstLine, dstStride, dstX,
 		 width, height, alu, pm, reverse, upsidedown);
 	return;
     }
 #endif
-    IcInitializeMergeRop(alu, pm);
-    destInvarient = IcDestInvarientMergeRop();
+    FbInitializeMergeRop(alu, pm);
+    destInvarient = FbDestInvarientMergeRop();
     if (upsidedown)
     {
 	srcLine += (height - 1) * (srcStride);
@@ -81,21 +105,21 @@ IcBlt (pixman_bits_t   *srcLine,
 	srcStride = -srcStride;
 	dstStride = -dstStride;
     }
-    IcMaskBitsBytes (dstX, width, destInvarient, startmask, startbyte,
+    FbMaskBitsBytes (dstX, width, destInvarient, startmask, startbyte,
 		     nmiddle, endmask, endbyte);
     if (reverse)
     {
-	srcLine += ((srcX + width - 1) >> IC_SHIFT) + 1;
-	dstLine += ((dstX + width - 1) >> IC_SHIFT) + 1;
-	srcX = (srcX + width - 1) & IC_MASK;
-	dstX = (dstX + width - 1) & IC_MASK;
+	srcLine += ((srcX + width - 1) >> FB_SHIFT) + 1;
+	dstLine += ((dstX + width - 1) >> FB_SHIFT) + 1;
+	srcX = (srcX + width - 1) & FB_MASK;
+	dstX = (dstX + width - 1) & FB_MASK;
     }
     else
     {
-	srcLine += srcX >> IC_SHIFT;
-	dstLine += dstX >> IC_SHIFT;
-	srcX &= IC_MASK;
-	dstX &= IC_MASK;
+	srcLine += srcX >> FB_SHIFT;
+	dstLine += dstX >> FB_SHIFT;
+	srcX &= FB_MASK;
+	dstX &= FB_MASK;
     }
     if (srcX == dstX)
     {
@@ -111,13 +135,13 @@ IcBlt (pixman_bits_t   *srcLine,
 		{
 		    bits = *--src;
 		    --dst;
-		    IcDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
+		    FbDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
 		}
 		n = nmiddle;
 		if (destInvarient)
 		{
 		    while (n--)
-			*--dst = IcDoDestInvarientMergeRop(*--src);
+			*--dst = FbDoDestInvarientMergeRop(*--src);
 		}
 		else
 		{
@@ -125,14 +149,14 @@ IcBlt (pixman_bits_t   *srcLine,
 		    {
 			bits = *--src;
 			--dst;
-			*dst = IcDoMergeRop (bits, *dst);
+			*dst = FbDoMergeRop (bits, *dst);
 		    }
 		}
 		if (startmask)
 		{
 		    bits = *--src;
 		    --dst;
-		    IcDoLeftMaskByteMergeRop(dst, bits, startbyte, startmask);
+		    FbDoLeftMaskByteMergeRop(dst, bits, startbyte, startmask);
 		}
 	    }
 	    else
@@ -140,7 +164,7 @@ IcBlt (pixman_bits_t   *srcLine,
 		if (startmask)
 		{
 		    bits = *src++;
-		    IcDoLeftMaskByteMergeRop(dst, bits, startbyte, startmask);
+		    FbDoLeftMaskByteMergeRop(dst, bits, startbyte, startmask);
 		    dst++;
 		}
 		n = nmiddle;
@@ -149,12 +173,12 @@ IcBlt (pixman_bits_t   *srcLine,
 #if 0
 		    /*
 		     * This provides some speedup on screen->screen blts
-		     * over the PCI bus, usually about 10%.  But Ic
+		     * over the PCI bus, usually about 10%.  But fb
 		     * isn't usually used for this operation...
 		     */
 		    if (_ca2 + 1 == 0 && _cx2 == 0)
 		    {
-			pixman_bits_t	t1, t2, t3, t4;
+			FbBits	t1, t2, t3, t4;
 			while (n >= 4)
 			{
 			    t1 = *src++;
@@ -170,21 +194,21 @@ IcBlt (pixman_bits_t   *srcLine,
 		    }
 #endif
 		    while (n--)
-			*dst++ = IcDoDestInvarientMergeRop(*src++);
+			*dst++ = FbDoDestInvarientMergeRop(*src++);
 		}
 		else
 		{
 		    while (n--)
 		    {
 			bits = *src++;
-			*dst = IcDoMergeRop (bits, *dst);
+			*dst = FbDoMergeRop (bits, *dst);
 			dst++;
 		    }
 		}
 		if (endmask)
 		{
 		    bits = *src;
-		    IcDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
+		    FbDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
 		}
 	    }
 	}
@@ -194,12 +218,12 @@ IcBlt (pixman_bits_t   *srcLine,
 	if (srcX > dstX)
 	{
 	    leftShift = srcX - dstX;
-	    rightShift = IC_UNIT - leftShift;
+	    rightShift = FB_UNIT - leftShift;
 	}
 	else
 	{
 	    rightShift = dstX - srcX;
-	    leftShift = IC_UNIT - rightShift;
+	    leftShift = FB_UNIT - rightShift;
 	}
 	while (height--)
 	{
@@ -215,48 +239,48 @@ IcBlt (pixman_bits_t   *srcLine,
 		    bits1 = *--src;
 		if (endmask)
 		{
-		    bits = IcScrRight(bits1, rightShift); 
-		    if (IcScrRight(endmask, leftShift))
+		    bits = FbScrRight(bits1, rightShift); 
+		    if (FbScrRight(endmask, leftShift))
 		    {
 			bits1 = *--src;
-			bits |= IcScrLeft(bits1, leftShift);
+			bits |= FbScrLeft(bits1, leftShift);
 		    }
 		    --dst;
-		    IcDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
+		    FbDoRightMaskByteMergeRop(dst, bits, endbyte, endmask);
 		}
 		n = nmiddle;
 		if (destInvarient)
 		{
 		    while (n--)
 		    {
-			bits = IcScrRight(bits1, rightShift); 
+			bits = FbScrRight(bits1, rightShift); 
 			bits1 = *--src;
-			bits |= IcScrLeft(bits1, leftShift);
+			bits |= FbScrLeft(bits1, leftShift);
 			--dst;
-			*dst = IcDoDestInvarientMergeRop(bits);
+			*dst = FbDoDestInvarientMergeRop(bits);
 		    }
 		}
 		else
 		{
 		    while (n--)
 		    {
-			bits = IcScrRight(bits1, rightShift); 
+			bits = FbScrRight(bits1, rightShift); 
 			bits1 = *--src;
-			bits |= IcScrLeft(bits1, leftShift);
+			bits |= FbScrLeft(bits1, leftShift);
 			--dst;
-			*dst = IcDoMergeRop(bits, *dst);
+			*dst = FbDoMergeRop(bits, *dst);
 		    }
 		}
 		if (startmask)
 		{
-		    bits = IcScrRight(bits1, rightShift); 
-		    if (IcScrRight(startmask, leftShift))
+		    bits = FbScrRight(bits1, rightShift); 
+		    if (FbScrRight(startmask, leftShift))
 		    {
 			bits1 = *--src;
-			bits |= IcScrLeft(bits1, leftShift);
+			bits |= FbScrLeft(bits1, leftShift);
 		    }
 		    --dst;
-		    IcDoLeftMaskByteMergeRop (dst, bits, startbyte, startmask);
+		    FbDoLeftMaskByteMergeRop (dst, bits, startbyte, startmask);
 		}
 	    }
 	    else
@@ -265,10 +289,10 @@ IcBlt (pixman_bits_t   *srcLine,
 		    bits1 = *src++;
 		if (startmask)
 		{
-		    bits = IcScrLeft(bits1, leftShift); 
+		    bits = FbScrLeft(bits1, leftShift); 
 		    bits1 = *src++;
-		    bits |= IcScrRight(bits1, rightShift);
-		    IcDoLeftMaskByteMergeRop (dst, bits, startbyte, startmask);
+		    bits |= FbScrRight(bits1, rightShift);
+		    FbDoLeftMaskByteMergeRop (dst, bits, startbyte, startmask);
 		    dst++;
 		}
 		n = nmiddle;
@@ -276,10 +300,10 @@ IcBlt (pixman_bits_t   *srcLine,
 		{
 		    while (n--)
 		    {
-			bits = IcScrLeft(bits1, leftShift); 
+			bits = FbScrLeft(bits1, leftShift); 
 			bits1 = *src++;
-			bits |= IcScrRight(bits1, rightShift);
-			*dst = IcDoDestInvarientMergeRop(bits);
+			bits |= FbScrRight(bits1, rightShift);
+			*dst = FbDoDestInvarientMergeRop(bits);
 			dst++;
 		    }
 		}
@@ -287,29 +311,29 @@ IcBlt (pixman_bits_t   *srcLine,
 		{
 		    while (n--)
 		    {
-			bits = IcScrLeft(bits1, leftShift); 
+			bits = FbScrLeft(bits1, leftShift); 
 			bits1 = *src++;
-			bits |= IcScrRight(bits1, rightShift);
-			*dst = IcDoMergeRop(bits, *dst);
+			bits |= FbScrRight(bits1, rightShift);
+			*dst = FbDoMergeRop(bits, *dst);
 			dst++;
 		    }
 		}
 		if (endmask)
 		{
-		    bits = IcScrLeft(bits1, leftShift); 
-		    if (IcScrLeft(endmask, rightShift))
+		    bits = FbScrLeft(bits1, leftShift); 
+		    if (FbScrLeft(endmask, rightShift))
 		    {
 			bits1 = *src;
-			bits |= IcScrRight(bits1, rightShift);
+			bits |= FbScrRight(bits1, rightShift);
 		    }
-		    IcDoRightMaskByteMergeRop (dst, bits, endbyte, endmask);
+		    FbDoRightMaskByteMergeRop (dst, bits, endbyte, endmask);
 		}
 	    }
 	}
     }
 }
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 
 #undef DEBUG_BLT24
 #ifdef DEBUG_BLT24
@@ -326,65 +350,65 @@ getPixel (char *src, int x)
 #endif
 
 static void
-IcBlt24Line (pixman_bits_t	    *src,
+fbBlt24Line (FbBits	    *src,
 	     int	    srcX,
 
-	     pixman_bits_t	    *dst,
+	     FbBits	    *dst,
 	     int	    dstX,
 
 	     int	    width,
 
 	     int	    alu,
-	     pixman_bits_t	    pm,
+	     FbBits	    pm,
 	 
-	     int	    reverse)
+	     Bool	    reverse)
 {
 #ifdef DEBUG_BLT24
     char    *origDst = (char *) dst;
-    pixman_bits_t  *origLine = dst + ((dstX >> IC_SHIFT) - 1);
-    int	    origNlw = ((width + IC_MASK) >> IC_SHIFT) + 3;
+    FbBits  *origLine = dst + ((dstX >> FB_SHIFT) - 1);
+    int	    origNlw = ((width + FB_MASK) >> FB_SHIFT) + 3;
     int	    origX = dstX / 24;
 #endif
     
     int	    leftShift, rightShift;
-    pixman_bits_t  startmask, endmask;
+    FbBits  startmask, endmask;
     int	    n;
     
-    pixman_bits_t  bits, bits1;
-    pixman_bits_t  mask;
+    FbBits  bits, bits1;
+    FbBits  mask;
 
     int	    rot;
-    IcDeclareMergeRop ();
+    FbDeclareMergeRop ();
     
-    IcInitializeMergeRop (alu, IC_ALLONES);
-    IcMaskBits(dstX, width, startmask, n, endmask);
+    FbInitializeMergeRop (alu, FB_ALLONES);
+    FbMaskBits(dstX, width, startmask, n, endmask);
 #ifdef DEBUG_BLT24
     ErrorF ("dstX %d width %d reverse %d\n", dstX, width, reverse);
 #endif
     if (reverse)
     {
-	src += ((srcX + width - 1) >> IC_SHIFT) + 1;
-	dst += ((dstX + width - 1) >> IC_SHIFT) + 1;
-	rot = IcFirst24Rot (((dstX + width - 8) & IC_MASK));
-	rot = IcPrev24Rot(rot);
+	src += ((srcX + width - 1) >> FB_SHIFT) + 1;
+	dst += ((dstX + width - 1) >> FB_SHIFT) + 1;
+	rot = FbFirst24Rot (((dstX + width - 8) & FB_MASK));
+	rot = FbPrev24Rot(rot);
 #ifdef DEBUG_BLT24
-	ErrorF ("dstX + width - 8: %d rot: %d\n", (dstX + width - 8) & IC_MASK, rot);
+	ErrorF ("dstX + width - 8: %d rot: %d\n", (dstX + width - 8) & FB_MASK, rot);
 #endif
-	srcX = (srcX + width - 1) & IC_MASK;
-	dstX = (dstX + width - 1) & IC_MASK;
+	srcX = (srcX + width - 1) & FB_MASK;
+	dstX = (dstX + width - 1) & FB_MASK;
     }
     else
     {
-	src += srcX >> IC_SHIFT;
-	dst += dstX >> IC_SHIFT;
-	srcX &= IC_MASK;
-	dstX &= IC_MASK;
-	rot = IcFirst24Rot (dstX);
+	src += srcX >> FB_SHIFT;
+	dst += dstX >> FB_SHIFT;
+	srcX &= FB_MASK;
+	dstX &= FB_MASK;
+	rot = FbFirst24Rot (dstX);
 #ifdef DEBUG_BLT24
 	ErrorF ("dstX: %d rot: %d\n", dstX, rot);
 #endif
     }
-    mask = IcRot24(pm,rot);
+    mask = FbRot24(pm,rot);
 #ifdef DEBUG_BLT24
     ErrorF ("pm 0x%x mask 0x%x\n", pm, mask);
 #endif
@@ -396,21 +420,21 @@ IcBlt24Line (pixman_bits_t	    *src,
 	    {
 		bits = *--src;
 		--dst;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & endmask);
-		mask = IcPrev24Pix (mask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & endmask);
+		mask = FbPrev24Pix (mask);
 	    }
 	    while (n--)
 	    {
 		bits = *--src;
 		--dst;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask);
-		mask = IcPrev24Pix (mask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask);
+		mask = FbPrev24Pix (mask);
 	    }
 	    if (startmask)
 	    {
 		bits = *--src;
 		--dst;
-		*dst = IcDoMaskMergeRop(bits, *dst, mask & startmask);
+		*dst = FbDoMaskMergeRop(bits, *dst, mask & startmask);
 	    }
 	}
 	else
@@ -418,21 +442,21 @@ IcBlt24Line (pixman_bits_t	    *src,
 	    if (startmask)
 	    {
 		bits = *src++;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & startmask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & startmask);
 		dst++;
-		mask = IcNext24Pix(mask);
+		mask = FbNext24Pix(mask);
 	    }
 	    while (n--)
 	    {
 		bits = *src++;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask);
 		dst++;
-		mask = IcNext24Pix(mask);
+		mask = FbNext24Pix(mask);
 	    }
 	    if (endmask)
 	    {
 		bits = *src;
-		*dst = IcDoMaskMergeRop(bits, *dst, mask & endmask);
+		*dst = FbDoMaskMergeRop(bits, *dst, mask & endmask);
 	    }
 	}
     }
@@ -441,12 +465,12 @@ IcBlt24Line (pixman_bits_t	    *src,
 	if (srcX > dstX)
 	{
 	    leftShift = srcX - dstX;
-	    rightShift = IC_UNIT - leftShift;
+	    rightShift = FB_UNIT - leftShift;
 	}
 	else
 	{
 	    rightShift = dstX - srcX;
-	    leftShift = IC_UNIT - rightShift;
+	    leftShift = FB_UNIT - rightShift;
 	}
 	
 	bits1 = 0;
@@ -456,35 +480,35 @@ IcBlt24Line (pixman_bits_t	    *src,
 		bits1 = *--src;
 	    if (endmask)
 	    {
-		bits = IcScrRight(bits1, rightShift); 
-		if (IcScrRight(endmask, leftShift))
+		bits = FbScrRight(bits1, rightShift); 
+		if (FbScrRight(endmask, leftShift))
 		{
 		    bits1 = *--src;
-		    bits |= IcScrLeft(bits1, leftShift);
+		    bits |= FbScrLeft(bits1, leftShift);
 		}
 		--dst;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & endmask);
-		mask = IcPrev24Pix(mask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & endmask);
+		mask = FbPrev24Pix(mask);
 	    }
 	    while (n--)
 	    {
-		bits = IcScrRight(bits1, rightShift); 
+		bits = FbScrRight(bits1, rightShift); 
 		bits1 = *--src;
-		bits |= IcScrLeft(bits1, leftShift);
+		bits |= FbScrLeft(bits1, leftShift);
 		--dst;
-		*dst = IcDoMaskMergeRop(bits, *dst, mask);
-		mask = IcPrev24Pix(mask);
+		*dst = FbDoMaskMergeRop(bits, *dst, mask);
+		mask = FbPrev24Pix(mask);
 	    }
 	    if (startmask)
 	    {
-		bits = IcScrRight(bits1, rightShift); 
-		if (IcScrRight(startmask, leftShift))
+		bits = FbScrRight(bits1, rightShift); 
+		if (FbScrRight(startmask, leftShift))
 		{
 		    bits1 = *--src;
-		    bits |= IcScrLeft(bits1, leftShift);
+		    bits |= FbScrLeft(bits1, leftShift);
 		}
 		--dst;
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & startmask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & startmask);
 	    }
 	}
 	else
@@ -493,31 +517,31 @@ IcBlt24Line (pixman_bits_t	    *src,
 		bits1 = *src++;
 	    if (startmask)
 	    {
-		bits = IcScrLeft(bits1, leftShift); 
+		bits = FbScrLeft(bits1, leftShift); 
 		bits1 = *src++;
-		bits |= IcScrRight(bits1, rightShift);
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & startmask);
+		bits |= FbScrRight(bits1, rightShift);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & startmask);
 		dst++;
-		mask = IcNext24Pix(mask);
+		mask = FbNext24Pix(mask);
 	    }
 	    while (n--)
 	    {
-		bits = IcScrLeft(bits1, leftShift); 
+		bits = FbScrLeft(bits1, leftShift); 
 		bits1 = *src++;
-		bits |= IcScrRight(bits1, rightShift);
-		*dst = IcDoMaskMergeRop(bits, *dst, mask);
+		bits |= FbScrRight(bits1, rightShift);
+		*dst = FbDoMaskMergeRop(bits, *dst, mask);
 		dst++;
-		mask = IcNext24Pix(mask);
+		mask = FbNext24Pix(mask);
 	    }
 	    if (endmask)
 	    {
-		bits = IcScrLeft(bits1, leftShift); 
-		if (IcScrLeft(endmask, rightShift))
+		bits = FbScrLeft(bits1, leftShift); 
+		if (FbScrLeft(endmask, rightShift))
 		{
 		    bits1 = *src;
-		    bits |= IcScrRight(bits1, rightShift);
+		    bits |= FbScrRight(bits1, rightShift);
 		}
-		*dst = IcDoMaskMergeRop (bits, *dst, mask & endmask);
+		*dst = FbDoMaskMergeRop (bits, *dst, mask & endmask);
 	    }
 	}
     }
@@ -540,22 +564,22 @@ IcBlt24Line (pixman_bits_t	    *src,
 }
 
 void
-IcBlt24 (pixman_bits_t	    *srcLine,
-	 IcStride   srcStride,
+fbBlt24 (FbBits	    *srcLine,
+	 FbStride   srcStride,
 	 int	    srcX,
 
-	 pixman_bits_t	    *dstLine,
-	 IcStride   dstStride,
+	 FbBits	    *dstLine,
+	 FbStride   dstStride,
 	 int	    dstX,
 
 	 int	    width, 
 	 int	    height,
 
 	 int	    alu,
-	 pixman_bits_t	    pm,
+	 FbBits	    pm,
 
-	 int	    reverse,
-	 int	    upsidedown)
+	 Bool	    reverse,
+	 Bool	    upsidedown)
 {
     if (upsidedown)
     {
@@ -566,7 +590,7 @@ IcBlt24 (pixman_bits_t	    *srcLine,
     }
     while (height--)
     {
-	IcBlt24Line (srcLine, srcX, dstLine, dstX, width, alu, pm, reverse);
+	fbBlt24Line (srcLine, srcX, dstLine, dstX, width, alu, pm, reverse);
 	srcLine += srcStride;
 	dstLine += dstStride;
     }
@@ -574,25 +598,25 @@ IcBlt24 (pixman_bits_t	    *srcLine,
     ErrorF ("\n");
 #endif
 }
-#endif /* IC_24BIT */
+#endif /* FB_24BIT */
 
-#if IC_SHIFT == IC_STIP_SHIFT + 1
+#if FB_SHIFT == FB_STIP_SHIFT + 1
 
 /*
- * Could be generalized to IC_SHIFT > IC_STIP_SHIFT + 1 by
+ * Could be generalized to FB_SHIFT > FB_STIP_SHIFT + 1 by
  * creating an ring of values stepped through for each line
  */
 
 void
-IcBltOdd (pixman_bits_t    *srcLine,
-	  IcStride  srcStrideEven,
-	  IcStride  srcStrideOdd,
+fbBltOdd (FbBits    *srcLine,
+	  FbStride  srcStrideEven,
+	  FbStride  srcStrideOdd,
 	  int	    srcXEven,
 	  int	    srcXOdd,
 
-	  pixman_bits_t    *dstLine,
-	  IcStride  dstStrideEven,
-	  IcStride  dstStrideOdd,
+	  FbBits    *dstLine,
+	  FbStride  dstStrideEven,
+	  FbStride  dstStrideOdd,
 	  int	    dstXEven,
 	  int	    dstXOdd,
 
@@ -600,46 +624,46 @@ IcBltOdd (pixman_bits_t    *srcLine,
 	  int	    height,
 
 	  int	    alu,
-	  pixman_bits_t    pm,
+	  FbBits    pm,
 	  int	    bpp)
 {
-    pixman_bits_t  *src;
+    FbBits  *src;
     int	    leftShiftEven, rightShiftEven;
-    pixman_bits_t  startmaskEven, endmaskEven;
+    FbBits  startmaskEven, endmaskEven;
     int	    nmiddleEven;
     
-    pixman_bits_t  *dst;
+    FbBits  *dst;
     int	    leftShiftOdd, rightShiftOdd;
-    pixman_bits_t  startmaskOdd, endmaskOdd;
+    FbBits  startmaskOdd, endmaskOdd;
     int	    nmiddleOdd;
 
     int	    leftShift, rightShift;
-    pixman_bits_t  startmask, endmask;
+    FbBits  startmask, endmask;
     int	    nmiddle;
     
     int	    srcX, dstX;
     
-    pixman_bits_t  bits, bits1;
+    FbBits  bits, bits1;
     int	    n;
     
-    int    destInvarient;
-    int    even;
-    IcDeclareMergeRop ();
+    Bool    destInvarient;
+    Bool    even;
+    FbDeclareMergeRop ();
 
-    IcInitializeMergeRop (alu, pm);
-    destInvarient = IcDestInvarientMergeRop();
+    FbInitializeMergeRop (alu, pm);
+    destInvarient = FbDestInvarientMergeRop();
 
-    srcLine += srcXEven >> IC_SHIFT;
-    dstLine += dstXEven >> IC_SHIFT;
-    srcXEven &= IC_MASK;
-    dstXEven &= IC_MASK;
-    srcXOdd &= IC_MASK;
-    dstXOdd &= IC_MASK;
+    srcLine += srcXEven >> FB_SHIFT;
+    dstLine += dstXEven >> FB_SHIFT;
+    srcXEven &= FB_MASK;
+    dstXEven &= FB_MASK;
+    srcXOdd &= FB_MASK;
+    dstXOdd &= FB_MASK;
 
-    IcMaskBits(dstXEven, width, startmaskEven, nmiddleEven, endmaskEven);
-    IcMaskBits(dstXOdd, width, startmaskOdd, nmiddleOdd, endmaskOdd);
+    FbMaskBits(dstXEven, width, startmaskEven, nmiddleEven, endmaskEven);
+    FbMaskBits(dstXOdd, width, startmaskOdd, nmiddleOdd, endmaskOdd);
     
-    even = 1;
+    even = TRUE;
     InitializeShifts(srcXEven, dstXEven, leftShiftEven, rightShiftEven);
     InitializeShifts(srcXOdd, dstXOdd, leftShiftOdd, rightShiftOdd);
     while (height--)
@@ -657,7 +681,7 @@ IcBltOdd (pixman_bits_t    *srcLine,
 	    rightShift = rightShiftEven;
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = 0;
+	    even = FALSE;
 	}
 	else
 	{
@@ -670,14 +694,14 @@ IcBltOdd (pixman_bits_t    *srcLine,
 	    rightShift = rightShiftOdd;
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = 1;
+	    even = TRUE;
 	}
 	if (srcX == dstX)
 	{
 	    if (startmask)
 	    {
 		bits = *src++;
-		*dst = IcDoMaskMergeRop (bits, *dst, startmask);
+		*dst = FbDoMaskMergeRop (bits, *dst, startmask);
 		dst++;
 	    }
 	    n = nmiddle;
@@ -686,7 +710,7 @@ IcBltOdd (pixman_bits_t    *srcLine,
 		while (n--)
 		{
 		    bits = *src++;
-		    *dst = IcDoDestInvarientMergeRop(bits);
+		    *dst = FbDoDestInvarientMergeRop(bits);
 		    dst++;
 		}
 	    }
@@ -695,14 +719,14 @@ IcBltOdd (pixman_bits_t    *srcLine,
 		while (n--)
 		{
 		    bits = *src++;
-		    *dst = IcDoMergeRop (bits, *dst);
+		    *dst = FbDoMergeRop (bits, *dst);
 		    dst++;
 		}
 	    }
 	    if (endmask)
 	    {
 		bits = *src;
-		*dst = IcDoMaskMergeRop(bits, *dst, endmask);
+		*dst = FbDoMaskMergeRop(bits, *dst, endmask);
 	    }
 	}
 	else
@@ -712,10 +736,10 @@ IcBltOdd (pixman_bits_t    *srcLine,
 		bits = *src++;
 	    if (startmask)
 	    {
-		bits1 = IcScrLeft(bits, leftShift);
+		bits1 = FbScrLeft(bits, leftShift);
 		bits = *src++;
-		bits1 |= IcScrRight(bits, rightShift);
-		*dst = IcDoMaskMergeRop (bits1, *dst, startmask);
+		bits1 |= FbScrRight(bits, rightShift);
+		*dst = FbDoMaskMergeRop (bits1, *dst, startmask);
 		dst++;
 	    }
 	    n = nmiddle;
@@ -723,10 +747,10 @@ IcBltOdd (pixman_bits_t    *srcLine,
 	    {
 		while (n--)
 		{
-		    bits1 = IcScrLeft(bits, leftShift);
+		    bits1 = FbScrLeft(bits, leftShift);
 		    bits = *src++;
-		    bits1 |= IcScrRight(bits, rightShift);
-		    *dst = IcDoDestInvarientMergeRop(bits1);
+		    bits1 |= FbScrRight(bits, rightShift);
+		    *dst = FbDoDestInvarientMergeRop(bits1);
 		    dst++;
 		}
 	    }
@@ -734,38 +758,38 @@ IcBltOdd (pixman_bits_t    *srcLine,
 	    {
 		while (n--)
 		{
-		    bits1 = IcScrLeft(bits, leftShift);
+		    bits1 = FbScrLeft(bits, leftShift);
 		    bits = *src++;
-		    bits1 |= IcScrRight(bits, rightShift);
-		    *dst = IcDoMergeRop(bits1, *dst);
+		    bits1 |= FbScrRight(bits, rightShift);
+		    *dst = FbDoMergeRop(bits1, *dst);
 		    dst++;
 		}
 	    }
 	    if (endmask)
 	    {
-		bits1 = IcScrLeft(bits, leftShift);
-		if (IcScrLeft(endmask, rightShift))
+		bits1 = FbScrLeft(bits, leftShift);
+		if (FbScrLeft(endmask, rightShift))
 		{
 		    bits = *src;
-		    bits1 |= IcScrRight(bits, rightShift);
+		    bits1 |= FbScrRight(bits, rightShift);
 		}
-		*dst = IcDoMaskMergeRop (bits1, *dst, endmask);
+		*dst = FbDoMaskMergeRop (bits1, *dst, endmask);
 	    }
 	}
     }
 }
 
-#ifdef IC_24BIT
+#ifdef FB_24BIT
 void
-IcBltOdd24 (pixman_bits_t	*srcLine,
-	    IcStride	srcStrideEven,
-	    IcStride	srcStrideOdd,
+fbBltOdd24 (FbBits	*srcLine,
+	    FbStride	srcStrideEven,
+	    FbStride	srcStrideOdd,
 	    int		srcXEven,
 	    int		srcXOdd,
 
-	    pixman_bits_t	*dstLine,
-	    IcStride	dstStrideEven,
-	    IcStride	dstStrideOdd,
+	    FbBits	*dstLine,
+	    FbStride	dstStrideEven,
+	    FbStride	dstStrideOdd,
 	    int		dstXEven,
 	    int		dstXOdd,
 
@@ -773,27 +797,27 @@ IcBltOdd24 (pixman_bits_t	*srcLine,
 	    int		height,
 
 	    int		alu,
-	    pixman_bits_t	pm)
+	    FbBits	pm)
 {
-    int    even = 1;
+    Bool    even = TRUE;
     
     while (height--)
     {
 	if (even)
 	{
-	    IcBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
-			 width, alu, pm, 0);
+	    fbBlt24Line (srcLine, srcXEven, dstLine, dstXEven,
+			 width, alu, pm, FALSE);
 	    srcLine += srcStrideEven;
 	    dstLine += dstStrideEven;
-	    even = 0;
+	    even = FALSE;
 	}
 	else
 	{
-	    IcBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
-			 width, alu, pm, 0);
+	    fbBlt24Line (srcLine, srcXOdd, dstLine, dstXOdd,
+			 width, alu, pm, FALSE);
 	    srcLine += srcStrideOdd;
 	    dstLine += dstStrideOdd;
-	    even = 1;
+	    even = TRUE;
 	}
     }
 #if 0
@@ -804,14 +828,14 @@ IcBltOdd24 (pixman_bits_t	*srcLine,
 
 #endif
 
-#if IC_STIP_SHIFT != IC_SHIFT
+#if FB_STIP_SHIFT != FB_SHIFT
 void
-IcSetBltOdd (IcStip	*stip,
-	     IcStride	stipStride,
+fbSetBltOdd (FbStip	*stip,
+	     FbStride	stipStride,
 	     int	srcX,
-	     pixman_bits_t	**bits,
-	     IcStride	*strideEven,
-	     IcStride	*strideOdd,
+	     FbBits	**bits,
+	     FbStride	*strideEven,
+	     FbStride	*strideOdd,
 	     int	*srcXEven,
 	     int	*srcXOdd)
 {
@@ -821,78 +845,78 @@ IcSetBltOdd (IcStip	*stip,
     /*
      * bytes needed to align source
      */
-    srcAdjust = (((int) stip) & (IC_MASK >> 3));
+    srcAdjust = (((int) stip) & (FB_MASK >> 3));
     /*
-     * IcStip units needed to align stride
+     * FbStip units needed to align stride
      */
-    strideAdjust = stipStride & (IC_MASK >> IC_STIP_SHIFT);
+    strideAdjust = stipStride & (FB_MASK >> FB_STIP_SHIFT);
 
-    *bits = (pixman_bits_t *) ((char *) stip - srcAdjust);
+    *bits = (FbBits *) ((char *) stip - srcAdjust);
     if (srcAdjust)
     {
-	*strideEven = IcStipStrideToBitsStride (stipStride + 1);
-	*strideOdd = IcStipStrideToBitsStride (stipStride);
+	*strideEven = FbStipStrideToBitsStride (stipStride + 1);
+	*strideOdd = FbStipStrideToBitsStride (stipStride);
 
 	*srcXEven = srcX + (srcAdjust << 3);
-	*srcXOdd = srcX + (srcAdjust << 3) - (strideAdjust << IC_STIP_SHIFT);
+	*srcXOdd = srcX + (srcAdjust << 3) - (strideAdjust << FB_STIP_SHIFT);
     }
     else
     {
-	*strideEven = IcStipStrideToBitsStride (stipStride);
-	*strideOdd = IcStipStrideToBitsStride (stipStride + 1);
+	*strideEven = FbStipStrideToBitsStride (stipStride);
+	*strideOdd = FbStipStrideToBitsStride (stipStride + 1);
 	
 	*srcXEven = srcX;
-	*srcXOdd = srcX + (strideAdjust << IC_STIP_SHIFT);
+	*srcXOdd = srcX + (strideAdjust << FB_STIP_SHIFT);
     }
 }
 #endif
 
 void
-IcBltStip (IcStip   *src,
-	   IcStride srcStride,	    /* in IcStip units, not pixman_bits_t units */
+fbBltStip (FbStip   *src,
+	   FbStride srcStride,	    /* in FbStip units, not FbBits units */
 	   int	    srcX,
 	   
-	   IcStip   *dst,
-	   IcStride dstStride,	    /* in IcStip units, not pixman_bits_t units */
+	   FbStip   *dst,
+	   FbStride dstStride,	    /* in FbStip units, not FbBits units */
 	   int	    dstX,
 
 	   int	    width, 
 	   int	    height,
 
 	   int	    alu,
-	   pixman_bits_t   pm,
+	   FbBits   pm,
 	   int	    bpp)
 {
-#if IC_STIP_SHIFT != IC_SHIFT
-    if (IC_STIP_ODDSTRIDE(srcStride) || IC_STIP_ODDPTR(src) ||
-	IC_STIP_ODDSTRIDE(dstStride) || IC_STIP_ODDPTR(dst))
+#if FB_STIP_SHIFT != FB_SHIFT
+    if (FB_STIP_ODDSTRIDE(srcStride) || FB_STIP_ODDPTR(src) ||
+	FB_STIP_ODDSTRIDE(dstStride) || FB_STIP_ODDPTR(dst))
     {
-	IcStride    srcStrideEven, srcStrideOdd;
-	IcStride    dstStrideEven, dstStrideOdd;
+	FbStride    srcStrideEven, srcStrideOdd;
+	FbStride    dstStrideEven, dstStrideOdd;
 	int	    srcXEven, srcXOdd;
 	int	    dstXEven, dstXOdd;
-	pixman_bits_t	    *s, *d;
+	FbBits	    *s, *d;
 	int	    sx, dx;
 	
-	src += srcX >> IC_STIP_SHIFT;
-	srcX &= IC_STIP_MASK;
-	dst += dstX >> IC_STIP_SHIFT;
-	dstX &= IC_STIP_MASK;
+	src += srcX >> FB_STIP_SHIFT;
+	srcX &= FB_STIP_MASK;
+	dst += dstX >> FB_STIP_SHIFT;
+	dstX &= FB_STIP_MASK;
 	
-	IcSetBltOdd (src, srcStride, srcX,
+	fbSetBltOdd (src, srcStride, srcX,
 		     &s,
 		     &srcStrideEven, &srcStrideOdd,
 		     &srcXEven, &srcXOdd);
 		     
-	IcSetBltOdd (dst, dstStride, dstX,
+	fbSetBltOdd (dst, dstStride, dstX,
 		     &d,
 		     &dstStrideEven, &dstStrideOdd,
 		     &dstXEven, &dstXOdd);
 		     
-#ifdef IC_24BIT
-	if (bpp == 24 && !IcCheck24Pix (pm))
+#ifdef FB_24BIT
+	if (bpp == 24 && !FbCheck24Pix (pm))
 	{
-	    IcBltOdd24  (s, srcStrideEven, srcStrideOdd,
+	    fbBltOdd24  (s, srcStrideEven, srcStrideOdd,
 			 srcXEven, srcXOdd,
 
 			 d, dstStrideEven, dstStrideOdd,
@@ -903,7 +927,7 @@ IcBltStip (IcStip   *src,
 	else
 #endif
 	{
-	    IcBltOdd (s, srcStrideEven, srcStrideOdd,
+	    fbBltOdd (s, srcStrideEven, srcStrideOdd,
 		      srcXEven, srcXOdd,
     
 		      d, dstStrideEven, dstStrideOdd,
@@ -915,11 +939,11 @@ IcBltStip (IcStip   *src,
     else
 #endif
     {
-	IcBlt ((pixman_bits_t *) src, IcStipStrideToBitsStride (srcStride), 
+	fbBlt ((FbBits *) src, FbStipStrideToBitsStride (srcStride), 
 	       srcX, 
-	       (pixman_bits_t *) dst, IcStipStrideToBitsStride (dstStride), 
+	       (FbBits *) dst, FbStipStrideToBitsStride (dstStride), 
 	       dstX, 
 	       width, height,
-	       alu, pm, bpp, 0, 0);
+	       alu, pm, bpp, FALSE, FALSE);
     }
 }

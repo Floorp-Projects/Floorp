@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_PDF_SURFACE
+#if CAIRO_HAS_PDF_SURFACE
 
 CAIRO_BEGIN_DECLS
 

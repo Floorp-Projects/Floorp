@@ -229,6 +229,35 @@ _compare_point_fixed_by_y (const void *av, const void *bv)
     return ret;
 }
 
+void
+_cairo_traps_translate (cairo_traps_t *traps, int x, int y)
+{
+    cairo_fixed_t xoff, yoff;
+    cairo_trapezoid_t *t;
+    int i;
+
+    /* Ugh. The cairo_composite/(Render) interface doesn't allow
+       an offset for the trapezoids. Need to manually shift all
+       the coordinates to align with the offset origin of the
+       intermediate surface. */
+
+    xoff = _cairo_fixed_from_int (x);
+    yoff = _cairo_fixed_from_int (y);
+
+    for (i = 0, t = traps->traps; i < traps->num_traps; i++, t++) {
+	t->top += yoff;
+	t->bottom += yoff;
+	t->left.p1.x += xoff;
+	t->left.p1.y += yoff;
+	t->left.p2.x += xoff;
+	t->left.p2.y += yoff;
+	t->right.p1.x += xoff;
+	t->right.p1.y += yoff;
+	t->right.p2.x += xoff;
+	t->right.p2.y += yoff;
+    }
+}
+
 cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
 {
@@ -820,7 +849,7 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	int width = _cairo_fixed_integer_part(traps->traps[i].right.p1.x) - x;
 	int height = _cairo_fixed_integer_part(traps->traps[i].left.p2.y) - y;
 
-	/* Sometimes we get degenerate trapezoids from the tesellator,
+	/* XXX: Sometimes we get degenerate trapezoids from the tesellator,
 	 * if we call pixman_region_union_rect(), it bizarrly fails on such
 	 * an empty rectangle, so skip them.
 	 */

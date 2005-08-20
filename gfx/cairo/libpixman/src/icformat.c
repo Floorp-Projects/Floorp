@@ -76,10 +76,10 @@ pixman_format_create_masks (int bpp,
 	type = PICT_TYPE_ABGR;
 
     format_code = PICT_FORMAT (bpp, type,
-			       _IcOnes (alpha_mask),
-			       _IcOnes (red_mask),
-			       _IcOnes (green_mask),
-			       _IcOnes (blue_mask));
+			       _FbOnes (alpha_mask),
+			       _FbOnes (red_mask),
+			       _FbOnes (green_mask),
+			       _FbOnes (blue_mask));
 
     format = malloc (sizeof (pixman_format_t));
     if (format == NULL)
@@ -148,7 +148,7 @@ pixman_format_init (pixman_format_t *format, int format_code)
 	break;
     }
 
-    format->depth = _IcOnes ((format->alphaMask << format->alpha) |
+    format->depth = _FbOnes ((format->alphaMask << format->alpha) |
 			     (format->redMask << format->red) |
 			     (format->blueMask << format->blue) |
 			     (format->greenMask << format->green));

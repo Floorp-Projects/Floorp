@@ -39,16 +39,16 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_QUARTZ_SURFACE
+#if CAIRO_HAS_QUARTZ_SURFACE
 
 #include <Carbon/Carbon.h>
 
 CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-cairo_quartz_surface_create (   CGContextRef    context,
-				int		width,
-				int		height);
+cairo_quartz_surface_create (CGContextRef    context,
+			     int	     width,
+			     int	     height);
 
 CAIRO_END_DECLS
 

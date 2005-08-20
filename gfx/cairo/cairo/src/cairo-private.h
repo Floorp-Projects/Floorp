@@ -42,10 +42,11 @@
 struct _cairo {
     unsigned int ref_count;
 
-    cairo_gstate_t *gstate;
+    cairo_status_t status;
+
     cairo_path_fixed_t path;
 
-    cairo_status_t status;
+    cairo_gstate_t *gstate;
 };
 
 #endif /* CAIRO_PRIVATE_H */

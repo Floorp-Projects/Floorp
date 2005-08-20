@@ -46,11 +46,11 @@ SOFTWARE.
 
 ******************************************************************/
 
+#undef DEBUG
+
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-
-#undef DEBUG
 
 #include "pixregionint.h"
 #include "slim_internal.h"
@@ -1158,7 +1158,7 @@ pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
     pixman_region16_t region;
 
     if (!width || !height)
-	return PIXMAN_REGION_STATUS_FAILURE;
+	return PIXMAN_REGION_STATUS_SUCCESS;
     region.data = NULL;
     region.extents.x1 = x;
     region.extents.y1 = y;
