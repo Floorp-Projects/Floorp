@@ -290,9 +290,9 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
     width -= 2;
     height -= 2;
   }
-	
-  shadow_type = (state->active && state->inHover) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
-  
+
+  shadow_type = (state->active && state->inHover && !state->disabled) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+
   if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
                                     button_state != GTK_STATE_INSENSITIVE)) {
     TSOffsetStyleGCs(style, x, y);
@@ -434,7 +434,7 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
                                GtkArrowType type)
 {
   GtkStateType state_type = ConvertGtkState(state);
-  GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+  GtkShadowType shadow_type = (state->active && !state->disabled) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   GdkRectangle arrow_rect;
   GtkStyle* style;
 
@@ -569,7 +569,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
 {
   GdkRectangle arrow_rect, real_arrow_rect;
   GtkStateType state_type = ConvertGtkState(state);
-  GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+  GtkShadowType shadow_type = (state->active && !state->disabled) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   GtkStyle* style;
 
   ensure_arrow_widget();
