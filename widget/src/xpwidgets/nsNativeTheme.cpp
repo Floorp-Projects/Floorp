@@ -54,6 +54,8 @@ nsMargin nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
 nsMargin nsNativeTheme::sButtonDisabledBorderSize(1, 1, 1, 1);
 nsMargin nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
 PRBool   nsNativeTheme::sTextfieldBGTransparent = PR_FALSE;
+nsMargin nsNativeTheme::sListboxBorderSize(2, 2, 2, 2);
+PRBool   nsNativeTheme::sListboxBGTransparent = PR_FALSE;
 
 nsNativeTheme::nsNativeTheme()
 {
@@ -67,6 +69,7 @@ nsNativeTheme::nsNativeTheme()
   mModeAtom = do_GetAtom("mode");
   mClassAtom = do_GetAtom("class");
   mSortDirectionAtom = do_GetAtom("sortDirection");
+  mReadOnlyAtom = do_GetAtom("readonly");
 }
 
 nsIPresShell *
@@ -92,9 +95,10 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (!aFrame)
     return 0;
 
-  PRBool isXULCheckboxRadio = PR_FALSE;
-  if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
-      && aFrame->GetContent()->IsContentOfType(nsIContent::eXUL))
+  PRBool isXULCheckboxRadio = 
+    (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) &&
+    aFrame->GetContent()->IsContentOfType(nsIContent::eXUL);
+  if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
   nsIPresShell *shell = GetPrimaryPresShell(aFrame);
@@ -206,7 +210,9 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
 {
   // Check for specific widgets to see if HTML has overridden the style.
   if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
-                 aWidgetType == NS_THEME_TEXTFIELD)) {
+                 aWidgetType == NS_THEME_TEXTFIELD ||
+                 aWidgetType == NS_THEME_LISTBOX ||
+                 aWidgetType == NS_THEME_DROPDOWN)) {
 
     if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       nscolor defaultBGColor, defaultBorderColor;
@@ -248,6 +254,21 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
         lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface,
                               defaultBorderColor);
         if (!(defaultBGTransparent = sTextfieldBGTransparent)) {
+          if (IsDisabled(aFrame))
+            defaultBGColor = defaultBorderColor;
+          else
+            lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field,
+                                  defaultBGColor);
+        }
+        break;
+
+      case NS_THEME_LISTBOX:
+      case NS_THEME_DROPDOWN:
+        defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
+        ConvertMarginToTwips(sListboxBorderSize, defaultBorderSize, p2t);
+        lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface,
+                              defaultBorderColor);
+        if (!(defaultBGTransparent = sListboxBGTransparent)) {
           if (IsDisabled(aFrame))
             defaultBGColor = defaultBorderColor;
           else

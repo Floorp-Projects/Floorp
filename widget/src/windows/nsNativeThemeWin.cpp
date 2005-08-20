@@ -167,15 +167,13 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
   }
 
-  mCheckedAtom = do_GetAtom("checked");
   mInputAtom = do_GetAtom("input");
   mInputCheckedAtom = do_GetAtom("_moz-input-checked");
-  mDisabledAtom = do_GetAtom("disabled");
-  mSelectedAtom = do_GetAtom("selected");
   mTypeAtom = do_GetAtom("type");
-  mReadOnlyAtom = do_GetAtom("readonly");
-  mDefaultAtom = do_GetAtom("default");
-  mClassAtom = do_GetAtom("class");
+
+  // If there is a relevant change in platform-forms.css for windows platform,
+  // static widget style variables (e.g. sButtonBorderSize) should be 
+  // reinitialized here.
 }
 
 nsNativeThemeWin::~nsNativeThemeWin() {
@@ -298,104 +296,6 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
   return NULL;
 }
 
-static nsIPresShell *
-GetPrimaryPresShell(nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return nsnull;
-
-  nsIDocument *doc = aFrame->GetContent()->GetDocument();
-
-  nsIPresShell *shell = nsnull;
-
-  if (doc) {
-    shell = doc->GetShellAt(0);
-  }
-
-  return shell;
-}
-
-static PRInt32 GetContentState(nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return 0;
-
-  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
-  if (!shell)
-    return 0;
-
-  nsCOMPtr<nsIPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
-  PRInt32 flags = 0;
-  context->EventStateManager()->GetContentState(aFrame->GetContent(), flags);
-  return flags;
-}
-
-static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
-{
-  if (!aFrame)
-    return PR_FALSE;
-  nsAutoString attr;
-  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
-  if (res == NS_CONTENT_ATTR_NO_VALUE ||
-      (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
-    return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
-  return attr.Equals(NS_LITERAL_STRING("true"), // This handles the XUL case.
-                     nsCaseInsensitiveStringComparator()); 
-}
-
-static PRBool
-GetAttribute(nsIFrame* aFrame, nsIAtom* inAttribute, nsCString& outValue)
-{
-  if (!aFrame)
-    return PR_FALSE;
-  
-  nsAutoString attr;
-  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, inAttribute, attr);
-  outValue = NS_LossyConvertUCS2toASCII(attr).get();
-  return ( res != NS_CONTENT_ATTR_NO_VALUE &&
-         !(res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()));
-}
-
-PRBool nsNativeThemeWin::IsDisabled(nsIFrame* aFrame)
-{
-  return CheckBooleanAttr(aFrame, mDisabledAtom);
-}
-
-PRBool nsNativeThemeWin::IsReadOnly(nsIFrame* aFrame)
-{
-  return CheckBooleanAttr(aFrame, mReadOnlyAtom);
-}
-
-PRBool nsNativeThemeWin::IsChecked(nsIFrame* aFrame)
-{
-  if (!aFrame)
-    return NS_OK;
-  nsAutoString checked;
-  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, mCheckedAtom, checked);
-  if (res == NS_CONTENT_ATTR_NO_VALUE)
-    return PR_TRUE; // XXXdwh Can the HTML form control's checked property differ
-                    // from the checked attribute?  If so, will need an IsContentofType
-                    // HTML followed by a QI to nsIDOMHTMLInputElement to grab the prop.
-  return checked.Equals(NS_LITERAL_STRING("true"), // This handles the XUL case
-                        nsCaseInsensitiveStringComparator()); 
-}
-
-PRBool nsNativeThemeWin::IsSelected(nsIFrame* aFrame)
-{
-  return CheckBooleanAttr(aFrame, mSelectedAtom);
-}
-
-PRBool
-nsNativeThemeWin::IsBottomTab(nsIFrame* aFrame)
-{
-  nsCAutoString mode;
-  if ( GetAttribute(aFrame, mClassAtom, mode) )
-    return mode.Find("tab-bottom") != kNotFound;
-  
-  return PR_FALSE;
-}
-
 nsresult 
 nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType, 
                                        PRInt32& aPart, PRInt32& aState)
@@ -412,7 +312,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState = TS_DISABLED;
         return NS_OK;
       }
-      PRInt32 eventState = GetContentState(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_FOCUS)
@@ -424,7 +324,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       
       // Check for default dialog buttons.  These buttons should always look
       // focused.
-      if (aState == TS_NORMAL && CheckBooleanAttr(aFrame, mDefaultAtom))
+      if (aState == TS_NORMAL && IsDefaultButton(aFrame))
         aState = TS_FOCUSED;
       return NS_OK;
     }
@@ -439,6 +339,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       PRBool isHTML = PR_FALSE;
       PRBool isHTMLChecked = PR_FALSE;
+      PRBool isXULCheckboxRadio = PR_FALSE;
       
       if (!aFrame)
         aState = TS_NORMAL;
@@ -446,9 +347,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         // For XUL checkboxes and radio buttons, the state of the parent
         // determines our state.
         nsIContent* content = aFrame->GetContent();
-        if (content->IsContentOfType(nsIContent::eXUL))
-          aFrame = aFrame->GetParent();
-        else {
+        PRBool isXULCheckboxRadio = content->IsContentOfType(nsIContent::eXUL);
+        if (!isXULCheckboxRadio) {
           // Attempt a QI.
           nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
           if (inputElt) {
@@ -457,10 +357,10 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           }
         }
 
-        if (IsDisabled(aFrame))
+        if (IsDisabled(isXULCheckboxRadio ? aFrame->GetParent(): aFrame))
           aState = TS_DISABLED;
         else {
-          PRInt32 eventState = GetContentState(aFrame);
+          PRInt32 eventState = GetContentState(aFrame, aWidgetType);
           if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
             aState = TS_ACTIVE;
           else if (eventState & NS_EVENT_STATE_HOVER)
@@ -474,7 +374,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (isHTMLChecked)
           aState += 4;
       }
-      else if (CheckBooleanAttr(aFrame, atom))
+      else if (aWidgetType == NS_THEME_CHECKBOX ?
+               IsChecked(aFrame) : IsSelected(aFrame))
         aState += 4; // 4 unchecked states, 4 checked states.
       return NS_OK;
     }
@@ -496,7 +397,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      PRInt32 eventState = GetContentState(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_FOCUS)
@@ -544,7 +445,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState = TS_DISABLED;
         return NS_OK;
       }
-      PRInt32 eventState = GetContentState(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_HOVER)
@@ -565,7 +466,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else if (IsDisabled(aFrame))
         aState += TS_DISABLED;
       else {
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
           aState += TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
@@ -591,7 +492,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else if (IsDisabled(aFrame))
         aState = TS_DISABLED;
       else {
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the thumb, since the drag is not canceled
                                                 // when you move outside the thumb.
@@ -614,7 +515,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else {
         // XXXdwh The gripper needs to get a hover attribute set on it, since it
         // never goes into :hover.
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the gripper, since the drag is not canceled
                                                 // when you move outside the gripper.
@@ -669,12 +570,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
 
-      if (IsSelected(aFrame)) {
+      if (IsSelectedTab(aFrame)) {
         aPart = TABP_TAB_SELECTED;
         aState = TS_ACTIVE; // The selected tab is always "pressed".
       }
       else {
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
           aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_FOCUS)
@@ -700,7 +601,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         return NS_OK;
       }
       
-      PRInt32 eventState = GetContentState(aFrame);
+      PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_FOCUS)
@@ -726,7 +627,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (IsDisabled(aFrame))
         aState = TS_DISABLED;
       else {     
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
           aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
@@ -803,7 +704,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
       && aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       PRInt32 contentState ;
-      contentState = GetContentState(aFrame);  
+      contentState = GetContentState(aFrame, aWidgetType);  
             
       if (contentState & NS_EVENT_STATE_FOCUS) {
         // setup DC to make DrawFocusRect draw correctly
@@ -1045,109 +946,6 @@ nsNativeThemeWin::ThemeChanged()
   return NS_OK;
 }
 
-PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType) 
-{  
-  if (aFrame && (aWidgetType == NS_THEME_BUTTON || 
-                 aWidgetType == NS_THEME_TEXTFIELD ||
-                 aWidgetType == NS_THEME_LISTBOX || 
-                 aWidgetType == NS_THEME_DROPDOWN)) {
-    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
-      
-      // Get default CSS style values for widget
-      // (these need to match the values in forms.css)
-      #define BUTTON_BORDER_SIZE           2 // pixels
-      #define BUTTON_DISABLED_BORDER_SIZE  1 // pixels
-      #define TEXTFIELD_BORDER_SIZE        2 // pixels
-
-      nscolor defaultBGColor, defaultBorderColor;
-      PRUint8 defaultBorderStyle;
-      nscoord defaultBorderSize;
-            
-      float p2t;
-      p2t = aPresContext->PixelsToTwips();
-
-      nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
-
-      switch (aWidgetType) {
-        case NS_THEME_BUTTON: {          
-          if (IsDisabled(aFrame)) {
-            defaultBorderSize = NSIntPixelsToTwips(BUTTON_DISABLED_BORDER_SIZE, p2t);
-            defaultBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;            
-            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedshadow, defaultBorderColor);
-            
-            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBGColor);
-          }
-          else {
-            PRInt32 contentState = GetContentState(aFrame);
-            defaultBorderSize = NSIntPixelsToTwips(BUTTON_BORDER_SIZE, p2t);
-            if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
-              defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-            else
-              defaultBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
-            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBorderColor);
-            
-            defaultBGColor = defaultBorderColor;
-          }
-          break;                      
-        }
-        case NS_THEME_TEXTFIELD: {
-          defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-          defaultBorderSize = NSIntPixelsToTwips(TEXTFIELD_BORDER_SIZE, p2t);
-          // fall through...
-        }
-        case NS_THEME_LISTBOX:
-        case NS_THEME_DROPDOWN: {
-          lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBorderColor);
-
-          if (IsDisabled(aFrame))
-            defaultBGColor = defaultBorderColor;
-          else
-            lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field, defaultBGColor);
-          break;
-        }
-        default:
-          NS_ERROR("nsNativeThemeWin: IsWidgetStyled widget type not handled");
-          return PR_FALSE;
-      }
-     
-      // Check whether background differs from default
-      const nsStyleBackground* ourBG = aFrame->GetStyleBackground();
-
-      if (ourBG->mBackgroundColor != defaultBGColor ||
-          ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT ||
-          !(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
-        return PR_TRUE;
-      
-      // We don't honor CSS-specified border for listbox and dropdown
-      if (aWidgetType == NS_THEME_LISTBOX || aWidgetType == NS_THEME_DROPDOWN)
-          return PR_FALSE;
-
-      // Check whether border style or color differs from default
-      const nsStyleBorder* ourBorder = aFrame->GetStyleBorder();
-
-      for (PRInt32 i = 0; i < 4; i++) {
-        if (ourBorder->GetBorderStyle(i) != defaultBorderStyle)            
-          return PR_TRUE;
-
-        PRBool borderFG, borderClear;
-        nscolor borderColor;
-        ourBorder->GetBorderColor(i, borderColor, borderFG, borderClear);
-        if (borderColor != defaultBorderColor || borderClear)
-          return PR_TRUE;
-      }
-      
-      // Check whether border size differs from default
-      nsMargin borderSize;
-      if (ourBorder->GetBorder(borderSize))
-        if (borderSize.left != defaultBorderSize || borderSize.top != defaultBorderSize ||
-            borderSize.right != defaultBorderSize || borderSize.bottom != defaultBorderSize)
-          return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
 PRBool 
 nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
                                       nsIFrame* aFrame,
@@ -1387,7 +1185,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aState = DFCS_BUTTONPUSH;
       aFocused = PR_FALSE;
 
-      contentState = GetContentState(aFrame);
+      contentState = GetContentState(aFrame, aWidgetType);
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
       else {
@@ -1402,7 +1200,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           }
         }
         if ((contentState & NS_EVENT_STATE_FOCUS) || 
-          (aState == DFCS_BUTTONPUSH && CheckBooleanAttr(aFrame, mDefaultAtom))) {
+          (aState == DFCS_BUTTONPUSH && IsDefaultButton(aFrame))) {
           aFocused = PR_TRUE;          
         }
 
@@ -1422,15 +1220,14 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
            
       if (content->IsContentOfType(nsIContent::eXUL)) {
         // XUL
-        aFrame = aFrame->GetParent();
         if (aWidgetType == NS_THEME_CHECKBOX) {
           if (IsChecked(aFrame))
             aState |= DFCS_CHECKED;
         }
         else
-          if (CheckBooleanAttr(aFrame, mSelectedAtom))
+          if (IsSelected(aFrame))
             aState |= DFCS_CHECKED;
-        contentState = GetContentState(aFrame);
+        contentState = GetContentState(aFrame, aWidgetType);
       }
       else {
         // HTML
@@ -1442,7 +1239,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           if (isChecked)
             aState |= DFCS_CHECKED;
         }
-        contentState = GetContentState(aFrame);
+        contentState = GetContentState(aFrame, aWidgetType);
         if (contentState & NS_EVENT_STATE_FOCUS)
           aFocused = PR_TRUE;
       }
@@ -1495,7 +1292,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
       else {     
-        PRInt32 eventState = GetContentState(aFrame);
+        PRInt32 eventState = GetContentState(aFrame, aWidgetType);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState |= DFCS_PUSHED | DFCS_FLAT;
       }
@@ -1527,7 +1324,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
       else {
-        contentState = GetContentState(aFrame);
+        contentState = GetContentState(aFrame, aWidgetType);
         if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
           aState |= DFCS_PUSHED | DFCS_FLAT;      
       }
@@ -1551,7 +1348,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (IsDisabled(aFrame))
         aState |= DFCS_INACTIVE;
       else {
-        contentState = GetContentState(aFrame);
+        contentState = GetContentState(aFrame, aWidgetType);
         if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
           aState |= DFCS_PUSHED;
       }
@@ -1724,6 +1521,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
     }
     // Draw controls with 2px 3D inset border
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_TEXTFIELD: {
       // Draw inset edge
@@ -1738,7 +1536,6 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_WINDOW+1));
       return NS_OK;
     }
-    case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW: {
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
@@ -1842,7 +1639,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
     case NS_THEME_TAB_RIGHT_EDGE: {
       DrawTab(hdc, widgetRect,
         IsBottomTab(aFrame) ? BF_BOTTOM : BF_TOP, 
-        IsSelected(aFrame),
+        IsSelectedTab(aFrame),
         aWidgetType != NS_THEME_TAB_RIGHT_EDGE,
         aWidgetType != NS_THEME_TAB_LEFT_EDGE);      
 
