@@ -99,6 +99,10 @@ void
 moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                              GdkRectangle* clipRect, GtkWidgetState* state);
 
+void
+moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                        GdkRectangle* clipRect, GtkWidgetState* aState, const char* detail);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
