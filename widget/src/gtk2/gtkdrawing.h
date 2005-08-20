@@ -63,6 +63,8 @@ typedef struct {
   guint8 disabled;
   guint8 isDefault;
   guint8 canDefault;
+  gint32 curpos; /* curpos and maxpos are used for scrollbars */
+  gint32 maxpos;
 } GtkWidgetState;
 
 /** flags for tab state **/
@@ -97,9 +99,11 @@ typedef enum {
    */
   MOZ_GTK_SCROLLBAR_BUTTON,
   /* Paints the trough (track) of a GtkScrollbar. */
-  MOZ_GTK_SCROLLBAR_TRACK,
+  MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL,
+  MOZ_GTK_SCROLLBAR_TRACK_VERTICAL,
   /* Paints the slider (thumb) of a GtkScrollbar. */
-  MOZ_GTK_SCROLLBAR_THUMB,
+  MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL,
+  MOZ_GTK_SCROLLBAR_THUMB_VERTICAL,
   /* Paints the gripper of a GtkHandleBox. */
   MOZ_GTK_GRIPPER,
   /* Paints a GtkEntry. */
