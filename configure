@@ -18358,7 +18358,7 @@ EOF
        if test "$_WIN32_MSVC"; then
            MOZ_CAIRO_LIBS='$(DIST)/lib/mozcairo.lib $(DIST)/lib/mozlibpixman.lib'
            if test "$MOZ_ENABLE_GLITZ"; then
-               MOZ_CAIR_LIBS="$MOZ_CAIRO_LIBS $(DIST)/lib/mozglitz.lib $(DIST)/lib/mozglitzwgl.lib"
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $(DIST)/lib/mozglitz.lib $(DIST)/lib/mozglitzwgl.lib"
            fi
        else
            MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman"
