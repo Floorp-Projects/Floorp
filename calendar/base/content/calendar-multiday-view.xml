@@ -2153,8 +2153,21 @@
       <method name="findColumnForDate">
         <parameter name="aDate"/>
         <body><![CDATA[
+
+          // XXXdmose hackaround for bug 299327: always compare
+          // against a date with the exact same time as the column
+          var viewTZ = this.mDateColumns[0].date.timezone;
+          if(aDate.timezone == viewTZ) {
+              var dateInView = aDate.clone();
+          } else {
+              dateInView = aDate.getInTimezone(viewTZ);
+          }
+          dateInView.hour = 0;
+          dateInView.minute = 0;
+          dateInView.second = 0;
+
           for each (var col in this.mDateColumns) {
-              if (col.date.compare(aDate) == 0)
+              if (col.date.compare(dateInView) == 0)
                   return col;
           }
           return null;
@@ -2165,10 +2178,7 @@
       <method name="findColumnForEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var estart = aEvent.startDate;
-          var eend = aEvent.endDate;
-
-          return this.findColumnForDate(estart);
+          return this.findColumnForDate(aEvent.startDate);
         ]]></body>
       </method>
 
