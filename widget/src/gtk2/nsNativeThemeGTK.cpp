@@ -171,7 +171,7 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (res == NS_CONTENT_ATTR_NO_VALUE ||
       (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
     return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
-  return attr.EqualsIgnoreCase("true"); // This handles the XUL case.
+  return attr.LowerCaseEqualsLiteral("true"); // This handles the XUL case.
 }
 
 static PRInt32 CheckIntegerAttr(nsIFrame *aFrame, nsIAtom *aAtom)
