@@ -112,4 +112,6 @@ private:
   nsCOMPtr<nsIAtom> mFirstTabAtom;
 
   GtkWidget* mProtoLayout;
+
+  PRUint8 mDisabledWidgetTypes[32];
 };
