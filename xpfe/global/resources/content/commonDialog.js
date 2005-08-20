@@ -163,28 +163,12 @@ function commonDialogOnLoad()
 
   if (gCommonDialogParam.GetInt(3) == 0) // If no text fields
   {
-    var dButton;
-    var defaultButton = gCommonDialogParam.GetInt(5);
-    switch (defaultButton) {
-      case 3:
-        dButton = document.documentElement.getButton("extra2");
-        break;
-      case 2:
-        dButton = document.documentElement.getButton("extra1");
-        break;
-      case 1:
-        dButton = document.documentElement.getButton("cancel");
-        break;
-      default:
-      case 0:
-        dButton = document.documentElement.getButton("accept");
-        break;
-    }
-    // move the default attribute and focus from the accept button
-    // to the one specified in the dialog params
-    document.documentElement.getButton("accept").setAttribute("default",false);
-    dButton.setAttribute("default", true);
-    dButton.focus();
+    var dlgButtons = ['accept', 'cancel', 'extra1', 'extra2'];
+
+    // Set the default button and focus it
+    var dButton = dlgButtons[gCommonDialogParam.GetInt(5)];
+    document.documentElement.defaultButton = dButton;
+    document.documentElement.getButton(dButton).focus();
   }
 
   if (gCommonDialogParam.GetInt(6) != 0) // delay button enable
