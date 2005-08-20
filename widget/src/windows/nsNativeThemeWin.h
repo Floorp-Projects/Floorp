@@ -85,6 +85,7 @@ private:
   HANDLE mTabTheme;
   HANDLE mTreeViewTheme;
   HANDLE mComboBoxTheme;
+  HANDLE mHeaderTheme;
 
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mInputAtom;
