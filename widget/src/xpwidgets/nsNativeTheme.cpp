@@ -41,7 +41,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
@@ -105,7 +105,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (!shell)
     return 0;
 
-  nsCOMPtr<nsIPresContext> context;
+  nsCOMPtr<nsPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   PRInt32 flags = 0;
   context->EventStateManager()->GetContentState(aFrame->GetContent(), flags);
@@ -199,7 +199,7 @@ ConvertMarginToTwips(const nsMargin &aSource, nsMargin &aDest, float p2t)
 }
 
 PRBool
-nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
+nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                               PRUint8 aWidgetType)
 {
   // Check for specific widgets to see if HTML has overridden the style.

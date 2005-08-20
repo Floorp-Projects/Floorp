@@ -45,7 +45,7 @@
 #include "nsTransform2D.h"
 #include "nsThemeConstants.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
@@ -941,7 +941,7 @@ nsNativeThemeWin::ThemeChanged()
 }
 
 PRBool 
-nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
+nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
@@ -981,7 +981,7 @@ nsNativeThemeWin::WidgetIsContainer(PRUint8 aWidgetType)
 /* Windows 9x/NT/2000/Classic XP Theme Support */
 
 PRBool 
-nsNativeThemeWin::ClassicThemeSupportsWidget(nsIPresContext* aPresContext,
+nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
