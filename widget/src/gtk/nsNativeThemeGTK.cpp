@@ -380,20 +380,30 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsMargin* aResult)
 {
   aResult->top = aResult->left = 0;
-  if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)
+  switch (aWidgetType) {
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       gint trough_border;
       moz_gtk_get_scrollbar_metrics(nsnull, &trough_border,
                                     nsnull, nsnull, nsnull);
       aResult->top = aResult->left = trough_border;
-    } else {
+    }
+    break;
+  case NS_THEME_TOOLBOX:
+    // gtk has no toolbox equivalent.  So, although we map toolbox to
+    // gtk's 'toolbar' for purposes of painting the widget background,
+    // we don't use the toolbar border for toolbox.
+    break;
+  default:
+    {
       GtkThemeWidgetType gtkWidgetType;
       if (GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, nsnull,
                                nsnull))
         moz_gtk_get_widget_border(gtkWidgetType, &aResult->left,
                                   &aResult->top);
     }
+  }
 
   aResult->right = aResult->left;
   aResult->bottom = aResult->top;
