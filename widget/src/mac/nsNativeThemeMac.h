@@ -83,6 +83,9 @@ protected:
   PRBool IsSelected(nsIFrame* aFrame);
   PRBool IsDefaultButton(nsIFrame* aFrame);
   PRBool IsIndeterminate(nsIFrame* aFrame);
+  PRBool IsSortedColumn(nsIFrame* aFrame);
+  PRBool IsSortReversed(nsIFrame* aFrame);
+  PRBool DoTabsPointUp(nsIFrame* aFrame);
 
     // Appearance Manager drawing routines
   void DrawCheckbox ( const Rect& inBoxRect, PRBool inChecked, PRBool inDisabled, PRInt32 inState ) ;
@@ -95,12 +98,12 @@ protected:
   void DrawFullScrollbar  ( const Rect& inScrollbarRect, PRInt32 inWidgetHit, PRInt32 inLineHeight, PRBool inIsDisabled,
                              PRInt32 inMax, PRInt32 inValue, PRInt32 inState ) ;
   void DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
-                  PRBool inIsHorizontal, PRInt32 inState ) ;
+                  PRBool inIsHorizontal, PRBool inTabBottom, PRInt32 inState ) ;
   void DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
 //  void DrawScrollArrows ( const Rect& inScrollbarRect, PRBool inIsDisabled, PRInt32 inWidget, PRInt32 inState ) ;
   
   void DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inIsDefault, 
-                      PRBool inDisabled, PRInt32 inState ) ;
+                      PRBool inDisabled, ThemeButtonValue inValue, ThemeButtonAdornment inAdornment, PRInt32 inState ) ;
   void DrawCheckboxRadio ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inChecked, 
                               PRBool inDisabled, PRInt32 inState ) ;
 
@@ -110,6 +113,8 @@ protected:
 
 private:
 
+  ThemeEraseUPP mEraseProc;
+  
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mDisabledAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
@@ -120,4 +125,6 @@ private:
   nsCOMPtr<nsIAtom> mCurPosAtom;
   nsCOMPtr<nsIAtom> mMaxPosAtom;
   nsCOMPtr<nsIAtom> mScrollbarAtom;
+  nsCOMPtr<nsIAtom> mClassAtom;
+  nsCOMPtr<nsIAtom> mSortDirectionAtom;
 };
