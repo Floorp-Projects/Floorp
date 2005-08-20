@@ -385,13 +385,15 @@ nsNativeThemeMac::DrawToolbar ( const Rect& inBoxRect )
 void
 nsNativeThemeMac::DrawEditText ( const Rect& inBoxRect, PRBool inIsDisabled )
 {
+#if TARGET_CARBON
   Pattern whitePat;
   ::BackColor(whiteColor);
-//  ::BackPat(GetQDGlobalsWhite(&whitePat));
+  ::BackPat(GetQDGlobalsWhite(&whitePat));
   ::EraseRect(&inBoxRect);
   
   ThemeDrawState drawState = inIsDisabled ? kThemeStateActive : kThemeStateDisabled;
   ::DrawThemeEditTextFrame(&inBoxRect, drawState);
+#endif
 }
 
 void
@@ -630,6 +632,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
 {
   aResult->SizeTo(0,0,0,0);
       
+#if TARGET_CARBON
   // XXX we should probably cache some of these metrics
   
   switch ( aWidgetType ) {
@@ -663,6 +666,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
     }
 
   }
+#endif
   
   return NS_OK;
 }
@@ -676,6 +680,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   aResult->SizeTo(0,0);
   *aIsOverridable = PR_TRUE;
   
+#if TARGET_CARBON
   switch ( aWidgetType ) {
   
     case NS_THEME_CHECKBOX:
@@ -757,6 +762,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     }
 
   }
+#endif
 
   return NS_OK;
 }
