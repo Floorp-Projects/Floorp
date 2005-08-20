@@ -30,15 +30,21 @@ use Litmus::Error;
 
 Litmus::DB::Test->table('tests');
 
-Litmus::DB::Test->columns(Primary => qw/testid/);
-Litmus::DB::Test->columns(Essential => qw/testid subgroup summary status communityenabled format/); 
-Litmus::DB::Test->columns(All => qw/t1 t2 t3 s1 s2 i1 i2/);
+Litmus::DB::Test->columns(Primary => qw/test_id/);
+Litmus::DB::Test->columns(Essential => qw/subgroup_id summary details status_id community_enabled format_id regression_bug_id/); 
+Litmus::DB::Test->columns(All => qw/t1 t2 t3/);
+
+Litmus::DB::Test->column_alias("test_id", "testid");
+Litmus::DB::Test->column_alias("subgroup_id", "subgroup");
+Litmus::DB::Test->column_alias("status_id", "status");
+Litmus::DB::Test->column_alias("community_enabled", "communityenabled");
+Litmus::DB::Test->column_alias("format_id", "format");
 
 Litmus::DB::Test->has_a(subgroup => "Litmus::DB::Subgroup");
 Litmus::DB::Test->has_a(status => "Litmus::DB::Status");
 Litmus::DB::Test->has_a("format" => "Litmus::DB::Format");
 
-Litmus::DB::Test->has_many(testresults => "Litmus::DB::Testresult", {order_by => 'timestamp DESC'});
+Litmus::DB::Test->has_many(testresults => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
 
 # we override Class::DBI's find_column() so that when we refer to 
 # formatted names like steps and expected results, we use the actual
@@ -48,17 +54,17 @@ sub find_column {
     my $self = shift;
     my $want = shift; 
 
-    my $col;
+    my $col = undef;
     if (ref $self) {
         $want =~ s/^.*::(\w+)$/$1/;
-        $col = $self->format()->getColumnMapping($want);
+        $col = $self->format_id()->getColumnMapping($want);
     }
     
     if ($col) {
         return $self->SUPER::find_column($col);
     } else {
         # didn't find it, so we fall back on the normal 
-        # find_column:
+        # find_column from Litmus::DBI:
         $self->SUPER::find_column($want);
     }
 }
@@ -74,7 +80,7 @@ sub AUTOLOAD {
     my $col = $self->find_column($name);
     
     if (!$col) {
-        internalError("tried to call Litmus::DB::Test method $name which does not exist ");
+        internalError("tried to call Litmus::DB::Test method $name which does not exist");
     }
     
     return $self->$col(@args);

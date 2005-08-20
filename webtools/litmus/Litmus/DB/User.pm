@@ -26,7 +26,10 @@ use base 'Litmus::DBI';
 
 Litmus::DB::User->table('users');
 
-Litmus::DB::User->columns(All => qw/userid email istrusted/);
+Litmus::DB::User->columns(All => qw/user_id email is_trusted/);
+
+Litmus::DB::User->column_alias("user_id", "userid");
+Litmus::DB::User->column_alias("is_trusted", "istrusted");
 
 Litmus::DB::User->has_many(testresults => "Litmus::DB::Testresult");
 

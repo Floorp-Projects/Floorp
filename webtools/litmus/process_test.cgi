@@ -124,17 +124,24 @@ foreach my $curtestid (@tests) {
         $user = $user || Litmus::Auth::getCookie()->userid();
     } 
     
-    Litmus::DB::Testresult->create({
+    my $tr = Litmus::DB::Testresult->create({
         user      => $user,
         testid    => $curtest,
         timestamp => $time,
         useragent => $ua,
         result    => $result,
-        note      => $note,
         platform  => $sysconfig->platform(),
         opsys     => $sysconfig->opsys(),
         branch    => $sysconfig->branch(),
         buildid   => $sysconfig->buildid(),
+    });
+    
+    # if there's a note, create an entry in the comments table for it
+    Litmus::DB::Comment->create({
+    	testresult      => $tr,
+    	submission_time => $time,
+    	user			=> $user,
+    	comment			=> $note
     });
 }
 

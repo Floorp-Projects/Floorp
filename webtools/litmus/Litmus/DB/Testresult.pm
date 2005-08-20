@@ -28,9 +28,20 @@ use Time::Piece;
 use Time::Seconds;
 use Memoize;
 
-Litmus::DB::Testresult->table('testresults');
+Litmus::DB::Testresult->table('test_results');
 
-Litmus::DB::Testresult->columns(All => qw/testresultid platform opsys branch buildid useragent result note user testid timestamp/);
+Litmus::DB::Testresult->columns(All => qw/testresult_id test_id last_updated submission_time user_id platform_id opsys_id branch_id buildid user_agent result_id log_id/);
+
+Litmus::DB::Testresult->column_alias("testresult_id", "testresultid");
+Litmus::DB::Testresult->column_alias("test_id", "testid");
+Litmus::DB::Testresult->column_alias("submission_time", "timestamp");
+Litmus::DB::Testresult->column_alias("user_id", "user");
+Litmus::DB::Testresult->column_alias("platform_id", "platform");
+Litmus::DB::Testresult->column_alias("opsys_id", "opsys");
+Litmus::DB::Testresult->column_alias("branch_id", "branch");
+Litmus::DB::Testresult->column_alias("user_agent", "useragent");
+Litmus::DB::Testresult->column_alias("result_id", "result");
+Litmus::DB::Testresult->column_alias("log_id", "log");
 
 
 Litmus::DB::Testresult->has_a(platform => "Litmus::DB::Platform");
@@ -40,8 +51,27 @@ Litmus::DB::Testresult->has_a(testid => "Litmus::DB::Test");
 Litmus::DB::Testresult->has_a(result => "Litmus::DB::Result");
 Litmus::DB::Testresult->has_a(user => "Litmus::DB::User");
 Litmus::DB::Testresult->has_a(useragent => "Litmus::UserAgentDetect");
+Litmus::DB::Testresult->has_a("log" => "Litmus::DB::Log");
+
+Litmus::DB::Testresult->has_many(comments => "Litmus::DB::Comment", {order_by => 'submission_time'});
+Litmus::DB::Testresult->has_many(bugs => "Litmus::DB::Resultbug", {order_by => 'submission_time DESC'});
 
 Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
+
+# for historical reasons, note() is a shorthand way of saying "the text of the first 
+# comment on this result if that comment was submitted by the result submitter"
+sub note {
+	my $self = shift;
+	
+	my @comments = $self->comments();
+	
+	if (@comments && @comments[0] &&
+		@comments[0]->user() == $self->user()) {
+		return $comments[0]->comment();
+	} else {
+		return undef;
+	}
+}
 
 # is this test result recent?
 memoize('isrecent', NORMALIZER => sub {my $a=shift; return $a->testresultid()});

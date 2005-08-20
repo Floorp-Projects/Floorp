@@ -36,8 +36,9 @@ my $c = new CGI;
 
 # how old of a build do we want to allow? default is 10 days
 my $maxbuildage = 10; 
-# what branch do we accept? default is Deer Park
+# what branch do we accept? default is the trunk or the 1.8 branch
 my $branch = Litmus::DB::Branch->retrieve(1);
+my $branch2 = Litmus::DB::Branch->retrieve(2);
 
 showTest();
 
@@ -51,27 +52,27 @@ sub showTest {
     $time->date_separator("");
     my $curbuildtime = $time->ymd;
     my $prod = Litmus::DB::Product->search(name => "Firefox")->next();
-    my $branch = Litmus::DB::Branch->search(product => $prod, name => "Trunk")->next();
     my @detectbranch = $ua->branch($prod);
-    if (! $ua->buildid() || ! $detectbranch[0] || 
-            $detectbranch[0]->branchid() != $branch->branchid() || 
-            $curbuildtime - $ua->buildid() > $maxbuildage) {
-        Litmus->template()->process("simpletest/simpletest.html.tmpl") || 
-            internalError(Litmus->template()->error());
-        exit;
+    if ((! $ua->buildid()) || (! $detectbranch[0]) || 
+		$curbuildtime - $ua->buildid() > $maxbuildage ||
+		($detectbranch[0]->branchid() != $branch->branchid() &&
+		  $detectbranch[0]->branchid() != $branch2->branchid())) {
+            Litmus->template()->process("simpletest/simpletest.html.tmpl") || 
+              internalError(Litmus->template()->error());
+           exit;
     }
     
     my $pid = $prod->productid();
     # get a random test to display:
     Litmus::DB::Test->set_sql(random_test => qq {
-        SELECT __ESSENTIAL__
-        FROM __TABLE__, products,testgroups,subgroups
+        SELECT tests.test_id, tests.subgroup_id, tests.summary, tests.details, tests.status_id, tests.community_enabled, tests.format_id, tests.regression_bug_id
+        FROM __TABLE__, products,test_groups,subgroups
         WHERE
-            products.productid=? AND 
-            communityenabled = 1 AND
-            products.productid=testgroups.product AND 
-            subgroups.testgroup=testgroups.testgroupid AND 
-            tests.subgroup=subgroups.subgroupid 
+            products.product_id=? AND 
+            community_enabled = 1 AND
+            products.product_id=test_groups.product_id AND 
+            subgroups.testgroup_id=test_groups.testgroup_id AND 
+            tests.subgroup_id=subgroups.subgroup_id 
         ORDER BY RAND()    
         LIMIT 1
     });

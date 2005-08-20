@@ -26,7 +26,10 @@ use base 'Litmus::DBI';
 
 Litmus::DB::Branch->table('branches');
 
-Litmus::DB::Branch->columns(All => qw/branchid product name detect_regexp/);
+Litmus::DB::Branch->columns(All => qw/branch_id product_id name detect_regexp/);
+
+Litmus::DB::Branch->column_alias("branch_id", "branchid");
+Litmus::DB::Branch->column_alias("product_id", "product");
 
 Litmus::DB::Branch->has_many(testresults => "Litmus::DB::Testresult");
 Litmus::DB::Branch->has_a(product => "Litmus::DB::Product");

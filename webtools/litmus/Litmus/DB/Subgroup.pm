@@ -30,7 +30,10 @@ use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroupid testgroup name/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name/);
+
+Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
+Litmus::DB::Subgroup->column_alias("testgroup_id", "testgroup");
 
 Litmus::DB::Subgroup->has_a(testgroup => "Litmus::DB::Testgroup");
 

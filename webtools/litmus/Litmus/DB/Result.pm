@@ -24,9 +24,11 @@ package Litmus::DB::Result;
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Result->table('results');
+Litmus::DB::Result->table('test_result_status_lookup');
 
-Litmus::DB::Result->columns(All => qw/resultid name style/);
+Litmus::DB::Result->columns(All => qw/result_status_id name style/);
+
+Litmus::DB::Result->column_alias("result_status_id", "resultid");
 
 Litmus::DB::Result->has_many(testresults => "Litmus::DB::Testresult");
 

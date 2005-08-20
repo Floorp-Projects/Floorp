@@ -28,9 +28,11 @@ use IO::File;
 use Litmus::Error;
 use Litmus;
 
-Litmus::DB::Format->table('formats');
+Litmus::DB::Format->table('test_format_lookup');
 
-Litmus::DB::Format->columns(All => qw/formatid name/);
+Litmus::DB::Format->columns(All => qw/format_id name/);
+
+Litmus::DB::Format->column_alias("format_id", "formatid");
 
 Litmus::DB::Format->has_many(tests => "Litmus::DB::Test");
 

@@ -24,9 +24,13 @@ package Litmus::DB::Testgroup;
 use strict;
 use base 'Litmus::DBI';
 
-Litmus::DB::Testgroup->table('testgroups');
+Litmus::DB::Testgroup->table('test_groups');
 
-Litmus::DB::Testgroup->columns(All => qw/testgroupid product name expirationdays/);
+Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name expiration_days/);
+
+Litmus::DB::Testgroup->column_alias("testgroup_id", "testgroupid");
+Litmus::DB::Testgroup->column_alias("product_id", "product");
+Litmus::DB::Testgroup->column_alias("expiration_days", "expirationdays");
 
 Litmus::DB::Testgroup->has_a(product => "Litmus::DB::Product");
 

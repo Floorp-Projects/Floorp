@@ -27,7 +27,10 @@ use CGI;
 
 Litmus::DB::Platform->table('platforms');
 
-Litmus::DB::Platform->columns(All => qw/platformid product name detect_regexp iconpath/);
+Litmus::DB::Platform->columns(All => qw/platform_id product_id name detect_regexp iconpath/);
+
+Litmus::DB::Platform->column_alias("platform_id", "platformid");
+Litmus::DB::Platform->column_alias("product_id", "product");
 
 Litmus::DB::Platform->has_a(product => "Litmus::DB::Product");
 Litmus::DB::Platform->has_many(testresults => "Litmus::DB::Testresult");

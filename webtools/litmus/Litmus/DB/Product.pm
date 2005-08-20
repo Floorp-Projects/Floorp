@@ -26,7 +26,9 @@ use base 'Litmus::DBI';
 
 Litmus::DB::Product->table('products');
 
-Litmus::DB::Product->columns(All => qw/productid name iconpath/);
+Litmus::DB::Product->columns(All => qw/product_id name iconpath/);
+
+Litmus::DB::Product->column_alias("product_id", "productid");
 
 Litmus::DB::Product->has_many(tests => "Litmus::DB::Test");
 Litmus::DB::Product->has_many(testgroups => "Litmus::DB::Testgroup");

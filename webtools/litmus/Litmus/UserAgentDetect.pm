@@ -40,14 +40,14 @@ Litmus::DB::Platform->set_sql(detectplatform => qq{
                                                   FROM __TABLE__
                                                   WHERE 
                                                       ? REGEXP detect_regexp AND 
-                                                      product LIKE ?
+                                                      product_id LIKE ?
                                                 });
 Litmus::DB::Branch->set_sql(detectbranch => qq{
                                                 SELECT __ESSENTIAL__
                                                 FROM __TABLE__
                                                 WHERE 
                                                     ? REGEXP detect_regexp AND 
-                                                    product LIKE ?
+                                                    product_id LIKE ?
                                             });                                                
 
 # constructor. Optionally you can pass a UA string 

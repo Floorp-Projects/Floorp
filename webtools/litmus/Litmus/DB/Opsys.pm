@@ -26,7 +26,10 @@ use base 'Litmus::DBI';
 
 Litmus::DB::Opsys->table('opsyses');
 
-Litmus::DB::Opsys->columns(All => qw/opsysid platform name detect_regexp/);
+Litmus::DB::Opsys->columns(All => qw/opsys_id platform_id name detect_regexp/);
+
+Litmus::DB::Opsys->column_alias("opsys_id", "opsysid");
+Litmus::DB::Opsys->column_alias("platform_id", "platform");
 
 Litmus::DB::Opsys->has_many(testresults => "Litmus::DB::Testresult");
 Litmus::DB::Opsys->has_a(platform => "Litmus::DB::Platform");
