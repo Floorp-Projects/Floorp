@@ -102,6 +102,11 @@ class nsNativeTheme
     return CheckBooleanAttr(aFrame, mSelectedAtom);
   }
 
+  // toolbarbutton:
+  PRBool IsCheckedButton(nsIFrame* aFrame) {
+    return CheckBooleanAttr(aFrame, mCheckedAtom);
+  }
+  
   // treeheadercell:
   TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame) {
     nsAutoString sortdir;
