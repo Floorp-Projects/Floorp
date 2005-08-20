@@ -73,8 +73,9 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
   mCheckedAtom = getter_AddRefs(NS_NewAtom("checked"));
   mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
-  mInputCheckedAtom = getter_AddRefs(NS_NewPermanentAtom("_moz-input-checked"));
+  mInputCheckedAtom = getter_AddRefs(NS_NewAtom("_moz-input-checked"));
   mInputAtom = getter_AddRefs(NS_NewAtom("input"));
+  mFocusedAtom = getter_AddRefs(NS_NewAtom("focused"));
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -283,7 +284,19 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                           &state);
     break;
 
+  case NS_THEME_DROPDOWN_TEXTFIELD:
+    if (aFrame)
+      // look at the parent frame (the textbox)
+      aFrame->GetParent(&aFrame);
+
+    // fall through
+
   case NS_THEME_TEXTFIELD:
+    // The textfield element isn't actually focused, the inner
+    // html:input is.  Use the focused attribute to get the correct
+    // state.
+
+    state.focused = CheckBooleanAttr(aFrame, mFocusedAtom);
     EnsureEntryWidget();
     moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect, &gdk_clip,
                         &state);
@@ -336,6 +349,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     }
     break;
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_DROPDOWN_TEXTFIELD:
     EnsureEntryWidget();
     WidgetBorderToMargin(gEntryWidget, aResult);
     break;
@@ -495,9 +509,11 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
   case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_RADIO:
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_TOOLBOX:
     return PR_TRUE;
