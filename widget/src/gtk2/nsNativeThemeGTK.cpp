@@ -101,8 +101,12 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   // If we're using a blacklisted engine, we need to disable all widget types.
 
   EnsureButtonWidget();  // arbitrary, but we need a widget's style
+  GtkThemeEngine* gtkThemeEng = gButtonWidget->style->engine;
+  if (!gtkThemeEng)  // gtk's built-in drawing routines are safe
+    return;
+
+  const char* curEngine = ((GtkThemeEnginePrivate*) gtkThemeEng)->name;
   const char* eng;
-  const char* curEngine = ((GtkThemeEnginePrivate*) gButtonWidget->style->engine)->name;
   int i = 0;
   while ((eng = sDisabledEngines[i++])) {
     if (!strcmp(eng, curEngine)) {
