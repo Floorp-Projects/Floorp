@@ -203,7 +203,7 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
 
 HANDLE
 nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
-{
+{ 
   if (!mThemeDLL)
     return NULL;
 
@@ -967,13 +967,12 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-  if (!aPresContext)
-    return PR_TRUE;
-
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  if (!shell->IsThemeSupportEnabled())
-    return PR_FALSE;
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (!shell->IsThemeSupportEnabled())
+      return PR_FALSE;
+  }
 
   HANDLE theme = NULL;
   if (aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
