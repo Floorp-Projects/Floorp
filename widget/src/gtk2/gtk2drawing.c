@@ -297,11 +297,10 @@ ConvertGtkState(GtkWidgetState* state)
 {
     if (state->disabled)
         return GTK_STATE_INSENSITIVE;
-    else if (state->active)
-        return GTK_STATE_ACTIVE;
     else if (state->inHover)
-        return GTK_STATE_PRELIGHT;
-    return GTK_STATE_NORMAL;
+        return (state->active ? GTK_STATE_ACTIVE : GTK_STATE_PRELIGHT);
+    else
+        return GTK_STATE_NORMAL;
 }
 
 static gint
@@ -789,18 +788,18 @@ moz_gtk_container_paint(GdkDrawable* drawable, GdkRectangle* rect,
         style = gCheckboxWidget->style;
     }
 
-    if (state_type != GTK_STATE_NORMAL && state_type != GTK_STATE_PRELIGHT)
-        state_type = GTK_STATE_NORMAL;
-  
     TSOffsetStyleGCs(style, rect->x, rect->y);
 
     /* this is for drawing a prelight box */
-    if (state_type != GTK_STATE_NORMAL) {
-        gtk_paint_flat_box(style, drawable, state_type, GTK_SHADOW_ETCHED_OUT,
+    if (state_type == GTK_STATE_PRELIGHT || state_type == GTK_STATE_ACTIVE) {
+        gtk_paint_flat_box(style, drawable, GTK_STATE_PRELIGHT, GTK_SHADOW_ETCHED_OUT,
                            cliprect, gCheckboxWidget,
-                           isradio ? "radiobutton" : "checkbutton",
+                           "checkbutton",
                            rect->x, rect->y, rect->width, rect->height);
     }
+
+    if (state_type != GTK_STATE_NORMAL && state_type != GTK_STATE_PRELIGHT)
+        state_type = GTK_STATE_NORMAL;
 
     if (state->focused) {
         gtk_paint_focus(style, drawable, state_type, cliprect, gCheckboxWidget,
