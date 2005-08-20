@@ -815,7 +815,8 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
   
     case NS_THEME_BUTTON:
       if ( OnMacOSX() )
-        aResult->SizeTo(14,2,14,2);   // 14px left/right endcaps in aqua.
+        aResult->SizeTo(kAquaPushButtonEndcaps, kAquaPushButtonTopBottom, 
+                            kAquaPushButtonEndcaps, kAquaPushButtonTopBottom);
       else
         aResult->SizeTo(5,2,5,2);     // 5px for AGA
       break;
@@ -826,7 +827,8 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
       if ( OnMacOSX() )
-        aResult->SizeTo(9,2,20,2);     // 9px left endcaps in aqua, bigger right border for button
+        aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
+                          kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       else
         aResult->SizeTo(3,0,3,0);     // 3px for AGA
       break;
@@ -867,6 +869,14 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
 #if TARGET_CARBON
   switch ( aWidgetType ) {
   
+    case NS_THEME_BUTTON:
+    {
+      SInt32 buttonHeight = 0;
+      ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
+      aResult->SizeTo(kAquaPushButtonEndcaps*2, buttonHeight);
+      break;
+    }
+      
     case NS_THEME_CHECKBOX:
     {
       SInt32 boxHeight = 0, boxWidth = 0;
@@ -884,7 +894,6 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       ::GetThemeMetric(kThemeMetricCheckBoxHeight, &radioHeight);
       aResult->SizeTo(radioWidth, radioHeight);
       *aIsOverridable = PR_FALSE;
-      aResult->SizeTo(18,18);
       break;
     }
 
