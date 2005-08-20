@@ -54,6 +54,7 @@ extern GtkWidget* gEntryWidget;
 extern GtkWidget* gArrowWidget;
 extern GtkWidget* gDropdownButtonWidget;
 extern GtkWidget* gHandleBoxWidget;
+extern GtkTooltips* gTooltipWidget;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* state)
@@ -159,6 +160,23 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
 }
 
 void
+moz_gtk_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                    GdkRectangle* cliprect, GtkWidgetState* state)
+{
+  GtkMisc* misc = GTK_MISC(gArrowWidget);
+  gint extent = MIN(rect->width - misc->xpad * 2, rect->height - misc->ypad * 2);
+  gint x = ((rect->x + misc->xpad) * (1.0 - misc->xalign) +
+            (rect->x + rect->width - extent - misc->xpad) * misc->xalign);
+  gint y = ((rect->y + misc->ypad) * (1.0 - misc->yalign) +
+            (rect->y + rect->height - extent - misc->ypad) * misc->yalign);
+
+  gtk_paint_arrow(style, window, ConvertGtkState(state),
+                  state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT, cliprect,
+                  gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, x, 
+                  y, extent, extent);
+}
+
+void
 moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
                                GdkRectangle* rect, GdkRectangle* cliprect,
                                GtkWidgetState* state, GtkArrowType type)
@@ -206,6 +224,11 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
                               gint* stepper_size, gint* stepper_spacing,
                               gint* min_slider_size)
 {
+#if ((GTK_MINOR_VERSION == 2) && (GTK_MICRO_VERSION > 8)) || (GTK_MINOR_VERSION > 2)
+  /*
+   * This API is only supported in GTK+ >= 1.2.9, and gives per-theme values.
+   */
+
   if (slider_width)
     *slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
                                                     "GtkRange::slider_width",
@@ -228,6 +251,26 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
 
   if (min_slider_size)
     *min_slider_size = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+#else
+  /*
+   * This is the older method, which gives per-engine values.
+   */
+
+  if (slider_width)
+    *slider_width = RANGE_CLASS(gScrollbarWidget)->slider_width;
+
+  if (trough_border)
+    *trough_border = gScrollbarWidget->style->klass->xthickness;
+
+  if (stepper_size)
+    *stepper_size = RANGE_CLASS(gScrollbarWidget)->stepper_size;
+
+  if (stepper_spacing)
+    *stepper_spacing = RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing;
+
+  if (min_slider_size)
+    *min_slider_size = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+#endif
 }
 
 void
@@ -275,12 +318,18 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
                              GdkRectangle* rect, GdkRectangle* cliprect, 
                              GtkWidgetState* state)
 {
+  GdkRectangle arrow_rect;
+
   moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, cliprect,
                        state, GTK_RELIEF_NORMAL);
-  gtk_paint_arrow(style, window, ConvertGtkState(state),
-                  state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT, cliprect,
-                  gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, rect->x, rect->y,
-                  rect->width, rect->height);
+
+  /* This mirrors gtkbutton's child positioning */
+  arrow_rect.x = rect->x + 1 + gDropdownButtonWidget->style->klass->xthickness;
+  arrow_rect.y = rect->y + 1 + gDropdownButtonWidget->style->klass->ythickness;
+  arrow_rect.width = MAX(1, rect->width - (arrow_rect.x - rect->x) * 2);
+  arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
+
+  moz_gtk_arrow_paint(window, style, &arrow_rect, cliprect, state);
 }
 
 void
@@ -294,10 +343,14 @@ moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
     state_type = GTK_STATE_NORMAL;
   
   if (state_type != GTK_STATE_NORMAL) /* this is for drawing a prelight box */
-    gtk_paint_flat_box (style, window, state_type, GTK_SHADOW_ETCHED_OUT,
-                        cliprect, gCheckboxWidget,
-                        isradio ? "radiobutton" : "checkbutton",
-                        rect->x, rect->y, rect->width, rect->height);
+    gtk_paint_flat_box(style, window, state_type, GTK_SHADOW_ETCHED_OUT,
+                       cliprect, gCheckboxWidget,
+                       isradio ? "radiobutton" : "checkbutton",
+                       rect->x, rect->y, rect->width, rect->height);
+
+  if (state->focused)
+    gtk_paint_focus(style, window, cliprect, gCheckboxWidget, "checkbutton",
+                    rect->x, rect->y, rect->width - 1, rect->height - 1);
 }
 
 void
@@ -308,3 +361,13 @@ moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                 cliprect, gHandleBoxWidget, "dockitem_bin",
                 rect->x, rect->y, rect->width, rect->height);
 }
+
+void
+moz_gtk_tooltip_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* cliprect)
+{
+  gtk_paint_flat_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                     cliprect, gTooltipWidget->tip_window, "tooltip", rect->x,
+                     rect->y, rect->width, rect->height);
+}
+
