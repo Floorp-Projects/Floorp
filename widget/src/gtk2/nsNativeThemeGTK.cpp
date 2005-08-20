@@ -64,11 +64,12 @@ GtkWidget* gDropdownButonWidget;
 GtkWidget* gArrowWidget;
 GtkWidget* gDropdownButtonWidget;
 GtkWidget* gHandleBoxWidget;
+GtkWidget* gFrameWidget;
+GtkWidget* gProtoWindow;
 GtkTooltips* gTooltipWidget;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
-  : mProtoWindow(nsnull),
-    mProtoLayout(nsnull)
+  : mProtoLayout(nsnull)
 {
   NS_INIT_ISUPPORTS();
   mDisabledAtom = do_GetAtom("disabled");
@@ -81,8 +82,8 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
   // This will destroy all of our widgets
-  if (mProtoWindow)
-    gtk_widget_destroy(mProtoWindow);
+  if (gProtoWindow)
+    gtk_widget_destroy(gProtoWindow);
   if (gTooltipWidget)
     gtk_object_unref(GTK_OBJECT(gTooltipWidget));
 }
@@ -266,6 +267,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     {
       EnsureScrollbarWidget();
+      EnsureArrowWidget();
       GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
       moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style,
                                      &gdk_rect, &gdk_clip, &state, arrowType);
@@ -318,15 +320,22 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             &gdk_clip, &state,
                             (aWidgetType == NS_THEME_RADIO_CONTAINER));
     break;
+
   case NS_THEME_TOOLBOX:
     EnsureHandleBoxWidget();
     moz_gtk_toolbar_paint(window, gHandleBoxWidget->style, &gdk_rect,
                           &gdk_clip);
     break;
+
   case NS_THEME_TOOLTIP:
     EnsureTooltipWidget();
     moz_gtk_tooltip_paint(window, gTooltipWidget->tip_window->style, &gdk_rect,
                           &gdk_clip);
+    break;
+
+  case NS_THEME_STATUSBAR_PANEL:
+    EnsureFrameWidget();
+    moz_gtk_frame_paint(window, gFrameWidget->style, &gdk_rect, &gdk_clip);
     break;
   }
 
@@ -377,6 +386,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
     aResult->top = aResult->bottom = aResult->left = aResult->right = 1;
+    break;
+  case NS_THEME_STATUSBAR_PANEL:
+    EnsureFrameWidget();
+    WidgetBorderToMargin(gFrameWidget, aResult);
     break;
   }
 
@@ -511,26 +524,69 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
 {
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
+  case NS_THEME_RADIO:
   case NS_THEME_CHECKBOX:
-  case NS_THEME_CHECKBOX_CONTAINER:
-  case NS_THEME_RADIO_CONTAINER:
+  case NS_THEME_TOOLBOX:
+    // case NS_THEME_TOOLBAR:  (not in skin)
+  case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
+    // case NS_THEME_TOOLBAR_DUAL_BUTTON_DROPDOWN:
+    // case NS_THEME_TOOLBAR_SEPARATOR:
+  case NS_THEME_TOOLBAR_GRIPPER:
+  case NS_THEME_STATUSBAR:
+  case NS_THEME_STATUSBAR_PANEL:
+    // case NS_THEME_RESIZER:
+    // case NS_THEME_LISTBOX:
+    // case NS_THEME_LISTBOX_LISTITEM:
+    // case NS_THEME_TREEVIEW:
+    // case NS_THEME_TREEVIEW_TREEITEM:
+    // case NS_THEME_TREEVIEW_TWISTY:
+    // case NS_THEME_TREEVIEW_LINE:
+    // case NS_THEME_TREEVIEW_HEADER:
+    // case NS_THEME_TREEVIEW_HEADER_CELL:
+    // case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    // case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    // case NS_THEME_PROGRESSBAR:
+    // case NS_THEME_PROGRESSBAR_CHUNK:
+    // case NS_THEME_PROGRESSBAR_VERTICAL:
+    // case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    // case NS_THEME_TAB:
+    // case NS_THEME_TAB_PANEL:
+    // case NS_THEME_TAB_LEFT_EDGE:
+    // case NS_THEME_TAB_RIGHT_EDGE:
+    // case NS_THEME_TAB_PANELS:
+  case NS_THEME_TOOLTIP:
+    // case NS_THEME_SPINNER:
+    // case NS_THEME_SPINNER_UP_BUTTON:
+    // case NS_THEME_SPINNER_DOWN_BUTTON:
+    // case NS_THEME_SCROLLBAR:
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-  case NS_THEME_TOOLBAR_BUTTON:
-  case NS_THEME_TOOLBAR_DUAL_BUTTON: // so we can override the border with 0
-  case NS_THEME_TOOLBAR_GRIPPER:
-  case NS_THEME_RADIO:
+  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
+    // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
   case NS_THEME_TEXTFIELD:
-  case NS_THEME_DROPDOWN_TEXTFIELD:
+    // case NS_THEME_TEXTFIELD_CARET:
+    // case NS_THEME_DROPDOWN:
   case NS_THEME_DROPDOWN_BUTTON:
-  case NS_THEME_TOOLBOX:
-  case NS_THEME_TOOLTIP:
+    // case NS_THEME_DROPDOWN_TEXT:
+  case NS_THEME_DROPDOWN_TEXTFIELD:
+    // case NS_THEME_SLIDER:
+    // case NS_THEME_SLIDER_THUMB:
+    // case NS_THEME_SLIDER_THUMB_START:
+    // case NS_THEME_SLIDER_THUMB_END:
+    // case NS_THEME_SLIDER_TICK:
+  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_RADIO_CONTAINER:
+    // case NS_THEME_WINDOW:
+    // case NS_THEME_DIALOG:
+    // case NS_THEME_MENU:
+    // case NS_THEME_MENUBAR:
     return PR_TRUE;
   }
 
@@ -551,10 +607,10 @@ nsNativeThemeGTK::WidgetIsContainer(PRUint8 aWidgetType)
 void
 nsNativeThemeGTK::SetupWidgetPrototype(GtkWidget* widget)
 {
-  if (!mProtoWindow) {
-    mProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
+  if (!gProtoWindow) {
+    gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
     mProtoLayout = gtk_fixed_new();
-    gtk_container_add(GTK_CONTAINER(mProtoWindow), mProtoLayout);
+    gtk_container_add(GTK_CONTAINER(gProtoWindow), mProtoLayout);
   }
 
   gtk_container_add(GTK_CONTAINER(mProtoLayout), widget);
@@ -637,6 +693,15 @@ nsNativeThemeGTK::EnsureTooltipWidget()
     gtk_tooltips_force_window(gTooltipWidget);
     gtk_widget_set_rc_style(gTooltipWidget->tip_window);
     gtk_widget_realize(gTooltipWidget->tip_window);
+  }
+}
+
+void
+nsNativeThemeGTK::EnsureFrameWidget()
+{
+  if (!gFrameWidget) {
+    gFrameWidget = gtk_frame_new(NULL);
+    SetupWidgetPrototype(gFrameWidget);
   }
 }
 
