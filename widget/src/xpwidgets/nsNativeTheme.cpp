@@ -246,7 +246,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
           lookAndFeel->GetColor(sButtonBorderColorID,
                                 defaultBorderColor);
           lookAndFeel->GetColor(sButtonBGColorID,
-                                defaultBorderColor);
+                                defaultBGColor);
         }
         break;
 
