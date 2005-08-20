@@ -70,12 +70,12 @@ nsNativeThemeGTK::nsNativeThemeGTK()
     mProtoLayout(nsnull)
 {
   NS_INIT_ISUPPORTS();
-  mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
-  mCheckedAtom = getter_AddRefs(NS_NewAtom("checked"));
-  mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
-  mInputCheckedAtom = getter_AddRefs(NS_NewAtom("_moz-input-checked"));
-  mInputAtom = getter_AddRefs(NS_NewAtom("input"));
-  mFocusedAtom = getter_AddRefs(NS_NewAtom("focused"));
+  mDisabledAtom = do_GetAtom("disabled");
+  mCheckedAtom = do_GetAtom("checked");
+  mSelectedAtom = do_GetAtom("selected");
+  mInputCheckedAtom = do_GetAtom("_moz-input-checked");
+  mInputAtom = do_GetAtom("input");
+  mFocusedAtom = do_GetAtom("focused");
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -358,11 +358,6 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     EnsureButtonWidget();
     WidgetBorderToMargin(gButtonWidget, aResult);
     break;
-  case NS_THEME_CHECKBOX:
-  case NS_THEME_RADIO:
-    EnsureCheckBoxWidget();
-    WidgetBorderToMargin(gCheckboxWidget, aResult);
-    break;
   case NS_THEME_TOOLBAR_GRIPPER:
     EnsureGripperWidget();
     WidgetBorderToMargin(gGripperWidget, aResult);
@@ -370,6 +365,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   case NS_THEME_DROPDOWN_BUTTON:
     EnsureArrowWidget();
     WidgetBorderToMargin(gDropdownButtonWidget, aResult);
+    break;
+  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_RADIO_CONTAINER:
+    aResult->top = aResult->bottom = aResult->left = aResult->right = 1;
     break;
   }
 
