@@ -12,7 +12,7 @@
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.
 **
-** @(#) $Id: sqlite.h.in,v 1.131 2005/03/21 04:04:03 danielk1977 Exp $
+** @(#) $Id: sqlite.h.in,v 1.136 2005/06/12 22:12:39 drh Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -31,7 +31,7 @@ extern "C" {
 #ifdef SQLITE_VERSION
 # undef SQLITE_VERSION
 #endif
-#define SQLITE_VERSION         "--VERS--"
+#define SQLITE_VERSION         "3.2.2"
 
 /*
 ** The format of the version string is "X.Y.Z<trailing string>", where
@@ -48,7 +48,7 @@ extern "C" {
 #ifdef SQLITE_VERSION_NUMBER
 # undef SQLITE_VERSION_NUMBER
 #endif
-#define SQLITE_VERSION_NUMBER 3002000
+#define SQLITE_VERSION_NUMBER 3002002
 
 /*
 ** The version string is also compiled into the library so that a program
@@ -687,35 +687,7 @@ const char *sqlite3_bind_parameter_name(sqlite3_stmt*, int);
 int sqlite3_bind_parameter_index(sqlite3_stmt*, const char *zName);
 
 /*
-** Transfer any existing parameter bindings from pOldStmt to pNewStmt.
-** They both must have the exact same number of parameters.  They must
-** both be created against the same database.  Neither must be
-** currently in a running state.  The bindings of pOldStmt are lost
-** after this.
-**/
-int sqlite3_transfer_bindings(
-  sqlite3_stmt *pOldStmt,
-  sqlite3_stmt *pNewStmt
-);
-
-/*
-** Given a wildcard parameter name, return the set of indexes of the
-** variables with that name.  If there are no variables with the given
-** name, return 0.  Otherwise, return the number of indexes returned
-** in *pIndexes.  The array should be freed with
-** sqlite3_free_parameter_indexes.
-*/
-int sqlite3_bind_parameter_indexes(
-    sqlite3_stmt *pStmt,
-    const char *zName,
-    int **pIndexes
-);
-void sqlite3_free_parameter_indexes(int *pIndexes);
-
-/*
 ** Set all the parameters in the compiled SQL statement to NULL.
-**
-******* THIS IS AN EXPERIMENTAL API AND IS SUBJECT TO CHANGE ******
 */
 int sqlite3_clear_bindings(sqlite3_stmt*);
 
@@ -1217,22 +1189,28 @@ int sqlite3_rekey(
 ** milisecond time resolution, then the time will be rounded up to 
 ** the nearest second. The number of miliseconds of sleep actually 
 ** requested from the operating system is returned.
-**
-******* THIS IS AN EXPERIMENTAL API AND IS SUBJECT TO CHANGE ******
 */
 int sqlite3_sleep(int);
 
 /*
-** Return TRUE (non-zero) of the statement supplied as an argument needs
+** Return TRUE (non-zero) if the statement supplied as an argument needs
 ** to be recompiled.  A statement needs to be recompiled whenever the
 ** execution environment changes in a way that would alter the program
 ** that sqlite3_prepare() generates.  For example, if new functions or
 ** collating sequences are registered or if an authorizer function is
 ** added or changed.
 **
-******* THIS IS AN EXPERIMENTAL API AND IS SUBJECT TO CHANGE ******
 */
 int sqlite3_expired(sqlite3_stmt*);
+
+/*
+** Move all bindings from the first prepared statement over to the second.
+** This routine is useful, for example, if the first prepared statement
+** fails with an SQLITE_SCHEMA error.  The same SQL can be prepared into
+** the second prepared statement then all of the bindings transfered over
+** to the second statement before the first statement is finalized.
+*/
+int sqlite3_transfer_bindings(sqlite3_stmt*, sqlite3_stmt*);
 
 /*
 ** If the following global variable is made to point to a
@@ -1250,7 +1228,7 @@ extern char *sqlite3_temp_directory;
 ** This function is called to recover from a malloc() failure that occured
 ** within the SQLite library. Normally, after a single malloc() fails the 
 ** library refuses to function (all major calls return SQLITE_NOMEM).
-** This function library state so that it can be used again.
+** This function restores the library state so that it can be used again.
 **
 ** All existing statements (sqlite3_stmt pointers) must be finalized or
 ** reset before this call is made. Otherwise, SQLITE_BUSY is returned.
@@ -1266,6 +1244,36 @@ extern char *sqlite3_temp_directory;
 ** SQLITE_OMIT_GLOBALRECOVER at compile time.
 */
 int sqlite3_global_recover();
+
+/*
+** Test to see whether or not the database connection is in autocommit
+** mode.  Return TRUE if it is and FALSE if not.  Autocommit mode is on
+** by default.  Autocommit is disabled by a BEGIN statement and reenabled
+** by the next COMMIT or ROLLBACK.
+*/
+int sqlite3_get_autocommit(sqlite3*);
+
+/*
+** Return the sqlite3* database handle to which the prepared statement given
+** in the argument belongs.  This is the same database handle that was
+** the first argument to the sqlite3_prepare() that was used to create
+** the statement in the first place.
+*/
+sqlite3 *sqlite3_db_handle(sqlite3_stmt*);
+
+/*
+** Given a wildcard parameter name, return the set of indexes of the
+** variables with that name.  If there are no variables with the given
+** name, return 0.  Otherwise, return the number of indexes returned
+** in *pIndexes.  The array should be freed with
+** sqlite3_free_parameter_indexes.
+*/
+int sqlite3_bind_parameter_indexes(
+    sqlite3_stmt *pStmt,
+    const char *zName,
+    int **pIndexes
+);
+void sqlite3_free_parameter_indexes(int *pIndexes);
 
 #ifdef __cplusplus
 }  /* End of the 'extern "C"' block */

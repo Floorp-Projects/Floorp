@@ -22,7 +22,7 @@
 **     COMMIT
 **     ROLLBACK
 **
-** $Id: build.c,v 1.318 2005/03/29 03:10:59 danielk1977 Exp $
+** $Id: build.c,v 1.326 2005/06/12 21:35:52 drh Exp $
 */
 #include "sqliteInt.h"
 #include <ctype.h>
@@ -266,9 +266,10 @@ static void sqliteDeleteIndex(sqlite3 *db, Index *p){
 }
 
 /*
-** Unlink the given index from its table, then remove
-** the index from the index hash table and free its memory
-** structures.
+** For the index called zIdxName which is found in the database iDb,
+** unlike that index from its Table then remove the index from
+** the index hash table and free all memory structures associated
+** with the index.
 */
 void sqlite3UnlinkAndDeleteIndex(sqlite3 *db, int iDb, const char *zIdxName){
   Index *pIndex;
@@ -426,6 +427,13 @@ void sqlite3DeleteTable(sqlite3 *db, Table *pTable){
 
   if( pTable==0 ) return;
 
+  /* Do not delete the table until the reference count reaches zero. */
+  pTable->nRef--;
+  if( pTable->nRef>0 ){
+    return;
+  }
+  assert( pTable->nRef==0 );
+
   /* Delete all indices associated with this table
   */
   for(pIndex = pTable->pIndex; pIndex; pIndex=pNext){
@@ -496,7 +504,7 @@ void sqlite3UnlinkAndDeleteTable(sqlite3 *db, int iDb, const char *zTabName){
 ** is obtained from sqliteMalloc() and must be freed by the calling
 ** function.
 **
-** Tokens are really just pointers into the original SQL text and so
+** Tokens are often just pointers into the original SQL text and so
 ** are not \000 terminated and are not persistent.  The returned string
 ** is \000 terminated and is persistent.
 */
@@ -598,6 +606,7 @@ int sqlite3TwoPartName(
 */
 int sqlite3CheckObjectName(Parse *pParse, const char *zName){
   if( !pParse->db->init.busy && pParse->nested==0 
+          && (pParse->db->flags & SQLITE_WriteSchema)==0
           && 0==sqlite3StrNICmp(zName, "sqlite_", 7) ){
     sqlite3ErrorMsg(pParse, "object name reserved for internal use: %s", zName);
     return SQLITE_ERROR;
@@ -727,6 +736,7 @@ void sqlite3StartTable(
   pTable->iPKey = -1;
   pTable->pIndex = 0;
   pTable->iDb = iDb;
+  pTable->nRef = 1;
   if( pParse->pNewTable ) sqlite3DeleteTable(db, pParse->pNewTable);
   pParse->pNewTable = pTable;
 
@@ -781,10 +791,10 @@ void sqlite3StartTable(
       sqlite3VdbeAddOp(v, OP_CreateTable, iDb, 0);
     }
     sqlite3OpenMasterTable(v, iDb);
-    sqlite3VdbeAddOp(v, OP_NewRecno, 0, 0);
+    sqlite3VdbeAddOp(v, OP_NewRowid, 0, 0);
     sqlite3VdbeAddOp(v, OP_Dup, 0, 0);
-    sqlite3VdbeAddOp(v, OP_String8, 0, 0);
-    sqlite3VdbeAddOp(v, OP_PutIntKey, 0, 0);
+    sqlite3VdbeAddOp(v, OP_Null, 0, 0);
+    sqlite3VdbeAddOp(v, OP_Insert, 0, 0);
     sqlite3VdbeAddOp(v, OP_Close, 0, 0);
     sqlite3VdbeAddOp(v, OP_Pull, 1, 0);
   }
@@ -1076,154 +1086,6 @@ void sqlite3AddCollateType(Parse *pParse, const char *zType, int nType){
 }
 
 /*
-** Locate and return an entry from the db.aCollSeq hash table. If the entry
-** specified by zName and nName is not found and parameter 'create' is
-** true, then create a new entry. Otherwise return NULL.
-**
-** Each pointer stored in the sqlite3.aCollSeq hash table contains an
-** array of three CollSeq structures. The first is the collation sequence
-** prefferred for UTF-8, the second UTF-16le, and the third UTF-16be.
-**
-** Stored immediately after the three collation sequences is a copy of
-** the collation sequence name. A pointer to this string is stored in
-** each collation sequence structure.
-*/
-static CollSeq * findCollSeqEntry(
-  sqlite3 *db,
-  const char *zName,
-  int nName,
-  int create
-){
-  CollSeq *pColl;
-  if( nName<0 ) nName = strlen(zName);
-  pColl = sqlite3HashFind(&db->aCollSeq, zName, nName);
-
-  if( 0==pColl && create ){
-    pColl = sqliteMalloc( 3*sizeof(*pColl) + nName + 1 );
-    if( pColl ){
-      CollSeq *pDel = 0;
-      pColl[0].zName = (char*)&pColl[3];
-      pColl[0].enc = SQLITE_UTF8;
-      pColl[1].zName = (char*)&pColl[3];
-      pColl[1].enc = SQLITE_UTF16LE;
-      pColl[2].zName = (char*)&pColl[3];
-      pColl[2].enc = SQLITE_UTF16BE;
-      memcpy(pColl[0].zName, zName, nName);
-      pColl[0].zName[nName] = 0;
-      pDel = sqlite3HashInsert(&db->aCollSeq, pColl[0].zName, nName, pColl);
-
-      /* If a malloc() failure occured in sqlite3HashInsert(), it will 
-      ** return the pColl pointer to be deleted (because it wasn't added
-      ** to the hash table).
-      */
-      assert( !pDel || (sqlite3_malloc_failed && pDel==pColl) );
-      sqliteFree(pDel);
-    }
-  }
-  return pColl;
-}
-
-/*
-** Parameter zName points to a UTF-8 encoded string nName bytes long.
-** Return the CollSeq* pointer for the collation sequence named zName
-** for the encoding 'enc' from the database 'db'.
-**
-** If the entry specified is not found and 'create' is true, then create a
-** new entry.  Otherwise return NULL.
-*/
-CollSeq *sqlite3FindCollSeq(
-  sqlite3 *db,
-  u8 enc,
-  const char *zName,
-  int nName,
-  int create
-){
-  CollSeq *pColl = findCollSeqEntry(db, zName, nName, create);
-  assert( SQLITE_UTF8==1 && SQLITE_UTF16LE==2 && SQLITE_UTF16BE==3 );
-  assert( enc>=SQLITE_UTF8 && enc<=SQLITE_UTF16BE );
-  if( pColl ) pColl += enc-1;
-  return pColl;
-}
-
-/*
-** Invoke the 'collation needed' callback to request a collation sequence
-** in the database text encoding of name zName, length nName.
-** If the collation sequence
-*/
-static void callCollNeeded(sqlite3 *db, const char *zName, int nName){
-  assert( !db->xCollNeeded || !db->xCollNeeded16 );
-  if( nName<0 ) nName = strlen(zName);
-  if( db->xCollNeeded ){
-    char *zExternal = sqliteStrNDup(zName, nName);
-    if( !zExternal ) return;
-    db->xCollNeeded(db->pCollNeededArg, db, (int)db->enc, zExternal);
-    sqliteFree(zExternal);
-  }
-#ifndef SQLITE_OMIT_UTF16
-  if( db->xCollNeeded16 ){
-    char const *zExternal;
-    sqlite3_value *pTmp = sqlite3GetTransientValue(db);
-    sqlite3ValueSetStr(pTmp, -1, zName, SQLITE_UTF8, SQLITE_STATIC);
-    zExternal = sqlite3ValueText(pTmp, SQLITE_UTF16NATIVE);
-    if( !zExternal ) return;
-    db->xCollNeeded16(db->pCollNeededArg, db, (int)db->enc, zExternal);
-  }
-#endif
-}
-
-/*
-** This routine is called if the collation factory fails to deliver a
-** collation function in the best encoding but there may be other versions
-** of this collation function (for other text encodings) available. Use one
-** of these instead if they exist. Avoid a UTF-8 <-> UTF-16 conversion if
-** possible.
-*/
-static int synthCollSeq(Parse *pParse, CollSeq *pColl){
-  CollSeq *pColl2;
-  char *z = pColl->zName;
-  int n = strlen(z);
-  sqlite3 *db = pParse->db;
-  int i;
-  static const u8 aEnc[] = { SQLITE_UTF16BE, SQLITE_UTF16LE, SQLITE_UTF8 };
-  for(i=0; i<3; i++){
-    pColl2 = sqlite3FindCollSeq(db, aEnc[i], z, n, 0);
-    if( pColl2->xCmp!=0 ){
-      memcpy(pColl, pColl2, sizeof(CollSeq));
-      return SQLITE_OK;
-    }
-  }
-  if( pParse->nErr==0 ){
-    sqlite3ErrorMsg(pParse, "no such collation sequence: %.*s", n, z);
-  }
-  pParse->nErr++;
-  return SQLITE_ERROR;
-}
-
-/*
-** This routine is called on a collation sequence before it is used to
-** check that it is defined. An undefined collation sequence exists when
-** a database is loaded that contains references to collation sequences
-** that have not been defined by sqlite3_create_collation() etc.
-**
-** If required, this routine calls the 'collation needed' callback to
-** request a definition of the collating sequence. If this doesn't work, 
-** an equivalent collating sequence that uses a text encoding different
-** from the main database is substituted, if one is available.
-*/
-int sqlite3CheckCollSeq(Parse *pParse, CollSeq *pColl){
-  if( pColl && !pColl->xCmp ){
-    /* No collation sequence of this type for this encoding is registered.
-    ** Call the collation factory to see if it can supply us with one.
-    */
-    callCollNeeded(pParse->db, pColl->zName, strlen(pColl->zName));
-    if( !pColl->xCmp && synthCollSeq(pParse, pColl) ){
-      return SQLITE_ERROR;
-    }
-  }
-  return SQLITE_OK;
-}
-
-/*
 ** Call sqlite3CheckCollSeq() for all collating sequences in an index,
 ** in order to verify that all the necessary collating sequences are
 ** loaded.
@@ -1255,33 +1117,22 @@ int sqlite3CheckIndexCollSeq(Parse *pParse, Index *pIdx){
 ** pParse.
 */
 CollSeq *sqlite3LocateCollSeq(Parse *pParse, const char *zName, int nName){
-  u8 enc = pParse->db->enc;
-  u8 initbusy = pParse->db->init.busy;
-  CollSeq *pColl = sqlite3FindCollSeq(pParse->db, enc, zName, nName, initbusy);
-  if( nName<0 ) nName = strlen(zName);
+  sqlite3 *db = pParse->db;
+  u8 enc = db->enc;
+  u8 initbusy = db->init.busy;
+
+  CollSeq *pColl = sqlite3FindCollSeq(db, enc, zName, nName, initbusy);
   if( !initbusy && (!pColl || !pColl->xCmp) ){
-    /* No collation sequence of this type for this encoding is registered.
-    ** Call the collation factory to see if it can supply us with one.
-    */
-    callCollNeeded(pParse->db, zName, nName);
-    pColl = sqlite3FindCollSeq(pParse->db, enc, zName, nName, 0);
-    if( pColl && !pColl->xCmp ){
-      /* There may be a version of the collation sequence that requires
-      ** translation between encodings. Search for it with synthCollSeq().
-      */
-      if( synthCollSeq(pParse, pColl) ){
-        return 0;
+    pColl = sqlite3GetCollSeq(db, pColl, zName, nName);
+    if( !pColl ){
+      if( nName<0 ){
+        nName = strlen(zName);
       }
+      sqlite3ErrorMsg(pParse, "no such collation sequence: %.*s", nName, zName);
+      pColl = 0;
     }
   }
 
-  /* If nothing has been found, write the error message into pParse */
-  if( !initbusy && (!pColl || !pColl->xCmp) ){
-    if( pParse->nErr==0 ){
-      sqlite3ErrorMsg(pParse, "no such collation sequence: %.*s", nName, zName);
-    }
-    pColl = 0;
-  }
   return pColl;
 }
 
@@ -1510,7 +1361,7 @@ void sqlite3EndTable(
     if( pSelect ){
       zStmt = createTableStmt(p);
     }else{
-      n = Addr(pEnd->z) - Addr(pParse->sNameToken.z) + 1;
+      n = pEnd->z - pParse->sNameToken.z + 1;
       zStmt = sqlite3MPrintf("CREATE %s %.*s", zType2, n, pParse->sNameToken.z);
     }
 
@@ -1605,6 +1456,11 @@ void sqlite3CreateView(
   DbFixer sFix;
   Token *pName;
 
+  if( pParse->nVar>0 ){
+    sqlite3ErrorMsg(pParse, "parameters are not allowed in views");
+    sqlite3SelectDelete(pSelect);
+    return;
+  }
   sqlite3StartTable(pParse, pBegin, pName1, pName2, isTemp, 1);
   p = pParse->pNewTable;
   if( p==0 || pParse->nErr ){
@@ -2152,7 +2008,7 @@ static void sqlite3RefillIndex(Parse *pParse, Index *pIndex, int memRootPage){
   addr1 = sqlite3VdbeAddOp(v, OP_Rewind, iTab, 0);
   sqlite3GenerateIndexKey(v, pIndex, iTab);
   isUnique = pIndex->onError!=OE_None;
-  sqlite3VdbeAddOp(v, OP_IdxPut, iIdx, isUnique);
+  sqlite3VdbeAddOp(v, OP_IdxInsert, iIdx, isUnique);
   if( isUnique ){
     sqlite3VdbeChangeP3(v, -1, "indexed columns are not unique", P3_STATIC);
   }
@@ -2463,7 +2319,7 @@ void sqlite3CreateIndex(
       /* A named index with an explicit CREATE INDEX statement */
       zStmt = sqlite3MPrintf("CREATE%s INDEX %.*s",
         onError==OE_None ? "" : " UNIQUE",
-        Addr(pEnd->z) - Addr(pName->z) + 1,
+        pEnd->z - pName->z + 1,
         pName->z);
     }else{
       /* An automatic index created by a PRIMARY KEY or UNIQUE constraint */
@@ -2737,9 +2593,7 @@ void sqlite3SrcListDelete(SrcList *pList){
     sqliteFree(pItem->zDatabase);
     sqliteFree(pItem->zName);
     sqliteFree(pItem->zAlias);
-    if( pItem->pTab && pItem->pTab->isTransient ){
-      sqlite3DeleteTable(0, pItem->pTab);
-    }
+    sqlite3DeleteTable(0, pItem->pTab);
     sqlite3SelectDelete(pItem->pSelect);
     sqlite3ExprDelete(pItem->pOn);
     sqlite3IdListDelete(pItem->pUsing);
@@ -2908,19 +2762,6 @@ void sqlite3BeginWriteOperation(Parse *pParse, int setStatement, int iDb){
     sqlite3BeginWriteOperation(pParse, setStatement, 1);
   }
 }
-
-#ifndef SQLITE_OMIT_UTF16
-/* 
-** Return the transient sqlite3_value object used for encoding conversions
-** during SQL compilation.
-*/
-sqlite3_value *sqlite3GetTransientValue(sqlite3 *db){
-  if( !db->pValue ){
-    db->pValue = sqlite3ValueNew();
-  }
-  return db->pValue;
-}
-#endif
 
 /*
 ** Check to see if pIndex uses the collating sequence pColl.  Return
