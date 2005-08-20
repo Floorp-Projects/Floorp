@@ -916,7 +916,7 @@ sub insert
     # and FlagType::validate assume User::match_field has ensured that the
     # values in the requestee fields are legitimate user email addresses.
     my $match_status = Bugzilla::User::match_field($cgi, {
-        '^requestee(_type)?-(\d+)$' => { 'type' => 'single' },
+        '^requestee(_type)?-(\d+)$' => { 'type' => 'multi' },
     }, MATCH_SKIP_CONFIRM);
 
     $vars->{'match_field'} = 'requestee';
@@ -1162,7 +1162,7 @@ sub update
     # and FlagType::validate assume User::match_field has ensured that the
     # values in the requestee fields are legitimate user email addresses.
     Bugzilla::User::match_field($cgi, {
-        '^requestee(_type)?-(\d+)$' => { 'type' => 'single' }
+        '^requestee(_type)?-(\d+)$' => { 'type' => 'multi' }
     });
     Bugzilla::Flag::validate($cgi, $bugid, $attach_id);
     Bugzilla::FlagType::validate($cgi, $bugid, $attach_id);

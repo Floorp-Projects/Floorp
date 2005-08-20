@@ -590,7 +590,7 @@ sub modify {
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
-    $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
+    my $sql_timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
     
     # Extract a list of flags from the form data.
     my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
@@ -604,9 +604,35 @@ sub modify {
         my $flag = get($id);
 
         my $status = $cgi->param("flag-$id");
-        my $requestee_email = trim($cgi->param("requestee-$id") || '');
 
         
+        # If the user entered more than one name into the requestee field
+        # (i.e. they want more than one person to set the flag) we can reuse
+        # the existing flag for the first person (who may well be the existing
+        # requestee), but we have to create new flags for each additional.
+        my @requestees = $cgi->param("requestee-$id");
+        my $requestee_email;
+        if ($status eq "?"
+            && scalar(@requestees) > 1
+            && $flag->{type}->{is_multiplicable})
+        {
+            # The first person, for which we'll reuse the existing flag.
+            $requestee_email = shift(@requestees);
+  
+            # Create new flags like the existing one for each additional person.
+            foreach my $login (@requestees) {
+                create({ type      => $flag->{type} ,
+                         target    => $flag->{target} , 
+                         setter    => new Bugzilla::User($::userid), 
+                         status    => "?",
+                         requestee => new Bugzilla::User(login_to_id($login)) },
+                       $timestamp);
+            }
+        }
+        else {
+            $requestee_email = trim($cgi->param("requestee-$id") || '');
+        }
+
         # Ignore flags the user didn't change. There are two components here:
         # either the status changes (trivial) or the requestee changes.
         # Change of either field will cause full update of the flag.
@@ -639,7 +665,7 @@ sub modify {
                         SET    setter_id = $::userid , 
                                requestee_id = NULL , 
                                status = '$status' , 
-                               modification_date = $timestamp ,
+                               modification_date = $sql_timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
             
@@ -664,7 +690,7 @@ sub modify {
                         SET    setter_id = $::userid , 
                                requestee_id = $requestee_id , 
                                status = '$status' , 
-                               modification_date = $timestamp ,
+                               modification_date = $sql_timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
             
@@ -776,25 +802,24 @@ sub FormToNewFlags {
 
         my $status = $cgi->param("flag_type-$type_id");
         trick_taint($status);
-    
-        # Create the flag record and populate it with data from the form.
-        my $flag = { 
-            type   => $flag_type ,
-            target => $target , 
-            setter => $setter , 
-            status => $status 
-        };
 
         if ($status eq "?") {
-            my $requestee = $cgi->param("requestee_type-$type_id");
-            if ($requestee) {
-                my $requestee_id = login_to_id($requestee);
-                $flag->{'requestee'} = new Bugzilla::User($requestee_id);
+            foreach my $login ($cgi->param("requestee_type-$type_id")) {
+                my $requestee = new Bugzilla::User(login_to_id($login));
+                push (@flags, { type      => $flag_type ,
+                                target    => $target , 
+                                setter    => $setter , 
+                                status    => $status ,
+                                requestee => $requestee });
+                last if !$flag_type->{'is_multiplicable'};
             }
         }
-        
-        # Add the flag to the array of flags.
-        push(@flags, $flag);
+        else {
+            push (@flags, { type   => $flag_type ,
+                            target => $target , 
+                            setter => $setter , 
+                            status => $status });
+        }
     }
 
     # Return the list of flags.

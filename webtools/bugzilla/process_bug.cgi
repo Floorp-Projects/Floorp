@@ -164,7 +164,7 @@ foreach my $field ("dependson", "blocked") {
     'newcc'                     => { 'type' => 'multi'  },
     'masscc'                    => { 'type' => 'multi'  },
     'assigned_to'               => { 'type' => 'single' },
-    '^requestee(_type)?-(\d+)$' => { 'type' => 'single' },
+    '^requestee(_type)?-(\d+)$' => { 'type' => 'multi'  },
 });
 
 # Validate flags in all cases. validate() should not detect any
