@@ -82,7 +82,7 @@
 // nsIProfileMigrator
 
 #define MIGRATION_WIZARD_FE_URL "chrome://browser/content/migration/migration.xul"
-#define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen"
+#define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen,titlebar"
 
 NS_IMETHODIMP
 nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
