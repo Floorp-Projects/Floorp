@@ -59,17 +59,22 @@ typedef struct {
 
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
-		     GdkRectangle* buttonRect, GdkRectangle* clipRect,
-		     GtkWidgetState* buttonState);
+                     GdkRectangle* buttonRect, GdkRectangle* clipRect,
+                     GtkWidgetState* buttonState);
 
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
-		       GdkRectangle* boxRect, GdkRectangle* clipRect,
-		       GtkToggleButtonState* aState);
+                       GdkRectangle* boxRect, GdkRectangle* clipRect,
+                       GtkToggleButtonState* aState);
 
 void
 moz_gtk_radio_paint(GdkWindow* window, GtkStyle* style,
-		    GdkRectangle* boxRect, GdkRectangle* clipRect,
-		    GtkToggleButtonState* aState);
+                    GdkRectangle* boxRect, GdkRectangle* clipRect,
+                    GtkToggleButtonState* aState);
+
+void
+moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
+                               GdkRectangle* arrowRect, GdkRectangle* clipRect,
+                               GtkWidgetState* state, GtkArrowType type);
 
 #endif

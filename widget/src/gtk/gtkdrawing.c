@@ -45,6 +45,9 @@
 #include <gdk/gdkprivate.h>
 #include "gtkdrawing.h"
 
+extern GtkWidget* gButtonWidget;
+extern GtkWidget* gCheckboxWidget;
+
 GtkStateType
 ConvertGtkState(GtkWidgetState* aState)
 {
@@ -60,8 +63,8 @@ ConvertGtkState(GtkWidgetState* aState)
 
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
-		     GdkRectangle* buttonRect, GdkRectangle* clipRect,
-		     GtkWidgetState* buttonState)
+                     GdkRectangle* buttonRect, GdkRectangle* clipRect,
+                     GtkWidgetState* buttonState)
 {
   GtkShadowType shadow_type;
   gint default_spacing = 7; /* xxx fix me */
@@ -69,13 +72,14 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
   gint x = buttonRect->x, y=buttonRect->y, width=buttonRect->width, height=buttonRect->height;
 
   if (((GdkWindowPrivate*)window)->mapped) {
-    gdk_window_set_back_pixmap (window, NULL, TRUE);
-    gdk_window_clear_area (window, clipRect->x, clipRect->y, clipRect->width, clipRect->height);
+    gdk_window_set_back_pixmap(window, NULL, TRUE);
+    gdk_window_clear_area(window, clipRect->x, clipRect->y, clipRect->width, clipRect->height);
   }
 
+  gtk_widget_set_state(gButtonWidget, button_state);
   if (buttonState->isDefault)
     gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-		  clipRect, NULL, "buttondefault", x, y, width, height);
+                  clipRect, gButtonWidget, "buttondefault", x, y, width, height);
 
   if (buttonState->canDefault) {
     x += style->klass->xthickness;
@@ -93,14 +97,10 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
     height -= 2;
   }
 	
-  if (buttonState->active)
-    shadow_type = GTK_SHADOW_IN;
-  else
-    shadow_type = GTK_SHADOW_OUT;
-
+  shadow_type = (buttonState->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   
   gtk_paint_box(style, window, button_state, shadow_type, clipRect,
-		NULL, "button", x, y, width, height);
+                gButtonWidget, "button", x, y, width, height);
   
   if (buttonState->focused) {
     x -= 1;
@@ -108,15 +108,15 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
     width += 2;
     height += 2;
     
-    gtk_paint_focus(style, window, clipRect, NULL, "button",
-		    x, y, width - 1, height - 1);
+    gtk_paint_focus(style, window, clipRect, gButtonWidget, "button",
+                    x, y, width - 1, height - 1);
   }
 }
 
 void
 moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
-				    GdkRectangle* boxRect, GdkRectangle* clipRect,
-				    GtkToggleButtonState* aState)
+                                    GdkRectangle* boxRect, GdkRectangle* clipRect,
+                                    GtkToggleButtonState* aState)
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
@@ -130,16 +130,17 @@ moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
   */
 
   state_type = ConvertGtkState(wState);
+
   if (state_type != GTK_STATE_NORMAL &&
       state_type != GTK_STATE_PRELIGHT)
     state_type = GTK_STATE_NORMAL;
   
-  /*  if (state_type != GTK_STATE_NORMAL) */   /* XXX huh? */
+  if (state_type != GTK_STATE_NORMAL) /* this is for drawing e.g. a prelight box */
     gtk_paint_flat_box (style, window, state_type, 
-			GTK_SHADOW_ETCHED_OUT, 
-			clipRect, NULL, "checkbutton",
-			boxRect->x, boxRect->y,
-			boxRect->width, boxRect->height);
+                        GTK_SHADOW_ETCHED_OUT,
+                        clipRect, gCheckboxWidget, "checkbutton",
+                        boxRect->x, boxRect->y,
+                        boxRect->width, boxRect->height);
   
   x = boxRect->x + indicator_spacing;
   y = boxRect->y + (boxRect->height - indicator_size) / 2;
@@ -154,22 +155,37 @@ moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
     shadow_type = GTK_SHADOW_OUT;
     state_type = ConvertGtkState(wState);
   }
-
+  
   gtk_paint_check (style, window,
-		   state_type, shadow_type,
-		   clipRect, NULL, "checkbutton",
-		   x + 1, y + 1, width, height);
+                   state_type, shadow_type,
+                   clipRect, gCheckboxWidget, "checkbutton",
+                   x + 1, y + 1, width, height);
 }
 
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
-		       GdkRectangle* boxRect, GdkRectangle* clipRect,
-		       GtkToggleButtonState* aState)
+                       GdkRectangle* boxRect, GdkRectangle* clipRect,
+                       GtkToggleButtonState* aState)
 {
   moz_gtk_check_button_draw_indicator(window, style, boxRect, clipRect, aState);
   
   if (((GtkWidgetState*)aState)->focused)
     gtk_paint_focus (style, window,
-		     NULL, NULL, "checkbutton",
-		     boxRect->x, boxRect->y, boxRect->width - 1, boxRect->height - 1); /* XXX border width? */
+                     clipRect, gCheckboxWidget, "checkbutton",
+                     boxRect->x, boxRect->y, boxRect->width - 1, boxRect->height - 1);
+
 }
+
+void
+moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
+                               GdkRectangle* arrowRect, GdkRectangle* clipRect,
+                               GtkWidgetState* state, GtkArrowType arrowType)
+{
+  GtkStateType state_type = ConvertGtkState(state);
+  GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+
+  moz_gtk_button_paint(window, style, arrowRect, clipRect, state);
+  gtk_draw_arrow(style, window, state_type, shadow_type, arrowType, TRUE,
+                 arrowRect->x, arrowRect->y, arrowRect->width, arrowRect->height);
+}
+
