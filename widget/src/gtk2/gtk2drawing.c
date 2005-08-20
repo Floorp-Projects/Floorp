@@ -1661,5 +1661,26 @@ moz_gtk_shutdown()
     if (gProtoWindow)
         gtk_widget_destroy(gProtoWindow);
 
+    gProtoWindow = NULL;
+    gButtonWidget = NULL;
+    gCheckboxWidget = NULL;
+    gRadiobuttonWidget = NULL;
+    gHorizScrollbarWidget = NULL;
+    gVertScrollbarWidget = NULL;
+    gEntryWidget = NULL;
+    gArrowWidget = NULL;
+    gDropdownButtonWidget = NULL;
+    gHandleBoxWidget = NULL;
+    gToolbarWidget = NULL;
+    gFrameWidget = NULL;
+    gProgressWidget = NULL;
+    gTabWidget = NULL;
+    gTooltipWidget = NULL;
+    gMenuBarWidget = NULL;
+    gMenuBarItemWidget = NULL;
+    gMenuPopupWidget = NULL;
+    gMenuItemWidget = NULL;
+    gCheckMenuItemWidget = NULL;
+
     return MOZ_GTK_SUCCESS;
 }
