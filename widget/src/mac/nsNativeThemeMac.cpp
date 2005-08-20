@@ -97,7 +97,8 @@ nsNativeThemeMac::nsNativeThemeMac()
   if (!sInitializedBorders) {
     sInitializedBorders = PR_TRUE;
     sTextfieldBorderSize.left = sTextfieldBorderSize.top = 2;
-    sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 1;
+    sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 2;
+    sTextfieldBGTransparent = PR_TRUE;
   }
 }
 
@@ -166,8 +167,14 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
                     kThemeStatePressed : kThemeStateActive;
   info.value = inValue;
   info.adornment = inAdornment;
-  if ( inState & NS_EVENT_STATE_FOCUS )    
-    info.adornment = kThemeAdornmentFocus;
+  if ( inState & NS_EVENT_STATE_FOCUS ) {
+    // There is a bug in OS 10.2 and higher where if we are in a CG context and
+    // draw the focus ring with DrawThemeButton(), there are ugly lines all
+    // through the button.  This may get fixed in a dot-release, but until it
+    // does, we can't draw the focus ring.
+    if (inKind != kThemePushButton || !nsRenderingContextMac::OnJaguar())
+      info.adornment = kThemeAdornmentFocus;
+  }
   if ( inIsDefault )
     info.adornment |= kThemeAdornmentDefault;
 
@@ -507,7 +514,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
     
     case NS_THEME_TEXTFIELD:
     {
-      aResult->SizeTo(2, 2, 1, 1);
+      aResult->SizeTo(2, 2, 2, 2);
       break;
     }
 
