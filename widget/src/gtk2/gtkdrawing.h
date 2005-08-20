@@ -148,6 +148,8 @@ typedef enum {
   MOZ_GTK_MENUPOPUP,
   /* Paints items of menubar and popups. */
   MOZ_GTK_MENUITEM,
+  MOZ_GTK_CHECKMENUITEM,
+  MOZ_GTK_RADIOMENUITEM,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW
 } GtkThemeWidgetType;
