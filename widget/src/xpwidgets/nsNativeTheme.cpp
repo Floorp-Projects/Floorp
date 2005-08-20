@@ -76,10 +76,7 @@ nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
   if (!aFrame)
     return;
 
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  doc = content->GetDocument();
+  nsIDocument* doc = aFrame->GetContent()->GetDocument();
   if (doc)
     doc->GetShellAt(0, aResult); // addrefs
 }
@@ -91,13 +88,9 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
     return 0;
 
   PRBool isXULCheckboxRadio = PR_FALSE;
-  if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) {
-    nsCOMPtr<nsIContent> checkboxRadioContent;
-    aFrame->GetContent(getter_AddRefs(checkboxRadioContent));
-    isXULCheckboxRadio = checkboxRadioContent->IsContentOfType(nsIContent::eXUL);
-    if (isXULCheckboxRadio)
-      aFrame->GetParent(&aFrame);
-  }
+  if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
+      && aFrame->GetContent()->IsContentOfType(nsIContent::eXUL))
+    aFrame = aFrame->GetParent();
 
   nsCOMPtr<nsIPresShell> shell;
   GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
@@ -109,9 +102,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   nsCOMPtr<nsIEventStateManager> esm;
   context->GetEventStateManager(getter_AddRefs(esm));
   PRInt32 flags = 0;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  esm->GetContentState(content, flags);
+  esm->GetContentState(aFrame->GetContent(), flags);
   
   if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
     if (IsFocused(aFrame))
@@ -127,8 +118,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (!aFrame)
     return PR_FALSE;
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
   nsAutoString attr;
   nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attr);
 
@@ -154,10 +144,8 @@ nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (!aFrame)
     return 0;
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
   nsAutoString attr;
-  content->GetAttr(kNameSpaceID_None, aAtom, attr);
+  aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
   PRInt32 err, value = attr.ToInteger(&err);
   if (NS_FAILED(err))
     return 0;
@@ -171,9 +159,7 @@ nsNativeTheme::GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue)
   if (!aFrame)
     return PR_FALSE;
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attrValue);
+  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attrValue);
   return ((res != NS_CONTENT_ATTR_NOT_THERE) &&
 	  !(res != NS_CONTENT_ATTR_NO_VALUE && attrValue.IsEmpty()));
 }
@@ -184,13 +170,12 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
   if (!aFrame)
     return PR_FALSE;
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
 
   if (content->IsContentOfType(nsIContent::eXUL)) {
     // For a XUL checkbox or radio button, the state of the parent determines
     // the checked state
-    aFrame->GetParent(&aFrame);
+    aFrame = aFrame->GetParent();
   } else {
     // Check for an HTML input element
     nsCOMPtr<nsIDOMHTMLInputElement> inputElt = do_QueryInterface(content);
@@ -221,10 +206,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
   if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
                  aWidgetType == NS_THEME_TEXTFIELD)) {
 
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content->IsContentOfType(nsIContent::eHTML)) {
-
+    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       nscolor defaultBGColor, defaultBorderColor;
       PRUint8 defaultBorderStyle;
       nsMargin defaultBorderSize;

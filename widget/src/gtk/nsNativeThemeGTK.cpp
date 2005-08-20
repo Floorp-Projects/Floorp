@@ -100,9 +100,7 @@ static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
   if (!aFrame)
     return;
  
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  nsIDocument* doc = content->GetDocument();
+  nsIDocument* doc = aFrame->GetContent()->GetDocument();
   if (doc)
     doc->GetShellAt(0, aResult); // Addref happens here.
 }
@@ -115,8 +113,7 @@ static void RefreshWidgetWindow(nsIFrame* aFrame)
   if (!shell)
     return;
 
-  nsCOMPtr<nsIViewManager> vm;
-  shell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = shell->GetViewManager();
   if (!vm)
     return;
  
@@ -136,11 +133,9 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIEventStateManager> esm;
-  context->GetEventStateManager(getter_AddRefs(esm));
+  shell->GetPresContext()->GetEventStateManager(getter_AddRefs(esm));
   PRInt32 flags = 0;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  esm->GetContentState(content, flags);
+  esm->GetContentState(aFrame->GetContent(), flags);
   return flags;
 }
 
@@ -148,10 +143,8 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 {
   if (!aFrame)
     return PR_FALSE;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
   nsAutoString attr;
-  nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attr);
+  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
   if (res == NS_CONTENT_ATTR_NO_VALUE ||
       (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
     return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
@@ -163,8 +156,7 @@ static PRInt32 CheckIntegerAttr(nsIFrame *aFrame, nsIAtom *aAtom)
   if (!aFrame)
     return 0;
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  nsIContent* content = aFrame->GetContent();
   if (!content)
     return 0;
 
@@ -205,7 +197,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     } else {
       // for dropdown textfields, look at the parent frame (the textbox)
       if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
-        aFrame->GetParent(&aFrame);
+        aFrame = aFrame->GetParent();
 
       PRInt32 eventState = GetContentState(aFrame);
 
@@ -222,9 +214,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
           aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
         // for scrollbars we need to go up two to go from the thumb to
         // the slider to the actual scrollbar object
-        nsIFrame *tmpFrame = aFrame;
-        tmpFrame->GetParent(&tmpFrame);
-        tmpFrame->GetParent(&tmpFrame);
+        nsIFrame *tmpFrame = aFrame->GetParent()->GetParent();
 
         aState->curpos = CheckIntegerAttr(tmpFrame, mCurPosAtom);
         aState->maxpos = CheckIntegerAttr(tmpFrame, mMaxPosAtom);
@@ -252,10 +242,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       if (aFrame) {
         // For XUL checkboxes and radio buttons, the state of the parent
         // determines our state.
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
+        nsIContent* content = aFrame->GetContent();
         if (content->IsContentOfType(nsIContent::eXUL))
-          aFrame->GetParent(&aFrame);
+          aFrame = aFrame->GetParent();
         else {
           nsCOMPtr<nsIAtom> tag;
           content->GetTag(getter_AddRefs(tag));
@@ -340,10 +329,8 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
           *aWidgetFlags |= MOZ_GTK_TAB_BEFORE_SELECTED;
 
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
-      if (content->HasAttr(kNameSpaceID_None, mFirstTabAtom))
-        *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
+        if (aFrame->GetContent()->HasAttr(kNameSpaceID_None, mFirstTabAtom))
+          *aWidgetFlags |= MOZ_GTK_TAB_FIRST;
       }
 
       aGtkWidgetType = MOZ_GTK_TAB;
@@ -581,9 +568,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   // Check for specific widgets to see if HTML has overridden the style.
   if (aFrame) {
     // For now don't support HTML.
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content->IsContentOfType(nsIContent::eHTML))
+    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
       return PR_FALSE;
   }
 
