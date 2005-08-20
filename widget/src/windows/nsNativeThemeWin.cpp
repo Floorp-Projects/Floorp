@@ -218,6 +218,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mProgressTheme;
     }
     case NS_THEME_TAB:
+    case NS_THEME_TAB_LEFT_EDGE:
+    case NS_THEME_TAB_RIGHT_EDGE:
     case NS_THEME_TAB_PANEL: {
       if (!mTabTheme)
         mTabTheme = openTheme(NULL, L"Tab");
@@ -517,7 +519,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aState = TS_NORMAL;
       return NS_OK;
     }
-    case NS_THEME_TAB: {
+    case NS_THEME_TAB:
+    case NS_THEME_TAB_LEFT_EDGE:
+    case NS_THEME_TAB_RIGHT_EDGE: {
       aPart = TABP_TAB;
       if (!aFrame) {
         aState = TS_NORMAL;
@@ -615,6 +619,25 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!hdc)
     return NS_ERROR_FAILURE;
   
+  // For left edge and right edge tabs, we need to adjust the widget
+  // rects and clip rects so that the edges don't get drawn.
+  if (aWidgetType == NS_THEME_TAB_LEFT_EDGE || aWidgetType == NS_THEME_TAB_RIGHT_EDGE) {
+    // There appears to be no way to really obtain this value, so we're forced
+    // to just use the default value for Luna (which also happens to be correct for
+    // all the other skins I've tried).
+    PRInt32 edgeSize = 2;
+    
+    // Armed with the size of the edge, we now need to either shift to the left or to the
+    // right.  The clip rect won't include this extra area, so we know that we're
+    // effectively shifting the edge out of view (such that it won't be painted).
+    if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
+      // The right edge should not be drawn.  Extend our rect by the edge size.
+      widgetRect.right += edgeSize;
+    else
+      // The left edge should not be drawn.  Move the widget rect's left coord back.
+      widgetRect.left -= edgeSize;
+  }
+
   drawThemeBG(theme, hdc, part, state, &widgetRect, &clipRect);
   return NS_OK;
 }
@@ -660,6 +683,15 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
   aResult->bottom = outerRect.bottom - contentRect.bottom;
   aResult->left = contentRect.left - outerRect.left;
   aResult->right = outerRect.right - contentRect.right;
+
+  // Remove the edges for tabs that are before or after the selected tab,
+  if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
+    // Remove the right edge, since we won't be drawing it.
+    aResult->right = 0;
+  else if (aWidgetType == NS_THEME_TAB_RIGHT_EDGE)
+    // Remove the left edge, since we won't be drawing it.
+    aResult->left = 0;
+
   return NS_OK;
 }
 
@@ -693,9 +725,12 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
 
   PRInt32 sizeReq = 1; // Best-fit size.
   if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
-      aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL)
-    sizeReq = 0; // Best-fit size for scrollbar thumbs is too large for most themes.
-                 // In our app, we want the thumb to be able to really shrink down,
+      aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL ||
+      aWidgetType == NS_THEME_PROGRESSBAR ||
+      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL)
+    sizeReq = 0; // Best-fit size for scrollbar thumbs and progress meters is too large for most 
+                 // themes.
+                 // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
