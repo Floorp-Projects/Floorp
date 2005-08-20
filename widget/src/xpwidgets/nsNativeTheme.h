@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsMargin.h"
+#include "nsILookAndFeel.h"
 
 class nsIFrame;
 class nsIPresShell;
@@ -155,12 +156,26 @@ protected:
 
   // these should be set to appropriate platform values by the subclass, to
   // match the values in platform-forms.css.  These defaults match forms.css
-  static nsMargin sButtonBorderSize;
-  static nsMargin sButtonDisabledBorderSize;
-  static nsMargin sTextfieldBorderSize;
-  static PRBool   sTextfieldBGTransparent;
-  static nsMargin sListboxBorderSize;
-  static PRBool   sListboxBGTransparent;
+  static nsMargin                  sButtonBorderSize;
+  static nsMargin                  sButtonDisabledBorderSize;
+  static PRUint8                   sButtonActiveBorderStyle;
+  static PRUint8                   sButtonInactiveBorderStyle;
+  static nsILookAndFeel::nsColorID sButtonBorderColorID;
+  static nsILookAndFeel::nsColorID sButtonDisabledBorderColorID;
+  static nsILookAndFeel::nsColorID sButtonBGColorID;
+  static nsILookAndFeel::nsColorID sButtonDisabledBGColorID;
+  static nsMargin                  sTextfieldBorderSize;
+  static PRUint8                   sTextfieldBorderStyle;
+  static nsILookAndFeel::nsColorID sTextfieldBorderColorID;
+  static PRBool                    sTextfieldBGTransparent;
+  static nsILookAndFeel::nsColorID sTextfieldBGColorID;
+  static nsILookAndFeel::nsColorID sTextfieldDisabledBGColorID;
+  static nsMargin                  sListboxBorderSize;
+  static PRUint8                   sListboxBorderStyle;
+  static nsILookAndFeel::nsColorID sListboxBorderColorID;
+  static PRBool                    sListboxBGTransparent;
+  static nsILookAndFeel::nsColorID sListboxBGColorID;
+  static nsILookAndFeel::nsColorID sListboxDisabledBGColorID;
 
 private:
   nsCOMPtr<nsIAtom> mDefaultAtom;
