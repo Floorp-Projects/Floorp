@@ -812,6 +812,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       retVal = PR_TRUE;
+      break;
   
     case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
