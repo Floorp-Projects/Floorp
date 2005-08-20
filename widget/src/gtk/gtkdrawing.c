@@ -127,6 +127,26 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 }
 
 void
+moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
+{
+#if ((GTK_MINOR_VERSION == 2) && (GTK_MICRO_VERSION > 8)) || (GTK_MINOR_VERSION > 2)
+  /*
+   * This API is only supported in GTK+ >= 1.2.9, and gives per-theme values.
+   */
+  
+  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget),
+                              indicator_size, indicator_spacing);
+#else
+  GtkCheckButtonClass* klass = GTK_CHECK_BUTTON_CLASS(GTK_OBJECT(gCheckboxWidget)->klass);
+
+  if (indicator_size)
+    *indicator_size = klass->indicator_size;
+  if (indicator_spacing)
+    *indicator_spacing = klass->indicator_spacing;
+#endif
+}
+
+void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
                        GdkRectangle* rect, GdkRectangle* cliprect,
                        GtkWidgetState* state, gboolean selected,
@@ -137,8 +157,7 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
   gint indicator_size;
   gint x, y, width, height;
 
-  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget),
-                              &indicator_size, NULL);
+  moz_gtk_checkbox_get_metrics(&indicator_size, NULL);
 
   /* left justified, vertically centered within the rect */
   x = rect->x;
