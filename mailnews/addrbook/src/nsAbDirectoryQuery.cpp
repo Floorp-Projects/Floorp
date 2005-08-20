@@ -470,7 +470,6 @@ nsresult nsAbDirectoryQuery::queryCards (nsIAbDirectory* directory,
         if (*resultLimit == 0)
             return NS_OK;
     }
-    while (rv == NS_OK);
 
     return NS_OK;
 }
