@@ -72,6 +72,16 @@ GtkWidget* gTabWidget;
 GtkTooltips* gTooltipWidget;
 
 static int gLastXError;
+const char* nsNativeThemeGTK::sDisabledEngines[] = {
+  "xeno",   // xenophilia
+  nsnull
+};
+
+typedef struct GtkThemeEnginePrivate {
+  GtkThemeEngine engine;
+  void* library;
+  char* name;
+} GtkThemeEnginePrivate;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoLayout(nsnull)
@@ -86,6 +96,23 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mFirstTabAtom = do_GetAtom("first-tab");
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+
+  // Check for a blacklisted theme engine.  These are known to crash.
+  // If we're using a blacklisted engine, we need to disable all widget types.
+
+  EnsureButtonWidget();  // arbitrary, but we need a widget's style
+  const char* eng;
+  const char* curEngine = ((GtkThemeEnginePrivate*) gButtonWidget->style->engine)->name;
+  int i = 0;
+  while ((eng = sDisabledEngines[i++])) {
+    if (!strcmp(eng, curEngine)) {
+#ifdef DEBUG
+      printf("Disabling GTK themed widgets due to blacklisted theme engine: %s\n", eng);
+#endif
+      memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
+      break;
+    }
+  }
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -273,7 +300,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
     {
-      EnsureButtonWidget();
       GtkReliefStyle relief = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
       moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip,
                            &state, relief );
@@ -477,7 +503,6 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     break;
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
-    EnsureButtonWidget();
     WidgetBorderToMargin(gButtonWidget, aResult);
     break;
   case NS_THEME_TOOLBAR_GRIPPER:
