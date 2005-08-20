@@ -164,6 +164,8 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
 
     mCheckedAtom = getter_AddRefs(NS_NewAtom("checked"));
+    mInputAtom = getter_AddRefs(NS_NewAtom("input"));
+    mInputCheckedAtom = getter_AddRefs(NS_NewAtom("_moz-input-checked"));
     mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
     mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
     mTypeAtom = getter_AddRefs(NS_NewAtom("type"));
@@ -328,7 +330,8 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   aFrame->GetContent(getter_AddRefs(content));
   nsAutoString attr;
   nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attr);
-  if (res == NS_CONTENT_ATTR_NO_VALUE)
+  if (res == NS_CONTENT_ATTR_NO_VALUE ||
+      (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
     return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
   return attr.EqualsIgnoreCase("true"); // This handles the XUL case.
 }
@@ -398,6 +401,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
       aPart = (aWidgetType == NS_THEME_CHECKBOX) ? BP_CHECKBOX : BP_RADIO; 
+
+      // XXXdwh This check will need to be more complicated, since HTML radio groups
+      // use checked, but XUL radio groups use selected.  There will need to be an
+      // IsContentOfType test for HTML vs. XUL here.
+      nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
+
       if (!aFrame)
         aState = TS_NORMAL;
       else {
@@ -407,6 +416,13 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aFrame->GetContent(getter_AddRefs(content));
         if (content->IsContentOfType(nsIContent::eXUL))
           aFrame->GetParent(&aFrame);
+        else {
+          nsCOMPtr<nsIAtom> tag;
+          content->GetTag(*getter_AddRefs(tag));
+          if (tag == mInputAtom)
+            atom = mInputCheckedAtom;
+        }
+
       }
 
       if (aFrame) {
@@ -423,10 +439,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         }
       }
 
-      // XXXdwh This check will need to be more complicated, since HTML radio groups
-      // use checked, but XUL radio groups use selected.  There will need to be an
-      // IsContentOfType test for HTML vs. XUL here.
-      nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
       if (CheckBooleanAttr(aFrame, atom))
         aState += 4; // 4 unchecked states, 4 checked states.
       return NS_OK;
@@ -819,9 +831,6 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
                  // themes.
                  // In our app, we want these widgets to be able to really shrink down,
                  // so use the min-size request value (of 0).
-
-  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON)
-    printf("HAHAHAH!");
 
   SIZE sz;
   getThemePartSize(theme, hdc, part, state, NULL, sizeReq, &sz);
