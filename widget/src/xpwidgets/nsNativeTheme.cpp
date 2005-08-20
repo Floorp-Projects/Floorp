@@ -125,23 +125,17 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
     return PR_FALSE;
 
   nsIContent* content = aFrame->GetContent();
-  nsAutoString attr;
-  nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attr);
+  if (content->IsContentOfType(nsIContent::eHTML))
+    return content->HasAttr(kNameSpaceID_None, aAtom);
 
-  // For HTML elements, boolean attributes will return NOT_THERE if they
-  // are not present and HAS_VALUE + a string (possibly empty)
-  // if they are present.
+  nsAutoString attr;
+  content->GetAttr(kNameSpaceID_None, aAtom, attr);
 
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
 
-  PRBool isHTML = content->IsContentOfType(nsIContent::eHTML);
-  if (isHTML && (res == NS_CONTENT_ATTR_NO_VALUE ||
-                 res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
-    return PR_TRUE;
-
-  return attr.EqualsIgnoreCase("true");
+  return attr.Equals(NS_LITERAL_STRING("true"));
 }
 
 PRInt32
