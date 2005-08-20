@@ -1152,12 +1152,8 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
 
-  if (aPresContext) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    if (!shell->IsThemeSupportEnabled())
-      return PR_FALSE;
-  }
+  if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
+    return PR_FALSE;
 
   HANDLE theme = NULL;
   if (aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
