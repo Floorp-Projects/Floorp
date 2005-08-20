@@ -39,10 +39,9 @@
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-extern "C" {
+
 #include "gtkdrawing.h"
-}
-#include <gtk/gtkstyle.h>
+#include <gtk/gtkwidget.h>
 
 class nsNativeThemeGTK: public nsITheme {
 public:
@@ -84,11 +83,16 @@ protected:
   PRBool IsSelected(nsIFrame* aFrame);
 
   void GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState);
+  void GetScrollbarMetrics(gint* slider_width,
+                           gint* trough_border,
+                           gint* stepper_size,
+                           gint* stepper_spacing);
 
   void SetupWidgetPrototype(GtkWidget* widget);
   void EnsureButtonWidget();
   void EnsureCheckBoxWidget();
   void EnsureScrollbarWidget();
+  void EnsureGripperWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;
