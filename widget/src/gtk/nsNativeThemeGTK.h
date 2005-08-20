@@ -84,8 +84,10 @@ protected:
 
   void GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState);
 
-  void EnsureButtonStyle();
-  void EnsureCheckBoxStyle();
+  void SetupWidgetPrototype(GtkWidget* widget);
+  void EnsureButtonWidget();
+  void EnsureCheckBoxWidget();
+  void EnsureScrollbarWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;
@@ -93,6 +95,6 @@ private:
   nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
 
-  GtkStyle* mButtonStyle;
-  GtkStyle* mCheckBoxStyle;
+  GtkWidget* mProtoWindow;
+  GtkWidget* mProtoLayout;
 };
