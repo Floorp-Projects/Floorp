@@ -128,6 +128,12 @@ typedef enum {
   MOZ_GTK_TAB,
   /* Paints the background and border of a GtkNotebook. */
   MOZ_GTK_TABPANELS,
+  /* Paints the background of the menu bar. */
+  MOZ_GTK_MENUBAR,
+  /* Paints the background of menus, context menus. */
+  MOZ_GTK_MENUPOPUP,
+  /* Paints items of menubar and popups. */
+  MOZ_GTK_MENUITEM,
   /* Paints the background of a window, dialog or page. */
   MOZ_GTK_WINDOW
 } GtkThemeWidgetType;
