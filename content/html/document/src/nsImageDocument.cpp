@@ -221,15 +221,16 @@ ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   }
 
 
-  if (NS_FAILED(status) && imgDoc->mStringBundle) {
+  // mImageContent can be null if the document is already destroyed
+  if (NS_FAILED(status) && imgDoc->mStringBundle && imgDoc->mImageContent) {
     nsCAutoString src;
     imgDoc->mDocumentURI->GetSpec(src);
-    NS_ConvertUTF8toUCS2 srcString(src);
-    const PRUnichar* formatString[1] = { srcString.get() };
+    NS_ConvertUTF8toUTF16 srcString(src);
+    const PRUnichar* formatString[] = { srcString.get() };
     nsXPIDLString errorMsg;
     NS_NAMED_LITERAL_STRING(str, "InvalidImage");
     imgDoc->mStringBundle->FormatStringFromName(str.get(), formatString, 1,
-                                        getter_Copies(errorMsg));
+                                                getter_Copies(errorMsg));
     
     imgDoc->mImageContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, errorMsg, PR_FALSE);
   }
