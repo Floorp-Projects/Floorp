@@ -656,10 +656,11 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   nsTransform2D* transformMatrix;
   aContext->GetCurrentTransform(transformMatrix);
   nsRect transRect(aRect), transClipRect(aClipRect);
-  Rect macRect, clipRect;
+  Rect macRect;
   transformMatrix->TransformCoord(&transRect.x, &transRect.y, &transRect.width, &transRect.height);
   ConvertGeckoToNativeRect(transRect, macRect);
 #ifdef CLIP_DRAWING
+  Rect clipRect;
   transformMatrix->TransformCoord(&transClipRect.x, &transClipRect.y, &transClipRect.width, &transClipRect.height);
   ConvertGeckoToNativeRect(transClipRect, clipRect);
   ::ClipRect(&clipRect);
