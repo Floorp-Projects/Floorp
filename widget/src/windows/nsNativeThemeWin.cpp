@@ -165,7 +165,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mInputCheckedAtom = do_GetAtom("_moz-input-checked");
   mTypeAtom = do_GetAtom("type");
 
-  // If there is a relevant change in platform-forms.css for windows platform,
+  // If there is a relevant change in forms.css for windows platform,
   // static widget style variables (e.g. sButtonBorderSize) should be 
   // reinitialized here.
 }
