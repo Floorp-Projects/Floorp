@@ -67,6 +67,7 @@ GtkWidget* gHandleBoxWidget;
 GtkWidget* gFrameWidget;
 GtkWidget* gProtoWindow;
 GtkWidget* gProgressWidget;
+GtkWidget* gTabWidget;
 GtkTooltips* gTooltipWidget;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
@@ -352,6 +353,36 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     moz_gtk_progress_chunk_paint(window, gProgressWidget->style, &gdk_rect,
                                  &gdk_clip);
     break;
+
+//  case NS_THEME_TAB_PANELS:
+//    EnsureTabWidget();
+//    break;
+
+  case NS_THEME_TAB:
+  case NS_THEME_TAB_LEFT_EDGE:
+  case NS_THEME_TAB_RIGHT_EDGE:
+    {
+      EnsureTabWidget();
+      GtkTabType tab_type;
+      switch (aWidgetType) {
+        case NS_THEME_TAB:
+          {
+            PRBool isSelected = CheckBooleanAttr(aFrame, mSelectedAtom);
+            tab_type = (isSelected ? kTabSelected : kTabNormal);
+          }
+          break;
+        case NS_THEME_TAB_LEFT_EDGE:
+          tab_type = kTabBeforeSelected;
+          break;
+        case NS_THEME_TAB_RIGHT_EDGE:
+          tab_type = kTabAfterSelected;
+          break;
+      }
+
+      moz_gtk_tab_paint(window, gTabWidget->style, &gdk_rect, &gdk_clip,
+                        tab_type);
+      break;
+    }
   }
 
   return NS_OK;
@@ -555,7 +586,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_TOOLBAR_GRIPPER:
   case NS_THEME_STATUSBAR:
   case NS_THEME_STATUSBAR_PANEL:
-    // case NS_THEME_RESIZER:
+    // case NS_THEME_RESIZER:  (n/a for gtk)
     // case NS_THEME_LISTBOX:
     // case NS_THEME_LISTBOX_LISTITEM:
     // case NS_THEME_TREEVIEW:
@@ -570,16 +601,16 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_VERTICAL:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    // case NS_THEME_TAB:
+    case NS_THEME_TAB:
     // case NS_THEME_TAB_PANEL:
-    // case NS_THEME_TAB_LEFT_EDGE:
-    // case NS_THEME_TAB_RIGHT_EDGE:
+    case NS_THEME_TAB_LEFT_EDGE:
+    case NS_THEME_TAB_RIGHT_EDGE:
     // case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
     // case NS_THEME_SPINNER:
     // case NS_THEME_SPINNER_UP_BUTTON:
     // case NS_THEME_SPINNER_DOWN_BUTTON:
-    // case NS_THEME_SCROLLBAR:
+    // case NS_THEME_SCROLLBAR:  (n/a for gtk)
   case NS_THEME_SCROLLBAR_BUTTON_UP:
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
@@ -588,8 +619,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
-    // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
+    // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:  (n/a for gtk)
+    // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
     // case NS_THEME_TEXTFIELD_CARET:
     // case NS_THEME_DROPDOWN:
@@ -731,6 +762,15 @@ nsNativeThemeGTK::EnsureProgressBarWidget()
   if (!gProgressWidget) {
     gProgressWidget = gtk_progress_bar_new();
     SetupWidgetPrototype(gProgressWidget);
+  }
+}
+
+void
+nsNativeThemeGTK::EnsureTabWidget()
+{
+  if (!gTabWidget) {
+    gTabWidget = gtk_notebook_new();
+    SetupWidgetPrototype(gTabWidget);
   }
 }
 
