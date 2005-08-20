@@ -427,7 +427,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                "Trying to render an unsafe widget!");
 
   PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-  XErrorHandler oldHandler;
+  XErrorHandler oldHandler = nsnull;
   if (!safeState) {
     gLastXError = 0;
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
