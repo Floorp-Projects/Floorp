@@ -30,6 +30,14 @@
  */
 #define _GSSAPI_H_
 
+/*
+ * On Mac OS X, Kerberos/Kerberos.h is used to gain access to certain
+ * system-specific Kerberos functions, but on 10.4, that file also brings
+ * in other headers that conflict with this one.
+ */
+#define _GSSAPI_GENERIC_H_
+#define _GSSAPI_KRB5_H_
+
 /* 
  * Define windows specific needed parameters.
  */
