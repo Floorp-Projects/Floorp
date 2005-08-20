@@ -354,9 +354,10 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                                  &gdk_clip);
     break;
 
-//  case NS_THEME_TAB_PANELS:
-//    EnsureTabWidget();
-//    break;
+  case NS_THEME_TAB_PANELS:
+    EnsureTabWidget();
+    moz_gtk_tabpanels_paint(window, gTabWidget->style, &gdk_rect, &gdk_clip);
+    break;
 
   case NS_THEME_TAB:
   case NS_THEME_TAB_LEFT_EDGE:
@@ -441,6 +442,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   case NS_THEME_PROGRESSBAR_VERTICAL:
     EnsureProgressBarWidget();
     WidgetBorderToMargin(gProgressWidget, aResult);
+    break;
+  case NS_THEME_TAB_PANELS:
+    EnsureTabWidget();
+    WidgetBorderToMargin(gTabWidget, aResult);
     break;
   }
 
@@ -605,7 +610,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     // case NS_THEME_TAB_PANEL:
     case NS_THEME_TAB_LEFT_EDGE:
     case NS_THEME_TAB_RIGHT_EDGE:
-    // case NS_THEME_TAB_PANELS:
+    case NS_THEME_TAB_PANELS:
   case NS_THEME_TOOLTIP:
     // case NS_THEME_SPINNER:
     // case NS_THEME_SPINNER_UP_BUTTON:
