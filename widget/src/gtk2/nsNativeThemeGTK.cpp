@@ -622,7 +622,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
     if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom)
+        aAttribute == mSelectedAtom || aAttribute == mFocusedAtom ||
+        aAttribute == mMenuActiveAtom)
       *aShouldRepaint = PR_TRUE;
   }
 
