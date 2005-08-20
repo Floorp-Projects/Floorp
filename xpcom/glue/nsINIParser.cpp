@@ -45,7 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_OS2)
 #define BINARY_MODE "b"
 #else
 #define BINARY_MODE
