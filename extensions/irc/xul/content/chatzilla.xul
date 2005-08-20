@@ -124,7 +124,10 @@
       <hbox id="tabstrip-box" flex="0" crop="right">
         <hbox id="view-tabs" persist="collapsed" flex="1">
           <scrollbox flex="1">
-            <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right">
+            <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right"
+                setfocus="false">
+              <!-- setfocus="false" is a hack to work around tab bugs,
+                   see bug 300622. -->
               <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from
                                            causing an exception -->
             </tabs>
