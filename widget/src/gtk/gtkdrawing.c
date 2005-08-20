@@ -71,6 +71,29 @@ ConvertGtkState(GtkWidgetState* state)
     return GTK_STATE_NORMAL;
 }
 
+static void
+TSOffsetStyleGCArray(GdkGC** gcs, gint xorigin, gint yorigin)
+{
+  int i;
+  /* there are 5 gc's in each array, for each of the widget states */
+  for (i = 0; i < 5; ++i)
+    gdk_gc_set_ts_origin(gcs[i], xorigin, yorigin);
+}
+
+static void
+TSOffsetStyleGCs(GtkStyle* style, gint xorigin, gint yorigin)
+{
+  TSOffsetStyleGCArray(style->fg_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->bg_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->light_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->dark_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->mid_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->text_gc, xorigin, yorigin);
+  TSOffsetStyleGCArray(style->base_gc, xorigin, yorigin);
+  gdk_gc_set_ts_origin(style->black_gc, xorigin, yorigin);
+  gdk_gc_set_ts_origin(style->white_gc, xorigin, yorigin);
+}
+
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
                      GdkRectangle* rect, GdkRectangle* cliprect,
@@ -88,9 +111,11 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
   }
 
   gtk_widget_set_state(gButtonWidget, button_state);
-  if (state->isDefault)
+  if (state->isDefault) {
+    TSOffsetStyleGCs(style, x, y);
     gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
                   gButtonWidget, "buttondefault", x, y, width, height);
+  }
 
   if (state->canDefault) {
     x += style->klass->xthickness;
@@ -111,16 +136,19 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
   shadow_type = (state->active && state->inHover) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   
   if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
-                                    button_state != GTK_STATE_INSENSITIVE))
+                                    button_state != GTK_STATE_INSENSITIVE)) {
+    TSOffsetStyleGCs(style, x, y);
     gtk_paint_box(style, window, button_state, shadow_type, cliprect,
                   gButtonWidget, "button", x, y, width, height);
-  
+  }
+
   if (state->focused) {
     x -= 1;
     y -= 1;
     width += 2;
     height += 2;
     
+    TSOffsetStyleGCs(style, x, y);
     gtk_paint_focus(style, window, cliprect, gButtonWidget, "button", x, y,
                     width - 1, height - 1);
   }
@@ -174,6 +202,7 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
     state_type = ConvertGtkState(state);
   }
   
+  TSOffsetStyleGCs(style, x, y);
   if (isradio)
     gtk_paint_option(style, window, state_type, shadow_type, cliprect,
                      gCheckboxWidget, "radiobutton", x, y, width, height);
@@ -204,6 +233,7 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   GdkRectangle arrow_rect;
   calculate_arrow_dimensions(rect, &arrow_rect);
+  TSOffsetStyleGCs(style, arrow_rect.x, arrow_rect.y);
   gtk_paint_arrow(style, window, state_type, shadow_type, cliprect,
                   gScrollbarWidget, (type < 2) ? "vscrollbar" : "hscrollbar", 
                   type, TRUE, arrow_rect.x, arrow_rect.y, arrow_rect.width,
@@ -215,6 +245,7 @@ moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
                                GdkRectangle* rect, GdkRectangle* cliprect,
                                GtkWidgetState* state)
 {
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_style_apply_default_background(style, window, TRUE, GTK_STATE_ACTIVE,
                                      cliprect, rect->x, rect->y,
                                      rect->width, rect->height);
@@ -234,6 +265,7 @@ moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
                               GtkWidgetState* state)
 {
   GtkStateType state_type = (state->inHover || state->active) ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, cliprect,
                 gScrollbarWidget, "slider", rect->x, rect->y, rect->width, 
                 rect->height);
@@ -302,6 +334,7 @@ moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = GTK_HANDLE_BOX(gGripperWidget)->shadow_type;
 
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_box(style, window, state_type, shadow_type, cliprect,
                 gGripperWidget, "handlebox_bin", rect->x, rect->y,
                 rect->width, rect->height);
@@ -320,16 +353,20 @@ moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
       height -= 2;
   }
   
+  TSOffsetStyleGCs(style, x, y);
   gtk_paint_shadow (style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
                     gEntryWidget, "entry", x, y, width, height);
   
-  if (state->focused)
-      gtk_paint_focus (style, window,  cliprect, gEntryWidget, "entry",
-                       rect->x, rect->y, rect->width - 1, rect->height - 1);
+  if (state->focused) {
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_paint_focus (style, window,  cliprect, gEntryWidget, "entry",
+                     rect->x, rect->y, rect->width - 1, rect->height - 1);
+  }
 
   x = style->klass->xthickness;
   y = style->klass->ythickness;
 
+  TSOffsetStyleGCs(style, rect->x + x, rect->y + y);
   gtk_paint_flat_box (style, window, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
                       cliprect, gEntryWidget, "entry_bg",  rect->x + x,
                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
@@ -354,6 +391,7 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
   arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
 
   calculate_arrow_dimensions(&arrow_rect, &real_arrow_rect);
+  TSOffsetStyleGCs(style, real_arrow_rect.x, real_arrow_rect.y);
   gtk_paint_arrow(style, window, state_type, shadow_type, cliprect,
                   gScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                   real_arrow_rect.x, real_arrow_rect.y,
@@ -370,6 +408,8 @@ moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
   if (state_type != GTK_STATE_NORMAL && state_type != GTK_STATE_PRELIGHT)
     state_type = GTK_STATE_NORMAL;
   
+  TSOffsetStyleGCs(style, rect->x, rect->y);
+
   if (state_type != GTK_STATE_NORMAL) /* this is for drawing a prelight box */
     gtk_paint_flat_box(style, window, state_type, GTK_SHADOW_ETCHED_OUT,
                        cliprect, gCheckboxWidget,
@@ -385,15 +425,22 @@ void
 moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                       GdkRectangle* cliprect)
 {
-  gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                cliprect, gHandleBoxWidget, "dockitem_bin",
-                rect->x, rect->y, rect->width, rect->height);
+  TSOffsetStyleGCs(style, rect->x, rect->y);
+  if (style->bg_pixmap[GTK_STATE_NORMAL])
+    gtk_style_apply_default_background(style, window, TRUE, GTK_STATE_NORMAL,
+                                       cliprect, rect->x, rect->y,
+                                       rect->width, rect->height);
+  else
+    gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT, cliprect,
+                  gHandleBoxWidget, "dockitem_bin",
+                  rect->x, rect->y, rect->width, rect->height);
 }
 
 void
 moz_gtk_tooltip_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                       GdkRectangle* cliprect)
 {
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_flat_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                      cliprect, gTooltipWidget->tip_window, "tooltip", rect->x,
                      rect->y, rect->width, rect->height);
@@ -403,10 +450,12 @@ void
 moz_gtk_frame_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                     GdkRectangle* cliprect)
 {
+  TSOffsetStyleGCs(gProtoWindow->style, rect->x, rect->y);
   gtk_paint_flat_box(gProtoWindow->style, window, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
                      NULL, gProtoWindow, "base", rect->x, rect->y,
                      rect->width, rect->height);
 
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_shadow(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
                    gFrameWidget, "frame", rect->x, rect->y, rect->width,
                    rect->height);
@@ -416,6 +465,7 @@ void
 moz_gtk_progressbar_paint(GdkWindow* window, GtkStyle* style,
                           GdkRectangle* rect, GdkRectangle* cliprect)
 {
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN,
                 cliprect, gProgressWidget, "trough", rect->x, rect->y,
                 rect->width, rect->height);
@@ -425,6 +475,7 @@ void
 moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
                              GdkRectangle* rect, GdkRectangle* cliprect)
 {
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_box(style, window, GTK_STATE_PRELIGHT, GTK_SHADOW_OUT,
                 cliprect, gProgressWidget, "bar", rect->x, rect->y,
                 rect->width, rect->height);
@@ -465,6 +516,7 @@ moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
     rect->width += 2;
   }
 
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_extension(style, window,
                       ((flags & MOZ_GTK_TAB_SELECTED) ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE),
                       GTK_SHADOW_OUT, cliprect, gTabWidget, "tab", rect->x,
@@ -474,6 +526,7 @@ moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
     gboolean before_selected = ((flags & MOZ_GTK_TAB_BEFORE_SELECTED) != 0);
     cliprect->y -= 2;
     cliprect->height += 2;
+    TSOffsetStyleGCs(style, rect->x + rect->width - 2, rect->y - (2 * before_selected));
     gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT, cliprect,
                         gTabWidget, "tab", rect->x + rect->width - 2,
                         rect->y - (2 * before_selected), rect->width,
@@ -485,6 +538,7 @@ void
 moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,
                         GdkRectangle* rect, GdkRectangle* cliprect)
 {
+  TSOffsetStyleGCs(style, rect->x, rect->y);
   gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                 cliprect, gTabWidget, "notebook", rect->x, rect->y,
                 rect->width, rect->height);
