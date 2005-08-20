@@ -40,9 +40,11 @@
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsNativeTheme.h"
 #include <windows.h>
 
-class nsNativeThemeWin: public nsITheme {
+class nsNativeThemeWin : private nsNativeTheme,
+                         public nsITheme {
 public:
   NS_DECL_ISUPPORTS
 
@@ -103,15 +105,6 @@ protected:
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType);
 
-
-  PRBool IsDisabled(nsIFrame* aFrame);
-  PRBool IsReadOnly(nsIFrame* aFrame);
-  PRBool IsChecked(nsIFrame* aFrame);
-  PRBool IsSelected(nsIFrame* aFrame);
-  PRBool IsBottomTab(nsIFrame* aFrame);
-
-  PRBool IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
-
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;
@@ -127,15 +120,9 @@ private:
   HANDLE mComboBoxTheme;
   HANDLE mHeaderTheme;
 
-  nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mInputAtom;
   nsCOMPtr<nsIAtom> mInputCheckedAtom;
-  nsCOMPtr<nsIAtom> mDisabledAtom;
-  nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
-  nsCOMPtr<nsIAtom> mReadOnlyAtom;
-  nsCOMPtr<nsIAtom> mDefaultAtom;
-  nsCOMPtr<nsIAtom> mClassAtom;
 };
 
 // Creator function
