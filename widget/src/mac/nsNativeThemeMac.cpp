@@ -1088,9 +1088,18 @@ nsNativeThemeMac::ThemeChanged()
 
 
 PRBool 
-nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
+nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
+  // Check for specific widgets to see if HTML has overridden the style.
+  if (aFrame) {
+    // For now don't support HTML.
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (content->IsContentOfType(nsIContent::eHTML))
+      return PR_FALSE;
+  }
+
   // XXX We can go even further and call the API to ask if support exists.
   PRBool retVal = PR_FALSE;
   
