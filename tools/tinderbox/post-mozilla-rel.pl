@@ -458,6 +458,8 @@ sub packit {
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
           TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
       }
+
+      TinderUtils::print_log "\nUpdate generated.\n\n";
     } else {
       TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
