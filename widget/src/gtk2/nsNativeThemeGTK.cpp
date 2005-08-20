@@ -66,6 +66,7 @@ GtkWidget* gDropdownButtonWidget;
 GtkWidget* gHandleBoxWidget;
 GtkWidget* gFrameWidget;
 GtkWidget* gProtoWindow;
+GtkWidget* gProgressWidget;
 GtkTooltips* gTooltipWidget;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
@@ -337,6 +338,20 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     EnsureFrameWidget();
     moz_gtk_frame_paint(window, gFrameWidget->style, &gdk_rect, &gdk_clip);
     break;
+
+  case NS_THEME_PROGRESSBAR:
+  case NS_THEME_PROGRESSBAR_VERTICAL:
+    EnsureProgressBarWidget();
+    moz_gtk_progressbar_paint(window, gProgressWidget->style, &gdk_rect,
+                              &gdk_clip);
+    break;
+
+  case NS_THEME_PROGRESSBAR_CHUNK:
+  case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    EnsureProgressBarWidget();
+    moz_gtk_progress_chunk_paint(window, gProgressWidget->style, &gdk_rect,
+                                 &gdk_clip);
+    break;
   }
 
   return NS_OK;
@@ -390,6 +405,11 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   case NS_THEME_STATUSBAR_PANEL:
     EnsureFrameWidget();
     WidgetBorderToMargin(gFrameWidget, aResult);
+    break;
+  case NS_THEME_PROGRESSBAR:
+  case NS_THEME_PROGRESSBAR_VERTICAL:
+    EnsureProgressBarWidget();
+    WidgetBorderToMargin(gProgressWidget, aResult);
     break;
   }
 
@@ -546,10 +566,10 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     // case NS_THEME_TREEVIEW_HEADER_CELL:
     // case NS_THEME_TREEVIEW_HEADER_SORTARROW:
     // case NS_THEME_TREEVIEW_TWISTY_OPEN:
-    // case NS_THEME_PROGRESSBAR:
-    // case NS_THEME_PROGRESSBAR_CHUNK:
-    // case NS_THEME_PROGRESSBAR_VERTICAL:
-    // case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     // case NS_THEME_TAB:
     // case NS_THEME_TAB_PANEL:
     // case NS_THEME_TAB_LEFT_EDGE:
@@ -702,6 +722,15 @@ nsNativeThemeGTK::EnsureFrameWidget()
   if (!gFrameWidget) {
     gFrameWidget = gtk_frame_new(NULL);
     SetupWidgetPrototype(gFrameWidget);
+  }
+}
+
+void
+nsNativeThemeGTK::EnsureProgressBarWidget()
+{
+  if (!gProgressWidget) {
+    gProgressWidget = gtk_progress_bar_new();
+    SetupWidgetPrototype(gProgressWidget);
   }
 }
 
