@@ -64,12 +64,14 @@ protected:
   nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                 PRInt32& aPart, PRInt32& aState);
   PRBool IsDisabled(nsIFrame* aFrame);
+  PRBool IsReadOnly(nsIFrame* aFrame);
   PRBool IsChecked(nsIFrame* aFrame);
   PRBool IsSelected(nsIFrame* aFrame);
 
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;
+  HANDLE mTextFieldTheme;
   HANDLE mTooltipTheme;
   HANDLE mToolbarTheme;
   HANDLE mRebarTheme;
@@ -83,6 +85,8 @@ private:
   nsCOMPtr<nsIAtom> mDisabledAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
+  nsCOMPtr<nsIAtom> mReadOnlyAtom;
+  nsCOMPtr<nsIAtom> mDefaultAtom;
 };
 
 // Creator function

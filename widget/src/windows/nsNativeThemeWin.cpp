@@ -64,12 +64,16 @@
 #define TS_HOVER     2
 #define TS_ACTIVE    3
 #define TS_DISABLED  4
+#define TS_FOCUSED   5
 
 // Button constants
 #define BP_BUTTON    1
 #define BP_RADIO     2
 #define BP_CHECKBOX  3
-#define BS_DEFAULT   5
+
+// Textfield constants
+#define TFP_TEXTFIELD 1
+#define TFS_READONLY  6
 
 // Scrollbar constants
 #define SP_BUTTON          1
@@ -134,6 +138,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   NS_INIT_ISUPPORTS();
   mThemeDLL = NULL;
   mButtonTheme = NULL;
+  mTextFieldTheme = NULL;
   mTooltipTheme = NULL;
   mToolbarTheme = NULL;
   mRebarTheme = NULL;
@@ -157,6 +162,8 @@ nsNativeThemeWin::nsNativeThemeWin() {
     mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
     mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
     mTypeAtom = getter_AddRefs(NS_NewAtom("type"));
+    mReadOnlyAtom = getter_AddRefs(NS_NewAtom("readonly"));
+    mDefaultAtom = getter_AddRefs(NS_NewAtom("default"));
   }
 }
 
@@ -191,6 +198,11 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mButtonTheme)
         mButtonTheme = openTheme(NULL, L"Button");
       return mButtonTheme;
+    }
+    case NS_THEME_TEXTFIELD: {
+      if (!mTextFieldTheme)
+        mTextFieldTheme = openTheme(NULL, L"Edit");
+      return mTextFieldTheme;
     }
     case NS_THEME_TOOLTIP: {
       if (!mTooltipTheme)
@@ -314,7 +326,12 @@ PRBool nsNativeThemeWin::IsDisabled(nsIFrame* aFrame)
 {
   return CheckBooleanAttr(aFrame, mDisabledAtom);
 }
-  
+
+PRBool nsNativeThemeWin::IsReadOnly(nsIFrame* aFrame)
+{
+  return CheckBooleanAttr(aFrame, mReadOnlyAtom);
+}
+
 PRBool nsNativeThemeWin::IsChecked(nsIFrame* aFrame)
 {
   if (!aFrame)
@@ -355,12 +372,16 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_FOCUS)
-        aState = BS_DEFAULT;
+        aState = TS_FOCUSED;
       else if (eventState & NS_EVENT_STATE_HOVER)
         aState = TS_HOVER;
       else 
         aState = TS_NORMAL;
       
+      // Check for default dialog buttons.  These buttons should always look
+      // focused.
+      if (aState == TS_NORMAL && CheckBooleanAttr(aFrame, mDefaultAtom))
+        aState = TS_FOCUSED;
       return NS_OK;
     }
     case NS_THEME_CHECKBOX:
@@ -386,6 +407,35 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
       if (CheckBooleanAttr(aFrame, atom))
         aState += 4; // 4 unchecked states, 4 checked states.
+      return NS_OK;
+    }
+    case NS_THEME_TEXTFIELD: {
+      aPart = TFP_TEXTFIELD;
+      if (!aFrame) {
+        aState = TS_NORMAL;
+        return NS_OK;
+      }
+
+      if (IsDisabled(aFrame)) {
+        aState = TS_DISABLED;
+        return NS_OK;
+      }
+
+      if (IsReadOnly(aFrame)) {
+        aState = TFS_READONLY;
+        return NS_OK;
+      }
+
+      PRInt32 eventState = GetContentState(aFrame);
+      if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
+        aState = TS_ACTIVE;
+      else if (eventState & NS_EVENT_STATE_FOCUS)
+        aState = TS_FOCUSED;
+      else if (eventState & NS_EVENT_STATE_HOVER)
+        aState = TS_HOVER;
+      else 
+        aState = TS_NORMAL;
+      
       return NS_OK;
     }
     case NS_THEME_TOOLTIP: {
@@ -552,7 +602,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
           aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_FOCUS)
-          aState = BS_DEFAULT;
+          aState = TS_FOCUSED;
         else if (eventState & NS_EVENT_STATE_HOVER)
           aState = TS_HOVER;
         else 
@@ -565,34 +615,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
   aPart = 0;
   aState = 0;
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID)
-{
-  switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBAR_BUTTON:
-    case NS_THEME_TAB: {
-      aColorID = nsILookAndFeel::eColor_buttontext;
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult 
-GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont)
-{
-  switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBAR_BUTTON:
-    case NS_THEME_TAB: {
-      aFont = eSystemFont_Button;
-      return NS_OK;
-    }
-  }
   return NS_ERROR_FAILURE;
 }
 
@@ -632,7 +654,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   // For left edge and right edge tabs, we need to adjust the widget
   // rects and clip rects so that the edges don't get drawn.
   if (aWidgetType == NS_THEME_TAB_LEFT_EDGE || aWidgetType == NS_THEME_TAB_RIGHT_EDGE) {
-    // There appears to be no way to really obtain this value, so we're forced
+    // HACK ALERT: There appears to be no way to really obtain this value, so we're forced
     // to just use the default value for Luna (which also happens to be correct for
     // all the other skins I've tried).
     PRInt32 edgeSize = 2;
@@ -783,7 +805,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
     if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom)
+        aAttribute == mSelectedAtom || aAttribute == mReadOnlyAtom)
       *aShouldRepaint = PR_TRUE;
   }
 
@@ -812,6 +834,10 @@ nsNativeThemeWin::CloseData()
   if (mButtonTheme) {
     closeTheme(mButtonTheme);
     mButtonTheme = NULL;
+  }
+  if (mTextFieldTheme) {
+    closeTheme(mTextFieldTheme);
+    mTextFieldTheme = NULL;
   }
   if (mTooltipTheme) {
     closeTheme(mTooltipTheme);
