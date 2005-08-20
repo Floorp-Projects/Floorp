@@ -92,6 +92,7 @@ nsNativeThemeGTK::~nsNativeThemeGTK() {
     gtk_widget_destroy(gProtoWindow);
   if (gTooltipWidget)
     gtk_object_unref(GTK_OBJECT(gTooltipWidget));
+  moz_gtk_shutdown();
 }
 
 static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)

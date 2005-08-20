@@ -139,6 +139,9 @@ void
 moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,
                         GdkRectangle* rect, GdkRectangle* cliprect);
 
+void
+moz_gtk_shutdown();
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
