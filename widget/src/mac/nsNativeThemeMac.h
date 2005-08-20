@@ -114,8 +114,12 @@ protected:
                       PRBool inDisabled, ThemeButtonValue inValue, ThemeButtonAdornment inAdornment, PRInt32 inState ) ;
   void DrawCheckboxRadio ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inChecked, 
                               PRBool inDisabled, PRInt32 inState ) ;
+  void DrawMenu ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
+  void DrawMenuItem ( const Rect& inBoxRect, ThemeMenuItemType itemType, PRBool inIsDisabled,
+                        PRBool inHover) ;
 
 private:
 
   ThemeEraseUPP mEraseProc;
+  nsCOMPtr<nsIAtom> mMenuActiveAtom;
 };
