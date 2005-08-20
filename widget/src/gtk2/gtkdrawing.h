@@ -56,12 +56,10 @@ typedef struct {
   PRPackedBool canDefault;
 } GtkWidgetState;
 
-typedef enum {
-  kTabNormal,
-  kTabBeforeSelected,
-  kTabSelected,
-  kTabAfterSelected
-} GtkTabType;
+/* flags for tab state */
+#define MOZ_GTK_TAB_FIRST           (1<<0)
+#define MOZ_GTK_TAB_BEFORE_SELECTED (1<<1)
+#define MOZ_GTK_TAB_SELECTED        (1<<2)
 
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
@@ -132,7 +130,7 @@ moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
 
 void
 moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                  GdkRectangle* cliprect, GtkTabType type);
+                  GdkRectangle* cliprect, gint flags);
 
 void
 moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,

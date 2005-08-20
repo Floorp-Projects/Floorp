@@ -80,6 +80,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   mInputCheckedAtom = do_GetAtom("_moz-input-checked");
   mInputAtom = do_GetAtom("input");
   mFocusedAtom = do_GetAtom("focused");
+  mFirstTabAtom = do_GetAtom("first-tab");
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -364,24 +365,20 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_TAB_RIGHT_EDGE:
     {
       EnsureTabWidget();
-      GtkTabType tab_type;
-      switch (aWidgetType) {
-        case NS_THEME_TAB:
-          {
-            PRBool isSelected = CheckBooleanAttr(aFrame, mSelectedAtom);
-            tab_type = (isSelected ? kTabSelected : kTabNormal);
-          }
-          break;
-        case NS_THEME_TAB_LEFT_EDGE:
-          tab_type = kTabBeforeSelected;
-          break;
-        case NS_THEME_TAB_RIGHT_EDGE:
-          tab_type = kTabAfterSelected;
-          break;
-      }
+      gint tab_flags = 0;
+
+      if (aWidgetType == NS_THEME_TAB && CheckBooleanAttr(aFrame, mSelectedAtom))
+        tab_flags |= MOZ_GTK_TAB_SELECTED;
+      else if (aWidgetType == NS_THEME_TAB_LEFT_EDGE)
+        tab_flags |= MOZ_GTK_TAB_BEFORE_SELECTED;
+
+      nsCOMPtr<nsIContent> content;
+      aFrame->GetContent(getter_AddRefs(content));
+      if (content->HasAttr(kNameSpaceID_None, mFirstTabAtom))
+        tab_flags |= MOZ_GTK_TAB_FIRST;
 
       moz_gtk_tab_paint(window, gTabWidget->style, &gdk_rect, &gdk_clip,
-                        tab_type);
+                        tab_flags);
       break;
     }
   }
