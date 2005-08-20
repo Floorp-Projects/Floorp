@@ -54,6 +54,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIComponentManager.h"
+#include "nsWidgetsCID.h"
 #include "nsIMenuFrame.h"
 #include "nsUnicharUtils.h"
 #include <malloc.h>
@@ -76,6 +79,9 @@
 // Textfield constants
 #define TFP_TEXTFIELD 1
 #define TFS_READONLY  6
+
+// Treeview/listbox constants
+#define TREEVIEW_BODY 1
 
 // Scrollbar constants
 #define SP_BUTTON          1
@@ -105,6 +111,8 @@
 
 // Dropdown constants
 #define CBP_DROPMARKER       1
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
@@ -276,6 +284,17 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mComboBoxTheme = openTheme(NULL, L"Combobox");
       return mComboBoxTheme;
     }
+    case NS_THEME_LISTBOX:
+    case NS_THEME_LISTBOX_LISTITEM:
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_TREEVIEW_HEADER:
+    case NS_THEME_TREEVIEW_HEADER_SORTARROW:
+    case NS_THEME_TREEVIEW_TWISTY_OPEN:
+    case NS_THEME_TREEVIEW_TREEITEM: {
+      if (!mTreeViewTheme)
+        mTreeViewTheme = openTheme(NULL, L"Listview");
+      return mTreeViewTheme;
+    }
   }
   return NULL;
 }
@@ -403,6 +422,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       // IsContentOfType test for HTML vs. XUL here.
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
 
+      PRBool isHTML = PR_FALSE;
+      PRBool isHTMLChecked = PR_FALSE;
+      
       if (!aFrame)
         aState = TS_NORMAL;
       else {
@@ -413,15 +435,14 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (content->IsContentOfType(nsIContent::eXUL))
           aFrame->GetParent(&aFrame);
         else {
-          nsCOMPtr<nsIAtom> tag;
-          content->GetTag(*getter_AddRefs(tag));
-          if (tag == mInputAtom)
-            atom = mInputCheckedAtom;
+          // Attempt a QI.
+          nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
+          if (inputElt) {
+            inputElt->GetChecked(&isHTMLChecked);
+            isHTML = PR_TRUE;
+          }
         }
 
-      }
-
-      if (aFrame) {
         if (IsDisabled(aFrame))
           aState = TS_DISABLED;
         else {
@@ -435,7 +456,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         }
       }
 
-      if (CheckBooleanAttr(aFrame, atom))
+      if (isHTML) {
+        if (isHTMLChecked)
+          aState += 4;
+      }
+      else if (CheckBooleanAttr(aFrame, atom))
         aState += 4; // 4 unchecked states, 4 checked states.
       return NS_OK;
     }
@@ -597,6 +622,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_STATUSBAR_RESIZER_PANEL:
     case NS_THEME_RESIZER: {
       aPart = (aWidgetType - NS_THEME_STATUSBAR_PANEL) + 1;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_TREEVIEW:
+    case NS_THEME_LISTBOX: {
+      aPart = TREEVIEW_BODY;
       aState = TS_NORMAL;
       return NS_OK;
     }
@@ -933,10 +964,17 @@ nsNativeThemeWin::ThemeChanged()
 
 PRBool 
 nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
+                                      nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-  // XXXdwh We can go even further and call the API to ask if support exists for
-  // specific widgets.
+  if (!aPresContext)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (!shell->IsThemeSupportEnabled())
+    return PR_FALSE;
+
   HANDLE theme = NULL;
   if (aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
     theme = GetTheme(NS_THEME_CHECKBOX);
@@ -944,7 +982,51 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
     theme = GetTheme(NS_THEME_RADIO);
   else
     theme = GetTheme(aWidgetType);
-  return theme != NULL;
+  if (!theme)
+    return PR_FALSE;
+  
+  // Check for specific widgets to see if HTML has overridden the style.
+  if (aFrame && aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD) {
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (content->IsContentOfType(nsIContent::eHTML)) {
+      nscolor bgColor;
+      nscolor disabledBG;
+
+      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_CreateInstance(kLookAndFeelCID));
+      
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, disabledBG);
+
+      switch (aWidgetType) {
+      case NS_THEME_BUTTON:
+        lookAndFeel->GetColor(nsILookAndFeel::eColor_buttonface, bgColor);
+        break;
+      case NS_THEME_TEXTFIELD:
+        lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field, bgColor);
+        break;
+      default:
+        return PR_TRUE;
+      }
+
+      nsCOMPtr<nsIStyleContext> styleContext;
+      aFrame->GetStyleContext(getter_AddRefs(styleContext));
+      
+      const nsStyleBackground* ourBG = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
+      if (ourBG->mBackgroundColor != bgColor && ourBG->mBackgroundColor != disabledBG)
+        return PR_FALSE;
+
+      const nsStyleBorder* ourBorder = (const nsStyleBorder*)styleContext->GetStyleData(eStyleStruct_Border);
+      //see if any sides are dotted, dashed or solid
+      for (PRInt32 cnt = 0; cnt < 4; cnt++) {
+        if ((ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
+            (ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED) ||
+            (ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_SOLID))
+          return PR_FALSE;
+      }
+    }
+  }
+
+  return PR_TRUE;
 }
 
 PRBool 
