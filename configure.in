@@ -95,6 +95,7 @@ QT_VERSION=3.2.0
 QT_VERSION_NUM=320
 LIBART_VERSION=2.3.4
 CAIRO_VERSION=0.9.1
+GLITZ_VERSION=0.4.0
 GTK2_VERSION=1.3.7
 MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
@@ -3620,6 +3621,16 @@ if test "$MOZ_ENABLE_CANVAS"; then
     AC_DEFINE(MOZ_ENABLE_CANVAS)
 fi
 
+dnl check whether to enable glitz
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(glitz,
+[  --enable-glitz          Enable Glitz for use with Cairo],
+    MOZ_ENABLE_GLITZ=1,
+    MOZ_ENABLE_GLITZ= )
+if test "$MOZ_ENABLE_GLITZ"; then
+    AC_DEFINE(MOZ_ENABLE_GLITZ)
+fi
+
 dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
@@ -3666,6 +3677,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "mac" \
         -o "$_DEFAULT_TOOLKIT" = "windows" \
         -o "$_DEFAULT_TOOLKIT" = "cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-xlib"
     then
@@ -3747,6 +3759,12 @@ mac|cocoa)
         MOZ_ENABLE_COCOA=1
         AC_DEFINE(MOZ_WIDGET_COCOA)
     fi
+    ;;
+
+cairo-windows)
+    MOZ_WIDGET_TOOLKIT=windows
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_CAIRO_GFX=1
     ;;
 
 cairo-gtk2)
@@ -3881,6 +3899,7 @@ AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_CAIRO_GFX)
+AC_SUBST(MOZ_ENABLE_GLITZ)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
@@ -3892,6 +3911,11 @@ AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 
 AC_SUBST(MOC)
+
+if test "$MOZ_ENABLE_CAIRO_GFX"
+then
+    AC_DEFINE(MOZ_THEBES)
+fi
 
 if test "$MOZ_ENABLE_GTK" \
 || test "$MOZ_ENABLE_QT" \
@@ -6215,33 +6239,27 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        AC_DEFINE(HAVE_UINT64_T)
 
        # Define macros for cairo-features.h
-       PS_SURFACE_FEATURE=CAIRO_HAS_NO_PS_SURFACE
-       PDF_SURFACE_FEATURE=CAIRO_HAS_NO_PDF_SURFACE
-       PNG_SURFACE_FEATURE=CAIRO_HAS_NO_PNG_SURFACE
        if test "$MOZ_X11"; then
-           XLIB_SURFACE_FEATURE=CAIRO_HAS_XLIB_SURFACE
-           FT_FONT_FEATURE=CAIRO_HAS_FT_FONT
-       else
-           XLIB_SURFACE_FEATURE=CAIRO_HAS_NO_XLIB_SURFACe
-           FT_FONT_FEATURE=CAIRO_HAS_NO_FT_FONT
+           XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
+           FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-           QUARTZ_SURFACE_FEATURE=CAIRO_HAS_QUARTZ_SURFACE
-           ATSUI_FONT_FEATURE=CAIRO_HAS_ATSUI_FONT
-       else
-           QUARTZ_SURFACE_FEATURE=CAIRO_HAS_NO_QUARTZ_SURFACE
-           ATSUI_FONT_FEATURE=CAIRO_HAS_NO_ATSUI_FONT
+           QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
+           ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
        fi
-       XCB_SURFACE_FEATURE=CAIRO_HAS_NO_XCB_SURFACE
        if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
-           WIN32_SURFACE_FEATURE=CAIRO_HAS_WIN32_SURFACE
-           WIN32_FONT_FEATURE=CAIRO_HAS_WIN32_FONT
-       else
-           WIN32_SURFACE_FEATURE=CAIRO_HAS_NO_WIN32_SURFACE
-           WIN32_FONT_FEATURE=CAIRO_HAS_NO_WIN32_FONT
+           WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+           WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
        fi
-       GLITZ_SURFACE_FEATURE=CAIRO_HAS_NO_GLITZ_SURFACE
-       SANITY_CHECKING_FEATURE=CAIRO_DO_SANITY_CHECKING
+       if test "$MOZ_ENABLE_GLITZ"; then
+           GLITZ_SURFACE_FEATURE="#define CAIRO_HAS_GLITZ_SURFACE 1"
+       fi
+
+       if test "$MOZ_DEBUG"; then
+         SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
+       else
+         SANITY_CHECKING_FEATURE="#undef CAIRO_DO_SANITY_CHECKING"
+       fi
 
        AC_SUBST(PS_SURFACE_FEATURE)
        AC_SUBST(PDF_SURFACE_FEATURE)
@@ -6254,16 +6272,35 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        AC_SUBST(FT_FONT_FEATURE)
        AC_SUBST(WIN32_FONT_FEATURE)
        AC_SUBST(ATSUI_FONT_FEATURE)
+       AC_SUBST(PNG_FUNCTIONS_FEATURE)
        AC_SUBST(SANITY_CHECKING_FEATURE)
 
        if test "$_WIN32_MSVC"; then
            MOZ_CAIRO_LIBS='$(DIST)/lib/mozcairo.lib $(DIST)/lib/mozlibpixman.lib'
+           if test "$MOZ_ENABLE_GLITZ"; then
+               MOZ_CAIR_LIBS="$MOZ_CAIRO_LIBS $(DIST)/lib/mozglitz.lib $(DIST)/lib/mozglitzwgl.lib"
+           fi
        else
            MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman"
+
+           if test -z "$MACOSX"; then
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype"
+           fi
 
            if test "$MOZ_X11"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype"
            fi
+
+           if test "$MOZ_ENABLE_GLITZ"; then
+               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitz"
+               if test "$MOZ_X11"; then
+                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitzglx -lGL"
+               fi
+               if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
+                   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lmozglitzwgl"
+               fi
+           fi
+
            if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lgdi32"
            fi
