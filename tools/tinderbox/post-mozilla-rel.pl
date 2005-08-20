@@ -498,7 +498,7 @@ sub update_create_stats {
   $hashfunction = uc($hashfunction);
 
   if ( defined($Settings::update_filehost) ) {
-    $url =~ s|^([^:]*)://([^/:]*)(.*)$|$1://$Settings::update_filehost$2|g;
+    $url =~ s|^([^:]*)://([^/:]*)(.*)$|$1://$Settings::update_filehost$3|g;
   }
 
   $output  = "$type\n";
