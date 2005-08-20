@@ -73,20 +73,15 @@ nsNativeTheme::nsNativeTheme()
 }
 
 nsIPresShell *
-nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame)
+nsNativeTheme::GetPresShell(nsIFrame* aFrame)
 {
   if (!aFrame)
     return nsnull;
 
-  nsIDocument *doc = aFrame->GetContent()->GetDocument();
-
-  nsIPresShell *shell = nsnull;
-
-  if (doc) {
-    shell = doc->GetShellAt(0);
-  }
-
-  return shell;
+  // this is a workaround for the egcs 1.1.2 not inliningg
+  // aFrame->GetPresContext(), which causes an undefined symbol
+  nsPresContext *context = aFrame->GetStyleContext()->GetRuleNode()->GetPresContext();
+  return context ? context->GetPresShell() : nsnull;
 }
 
 PRInt32
@@ -101,7 +96,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (isXULCheckboxRadio)
     aFrame = aFrame->GetParent();
 
-  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
+  nsIPresShell *shell = GetPresShell(aFrame);
   if (!shell)
     return 0;
 

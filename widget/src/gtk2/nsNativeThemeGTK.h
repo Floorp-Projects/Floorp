@@ -40,11 +40,14 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIObserver.h"
+#include "nsNativeTheme.h"
 
 #include <gtk/gtkwidget.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK: public nsITheme, public nsIObserver {
+class nsNativeThemeGTK: private nsNativeTheme,
+                        public nsITheme,
+                        public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
 
@@ -82,22 +85,16 @@ public:
   nsNativeThemeGTK();
   virtual ~nsNativeThemeGTK();
 
-protected:
+private:
   PRBool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
                               GtkThemeWidgetType& aGtkWidgetType,
                               GtkWidgetState* aState, gint* aWidgetFlags);
 
-  PRBool IsDisabled(nsIFrame* aFrame);
+  void RefreshWidgetWindow(nsIFrame* aFrame);
 
-private:
-  nsCOMPtr<nsIAtom> mCheckedAtom;
-  nsCOMPtr<nsIAtom> mDisabledAtom;
-  nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mTypeAtom;
   nsCOMPtr<nsIAtom> mInputCheckedAtom;
   nsCOMPtr<nsIAtom> mInputAtom;
-  nsCOMPtr<nsIAtom> mFocusedAtom;
-  nsCOMPtr<nsIAtom> mFirstTabAtom;
   nsCOMPtr<nsIAtom> mCurPosAtom;
   nsCOMPtr<nsIAtom> mMaxPosAtom;
   nsCOMPtr<nsIAtom> mMenuActiveAtom;
