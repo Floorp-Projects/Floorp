@@ -55,7 +55,7 @@ DEFAULT_COMPILER = gcc
 ifeq ($(OS_TEST),m68k)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= m68k
-else	
+else
 ifeq ($(OS_TEST),ppc64)
 	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= ppc
@@ -175,6 +175,3 @@ G++INCLUDES		= -I/usr/include/g++
 # Always set CPU_TAG on Linux, OpenVMS, WINCE.
 #
 CPU_TAG = _$(CPU_ARCH)
-
-USE_SYSTEM_ZLIB = 1
-ZLIB_LIBS = -lz
