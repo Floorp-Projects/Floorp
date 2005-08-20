@@ -80,9 +80,14 @@ class nsNativeTheme
     return GetCheckedOrSelected(aFrame, PR_FALSE);
   }
 
-  // radiobutton and tab:
+  // radiobutton:
   PRBool IsSelected(nsIFrame* aFrame) {
     return GetCheckedOrSelected(aFrame, PR_TRUE);
+  }
+
+  // tab:
+  PRBool IsSelectedTab(nsIFrame* aFrame) {
+    return CheckBooleanAttr(aFrame, mSelectedAtom);
   }
 
   // treeheadercell:
