@@ -42,11 +42,11 @@ my $numusers = Litmus::DB::User->count_all();
 # get a list of the top 15 testers of all time, sorted by the number 
 # of test results submitted:
 my $dbh = Litmus::DB::User->db_Main();
-my $sth = $dbh->prepare("SELECT userid, email, count(*) AS thecount
-                                         FROM users, testresults 
+my $sth = $dbh->prepare("SELECT users.user_id, users.email, count(*) AS thecount
+                                         FROM users, test_results 
                                          WHERE 
-                                             users.userid=testresults.user 
-                                         GROUP BY user 
+                                             users.user_id=test_results.user_id 
+                                         GROUP BY user_id 
                                          ORDER BY thecount DESC 
                                           LIMIT 15;");
 $sth->execute();
