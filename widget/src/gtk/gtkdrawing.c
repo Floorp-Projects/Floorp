@@ -43,6 +43,7 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkprivate.h>
+#include <string.h>
 #include "gtkdrawing.h"
 
 extern GtkWidget* gButtonWidget;
@@ -179,11 +180,16 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
   moz_gtk_check_button_draw_indicator(window, style, boxRect,
                                       clipRect, aState, detail);
   
-  if (((GtkWidgetState*)aState)->focused)
+#if 0
+  if (((GtkWidgetState*)aState)->focused) {
+    gint border_width = GTK_CONTAINER(gCheckboxWidget)->border_width;
     gtk_paint_focus (style, window,
-                     clipRect, gCheckboxWidget, detail,
-                     boxRect->x, boxRect->y, boxRect->width - 1, boxRect->height - 1);
-
+                     NULL, gCheckboxWidget, detail,
+                     boxRect->x + border_width, boxRect->y + border_width, 
+                     boxRect->width - 2*border_width - 1,
+                     boxRect->height - 2*border_width - 1);
+  }
+#endif
 }
 
 void
