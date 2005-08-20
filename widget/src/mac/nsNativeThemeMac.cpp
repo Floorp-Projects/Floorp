@@ -98,7 +98,7 @@ nsNativeThemeMac::nsNativeThemeMac()
     sInitializedBorders = PR_TRUE;
     sTextfieldBorderSize.left = sTextfieldBorderSize.top = 2;
     sTextfieldBorderSize.right = sTextfieldBorderSize.bottom = 2;
-    sTextfieldBGTransparent = PR_TRUE;
+    sTextfieldBGTransparent = PR_FALSE;
   }
 }
 
