@@ -518,9 +518,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       EnsureCheckBoxWidget();
 
       gint indicator_size, indicator_spacing;
-      _gtk_check_button_get_props (GTK_CHECK_BUTTON(gCheckboxWidget), &indicator_size,
-                                   &indicator_spacing);
-
+      moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
       aResult->width = aResult->height = indicator_size;
       *aIsOverridable = PR_FALSE;
     }
