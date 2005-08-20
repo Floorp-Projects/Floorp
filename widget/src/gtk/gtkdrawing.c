@@ -53,6 +53,7 @@ extern GtkWidget* gGripperWidget;
 extern GtkWidget* gEntryWidget;
 extern GtkWidget* gArrowWidget;
 extern GtkWidget* gDropdownButtonWidget;
+extern GtkWidget* gHandleBoxWidget;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* state)
@@ -128,11 +129,11 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
-  gint indicator_size, indicator_spacing;
+  gint indicator_size;
   gint x, y, width, height;
 
   _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget),
-                              &indicator_size, &indicator_spacing);
+                              &indicator_size, NULL);
 
   /* left justified, vertically centered within the rect */
   x = rect->x;
@@ -196,6 +197,37 @@ moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
   gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, cliprect,
                 gScrollbarWidget, "slider", rect->x, rect->y, rect->width, 
                 rect->height);
+}
+
+#define RANGE_CLASS(w) GTK_RANGE_CLASS(GTK_OBJECT(w)->klass)
+
+void
+moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
+                              gint* stepper_size, gint* stepper_spacing,
+                              gint* min_slider_size)
+{
+  if (slider_width)
+    *slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                    "GtkRange::slider_width",
+                                                    RANGE_CLASS(gScrollbarWidget)->slider_width);
+
+  if (trough_border)
+    *trough_border = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                     "GtkRange::trough_border",
+                                                     gScrollbarWidget->style->klass->xthickness);
+
+  if (stepper_size)
+    *stepper_size = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                    "GtkRange::stepper_size",
+                                                    RANGE_CLASS(gScrollbarWidget)->stepper_size);
+
+  if (stepper_spacing)
+    *stepper_spacing = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::stepper_spacing",
+                                                       RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing);
+
+  if (min_slider_size)
+    *min_slider_size = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
 }
 
 void
@@ -266,4 +298,13 @@ moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                         cliprect, gCheckboxWidget,
                         isradio ? "radiobutton" : "checkbutton",
                         rect->x, rect->y, rect->width, rect->height);
+}
+
+void
+moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* cliprect)
+{
+  gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                cliprect, gHandleBoxWidget, "dockitem_bin",
+                rect->x, rect->y, rect->width, rect->height);
 }

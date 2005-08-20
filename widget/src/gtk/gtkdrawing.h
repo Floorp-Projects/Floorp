@@ -80,7 +80,10 @@ void
 moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
                               GdkRectangle* rect, GdkRectangle* cliprect,
                               GtkWidgetState* state);
-
+void
+moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
+                              gint* stepper_size, gint* stepper_spacing,
+                              gint* min_slider_size);
 
 void
 moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
@@ -99,6 +102,10 @@ void
 moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                         GdkRectangle* cliprect, GtkWidgetState* state,
                         gboolean isradio);
+
+void
+moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* cliprect);
 
 #ifdef __cplusplus
 }
