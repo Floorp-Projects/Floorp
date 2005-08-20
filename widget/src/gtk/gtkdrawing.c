@@ -120,7 +120,7 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 void
 moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
                                     GdkRectangle* boxRect, GdkRectangle* clipRect,
-                                    GtkToggleButtonState* aState)
+                                    GtkToggleButtonState* aState, const char* detail)
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
@@ -142,7 +142,7 @@ moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
   if (state_type != GTK_STATE_NORMAL) /* this is for drawing e.g. a prelight box */
     gtk_paint_flat_box (style, window, state_type, 
                         GTK_SHADOW_ETCHED_OUT,
-                        clipRect, gCheckboxWidget, "checkbutton",
+                        clipRect, gCheckboxWidget, detail,
                         boxRect->x, boxRect->y,
                         boxRect->width, boxRect->height);
   
@@ -160,22 +160,25 @@ moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
     state_type = ConvertGtkState(wState);
   }
   
-  gtk_paint_check (style, window,
-                   state_type, shadow_type,
-                   clipRect, gCheckboxWidget, "checkbutton",
-                   x + 1, y + 1, width, height);
+  if (!strcmp(detail, "radiobutton"))
+    gtk_paint_option(style, window, state_type, shadow_type, clipRect,
+                     gCheckboxWidget, detail, x+1, y+1, width, height);
+  else
+    gtk_paint_check(style, window, state_type, shadow_type, clipRect, 
+                     gCheckboxWidget, detail, x+1, y+1, width, height);
 }
 
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
                        GdkRectangle* boxRect, GdkRectangle* clipRect,
-                       GtkToggleButtonState* aState)
+                       GtkToggleButtonState* aState, const char* detail)
 {
-  moz_gtk_check_button_draw_indicator(window, style, boxRect, clipRect, aState);
+  moz_gtk_check_button_draw_indicator(window, style, boxRect,
+                                      clipRect, aState, detail);
   
   if (((GtkWidgetState*)aState)->focused)
     gtk_paint_focus (style, window,
-                     clipRect, gCheckboxWidget, "checkbutton",
+                     clipRect, gCheckboxWidget, detail,
                      boxRect->x, boxRect->y, boxRect->width - 1, boxRect->height - 1);
 
 }
