@@ -454,11 +454,14 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
                     kThemeDisclosureDown, kThemeAdornmentNone, eventState );
       break;
     case NS_THEME_TREEVIEW_HEADER_CELL:
+    {
+      TreeSortDirection sortDirection = GetTreeSortDirection(aFrame);
       DrawButton ( kThemeListHeaderButton, macRect, PR_FALSE, IsDisabled(aFrame), 
-                    IsSortedColumn(aFrame) ? kThemeButtonOn : kThemeButtonOff,
-                    IsSortReversed(aFrame) ? kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone,
-                    eventState );      
+                    sortDirection == eTreeSortDirection_Natural ? kThemeButtonOff : kThemeButtonOn,
+                    sortDirection == eTreeSortDirection_Descending ?
+                    kThemeAdornmentHeaderButtonSortUp : kThemeAdornmentNone, eventState );      
       break;
+    }
     case NS_THEME_TREEVIEW_TREEITEM:
     case NS_THEME_TREEVIEW:
       ::SetThemeBackground(kThemeBrushWhite, 24, true);

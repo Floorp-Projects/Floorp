@@ -53,6 +53,13 @@ class nsPresContext;
 class nsNativeTheme
 {
  protected:
+
+  enum TreeSortDirection {
+    eTreeSortDirection_Descending,
+    eTreeSortDirection_Natural,
+    eTreeSortDirection_Ascending
+  };
+
   nsNativeTheme();
 
   // Returns the content state (hover, focus, etc), see nsIEventStateManager.h
@@ -96,18 +103,16 @@ class nsNativeTheme
   }
 
   // treeheadercell:
-  PRBool IsSortedColumn(nsIFrame* aFrame) {
+  TreeSortDirection GetTreeSortDirection(nsIFrame* aFrame) {
     nsAutoString sortdir;
-    if (GetAttr(aFrame, mSortDirectionAtom, sortdir))
-      return !sortdir.IsEmpty();
-    return PR_FALSE;
-  }
+    if (GetAttr(aFrame, mSortDirectionAtom, sortdir)) {
+      if (sortdir.EqualsLiteral("descending"))
+        return eTreeSortDirection_Descending;
+      else if (sortdir.EqualsLiteral("ascending"))
+        return eTreeSortDirection_Ascending;
+    }
 
-  PRBool IsSortReversed(nsIFrame* aFrame) {
-    nsAutoString sortdir;
-    if (GetAttr(aFrame, mSortDirectionAtom, sortdir))
-      return sortdir.EqualsLiteral("descending");
-    return PR_FALSE;
+    return eTreeSortDirection_Natural;
   }
 
   // tab:
