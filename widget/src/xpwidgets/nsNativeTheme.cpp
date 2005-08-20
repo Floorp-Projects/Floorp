@@ -314,8 +314,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
       }
 
       // Check whether border size differs from default
-      nsMargin borderSize;
-      if (ourBorder->GetBorder(borderSize) && borderSize != defaultBorderSize)
+      if (ourBorder->GetBorder() != defaultBorderSize)
         return PR_TRUE;
     }
   }
