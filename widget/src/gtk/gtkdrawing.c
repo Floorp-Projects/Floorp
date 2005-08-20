@@ -55,37 +55,38 @@ extern GtkWidget* gArrowWidget;
 extern GtkWidget* gDropdownButtonWidget;
 
 GtkStateType
-ConvertGtkState(GtkWidgetState* aState)
+ConvertGtkState(GtkWidgetState* state)
 {
-  if (aState->disabled)
+  if (state->disabled)
     return GTK_STATE_INSENSITIVE;
-  else if (aState->inHover)
-    return (aState->active ? GTK_STATE_ACTIVE : GTK_STATE_PRELIGHT);
+  else if (state->inHover)
+    return (state->active ? GTK_STATE_ACTIVE : GTK_STATE_PRELIGHT);
   else
     return GTK_STATE_NORMAL;
 }
 
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
-                     GdkRectangle* buttonRect, GdkRectangle* clipRect,
-                     GtkWidgetState* buttonState, GtkReliefStyle relief)
+                     GdkRectangle* rect, GdkRectangle* cliprect,
+                     GtkWidgetState* state, GtkReliefStyle relief)
 {
   GtkShadowType shadow_type;
   gint default_spacing = 7; /* xxx fix me */
-  GtkStateType button_state = ConvertGtkState(buttonState);
-  gint x = buttonRect->x, y=buttonRect->y, width=buttonRect->width, height=buttonRect->height;
+  GtkStateType button_state = ConvertGtkState(state);
+  gint x = rect->x, y=rect->y, width=rect->width, height=rect->height;
 
   if (((GdkWindowPrivate*)window)->mapped) {
     gdk_window_set_back_pixmap(window, NULL, TRUE);
-    gdk_window_clear_area(window, clipRect->x, clipRect->y, clipRect->width, clipRect->height);
+    gdk_window_clear_area(window, cliprect->x, cliprect->y, cliprect->width,
+                          cliprect->height);
   }
 
   gtk_widget_set_state(gButtonWidget, button_state);
-  if (buttonState->isDefault)
-    gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                  clipRect, gButtonWidget, "buttondefault", x, y, width, height);
+  if (state->isDefault)
+    gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                  gButtonWidget, "buttondefault", x, y, width, height);
 
-  if (buttonState->canDefault) {
+  if (state->canDefault) {
     x += style->klass->xthickness;
     y += style->klass->ythickness;
     width -= 2 * x + default_spacing;
@@ -94,130 +95,126 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
     y += (1 + default_spacing) / 2;
   }
        
-  if (buttonState->focused) {
+  if (state->focused) {
     x += 1;
     y += 1;
     width -= 2;
     height -= 2;
   }
 	
-  shadow_type = (buttonState->active && buttonState->inHover) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+  shadow_type = (state->active && state->inHover) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   
   if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
                                     button_state != GTK_STATE_INSENSITIVE))
-    gtk_paint_box(style, window, button_state, shadow_type, clipRect,
+    gtk_paint_box(style, window, button_state, shadow_type, cliprect,
                   gButtonWidget, "button", x, y, width, height);
   
-  if (buttonState->focused) {
+  if (state->focused) {
     x -= 1;
     y -= 1;
     width += 2;
     height += 2;
     
-    gtk_paint_focus(style, window, clipRect, gButtonWidget, "button",
-                    x, y, width - 1, height - 1);
+    gtk_paint_focus(style, window, cliprect, gButtonWidget, "button", x, y,
+                    width - 1, height - 1);
   }
 }
 
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
-                       GdkRectangle* boxRect, GdkRectangle* clipRect,
-                       GtkToggleButtonState* aState, const char* detail)
+                       GdkRectangle* rect, GdkRectangle* cliprect,
+                       GtkWidgetState* state, gboolean selected,
+                       gboolean isradio)
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
   gint indicator_size, indicator_spacing;
-  GtkWidgetState* wState = (GtkWidgetState*) aState;
   gint x, y, width, height;
 
-  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget), &indicator_size,
-                              &indicator_spacing);
+  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget),
+                              &indicator_size, &indicator_spacing);
 
-  x = boxRect->x;          /* left justified within the rect */
-  y = boxRect->y + (boxRect->height - indicator_size) / 2; /* vertically centered */
+  /* left justified, vertically centered within the rect */
+  x = rect->x;
+  y = rect->y + (rect->height - indicator_size) / 2;
   width = indicator_size;
   height = indicator_size;
   
-  if (aState->selected) {
+  if (selected) {
     state_type = GTK_STATE_ACTIVE;
     shadow_type = GTK_SHADOW_IN;
   }
   else {
     shadow_type = GTK_SHADOW_OUT;
-    state_type = ConvertGtkState(wState);
+    state_type = ConvertGtkState(state);
   }
   
-  if (detail[0] == 'r') /* radiobutton */
-    gtk_paint_option(style, window, state_type, shadow_type, clipRect,
-                     gCheckboxWidget, (char*) detail, x, y, width, height);
+  if (isradio)
+    gtk_paint_option(style, window, state_type, shadow_type, cliprect,
+                     gCheckboxWidget, "radiobutton", x, y, width, height);
   else
-    gtk_paint_check(style, window, state_type, shadow_type, clipRect, 
-                     gCheckboxWidget, (char*) detail, x, y, width, height);
+    gtk_paint_check(style, window, state_type, shadow_type, cliprect, 
+                     gCheckboxWidget, "checkbutton", x, y, width, height);
 }
 
 void
 moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* arrowRect, GdkRectangle* clipRect,
-                               GtkWidgetState* state, GtkArrowType arrowType)
+                               GdkRectangle* rect, GdkRectangle* cliprect,
+                               GtkWidgetState* state, GtkArrowType type)
 {
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
-  gtk_paint_arrow(style, window, state_type, shadow_type, clipRect,
-                  gScrollbarWidget, (arrowType < 2) ? "vscrollbar" : "hscrollbar", 
-                  arrowType, TRUE,
-                  arrowRect->x, arrowRect->y, arrowRect->width, arrowRect->height);
+  gtk_paint_arrow(style, window, state_type, shadow_type, cliprect,
+                  gScrollbarWidget, (type < 2) ? "vscrollbar" : "hscrollbar", 
+                  type, TRUE, rect->x, rect->y, rect->width, rect->height);
 }
 
 void
 moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* troughRect, GdkRectangle* clipRect,
+                               GdkRectangle* rect, GdkRectangle* cliprect,
                                GtkWidgetState* state)
 {
   gtk_style_apply_default_background(style, window, TRUE, GTK_STATE_ACTIVE,
-                                     clipRect, troughRect->x, troughRect->y,
-                                     troughRect->width, troughRect->height);
+                                     cliprect, rect->x, rect->y,
+                                     rect->width, rect->height);
 
-  gtk_paint_box(style, window, GTK_STATE_ACTIVE, GTK_SHADOW_IN,
-                clipRect, gScrollbarWidget, "trough", troughRect->x,
-                troughRect->y, troughRect->width, troughRect->height);
+  gtk_paint_box(style, window, GTK_STATE_ACTIVE, GTK_SHADOW_IN, cliprect,
+                gScrollbarWidget, "trough", rect->x, rect->y,  rect->width,
+                rect->height);
 
   if (state->focused)
-    gtk_paint_focus(style, window, clipRect, gScrollbarWidget, "trough",
-                    troughRect->x, troughRect->y, troughRect->width, 
-                    troughRect->height);
+    gtk_paint_focus(style, window, cliprect, gScrollbarWidget, "trough",
+                    rect->x, rect->y, rect->width, rect->height);
 }
 
 void
 moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
-                              GdkRectangle* thumbRect, GdkRectangle* clipRect,
+                              GdkRectangle* rect, GdkRectangle* cliprect,
                               GtkWidgetState* state)
 {
   GtkStateType state_type = state->inHover ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
-  gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, clipRect,
-                gScrollbarWidget, "slider", thumbRect->x, thumbRect->y,
-                thumbRect->width, thumbRect->height);
+  gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, cliprect,
+                gScrollbarWidget, "slider", rect->x, rect->y, rect->width, 
+                rect->height);
 }
 
 void
 moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                      GdkRectangle* clipRect, GtkWidgetState* state)
+                      GdkRectangle* cliprect, GtkWidgetState* state)
 {
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = GTK_HANDLE_BOX(gGripperWidget)->shadow_type;
 
-  gtk_paint_box(style, window, state_type, shadow_type, clipRect,
+  gtk_paint_box(style, window, state_type, shadow_type, cliprect,
                 gGripperWidget, "handlebox_bin", rect->x, rect->y,
                 rect->width, rect->height);
 }
 
 void
 moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                    GdkRectangle* clipRect, GtkWidgetState* state)
+                    GdkRectangle* cliprect, GtkWidgetState* state)
 {
-  gint x = rect->x;
-  gint y = rect->y;
-  gint width = rect->width;
-  gint height = rect->height;
+  gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
   
   if (state->focused) {
       x += 1;
@@ -226,47 +223,47 @@ moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
       height -= 2;
   }
   
-  gtk_paint_shadow (style, window,
-                    GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                    clipRect, gEntryWidget, "entry",
-                    x, y, width, height);
+  gtk_paint_shadow (style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                    gEntryWidget, "entry", x, y, width, height);
   
   if (state->focused)
-      gtk_paint_focus (style, window,  clipRect, gEntryWidget, "entry",
+      gtk_paint_focus (style, window,  cliprect, gEntryWidget, "entry",
                        rect->x, rect->y, rect->width - 1, rect->height - 1);
 
   x = style->klass->xthickness;
   y = style->klass->ythickness;
 
   gtk_paint_flat_box (style, window, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
-                      clipRect, gEntryWidget, "entry_bg",  rect->x + x,
+                      cliprect, gEntryWidget, "entry_bg",  rect->x + x,
                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
 }
 
 void
-moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                             GdkRectangle* clipRect, GtkWidgetState* state)
+moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
+                             GdkRectangle* rect, GdkRectangle* cliprect, 
+                             GtkWidgetState* state)
 {
-  moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, clipRect, state, GTK_RELIEF_NORMAL);
-  gtk_paint_arrow(style, window, ConvertGtkState(state), state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT,
-                  clipRect, gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, rect->x, rect->y,
+  moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, cliprect,
+                       state, GTK_RELIEF_NORMAL);
+  gtk_paint_arrow(style, window, ConvertGtkState(state),
+                  state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT, cliprect,
+                  gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, rect->x, rect->y,
                   rect->width, rect->height);
 }
 
 void
 moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                        GdkRectangle* clipRect, GtkWidgetState* state, const char* detail)
+                        GdkRectangle* cliprect, GtkWidgetState* state, 
+                        gboolean isradio)
 {
   GtkStateType state_type = ConvertGtkState(state);
 
-  if (state_type != GTK_STATE_NORMAL &&
-      state_type != GTK_STATE_PRELIGHT)
+  if (state_type != GTK_STATE_NORMAL && state_type != GTK_STATE_PRELIGHT)
     state_type = GTK_STATE_NORMAL;
   
-  if (state_type != GTK_STATE_NORMAL) /* this is for drawing e.g. a prelight box */
-    gtk_paint_flat_box (style, window, state_type, 
-                        GTK_SHADOW_ETCHED_OUT,
-                        clipRect, gCheckboxWidget, (char*) detail,
-                        rect->x, rect->y,
-                        rect->width, rect->height);
+  if (state_type != GTK_STATE_NORMAL) /* this is for drawing a prelight box */
+    gtk_paint_flat_box (style, window, state_type, GTK_SHADOW_ETCHED_OUT,
+                        cliprect, gCheckboxWidget,
+                        isradio ? "radiobutton" : "checkbutton",
+                        rect->x, rect->y, rect->width, rect->height);
 }
