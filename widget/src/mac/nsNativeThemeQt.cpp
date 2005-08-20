@@ -57,6 +57,7 @@
 nsNativeThemeQt::nsNativeThemeQt()
 {
     combo = new QComboBox((QWidget *)0);
+    combo->resize(0, 0);
     ThemeChanged();
 }
 
