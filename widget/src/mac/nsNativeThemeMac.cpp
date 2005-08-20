@@ -57,23 +57,6 @@
 #include "nsRegionPool.h"
 #include "nsGfxUtils.h"
 
-//
-// Return true if we are on Mac OS X, caching the result after the first call
-// Yes, this needs to go somehwere better.
-//
-static PRBool OnMacOSX()
-{
-  static PRBool gInitVer = PR_FALSE;
-  static PRBool gOnMacOSX = PR_FALSE;
-  if(! gInitVer) {
-    long version;
-    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
-    gOnMacOSX = (err == noErr && version >= 0x00001000);
-    gInitVer = PR_TRUE;
-  }
-  return gOnMacOSX;
-}
-
 
 static void 
 ConvertGeckoToNativeRect(const nsRect& aSrc, Rect& aDst) 
@@ -563,15 +546,33 @@ nsNativeThemeMac::DrawFullScrollbar ( const Rect& inSbarRect, PRInt32 inWidgetHi
                                        PRBool inIsDisabled, PRInt32 inMax, PRInt32 inValue, PRInt32 inState )
 {
   ThemeTrackDrawInfo info;
+  static Rect lastScrollbarDrawn = {0, 0, 0, 0};
+  static WindowRef lastScrollbarWindow = nsnull;
 
+  // this is a serious, serious hack, but we seem to have some coordinate rounding problems
+  // that I really can't figure out. I'll take 40 whacks for this, and even buy liquor to
+  // the person that can fix it. The problem comes from the fact that we're determining the
+  // location of the scrollbar's frame by walking up the frame parent chain from a child
+  // of the scrollbar. Sometimes (not always) a rounding error in gfx occurs and we end up with the
+  // bottom of the scrollbar being off by a pixel or two from the last time we drew it. 
+  // Rather nasty jiggling ensues as we draw different pieces of the scrollbar with and 
+  // without the rounding error. The only solution i could come up with was to remember where
+  // we last drew, and if it's a close enough match, revert back to the last scrollbar rect. Seems
+  // to work pretty well.
+  Rect scrollbarRect = inSbarRect;
+  if ( ::FrontWindow() == lastScrollbarWindow && 
+        abs(scrollbarRect.bottom - lastScrollbarDrawn.bottom) <= 2 &&
+              scrollbarRect.left == lastScrollbarDrawn.left )
+    scrollbarRect = lastScrollbarDrawn;
+  
   // the scrollbar is horizontal if the width is greater than the height. Too bad the API
   // doesn't tell us which is which.
   PRBool isHorizontal = 
-          (inSbarRect.right - inSbarRect.left) > (inSbarRect.bottom - inSbarRect.top);
+          (scrollbarRect.right - scrollbarRect.left) > (scrollbarRect.bottom - scrollbarRect.top);
    
   // compute the number of lines in our view. It's probably safe to assume that
   // the height of the scrollbar is the height of the scrollable view
-  PRInt32 viewSize = isHorizontal ? (inSbarRect.right - inSbarRect.left) : (inSbarRect.bottom - inSbarRect.top);
+  PRInt32 viewSize = isHorizontal ? (scrollbarRect.right - scrollbarRect.left) : (scrollbarRect.bottom - scrollbarRect.top);
   viewSize /= inLineHeight;
 
   // Figure out if something should be drawn depressed
@@ -593,7 +594,7 @@ nsNativeThemeMac::DrawFullScrollbar ( const Rect& inSbarRect, PRInt32 inWidgetHi
 //XXX this is true for all controls, but scrollbars are the ones you notice the most
 
   info.kind = kThemeMediumScrollBar;
-  info.bounds = inSbarRect;
+  info.bounds = scrollbarRect;
   info.min = 0;
   info.max = inMax;
   info.value = inValue;
@@ -605,11 +606,17 @@ nsNativeThemeMac::DrawFullScrollbar ( const Rect& inSbarRect, PRInt32 inWidgetHi
   
   ::DrawThemeTrack(&info, nsnull, nsnull, 0L);
 
-#ifdef DEBUG_PINK
+  // update our statics for hack detection
+  lastScrollbarDrawn = scrollbarRect;
+  lastScrollbarWindow = ::FrontWindow();
+  
+//#ifdef DEBUG_PINK
+#if 1
   // some debug info for helping diagnose problems
   printf("--- BEGIN scrollbar debug info\n");
   printf("-- widget drawn is %ld\n", inWidgetHit);
   printf("bounds (%ld, %ld), (%ld, %ld)\n",inSbarRect.left, inSbarRect.top, inSbarRect.right, inSbarRect.bottom );
+  printf("bounds (%ld, %ld), (%ld, %ld) adjusted\n",scrollbarRect.left, scrollbarRect.top, scrollbarRect.right, scrollbarRect.bottom );
   if ( isHorizontal )
     printf("horizontal\n");
   else
@@ -811,6 +818,10 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
           maxPos = 1;
         PRInt32 curPos = CheckIntAttr(scrollbar, mCurPosAtom) / kLineHeight;
         
+#if 0
+        ++macScrollbarRect.left;
+        ++macScrollbarRect.bottom;
+#endif
         DrawFullScrollbar ( macScrollbarRect, aWidgetType, kLineHeight, IsDisabled(aFrame),
                               maxPos, curPos, eventState);
       }
@@ -854,7 +865,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
   switch ( aWidgetType ) {
   
     case NS_THEME_BUTTON:
-      if ( OnMacOSX() )
+      if ( nsRenderingContextMac::OnMacOSX() )
         aResult->SizeTo(kAquaPushButtonEndcaps, kAquaPushButtonTopBottom, 
                             kAquaPushButtonEndcaps, kAquaPushButtonTopBottom);
       else
@@ -866,7 +877,7 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
       break;
 
     case NS_THEME_DROPDOWN:
-      if ( OnMacOSX() )
+      if ( nsRenderingContextMac::OnMacOSX() )
         aResult->SizeTo(kAquaDropdownLeftEndcap, kAquaPushButtonTopBottom, 
                           kAquaDropwdonRightEndcap, kAquaPushButtonTopBottom);
       else
@@ -1008,6 +1019,7 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       SInt32 scrollbarWidth = 0;
       ::GetThemeMetric(kThemeMetricScrollBarWidth, &scrollbarWidth);
       aResult->SizeTo(scrollbarWidth, scrollbarWidth);
+      *aIsOverridable = PR_FALSE;
       break;
     }
 
@@ -1134,7 +1146,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       // for now, only use on osx since i haven't yet verified on os9
-      if ( OnMacOSX() )
+      if ( nsRenderingContextMac::OnMacOSX() )
         retVal = PR_TRUE;
       break;
   
