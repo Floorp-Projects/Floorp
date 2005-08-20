@@ -53,11 +53,8 @@
 #include "nsIFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsINameSpaceManager.h"
-#include "nsIPresContext.h"
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIComponentManager.h"
-#include "nsWidgetsCID.h"
 #include "nsIMenuFrame.h"
 #include "nsUnicharUtils.h"
 #include <malloc.h>
@@ -112,8 +109,6 @@
 
 // Dropdown constants
 #define CBP_DROPMARKER       1
-
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
@@ -1068,44 +1063,99 @@ nsNativeThemeWin::ThemeChanged()
   return NS_OK;
 }
 
-static PRBool IsAlreadyStyled(nsIFrame* aFrame, PRUint8 aWidgetType) {
-  // Check for specific widgets to see if HTML has overridden the style.
+PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType) 
+{  
   if (aFrame && (aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD)) {
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     if (content->IsContentOfType(nsIContent::eHTML)) {
-      nscolor bgColor;
-      nscolor disabledBG;
-
-      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_CreateInstance(kLookAndFeelCID));
       
-      lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, disabledBG);
+      // Get default CSS style values for widget
+      // (these need to match the values in forms.css)
+      #define BUTTON_BORDER_SIZE           2 // pixels
+      #define BUTTON_DISABLED_BORDER_SIZE  1 // pixels
+      #define TEXTFIELD_BORDER_SIZE        2 // pixels
 
-      switch (aWidgetType) {
-      case NS_THEME_BUTTON:
-        lookAndFeel->GetColor(nsILookAndFeel::eColor_buttonface, bgColor);
-        break;
-      case NS_THEME_TEXTFIELD:
-        lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field, bgColor);
-        break;
-      default:
-        return PR_FALSE;
-      }
+      nscolor defaultBGColor, defaultBorderColor;
+      PRUint8 defaultBorderStyle;
+      nscoord defaultBorderSize;
+            
+      float p2t;
+      aPresContext->GetPixelsToTwips(&p2t);
 
-      const nsStyleBackground* ourBG;
-      ::GetStyleData(aFrame, &ourBG);
-      if (ourBG->mBackgroundColor != bgColor && ourBG->mBackgroundColor != disabledBG)
+      nsCOMPtr<nsILookAndFeel> lookAndFeel;
+      aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));            
+      if (!lookAndFeel)
         return PR_TRUE;
 
+      switch (aWidgetType) {
+        case NS_THEME_BUTTON: {          
+          if (IsDisabled(aFrame)) {
+            defaultBorderSize = NSIntPixelsToTwips(BUTTON_DISABLED_BORDER_SIZE, p2t);
+            defaultBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;            
+            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedshadow, defaultBorderColor);
+            
+            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBGColor);
+          }
+          else {
+            PRInt32 contentState = GetContentState(aFrame);
+            defaultBorderSize = NSIntPixelsToTwips(BUTTON_BORDER_SIZE, p2t);
+            if (contentState & NS_EVENT_STATE_HOVER && contentState & NS_EVENT_STATE_ACTIVE)
+              defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
+            else
+              defaultBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
+            lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBorderColor);
+            
+            defaultBGColor = defaultBorderColor;
+          }
+          break;                      
+        }
+        case NS_THEME_TEXTFIELD: {
+          defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
+          defaultBorderSize = NSIntPixelsToTwips(TEXTFIELD_BORDER_SIZE, p2t);
+          lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBorderColor);
+
+          if (IsDisabled(aFrame))
+            defaultBGColor = defaultBorderColor;
+          else
+            lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field, defaultBGColor);
+          break;
+        }
+        default:
+          NS_ERROR("nsNativeThemeWin: IsWidgetStyled widget type not handled");
+          return PR_FALSE;
+      }
+     
+      // Check whether background differs from default
+      const nsStyleBackground* ourBG;
+      ::GetStyleData(aFrame, &ourBG);
+
+      if (ourBG->mBackgroundColor != defaultBGColor ||
+          ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT ||
+          !(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
+        return PR_TRUE;
+      
+      // Check whether border style or color differs from default
       const nsStyleBorder* ourBorder;
       ::GetStyleData(aFrame, &ourBorder);
-      //see if any sides are dotted, dashed or solid
-      for (PRInt32 cnt = 0; cnt < 4; cnt++) {
-        if ((ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
-            (ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED) ||
-            (ourBorder->GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_SOLID))
+
+      for (PRInt32 i = 0; i < 4; i++) {
+        if (ourBorder->GetBorderStyle(i) != defaultBorderStyle)            
+          return PR_TRUE;
+
+        PRBool borderFG, borderClear;
+        nscolor borderColor;
+        ourBorder->GetBorderColor(i, borderColor, borderFG, borderClear);
+        if (borderColor != defaultBorderColor || borderClear)
           return PR_TRUE;
       }
+      
+      // Check whether border size differs from default
+      nsMargin borderSize;
+      if (ourBorder->GetBorder(borderSize))
+        if (borderSize.left != defaultBorderSize || borderSize.top != defaultBorderSize ||
+            borderSize.right != defaultBorderSize || borderSize.bottom != defaultBorderSize)
+          return PR_TRUE;
     }
   }
 
@@ -1137,7 +1187,7 @@ nsNativeThemeWin::ThemeSupportsWidget(nsIPresContext* aPresContext,
 
   if ((theme) || (!theme && ClassicThemeSupportsWidget(aPresContext, aFrame, aWidgetType)))
     // turn off theming for some HTML widgets styled by the page
-    return (!IsAlreadyStyled(aFrame, aWidgetType));
+    return (!IsWidgetStyled(aPresContext, aFrame, aWidgetType));
   
   return PR_FALSE;
 }
@@ -1209,7 +1259,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
       const nsStyleUserInterface *uiData = nsnull;
-      aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)uiData);      
+      ::GetStyleData(aFrame, &uiData);      
       if (uiData && uiData->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE) {
         // use different padding for non-focusable buttons
         (*aResult).top = (*aResult).left = 1;
@@ -1365,7 +1415,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         if (contentState & NS_EVENT_STATE_ACTIVE && contentState & NS_EVENT_STATE_HOVER) {
           aState |= DFCS_PUSHED;
           const nsStyleUserInterface *uiData = nsnull;
-          aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)uiData);
+          ::GetStyleData(aFrame, &uiData);
           // The down state is flat if the button is focusable
           if (uiData && uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
             nsCOMPtr<nsIContent> content;
@@ -1701,11 +1751,24 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       return NS_OK;
     }
     // Draw controls with 2px 3D inset border
-    case NS_THEME_LISTBOX:
-    case NS_THEME_TREEVIEW:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_TEXTFIELD: {
+      // Draw inset edge
+      ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
+
+      nsCOMPtr<nsIContent> content;
+      aFrame->GetContent(getter_AddRefs(content));     
+        
+      // Fill in background
+      if (IsDisabled(aFrame) || (content->IsContentOfType(nsIContent::eXUL) && IsReadOnly(aFrame)))
+        ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
+      else
+        ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_WINDOW+1));
+      return NS_OK;
+    }
+    case NS_THEME_LISTBOX:
+    case NS_THEME_TREEVIEW: {
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 

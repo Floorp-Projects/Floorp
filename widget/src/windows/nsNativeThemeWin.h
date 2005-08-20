@@ -96,6 +96,8 @@ protected:
   PRBool IsSelected(nsIFrame* aFrame);
   PRBool IsBottomTab(nsIFrame* aFrame);
 
+  PRBool IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
+
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;
