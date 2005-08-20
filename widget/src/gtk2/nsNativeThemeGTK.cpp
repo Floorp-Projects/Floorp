@@ -71,6 +71,8 @@ GtkWidget* gProgressWidget;
 GtkWidget* gTabWidget;
 GtkTooltips* gTooltipWidget;
 
+static int gLastXError;
+
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoLayout(nsnull)
 {
@@ -226,6 +228,12 @@ nsNativeThemeGTK::GetGtkWidgetState(PRUint8 aWidgetType,
   }
 }
 
+static int
+NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
+  gLastXError = error->error_code;
+  return 0;
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame,
@@ -251,7 +259,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType), "Trying to render an unsafe widget!");
 
-  gdk_error_trap_push();
+  // The widget code on Solaris replaces gdk's X error handler with its own,
+  // which means that gdk_error_trap_push/pop won't have any effect.
+  // So, instead of using those, we just use our own error handler which
+  // records the last X error to occur, then restore the old error handler
+  // when we're done drawing.
+
+  gLastXError = 0;
+  XErrorHandler oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
 
   switch (aWidgetType) {
     
@@ -416,11 +431,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   }
 
   gdk_flush();
-  int err = gdk_error_trap_pop();
-  if (err) {
+  XSetErrorHandler(oldHandler);
+  if (gLastXError) {
 #ifdef DEBUG
     printf("GTK theme failed for widget type %d, error was %d, state was [active=%d,focused=%d,inHover=%d,disabled=%d]\n",
-           aWidgetType, err, state.active, state.focused, state.inHover, state.disabled);
+           aWidgetType, gLastXError, state.active, state.focused, state.inHover, state.disabled);
 #endif
     NS_WARNING("GTK theme failed; disabling unsafe widget");
     SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
