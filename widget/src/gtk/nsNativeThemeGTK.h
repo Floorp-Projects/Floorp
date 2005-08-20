@@ -80,7 +80,9 @@ public:
 protected:
   PRBool IsDisabled(nsIFrame* aFrame);
 
-  void GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState);
+  void GetGtkWidgetState(PRUint8 aWidgetType,
+                         nsIFrame* aFrame, GtkWidgetState* aState);
+
   void GetScrollbarMetrics(gint* slider_width,
                            gint* trough_border,
                            gint* stepper_size,
@@ -94,6 +96,7 @@ protected:
   void EnsureEntryWidget();
   void EnsureArrowWidget();
   void EnsureHandleBoxWidget();
+  void EnsureTooltipWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;

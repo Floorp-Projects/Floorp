@@ -64,6 +64,7 @@ GtkWidget* gDropdownButonWidget;
 GtkWidget* gArrowWidget;
 GtkWidget* gDropdownButtonWidget;
 GtkWidget* gHandleBoxWidget;
+GtkTooltips* gTooltipWidget;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoWindow(nsnull),
@@ -82,6 +83,8 @@ nsNativeThemeGTK::~nsNativeThemeGTK() {
   // This will destroy all of our widgets
   if (mProtoWindow)
     gtk_widget_destroy(mProtoWindow);
+  if (gTooltipWidget)
+    gtk_object_unref(GTK_OBJECT(gTooltipWidget));
 }
 
 static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
@@ -166,7 +169,8 @@ GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont)
 }
 
 void
-nsNativeThemeGTK::GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState)
+nsNativeThemeGTK::GetGtkWidgetState(PRUint8 aWidgetType,
+                                    nsIFrame* aFrame, GtkWidgetState* aState)
 {
   if (!aFrame) {
     aState->active = PR_FALSE;
@@ -178,7 +182,11 @@ nsNativeThemeGTK::GetGtkWidgetState(nsIFrame* aFrame, GtkWidgetState* aState)
   } else {
     PRInt32 eventState = GetContentState(aFrame);
     aState->active = (eventState & NS_EVENT_STATE_ACTIVE);
-    aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
+    if (aWidgetType == NS_THEME_TEXTFIELD ||
+        aWidgetType == NS_THEME_RADIO_CONTAINER)
+      aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
+    else
+      aState->focused = (eventState & NS_EVENT_STATE_FOCUS);
     aState->inHover = (eventState & NS_EVENT_STATE_HOVER);
     aState->disabled = IsDisabled(aFrame);
     aState->isDefault = PR_FALSE; // XXX fix me
@@ -207,7 +215,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
 
   GtkWidgetState state;
-  GetGtkWidgetState(aFrame, &state);
+  GetGtkWidgetState(aWidgetType, aFrame, &state);
 
   switch (aWidgetType) {
     
@@ -292,11 +300,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     // fall through
 
   case NS_THEME_TEXTFIELD:
-    // The textfield element isn't actually focused, the inner
-    // html:input is.  Use the focused attribute to get the correct
-    // state.
-
-    state.focused = CheckBooleanAttr(aFrame, mFocusedAtom);
     EnsureEntryWidget();
     moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect, &gdk_clip,
                         &state);
@@ -318,6 +321,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_TOOLBOX:
     EnsureHandleBoxWidget();
     moz_gtk_toolbar_paint(window, gHandleBoxWidget->style, &gdk_rect,
+                          &gdk_clip);
+    break;
+  case NS_THEME_TOOLTIP:
+    EnsureTooltipWidget();
+    moz_gtk_tooltip_paint(window, gTooltipWidget->tip_window->style, &gdk_rect,
                           &gdk_clip);
     break;
   }
@@ -423,10 +431,16 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_DROPDOWN_BUTTON:
     {
       EnsureArrowWidget();
-      GtkRequisition req;
-      gtk_widget_size_request(gDropdownButtonWidget, &req);
-      aResult->width = req.width;
-      aResult->height = req.height;
+
+      // First, get the minimum size for the button itself.
+      aResult->width = 2 * (1 + gDropdownButtonWidget->style->klass->xthickness);
+      aResult->height = 2 * (1 + gDropdownButtonWidget->style->klass->ythickness);
+
+      // Now, add in the requested size of the arrow.
+      // Note: the minimum arrow size is fixed at 11 pixels.
+
+      aResult->width += 11 + GTK_MISC(gArrowWidget)->xpad * 2;
+      aResult->height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;      
     }
     break;
   case NS_THEME_CHECKBOX:
@@ -441,6 +455,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                    &indicator_spacing);
 
       aResult->width = aResult->height = indicator_size;
+      *aIsOverridable = PR_FALSE;
     }
     break;
   }
@@ -515,6 +530,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_TOOLBOX:
+  case NS_THEME_TOOLTIP:
     return PR_TRUE;
   }
 
@@ -612,3 +628,15 @@ nsNativeThemeGTK::EnsureHandleBoxWidget()
     SetupWidgetPrototype(gHandleBoxWidget);
   }
 }
+
+void
+nsNativeThemeGTK::EnsureTooltipWidget()
+{
+  if (!gTooltipWidget) {
+    gTooltipWidget = gtk_tooltips_new();
+    gtk_tooltips_force_window(gTooltipWidget);
+    gtk_widget_set_rc_style(gTooltipWidget->tip_window);
+    gtk_widget_realize(gTooltipWidget->tip_window);
+  }
+}
+

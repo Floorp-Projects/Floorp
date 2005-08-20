@@ -107,6 +107,10 @@ void
 moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                       GdkRectangle* cliprect);
 
+void
+moz_gtk_tooltip_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* cliprect);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
