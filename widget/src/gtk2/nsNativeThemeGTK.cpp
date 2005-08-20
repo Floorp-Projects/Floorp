@@ -333,9 +333,10 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
-                                       nsSize* aResult)
+                                       nsSize* aResult, PRBool* aIsOverridable)
 {
   aResult->width = aResult->height = 0;
+  *aIsOverridable = PR_TRUE;
 
   switch (aWidgetType) {
     case NS_THEME_SCROLLBAR_BUTTON_UP:
