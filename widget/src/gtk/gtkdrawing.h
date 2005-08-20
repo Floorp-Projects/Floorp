@@ -56,6 +56,13 @@ typedef struct {
   PRPackedBool canDefault;
 } GtkWidgetState;
 
+typedef enum {
+  kTabNormal,
+  kTabBeforeSelected,
+  kTabSelected,
+  kTabAfterSelected
+} GtkTabType;
+
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                      GdkRectangle* cliprect, GtkWidgetState* state, 
@@ -122,6 +129,10 @@ moz_gtk_progressbar_paint(GdkWindow* window, GtkStyle* style,
 void
 moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
                              GdkRectangle* rect, GdkRectangle* cliprect);
+
+void
+moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                  GdkRectangle* cliprect, GtkTabType type);
 
 #ifdef __cplusplus
 }
