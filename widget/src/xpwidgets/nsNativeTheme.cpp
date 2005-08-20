@@ -53,6 +53,7 @@
 nsMargin nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
 nsMargin nsNativeTheme::sButtonDisabledBorderSize(1, 1, 1, 1);
 nsMargin nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
+PRBool   nsNativeTheme::sTextfieldBGTransparent = PR_FALSE;
 
 nsNativeTheme::nsNativeTheme()
 {
@@ -217,7 +218,9 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
                               PRUint8 aWidgetType)
 {
   // Check for specific widgets to see if HTML has overridden the style.
-  if (aFrame && (aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD)) {
+  if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
+                 aWidgetType == NS_THEME_TEXTFIELD)) {
+
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     if (content->IsContentOfType(nsIContent::eHTML)) {
@@ -225,6 +228,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
       nscolor defaultBGColor, defaultBorderColor;
       PRUint8 defaultBorderStyle;
       nsMargin defaultBorderSize;
+      PRBool defaultBGTransparent = PR_FALSE;
 
       float p2t;
       aPresContext->GetPixelsToTwips(&p2t);
@@ -262,11 +266,13 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
         ConvertMarginToTwips(sTextfieldBorderSize, defaultBorderSize, p2t);
         lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface,
                               defaultBorderColor);
-        if (IsDisabled(aFrame))
-          defaultBGColor = defaultBorderColor;
-        else
-          lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field,
-                                defaultBGColor);
+        if (!(defaultBGTransparent = sTextfieldBGTransparent)) {
+          if (IsDisabled(aFrame))
+            defaultBGColor = defaultBorderColor;
+          else
+            lookAndFeel->GetColor(nsILookAndFeel::eColor__moz_field,
+                                  defaultBGColor);
+        }
         break;
 
       default:
@@ -278,9 +284,14 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
       const nsStyleBackground* ourBG;
       ::GetStyleData(aFrame, &ourBG);
 
-      if (ourBG->mBackgroundColor != defaultBGColor ||
-          ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT ||
-          !(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
+      if (defaultBGTransparent) {
+        if (!(ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
+          return PR_TRUE;
+      } else if (ourBG->mBackgroundColor != defaultBGColor ||
+                 ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
+        return PR_TRUE;
+
+      if (!(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
         return PR_TRUE;
 
       // Check whether border style or color differs from default
