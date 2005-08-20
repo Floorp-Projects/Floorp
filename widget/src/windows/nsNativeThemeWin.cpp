@@ -149,7 +149,6 @@ static GetThemeTextMetricsPtr getThemeTextMetrics = NULL;
 static const char kThemeLibraryName[] = "uxtheme.dll";
 
 nsNativeThemeWin::nsNativeThemeWin() {
-  NS_INIT_ISUPPORTS();
   mThemeDLL = NULL;
   mButtonTheme = NULL;
   mTextFieldTheme = NULL;
