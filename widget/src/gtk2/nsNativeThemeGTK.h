@@ -90,6 +90,8 @@ private:
   nsCOMPtr<nsIAtom> mInputAtom;
   nsCOMPtr<nsIAtom> mFocusedAtom;
   nsCOMPtr<nsIAtom> mFirstTabAtom;
+  nsCOMPtr<nsIAtom> mCurPosAtom;
+  nsCOMPtr<nsIAtom> mMaxPosAtom;
 
   PRUint8 mDisabledWidgetTypes[32];
   static const char* sDisabledEngines[];

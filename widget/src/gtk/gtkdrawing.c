@@ -830,8 +830,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
   case MOZ_GTK_CHECKBUTTON:
   case MOZ_GTK_RADIOBUTTON:
   case MOZ_GTK_SCROLLBAR_BUTTON:
-  case MOZ_GTK_SCROLLBAR_TRACK:
-  case MOZ_GTK_SCROLLBAR_THUMB:
+  case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
+  case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
+  case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
+  case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
   case MOZ_GTK_GRIPPER:
   case MOZ_GTK_TOOLTIP:
   case MOZ_GTK_PROGRESS_CHUNK:
@@ -955,10 +957,12 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
     return moz_gtk_scrollbar_button_paint(drawable, rect, cliprect,
                                           state, (GtkArrowType) flags);
     break;
-  case MOZ_GTK_SCROLLBAR_TRACK:
+  case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
+  case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
     return moz_gtk_scrollbar_trough_paint(drawable, rect, cliprect, state);
     break;
-  case MOZ_GTK_SCROLLBAR_THUMB:
+  case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
+  case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     return moz_gtk_scrollbar_thumb_paint(drawable, rect, cliprect, state);
     break;
   case MOZ_GTK_GRIPPER:
