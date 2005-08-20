@@ -1067,10 +1067,7 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
       float p2t;
       aPresContext->GetPixelsToTwips(&p2t);
 
-      nsCOMPtr<nsILookAndFeel> lookAndFeel;
-      aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));            
-      if (!lookAndFeel)
-        return PR_TRUE;
+      nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
 
       switch (aWidgetType) {
         case NS_THEME_BUTTON: {          
