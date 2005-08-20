@@ -54,6 +54,8 @@ extern GtkWidget* gEntryWidget;
 extern GtkWidget* gArrowWidget;
 extern GtkWidget* gDropdownButtonWidget;
 extern GtkWidget* gHandleBoxWidget;
+extern GtkWidget* gFrameWidget;
+extern GtkWidget* gProtoWindow;
 extern GtkTooltips* gTooltipWidget;
 
 GtkStateType
@@ -160,20 +162,16 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
 }
 
 void
-moz_gtk_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                    GdkRectangle* cliprect, GtkWidgetState* state)
+calculate_arrow_dimensions(GdkRectangle* rect, GdkRectangle* arrow_rect)
 {
   GtkMisc* misc = GTK_MISC(gArrowWidget);
   gint extent = MIN(rect->width - misc->xpad * 2, rect->height - misc->ypad * 2);
-  gint x = ((rect->x + misc->xpad) * (1.0 - misc->xalign) +
-            (rect->x + rect->width - extent - misc->xpad) * misc->xalign);
-  gint y = ((rect->y + misc->ypad) * (1.0 - misc->yalign) +
-            (rect->y + rect->height - extent - misc->ypad) * misc->yalign);
+  arrow_rect->x = ((rect->x + misc->xpad) * (1.0 - misc->xalign) +
+                   (rect->x + rect->width - extent - misc->xpad) * misc->xalign);
+  arrow_rect->y = ((rect->y + misc->ypad) * (1.0 - misc->yalign) +
+                   (rect->y + rect->height - extent - misc->ypad) * misc->yalign);
 
-  gtk_paint_arrow(style, window, ConvertGtkState(state),
-                  state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT, cliprect,
-                  gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, x, 
-                  y, extent, extent);
+  arrow_rect->width = arrow_rect->height = extent;
 }
 
 void
@@ -183,9 +181,12 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
 {
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+  GdkRectangle arrow_rect;
+  calculate_arrow_dimensions(rect, &arrow_rect);
   gtk_paint_arrow(style, window, state_type, shadow_type, cliprect,
                   gScrollbarWidget, (type < 2) ? "vscrollbar" : "hscrollbar", 
-                  type, TRUE, rect->x, rect->y, rect->width, rect->height);
+                  type, TRUE, arrow_rect.x, arrow_rect.y, arrow_rect.width,
+                  arrow_rect.height);
 }
 
 void
@@ -318,7 +319,9 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
                              GdkRectangle* rect, GdkRectangle* cliprect, 
                              GtkWidgetState* state)
 {
-  GdkRectangle arrow_rect;
+  GdkRectangle arrow_rect, real_arrow_rect;
+  GtkStateType state_type = ConvertGtkState(state);
+  GtkShadowType shadow_type = state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
 
   moz_gtk_button_paint(window, gDropdownButtonWidget->style, rect, cliprect,
                        state, GTK_RELIEF_NORMAL);
@@ -329,7 +332,11 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
   arrow_rect.width = MAX(1, rect->width - (arrow_rect.x - rect->x) * 2);
   arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
 
-  moz_gtk_arrow_paint(window, style, &arrow_rect, cliprect, state);
+  calculate_arrow_dimensions(&arrow_rect, &real_arrow_rect);
+  gtk_paint_arrow(style, window, state_type, shadow_type, cliprect,
+                  gScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                  real_arrow_rect.x, real_arrow_rect.y,
+                  real_arrow_rect.width, real_arrow_rect.height);
 }
 
 void
@@ -371,3 +378,15 @@ moz_gtk_tooltip_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                      rect->y, rect->width, rect->height);
 }
 
+void
+moz_gtk_frame_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                    GdkRectangle* cliprect)
+{
+  gtk_paint_flat_box(gProtoWindow->style, window, GTK_STATE_NORMAL, GTK_SHADOW_NONE,
+                     NULL, gProtoWindow, "base", rect->x, rect->y,
+                     rect->width, rect->height);
+
+  gtk_paint_shadow(style, window, GTK_STATE_NORMAL, GTK_SHADOW_IN, cliprect,
+                   gFrameWidget, "frame", rect->x, rect->y, rect->width,
+                   rect->height);
+}
