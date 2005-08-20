@@ -54,6 +54,16 @@ interface nsIStyleSheetService : nsISupports
   /**
    * Synchronously loads a style sheet from |sheetURI| and adds it to the list
    * of user or agent style sheets.
+   *
+   * A user sheet loaded via this API will come before userContent.css and
+   * userChrome.css in the cascade (so the rules in it will have lower
+   * precedence than rules in those sheets).
+   *
+   * An agent sheet loaded via this API will come after ua.css in the cascade
+   * (so the rules in it will have higher precedence than rules in ua.css).
+   *
+   * The relative ordering of two user or two agent sheets loaded via
+   * this API is undefined.
    */
   void loadAndRegisterSheet(in nsIURI sheetURI, in unsigned long type);
 

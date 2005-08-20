@@ -1970,10 +1970,10 @@ AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
 }
 
 PR_STATIC_CALLBACK(PRBool)
-AppendUserSheet(nsIStyleSheet *aSheet, void *aData)
+PrependUserSheet(nsIStyleSheet *aSheet, void *aData)
 {
   nsStyleSet *styleSet = NS_STATIC_CAST(nsStyleSet*, aData);
-  styleSet->AppendStyleSheet(nsStyleSet::eUserSheet, aSheet);
+  styleSet->PrependStyleSheet(nsStyleSet::eUserSheet, aSheet);
   return PR_TRUE;
 }
 
@@ -2071,8 +2071,8 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   if (sheetService) {
     sheetService->AgentStyleSheets()->EnumerateForwards(AppendAgentSheet,
                                                         styleSet);
-    sheetService->UserStyleSheets()->EnumerateForwards(AppendUserSheet,
-                                                       styleSet);
+    sheetService->UserStyleSheets()->EnumerateBackwards(PrependUserSheet,
+                                                        styleSet);
   }
 
   // Caller will handle calling EndUpdate, per contract.

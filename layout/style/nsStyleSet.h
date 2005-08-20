@@ -150,8 +150,8 @@ class nsStyleSet
   // Free global data at module shutdown
   static void FreeGlobals() { NS_IF_RELEASE(gQuirkURI); }
 
-  // APIs to manipulate the style sheet lists.
-  // All sheet types are ordered most-significant-first.
+  // The "origins" of the CSS cascade, from lowest precedence to
+  // highest (for non-!important rules).
   enum sheetType {
     eAgentSheet, // CSS
     ePresHintSheet,
@@ -165,6 +165,8 @@ class nsStyleSet
     // changing the number of sheet types
   };
 
+  // APIs to manipulate the style sheet lists.  The sheets in each
+  // list are stored with the most significant sheet last.
   nsresult AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
   nsresult PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
   nsresult RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
