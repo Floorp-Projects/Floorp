@@ -1135,7 +1135,8 @@ function serv_onRawData(e)
             else
                 mask.hostRE = makeMaskRegExp(mask.host);
         }
-        if ((!mask.nickRE || user.unicodeName.match(mask.nickRE)) &&
+        var lowerNick = this.parent.toLowerCase(user.unicodeName);
+        if ((!mask.nickRE || lowerNick.match(mask.nickRE)) &&
             (!mask.userRE || user.name.match(mask.userRE)) &&
             (!mask.hostRE || user.host.match(mask.hostRE)))
             return true;
