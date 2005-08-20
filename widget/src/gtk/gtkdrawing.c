@@ -413,22 +413,53 @@ moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
 
 void
 moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                  GdkRectangle* cliprect, GtkTabType type)
+                  GdkRectangle* cliprect, gint flags)
 {
+  /*
+   * In order to get the correct shadows and highlights, GTK paints tabs
+   * right-to-left (end-to-beginning, to be generic), leaving out the
+   * active tab, and then paints the current tab once everything else is
+   * painted.  In addition, GTK uses a 2-pixel overlap between adjacent tabs
+   * (this value is hard-coded in gtknotebook.c).  For purposes of mapping to
+   * gecko's frame positions, we put this overlap on the far edge of the frame
+   * (i.e., for a horizontal/top tab strip, we shift the left side of each tab
+   * 2px to the left, into the neighboring tab's frame rect.  The right 2px
+   * of a tab's frame will be referred to as the "overlap area".
+   *
+   * Since we can't guarantee painting order with gecko, we need to manage
+   * the overlap area manually. There are three types of tab boundaries we need to handle:
+   *
+   *   * two non-active tabs: In this case, we just have both tabs paint normally.
+   *
+   *   * non-active to active tab: Here, we need the tab on the left to paint itself
+   *                               normally, then paint the edge of the active tab
+   *                               in its overlap area.
+   *
+   *   * active to non-active tab: In this case, we just have both tabs paint normally.
+   *
+   * We need to make an exception for the first tab - since there is no tab to the
+   * left to paint the overlap area, we do _not_ shift the tab left by 2px.
+   */
+
+  if (!(flags & MOZ_GTK_TAB_FIRST)) {
+    rect->x -= 2;
+    rect->width += 2;
+  }
+
   gtk_paint_extension(style, window,
-                      (type == kTabSelected ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE),
+                      ((flags & MOZ_GTK_TAB_SELECTED) ? GTK_STATE_NORMAL : GTK_STATE_ACTIVE),
                       GTK_SHADOW_OUT, cliprect, gTabWidget, "tab", rect->x,
                       rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
 
-  /* Here is the sleazy hack for before/after selected tab */
-  if (type == kTabBeforeSelected)
-    gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                        cliprect, gTabWidget, "tab", rect->x + rect->width,
-                        rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
-  else if (type == kTabAfterSelected)
-    gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                        cliprect, gTabWidget, "tab", rect->x - rect->width,
-                        rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
+  if (flags & MOZ_GTK_TAB_BEFORE_SELECTED) {
+    gboolean before_selected = ((flags & MOZ_GTK_TAB_BEFORE_SELECTED) != 0);
+    cliprect->y -= 2;
+    cliprect->height += 2;
+    gtk_paint_extension(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT, cliprect,
+                        gTabWidget, "tab", rect->x + rect->width - 2,
+                        rect->y - (2 * before_selected), rect->width,
+                        rect->height + (2 * before_selected), GTK_POS_BOTTOM);
+  }
 }
 
 void
