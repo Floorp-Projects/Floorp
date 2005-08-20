@@ -217,7 +217,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
       PRBool defaultBGTransparent = PR_FALSE;
 
       float p2t;
-      aPresContext->GetPixelsToTwips(&p2t);
+      p2t = aPresContext->PixelsToTwips();
 
       nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
 

@@ -1065,7 +1065,7 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
       nscoord defaultBorderSize;
             
       float p2t;
-      aPresContext->GetPixelsToTwips(&p2t);
+      p2t = aPresContext->PixelsToTwips();
 
       nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
 
