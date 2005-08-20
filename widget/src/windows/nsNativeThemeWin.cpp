@@ -1102,6 +1102,10 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
     case NS_THEME_TOOLTIP:
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 1;
       break;
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+      (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 1;
+      break;
     default:
       (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
       break;
@@ -1581,9 +1585,13 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_INFOBK+1));
       return NS_OK;
     // Draw 3D face background controls
-    case NS_THEME_TAB_PANEL:    
     case NS_THEME_PROGRESSBAR:
     case NS_THEME_PROGRESSBAR_VERTICAL:
+      // Draw 3D border
+      ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+      InflateRect(&widgetRect, -1, -1);
+      // fall through
+    case NS_THEME_TAB_PANEL:
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_RESIZER_PANEL: {
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
