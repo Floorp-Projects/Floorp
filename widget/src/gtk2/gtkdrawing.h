@@ -228,7 +228,7 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
 gint
 moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/** Get the focus metrics for a checkbox or radio button
+/** Get the focus metrics for a button, checkbox, or radio button.
  * interior_focus:     [OUT] whether the focus is drawn around the
  *                           label (TRUE) or around the whole container (FALSE)
  * focus_width:        [OUT] the width of the focus line
@@ -236,6 +236,9 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
+gint
+moz_gtk_button_get_focus(gboolean* interior_focus,
+                         gint* focus_width, gint* focus_pad);
 gint
 moz_gtk_checkbox_get_focus(gboolean* interior_focus,
                            gint* focus_width, gint* focus_pad);

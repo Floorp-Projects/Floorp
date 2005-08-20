@@ -123,14 +123,8 @@ GetPrimaryPresShell(nsIFrame* aFrame)
   if (!aFrame)
     return nsnull;
 
-  nsIPresShell *shell = nsnull;
- 
-  nsIDocument* doc = aFrame->GetContent()->GetDocument();
-  if (doc) {
-    shell = doc->GetShellAt(0);
-  }
-
-  return shell;
+  nsPresContext *context = aFrame->GetPresContext();
+  return context ? context->GetPresShell() : nsnull;
 }
 
 static void RefreshWidgetWindow(nsIFrame* aFrame)
@@ -337,6 +331,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TOOLBAR_DUAL_BUTTON:
     if (aWidgetFlags)
       *aWidgetFlags = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
     aGtkWidgetType = MOZ_GTK_BUTTON;
@@ -543,6 +538,14 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
     // gtk's 'toolbar' for purposes of painting the widget background,
     // we don't use the toolbar border for toolbox.
     break;
+  case NS_THEME_TOOLBAR_DUAL_BUTTON:
+    // TOOLBAR_DUAL_BUTTON is an interesting case.  We want a border to draw
+    // around the entire button + dropdown, and also an inner border if you're
+    // over the button part.  But, we want the inner button to be right up
+    // against the edge of the outer button so that the borders overlap.
+    // To make this happen, we draw a button border for the outer button,
+    // but don't reserve any space for it.
+    break;
   default:
     {
       GtkThemeWidgetType gtkWidgetType;
@@ -557,6 +560,21 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   aResult->bottom = aResult->top;
 
   return NS_OK;
+}
+
+PRBool
+nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
+                                   nsIFrame* aFrame, PRUint8 aWidgetType,
+                                   nsMargin* aResult)
+{
+  if (aWidgetType == NS_THEME_BUTTON_FOCUS ||
+      aWidgetType == NS_THEME_TOOLBAR_BUTTON ||
+      aWidgetType == NS_THEME_TOOLBAR_DUAL_BUTTON) {
+    aResult->SizeTo(0, 0, 0, 0);
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -626,6 +644,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:
   case NS_THEME_RADIO_LABEL:
+  case NS_THEME_BUTTON:
+  case NS_THEME_TOOLBAR_BUTTON:
     {
       // Just include our border, and let the box code augment the size.
 
@@ -710,6 +730,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 
   switch (aWidgetType) {
   case NS_THEME_BUTTON:
+  case NS_THEME_BUTTON_FOCUS:
   case NS_THEME_RADIO:
   case NS_THEME_CHECKBOX:
   case NS_THEME_TOOLBOX: // N/A

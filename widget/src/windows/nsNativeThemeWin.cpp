@@ -777,6 +777,15 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
   return NS_OK;
 }
 
+PRBool
+nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext, 
+                                   nsIFrame* aFrame,
+                                   PRUint8 aWidgetType,
+                                   nsMargin* aResult)
+{
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
