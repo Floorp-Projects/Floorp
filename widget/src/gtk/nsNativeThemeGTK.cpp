@@ -246,9 +246,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       memset(aState, 0, sizeof(GtkWidgetState));
     } else {
 
-      // for dropdown textfields, look at the parent frame (the textbox)
+      // for dropdown textfields, look at the parent frame (textbox or menulist)
       if (aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD)
         aFrame = aFrame->GetParent();
+
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
       if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO ||
@@ -369,10 +370,15 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
   case NS_THEME_TOOLBAR_GRIPPER:
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
-  case NS_THEME_DROPDOWN_TEXTFIELD:
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_DROPDOWN_TEXTFIELD:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
+  case NS_THEME_DROPDOWN:
+    aGtkWidgetType = MOZ_GTK_DROPDOWN;
+    break;
+  case NS_THEME_DROPDOWN_TEXT:
+    return PR_FALSE; // nothing to do, but prevents the bg from being drawn
   case NS_THEME_DROPDOWN_BUTTON:
     aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
     break;
@@ -754,9 +760,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
     // case NS_THEME_TEXTFIELD_CARET:
-    // case NS_THEME_DROPDOWN:
   case NS_THEME_DROPDOWN_BUTTON:
-    // case NS_THEME_DROPDOWN_TEXT:
   case NS_THEME_DROPDOWN_TEXTFIELD:
     // case NS_THEME_SLIDER:
     // case NS_THEME_SLIDER_THUMB:
@@ -773,6 +777,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_MENUITEM:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
+  case NS_THEME_DROPDOWN:
+  case NS_THEME_DROPDOWN_TEXT:
 #endif
     return PR_TRUE;
   }
