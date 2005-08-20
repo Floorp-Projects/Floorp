@@ -1207,13 +1207,13 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
             /* If the focus is _not_ interior, then the container has a border
                of (focus_width + focus_pad). */
             if (widget == MOZ_GTK_CHECKBUTTON_CONTAINER) {
-                w = gCheckboxWidget;
                 moz_gtk_checkbox_get_focus(&interior_focus,
                                            &focus_width, &focus_pad);
+                w = gCheckboxWidget;
             } else {
-                w = gRadiobuttonWidget;
                 moz_gtk_radio_get_focus(&interior_focus,
                                         &focus_width, &focus_pad);
+                w = gRadiobuttonWidget;
             }
 
             *xthickness = *ythickness = GTK_CONTAINER(w)->border_width;
