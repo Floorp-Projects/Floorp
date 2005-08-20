@@ -783,12 +783,13 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 NS_IMETHODIMP
 nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
-                                       nsSize* aResult)
+                                       nsSize* aResult, PRBool* aIsOverridable)
 {
   if (!getThemePartSize)
     return NS_ERROR_FAILURE;
 
   (*aResult).width = (*aResult).height = 0;
+  *aIsOverridable = PR_TRUE;
 
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
