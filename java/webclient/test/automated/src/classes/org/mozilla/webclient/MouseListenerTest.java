@@ -1,5 +1,5 @@
 /*
- * $Id: MouseListenerTest.java,v 1.2 2004/10/28 13:57:59 edburns%acm.org Exp $
+ * $Id: MouseListenerTest.java,v 1.3 2005/08/20 19:25:52 edburns%acm.org Exp $
  */
 
 /* 
@@ -27,10 +27,7 @@
 package org.mozilla.webclient;
 
 import junit.framework.TestSuite;
-import junit.framework.TestResult;
 import junit.framework.Test;
-
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.BitSet;
 
@@ -40,9 +37,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.InputEvent;
 import java.awt.BorderLayout;
-
-import java.io.File;
-import java.io.FileInputStream;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 // MouseListenerTest.java
 
@@ -142,6 +138,18 @@ public class MouseListenerTest extends WebclientTestCase {
 		    String href = (String) eventMap.get("href");
 		    assertNotNull(href);
 		    assertEquals(href, "HistoryTest1.html");
+                    Node domNode = (Node) wcMouseEvent.getWebclientEvent().getSource();
+                    assertNotNull(domNode);
+                    assertTrue(domNode instanceof Element);
+                    Element element = (Element) domNode;
+                    String 
+                        id = element.getAttribute("id"),
+                        name = domNode.getNodeName(),
+                        value = domNode.getNodeValue();
+                    domNode = domNode.getFirstChild();
+                    name = domNode.getNodeName();
+                    value = domNode.getNodeValue();
+                    
 		    bitSet.set(0);
 		}
 		public void mouseExited(MouseEvent e) {

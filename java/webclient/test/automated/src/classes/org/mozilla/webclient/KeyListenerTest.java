@@ -1,5 +1,5 @@
 /*
- * $Id: KeyListenerTest.java,v 1.2 2004/12/01 15:46:23 edburns%acm.org Exp $
+ * $Id: KeyListenerTest.java,v 1.3 2005/08/20 19:25:52 edburns%acm.org Exp $
  */
 
 /* 
@@ -27,11 +27,7 @@
 package org.mozilla.webclient;
 
 import junit.framework.TestSuite;
-import junit.framework.TestResult;
 import junit.framework.Test;
-
-import java.util.Enumeration;
-import java.util.Map;
 import java.util.BitSet;
 
 import java.awt.Frame;
@@ -40,9 +36,9 @@ import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.InputEvent;
 import java.awt.BorderLayout;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
-import java.io.File;
-import java.io.FileInputStream;
 
 // KeyListenerTest.java
 
@@ -129,6 +125,7 @@ public class KeyListenerTest extends WebclientTestCase {
 		    if ('z' == e.getKeyChar()) {
 			KeyListenerTest.keepWaiting = false;
 		    }
+                    
 		}
 	    };
 	canvas.addKeyListener(manualExitKeyListener);
@@ -143,6 +140,26 @@ public class KeyListenerTest extends WebclientTestCase {
 		    bitSet.set(1);
 		}
 		public void keyTyped(KeyEvent e) {
+		    System.out.println("Key Pressed");
+                    assertTrue(e instanceof WCKeyEvent);
+                    WCKeyEvent wcKeyEvent = (WCKeyEvent) e;
+                    WebclientEvent wcEvent = wcKeyEvent.getWebclientEvent();
+                    assertNotNull(wcEvent);
+                    Node domNode = (Node) wcEvent.getSource();
+                    assertNotNull(domNode);
+                    assertTrue(domNode instanceof Element);
+                    Element element = (Element) domNode;
+                    String 
+                        id = element.getAttribute("id"),
+                        name = element.getAttribute("name"),
+                        nodeName = domNode.getNodeName(),
+                        value = domNode.getNodeValue();
+                    assertEquals("field1", id);
+                    assertEquals("field1", name);
+                    assertEquals("INPUT", nodeName);
+                    assertEquals("", value);
+                    assertEquals('a', e.getKeyChar());
+                                        
 		    System.out.println("Key Typed");
 		    bitSet.set(2);
 		}
@@ -194,7 +211,6 @@ public class KeyListenerTest extends WebclientTestCase {
 
 	keyListener = new KeyListener() {
 		public void keyPressed(KeyEvent e) {
-		    System.out.println("Key Pressed");
 		    if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
 			bitSet.set(0);
 		    }

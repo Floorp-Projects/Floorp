@@ -49,6 +49,7 @@ import org.mozilla.webclient.DocumentLoadListener;
 import org.mozilla.webclient.PageInfoListener;
 import org.mozilla.webclient.NewWindowEvent;
 import org.mozilla.webclient.NewWindowListener;
+import org.mozilla.webclient.WCKeyEvent;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WCMouseEvent;
 import org.mozilla.webclient.WebclientEventListener;
@@ -506,17 +507,6 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
 	    return null;
 	}
     }
-    try {
-	keyEvent = new KeyEvent((Component) browserControlCanvas, (int) eventType,
-				when, modifiers, keyCode, keyChar);
-    }
-    catch (Throwable e) {
-	String msg = e.getMessage();
-	System.out.println(e.toString() + " " + e.getMessage() + 
-			   " eventType: " + eventType + 
-			   " keyCode: " + keyCode +
-			   " keyChar: " + keyChar);
-    }
     Object source = null;
     if (null != domNode) {
         source = domNode;
@@ -526,8 +516,19 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
     }
 
     WebclientEvent event = new WebclientEvent(source, eventType,
-					      keyEvent);
-    return event;
+					      eventData);
+    try {
+	keyEvent = new WCKeyEvent((Component) browserControlCanvas, (int) eventType,
+				when, modifiers, keyCode, keyChar, event);
+    }
+    catch (Throwable e) {
+	String msg = e.getMessage();
+	System.out.println(e.toString() + " " + e.getMessage() + 
+			   " eventType: " + eventType + 
+			   " keyCode: " + keyCode +
+			   " keyChar: " + keyChar);
+    }
+    return keyEvent;
 }
 
 private int getNativeBrowserControlFromNewWindowEvent(NewWindowEvent event) {
@@ -629,8 +630,7 @@ public class BrowserToJavaEventPump extends Thread {
 	    else if (curEvent instanceof MouseEvent) {
 		listeners = EventRegistrationImpl.this.mouseListeners;
 	    }
-	    else if (curEvent instanceof WebclientEvent &&
-		     ((WebclientEvent)curEvent).getEventData() instanceof KeyEvent) {
+	    else if (curEvent instanceof KeyEvent) {
 		listeners = EventRegistrationImpl.this.keyListeners;
 	    }
 	    else if (curEvent instanceof NewWindowEvent) {
@@ -655,7 +655,7 @@ public class BrowserToJavaEventPump extends Thread {
 			    }
 			    else if (cur instanceof KeyListener) {
 				dispatchKeyEvent((KeyListener) cur, 
-						 (WebclientEvent) curEvent);
+						 (WCKeyEvent) curEvent);
 			    }
 			    // else ...
 			}
@@ -694,16 +694,16 @@ public class BrowserToJavaEventPump extends Thread {
     }
     
     private void dispatchKeyEvent(KeyListener listener, 
-				  WebclientEvent event) {
-	switch ((int) event.getType()) {
+				  WCKeyEvent event) {
+	switch ((int) event.getWebclientEvent().getType()) {
 	case (int) KeyEvent.KEY_PRESSED:
-	    listener.keyPressed((KeyEvent) event.getEventData());
+	    listener.keyPressed(event);
 	    break;
 	case (int) KeyEvent.KEY_RELEASED:
-	    listener.keyReleased((KeyEvent) event.getEventData());
+	    listener.keyReleased(event);
 	    break;
 	case (int) KeyEvent.KEY_TYPED:
-	    listener.keyTyped((KeyEvent) event.getEventData());
+	    listener.keyTyped(event);
 	    break;
 	}
     }
