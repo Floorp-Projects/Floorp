@@ -430,3 +430,13 @@ moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                         cliprect, gTabWidget, "tab", rect->x - rect->width,
                         rect->y, rect->width, rect->height, GTK_POS_BOTTOM);
 }
+
+void
+moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,
+                        GdkRectangle* rect, GdkRectangle* cliprect)
+{
+  gtk_paint_box(style, window, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
+                cliprect, gTabWidget, "notebook", rect->x, rect->y,
+                rect->width, rect->height);
+}
+
