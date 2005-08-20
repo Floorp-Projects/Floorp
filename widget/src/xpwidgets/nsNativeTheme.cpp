@@ -281,8 +281,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
       }
 
       // Check whether background differs from default
-      const nsStyleBackground* ourBG;
-      ::GetStyleData(aFrame, &ourBG);
+      const nsStyleBackground* ourBG = aFrame->GetStyleBackground();
 
       if (defaultBGTransparent) {
         if (!(ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
@@ -295,8 +294,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
         return PR_TRUE;
 
       // Check whether border style or color differs from default
-      const nsStyleBorder* ourBorder;
-      ::GetStyleData(aFrame, &ourBorder);
+      const nsStyleBorder* ourBorder = aFrame->GetStyleBorder();
 
       for (PRInt32 i = 0; i < 4; ++i) {
         if (ourBorder->GetBorderStyle(i) != defaultBorderStyle)
