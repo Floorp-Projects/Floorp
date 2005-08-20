@@ -69,6 +69,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   NS_INIT_ISUPPORTS();
   mDisabledAtom = getter_AddRefs(NS_NewAtom("disabled"));
   mCheckedAtom = getter_AddRefs(NS_NewAtom("checked"));
+  mSelectedAtom = getter_AddRefs(NS_NewAtom("selected"));
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -261,7 +262,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       
       GtkToggleButtonState checkBoxState;
       GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
-      checkBoxState.selected = CheckBooleanAttr(aFrame, mCheckedAtom);
+      nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
+      checkBoxState.selected = CheckBooleanAttr(aFrame, atom);
       
 #ifdef DEBUG_NATIVE_THEME
       printf("paint checkbox: aRect=(%d,%d,%d,%d), aClipRect=(%d,%d,%d,%d)\n",
@@ -285,7 +287,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     {
       EnsureScrollbarWidget();
-      EnsureButtonWidget();
 
       GtkWidgetState buttonState;
       GetGtkWidgetState(aFrame, &buttonState);
