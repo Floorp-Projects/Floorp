@@ -121,23 +121,17 @@ typedef HRESULT (WINAPI*GetThemeContentRectPtr)(HANDLE hTheme, HDC hdc, int iPar
 typedef HRESULT (WINAPI*GetThemePartSizePtr)(HANDLE hTheme, HDC hdc, int iPartId,
                                        int iStateId, RECT* prc, int ts,
                                        SIZE* psz);
-typedef HRESULT (WINAPI*GetThemeFontPtr)(HANDLE hTheme, HDC hdc, int iPartId,
-                                   int iStateId, int iPropId, OUT LOGFONT* pFont);
 typedef HRESULT (WINAPI*GetThemeSysFontPtr)(HANDLE hTheme, int iFontId, OUT LOGFONT* pFont);
 typedef HRESULT (WINAPI*GetThemeColorPtr)(HANDLE hTheme, HDC hdc, int iPartId,
                                    int iStateId, int iPropId, OUT COLORREF* pFont);
-typedef HRESULT (WINAPI*GetThemeTextMetricsPtr)(HANDLE hTheme, OPTIONAL HDC hdc, int iPartId,
-                                          int iStateId, OUT TEXTMETRIC* ptm);
 
 static OpenThemeDataPtr openTheme = NULL;
 static CloseThemeDataPtr closeTheme = NULL;
 static DrawThemeBackgroundPtr drawThemeBG = NULL;
 static GetThemeContentRectPtr getThemeContentRect = NULL;
 static GetThemePartSizePtr getThemePartSize = NULL;
-static GetThemeFontPtr getThemeFont = NULL;
 static GetThemeSysFontPtr getThemeSysFont = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
-static GetThemeTextMetricsPtr getThemeTextMetrics = NULL;
 
 static const char kThemeLibraryName[] = "uxtheme.dll";
 
@@ -1179,7 +1173,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
       PRInt32 contentState;
-      PRBool isDisabled = PR_FALSE;
 
       aPart = DFC_BUTTON;
       aState = DFCS_BUTTONPUSH;
@@ -1211,7 +1204,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
       PRInt32 contentState ;
-      PRBool isDisabled = PR_FALSE;
       aFocused = PR_FALSE;
 
       aPart = DFC_BUTTON;
