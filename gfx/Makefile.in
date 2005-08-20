@@ -47,6 +47,7 @@ MODULE		= gfx
 ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
+
 ifdef MOZ_ENABLE_CAIRO_GFX
 DIRS            += thebes
 endif
