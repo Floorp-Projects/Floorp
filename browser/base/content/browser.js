@@ -3071,6 +3071,7 @@ var FullScreen =
     // show/hide all menubars, toolbars, and statusbars (except the full screen toolbar)
     this.showXULChrome("toolbar", window.fullScreen);
     this.showXULChrome("statusbar", window.fullScreen);
+    document.getElementById("fullScreenItem").setAttribute("checked", !window.fullScreen);
   },
 
   showXULChrome: function(aTag, aShow)
