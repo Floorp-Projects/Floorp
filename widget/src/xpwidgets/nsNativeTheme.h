@@ -105,7 +105,7 @@ class nsNativeTheme
   PRBool IsSortReversed(nsIFrame* aFrame) {
     nsAutoString sortdir;
     if (GetAttr(aFrame, mSortDirectionAtom, sortdir))
-      return sortdir.Equals(NS_LITERAL_STRING("descending"));
+      return sortdir.EqualsLiteral("descending");
     return PR_FALSE;
   }
 
@@ -121,7 +121,7 @@ class nsNativeTheme
   PRBool IsIndeterminateProgress(nsIFrame* aFrame) {
     nsAutoString mode;
     if (GetAttr(aFrame, mModeAtom, mode))
-      return mode.Equals(NS_LITERAL_STRING("undetermined"));
+      return mode.EqualsLiteral("undetermined");
     return PR_FALSE;
   }
 

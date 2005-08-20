@@ -135,7 +135,7 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
 
-  return attr.Equals(NS_LITERAL_STRING("true"));
+  return attr.EqualsLiteral("true");
 }
 
 PRInt32
