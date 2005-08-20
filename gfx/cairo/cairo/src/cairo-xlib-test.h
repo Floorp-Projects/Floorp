@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 
 #include <cairo-xlib.h>
 

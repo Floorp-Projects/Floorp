@@ -22,15 +22,15 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "icint.h"
+#include "pixman-xserver-compat.h"
 
 pixman_bits_t
-IcReplicatePixel (Pixel p, int bpp)
+fbReplicatePixel (Pixel p, int bpp)
 {
     pixman_bits_t  b = p;
     
-    b &= IcFullMask (bpp);
-    while (bpp < IC_UNIT)
+    b &= FbFullMask (bpp);
+    while (bpp < FB_UNIT)
     {
 	b |= b << bpp;
 	bpp <<= 1;
@@ -39,9 +39,9 @@ IcReplicatePixel (Pixel p, int bpp)
 }
 
 #define O 0
-#define I IC_ALLONES
+#define I FB_ALLONES
 
-const IcMergeRopRec IcMergeRopBits[16] = {
+const FbMergeRopRec FbMergeRopBits[16] = {
     { O,O,O,O },   /* clear	    0x0		0 */
     { I,O,O,O },   /* and	    0x1		src AND dst */
     { I,O,I,O },   /* andReverse    0x2		src AND NOT dst */
@@ -62,11 +62,11 @@ const IcMergeRopRec IcMergeRopBits[16] = {
 
 /*
  * Stipple masks are independent of bit/byte order as long
- * as bitorder == byteorder.  IC doesn't handle the case
+ * as bitorder == byteorder.  FB doesn't handle the case
  * where these differ
  */
-#define BitsMask(x,w)	((IC_ALLONES << ((x) & IC_MASK)) & \
-			 (IC_ALLONES >> ((IC_UNIT - ((x) + (w))) & IC_MASK)))
+#define BitsMask(x,w)	((FB_ALLONES << ((x) & FB_MASK)) & \
+			 (FB_ALLONES >> ((FB_UNIT - ((x) + (w))) & FB_MASK)))
 
 #define Mask(x,w)	BitsMask((x)*(w),(w))
 
@@ -96,23 +96,23 @@ const IcMergeRopRec IcMergeRopBits[16] = {
      SelMask(b,6,w) | \
      SelMask(b,7,w))
 
-#if IC_UNIT == 16
-#define icStipple16Bits 0
-#define icStipple8Bits 0
-static const pixman_bits_t icStipple4Bits[16] = {
+#if FB_UNIT == 16
+#define fbStipple16Bits 0
+#define fbStipple8Bits 0
+static const pixman_bits_t fbStipple4Bits[16] = {
     C4(  0,4), C4(  1,4), C4(  2,4), C4(  3,4), C4(  4,4), C4(  5,4),
     C4(  6,4), C4(  7,4), C4(  8,4), C4(  9,4), C4( 10,4), C4( 11,4),
     C4( 12,4), C4( 13,4), C4( 14,4), C4( 15,4),};
-static const pixman_bits_t icStipple2Bits[4] = {
+static const pixman_bits_t fbStipple2Bits[4] = {
     C2(  0,8), C2(  1,8), C2(  2,8), C2(  3,8),
 };
-static const pixman_bits_t icStipple1Bits[2] = {
+static const pixman_bits_t fbStipple1Bits[2] = {
     C1(  0,16), C1(  1,16),
 };
 #endif
-#if IC_UNIT == 32
-#define icStipple16Bits 0
-static const pixman_bits_t icStipple8Bits[256] = {
+#if FB_UNIT == 32
+#define fbStipple16Bits 0
+static const pixman_bits_t fbStipple8Bits[256] = {
     C8(  0,4), C8(  1,4), C8(  2,4), C8(  3,4), C8(  4,4), C8(  5,4),
     C8(  6,4), C8(  7,4), C8(  8,4), C8(  9,4), C8( 10,4), C8( 11,4),
     C8( 12,4), C8( 13,4), C8( 14,4), C8( 15,4), C8( 16,4), C8( 17,4),
@@ -157,19 +157,19 @@ static const pixman_bits_t icStipple8Bits[256] = {
     C8(246,4), C8(247,4), C8(248,4), C8(249,4), C8(250,4), C8(251,4),
     C8(252,4), C8(253,4), C8(254,4), C8(255,4),
 };
-static const pixman_bits_t icStipple4Bits[16] = {
+static const pixman_bits_t fbStipple4Bits[16] = {
     C4(  0,8), C4(  1,8), C4(  2,8), C4(  3,8), C4(  4,8), C4(  5,8),
     C4(  6,8), C4(  7,8), C4(  8,8), C4(  9,8), C4( 10,8), C4( 11,8),
     C4( 12,8), C4( 13,8), C4( 14,8), C4( 15,8),};
-static const pixman_bits_t icStipple2Bits[4] = {
+static const pixman_bits_t fbStipple2Bits[4] = {
     C2(  0,16), C2(  1,16), C2(  2,16), C2(  3,16),
 };
-static const pixman_bits_t icStipple1Bits[2] = {
+static const pixman_bits_t fbStipple1Bits[2] = {
     C1(  0,32), C1(  1,32),
 };
 #endif
-#if IC_UNIT == 64
-const pixman_bits_t icStipple16Bits[256] = {
+#if FB_UNIT == 64
+const pixman_bits_t fbStipple16Bits[256] = {
     C8(  0,4), C8(  1,4), C8(  2,4), C8(  3,4), C8(  4,4), C8(  5,4),
     C8(  6,4), C8(  7,4), C8(  8,4), C8(  9,4), C8( 10,4), C8( 11,4),
     C8( 12,4), C8( 13,4), C8( 14,4), C8( 15,4), C8( 16,4), C8( 17,4),
@@ -214,7 +214,7 @@ const pixman_bits_t icStipple16Bits[256] = {
     C8(246,4), C8(247,4), C8(248,4), C8(249,4), C8(250,4), C8(251,4),
     C8(252,4), C8(253,4), C8(254,4), C8(255,4),
 };
-static const pixman_bits_t icStipple8Bits[256] = {
+static const pixman_bits_t fbStipple8Bits[256] = {
     C8(  0,8), C8(  1,8), C8(  2,8), C8(  3,8), C8(  4,8), C8(  5,8),
     C8(  6,8), C8(  7,8), C8(  8,8), C8(  9,8), C8( 10,8), C8( 11,8),
     C8( 12,8), C8( 13,8), C8( 14,8), C8( 15,8), C8( 16,8), C8( 17,8),
@@ -259,28 +259,28 @@ static const pixman_bits_t icStipple8Bits[256] = {
     C8(246,8), C8(247,8), C8(248,8), C8(249,8), C8(250,8), C8(251,8),
     C8(252,8), C8(253,8), C8(254,8), C8(255,8),
 };
-static const pixman_bits_t icStipple4Bits[16] = {
+static const pixman_bits_t fbStipple4Bits[16] = {
     C4(  0,16), C4(  1,16), C4(  2,16), C4(  3,16), C4(  4,16), C4(  5,16),
     C4(  6,16), C4(  7,16), C4(  8,16), C4(  9,16), C4( 10,16), C4( 11,16),
     C4( 12,16), C4( 13,16), C4( 14,16), C4( 15,16),};
-static const pixman_bits_t icStipple2Bits[4] = {
+static const pixman_bits_t fbStipple2Bits[4] = {
     C2(  0,32), C2(  1,32), C2(  2,32), C2(  3,32),
 };
-#define icStipple1Bits 0
+#define fbStipple1Bits 0
 #endif
 
 const pixman_bits_t *
-IcStippleTable(int bits)
+fbStippleTable(int bits)
 {
     switch (bits) {
     case 1:
-	return icStipple1Bits;
+	return fbStipple1Bits;
     case 2:
-	return icStipple2Bits;
+	return fbStipple2Bits;
     case 4:
-	return icStipple4Bits;
+	return fbStipple4Bits;
     case 8:
-	return icStipple8Bits;
+	return fbStipple8Bits;
     }
     return 0;
 }

@@ -306,36 +306,36 @@ an ellipse parameterized by angle 't':
 Perturb t by ± d and compute two new points (x+,y+), (x-,y-).
 The distance from the average of these two points to (x,y) represents
 the maximum error in approximating the ellipse with a polygon formed
-from vertices 2? radians apart.
+from vertices 2∆ radians apart.
 
-	    x+ = M cos (t+?)		y+ = m sin (t+?)
-	    x- = M cos (t-?)		y- = m sin (t-?)
+	    x+ = M cos (t+∆)		y+ = m sin (t+∆)
+	    x- = M cos (t-∆)		y- = m sin (t-∆)
 
 Now compute the approximation error, E:
 
 	Ex = (x - (x+ + x-) / 2)
-	Ex = (M cos(t) - (Mcos(t+?) + Mcos(t-?))/2)
-	   = M (cos(t) - (cos(t)cos(?) + sin(t)sin(?) +
-			  cos(t)cos(?) - sin(t)sin(?))/2)
-	   = M(cos(t) - cos(t)cos(?))
-	   = M cos(t) (1 - cos(?))
+	Ex = (M cos(t) - (Mcos(t+∆) + Mcos(t-∆))/2)
+	   = M (cos(t) - (cos(t)cos(∆) + sin(t)sin(∆) +
+			  cos(t)cos(∆) - sin(t)sin(∆))/2)
+	   = M(cos(t) - cos(t)cos(∆))
+	   = M cos(t) (1 - cos(∆))
 
 	Ey = y - (y+ - y-) / 2
-	   = m sin (t) - (m sin(t+?) + m sin(t-?)) / 2
-	   = m (sin(t) - (sin(t)cos(?) + cos(t)sin(?) +
-			  sin(t)cos(?) - cos(t)sin(?))/2)
-	   = m (sin(t) - sin(t)cos(?))
-	   = m sin(t) (1 - cos(?))
+	   = m sin (t) - (m sin(t+∆) + m sin(t-∆)) / 2
+	   = m (sin(t) - (sin(t)cos(∆) + cos(t)sin(∆) +
+			  sin(t)cos(∆) - cos(t)sin(∆))/2)
+	   = m (sin(t) - sin(t)cos(∆))
+	   = m sin(t) (1 - cos(∆))
 
 	E² = Ex² + Ey²
-	   = (M cos(t) (1 - cos (?)))² + (m sin(t) (1-cos(?)))²
-	   = (1 - cos(?))² (M² cos²(t) + m² sin²(t))
-	   = (1 - cos(?))² ((m² + M² - m²) cos² (t) + m² sin²(t))
-	   = (1 - cos(?))² (M² - m²) cos² (t) + (1 - cos(?))² m²
+	   = (M cos(t) (1 - cos (∆)))² + (m sin(t) (1-cos(∆)))²
+	   = (1 - cos(∆))² (M² cos²(t) + m² sin²(t))
+	   = (1 - cos(∆))² ((m² + M² - m²) cos² (t) + m² sin²(t))
+	   = (1 - cos(∆))² (M² - m²) cos² (t) + (1 - cos(∆))² m²
 
 Find the extremum by differentiation wrt t and setting that to zero
 
-∂(E²)/∂(t) = (1-cos(?))² (M² - m²) (-2 cos(t) sin(t))
+∂(E²)/∂(t) = (1-cos(∆))² (M² - m²) (-2 cos(t) sin(t))
 
          0 = 2 cos (t) sin (t)
 	 0 = sin (2t)
@@ -344,25 +344,25 @@ Find the extremum by differentiation wrt t and setting that to zero
 Which is to say that the maximum and minimum errors occur on the
 axes of the ellipse at 0 and π radians:
 
-	E²(0) = (1-cos(?))² (M² - m²) + (1-cos(?))² m²
-	      = (1-cos(?))² M²
-	E²(π) = (1-cos(?))² m²
+	E²(0) = (1-cos(∆))² (M² - m²) + (1-cos(∆))² m²
+	      = (1-cos(∆))² M²
+	E²(π) = (1-cos(∆))² m²
 
-maximum error = M (1-cos(?))
-minimum error = m (1-cos(?))
+maximum error = M (1-cos(∆))
+minimum error = m (1-cos(∆))
 
-We must make maximum error ≤ tolerance, so compute the ? needed:
+We must make maximum error ≤ tolerance, so compute the ∆ needed:
 
-	    tolerance = M (1-cos(?))
-	tolerance / M = 1 - cos (?)
-	       cos(?) = 1 - tolerance/M
-                    ? = acos (1 - tolerance / M);
+	    tolerance = M (1-cos(∆))
+	tolerance / M = 1 - cos (∆)
+	       cos(∆) = 1 - tolerance/M
+                    ∆ = acos (1 - tolerance / M);
 
-Remembering that ? is half of our angle between vertices,
+Remembering that ∆ is half of our angle between vertices,
 the number of vertices is then
 
-vertices = ceil(2π/2?).
-		 = ceil(π/?).
+vertices = ceil(2π/2∆).
+		 = ceil(π/∆).
 
 Note that this also equation works for M == m (a circle) as it
 doesn't matter where on the circle the error is computed.
@@ -374,15 +374,32 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    double min, max, major_axis;
-    int num_vertices;
+    double  a = matrix->xx, b = matrix->yx;
+    double  c = matrix->xy, d = matrix->yy;
 
-    _cairo_matrix_compute_expansion_factors (matrix, &min, &max);
-    major_axis = radius * max;
+    double  i = a*a + c*c;
+    double  j = b*b + d*d;
+
+    double  f = 0.5 * (i + j);
+    double  g = 0.5 * (i - j);
+    double  h = a*b + c*d;
+    
+    /* 
+     * compute major and minor axes lengths for 
+     * a pen with the specified radius 
+     */
+    
+    double  major_axis = radius * sqrt (f + sqrt (g*g+h*h));
+
+    /*
+     * we don't need the minor axis length, which is
+     * double min = radius * sqrt (f - sqrt (g*g+h*h));
+     */
     
     /*
      * compute number of vertices needed
      */
+    int	    num_vertices;
     
     /* Where tolerance / M is > 1, we use 4 points */
     if (tolerance >= major_axis) {

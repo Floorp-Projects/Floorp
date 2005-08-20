@@ -57,7 +57,7 @@ pixman_triangle_bounds (int ntri, const pixman_triangle_t *tris, pixman_box16_t 
 }
 
 static void
-IcRasterizeTriangle (pixman_image_t		*image,
+FbRasterizeTriangle (pixman_image_t		*image,
 		     const pixman_triangle_t	*tri,
 		     int		x_off,
 		     int		y_off)
@@ -159,7 +159,7 @@ pixman_composite_triangles (pixman_operator_t	op,
 	pixman_triangle_bounds (ntris, tris, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (dst,
+	image = FbCreateAlphaPicture (dst,
 				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
@@ -173,14 +173,14 @@ pixman_composite_triangles (pixman_operator_t	op,
 	    pixman_triangle_bounds (1, tris, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (dst,
+	    image = FbCreateAlphaPicture (dst,
 					  format,
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
 		break;
 	}
-	IcRasterizeTriangle (image, tris, -bounds.x1, -bounds.y1);
+	FbRasterizeTriangle (image, tris, -bounds.x1, -bounds.y1);
 	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
@@ -233,7 +233,7 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 	pixman_point_fixed_bounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (dst,
+	image = FbCreateAlphaPicture (dst,
 				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
@@ -250,14 +250,14 @@ pixman_composite_tri_strip (pixman_operator_t		op,
 	    pixman_triangle_bounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (dst,
+	    image = FbCreateAlphaPicture (dst,
 					  format, 
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
 		continue;
 	}
-	IcRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
+	FbRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
 	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;
@@ -310,7 +310,7 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 	pixman_point_fixed_bounds (npoints, points, &bounds);
 	if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 	    return;
-	image = IcCreateAlphaPicture (dst,
+	image = FbCreateAlphaPicture (dst,
 				      format,
 				      bounds.x2 - bounds.x1,
 				      bounds.y2 - bounds.y1);
@@ -329,14 +329,14 @@ pixman_composite_tri_fan (pixman_operator_t		op,
 	    pixman_triangle_bounds (1, &tri, &bounds);
 	    if (bounds.x2 <= bounds.x1 || bounds.y2 <= bounds.y1)
 		continue;
-	    image = IcCreateAlphaPicture (dst,
+	    image = FbCreateAlphaPicture (dst,
 					  format, 
 					  bounds.x2 - bounds.x1,
 					  bounds.y2 - bounds.y1);
 	    if (!image)
 		continue;
 	}
-	IcRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
+	FbRasterizeTriangle (image, &tri, -bounds.x1, -bounds.y1);
 	if (!format)
 	{
 	    xRel = bounds.x1 + xSrc - xDst;

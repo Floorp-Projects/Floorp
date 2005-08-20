@@ -54,7 +54,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.6 2005/06/04 07:03:28 vladimir%pobox.com Exp $ */
+/* $Id: pixman.h,v 1.7 2005/08/20 05:34:03 vladimir%pobox.com Exp $ */
 
 /* libic.h */
 
@@ -91,6 +91,7 @@ SOFTWARE.
 # include "mozstdint.h"
 #endif
 
+#include "pixman-remap.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -272,6 +273,7 @@ pixman_image_create (pixman_format_t	*format,
 */
 #ifndef IC_SHIFT
 #define IC_SHIFT 5
+#define FB_SHIFT IC_SHIFT
 typedef uint32_t pixman_bits_t;
 #endif
 

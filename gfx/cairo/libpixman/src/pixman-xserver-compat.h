@@ -48,7 +48,7 @@
 
 /* Then, define any names that the server code will be expecting in
  * terms of libpixman names. */
-
+/*
 typedef uint8_t			CARD8;
 typedef uint16_t		CARD16;
 typedef int16_t			INT16;
@@ -66,23 +66,41 @@ typedef pixman_point_fixed_t	xPointFixed;
 typedef pixman_line_fixed_t	xLineFixed;
 typedef pixman_trapezoid_t	xTrapezoid;
 typedef pixman_triangle_t	xTriangle;
-
+*/
 #define RENDER 1
+/*
 #define FB_SHIFT IC_SHIFT 
 #define FB_MASK IC_MASK
 #define FB_ALLONES IC_ALLONES
 #define FbMaskBits IcMaskBits
+*/
 
 /* XXX: We changed some function and field names which makes for some
  * ugly hacks... */
 #define pDrawable pixels
-#define fbGetDrawable(pDrawable, pointer, stride, bpp, xoff, yoff) { \
+#define fbGetDrawable(pDrawable, buf, outstride, outbpp, xoff, yoff) { \
     (buf) = (pDrawable)->data; \
-    (stride) = ((int) pDrawable->stride) / sizeof (pixman_bits_t); \
-    (bpp) = (pDrawable)->bpp; \
+    (outstride) = ((int) pDrawable->stride) / sizeof (pixman_bits_t); \
+    (outbpp) = (pDrawable)->bpp; \
     (xoff) = 0; \
     (yoff) = 0; \
 }
+
+/* Extended repeat attributes included in 0.10 */
+#define RepeatNone                          0
+#define RepeatNormal                        1
+#define RepeatPad                           2
+#define RepeatReflect                       3
+
+typedef pixman_vector_t PictVector;
+typedef pixman_vector_t* PictVectorPtr;
+
+#define miIndexedPtr FbIndexedPtr
+#define miIndexToEnt24 FbIndexToEnt24
+#define miIndexToEntY24 FbIndexToEntY24
+
+#define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
+#define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))
 
 /* Then, include any header files that have been copied directly
  * from xserver. */

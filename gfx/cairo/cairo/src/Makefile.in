@@ -36,88 +36,97 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH           = ../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= cairo
-LIBRARY_NAME	= mozcairo
+MODULE          = cairo
+LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= $(PNG_REQUIRES) \
-		  $(ZLIB_REQUIRES) \
-		  libpixman \
-		  $(NULL)
+REQUIRES        = $(PNG_REQUIRES) \
+                  $(ZLIB_REQUIRES) \
+                  libpixman \
+                  $(NULL)
 
-CSRCS	= \
-	cairo.c \
-	cairo-arc.c \
-	cairo-array.c \
-	cairo-cache.c \
-	cairo-color.c \
-	cairo-fixed.c \
-	cairo-font.c \
-	cairo-gstate.c \
-	cairo-hull.c \
-	cairo-image-surface.c \
-	cairo-matrix.c \
-	cairo-output-stream.c \
-	cairo-path.c \
-	cairo-path-bounds.c \
-	cairo-path-data.c \
-	cairo-path-fill.c \
-	cairo-path-stroke.c \
-	cairo-pattern.c \
-	cairo-pen.c \
-	cairo-polygon.c \
-	cairo-slope.c \
-	cairo-spline.c \
-	cairo-surface.c \
-	cairo-traps.c \
-	cairo-unicode.c \
-	cairo-wideint.c \
-	$(NULL)
+CSRCS   = \
+        cairo.c \
+        cairo-arc.c \
+        cairo-array.c \
+        cairo-cache.c \
+        cairo-clip.c \
+        cairo-color.c \
+        cairo-debug.c \
+        cairo-fixed.c \
+        cairo-font.c \
+	cairo-font-options.c \
+        cairo-gstate.c \
+	cairo-hash.c \
+        cairo-hull.c \
+        cairo-image-surface.c \
+        cairo-matrix.c \
+	cairo-meta-surface.c \
+        cairo-output-stream.c \
+        cairo-path.c \
+        cairo-path-bounds.c \
+        cairo-path-data.c \
+        cairo-path-fill.c \
+        cairo-path-stroke.c \
+        cairo-pattern.c \
+        cairo-pen.c \
+        cairo-polygon.c \
+	cairo-region.c \
+        cairo-slope.c \
+        cairo-spline.c \
+        cairo-surface.c \
+        cairo-traps.c \
+        cairo-unicode.c \
+        cairo-wideint.c \
+        $(NULL)
 
-EXPORTS		= cairo.h cairo-features.h
+EXPORTS = cairo.h cairo-features.h
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CSRCS	+= 	cairo-win32-font.c \
-		cairo-win32-surface.c
+CSRCS   += cairo-win32-font.c \
+           cairo-win32-surface.c
 EXPORTS += cairo-win32.h
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
-CSRCS	+= 	cairo-quartz-surface.c \
-		cairo-atsui-font.c
-EXPORTS += cairo-quartz.h
+CSRCS   += cairo-quartz-surface.c \
+           cairo-atsui-font.c
+EXPORTS += cairo-quartz.h cairo-atsui.h
 endif
 
 
 ifdef BUILD_CAIRO_PDF
-CSRCS	+=	cairo-pdf-surface.c \
-		cairo-ps-surface.c
+CSRCS   += cairo-font-subset.c \
+           cairo-pdf-surface.c \
+           cairo-ps-surface.c
 EXPORTS += cairo-ps.h cairo-pdf.h
 endif
 
 
 ifdef MOZ_X11
-CSRCS	+=	cairo-xlib-surface.c \
-		cairo-ft-font.c
-EXPORTS += cairo-xlib.h
+CSRCS   += cairo-xlib-surface.c \
+	   cairo-xlib-screen.c \
+           cairo-ft-font.c
+EXPORTS += cairo-xlib.h cairo-xlib-xrender.h cairo-ft.h
 LOCAL_INCLUDES += $(FT2_CFLAGS)
 endif
 
-ifdef BUILD_CAIRO_GL
-CSRCS	+= 	cairo-glitz-surface.c
-EXPORTS += cairo-glitz.h
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += glitz
+CSRCS    += cairo-glitz-surface.c
+EXPORTS  += cairo-glitz.h
 endif
 
 
-LOCAL_INCLUDES	+= -I$(srcdir)
+LOCAL_INCLUDES  += -I$(srcdir)
 
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build

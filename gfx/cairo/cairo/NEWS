@@ -1,3 +1,408 @@
+Release 0.9.0 (2005-08-08 Carl Worth <cworth@cworth.org>)
+=========================================================
+API additions
+-------------
+
+ * Add a new function call to set the current antialiasing mode in the
+   graphics state:
+
+	cairo_set_antialias
+
+   This call accepts the same modes recently added for font options
+   (NONE or GRAY) but affects the rendering of geometry other than
+   text. The intent of this call is to enable more precise control of
+   which pixels are affected by each operation, for example to allow
+   for full-scene antialiasing for seam-free rendering. It is not
+   expected that non-antialiased rendering will perform better than
+   anti-aliased rendering.
+
+ * Three new functions were added to provide support for mixed cairo-
+   and non-cairo drawing to the same surface:
+
+	cairo_surface_mark_dirty
+	cairo_surface_mark_dirty_rectangle
+	cairo_flush
+
+ * The return type of the several "reference" functions was change,
+   (API compatibly), from void to the same type as the argument. The
+   affected functions are:
+
+	cairo_font_face_reference
+	cairo_scaled_font_reference
+	cairo_pattern_reference
+	cairo_surface_reference
+	cairo_reference
+
+   This allows a convenient way to assign and reference in a single
+   statement.
+
+cairo-win32
+-----------
+ * Some portability improvements, (eg. workaround for missing stdint.h).
+
+cairo-ft
+--------
+ * Updated to allow compilation with older versions of freetype.
+
+Bug fixes
+---------
+ * Fix the unbounded operators to actually produce a correct result,
+   (previously the results were artificially restricited to the
+   bounding box of whatever shape was being drawn rather than
+   extending out infinitely). The fixed operators are:
+
+	CAIRO_OPERATOR_CLEAR
+	CAIRO_OPERATOR_SOURCE
+	CAIRO_OPERATOR_OUT
+	CAIRO_OPERATOR_IN
+	CAIRO_OPERATOR_DEST_IN
+	CAIRO_OPERATOR_DEST_ATOP
+
+ * Fix cairo_mask and cairo_mask_surface to transform the mask by the
+   current transformation matrix (CTM).
+
+ * Fix cairo_set_source to lock the CTM used to transform the pattern.
+
+ * Workaround for X server Render bug involving repeating patterns
+   with a general transformation matrix.
+
+ * cairo_get_font_face fixed to return a "nil" font face object rather
+   than NULL on error.
+
+ * cairo_set_font_face fixed to not crash if given a NULL font face,
+   (which is the documented interface for restoring the defauly font
+   face).
+
+ * Fix xlib glyphset caching to not try to free a NULL glyph.
+
+Snapshot 0.6.0 (2005-07-28 Carl Worth <cworth@cworth.org>)
+==========================================================
+API changes
+-----------
+* The prototypes of the following functions have changed:
+
+	cairo_xlib_surface_create_with_xrender_format
+	cairo_xlib_surface_create_for_bitmap
+
+  A Screen* parameter has been added to each. This allows the cairo
+  xlib backend to work correctly with multi-head X servers.
+
+* The following function has been modified:
+
+	cairo_scaled_font_create
+
+  to accept a cairo_font_options_t*. See below fore more details.
+
+* All opaque, reference-counted cairo objects have now been moved to a
+  standard error-handling scheme. The new objects to receive this
+  treatment are cairo_font_face_t, cairo_scaled_font_t, and
+  cairo_surface_t. (Previous snapshots already provided this scheme
+  for cairo_t, cairo_path_t, and cairo_pattern_t.)
+
+  This changes two functions to have a return type of void rather than
+  cairo_status_t:
+
+	cairo_scaled_font_extent
+	cairo_surface_finish
+
+  And significantly, none of the create functions for any of the
+  objects listed above will return NULL. The pointer returned from any
+  function will now always be a valid pointer and should always be
+  passed to the corresponding destroy function when finished
+
+  The simplest strategy for porting code is to switch from:
+
+	object = cairo_<object>_create ();
+	if (object == NULL)
+	    goto BAILOUT;
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+  to:
+
+	object = cairo_<object>_create ();
+	if (cairo_<object>_status (object))
+	    goto BAILOUT;
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+   But significantly, it is not required to check for an error status
+   before the "act on object" portions of the code above. All
+   operations on an object with an error status are, by definition,
+   no-ops without side effect. So new code might be written in an
+   easier-to-read style of:
+
+	object = cairo_<object>_create ();
+
+	/* act on object */
+
+	cairo_<object>_destroy (object);
+
+   with cairo_<object>_status checks placed only at strategic
+   locations. For example, passing an error object to another object,
+   (eg. cairo_set_source with an in-error pattern), will propagate the
+   error to the subsequent object (eg. the cairo_t). This means that
+   error checking can often be deferred even beyond the destruction of
+   a temporary object.
+
+API additions
+-------------
+* New functions for checking the status of objects that have been
+  switched to the common error-handling scheme:
+
+	cairo_font_face_status
+	cairo_scaled_font_status
+	cairo_surface_status
+
+* The _cairo_error function which was added in 0.5.1 has now been made
+  much more useful. In 0.5.1 only errors on cairo_t objects passed
+  through _cairo_error. Now, an error on any object should pass
+  through _cairo_error making it much more reliable as a debugging
+  mechanism for finding when an error first occurs.
+
+* Added new font options support with a myriad of functions:
+
+	cairo_font_options_create
+	cairo_font_options_copy
+	cairo_font_options_destroy
+
+	cairo_font_options_status
+
+	cairo_font_options_merge
+	cairo_font_options_equal
+	cairo_font_options_hash
+
+	cairo_font_options_set_antialias
+	cairo_font_options_get_antialias
+	cairo_font_options_set_subpixel_order
+	cairo_font_options_get_subpixel_order
+	cairo_font_options_set_hint_style
+	cairo_font_options_get_hint_style
+	cairo_font_options_set_hint_metrics
+	cairo_font_options_get_hint_metrics
+
+	cairo_surface_get_font_options
+
+	cairo_ft_font_options_substitute
+
+	cairo_set_font_options
+	cairo_get_font_options
+
+   This new font options support allows the application to have much
+   more fine-grained control over how fonts are rendered.
+   Significantly, it also allows surface backends to have some
+   influence over the process. For example, the xlib backend now
+   queries existing Xft properties to set font option defaults.
+
+* New function:
+
+	cairo_xlib_surface_set_drawable
+
+  which allos the target drawable for an xlib cairo_surface_t to be
+  changed to another with the same format, screen, and display. This
+  is necessary in certain double-buffering techniques.
+
+New features
+------------
+* Sub-pixel text antialiasing is now supported.
+
+Bug fixes
+---------
+* Fixed assertion failure in cairo_surface_create_similar when
+  application commits an error by passing a cairo_format_t rather than
+  a cairo_content_t.
+
+* Avoid division by zero in various places (cairo-ft).
+
+* Fix infinite loop when using non-default visuals (cairo-xlib).
+
+* Eliminate segfault in cairo_image_surface_create_from_png_stream.
+
+* Prevent errant sign-extension of masks on 64-bit architectures
+  (cairo-xlib and cairo-xcb).
+
+* Other miscellaneous fixes.
+
+Snapshot 0.5.2 (2005-07-18 Carl Worth <cworth@cworth.org>)
+==========================================================
+API changes
+-----------
+* New functions for creating patterns of a single color:
+
+	cairo_pattern_create_rgb
+	cairo_pattern_create_rgba
+
+* Change cairo_surface_create_similar to accept a new type of
+  cairo_content_t rather than cairo_format_t:
+
+	typedef enum _cairo_content {
+	    CAIRO_CONTENT_COLOR		= 0x1000,
+	    CAIRO_CONTENT_ALPHA		= 0x2000,
+	    CAIRO_CONTENT_COLOR_ALPHA	= 0x3000
+	} cairo_content_t;
+
+* Add new CAIRO_FORMAT_VALID and CAIRO_CONTENT_VALID macros.
+
+* Remove unused status value:
+
+	CAIRO_STATUS_NO_TARGET_SURFACE
+
+* Add new status values:
+
+	CAIRO_STATUS_INVALID_STATUS
+
+* Require libpixman >= 0.1.5 (for necessary bug fixes)
+
+Bug fixes
+---------
+* Fix cairo_surface_write_to_png for RGB24 images.
+
+* Fix broken metrics and rendering for bitmap fonts. Add mostly
+  useless bitmap glyph transformation.
+
+* Fix glyph caches to not eject entries that might be immediately
+  needed, (fixing intermittent crashes when rendering text).
+
+* Fix all memory leaks found by running "make check-valigrind".
+
+ATSUI backend changes
+---------------------
+* Allow building against < 10.3 SDK.
+
+* Prevent crash on empty strings.
+
+Glitz backend changes
+---------------------
+* Require glitz >= 0.4.4.
+
+* Use frame buffer objects instead of pbuffers for accelerated
+  offscreen drawing.
+
+* Minor improvement to gradient pattern creation.
+
+PostScript backend fixes
+------------------------
+* Rewrite of the PS backend to generate more interesting output that
+  the old big-image implementation.
+
+Win32 backend fixes
+-------------------
+* Implement glyph path support.
+
+* Fix swap of blue and green values in the fill_rectangles path.
+
+Xlib backend fixes
+------------------
+* Add optimization to use XCopyArea rather than XRenderComposite when
+  transforming only with an integer translation, and using SOURCE
+  operator or OVER with a source pattern without alpha.
+
+Snapshot 0.5.1 (2005-06-20 Carl Worth <cworth@cworth.org>)
+==========================================================
+API changes
+-----------
+* Removed cairo_status_string(cairo_t*) and add
+  cairo_status_to_string(cairo_status_t) in its place. Code using
+  cairo_status_string can be ported forward as follows:
+
+	cairo_status (cr);
+	->
+	cairo_status_to_string (cairo_status (cr));
+
+* Removed the BAD_NESTING restriction which means that two different
+  cairo_t objects can now interleave drawing to the same
+  cairo_surface_t without causing an error.
+
+* The following functions which previously had a return type of
+  cairo_status_t now have a return type of void:
+
+	cairo_pattern_add_color_stop_rgba
+	cairo_pattern_set_matrix
+	cairo_pattern_get_matrix
+	cairo_pattern_set_extend
+	cairo_pattern_set_filter
+
+  See discussion of cairo_pattern_status below for more details.
+
+API additions
+-------------
+* Improved error handling:
+
+	cairo_status_t
+	cairo_pattern_status (cairo_pattern_t *pattern);
+
+  This snapshot expands the status-based error handling scheme from
+  cairo_t to cairo_path_t and cairo_pattern_t. It also expands the
+  scheme so that object-creating functions, (cairo_create,
+  cairo_pattern_create_*, cairo_copy_path_*), are now guaranteed to
+  not return NULL. Instead, in the case of out-of-memory these
+  functions will return a static object with
+  status==CAIRO_STATUS_NO_MEMORY. The status can be checked with the
+  functions cairo_status and cairo_pattern_status, or by direct
+  inspection of the new status field in cairo_path_t.
+
+  Please note that some objects, including cairo_surface_t and all of
+  the font-related objects have not been converted to this
+  error-handling scheme.
+
+* In addition to the above changes, a new private function has been added:
+
+	_cairo_error
+
+  This function can be used to set a breakpoint in a debugger to make
+  it easier to find programming error in cairo-using code. (Currently,
+  _cairo_error is called when any error is detected within a cairo_t
+  context, but is not called for non-cairo_t errors such as for
+  cairo_path_t and cairo_pattern_t).
+
+* Fixed cairo_path_data_t so that its enum is visible to C++ code, (as
+  cairo_path_data_type_t).
+
+Performance improvements
+------------------------
+* Made a minor performance improvement for clipping, (restrict clip
+  surface to the new intersected bounds).
+
+* Optimize rendering of a solid source pattern with a pixel-aligned
+  rectangular path to use backend clipping rather than rasterization
+  and backend compositing.
+
+* Optimize cairo_paint_with_alpha to defer to cairo_paint when alpha
+  is 1.0.
+
+Bug fixes
+---------
+* Fixed memory leak in cairo_copy_path.
+
+* A build fix for non-srcdir builds.
+
+PDF backend fixes
+-----------------
+* New support for path-based clipping.
+
+* Fix for text rotated to angles other than multiples of π/2.
+
+Win32 backend fixes
+-------------------
+* Fix for text extents.
+
+Xlib backend
+------------
+* Implemented a complex workaround for X server bug[*] related to
+  Render-based compositing with untransformed, repeating source
+  pictures. The workaround uses core Xlib when possible for
+  performance, (ie. with CAIRO_OPERATOR_SOURCE or CAIRO_OPERATOR_OVER
+  with an opaque source surface), and falls back to the pixman
+  image-based compositing otherwise.
+
+  [*] https://bugs.freedesktop.org/show_bug.cgi?id=3566
+
+* Various bug fixes, particularly in the fallback paths.
+
 Snapshot 0.5.0 (2005-05-17 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is a pretty big, and fairly significant snapshot.  It represents

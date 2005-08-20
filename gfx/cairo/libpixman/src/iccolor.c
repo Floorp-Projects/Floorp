@@ -26,7 +26,7 @@
 #ifdef ICINT_NEED_IC_ONES
 /* Fall back on HACKMEM 169.  */
 int
-_IcOnes (unsigned long mask)
+_FbOnes (unsigned long mask)
 {
     register unsigned long y;
 
@@ -43,10 +43,10 @@ pixman_color_to_pixel (const pixman_format_t	*format,
 {
     uint32_t	    r, g, b, a;
 
-    r = color->red >> (16 - _IcOnes (format->redMask));
-    g = color->green >> (16 - _IcOnes (format->greenMask));
-    b = color->blue >> (16 - _IcOnes (format->blueMask));
-    a = color->alpha >> (16 - _IcOnes (format->alphaMask));
+    r = color->red >> (16 - _FbOnes (format->redMask));
+    g = color->green >> (16 - _FbOnes (format->greenMask));
+    b = color->blue >> (16 - _FbOnes (format->blueMask));
+    a = color->alpha >> (16 - _FbOnes (format->alphaMask));
     r = r << format->red;
     g = g << format->green;
     b = b << format->blue;
@@ -56,7 +56,7 @@ pixman_color_to_pixel (const pixman_format_t	*format,
 slim_hidden_def(pixman_color_to_pixel);
 
 static uint16_t
-IcFillColor (uint32_t pixel, int bits)
+FbFillColor (uint32_t pixel, int bits)
 {
     while (bits < 16)
     {
@@ -77,8 +77,8 @@ pixman_pixel_to_color (const pixman_format_t	*format,
     g = (pixel >> format->green) & format->greenMask;
     b = (pixel >> format->blue) & format->blueMask;
     a = (pixel >> format->alpha) & format->alphaMask;
-    color->red = IcFillColor (r, _IcOnes (format->redMask));
-    color->green = IcFillColor (r, _IcOnes (format->greenMask));
-    color->blue = IcFillColor (r, _IcOnes (format->blueMask));
-    color->alpha = IcFillColor (r, _IcOnes (format->alphaMask));
+    color->red = FbFillColor (r, _FbOnes (format->redMask));
+    color->green = FbFillColor (r, _FbOnes (format->greenMask));
+    color->blue = FbFillColor (r, _FbOnes (format->blueMask));
+    color->alpha = FbFillColor (r, _FbOnes (format->alphaMask));
 }

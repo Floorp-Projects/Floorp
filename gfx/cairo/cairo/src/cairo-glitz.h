@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_GLITZ_SURFACE
+#if CAIRO_HAS_GLITZ_SURFACE
 
 #include <glitz.h>
 

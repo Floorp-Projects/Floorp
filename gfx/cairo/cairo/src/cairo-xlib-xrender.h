@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 
 #include <X11/extensions/Xrender.h>
 
@@ -48,6 +48,7 @@ CAIRO_BEGIN_DECLS
 cairo_surface_t *
 cairo_xlib_surface_create_with_xrender_format (Display		 *dpy,
                                                Drawable		  drawable,
+					       Screen		 *screen,
                                                XRenderPictFormat *format,
                                                int		  width,
                                                int		  height);

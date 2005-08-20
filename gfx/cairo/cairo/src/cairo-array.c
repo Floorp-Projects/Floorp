@@ -147,7 +147,7 @@ typedef struct {
  * 
  * Initializes a #cairo_user_data_array_t structure for future
  * use. After initialization, the array has no keys. Call
- * _cairo_user_data_array_destroy() to free any allocated memory
+ * _cairo_user_data_array_fini() to free any allocated memory
  * when done using the array.
  **/
 void
@@ -157,14 +157,14 @@ _cairo_user_data_array_init (cairo_user_data_array_t *array)
 }
 
 /**
- * _cairo_user_data_array_destroy:
+ * _cairo_user_data_array_fini:
  * @array: a #cairo_user_data_array_t
  * 
  * Destroys all current keys in the user data array and deallocates
  * any memory allocated for the array itself.
  **/
 void
-_cairo_user_data_array_destroy (cairo_user_data_array_t *array)
+_cairo_user_data_array_fini (cairo_user_data_array_t *array)
 {
     int i, num_slots;
     cairo_user_data_slot_t *slots;
@@ -197,6 +197,11 @@ _cairo_user_data_array_get_data (cairo_user_data_array_t     *array,
 {
     int i, num_slots;
     cairo_user_data_slot_t *slots;
+
+    /* We allow this to support degenerate objects such as
+     * cairo_image_surface_nil. */
+    if (array == NULL)
+	return NULL;
 
     num_slots = array->num_elements;
     slots = (cairo_user_data_slot_t *) array->elements;

@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.3 2005/06/04 07:03:28 vladimir%pobox.com Exp $
+ * $Id: ictrap.c,v 1.4 2005/08/20 05:34:02 vladimir%pobox.com Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -25,7 +25,7 @@
 #include "icint.h"
 
 pixman_image_t *
-IcCreateAlphaPicture (pixman_image_t	*dst,
+FbCreateAlphaPicture (pixman_image_t	*dst,
 		      pixman_format_t	*format,
 		      uint16_t	width,
 		      uint16_t	height)
@@ -167,7 +167,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     if (!format)
 	return;
 
-    image = IcCreateAlphaPicture (dst, format,
+    image = FbCreateAlphaPicture (dst, format,
 				  bounds.x2 - bounds.x1,
 				  bounds.y2 - bounds.y1);
     if (!image)

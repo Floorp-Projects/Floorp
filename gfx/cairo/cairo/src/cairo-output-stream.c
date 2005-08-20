@@ -39,6 +39,10 @@
 #include <ctype.h>
 #include "cairoint.h"
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif /* _MSC_VER */
+
 struct _cairo_output_stream {
     cairo_write_func_t		write_data;
     void			*closure;
@@ -88,6 +92,26 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
     stream->position += length;
 
     return stream->status;
+}
+
+void
+_cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
+				       const char *data,
+				       size_t length)
+{
+    const char hex_chars[] = "0123456789abcdef";
+    char buffer[2];
+    int i, column;
+
+    for (i = 0, column = 0; i < length; i++, column++) {
+	if (column == 38) {
+	    _cairo_output_stream_write (stream, "\n", 1);
+	    column = 0;
+	}
+	buffer[0] = hex_chars[(data[i] >> 4) & 0x0f];
+	buffer[1] = hex_chars[data[i] & 0x0f];
+	_cairo_output_stream_write (stream, buffer, 2);
+    }
 }
 
 /* Format a double in a locale independent way and trim trailing
@@ -187,8 +211,8 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 
 	switch (*f | length_modifier) {
 	case '%':
-	    p[0] = *f;
-	    p[1] = 0;
+	    buffer[0] = *f;
+	    buffer[1] = 0;
 	    break;
 	case 'd':
 	    snprintf (buffer, sizeof buffer, "%d", va_arg (ap, int));
@@ -210,6 +234,10 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    break;
 	case 'f':
 	    dtostr (buffer, sizeof buffer, va_arg (ap, double));
+	    break;
+	case 'c':
+	    buffer[0] = va_arg (ap, int);
+	    buffer[1] = 0;
 	    break;
 	default:
 	    ASSERT_NOT_REACHED;

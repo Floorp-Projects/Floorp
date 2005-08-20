@@ -38,7 +38,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_WIN32_SURFACE
+#if CAIRO_HAS_WIN32_SURFACE
 
 #include <windows.h>
 

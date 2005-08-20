@@ -39,7 +39,7 @@
 
 #include <cairo.h>
 
-#ifdef CAIRO_HAS_XCB_SURFACE
+#if CAIRO_HAS_XCB_SURFACE
 
 #include <X11/XCB/xcb.h>
 
@@ -47,7 +47,7 @@ CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
 cairo_xcb_surface_create (XCBConnection *c,
-			  XCBDRAWABLE	 pixmap,
+			  XCBDRAWABLE	 drawable,
 			  XCBVISUALTYPE *visual,
 			  int		 width,
 			  int		 height);

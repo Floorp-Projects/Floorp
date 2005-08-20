@@ -38,7 +38,7 @@
 
 #include "cairoint.h"
 
-void
+cairo_private void
 _cairo_arc_path (cairo_t *cr,
 		 double	  xc,
 		 double	  yc,
@@ -46,7 +46,7 @@ _cairo_arc_path (cairo_t *cr,
 		 double	  angle1,
 		 double	  angle2);
 
-void
+cairo_private void
 _cairo_arc_path_negative (cairo_t *cr,
 			  double   xc,
 			  double   yc,

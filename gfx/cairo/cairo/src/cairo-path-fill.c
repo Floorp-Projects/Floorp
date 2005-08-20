@@ -36,10 +36,8 @@
 
 #include "cairoint.h"
 
-#include "cairo-gstate-private.h"
-
 typedef struct cairo_filler {
-    cairo_gstate_t *gstate;
+    double tolerance;
     cairo_traps_t *traps;
 
     cairo_point_t current_point;
@@ -48,7 +46,7 @@ typedef struct cairo_filler {
 } cairo_filler_t;
 
 static void
-_cairo_filler_init (cairo_filler_t *filler, cairo_gstate_t *gstate, cairo_traps_t *traps);
+_cairo_filler_init (cairo_filler_t *filler, double tolerance, cairo_traps_t *traps);
 
 static void
 _cairo_filler_fini (cairo_filler_t *filler);
@@ -69,9 +67,9 @@ static cairo_status_t
 _cairo_filler_close_path (void *closure);
 
 static void
-_cairo_filler_init (cairo_filler_t *filler, cairo_gstate_t *gstate, cairo_traps_t *traps)
+_cairo_filler_init (cairo_filler_t *filler, double tolerance, cairo_traps_t *traps)
 {
-    filler->gstate = gstate;
+    filler->tolerance = tolerance;
     filler->traps = traps;
 
     filler->current_point.x = 0;
@@ -132,7 +130,6 @@ _cairo_filler_curve_to (void *closure,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
-    cairo_gstate_t *gstate = filler->gstate;
     cairo_spline_t spline;
 
     status = _cairo_spline_init (&spline, &filler->current_point, b, c, d);
@@ -140,7 +137,7 @@ _cairo_filler_curve_to (void *closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_spline_decompose (&spline, gstate->tolerance);
+    _cairo_spline_decompose (&spline, filler->tolerance);
     if (status)
 	goto CLEANUP_SPLINE;
 
@@ -174,13 +171,14 @@ _cairo_filler_close_path (void *closure)
 
 cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
-				 cairo_gstate_t     *gstate,
+				 cairo_fill_rule_t   fill_rule,
+				 double              tolerance,
 				 cairo_traps_t      *traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t filler;
 
-    _cairo_filler_init (&filler, gstate, traps);
+    _cairo_filler_init (&filler, tolerance, traps);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -198,7 +196,7 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
 
     status = _cairo_traps_tessellate_polygon (filler.traps,
 					      &filler.polygon,
-					      filler.gstate->fill_rule);
+					      fill_rule);
     if (status)
 	goto BAIL;
 

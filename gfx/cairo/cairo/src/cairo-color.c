@@ -89,29 +89,19 @@ _cairo_color_init_rgb (cairo_color_t *color,
     _cairo_color_init_rgba (color, red, green, blue, 1.0);
 }
 
+/* We multiply colors by (0x10000 - epsilon), such that we get a uniform
+ * range even for 0xffff.  In other words, (1.0 - epsilon) would convert
+ * to 0xffff, not 0xfffe.
+ */
+#define CAIRO_COLOR_ONE_MINUS_EPSILON (65536.0 - 1e-5)
 
-/* XXX: The calculation of:
-
-		channel * 0xffff
-
-	isn't really what we want since:
-
-		(1.0 - epsilon) * 0xffff = 0xfffe
-
-	In other words, given an input range of [0.0, 1.0], we have an
-	infinitely small range tha maps to the output value 0xffff,
-	(while having large, uniformly sized input ranges for all
-	other output values). This is undesirable, particularly when
-	we want to do optimizations for "opaque" colors specfied as
-	floating-point.
-*/
 static void
 _cairo_color_compute_shorts (cairo_color_t *color)
 {
-    color->red_short   = color->red   * color->alpha * 0xffff;
-    color->green_short = color->green * color->alpha * 0xffff;
-    color->blue_short  = color->blue  * color->alpha * 0xffff;
-    color->alpha_short = color->alpha * 0xffff;
+    color->red_short   = color->red   * color->alpha * CAIRO_COLOR_ONE_MINUS_EPSILON;
+    color->green_short = color->green * color->alpha * CAIRO_COLOR_ONE_MINUS_EPSILON;
+    color->blue_short  = color->blue  * color->alpha * CAIRO_COLOR_ONE_MINUS_EPSILON;
+    color->alpha_short = color->alpha * CAIRO_COLOR_ONE_MINUS_EPSILON;
 }
 
 void

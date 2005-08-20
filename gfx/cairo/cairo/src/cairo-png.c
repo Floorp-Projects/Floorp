@@ -36,8 +36,10 @@
  */
 
 #include <png.h>
+#include <errno.h>
 #include "cairoint.h"
 
+/* Unpremultiplies data and converts native endian ARGB => RGBA bytes */
 static void
 unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
 {
@@ -53,11 +55,30 @@ unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
         if (alpha == 0) {
 	    b[0] = b[1] = b[2] = b[3] = 0;
 	} else {
-            b[0] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
+            b[0] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
             b[1] = (((pixel & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
-            b[2] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
+            b[2] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
 	    b[3] = alpha;
 	}
+    }
+}
+
+/* Converts native endian xRGB => RGBx bytes */
+static void
+convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
+{
+    int i;
+
+    for (i = 0; i < row_info->rowbytes; i += 4) {
+        uint8_t *b = &data[i];
+        uint32_t pixel;
+
+	memcpy (&pixel, b, sizeof (uint32_t));
+	
+	b[0] = (pixel & 0xff0000) >> 16;
+	b[1] = (pixel & 0x00ff00) >>  8;
+	b[2] = (pixel & 0x0000ff) >>  0;
+	b[3] = 0;
     }
 }
 
@@ -153,14 +174,19 @@ write_png (cairo_surface_t	*surface,
     png_convert_from_time_t (&pt, time (NULL));
     png_set_tIME (png, info, &pt);
 
-    png_set_write_user_transform_fn (png, unpremultiply_data);
-    if (image->format == CAIRO_FORMAT_ARGB32 ||
-	image->format == CAIRO_FORMAT_RGB24)
-	png_set_bgr (png);
+    /* We have to call png_write_info() before setting up the write
+     * transformation, since it stores data internally in 'png'
+     * that is needed for the write transformation functions to work.
+     */
+    png_write_info (png, info);
+    
+    if (image->format == CAIRO_FORMAT_ARGB32)
+	png_set_write_user_transform_fn (png, unpremultiply_data);
+    else if (image->format == CAIRO_FORMAT_RGB24)
+	png_set_write_user_transform_fn (png, convert_data_to_bytes);
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
-
-    png_write_info (png, info);
+	
     png_write_image (png, rows);
     png_write_end (png, info);
 
@@ -212,7 +238,7 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
   
     status = write_png (surface, stdio_write_func, fp);
 
-    if (fclose (fp) && CAIRO_OK (status))
+    if (fclose (fp) && status == CAIRO_STATUS_SUCCESS)
 	status = CAIRO_STATUS_WRITE_ERROR;
 
     return status;
@@ -226,10 +252,12 @@ struct png_write_closure_t {
 static void
 stream_write_func (png_structp png, png_bytep data, png_size_t size)
 {
+    cairo_status_t status;
     struct png_write_closure_t *png_closure;
 
     png_closure = png_get_io_ptr (png);
-    if (!CAIRO_OK (png_closure->write_func (png_closure->closure, data, size)))
+    status = png_closure->write_func (png_closure->closure, data, size);
+    if (status)
 	png_error(png, "Write Error");
 }
 
@@ -260,6 +288,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
     return write_png (surface, stream_write_func, &png_closure);
 }				     
 
+/* Premultiplies data and converts RGBA bytes => native endian */
 static void
 premultiply_data (png_structp   png,
                   png_row_infop row_info,
@@ -269,9 +298,9 @@ premultiply_data (png_structp   png,
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
 	uint8_t *base = &data[i];
-	uint8_t  blue = base[0];
+	uint8_t  red = base[0];
 	uint8_t  green = base[1];
-	uint8_t  red = base[2];
+	uint8_t  blue = base[2];
 	uint8_t  alpha = base[3];
 	uint32_t p;
 
@@ -287,19 +316,15 @@ static cairo_surface_t *
 read_png (png_rw_ptr	read_func,
 	  void		*closure)
 {
-    cairo_surface_t *surface;
-    png_byte *data;
+    cairo_surface_t *surface = (cairo_surface_t*) &_cairo_surface_nil;
+    png_byte *data = NULL;
     int i;
-    png_struct *png;
+    png_struct *png = NULL;
     png_info *info;
     png_uint_32 png_width, png_height, stride;
     int depth, color_type, interlace;
     unsigned int pixel_size;
-    png_byte **row_pointers;
-
-    surface = NULL;
-    data = NULL;
-    row_pointers = NULL;
+    png_byte **row_pointers = NULL;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -307,7 +332,7 @@ read_png (png_rw_ptr	read_func,
                                   NULL,
                                   NULL);
     if (png == NULL)
-	return NULL;
+	goto BAIL;
 
     info = png_create_info_struct (png);
     if (info == NULL)
@@ -315,8 +340,10 @@ read_png (png_rw_ptr	read_func,
 
     png_set_read_fn (png, closure, read_func);
 
-    if (setjmp (png_jmpbuf (png)))
+    if (setjmp (png_jmpbuf (png))) {
+	surface = (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	goto BAIL;
+    }
 
     png_read_info (png, info);
 
@@ -350,7 +377,6 @@ read_png (png_rw_ptr	read_func,
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png);
 
-    png_set_bgr (png);
     png_set_filler (png, 0xff, PNG_FILLER_AFTER);
 
     png_set_read_user_transform_fn (png, premultiply_data);
@@ -375,13 +401,22 @@ read_png (png_rw_ptr	read_func,
     surface = cairo_image_surface_create_for_data (data,
 						   CAIRO_FORMAT_ARGB32,
 						   png_width, png_height, stride);
+    if (surface->status)
+	goto BAIL;
+
     _cairo_image_surface_assume_ownership_of_data ((cairo_image_surface_t*)surface);
     data = NULL;
 
  BAIL:
-    free (row_pointers);
-    free (data);
-    png_destroy_read_struct (&png, NULL, NULL);
+    if (row_pointers)
+	free (row_pointers);
+    if (data)
+	free (data);
+    if (png)
+	png_destroy_read_struct (&png, &info, NULL);
+
+    if (surface->status)
+	_cairo_error (surface->status);
 
     return surface;
 }
@@ -404,8 +439,13 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
  * given PNG file.
  * 
  * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file or %NULL if the file is not a valid PNG file or
- * memory could not be allocated for the operation.
+ * of the PNG file, or a "nil" surface if any error occurred. A nil
+ * surface can be checked for with cairo_surface_status(surface) which
+ * may return one of the following values: 
+ *
+ *	CAIRO_STATUS_NO_MEMORY
+ *	CAIRO_STATUS_FILE_NOT_FOUND
+ *	CAIRO_STATUS_READ_ERROR
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
@@ -414,8 +454,19 @@ cairo_image_surface_create_from_png (const char *filename)
     cairo_surface_t *surface;
 
     fp = fopen (filename, "rb");
-    if (fp == NULL)
-	return NULL;
+    if (fp == NULL) {
+	switch (errno) {
+	case ENOMEM:
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_surface_t*) &_cairo_surface_nil;
+	case ENOENT:
+	    _cairo_error (CAIRO_STATUS_FILE_NOT_FOUND);
+	    return (cairo_surface_t*) &_cairo_surface_nil_file_not_found;
+	default:
+	    _cairo_error (CAIRO_STATUS_READ_ERROR);
+	    return (cairo_surface_t*) &_cairo_surface_nil_read_error;
+	}
+    }
   
     surface = read_png (stdio_read_func, fp);
 
@@ -432,10 +483,12 @@ struct png_read_closure_t {
 static void
 stream_read_func (png_structp png, png_bytep data, png_size_t size)
 {
+    cairo_status_t status;
     struct png_read_closure_t *png_closure;
 
     png_closure = png_get_io_ptr (png);
-    if (!CAIRO_OK (png_closure->read_func (png_closure->closure, data, size)))
+    status = png_closure->read_func (png_closure->closure, data, size);
+    if (status)
 	png_error(png, "Read Error");
 }
 
@@ -460,6 +513,6 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
     png_closure.read_func = read_func;
     png_closure.closure = closure;
 
-    return read_png (stream_read_func, &closure);
+    return read_png (stream_read_func, &png_closure);
 }
 

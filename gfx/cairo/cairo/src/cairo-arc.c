@@ -100,6 +100,8 @@ _arc_max_angle_for_tolerance_normalized (double tolerance)
     return angle;
 }
 
+/* XXX: The computation here if bogus. Correct math (with proof!) is
+ * available in _cairo_pen_vertices_needed. */
 static int
 _arc_segments_needed (double	      angle,
 		      double	      radius,
