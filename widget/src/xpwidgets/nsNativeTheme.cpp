@@ -84,10 +84,19 @@ nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
 }
 
 PRInt32
-nsNativeTheme::GetContentState(nsIFrame* aFrame)
+nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (!aFrame)
     return 0;
+
+  PRBool isXULCheckboxRadio = PR_FALSE;
+  if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) {
+    nsCOMPtr<nsIContent> checkboxRadioContent;
+    aFrame->GetContent(getter_AddRefs(checkboxRadioContent));
+    isXULCheckboxRadio = checkboxRadioContent->IsContentOfType(nsIContent::eXUL);
+    if (isXULCheckboxRadio)
+      aFrame->GetParent(&aFrame);
+  }
 
   nsCOMPtr<nsIPresShell> shell;
   GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
@@ -102,6 +111,12 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame)
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
   esm->GetContentState(content, flags);
+  
+  if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
+    if (IsFocused(aFrame))
+      flags |= NS_EVENT_STATE_FOCUS;
+  }
+  
   return flags;
 }
 
@@ -229,7 +244,7 @@ nsNativeTheme::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
           lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface,
                                 defaultBGColor);
         } else {
-          PRInt32 contentState = GetContentState(aFrame);
+          PRInt32 contentState = GetContentState(aFrame, aWidgetType);
           ConvertMarginToTwips(sButtonBorderSize, defaultBorderSize, p2t);
           if (contentState & NS_EVENT_STATE_HOVER &&
               contentState & NS_EVENT_STATE_ACTIVE)

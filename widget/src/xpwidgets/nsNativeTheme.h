@@ -55,13 +55,13 @@ class nsNativeTheme
   nsNativeTheme();
 
   // Returns the content state (hover, focus, etc), see nsIEventStateManager.h
-  PRInt32 GetContentState(nsIFrame* aFrame);
+  PRInt32 GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType);
 
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
   // for elements that are already styled.
   PRBool IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame,
-                        PRUint8 aWidgetType);
+                        PRUint8 aWidgetType);                                              
 
   // Accessors to widget-specific state information
 
@@ -83,6 +83,10 @@ class nsNativeTheme
   // radiobutton:
   PRBool IsSelected(nsIFrame* aFrame) {
     return GetCheckedOrSelected(aFrame, PR_TRUE);
+  }
+  
+  PRBool IsFocused(nsIFrame* aFrame) {
+    return CheckBooleanAttr(aFrame, mFocusedAtom);
   }
 
   // tab:
