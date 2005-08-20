@@ -69,16 +69,21 @@ nsNativeTheme::nsNativeTheme()
   mSortDirectionAtom = do_GetAtom("sortDirection");
 }
 
-void
-nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
+nsIPresShell *
+nsNativeTheme::GetPrimaryPresShell(nsIFrame* aFrame)
 {
-  *aResult = nsnull;
   if (!aFrame)
-    return;
+    return nsnull;
 
-  nsIDocument* doc = aFrame->GetContent()->GetDocument();
-  if (doc)
-    doc->GetShellAt(0, aResult); // addrefs
+  nsIDocument *doc = aFrame->GetContent()->GetDocument();
+
+  nsIPresShell *shell = nsnull;
+
+  if (doc) {
+    shell = doc->GetShellAt(0);
+  }
+
+  return shell;
 }
 
 PRInt32
@@ -92,8 +97,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
       && aFrame->GetContent()->IsContentOfType(nsIContent::eXUL))
     aFrame = aFrame->GetParent();
 
-  nsCOMPtr<nsIPresShell> shell;
-  GetPrimaryPresShell(aFrame, getter_AddRefs(shell));
+  nsIPresShell *shell = GetPrimaryPresShell(aFrame);
   if (!shell)
     return 0;
 
