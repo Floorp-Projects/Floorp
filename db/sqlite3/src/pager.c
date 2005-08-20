@@ -18,8 +18,9 @@
 ** file simultaneously, or one process from reading the database while
 ** another is writing.
 **
-** @(#) $Id: pager.c,v 1.201 2005/03/28 18:04:28 drh Exp $
+** @(#) $Id: pager.c,v 1.207 2005/06/07 02:12:30 drh Exp $
 */
+#ifndef SQLITE_OMIT_DISKIO
 #include "sqliteInt.h"
 #include "os.h"
 #include "pager.h"
@@ -171,7 +172,7 @@ struct PgHdr {
 #ifdef SQLITE_CHECK_PAGES
   u32 pageHash;
 #endif
-  /* pPager->psAligned bytes of page data follow this header */
+  /* pPager->pageSize bytes of page data follow this header */
   /* Pager.nExtra bytes of local data follow the page data */
 };
 
@@ -207,9 +208,9 @@ struct PgHistory {
 */
 #define PGHDR_TO_DATA(P)  ((void*)(&(P)[1]))
 #define DATA_TO_PGHDR(D)  (&((PgHdr*)(D))[-1])
-#define PGHDR_TO_EXTRA(G,P) ((void*)&((char*)(&(G)[1]))[(P)->psAligned])
+#define PGHDR_TO_EXTRA(G,P) ((void*)&((char*)(&(G)[1]))[(P)->pageSize])
 #define PGHDR_TO_HIST(P,PGR)  \
-            ((PgHistory*)&((char*)(&(P)[1]))[(PGR)->psAligned+(PGR)->nExtra])
+            ((PgHistory*)&((char*)(&(P)[1]))[(PGR)->pageSize+(PGR)->nExtra])
 
 /*
 ** How big to make the hash table used for locating in-memory pages
@@ -233,31 +234,6 @@ struct PgHistory {
 ** A open page cache is an instance of the following structure.
 */
 struct Pager {
-  char *zFilename;            /* Name of the database file */
-  char *zJournal;             /* Name of the journal file */
-  char *zDirectory;           /* Directory hold database and journal files */
-  OsFile fd, jfd;             /* File descriptors for database and journal */
-  OsFile stfd;                /* File descriptor for the statement subjournal*/
-  int dbSize;                 /* Number of pages in the file */
-  int origDbSize;             /* dbSize before the current change */
-  int stmtSize;               /* Size of database (in pages) at stmt_begin() */
-  i64 stmtJSize;              /* Size of journal at stmt_begin() */
-  int nRec;                   /* Number of pages written to the journal */
-  u32 cksumInit;              /* Quasi-random value added to every checksum */
-  int stmtNRec;               /* Number of records in stmt subjournal */
-  int nExtra;                 /* Add this many bytes to each in-memory page */
-  void (*xDestructor)(void*,int); /* Call this routine when freeing pages */
-  void (*xReiniter)(void*,int);   /* Call this routine when reloading pages */
-  int pageSize;               /* Number of bytes in a page */
-  int psAligned;              /* pageSize rounded up to a multiple of 8 */
-  int nPage;                  /* Total number of in-memory pages */
-  int nMaxPage;               /* High water mark of nPage */
-  int nRef;                   /* Number of in-memory pages with PgHdr.nRef>0 */
-  int mxPage;                 /* Maximum number of pages to hold in cache */
-  int nHit, nMiss, nOvfl;     /* Cache hits, missing, and LRU overflows */
-  int nRead,nWrite;           /* Database pages read/written */
-  void (*xCodec)(void*,void*,Pgno,int); /* Routine for en/decoding data */
-  void *pCodecArg;            /* First argument to xCodec() */
   u8 journalOpen;             /* True if journal file descriptors is valid */
   u8 journalStarted;          /* True if header of journal is synced */
   u8 useJournal;              /* Use a rollback journal on this file */
@@ -275,9 +251,26 @@ struct Pager {
   u8 dirtyCache;              /* True if cached pages have changed */
   u8 alwaysRollback;          /* Disable dont_rollback() for all pages */
   u8 memDb;                   /* True to inhibit all file I/O */
+  u8 setMaster;               /* True if a m-j name has been written to jrnl */
+  int dbSize;                 /* Number of pages in the file */
+  int origDbSize;             /* dbSize before the current change */
+  int stmtSize;               /* Size of database (in pages) at stmt_begin() */
+  int nRec;                   /* Number of pages written to the journal */
+  u32 cksumInit;              /* Quasi-random value added to every checksum */
+  int stmtNRec;               /* Number of records in stmt subjournal */
+  int nExtra;                 /* Add this many bytes to each in-memory page */
+  int pageSize;               /* Number of bytes in a page */
+  int nPage;                  /* Total number of in-memory pages */
+  int nMaxPage;               /* High water mark of nPage */
+  int nRef;                   /* Number of in-memory pages with PgHdr.nRef>0 */
+  int mxPage;                 /* Maximum number of pages to hold in cache */
   u8 *aInJournal;             /* One bit for each page in the database file */
   u8 *aInStmt;                /* One bit for each page in the database */
-  u8 setMaster;               /* True if a m-j name has been written to jrnl */
+  char *zFilename;            /* Name of the database file */
+  char *zJournal;             /* Name of the journal file */
+  char *zDirectory;           /* Directory hold database and journal files */
+  OsFile fd, jfd;             /* File descriptors for database and journal */
+  OsFile stfd;                /* File descriptor for the statement subjournal*/
   BusyHandler *pBusyHandler;  /* Pointer to sqlite.busyHandler */
   PgHdr *pFirst, *pLast;      /* List of free pages */
   PgHdr *pFirstSynced;        /* First free page with PgHdr.needSync==0 */
@@ -287,9 +280,28 @@ struct Pager {
   i64 journalHdr;             /* Byte offset to previous journal header */
   i64 stmtHdrOff;             /* First journal header written this statement */
   i64 stmtCksum;              /* cksumInit when statement was started */
+  i64 stmtJSize;              /* Size of journal at stmt_begin() */
   int sectorSize;             /* Assumed sector size during rollback */
+#ifdef SQLITE_TEST
+  int nHit, nMiss, nOvfl;     /* Cache hits, missing, and LRU overflows */
+  int nRead,nWrite;           /* Database pages read/written */
+#endif
+  void (*xDestructor)(void*,int); /* Call this routine when freeing pages */
+  void (*xReiniter)(void*,int);   /* Call this routine when reloading pages */
+  void (*xCodec)(void*,void*,Pgno,int); /* Routine for en/decoding data */
+  void *pCodecArg;            /* First argument to xCodec() */
   PgHdr *aHash[N_PG_HASH];    /* Hash table to map page number to PgHdr */
 };
+
+/*
+** If SQLITE_TEST is defined then increment the variable given in
+** the argument
+*/
+#ifdef SQLITE_TEST
+# define TEST_INCR(x)  x++
+#else
+# define TEST_INCR(x)
+#endif
 
 /*
 ** These are bits that can be set in Pager.errMask.
@@ -1483,22 +1495,8 @@ end_stmt_playback:
 
 /*
 ** Change the maximum number of in-memory pages that are allowed.
-**
-** The maximum number is the absolute value of the mxPage parameter.
-** If mxPage is negative, the noSync flag is also set.  noSync bypasses
-** calls to sqlite3OsSync().  The pager runs much faster with noSync on,
-** but if the operating system crashes or there is an abrupt power 
-** failure, the database file might be left in an inconsistent and
-** unrepairable state.  
 */
 void sqlite3pager_set_cachesize(Pager *pPager, int mxPage){
-  if( mxPage>=0 ){
-    pPager->noSync = pPager->tempFile;
-    if( pPager->noSync ) pPager->needSync = 0; 
-  }else{
-    pPager->noSync = 1;
-    mxPage = -mxPage;
-  }
   if( mxPage>10 ){
     pPager->mxPage = mxPage;
   }else{
@@ -1541,8 +1539,15 @@ void sqlite3pager_set_safety_level(Pager *pPager, int level){
 #endif
 
 /*
-** Open a temporary file.  Write the name of the file into zName
-** (zName must be at least SQLITE_TEMPNAME_SIZE bytes long.)  Write
+** The following global variable is incremented whenever the library
+** attempts to open a temporary file.  This information is used for
+** testing and analysis only.  
+*/
+int sqlite3_opentemp_count = 0;
+
+/*
+** Open a temporary file.  Write the name of the file into zFile
+** (zFile must be at least SQLITE_TEMPNAME_SIZE bytes long.)  Write
 ** the file descriptor into *fd.  Return SQLITE_OK on success or some
 ** other error code if we fail.
 **
@@ -1552,6 +1557,7 @@ void sqlite3pager_set_safety_level(Pager *pPager, int level){
 static int sqlite3pager_opentemp(char *zFile, OsFile *fd){
   int cnt = 8;
   int rc;
+  sqlite3_opentemp_count++;  /* Used for testing and analysis only */
   do{
     cnt--;
     sqlite3OsTempFileName(zFile);
@@ -1659,7 +1665,6 @@ int sqlite3pager_open(
   pPager->nRef = 0;
   pPager->dbSize = memDb-1;
   pPager->pageSize = SQLITE_DEFAULT_PAGE_SIZE;
-  pPager->psAligned = FORCE_ALIGNMENT(pPager->pageSize);
   pPager->stmtSize = 0;
   pPager->stmtJSize = 0;
   pPager->nPage = 0;
@@ -1715,14 +1720,16 @@ void sqlite3pager_set_reiniter(Pager *pPager, void (*xReinit)(void*,int)){
 }
 
 /*
-** Set the page size.
-**
-** The page size must only be changed when the cache is empty.
+** Set the page size.  Return the new size.  If the suggest new page
+** size is inappropriate, then an alternative page size is selected
+** and returned.
 */
-void sqlite3pager_set_pagesize(Pager *pPager, int pageSize){
+int sqlite3pager_set_pagesize(Pager *pPager, int pageSize){
   assert( pageSize>=512 && pageSize<=SQLITE_MAX_PAGE_SIZE );
-  pPager->pageSize = pageSize;
-  pPager->psAligned = FORCE_ALIGNMENT(pageSize);
+  if( !pPager->memDb ){
+    pPager->pageSize = pageSize;
+  }
+  return pPager->pageSize;
 }
 
 /*
@@ -2201,7 +2208,7 @@ static int pager_write_pagelist(PgHdr *pList){
       TRACE3("STORE %d page %d\n", PAGERID(pPager), pList->pgno);
       rc = sqlite3OsWrite(&pPager->fd, PGHDR_TO_DATA(pList), pPager->pageSize);
       CODEC(pPager, PGHDR_TO_DATA(pList), pList->pgno, 0);
-      pPager->nWrite++;
+      TEST_INCR(pPager->nWrite);
     }
 #ifndef NDEBUG
     else{
@@ -2372,10 +2379,10 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
   if( pPg==0 ){
     /* The requested page is not in the page cache. */
     int h;
-    pPager->nMiss++;
+    TEST_INCR(pPager->nMiss);
     if( pPager->nPage<pPager->mxPage || pPager->pFirst==0 || MEMDB ){
       /* Create a new page */
-      pPg = sqliteMallocRaw( sizeof(*pPg) + pPager->psAligned
+      pPg = sqliteMallocRaw( sizeof(*pPg) + pPager->pageSize
                               + sizeof(u32) + pPager->nExtra
                               + MEMDB*sizeof(PgHistory) );
       if( pPg==0 ){
@@ -2458,7 +2465,7 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
       /* Unlink the old page from the free list and the hash table
       */
       unlinkPage(pPg);
-      pPager->nOvfl++;
+      TEST_INCR(pPager->nOvfl);
     }
     pPg->pgno = pgno;
     if( pPager->aInJournal && (int)pgno<=pPager->origDbSize ){
@@ -2514,7 +2521,7 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
           memset(PGHDR_TO_DATA(pPg), 0, pPager->pageSize);
         }
       }else{
-        pPager->nRead++;
+        TEST_INCR(pPager->nRead);
       }
     }
 #ifdef SQLITE_CHECK_PAGES
@@ -2522,7 +2529,7 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
 #endif
   }else{
     /* The requested page is in the page cache. */
-    pPager->nHit++;
+    TEST_INCR(pPager->nHit);
     page_ref(pPg);
   }
   *ppPage = PGHDR_TO_DATA(pPg);
@@ -3191,11 +3198,13 @@ int *sqlite3pager_stats(Pager *pPager){
   a[3] = pPager->dbSize;
   a[4] = pPager->state;
   a[5] = pPager->errMask;
+#ifdef SQLITE_TEST
   a[6] = pPager->nHit;
   a[7] = pPager->nMiss;
   a[8] = pPager->nOvfl;
   a[9] = pPager->nRead;
   a[10] = pPager->nWrite;
+#endif
   return a;
 }
 
@@ -3591,3 +3600,5 @@ void sqlite3pager_refdump(Pager *pPager){
   }
 }
 #endif
+
+#endif /* SQLITE_OMIT_DISKIO */
