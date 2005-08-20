@@ -1,0 +1,26 @@
+.\"
+.\"
+.de TQ
+.br
+.ns
+.TP
+\\$1
+..
+.TH GLITZ-AGL 3 "Version 1.0"
+
+.SH NAME
+GLITZ-AGL \- AGL interface to glitz
+
+.SH SYNOPSIS
+.nf
+.B #include <glitz-agl.h>
+.fi
+.SH DESCRIPTION
+
+AGL interface to glitz.
+
+.SH AUTHOR
+David Reveman
+
+.SH "SEE ALSO"
+.BR GLITZ (3)
