@@ -1049,7 +1049,10 @@ nsNativeThemeWin::ThemeChanged()
 
 PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType) 
 {  
-  if (aFrame && (aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD)) {
+  if (aFrame && (aWidgetType == NS_THEME_BUTTON || 
+                 aWidgetType == NS_THEME_TEXTFIELD ||
+                 aWidgetType == NS_THEME_LISTBOX || 
+                 aWidgetType == NS_THEME_DROPDOWN)) {
     if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       
       // Get default CSS style values for widget
@@ -1092,6 +1095,10 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
         case NS_THEME_TEXTFIELD: {
           defaultBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
           defaultBorderSize = NSIntPixelsToTwips(TEXTFIELD_BORDER_SIZE, p2t);
+          // fall through...
+        }
+        case NS_THEME_LISTBOX:
+        case NS_THEME_DROPDOWN: {
           lookAndFeel->GetColor(nsILookAndFeel::eColor_threedface, defaultBorderColor);
 
           if (IsDisabled(aFrame))
@@ -1113,6 +1120,10 @@ PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* 
           !(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
         return PR_TRUE;
       
+      // We don't honor CSS-specified border for listbox and dropdown
+      if (aWidgetType == NS_THEME_LISTBOX || aWidgetType == NS_THEME_DROPDOWN)
+          return PR_FALSE;
+
       // Check whether border style or color differs from default
       const nsStyleBorder* ourBorder = aFrame->GetStyleBorder();
 
