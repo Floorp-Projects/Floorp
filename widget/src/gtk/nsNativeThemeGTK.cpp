@@ -53,18 +53,16 @@
 
 #include <gdk/gdkprivate.h>
 
-#undef DEBUG_NATIVE_THEME
-
 NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 
-GtkWidget* gButtonWidget = nsnull;
-GtkWidget* gCheckboxWidget = nsnull;
-GtkWidget* gScrollbarWidget = nsnull;
-GtkWidget* gGripperWidget = nsnull;
-GtkWidget* gEntryWidget = nsnull;
-GtkWidget* gDropdownButonWidget = nsnull;
-GtkWidget* gArrowWidget = nsnull;
-GtkWidget* gDropdownButtonWidget = nsnull;
+GtkWidget* gButtonWidget;
+GtkWidget* gCheckboxWidget;
+GtkWidget* gScrollbarWidget;
+GtkWidget* gGripperWidget;
+GtkWidget* gEntryWidget;
+GtkWidget* gDropdownButonWidget;
+GtkWidget* gArrowWidget;
+GtkWidget* gDropdownButtonWidget;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoWindow(nsnull),
@@ -116,13 +114,6 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   aFrame->GetContent(getter_AddRefs(content));
   esm->GetContentState(content, flags);
   return flags;
-}
-
-static PRBool HasAttrValue(nsIContent* aContent, nsIAtom* aAtom, const char* aStr)
-{
-  nsAutoString attr;
-  aContent->GetAttr(kNameSpaceID_None, aAtom, attr);
-  return attr.EqualsIgnoreCase(aStr);
 }
 
 static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
@@ -235,18 +226,18 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   transformMatrix->TransformCoord(&cr.x, &cr.y, &cr.width, &cr.height);
   GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
 
+  GtkWidgetState state;
+  GetGtkWidgetState(aFrame, &state);
+
   switch (aWidgetType) {
     
   case NS_THEME_BUTTON:
   case NS_THEME_TOOLBAR_BUTTON:
     {
       EnsureButtonWidget();
-
-      GtkWidgetState buttonState;
-      GetGtkWidgetState(aFrame, &buttonState);
       GtkReliefStyle relief = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
-
-      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip, &buttonState, relief );
+      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip,
+                           &state, relief );
     }
     break;
 
@@ -264,14 +255,11 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
           aFrame->GetParent(&aFrame);
       }
       
-      GtkToggleButtonState checkBoxState;
-      GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
-      checkBoxState.selected = CheckBooleanAttr(aFrame, atom);
       
       moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect,
-                             &gdk_clip, &checkBoxState,
-                             (aWidgetType==NS_THEME_RADIO) ? "radiobutton" : "checkbutton");
+                             &gdk_clip, &state, CheckBooleanAttr(aFrame, atom),
+                             (aWidgetType == NS_THEME_RADIO));
     }
     break;
 
@@ -281,13 +269,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     {
       EnsureScrollbarWidget();
-
-      GtkWidgetState buttonState;
-      GetGtkWidgetState(aFrame, &buttonState);
       GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
-      
-      moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style, &gdk_rect, &gdk_clip,
-                                     &buttonState, arrowType);
+      moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style,
+                                     &gdk_rect, &gdk_clip, &state, arrowType);
     }
     break;
 
@@ -295,12 +279,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       EnsureScrollbarWidget();
-
-      GtkWidgetState troughState;
-      GetGtkWidgetState(aFrame, &troughState);
-
       moz_gtk_scrollbar_trough_paint(window, gScrollbarWidget->style,
-                                     &gdk_rect, &gdk_clip, &troughState);
+                                     &gdk_rect, &gdk_clip, &state);
     }
     break;
 
@@ -308,22 +288,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     {
       EnsureScrollbarWidget();
-
-      GtkWidgetState thumbState;
-      GetGtkWidgetState(aFrame, &thumbState);
-
       moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
-                                    &gdk_rect, &gdk_clip, &thumbState);
+                                    &gdk_rect, &gdk_clip, &state);
     }
     break;
 
   case NS_THEME_TOOLBAR_GRIPPER:
     {
       EnsureGripperWidget();
-
-      GtkWidgetState state;
-      GetGtkWidgetState(aFrame, &state);
-
       moz_gtk_gripper_paint(window, gGripperWidget->style, &gdk_rect,
                             &gdk_clip, &state);
     }
@@ -332,22 +304,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_TEXTFIELD:
     {
       EnsureEntryWidget();
-
-      GtkWidgetState state;
-      GetGtkWidgetState(aFrame, &state);
-
-      moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect,
-                          &gdk_clip, &state);
+      moz_gtk_entry_paint(window, gEntryWidget->style, &gdk_rect, &gdk_clip,
+                          &state);
     }
     break;
 
   case NS_THEME_DROPDOWN_BUTTON:
     {
       EnsureArrowWidget();
-
-      GtkWidgetState state;
-      GetGtkWidgetState(aFrame, &state);
-
       moz_gtk_dropdown_arrow_paint(window, gArrowWidget->style, &gdk_rect,
                                    &gdk_clip, &state);
     }
@@ -357,13 +321,9 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   case NS_THEME_RADIO_CONTAINER:
     {
       EnsureCheckBoxWidget();
-
-      GtkWidgetState state;
-      GetGtkWidgetState(aFrame, &state);
-
       moz_gtk_container_paint(window, gCheckboxWidget->style, &gdk_rect,
                               &gdk_clip, &state,
-                              (aWidgetType == NS_THEME_RADIO_CONTAINER) ? "radiobutton" : "checkbutton");
+                              (aWidgetType == NS_THEME_RADIO_CONTAINER));
     }
     break;
   }
@@ -472,10 +432,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
           aResult->height = slider_width;
         }
 
-#ifdef DEBUG_NATIVE_THEME
-        printf("scrollbar thumb min size: (%d,%d)\n", aResult->width,
-               aResult->height);
-#endif
         *aIsOverridable = PR_FALSE;
       }
       break;
