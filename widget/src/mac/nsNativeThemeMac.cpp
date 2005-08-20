@@ -535,6 +535,14 @@ nsNativeThemeMac::GetWidgetBorder(nsIDeviceContext* aContext,
   return NS_OK;
 }
 
+PRBool
+nsNativeThemeMac::GetWidgetPadding(nsIDeviceContext* aContext, 
+                                   nsIFrame* aFrame,
+                                   PRUint8 aWidgetType,
+                                   nsMargin* aResult)
+{
+  return PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
