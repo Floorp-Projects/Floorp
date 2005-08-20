@@ -384,6 +384,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext,
 
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       gint trough_border;
       GetScrollbarMetrics(nsnull, &trough_border, nsnull, nsnull);
@@ -406,6 +407,8 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   switch (aWidgetType) {
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
       {
         EnsureScrollbarWidget();
 
@@ -418,19 +421,27 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       }
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
         EnsureScrollbarWidget();
 
         gint slider_width;
         GetScrollbarMetrics(&slider_width, nsnull, nsnull, nsnull);
 
-        aResult->width = slider_width;
-        aResult->height = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+        if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
+          aResult->width = slider_width;
+          aResult->height = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+        } else {
+          aResult->width = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+          aResult->height = slider_width;
+        }
+
         *aIsOverridable = PR_FALSE;
         printf("scrollbar thumb min size: (%d,%d)\n", aResult->width,
                aResult->height);
       }
       break;
+
   }
 
   return NS_OK;
