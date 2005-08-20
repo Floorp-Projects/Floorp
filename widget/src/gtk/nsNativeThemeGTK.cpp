@@ -71,6 +71,9 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
+  // This will destroy all of our widgets
+  if (mProtoWindow)
+    gtk_widget_destroy(mProtoWindow);
 }
 
 static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
@@ -273,10 +276,43 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       
       GtkArrowType arrowType = GtkArrowType(aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP);
       
+      printf("paint scrollbar button, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
+             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
+             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
       moz_gtk_scrollbar_button_paint(window, gScrollbarWidget->style, &gdk_rect, &gdk_clip,
                                      &buttonState, arrowType);
     }
     break;
+
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+      {
+        EnsureScrollbarWidget();
+
+        GtkWidgetState troughState;
+        GetGtkWidgetState(aFrame, &troughState);
+
+        moz_gtk_scrollbar_trough_paint(window, gScrollbarWidget->style,
+                                       &gdk_rect, &gdk_clip, &troughState);
+      }
+      break;
+
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+      {
+        EnsureScrollbarWidget();
+
+        GtkWidgetState thumbState;
+        GetGtkWidgetState(aFrame, &thumbState);
+
+        printf("paint thumb, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
+               gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
+               gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+        moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
+                                       &gdk_rect, &gdk_clip, &thumbState);
+      }
+      break;
+
   }
 
   return NS_OK;
@@ -292,12 +328,54 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext,
   return NS_OK;
 }
 
+#define RANGE_CLASS(w) GTK_RANGE_CLASS(GTK_OBJECT(w)->klass)
+
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsSize* aResult)
 {
   aResult->width = aResult->height = 0;
+
+  switch (aWidgetType) {
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+      {
+        EnsureScrollbarWidget();
+
+        gint slider_width, trough_border, stepper_size; // xxx stepper_spacing?
+
+        slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::slider_width",
+                                                       RANGE_CLASS(gScrollbarWidget)->slider_width);
+        trough_border = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::trough_border",
+                                                       gScrollbarWidget->style->klass->xthickness);
+        stepper_size = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::stepper_size",
+                                                       RANGE_CLASS(gScrollbarWidget)->stepper_size);
+        aResult->width = slider_width + 2 * trough_border;
+        aResult->height = stepper_size;
+        printf("scrollbar button min size: (%d,%d)\n", aResult->width,
+               aResult->height);
+      }
+      break;
+    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+      {
+        EnsureScrollbarWidget();
+        gint slider_width;
+
+        slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::slider_width",
+                                                       RANGE_CLASS(gScrollbarWidget)->slider_width);
+        aResult->width = slider_width + 2;
+        aResult->height = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+        printf("scrollbar thumb min size: (%d,%d)\n", aResult->width,
+               aResult->height);
+      }
+      break;
+  }
+
   return NS_OK;
 }
 
@@ -356,6 +434,11 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_BUTTON_DOWN:
   case NS_THEME_SCROLLBAR_BUTTON_LEFT:
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+  case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+  case NS_THEME_SCROLLBAR:
     return PR_TRUE;
   }
 

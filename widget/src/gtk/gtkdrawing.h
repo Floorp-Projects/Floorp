@@ -77,4 +77,13 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
                                GdkRectangle* arrowRect, GdkRectangle* clipRect,
                                GtkWidgetState* state, GtkArrowType type);
 
+void
+moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
+                               GdkRectangle* troughRect, GdkRectangle* clipRect,
+                               GtkWidgetState* state);
+
+void
+moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
+                              GdkRectangle* thumbRect, GdkRectangle* clipRect,
+                              GtkWidgetState* state);
 #endif
