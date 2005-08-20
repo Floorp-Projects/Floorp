@@ -374,6 +374,10 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
       break;      
+    case NS_THEME_BUTTON_BEVEL:
+      DrawButton ( kThemeMediumBevelButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame), 
+                    kThemeButtonOff, kThemeAdornmentNone, eventState );
+      break;
     case NS_THEME_TOOLBAR_BUTTON:
       DrawButton ( kThemePushButton, macRect, IsDefaultButton(aFrame), IsDisabled(aFrame),
                     kThemeButtonOn, kThemeAdornmentNone, eventState );
@@ -779,6 +783,7 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
     case NS_THEME_RADIO_CONTAINER:
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_SMALL:
+    case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_DROPDOWN:
