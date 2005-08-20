@@ -65,8 +65,8 @@ sub note {
 	
 	my @comments = $self->comments();
 	
-	if (@comments && @comments[0] &&
-		@comments[0]->user() == $self->user()) {
+	if (@comments && $comments[0] &&
+		$comments[0]->user() == $self->user()) {
 		return $comments[0]->comment();
 	} else {
 		return undef;
