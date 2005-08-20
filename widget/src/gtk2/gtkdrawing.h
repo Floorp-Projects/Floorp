@@ -127,7 +127,9 @@ typedef enum {
   /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
   MOZ_GTK_TAB,
   /* Paints the background and border of a GtkNotebook. */
-  MOZ_GTK_TABPANELS
+  MOZ_GTK_TABPANELS,
+  /* Paints the background of a window, dialog or page. */
+  MOZ_GTK_WINDOW
 } GtkThemeWidgetType;
 
 /*** General library functions ***/
