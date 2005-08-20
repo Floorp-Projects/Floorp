@@ -48,6 +48,7 @@
 extern GtkWidget* gButtonWidget;
 extern GtkWidget* gCheckboxWidget;
 extern GtkWidget* gScrollbarWidget;
+extern GtkWidget* gGripperWidget;
 
 GtkStateType
 ConvertGtkState(GtkWidgetState* aState)
@@ -65,7 +66,7 @@ ConvertGtkState(GtkWidgetState* aState)
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
                      GdkRectangle* buttonRect, GdkRectangle* clipRect,
-                     GtkWidgetState* buttonState)
+                     GtkWidgetState* buttonState, GtkReliefStyle relief)
 {
   GtkShadowType shadow_type;
   gint default_spacing = 7; /* xxx fix me */
@@ -100,8 +101,10 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 	
   shadow_type = (buttonState->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   
-  gtk_paint_box(style, window, button_state, shadow_type, clipRect,
-                gButtonWidget, "button", x, y, width, height);
+  if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
+                                    button_state != GTK_STATE_INSENSITIVE))
+    gtk_paint_box(style, window, button_state, shadow_type, clipRect,
+                  gButtonWidget, "button", x, y, width, height);
   
   if (buttonState->focused) {
     x -= 1;
@@ -185,7 +188,7 @@ moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
   GtkStateType state_type = ConvertGtkState(state);
   GtkShadowType shadow_type = (state->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
 
-  moz_gtk_button_paint(window, style, arrowRect, clipRect, state);
+  moz_gtk_button_paint(window, style, arrowRect, clipRect, state, GTK_RELIEF_NORMAL);
   gtk_paint_arrow(style, window, state_type, shadow_type, clipRect,
                   gScrollbarWidget, (arrowType < 2) ? "vscrollbar" : "hscrollbar", 
                   arrowType, TRUE,
@@ -216,5 +219,17 @@ moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
   gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, clipRect,
                 gScrollbarWidget, "slider", thumbRect->x, thumbRect->y,
                 thumbRect->width, thumbRect->height);
+}
+
+void
+moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* clipRect, GtkWidgetState* state)
+{
+  GtkStateType state_type = ConvertGtkState(state);
+  GtkShadowType shadow_type = GTK_HANDLE_BOX(gGripperWidget)->shadow_type;
+
+  gtk_paint_box(style, window, state_type, shadow_type, clipRect,
+                gGripperWidget, "handlebox_bin", rect->x, rect->y,
+                rect->width, rect->height);
 }
 

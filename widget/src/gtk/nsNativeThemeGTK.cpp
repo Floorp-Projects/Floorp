@@ -60,6 +60,7 @@ NS_IMPL_ISUPPORTS1(nsNativeThemeGTK, nsITheme)
 GtkWidget* gButtonWidget = nsnull;
 GtkWidget* gCheckboxWidget = nsnull;
 GtkWidget* gScrollbarWidget = nsnull;
+GtkWidget* gGripperWidget = nsnull;
 
 nsNativeThemeGTK::nsNativeThemeGTK()
   : mProtoWindow(nsnull),
@@ -162,9 +163,10 @@ nsresult
 GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID)
 {
   switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBAR_BUTTON:
-    case NS_THEME_TAB: {
+  case NS_THEME_BUTTON:
+  case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TAB:
+    {
       aColorID = nsILookAndFeel::eColor_buttontext;
       return NS_OK;
     }
@@ -176,9 +178,10 @@ nsresult
 GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont)
 {
   switch (aWidgetType) {
-    case NS_THEME_BUTTON:
-    case NS_THEME_TOOLBAR_BUTTON:
-    case NS_THEME_TAB: {
+  case NS_THEME_BUTTON:
+  case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TAB:
+    {
       aFont = eSystemFont_Button;
       return NS_OK;
     }
@@ -228,15 +231,17 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   GdkRectangle gdk_clip = {cr.x, cr.y, cr.width, cr.height};
 
   switch (aWidgetType) {
-
+    
   case NS_THEME_BUTTON:
+  case NS_THEME_TOOLBAR_BUTTON:
     {
       EnsureButtonWidget();
 
       GtkWidgetState buttonState;
       GetGtkWidgetState(aFrame, &buttonState);
-      
-      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip, &buttonState);
+      GtkReliefStyle relief = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
+
+      moz_gtk_button_paint(window, gButtonWidget->style, &gdk_rect, &gdk_clip, &buttonState, relief );
     }
     break;
 
@@ -257,9 +262,14 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       GetGtkWidgetState(aFrame, (GtkWidgetState*)&checkBoxState);
       checkBoxState.selected = CheckBooleanAttr(aFrame, mCheckedAtom);
       
-      printf("paint checkbox: gdk_rect=(%d,%d,%d,%d), gdk_clip=(%d,%d,%d,%d)\n",
+      printf("paint checkbox: aRect=(%d,%d,%d,%d), aClipRect=(%d,%d,%d,%d)\n",
+             aRect.x, aRect.y, aRect.width, aRect.height, aClipRect.x,
+             aClipRect.y, aClipRect.width, aClipRect.height);
+
+      printf("          gdk_rect=(%d,%d,%d,%d), gdk_clip=(%d,%d,%d,%d)\n",
              gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
-             gdk_clip.y, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+
       moz_gtk_checkbox_paint(window, gCheckboxWidget->style, &gdk_rect, &gdk_clip, &checkBoxState);
     }
     break;
@@ -284,38 +294,83 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
     break;
 
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-      {
-        EnsureScrollbarWidget();
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    {
+      EnsureScrollbarWidget();
 
-        GtkWidgetState troughState;
-        GetGtkWidgetState(aFrame, &troughState);
+      GtkWidgetState troughState;
+      GetGtkWidgetState(aFrame, &troughState);
 
-        moz_gtk_scrollbar_trough_paint(window, gScrollbarWidget->style,
-                                       &gdk_rect, &gdk_clip, &troughState);
-      }
-      break;
+      moz_gtk_scrollbar_trough_paint(window, gScrollbarWidget->style,
+                                     &gdk_rect, &gdk_clip, &troughState);
+    }
+    break;
 
-    case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-      {
-        EnsureScrollbarWidget();
+  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+  case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    {
+      EnsureScrollbarWidget();
 
-        GtkWidgetState thumbState;
-        GetGtkWidgetState(aFrame, &thumbState);
+      GtkWidgetState thumbState;
+      GetGtkWidgetState(aFrame, &thumbState);
 
-        printf("paint thumb, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
-               gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
-               gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
-        moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
-                                       &gdk_rect, &gdk_clip, &thumbState);
-      }
-      break;
+      printf("paint thumb, rect=(%d,%d,%d,%d), clip=(%d,%d,%d,%d)\n",
+             gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height,
+             gdk_clip.x, gdk_clip.y, gdk_clip.width, gdk_clip.height);
+      moz_gtk_scrollbar_thumb_paint(window, gScrollbarWidget->style,
+                                    &gdk_rect, &gdk_clip, &thumbState);
+    }
+    break;
+
+  case NS_THEME_TOOLBAR_GRIPPER:
+    {
+      EnsureGripperWidget();
+
+      GtkWidgetState state;
+      GetGtkWidgetState(aFrame, &state);
+
+      printf("painting gripper\n");
+      moz_gtk_gripper_paint(window, gGripperWidget->style, &gdk_rect,
+                            &gdk_clip, &state);
+    }
+    break;
 
   }
 
   return NS_OK;
+}
+
+#define RANGE_CLASS(w) GTK_RANGE_CLASS(GTK_OBJECT(w)->klass)
+
+void
+nsNativeThemeGTK::GetScrollbarMetrics(gint* slider_width,
+                                      gint* trough_border,
+                                      gint* stepper_size,
+                                      gint* stepper_spacing)
+{
+  EnsureScrollbarWidget();
+
+  if (slider_width)
+    *slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                    "GtkRange::slider_width",
+                                                    RANGE_CLASS(gScrollbarWidget)->slider_width);
+
+  if (trough_border)
+    *trough_border = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                     "GtkRange::trough_border",
+                                                     gScrollbarWidget->style->klass->xthickness);
+
+  if (stepper_size)
+    *stepper_size = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                    "GtkRange::stepper_size",
+                                                    RANGE_CLASS(gScrollbarWidget)->stepper_size);
+
+  if (stepper_spacing)
+    *stepper_spacing = gtk_style_get_prop_experimental(gScrollbarWidget->style,
+                                                       "GtkRange::stepper_spacing",
+                                                       RANGE_CLASS(gScrollbarWidget)->stepper_slider_spacing);
+
 }
 
 NS_IMETHODIMP
@@ -325,10 +380,19 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext,
                                   nsMargin* aResult)
 {
   aResult->top = aResult->bottom = aResult->left = aResult->right = 0;
+
+  switch (aWidgetType) {
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      gint trough_border;
+      GetScrollbarMetrics(nsnull, &trough_border, nsnull, nsnull);
+      aResult->top = aResult->bottom = aResult->left = aResult->right = trough_border;
+    }
+    break;
+  }
+
   return NS_OK;
 }
-
-#define RANGE_CLASS(w) GTK_RANGE_CLASS(GTK_OBJECT(w)->klass)
 
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
@@ -344,33 +408,24 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       {
         EnsureScrollbarWidget();
 
-        gint slider_width, trough_border, stepper_size; // xxx stepper_spacing?
+        gint slider_width, stepper_size;
+        GetScrollbarMetrics(&slider_width, nsnull, &stepper_size, nsnull);
 
-        slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                       "GtkRange::slider_width",
-                                                       RANGE_CLASS(gScrollbarWidget)->slider_width);
-        trough_border = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                       "GtkRange::trough_border",
-                                                       gScrollbarWidget->style->klass->xthickness);
-        stepper_size = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                       "GtkRange::stepper_size",
-                                                       RANGE_CLASS(gScrollbarWidget)->stepper_size);
-        aResult->width = slider_width + 2 * trough_border;
+        aResult->width = slider_width;
         aResult->height = stepper_size;
-        printf("scrollbar button min size: (%d,%d)\n", aResult->width,
-               aResult->height);
+        *aIsOverridable = PR_FALSE;
       }
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
       {
         EnsureScrollbarWidget();
-        gint slider_width;
 
-        slider_width = gtk_style_get_prop_experimental(gScrollbarWidget->style,
-                                                       "GtkRange::slider_width",
-                                                       RANGE_CLASS(gScrollbarWidget)->slider_width);
-        aResult->width = slider_width + 2;
+        gint slider_width;
+        GetScrollbarMetrics(&slider_width, nsnull, nsnull, nsnull);
+
+        aResult->width = slider_width;
         aResult->height = RANGE_CLASS(gScrollbarWidget)->min_slider_size;
+        *aIsOverridable = PR_FALSE;
         printf("scrollbar thumb min size: (%d,%d)\n", aResult->width,
                aResult->height);
       }
@@ -439,7 +494,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-  case NS_THEME_SCROLLBAR:
+  case NS_THEME_TOOLBAR_BUTTON:
+  case NS_THEME_TOOLBAR_GRIPPER:
     return PR_TRUE;
   }
 
@@ -497,3 +553,13 @@ nsNativeThemeGTK::EnsureScrollbarWidget()
     SetupWidgetPrototype(gScrollbarWidget);
   }
 }
+
+void
+nsNativeThemeGTK::EnsureGripperWidget()
+{
+  if (!gGripperWidget) {
+    gGripperWidget = gtk_handle_box_new();
+    SetupWidgetPrototype(gGripperWidget);
+  }
+}
+

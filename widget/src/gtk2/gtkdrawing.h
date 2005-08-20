@@ -43,6 +43,10 @@
 #include <gtk/gtkstyle.h>
 #include "prtypes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct {
   PRPackedBool active;
   PRPackedBool focused;
@@ -60,7 +64,7 @@ typedef struct {
 void
 moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
                      GdkRectangle* buttonRect, GdkRectangle* clipRect,
-                     GtkWidgetState* buttonState);
+                     GtkWidgetState* buttonState, GtkReliefStyle relief);
 
 void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
@@ -86,4 +90,14 @@ void
 moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
                               GdkRectangle* thumbRect, GdkRectangle* clipRect,
                               GtkWidgetState* state);
+
+
+void
+moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                      GdkRectangle* clipRect, GtkWidgetState* state);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif
