@@ -15,12 +15,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Christopher Blizzard <blizzard@mozilla.org>.  
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,38 +35,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NS_CAIROBLENDER_H_
-#define _NS_CAIROBLENDER_H_
+#ifndef __nsIThebesRenderingContext_h
+#define __nsIThebesRenderingContext_h
 
-#include "nsIBlender.h"
-#include "nsCairoDeviceContext.h"
+#include "nsIRenderingContext.h"
 
-class nsCairoBlender : public nsIBlender
+// IID for the nsIRenderingContext interface
+#define NSI_THEBES_RENDERING_CONTEXT_IID \
+{ 0x8591c4c6, 0x41d4, 0x485a, \
+{ 0xb2, 0x4f, 0x9d, 0xe1, 0x9b, 0x69, 0xce, 0x02 } }
+
+class nsIThebesRenderingContext : public nsISupports
 {
 public:
-    nsCairoBlender();
-    ~nsCairoBlender();
+    NS_DEFINE_STATIC_IID_ACCESSOR(NSI_THEBES_RENDERING_CONTEXT_IID)
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_IMETHOD CreateDrawingSurface(nsNativeWidget aWidget, nsIDrawingSurface* &aSurface) = 0;
 
-    // nsIBlender
-    NS_IMETHOD Init(nsIDeviceContext *aContext);
-
-    NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsIDrawingSurface* aSrc,
-                     nsIDrawingSurface* aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                     nsIDrawingSurface* aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
-                     nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
-
-    NS_IMETHOD Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
-                     nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                     nsIRenderingContext *aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
-                     nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
-
-    NS_IMETHOD GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
-                         nsIDrawingSurface* aWhite, PRUint8** aAlphas);
-private:
-    nsCairoDeviceContext *mCairoDC;
 };
 
-#endif /* _NS_CAIROBLENDER_H_ */
+#endif /* __nsIThebesRenderingContext_h */

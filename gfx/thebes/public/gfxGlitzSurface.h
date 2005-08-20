@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Oracle Corporation code.
  *
- * The Initial Developer of the Original Code is
- * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is Oracle Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,38 +35,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NS_CAIROSURFACEMANAGER_H_
-#define _NS_CAIROSURFACEMANAGER_H_
+#ifndef GFX_GLITZSURFACE_H
+#define GFX_GLITZSURFACE_H
 
-#include "gfxCore.h"
+#include "gfxASurface.h"
 
-#include <cairo.h>
+#include <cairo-glitz.h>
 
-// someone who knows nsTHashTable can fix this
-#include <map>
+/**
+ * A surface that wraps a glitz surface.
+ */
+class gfxGlitzSurface : public gfxASurface {
+    THEBES_DECL_ISUPPORTS_INHERITED
 
-class nsIDrawingSurface;
-class nsCairoDrawingSurface;
-class nsCairoDeviceContext;
-class nsIWidget;
-
-class nsCairoSurfaceManager
-{
 public:
-    nsCairoSurfaceManager();
-    ~nsCairoSurfaceManager();
+    gfxGlitzSurface(glitz_drawable_t *drawable,
+                    glitz_surface_t *glitzSurface,
+                    PRBool takeOwnership = PR_FALSE);
 
-    NS_IMETHOD GetDrawingSurfaceForWidget (nsCairoDeviceContext *aDC, nsIWidget *aWidget, nsIDrawingSurface **aSurface);
-    NS_IMETHOD GetDrawingSurfaceForNativeWidget (nsCairoDeviceContext *aDC, nsNativeWidget aWidget, nsIDrawingSurface **aSurface);
+    virtual ~gfxGlitzSurface();
 
-    NS_IMETHOD ReleaseSurface (nsIDrawingSurface *aSurface);
+    /**
+     * When double-buffering is used, swaps the back and the front buffer.
+     */
+    void SwapBuffers();
 
-    // get rid of all cached surfaces
-    NS_IMETHOD FlushCachedSurfaces ();
+    unsigned long Width();
+    unsigned long Height();
 
-private:
-    typedef std::map<nsNativeWidget, nsCairoDrawingSurface*> WidgetToSurfaceMap;
-    WidgetToSurfaceMap mSurfaceMap;
+    glitz_surface_t* GlitzSurface() { return mGlitzSurface; }
+    glitz_drawable_t* GlitzDrawable() { return mGlitzDrawable; }
+
+protected:
+    glitz_drawable_t *mGlitzDrawable;
+    glitz_surface_t *mGlitzSurface;
+    PRBool mOwnsSurface;
 };
 
-#endif /* _NS_CAIROSURFACEMANAGER_H_ */
+#endif /* GFX_GLITZSURFACE_H */

@@ -41,7 +41,6 @@
 // know about both the xft and core fonts code.
 
 #ifdef MOZ_ENABLE_XFT
-#include "nsFontMetricsXft.h"
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 #include "prenv.h"

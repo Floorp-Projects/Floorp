@@ -89,7 +89,7 @@ DIRS        += xprintutil xprint
 endif
 
 ifdef MOZ_ENABLE_CAIRO_GFX
-DIRS        += cairo
+DIRS        += thebes
 else
  ifdef MOZ_ENABLE_GTK
  DIRS        += gtk

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes gfx
  *
  * The Initial Developer of the Original Code is 
- *  Vladimir Vukicevic <vladimir@pobox.com>
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *  Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,43 +36,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIRODRAWINGSURFACE__H__
-#define NSCAIRODRAWINGSURFACE__H__
+#ifndef _NSTHEBESDRAWINGSURFACE_H_
+#define _NSTHEBESDRAWINGSURFACE_H_
 
 #include "nsCOMPtr.h"
 
+#include "nsSize.h"
+#include "nsRect.h"
 #include "nsIDrawingSurface.h"
-#include "nsIRegion.h"
+#include "nsIWidget.h"
 
-#include <cairo.h>
+#include "gfxASurface.h"
 
-#if defined(MOZ_ENABLE_GTK2)
-#include <gdk/gdkx.h>
-#include <X11/extensions/XShm.h>
-#endif
+class nsThebesDeviceContext;
 
-class nsIWidget;
-class nsCairoDeviceContext;
-
-#ifdef MOZ_ENABLE_XFT
-typedef struct _XftDraw XftDraw;
-#endif
-
-class nsCairoDrawingSurface : public nsIDrawingSurface
+class nsThebesDrawingSurface : public nsIDrawingSurface
 {
 public:
-    nsCairoDrawingSurface ();
-    virtual ~nsCairoDrawingSurface ();
+    nsThebesDrawingSurface ();
+    virtual ~nsThebesDrawingSurface ();
 
     // create a image surface if aFastAccess == TRUE, otherwise create
     // a fast server pixmap
-    nsresult Init (nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess);
+    nsresult Init (nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess);
 
     // create a fast drawing surface for a native widget
-    nsresult Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget);
+    nsresult Init (nsThebesDeviceContext *aDC, nsIWidget *aWidget);
 
     // create a fast drawing surface for a native widget
-    nsresult Init (nsCairoDeviceContext *aDC, nsNativeWidget aWidget);
+    nsresult Init (nsThebesDeviceContext *aDC, nsNativeWidget aWidget);
+
+    // create a drawing surface for a native pixmap
+    nsresult Init (nsThebesDeviceContext* aDC, void* aNativePixmapBlack,
+                   void* aNativePixmapWhite,
+                   const nsIntSize& aSize);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -89,37 +86,24 @@ public:
     NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
     /* utility functions */
-    cairo_surface_t *GetCairoSurface(void) { return mSurface; }
+    gfxASurface *GetThebesSurface(void) { return mSurface; }
     PRInt32 GetDepth() { /* XXX */ return 24; }
     nsNativeWidget GetNativeWidget(void) { return mNativeWidget; }
 
-#ifdef MOZ_ENABLE_XFT
-    XftDraw *GetXftDraw(void);
-    void     GetLastXftClip(nsIRegion **aLastRegion);
-    void     SetLastXftClip(nsIRegion  *aLastRegion);
-#endif /* MOZ_ENABLE_XFT */
+    nsresult PushFilter(const nsIntRect& aRect, PRBool aAreaIsOpaque, float aOpacity);
+    void PopFilter();
 
+    static PRBool UseGlitz();
+    static PRInt32 mGlitzMode;
 private:
-    cairo_surface_t *mSurface, *mImageSurface;
-    nsCairoDeviceContext *mDC;
+    nsRefPtr<gfxASurface> mSurface;
+    nsThebesDeviceContext *mDC;
     nsNativeWidget mNativeWidget;
-
-#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
-    Display *mXDisplay;
-    Drawable mDrawable;
-    Pixmap mPixmap;
-    XShmSegmentInfo mShmInfo;
+#ifdef XP_WIN
+    nsIWidget *mWidget;
 #endif
 
-#ifdef MOZ_ENABLE_XFT
-    XftDraw             *mXftDraw;
-    nsCOMPtr<nsIRegion>  mLastXftClip;
-#endif
-
-    PRUint32 mLockFlags;
-    PRBool mFastAccess;
     PRUint32 mWidth, mHeight;
-
 };
 
-#endif /* NSCAIRODRAWINGSURFACE__H__ */
+#endif /* _NSTHEBESDRAWINGSURFACE_H_ */

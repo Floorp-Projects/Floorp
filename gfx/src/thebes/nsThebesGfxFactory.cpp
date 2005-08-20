@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes gfx
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,27 +43,31 @@
 
 #include "nsScriptableRegion.h"
 #include "gfxImageFrame.h"
-#include "nsCairoFontMetrics.h"
-#include "nsCairoDeviceContext.h"
-#include "nsCairoRenderingContext.h"
-#include "nsCairoImage.h"
-#include "nsCairoRegion.h"
-#include "nsCairoScreen.h"
-#include "nsCairoScreenManager.h"
-#include "nsCairoBlender.h"
-#ifdef MOZ_ENABLE_XFT
-#include "nsFontMetricsXft.h"
+
+#include "nsThebesDeviceContext.h"
+#include "nsThebesRenderingContext.h"
+#include "nsThebesImage.h"
+#include "nsThebesRegion.h"
+#include "nsThebesScreen.h"
+#include "nsThebesScreenManager.h"
+#include "nsThebesBlender.h"
+
+#ifdef MOZ_ENABLE_PANGO
+#include "nsFontMetricsPango.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsPango)
+#endif
+#ifdef XP_WIN
+#include "nsFontMetricsWin2.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsXft)
-    //NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoFontMetrics)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoDeviceContext)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoRenderingContext)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoImage)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoRegion)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoScreenManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesDeviceContext)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRenderingContext)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesImage)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesScreenManager)
 
 static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -83,9 +86,9 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
     rv = NS_ERROR_NO_AGGREGATION;
     return rv;
   }
-  // create an nsRegionGtk and get the scriptable region from it
+
   nsCOMPtr <nsIRegion> rgn;
-  NS_NEWXPCOM(rgn, nsCairoRegion);
+  NS_NEWXPCOM(rgn, nsThebesRegion);
   nsCOMPtr<nsIScriptableRegion> scriptableRgn;
   if (rgn != nsnull)
   {
@@ -109,38 +112,45 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
 
 static const nsModuleComponentInfo components[] =
 {
-  { "Cairo nsFontMetrics",
+  { "Thebes nsFontMetrics",
     NS_FONT_METRICS_CID,
     "@mozilla.org/gfx/fontmetrics;1",
-    nsFontMetricsXftConstructor },
-  { "Cairo Device Context",
+#ifdef MOZ_ENABLE_PANGO
+    nsFontMetricsPangoConstructor
+#elif XP_WIN
+    nsFontMetricsWinConstructor
+#else
+#error write me!
+#endif
+  },
+  { "Thebes Device Context",
     NS_DEVICE_CONTEXT_CID,
     "@mozilla.org/gfx/devicecontext;1",
-    nsCairoDeviceContextConstructor },
-  { "Cairo Rendering Context",
+    nsThebesDeviceContextConstructor },
+  { "Thebes Rendering Context",
     NS_RENDERING_CONTEXT_CID,
     "@mozilla.org/gfx/renderingcontext;1",
-    nsCairoRenderingContextConstructor },
-  { "Cairo nsImage",
+    nsThebesRenderingContextConstructor },
+  { "Thebes nsImage",
     NS_IMAGE_CID,
     "@mozilla.org/gfx/image;1",
-    nsCairoImageConstructor },
-  { "Cairo Region",
+    nsThebesImageConstructor },
+  { "Thebes Region",
     NS_REGION_CID,
-    "@mozilla.org/gfx/region/nsCairo;1",
-    nsCairoRegionConstructor },
-  { "Cairo Screen Manager",
+    "@mozilla.org/gfx/region/nsThebes;1",
+    nsThebesRegionConstructor },
+  { "Thebes Screen Manager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
-    nsCairoScreenManagerConstructor },
+    nsThebesScreenManagerConstructor },
   { "Scriptable Region",
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",
     nsScriptableRegionConstructor },
-  { "Cairo Blender",
+  { "Thebes Blender",
     NS_BLENDER_CID,
     "@mozilla.org/gfx/blender;1",
-    nsCairoBlenderConstructor },
+    nsThebesBlenderConstructor },
   { "image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
@@ -148,9 +158,9 @@ static const nsModuleComponentInfo components[] =
 };
 
 PR_STATIC_CALLBACK(void)
-nsCairoGfxModuleDtor(nsIModule *self)
+nsThebesGfxModuleDtor(nsIModule *self)
 {
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsCairoGfxModule, components, nsCairoGfxModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxModule, components, nsThebesGfxModuleDtor)
 

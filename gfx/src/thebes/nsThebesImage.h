@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is thebes gfx
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,18 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIROIMAGE__H__
-#define NSCAIROIMAGE__H__
+#ifndef _NSTHEBESIMAGE_H_
+#define _NSTHEBESIMAGE_H_
 
 #include "nsIImage.h"
 
-#include <cairo.h>
+#include "gfxASurface.h"
+#include "gfxImageSurface.h"
 
-class nsCairoImage : public nsIImage
+class nsThebesImage : public nsIImage
 {
 public:
-    nsCairoImage();
-    ~nsCairoImage();
+    nsThebesImage();
+    ~nsThebesImage();
 
     NS_DECL_ISUPPORTS
 
@@ -58,15 +58,15 @@ public:
     virtual PRBool GetIsRowOrderTopToBottom();
     virtual PRInt32 GetWidth();
     virtual PRInt32 GetHeight();
-    virtual PRUint8 * GetBits();
+    virtual PRUint8 *GetBits();
     virtual PRInt32 GetLineStride();
     virtual PRBool GetHasAlphaMask();
-    virtual PRUint8 * GetAlphaBits();
+    virtual PRUint8 *GetAlphaBits();
     virtual PRInt32 GetAlphaLineStride();
     virtual PRBool GetIsImageComplete();
     virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
     virtual nsresult Optimize(nsIDeviceContext* aContext);
-    virtual nsColorMap * GetColorMap();
+    virtual nsColorMap *GetColorMap();
 
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
                     nsIDrawingSurface *aSurface,
@@ -88,24 +88,32 @@ public:
     NS_IMETHOD LockImagePixels(PRBool aMaskPixels);
     NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels);
 
-    void UpdateFromImageData();
+    void UpdateFromLockedData();
+
+    gfxASurface* ThebesSurface() {
+        if (mOptSurface)
+            return mOptSurface;
+        return mImageSurface;
+    }
 
 protected:
+
     PRInt32 mWidth;
     PRInt32 mHeight;
     nsRect mDecoded;
 
-    cairo_surface_t *mImageSurface;
-    cairo_format_t mCairoFormat;
-    // Where the mImageSurface data lives (in the mCairoFormat)
-    PRUint32* mImageSurfaceBuf;
-    // Where gfxIImageFrame data lives while the image data is dirty
-    // (from LockImagePixels(Alpha) to the next paint)
-    PRUint8* mImageSurfaceData;
-    PRUint8* mImageSurfaceAlpha;
+    nsRefPtr<gfxImageSurface> mImageSurface;
+    nsRefPtr<gfxASurface> mOptSurface;
+
+    // temporary buffers for Lock()
+    PRUint8* mLockedData;
+    PRUint8* mLockedAlpha;
 
     PRUint8 mAlphaDepth;
+    PRUint8 mRealAlphaDepth;
+    PRPackedBool mLocked;
     PRPackedBool mHadAnyData;
+    PRPackedBool mUpToDate;
 };
 
-#endif // NSCAIROIMAGE__H__
+#endif /* _NSTHEBESIMAGE_H_ */

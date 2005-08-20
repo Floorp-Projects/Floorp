@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSCAIROFONTMETRICS__H__
-#define NSCAIROFONTMETRICS__H__
+#ifndef NSTHEBESFONTMETRICS__H__
+#define NSTHEBESFONTMETRICS__H__
 
 #include "nsIFontMetrics.h"
 #include "nsCOMPtr.h"
@@ -48,11 +48,11 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-class nsCairoFontMetrics : public nsIFontMetrics
+class nsThebesFontMetrics : public nsIFontMetrics
 {
 public:
-    nsCairoFontMetrics();
-    virtual ~nsCairoFontMetrics();
+    nsThebesFontMetrics();
+    virtual ~nsThebesFontMetrics();
 
     NS_DECL_ISUPPORTS
 
@@ -99,4 +99,4 @@ private:
     long mUnderlineHeight;
 };
 
-#endif /* NSCAIROFONTMETRICS__H__ */
+#endif /* NSTHEBESFONTMETRICS__H__ */

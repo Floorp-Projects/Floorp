@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,14 +16,11 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by the Initial Developer
+ * are Copyright (C) 2004 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,54 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCairoScreenManager.h"
-#include "nsCairoScreen.h"
+#ifndef _MOZILLA_DECODER_H
+#define _MOZILLA_DECODER_H
 
-NS_IMPL_ISUPPORTS1(nsCairoScreenManager, nsIScreenManager)
+#include <pango/pangofc-decoder.h>
 
-nsCairoScreenManager::nsCairoScreenManager()
+G_BEGIN_DECLS
+
+#define MOZILLA_TYPE_DECODER (mozilla_decoder_get_type())
+#define MOZILLA_DECODER(object) (G_TYPE_CHECK_INSTANCE_CAST ((object), MOZILLA_TYPE_DECODER, MozillaDecoder))
+#define MOZILLA_IS_DECODER(object) (G_TYPE_CHECK_INSTANCE_TYPE ((object), MOZILLA_TYPE_DECODER))
+
+typedef struct _MozillaDecoder      MozillaDecoder;
+typedef struct _MozillaDecoderClass MozillaDecoderClass;
+
+#define MOZILLA_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), MOZILLA_TYPE_DECODER, MozillaDecoderClass))
+#define MOZILLA_IS_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), MOZILLA_TYPE_DECODER))
+#define MOZILLA_DECODER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), MOZILLA_TYPE_DECODER, MozillaDecoderClass))
+
+struct _MozillaDecoder
 {
-    NS_INIT_ISUPPORTS();
-}
+  PangoFcDecoder parent_instance;
+};
 
-nsCairoScreenManager::~nsCairoScreenManager()
+struct _MozillaDecoderClass
 {
-}
+  PangoFcDecoderClass parent_class;
+};
 
-nsIScreen* 
-nsCairoScreenManager::CreateNewScreenObject()
-{
-    nsIScreen* retval = nsnull;
-    if (!mCachedMainScreen) {
-        nsCairoScreen *ncs = new nsCairoScreen();
-        ncs->Init();
-        mCachedMainScreen = ncs;
-    }
+GType           mozilla_decoder_get_type (void);
+int             mozilla_decoders_init    (void);
 
-    NS_IF_ADDREF(retval = mCachedMainScreen.get());
+G_END_DECLS
 
-    return retval;
-}
-
-
-NS_IMETHODIMP
-nsCairoScreenManager::ScreenForRect(PRInt32 /*inLeft*/, PRInt32 /*inTop*/, PRInt32 /*inWidth*/,
-                               PRInt32 /*inHeight*/, nsIScreen **outScreen )
-{
-    GetPrimaryScreen(outScreen);
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsCairoScreenManager::GetPrimaryScreen(nsIScreen **aPrimaryScreen) 
-{
-    *aPrimaryScreen = CreateNewScreenObject();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCairoScreenManager::GetNumberOfScreens(PRUint32 *aNumberOfScreens)
-{
-    *aNumberOfScreens = 1;
-    return NS_OK;
-}
+#endif /*_MOZILLA_DECODER_H */

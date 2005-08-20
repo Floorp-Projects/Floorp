@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,77 +37,77 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCairoRegion.h"
+#include "nsThebesRegion.h"
 
-NS_IMPL_ISUPPORTS1(nsCairoRegion, nsIRegion)
+NS_IMPL_ISUPPORTS1(nsThebesRegion, nsIRegion)
 
-nsCairoRegion::nsCairoRegion() 
+nsThebesRegion::nsThebesRegion() 
 {  
   NS_INIT_ISUPPORTS();
 }
 
-nsresult nsCairoRegion::Init (void)
+nsresult nsThebesRegion::Init (void)
 {
   mRegion.SetEmpty();
   return NS_OK;
 }
 
-void nsCairoRegion::SetTo (const nsIRegion &aRegion)
+void nsThebesRegion::SetTo (const nsIRegion &aRegion)
 {
-  const nsCairoRegion* pRegion = NS_STATIC_CAST (const nsCairoRegion*, &aRegion);
+  const nsThebesRegion* pRegion = NS_STATIC_CAST (const nsThebesRegion*, &aRegion);
   mRegion = pRegion->mRegion;
 }
 
-void nsCairoRegion::SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsThebesRegion::SetTo (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   mRegion = nsRect (aX, aY, aWidth, aHeight);
 }
 
-void nsCairoRegion::Intersect (const nsIRegion &aRegion)
+void nsThebesRegion::Intersect (const nsIRegion &aRegion)
 {
-  const nsCairoRegion* pRegion = NS_STATIC_CAST (const nsCairoRegion*, &aRegion);
+  const nsThebesRegion* pRegion = NS_STATIC_CAST (const nsThebesRegion*, &aRegion);
   mRegion.And (mRegion, pRegion->mRegion);
 }
 
-void nsCairoRegion::Intersect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsThebesRegion::Intersect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   mRegion.And (mRegion, nsRect (aX, aY, aWidth, aHeight));
 }
 
-void nsCairoRegion::Union (const nsIRegion &aRegion)
+void nsThebesRegion::Union (const nsIRegion &aRegion)
 {
-  const nsCairoRegion* pRegion = NS_STATIC_CAST (const nsCairoRegion*, &aRegion);
+  const nsThebesRegion* pRegion = NS_STATIC_CAST (const nsThebesRegion*, &aRegion);
   mRegion.Or (mRegion, pRegion->mRegion);
 }
 
-void nsCairoRegion::Union (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsThebesRegion::Union (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   mRegion.Or (mRegion, nsRect (aX, aY, aWidth, aHeight));
 }
 
-void nsCairoRegion::Subtract (const nsIRegion &aRegion)
+void nsThebesRegion::Subtract (const nsIRegion &aRegion)
 {
-  const nsCairoRegion* pRegion = NS_STATIC_CAST (const nsCairoRegion*, &aRegion);
+  const nsThebesRegion* pRegion = NS_STATIC_CAST (const nsThebesRegion*, &aRegion);
   mRegion.Sub (mRegion, pRegion->mRegion);
 }
 
-void nsCairoRegion::Subtract (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void nsThebesRegion::Subtract (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   mRegion.Sub (mRegion, nsRect (aX, aY, aWidth, aHeight));
 }
 
-PRBool nsCairoRegion::IsEmpty (void)
+PRBool nsThebesRegion::IsEmpty (void)
 {
   return mRegion.IsEmpty ();
 }
 
-PRBool nsCairoRegion::IsEqual (const nsIRegion &aRegion)
+PRBool nsThebesRegion::IsEqual (const nsIRegion &aRegion)
 {
-  const nsCairoRegion* pRegion = NS_STATIC_CAST (const nsCairoRegion*, &aRegion);
+  const nsThebesRegion* pRegion = NS_STATIC_CAST (const nsThebesRegion*, &aRegion);
   return mRegion.IsEqual (pRegion->mRegion);
 }
 
-void nsCairoRegion::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
+void nsThebesRegion::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
   nsRect BoundRect;
   BoundRect = mRegion.GetBounds();
@@ -117,12 +117,12 @@ void nsCairoRegion::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, P
   *aHeight = BoundRect.height;
 }
 
-void nsCairoRegion::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
+void nsThebesRegion::Offset (PRInt32 aXOffset, PRInt32 aYOffset)
 {
   mRegion.MoveBy (aXOffset, aYOffset);
 }
 
-PRBool nsCairoRegion::ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+PRBool nsThebesRegion::ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   nsRegion TmpRegion;
   TmpRegion.And (mRegion, nsRect (aX, aY, aWidth, aHeight));
@@ -130,7 +130,7 @@ PRBool nsCairoRegion::ContainsRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 }
 
 NS_IMETHODIMP
-nsCairoRegion::GetRects (nsRegionRectSet **aRects)
+nsThebesRegion::GetRects (nsRegionRectSet **aRects)
 {
   if (!aRects)
     return NS_ERROR_NULL_POINTER;
@@ -175,7 +175,7 @@ nsCairoRegion::GetRects (nsRegionRectSet **aRects)
 }
 
 NS_IMETHODIMP
-nsCairoRegion::FreeRects (nsRegionRectSet *aRects)
+nsThebesRegion::FreeRects (nsRegionRectSet *aRects)
 {
   if (!aRects)
     return NS_ERROR_NULL_POINTER;
@@ -185,14 +185,14 @@ nsCairoRegion::FreeRects (nsRegionRectSet *aRects)
 }
 
 NS_IMETHODIMP
-nsCairoRegion::GetNativeRegion (void *&aRegion) const
+nsThebesRegion::GetNativeRegion (void *&aRegion) const
 {
   aRegion = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoRegion::GetRegionComplexity (nsRegionComplexity &aComplexity) const
+nsThebesRegion::GetRegionComplexity (nsRegionComplexity &aComplexity) const
 {
   switch (mRegion.GetNumRects ())
   {
@@ -205,7 +205,7 @@ nsCairoRegion::GetRegionComplexity (nsRegionComplexity &aComplexity) const
 }
 
 NS_IMETHODIMP
-nsCairoRegion::GetNumRects (PRUint32 *aRects) const
+nsThebesRegion::GetNumRects (PRUint32 *aRects) const
 {
   *aRects = mRegion.GetNumRects ();
   return NS_OK;

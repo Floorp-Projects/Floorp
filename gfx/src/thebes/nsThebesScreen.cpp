@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,18 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCairoScreen.h"
+#include "nsThebesScreen.h"
 
 #ifdef MOZ_ENABLE_GTK2
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include <X11/Xatom.h>
+#elif defined (XP_WIN)
+#include "gfxWindowsSurface.h"
 #endif
 
-NS_IMPL_ISUPPORTS1(nsCairoScreen, nsIScreen)
+NS_IMPL_ISUPPORTS1(nsThebesScreen, nsIScreen)
 
-nsCairoScreen::nsCairoScreen()
+nsThebesScreen::nsThebesScreen()
   :
     mScreenNum(0), mRect(0, 0, 0, 0), mAvailRect(0, 0, 0, 0)
 
@@ -57,12 +59,12 @@ nsCairoScreen::nsCairoScreen()
 }
 
 
-nsCairoScreen::~nsCairoScreen()
+nsThebesScreen::~nsThebesScreen()
 {
 }
 
 NS_IMETHODIMP
-nsCairoScreen::GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsThebesScreen::GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
     *outLeft = mRect.x;
     *outTop = mRect.y;
@@ -74,7 +76,7 @@ nsCairoScreen::GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 
 
 NS_IMETHODIMP
-nsCairoScreen::GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
+nsThebesScreen::GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
     *outLeft = mAvailRect.x;
     *outTop = mAvailRect.y;
@@ -85,21 +87,27 @@ nsCairoScreen::GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 } 
 
 NS_IMETHODIMP 
-nsCairoScreen::GetPixelDepth(PRInt32 *aPixelDepth)
+nsThebesScreen::GetPixelDepth(PRInt32 *aPixelDepth)
 {
+#ifdef XP_WIN
+    HDC hDCScreen = GetDC(nsnull);
+    *aPixelDepth = GetDeviceCaps(hDCScreen, BITSPIXEL);
+    ReleaseDC(nsnull, hDCScreen);
+#else
     *aPixelDepth = 24;
+#endif
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsCairoScreen::GetColorDepth(PRInt32 *aColorDepth)
+nsThebesScreen::GetColorDepth(PRInt32 *aColorDepth)
 {
-    return 24;
+    return GetPixelDepth(aColorDepth);
 }
 
 
 void
-nsCairoScreen::Init ()
+nsThebesScreen::Init ()
 {
 #ifdef MOZ_ENABLE_GTK2
     mAvailRect = mRect = nsRect(0, 0, gdk_screen_width(), gdk_screen_height());
@@ -132,11 +140,10 @@ nsCairoScreen::Init ()
 
     gdk_error_trap_push();
 
-    // gdk_property_get uses (length + 3) / 4, hence G_MAXLONG - 3 here.
     if (!gdk_property_get(root_window,
                           gdk_atom_intern ("_NET_WORKAREA", FALSE),
                           cardinal_atom,
-                          0, G_MAXLONG - 3, FALSE,
+                          0, G_MAXLONG, FALSE,
                           &type_returned,
                           &format_returned,
                           &length_returned,
@@ -166,12 +173,10 @@ nsCairoScreen::Init ()
             mAvailRect.IntersectRect(mAvailRect, workarea);
         }
     }
-
-#elif MOZ_ENABLE_XLIB
-    mScreenNum = 0;
-    mRect.x = mAvailRect.x = 0;
-    mRect.y = mAvailRect.y = 0;
-    mRect.width = mAvailRect.width = 1600;
-    mRect.height = mAvailRect.height = 1200;
+#elif defined(XP_WIN)
+    // XXX writeme
+    mAvailRect = mRect = nsRect(0, 0, 1600, 1200);
+#else
+#error Write me!
 #endif
 }

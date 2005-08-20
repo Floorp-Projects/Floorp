@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCairoFontMetrics.h"    
+#include "nsThebesFontMetrics.h"    
 #include "nsFont.h"
 
 #include "nsDirectoryServiceDefs.h"
@@ -56,9 +55,9 @@
 
 static FT_Library ftlib = nsnull;
 
-NS_IMPL_ISUPPORTS1(nsCairoFontMetrics, nsIFontMetrics)
+NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
-nsCairoFontMetrics::nsCairoFontMetrics() :
+nsThebesFontMetrics::nsThebesFontMetrics() :
     mMaxAscent(0),
     mMaxDescent(0),
     mMaxAdvance(0),
@@ -71,7 +70,7 @@ nsCairoFontMetrics::nsCairoFontMetrics() :
     }
 }
 
-nsCairoFontMetrics::~nsCairoFontMetrics()
+nsThebesFontMetrics::~nsThebesFontMetrics()
 {
     FT_Done_Face(mFace);
 }
@@ -92,7 +91,7 @@ GetFontPath()
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
+nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                          nsIDeviceContext *aContext)
 {
     mFont = aFont;
@@ -122,34 +121,34 @@ nsCairoFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::Destroy()
+nsThebesFontMetrics::Destroy()
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetXHeight(nscoord& aResult)
+nsThebesFontMetrics::GetXHeight(nscoord& aResult)
 {
     aResult = NSToCoordRound(14 * mDev2App);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetSuperscriptOffset(nscoord& aResult)
+nsThebesFontMetrics::GetSuperscriptOffset(nscoord& aResult)
 {
     aResult = 0;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetSubscriptOffset(nscoord& aResult)
+nsThebesFontMetrics::GetSubscriptOffset(nscoord& aResult)
 {
     aResult = 0;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
+nsThebesFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
     aOffset = 0;
     aSize = NSToCoordRound(1 * mDev2App);
@@ -157,7 +156,7 @@ nsCairoFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
+nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
     const FT_Fixed scale = mFace->size->metrics.y_scale;
 
@@ -173,14 +172,14 @@ nsCairoFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetHeight(nscoord &aHeight)
+nsThebesFontMetrics::GetHeight(nscoord &aHeight)
 {
     aHeight = NSToCoordRound((mFace->size->metrics.height >> 6) * mDev2App);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetInternalLeading(nscoord &aLeading)
+nsThebesFontMetrics::GetInternalLeading(nscoord &aLeading)
 {
     // aLeading = 0 * mDev2App;
     aLeading = 0;
@@ -188,7 +187,7 @@ nsCairoFontMetrics::GetInternalLeading(nscoord &aLeading)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetExternalLeading(nscoord &aLeading)
+nsThebesFontMetrics::GetExternalLeading(nscoord &aLeading)
 {
     // aLeading = 0 * mDev2App;
     aLeading = 0;
@@ -196,7 +195,7 @@ nsCairoFontMetrics::GetExternalLeading(nscoord &aLeading)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetEmHeight(nscoord &aHeight)
+nsThebesFontMetrics::GetEmHeight(nscoord &aHeight)
 {
     /* ascent + descent */
 #if FONT_SIZE == 10
@@ -211,7 +210,7 @@ nsCairoFontMetrics::GetEmHeight(nscoord &aHeight)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetEmAscent(nscoord &aAscent)
+nsThebesFontMetrics::GetEmAscent(nscoord &aAscent)
 {
     /* units above the base line */
 #if FONT_SIZE == 10
@@ -225,7 +224,7 @@ nsCairoFontMetrics::GetEmAscent(nscoord &aAscent)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetEmDescent(nscoord &aDescent)
+nsThebesFontMetrics::GetEmDescent(nscoord &aDescent)
 {
     /* units below the base line */
 #if FONT_SIZE == 10
@@ -239,7 +238,7 @@ nsCairoFontMetrics::GetEmDescent(nscoord &aDescent)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetMaxHeight(nscoord &aHeight)
+nsThebesFontMetrics::GetMaxHeight(nscoord &aHeight)
 {
     /* ascent + descent */
     aHeight = FT_CEIL(FT_MulFix(mMaxAscent, mFace->size->metrics.y_scale))
@@ -251,7 +250,7 @@ nsCairoFontMetrics::GetMaxHeight(nscoord &aHeight)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetMaxAscent(nscoord &aAscent)
+nsThebesFontMetrics::GetMaxAscent(nscoord &aAscent)
 {
     /* units above the base line */
     aAscent = FT_CEIL(FT_MulFix(mMaxAscent, mFace->size->metrics.y_scale));
@@ -260,7 +259,7 @@ nsCairoFontMetrics::GetMaxAscent(nscoord &aAscent)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetMaxDescent(nscoord &aDescent)
+nsThebesFontMetrics::GetMaxDescent(nscoord &aDescent)
 {
     /* units below the base line */
     aDescent = -FT_CEIL(FT_MulFix(mMaxDescent, mFace->size->metrics.y_scale));
@@ -269,7 +268,7 @@ nsCairoFontMetrics::GetMaxDescent(nscoord &aDescent)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetMaxAdvance(nscoord &aAdvance)
+nsThebesFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 {
     aAdvance = FT_CEIL(FT_MulFix(mMaxAdvance, mFace->size->metrics.x_scale));
     aAdvance = NSToCoordRound(aAdvance * mDev2App);
@@ -277,7 +276,7 @@ nsCairoFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetLangGroup(nsIAtom** aLangGroup)
+nsThebesFontMetrics::GetLangGroup(nsIAtom** aLangGroup)
 {
     *aLangGroup = mLangGroup;
     NS_IF_ADDREF(*aLangGroup);
@@ -285,20 +284,20 @@ nsCairoFontMetrics::GetLangGroup(nsIAtom** aLangGroup)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetFontHandle(nsFontHandle &aHandle)
+nsThebesFontMetrics::GetFontHandle(nsFontHandle &aHandle)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
+nsThebesFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
 {
     aAveCharWidth = NSToCoordRound(7 * mDev2App);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
+nsThebesFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
 {
     FT_Load_Char(mFace, ' ', FT_LOAD_DEFAULT | FT_LOAD_NO_AUTOHINT);
 
@@ -308,7 +307,7 @@ nsCairoFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
 }
 
 nscoord
-nsCairoFontMetrics::MeasureString(const char *aString, PRUint32 aLength)
+nsThebesFontMetrics::MeasureString(const char *aString, PRUint32 aLength)
 {
     nscoord width = 0;
     PRUint32 i;
@@ -339,7 +338,7 @@ nsCairoFontMetrics::MeasureString(const char *aString, PRUint32 aLength)
 }
 
 nscoord
-nsCairoFontMetrics::MeasureString(const PRUnichar *aString, PRUint32 aLength)
+nsThebesFontMetrics::MeasureString(const PRUnichar *aString, PRUint32 aLength)
 {
     nscoord width = 0;
     PRUint32 i;
@@ -370,14 +369,14 @@ nsCairoFontMetrics::MeasureString(const PRUnichar *aString, PRUint32 aLength)
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetLeading(nscoord& aLeading)
+nsThebesFontMetrics::GetLeading(nscoord& aLeading)
 {
     aLeading = 0;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCairoFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
+nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
 {
     aLineHeight = 10;
     return NS_OK;
