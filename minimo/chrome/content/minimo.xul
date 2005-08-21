@@ -61,6 +61,10 @@
 
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
 
+  <popupset id="mainPopupSet">
+    <popup type="autocomplete" id="PopupAutoComplete"/>
+  </popupset>
+
   <toolbox>
 
 	<!-- command definitions --> 
@@ -68,6 +72,8 @@
 	<!-- we shall enable all the command="cmd_commandName" for each Menu Item   -->  
 	<!-- so far, the -->
 	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
+	<command id="cmd_BrowserSSR" oncommand="BrowserToogleSSR()"/>
+	<command id="cmd_BrowserSiteSSR" oncommand="BrowserToogleSiteSSR()"/>
 	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
 	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
 	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
@@ -76,7 +82,15 @@
        <menubar  class="chromeclass-menubar">
          <menu id="menu-button" > 
          	 <menupopup>
-		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="new Tab"  /> 
+		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+
+             <menu id="SSR" label="SSR">
+                <menupopup >
+        		     <menuitem id="command_BrowserSSR" type="checkbox" command="cmd_BrowserSSR" label="Toggle SSR"  /> 
+		             <menuitem id="command_BrowserSiteSSR" type="checkbox" command="cmd_BrowserSiteSSR" label="Toggle Site SSR"/> 
+                </menupopup>
+             </menu>
+
              <menu id="menu-zoom" label="Text zoom">
                 <menupopup >
                   <menuitem id="" oncommand="BrowserResetZoomPlus()" label="ZOOM + " />
@@ -95,14 +109,36 @@
         <toolbarbutton id="back-button" onclick="BrowserBack()"/>  
         <toolbarbutton id="forward-button" onclick="BrowserForward()"/>  
         <toolbarbutton id="reload-stop-button" class="reload-button" onclick="BrowserReload()"/>
-        <textbox id="urlbar" flex="100%" onkeypress="if( event.keyCode == 13 ) { BrowserLoadURL(); }"/>
+
+
+        <textbox id="urlbar" flex="100%" onkeypress="if(event.keyCode == 13 ) { BrowserLoadURL(); }"/>
+<!--
+        <textbox id="urlbar" 
+                 flex="100%" 
+                 type="autocomplete"
+                 enablehistory="true"
+                 autocompletesearch="history" 
+                 completeselectedindex="true"
+                 autocompletepopup="PopupAutoComplete"
+                 onfocus="URLBarFocusHandler();"
+                 ontextentered="return URLBarEntered();"/>
+-->
+
     </toolbar>
   </toolbox>
 
   <hbox flex="1" >
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
-        <tabbrowser contentcontextmenu="contentAreaContextMenu"  context="context" type="content-primary" id="content" src="about:blank" flex="1" onclick="tabbrowserAreaClick(event)" onnewtab="BrowserOpenTab()"/>
+        <tabbrowser contentcontextmenu="contentAreaContextMenu"
+                    context="context"
+                    type="content-primary"
+                    id="content" 
+                    src="about:blank"
+                    flex="1" 
+                    autocompletepopup="PopupAutoComplete"
+                    onclick="tabbrowserAreaClick(event)" 
+                    onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>
   </hbox>

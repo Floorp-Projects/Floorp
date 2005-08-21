@@ -45,6 +45,9 @@ var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
 var gFullScreen=false;
+var gGlobalHistory = null;
+var gURIFixup = null;
+var gSSRSupport = null;
 
 function nsBrowserStatusHandler()
 {
@@ -258,6 +261,7 @@ function BrowserLoadURL()
 {
   try {
     loadURI(gURLBar.value);
+    content.focus();
   }
   catch(e) {
   }
@@ -283,11 +287,9 @@ function BrowserReload()
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
-function BrowserAddTab() {
-
-
-    var thisTab=getBrowser().addTab("http://taboca.com");
-
+function BrowserAddTab() 
+{
+    var thisTab=getBrowser().addTab("http://mozilla.org");
     browserInit(thisTab);
 }
 
@@ -325,8 +327,6 @@ function tabbrowserAreaClick(e) {
   * urlbar indentity, style, progress indicator.
   **/ 
 function urlbar() {
-    
-
 }
 
 
@@ -368,4 +368,71 @@ function DoFullScreen()
 
   getBrowser().setStripVisibilityTo(!gFullScreen);
   window.fullScreen = gFullScreen;  
+}
+
+
+
+function addToUrlbarHistory()
+{
+  var urlToAdd = gURLBar.value;
+  
+  if (!urlToAdd)
+    return;
+  
+  if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
+    return;
+  
+  if (!gGlobalHistory)
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                               .getService(Components.interfaces.nsIBrowserHistory);
+  
+  if (!gURIFixup)
+    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                          .getService(Components.interfaces.nsIURIFixup);
+  try {
+    if (urlToAdd.indexOf(" ") == -1) {
+      var fixedUpURI = gURIFixup.createFixupURI(urlToAdd, 0);
+       gGlobalHistory.markPageAsTyped(fixedUpURI);
+    }
+  }
+  catch(ex) {
+  }
+}
+
+function URLBarEntered()
+{
+
+  try {  addToUrlbarHistory(); } catch(ex) {}
+  BrowserLoadURL();
+
+  return true;
+}
+
+function URLBarFocusHandler()
+{
+  gURLBar.showHistoryPopup();
+}
+
+function URLBarClickHandler()
+{
+}
+
+function BrowserToogleSSR()
+{
+  if(!gSSRSupport)
+    gSSRSupport = Components.classes["@mozilla.org/ssr;1"].getService(Components.interfaces.nsISSRSupport);
+
+  gSSRSupport.SSREnabled = !gSSRSupport.SSREnabled;
+
+  BrowserReload(); // hack until this is done by ssr itself
+}
+
+function BrowserToogleSiteSSR()
+{
+  if(!gSSRSupport)
+    gSSRSupport = Components.classes["@mozilla.org/ssr;1"].getService(Components.interfaces.nsISSRSupport);
+
+  gSSRSupport.siteSSREnabled = !gSSRSupport.siteSSREnabled;
+
+  BrowserReload(); // hack until this is done by ssr itself
 }
