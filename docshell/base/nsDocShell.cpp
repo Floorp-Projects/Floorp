@@ -7727,7 +7727,9 @@ nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry> *aPtr, nsISHEntry *aEntry)
         // newRootEntry is now the new root entry.
         // Find the old root entry as well.
 
-        nsISHEntry *oldRootEntry = GetRootSHEntry(*aPtr);
+        // Need a strong ref. on |oldRootEntry| so it isn't destroyed when
+        // SetChildHistoryEntry() does SwapHistoryEntries() (bug 304639).
+        nsCOMPtr<nsISHEntry> oldRootEntry = GetRootSHEntry(*aPtr);
         if (oldRootEntry) {
             nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
             GetSameTypeParent(getter_AddRefs(parentAsItem));
