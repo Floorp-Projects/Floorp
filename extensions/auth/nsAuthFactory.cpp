@@ -220,7 +220,6 @@ static nsModuleComponentInfo components[] = {
 };
 
 //-----------------------------------------------------------------------------
-
 #if defined( PR_LOGGING )
 PRLogModuleInfo *gNegotiateLog;
 
@@ -231,6 +230,8 @@ InitNegotiateAuth(nsIModule *self)
   gNegotiateLog = PR_NewLogModule("negotiateauth");
   return NS_OK;
 }
+#else
+#define InitNegotiateAuth nsnull
 #endif
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsAuthModule, components, InitNegotiateAuth)
