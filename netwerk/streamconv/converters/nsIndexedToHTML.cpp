@@ -108,7 +108,6 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     rv = sbs->CreateBundle("chrome://necko/locale/necko.properties",
                            getter_AddRefs(mBundle));
 
-    mRowCount = 0;
     mExpectAbsLoc = PR_FALSE;
 
     return rv;
@@ -461,10 +460,6 @@ nsIndexedToHTML::OnDataAvailable(nsIRequest *aRequest,
     return mParser->OnDataAvailable(aRequest, aCtxt, aInput, aOffset, aCount);
 }
 
-// This defines the number of rows we are going to have per table
-// splitting this up makes things faster, by helping layout
-#define ROWS_PER_TABLE 250
-
 NS_IMETHODIMP
 nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                                   nsISupports *aCtxt,
@@ -586,13 +581,6 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     pushBuffer.AppendLiteral("</td>\n</tr>\n");
 
-    // Split this up to avoid slow layout performance with large tables
-    // - bug 85381
-    if (++mRowCount > ROWS_PER_TABLE) {
-        pushBuffer.AppendLiteral("</table>\n<table>\n");
-        mRowCount = 0;
-    }
-    
     return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
 
@@ -609,12 +597,6 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
     nsMemory::Free(escaped);
     pushBuffer.AppendLiteral("</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n");
     
-    // Split this up to avoid slow layout performance with large tables
-    // - bug 85381
-    if (++mRowCount > ROWS_PER_TABLE) {
-        pushBuffer.AppendLiteral("</table>\n<table>\n");
-        mRowCount = 0;
-    }   
     return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
 
