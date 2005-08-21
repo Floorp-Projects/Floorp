@@ -45,8 +45,11 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+#undef USE_SSPI
+GSSAPI_INCLUDES = -Ic:\inc\krb5\gssapi
 include $(DEPTH)/config/autoconf.mk
 
+USE_GSSAPI = 1
 MOZILLA_INTERNAL_API = 1
 
 MODULE		= negotiateauth
@@ -71,14 +74,18 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+LOCAL_INCLUDES += -Ic:/inc/krb5/gssapi 
+
+
 ifeq (1,$(USE_GSSAPI))
-LOCAL_INCLUDES	= -DUSE_GSSAPI $(GSSAPI_INCLUDES)
+LOCAL_INCLUDES += -Ic:\inc\krb5\gssapi -Ic:\inc\krb5
+LOCAL_INCLUDES	+= -DUSE_GSSAPI $(GSSAPI_INCLUDES)
 CPPSRCS		+= nsNegotiateAuthGSSAPI.cpp
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES	= -DUSE_SSPI
-CPPSRCS		+= nsNegotiateAuthSSPI.cpp
+#LOCAL_INCLUDES	+= -DUSE_SSPI
+#CPPSRCS		+= nsNegotiateAuthSSPI.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
