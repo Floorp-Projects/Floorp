@@ -236,19 +236,26 @@ if ($cgi->param('update')) {
                         if ($mailto_type == MAILTO_USER) {
                             # detaint
                             my $emailregexp = Param('emailregexp');
-                            $mailto =~ /($emailregexp)/;
-                            $mailto =~ $1;
-                            $mailto_id = login_to_id($mailto);
+                            if ($mailto =~ /($emailregexp)/) {
+                                $mailto_id = login_to_id($1);
+                            }
+                            else {
+                                ThrowUserError("illegal_email_address", 
+                                               { addr => $mailto });
+                            }
                         }
                         elsif ($mailto_type == MAILTO_GROUP) {
                             # detaint the group parameter
-                            $mailto =~ /^([0-9a-z_\-\.]+)/i;
-                            my $group = $1;
-
-                            $mailto_id = Bugzilla::Group::ValidateGroupName(
-                                $group, ($user));
-                            $mailto_id || ThrowUserError(
-                                'invalid_group_name', {name => $group});
+                            if ($mailto =~ /^([0-9a-z_\-\.]+)$/i) {
+                                $mailto_id = Bugzilla::Group::ValidateGroupName(
+                                                 $1, ($user)) || 
+                                             ThrowUserError(
+                                                 'invalid_group_name', 
+                                                 { name => $1 });
+                            } else {
+                                ThrowUserError('invalid_group_name',
+                                               { name => $mailto });
+                            }
                         }
                         else {
                             # bad value, so it will just mail to the whine
