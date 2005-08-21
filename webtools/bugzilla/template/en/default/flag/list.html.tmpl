@@ -121,7 +121,7 @@
           <td>
             [% IF type.is_active && type.is_requesteeble %]
               <span style="white-space: nowrap;">
-                (<input type="text" size="8" maxlength="255"
+                (<input type="text" size="30" maxlength="255"
                         id="requestee-[% flag.id %]" 
                         name="requestee-[% flag.id %]"
                         [% IF flag.status == "?" && flag.requestee %]
@@ -159,7 +159,7 @@
           <td>
             [% IF type.is_requesteeble %]
               <span style="white-space: nowrap;">
-                (<input type="text" size="8" maxlength="255"
+                (<input type="text" size="30" maxlength="255"
                         id="requestee_type-[% type.id %]" 
                         name="requestee_type-[% type.id %]">)
               </span>
@@ -198,7 +198,7 @@
         <td>
           [% IF type.is_requesteeble %]
               <span style="white-space: nowrap;">
-                (<input type="text" size="8" maxlength="255"
+                (<input type="text" size="30" maxlength="255"
                         id="requestee_type-[% type.id %]" 
                         name="requestee_type-[% type.id %]">)
               </span>
