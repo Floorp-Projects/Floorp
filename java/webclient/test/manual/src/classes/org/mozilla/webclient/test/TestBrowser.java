@@ -33,10 +33,10 @@ import java.util.Map;
 import java.util.Iterator;
 
 import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import org.mozilla.webclient.*;
+import org.w3c.dom.Element;
 
 /**
  * <p>webclient API demo main class.</p>
@@ -319,34 +319,50 @@ public class TestBrowser extends JPanel {
 	eventRegistration.addMouseListener(new MouseListener() {
 		public void mouseClicked(MouseEvent e) {
 		}
-		public void mouseEntered(MouseEvent e) {
-		    if (e instanceof WCMouseEvent) {
-			WCMouseEvent wcMouseEvent = (WCMouseEvent) e;
-			Map eventProps =
-			    (Map) wcMouseEvent.getWebclientEvent().getEventData();
-			if (null == eventProps) {
-			    return;
-			}
-			if (e.isAltDown()) {
-			    System.out.println("Alt ");
-			}
-			if (e.isControlDown()) {
-			    System.out.println("Ctrl ");
-			}
-			if (e.isShiftDown()) {
-			    System.out.println("Shift ");
-			}
-			if (e.isMetaDown()) {
-			    // PENDING(edburns): this is always sent for some reason
-			    //System.out.println("Meta ");
-			}
-			String href = (String) eventProps.get("href");
-			if (null != href) {
-			    // PENDING(edburns): take care of relative URL
-			    updateStatusInfo(href);
-			}
-		    }
-		}
+                public void mouseEntered(MouseEvent e) {
+                    if (e instanceof WCMouseEvent) {
+                        WCMouseEvent wcMouseEvent = (WCMouseEvent) e;
+                        Map eventProps =
+                                (Map) wcMouseEvent.getWebclientEvent().getEventData();
+                        if (null == eventProps) {
+                            return;
+                        }
+                        if (e.isAltDown()) {
+                            System.out.println("Alt ");
+                        }
+                        if (e.isControlDown()) {
+                            System.out.println("Ctrl ");
+                        }
+                        if (e.isShiftDown()) {
+                            System.out.println("Shift ");
+                        }
+                        if (e.isMetaDown()) {
+                            // PENDING(edburns): this is always sent for some reason
+                            //System.out.println("Meta ");
+                        }
+                        
+                        Node domNode = (Node)
+                        wcMouseEvent.getWebclientEvent().getSource();
+                        Element element = (Element) domNode;
+                        String
+                                href = (String) eventProps.get("href"),
+                                id = element.getAttribute("id"),
+                                name = element.getAttribute("name"),
+                                nodeName = domNode.getNodeName(),
+                                value = domNode.getNodeValue(),
+                                status = "";
+                        if (null != href) {
+                            // PENDING(edburns): take care of relative URL
+                            status = href;
+                        }
+                        if (null != id || null != name || null != nodeName
+                                || null != value) {
+                            status = status + " domNode: " + nodeName + " id: " + id
+                                    + " name: " + name + " value: " + value;
+                            updateStatusInfo(status);
+                        }
+                    }
+                }
 		public void mouseExited(MouseEvent e) {
 		    updateStatusInfo("                      ");
 		}
