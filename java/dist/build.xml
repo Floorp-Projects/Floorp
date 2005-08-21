@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a4"/>
+  <property name="version" value="2_0_a5"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
