@@ -134,6 +134,8 @@
       delete
     [% ELSIF action == "edit" %]
       add, modify or delete
+    [% ELSIF action == "move" %]
+      move
     [% ELSIF action == "run" %]
       run
     [% ELSIF action == "schedule" %]
@@ -144,6 +146,8 @@
 
     [% IF object == "attachment" %]
       this attachment
+    [% ELSIF object == "bugs" %]
+      [%+ terms.bugs %]
     [% ELSIF object == "charts" %]
       the "New Charts" feature
     [% ELSIF object == "classifications" %]
@@ -800,7 +804,12 @@
     [% title = "Missing Search" %]
     The search named <em>[% queryname FILTER html %]</em> does not
     exist.
-        
+
+  [% ELSIF error == "move_bugs_disabled" %]
+    [% title = BLOCK %][% terms.Bug %] Moving Disabled[% END %]
+    Sorry, [% terms.bug %] moving has been disabled. If you need
+    to move [% terms.abug %], please contact [% Param("maintainer") %].
+
   [% ELSIF error == "must_be_patch" %]
     [% title = "Attachment Must Be Patch" %]
     Attachment #[% attach_id FILTER html %] must be a patch.

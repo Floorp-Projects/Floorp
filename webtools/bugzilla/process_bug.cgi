@@ -50,6 +50,7 @@ require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
+use Bugzilla::BugMail;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Field;
@@ -586,15 +587,110 @@ if (defined $cgi->param('id')) {
     }
 }
 
-my $action = '';
-if (defined $cgi->param('action')) {
-  $action = trim($cgi->param('action'));
-}
-if (Param("move-enabled") && $action eq Param("move-button-text")) {
-  $cgi->param('buglist', join (":", @idlist));
-  do "move.pl" || die "Error executing move.cgi: $!";
-  $template->put_footer();
-  exit;
+my $action = trim($cgi->param('action') || '');
+
+if ($action eq Param('move-button-text')) {
+    Param('move-enabled') || ThrowUserError("move_bugs_disabled");
+
+    my $exporter = $user->login;
+    my $movers = Param('movers');
+    $movers =~ s/\s?,\s?/|/g;
+    $movers =~ s/@/\@/g;
+    if ($exporter !~ /($movers)/) {
+        ThrowUserError("auth_failure", {action => 'move',
+                                        object => 'bugs'});
+    }
+
+    # Moved bugs are marked as RESOLVED MOVED.
+    my $sth = $dbh->prepare("UPDATE bugs
+                                SET bug_status = 'RESOLVED',
+                                    resolution = 'MOVED',
+                                    delta_ts = ?
+                              WHERE bug_id = ?");
+    # Bugs cannot be a dupe and moved at the same time.
+    my $sth2 = $dbh->prepare("DELETE FROM duplicates WHERE dupe = ?");
+
+    my $comment = "";
+    if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {
+        $comment = $cgi->param('comment') . "\n\n";
+    }
+    $comment .= "Bug moved to " . Param('move-to-url') . ".\n\n";
+    $comment .= "If the move succeeded, $exporter will receive a mail\n";
+    $comment .= "containing the number of the new bug in the other database.\n";
+    $comment .= "If all went well,  please mark this bug verified, and paste\n";
+    $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
+
+    # $user->derive_groups() has already been called by Bugzilla->login(),
+    # so the related tables do not need to be locked.
+    $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE', 'duplicates WRITE',
+                         'longdescs WRITE', 'profiles READ', 'groups READ',
+                         'bug_group_map READ', 'group_group_map READ',
+                         'user_group_map READ', 'classifications READ',
+                         'products READ', 'components READ', 'votes READ',
+                         'cc READ', 'fielddefs READ');
+
+    my $timestamp = $dbh->selectrow_array("SELECT NOW()");
+    my @bugs;
+    # First update all moved bugs.
+    foreach my $id (@idlist) {
+        my $bug = new Bugzilla::Bug($id, $whoid);
+        push(@bugs, $bug);
+
+        $sth->execute($timestamp, $id);
+        $sth2->execute($id);
+
+        AppendComment($id, $whoid, $comment, 0, $timestamp);
+
+        if ($bug->bug_status ne 'RESOLVED') {
+            LogActivityEntry($id, 'bug_status', $bug->bug_status,
+                             'RESOLVED', $whoid, $timestamp);
+        }
+        if ($bug->resolution ne 'MOVED') {
+            LogActivityEntry($id, 'resolution', $bug->resolution,
+                             'MOVED', $whoid, $timestamp);
+        }
+    }
+    $dbh->bz_unlock_tables();
+
+    # Now send emails.
+    foreach my $id (@idlist) {
+        $vars->{'mailrecipients'} = { 'changer' => $exporter };
+        $vars->{'id'} = $id;
+        $vars->{'type'} = "move";
+
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+        $vars->{'header_done'} = 1;
+    }
+    # Prepare and send all data about these bugs to the new database
+    my $to = Param('move-to-address');
+    $to =~ s/@/\@/;
+    my $from = Param('moved-from-address');
+    $from =~ s/@/\@/;
+    my $msg = "To: $to\n";
+    $msg .= "From: Bugzilla <" . $from . ">\n";
+    $msg .= "Subject: Moving bug(s) " . join(', ', @idlist) . "\n\n";
+
+    my @fieldlist = (Bugzilla::Bug::fields(), 'group', 'long_desc', 'attachment');
+    my %displayfields;
+    foreach (@fieldlist) {
+        $displayfields{$_} = 1;
+    }
+
+    $template->process("bug/show.xml.tmpl", { bugs => \@bugs,
+                                              displayfields => \%displayfields,
+                                            }, \$msg)
+      || ThrowTemplateError($template->error());
+
+    $msg .= "\n";
+    Bugzilla::BugMail::MessageToMTA($msg);
+
+    # End the response page.
+    $template->process("bug/navigate.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    $template->process("global/footer.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
 }
 
 
