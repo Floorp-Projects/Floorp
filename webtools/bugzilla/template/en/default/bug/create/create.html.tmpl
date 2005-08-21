@@ -456,9 +456,13 @@ function set_assign_to() {
     <select name="[% sel.name %]">
     [%- FOREACH x = ${sel.name} %]
       <option value="[% x FILTER html %]"
-        [% " selected=\"selected\"" IF x == default.${sel.name} %]>[% x FILTER html -%]
-      </option>
-    [%- END %]
+        [% " selected=\"selected\"" IF x == default.${sel.name} %]>
+        [% IF sel.name == "bug_status" %]
+          [% status_descs.$x FILTER html %]
+        [% ELSE %]
+          [% x FILTER html %]
+        [% END %]</option>
+    [% END %]
     </select>
   </td>
 [% END %]
