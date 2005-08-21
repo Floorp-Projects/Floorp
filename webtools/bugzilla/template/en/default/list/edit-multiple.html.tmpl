@@ -283,7 +283,7 @@
     [% FOREACH resolution = resolutions %]
       [% NEXT IF !resolution %]
       <option value="[% resolution FILTER html %]" [% 'selected="selected"' IF resolution == "FIXED" %]>
-        [% resolution FILTER html %]
+        [% resolution_descs.$resolution FILTER html %]
       </option>
     [% END %]
   </select><br>
