@@ -60,14 +60,16 @@ var gSearchAbViewListener = {
   },
   onCountChanged: function(total) {
     var statusText;
-    if (total == 0)
-      statusText = gAddressBookBundle.getString("noMatchFound");  
-    else
-    {
-      if (total == 1)
+    switch (total) {
+      case 0:
+        statusText = gAddressBookBundle.getString("noMatchFound");
+        break;
+      case 1:
         statusText = gAddressBookBundle.getString("matchFound");
-      else  
+        break;
+      default:
         statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);
+        break;
     }
     gStatusText.setAttribute("label", statusText);
   }
