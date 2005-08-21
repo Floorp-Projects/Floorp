@@ -340,21 +340,19 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         case JSTYPE_JAVA_OBJECT:
         case JSTYPE_JAVA_ARRAY:
+            Object javaObj = fromObj;
+            if (javaObj instanceof Wrapper) {
+                javaObj = ((Wrapper)javaObj).unwrap();
+            }
+            if (to.isInstance(javaObj)) {
+                return CONVERSION_NONTRIVIAL;
+            }
             if (to == ScriptRuntime.StringClass) {
                 return 2;
             }
             else if (to.isPrimitive() && to != Boolean.TYPE) {
                 return (fromCode == JSTYPE_JAVA_ARRAY)
                        ? CONVERSION_NONTRIVIAL : 2 + getSizeRank(to);
-            }
-            else {
-                Object javaObj = fromObj;
-                if (javaObj instanceof Wrapper) {
-                    javaObj = ((Wrapper)javaObj).unwrap();
-                }
-                if (to.isInstance(javaObj)) {
-                    return CONVERSION_NONTRIVIAL;
-                }
             }
             break;
 
