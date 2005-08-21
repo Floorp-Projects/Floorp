@@ -513,12 +513,7 @@
 #ifdef GetMessageA
 #undef GetMessageA
 #endif
-#define GetMessageA               mozce_GetMessage
-
-#ifdef GetMessageW
-#undef GetMessageW
-#endif
-#define GetMessageW               mozce_GetMessage
+#define GetMessageA               GetMessageW
 
 #ifdef GetMessageTime
 #undef GetMessageTime
@@ -634,12 +629,8 @@
 #ifdef PeekMessageA
 #undef PeekMessageA
 #endif
-#define PeekMessageA              mozce_PeekMessage
+#define PeekMessageA              PeekMessageW
 
-#ifdef PeekMessageW
-#undef PeekMessageW
-#endif
-#define PeekMessageW              mozce_PeekMessage
 
 #ifdef RegCreateKey
 #undef RegCreateKey
