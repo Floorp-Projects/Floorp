@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -285,17 +286,15 @@ nsDirectoryIndexStream::Close()
 NS_IMETHODIMP
 nsDirectoryIndexStream::Available(PRUint32* aLength)
 {
-    // Lie, and tell the caller that the stream is endless (until we
-    // actually don't have anything left).
-    PRBool more = mPos < mArray.Count();
-    if (more) {
-        *aLength = PRUint32(-1);
+    // If there's data in our buffer, use that
+    if (mOffset < (PRInt32)mBuf.Length()) {
+        *aLength = mBuf.Length() - mOffset;
         return NS_OK;
     }
-    else {
-        *aLength = 0;
-        return NS_OK;
-    }
+
+    // Returning one byte is not ideal, but good enough
+    *aLength = (mPos < mArray.Count()) ? 1 : 0;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
