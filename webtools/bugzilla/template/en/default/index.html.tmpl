@@ -28,11 +28,12 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% title = BLOCK %]
-[% terms.Bugzilla %] Main Page
-[% END %]
-[% style_urls = [ "skins/standard/index.css" ] %]
-[% PROCESS global/header.html.tmpl %]
+
+[% PROCESS global/header.html.tmpl
+   title = "$terms.Bugzilla Main Page"
+   style_urls = [ 'skins/standard/index.css' ]
+   onload = 'document.forms[\'f\'].quicksearch.focus();'
+%]
 
 
 <script type="text/javascript">
@@ -84,25 +85,19 @@ function addSidebar() {
 
   </ul>
 
-  <form id="show-bug" name="f" action="show_bug.cgi" method="get"
-      onsubmit="QuickSearch(f.id.value); return false;">
+  <form id="show-bug" name="f" action="buglist.cgi" method="get"
+        onsubmit="if (this.quicksearch.value == '')
+                  { alert('Please enter one or more search terms first.');
+                    return false; } return true;">
   <div>
     <p>Enter [% terms.abug %] # or some search terms:</p>
-    <input id="text" type="text" name="id">
-    <input id="show" type="submit" value="Show">
-    <a href="quicksearch.html">[Help]</a>
+    <input id="quicksearch" type="text" name="quicksearch">
+    <input id="find" type="submit" value="Find">
+    <a href="page.cgi?id=quicksearch.html">[Help]</a>
   </div>
   </form>
 
   <div class="outro"></div>
 </div>
-
-<script type="text/javascript" src="localconfig.js"></script>
-<script type="text/javascript" src="quicksearch.js"></script>
-<script type="text/javascript">
-<!--
-document.forms['f'].id.focus();
-//-->
-</script>
 
 [% PROCESS global/footer.html.tmpl %]

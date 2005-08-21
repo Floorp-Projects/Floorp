@@ -30,10 +30,6 @@ of the Bugzilla Guide in the docs/ directory.
    If you want to change platforms, operating systems, severities and
    priorities, this can also be done in localconfig at this time.
 
-   You should also update localconfig.js to reflect these changes. This
-   includes setting the URL you chose in step 1 as the 'bugzilla' JS
-   variable.
-
 5. Using the name you provided as $db_name above, create a MySQL database
    for Bugzilla. You should also create a user permission for the name
    supplied as $db_user with read/write access to that database.

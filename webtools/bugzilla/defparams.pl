@@ -1424,6 +1424,17 @@ Reason: %reason%
    default => 1,
   },
 
+  {
+   name    => 'quicksearch_comment_cutoff',
+   desc    => q{The maximum number of search terms for a QuickSearch to search
+                comments.
+                If the QuickSearch query contains more terms than this value,
+                QuickSearch will not search comments.},
+   type    => 't',
+   default => '4',
+   checker => \&check_numeric
+  },
+
 # Added for Patch Viewer stuff (attachment.cgi?action=diff)
   {
    name    => 'cvsroot',

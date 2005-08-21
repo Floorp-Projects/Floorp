@@ -725,11 +725,12 @@
       summary and status whiteboard of a bug; adding 
       "<filename>:BazProduct</filename>" would
       search only in that product.
+      You can use it to find a bug by its number or its alias, too.
       </para>
 
-      <para>You'll find the Quicksearch box on Bugzilla's
-      front page, along with a 
-      <ulink url="../../quicksearch.html">Help</ulink> 
+      <para>You'll find the Quicksearch box in Bugzilla's footer area.
+      On Bugzilla's front page, there is an additional
+      <ulink url="../../page.cgi?id=quicksearch.html">Help</ulink>
       link which details how to use it.</para>
     </section>
     

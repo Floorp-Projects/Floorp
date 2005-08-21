@@ -38,6 +38,7 @@ use vars qw($template $vars);
 
 use Bugzilla;
 use Bugzilla::Search;
+use Bugzilla::Search::Quicksearch;
 use Bugzilla::Constants;
 use Bugzilla::User;
 
@@ -63,6 +64,15 @@ my $buffer = $cgi->query_string();
 if (length($buffer) == 0) {
     print $cgi->header(-refresh=> '10; URL=query.cgi');
     ThrowUserError("buglist_parameters_required");
+}
+
+# Determine whether this is a quicksearch query.
+my $searchstring = $cgi->param('quicksearch');
+if (defined($searchstring)) {
+    $buffer = quicksearch($searchstring);
+    # Quicksearch may do a redirect, in which case it does not return.
+    # If it does return, it has modified $cgi->params so we can use them here
+    # as if this had been a normal query from the beginning.
 }
 
 ################################################################################

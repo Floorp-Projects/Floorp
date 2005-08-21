@@ -25,7 +25,6 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-<form method="get" action="show_bug.cgi">
 <div id="useful-links">
   <div id="links-actions">
     <div class="label">Actions:</div>
@@ -34,8 +33,13 @@
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Search</a> |
         
-        [% terms.bug %] # <input class="txt" name="id" size="6">
-        <input class="btn" type="submit" value="Find"> | 
+        <form action="buglist.cgi" method="get"
+              onsubmit="if (this.quicksearch.value == '')
+                        { alert('Please enter one or more search terms first.');
+                          return false; } return true;">
+            <input class="txt" type="text" name="quicksearch">
+            <input class="btn" type="submit" value="Find">
+        </form> |
         
         <a href="report.cgi">Reports</a> 
         
@@ -127,4 +131,3 @@
   [%# Sections of links to more things users can do on this installation. %]
   [% Hook.process("end") %]
 </div>
-</form>

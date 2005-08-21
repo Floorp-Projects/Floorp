@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.6 2005/06/29 23:43:33 zach%zachlipton.com Exp $ -->
+<!-- $Id: security.xml,v 1.7 2005/08/21 18:16:41 lpsolit%gmail.com Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -204,14 +204,6 @@ skip-networking
               <simplelist type="inline">
                 <member><filename>*.pl</filename></member>
                 <member><filename>*localconfig*</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
-            <listitem>
-              <para>But allow:
-              <simplelist type="inline">
-                <member><filename>localconfig.js</filename></member>
-                <member><filename>localconfig.rdf</filename></member>
               </simplelist>
               </para>
             </listitem>

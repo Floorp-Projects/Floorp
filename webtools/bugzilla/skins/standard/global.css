@@ -176,13 +176,14 @@ body
         margin-top: 5px;
         width: 100%;
         font-family: sans-serif;
+        background: #edf2f2;
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
     }
 
     #footer form
     {
-        background: #edf2f2;
-        border-top: 1px solid #ddd;
-        border-bottom: 1px solid #ddd;
+        display: inline;
     }
 
     #footer span

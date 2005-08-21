@@ -34,13 +34,7 @@
   orient="vertical"
   onload="document.getElementById('query-field').addEventListener('keypress', initial_keypress_handler, true)">
 
-<!-- Load QuickSearch libraries -->
-<script type="application/x-javascript" src="localconfig.js"/>
-<script type="application/x-javascript" src="quicksearch.js"/>
 <script type="application/x-javascript"><![CDATA[
-
-// Tell QuickSearch that the source of this is the sidebar
-var sidebar = 1;
 
 function load_absolute_url( aAbsoluteURL ) {
     content.location = aAbsoluteURL;
@@ -59,7 +53,7 @@ function initial_keypress_handler( aEvent ) {
 
 function normal_keypress_handler( aEvent ) {
     if ( aEvent.keyCode == 13 )
-      QuickSearch(this.value);
+      load_relative_url('buglist.cgi?quicksearch=' + this.value);
 }
 
 ]]></script>

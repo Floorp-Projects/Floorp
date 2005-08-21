@@ -1015,9 +1015,6 @@ if ($my_create_htaccess) {
 <FilesMatch ^(.*\.pl|.*localconfig.*)$>
   deny from all
 </FilesMatch>
-<FilesMatch ^(localconfig.js|localconfig.rdf)$>
-  allow from all
-</FilesMatch>
 END
     close HTACCESS;
     chmod $fileperm, ".htaccess";
@@ -1033,11 +1030,6 @@ END
       print "Repairing .htaccess...\n";
       open HTACCESS, '>', '.htaccess';
       print HTACCESS $oldaccess;
-      print HTACCESS <<'END';
-<FilesMatch ^(localconfig.js|localconfig.rdf)$>
-  allow from all
-</FilesMatch>
-END
       close HTACCESS;
     }
 
