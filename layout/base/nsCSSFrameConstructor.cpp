@@ -11554,6 +11554,23 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIContent* aContent)
   return result;
 }
 
+PRBool
+nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame, nsresult* aResult)
+{
+  if (!aFrame || !IsFrameSpecial(aFrame))
+    return PR_FALSE;
+
+#ifdef DEBUG
+  if (gNoisyContentUpdates) {
+    printf("nsCSSFrameConstructor::RecreateFramesForContent: frame=");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" is special\n");
+  }
+#endif
+  *aResult = ReframeContainingBlock(aFrame);
+  return PR_TRUE;
+}
+ 
 nsresult
 nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
 {
@@ -11574,6 +11591,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
   mPresShell->GetPrimaryFrameFor(aContent, &frame);
   nsPresContext* presContext = mPresShell->GetPresContext();
 
+  nsresult rv = NS_OK;
+
   if (frame) {
     // If the background of the frame is painted on one of its ancestors,
     // the frame reconstruct might not invalidate correctly.
@@ -11590,20 +11609,16 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     if (ancestor != frame)
       ApplyRenderingChangeToTree(presContext, ancestor, nsnull,
                                  nsChangeHint_RepaintFrame);
+
+    // If the frame is an anonymous frame created as part of
+    // inline-in-block splitting --- or if its parent is
+    // such an anonymous frame (i.e., this frame was the cause
+    // of such splitting), then recreate the containing block.
+    if (MaybeRecreateContainerForIBSplitterFrame(frame, &rv) ||
+        MaybeRecreateContainerForIBSplitterFrame(frame->GetParent(), &rv))
+      return rv;
   }
 
-  if (frame && IsFrameSpecial(frame)) {
-#ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::RecreateFramesForContent: frame=");
-      nsFrame::ListTag(stdout, frame);
-      printf(" is special\n");
-    }
-#endif
-    return ReframeContainingBlock(frame);
-  }
-
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> container = aContent->GetParent();
   if (container) {
     PRInt32 indexInContainer = container->IndexOf(aContent);
