@@ -71,12 +71,16 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresShell.h"
+#include "nsIEventQueueService.h"
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsPresState.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
+
+static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
+
 //----------------------------------------------------------------------
 
 //----------nsHTMLScrollFrame-------------------------------------------
@@ -1317,6 +1321,13 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aI
 {
 }
 
+nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
+{
+  if (mScrollEventQueue) {
+    mScrollEventQueue->RevokeEvents(this);
+  }
+}
+
 NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::AddRef(void)
 {
   return 1;
@@ -1679,10 +1690,10 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
   NS_ASSERTION(!mViewInitiatedScroll, "Cannot reenter ScrollPositionDidChange");
 
   mViewInitiatedScroll = PR_TRUE;
-
   InternalScrollPositionDidChange(aX, aY);
-
   mViewInitiatedScroll = PR_FALSE;
+  
+  PostScrollEvent();
   
   return NS_OK;
 }
@@ -1768,23 +1779,73 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
         mFrameInitiatedScroll = PR_FALSE;
       }
       ScrollbarChanged(mOuter->GetPresContext(), x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
-
-      // Fire the onScroll event now that we have scrolled
-      nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
-      if (presShell) {
-        nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
-        nsEventStatus status = nsEventStatus_eIgnore;
-        // note if hcontent is non-null then hframe must be non-null.
-        // likewise for vcontent and vframe. Thus targetFrame will always
-        // be non-null in here.
-        nsIFrame* targetFrame =
-          hcontent == aContent ? mHScrollbarBox : mVScrollbarBox;
-        presShell->HandleEventWithTarget(&event, targetFrame,
-                                         aContent,
-                                         NS_EVENT_FLAG_INIT, &status);
-      }
     }
   }
+}
+
+/* ============= Scroll events ========== */
+struct ScrollEvent : public PLEvent {
+  nsGfxScrollFrameInner* mInner;
+  ScrollEvent(nsGfxScrollFrameInner* aInner);
+};
+
+static void* PR_CALLBACK HandleScrollEvent(PLEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  ScrollEvent *event = NS_STATIC_CAST(ScrollEvent*, aEvent);
+  event->mInner->FireScrollEvent();
+  return nsnull;
+}
+
+static void PR_CALLBACK DestroyScrollEvent(PLEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent,"Event is null");
+  ScrollEvent *event = NS_STATIC_CAST(ScrollEvent*, aEvent);
+  delete event;
+}
+
+ScrollEvent::ScrollEvent(nsGfxScrollFrameInner* aInner)
+{
+  NS_ASSERTION(aInner, "null parameter");
+  mInner = aInner;
+  PL_InitEvent(this, aInner, ::HandleScrollEvent, ::DestroyScrollEvent);  
+}
+
+void
+nsGfxScrollFrameInner::FireScrollEvent()
+{
+  mScrollEventQueue = nsnull;
+  nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
+  if (!presShell)
+    return;
+  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  presShell->HandleEventWithTarget(&event, mOuter, mOuter->GetContent(),
+                                   NS_EVENT_FLAG_INIT, &status);
+}
+
+void
+nsGfxScrollFrameInner::PostScrollEvent()
+{
+  nsCOMPtr<nsIEventQueueService> service = do_GetService(kEventQueueServiceCID);
+  NS_ASSERTION(service, "No event service");
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  service->GetSpecialEventQueue(
+    nsIEventQueueService::UI_THREAD_EVENT_QUEUE, getter_AddRefs(eventQueue));
+  NS_ASSERTION(eventQueue, "Event queue is null");
+
+  if (eventQueue == mScrollEventQueue)
+    return;
+    
+  ScrollEvent* ev = new ScrollEvent(this);
+  if (!ev)
+    return;
+
+  if (mScrollEventQueue) {
+    mScrollEventQueue->RevokeEvents(this);
+  }
+  eventQueue->PostEvent(ev);
+  mScrollEventQueue = eventQueue;
 }
 
 void
