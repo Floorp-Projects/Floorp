@@ -94,6 +94,7 @@ eval {
 
 $vars->{'bugs'} = \@bugs;
 $vars->{'marks'} = \%marks;
+$vars->{'use_keywords'} = 1 if (@::legal_keywords);
 
 # Next bug in list (if there is one)
 my @bug_list;
