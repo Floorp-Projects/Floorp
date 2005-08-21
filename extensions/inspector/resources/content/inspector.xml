@@ -785,10 +785,10 @@
             this.mMenuEl.appendChild(pp);
       
            this.mFormerContextParent = parent;
-           this.mContextMenu = pp;
           } else {
             this.mMenuEl.setAttribute("disabled", "true");
           }
+          this.mContextMenu = pp;
         ]]></body>
       </method>
 
