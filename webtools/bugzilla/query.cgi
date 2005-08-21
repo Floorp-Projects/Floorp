@@ -384,8 +384,8 @@ for (my $chart = 0; $cgi->param("field$chart-0-0"); $chart++) {
         my @cols;
         for (my $col = 0; $cgi->param("field$chart-$row-$col"); $col++) {
             push(@cols, { field => $cgi->param("field$chart-$row-$col"),
-                          type => $cgi->param("type$chart-$row-$col"),
-                          value => $cgi->param("value$chart-$row-$col") });
+                          type => $cgi->param("type$chart-$row-$col") || 'noop',
+                          value => $cgi->param("value$chart-$row-$col") || '' });
         }
         push(@rows, \@cols);
     }
