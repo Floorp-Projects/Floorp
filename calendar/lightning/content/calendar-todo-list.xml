@@ -46,9 +46,12 @@
             
             onGetResult: function onGetResult(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
-                if (!Components.isSuccessCode(aStatus))
-                    return Components.utils.reportError("Failed to fetch todo items: " + aStatus)
-
+                if (!Components.isSuccessCode(aStatus)) {
+                    Components.utils.reportError(
+                        "Failed to fetch todo items: 0x" +
+                        aStatus.toString(16));
+                    return;
+                }
                 aItems.forEach(this.todoList.addTodo, this.todoList);
             },
             
@@ -56,8 +59,9 @@
                                                               aDetail)
             {
                 if (!Components.isSuccessCode(aStatus))
-                    Components.utils.reportError("Failed to fetch todo item (" +
-                                                aId + "): " + aStatus);
+                    Components.utils.reportError("Failed to fetch todo item"
+                                                 + "(" + aId + "): 0x" + 
+                                                 aStatus.toString(16));
             },
 
             QueryInterface: function QueryInterface(aIID) {

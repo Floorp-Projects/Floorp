@@ -84,7 +84,7 @@ function doCreateCalendar()
         if (already.length) {
             if (type != 'local') {
                 // signalError("Already have calendar at this URI.");
-                Components.reportError("Already have calendar with URI " + uri);
+                Components.utils.reportError("Already have calendar with URI " + uri);
                 return false;
             }
             uri = uri.replace(/id=(\d+)/,

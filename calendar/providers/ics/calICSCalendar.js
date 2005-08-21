@@ -243,7 +243,6 @@ calICSCalendar.prototype = {
             },
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
-                var lastmodifed;
                 for (var i=0; i<aCount; i++) {
                     calComp.addSubcomponent(aItems[i].icalComponent);
                 }

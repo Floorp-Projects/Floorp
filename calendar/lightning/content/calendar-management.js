@@ -10,7 +10,7 @@ for (var i = 0; i < document.styleSheets.length; i++) {
     }
 }
 if (!calendarPrefStyleSheet)
-    Components.reportError("Couldn't find our magic empty style sheet.")
+    Components.utils.reportError("Couldn't find our magic empty style sheet.")
 
 function updateStyleSheetForCalendar(aCalendar)
 {

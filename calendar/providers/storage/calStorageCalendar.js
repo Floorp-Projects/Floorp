@@ -122,8 +122,9 @@ function createStatement (dbconn, sql) {
         wrapper.initialize(stmt);
         return wrapper;
     } catch (e) {
-        Components.reportError("mozStorage exception: createStatement failed, statement: '" + 
-                               sql + "', error: '" + dbconn.lastErrorString + "'");
+        Components.utils.reportError(
+            "mozStorage exception: createStatement failed, statement: '" + 
+            sql + "', error: '" + dbconn.lastErrorString + "'");
     }
 
     return null;
@@ -893,7 +894,8 @@ calStorageCalendar.prototype = {
                 oldVersion = 3;
             } catch (e) {
                 dump ("+++++++++++++++++ DB Error: " + this.mDB.lastErrorString + "\n");
-                Components.reportError("Upgrade failed! DB Error: " + this.mDB.lastErrorString);
+                Components.utils.reportError("Upgrade failed! DB Error: " + 
+                                             this.mDB.lastErrorString);
                 this.mDB.rollbackTransaction();
                 throw e;
             }
@@ -925,7 +927,8 @@ calStorageCalendar.prototype = {
                 oldVersion = 4;
             } catch (e) {
                 dump ("+++++++++++++++++ DB Error: " + this.mDB.lastErrorString + "\n");
-                Components.reportError("Upgrade failed! DB Error: " + this.mDB.lastErrorString);
+                Components.utils.reportError("Upgrade failed! DB Error: " +
+                                             this.mDB.lastErrorString);
                 this.mDB.rollbackTransaction();
                 throw e;
             }
@@ -1413,7 +1416,8 @@ calStorageCalendar.prototype = {
             this.mDB.commitTransaction();
         } catch (e) {
             dump("flushItem DB error: " + this.mDB.lastErrorString + "\n");
-            Components.reportError("flushItem DB error: " + this.mDB.lastErrorString);
+            Components.utils.reportError("flushItem DB error: " +
+                                         this.mDB.lastErrorString);
             this.mDB.rollbackTransaction();
             throw e;
         }
@@ -1522,7 +1526,7 @@ calStorageCalendar.prototype = {
             ip.last_modified = tmp.nativeTime;
 
         ip.title = item.getUnproxiedProperty("SUMMARY");
-        ip.priority = item.getUnproxiedProperty("PRIROITY");
+        ip.priority = item.getUnproxiedProperty("PRIORITY");
         ip.privacy = item.getUnproxiedProperty("PRIVACY");
         ip.ical_status = item.getUnproxiedProperty("STATUS");
 
@@ -1692,7 +1696,8 @@ calStorageCalendar.prototype = {
             this.mDeleteTodo(aID);
             this.mDB.commitTransaction();
         } catch (e) {
-            Components.reportError("deleteItemById DB error: " + this.mDB.lastErrorString);
+            Components.utils.reportError("deleteItemById DB error: " + 
+                                         this.mDB.lastErrorString);
             this.mDB.rollbackTransaction();
             throw e;
         }
