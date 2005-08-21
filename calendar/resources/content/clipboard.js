@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
+ *                 Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,9 +47,9 @@
 
 function getClipboard()
 {
-   const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
-   const kClipboardIID = Components.interfaces.nsIClipboard;
-   return Components.classes[kClipboardContractID].getService(kClipboardIID);
+    const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
+    const kClipboardIID = Components.interfaces.nsIClipboard;
+    return Components.classes[kClipboardContractID].getService(kClipboardIID);
 }
 
 var Transferable = Components.Constructor("@mozilla.org/widget/transferable;1", Components.interfaces.nsITransferable);
@@ -69,22 +70,21 @@ var SupportsString = (("nsISupportsWString" in Components.interfaces)
 
 function canPaste()
 {
-   const kClipboardIID = Components.interfaces.nsIClipboard;
+    const kClipboardIID = Components.interfaces.nsIClipboard;
 
-   var clipboard = getClipboard();
-  var flavourArray = new SupportsArray;
-   var flavours = ["text/calendar", "text/unicode"];
+    var clipboard = getClipboard();
+    var flavourArray = new SupportsArray;
+    var flavours = ["text/calendar", "text/unicode"];
    
-   for (var i = 0; i < flavours.length; ++i)
-   {
-    var kSuppString = new SupportsCString;
-      kSuppString.data = flavours[i];
-      flavourArray.AppendElement(kSuppString);
-   }
+    for (var i = 0; i < flavours.length; ++i)
+    {
+        var kSuppString = new SupportsCString;
+        kSuppString.data = flavours[i];
+        flavourArray.AppendElement(kSuppString);
+    }
    
-   return clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
+    return clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
 }
-
 
 /** 
 * Copy iCalendar data to the Clipboard, and delete the selected events.
@@ -93,78 +93,84 @@ function canPaste()
 
 function cutToClipboard( /* calendarEventArray */)
 {
-  // if( !calendarEventArray)
-  var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+    // if( !calendarEventArray)
+    var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
-   if( copyToClipboard( calendarEventArray ) )
-   {
-      deleteEventCommand( true ); // deletes all selected events without prompting.
-   }
+    if( copyToClipboard( calendarEventArray ) )
+    {
+         deleteEventCommand( true ); // deletes all selected events without prompting.
+    }
 }
 
 
 /** 
-* Copy iCalendar data to the Clipboard. The data is copied to three types:
-* 1) text/calendar. Found that name somewhere in mail code. not used outside
-*    Calendar as far as I know, so this can be customized for internal use.
-* 2) text/unicode. Plaintext iCalendar data, tested on Windows for Outlook 2000 
-*    and Lotus Organizer.
-* 3) text/html. Not for parsing, only pretty looking calendar data.
-*
+* Copy iCalendar data to the Clipboard. The data is copied to both 
+* text/calendar and text/unicode. 
 **/
 
-function copyToClipboard( calendarEventArray )
+function copyToClipboard( calendarItemArray )
 {  
-   if( !calendarEventArray)
-   {
-      calendarEventArray = new Array( 0 );
-      calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
-   }
+    if(!calendarItemArray)
+    {
+        calendarItemArray = new Array();
+        calendarItemArray = gCalendarWindow.EventSelection.selectedEvents;
+    }
 
-   if(calendarEventArray.length == 0)
-      alert("No events selected");
+    if (calendarItemArray.length == 0) {
+        dump("Tried to cut/copy 0 events");
+        return false;
+    }
 
-   var calendarEvent;  
-   var sTextiCalendar = eventArrayToICalString( calendarEventArray );
-   var sTextiCalendarExport =  eventArrayToICalString( calendarEventArray, true );
-   var sTextHTML = eventArrayToHTML( calendarEventArray ); 
+    var icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                       .getService(Components.interfaces.calIICSService);
+    var calComp = icssrv.createIcalComponent("VCALENDAR");
+    calComp.version = "2.0";
+    calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
 
-   // 1. get the clipboard service
-   var clipboard = getClipboard();
+    for each (item in calendarItemArray) {
+        // If we copy an item and paste it again, it will have the same ID as
+        // the original.  Therefore, give every item a new ID.
+        var dummyItem = Components.classes["@mozilla.org/calendar/event;1"]
+                                  .createInstance(Components.interfaces.calIEvent);
+        var newItem = item.clone();
+        newItem.id = dummyItem.id;
+        calComp.addSubcomponent(newItem.icalComponent);
+    }
 
-   // 2. create the transferable
-  var trans = new Transferable;
+    // XXX This might not be enough to be Outlook compatible
+    var sTextiCalendar = calComp.serializeToICS();
 
-   if ( trans && clipboard) {
+    // 1. get the clipboard service
+    var clipboard = getClipboard();
 
-      // 3. register the data flavors
-      trans.addDataFlavor("text/calendar");
-      trans.addDataFlavor("text/unicode");
-      trans.addDataFlavor("text/html");
+    // 2. create the transferable
+    var trans = new Transferable;
 
-      // 4. create the data objects
-    var icalWrapper = new SupportsString;
-    var textWrapper = new SupportsString;
-    var htmlWrapper = new SupportsString;
+    if ( trans && clipboard) {
+        // 3. register the data flavors
+        trans.addDataFlavor("text/calendar");
+        trans.addDataFlavor("text/unicode");
 
-      if ( icalWrapper && textWrapper && htmlWrapper ) {
-         // get the data
-         icalWrapper.data = sTextiCalendar;        // plainTextRepresentation;
-         textWrapper.data = sTextiCalendarExport;  // plainTextRepresentation;
-         htmlWrapper.data = sTextHTML;             // htmlRepresentation;
+        // 4. create the data objects
+        var icalWrapper = new SupportsString;
 
-         // 5. add data objects to transferable
-         // Both Outlook 2000 client and Lotus Organizer use text/unicode when pasting iCalendar data
-         trans.setTransferData ( "text/calendar", icalWrapper, icalWrapper.data.length*2 ); // double byte data
-         trans.setTransferData ( "text/unicode", textWrapper, textWrapper.data.length*2 );
-         trans.setTransferData ( "text/html", htmlWrapper, htmlWrapper.data.length*2 );
+        // get the data
+        icalWrapper.data = sTextiCalendar;
 
-         clipboard.setData( trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
+        // 5. add data objects to transferable
+        // Both Outlook 2000 client and Lotus Organizer use text/unicode 
+        // when pasting iCalendar data
+        trans.setTransferData("text/calendar", icalWrapper,
+                              icalWrapper.data.length*2 ); // double byte data
+        trans.setTransferData("text/unicode", icalWrapper, 
+                              icalWrapper.data.length*2 );
 
-         return true;         
-      }
-   }
-   return true;
+        clipboard.setData(trans, null,
+                          Components.interfaces.nsIClipboard.kGlobalClipboard );
+
+        return true;         
+    }
+    return true;
 }
 
 
@@ -175,91 +181,119 @@ function copyToClipboard( calendarEventArray )
 
 function pasteFromClipboard()
 {
-   const kClipboardIID = Components.interfaces.nsIClipboard;
+    if (!canPaste()) {
+        dump("Attempting to paste with no useful data on the clipboard");
+        return;
+    }
 
-   if( canPaste() ) {   
-      // 1. get the clipboard service
-      var clipboard = getClipboard();
+    // 1. get the clipboard service
+    var clipboard = getClipboard();
 
-      // 2. create the transferable
+    // 2. create the transferable
     var trans = new Transferable;
-  
-      if ( trans && clipboard) {
-                     
-         // 3. register the data flavors you want, highest fidelity first!
-         trans.addDataFlavor("text/calendar");
-         trans.addDataFlavor("text/unicode");
 
-         // 4. get transferable from clipboard
-	 clipboard.getData ( trans, kClipboardIID.kGlobalClipboard);
+    if (!trans || !clipboard) {
+        dump("Failed to get either a transferable or a clipboard");
+        return;
+    }
+    // 3. register the data flavors you want, highest fidelity first!
+    trans.addDataFlavor("text/calendar");
+    trans.addDataFlavor("text/unicode");
 
-	 // 5. ask transferable for the best flavor. Need to create new JS
-         //    objects for the out params.
-	 var flavour = { };
-	 var data = { };
-	 var length = { };
-	 trans.getAnyTransferData(flavour, data, length);
-	 data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
-	 //DEBUG alert("clipboard type: " + flavour.value);
-    var calendarEventArray;
-    var startDate;
-    var endDateTime;
-    var MinutesToAddOn;
+    // 4. get transferable from clipboard
+    clipboard.getData ( trans, Components.interfaces.nsIClipboard.kGlobalClipboard);
 
-	 switch (flavour.value) {
-	 case "text/calendar":
-            
-            calendarEventArray = parseIcalEvents( data );
-            
-            //change the date of all the events to now
-            startDate = gCalendarWindow.currentView.getNewEventDate();
-            var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   
-            MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", categoriesStringBundle.GetStringFromName("defaultEventLength" ) );
-   
-            endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-   
-            for( var i = 0; i < calendarEventArray.length; i++ )
-            {
-               calendarEventArray[i].start.setTime( startDate );
-               calendarEventArray[i].end.setTime( endDateTime );
+    // 5. ask transferable for the best flavor. Need to create new JS
+    //    objects for the out params.
+    var flavour = { };
+    var data = { };
+    trans.getAnyTransferData(flavour, data, {});
+    data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+    var items = new Array();
+    switch (flavour.value) {
+        case "text/calendar":
+        case "text/unicode":
+            var icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                                   .getService(Components.interfaces.calIICSService);
+            var calComp = icssrv.parseICS(data);
+            var subComp = calComp.getFirstSubcomponent("ANY");
+            while (subComp) {
+                switch (subComp.componentType) {
+                    case "VEVENT":
+                        var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                              .createInstance
+                                              (Components.interfaces.calIEvent);
+                        event.icalComponent = subComp;
+                        items.push(event);
+                        break;
+                    case "VTODO":
+                        var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                             .createInstance
+                                             (Components.interfaces.calITodo);
+                        todo.icalComponent = subComp;
+                        items.push(todo);
+                        break;
+                    default: break;
+                }
+                subComp = calComp.getNextSubcomponent("ANY");
             }
-	    // LINAGORA (We don't want to have to edit the event again)
-            addEventsToCalendar( calendarEventArray, 1 );
+            // If there are multiple items on the clipboard, the earliest
+            // should be set to the selected day/time and the rest adjusted.
+            var earliestDate = null;
+            for each(item in items) {
+                var date = null;
+                if (item.startDate) 
+                    date = item.startDate.clone();
+                else if (item.entryDate)
+                    date = item.entryDate.clone();
+                else if (item.dueDate)
+                    date = item.dueDate.clone();
+
+                if (!date)
+                    continue;
+                if (!earliestDate || date.compare(earliestDate) < 0)
+                    earliestDate = date;
+            }
+            var destCal = getDefaultCalendar();
+            var firstDate = jsDateToDateTime(gCalendarWindow.currentView.getNewEventDate());
+
+            function makeNewStartingDate(oldDate) {
+                var date = firstDate.clone();
+                var offset = oldDate.subtractDate(earliestDate);
+                date.addDuration(offset);
+
+                // now that the day is set, fix the time back to the original
+                date.hour = oldDate.hour;
+                date.minute = oldDate.minute;
+                date.second = oldDate.second;
+                date.normalize();
+                return date;
+            }
+
+            startBatchTransaction();
+            for each(item in items) {
+                var duration = item.duration;
+                var newItem = item.clone();
+                if (item.startDate) {
+                    newItem.startDate = makeNewStartingDate(item.startDate).clone();
+                    newItem.endDate = newItem.startDate.clone();
+                    newItem.endDate.addDuration(duration);
+                }
+                if (item.entryDate) {
+                    newItem.entryDate = makeNewStartingDate(item.entryDate).clone();
+                    if (item.dueDate) {
+                        newItem.dueDate = newItem.entryDate.clone();
+                        newItem.dueDate.addDuration(duration);
+                    }
+                }
+                else if (item.dueDate) {
+                    newItem.dueDate = makeNewStartingDate(item.dueDate).clone();
+                }
+                doTransaction('add', newItem, destCal, null, null);
+            }
+            endBatchTransaction();
             break;
-	 case "text/unicode":
-            if ( data.indexOf("BEGIN:VEVENT") == -1 )
-            {
-               // no iCalendar data, paste clipboard text into description of new event 
-               calendarEvent = createEvent();
-               initCalendarEvent( calendarEvent );
-               calendarEvent.description = data;
-               editNewEvent( calendarEvent );
-            }
-            else
-            {
-               calendarEventArray = parseIcalEvents( data );
-               //change the date of all the events to now
-               startDate = gCalendarWindow.currentView.getNewEventDate();
-               MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
-      
-               endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-      
-               for( i = 0; i < calendarEventArray.length; i++ )
-               {
-                  calendarEventArray[i].start.setTime( startDate );
-                  calendarEventArray[i].end.setTime( endDateTime );
-               }
-               
-               // LINAGORA (We don't want to have to edit the event again)
-               addEventsToCalendar( calendarEventArray, 1 );
-            }
-            break;            
-	 default: 
-            alert("Unknown clipboard type: " + flavour.value);
-	 }
-      }
-   }
-   else
-     alert( "No iCalendar or text on the clipboard." );
+        default: 
+            dump("Unknown clipboard type: " + flavour.value);
+    }
 }
