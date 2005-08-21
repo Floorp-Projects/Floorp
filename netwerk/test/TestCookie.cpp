@@ -565,5 +565,5 @@ main(PRInt32 argc, char *argv[])
 
     NS_ShutdownXPCOM(nsnull);
     
-    return 0;
+    return allTestsPassed ? 0 : 1;
 }
