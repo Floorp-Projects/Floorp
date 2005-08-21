@@ -605,6 +605,7 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   const PRUnichar* action         = nsnull;
   const PRUnichar* group          = nsnull;
   const PRUnichar* preventdefault = nsnull;
+  const PRUnichar* allowuntrusted = nsnull;
 
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -639,6 +640,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
       group = aAtts[1];
     else if (localName == nsXBLAtoms::preventdefault)
       preventdefault = aAtts[1];
+    else if (localName == nsXBLAtoms::allowuntrusted)
+      allowuntrusted = aAtts[1];
   }
 
   if (command && !mIsChromeOrResource)
@@ -651,7 +654,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
   nsXBLPrototypeHandler* newHandler;
   newHandler = new nsXBLPrototypeHandler(event, phase, action, command,
                                          keycode, charcode, modifiers, button,
-                                         clickcount, group, preventdefault, mBinding);
+                                         clickcount, group, preventdefault,
+                                         allowuntrusted, mBinding);
 
   if (newHandler) {
     newHandler->SetLineNumber(aLineNumber);

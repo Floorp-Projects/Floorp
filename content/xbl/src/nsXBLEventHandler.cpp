@@ -47,6 +47,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsXBLAtoms.h"
 #include "nsXBLPrototypeHandler.h"
+#include "nsIDOMNSEvent.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
   : mProtoHandler(aHandler)
@@ -135,12 +136,20 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
 
+  nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aEvent);
+  PRBool trustedEvent = PR_FALSE;
+  if (domNSEvent) {
+    domNSEvent->GetIsTrusted(&trustedEvent);
+  }
+
   PRUint32 i;
   for (i = 0; i < count; ++i) {
     nsXBLPrototypeHandler* handler = NS_STATIC_CAST(nsXBLPrototypeHandler*,
                                                     mProtoHandlers[i]);
-    if (handler->KeyEventMatched(key))
+    if ((trustedEvent || handler->AllowUntrustedEvents()) &&
+        handler->KeyEventMatched(key)) {
       handler->ExecuteHandler(receiver, aEvent);
+    }
   }
 
   return NS_OK;

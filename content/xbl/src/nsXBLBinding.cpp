@@ -99,6 +99,8 @@
 #include "nsXBLBinding.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIEventListenerManager.h"
+#include "nsGUIEvent.h"
 
 #include "prprf.h"
 
@@ -648,8 +650,11 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
     if (handlerChain) {
-      nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-      nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
+      nsCOMPtr<nsIEventListenerManager> manager;
+      mBoundElement->GetListenerManager(getter_AddRefs(manager));
+      if (!manager)
+        return;
+
       nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
 
       nsXBLPrototypeHandler* curr;
@@ -665,9 +670,6 @@ nsXBLBinding::InstallEventHandlers()
         nsAutoString type;
         eventAtom->ToString(type);
 
-        // Figure out if we're using capturing or not.
-        PRBool useCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
-
         // If this is a command, add it in the system event group, otherwise 
         // add it to the standard event group.
 
@@ -676,14 +678,21 @@ nsXBLBinding::InstallEventHandlers()
         nsIDOMEventGroup* eventGroup = nsnull;
         if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
-            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+            manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
         }
 
         nsXBLEventHandler* handler = curr->GetEventHandler();
         if (handler) {
-          target->AddGroupedEventListener(type, handler, useCapture,
-                                          eventGroup);
+          // Figure out if we're using capturing or not.
+          PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
+            NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+          if (curr->AllowUntrustedEvents()) {
+            flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+          }
+
+          manager->AddEventListenerByType(handler, type, flags, eventGroup);
         }
       }
 
@@ -696,9 +705,6 @@ nsXBLBinding::InstallEventHandlers()
         nsAutoString type;
         handler->GetEventName(type);
 
-        // Figure out if we're using capturing or not.
-        PRBool useCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
-
         // If this is a command, add it in the system event group, otherwise 
         // add it to the standard event group.
 
@@ -707,11 +713,20 @@ nsXBLBinding::InstallEventHandlers()
         nsIDOMEventGroup* eventGroup = nsnull;
         if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
-            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+            manager->GetSystemEventGroupLM(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
         }
 
-        target->AddGroupedEventListener(type, handler, useCapture, eventGroup);
+        // Figure out if we're using capturing or not.
+        PRInt32 flags = (handler->GetPhase() == NS_PHASE_CAPTURING) ?
+          NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+        // For key handlers we have to set NS_PRIV_EVENT_UNTRUSTED_PERMITTED flag.
+        // Whether the handling of the event is allowed or not is handled in
+        // nsXBLKeyEventHandler::HandleEvent
+        flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+
+        manager->AddEventListenerByType(handler, type, flags, eventGroup);
       }
     }
   }

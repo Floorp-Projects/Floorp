@@ -62,12 +62,15 @@ public:
 
   NS_IMETHOD FlushSkinStylesheets();
 
+  NS_IMETHOD_(PRBool) IsChrome() { return mIsChrome; }
+
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject();
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
-  PRBool mScriptAccess;
+  PRPackedBool mScriptAccess;
+  PRPackedBool mIsChrome;
   // the binding table owns each nsXBLPrototypeBinding
   nsObjectHashtable* mBindingTable;
 

@@ -54,9 +54,9 @@ class nsXBLPrototypeBinding;
 class nsIURI;
 class nsACString;
 
-// {5C4D9674-A2CF-4ddf-9F65-E1806C34D28D}
+// 3eedb7ff-d51d-4461-8162-a192b93216de
 #define NS_IXBLDOCUMENTINFO_IID \
-{ 0x5c4d9674, 0xa2cf, 0x4ddf, { 0x9f, 0x65, 0xe1, 0x80, 0x6c, 0x34, 0xd2, 0x8d } }
+{ 0x3eedb7ff, 0xd51d, 0x4461, { 0x81, 0x62, 0xa1, 0x92, 0xb9, 0x32, 0x16, 0xde } }
 
 class nsIXBLDocumentInfo : public nsISupports
 {
@@ -74,6 +74,9 @@ public:
   NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)=0;
 
   NS_IMETHOD FlushSkinStylesheets()=0;
+
+  // Tells whether the scheme of the document URI is "chrome".
+  NS_IMETHOD_(PRBool) IsChrome()=0;
 };
 
 nsresult
