@@ -2253,24 +2253,40 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState, PRBool aTryPull)
         break;
       }
 
-      if (line.next() != end_lines() &&
-          // Check if the line might be empty, so the previous dirty
-          // margin might carry through to the next line.
-          ((line->mBounds.height == 0 && previousMarginWasDirty) ||
-           // Check if the current line might have just been reflowed
-           // for the first time.
-           maybeReflowingForFirstTime ||
-           // Check if the current line might have been tested in a
-           // subsequent line's ShouldApplyTopMargin
-           (oldY == 0 && line->mBounds.y == 0 &&
-            // EXCEPT if it wasn't empty before and it wasn't empty
-            // now, nothing has changed that could affect
-            // ShouldApplyTopMargin
-            !(oldYMost != 0 && line->mBounds.height != 0)))) {
-        // In all these cases we must mark the the previous margin of
-        // the next line dirty.
-        line.next()->MarkPreviousMarginDirty();
-        // since it's marked dirty, nobody will care about |deltaY|
+      // Test to see whether the margin that should be carried out
+      // to the next line (NL) might have changed. In ReflowBlockFrame
+      // we call nextLine->MarkPreviousMarginDirty if the block's
+      // actual carried-out bottom margin changed. So here we only
+      // need to worry about the following effects:
+      // 1) the line was just created, and it might now be blocking
+      // a carried-out bottom margin from previous lines that
+      // used to reach NL from reaching NL
+      // 2) the line used to be empty, and is now not empty,
+      // thus blocking a carried-out bottom margin from previous lines
+      // that used to reach NL from reaching NL
+      // 3) the line wasn't empty, but now is, so a carried-out
+      // bottom margin from previous lines that didn't used to reach NL
+      // now does
+      // 4) the line might have changed in a way that affects NL's
+      // ShouldApplyTopMargin decision. The three things that matter
+      // are the line's emptiness, its adjacency to the top of the block,
+      // and whether it has clearance (the latter only matters if the block
+      // was and is adjacent to the top and empty).
+      //
+      // If the line is empty now, we can't reliably tell if the line was empty
+      // before, so we just assume it was and do nextLine->MarkPreviousMarginDirty.
+      // This means the checks in 4) are redundant; if the line is empty now
+      // we don't need to check 4), but if the line is not empty now and we're sure
+      // it wasn't empty before, any adjacency and clearance changes are irrelevant
+      // to the result of nextLine->ShouldApplyTopMargin.
+      if (line.next() != end_lines()) {
+        PRBool maybeWasEmpty = oldY == oldYMost;
+        PRBool isEmpty = line->mBounds.height == 0 && line->CachedIsEmpty();
+        if (maybeReflowingForFirstTime /*1*/ ||
+            (isEmpty || maybeWasEmpty) /*2/3/4*/) {
+          line.next()->MarkPreviousMarginDirty();
+          // since it's marked dirty, nobody will care about |deltaY|
+        }
       }
 
       // If the line was just reflowed for the first time, then its
