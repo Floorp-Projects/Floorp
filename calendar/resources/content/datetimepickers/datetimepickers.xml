@@ -263,7 +263,7 @@
          So navigate parents to textbox in order to call parseTextBoxTime.
          [this comment is outside the <content> so it won't become a
          node that interferes with navigation to interior nodes.] -->
-    <content id="content">
+    <content>
       <xul:hbox flex="1" id="hbox" class="timepicker-box-class">
         <xul:menulist editable="true" sizetopopup="false"
                       id="timepicker-text"
