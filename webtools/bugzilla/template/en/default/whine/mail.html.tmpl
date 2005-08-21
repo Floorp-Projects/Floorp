@@ -30,6 +30,7 @@
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
+[% PROCESS 'global/field-descs.none.tmpl' %]
 
 [%# assignee_login_string is a literal string used for getting the 
   # assignee's name out of the bug data %]
@@ -83,7 +84,7 @@
         <td align="left">[% bug.rep_platform FILTER html %]</td>
         <td align="left">[% bug.$assignee_login_string FILTER html %]</td>
         <td align="left">[% status_descs.${bug.bug_status} FILTER html %]</td>
-        <td align="left">[% resolutions.descs.${bug.resolution} FILTER html %]</td>
+        <td align="left">[% resolution_descs.${bug.resolution} FILTER html %]</td>
         <td align="left">[% bug.short_desc FILTER html %]</td>
       </tr>
     [% END %]
