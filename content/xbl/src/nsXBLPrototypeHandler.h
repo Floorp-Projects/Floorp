@@ -58,6 +58,7 @@ class nsXBLPrototypeBinding;
 #define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
 #define NS_HANDLER_TYPE_XUL             (1 << 2)
+#define NS_HANDLER_ALLOW_UNTRUSTED      (1 << 5)
 #define NS_HANDLER_TYPE_SYSTEM          (1 << 6)
 #define NS_HANDLER_TYPE_PREVENTDEFAULT  (1 << 7)
 
@@ -76,6 +77,7 @@ public:
                         const PRUnichar* aModifiers, const PRUnichar* aButton,
                         const PRUnichar* aClickCount, const PRUnichar* aGroup,
                         const PRUnichar* aPreventDefault,
+                        const PRUnichar* aAllowUntrusted,
                         nsXBLPrototypeBinding* aBinding);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
@@ -137,6 +139,11 @@ public:
     return mHandler;
   }
 
+  PRBool AllowUntrustedEvents()
+  {
+    return (mType & NS_HANDLER_ALLOW_UNTRUSTED) != 0;
+  }
+
 public:
   static PRUint32 gRefCnt;
   
@@ -150,7 +157,8 @@ protected:
                           const PRUnichar* aKeyCode=nsnull, const PRUnichar* aCharCode=nsnull,
                           const PRUnichar* aModifiers=nsnull, const PRUnichar* aButton=nsnull,
                           const PRUnichar* aClickCount=nsnull, const PRUnichar* aGroup=nsnull,
-                          const PRUnichar* aPreventDefault=nsnull);
+                          const PRUnichar* aPreventDefault=nsnull,
+                          const PRUnichar* aAllowUntrusted=nsnull);
 
   void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);

@@ -114,6 +114,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
                                              const PRUnichar* aClickCount,
                                              const PRUnichar* aGroup,
                                              const PRUnichar* aPreventDefault,
+                                             const PRUnichar* aAllowUntrusted,
                                              nsXBLPrototypeBinding* aBinding)
   : mHandlerText(nsnull),
     mLineNumber(0),
@@ -127,7 +128,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
 
   ConstructPrototype(nsnull, aEvent, aPhase, aAction, aCommand, aKeyCode,
                      aCharCode, aModifiers, aButton, aClickCount,
-                     aGroup, aPreventDefault);
+                     aGroup, aPreventDefault, aAllowUntrusted);
 }
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
@@ -779,7 +780,8 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
                                           const PRUnichar* aButton,
                                           const PRUnichar* aClickCount,
                                           const PRUnichar* aGroup,
-                                          const PRUnichar* aPreventDefault)
+                                          const PRUnichar* aPreventDefault,
+                                          const PRUnichar* aAllowUntrusted)
 {
   mType = 0;
 
@@ -790,6 +792,10 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   else {
     mType |= aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
     mHandlerText = nsnull;
+
+    if (mPrototypeBinding && !mPrototypeBinding->IsChrome()) {
+      mType |= NS_HANDLER_ALLOW_UNTRUSTED;
+    }
   }
 
   mDetail = -1;
@@ -901,6 +907,14 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   nsAutoString preventDefault(aPreventDefault);
   if (preventDefault.EqualsLiteral("true"))
     mType |= NS_HANDLER_TYPE_PREVENTDEFAULT;
+
+  if (aAllowUntrusted) {
+    if (nsDependentString(aAllowUntrusted).EqualsLiteral("true")) {
+      mType |= NS_HANDLER_ALLOW_UNTRUSTED;
+    } else {
+      mType &= ~NS_HANDLER_ALLOW_UNTRUSTED;
+    }
+  }
 }
 
 PRBool

@@ -352,6 +352,7 @@ NS_IMPL_ISUPPORTS3(nsXBLDocumentInfo, nsIXBLDocumentInfo, nsIScriptGlobalObjectO
 nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   : mDocument(aDocument),
     mScriptAccess(PR_TRUE),
+    mIsChrome(PR_FALSE),
     mBindingTable(nsnull)
 {
   nsIURI* uri = aDocument->GetDocumentURI();
@@ -363,6 +364,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
       reg->AllowScriptsForPackage(uri, &allow);
       mScriptAccess = allow;
     }
+    mIsChrome = PR_TRUE;
   }
 }
 
