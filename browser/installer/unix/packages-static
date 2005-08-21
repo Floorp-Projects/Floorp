@@ -194,7 +194,7 @@ bin/components/extensions.xpt
 bin/components/update.xpt
 
 ; Kerberos NegotiateAuth
-bin/components/libnegotiateauth.so
+bin/components/libauth.so
 
 ; GNOME hooks
 bin/components/libmozgnome.so
@@ -295,7 +295,7 @@ bin/updater
 ; [Extensions]
 ;
 bin/components/libnkgnomevfs.so
-bin/components/libnegotiateauth.so
+bin/components/libauth.so
 
 ; [Additional Developer Tools]
 [adt]
