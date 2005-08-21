@@ -45,7 +45,11 @@
             title="&connectionsDialog.title;"
             dlgbuttons="accept,cancel,help"
             onbeforeaccept="return gConnectionsDialog.beforeAccept();"
+#ifdef XP_MACOSX
+            style="width: &window.macWidth; !important;">
+#else
             style="width: &window.width; !important;">
+#endif
 
   <prefpane id="ConnectionsDialogPane"
             helpTopic="prefs-connection-settings" helpURI="chrome://browser/locale/help/help.rdf">

@@ -1,6 +1,7 @@
 
 <!ENTITY  connectionsDialog.title       "Connection Settings">
-<!ENTITY window.width                   "37em">
+<!ENTITY  window.width                  "37em">
+<!ENTITY  window.macWidth               "39em">
 
 <!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">

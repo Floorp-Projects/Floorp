@@ -239,7 +239,10 @@
             </radiogroup>
             
             <separator/>
-            
+
+#ifdef XP_MACOSX
+            <vbox>
+#endif
             <hbox>
               <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
                       oncommand="gAdvancedPane.showCertificates();"
@@ -249,10 +252,17 @@
                       preference="security.OCSP.disable_button.managecrl"/>
               <button label="&viewOCSP.label;" accesskey="&viewOCSP.accesskey;" 
                       oncommand="gAdvancedPane.showOCSP();"/>
+#ifdef XP_MACOSX
+            </hbox>
+            <hbox>
+#endif
               <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
                       oncommand="gAdvancedPane.showSecurityDevices();"
                       preference="security.disable_button.openDeviceManager"/>
-            </hbox>                              
+            </hbox>
+#ifdef XP_MACOSX
+            </vbox>
+#endif
           </groupbox>
         </tabpanel>
       </tabpanels>
