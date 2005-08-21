@@ -1510,8 +1510,8 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 					aRect.y + aRect.height - 1);
 			mView->Draw(r);
 			rv = NS_OK;
+			mView->UnlockLooper();
 		}
-		mView->UnlockLooper();
 	}
 	return rv;
 }
