@@ -44,6 +44,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsIStatefulFrame.h"
 #include "nsGUIEvent.h"
+#include "nsIEventQueue.h"
 
 class nsISupportsArray;
 class nsIScrollableView;
@@ -63,6 +64,7 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot);
+  ~nsGfxScrollFrameInner();
 
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
@@ -91,6 +93,8 @@ public:
 
   // This gets called when the 'curpos' attribute on one of the scrollbars changes
   void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
+  void PostScrollEvent();
+  void FireScrollEvent();
 
   void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool aReflow=PR_TRUE);
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
@@ -129,6 +133,7 @@ public:
                         const nsRect& aOldScrollArea,
                         const nsRect& aScrollArea);
 
+  nsCOMPtr<nsIEventQueue> mScrollEventQueue;
   nsIScrollableView* mScrollableView;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
