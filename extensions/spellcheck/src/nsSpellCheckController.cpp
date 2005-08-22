@@ -38,6 +38,8 @@
 
 #include "nsSpellCheckController.h"
 #include "nsIServiceManager.h"
+#include "nsIWordBreaker.h"
+#include "nsLWBrkCIID.h"
 #include "nsIDOMRange.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
@@ -106,9 +108,10 @@ nsSpellCheckController::Init(nsITextServicesDocument* aDoc, nsIDOMRange* aInitia
   mSpellChecker  = do_GetService(NS_SPELLCHECKER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Create WordBreaker
-  rv = nsSpellCheckUtils::GetWordBreaker(getter_AddRefs(mWordBreaker));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mWordBreaker = do_GetService(NS_WBRK_CONTRACTID, &rv);
+
+  if(NS_FAILED(rv) || !mWordBreaker)
+    return NS_ERROR_FAILURE;
 
   // zero out offset before starting
   mOffset = 0;
@@ -177,37 +180,35 @@ nsSpellCheckController::FindBeginningOfWord(PRUint32& aPos)
   const PRUnichar* text      = mText.get();
   PRUint32         textLen   = mText.Length();
   PRUint32         wlen      = 0;
-  PRUint32         beginWord = 0;
-  PRUint32         endWord   = 0;
 
   PRUint32 prvWordEnd;
   PRUint32 offset = 0;
   while (offset < textLen) {
     prvWordEnd = endWord;
-    nsresult rv = mWordBreaker->FindWord(text, textLen, offset, &beginWord, &endWord);
-    if (NS_FAILED(rv)) break;
+    nsWordRange res = mWordBreaker->FindWord(text, textLen, offset);
+    if (res.mBegin > textLen) break;
 
     // The wordBreaker hands back the spaces inbetween the words 
     // so we need to skip any words that are all spaces
     const PRUnichar* start  = (text+offset);
-    const PRUnichar* endPtr = (text+endWord);
+    const PRUnichar* endPtr = (text+res.mEnd);
     while (*start == NBSP_SPACE_CODE && start < endPtr) 
       start++;
 
     if (start == endPtr) {
-      offset = endWord;
+      offset = res.mEnd;
       continue;
     }
 
-    offset = endWord+1;
+    offset = res.mEnd+1;
 
-    wlen = endWord - beginWord;
-    if (endWord < aPos) {
+    wlen = res.mEnd - res.mBegin;
+    if (res.mEnd < aPos) {
       continue;
     }
 
-    if (aPos >= beginWord) {
-      aPos = beginWord;
+    if (aPos >= res.mBegin) {
+      aPos = res.mBegin;
       break;
     }
   }
@@ -228,7 +229,8 @@ NS_IMETHODIMP
 nsSpellCheckController::NextMisspelledWord(PRUnichar **aWord)
 {
   NS_ENSURE_ARG_POINTER(aWord);
-  NS_ENSURE_TRUE(mDocument && mSpellChecker && mWordBreaker, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mDocument && mSpellChecker && mWordBreaker, 
+                 NS_ERROR_NULL_POINTER);
 
   // Init the return values.
   *aWord = nsnull;
@@ -476,7 +478,8 @@ nsSpellCheckController::ReplaceAllOccurrences(const CharBuffer *aOldWord, const 
 {
   NS_ENSURE_ARG_POINTER(aOldWord);
   NS_ENSURE_ARG_POINTER(aNewWord);
-  NS_ENSURE_TRUE(mSpellChecker && mWordBreaker, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mSpellChecker && mWordBreaker,
+                 NS_ERROR_NULL_POINTER);
 
   // Now get the next misspelled word in the document.
   const PRUnichar* text         = mText.get();
@@ -537,7 +540,8 @@ nsSpellCheckController::SpellCheckDOMRange(nsIDOMRange *aRangeToCheck, nsISelect
   NS_ENSURE_ARG_POINTER(aRangeToCheck);
   NS_ENSURE_ARG_POINTER(aSelectionOfWords);
 
-  NS_ENSURE_TRUE(mSpellChecker && mWordBreaker, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mSpellChecker && mWordBreaker, 
+                 NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
   mDocument->InitWithRange(aRangeToCheck);
@@ -590,12 +594,19 @@ nsSpellCheckController::FindNextMisspelledWord(const PRUnichar* aText,
   aIsMisspelled = PR_FALSE;
 
 #ifdef DEBUG_rods
-  DUMPWORDS(mWordBreaker, aText, aTextLen);
+  DUMPWORDS(aText, aTextLen);
 #endif
 
   while (aOffset < aTextLen) {
-    nsresult result = mWordBreaker->FindWord(aText, aTextLen, aOffset, &aBeginWord, &aEndWord);
-    NS_ENSURE_SUCCESS(result, result);
+    nsWordRange res = nsContentUtils::mWordBreaker->FindWord(aText, aTextLen,
+                                                             aOffset);
+    if (res.mBegin > atextLen)
+      if (!aText) return NS_ERROR_NULL_POINTER;
+      else return NS_ERROR_ILLEGAL_VALUE;
+      
+    aBeginWord = res.mBegin;
+    aEndWord = res.mEnd;
+      
     aWLen = aEndWord - aBeginWord;
 
     // The wordBreaker hands back the spaces inbetween the words 

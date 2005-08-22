@@ -56,7 +56,6 @@ CSRCS		= rulebrk.c
 
 CPPSRCS		= \
 		nsJISx4501LineBreaker.cpp \
-		nsLWBreakerFImp.cpp \
 		nsSampleWordBreaker.cpp \
 		nsSemanticUnitScanner.cpp \
 		$(NULL)

@@ -53,7 +53,6 @@
 #include "nsITextServicesFilter.h"
 #include "nsWeakReference.h"
 
-class nsIWordBreaker;
 class nsIRangeUtils;
 
 /** implementation of a text services object.
@@ -234,9 +233,7 @@ private:
   nsresult RemoveInvalidOffsetEntries();
   nsresult SplitOffsetEntry(PRInt32 aTableIndex, PRInt32 aOffsetIntoEntry);
 
-  static nsresult GetWordBreaker(nsIWordBreaker **aWordBreaker);
   static nsresult FindWordBounds(nsVoidArray *offsetTable, nsString *blockStr,
-                                 nsIWordBreaker *aWordBreaker,
                                  nsIDOMNode *aNode, PRInt32 aNodeOffset,
                                  nsIDOMNode **aWordStartNode,
                                  PRInt32 *aWordStartOffset,

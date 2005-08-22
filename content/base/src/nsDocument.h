@@ -72,8 +72,6 @@
 #include "nsIDOM3DocumentEvent.h"
 #include "nsCOMArray.h"
 #include "nsHashtable.h"
-#include "nsIWordBreakerFactory.h"
-#include "nsILineBreakerFactory.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
@@ -353,14 +351,6 @@ public:
    * Remove a charset observer.
    */
   virtual void RemoveCharSetObserver(nsIObserver* aObserver);
-
-  /**
-   * Return the Line Breaker for the document
-   */
-  virtual nsILineBreaker* GetLineBreaker();
-  virtual void SetLineBreaker(nsILineBreaker* aLineBreaker);
-  virtual nsIWordBreaker* GetWordBreaker();
-  virtual void SetWordBreaker(nsIWordBreaker* aWordBreaker);
 
   /**
    * Access HTTP header data (this may also get set from other sources, like
@@ -721,8 +711,6 @@ protected:
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
   nsCOMPtr<nsIScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
-  nsCOMPtr<nsILineBreaker> mLineBreaker;
-  nsCOMPtr<nsIWordBreaker> mWordBreaker;
 
   nsRefPtr<nsDocumentChildNodes> mChildNodes;
 

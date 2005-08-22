@@ -78,6 +78,8 @@ class nsIConsoleService;
 class nsIStringBundleService;
 class nsIStringBundle;
 class nsIContentPolicy;
+class nsILineBreaker;
+class nsIWordBreaker;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -334,6 +336,16 @@ public:
   static nsIPrefBranch *GetPrefBranch()
   {
     return sPrefBranch;
+  }
+
+  static nsILineBreaker* GetLineBreaker()
+  {
+    return sLineBreaker;
+  }
+
+  static nsIWordBreaker* GetWordBreaker()
+  {
+    return sWordBreaker;
   }
 
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
@@ -604,6 +616,9 @@ private:
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
 
   static nsIContentPolicy* sContentPolicyService;
+
+  static nsILineBreaker* sLineBreaker;
+  static nsIWordBreaker* sWordBreaker;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;

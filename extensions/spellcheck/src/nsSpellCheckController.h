@@ -41,7 +41,6 @@
 
 #include "nsITextServicesDocument.h"
 #include "nsISpellCheckController.h"
-#include "nsIWordBreakerFactory.h" // nsIWordBreaker
 #include "nsIDOMNode.h"
 
 #include "nsISpellChecker.h"
@@ -89,8 +88,8 @@ private:
   CharBuffer      mBlockBuffer;
   CharBuffer      mWordBuffer;
 
-  nsCOMPtr<nsIWordBreaker>      mWordBreaker;
   nsCOMPtr<nsISpellChecker>     mSpellChecker;
+  nsCOMPtr<nsIWordBreaker>      mWordBreaker;
   nsString                      mText;
   PRUint32                      mOffset;   // starting offset to start spelling
   PRUint32                      mEndPoint; // end point of range to be spell checked

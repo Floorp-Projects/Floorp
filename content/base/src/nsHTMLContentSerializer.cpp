@@ -57,7 +57,6 @@
 #include "nsCRT.h"
 #include "nsIParserService.h"
 #include "nsContentUtils.h"
-#include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 
 #define kIndentStr NS_LITERAL_STRING("  ")
@@ -66,7 +65,6 @@
 #define kEndTag NS_LITERAL_STRING("</")
 
 static const char kMozStr[] = "moz";
-static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -162,20 +160,6 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
     nsCOMPtr<nsIDOMDocument> domDoc;
     aText->GetOwnerDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-    if (document) {
-      mLineBreaker = document->GetLineBreaker();
-    }
-
-    if (!mLineBreaker) {
-      nsresult rv;
-      nsCOMPtr<nsILineBreakerFactory> lf(do_GetService(kLWBrkCID, &rv));
-      if (NS_SUCCEEDED(rv)) {
-        rv = lf->GetBreaker(EmptyString(), getter_AddRefs(mLineBreaker));
-        // Ignore result value.
-        // If we are unable to obtain a line breaker,
-        // we will use our simple fallback logic.
-      }
-    }
   }
 
   nsAutoString data;
@@ -349,27 +333,22 @@ void nsHTMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
         // we must wrap
 
         PRBool foundWrapPosition = PR_FALSE;
+        nsCOMPtr<nsILineBreaker> aLineBreaker = nsContentUtils::GetLineBreaker();
 
-        if (mLineBreaker) { // we have a line breaker helper object
-          PRUint32 wrapPosition;
-          PRBool needMoreText;
-          nsresult rv;
+        if (aLineBreaker) { // we have a line breaker helper object
+          PRInt32 wrapPosition;
 
-          rv = mLineBreaker->Prev(aSequenceStart,
-                                  (aEnd - aSequenceStart),
-                                  (aPos - aSequenceStart) + 1,
-                                  &wrapPosition,
-                                  &needMoreText);
-          if (NS_SUCCEEDED(rv) && !needMoreText && wrapPosition > 0) {
+          wrapPosition = aLineBreaker->Prev(aSequenceStart,
+                                           (aEnd - aSequenceStart),
+                                           (aPos - aSequenceStart) + 1);
+          if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = PR_TRUE;
           }
           else {
-            rv = mLineBreaker->Next(aSequenceStart,
-                                    (aEnd - aSequenceStart),
-                                    (aPos - aSequenceStart),
-                                    &wrapPosition,
-                                    &needMoreText);
-            if (NS_SUCCEEDED(rv) && !needMoreText && wrapPosition > 0) {
+            wrapPosition = aLineBreaker->Next(aSequenceStart,
+                                             (aEnd - aSequenceStart),
+                                             (aPos - aSequenceStart));
+            if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
               foundWrapPosition = PR_TRUE;
             }
           }
@@ -389,7 +368,7 @@ void nsHTMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
           }
         }
 
-        if (!mLineBreaker || !foundWrapPosition) {
+        if (!aLineBreaker || !foundWrapPosition) {
           // try some simple fallback logic
           // go forward up to the next whitespace position,
           // in the worst case this will be all the rest of the data

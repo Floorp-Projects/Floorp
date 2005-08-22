@@ -45,20 +45,15 @@ class nsJISx4051LineBreaker : public nsILineBreaker
   NS_DECL_ISUPPORTS
 
 public:
-  nsJISx4051LineBreaker(const PRUnichar *aNoBegin, PRInt32 aNoBeginLen, 
-                        const PRUnichar* aNoEnd, PRInt32 aNoEndLen);
+  nsJISx4051LineBreaker();
   virtual ~nsJISx4051LineBreaker();
 
-  NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
-                            const PRUnichar* aText2 , PRUint32 aTextLen2,
-                            PRBool *oCanBreak);
+  PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
+                         const PRUnichar* aText2 , PRUint32 aTextLen2);
 
-  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oNext, PRBool *oNeedMoreText);
+  PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
-  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oPrev, PRBool *oNeedMoreText);
-
+  PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
 protected:
 

@@ -154,9 +154,7 @@ class nsTextTransformer {
 public:
   // Note: The text transformer does not hold a reference to the line
   // breaker and work breaker objects
-  nsTextTransformer(nsILineBreaker* aLineBreaker,
-                    nsIWordBreaker* aWordBreaker,
-                    nsPresContext* aPresContext);
+  nsTextTransformer(nsPresContext* aPresContext);
 
   ~nsTextTransformer();
 
@@ -346,10 +344,6 @@ protected:
     ePreWrap
   } mMode;
   
-  nsILineBreaker* mLineBreaker;  // [WEAK]
-
-  nsIWordBreaker* mWordBreaker;  // [WEAK]
-
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
 
 #ifdef IBMBIDI
@@ -378,9 +372,7 @@ protected:
   static PRBool sWordSelectStopAtPunctuation;    // should we stop at punctuation?
 
 #ifdef DEBUG
-  static void SelfTest(nsILineBreaker* aLineBreaker,
-                       nsIWordBreaker* aWordBreaker,
-                       nsPresContext* aPresContext);
+  static void SelfTest(nsPresContext* aPresContext);
 
   nsresult Init2(const nsTextFragment* aFrag,
                  PRInt32 aStartingOffset,
