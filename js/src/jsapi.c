@@ -1205,7 +1205,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitXMLClasses(cx, obj) &&
 #endif
 #if JS_HAS_FILE_OBJECT
-           js_InitFileClass(cx, obj, JS_TRUE) &&
+           js_InitFileClass(cx, obj) &&
 #endif
            js_InitDateClass(cx, obj);
 }
@@ -1245,6 +1245,9 @@ static struct {
     {js_InitXMLClass,               ATOM_OFFSET(XML)},
     {js_InitNamespaceClass,         ATOM_OFFSET(Namespace)},
     {js_InitQNameClass,             ATOM_OFFSET(QName)},
+#endif
+#if JS_HAS_FILE_OBJECT
+    {js_InitFileClass,              ATOM_OFFSET(File)},
 #endif
     {NULL,                          0}
 };

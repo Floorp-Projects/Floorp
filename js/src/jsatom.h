@@ -180,6 +180,7 @@ struct JSAtomState {
     JSAtom              *ScriptAtom;
     JSAtom              *StringAtom;
     JSAtom              *XMLAtom;
+    JSAtom              *FileAtom;
     JSAtom              *anonymousAtom;
     JSAtom              *argumentsAtom;
     JSAtom              *arityAtom;
@@ -286,6 +287,7 @@ extern const char   js_RegExp_str[];
 extern const char   js_Script_str[];
 extern const char   js_String_str[];
 extern const char   js_XML_str[];
+extern const char   js_File_str[];
 extern const char   js_anonymous_str[];
 extern const char   js_arguments_str[];
 extern const char   js_arity_str[];
