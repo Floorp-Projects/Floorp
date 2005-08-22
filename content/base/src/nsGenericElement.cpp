@@ -2548,9 +2548,8 @@ nsGenericElement::SetFocus(nsPresContext* aPresContext)
   // Traditionally focusable elements can take focus as long as they don't set
   // the disabled attribute
 
-  nsIFrame* frame = nsnull;
   nsIPresShell *presShell = aPresContext->PresShell();
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   if (frame && frame->IsFocusable()) {
     aPresContext->EventStateManager()->SetContentState(this,
                                                         NS_EVENT_STATE_FOCUS);

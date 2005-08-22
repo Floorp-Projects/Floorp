@@ -90,8 +90,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x0672be76, 0x1047, 0x4905, \
-  {0xad, 0xd1, 0xc5, 0xc6, 0x90, 0xe8, 0x70, 0x3a} }
+{ 0x8be1b911, 0x7a04, 0x44e8, \
+ { 0xaf, 0xaa, 0x17, 0x77, 0x26, 0x91, 0x8c, 0x19 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -301,8 +301,7 @@ public:
    * the primary frame is the frame that is out of the flow and not the
    * placeholder frame.
    */
-  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame**  aPrimaryFrame) const = 0;
+  virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const = 0;
 
   /**
    * Returns a layout object associated with the primary frame for the content object.

@@ -426,7 +426,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   for ( ; content; content = content->GetParent()) {
     if (!content->IsNativeAnonymous()) {
-      presShell->GetPrimaryFrameFor(content, &frame);
+      frame = presShell->GetPrimaryFrameFor(content);
       if (!frame)
         return;
       CallQueryInterface(frame, &tcFrame);
@@ -846,7 +846,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
         focusController->GetFocusedElement(getter_AddRefs(focusedElement));
         if (focusedElement) {
             nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
-            presShell->GetPrimaryFrameFor(content, &frame);
+            frame = presShell->GetPrimaryFrameFor(content);
         }
       }
     }

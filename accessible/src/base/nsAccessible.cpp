@@ -162,8 +162,7 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAcces
      printf(">>> %p Created Acc - Con: %p  Acc: %p  PS: %p", 
              (nsIAccessible*)this, aContent, aAccessible, shell.get());
      if (shell && aContent != nsnull) {
-       nsIFrame* frame;
-       shell->GetPrimaryFrameFor(aContent, &frame);
+       nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
        char * name;
        if (GetNameForFrame(frame, &name)) {
          printf(" Name:[%s]", name);
@@ -1253,8 +1252,7 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
     nsIContent *parentContent = aContent->GetParent();
     nsCOMPtr<nsIContent> appendedSubtreeStart(do_QueryInterface(mDOMNode));
     if (parentContent && parentContent != appendedSubtreeStart) {
-      nsIFrame *frame;
-      shell->GetPrimaryFrameFor(parentContent, &frame);
+      nsIFrame *frame = shell->GetPrimaryFrameFor(parentContent);
       if (frame) {
         // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
         // block's text, so we don't get words jammed together in final name
@@ -2404,8 +2402,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   if (! content)
     return NS_ERROR_FAILURE;
 
-  nsIFrame *frame = nsnull;
-  aPresShell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(content);
   if (! frame)
     return NS_ERROR_FAILURE;
 

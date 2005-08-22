@@ -562,8 +562,7 @@ nsGenericHTMLElement::RecreateFrames()
   for (PRInt32 i = 0; i < numShells; ++i) {
     nsIPresShell *shell = document->GetShellAt(i);
     if (shell) {
-      nsIFrame* frame = nsnull;
-      shell->GetPrimaryFrameFor(this, &frame);
+      nsIFrame* frame = shell->GetPrimaryFrameFor(this);
       if (frame) {
         shell->RecreateFramesFor(this);
       }
@@ -623,8 +622,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Get the Frame for our content
-  nsIFrame* frame = nsnull;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
     return;
@@ -1004,8 +1002,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   }
 
   // Get the primary frame for this element
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(this);
   if (!frame) {
     return;
   }
@@ -1295,8 +1292,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   // Get the primary frame for this element
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(this);
   if (!frame) {
     return NS_OK;
   }
@@ -2256,14 +2252,10 @@ nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
 
   // Get presentation shell 0
   nsIPresShell *presShell = aDocument->GetShellAt(0);
+  if (!presShell)
+    return nsnull;
 
-  nsIFrame *frame = nsnull;
-
-  if (presShell) {
-    presShell->GetPrimaryFrameFor(aContent, &frame);
-  }
-
-  return frame;
+  return presShell->GetPrimaryFrameFor(aContent);
 }
 
 // static

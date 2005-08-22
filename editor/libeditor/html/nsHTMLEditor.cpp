@@ -5832,12 +5832,11 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame *frame = 0; // not ref-counted
-  ps->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = ps->GetPrimaryFrameFor(content); // not ref-counted
 
   float t2p = ps->GetPresContext()->TwipsToPixels();
 
-  if (nsHTMLEditUtils::IsHR(aElement)) {
+  if (nsHTMLEditUtils::IsHR(aElement) && frame) {
     frame = frame->GetNextSibling();
   }
   PRInt32 offsetX = 0, offsetY = 0;

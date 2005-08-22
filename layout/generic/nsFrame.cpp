@@ -1208,18 +1208,16 @@ ContentContainsPoint(nsPresContext *aPresContext,
 
   if (!presShell) return PR_FALSE;
 
-  nsIFrame *frame = nsnull;
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(aContent);
 
-  nsresult rv = presShell->GetPrimaryFrameFor(aContent, &frame);
-
-  if (NS_FAILED(rv) || !frame) return PR_FALSE;
+  if (!frame) return PR_FALSE;
 
   nsIView *frameView = nsnull;
   nsPoint offsetPoint;
 
   // Get the view that contains the content's frame.
 
-  rv = frame->GetOffsetFromView(offsetPoint, &frameView);
+  nsresult rv = frame->GetOffsetFromView(offsetPoint, &frameView);
 
   if (NS_FAILED(rv) || !frameView) return PR_FALSE;
 

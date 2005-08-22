@@ -1144,10 +1144,7 @@ nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, 
   // find the closest frame aPoint.
   //
 
-  result = mShell->GetPrimaryFrameFor(anchorRoot, aRetFrame);
-
-  if (NS_FAILED(result))
-    return result;
+  *aRetFrame = mShell->GetPrimaryFrameFor(anchorRoot);
 
   if (! *aRetFrame)
     return NS_ERROR_FAILURE;
@@ -2814,10 +2811,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
     }
   }
   
-  result = mShell->GetPrimaryFrameFor(theNode, aReturnFrame);
-  if (NS_FAILED(result))
-    return result;
-
+  *aReturnFrame = mShell->GetPrimaryFrameFor(theNode);
   if (!*aReturnFrame)
     return NS_ERROR_UNEXPECTED;
 
@@ -3045,8 +3039,7 @@ nsITableCellLayout*
 nsSelection::GetCellLayout(nsIContent *aCellContent)
 {
   // Get frame for cell
-  nsIFrame *cellFrame = nsnull;
-  mShell->GetPrimaryFrameFor(aCellContent, &cellFrame);
+  nsIFrame *cellFrame = mShell->GetPrimaryFrameFor(aCellContent);
   if (!cellFrame)
     return nsnull;
 
@@ -3060,8 +3053,7 @@ nsITableLayout*
 nsSelection::GetTableLayout(nsIContent *aTableContent)
 {
   // Get frame for table
-  nsIFrame *tableFrame = nsnull;
-  mShell->GetPrimaryFrameFor(aTableContent, &tableFrame);
+  nsIFrame *tableFrame = mShell->GetPrimaryFrameFor(aTableContent);
   if (!tableFrame)
     return nsnull;
 
@@ -3219,9 +3211,7 @@ printf("HandleTableSelection: Mouse down event\n");
           // We have at least 1 other selected cell
 
           // Check if new cell is already selected
-          nsIFrame  *cellFrame = nsnull;
-          result = mShell->GetPrimaryFrameFor(childContent, &cellFrame);
-          if (NS_FAILED(result)) return result;
+          nsIFrame  *cellFrame = mShell->GetPrimaryFrameFor(childContent);
           if (!cellFrame) return NS_ERROR_NULL_POINTER;
           result = cellFrame->GetSelected(&isSelected);
           if (NS_FAILED(result)) return result;
@@ -4650,8 +4640,8 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
       content = child; // releases the focusnode
     }
   }
-  result = mFrameSelection->GetShell()->GetPrimaryFrameFor(content,aReturnFrame);
-  return result;
+  *aReturnFrame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+  return NS_OK;
 }
 #endif
 
@@ -4725,8 +4715,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
   if (NS_SUCCEEDED(result))
   {
     // First select frame of content passed in
-    result = mFrameSelection->GetShell()->GetPrimaryFrameFor(aContent, &frame);
-    if (NS_SUCCEEDED(result) && frame)
+    frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(aContent);
+    if (frame)
     {
       //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
       frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown);
@@ -4749,8 +4739,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
     {
       nsIContent *innercontent = aInnerIter->GetCurrentNode();
 
-      result = mFrameSelection->GetShell()->GetPrimaryFrameFor(innercontent, &frame);
-      if (NS_SUCCEEDED(result) && frame)
+      frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(innercontent);
+      if (frame)
       {
         //NOTE: eSpreadDown is now IGNORED. Selected state is set only
         //for given frame
@@ -4781,8 +4771,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
     }
 
 #if 0
-    result = mFrameSelection->GetShell()->GetPrimaryFrameFor(content, &frame);
-    if (NS_SUCCEEDED(result) && frame)
+    frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+    if (frame)
       frame->SetSelected(aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
 #endif
 
@@ -4846,8 +4836,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
 
     if (!content->IsContentOfType(nsIContent::eELEMENT))
     {
-      result = mFrameSelection->GetShell()->GetPrimaryFrameFor(content, &frame);
-      if (NS_SUCCEEDED(result) && frame)
+      frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+      if (frame)
         frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
     }
 //end start content
@@ -4870,8 +4860,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIDOMRange *aRange,
 
       if (!content->IsContentOfType(nsIContent::eELEMENT))
       {
-        result = mFrameSelection->GetShell()->GetPrimaryFrameFor(content, &frame);
-        if (NS_SUCCEEDED(result) && frame)
+        frame = mFrameSelection->GetShell()->GetPrimaryFrameFor(content);
+        if (frame)
            frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
       }
     }

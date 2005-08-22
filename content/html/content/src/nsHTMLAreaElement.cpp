@@ -197,8 +197,7 @@ nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
   nsIPresShell *presShell = aPresContext->GetPresShell();
 
   if (presShell) {
-    nsIFrame* frame = nsnull;
-    presShell->GetPrimaryFrameFor(this, &frame);
+    nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
     if (frame) {
       presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                      NS_PRESSHELL_SCROLL_ANYWHERE);

@@ -148,9 +148,8 @@ nsInspectorCSSUtils::GetStyleContextForContent(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
     if (!aPseudo) {
-        nsIFrame* frame = nsnull;
         aPresShell->FlushPendingNotifications(Flush_StyleReresolves);
-        aPresShell->GetPrimaryFrameFor(aContent, &frame);
+        nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
         if (frame) {
             nsStyleContext* result = GetStyleContextForFrame(frame);
             // this function returns an addrefed style context

@@ -240,8 +240,8 @@ nsPluginDocument::Print()
     return NS_OK;
   }
 
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(mPluginContent, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(mPluginContent);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   nsIObjectFrame* objectFrame = nsnull;
   CallQueryInterface(frame, &objectFrame);

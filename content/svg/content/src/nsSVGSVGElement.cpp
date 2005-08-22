@@ -508,8 +508,8 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   NS_ASSERTION(presShell, "need presShell to suspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame = 
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
 #ifdef DEBUG
   // XXX We sometimes hit this assertion when the svg:svg element is
   // in a binding and svg children are inserted underneath it using
@@ -560,8 +560,8 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame =
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
 #ifdef DEBUG
   NS_ASSERTION(frame, "unsuspending redraw w/o frame");
 #endif
@@ -952,8 +952,8 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame =
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 
@@ -1287,8 +1287,8 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame =
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
   if (frame) {
     nsISVGSVGFrame* svgframe;
     CallQueryInterface(frame, &svgframe);
@@ -1341,8 +1341,7 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
     return;
   }
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (frame) {
     nsIntRect rect = frame->GetScreenRect();

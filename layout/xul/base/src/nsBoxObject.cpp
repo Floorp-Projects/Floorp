@@ -163,12 +163,11 @@ nsBoxObject::InvalidatePresentationStuff()
 nsIFrame*
 nsBoxObject::GetFrame()
 {
-  nsIFrame* frame = nsnull;
-  if (mPresShell) {
-    mPresShell->FlushPendingNotifications(Flush_Frames);
-    mPresShell->GetPrimaryFrameFor(mContent, &frame);
-  }
-  return frame;
+  if (!mPresShell)
+    return nsnull;
+
+  mPresShell->FlushPendingNotifications(Flush_Frames);
+  return mPresShell->GetPrimaryFrameFor(mContent);
 }
 
 nsresult 
@@ -192,9 +191,8 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
       doc->FlushPendingNotifications(Flush_Layout);
 
       // Get the Frame for our content
-      nsIFrame* frame = nsnull;
-      presShell->GetPrimaryFrameFor(mContent, &frame);
-      if(frame != nsnull) {
+      nsIFrame* frame = presShell->GetPrimaryFrameFor(mContent);
+      if(frame) {
         // Get its origin
         nsPoint origin = frame->GetPosition();
 
@@ -276,8 +274,7 @@ nsBoxObject::GetScreenPosition(nsIntPoint& aPoint)
 
       nsPresContext *presContext = presShell->GetPresContext();
       if (presContext) {
-        nsIFrame* frame;
-        presShell->GetPrimaryFrameFor(mContent, &frame);
+        nsIFrame* frame = presShell->GetPrimaryFrameFor(mContent);
         
         if (frame) {
           nsIntRect rect = frame->GetScreenRect();

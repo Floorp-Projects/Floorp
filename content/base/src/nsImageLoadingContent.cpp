@@ -509,8 +509,7 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   for (PRInt32 i = 0; i < numShells; ++i) {
     nsIPresShell *shell = doc->GetShellAt(i);
     if (shell) {
-      nsIFrame* frame = nsnull;
-      shell->GetPrimaryFrameFor(thisContent, &frame);
+      nsIFrame* frame = shell->GetPrimaryFrameFor(thisContent);
       if (frame) {
         // XXXbz I don't like this one bit... we really need a better way of
         // doing the CantRenderReplacedElement stuff.. In particular, it needs

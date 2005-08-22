@@ -506,8 +506,7 @@ nsTreeColumns::EnsureColumns()
     if (!shell)
       return;
 
-    nsIFrame* colsFrame = nsnull;
-    shell->GetPrimaryFrameFor(colsContent, &colsFrame);
+    nsIFrame* colsFrame = shell->GetPrimaryFrameFor(colsContent);
     if (!colsFrame)
       return;
 

@@ -2486,9 +2486,8 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
   nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
 
   // Now grab its frame
-  nsIFrame* frame;
-  nsresult rv = aShell->GetPrimaryFrameFor(body, &frame);
-  if (NS_SUCCEEDED(rv) && frame) {
+  nsIFrame* frame = aShell->GetPrimaryFrameFor(body);
+  if (frame) {
     nsSize                    size;
     nsIView* view = frame->GetView();
 

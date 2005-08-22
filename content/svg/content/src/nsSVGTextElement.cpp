@@ -427,8 +427,8 @@ nsSVGTextElement::GetTextContentMetrics()
     return nsnull;
   }
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame =
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
 
   if (!frame) {
     NS_ERROR("no frame");

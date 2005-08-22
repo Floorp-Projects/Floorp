@@ -307,8 +307,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   nsIPresShell* presShell = document->GetShellAt(0);
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(mContent, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(mContent);
 
   nsresult rv = NS_OK;
 

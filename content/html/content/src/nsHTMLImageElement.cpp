@@ -276,8 +276,7 @@ nsHTMLImageElement::GetXY()
   document->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for this image
-  nsIFrame* frame = nsnull;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
     return point;

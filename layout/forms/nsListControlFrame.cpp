@@ -459,7 +459,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     focusedContent = GetOptionContent(focusedIndex);
     // otherwise we find the focusedContent's frame and scroll to it
     if (focusedContent) {
-      result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
+      childframe = presShell->GetPrimaryFrameFor(focusedContent);
     }
   } else {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectHTMLElement(do_QueryInterface(mContent));
@@ -495,7 +495,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     // if we found a node use, if not get the first child (this is for empty selects)
     if (node) {
       focusedContent = do_QueryInterface(node);
-      result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
+      childframe = presShell->GetPrimaryFrameFor(focusedContent);
     }
     if (!childframe) {
       // The only way we can get right here is that there are no options
@@ -505,7 +505,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     }
   }
 
-  if (NS_FAILED(result) || !childframe) return;
+  if (!childframe) return;
 
   // get the child rect
   nsRect fRect = childframe->GetRect();
@@ -661,8 +661,7 @@ GetOptGroupLabelsHeight(nsPresContext* aPresContext,
     if (::IsOptGroup(child)) {
       PRUint32 numOptions = ::GetNumberOfOptionsRecursive(child);
       nscoord optionsHeight = aRowHeight * numOptions;
-      nsIFrame* frame = nsnull;
-      aPresContext->GetPresShell()->GetPrimaryFrameFor(child, &frame);
+      nsIFrame* frame = aPresContext->GetPresShell()->GetPrimaryFrameFor(child);
       nscoord totalHeight = frame ? frame->GetSize().height : 0;
       height += PR_MAX(0, totalHeight - optionsHeight);
     }
@@ -951,15 +950,14 @@ nsListControlFrame::Reflow(nsPresContext*          aPresContext,
   if (heightOfARow == 0 && length > 0) {
     nsCOMPtr<nsIContent> option = GetOptionContent(0);
     if (option) {
-      nsIFrame * optFrame;
-      nsresult result = GetPresContext()->PresShell()->
-        GetPrimaryFrameFor(option, &optFrame);
-      if (NS_SUCCEEDED(result) && optFrame != nsnull) {
+      nsIFrame * optFrame = GetPresContext()->PresShell()->
+        GetPrimaryFrameFor(option);
+      if (optFrame) {
         nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
           const nsStyleFont* styleFont = optStyle->GetStyleFont();
           nsCOMPtr<nsIFontMetrics> fontMet;
-          result = aPresContext->DeviceContext()->
+          nsresult result = aPresContext->DeviceContext()->
             GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
           if (NS_SUCCEEDED(result) && fontMet) {
             if (fontMet) {
@@ -2713,9 +2711,8 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   // first option frame
   nsCOMPtr<nsIContent> firstOption = GetOptionContent(0);
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
-  nsIFrame* optionFrame;
-  nsresult rv = presShell->GetPrimaryFrameFor(firstOption, &optionFrame);
-  if (NS_SUCCEEDED(rv) && optionFrame) {
+  nsIFrame* optionFrame = presShell->GetPrimaryFrameFor(firstOption);
+  if (optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y < 0 && ptInOptionFrame.x >= 0 &&
         ptInOptionFrame.x < optionFrame->GetSize().width) {
@@ -2728,8 +2725,8 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   // If the event coordinate is below the last option frame, then target the
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
-  rv = presShell->GetPrimaryFrameFor(lastOption, &optionFrame);
-  if (NS_SUCCEEDED(rv) && optionFrame) {
+  optionFrame = presShell->GetPrimaryFrameFor(lastOption);
+  if (optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y >= optionFrame->GetSize().height && ptInOptionFrame.x >= 0 &&
         ptInOptionFrame.x < optionFrame->GetSize().width) {
@@ -2909,15 +2906,14 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     // otherwise we find the content's frame and scroll to it
     nsIPresShell *presShell = GetPresContext()->PresShell();
     nsIFrame * childframe;
-    nsresult result;
     if (aOptElement) {
-      result = presShell->GetPrimaryFrameFor(aOptElement, &childframe);
+      childframe = presShell->GetPrimaryFrameFor(aOptElement);
     } else {
       return NS_ERROR_FAILURE;
     }
 
-    if (NS_SUCCEEDED(result) && childframe) {
-      if (NS_SUCCEEDED(result) && scrollableView) {
+    if (childframe) {
+      if (scrollableView) {
         nscoord x;
         nscoord y;
         scrollableView->GetScrollPosition(x,y);
@@ -2944,9 +2940,8 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
         nsRect optRect(0,0,0,0);
         if (optGroup) {
-          nsIFrame * optFrame;
-          result = presShell->GetPrimaryFrameFor(parentContent, &optFrame);
-          if (NS_SUCCEEDED(result) && optFrame) {
+          nsIFrame * optFrame = presShell->GetPrimaryFrameFor(parentContent);
+          if (optFrame) {
             optRect = optFrame->GetRect();
           }
         }

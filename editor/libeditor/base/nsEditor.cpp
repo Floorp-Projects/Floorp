@@ -2155,12 +2155,8 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
   if (!content)
     return NS_ERROR_FAILURE;
 
-  nsIFrame *frame = 0; // Not ref counted
-
-  result = aPresShell->GetPrimaryFrameFor(content, &frame);
-
-  if (NS_FAILED(result))
-    return result;
+  // Not ref counted
+  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(content);
 
   if (!frame)
     return NS_ERROR_FAILURE;
@@ -3935,9 +3931,8 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
   {
-    nsIFrame *resultFrame;
-    nsresult result = shell->GetPrimaryFrameFor(content, &resultFrame);
-    if (NS_FAILED(result) || !resultFrame)   // if it has no frame, it is not editable
+    nsIFrame *resultFrame = shell->GetPrimaryFrameFor(content);
+    if (!resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
     nsCOMPtr<nsITextContent> text(do_QueryInterface(content));
     if (!text)
@@ -4278,9 +4273,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
-  nsIFrame *frame;
-  nsresult result = ps->GetPrimaryFrameFor(content, &frame);
-  if (NS_FAILED(result)) return result;
+  nsIFrame *frame = ps->GetPrimaryFrameFor(content);
 
   NS_ASSERTION(frame, "no frame, see bug #188946");
   if (!frame)
@@ -5489,10 +5482,9 @@ nsEditor::SwitchTextDirection()
   if (NS_FAILED(rv))
     return rv;  
 
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(content, &frame);
-  if (NS_FAILED(rv))
-    return rv; 
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame)
+    return NS_ERROR_FAILURE; 
 
   // Apply the opposite direction
   if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)

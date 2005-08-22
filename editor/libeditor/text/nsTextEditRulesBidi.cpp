@@ -71,10 +71,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   if (!content)
     return NS_ERROR_NULL_POINTER;
   
-  nsIFrame *primaryFrame;
-  res = shell->GetPrimaryFrameFor(content, &primaryFrame);
-  if (NS_FAILED(res))
-    return res;
+  nsIFrame *primaryFrame = shell->GetPrimaryFrameFor(content);
   if (!primaryFrame)
     return NS_ERROR_NULL_POINTER;
   

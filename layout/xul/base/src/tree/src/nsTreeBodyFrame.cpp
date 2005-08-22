@@ -735,9 +735,8 @@ nsTreeBodyFrame::EnsureScrollbar()
   if (!mScrollbar) {
     // Try to find it.
     nsIContent* parContent = GetBaseElement();
-    nsIFrame* treeFrame;
-
-    mPresContext->PresShell()->GetPrimaryFrameFor(parContent, &treeFrame);
+    nsIFrame* treeFrame = mPresContext->PresShell()
+      ->GetPrimaryFrameFor(parContent);
     if (treeFrame)
       mScrollbar = InitScrollbarFrame(mPresContext, treeFrame, this);
   }

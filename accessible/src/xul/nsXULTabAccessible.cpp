@@ -108,8 +108,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   if (presShell && content) {
-    nsIFrame *frame = nsnull;
-    presShell->GetPrimaryFrameFor(content, &frame);
+    nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
     if (frame) {
       const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
       if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)

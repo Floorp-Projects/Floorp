@@ -525,9 +525,7 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
         if (!presShell) {
           return nsnull;
         }
-        nsIFrame *selectFrame = nsnull;
-        presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
-        return selectFrame;
+        return presShell->GetPrimaryFrameFor(selectContent);
       }
     }
   }
@@ -633,8 +631,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
     if (!testSelectNode || !selectContent || !presShell || !option) 
       return NS_ERROR_FAILURE;
 
-    nsIFrame *selectFrame = nsnull;
-    presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
+    nsIFrame *selectFrame = presShell->GetPrimaryFrameFor(selectContent);
     nsIComboboxControlFrame *comboBoxFrame = nsnull;
     CallQueryInterface(selectFrame, &comboBoxFrame);
     if (comboBoxFrame) {
@@ -678,8 +675,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   if (!shell)
     return NS_ERROR_FAILURE;
 
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
   if (!frame)
     return NS_ERROR_FAILURE;
 
@@ -1329,9 +1325,8 @@ void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBo
     return;
   }
 
-  nsIFrame* frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(child));
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
   if (!frame) {
     *aBoundingFrame = nsnull;
     return;

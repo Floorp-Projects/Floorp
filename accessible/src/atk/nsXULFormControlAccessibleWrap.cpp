@@ -118,9 +118,8 @@ nsXULTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
   if (!shell)
     return;
 
-  nsIFrame* frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
 
   if (!frame)
     return;

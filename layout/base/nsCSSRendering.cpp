@@ -1557,9 +1557,8 @@ PRBool GetBGColorForHTMLElement( nsPresContext *aPresContext,
         if (tag == nsHTMLAtoms::html ||
             tag == nsHTMLAtoms::body) {
           // use this guy's color
-          nsIFrame *pFrame = nsnull;
-          if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) &&
-              pFrame) {
+          nsIFrame *pFrame = shell->GetPrimaryFrameFor(pContent);
+          if (pFrame) {
             nsStyleContext *pContext = pFrame->GetStyleContext();
             if (pContext) {
               const nsStyleBackground* color = pContext->GetStyleBackground();
@@ -2622,10 +2621,9 @@ FindCanvasBackground(nsPresContext* aPresContext,
             // and thus |InitialReflow| on the pres shell.  See bug 119351
             // for the ugly details.
             if (bodyContent) {
-              nsIFrame *bodyFrame;
-              nsresult rv = aPresContext->PresShell()->
-                GetPrimaryFrameFor(bodyContent, &bodyFrame);
-              if (NS_SUCCEEDED(rv) && bodyFrame)
+              nsIFrame *bodyFrame = aPresContext->PresShell()->
+                GetPrimaryFrameFor(bodyContent);
+              if (bodyFrame)
                 result = bodyFrame->GetStyleBackground();
             }
           }

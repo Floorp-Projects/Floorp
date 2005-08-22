@@ -661,12 +661,12 @@ DoCleanupFrameReferences(nsPresContext*  aPresContext,
 
   // Remove the mapping from the content object to its frame
   aFrameManager->SetPrimaryFrameFor(content, nsnull);
-  frame->RemovedAsPrimaryFrame(aPresContext);
+  aFrameIn->RemovedAsPrimaryFrame(aPresContext);
   aFrameManager->ClearAllUndisplayedContentIn(content);
 
   // Recursively walk the child frames.
   // Note: we only need to look at the principal child list
-  nsIFrame* childFrame = frame->GetFirstChild(nsnull);
+  nsIFrame* childFrame = aFrameIn->GetFirstChild(nsnull);
   while (childFrame) {
     DoCleanupFrameReferences(aPresContext, aFrameManager, childFrame);
     
@@ -7741,8 +7741,7 @@ nsIFrame*
 nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
 {
   // Get the primary frame associated with the content
-  nsIFrame* frame;
-  mPresShell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
 
   if (!frame)
     return nsnull;
@@ -7908,8 +7907,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
 
     // Get its frame. If it doesn't have one, continue on to the
     // anonymous element that preceded it.
-    nsIFrame* prevSibling;
-    aPresShell->GetPrimaryFrameFor(child, &prevSibling);
+    nsIFrame* prevSibling = aPresShell->GetPrimaryFrameFor(child);
     if (prevSibling) {
       // The frame may be a special frame (a split inline frame that
       // contains a block).  Get the last part of that split.
@@ -7988,8 +7986,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
     nsCOMPtr<nsIContent> child = do_QueryInterface(node);
 
     // Get its frame
-    nsIFrame* nextSibling;
-    aPresShell->GetPrimaryFrameFor(child, &nextSibling);
+    nsIFrame* nextSibling = aPresShell->GetPrimaryFrameFor(child);
     if (nextSibling) {
       // The primary frame should never be a continuation
       NS_ASSERTION(!nextSibling->GetPrevInFlow(),
@@ -8094,8 +8091,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
   // Note: not all content objects are associated with a frame (e.g., if it's
   // `display: hidden') so keep looking until we find a previous frame
   while (iter-- != first) {
-    nsIFrame* prevSibling = nsnull;
-    mPresShell->GetPrimaryFrameFor(nsCOMPtr<nsIContent>(*iter), &prevSibling);
+    nsIFrame* prevSibling = mPresShell->GetPrimaryFrameFor(nsCOMPtr<nsIContent>(*iter));
 
     if (prevSibling) {
       // The frame may be a special frame (a split inline frame that
@@ -8134,7 +8130,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
 
 #ifdef DEBUG
       nsIFrame* containerFrame = nsnull;
-      mPresShell->GetPrimaryFrameFor(aContainer, &containerFrame);
+      containerFrame = mPresShell->GetPrimaryFrameFor(aContainer);
       NS_ASSERTION(prevSibling != containerFrame, "Previous Sibling is the Container's frame");
 #endif
       // Found a previous sibling, we're done!
@@ -8167,8 +8163,8 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent*       aContainer,
   PRUint8 childDisplay = UNSET_DISPLAY;
 
   while (++iter != last) {
-    nsIFrame* nextSibling = nsnull;
-    mPresShell->GetPrimaryFrameFor(nsCOMPtr<nsIContent>(*iter), &nextSibling);
+    nsIFrame* nextSibling =
+      mPresShell->GetPrimaryFrameFor(nsCOMPtr<nsIContent>(*iter));
 
     if (nextSibling) {
       // The frame primary frame should never be a continuation
@@ -8683,8 +8679,7 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIContent*     aContainer,
   PRUint32 numOptions = 0;
   nsresult rv = aSelectElement->GetLength(&numOptions);
   if (NS_SUCCEEDED(rv) && numOptions > 0) {
-    nsIFrame* frame;
-    mPresShell->GetPrimaryFrameFor(aContainer, &frame);
+    nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContainer);
     if (frame) {
       nsISelectControlFrame* listFrame = nsnull;
       CallQueryInterface(frame, &listFrame);
@@ -9525,8 +9520,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
   nsresult                  rv = NS_OK;
 
   // Find the child frame that maps the content
-  nsIFrame* childFrame;
-  mPresShell->GetPrimaryFrameFor(aChild, &childFrame);
+  nsIFrame* childFrame = mPresShell->GetPrimaryFrameFor(aChild);
 
   if (! childFrame) {
     frameManager->ClearUndisplayedContentIn(aChild, aContainer);
@@ -9539,9 +9533,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContainer);
     if (selectElement) {
       // XXX temp needed only native controls
-      nsIFrame* selectFrame;
-      // XXX temp needed only native controls
-      mPresShell->GetPrimaryFrameFor(aContainer, &selectFrame);
+      nsIFrame* selectFrame = mPresShell->GetPrimaryFrameFor(aContainer);
 
       // For "select" add the pseudo frame after the last item is deleted
       nsIFrame* parentFrame = childFrame->GetParent();
@@ -9624,7 +9616,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
                          containingBlock);
 
       // Recover childFrame and parentFrame
-      mPresShell->GetPrimaryFrameFor(aChild, &childFrame);
+      childFrame = mPresShell->GetPrimaryFrameFor(aChild);
       if (!childFrame) {
         frameManager->ClearUndisplayedContentIn(aChild, aContainer);
         return NS_OK;
@@ -9989,8 +9981,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   nsresult      rv = NS_OK;
 
   // Find the child frame
-  nsIFrame* frame;
-  mPresShell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
@@ -10149,8 +10140,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #ifdef DEBUG
     // reget from content since it may have been regenerated...
     if (content) {
-      nsIFrame* frame;
-      mPresShell->GetPrimaryFrameFor(content, &frame);
+      nsIFrame* frame = mPresShell->GetPrimaryFrameFor(content);
       if (frame) {
         mPresShell->FrameManager()->DebugVerifyStyleTree(frame);
       }
@@ -10208,8 +10198,7 @@ nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
   }
 #ifdef ACCESSIBILITY
   if (mPresShell->IsAccessibilityActive()) {
-    nsIFrame *frame;
-    mPresShell->GetPrimaryFrameFor(aContent, &frame);
+    nsIFrame *frame = mPresShell->GetPrimaryFrameFor(aContent);
     NotifyAccessibleChange(prevRenderedFrameType,
                            GetRenderedFrameType(frame),
                            aContent);
@@ -10231,8 +10220,7 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIContent *aContent)
     if (!child->IsContentOfType(nsIContent::eELEMENT))
       continue;
 
-    nsIFrame* primaryFrame = nsnull;
-    mPresShell->GetPrimaryFrameFor(child, &primaryFrame);
+    nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(child);
     RestyleElement(child, primaryFrame, NS_STYLE_HINT_NONE);
   }
 }
@@ -10256,8 +10244,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
   NS_ASSERTION(styleSet, "couldn't get style set");
 
   if (aContent) {
-    nsIFrame* primaryFrame = nsnull;
-    mPresShell->GetPrimaryFrameFor(aContent, &primaryFrame);
+    nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
 
     nsChangeHint hint = NS_STYLE_HINT_NONE;
     if (primaryFrame) {
@@ -10296,8 +10283,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   nsCOMPtr<nsIPresShell> shell = mPresShell;
 
   // Get the frame associated with the content which is the highest in the frame tree
-  nsIFrame* primaryFrame;
-  shell->GetPrimaryFrameFor(aContent, &primaryFrame); 
+  nsIFrame* primaryFrame = shell->GetPrimaryFrameFor(aContent); 
 
 #if 0
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -11485,8 +11471,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   }
 
   if (insertionElement) {
-    nsIFrame* insertionPoint = nsnull;
-    mPresShell->GetPrimaryFrameFor(insertionElement, &insertionPoint);
+    nsIFrame* insertionPoint = mPresShell->GetPrimaryFrameFor(insertionElement);
     if (insertionPoint) {
       // If the insertion point is a scrollable, then walk ``through''
       // it to get the scrolled frame.
@@ -11513,14 +11498,11 @@ nsresult
 nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
                                                nsILayoutHistoryState* aHistoryState)
 {
-  nsresult rv = NS_OK;
-
-  nsIFrame* frame;
-  rv = mPresShell->GetPrimaryFrameFor(aContent, &frame);
-  if (NS_SUCCEEDED(rv) && frame) {
+  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  if (frame) {
     CaptureStateFor(frame, aHistoryState);
   }
-  return rv;
+  return NS_OK;
 }
 
 // Capture state for the frame tree rooted at aFrame.
@@ -11587,8 +11569,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
   // containing block from ContentRemoved() and ContentInserted(),
   // below!)
 
-  nsIFrame* frame;
-  mPresShell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
   nsPresContext* presContext = mPresShell->GetPresContext();
 
   nsresult rv = NS_OK;
@@ -13586,8 +13567,7 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
     return;
   }
   
-  nsIFrame* primaryFrame = nsnull;
-  mPresShell->GetPrimaryFrameFor(aContent, &primaryFrame);
+  nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
   if (aRestyleHint & eReStyle_Self) {
     RestyleElement(aContent, primaryFrame, aChangeHint);
   } else if (aChangeHint &&

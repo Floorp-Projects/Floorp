@@ -2980,8 +2980,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
 
     if (shell) {
         nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
-        nsIFrame* frame = nsnull;
-        shell->GetPrimaryFrameFor(content, &frame);
+        nsIFrame* frame = shell->GetPrimaryFrameFor(content);
 
         nsPresContext *presContext = shell->GetPresContext();
 

@@ -2176,8 +2176,7 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
                                           nsPoint& aTargetPt)
 {
   nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(aCurrentEl));
-  nsIFrame *frame = nsnull;
-  aPresShell->GetPrimaryFrameFor(focusedContent, &frame);
+  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(focusedContent);
   if (frame) {
     aPresShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                            NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -2253,7 +2252,7 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
               col->GetElement(getter_AddRefs(colElement));
               nsCOMPtr<nsIContent> colContent(do_QueryInterface(colElement));
               if (colContent) {
-                aPresShell->GetPrimaryFrameFor(colContent, &frame);
+                frame = aPresShell->GetPrimaryFrameFor(colContent);
                 if (frame) {
                   frameOrigin.y += frame->GetSize().height;
                 }

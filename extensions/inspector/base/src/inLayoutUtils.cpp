@@ -94,10 +94,7 @@ nsIFrame*
 inLayoutUtils::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame* frame = nsnull;
-  aShell->GetPrimaryFrameFor(content, &frame);
-
-  return frame;
+  return aShell->GetPrimaryFrameFor(content);
 }
 
 already_AddRefed<nsIRenderingContext>
@@ -169,8 +166,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
       nsPresContext *presContext = presShell->GetPresContext();
       
       if (presContext) {
-        nsIFrame* frame = nsnull;
-        presShell->GetPrimaryFrameFor(content, &frame);
+        nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
         
         PRInt32 offsetX = 0;
         PRInt32 offsetY = 0;

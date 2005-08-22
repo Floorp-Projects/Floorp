@@ -3629,8 +3629,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
             pPresShell->GetDocument()->FindContentForSubDocument(presShell->GetDocument());
         NS_ASSERTION(shellContent, "subshell not in the map");
 
-        nsIFrame* frame;
-        pPresShell->GetPrimaryFrameFor(shellContent, &frame);
+        nsIFrame* frame = pPresShell->GetPrimaryFrameFor(shellContent);
         if (frame && !frame->AreAncestorViewsVisible()) {
             *aVisibility = PR_FALSE;
             return NS_OK;
@@ -8138,8 +8137,7 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
   nsIContent *rootContent = doc->GetRootContent();
   if (!rootContent) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(rootContent, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
   if (frame) {
     frame = frame->GetParent();
     if (frame) {

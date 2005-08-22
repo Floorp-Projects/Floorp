@@ -254,10 +254,9 @@ nsIFrame* nsAccessNode::GetFrame()
   if (!shell) 
     return nsnull;  
 
-  nsIFrame* frame;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   while (content) {
-    shell->GetPrimaryFrameFor(content, &frame);
+    nsIFrame* frame = shell->GetPrimaryFrameFor(content);
     if (frame) {
       return frame;
     }
