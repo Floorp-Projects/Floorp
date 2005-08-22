@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1265,6 +1266,10 @@ nsBoxFrame::AttributeChanged(nsIContent* aChild,
       aAttribute == nsHTMLAtoms::valign      ||
       aAttribute == nsHTMLAtoms::left        ||
       aAttribute == nsHTMLAtoms::top         ||
+      aAttribute == nsXULAtoms::minwidth     ||
+      aAttribute == nsXULAtoms::maxwidth     ||
+      aAttribute == nsXULAtoms::minheight    ||
+      aAttribute == nsXULAtoms::maxheight    ||
       aAttribute == nsXULAtoms::flex         ||
       aAttribute == nsXULAtoms::orient       ||
       aAttribute == nsXULAtoms::pack         ||
