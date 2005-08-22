@@ -224,7 +224,7 @@ nsXFormsItemSetElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **
   anonContent->GetFirstChild(getter_AddRefs(child));
   // Trying to select the first possible (generated) \<item\> element.
   while (child) {
-    nsCOMPtr<nsIXFormsSelectChild> selectChild(do_QueryInterface(tmp));
+    nsCOMPtr<nsIXFormsSelectChild> selectChild(do_QueryInterface(child));
     if (selectChild) {
       selectChild->SelectItemByValue(aValue, aSelected);
       if (*aSelected) {
