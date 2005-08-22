@@ -1501,8 +1501,6 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
           // Append the index of the control in the form
           nsCOMPtr<nsIForm> form(do_QueryInterface(formElement));
           form->IndexOfControl(control, &index);
-          NS_ASSERTION(index > -1,
-                       "nsFrameManager::GenerateStateKey didn't find form control index!");
 
           if (index > -1) {
             KeyAppendInt(index, aKey);
