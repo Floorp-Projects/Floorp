@@ -1630,6 +1630,12 @@ nsIPresShell::GetVerifyReflowFlags()
 #endif
 }
 
+void
+nsIPresShell::SetForwardingContainer(nsISupports *aContainer)
+{
+  mForwardingContainer = do_GetWeakReference(aContainer);
+}
+
 //----------------------------------------------------------------------
 
 nsresult
@@ -5944,9 +5950,16 @@ nsresult PresShell::RetargetEventToParent(nsIView         *aView,
   // Next, update the display so the old focus ring is no longer visible
 
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (!container)
+    container = do_QueryReferent(mForwardingContainer);
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-  NS_ASSERTION(docShell, "No docshell for container.");
+  if (!docShell) {
+    // We don't have any place to send this event.
+    NS_WARNING("dropping event, no forwarding shell");
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIContentViewer> contentViewer;
   docShell->GetContentViewer(getter_AddRefs(contentViewer));
   if (contentViewer) {

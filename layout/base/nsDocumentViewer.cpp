@@ -1226,6 +1226,9 @@ DocumentViewerImpl::Open(nsISupports *aState)
   if (mDocument)
     mDocument->SetContainer(nsCOMPtr<nsISupports>(do_QueryReferent(mContainer)));
 
+  if (mPresShell)
+    mPresShell->SetForwardingContainer(nsnull);
+
   SyncParentSubDocMap();
 
   // XXX re-enable image animations once that works correctly
@@ -1392,6 +1395,8 @@ DocumentViewerImpl::Destroy()
       mPresContext->SetLinkHandler(nsnull);
       mPresContext->SetContainer(nsnull);
     }
+    if (mPresShell)
+      mPresShell->SetForwardingContainer(mContainer);
 
     return NS_OK;
   }
