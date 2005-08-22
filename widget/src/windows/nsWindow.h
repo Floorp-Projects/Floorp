@@ -570,6 +570,7 @@ protected:
     {
       HDC       mMemoryDC;
       HBITMAP   mMemoryBitmap;
+      PRUint8*  mMemoryBits;
     } w2k;
     // Windows NT and 9x use complex shaped window regions to support 1-bit transparency masks
     struct
