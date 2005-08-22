@@ -306,6 +306,8 @@ nsresult nsTestUConv::DisplayDetectors()
     res = ccMan->GetCharsetTitle(detectorName.get(), title);
     if (NS_FAILED(res)) title.SetLength(0);
     printf("\"%s\"\n", NS_LossyConvertUCS2toASCII(title).get());
+
+    detectors->HasMore(&hasMore);
   }
   
   mLog.DelTrace(trace);
