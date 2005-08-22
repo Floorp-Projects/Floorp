@@ -693,15 +693,16 @@ public:
    */
   virtual void Thaw() = 0;
 
-#ifdef _IMPL_NS_LAYOUT
   /**
    * When this shell is disconnected from its containing docshell, we
    * lose our container pointer.  However, we'd still like to be able to target
    * user events at the docshell's parent.  This pointer allows us to do that.
    * It should not be used for any other purpose.
    */
-  void SetForwardingContainer(nsISupports *aContainer);
-#endif
+  void SetForwardingContainer(nsWeakPtr aContainer)
+  {
+    mForwardingContainer = aContainer;
+  }
 
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
