@@ -2420,19 +2420,43 @@ ExtensionManager.prototype = {
       var globalExtension = commandLine.handleFlagWithParam("install-global-extension", false);
       if (globalExtension) {
         var file = commandLine.resolveFile(globalExtension);
-        this.installItemFromFile(file, KEY_APP_GLOBAL);
+        this._installGlobalItem(file);
       }
       var globalTheme = commandLine.handleFlagWithParam("install-global-theme", false);
       if (globalTheme) {
-        var file = commandLine.resolveFile(globalExtension);
-        this.installItemFromFile(file, KEY_APP_GLOBAL);
+        file = commandLine.resolveFile(globalTheme);
+        this._installGlobalItem(file);
       }
-      this._finishOperations();
     }
     catch (e) { 
-      LOG("Failed to install Global Item: invalid parameter format or file path");
+      LOG("ExtensionManager:handleCommandLineArgs - failure, catching exception - lineno: " +
+          e.lineNumber + " - file: " + e.fileName + " - " + e);
     }
     commandLine.preventDefault = true;
+  },
+
+  /**
+   * Installs an XPI/JAR file into the KEY_APP_GLOBAL install location.
+   * @param   file
+   *          The XPI/JAR file to extract
+   */
+  _installGlobalItem: function(file) {
+    if (!file || !file.exists())
+      throw new Error("Unable to find the file specified on the command line!");
+    var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
+    if (!installManifestFile || !installManifestFile.exists())
+      throw new Error("The package is missing an install manifest!");
+    var installManifest = getInstallManifest(installManifestFile);
+    installManifestFile.remove(false);
+    var installData = this._getInstallData(installManifest);
+    var installer = new Installer(installManifest, installData.id,
+                                  InstallLocations.get(KEY_APP_GLOBAL),
+                                  installData.type);
+    installer._installExtensionFiles(file);
+    if (installData.type == nsIUpdateItem.TYPE_EXTENSION)
+      installer.upgradeExtensionChrome();
+    else
+      installer.upgradeThemeChrome();
   },
 
   /**
