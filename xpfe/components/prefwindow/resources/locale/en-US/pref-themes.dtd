@@ -13,6 +13,6 @@
 
 <!ENTITY  general.label           "General">
 <!ENTITY  preview.label           "Preview Image">
-<!ENTITY  author.label            "Author">
+<!ENTITY  author.label            "Author:">
 
 <!ENTITY  getNewThemes.label      "Get New Themes">
