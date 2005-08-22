@@ -2736,14 +2736,8 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
   if (aNode->IsContentOfType(nsIContent::eELEMENT))
   {
     PRInt32 childIndex  = 0;
-    PRInt32 numChildren = theNode->GetChildCount();
+    PRInt32 numChildren = 0;
 
-    if (numChildren == 0)
-    {
-      *aReturnOffset = 0;
-      return mShell->GetPrimaryFrameFor(theNode, aReturnFrame);
-    }
-    
     if (aHint == HINTLEFT)
     {
       if (aOffset > 0)
@@ -2753,8 +2747,15 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
     }
     else // HINTRIGHT
     {
+      numChildren = theNode->GetChildCount();
+
       if (aOffset >= numChildren)
-        childIndex = numChildren - 1;
+      {
+        if (numChildren > 0)
+          childIndex = numChildren - 1;
+        else
+          childIndex = 0;
+      }
       else
         childIndex = aOffset;
     }
