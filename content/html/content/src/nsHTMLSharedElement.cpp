@@ -85,7 +85,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIPluginElement
-  virtual void SetActualType(const nsACString& aActualType);
+  NS_DECL_NSIPLUGINELEMENT
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
@@ -207,13 +207,23 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Height, height)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Width, width)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
-//NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Src, src)
 
-void
+NS_IMETHODIMP
 nsHTMLSharedElement::SetActualType(const nsACString& aActualType)
 {
   mActualType = aActualType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSharedElement::GetActualType(nsACString& aActualType)
+{
+  aActualType = mActualType;
+
+  return NS_OK;
 }
 
 #ifdef MOZ_SVG
@@ -261,30 +271,6 @@ NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedElement, TabIndex, tabindex,
                                mNodeInfo->Equals(nsHTMLAtoms::embed) ? 0 : -1)
   
-NS_IMETHODIMP
-nsHTMLSharedElement::GetType(nsAString& aType)
-{
-  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || mActualType.IsEmpty()) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
-  } else {
-    CopyUTF8toUTF16(mActualType, aType);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLSharedElement::SetType(const nsAString& aType)
-{
-  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    mActualType.Truncate();
-  }
-
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {

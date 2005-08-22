@@ -35,29 +35,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIPluginElement_h___
-#define nsIPluginElement_h___
 
-#include "nsISupports.h"
-
-#define NS_IPLUGINELEMENT_IID   \
-{ 0xa7398342, 0xbc15, 0x4c61, \
-  {0x9a, 0xe2, 0xa4, 0xa4, 0x85, 0xa7, 0x3c, 0x80} }
+#include "nsISupports.idl"
 
 /**
  * Interface which plugin elements (e.g. embed and object) implement
- * in addition to their dom specific interface.
+ * (but don't automatically expose to JS) in addition to their dom
+ * specific interface.
  */
-class nsIPluginElement : public nsISupports
+[scriptable, uuid(41be252d-c47b-40f3-94bc-bffe51762d68)]
+interface nsIPluginElement : nsISupports
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINELEMENT_IID)
+  /**
+   * The actual mime type (the one we got back from the network
+   * request) for the plugin element.
+   */
+  readonly attribute ACString actualType;
 
   /**
-   * Set the actual mime type (the one we got back from the network
-   * request) for the plugin element
+   * Non-scriptable setter for the actual mime type (the one we got
+   * back from the network request).
    */
-  virtual void SetActualType(const nsACString& aActualType) = 0;
+  [noscript] void setActualType(in ACString actualType);
 };
-
-#endif // nsIPluginElement_h___
