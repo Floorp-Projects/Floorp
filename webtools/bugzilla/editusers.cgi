@@ -127,12 +127,11 @@ if ($action eq 'search') {
 
         # Handle selection by group.
         if ($grouprestrict eq '1') {
+            detaint_natural($groupid);
+            my $grouplist = join(',',
+                @{Bugzilla::User->flatten_group_membership($groupid)});
             $query .= " $nextCondition profiles.userid = ugm.user_id " .
-                      'AND ugm.group_id = ?';
-            # We can trick_taint because we use the value in a SELECT only,
-            # using a placeholder.
-            trick_taint($groupid);
-            push(@bindValues, $groupid);
+                      "AND ugm.group_id IN($grouplist)";
         }
         $query .= ' ORDER BY profiles.login_name';
 
@@ -656,7 +655,11 @@ sub userDataToVars {
         qq{SELECT id,
                   COUNT(directmember.group_id) AS directmember,
                   COUNT(regexpmember.group_id) AS regexpmember,
-                  CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END,
+                  (CASE WHEN (groups.id IN ($grouplist)
+                              AND COUNT(directmember.group_id) = 0
+                              AND COUNT(regexpmember.group_id) = 0
+                             ) THEN 1 ELSE 0 END) 
+                      AS derivedmember,
                   COUNT(directbless.group_id) AS directbless
            FROM groups
            LEFT JOIN user_group_map AS directmember
