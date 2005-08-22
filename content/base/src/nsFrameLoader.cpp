@@ -220,6 +220,13 @@ nsFrameLoader::Destroy()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetDepthTooGreat(PRBool* aDepthTooGreat)
+{
+  *aDepthTooGreat = mDepthTooGreat;
+  return NS_OK;
+}
+
 nsresult
 nsFrameLoader::EnsureDocShell()
 {
@@ -396,6 +403,8 @@ nsFrameLoader::GetURL(nsString& aURI)
 nsresult
 nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
 {
+  mDepthTooGreat = PR_FALSE;
+  
   NS_PRECONDITION(mDocShell, "Must have docshell here");
   
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
@@ -418,6 +427,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
     ++depth;
     
     if (depth >= MAX_DEPTH_CONTENT_FRAMES) {
+      mDepthTooGreat = PR_TRUE;
       NS_WARNING("Too many nested content frames so giving up");
 
       return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
