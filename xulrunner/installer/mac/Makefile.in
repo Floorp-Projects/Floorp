@@ -120,6 +120,7 @@ libs:: Info.plist Description.plist
 	$(SIGN_NSS)
 	chmod -R a+rX,u+w,go-w,-s,-t $(DIST)/package-stage
 # For some unknown reason, PackageMaker requires absolute paths to everything.
+	unset NEXT_ROOT; \
 	$(CHOWN_ROOT) $(DIST)/package-stage && \
 	  /Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker -build \
 	    -p $(_ABS_DIST)/$(PKG_BASENAME).pkg \
