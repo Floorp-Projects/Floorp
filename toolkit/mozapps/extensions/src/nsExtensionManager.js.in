@@ -4252,6 +4252,14 @@ ExtensionManager.prototype = {
         return;
       }
     }
+    else if (installLocation.name == KEY_APP_PROFILE ||
+             installLocation.name == KEY_APP_GLOBAL) {
+      // Check for a pointer file and remove it if it exists
+      var pointerFile = installLocation.location.clone();
+      pointerFile.append(id);
+      if (pointerFile.exists() && !pointerFile.isDirectory())
+        pointerFile.remove(false);
+    }
     
     // Clean the item resource
     ds.removeItemMetadata(id);
