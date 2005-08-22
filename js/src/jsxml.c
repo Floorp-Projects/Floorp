@@ -3839,7 +3839,7 @@ GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
     JSFunction *fun;
 
     do {
-        /* XXXbe really want a separate scope for function:*. */
+        /* XXXbe really want a separate scope for function::*. */
         if (!js_GetProperty(cx, obj, id, &fval))
             return JS_FALSE;
         if (JSVAL_IS_FUNCTION(cx, fval)) {
@@ -5369,6 +5369,13 @@ CallConstructorFunction(JSContext *cx, JSObject *obj, JSClass *clasp,
     return JSVAL_TO_OBJECT(rval);
 }
 
+#define XML_METHOD_PROLOG                                                     \
+    JS_BEGIN_MACRO                                                            \
+        xml = (JSXML *) JS_GetInstancePrivate(cx, obj, &js_XMLClass, argv);   \
+        if (!xml)                                                             \
+            return JS_FALSE;                                                  \
+    JS_END_MACRO
+
 static JSBool
 xml_addNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *rval)
@@ -5377,7 +5384,7 @@ xml_addNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *nsobj;
     JSXMLNamespace *ns;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (xml->xml_class != JSXML_CLASS_ELEMENT)
         return JS_TRUE;
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
@@ -5405,7 +5412,7 @@ xml_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval name, v;
     JSObject *vobj;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
     if (!xml)
         return JS_FALSE;
@@ -5498,7 +5505,7 @@ xml_child(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uint32 i, n;
     JSObject *listobj, *kidobj;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     name = argv[0];
     if (xml->xml_class == JSXML_CLASS_LIST) {
         /* ECMA-357 13.5.4.4 */
@@ -5536,7 +5543,7 @@ xml_childIndex(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXML *xml, *parent;
     uint32 i, n;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     parent = xml->parent;
     if (!parent || xml->xml_class == JSXML_CLASS_ATTRIBUTE) {
         *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -5572,7 +5579,7 @@ xml_comments(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uint32 i, n;
     jsval v;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
     if (!listobj)
         return JS_FALSE;
@@ -5632,7 +5639,7 @@ xml_contains(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *kidobj;
     uint32 i, n;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     value = argv[0];
     if (xml->xml_class == JSXML_CLASS_LIST) {
         eq = JS_FALSE;
@@ -5658,7 +5665,7 @@ xml_copy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSXML *xml, *copy;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     copy = DeepCopy(cx, xml, NULL, 0);
     if (!copy)
         return JS_FALSE;
@@ -5674,7 +5681,7 @@ xml_descendants(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXML *xml, *list;
     jsval name;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     name = (argc == 0) ? ATOM_KEY(cx->runtime->atomState.starAtom) : argv[0];
     list = Descendants(cx, xml, name);
     if (!list)
@@ -5696,7 +5703,7 @@ xml_elements(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSBool ok;
     uint32 i, n;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     name = (argc == 0) ? ATOM_KEY(cx->runtime->atomState.starAtom) : argv[0];
     nameqn = ToXMLName(cx, name, &funid);
     if (!nameqn)
@@ -5783,8 +5790,8 @@ xml_hasComplexContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *kidobj;
     uint32 i, n;
 
+    XML_METHOD_PROLOG;
 again:
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
     switch (xml->xml_class) {
       case JSXML_CLASS_ATTRIBUTE:
       case JSXML_CLASS_COMMENT:
@@ -5801,6 +5808,7 @@ again:
             if (!kidobj)
                 return JS_FALSE;
             obj = kidobj;
+            xml = (JSXML *) JS_GetPrivate(cx, obj);
             goto again;
         }
         /* FALL THROUGH */
@@ -5825,7 +5833,7 @@ xml_hasSimpleContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSXML *xml;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     *rval = BOOLEAN_TO_JSVAL(HasSimpleContent(xml));
     return JS_TRUE;
 }
@@ -5846,7 +5854,7 @@ xml_inScopeNamespaces(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = OBJECT_TO_JSVAL(arrayobj);
     length = 0;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     do {
         if (xml->xml_class != JSXML_CLASS_ELEMENT)
             continue;
@@ -5887,7 +5895,7 @@ xml_insertChildAfter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval arg;
     uint32 i;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (!JSXML_HAS_KIDS(xml))
         return JS_TRUE;
 
@@ -5922,7 +5930,7 @@ xml_insertChildBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval arg;
     uint32 i;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (!JSXML_HAS_KIDS(xml))
         return JS_TRUE;
 
@@ -5954,7 +5962,7 @@ xml_length(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSXML *xml;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (xml->xml_class != JSXML_CLASS_LIST) {
         *rval = JSVAL_ONE;
     } else {
@@ -5970,7 +5978,7 @@ xml_localName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSXML *xml;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     *rval = xml->name ? STRING_TO_JSVAL(xml->name->localName) : JSVAL_NULL;
     return JS_TRUE;
 }
@@ -5981,7 +5989,7 @@ xml_name(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSXML *xml;
     JSObject *nameobj;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (!xml->name) {
         *rval = JSVAL_NULL;
     } else {
@@ -6006,7 +6014,7 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXMLNamespace *ns;
     JSString *prefix;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (argc == 0 &&
         (xml->xml_class == JSXML_CLASS_TEXT ||
          xml->xml_class == JSXML_CLASS_COMMENT ||
@@ -6078,7 +6086,7 @@ xml_namespaceDeclarations(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(arrayobj);
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (JSXML_HAS_VALUE(xml) || xml->xml_class == JSXML_CLASS_LIST)
         return JS_TRUE;
 
@@ -6150,7 +6158,7 @@ xml_nodeKind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXML *xml;
     JSString *str;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     str = JS_InternString(cx, js_xml_class_str[xml->xml_class]);
     if (!str)
         return JS_FALSE;
@@ -6198,8 +6206,8 @@ xml_normalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
     jsval junk;
 
+    XML_METHOD_PROLOG;
     *rval = OBJECT_TO_JSVAL(obj);
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
     if (!JSXML_HAS_KIDS(xml))
         return JS_TRUE;
 
@@ -6245,7 +6253,7 @@ xml_parent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uint32 i, n;
     JSObject *parentobj;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     parent = xml->parent;
     if (xml->xml_class == JSXML_CLASS_LIST) {
         *rval = JSVAL_VOID;
@@ -6287,7 +6295,7 @@ xml_processingInstructions(JSContext *cx, JSObject *obj, uintN argc,
     JSBool ok;
     uint32 i, n;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     name = (argc == 0) ? ATOM_KEY(cx->runtime->atomState.starAtom) : argv[0];
     nameqn = ToXMLName(cx, name, &funid);
     if (!nameqn)
@@ -6352,7 +6360,7 @@ xml_prependChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     JSXML *xml;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     xml = CHECK_COPY_ON_WRITE(cx, xml, obj);
     if (!xml)
         return JS_FALSE;
@@ -6369,7 +6377,7 @@ xml_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval name;
     uint32 index;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     name = argv[0];
     *rval = JSVAL_FALSE;
     if (js_IdIsIndex(name, &index)) {
@@ -6439,7 +6447,7 @@ xml_removeNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *nsobj;
     JSXMLNamespace *ns;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     *rval = OBJECT_TO_JSVAL(obj);
     if (xml->xml_class != JSXML_CLASS_ELEMENT)
         return JS_TRUE;
@@ -6466,7 +6474,7 @@ xml_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *nameobj;
     JSXMLQName *nameqn;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     *rval = OBJECT_TO_JSVAL(obj);
     if (xml->xml_class != JSXML_CLASS_ELEMENT)
         return JS_TRUE;
@@ -6540,7 +6548,7 @@ xml_setLocalName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXMLQName *nameqn;
     JSString *namestr;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (!JSXML_HAS_NAME(xml))
         return JS_TRUE;
 
@@ -6574,7 +6582,7 @@ xml_setName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uint32 i, n;
     JSXMLNamespace *ns;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (!JSXML_HAS_NAME(xml))
         return JS_TRUE;
 
@@ -6676,7 +6684,7 @@ xml_setNamespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXMLNamespace *ns;
     jsval qnargv[2];
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     if (xml->xml_class != JSXML_CLASS_ELEMENT &&
         xml->xml_class != JSXML_CLASS_ATTRIBUTE) {
         return JS_TRUE;
@@ -6724,7 +6732,7 @@ xml_text(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     jsval v;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
     if (!listobj)
         return JS_FALSE;
@@ -6820,7 +6828,7 @@ xml_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSXML *xml;
     JSString *str;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    XML_METHOD_PROLOG;
     str = xml_toString_helper(cx, xml);
     if (!str)
         return JS_FALSE;
