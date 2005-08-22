@@ -60,7 +60,8 @@
          <menuitem value="6" id="labelMenuItem5"/>
          <menuseparator id="lastDefaultView"/>
          <menuseparator id="createCustomViewSeparator"/>
-         <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+         <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
+         <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
        </menupopup>
       </menulist>
     </hbox>

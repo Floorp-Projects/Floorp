@@ -2,6 +2,7 @@
 
 <!ENTITY viewPicker.label "View:">
 <!ENTITY viewPicker.accesskey "i">
+<!ENTITY viewPickerSaveAsVirtualFolder.label "Save View as a Folder...">
 <!ENTITY viewPickerCustomView.label "Customize...">
 <!ENTITY viewPickerAll.label "All">
 <!ENTITY viewPickerUnread.label "Unread">

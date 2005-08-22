@@ -38,8 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 const kLabelOffset = 1;  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
-const kLastDefaultViewIndex = 9;  // 9, because 8 + 1, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
-const kCustomItemValue = "8"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="7" label="&viewPickerCustomView.label;"/>
+const kLastDefaultViewIndex = 9;  // 9, because 8 + 1, <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
+const kSaveItemValue = "7"; // from msgViewPickerOveraly.xul, <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
+const kCustomItemValue = "8"; // from msgViewPickerOveraly.xul, <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
 
 var gMailViewList = null;
 var gCurrentViewValue = "0"; // initialize to the first view ("All")
@@ -54,10 +55,14 @@ var nsMsgSearchOp = Components.interfaces.nsMsgSearchOp;
 
 function viewChange(aMenuList, val)
 {
-  if (val == kCustomItemValue) { 
+  if (val == kCustomItemValue || val == kSaveItemValue)
+  {
     // restore to the previous view value, in case they cancel
     aMenuList.value = gCurrentViewValue;
-    LaunchCustomizeDialog();
+    if (val == kCustomItemValue)
+      LaunchCustomizeDialog();
+    else
+      openNewVirtualFolderDialogWithArgs(gCurrentViewLabel, gSaveDefaultSVTerms);
     return;
   }
 
@@ -65,7 +70,6 @@ function viewChange(aMenuList, val)
   if (val == gCurrentViewValue)
     return; 
   viewDebug("viewChange to " + val + "\n");
-  var oldViewValue = gCurrentViewValue;
   gCurrentViewValue = val;
   switch (val)
   {
@@ -83,11 +87,6 @@ function viewChange(aMenuList, val)
    case "5": // label 4
    case "6": // label 5
      ViewLabel(parseInt(val) - kLabelOffset);
-     break;
-   case "7": // save view as virtual folder
-     val = oldViewValue;
-     aMenuList.value = val;
-     openNewVirtualFolderDialogWithArgs(gCurrentViewLabel, gSaveDefaultSVTerms);
      break;
    default:
      LoadCustomMailView(parseInt(val) - kLastDefaultViewIndex);
@@ -184,19 +183,12 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
 
   // remove any existing entries...
   var menupopupNode = document.getElementById('viewPickerPopup');
-  var numItemsInNode = menupopupNode.childNodes.length;
-  numItemsInNode -= 2; // subtract off the last 2 items since we want to leave those
-  var removeNodes = true;
-
-  while (removeNodes && numItemsInNode)
+  for (var i = menupopupNode.childNodes.length - 1; i >= 0; --i)
   {
-    if (menupopupNode.childNodes[numItemsInNode-1].getAttribute('id') == 'lastDefaultView')
-      removeNodes = false;
-    else
-      menupopupNode.removeChild(menupopupNode.childNodes[numItemsInNode-1]);
-    numItemsInNode -= 1;
+    if (menupopupNode.childNodes[i].id.substr(0, 15) == "userdefinedview")
+      menupopupNode.removeChild(menupopupNode.childNodes[i]);
   }
- 
+
   // now rebuild the list
 
   var numItems = gMailViewList.mailViewCount; 
