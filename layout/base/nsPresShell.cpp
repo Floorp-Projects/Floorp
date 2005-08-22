@@ -1630,12 +1630,6 @@ nsIPresShell::GetVerifyReflowFlags()
 #endif
 }
 
-void
-nsIPresShell::SetForwardingContainer(nsISupports *aContainer)
-{
-  mForwardingContainer = do_GetWeakReference(aContainer);
-}
-
 //----------------------------------------------------------------------
 
 nsresult
