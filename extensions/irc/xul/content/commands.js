@@ -1416,6 +1416,8 @@ function cmdSSLServer(e)
 
 function cmdQuit(e)
 {
+    if ((typeof e.reason != "string") || !e.reason)
+        e.reason = client.prefs["defaultQuitMsg"];
     if (!e.reason)
         e.reason = client.userAgent;
 
@@ -1431,7 +1433,9 @@ function cmdQuitMozilla(e)
 
 function cmdDisconnect(e)
 {
-    if (typeof e.reason != "string")
+    if ((typeof e.reason != "string") || !e.reason)
+        e.reason = client.prefs["defaultQuitMsg"];
+    if (!e.reason)
         e.reason = client.userAgent;
 
     e.network.quit(e.reason);
@@ -1449,7 +1453,9 @@ function cmdDisconnectAll(e)
         return;
     }
 
-    if (typeof e.reason != "string")
+    if ((typeof e.reason != "string") || !e.reason)
+        e.reason = client.prefs["defaultQuitMsg"];
+    if (!e.reason)
         e.reason = client.userAgent;
 
     for (var i = 0; i < conNetworks.length; i++)
