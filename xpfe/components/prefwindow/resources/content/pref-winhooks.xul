@@ -62,7 +62,6 @@
       <listitem type="checkbox" id="isHandlingJPEG" label="&jpeg.label;"/>
       <listitem type="checkbox" id="isHandlingGIF"  label="&gif.label;"/>
       <listitem type="checkbox" id="isHandlingPNG"  label="&png.label;"/>
-      <listitem type="checkbox" id="isHandlingMNG"  label="&mng.label;"/>
       <listitem type="checkbox" id="isHandlingXBM"  label="&xbm.label;"/>
       <listitem type="checkbox" id="isHandlingBMP"  label="&bmp.label;"/>
       <listitem type="checkbox" id="isHandlingICO"  label="&ico.label;"/>

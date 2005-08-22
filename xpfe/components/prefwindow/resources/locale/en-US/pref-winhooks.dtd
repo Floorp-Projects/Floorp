@@ -9,7 +9,6 @@
 <!ENTITY jpeg.label           "JPEG images">
 <!ENTITY gif.label            "GIF images">
 <!ENTITY png.label            "PNG images">
-<!ENTITY mng.label            "MNG images">
 <!ENTITY xbm.label            "XBM images">
 <!ENTITY bmp.label            "BMP images">
 <!ENTITY ico.label            "ICO images">
