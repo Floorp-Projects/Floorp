@@ -1099,6 +1099,10 @@ void nsCaret::GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset)
   
   ToggleDrawnStatus();
 
+  if (mDrawn) {
+    aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
+  }
+
 #ifdef DONT_REUSE_RENDERING_CONTEXT
   mRendContext = nsnull;
 #endif

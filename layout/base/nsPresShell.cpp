@@ -5501,6 +5501,15 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
+  // XXX fix for bug 304383. Remove when bug 287813 is fixed?
+  if (mCaret) {
+    nsIFrame* frame = nsnull;
+    GetPrimaryFrameFor(aChild, &frame);
+    if (frame && (frame->GetStateBits() & NS_FRAME_EXTERNAL_REFERENCE)) {
+      mCaret->EraseCaret();
+    }
+  }
+
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
   mPresContext->EventStateManager()->ContentRemoved(aChild);
