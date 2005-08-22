@@ -254,7 +254,6 @@ function pm_arrayupdate(prefName)
         return;
 
     this.prefBranch.setCharPref(prefName, this.arrayToString(record.realValue));
-    this.prefService.savePrefFile(null);
 }
 
 PrefManager.prototype.stringToArray =
@@ -391,8 +390,6 @@ function pm_setpref(prefName, value)
     {
         this.prefBranch.setCharPref(prefName, fromUnicode(value, PREF_CHARSET));
     }
-    
-    this.prefService.savePrefFile(null);
 
     record.realValue = value;
     
@@ -404,7 +401,6 @@ function pm_reset(prefName)
 {
     this.prefRecords[prefName].realValue = null;
     this.prefBranch.clearUserPref(prefName);
-    this.prefService.savePrefFile(null);
 }
 
 PrefManager.prototype.addPref =
