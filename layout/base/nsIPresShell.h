@@ -59,6 +59,7 @@
 #include "nsCOMArray.h"
 #include "nsFrameManagerBase.h"
 #include "mozFlushType.h"
+#include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
 
 class nsIAtom;
@@ -692,6 +693,16 @@ public:
    */
   virtual void Thaw() = 0;
 
+#ifdef _IMPL_NS_LAYOUT
+  /**
+   * When this shell is disconnected from its containing docshell, we
+   * lose our container pointer.  However, we'd still like to be able to target
+   * user events at the docshell's parent.  This pointer allows us to do that.
+   * It should not be used for any other purpose.
+   */
+  void SetForwardingContainer(nsISupports *aContainer);
+#endif
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -706,6 +717,7 @@ protected:
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsIFrameSelection*        mSelection;
   nsFrameManagerBase        mFrameManager;  // [OWNS]
+  nsWeakPtr                 mForwardingContainer;
 
   PRPackedBool              mStylesHaveChanged;
 
