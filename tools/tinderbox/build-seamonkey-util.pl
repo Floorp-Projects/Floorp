@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.300 $ ';
+$::UtilsVersion = '$Revision: 1.301 $ ';
 
 package TinderUtils;
 
@@ -438,7 +438,7 @@ sub SetupPath {
     }
 
     if ($Settings::OS eq 'Darwin') {
-        $ENV{PATH} = "/bin:/usr/bin:/sw/bin:$ENV{PATH}";
+        $ENV{PATH} = "/sw/bin:/bin:/usr/bin:$ENV{PATH}";
         $Settings::ConfigureEnvArgs = 'CC=cc CXX=c++';
         $Settings::Compiler = 'cc';
         $Settings::mail = '/usr/bin/mail';
@@ -447,11 +447,21 @@ sub SetupPath {
         # There should be a way of auto-detecting this, for now
         # you have to match BuildDebug and --enable-optimize, 
         # --disable-debug to make things work here.
-        if ($Settings::BuildDebug) {
-            $Settings::DistBin = "dist/".$Settings::ProductName."Debug.app/Contents/MacOS";
+
+        $Settings::DistBin = "dist/";
+
+        # Deal with the most common case first.
+        if ($Settings::ProductName != 'XULRunner') {
+            $Settings::DistBin .= "$Settings::ProductName";
+            if ($Settings::BuildDebug) {
+                $Settings::DistBin .= "Debug";
+            }
+            $Settings::DistBin .= ".app/Contents/MacOS";
         } else {
-            $Settings::DistBin = "dist/".$Settings::ProductName.".app/Contents/MacOS";
-        }
+            # XULRunner needs a special output path on MacOS,
+            # and the path doesn't change based on debug settings.
+             $Settings::DistBin .= "XUL.framework/Versions/Current";
+       }
     }
 
     if ($Settings::OS eq 'FreeBSD') {
@@ -668,7 +678,7 @@ sub encode_log {
     if($Settings::LogEncoding eq 'base64') {
         eval "use MIME::Base64 ();";
         while(read($input_file, $buf, 60*57)) {
-            print $output_file MIME::Base64::encode($buf);
+            print $output_file &MIME::Base64::encode($buf);
         }
     }
     elsif($Settings::LogEncoding eq 'uuencode') {
