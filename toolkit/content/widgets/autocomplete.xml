@@ -173,8 +173,19 @@
       </method>
 
       <property name="textValue"
-                onget="return this.value;"
-                onset="return this.value = val;"/>
+                onget="return this.value;">
+        <setter><![CDATA[
+          // Completing a result should simulate the user typing the result,
+          // so fire an input event.
+          this.value = val;
+          var evt = document.createEvent("UIEvents");
+          evt.initUIEvent("input", true, false, window, 0);
+          this.mIgnoreInput = true;
+          this.dispatchEvent(evt);
+          this.mIgnoreInput = false;
+          return this.value;
+        ]]></setter>
+      </property>
 
       <property name="selectionStart"
                 onget="return this.mInputElt.selectionStart;"/>

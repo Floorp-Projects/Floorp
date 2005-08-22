@@ -2947,7 +2947,7 @@ nsTextControlFrame::FireOnInput()
   
   // Dispatch the "input" event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event(PR_TRUE, NS_FORM_INPUT, nsnull);
+  nsUIEvent event(PR_TRUE, NS_FORM_INPUT, 0);
 
   // Have the content handle the event, propagating it according to normal
   // DOM rules.

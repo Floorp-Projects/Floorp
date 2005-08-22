@@ -458,6 +458,8 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_UI_FOCUSIN;
     else if (atom == nsLayoutAtoms::onDOMFocusOut)
       mEvent->message = NS_UI_FOCUSOUT;
+    else if (atom == nsLayoutAtoms::oninput)
+      mEvent->message = NS_FORM_INPUT;
   } else if (mEvent->eventStructType == NS_PAGETRANSITION_EVENT) {
     if (atom == nsLayoutAtoms::onpageshow)
       mEvent->message = NS_PAGE_SHOW;
