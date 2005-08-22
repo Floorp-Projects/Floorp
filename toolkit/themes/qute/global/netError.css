@@ -98,3 +98,7 @@ body[dir="rtl"] #brand {
 #brand > p {
   margin: 0;
 }
+
+#errorContainer {
+  display: none;
+}

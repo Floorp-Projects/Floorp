@@ -37,6 +37,7 @@
    -   Adam Lock <adamlock@netscape.com>
    -   William R. Price <wrprice@alumni.rice.edu>
    -   Henrik Skupin <mozilla@hskupin.info>
+   -   Jeff Walden <jwalden+code@mit.edu>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,45 +58,6 @@
     <title>&loadError.label;</title>
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
 
-    <!-- Include the localized error titles/descriptions -->
-    <script type="application/x-javascript">
-      var errorTitle = {
-        generic: "&generic.title;",
-        dnsNotFound: "&dnsNotFound.title;",
-        fileNotFound: "&fileNotFound.title;",
-        malformedURI: "&malformedURI.title;",
-        protocolNotFound: "&protocolNotFound.title;",
-        connectionFailure: "&connectionFailure.title;",
-        netTimeout: "&netTimeout.title;",
-        redirectLoop: "&redirectLoop.title;",
-        unknownSocketType: "&unknownSocketType.title;",
-        netReset: "&netReset.title;",
-        netOffline: "&netOffline.title;",
-        netInterrupt: "&netInterrupt.title;",
-        deniedPortAccess: "&deniedPortAccess.title;",
-        proxyResolveFailure: "&proxyResolveFailure.title;",
-        proxyConnectFailure: "&proxyConnectFailure.title;"
-      };
-			 
-      var errorDesc = {
-        generic: "&generic.longDesc;",
-        dnsNotFound: "&dnsNotFound.longDesc;",
-        fileNotFound: "&fileNotFound.longDesc;",
-        malformedURI: "&malformedURI.longDesc;",
-        protocolNotFound: "&protocolNotFound.longDesc;",
-        connectionFailure: "&connectionFailure.longDesc;",
-        netTimeout: "&netTimeout.longDesc;",
-        redirectLoop: "&redirectLoop.longDesc;",
-        unknownSocketType: "&unknownSocketType.longDesc;",
-        netReset: "&netReset.longDesc;",
-        netOffline: "&netOffline.longDesc;",
-        netInterrupt: "&netInterrupt.longDesc;",
-        deniedPortAccess: "&deniedPortAccess.longDesc;",
-        proxyResolveFailure: "&proxyResolveFailure.longDesc;",
-        proxyConnectFailure: "&proxyConnectFailure.longDesc;"
-      };
-    </script>
-    
     <script type="application/x-javascript"><![CDATA[
       // Error url MUST be formatted like this:
       //   moz-neterror:page?e=error&u=url&d=desc
@@ -134,22 +96,27 @@
         location.reload();
       }
 
-      function parseFakeTags(instr)
-      {
-        return instr.replace(/\[([^\]]+)\]/g, '<$1>');
-      }
-
       function initPage()
       {
         var err = getErrorCode();
 
-        // Map unknown error codes to generic
-        if (!(err in errorDesc && err in errorTitle))
-          err = "generic";
+        // if it's an unknown error or there's no title or description
+        // defined, get the generic message
+        var errTitle = document.getElementById("et_" + err);
+        var errDesc  = document.getElementById("ed_" + err);
+        if (!errTitle || !errDesc)
+        {
+          errTitle = document.getElementById("et_generic");
+          errDesc  = document.getElementById("ed_generic");
+        }
 
         var title = document.getElementById("errorTitleText");
         if (title)
-          title.textContent = errorTitle[err];
+        {
+          title.parentNode.replaceChild(errTitle, title);
+          // change id to the replaced child's id so styling works
+          errTitle.id = "errorTitleText";
+        }
 
         var sd = document.getElementById("errorShortDescText");
         if (sd)
@@ -157,7 +124,15 @@
 
         var ld = document.getElementById("errorLongDesc");
         if (ld)
-          ld.innerHTML = parseFakeTags(errorDesc[err]);
+        {
+          ld.parentNode.replaceChild(errDesc, ld);
+          // change id to the replaced child's id so styling works
+          errDesc.id = "errorLongDesc";
+        }
+
+        // remove undisplayed errors to avoid bug 39098
+        var errContainer = document.getElementById("errorContainer");
+        errContainer.parentNode.removeChild(errContainer);
 
         // Focus the Try Again button.  We can't just do this inline because of
         // bug 232004.  We can't use onload (see comment below).  Since the
@@ -173,6 +148,44 @@
   </head>
 
   <body dir="&locale.dir;">
+
+    <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
+    <div id="errorContainer">
+      <div id="errorTitlesContainer">
+        <h1 id="et_generic">&generic.title;</h1>
+        <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
+        <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
+        <h1 id="et_malformedURI">&malformedURI.title;</h1>
+        <h1 id="et_protocolNotFound">&protocolNotFound.title;</h1>
+        <h1 id="et_connectionFailure">&connectionFailure.title;</h1>
+        <h1 id="et_netTimeout">&netTimeout.title;</h1>
+        <h1 id="et_redirectLoop">&redirectLoop.title;</h1>
+        <h1 id="et_unknownSocketType">&unknownSocketType.title;</h1>
+        <h1 id="et_netReset">&netReset.title;</h1>
+        <h1 id="et_netOffline">&netOffline.title;</h1>
+        <h1 id="et_netInterrupt">&netInterrupt.title;</h1>
+        <h1 id="et_deniedPortAccess">&deniedPortAccess.title;</h1>
+        <h1 id="et_proxyResolveFailure">&proxyResolveFailure.title;</h1>
+        <h1 id="et_proxyConnectFailure">&proxyConnectFailure.title;</h1>
+      </div>
+      <div id="errorDescriptionsContainer">
+        <div id="ed_generic">&generic.longDesc;</div>
+        <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
+        <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
+        <div id="ed_malformedURI">&malformedURI.longDesc;</div>
+        <div id="ed_protocolNotFound">&protocolNotFound.longDesc;</div>
+        <div id="ed_connectionFailure">&connectionFailure.longDesc;</div>
+        <div id="ed_netTimeout">&netTimeout.longDesc;</div>
+        <div id="ed_redirectLoop">&redirectLoop.longDesc;</div>
+        <div id="ed_unknownSocketType">&unknownSocketType.longDesc;</div>
+        <div id="ed_netReset">&netReset.longDesc;</div>
+        <div id="ed_netOffline">&netOffline.longDesc;</div>
+        <div id="ed_netInterrupt">&netInterrupt.longDesc;</div>
+        <div id="ed_deniedPortAccess">&deniedPortAccess.longDesc;</div>
+        <div id="ed_proxyResolveFailure">&proxyResolveFailure.longDesc;</div>
+        <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
+      </div>
+    </div>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
