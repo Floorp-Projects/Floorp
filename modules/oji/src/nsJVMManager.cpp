@@ -374,8 +374,14 @@ nsJVMManager::nsJVMManager(nsISupports* outer)
     NS_INIT_AGGREGATED(outer);
 
     nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (branch)
+    if (branch) {
         branch->AddObserver("security.enable_java", this, PR_FALSE);
+        PRBool prefBool = PR_TRUE;
+        nsresult rv = branch->GetBoolPref("security.enable_java", &prefBool);
+        if (NS_SUCCEEDED(rv)) {
+            SetJVMEnabled(prefBool);
+        }
+    }
 }
 
 nsJVMManager::~nsJVMManager()
