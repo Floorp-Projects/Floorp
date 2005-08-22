@@ -1846,8 +1846,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
 
     // then the shell can give us the screen frame for this content node
-    nsIFrame* frame = nsnull;
-    shell->GetPrimaryFrameFor(mContent, &frame);
+    nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
     NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
 
     // make sure this is REALLY an nsIObjectFrame

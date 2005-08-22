@@ -103,8 +103,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
   if (!content)
     content = doc->GetRootContent();  // If node is not content, use root content
 
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
   nsPresContext *presContext = presShell->GetPresContext();
   if (!frame || !presContext)
     return NS_ERROR_FAILURE;

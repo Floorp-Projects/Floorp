@@ -669,7 +669,7 @@ nsComboboxControlFrame::GetPrimaryComboFrame(nsPresContext* aPresContext, nsICon
    // Get the primary frame from the presentation shell.
   nsIPresShell *presShell = aPresContext->GetPresShell();
   if (presShell) {
-    presShell->GetPrimaryFrameFor(aContent, aFrame);
+    *aFrame = presShell->GetPrimaryFrameFor(aContent);
   }
   return NS_OK;
 }

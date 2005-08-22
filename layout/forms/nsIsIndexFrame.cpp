@@ -161,8 +161,7 @@ nsIsIndexFrame::GetInputFrame(nsPresContext* aPresContext,
   nsIPresShell *presShell = aPresContext->GetPresShell();
   if (!mInputContent) NS_WARNING("null content - cannot restore state");
   if (presShell && mInputContent) {
-    nsIFrame *frame;
-    presShell->GetPrimaryFrameFor(mInputContent, &frame);
+    nsIFrame *frame = presShell->GetPrimaryFrameFor(mInputContent);
     if (frame) {
       return frame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**) oFrame);
     }

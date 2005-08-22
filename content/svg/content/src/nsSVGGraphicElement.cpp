@@ -120,8 +120,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame;
-  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+  nsIFrame* frame =
+    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 

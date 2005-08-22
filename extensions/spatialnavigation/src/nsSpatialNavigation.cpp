@@ -694,9 +694,8 @@ nsSpatialNavigation::setFocusedContent(nsIContent* c)
   //#ifdef OLDER_LAYOUT  
   nsPresContext* presContext = getPresContext(c);
   
-  nsIFrame* frame = nsnull;
   nsIPresShell *presShell = presContext->PresShell();
-  presShell->GetPrimaryFrameFor(c, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(c);
   
   if (frame) {
     presContext->EventStateManager()->SetContentState(c, NS_EVENT_STATE_FOCUS);

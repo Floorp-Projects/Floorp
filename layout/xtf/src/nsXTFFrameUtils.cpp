@@ -50,10 +50,7 @@ nsXTFFrameUtils::GetContentInsertionFrame(nsIFrame *aFrame)
 
   NS_ASSERTION(content, "element not implementing nsIContent!?");
 
-  nsIFrame* insertionFrame = nsnull;
-  aFrame->GetPresContext()->PresShell()->GetPrimaryFrameFor(content,
-							    &insertionFrame);
-  return insertionFrame;
+  return aFrame->GetPresContext()->PresShell()->GetPrimaryFrameFor(content);
 }
 
 

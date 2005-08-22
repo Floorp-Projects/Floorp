@@ -1015,8 +1015,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         if (!content)
           return;
 
-        nsIFrame* frame = nsnull;
-        aPresContext->PresShell()->GetPrimaryFrameFor(content, &frame);
+        nsIFrame* frame = aPresContext->PresShell()->GetPrimaryFrameFor(content);
 
         if (frame) {
           const nsStyleVisibility* vis = frame->GetStyleVisibility();
@@ -1271,8 +1270,7 @@ nsEventStateManager::FireContextClick()
   // event and it will get reset on the very next event to the correct frame).
   mCurrentTarget = nsnull;
   if ( mGestureDownContent ) {
-    mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner,
-                                                     &mCurrentTarget);
+    mCurrentTarget = mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner);
 
     if ( mCurrentTarget ) {
       SetFrameExternalReference(mCurrentTarget);
@@ -1526,8 +1524,8 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 {
   NS_WARN_IF_FALSE(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
-    aPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner,
-                                                     &mCurrentTarget);
+    mCurrentTarget = aPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner);
+
     if (!mCurrentTarget) {
       StopTrackingDragGesture();
       return;
@@ -1751,7 +1749,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         return NS_OK;
       // Re-resolve |aTargetFrame| in case it was destroyed by the
       // DOM event handler above, bug 257998.
-      aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent, &aTargetFrame);
+      aTargetFrame = aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent);
       if (!aTargetFrame) {
         // Without a frame we can't do the normal ancestor search for a view to scroll.
         // Don't fall through to the "passToParent" code at the end because that will
@@ -1886,8 +1884,7 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
     because they are not used by DoScrollText().
   */
 
-  nsIFrame* frameFrame = nsnull;
-  pPresShell->GetPrimaryFrameFor(frameContent, &frameFrame);
+  nsIFrame* frameFrame = pPresShell->GetPrimaryFrameFor(frameContent);
   if (!frameFrame) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(presCtxOuter = pPresShell->GetPresContext());
@@ -2628,7 +2625,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
 
     nsIPresShell *shell = mPresContext->GetPresShell();
     if (shell) {
-      shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
+      targetFrame = shell->GetPrimaryFrameFor(aTargetContent);
     }
   }
   if (targetFrame) {
@@ -3254,7 +3251,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsIContent *startContent = nsnull;
 
   if (aStart) {
-    presShell->GetPrimaryFrameFor(aStart, &curFocusFrame);
+    curFocusFrame = presShell->GetPrimaryFrameFor(aStart);
 
     // If there is no frame, we can't navigate from this content node, and we
     // fall back to navigating from the document root.
@@ -3505,7 +3502,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     NS_ENSURE_TRUE(mPresContext, NS_ERROR_FAILURE);
     nsIPresShell *presShell = mPresContext->GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-    presShell->GetPrimaryFrameFor(aRootContent, &aStartFrame);
+    aStartFrame = presShell->GetPrimaryFrameFor(aRootContent);
     NS_ENSURE_TRUE(aStartFrame, NS_ERROR_FAILURE);
     rv = trav->NewFrameTraversal(getter_AddRefs(frameTraversal), FOCUS,
                                 mPresContext, aStartFrame);
@@ -3671,7 +3668,7 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
     if (mPresContext) {
       nsIPresShell *shell = mPresContext->GetPresShell();
       if (shell) {
-        shell->GetPrimaryFrameFor(mCurrentTargetContent, &mCurrentTarget);
+        mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
 
         //This may be new frame that hasn't been through the ESM so we
         //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
@@ -4185,8 +4182,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 
   if (aContent) {
     // Check if the HandleDOMEvent calls above destroyed our frame (bug #118685)
-    nsIFrame* frame = nsnull;
-    presShell->GetPrimaryFrameFor(aContent, &frame);
+    nsIFrame* frame = presShell->GetPrimaryFrameFor(aContent);
     if (!frame) {
       aContent = nsnull;
     }
@@ -4321,7 +4317,7 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
     if (doc) {
       nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
-        shell->GetPrimaryFrameFor(mCurrentFocus, &mCurrentFocusFrame);
+        mCurrentFocusFrame = shell->GetPrimaryFrameFor(mCurrentFocus);
         if (mCurrentFocusFrame)
           SetFrameExternalReference(mCurrentFocusFrame);
       }
@@ -4637,8 +4633,8 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
 
   nsIFrame *startFrame = nsnull;
   if (startContent) {
-    rv = shell->GetPrimaryFrameFor(startContent, &startFrame);
-    if (isCollapsed && NS_SUCCEEDED(rv)) {
+    startFrame = shell->GetPrimaryFrameFor(startContent);
+    if (isCollapsed) {
       // First check to see if we're in a <label>
       // We don't want to return the selection in a label, because
       // we we should be tabbing relative to what the label 
@@ -5007,8 +5003,7 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
 
   nsCOMPtr<nsIFrameSelection> frameSelection;
   if (aFocusedContent) {
-    nsIFrame *focusFrame = nsnull;
-    aPresShell->GetPrimaryFrameFor(aFocusedContent, &focusFrame);
+    nsIFrame *focusFrame = aPresShell->GetPrimaryFrameFor(aFocusedContent);
 
     GetSelection(focusFrame, mPresContext, getter_AddRefs(frameSelection));
   }

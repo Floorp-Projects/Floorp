@@ -2468,8 +2468,7 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
 
   // Check to see if the subdocument's element has been hidden by the parent document
   if (aPO->mParent) {
-    nsIFrame * frame;
-    aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
+    nsIFrame * frame = aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent);
     if (frame) {
       if (!frame->GetStyleVisibility()->IsVisible()) {
         aPO->mDontPrint = PR_TRUE;
@@ -2890,9 +2889,8 @@ nsPrintEngine::CalcPageFrameLocation(nsIPresShell * aPresShell,
     // in the parent document
     // if it comes back null it probably has the style
     // set to "display:none"
-    nsIFrame * frame;
-    aPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
-    if (frame == nsnull) {
+    nsIFrame * frame = aPresShell->GetPrimaryFrameFor(aPO->mContent);
+    if (!frame) {
       aPO->mDontPrint = PR_TRUE;
       return NS_OK;
     }

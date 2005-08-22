@@ -303,9 +303,8 @@ nsresult getFrameForContent(nsIContent* aContent, nsIFrame** aFrame)
   if (!doc)
     return NS_ERROR_FAILURE;
   
-  nsIFrame* frame;
   nsIPresShell *presShell = doc->GetShellAt(0);
-  presShell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(aContent);
   
   if (!frame)
     return NS_ERROR_FAILURE;

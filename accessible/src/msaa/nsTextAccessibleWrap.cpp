@@ -234,9 +234,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
   float t2p = presContext->TwipsToPixels();
 
-  nsIFrame *frame = nsnull;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  presShell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   nsIViewManager* viewManager = presShell->GetViewManager();

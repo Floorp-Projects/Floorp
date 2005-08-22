@@ -342,9 +342,7 @@ nsIFrame* nsXULSelectOptionAccessible::GetBoundsFrame()
         if (!presShell) {
           return nsnull;
         }
-        nsIFrame *menuListFrame = nsnull;
-        presShell->GetPrimaryFrameFor(menuListContent, &menuListFrame);
-        return menuListFrame;
+        return presShell->GetPrimaryFrameFor(menuListContent);
       }
       break;
     }

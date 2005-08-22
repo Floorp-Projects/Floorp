@@ -1591,12 +1591,11 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
 {
     nsresult result = NS_OK;
     nsSize size;
-    nsIFrame* frame;
 
     FlushPendingNotifications(Flush_Layout);
 
-    result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
-    if (NS_SUCCEEDED(result) && frame) {
+    nsIFrame* frame = aShell->GetPrimaryFrameFor(mRootContent);
+    if (frame) {
         nsIView* view = frame->GetView();
         // If we have a view check if it's scrollable. If not,
         // just use the view size itself
@@ -1625,6 +1624,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
     else {
         *aWidth = 0;
         *aHeight = 0;
+        result = NS_ERROR_FAILURE;
     }
 
     return result;

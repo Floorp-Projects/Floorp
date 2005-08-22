@@ -164,7 +164,7 @@ nsresult nsSVGUtils::GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uri
   if (!aPresShell)
     return NS_ERROR_FAILURE;
 
-  rv = aPresShell->GetPrimaryFrameFor(aGContent, aRefFrame);
+  *aRefFrame = aPresShell->GetPrimaryFrameFor(aGContent);
   NS_ASSERTION(*aRefFrame, "Get referenced SVG frame -- can't find primary frame");
   if (!(*aRefFrame)) return NS_ERROR_FAILURE;
   return rv;

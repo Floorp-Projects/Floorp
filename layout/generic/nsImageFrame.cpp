@@ -524,7 +524,7 @@ nsImageFrame::HandleLoadError(PRInt16 aImageStatus)
       // We have to try to get the primary frame for mContent, since for
       // <object> the frame CantRenderReplacedElement wants is the
       // ObjectFrame, not us (we're an anonymous frame then)....
-      presContext->PresShell()->GetPrimaryFrameFor(mContent, &primaryFrame);
+      primaryFrame = presContext->PresShell()->GetPrimaryFrameFor(mContent);
     }
 
     if (!primaryFrame) {

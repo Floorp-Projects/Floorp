@@ -225,7 +225,7 @@ nsListBoxObject::GetListBoxBody()
   FindBodyContent(frame->GetContent(), getter_AddRefs(content));
 
   // this frame will be a nsGFXScrollFrame
-  mPresShell->GetPrimaryFrameFor(content, &frame);
+  frame = mPresShell->GetPrimaryFrameFor(content);
   if (!frame)
      return nsnull;
   nsIScrollableFrame* scrollFrame;

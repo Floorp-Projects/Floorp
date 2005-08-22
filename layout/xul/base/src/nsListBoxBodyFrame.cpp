@@ -1284,8 +1284,7 @@ nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* a
   // to CreateRows will create all the frames, but OnContentInserted will
   // still be called again for each content node - so we need to make sure
   // that the frame for each content node hasn't already been created.
-  nsIFrame* childFrame = nsnull;
-  shell->GetPrimaryFrameFor(aChildContent, &childFrame);
+  nsIFrame* childFrame = shell->GetPrimaryFrameFor(aChildContent);
   if (childFrame)
     return;
 
@@ -1300,8 +1299,7 @@ nsListBoxBodyFrame::OnContentInserted(nsPresContext* aPresContext, nsIContent* a
     mRowsToPrepend = 1;
   } else if (nextSiblingContent) {
     // we may be inserting before a frame that is on screen
-    nsIFrame* nextSiblingFrame = nsnull;
-    shell->GetPrimaryFrameFor(nextSiblingContent, &nextSiblingFrame);
+    nsIFrame* nextSiblingFrame = shell->GetPrimaryFrameFor(nextSiblingContent);
     mLinkupFrame = nextSiblingFrame;
   }
   
@@ -1351,9 +1349,8 @@ nsListBoxBodyFrame::OnContentRemoved(nsPresContext* aPresContext, nsIFrame* aChi
     PRUint32 childCount = listBoxContent->GetChildCount();
     if (childCount > 0) {
       nsIContent *lastChild = listBoxContent->GetChildAt(childCount - 1);
-      nsIFrame* lastChildFrame = nsnull;
-      aPresContext->PresShell()->GetPrimaryFrameFor(lastChild,
-                                                    &lastChildFrame);
+      nsIFrame* lastChildFrame = 
+        aPresContext->PresShell()->GetPrimaryFrameFor(lastChild);
     
       if (lastChildFrame) {
         mTopFrame = nsnull;

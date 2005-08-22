@@ -6318,8 +6318,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
 
   if (frame) {
     // If we have a frame the frame has already loaded the binding.
@@ -7975,8 +7974,7 @@ nsHTMLExternalObjSH::GetPluginInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
 
   if (!frame) {
     // No frame, no plugin

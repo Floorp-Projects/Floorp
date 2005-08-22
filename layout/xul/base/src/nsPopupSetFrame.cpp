@@ -327,10 +327,9 @@ nsPopupSetFrame::RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aSt
 {
   // Sync up the view.
   if (aEntry && aEntry->mElementContent) {
-    nsIFrame* frameToSyncTo = nsnull;
     nsPresContext* presContext = aState.PresContext();
-    presContext->PresShell()->GetPrimaryFrameFor(aEntry->mElementContent,
-                                                 &frameToSyncTo );
+    nsIFrame* frameToSyncTo = presContext->PresShell()->
+      GetPrimaryFrameFor(aEntry->mElementContent);
     ((nsMenuPopupFrame*)(aEntry->mPopupFrame))->SyncViewWithFrame(presContext, 
           aEntry->mPopupAnchor, aEntry->mPopupAlign, frameToSyncTo, aEntry->mXPos, aEntry->mYPos);
   }
@@ -366,8 +365,8 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   entry->mYPos = aYPos;
 
   // If a frame exists already, go ahead and use it.
-  mPresContext->PresShell()->GetPrimaryFrameFor(aPopupContent,
-                                                &entry->mPopupFrame);
+  entry->mPopupFrame = mPresContext->PresShell()
+    ->GetPrimaryFrameFor(aPopupContent);
 
 #ifdef DEBUG_PINK
   printf("X Pos: %d\n", mXPos);
@@ -414,9 +413,8 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // menupopup, then hiding us should also hide the parent menu
     // popup.
     if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
-      nsIFrame* popupFrame = nsnull;
-      mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
-                                                    &popupFrame);
+      nsIFrame* popupFrame = mPresContext->PresShell()
+        ->GetPrimaryFrameFor(entry->mElementContent);
       if (popupFrame) {
         nsIMenuParent *menuParent;
         if (NS_SUCCEEDED(CallQueryInterface(popupFrame, &menuParent))) {
@@ -446,9 +444,8 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
       // menupopup, then destroying us should also dismiss the parent
       // menu popup.
       if (entry->mElementContent->Tag() == nsXULAtoms::menupopup) {
-        nsIFrame* popupFrame = nsnull;
-        mPresContext->PresShell()->GetPrimaryFrameFor(entry->mElementContent,
-                                                      &popupFrame);
+        nsIFrame* popupFrame = mPresContext->PresShell()
+          ->GetPrimaryFrameFor(entry->mElementContent);
         if (popupFrame) {
           nsIMenuParent *menuParent;
           if (NS_SUCCEEDED(CallQueryInterface(popupFrame, &menuParent))) {

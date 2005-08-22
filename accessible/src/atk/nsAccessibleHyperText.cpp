@@ -69,9 +69,8 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
   if (shell) {
     NS_NewArray(getter_AddRefs(mTextChildren));
     if (mTextChildren) {
-      nsIFrame *frame = nsnull;
       nsCOMPtr<nsIContent> content(do_QueryInterface(aDomNode));
-      shell->GetPrimaryFrameFor(content, &frame);
+      nsIFrame *frame = shell->GetPrimaryFrameFor(content);
       nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
       NS_ASSERTION(parentFrame, "Error: HyperText can't get parent block frame");
       if (parentFrame) {

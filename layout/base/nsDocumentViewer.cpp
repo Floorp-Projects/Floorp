@@ -2488,11 +2488,11 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
    NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
    // Get the primary frame
-   nsIFrame* frame;  // Remember Frames aren't ref-counted.  They are in their
-                     // own special little world.
+   // Remember Frames aren't ref-counted.  They are in their own special little
+   // world.
+   nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
 
-   NS_ENSURE_SUCCESS(presShell->GetPrimaryFrameFor(content, &frame),
-      NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
    // tell the pres shell to scroll to the frame
    NS_ENSURE_SUCCESS(presShell->ScrollFrameIntoView(frame,

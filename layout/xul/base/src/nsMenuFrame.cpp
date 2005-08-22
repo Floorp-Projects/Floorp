@@ -1625,7 +1625,7 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
   // was executed.
   nsIFrame* primary = nsnull;
-  if (shell) shell->GetPrimaryFrameFor(content, &primary);
+  if (shell) primary = shell->GetPrimaryFrameFor(content);
 
   // Now properly close them all up.
   if (content->GetDocument() &&     // <-- HACK IS HERE. ICK.
@@ -1984,8 +1984,7 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
 
   nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
   
-  nsIFrame* kid;
-  mPresContext->PresShell()->GetPrimaryFrameFor(child, &kid);
+  nsIFrame* kid = mPresContext->PresShell()->GetPrimaryFrameFor(child);
   if (!kid)
     return NS_ERROR_FAILURE;
   nsIMenuFrame *menuFrame;

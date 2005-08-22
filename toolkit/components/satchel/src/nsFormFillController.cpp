@@ -141,8 +141,9 @@ GetScreenOrigin(nsIDOMElement* aElement)
         float scale;
         scale = presContext->TwipsToPixels();
 
-        nsIFrame* frame;
-        nsresult rv = presShell->GetPrimaryFrameFor(content, &frame);
+        nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+        if (!frame)
+          return rect;
 
         nsIView* view;
         nsPoint offset;

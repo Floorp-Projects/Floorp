@@ -1830,7 +1830,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 #endif
     if (!frame || content != frame->GetContent()) {
       // Frame hint not correct, get true frame, we try to optimize away from this
-      aPresShell->GetPrimaryFrameFor(content, &frame);
+      frame = aPresShell->GetPrimaryFrameFor(content);
       if (frame) {
 #ifdef DEBUG_aleventhal_
         // Frame hint debugging

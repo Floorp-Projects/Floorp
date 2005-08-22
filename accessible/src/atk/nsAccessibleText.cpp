@@ -98,8 +98,7 @@ nsresult nsAccessibleText::GetSelections(nsISelectionController **aSelCon, nsISe
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   // Get the selection and selection controller
@@ -709,8 +708,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   nsIntRect frameScreenRect = frame->GetScreenRectExternal();
@@ -993,8 +991,7 @@ nsITextControlFrame* nsAccessibleEditableText::GetTextFrame()
   NS_ENSURE_TRUE(shell, nsnull);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mTextNode));
-  nsIFrame *frame = nsnull;
-  shell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
   NS_ENSURE_TRUE(frame, nsnull);
 
   nsITextControlFrame *textFrame;

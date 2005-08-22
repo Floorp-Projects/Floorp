@@ -1110,8 +1110,7 @@ public:
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
-  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
-                                nsIFrame**  aPrimaryFrame) const;
+  virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const;
 
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
                                 nsISupports** aResult) const;
@@ -3388,10 +3387,7 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   if (!content)
     return NS_ERROR_FAILURE;
-  nsIFrame *frame;
-  nsresult result = GetPrimaryFrameFor(content,&frame);
-  if (NS_FAILED(result)) //failure is taken as a no.
-    return result;
+  nsIFrame *frame = GetPrimaryFrameFor(content);
   if (!frame) //no frame to look at so it must not be visible
     return NS_OK;  
   //start process now to go through all frames to find startOffset. then check chars after that to see 
@@ -3752,8 +3748,7 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
     }
   }
   if (focusedContent) {
-    nsIFrame* startFrame = nsnull;
-    GetPrimaryFrameFor(focusedContent, &startFrame);
+    nsIFrame* startFrame = GetPrimaryFrameFor(focusedContent);
     if (startFrame) {
       nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(startFrame);
       // If this very frame provides a scroll view, start there instead of frame's
@@ -4308,8 +4303,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     if (aScroll) {
       mDocument->FlushPendingNotifications(Flush_Layout);   
       // Get the primary frame
-      nsIFrame* frame = nsnull;
-      GetPrimaryFrameFor(content, &frame);
+      nsIFrame* frame = GetPrimaryFrameFor(content);
       NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -4731,9 +4725,7 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
     nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextAreaElement(do_QueryInterface(content));
     if (htmlInputElement || htmlTextAreaElement)
     {
-      nsIFrame *htmlInputFrame;
-      rv = GetPrimaryFrameFor(content, &htmlInputFrame);
-      if (NS_FAILED(rv))  return rv;
+      nsIFrame *htmlInputFrame = GetPrimaryFrameFor(content);
       if (!htmlInputFrame) return NS_ERROR_FAILURE;
 
       nsCOMPtr<nsISelectionController> selCon;
@@ -4878,14 +4870,13 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
                                        GeneratedContentType aType,
                                        nsIContentIterator** aIterator) const
 {
-  nsIFrame* primaryFrame;
   nsresult  rv = NS_OK;
 
   // Initialize OUT parameter
   *aIterator = nsnull;
 
   // Get the primary frame associated with the content object
-  GetPrimaryFrameFor(aContent, &primaryFrame);
+  nsIFrame* primaryFrame = GetPrimaryFrameFor(aContent);
   if (primaryFrame) {
     // See whether it's a request for the before or after generated content
     if (Before == aType) {
@@ -5503,8 +5494,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   // XXX fix for bug 304383. Remove when bug 287813 is fixed?
   if (mCaret) {
-    nsIFrame* frame = nsnull;
-    GetPrimaryFrameFor(aChild, &frame);
+    nsIFrame* frame = GetPrimaryFrameFor(aChild);
     if (frame && (frame->GetStateBits() & NS_FRAME_EXTERNAL_REFERENCE)) {
       mCaret->EraseCaret();
     }
@@ -5638,12 +5628,10 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   mStylesHaveChanged = PR_TRUE;
 }
 
-NS_IMETHODIMP
-PresShell::GetPrimaryFrameFor(nsIContent* aContent,
-                              nsIFrame**  aResult) const
+nsIFrame*
+PresShell::GetPrimaryFrameFor(nsIContent* aContent) const
 {
-  *aResult = FrameManager()->GetPrimaryFrameFor(aContent);
-  return NS_OK;
+  return FrameManager()->GetPrimaryFrameFor(aContent);
 }
 
 NS_IMETHODIMP
@@ -5654,9 +5642,8 @@ PresShell::GetLayoutObjectFor(nsIContent*   aContent,
   if ((nsnull!=aResult) && (nsnull!=aContent))
   {
     *aResult = nsnull;
-    nsIFrame *primaryFrame=nsnull;
-    result = GetPrimaryFrameFor(aContent, &primaryFrame);
-    if ((NS_SUCCEEDED(result)) && (nsnull!=primaryFrame))
+    nsIFrame *primaryFrame = GetPrimaryFrameFor(aContent);
+    if (primaryFrame)
     {
       result = primaryFrame->QueryInterface(NS_GET_IID(nsISupports),
                                             (void**)aResult);
@@ -5849,7 +5836,7 @@ PresShell::GetCurrentEventFrame()
     // frame shouldn't get an event, nor should we even assume its
     // safe to try and find the frame.
     if (mCurrentEventContent->GetDocument()) {
-      GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
+      mCurrentEventFrame = GetPrimaryFrameFor(mCurrentEventContent);
     }
   }
 
@@ -6624,8 +6611,7 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
   // For now we just reconstruct the frame, but only if the element
   // has a plugin instance.
-  nsIFrame *frame = nsnull;
-  aShell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame *frame = aShell->GetPrimaryFrameFor(aContent);
   if (frame) {
     nsIObjectFrame *objFrame = nsnull;
     CallQueryInterface(frame, &objFrame);

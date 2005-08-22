@@ -355,8 +355,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   if (!shell)
     return;
 
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(aContent, &frame);
+  nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
   if (!frame)
     return;
 
@@ -830,8 +829,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
   if (!presShell)
     return PR_FALSE;
 
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(content, &frame);
+  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
   if (!frame) {
     // No frame! Not visible then.
     return PR_FALSE;
