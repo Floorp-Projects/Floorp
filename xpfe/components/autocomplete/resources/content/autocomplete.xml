@@ -698,7 +698,7 @@
             // set textbox value to either override value, or default search result 
             var val = this.resultsPopup.getOverrideValue();
             if (val) {
-              this.value = val;
+              this.setTextValue(val);
               this.mNeedToFinish = false;
             } else if (this.mTransientValue || !this.forceComplete ||
                        !(this.mNeedToComplete || aForceComplete)) {
@@ -710,10 +710,11 @@
                 var results = this.mLastResults[name];
                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
                {
-                  this.value = this.getSessionValueAt(name, results.defaultItemIndex);
+                  val = this.getSessionValueAt(name, results.defaultItemIndex);
+                  this.setTextValue(val);
                   this.mDefaultMatchFilled = true;
                   this.mNeedToFinish = false;
-                 break;
+                  break;
                }
               }
 
@@ -730,7 +731,9 @@
                 var defaultSession = this.getDefaultSession();
                 if (defaultSession)
                 {
-                    this.value = this.getSessionValueAt(defaultSession, 0); // preselect the first one...
+                    // preselect the first one
+                    var first = this.getSessionValueAt(defaultSession, 0);
+                    this.setTextValue(first);
                     this.mDefaultMatchFilled = true;
                 }
               }
@@ -760,17 +763,17 @@
           var errItem=null;
           var val = this.resultsPopup.getOverrideValue();
             if (val)
-              this.value = val;
+              this.setTextValue(val);
           else if (this.resultsPopup.selectedIndex != null &&
                    !this.noMatch) {
             if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
                 Components.interfaces.nsIAutoCompleteStatus.failureItems) {
-              this.value = this.currentSearchString;
+              this.setTextValue(this.currentSearchString);
               this.mTransientValue = true;
               errItem = this.getResultAt(this.resultsPopup.selectedIndex);
             } else { 
-              this.value = this.getResultValueAt(
-                                             this.resultsPopup.selectedIndex);
+              this.setTextValue(this.getResultValueAt(
+                                             this.resultsPopup.selectedIndex));
             }
           }
 
@@ -797,7 +800,7 @@
 
           var ok = this._fireEvent("textrevert");
           if ((ok || ok == undefined) && val)
-            this.value = val;
+            this.setTextValue(val);
 
           this.userAction = "typing";
 
@@ -988,17 +991,17 @@
               if (this.getSessionStatusAt(selected) == 
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
                 if (this.currentSearchString)
-                  this.value = this.currentSearchString;
+                  this.setTextValue(this.currentSearchString);
               } else {
-                this.value = this.getResultValueAt(selected);
+                this.setTextValue(this.getResultValueAt(selected));
               }
               this.mTransientValue = true;
             } else {
               if (this.currentSearchString)
-                this.value = this.currentSearchString;
+                this.setTextValue(this.currentSearchString);
               this.mTransientValue = false;
             }
-            
+
             // move cursor to the end
             this.mInputElt.setSelectionRange(this.value.length, this.value.length);
             this.ignoreInputEvent = false;
@@ -1030,17 +1033,18 @@
               this.ignoreInputEvent = true;
               if (match.indexOf(entry) == 0) {
                 var endPoint = this.value.length;
-                this.value = this.value + resultValue.substr(endPoint);
+                this.setTextValue(this.value + resultValue.substr(endPoint));
                 this.mInputElt.setSelectionRange(endPoint, this.value.length);
               } else {
                 if (this.autoFillAfterMatch) {
-                  this.value = this.value + " >> " + resultValue;
+                  this.setTextValue(this.value + " >> " + resultValue);
                   this.mInputElt.setSelectionRange(entry.length, this.value.length);
                 } else {
                   var postIndex = resultValue.indexOf(this.value);
                   if (postIndex >= 0) {
                     var startPt = this.value.length;
-                    this.value = this.value + resultValue.substr(startPt+postIndex);
+                    this.setTextValue(this.value + 
+                                      resultValue.substr(startPt+postIndex));
                     this.mInputElt.setSelectionRange(startPt, this.value.length);
                   }
                 }
@@ -1103,6 +1107,22 @@
             this.resultsPopup.adjustHeight();
 
           this.noMatch = true;
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="setTextValue">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          // Completing a result should simulate the user typing the result,
+          // so fire an input event.
+          this.value = aValue;
+          var evt = document.createEvent("UIEvents");
+          evt.initUIEvent("input", true, false, window, 0);
+          var oldIgnoreInput = this.mIgnoreInputEvent;
+          this.mIgnoreInputEvent = true;
+          this.dispatchEvent(evt);
+          this.mIgnoreInputEvent = oldIgnoreInput;
         ]]></body>
       </method>
 
