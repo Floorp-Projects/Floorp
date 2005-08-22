@@ -223,14 +223,9 @@ nsresult nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count, PRUint3
 {
   // Push the data to the GIF decoder
   
-  // First we ask if the gif decoder is ready for more data, and if so, push it.
-  // In the new decoder, we should always be able to process more data since
-  // we don't wait to decode each frame in an animation now.
-  if (gif_write_ready(mGIFStruct)) {
-    PRStatus result = gif_write(mGIFStruct, data, count);
-    if (result != PR_SUCCESS)
-      return NS_ERROR_FAILURE;
-  }
+  PRStatus result = gif_write(mGIFStruct, data, count);
+  if (result != PR_SUCCESS)
+    return NS_ERROR_FAILURE;
 
   if (mImageFrame && mObserver) {
     FlushImageData();
