@@ -274,14 +274,6 @@ public:
   }
 
   /**
-   * Return the Line Breaker for the document
-   */
-  virtual nsILineBreaker* GetLineBreaker() = 0;
-  virtual void SetLineBreaker(nsILineBreaker* aLineBreaker) = 0;
-  virtual nsIWordBreaker* GetWordBreaker() = 0;
-  virtual void SetWordBreaker(nsIWordBreaker* aWordBreaker) = 0;
-
-  /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */

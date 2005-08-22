@@ -37,11 +37,11 @@
 #ifndef nsILineBreaker_h__
 #define nsILineBreaker_h__
 
-
 #include "nsISupports.h"
-#include "nsIBreakState.h"
 
 #include "nscore.h"
+
+#define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
 // {E86B3375-BF89-11d2-B3AF-00805F8A6670}
 #define NS_ILINEBREAKER_IID \
@@ -53,15 +53,15 @@ class nsILineBreaker : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
-  NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
-                            const PRUnichar* aText2 , PRUint32 aTextLen2,
-                                  PRBool *oCanBreak) = 0;
+  virtual PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
+                                 const PRUnichar* aText2 , 
+                                 PRUint32 aTextLen2) = 0;
 
-  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oNext, PRBool *oNeedMoreText) = 0;
+  virtual PRInt32 Next( const PRUnichar* aText, PRUint32 aLen, 
+                        PRUint32 aPos) = 0;
 
-  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-                   PRUint32* oPrev, PRBool *oNeedMoreText) = 0;
+  virtual PRInt32 Prev( const PRUnichar* aText, PRUint32 aLen, 
+                        PRUint32 aPos) = 0;
 
 };
 

@@ -60,8 +60,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
-#include "nsIWordBreakerFactory.h"
-#include "nsLWBrkCIID.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"

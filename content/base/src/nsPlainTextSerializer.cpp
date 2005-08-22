@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPlainTextSerializer.h"
-#include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
@@ -53,8 +52,6 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIParserService.h"
-
-static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 #define PREF_STRUCTS "converter.html2txt.structs"
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
@@ -166,19 +163,13 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   NS_ENSURE_TRUE(nsContentUtils::GetParserServiceWeakRef(),
                  NS_ERROR_UNEXPECTED);
 
-  nsresult rv;
-  
   mFlags = aFlags;
   mWrapColumn = aWrapColumn;
 
   // Only create a linebreaker if we will handle wrapping.
   if (MayWrap()) {
-    nsCOMPtr<nsILineBreakerFactory> lf(do_GetService(kLWBrkCID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString lbarg;
-      rv = lf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    }
+    mLineBreaker = nsContentUtils::GetLineBreaker();
+    if (!mLineBreaker) return NS_ERROR_FAILURE;
   }
 
   // Set the line break character:
@@ -1406,10 +1397,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     PRUint32 bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
     // XXX: Should calculate prefixwidth with GetUnicharStringWidth
-    while(mCurrentLineWidth+prefixwidth > mWrapColumn+bonuswidth) {
-      // Must wrap. Let's find a good place to do that.
-      nsresult result = NS_OK;
-      
+    while(mCurrentLineWidth+prefixwidth > mWrapColumn+bonuswidth) {      
       // We go from the end removing one letter at a time until
       // we have a reasonable width
       PRInt32 goodSpace = mCurrentLine.Length();
@@ -1421,20 +1409,16 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
 
       goodSpace++;
       
-      PRBool oNeedMoreText;
-      if (nsnull != mLineBreaker) {
-        result = mLineBreaker->Prev(mCurrentLine.get(), 
-                                    mCurrentLine.Length(), goodSpace,
-                                    (PRUint32 *) &goodSpace, &oNeedMoreText);
-        if (oNeedMoreText) {
-          goodSpace = -1;
-        }
-        else if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) {
+      if (mLineBreaker) {
+        goodSpace = mLineBreaker->Prev(mCurrentLine.get(), 
+                                    mCurrentLine.Length(), goodSpace);
+        if (goodSpace != NS_LINEBREAKER_NEED_MORE_TEXT &&
+            nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) {
           --goodSpace;    // adjust the position since line breaker returns a position next to space
         }
       }
       // fallback if the line breaker is unavailable or failed
-      if (nsnull == mLineBreaker || NS_FAILED(result)) {
+      if (!mLineBreaker) {
         goodSpace = mWrapColumn-prefixwidth;
         while (goodSpace >= 0 &&
                !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
@@ -1443,18 +1427,18 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
       }
       
       nsAutoString restOfLine;
-      if (goodSpace < 0) {
+      if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
         // If we don't found a good place to break, accept long line and
         // try to find another place to break
         goodSpace=(prefixwidth>mWrapColumn+1)?1:mWrapColumn-prefixwidth+1;
-        result = NS_OK;
-        if (nsnull != mLineBreaker) {
-          result = mLineBreaker->Next(mCurrentLine.get(), 
-                                      mCurrentLine.Length(), goodSpace,
-                                      (PRUint32 *) &goodSpace, &oNeedMoreText);
+        if (mLineBreaker) {
+          goodSpace = mLineBreaker->Next(mCurrentLine.get(), 
+                                      mCurrentLine.Length(), goodSpace);
+          if (goodSpace == NS_LINEBREAKER_NEED_MORE_TEXT)
+            goodSpace = mCurrentLine.Length();
         }
         // fallback if the line breaker is unavailable or failed
-        if (nsnull == mLineBreaker || NS_FAILED(result)) {
+        if (!mLineBreaker) {
           goodSpace=(prefixwidth>mWrapColumn)?1:mWrapColumn-prefixwidth;
           while (goodSpace < linelength &&
                  !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {

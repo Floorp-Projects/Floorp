@@ -70,7 +70,6 @@
 #include "nsICaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsILineBreaker.h"
-#include "nsIWordBreaker.h"
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"
 
@@ -764,7 +763,6 @@ public:
   nsReflowStatus MeasureText(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsTextTransformer&       aTx,
-                             nsILineBreaker*          aLb,
                              TextStyle&               aTs,
                              TextReflowData&          aTextData);
   
@@ -792,8 +790,7 @@ public:
                                   PRBool&                  aIsPaginated,
                                   PRBool&                  aIsSelected,
                                   PRBool&                  aHideStandardSelection,
-                                  PRInt16&                 aSelectionValue,
-                                  nsILineBreaker**         aLineBreaker);
+                                  PRInt16&                 aSelectionValue);
 
   void PaintUnicodeText(nsPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
@@ -808,7 +805,6 @@ public:
                       nscoord dx, nscoord dy);
 
   nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
-                                nsILineBreaker* aLineBreaker,
                                 nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
@@ -819,7 +815,6 @@ public:
                                 PRBool     aCanBreakBefore);
 
   nsTextDimensions ComputeWordFragmentDimensions(nsPresContext* aPresContext,
-                                   nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
@@ -2262,13 +2257,11 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
                                              PRBool&                  aIsPaginated,
                                              PRBool&                  aIsSelected,
                                              PRBool&                  aHideStandardSelection,
-                                             PRInt16&                 aSelectionValue,
-                                             nsILineBreaker**         aLineBreaker)
+                                             PRInt16&                 aSelectionValue)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aPresShell);
   NS_ENSURE_ARG_POINTER(aSelectionController);
-  NS_ENSURE_ARG_POINTER(aLineBreaker);
 
   //get the presshell
   NS_IF_ADDREF(*aPresShell = aPresContext->GetPresShell());
@@ -2319,8 +2312,6 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  NS_IF_ADDREF(*aLineBreaker = doc->GetLineBreaker());
-
   aIsSelected = (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
   return NS_OK;
@@ -2337,7 +2328,6 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   PRBool  isSelected;
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
-  nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
                                        getter_AddRefs(shell),
@@ -2346,8 +2336,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
                                        isPaginated,
                                        isSelected,
                                        hideStandardSelection,
-                                       selectionValue,
-                                       getter_AddRefs(lb)))) {
+                                       selectionValue))) {
     return PR_FALSE;
   }
 
@@ -2365,7 +2354,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
 
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   PRInt32 textLength;
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -2473,7 +2462,6 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
   PRBool  isSelected;
   PRBool hideStandardSelection;
   PRInt16 selectionValue;
-  nsCOMPtr<nsILineBreaker> lb;
 #ifdef IBMBIDI
   PRBool  isOddLevel = PR_FALSE;
 #endif
@@ -2486,8 +2474,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                                        isPaginated,
                                        isSelected,
                                        hideStandardSelection,
-                                       selectionValue,
-                                       getter_AddRefs(lb)))) {
+                                       selectionValue))) {
      return;
   }
 
@@ -2511,7 +2498,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
 
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   PRInt32 textLength;
   // no need to worry about justification, that's always on the slow path
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
@@ -2813,7 +2800,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   }
 
   // Transform text from content into renderable form
-  nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   PRInt32 textLength;
   PRIntn numJustifiableCharacter;
 
@@ -3245,7 +3232,6 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
   PRBool  isSelected;
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
-  nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
                                        getter_AddRefs(shell),
@@ -3254,8 +3240,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                                        isPaginated,
                                        isSelected,
                                        hideStandardSelection,
-                                       selectionValue,
-                                       getter_AddRefs(lb)))) {
+                                       selectionValue))) {
      return;
   }
 
@@ -3273,7 +3258,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
   nscoord width = mRect.width;
   PRInt32 textLength;
 
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   PRIntn numJustifiableCharacter;
   
   PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
@@ -3471,7 +3456,6 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
   PRBool  isSelected;
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
-  nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
                                        getter_AddRefs(shell),
@@ -3480,8 +3464,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                                        isPaginated,
                                        isSelected,
                                        hideStandardSelection,
-                                       selectionValue,
-                                       getter_AddRefs(lb)))) {
+                                       selectionValue))) {
      return;
   }
 
@@ -3509,7 +3492,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
     }
   }
 
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
 
   // See if we need to transform the text. If the text fragment is ascii and
   // wasn't transformed, then we can skip this step. If we're displaying the
@@ -3824,7 +3807,7 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
 
       // Get the renderable form of the text
       nsIDocument *doc = GetDocument(aPresContext);
-      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
+      nsTextTransformer tx(aPresContext);
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -4164,7 +4147,7 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
 
   // Transform text from content into renderable form
   nsIDocument *doc = GetDocument(aPresContext);
-  nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   PRInt32 textLength;
   PRIntn numJustifiableCharacter;
 
@@ -4448,7 +4431,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       if (!doc) {
         return NS_OK;
       }
-      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
+      nsTextTransformer tx(aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       if (textLength)//if no renderable length, you cant park here.
@@ -4475,7 +4458,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       if (!doc) {
         return NS_OK;
       }
-      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
+      nsTextTransformer tx(aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       nsIFrame *frameUsed = nsnull;
@@ -4637,8 +4620,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         return result;
       }
 
-      nsTextTransformer tx(doc->GetLineBreaker(),
-                           doc->GetWordBreaker(), aPresContext);
+      nsTextTransformer tx(aPresContext);
 
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
       nsIFrame *frameUsed = nsnull;
@@ -4891,7 +4873,7 @@ nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt
     if (!doc)
       return NS_ERROR_FAILURE;
   //create texttransformer
-    nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aContext);
+    nsTextTransformer tx(aContext);
   //create the buffers
     nsAutoTextBuffer paintBuffer;
     nsAutoIndexBuffer indexBuffer;
@@ -5055,7 +5037,6 @@ nsReflowStatus
 nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsTextTransformer&       aTx,
-                         nsILineBreaker*          aLb,
                          TextStyle&               aTs,
                          TextReflowData&          aTextData)
 {
@@ -5612,7 +5593,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
               }
             }
           }
-          nsTextDimensions wordDimensions = ComputeTotalWordDimensions(aPresContext, aLb,
+          nsTextDimensions wordDimensions = ComputeTotalWordDimensions(aPresContext,
                                                     lineLayout,
                                                     aReflowState, next,
                                                     lastWordDimensions,
@@ -5814,8 +5795,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
                                (0 != ts.mWordSpacing) ||
                                (0 != ts.mLetterSpacing) ||
                                ts.mJustifying);
-  nsILineBreaker *lb = doc->GetLineBreaker();
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   // Keep the text in ascii if possible. Note that if we're measuring small
   // caps text then transform to Unicode because the helper function only
   // accepts Unicode text
@@ -5893,7 +5873,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   // Measure the text
   // MeasureText may set TEXT_TRIMMED_WS flag, so don't clear after the call
   if (ts.mFont->mSize)
-    aStatus = MeasureText(aPresContext, aReflowState, tx, lb, ts, textData);
+    aStatus = MeasureText(aPresContext, aReflowState, tx, ts, textData);
   else {
     textData.mX = 0;
     textData.mAscent = 0;
@@ -6132,7 +6112,6 @@ RevertSpacesToNBSP(PRUnichar* aBuffer, PRInt32 aWordLen)
 
 nsTextDimensions
 nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
-                                   nsILineBreaker* aLineBreaker,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
@@ -6163,7 +6142,6 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
       PRBool stop = PR_FALSE;
       nsTextDimensions moreDimensions;
       moreDimensions = ComputeWordFragmentDimensions(aPresContext,
-                                                     aLineBreaker,
                                                      aLineLayout,
                                                      aReflowState,
                                                      aNextFrame, content, tc,
@@ -6189,7 +6167,7 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
 
         if(newWordBuf)  {
           moreDimensions =
-            ComputeWordFragmentDimensions(aPresContext, aLineBreaker,
+            ComputeWordFragmentDimensions(aPresContext,
                                           aLineLayout, aReflowState,
                                           aNextFrame, content, tc, &stop,
                                           newWordBuf, aWordLen, newWordBufSize,
@@ -6235,7 +6213,6 @@ nsTextFrame::ComputeTotalWordDimensions(nsPresContext* aPresContext,
                                     
 nsTextDimensions
 nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
-                                      nsILineBreaker* aLineBreaker,
                                       nsLineLayout& aLineLayout,
                                       const nsHTMLReflowState& aReflowState,
                                       nsIFrame* aNextFrame,
@@ -6247,7 +6224,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
                                       PRUint32 aWordBufSize,
                                       PRBool aCanBreakBefore)
 {
-  nsTextTransformer tx(aLineBreaker, nsnull, aPresContext);
+  nsTextTransformer tx(aPresContext);
   tx.Init(aNextFrame, aContent, 0);
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
@@ -6293,21 +6270,19 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     {
       memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
       
-      PRUint32 breakP=0;
+      PRInt32 breakP=0;
       PRBool needMore=PR_TRUE;
-      nsresult lres = aLineBreaker->Next(aWordBuf, aRunningWordLen+wordLen,
-                                         0, &breakP, &needMore);
-      if(NS_SUCCEEDED(lres)) 
+      breakP = nsContentUtils::GetLineBreaker()->Next(aWordBuf, 
+                                         aRunningWordLen+wordLen, 0);
+      // when we look at two pieces text together, we might decide to break
+      // eariler than if we only look at the 2nd pieces of text
+      if (breakP != NS_LINEBREAKER_NEED_MORE_TEXT &&
+         (breakP < (aRunningWordLen + wordLen)))
         {
-          // when we look at two pieces text together, we might decide to break
-            // eariler than if we only look at the 2nd pieces of text
-          if(!needMore && (breakP < (aRunningWordLen + wordLen)))
-            {
-              wordLen = breakP - aRunningWordLen; 
-              if(wordLen < 0)
-                  wordLen = 0;
-              *aStop = PR_TRUE;
-            } 
+          wordLen = breakP - aRunningWordLen;
+          if(wordLen < 0)
+              wordLen = 0;
+          *aStop = PR_TRUE;
         }
       
       // if we don't stop, we need to extend the buf so the next one can
@@ -6321,8 +6296,9 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     // Even if the previous text fragment is not breakable, the connected pieces 
     // can be breakable in between. This especially true for CJK.
     PRBool canBreak;
-    nsresult lres = aLineBreaker->BreakInBetween(aWordBuf, aRunningWordLen, bp, wordLen, &canBreak);
-    if (NS_SUCCEEDED(lres) && canBreak) {
+    canBreak = nsContentUtils::GetLineBreaker()->BreakInBetween(aWordBuf, 
+                                            aRunningWordLen, bp, wordLen);
+    if (canBreak) {
       wordLen = 0;
       *aStop = PR_TRUE;
     }

@@ -39,19 +39,16 @@
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
-#include "nsILineBreakerFactory.h"
 #include "nsILineBreaker.h"
-#include "nsIWordBreakerFactory.h"
 #include "nsIWordBreaker.h"
-#include "nsIBreakState.h"
 #include "nsLWBrkCIID.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 
 #define WORK_AROUND_SERVICE_MANAGER_ASSERT
 
-IMPL_NS_IBREAKSTATE( nsBreakState )
-
-NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
+NS_DEFINE_CID(kLBrkCID, NS_LBRK_CID);
+NS_DEFINE_CID(kWBrkCID, NS_WBRK_CID);
 
 
 static char teng1[] = 
@@ -106,20 +103,18 @@ PRBool TestASCIILB(nsILineBreaker *lb,
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
-         PRUint32 curr;
-         PRBool finishThisFrag = PR_FALSE;
-         for(i = 0, curr = 0; ((! finishThisFrag) && (i < 256)); i++)
+         PRInt32 curr;
+         for(i = 0, curr = 0; (curr != NS_LINEBREAKER_NEED_MORE_TEXT) && 
+             (i < 256); i++)
          {
-            lb->Next(eng1.get(), eng1.Length(), curr, 
-                    &curr,
-                    &finishThisFrag);
-            res [i] = curr;
+            curr = lb->Next(eng1.get(), eng1.Length(), curr);
+            res [i] = curr != NS_LINEBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
     
          }
          if (i != outlen)
          {
             ok = PR_FALSE;
-            printf("WARNING!!! return size wrong, expect %d bet got %d \n",
+            printf("WARNING!!! return size wrong, expect %d but got %d \n",
                    outlen, i);
          }
          printf("string  = \n%s\n", in);
@@ -158,24 +153,22 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const PRUint32* out, PRUint32 outlen)
 {
          nsAutoString eng1; eng1.AssignWithConversion(in);
-         // nsBreakState bk(eng1.get(), eng1.Length());
 
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
-         PRBool done;
-         PRUint32 curr =0;
+         PRInt32 curr = 0;
 
-         for(i = 0, lb->NextWord(eng1.get(), eng1.Length(), curr, &curr, &done);
-                    (! done ) && (i < 256);
-                    lb->NextWord(eng1.get(), eng1.Length(), curr, &curr, &done), i++)
+         for(i = 0, curr = lb->NextWord(eng1.get(), eng1.Length(), curr);
+                    (curr != NS_WORDBREAKER_NEED_MORE_TEXT) && (i < 256);
+                    curr = lb->NextWord(eng1.get(), eng1.Length(), curr), i++)
          {
-            res [i] = curr;
+            res [i] = curr != NS_WORDBREAKER_NEED_MORE_TEXT ? curr : eng1.Length();
          }
          if (i != outlen)
          {
             ok = PR_FALSE;
-            printf("WARNING!!! return size wrong, expect %d bet got %d\n",
+            printf("WARNING!!! return size wrong, expect %d but got %d\n",
                    outlen, i);
          }
          printf("string  = \n%s\n", in);
@@ -212,95 +205,79 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
      
 PRBool TestLineBreaker()
 {
-   printf("==================================\n");
-   printf("Finish nsILineBreakerFactory Test \n");
-   printf("==================================\n");
-   nsILineBreakerFactory *t = NULL;
+   printf("===========================\n");
+   printf("Finish nsILineBreaker Test \n");
+   printf("===========================\n");
+   nsILineBreaker *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
-   res = CallGetService(kLWBrkCID, &t);
+   res = CallGetService(kLBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st GetService failed\n");
      ok = PR_FALSE;
-   } else {
-#ifdef WORD_AROUND_SERVICE_MANAGER_ASSERT
-     NS_RELEASE(t);
-#endif
    }
 
-   res = CallGetService(kLWBrkCID, &t);
-           
+   NS_IF_RELEASE(t);
+
+   res = CallGetService(kLBrkCID, &t);
+ 
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
      ok = PR_FALSE;
    } else {
-
-     printf("Test 3 - GetLineBreaker():\n");
-     nsILineBreaker *lb;
-
-     nsAutoString lb_arg;
-     res = t->GetBreaker(lb_arg, &lb);
-     if(NS_FAILED(res) || (lb == NULL)) {
-         printf("GetBreaker(nsILineBreaker*) failed\n");
-         ok = PR_FALSE;
+     printf("Test 4 - {First,Next}ForwardBreak():\n");
+     if( TestASCIILB(t, teng1, sizeof(teng1)/sizeof(char), 
+              exp1, sizeof(exp1)/sizeof(PRUint32)) )
+     {
+       printf("Test 4 Passed\n\n");
      } else {
-         
-         printf("Test 4 - {First,Next}ForwardBreak():\n");
-         if( TestASCIILB(lb, teng1, sizeof(teng1)/sizeof(char), 
-                   exp1, sizeof(exp1)/sizeof(PRUint32)) )
-         {
-           printf("Test 4 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 4 Failed\n\n");
-         }
-
-         printf("Test 5 - {First,Next}ForwardBreak():\n");
-         if(TestASCIILB(lb, teng2, sizeof(teng2)/sizeof(char), 
-                   lexp2, sizeof(lexp2)/sizeof(PRUint32)) )
-         {
-           printf("Test 5 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 5 Failed\n\n");
-         }
-
-         printf("Test 6 - {First,Next}ForwardBreak():\n");
-         if(TestASCIILB(lb, teng3, sizeof(teng3)/sizeof(char), 
-                   exp3, sizeof(exp3)/sizeof(PRUint32)) )
-         {
-           printf("Test 6 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 6 Failed\n\n");
-         }
-
-
-         NS_IF_RELEASE(lb);
+       ok = PR_FALSE;
+       printf("Test 4 Failed\n\n");
      }
 
-#ifdef WORD_AROUND_SERVICE_MANAGER_ASSERT
-     NS_RELEASE(t);
-#endif
-   }
-   printf("==================================\n");
-   printf("Finish nsILineBreakerFactory Test \n");
-   printf("==================================\n");
+     printf("Test 5 - {First,Next}ForwardBreak():\n");
+     if(TestASCIILB(t, teng2, sizeof(teng2)/sizeof(char), 
+               lexp2, sizeof(lexp2)/sizeof(PRUint32)) )
+     {
+       printf("Test 5 Passed\n\n");
+     } else {
+       ok = PR_FALSE;
+       printf("Test 5 Failed\n\n");
+     }
 
-   return ok;
+     printf("Test 6 - {First,Next}ForwardBreak():\n");
+     if(TestASCIILB(t, teng3, sizeof(teng3)/sizeof(char), 
+               exp3, sizeof(exp3)/sizeof(PRUint32)) )
+     {
+       printf("Test 6 Passed\n\n");
+     } else {
+       ok = PR_FALSE;
+       printf("Test 6 Failed\n\n");
+     }
+
+
+     NS_RELEASE(t);
+
+   }
+
+   printf("===========================\n");
+   printf("Finish nsILineBreaker Test \n");
+   printf("===========================\n");
+
+ return ok;
 }
 
 PRBool TestWordBreaker()
 {
-   printf("==================================\n");
-   printf("Finish nsIWordBreakerFactory Test \n");
-   printf("==================================\n");
-   nsIWordBreakerFactory *t = NULL;
+   printf("===========================\n");
+   printf("Finish nsIWordBreaker Test \n");
+   printf("===========================\n");
+   nsIWordBreaker *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
-   res = CallGetService(kLWBrkCID, &t);
+   res = CallGetService(kWBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
@@ -310,62 +287,50 @@ PRBool TestWordBreaker()
      NS_RELEASE(t);
    }
 
-   res = CallGetService(kLWBrkCID, &t);
+   res = CallGetService(kWBrkCID, &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
      ok = PR_FALSE;
    } else {
 
-     printf("Test 3 - GetWordBreaker():\n");
-     nsIWordBreaker *lb;
-
-     nsAutoString lb_arg;
-     res = t->GetBreaker(lb_arg, &lb);
-     if(NS_FAILED(res) || (lb == NULL)) {
-         printf("GetBreaker(nsIWordBreaker*) failed\n");
-         ok = PR_FALSE;
+     printf("Test 4 - {First,Next}ForwardBreak():\n");
+     if( TestASCIIWB(t, teng1, sizeof(teng1)/sizeof(char), 
+               wexp1, sizeof(wexp1)/sizeof(PRUint32)) )
+     {
+        printf("Test 4 Passed\n\n");
      } else {
-         
-         printf("Test 4 - {First,Next}ForwardBreak():\n");
-         if( TestASCIIWB(lb, teng1, sizeof(teng1)/sizeof(char), 
-                   wexp1, sizeof(wexp1)/sizeof(PRUint32)) )
-         {
-           printf("Test 4 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 4 Failed\n\n");
-         }
-
-         printf("Test 5 - {First,Next}ForwardBreak():\n");
-         if(TestASCIIWB(lb, teng2, sizeof(teng2)/sizeof(char), 
-                   wexp2, sizeof(wexp2)/sizeof(PRUint32)) )
-         {
-           printf("Test 5 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 5 Failed\n\n");
-         }
-
-         printf("Test 6 - {First,Next}ForwardBreak():\n");
-         if(TestASCIIWB(lb, teng3, sizeof(teng3)/sizeof(char), 
-                   wexp3, sizeof(wexp3)/sizeof(PRUint32)) )
-         {
-           printf("Test 6 Passed\n\n");
-         } else {
-           ok = PR_FALSE;
-           printf("Test 6 Failed\n\n");
-         }
-
-
-         NS_IF_RELEASE(lb);
+       ok = PR_FALSE;
+       printf("Test 4 Failed\n\n");
      }
+
+     printf("Test 5 - {First,Next}ForwardBreak():\n");
+     if(TestASCIIWB(t, teng2, sizeof(teng2)/sizeof(char), 
+               wexp2, sizeof(wexp2)/sizeof(PRUint32)) )
+     {
+       printf("Test 5 Passed\n\n");
+     } else {
+       ok = PR_FALSE;
+       printf("Test 5 Failed\n\n");
+     }
+
+     printf("Test 6 - {First,Next}ForwardBreak():\n");
+     if(TestASCIIWB(t, teng3, sizeof(teng3)/sizeof(char), 
+               wexp3, sizeof(wexp3)/sizeof(PRUint32)) )
+     {
+       printf("Test 6 Passed\n\n");
+     } else {
+       ok = PR_FALSE;
+       printf("Test 6 Failed\n\n");
+     }
+
 
      NS_RELEASE(t);
    }
-   printf("==================================\n");
-   printf("Finish nsIWordBreakerFactory Test \n");
-   printf("==================================\n");
+
+   printf("===========================\n");
+   printf("Finish nsIWordBreaker Test \n");
+   printf("===========================\n");
 
    return ok;
 }
@@ -401,13 +366,9 @@ void SampleWordBreakUsage()
 void SamplePrintWordWithBreak()
 {
    PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
-   nsIWordBreakerFactory *t = NULL;
+   nsIWordBreaker *wbk = NULL;
 
-   nsresult res = CallGetService(kLWBrkCID, &t);
-   nsIWordBreaker *wbk;
-
-   nsAutoString wb_arg;
-   res = t->GetBreaker(wb_arg, &wbk);
+   CallGetService(kWBrkCID, &wbk);
 
    nsAutoString result;
    nsAutoString tmp;
@@ -415,20 +376,18 @@ void SamplePrintWordWithBreak()
    for(PRUint32 i = 0; i < numOfFragment; i++)
    {
       nsAutoString fragText; fragText.AssignWithConversion(wb[i]); 
-      // nsBreakState bk(fragText.get(), fragText.Length());
 
-      PRUint32 cur = 0;
-      PRBool done;
-      res = wbk->NextWord(fragText.get(), fragText.Length(), cur, &cur, &done);
+      PRInt32 cur = 0;
+      cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
       PRUint32 start = 0;
-      for(PRUint32 j = 0; ! done ; j++)
+      for(PRUint32 j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT ; j++)
       {
             tmp.Truncate();
             fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
             result.AppendLiteral("^");
-            start = cur;
-            wbk->NextWord(fragText.get(), fragText.Length(), cur, &cur, &done);
+            start = (cur >= 0 ? cur : cur - start);
+            cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
       }
 
       tmp.Truncate();
@@ -441,12 +400,10 @@ void SamplePrintWordWithBreak()
         nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[i+1]);
  
         PRBool canBreak = PR_TRUE;
-        res = wbk->BreakInBetween( fragText.get(), 
-                                  fragText.Length(),
-                                  nextFragText.get(), 
-                                  nextFragText.Length(),
-                                  &canBreak
-                                );
+        canBreak = wbk->BreakInBetween( fragText.get(), 
+                                        fragText.Length(),
+                                        nextFragText.get(), 
+                                        nextFragText.Length());
         if(canBreak)
             result.AppendLiteral("^");
 
@@ -455,84 +412,73 @@ void SamplePrintWordWithBreak()
    }
    printf("Output From  SamplePrintWordWithBreak() \n\n");
    printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
+
+   NS_IF_RELEASE(wbk);
 }
 
 void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 {
    PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
-   nsIWordBreakerFactory *t = NULL;
+   nsIWordBreaker *wbk = NULL;
 
-   nsresult res = CallGetService(kLWBrkCID, &t);
-   nsIWordBreaker *wbk;
-
-   nsAutoString wb_arg;
-   res = t->GetBreaker(wb_arg, &wbk);
-
+   CallGetService(kWBrkCID, &wbk);
 
    nsAutoString fragText; fragText.AssignWithConversion(wb[fragN]); 
    
-   PRUint32 begin, end;
-
-
    nsAutoString result;
-   res = wbk->FindWord(fragText.get(), fragText.Length(), 
-                          offset, &begin, &end);
+   nsWordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
-   PRBool canbreak;
-   fragText.Mid(result, begin, end-begin);
+   PRBool canBreak;
+   fragText.Mid(result, res.mBegin, res.mEnd-res.mBegin);
 
-   if((PRUint32)fragText.Length() == end) // if we hit the end of the fragment
+   if((PRUint32)fragText.Length() == res.mEnd) // if we hit the end of the fragment
    {
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
      {
-        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[p]); 
-        res = wbk->BreakInBetween(curFragText.get(), 
-                                  curFragText.Length(),
-                                  nextFragText.get(), 
-                                  nextFragText.Length(),
-                                  &canbreak);
-        if(canbreak)
+        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[p]);
+        canBreak = wbk->BreakInBetween(curFragText.get(), 
+                                       curFragText.Length(),
+                                       nextFragText.get(), 
+                                       nextFragText.Length());
+        if(canBreak)
            break;
  
-        PRUint32 b, e;
-        res = wbk->FindWord(nextFragText.get(), nextFragText.Length(), 
-                          0, &b, &e);
+        nsWordRange r = wbk->FindWord(nextFragText.get(), nextFragText.Length(),
+                                      0);
 
         nsAutoString tmp;
-        nextFragText.Mid(tmp,b,e-b);
+        nextFragText.Mid(tmp,r.mBegin,r.mEnd-r.mBegin);
         result.Append(tmp);
 
-        if((PRUint32)nextFragText.Length() != e)
+        if((PRUint32)nextFragText.Length() != r.mEnd)
           break;
 
         nextFragText = curFragText;
      }
    }
    
-   if(0 == begin) // if we hit the beginning of the fragment
+   if(0 == res.mBegin) // if we hit the beginning of the fragment
    {
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN ; p > 0 ;p--)
      {
         nsAutoString prevFragText; prevFragText.AssignWithConversion(wb[p-1]); 
-        res = wbk->BreakInBetween(prevFragText.get(), 
-                                  prevFragText.Length(),
-                                  curFragText.get(), 
-                                  curFragText.Length(),
-                                  &canbreak);
-        if(canbreak)
+        canBreak = wbk->BreakInBetween(prevFragText.get(), 
+                                       prevFragText.Length(),
+                                       curFragText.get(), 
+                                       curFragText.Length());
+        if(canBreak)
            break;
  
-        PRUint32 b, e;
-        res = wbk->FindWord(prevFragText.get(), prevFragText.Length(), 
-                          prevFragText.Length(), &b, &e);
+        nsWordRange r = wbk->FindWord(prevFragText.get(), prevFragText.Length(), 
+                                      prevFragText.Length());
 
         nsAutoString tmp;
-        prevFragText.Mid(tmp,b,e-b);
+        prevFragText.Mid(tmp,r.mBegin,r.mEnd-r.mBegin);
         result.Insert(tmp,0);
 
-        if(0 != b)
+        if(0 != r.mBegin)
           break;
 
         prevFragText = curFragText;
@@ -541,6 +487,8 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    
    printf("Output From  SamplePrintWordWithBreak() \n\n");
    printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
+
+   NS_IF_RELEASE(wbk);
 }
 
 // Main

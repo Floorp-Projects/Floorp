@@ -109,6 +109,9 @@
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 #include "nsIMIMEService.h"
+#include "nsLWBrkCIID.h"
+#include "nsILineBreaker.h"
+#include "nsIWordBreaker.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -135,6 +138,8 @@ nsIConsoleService *nsContentUtils::sConsoleService;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
 nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
 nsIContentPolicy *nsContentUtils::sContentPolicyService;
+nsILineBreaker *nsContentUtils::sLineBreaker = nsnull;
+nsIWordBreaker *nsContentUtils::sWordBreaker = nsnull;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 
 
@@ -186,6 +191,12 @@ nsContentUtils::Init()
 
     sIOService = nsnull;
   }
+
+  rv = CallGetService(NS_LBRK_CONTRACTID, &sLineBreaker);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
   rv = CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
@@ -427,6 +438,8 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
   NS_IF_RELEASE(sIOService);
+  NS_IF_RELEASE(sLineBreaker);
+  NS_IF_RELEASE(sWordBreaker);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif

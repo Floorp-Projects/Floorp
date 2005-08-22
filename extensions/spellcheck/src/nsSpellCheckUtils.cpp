@@ -48,8 +48,8 @@
 #include "nsITextServicesDocument.h"
 
 #include "nsIServiceManager.h"
-#include "nsIWordBreakerFactory.h" // nsIWordBreaker
 #include "nsLWBrkCIID.h"
+#include "nsIWordBreaker.h"
 
 
 /* XXX The platform-specific #defines of IS_NSBSP_CHAR are unnecessary and
@@ -198,27 +198,9 @@ nsSpellCheckUtils::LoadTextBlockIntoBuffer(nsITextServicesDocument* aTxtSvcDoc,
   return NS_OK;
 }
 
-nsresult 
-nsSpellCheckUtils::GetWordBreaker(nsIWordBreaker** aResult) 
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  // no line breaker, find a default one
-  nsresult result;
-  nsCOMPtr<nsIWordBreakerFactory> wbf(do_GetService(NS_LWBRK_CONTRACTID, &result));
-  if (NS_SUCCEEDED(result)) 
-  {
-    nsAutoString wbarg;
-    result = wbf->GetBreaker(wbarg, aResult);
-    NS_IF_ADDREF(*aResult);
-  }
-  return result;
-}
-
 #ifdef NS_DEBUG
 nsresult
-nsSpellCheckUtils::DumpWords(nsIWordBreaker* aWordBreaker, 
-                             const PRUnichar*      aText, 
+nsSpellCheckUtils::DumpWords(const PRUnichar*      aText, 
                              const PRUint32&       aTextLen)
 {
   PRUint32 offset = 0;
@@ -237,20 +219,23 @@ nsSpellCheckUtils::DumpWords(nsIWordBreaker* aWordBreaker,
   //printf("%s\n", NS_LossyConvertUCS2toASCII(aText).get());
   free(line);
 
+  nsresult rv;
+  nsCOMPtr<nsIWordBreaker> aWordBreaker = do_GetService(NS_WBRK_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   while (offset < aTextLen) 
   {
-    PRUint32 begin = 0;
-    PRUint32 end   = 0;
-    nsresult result = aWordBreaker->FindWord(aText, aTextLen, offset, &begin, &end);
-    NS_ENSURE_SUCCESS(result, result);
-    wlen = end - begin;
-    printf("%d  %d  l:%d ", begin, end, wlen);
+    nsWordRange res = aWordBreaker->FindWord(aText, aTextLen, offset);
+    if (res.mBegin > aTextLen) return NS_ERROR_ILLEGAL_VALUE;
+
+    wlen = res.mEnd - res.mBegin;
+    printf("%d  %d  l:%d ", res.mBegin, res.mEnd, wlen);
     const PRUnichar* start = (const PRUnichar*)(aText+offset);
     PRUnichar* word = nsCRT::strndup(start, wlen);
     nsString str(word);
     printf("[%s]\n", NS_LossyConvertUCS2toASCII(str).get());
     nsMemory::Free(word);
-    offset = end;
+    offset = res.mEnd;
   }
   for (i=0;i<7;i++) printf("**********");
   printf("\n");

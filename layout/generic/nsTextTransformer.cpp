@@ -165,14 +165,10 @@ nsTextTransformer::Shutdown()
 
 MOZ_DECL_CTOR_COUNTER(nsTextTransformer)
 
-nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
-                                     nsIWordBreaker* aWordBreaker,
-                                     nsPresContext* aPresContext)
+nsTextTransformer::nsTextTransformer(nsPresContext* aPresContext)
   : mFrag(nsnull),
     mOffset(0),
     mMode(eNormal),
-    mLineBreaker(aLineBreaker),
-    mWordBreaker(aWordBreaker),
     mBufferPos(0),
     mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE),
     mFlags(0)
@@ -185,14 +181,15 @@ nsTextTransformer::nsTextTransformer(nsILineBreaker* aLineBreaker,
 #ifdef IBMBIDI
   mPresContext = aPresContext;
 #endif
-  if (aLineBreaker == nsnull && aWordBreaker == nsnull )
+  if (nsContentUtils::GetLineBreaker() == nsnull &&
+      nsContentUtils::GetWordBreaker() == nsnull )
     NS_ASSERTION(0, "invalid creation of nsTextTransformer");
   
 #ifdef DEBUG
   static PRBool firstTime = PR_TRUE;
   if (firstTime) {
     firstTime = PR_FALSE;
-    SelfTest(aLineBreaker, aWordBreaker, aPresContext);
+    SelfTest(aPresContext);
   }
 #endif
 }
@@ -543,10 +540,12 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
-      mLineBreaker->BreakInBetween(&firstChar, 1, cp, (fragLen-offset), &breakBetween);
+      breakBetween = nsContentUtils::GetLineBreaker()->BreakInBetween(
+          &firstChar, 1, cp, (fragLen-offset));
     }
     else {
-      mWordBreaker->BreakInBetween(&firstChar, 1, cp, (fragLen-offset), &breakBetween);
+      breakBetween = nsContentUtils::GetWordBreaker()->BreakInBetween(
+          &firstChar, 1, cp, (fragLen-offset));
     }
 
     // don't transform the first character until after BreakInBetween is called
@@ -566,14 +565,16 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
 
     if (!breakBetween) {
       // Find next position
-      PRBool tryNextFrag;
-      PRUint32 next;
+      PRInt32 next;
       if (aForLineBreak) {
-        mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+        next = nsContentUtils::GetLineBreaker()->Next(cp0, fragLen, offset);
       }
       else {
-        mWordBreaker->NextWord(cp0, fragLen, offset, &next, &tryNextFrag);
+        next = nsContentUtils::GetWordBreaker()->NextWord(cp0, fragLen, offset);
       }
+      if (aForLineBreak && next == NS_LINEBREAKER_NEED_MORE_TEXT ||
+          next == NS_WORDBREAKER_NEED_MORE_TEXT)
+        next = fragLen;
       numChars = (PRInt32) (next - (PRUint32) offset) + 1;
 
       // Since we know the number of characters we're adding grow the buffer
@@ -1211,26 +1212,27 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
-      mLineBreaker->BreakInBetween(cp0, offset + 1,
-                                   mTransformBuf.GetBufferEnd()-1, 1,
-                                   &breakBetween);
+      breakBetween = nsContentUtils::GetLineBreaker()->BreakInBetween(cp0, 
+          offset + 1, mTransformBuf.GetBufferEnd()-1, 1);
     }
     else {
-      mWordBreaker->BreakInBetween(cp0, offset + 1,
-                                   mTransformBuf.GetBufferEnd()-1, 1,
-                                   &breakBetween);
+      breakBetween = nsContentUtils::GetWordBreaker()->BreakInBetween(cp0,
+          offset + 1, mTransformBuf.GetBufferEnd()-1, 1);
     }
 
     if (!breakBetween) {
       // Find next position
-      PRBool tryPrevFrag;
-      PRUint32 prev;
+      PRInt32 prev;
       if (aForLineBreak) {
-        mLineBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+        prev = nsContentUtils::GetLineBreaker()->Prev(cp0, offset, offset);
       }
       else {
-        mWordBreaker->PrevWord(cp0, offset, offset, &prev, &tryPrevFrag);
+        prev = nsContentUtils::GetWordBreaker()->PrevWord(cp0, offset, offset);
       }
+      if (aForLineBreak && prev == NS_LINEBREAKER_NEED_MORE_TEXT ||
+          prev == NS_WORDBREAKER_NEED_MORE_TEXT)
+        prev = 0;
+      
       numChars = (PRInt32) ((PRUint32) offset - prev) + 1;
 
       // Grow buffer before copying
@@ -1685,9 +1687,7 @@ static SelfTestData tests[] = {
 #define NUM_TESTS (sizeof(tests) / sizeof(tests[0]))
 
 void
-nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
-                            nsIWordBreaker* aWordBreaker,
-                            nsPresContext* aPresContext)
+nsTextTransformer::SelfTest(nsPresContext* aPresContext)
 {
   PRBool gNoisy = PR_FALSE;
   if (PR_GetEnv("GECKO_TEXT_TRANSFORMER_NOISY_SELF_TEST")) {

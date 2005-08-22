@@ -45,7 +45,6 @@
 
 class nsISpellChecker;
 class nsITextServicesDocument;
-class nsIWordBreaker;
 
 class CharBuffer
 {
@@ -111,12 +110,8 @@ public:
                                           nsString&            aText, 
                                           PRUint32&            aOffset);
 
-  // helper
-  static nsresult GetWordBreaker(nsIWordBreaker** aResult);
-
 #ifdef NS_DEBUG
-  static nsresult DumpWords(nsIWordBreaker*  aWordBreaker, 
-                            const PRUnichar* aText, 
+  static nsresult DumpWords(const PRUnichar* aText, 
                             const PRUint32&  aTextLen);
 #define DUMPWORDS(_wb, _txt, _txtLen) nsSpellCheckUtils::DumpWords(_wb, _txt, _txtLen);
 #else

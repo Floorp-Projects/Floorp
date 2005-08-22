@@ -39,8 +39,6 @@
 
 #include "nsJISx4501LineBreaker.h"
 
-
-
 #include "pratom.h"
 #include "nsLWBRKDll.h"
 #include "jisx4501class.h"
@@ -342,11 +340,7 @@ PRBool nsJISx4051LineBreaker::GetPair(PRInt8 c1, PRInt8 c2)
   return (0 == ((gPair[c1] >> c2 ) & 0x0001));
 }
 
-
-nsJISx4051LineBreaker::nsJISx4051LineBreaker(
-   const PRUnichar* aNoBegin, PRInt32 aNoBeginLen,
-   const PRUnichar* aNoEnd, PRInt32 aNoEndLen
-)
+nsJISx4051LineBreaker::nsJISx4051LineBreaker()
 {
 }
 
@@ -403,20 +397,15 @@ PRInt8  nsJISx4051LineBreaker::ContextualAnalysis(
 }
 
 
-NS_IMETHODIMP nsJISx4051LineBreaker::BreakInBetween(
+PRBool nsJISx4051LineBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,
-  const PRUnichar* aText2 , PRUint32 aTextLen2,
-  PRBool *oCanBreak)
+  const PRUnichar* aText2 , PRUint32 aTextLen2)
 {
-  NS_ENSURE_TRUE(aText1, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(aText2, NS_ERROR_NULL_POINTER);
-
-  if((0 == aTextLen1) || (0==aTextLen2) ||
+  if(!aText1 || !aText2 || (0 == aTextLen1) || (0==aTextLen2) ||
      IS_HIGH_SURROGATE(aText1[aTextLen1-1]) && 
      IS_LOW_SURROGATE(aText2[0]) )  //Do not separate a surrogate pair
   {
-     *oCanBreak = PR_FALSE;
-     return NS_OK;
+     return PR_FALSE;
   }
 
   //search for CJK characters until a space is found. 
@@ -440,8 +429,7 @@ NS_IMETHODIMP nsJISx4051LineBreaker::BreakInBetween(
   }
 
   //now apply western rule.
-  *oCanBreak = IS_SPACE(aText1[aTextLen1-1]) || IS_SPACE(aText2[0]);
-  return NS_OK;
+  return IS_SPACE(aText1[aTextLen1-1]) || IS_SPACE(aText2[0]);
 
 ROUTE_CJK_BETWEEN:
 
@@ -463,24 +451,20 @@ ROUTE_CJK_BETWEEN:
   /* Handle cases for THAI */
   if((CLASS_THAI == c1) && (CLASS_THAI == c2))
   {
-     *oCanBreak = (0 == TrbWordBreakPos(aText1, aTextLen1, aText2, aTextLen2));
+     return (0 == TrbWordBreakPos(aText1, aTextLen1, aText2, aTextLen2));
   }
   else 
   {
-     *oCanBreak = GetPair(c1,c2);
+     return GetPair(c1,c2);
   }
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP nsJISx4051LineBreaker::Next( 
-  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-  PRUint32* oNext, PRBool *oNeedMoreText) 
+PRInt32 nsJISx4051LineBreaker::Next(
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos) 
 {
-  NS_ENSURE_TRUE(aText, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(oNext, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(oNeedMoreText, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(aPos <= aLen, NS_ERROR_ILLEGAL_VALUE);
+  NS_ASSERTION(aText, "aText shouldn't be null");
+  NS_ASSERTION(aLen > aPos, "Illegal value (length > position)");
 
   //forward check for CJK characters until a space is found. 
   //if CJK char is found before space, use 4051, otherwise western
@@ -488,17 +472,11 @@ NS_IMETHODIMP nsJISx4051LineBreaker::Next(
   for (cur = aPos; cur < aLen; ++cur)
   {
     if (IS_SPACE(aText[cur]))
-    {
-      *oNext = cur;
-      *oNeedMoreText = PR_FALSE;
-      return NS_OK;
-    }
+      return cur;
     if (IS_CJK_CHAR(aText[cur]))
       goto ROUTE_CJK_NEXT;
   }
-  *oNext = aLen;
-  *oNeedMoreText = PR_TRUE;
-  return NS_OK;
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
 
 ROUTE_CJK_NEXT:
   PRInt8 c1, c2;
@@ -513,11 +491,7 @@ ROUTE_CJK_NEXT:
   }
   
   if(CLASS_THAI == c1) 
-  {
-     *oNext = PRUint32(TrbFollowing(aText, aLen, aPos));
-     *oNeedMoreText = PR_FALSE;
-     return NS_OK;
-  }
+     return PRUint32(TrbFollowing(aText, aLen, aPos));
 
   for(cur++; cur <aLen; cur++)
   {
@@ -531,24 +505,17 @@ ROUTE_CJK_NEXT:
      }
 
      if(GetPair(c1, c2)) {
-       *oNext = cur ;
-       *oNeedMoreText = PR_FALSE;
-       return NS_OK;
+       return cur;
      }
      c1 = c2;
   }
-  *oNext = aLen;
-  *oNeedMoreText = PR_TRUE;
-  return NS_OK;
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
 }
 
-NS_IMETHODIMP nsJISx4051LineBreaker::Prev( 
-  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
-  PRUint32* oPrev, PRBool *oNeedMoreText) 
+PRInt32 nsJISx4051LineBreaker::Prev( 
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos) 
 {
-  NS_ENSURE_TRUE(aText, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(oPrev, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(oNeedMoreText, NS_ERROR_NULL_POINTER);
+  NS_ASSERTION(aText, "aText shouldn't be null");
 
   //backward check for CJK characters until a space is found. 
   //if CJK char is found before space, use 4051, otherwise western
@@ -559,17 +526,13 @@ NS_IMETHODIMP nsJISx4051LineBreaker::Prev(
     {
       if (cur != aPos - 1) // XXXldb Why?
         ++cur;
-      *oPrev = cur;
-      *oNeedMoreText = PR_FALSE;
-      return NS_OK;
+      return cur;
     }
     if (IS_CJK_CHAR(aText[cur]))
       goto ROUTE_CJK_PREV;
   }
 
-  *oPrev = 0;
-  *oNeedMoreText = PR_TRUE;
-  return NS_OK;
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
 
 ROUTE_CJK_PREV:
   cur = aPos;
@@ -598,14 +561,10 @@ ROUTE_CJK_PREV:
      }
 
      if(GetPair(c1, c2)) {
-       *oPrev = cur;
-       *oNeedMoreText = PR_FALSE;
-       return NS_OK;
+       return cur;
      }
      c2 = c1;
   }
-  *oPrev = 0;
-  *oNeedMoreText = PR_TRUE;
-  return NS_OK;
+  return NS_LINEBREAKER_NEED_MORE_TEXT; // Need more text
 }
 

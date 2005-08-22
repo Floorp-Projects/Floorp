@@ -291,8 +291,10 @@ static nsModuleComponentInfo components[] =
     NULL, NULL},
 #endif /* INCLUDE_DBGDETECTOR */
  // lwbrk
-  { "Line and Word Breaker", NS_LWBRK_CID,
-    NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor},
+  { "Line Breaker", NS_LBRK_CID, 
+    NS_LBRK_CONTRACTID, nsJISx4051LineBreakerConstructor},
+  { "Word Breaker", NS_WBRK_CID,
+    NS_WBRK_CONTRACTID, nsSampleWordBreakerConstructor},
   { "Semantic Unit Scanner", NS_SEMANTICUNITSCANNER_CID,
     NS_SEMANTICUNITSCANNER_CONTRACTID, nsSemanticUnitScannerConstructor},
 

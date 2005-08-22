@@ -115,10 +115,6 @@
 
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
-#include "nsILineBreakerFactory.h"
-#include "nsIWordBreakerFactory.h"
-#include "nsLWBrkCIID.h"
-
 #include "nsHTMLAtoms.h"
 
 #include "nsScriptEventManager.h"
@@ -1334,52 +1330,6 @@ void
 nsDocument::RemoveCharSetObserver(nsIObserver* aObserver)
 {
   mCharSetObservers.RemoveElement(aObserver);
-}
-
-nsILineBreaker*
-nsDocument::GetLineBreaker()
-{
-  if (!mLineBreaker) {
-    // no line breaker, find a default one
-    nsresult rv;
-    nsCOMPtr<nsILineBreakerFactory> lbf =
-      do_GetService(NS_LWBRK_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    lbf->GetBreaker(EmptyString(), getter_AddRefs(mLineBreaker));
-    NS_ENSURE_TRUE(mLineBreaker, nsnull);
-  }
-
-  return mLineBreaker;
-}
-
-void
-nsDocument::SetLineBreaker(nsILineBreaker* aLineBreaker)
-{
-  mLineBreaker = aLineBreaker;
-}
-
-nsIWordBreaker*
-nsDocument::GetWordBreaker()
-{
-  if (!mWordBreaker) {
-    // no word breaker, find a default one
-    nsresult rv;
-    nsCOMPtr<nsIWordBreakerFactory> wbf =
-      do_GetService(NS_LWBRK_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    wbf->GetBreaker(EmptyString(), getter_AddRefs(mWordBreaker));
-    NS_ENSURE_TRUE(wbf, nsnull);
-  }
-
-  return mWordBreaker;
-}
-
-void
-nsDocument::SetWordBreaker(nsIWordBreaker* aWordBreaker)
-{
-  mWordBreaker = aWordBreaker;
 }
 
 void
