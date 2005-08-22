@@ -36,7 +36,16 @@
   [% END %]
 [% END %]
 
-[% filter_form = BLOCK %]
+[% PROCESS global/header.html.tmpl
+  title="Request Queue"
+  style = "
+    table.requests th { text-align: left; }
+    table#filter th { text-align: right; }
+  "
+  onload="selectProduct(document.forms[0], 'product', 'component', 'Any');"
+  javascript_urls=["productmenu.js"]
+%]
+
 <form action="request.cgi" method="get">
   <input type="hidden" name="action" value="queue">
 
@@ -104,7 +113,6 @@
   </table>
 
 </form>
-[% END %]
 
 [% column_headers = {
       "type"       => "Flag" ,
@@ -119,18 +127,6 @@
 [% DEFAULT display_columns = ["requester", "requestee", "type", "bug", "attachment", "created"]
            group_field     = "Requestee"
            group_value     = ""
-%]
-
-
-[% PROCESS global/header.html.tmpl
-  title="Request Queue"
-  h2=filter_form
-  style = "
-    table.requests th { text-align: left; }
-    table#filter th { text-align: right; }
-  "
-  onload="selectProduct(document.forms[0], 'product', 'component', 'Any');"
-  javascript_urls=["productmenu.js"]
 %]
 
 [% IF debug %]
