@@ -933,8 +933,9 @@ nsWindow::nsWindow() : nsBaseWidget()
 #ifdef MOZ_XUL
   mIsTranslucent      = PR_FALSE;
   mIsTopTranslucent   = PR_FALSE;
-  w2k.mMemoryBitmap   = NULL;
   w2k.mMemoryDC       = NULL;
+  w2k.mMemoryBitmap   = NULL;
+  w2k.mMemoryBits     = NULL;
   w9x.mPerformingSetWindowRgn = PR_FALSE;
   mAlphaMask          = nsnull;
 #endif
@@ -4365,7 +4366,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = OnPaint((HDC) wParam);
       break;
 #endif
-			
+
 #ifdef WINCE
     case WM_HOTKEY:
     {
@@ -5421,13 +5422,13 @@ DWORD nsWindow::WindowStyle()
 #ifdef WINCE
   switch (mWindowType) {
     case eWindowType_child:
-	    style = WS_CHILD;
+      style = WS_CHILD;
       break;
 
     case eWindowType_dialog:
     case eWindowType_popup:
-		  style = WS_BORDER | WS_POPUP;
-		  break;
+      style = WS_BORDER | WS_POPUP;
+      break;
 
     default:
       NS_ASSERTION(0, "unknown border style");
@@ -8146,17 +8147,27 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
   if (IsAlphaTranslucencySupported())
   {
+    // Always use at least 24-bit bitmaps regardless of the device context.
+    int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
+    if (depth < 24)
+      depth = 24;
+    
     // resize the memory bitmap
-    HDC hScreenDC = ::GetDC(NULL);
-    w2k.mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, aNewWidth, aNewHeight);
+    BITMAPINFO bi = { 0 };
+    bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = aNewWidth;
+    bi.bmiHeader.biHeight = -aNewHeight;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = depth;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    w2k.mMemoryBitmap = ::CreateDIBSection(w2k.mMemoryDC, &bi, DIB_RGB_COLORS, (void**)&w2k.mMemoryBits, NULL, 0);
 
     if (w2k.mMemoryBitmap)
     {
       HGDIOBJ oldBitmap = ::SelectObject(w2k.mMemoryDC, w2k.mMemoryBitmap);
       ::DeleteObject(oldBitmap);
     }
-
-    ::ReleaseDC(NULL, hScreenDC);
   }
 }
 
@@ -8256,12 +8267,24 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
 
   if (aTranslucent)
   {
-    HDC hScreenDC = ::GetDC(NULL);
-    w2k.mMemoryDC = ::CreateCompatibleDC(hScreenDC);
+    w2k.mMemoryDC = ::CreateCompatibleDC(NULL);
 
     if (w2k.mMemoryDC)
     {
-      w2k.mMemoryBitmap = ::CreateCompatibleBitmap(hScreenDC, mBounds.width, mBounds.height);
+      // Always use at least 24-bit bitmaps regardless of the device context.
+      int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
+      if (depth < 24)
+        depth = 24;
+
+      BITMAPINFO bi = { 0 };
+      bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
+      bi.bmiHeader.biWidth = mBounds.width;
+      bi.bmiHeader.biHeight = -mBounds.height;
+      bi.bmiHeader.biPlanes = 1;
+      bi.bmiHeader.biBitCount = depth;
+      bi.bmiHeader.biCompression = BI_RGB;
+
+      w2k.mMemoryBitmap = ::CreateDIBSection(w2k.mMemoryDC, &bi, DIB_RGB_COLORS, (void**)&w2k.mMemoryBits, NULL, 0);
 
       if (w2k.mMemoryBitmap)
       {
@@ -8270,8 +8293,6 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
         rv = NS_OK;
       }
     }
-
-    ::ReleaseDC(NULL, hScreenDC);
   } else
   {
     ::DeleteDC(w2k.mMemoryDC);
@@ -8351,17 +8372,23 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  // Memory bitmap with alpha channel
-  HDC hMemoryDC = ::CreateCompatibleDC(NULL);
+  ::GdiFlush();
 
-  if (hMemoryDC)
+  int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
+  if (depth < 24)
+    depth = 24;
+
+  HDC hMemoryDC;
+  HBITMAP hAlphaBitmap;
+  PRBool needConversion = (depth != 32);
+
+  if (needConversion)
   {
-    HBITMAP hAlphaBitmap = ::CreateBitmap(mBounds.width, mBounds.height, 1, 32, NULL);
+    hMemoryDC = ::CreateCompatibleDC(NULL);
 
-    if (hAlphaBitmap)
+    if (hMemoryDC)
     {
-      ::SelectObject(hMemoryDC, hAlphaBitmap);
-
+      // Memory bitmap with alpha channel
       BITMAPINFO bi = { 0 };
       bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
       bi.bmiHeader.biWidth = mBounds.width;
@@ -8370,55 +8397,84 @@ nsresult nsWindow::UpdateTranslucentWindow()
       bi.bmiHeader.biBitCount = 32;
       bi.bmiHeader.biCompression = BI_RGB;
 
-      PRUint8* pBits = new PRUint8 [4 * mBounds.width * mBounds.height];
-
-      if (pBits)
+      PRUint8* pBits32 = nsnull;
+      hAlphaBitmap = ::CreateDIBSection(hMemoryDC, &bi, DIB_RGB_COLORS, (void**)&pBits32, NULL, 0);
+      
+      if (hAlphaBitmap)
       {
-        int lines = ::GetDIBits(w2k.mMemoryDC, w2k.mMemoryBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
+        HGDIOBJ oldBitmap = ::SelectObject(hMemoryDC, hAlphaBitmap);
 
-        if (lines == mBounds.height)
+        PRUint8* pPixel32 = pBits32;
+        PRUint8* pAlpha = mAlphaMask;
+        PRUint32 rasWidth = RASWIDTH(mBounds.width, depth);
+        PRInt32 bytesPerPixel = depth / 8;
+
+        for (PRInt32 y = 0 ; y < mBounds.height ; y++)
         {
-          PRUint8* pPixel = pBits;
-          PRUint8* pAlpha = mAlphaMask;
+          PRUint8* pPixel = w2k.mMemoryBits + y * rasWidth;
 
-          for (PRInt32 cnt = 0 ; cnt < mBounds.width * mBounds.height ; cnt++)
+          for (PRInt32 x = 0 ; x < mBounds.width ; x++)
           {
             // Each of the RGB components should be premultiplied with alpha and divided by 255
-            FAST_DIVIDE_BY_255(pPixel [0], *pAlpha * pPixel [0]);
-            FAST_DIVIDE_BY_255(pPixel [1], *pAlpha * pPixel [1]);
-            FAST_DIVIDE_BY_255(pPixel [2], *pAlpha * pPixel [2]);
-            pPixel [3] = *pAlpha;
+            FAST_DIVIDE_BY_255(pPixel32 [0], *pAlpha * pPixel [0]);
+            FAST_DIVIDE_BY_255(pPixel32 [1], *pAlpha * pPixel [1]);
+            FAST_DIVIDE_BY_255(pPixel32 [2], *pAlpha * pPixel [2]);
+            pPixel32 [3] = *pAlpha;
 
-            pPixel +=4;
+            pPixel += bytesPerPixel;
+            pPixel32 += 4;
             pAlpha++;
           }
-
-          lines = ::SetDIBits(hMemoryDC, hAlphaBitmap, 0, mBounds.height, pBits, &bi, DIB_RGB_COLORS);
         }
 
-        delete [] pBits;
-
-        if (lines == mBounds.height)
-        {
-          BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-          SIZE winSize = { mBounds.width, mBounds.height };
-          POINT srcPos = { 0, 0 };
-          HDC hScreenDC = ::GetDC(NULL);
-          HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-          RECT winRect;
-          ::GetWindowRect(hWnd, &winRect);
-
-          // perform the alpha blend
-          if (pUpdateLayeredWindow(hWnd, hScreenDC, (POINT*)&winRect, &winSize, hMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
-            rv = NS_OK;
-
-          ::ReleaseDC(NULL, hScreenDC);
-        }
-      } else
-        rv = NS_ERROR_OUT_OF_MEMORY;
-
-      ::DeleteObject(hAlphaBitmap);
+        rv = NS_OK;
+      }
     }
+  } else
+  {
+    hMemoryDC = w2k.mMemoryDC;
+
+    if (hMemoryDC)
+    {
+      PRUint8* pPixel = w2k.mMemoryBits;
+      PRUint8* pAlpha = mAlphaMask;
+      PRInt32 pixels = mBounds.width * mBounds.height;
+
+      for (PRInt32 cnt = 0 ; cnt < pixels ; cnt++)
+      {
+        // Each of the RGB components should be premultiplied with alpha and divided by 255
+        FAST_DIVIDE_BY_255(pPixel [0], *pAlpha * pPixel [0]);
+        FAST_DIVIDE_BY_255(pPixel [1], *pAlpha * pPixel [1]);
+        FAST_DIVIDE_BY_255(pPixel [2], *pAlpha * pPixel [2]);
+        pPixel [3] = *pAlpha;
+
+        pPixel += 4;
+        pAlpha++;
+      }
+
+      rv = NS_OK;
+    }
+  }
+
+
+  if (rv == NS_OK)
+  {
+    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+    SIZE winSize = { mBounds.width, mBounds.height };
+    POINT srcPos = { 0, 0 };
+    HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+    RECT winRect;
+    ::GetWindowRect(hWnd, &winRect);
+
+    // perform the alpha blend
+    if (!pUpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, hMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
+      rv = NS_ERROR_FAILURE;
+  }
+
+
+  if (needConversion)
+  {
+    ::DeleteObject(hAlphaBitmap);
     ::DeleteDC(hMemoryDC);
   }
 
