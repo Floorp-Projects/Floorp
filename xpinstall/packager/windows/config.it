@@ -255,11 +255,12 @@ C7=Component Venkman
 C8=Component US English Profile Defaults
 C9=Component En US lang pack
 C10=Component US region pack
+C11=Component DOM Inspector
+C12=Component SRoaming
+C13=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C11=Component DOM Inspector
-C12=Component QFA
-C13=Component RPT
+C14=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -283,11 +284,12 @@ C7=Component Venkman
 C8=Component US English Profile Defaults
 C9=Component En US lang pack
 C10=Component US region pack
+C11=Component DOM Inspector
+C12=Component SRoaming
+C13=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C11=Component DOM Inspector
-C12=Component QFA
-C13=Component RPT
+C14=Component QFA
 
 
 
@@ -689,6 +691,17 @@ $InstallSizeSystem$
 $InstallSizeArchive$:inspector.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
+
+[Component SRoaming]
+Description Short=Roaming
+;*** LOCALIZE ME BABY ***
+Description Long=Profile Roaming
+Archive=sroaming.xpi
+$InstallSize$:sroaming
+$InstallSizeSystem$
+$InstallSizeArchive$:sroaming.xpi
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\sroaming.jar
 
 [Component US English Profile Defaults]
 Description Short=US English profile defaults
