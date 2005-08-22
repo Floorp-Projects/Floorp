@@ -76,6 +76,7 @@
 #include "gfxIImageFrame.h"
 #include "nsNativeCharsetUtils.h"
 #include <windows.h>
+#include <process.h>
 
 #ifdef WINCE
 #include "aygshell.h"
@@ -1368,9 +1369,14 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   return (PRBool) PtInRect(&r, mp);
 }
 
-static char* sPropName = "MozillansIWidgetPtr"; 
+static char sPropName[40] = "";
 static char* GetNSWindowPropName() {
-   return sPropName;
+  if (!*sPropName)
+  {
+    _snprintf(sPropName, 39, "MozillansIWidgetPtr%p", _getpid());
+    sPropName[39] = '\0';
+  }
+  return sPropName;
 }
 
 nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd) {
