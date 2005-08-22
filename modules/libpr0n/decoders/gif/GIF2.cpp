@@ -79,56 +79,23 @@ mailing address.
 
 #include "nsGIFDecoder2.h"
 
-/* Gather n characters from the input stream and then enter state s. */
+/*
+ * GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'
+ *
+ * Note, the hold will never need to be bigger than 256 bytes to gather up in the hold,
+ * as each GIF block (except colormaps) can never be bigger than 256 bytes.
+ * Colormaps are directly copied in the resp. global_colormap or dynamically allocated local_colormap.
+ * So a fixed buffer in gif_struct is good enough.
+ * This buffer is only needed to copy left-over data from one GifWrite call to the next
+ */
 #define GETN(n,s)                    \
   PR_BEGIN_MACRO                     \
-    gs->state = gif_gather;          \
-    gs->gather_request_size = (n);   \
-    gs->post_gather_state = s;       \
+    gs->bytes_to_consume = (n);      \
+    gs->state = (s);                 \
   PR_END_MACRO
 
 /* Get a 16-bit value stored in little-endian format */
 #define GETINT16(p)   ((p)[1]<<8|(p)[0])
-
-/* Get a 32-bit value stored in little-endian format */
-#define GETINT32(p)   (((p)[3]<<24) | ((p)[2]<<16) | ((p)[1]<<8) | ((p)[0]))
-
-//******************************************************************************
-/*  binary block Allocate and Concatenate
- *
- *   destination_length  is the length of the existing block
- *   source_length   is the length of the block being added to the
- *   destination block
- */
-static char *il_BACat (char **destination,
-                       size_t destination_length,
-                       const char *source,
-                       size_t source_length)
-{
-  if (source) {
-    if (*destination) {
-      *destination = (char *) PR_REALLOC (*destination,
-                                          destination_length + source_length);
-      if (*destination == nsnull)
-        return (nsnull);
-
-      memmove(*destination + destination_length, source, source_length);
-    }
-    else {
-      *destination = (char *) PR_MALLOC (source_length);
-      if (*destination == nsnull)
-        return (nsnull);
-
-      memcpy(*destination, source, source_length);
-    }
-  }
-
-  return *destination;
-}
-
-#undef BlockAllocCat
-#define BlockAllocCat(dest, dest_length, src, src_length) \
-  il_BACat(&(dest), dest_length, src, src_length)
 
 //******************************************************************************
 // Send the data to the display front-end.
@@ -411,26 +378,11 @@ PRBool GIFInit(gif_struct* gs, void* aClientData)
   memset(gs, 0, offsetof(gif_struct, prefix));
   gs->clientptr = aClientData;
 
-  gs->state = gif_init;
-  gs->post_gather_state = gif_error;
-  gs->gathered = 0;
+  // Start with the version (GIF89a|GIF87a)
+  gs->state = gif_type;
+  gs->bytes_to_consume = 6;
 
   return PR_TRUE;
-}
-
-/* Maximum # of bytes to read ahead while waiting for delay_time to expire.
-   We no longer limit this number to remain within WIN16 malloc limitations
-   of 0xffff */
-
-#define MAX_READ_AHEAD  (0xFFFFFFL)
-
-//******************************************************************************
-PRBool gif_write_ready(const gif_struct* gs)
-{
-  if (!gs)
-    return PR_FALSE;
-
-  return (gs->gathered < MAX_READ_AHEAD);
 }
 
 /******************************************************************************/
@@ -440,20 +392,55 @@ PRBool gif_write_ready(const gif_struct* gs)
 
 PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 {
-  if (!gs)
+  if (!gs || !len)
     return PR_FAILURE;
 
-  /* If we fail, some upstream data provider ignored the
-     zero return value from il_gif_write_ready() which says not to
-     send any more data to this stream until the delay timeout fires. */
-  if ((len != 0) && (gs->gathered >= MAX_READ_AHEAD))
-    return PR_FAILURE;
+  const PRUint8 *q = buf;
 
-  const PRUint8 *q, *p = buf, *ep = buf + len;
+  // Add what we have sofar to the block
+  // If previous call to me left something in the hold first complete current block
+  // Or if we are filling the colormaps, first complete the colormap
+  PRUint8* p;
+  if (gs->state == gif_global_colormap)
+    p = gs->global_colormap;
+  else if (gs->state == gif_image_colormap)
+    p = gs->local_colormap;
+  else if (gs->bytes_in_hold)
+    p = gs->hold;
+  else
+    p = nsnull;
 
-  q = nsnull;                   /* Initialize to shut up gcc warnings */
+  if (p) {
+    // Add what we have sofar to the block
+    PRUint32 l = PR_MIN(len, gs->bytes_to_consume);
+    memcpy(p+gs->bytes_in_hold, buf, l);
 
-  while (p <= ep) {
+    if (l < gs->bytes_to_consume) {
+      // Not enough in 'buf' to complete current block, get more
+      gs->bytes_in_hold += l;
+      gs->bytes_to_consume -= l;
+      return PR_SUCCESS;
+    }
+    // Reset hold buffer count
+    gs->bytes_in_hold = 0;
+    // Point 'q' to complete block in hold (or in colormap)
+    q = p;
+  }
+
+  // Invariant:
+  //    'q' is start of current to be processed block (hold, colormap or buf)
+  //    'bytes_to_consume' is number of bytes to consume from 'buf'
+  //    'buf' points to the bytes to be consumed from the input buffer
+  //    'len' is number of bytes left in input buffer from position 'buf'.
+  //    At entrance of the for loop will 'buf' will be moved 'bytes_to_consume'
+  //    to point to next buffer, 'len' is adjusted accordingly.
+  //    So that next round in for loop, q gets pointed to the next buffer.
+
+  for (;len >= gs->bytes_to_consume; q=buf) {
+    // Eat the current block from the buffer, q keeps pointed at current block
+    buf += gs->bytes_to_consume;
+    len -= gs->bytes_to_consume;
+
     switch (gs->state)
     {
     case gif_lzw:
@@ -496,29 +483,12 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     }
     break;
 
-    /* We're positioned at the very start of the file. */
-    case gif_init:
-    {
-      GETN(3, gif_type);
-      break;
-    }
-
     /* All GIF files begin with "GIF87a" or "GIF89a" */
     case gif_type:
     {
-      if (strncmp((char*)q, "GIF", 3)) {
-        gs->state = gif_error;
-        break;
-      }
-      GETN(3, gif_version);
-    }
-    break;
-
-    case gif_version:
-    {
-      if (!strncmp((char*)q, "89a", 3)) {
+      if (!strncmp((char*)q, "GIF89a", 6)) {
         gs->version = 89;
-      } else if (!strncmp((char*)q, "87a", 3)) {
+      } else if (!strncmp((char*)q, "GIF87a", 6)) {
         gs->version = 87;
       } else {
         gs->state = gif_error;
@@ -551,11 +521,21 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         gs->screen_height,
         gs->screen_bgcolor);
 
-      if (q[4] & 0x80) /* global map */
-        /* 3 bytes for each entry in the global colormap */
-        GETN(gs->global_colormap_size*3, gif_global_colormap);
-      else
-        GETN(1, gif_image_start);
+      if (q[4] & 0x80) { /* global map */
+        // Get the global colormap
+        const PRUint32 size = 3*gs->global_colormap_size;
+        if (len < size) {
+          // Use 'hold' pattern to get the global colormap
+          GETN(size, gif_global_colormap);
+          break;
+        }
+        // Copy everything and directly go to gif_lzw_start
+        memcpy(gs->global_colormap, buf, size);
+        buf += size;
+        len -= size;
+      }
+
+      GETN(1, gif_image_start);
 
       // q[6] = Pixel Aspect Ratio
       //   Not used
@@ -564,11 +544,8 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     break;
 
     case gif_global_colormap:
-    {
-      memcpy(gs->global_colormap, q, 3 * gs->global_colormap_size);
-
+      // Everything is already copied into global_colormap
       GETN(1, gif_image_start);
-    }
     break;
 
     case gif_image_start:
@@ -669,9 +646,8 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
     case gif_comment_extension:
     {
-      gs->count = *q;
-      if (gs->count)
-        GETN(gs->count, gif_consume_comment);
+      if (*q)
+        GETN(*q, gif_consume_comment);
       else
         GETN(1, gif_image_start);
     }
@@ -833,43 +809,46 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       gs->rowend = gs->rowbuf + gs->width;
       gs->rowp = gs->rowbuf;
 
-      /* bits per pixel is 1<<((q[8]&0x07) + 1); */
+      /* bits per pixel is q[8]&0x07 */
 
       if (q[8] & 0x80) /* has a local colormap? */
       {
         int num_colors = 2 << (q[8] & 0x7);
-
-        // If current local_colormap is not big enough, force reallocation
-        if (num_colors > gs->local_colormap_size)
-          PR_FREEIF(gs->local_colormap);
-        gs->local_colormap_size = num_colors;
+        const PRUint32 size = 3*num_colors;
+        PRUint8 *map = gs->local_colormap;
+        if (!map || (num_colors > gs->local_colormap_size)) {
+          map = (PRUint8*)PR_REALLOC(map, size);
+          if (!map) {
+            gs->state = gif_oom;
+            break;
+          }
+        }
 
         /* Switch to the new local palette after it loads */
+        gs->local_colormap = map;
+        gs->local_colormap_size = num_colors;
         gs->is_local_colormap_defined = PR_TRUE;
-        GETN(gs->local_colormap_size * 3, gif_image_colormap);
+
+        if (len < size) {
+          // Use 'hold' pattern to get the image colormap
+          GETN(size, gif_image_colormap);
+          break;
+        }
+        // Copy everything and directly go to gif_lzw_start
+        memcpy(gs->local_colormap, buf, size);
+        buf += size;
+        len -= size;
       } else {
         /* Switch back to the global palette */
         gs->is_local_colormap_defined = PR_FALSE;
-        GETN(1, gif_lzw_start);
       }
+      GETN(1, gif_lzw_start);
     }
     break;
 
     case gif_image_colormap:
-    {
-      PRUint8 *map = gs->local_colormap;
-      if (!map) {
-        map = gs->local_colormap = (PRUint8*)PR_MALLOC(3 * gs->local_colormap_size);
-        if (!map) {
-          gs->state = gif_oom;
-          break;
-        }
-      }
-
-      memcpy(map, q, 3 * gs->local_colormap_size);
-
+      // Everything is already copied into local_colormap
       GETN(1, gif_lzw_start);
-    }
     break;
 
     case gif_sub_block:
@@ -900,6 +879,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                                      gs->delay_time);
 
         /* Clear state from this image */
+        gs->is_local_colormap_defined = PR_FALSE;
         gs->is_transparent = PR_FALSE;
 
         /* An image can specify a delay time before which to display
@@ -917,59 +897,6 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       return PR_SUCCESS;
       break;
 
-    case gif_delay:
-    case gif_gather:
-    {
-      PRInt32 gather_remaining;
-      PRInt32 request_size = gs->gather_request_size;
-
-      {
-        gather_remaining = request_size - gs->gathered;
-
-        /* Do we already have enough data in the accumulation
-           buffer to satisfy the request ?  (This can happen
-           after we transition from the gif_delay state.) */
-        if (gather_remaining <= 0) {
-          gs->gathered -= request_size;
-          q = gs->gather_head;
-          gs->gather_head += request_size;
-          gs->state = gs->post_gather_state;
-          break;
-        }
-
-        /* Shift remaining data to the head of the buffer */
-        if (gs->gathered && (gs->gather_head != gs->hold)) {
-          memmove(gs->hold, gs->gather_head, gs->gathered);
-          gs->gather_head = gs->hold;
-        }
-
-        /* If we add the data just handed to us by the netlib
-           to what we've already gathered, is there enough to satisfy
-           the current request ? */
-        if ((ep - p) >= gather_remaining) {
-          if (gs->gathered) { /* finish a prior gather */
-            char *hold = (char*)gs->hold;
-            BlockAllocCat(hold, gs->gathered, (char*)p, gather_remaining);
-            gs->hold = (PRUint8*)hold;
-            q = gs->gather_head = gs->hold;
-            gs->gathered = 0;
-          } else
-            q = p;
-
-          p += gather_remaining;
-          gs->state = gs->post_gather_state;
-        } else {
-          char *hold = (char*)gs->hold;
-          BlockAllocCat(hold, gs->gathered, (char*)p, ep - p);
-          gs->hold = (PRUint8*)hold;
-          gs->gather_head = gs->hold;
-          gs->gathered += ep-p;
-          return PR_SUCCESS;
-        }
-      }
-    }
-    break;
-
     // Handle out of memory errors
     case gif_oom:
       return PR_FAILURE;
@@ -979,13 +906,25 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       nsGIFDecoder2::EndGIF(gs->clientptr, gs->loop_count);
       return PR_SUCCESS;
 
-    case gif_stop_animating:
-      return PR_SUCCESS;
-
     // We shouldn't ever get here.
     default:
       break;
     }
+  }
+
+  // Copy the leftover into gs->hold
+  gs->bytes_in_hold = len;
+  if (len) {
+    // Add what we have sofar to the block
+    PRUint8* p;
+    if (gs->state == gif_global_colormap)
+      p = gs->global_colormap;
+    else if (gs->state == gif_image_colormap)
+      p = gs->local_colormap;
+    else
+      p = gs->hold;
+    memcpy(p, buf, len);
+    gs->bytes_to_consume -= len;
   }
 
   return PR_SUCCESS;
@@ -1003,8 +942,6 @@ void gif_destroy(gif_struct *gs)
     gs->delay_time = 0;
 
   PR_FREEIF(gs->rowbuf);
-  PR_FREEIF(gs->hold);
-
   PR_FREEIF(gs->local_colormap);
 }
 

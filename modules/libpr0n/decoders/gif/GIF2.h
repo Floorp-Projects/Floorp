@@ -41,39 +41,35 @@
 #define MAX_BITS            4097 /* 2^MAX_LZW_BITS+1 */
 #define MINIMUM_DELAY_TIME   100
 #define MAX_COLORS           256
+#define MAX_HOLD_SIZE        256
 
 /* gif2.h  
    The interface for the GIF87/89a decoder. 
 */
 // List of possible parsing states
 typedef enum {
-    gif_gather,
-    gif_init,                   //1
     gif_type,
-    gif_version,
     gif_global_header,
     gif_global_colormap,
-    gif_image_start,            //6
+    gif_image_start,            
     gif_image_header,
     gif_image_colormap,
     gif_image_body,
     gif_lzw_start,
-    gif_lzw,                    //11
+    gif_lzw,
     gif_sub_block,
     gif_extension,
     gif_control_extension,
     gif_consume_block,
     gif_skip_block,
-    gif_done,                   //17
+    gif_done,
     gif_oom,
     gif_error,
     gif_comment_extension,
     gif_application_extension,
     gif_netscape_extension_block,
     gif_consume_netscape_extension,
-    gif_consume_comment,
-    gif_delay,
-    gif_stop_animating   //added for animation stop 
+    gif_consume_comment
 } gstate;
 
 /* "Disposal" method indicates how the image should be handled in the
@@ -90,12 +86,9 @@ typedef enum
 typedef struct gif_struct {
     void* clientptr;
     /* Parsing state machine */
-    gstate state;               /* Curent decoder master state */
-    PRUint8 *hold;              /* Accumulation buffer */
-    PRUint8 *gather_head;       /* Next byte to read in accumulation buffer */
-    int32 gather_request_size;  /* Number of bytes to accumulate */
-    int32 gathered;             /* bytes accumulated so far*/
-    gstate post_gather_state;   /* State after requested bytes accumulated */
+    gstate state;                   /* Curent decoder master state */
+    PRUint32 bytes_to_consume;      /* Number of bytes to accumulate */
+    PRUint32 bytes_in_hold;         /* bytes accumulated so far*/
 
     /* LZW decoder state machine */
     PRUint8 *stackp;              /* Current stack pointer */
@@ -144,6 +137,7 @@ typedef struct gif_struct {
     PRPackedBool is_local_colormap_defined;
 
     PRUint16  prefix[MAX_BITS];          /* LZW decoding tables */
+    PRUint8   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */
     PRUint8   global_colormap[3*MAX_COLORS];   /* Default colormap if local not supplied, 3 bytes for each color  */
     PRUint8   suffix[MAX_BITS];          /* LZW decoding tables */
     PRUint8   stack[MAX_BITS];           /* Base of LZW decoder stack */
