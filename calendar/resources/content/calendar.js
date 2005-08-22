@@ -1023,68 +1023,6 @@ function print()
    window.openDialog("chrome://calendar/content/printDialog.xul","printdialog","chrome",args);
 }
 
-
-function publishEntireCalendar()
-{
-    var args = new Object();
-
-    args.onOk =  self.publishEntireCalendarDialogResponse;
-
-    var remotePath = ""; // get a remote path as a pref of the calendar
-
-    if (remotePath != "" && remotePath != null) {
-        var publishObject = new Object( );
-        publishObject.remotePath = remotePath;
-        args.publishObject = publishObject;
-    }
-
-    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
-}
-
-function publishEntireCalendarDialogResponse( CalendarPublishObject )
-{
-    var icsURL = makeURL(CalendarPublishObject.remotePath);
-
-    var oldCalendar = getDefaultCalendar(); // get the currently selected calendar
-
-    // create an ICS calendar, but don't register it
-    var calManager = getCalendarManager();
-    try {
-        var newCalendar = calManager.createCalendar("ics", icsURL);
-    } catch (ex) {
-        dump(ex);
-        return;
-    }
-
-    var getListener = {
-        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
-        {
-            // delete the new calendar now that we're done with it
-            calManager.deleteCalendar(newCalendar);
-        }
-    };
-
-    appendCalendars(newCalendar, [oldCalendar], getListener);
-}
-
-function publishCalendarData()
-{
-   var args = new Object();
-   
-   args.onOk =  self.publishCalendarDataDialogResponse;
-   
-   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
-}
-
-function publishCalendarDataDialogResponse( CalendarPublishObject )
-{
-   var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
-   
-   calendarPublish(calendarString, CalendarPublishObject.remotePath, "text/calendar");
-}
-
-
-
 function getCharPref (prefObj, prefName, defaultValue)
 {
     try {

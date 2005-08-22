@@ -36,279 +36,192 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Original code:
-// http://lxr.mozilla.org/mozilla/source/editor/ui/composer/content/publish.js
-// TODO Implement uploadfile with:
-//void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
-
-var gPublishHandler = null;
-
-
-/* Create an instance of the given ContractID, with given interface */
-function createInstance(contractId, intf) {
-    return Components.classes[contractId].createInstance(Components.interfaces[intf]);
+function publishCalendarData()
+{
+   var args = new Object();
+   
+   args.onOk =  self.publishCalendarDataDialogResponse;
+   
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
 }
 
-
-var gPublishIOService;
-function GetIOService()
+function publishCalendarDataDialogResponse(CalendarPublishObject, aProgressDialog)
 {
-  if (gPublishIOService)
-    return gPublishIOService;
-
-  gPublishIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  if (!gPublishIOService)
-    dump("failed to get io service\n");
-
-  return gPublishIOService;
+   publishItemArray(gCalendarWindow.EventSelection.selectedEvents,
+                    CalendarPublishObject.remotePath, aProgressDialog);
 }
 
-
-/**
- * This is the entry point into the file from calendar.js
- * contentType is always text/calendar
- */
-
-function calendarPublish(aDataString, newLocation, contentType)
+function publishEntireCalendar()
 {
-  try
-  {
-    var protocolChannel = get_destination_channel(newLocation);
-    if (!protocolChannel)
-    {
-      dump("failed to get a destination channel\n");
-      return;
+    var args = new Object();
+    var publishObject = new Object( );
+
+    args.onOk =  self.publishEntireCalendarDialogResponse;
+
+    // get the currently selected calendar
+    var cal = getDefaultCalendar();
+    publishObject.calendar = cal;
+
+    // get a remote path as a pref of the calendar
+    var remotePath = getCalendarManager().getCalendarPref(cal, "publishpath");
+    if (remotePath && remotePath != "") {
+        publishObject.remotePath = remotePath;
     }
-    output_string_to_channel(protocolChannel, aDataString, contentType);
-    protocolChannel.asyncOpen(gPublishingListener, null);
-  }
-  catch (e)
-  {
-    alert("an error occurred in calendarPublish: " + e + "\n");
-  }
+
+    args.publishObject = publishObject;
+    openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
 }
 
-function calendarUploadFile(aSourceFilename, newLocation, contentType)
+function publishEntireCalendarDialogResponse(CalendarPublishObject, aProgressDialog)
 {
-   try
-   {
-      var protocolChannel = get_destination_channel(newLocation);
-      if (!protocolChannel)
-      {
-         dump("failed to get a destination channel\n");
-         return;
-      }
-      output_file_to_channel(protocolChannel, aSourceFilename, contentType);
-      protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
+    var itemArray = [];
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+        {
+            publishItemArray(itemArray, CalendarPublishObject.remotePath, aProgressDialog);
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+        {
+            if (!Components.isSuccessCode(aStatus)) {
+                aborted = true;
+                return;
+            }
+            if (aCount) {
+                for (var i=0; i<aCount; ++i) {
+                    // Store a (short living) reference to the item.
+                    var itemCopy = aItems[i].clone();
+                    itemArray.push(itemCopy);
+                }  
+            }
+        }
+    };
+    aProgressDialog.onStartUpload();
+    var oldCalendar = CalendarPublishObject.calendar;
+    oldCalendar.getItems(Components.interfaces.calICalendar.ITEM_FILTER_TYPE_ALL,
+                         0, null, null, getListener);
 
-      return;
-   }
-   catch (e)
-   {
-      alert("an error occurred in calendarUploadFile: " + e + "\n");
-   }
 }
 
+function publishItemArray(aItemArray, aPath, aProgressDialog) {
+    var outputStream;
+    var inputStream;
+    var storageStream;
 
-function output_string_to_channel( aChannel, aDataString, contentType )
-{
-   var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
-   var postStream = createInstance('@mozilla.org/io/string-input-stream;1', 'nsIStringInputStream');
+    var icsURL = makeURL(aPath);
 
-   // Create the stream
-   postStream.setData(aDataString, aDataString.length);
-   // Send the stream (data) through the channel
-   uploadChannel.setUploadStream(postStream, contentType, -1);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+
+    var channel = ioService.newChannelFromURI(icsURL);
+    if (icsURL.schemeIs('webcal'))
+        icsURL.scheme = 'http';
+    if (icsURL.schemeIs('webcals'))
+        icsURL.scheme = 'https';
+        
+    switch(icsURL.scheme) {
+        case 'http':
+        case 'https':
+            channel = channel.QueryInterface(Components.interfaces.nsIHttpChannel);
+            break;
+        case 'ftp':
+            channel = channel.QueryInterface(Components.interfaces.nsIFTPChannel);
+            break;
+        case 'file':
+            channel = channel.QueryInterface(Components.interfaces.nsIFileChannel);
+            break;
+        default:
+            dump("No such scheme\n");
+            return;
+    }
+
+    var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
+    uploadChannel.notificationCallbacks = notificationCallbacks;
+
+    storageStream = Components.classes["@mozilla.org/storagestream;1"]
+                                  .createInstance(Components.interfaces.nsIStorageStream);
+    storageStream.init(32768, 0xffffffff, null);
+    outputStream = storageStream.getOutputStream(0);
+
+    var exporter = Components.classes["@mozilla.org/calendar/export;1?type=ics"]
+                             .getService(Components.interfaces.calIExporter);
+    exporter.exportToStream(outputStream,
+                            aItemArray.length, aItemArray);
+    outputStream.close();
+
+    inputStream = storageStream.newInputStream(0);
+
+    uploadChannel.setUploadStream(inputStream,
+                                  "text/calendar", -1);
+    try {
+        channel.asyncOpen(publishingListener, aProgressDialog);
+    } catch (e) {
+        var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                            calendarStringBundle.formatStringFromName('otherPutError',[e.message],1));
+    }
 }
 
-
-function output_file_to_channel( aChannel, aFilePath, contentType )
-{
-   var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
-
-   var thisFile = new File( aFilePath );
-
-   thisFile.open( "r" );
-
-   var theFileContents = thisFile.read();
-
-   output_string_to_channel( aChannel, theFileContents, contentType );
-}
 
 var notificationCallbacks =
 {
-  // nsIInterfaceRequestor interface
-  getInterface: function(iid, instance) {
-    if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
-      // use the window watcher service to get a nsIAuthPrompt impl
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      return ww.getNewAuthPrompter(null);
-    }
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  }
-}
-
-
-// this creates a channel for the destination, and hooks up the password mananager
-function get_destination_channel(destinationDirectoryLocation)
-{
-    var ioService = GetIOService();
-    if (!ioService)
-    {
-       return null;
-    }
-
-    // create a channel for the destination location
-    destChannel = create_channel_from_url(ioService, destinationDirectoryLocation);
-    if (!destChannel)
-    {
-      dump("can't create dest channel\n");
-      return null;
-    }
-
-    try
-    {
-	dump("about to set callbacks\n");
-	destChannel.notificationCallbacks = notificationCallbacks;  // docshell
-	dump("notification callbacks set\n");
-    }
-    catch(e) {
-	dump(e+"\n");
-    }
-
-    try {
-       switch(destChannel.URI.scheme)
-       {
-         case 'http':
-         case 'https':
-	       return destChannel.QueryInterface(
-		   Components.interfaces.nsIHttpChannel
-		);
-	   case 'ftp':
-	       return destChannel.QueryInterface(
-		   Components.interfaces.nsIFTPChannel
-		);
-	   case 'file':
-	       return destChannel.QueryInterface(
-		   Components.interfaces.nsIFileChannel
-		);
-	    default:
-		return null;
-	}
-    }
-    catch( e )
-    {
-       return null;
+    // nsIInterfaceRequestor interface
+    getInterface: function(iid, instance) {
+        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+            // use the window watcher service to get a nsIAuthPrompt impl
+            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                               .getService(Components.interfaces.nsIWindowWatcher);
+            return ww.getNewAuthPrompter(null);
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     }
 }
 
 
-// this function takes a full url, creates an nsIURI, and then creates a channel from that nsIURI
-function create_channel_from_url(ioService, aURL)
+var publishingListener =
 {
-  try
-  {
-    var nsiuri = ioService.newURI(aURL, null, null);
-    if (!nsiuri)
-      return null;
-    return ioService.newChannelFromURI(nsiuri);
-  }
-  catch (e)
-  {
-    alert(e+"\n");
-    return null;
-  }
-}
-
-/*
-function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, aLogin, aPassword)
-{
-  // append '/' if it's not there; inputs should be directories so should end in '/'
-  if ( srcDirectoryLocation.charAt(srcDirectoryLocation.length-1) != '/' )
-    srcDirectoryLocation = srcDirectoryLocation + '/';
-  if ( destinationDirectoryLocation.charAt(destinationDirectoryLocation.length-1) != '/' )
-    destinationDirectoryLocation = destinationDirectoryLocation + '/';
-
-  try
-  {
-    // grab an io service
-    var ioService = GetIOService();
-    if (!ioService)
-      return;
-
-    // create a channel for the source location
-    srcChannel = create_channel_from_url(ioService, srcDirectoryLocation, null, null);
-    if (!srcChannel)
+    QueryInterface: function(aIId, instance)
     {
-      dump("can't create src channel\n");
-      return;
-    }
+        if (aIId.equals(Components.interfaces.nsIStreamListener) ||
+            aIId.equals(Components.interfaces.nsISupports))
+            return this;
 
-    // create a channel for the destination location
-    var ftpChannel = get_destination_channel(destinationDirectoryLocation, aLogin, aPassword);
-    if (!ftpChannel)
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
+    },
+
+    onStartRequest: function(request, ctxt)
     {
-      dump("failed to get ftp channel\n");
-      return;
+    },
+
+    onStopRequest: function(request, ctxt, status, errorMsg)
+    {
+        ctxt.wrappedJSObject.onStopUpload();
+
+        var channel;
+        var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        try {
+            channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+            dump(ch.requestSucceeded+"\n");
+        } catch(e) {
+        }
+        if (channel && !channel.requestSucceeded) {
+            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                                calendarStringBundle.formatStringFromName('httpPutError',[channel.responseStatus, channel.responseStatusText],2));
+        }
+        else if (!channel && !Components.isSuccessCode(request.status)) {
+            // XXX this should be made human-readable.
+            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
+                                calendarStringBundle.formatStringFromName('otherPutError',[request.status.toString(16)],1));
+        }
+    },
+
+    onDataAvailable: function(request, ctxt, inStream, sourceOffset, count)
+    {
     }
-
-    ftpChannel.open();
-    protocolChannel.uploadStream = srcChannel.open();
-    protocolChannel.asyncOpen(null, null);
-    dump("done\n");
-  }
-  catch (e)
-  {
-    dump("an error occurred: " + e + "\n");
-  }
-}
-*/
-
-var gPublishingListener =
-{
-  QueryInterface: function(aIId, instance)
-  {
-    if (aIId.equals(Components.interfaces.nsIStreamListener) ||
-        aIId.equals(Components.interfaces.nsISupports))
-      return this;
-
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
-  },
-
-  onStartRequest: function(request, ctxt)
-  {
-    dump("onStartRequest status = " + request.status.toString(16) + "\n");
-  },
-
-  onStopRequest: function(request, ctxt, status, errorMsg)
-  {
-    dump("onStopRequest status = " + request.status.toString(16) + " " + errorMsg + "\n");
-    var ch;
-    var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
-    try {
-      ch = request.QueryInterface(Components.interfaces.nsIHttpChannel);
-      dump(ch.requestSucceeded+"\n");
-    } catch(e) {
-    }
-    if (ch && !ch.requestSucceeded) {
-      promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                          calendarStringBundle.formatStringFromName('httpPutError',[ch.responseStatus, ch.responseStatusText],2));
-    }
-    else if (!ch && !Components.isSuccessCode(request.status)) {
-      // XXX this should be made human-readable.
-      promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
-                          calendarStringBundle.formatStringFromName('otherPutError',[request.status.toString(16)],1));
-    }
-  },
-
-  onDataAvailable: function(request, ctxt, inStream, sourceOffset, count)
-  {
-    dump("onDataAvailable status = " + request.status.toString(16) + " " + count + "\n");
-  }
 }
 
