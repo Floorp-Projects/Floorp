@@ -792,6 +792,8 @@ To: %to%
 Subject: [Bug %bugid%] %neworchanged%%summary%
 %threadingmarker%
 X-Bugzilla-Reason: %reasonsheader%
+X-Bugzilla-Product: %product%
+X-Bugzilla-Component: %component%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
