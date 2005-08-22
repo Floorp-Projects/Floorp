@@ -156,7 +156,6 @@
                 
       <constructor>
         <![CDATA[
-          this.mInitialized = false;
           this.mSelected = false;
           this.mValue = null;
           this.mEditorDate = null; // set only in showMonth
@@ -167,6 +166,22 @@
             this.kMonthNames[month] = tempDate.toLocaleFormat("%B");
           }
           this.mPopup = null;
+          // save references for convenience
+          var anonContent = document.getAnonymousNodes(this);
+          var mainBox = anonContent[0];
+          var headBox = mainBox.childNodes[0];
+          this.kLeftBtn = headBox.firstChild;
+          this.kLeftBtn.kMinimonth = this;
+          this.kRightBtn = headBox.lastChild;
+          this.kRightBtn.kMinimonth = this;
+          this.kMonthCell = headBox.childNodes[2];
+          this.kYearCell = headBox.childNodes[3];
+          this.kDaysOfMonthBox = mainBox.childNodes[1];
+          var popupSet = anonContent[1];
+          this.kMonthPopup = popupSet.childNodes[0];
+          this.kMonthList = this.kMonthPopup.firstChild.childNodes;
+          this.kYearPopup = popupSet.childNodes[1];
+          this.kYearList  = this.kYearPopup.firstChild.childNodes;
           this.refreshDisplay( );
         ]]>
       </constructor>
@@ -174,42 +189,20 @@
       <method name="refreshDisplay">
         <body>
           <![CDATA[
-            if (!this.mInitialized) {
-              this.mInitialized = true;
-
-              // Find out which should be the first day of the week
-              try {
-                var pref =  Components.classes[
-                  "@mozilla.org/preferences-service;1"
-                ].getService(Components.interfaces.nsIPrefBranch);
-                // this.weekStart;
-                this.weekStart = pref.getIntPref("calendar.week.start");
-              } catch (e) {
-                this.weekStart = 0;
-              }
-
-              // save references for convenience
-              var anonContent = document.getAnonymousNodes(this);
-              var mainBox = anonContent[0];
-              var headBox = mainBox.childNodes[0];
-              this.kLeftBtn = headBox.firstChild;
-              this.kLeftBtn.kMinimonth = this;
-              this.kRightBtn = headBox.lastChild;
-              this.kRightBtn.kMinimonth = this;
-              this.kMonthCell = headBox.childNodes[2];
-              this.kYearCell = headBox.childNodes[3];
-              this.kDaysOfMonthBox = mainBox.childNodes[1];
-              var popupSet = anonContent[1];
-              this.kMonthPopup = popupSet.childNodes[0];
-              this.kMonthList = this.kMonthPopup.firstChild.childNodes;
-              this.kYearPopup = popupSet.childNodes[1];
-              this.kYearList  = this.kYearPopup.firstChild.childNodes;
-
-              if (!this.mValue) this.mValue = new Date();
-            
-              this.setHeader();
-              this.showMonth(this.mValue);
+            // Find out which should be the first day of the week
+            try {
+              var pref =  Components.classes[
+                "@mozilla.org/preferences-service;1"
+              ].getService(Components.interfaces.nsIPrefBranch);
+              // this.weekStart;
+              this.weekStart = pref.getIntPref("calendar.week.start");
+            } catch (e) {
+              this.weekStart = 0;
             }
+            if (!this.mValue) this.mValue = new Date();
+           
+            this.setHeader();
+            this.showMonth(this.mValue);
           ]]>
         </body>
       </method>
