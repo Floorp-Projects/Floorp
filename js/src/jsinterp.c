@@ -273,11 +273,15 @@ static JSClass prop_iterator_class = {
 
 #define VALUE_TO_OBJECT(cx, v, obj)                                           \
     JS_BEGIN_MACRO                                                            \
-        SAVE_SP(fp);                                                          \
-        obj = js_ValueToNonNullObject(cx, v);                                 \
-        if (!obj) {                                                           \
-            ok = JS_FALSE;                                                    \
-            goto out;                                                         \
+        if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
+            obj = JSVAL_TO_OBJECT(v);                                         \
+        } else {                                                              \
+            SAVE_SP(fp);                                                      \
+            obj = js_ValueToNonNullObject(cx, v);                             \
+            if (!obj) {                                                       \
+                ok = JS_FALSE;                                                \
+                goto out;                                                     \
+            }                                                                 \
         }                                                                     \
     JS_END_MACRO
 
@@ -2082,10 +2086,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_TOOBJECT:
-            SAVE_SP(fp);
-            ok = js_ValueToObject(cx, FETCH_OPND(-1), &obj);
-            if (!ok)
-                goto out;
+            VALUE_TO_OBJECT(cx, FETCH_OPND(-1), obj);
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
