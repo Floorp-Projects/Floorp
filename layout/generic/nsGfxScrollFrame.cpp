@@ -2060,14 +2060,14 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
 
   PRInt32 flags = NS_FRAME_NO_MOVE_VIEW;
 
-  nsSize min(0,0);
-  mInner.mScrolledFrame->GetMinSize(aState, min);
+  nsSize minSize(0,0);
+  mInner.mScrolledFrame->GetMinSize(aState, minSize);
   
-  if (min.height > childRect.height)
-    childRect.height = min.height;
+  if (minSize.height > childRect.height)
+    childRect.height = minSize.height;
   
-  if (min.width > childRect.width)
-    childRect.width = min.width;
+  if (minSize.width > childRect.width)
+    childRect.width = minSize.width;
 
   aState.SetLayoutFlags(flags);
   mInner.mScrolledFrame->SetBounds(aState, childRect);
