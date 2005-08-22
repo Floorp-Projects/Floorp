@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -272,15 +273,11 @@ static JSClass prop_iterator_class = {
 
 #define VALUE_TO_OBJECT(cx, v, obj)                                           \
     JS_BEGIN_MACRO                                                            \
-        if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {                          \
-            obj = JSVAL_TO_OBJECT(v);                                         \
-        } else {                                                              \
-            SAVE_SP(fp);                                                      \
-            obj = js_ValueToNonNullObject(cx, v);                             \
-            if (!obj) {                                                       \
-                ok = JS_FALSE;                                                \
-                goto out;                                                     \
-            }                                                                 \
+        SAVE_SP(fp);                                                          \
+        obj = js_ValueToNonNullObject(cx, v);                                 \
+        if (!obj) {                                                           \
+            ok = JS_FALSE;                                                    \
+            goto out;                                                         \
         }                                                                     \
     JS_END_MACRO
 
