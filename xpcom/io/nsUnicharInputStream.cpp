@@ -206,7 +206,7 @@ private:
 protected:
   PRInt32 Fill(nsresult * aErrorCode);
 
-  static void CountValidUTF8Bytes(const char *aBuf, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUCS2bytes);
+  static void CountValidUTF8Bytes(const char *aBuf, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUTF16CodeUnits);
 
   nsCOMPtr<nsIInputStream> mInput;
   nsCOMPtr<nsIByteBuffer> mByteData;
@@ -403,15 +403,15 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
 }
 
 void
-UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUCS2chars)
+UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRUint32 aMaxBytes, PRUint32& aValidUTF8bytes, PRUint32& aValidUTF16CodeUnits)
 {
   const char *c = aBuffer;
   const char *end = aBuffer + aMaxBytes;
   const char *lastchar = c;     // pre-initialize in case of 0-length buffer
-  PRUint32 ucs2bytes = 0;
+  PRUint32 utf16length = 0;
   while (c < end && *c) {
     lastchar = c;
-    ucs2bytes++;
+    utf16length++;
     
     if (UTF8traits::isASCII(*c))
       c++;
@@ -419,8 +419,11 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRUint32 aMaxBytes, PR
       c += 2;
     else if (UTF8traits::is3byte(*c))
       c += 3;
-    else if (UTF8traits::is4byte(*c))
+    else if (UTF8traits::is4byte(*c)) {
       c += 4;
+      utf16length++; // add 1 more because this will be converted to a
+                     // surrogate pair.
+    }
     else if (UTF8traits::is5byte(*c))
       c += 5;
     else if (UTF8traits::is6byte(*c))
@@ -432,11 +435,11 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, PRUint32 aMaxBytes, PR
   }
   if (c > end) {
     c = lastchar;
-    ucs2bytes--;
+    utf16length--;
   }
 
   aValidUTF8bytes = c - aBuffer;
-  aValidUCS2chars = ucs2bytes;
+  aValidUTF16CodeUnits = utf16length;
 }
 
 NS_COM nsresult
