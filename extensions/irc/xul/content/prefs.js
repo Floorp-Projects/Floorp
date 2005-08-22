@@ -80,12 +80,35 @@ function initPrefs()
     var logDefault = client.prefManager.logPath.clone();
     logDefault.append(escapeFileName("client.log"));
 
-    var gotos = ["goto-url",        "goto-url-newwin", 
+    var gotos = ["goto-url",        "goto-url-newwin",
                  "goto-url-newtab", "goto-url-newtab"];
     if (client.host == "XULrunner")
     {
-        gotos = ["goto-url-external", "goto-url-external", 
+        gotos = ["goto-url-external", "goto-url-external",
                  "goto-url-external", "goto-url-external"];
+    }
+
+    // Set up default nickname, if possible.
+    var defaultNick = DEFAULT_NICK;
+    var en = getService("@mozilla.org/process/environment;1", "nsIEnvironment");
+    if (en)
+    {
+        /* Get the enviroment variables used by various OSes:
+         *   USER     - Linux, Mac OSX and other *nix-types.
+         *   USERNAME - Windows.
+         *   LOGNAME  - *nix again.
+         */
+        const vars = ["USER", "USERNAME", "LOGNAME"];
+
+        for (var i = 0; i < vars.length; i++)
+        {
+            var nick = en.get(vars[i]);
+            if (nick)
+            {
+                defaultNick = nick;
+                break;
+            }
+        }
     }
 
     var prefs =
@@ -162,7 +185,7 @@ function initPrefs()
          ["newTabLimit",        15,       "global"],
          ["notify.aggressive",  true,     "global"],
          ["nickCompleteStr",    ":",      "global"],
-         ["nickname",           DEFAULT_NICK, ".ident"],
+         ["nickname",           defaultNick, ".ident"],
          ["nicknameList",       [],       "lists.nicknameList"],
          ["outgoing.colorCodes",  false,  "global"],
          ["outputWindowURL",   "chrome://chatzilla/content/output-window.html",
