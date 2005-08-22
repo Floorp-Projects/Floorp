@@ -1180,7 +1180,8 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
             path.EqualsLiteral("logo")    ||
             path.EqualsLiteral("license") ||
             path.EqualsLiteral("licence") ||
-            path.EqualsLiteral("credits"))
+            path.EqualsLiteral("credits") ||
+            Substring(path,0,9).EqualsLiteral("neterror?"))
         {
             aScheme = NS_LITERAL_CSTRING("about safe");
             return NS_OK;
