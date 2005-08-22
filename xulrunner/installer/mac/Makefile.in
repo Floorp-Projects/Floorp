@@ -1,0 +1,132 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Browser code.
+#
+# The Initial Developer of the Original Code is
+# IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Brian Ryner <bryner@brianryner.com>
+#  Benjamin Smedberg <bsmedberg@covad.net>
+#  Darin Fisher <darin@meer.net>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
+NO_PKG_FILES = \
+	xulrunner-config \
+	regchrome* \
+	regxpcom* \
+	xpcshell* \
+	xpidl* \
+	xpt_dump* \
+	xpt_link* \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+%.plist: %.plist.in
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
+
+PACKAGER_NO_LIBS=1
+
+# Include this solely for additional NO_PKG_FILES
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+BINARY_DIR = $(DIST)/package-stage/XUL.framework/Versions/$(MOZILLA_VERSION)
+
+SOFTOKN       = $(BINARY_DIR)/$(DLL_PREFIX)softokn3$(DLL_SUFFIX)
+FREEBL_HYBRID = $(BINARY_DIR)/$(DLL_PREFIX)freebl_hybrid_3$(DLL_SUFFIX)
+FREEBL_PURE   = $(BINARY_DIR)/$(DLL_PREFIX)freebl_pure32_3$(DLL_SUFFIX)
+
+_ABS_OBJDIR := $(shell pwd)
+_ABS_DIST := $(shell cd $(DIST) && pwd)
+
+# Syntax "chown_root <directory>"
+# Should be equivalent to "chown -R root:admin <directory>"
+CHOWN_ROOT ?= $(error CHOWN_ROOT must be set to a setuid script.)
+
+# Syntax "chown_revert <directory>"
+# Should be equivalent to "chown -R <getuid> <directory>"
+CHOWN_REVERT ?= $(error CHOWN_REVERT must be set to a setuid script.)
+
+# Do the real work here: we take $(DIST)/XUL.framework and make it into an
+# installer .pkg bundle. The xulrunner/installer makefile will then pack the
+# installer into a DMG.
+libs:: Info.plist Description.plist
+	$(RM) -rf resource-stage
+	mkdir resource-stage
+	$(RM) -rf $(DIST)/package-stage
+	mkdir $(DIST)/package-stage
+	rsync --copy-unsafe-links -a $(DIST)/XUL.framework $(DIST)/package-stage
+	cd $(BINARY_DIR) && $(RM) -rf $(NO_PKG_FILES)
+	echo "Stripping package directory..."
+	find $(BINARY_DIR) ! -type d \
+	  ! -name "*.js" \
+	  ! -name "*.xpt" \
+	  ! -name "*.gif" \
+	  ! -name "*.jpg" \
+	  ! -name "*.png" \
+	  ! -name "*.xpm" \
+	  ! -name "*.txt" \
+	  ! -name "*.rdf" \
+	  ! -name "*.sh" \
+	  ! -name "*.properties" \
+	  ! -name "*.dtd" \
+	  ! -name "*.html" \
+	  ! -name "*.xul" \
+	  ! -name "*.css" \
+	  ! -name "*.xml" \
+	  ! -name "*.jar" \
+	  ! -name "*.dat" \
+	  ! -name "*.tbl" \
+	  ! -name "*.src" \
+	  ! -name "*.reg" \
+	  $(PLATFORM_EXCLUDE_LIST) \
+	  -exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
+	$(SIGN_NSS)
+	chmod -R a+rX,u+w,go-w,-s,-t $(DIST)/package-stage
+# For some unknown reason, PackageMaker requires absolute paths to everything.
+	$(CHOWN_ROOT) $(DIST)/package-stage && \
+	  /Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker -build \
+	    -p $(_ABS_DIST)/$(PKG_BASENAME).pkg \
+	    -f $(_ABS_DIST)/package-stage \
+	    -r $(_ABS_OBJDIR)/resource-stage \
+	    -i $(_ABS_OBJDIR)/Info.plist \
+	    -d $(_ABS_OBJDIR)/Description.plist; \
+	SAVED=$$?; \
+	$(CHOWN_REVERT) $(DIST)/package-stage; \
+	exit $$SAVED

@@ -54,6 +54,12 @@ NO_PKG_FILES = \
 	xpt_link* \
 	$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += mac
+_APPNAME = $(PKG_BASENAME).pkg
+PKG_SKIP_STRIP = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

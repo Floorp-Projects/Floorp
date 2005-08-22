@@ -90,10 +90,12 @@ MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_APPNAME)
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
+ifndef _APPNAME
 ifdef MOZ_DEBUG
 _APPNAME	= $(MOZ_APP_DISPLAYNAME)Debug.app
 else
 _APPNAME	= $(MOZ_APP_DISPLAYNAME).app
+endif
 endif
 PKG_SUFFIX	= .dmg
 PKG_DMG_FLAGS	=
@@ -145,11 +147,6 @@ SIGN_NSS	+= $(SIGN_CMD) $(SOFTOKN); \
 
 endif # MOZ_PSM
 endif # !CROSS_COMPILE
-
-NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
-ifneq ($(NSPR_LDIR),)
-NSPR_LDIR	= $(subst -L,,$(word 1,$(NSPR_LIBS)))
-endif
 
 NO_PKG_FILES += \
 	core \
@@ -234,6 +231,7 @@ else
 	@cd $(DIST)/bin && tar $(TAR_CREATE_FLAGS) - * | (cd ../$(MOZ_PKG_APPNAME); tar -xf -)
 endif # DMG
 endif # MOZ_PKG_MANIFEST
+ifndef PKG_SKIP_STRIP
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
 			! -name "*.js" \
@@ -259,6 +257,7 @@ endif # MOZ_PKG_MANIFEST
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 	$(SIGN_NSS)
+endif
 	@echo "Removing unpackaged files..."
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 	cd $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS; rm -rf $(NO_PKG_FILES)
