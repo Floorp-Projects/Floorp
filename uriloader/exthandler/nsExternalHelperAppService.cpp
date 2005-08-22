@@ -2310,12 +2310,28 @@ nsresult nsExternalAppHandler::OpenWithApplication()
     }
     else
     {
+      PRBool deleteTempFileOnExit;
+      nsresult result = NS_ERROR_NOT_AVAILABLE;  // don't return this!
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefs) {
+        result = prefs->GetBoolPref("browser.helperApps.deleteTempFileOnExit",
+                                    &deleteTempFileOnExit);
+      }
+      if (NS_FAILED(result)) {
+        // No pref set; use default value
 #if !defined(XP_MAC) && !defined (XP_MACOSX)
-      NS_ASSERTION(sSrv, "Service gone away!?");
-      // Mac users have been very verbal about temp files being deleted on app exit - they
-      // don't like it - but we'll continue to do this on other platforms for now
-      sSrv->DeleteTemporaryFileOnExit(mFinalFileDestination);
+          // Mac users have been very verbal about temp files being deleted on
+          // app exit - they don't like it - but we'll continue to do this on
+          // other platforms for now.
+        deleteTempFileOnExit = PR_TRUE;
+#else
+        deleteTempFileOnExit = PR_FALSE;
 #endif
+      }
+      if (deleteTempFileOnExit) {
+        NS_ASSERTION(sSrv, "Service gone away!?");
+        sSrv->DeleteTemporaryFileOnExit(mFinalFileDestination);
+      }
     }
   }
 
