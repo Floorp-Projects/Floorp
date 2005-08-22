@@ -5765,23 +5765,35 @@ function SwitchDocumentDirection(aWindow) {
 function missingPluginInstaller(){
 }
 
+function getPluginInfo(pluginElement)
+{
+  var tagMimetype;
+  var pluginsPage;
+  if (pluginElement instanceof HTMLAppletElement) {
+    tagMimetype = "application/x-java-vm";
+  } else {
+    if (pluginElement instanceof HTMLObjectElement) {
+      pluginsPage = pluginElement.getAttribute("codebase");
+    } else {
+      pluginsPage = pluginElement.getAttribute("pluginspage");
+    }
+
+    tagMimetype = pluginElement.QueryInterface(Components.interfaces.nsIPluginElement).actualType;
+
+    if (tagMimetype == "") {
+      tagMimetype = pluginElement.type;
+    }
+  }
+
+  return {mimetype: tagMimetype, pluginsPage: pluginsPage};
+}
+
 missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
   var tabbrowser = getBrowser();
   var missingPluginsArray = new Object;
 
-  var tagMimetype;
-  var pluginsPage;
-  if (aEvent.target instanceof HTMLAppletElement) {
-    tagMimetype = "application/x-java-vm";
-  } else if (aEvent.target instanceof HTMLObjectElement) {
-    tagMimetype = aEvent.target.type;
-    pluginsPage = aEvent.target.getAttribute("codebase");
-  } else {
-    tagMimetype = aEvent.target.type;
-    pluginsPage = aEvent.target.getAttribute("pluginspage");
-  }
-
-  missingPluginsArray[tagMimetype] = {mimetype: tagMimetype, pluginsPage: pluginsPage};
+  var pluginInfo = getPluginInfo(aEvent.target);
+  missingPluginsArray[pluginInfo.mimetype] = pluginInfo;
 
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
@@ -5821,22 +5833,9 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   if (!tab.missingPlugins)
     tab.missingPlugins = new Object();
 
-  var tagMimetype;
-  var pluginsPage;
-  if (aEvent.target instanceof HTMLAppletElement) {
-    tagMimetype = "application/x-java-vm";
-  } else if (aEvent.target instanceof HTMLObjectElement) {
-    tagMimetype = aEvent.target.type;
-    pluginsPage = aEvent.target.getAttribute("codebase");
-  } else {
-    tagMimetype = aEvent.target.type;
-    pluginsPage = aEvent.target.getAttribute("pluginspage");
-  }
+  var pluginInfo = getPluginInfo(aEvent.target);
 
-  tab.missingPlugins[tagMimetype] = {
-    mimetype: tagMimetype,
-    pluginsPage: pluginsPage
-  };
+  tab.missingPlugins[pluginInfo.mimetype] = pluginInfo;
 
   var browser = tabbrowser.getBrowserAtIndex(i);
   var iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";

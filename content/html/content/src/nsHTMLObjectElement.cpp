@@ -64,7 +64,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIPluginElement
-  virtual void SetActualType(const nsACString& aActualType);
+  NS_DECL_NSIPLUGINELEMENT
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
@@ -144,10 +144,20 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-void
+NS_IMETHODIMP
 nsHTMLObjectElement::SetActualType(const nsACString& aActualType)
 {
   mActualType = aActualType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLObjectElement::GetActualType(nsACString& aActualType)
+{
+  aActualType = mActualType;
+
+  return NS_OK;
 }
 
 // nsIDOMHTMLObjectElement
@@ -254,32 +264,10 @@ NS_IMPL_INT_ATTR(nsHTMLObjectElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Standby, standby)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLObjectElement, TabIndex, tabindex, 0)
-//NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
+NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
-
-NS_IMETHODIMP
-nsHTMLObjectElement::GetType(nsAString& aType)
-{
-  if (mActualType.IsEmpty()) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType);
-  } else {
-    CopyUTF8toUTF16(mActualType, aType);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLObjectElement::SetType(const nsAString& aType)
-{
-  mActualType.Truncate();
-
-  SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, aType, PR_TRUE);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
