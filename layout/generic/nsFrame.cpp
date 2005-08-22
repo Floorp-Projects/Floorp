@@ -3602,16 +3602,24 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineFrameCount,
   if (!aFrame)
     return NS_ERROR_UNEXPECTED;
 
+  nsIFrame *prevFrame = aFrame;
   nsIFrame *currentFrame = aFrame;
   PRInt32 i;
 
   for (i = 1; i < aLineFrameCount; i++) //already have 1st frame
   {
+    prevFrame = currentFrame;
     currentFrame = currentFrame->GetNextSibling();
     NS_ASSERTION(currentFrame, "lineFrame Count lied to us from nsILineIterator!\n");
   }
+  if (!currentFrame->GetRect().width) //this can happen with BR frames and or empty placeholder frames.
+  {
+    //if we do hit an empty frame then back up the current frame to the frame before it if there is one.
+    currentFrame = prevFrame;
+  }
+  
   nsFrame::GetLastLeaf(aFrame->GetPresContext(), &currentFrame);
-    
+  
   aPos->mResultContent = currentFrame->GetContent();
   PRInt32 startOffset, endOffset;
   nsresult rv = currentFrame->GetOffsets(startOffset, endOffset);
