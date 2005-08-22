@@ -1667,7 +1667,10 @@ nsGfxScrollFrameInner::ScrollPositionWillChange(nsIScrollableView* aScrollable, 
 }
 
 /**
- * Called when someone (external or this frame) moves the scroll area.
+ * Called when we want to update the scrollbar position, either because scrolling happened
+ * or the user moved the scrollbar position and we need to undo that (e.g., when the user
+ * clicks to scroll and we're using smooth scrolling, so we need to put the thumb back
+ * to its initial position for the start of the smooth sequence).
  */
 void
 nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
@@ -1680,9 +1683,7 @@ nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
 }
 
 /**
- * Called if something externally moves the scroll area
- * This can happen if the user pages up down or uses arrow keys
- * So what we need to do up adjust the scrollbars to match.
+ * Called whenever actual scrolling happens for any reason.
  */
 NS_IMETHODIMP
 nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
@@ -1713,6 +1714,10 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
   // has already happened. In case 3) we don't need to scroll because
   // we're just adjusting the scrollbars back to the correct setting
   // for the view.
+  //
+  // Cases 1) and 3) do not indicate that actual scrolling has happened. Only
+  // case 2) indicates actual scrolling. Therefore we do not fire onscroll
+  // here, but in ScrollPositionDidChange.
   // 
   // We used to detect this case implicitly because we'd compare the
   // scrollbar attributes with the view's current scroll position and
@@ -1784,31 +1789,18 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
 }
 
 /* ============= Scroll events ========== */
-struct ScrollEvent : public PLEvent {
-  nsGfxScrollFrameInner* mInner;
-  ScrollEvent(nsGfxScrollFrameInner* aInner);
-};
-
-static void* PR_CALLBACK HandleScrollEvent(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void*) HandleScrollEvent(PLEvent* aEvent)
 {
   NS_ASSERTION(nsnull != aEvent,"Event is null");
-  ScrollEvent *event = NS_STATIC_CAST(ScrollEvent*, aEvent);
-  event->mInner->FireScrollEvent();
+  nsGfxScrollFrameInner* inner = NS_STATIC_CAST(nsGfxScrollFrameInner*, aEvent->owner);
+  inner->FireScrollEvent();
   return nsnull;
 }
 
-static void PR_CALLBACK DestroyScrollEvent(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void) DestroyScrollEvent(PLEvent* aEvent)
 {
   NS_ASSERTION(nsnull != aEvent,"Event is null");
-  ScrollEvent *event = NS_STATIC_CAST(ScrollEvent*, aEvent);
-  delete event;
-}
-
-ScrollEvent::ScrollEvent(nsGfxScrollFrameInner* aInner)
-{
-  NS_ASSERTION(aInner, "null parameter");
-  mInner = aInner;
-  PL_InitEvent(this, aInner, ::HandleScrollEvent, ::DestroyScrollEvent);  
+  delete aEvent;
 }
 
 void
@@ -1837,9 +1829,10 @@ nsGfxScrollFrameInner::PostScrollEvent()
   if (eventQueue == mScrollEventQueue)
     return;
     
-  ScrollEvent* ev = new ScrollEvent(this);
+  PLEvent* ev = new PLEvent;
   if (!ev)
     return;
+  PL_InitEvent(ev, this, ::HandleScrollEvent, ::DestroyScrollEvent);  
 
   if (mScrollEventQueue) {
     mScrollEventQueue->RevokeEvents(this);
