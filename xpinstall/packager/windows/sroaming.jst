@@ -1,0 +1,25 @@
+var err = initInstall("SRoaming v0.1", "Roaming", "$Version$"); 
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+logComment("addDirectory: " + err);
+
+addFile("SRoaming Chrome",
+        "bin/chrome/sroaming.jar", // jar source folder 
+        getFolder("Chrome"),       // target folder
+        "");                       // target subdir 
+
+var jarFolder = getFolder("Chrome", "sroaming.jar");
+registerChrome(CONTENT | DELAYED_CHROME, jarFolder, "content/sroaming/");
+registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/sroaming/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/modern/sroaming/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/sroaming/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);

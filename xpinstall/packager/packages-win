@@ -185,10 +185,6 @@ bin\components\mozldap.xpt
 bin\nsldap32v50.dll
 bin\nsldappr32v50.dll
 
-; Roaming
-bin\components\sroaming.dll
-bin\chrome\sroaming.jar
-
 ;PSM related files
 bin\components\pippki.dll
 bin\components\pippki.xpt
@@ -380,6 +376,10 @@ bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
+
+[sroaming]
+bin\components\sroaming.dll
+bin\chrome\sroaming.jar
 
 [spellcheck]
 bin\components\myspell.dll
