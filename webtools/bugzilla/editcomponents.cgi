@@ -286,6 +286,13 @@ if ($action eq 'new') {
                        {'name' => $component});
     }
 
+    # Do the user matching
+    Bugzilla::User::match_field ($cgi, {
+        'initialowner'     => { 'type' => 'single' },
+        'initialqacontact' => { 'type' => 'single' },
+    });
+
+
     my $initialowner = trim($cgi->param('initialowner') || '');
 
     if ($initialowner eq '') {
@@ -532,6 +539,13 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
+
+    # Do the user matching
+    Bugzilla::User::match_field ($cgi, {
+        'initialowner'     => { 'type' => 'single' },
+        'initialqacontact' => { 'type' => 'single' },
+    });
+
 
     my $componentold        = trim($cgi->param('componentold')        || '');
     my $description         = trim($cgi->param('description')         || '');
