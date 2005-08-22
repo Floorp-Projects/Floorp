@@ -49,7 +49,10 @@ class nsIURI;
 class nsFrameLoader : public nsIFrameLoader
 {
 public:
-  nsFrameLoader(nsIContent *aOwner) : mOwnerContent(aOwner) {}
+  nsFrameLoader(nsIContent *aOwner) :
+    mOwnerContent(aOwner),
+    mDepthTooGreat(PR_FALSE)
+  {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFRAMELOADER
@@ -64,6 +67,7 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
 
   nsIContent *mOwnerContent; // WEAK
+  PRBool mDepthTooGreat;
 };
 
 #endif

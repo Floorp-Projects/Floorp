@@ -41,7 +41,7 @@
 
 interface nsIDocShell;
 
-[scriptable, uuid(eb1a6413-c79f-4189-95b9-7070df9529b1)]
+[scriptable, uuid(88800e93-c6af-4d69-9ee0-29c1100ff431)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -60,6 +60,13 @@ interface nsIFrameLoader : nsISupports
    * clear the weak owner content reference.
    */
   void destroy();
+
+  /**
+   * Find out whether the loader's frame is at too great a depth in
+   * the frame tree.  This can be used to decide what operations may
+   * or may not be allowed on the loader's docshell.
+   */
+  readonly attribute boolean depthTooGreat;
 };
 
 [scriptable, uuid(feaf9285-05ac-4898-a69f-c3bd350767e4)]

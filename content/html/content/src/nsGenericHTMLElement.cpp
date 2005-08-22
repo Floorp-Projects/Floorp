@@ -3433,6 +3433,13 @@ nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
     return NS_OK;
   }
 
+  PRBool depthTooGreat = PR_FALSE;
+  mFrameLoader->GetDepthTooGreat(&depthTooGreat);
+  if (depthTooGreat) {
+    // Claim to have no contentWindow
+    return NS_OK;
+  }
+  
   nsCOMPtr<nsIDocShell> doc_shell;
   mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
 
