@@ -1714,7 +1714,7 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
     }
 
     nsTextFragment frag(st->text);
-    nsTextTransformer tx(aLineBreaker, aWordBreaker, aPresContext);
+    nsTextTransformer tx(aPresContext);
 
     for (PRInt32 preMode = 0; preMode < NUM_MODES; preMode++) {
       // Do forwards test
