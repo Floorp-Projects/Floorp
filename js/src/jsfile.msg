@@ -55,6 +55,7 @@ MSG_DEF(JSFILEMSG_CANNOT_FLUSH_CLOSE_FILE_ERROR,                  10, 1, JSEXN_N
 MSG_DEF(JSFILEMSG_CANNOT_OPEN_WRITING_ERROR,                      11, 1, JSEXN_NONE, "Cannot open file {0} for writing")
 MSG_DEF(JSFILEMSG_WRITEALL_EXPECTS_ONE_ARG_ERROR,                 12, 0, JSEXN_NONE, "writeAll expects one argument")
 MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_WRITEALL_NOT_ARRAY_ERROR,        13, 0, JSEXN_NONE, "writeAll expects an array as an argument")
+MSG_DEF(JSFILEMSG_UNUSED0,                                        14, 0, JSEXN_NONE, "Unused error message slot")
 MSG_DEF(JSFILEMSG_CANNOT_OPEN_FILE_ERROR,                         15, 1, JSEXN_NONE, "Cannot open file {0}")
 MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_CONSTRUCTOR_NOT_STRING_ERROR,    16, 1, JSEXN_NONE, "The argument to the File constructor {0} must be a string")
 MSG_DEF(JSFILEMSG_BIDIRECTIONAL_PIPE_NOT_SUPPORTED,               17, 0, JSEXN_NONE, "Bidirectional pipes are not supported")

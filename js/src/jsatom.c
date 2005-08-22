@@ -102,6 +102,7 @@ const char js_RegExp_str[]          = "RegExp";
 const char js_Script_str[]          = "Script";
 const char js_String_str[]          = "String";
 const char js_XML_str[]             = "XML";
+const char js_File_str[]            = "File";
 const char js_anonymous_str[]       = "anonymous";
 const char js_arguments_str[]       = "arguments";
 const char js_arity_str[]           = "arity";
@@ -319,6 +320,7 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(ScriptAtom,              js_Script_str);
     FROB(StringAtom,              js_String_str);
     FROB(XMLAtom,                 js_XML_str);
+    FROB(FileAtom,                js_File_str);
     FROB(anonymousAtom,           js_anonymous_str);
     FROB(argumentsAtom,           js_arguments_str);
     FROB(arityAtom,               js_arity_str);

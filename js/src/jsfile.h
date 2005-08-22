@@ -42,7 +42,7 @@
 
 #if JS_HAS_FILE_OBJECT
 extern JS_PUBLIC_API(JSObject*)
-js_InitFileClass(JSContext *cx, JSObject* obj, JSBool initStandardStreams);
+js_InitFileClass(JSContext *cx, JSObject* obj);
 
 extern JS_PUBLIC_API(JSObject*)
 js_NewFileObject(JSContext *cx, char *bytes);
