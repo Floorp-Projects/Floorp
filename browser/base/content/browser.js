@@ -4445,18 +4445,22 @@ nsContextMenu.prototype = {
     disableSetDesktopBackground: function() {
         // Disable the Set as Desktop Background menu item if we're still trying
         // to load the image or the load failed.
+
         const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
+        if (!(this.target instanceof nsIImageLoadingContent))
+            return true;
+
         if (("complete" in this.target) && !this.target.complete)
             return true;
-        else if (makeURI(this.target.src).scheme == "javascript")
+
+        if (this.target.currentURI.schemeIs("javascript"))
             return true;
-        else if (this.target instanceof nsIImageLoadingContent) {
-            var request = this.target.QueryInterface(nsIImageLoadingContent)
-                              .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-            if (!request)
-                return true;
-        }
-        
+
+        var request = this.target.QueryInterface(nsIImageLoadingContent)
+                                 .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+        if (!request)
+            return true;
+
         return false;
     },
     setDesktopBackground: function() {
@@ -4465,7 +4469,7 @@ nsContextMenu.prototype = {
       if (this.disableSetDesktopBackground())
         return;
 
-      urlSecurityCheck(this.target.src, this.docURL);
+      urlSecurityCheck(this.target.currentURI.spec, this.docURL);
 
       // Confirm since it's annoying if you hit this accidentally.
       const kDesktopBackgroundURL = 

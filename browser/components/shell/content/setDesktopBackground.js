@@ -197,19 +197,21 @@ var gSetBackground = {
 
   _createImage: function ()
   {
-    var img = document.createElementNS(kXUL_NS, "image");
     const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
-    if (window.arguments[0] instanceof nsIImageLoadingContent) {
-      var request = window.arguments[0].QueryInterface(nsIImageLoadingContent)
-                          .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-      if (!request)
+    if (!(this._image instanceof nsIImageLoadingContent))
         return false;
-    }
 
-    if (makeURI(window.arguments[0].src).scheme == "javascript")
+    var request = this._image.QueryInterface(nsIImageLoadingContent)
+                             .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    if (!request)
       return false;
-       
-    img.setAttribute("src", this._image.src);
+
+    var imgURI = this._image.currentURI;
+    if (imgURI.schemeIs("javascript"))
+      return false;
+
+    var img = document.createElementNS(kXUL_NS, "image");
+    img.setAttribute("src", imgURI.spec);
     return img;
   },
         
