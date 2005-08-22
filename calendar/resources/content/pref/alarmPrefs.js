@@ -107,18 +107,13 @@ function browseAlarm() {
 }
 
 function previewAlarm() {
-   var soundURL = document.getElementById( "alarmsoundpath" ).value;
-   var gSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
-
-   if (soundURL.indexOf( "file://" ) == -1) {
-     gSound.playSystemSound(soundURL);
-   }
-   else {
-     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-     var url = ioService.newURI(soundURL, null, null);
-     gSound.play(url)
-   }
+   var soundURL = document.getElementById("alarmsoundpath").value;
+   var soundiface = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
+   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                   .getService(Components.interfaces.nsIIOService);
+   var url = ioService.newURI(soundURL, null, null);
+   soundiface.init();
+   soundiface.play(url);
 }
 
 

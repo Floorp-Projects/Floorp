@@ -172,5 +172,6 @@ function calendarPreferences( CalendarWindow )
    getIntPref( this.calendarPref, "alarms.onfortodos", 0 );
    getCharPref( this.calendarPref, "alarms.eventalarmunit", calendarStringBundle.GetStringFromName("defaulteventalarmunit"));
    getCharPref( this.calendarPref, "alarms.todoalarmunit", calendarStringBundle.GetStringFromName("defaulttodoalarmunit"));
+   getCharPref( this.calendarPref, "alarms.soundURL", calendarStringBundle.GetStringFromName("soundURL"));
 }
 
