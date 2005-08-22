@@ -70,6 +70,12 @@ nsXFormsInstanceElement::nsXFormsInstanceElement()
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnDestroyed()
 {
+  if (mChannel) {
+    // better be a good citizen and tell the browser that we don't need this
+    // resource anymore.
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel = nsnull;
+  }
   mListener = nsnull;
   mElement = nsnull;
   return NS_OK;
@@ -209,9 +215,23 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
 
 // nsIStreamListener
 
+// It is possible that mListener could be null here.  If the document hit a
+// parsing error after we've already started to load the external source, then
+// Mozilla will destroy all of the elements and the document in order to load
+// the parser error page.  This will cause mListener to become null but since
+// the channel will hold a nsCOMPtr to the nsXFormsInstanceElement preventing
+// it from being freed up, the channel will still be able to call the
+// nsIStreamListener functions that we implement here.  And calling
+// mChannel->Cancel() is no guarantee that these other notifications won't come
+// through if the timing is wrong.  So we need to check for mElement below
+// before we handle any of the stream notifications.
+
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
+  if (!mElement) {
+    return NS_OK;
+  }
   NS_ASSERTION(mListener, "No stream listener for document!");
   return mListener->OnStartRequest(request, ctx);
 }
@@ -223,6 +243,9 @@ nsXFormsInstanceElement::OnDataAvailable(nsIRequest *aRequest,
                                          PRUint32 sourceOffset,
                                          PRUint32 count)
 {
+  if (!mElement) {
+    return NS_OK;
+  }
   NS_ASSERTION(mListener, "No stream listener for document!");
   return mListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset, count);
 }
@@ -231,6 +254,12 @@ NS_IMETHODIMP
 nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
                                        nsresult status)
 {
+  mChannel = nsnull;
+  if (status == NS_BINDING_ABORTED) {
+    // looks like our element has already been destroyed.  No use continuing on.
+    return NS_OK;
+  }
+
   NS_ASSERTION(mListener, "No stream listener for document!");
   mListener->OnStopRequest(request, ctx, status);
 
@@ -416,16 +445,15 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
           // Using the same load group as the main document and creating
           // the channel with LOAD_NORMAL flag delays the dispatching of
           // the 'load' event until all instance data documents have been loaded.
-          nsCOMPtr<nsIChannel> docChannel;
-          NS_NewChannel(getter_AddRefs(docChannel), uri, nsnull, loadGroup,
+          NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
                         nsnull, nsIRequest::LOAD_NORMAL);
 
-          if (docChannel) {
-            rv = newDoc->StartDocumentLoad(kLoadAsData, docChannel, loadGroup, nsnull,
+          if (mChannel) {
+            rv = newDoc->StartDocumentLoad(kLoadAsData, mChannel, loadGroup, nsnull,
                                            getter_AddRefs(mListener), PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
-              docChannel->SetNotificationCallbacks(this);
-              rv = docChannel->AsyncOpen(this, nsnull);
+              mChannel->SetNotificationCallbacks(this);
+              rv = mChannel->AsyncOpen(this, nsnull);
             }
           }
         } else {

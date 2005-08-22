@@ -355,11 +355,27 @@ nsXFormsSubmissionElement::GetInterface(const nsIID & aIID, void **aResult)
 
 // nsIChannelEventSink
 
+// It is possible that the submission element could well on its way to invalid
+// by the time that the below handlers are called.  If the document was
+// destroyed after we've already started submitting data then this will cause
+// mElement to become null.  Since the channel will hold a nsCOMPtr
+// to the nsXFormsSubmissionElement as a callback to the channel, this prevents
+// it from being freed up.  The channel will still be able to call the
+// nsIStreamListener functions that we implement here.  And calling
+// mChannel->Cancel() is no guarantee that these other notifications won't come
+// through if the timing is wrong.  So we need to check for mElement below
+// before we handle any of the stream notifications.
+
+
 NS_IMETHODIMP
 nsXFormsSubmissionElement::OnChannelRedirect(nsIChannel *aOldChannel,
                                              nsIChannel *aNewChannel,
                                              PRUint32    aFlags)
 {
+  if (!mElement) {
+    return NS_OK;
+  }
+
   NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
   nsCOMPtr<nsIURI> newURI;
   nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
@@ -390,6 +406,10 @@ NS_IMETHODIMP
 nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult status)
 {
   LOG(("xforms submission complete [status=%x]\n", status));
+
+  if (!mElement) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   NS_ASSERTION(channel, "request should be a channel");

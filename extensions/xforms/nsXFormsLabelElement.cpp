@@ -79,6 +79,7 @@ public:
   NS_IMETHOD Refresh();
 
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
+  NS_IMETHOD OnDestroyed();
 
   // nsIXTFElement overrides
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
@@ -115,6 +116,18 @@ nsXFormsLabelElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsLabelElement::OnDestroyed()
+{
+  if (mChannel) {
+    // better be a good citizen and tell the browser that we don't need this
+    // resource anymore.
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel = nsnull;
+  }
+  return nsXFormsDelegateStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -285,10 +298,26 @@ nsXFormsLabelElement::GetInterface(const nsIID &aIID, void **aResult)
 
 // nsIStreamListener
 
+// It is possible that the label element could well on its way to invalid by
+// the time that the below handlers are called.  If the document hit a
+// parsing error after we've already started to load the external source, then
+// Mozilla will destroy all of the elements and the document in order to load
+// the parser error page.  This will cause mElement to become null but since
+// the channel will hold a nsCOMPtr to the nsXFormsLabelElement preventing
+// it from being freed up, the channel will still be able to call the
+// nsIStreamListener functions that we implement here.  And calling
+// mChannel->Cancel() is no guarantee that these other notifications won't come
+// through if the timing is wrong.  So we need to check for mElement below
+// before we handle any of the stream notifications.
+
 NS_IMETHODIMP
 nsXFormsLabelElement::OnStartRequest(nsIRequest *aRequest,
                                      nsISupports *aContext)
 {
+  if (!mElement) {
+    return NS_OK;
+  }
+
   // Only handle data from text files for now.  Cancel any other requests.
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel) {
@@ -309,6 +338,10 @@ nsXFormsLabelElement::OnDataAvailable(nsIRequest *aRequest,
                                       PRUint32 aOffset,
                                       PRUint32 aCount)
 {
+  if (!mElement) {
+    return NS_OK;
+  }
+
   nsresult rv;
   PRUint32 size, bytesRead;
   char buffer[256];
@@ -332,10 +365,13 @@ nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
 {
   // Done with load request, so null out channel member
   mChannel = nsnull;
+  if (!mElement) {
+    return NS_OK;
+  }
 
   if (NS_FAILED(aStatusCode)) {
     // If we received NS_BINDING_ABORTED, then we were cancelled by a later
-    // AttributeSet() call.  Don't do anything and return.
+    // AttributeSet() or AttributeRemoved call.  Don't do anything and return.
     if (aStatusCode == NS_BINDING_ABORTED)
       return NS_OK;
 

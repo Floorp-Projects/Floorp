@@ -93,6 +93,7 @@ private:
   nsIDOMElement              *mElement;
   nsCOMPtr<nsIStreamListener> mListener;
   PRBool                      mIgnoreAttributeChanges;
+  nsCOMPtr<nsIChannel>        mChannel;
 };
 
 NS_HIDDEN_(nsresult)
