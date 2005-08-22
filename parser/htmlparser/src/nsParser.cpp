@@ -1402,6 +1402,19 @@ NS_IMETHODIMP nsParser::Terminate(void)
   // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
   CancelParsingEvents();
 
+  // If we got interrupted in the middle of a document.write, then we might
+  // have more than one parser context on our parsercontext stack. This has
+  // the effect of making DidBuildModel a no-op, meaning that we never call
+  // our sink's DidBuildModel and break the reference cycle, causing a leak.
+  // Since we're getting terminated, we manually clean up our context stack.
+  while (mParserContext && mParserContext->mPrevContext) {
+    CParserContext *prev = mParserContext->mPrevContext;
+    NS_ASSERTION(prev->mPrevContext || prev->mDTD, "How is there no root DTD?");
+
+    delete mParserContext;
+    mParserContext = prev;
+  }
+
   if (mParserContext && mParserContext->mDTD) {
     mParserContext->mDTD->Terminate();
     DidBuildModel(result);
