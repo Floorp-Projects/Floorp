@@ -309,25 +309,20 @@ sub GetQuip {
     return $quip;
 }
 
-sub GetGroupsByUserId {
-    my ($userid) = @_;
+sub GetGroups {
     my $dbh = Bugzilla->dbh;
-
-    return if !$userid;
 
     # Create an array where each item is a hash. The hash contains 
     # as keys the name of the columns, which point to the value of 
     # the columns for that row.
+    my $grouplist = Bugzilla->user->groups_as_string;
     my $groups = $dbh->selectall_arrayref(
-       "SELECT DISTINCT  groups.id, name, description, isactive
+                "SELECT  id, name, description, isactive
                    FROM  groups
-             INNER JOIN  user_group_map
-                     ON  user_group_map.group_id = groups.id
-                  WHERE  user_id = ?
-                    AND  isbless = 0
+                  WHERE  id IN ($grouplist)
                     AND  isbuggroup = 1
                ORDER BY  description "
-               , {Slice => {}}, ($userid));
+               , {Slice => {}});
 
     return $groups;
 }
@@ -994,7 +989,7 @@ if ($dotweak) {
     $vars->{'bugstatuses'} = [ keys %$bugstatuses ];
 
     # The groups to which the user belongs.
-    $vars->{'groups'} = GetGroupsByUserId($::userid);
+    $vars->{'groups'} = GetGroups();
 
     # If all bugs being changed are in the same product, the user can change
     # their version and component, so generate a list of products, a list of
