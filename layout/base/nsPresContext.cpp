@@ -112,6 +112,16 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
   return 0;  // PREF_OK
 }
 
+
+void
+nsPresContext::PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsPresContext*  presContext = (nsPresContext*)aClosure;
+  NS_ASSERTION(presContext != nsnull, "bad instance data");
+  if (presContext)
+    presContext->UpdateAfterPreferencesChanged();
+}
+
 #ifdef IBMBIDI
 static PRBool
 IsVisualCharset(const nsCString& aCharset)
@@ -218,6 +228,12 @@ nsPresContext::~nsPresContext()
   if (mEventManager) {
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
     NS_RELEASE(mEventManager);
+  }
+
+  if (mPrefChangedTimer)
+  {
+    mPrefChangedTimer->Cancel();
+    mPrefChangedTimer = nsnull;
   }
 
   // Unregister preference callbacks
@@ -606,6 +622,21 @@ nsPresContext::ClearStyleDataAndReflow()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
+  // we use a zero-delay timer to coalesce multiple pref updates
+  if (!mPrefChangedTimer)
+  {
+    mPrefChangedTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mPrefChangedTimer)
+      return;
+    mPrefChangedTimer->InitWithFuncCallback(nsPresContext::PrefChangedUpdateTimerCallback, (void*)this, 0, nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+void
+nsPresContext::UpdateAfterPreferencesChanged()
+{
+  mPrefChangedTimer = nsnull;
+
   nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRInt32 docShellType;

@@ -52,6 +52,7 @@
 #include "nsITheme.h"
 #include "nsILanguageAtomService.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsCRT.h"
 #include "nsIPrintSettings.h"
 #include "nsPropertyTable.h"
@@ -628,8 +629,12 @@ public:
 protected:
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
   NS_HIDDEN_(void) GetDocumentColorPreferences();
+
   NS_HIDDEN_(void) PreferenceChanged(const char* aPrefName);
   static NS_HIDDEN_(int) PR_CALLBACK PrefChangedCallback(const char*, void*);
+
+  NS_HIDDEN_(void) UpdateAfterPreferencesChanged();
+  static NS_HIDDEN_(void) PR_CALLBACK PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure);
 
   NS_HIDDEN_(void) GetUserPreferences();
   NS_HIDDEN_(void) GetFontPreferences();
@@ -667,6 +672,7 @@ protected:
   nsCOMPtr<nsITheme> mTheme;
   nsCOMPtr<nsILanguageAtomService> mLangService;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
   nsPropertyTable       mPropertyTable;
 
