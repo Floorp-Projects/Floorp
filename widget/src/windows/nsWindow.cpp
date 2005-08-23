@@ -110,9 +110,6 @@
 #endif
 #endif
 
-#include <imm.h>
-#include "aimm.h"
-
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
@@ -432,199 +429,7 @@ static PRBool is_vk_down(int vk)
 #define IME_X_OFFSET  0
 #define IME_Y_OFFSET  0
 
-
-
 #define IS_IME_CODEPAGE(cp) ((932==(cp))||(936==(cp))||(949==(cp))||(950==(cp)))
-
-//
-// Macro for Active Input Method Manager (AIMM) support.
-// Use AIMM method instead of Win32 Imm APIs.
-//
-#define NS_IMM_GETCOMPOSITIONSTRINGA(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
-{ \
-  compStrLen = 0; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionStringA(hIMC, dwIndex, dwBufLen, &(compStrLen), pBuf); \
-   else { \
-      nsIMM &theIMM = nsIMM::LoadModule(); \
-      compStrLen = theIMM.GetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
-   } \
-}
-
-#define NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
-{ \
-  compStrLen = 0; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionStringW(hIMC, dwIndex, dwBufLen, &(compStrLen), pBuf); \
-    else { \
-      nsIMM &theIMM = nsIMM::LoadModule(); \
-      compStrLen = theIMM.GetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); \
-    } \
-}
-
-#define NS_IMM_GETCONTEXT(hWnd, hIMC) \
-{ \
-  hIMC = NULL; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetContext(hWnd, &(hIMC)); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    hIMC = (HIMC)theIMM.GetContext(hWnd);  \
-  } \
-}
-
-#define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->ReleaseContext(hWnd, hIMC); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.ReleaseContext(hWnd, hIMC); \
-  } \
-}
-
-#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue, bRtn) \
-{ \
-  bRtn = TRUE; \
-  if (nsToolkit::gAIMMApp) { \
-    bRtn = (nsToolkit::gAIMMApp->NotifyIME(hIMC, dwAction, dwIndex, dwValue) == S_OK); \
-  }\
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    (theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue)); \
-  } \
-}
-
-#define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetCandidateWindow(hIMC, candForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.SetCandidateWindow(hIMC, candForm); \
-  } \
-}
-
-#define NS_IMM_SETCOMPOSITIONWINDOW(hIMC, compForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetCompositionWindow(hIMC, compForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.SetCompositionWindow(hIMC, compForm); \
-  } \
-}
-
-#define NS_IMM_GETCOMPOSITIONWINDOW(hIMC, compForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionWindow(hIMC, compForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.GetCompositionWindow(hIMC, compForm); \
-  } \
-}
-
-#define NS_IMM_GETPROPERTY(hKL, dwIndex, dwProp) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetProperty(hKL, dwIndex, &(dwProp)); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    dwProp = (DWORD)theIMM.GetProperty(hKL, dwIndex);  \
-  } \
-}
-
-#define NS_IMM_GETDEFAULTIMEWND(hWnd, phDefWnd) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    return nsToolkit::gAIMMApp->GetDefaultIMEWnd(hWnd, phDefWnd); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    *(phDefWnd) = (HWND)theIMM.GetDefaultIMEWnd(hWnd);  \
-  } \
-}
-
-#define NS_IMM_GETOPENSTATUS(hIMC, bRtn) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    bRtn = nsToolkit::gAIMMApp->GetOpenStatus(hIMC); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    bRtn = theIMM.GetOpenStatus(hIMC);  \
-  } \
-}
-
-#define NS_IMM_SETOPENSTATUS(hIMC, bOpen) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetOpenStatus(hIMC, bOpen); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    theIMM.SetOpenStatus(hIMC, bOpen);  \
-  } \
-}
-
-//
-// Macro for Input Method A/W conversion.
-//
-// On Windows 2000, ImmGetCompositionStringA() doesn't work well using IME of
-// different code page.  (See BUG # 29606)
-// And ImmGetCompositionStringW() doesn't work on Windows 9x.
-//
-
-#define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, cBuf, dwBufLen, lRtn) \
-{ \
-  if (nsToolkit::mUseImeApiW) { \
-    NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, cBuf, dwBufLen, lRtn); \
-  } else { \
-    NS_IMM_GETCOMPOSITIONSTRINGA(hIMC, dwIndex, cBuf, dwBufLen, lRtn); \
-  } \
-}
-
-//
-// for reconversion define
-//
-
-// VC++5.0 header doesn't have reconvertion structure and message.
-#ifndef WM_IME_REQUEST
-typedef struct tagRECONVERTSTRING {
-    DWORD dwSize;
-    DWORD dwVersion;
-    DWORD dwStrLen;
-    DWORD dwStrOffset;
-    DWORD dwCompStrLen;
-    DWORD dwCompStrOffset;
-    DWORD dwTargetStrLen;
-    DWORD dwTargetStrOffset;
-} RECONVERTSTRING, FAR * LPRECONVERTSTRING;
-
-typedef struct tagIMECHARPOSITION {
-    DWORD dwSize;
-    DWORD dwCharPos;
-    POINT pt;
-    UINT  cLineHeight;
-    RECT  rcDocument;
-} IMECHARPOSITION, *PIMECHARPOSITION;
-
-#define IMR_RECONVERTSTRING             0x0004
-#define IMR_QUERYCHARPOSITION           0x0006
-#define WM_IME_REQUEST                  0x0288
-#endif
-
-// from http://msdn.microsoft.com/library/specs/msime.h
-#define RWM_RECONVERT       TEXT("MSIMEReconvert")
-#define RWM_MOUSE           TEXT("MSIMEMouseOperation")
-
-#define IMEMOUSE_NONE       0x00    // no mouse button was pushed
-#define IMEMOUSE_LDOWN      0x01
-#define IMEMOUSE_RDOWN      0x02
-#define IMEMOUSE_MDOWN      0x04
-#define IMEMOUSE_WUP        0x10    // wheel up
-#define IMEMOUSE_WDOWN      0x20    // wheel down
-
-// from http://www.justsystem.co.jp/tech/atok/api12_04.html#4_11
-#define MSGNAME_ATOK_RECONVERT TEXT("Atok Message for ReconvertString")
 
 //
 // App Command messages for IntelliMouse and Natural Keyboard Pro
@@ -7395,6 +7200,39 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
     NS_IMM_RELEASECONTEXT(mWnd, hIMC);
   } else 
     *aState = PR_FALSE;
+  return NS_OK;
+}
+
+//==========================================================================
+NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState)
+{
+  if (sIMEIsComposing)
+    ResetInputState();
+  nsWinNLS &theWinNLS = nsWinNLS::LoadModule();
+  if (!theWinNLS.CanUseSetIMEEnableStatus()) {
+#ifndef WINCE
+    NS_WARNING("WINNLSEnableIME API is not loaded.");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+  PRBool lastStatus = theWinNLS.SetIMEEnableStatus(mWnd, aState);
+  if (aState && !lastStatus)
+    ::SendMessage(mWnd, WM_IME_NOTIFY, IMN_OPENSTATUSWINDOW, 0L);
+
+  return NS_OK;
+}
+
+//==========================================================================
+NS_IMETHODIMP nsWindow::GetIMEEnabled(PRBool* aState)
+{
+  nsWinNLS &theWinNLS = nsWinNLS::LoadModule();
+  if (!theWinNLS.CanUseGetIMEEnableStatus()) {
+#ifndef WINCE
+    NS_WARNING("WINNLSGetEnableStatus API is not loaded.");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+  *aState = !!theWinNLS.GetIMEEnableStatus(mWnd);
   return NS_OK;
 }
 
