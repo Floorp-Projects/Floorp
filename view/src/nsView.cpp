@@ -491,13 +491,22 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 	return NS_OK;
 }
 
-void nsView::InvalidateHierarchy()
+void nsView::InvalidateHierarchy(nsViewManager *aViewManagerParent)
 {
+  if (aViewManagerParent) {
+    // We're removed from the view hierarchy of aRemovalPoint, so make sure
+    // we're not still grabbing mouse events.
+    if (aViewManagerParent->GetMouseEventGrabber() == this) {
+      PRBool res;
+      aViewManagerParent->GrabMouseEvents(nsnull, res);
+    }
+  }
+
   if (mViewManager->GetRootView() == this)
     mViewManager->InvalidateHierarchy();
 
   for (nsView *child = mFirstChild; child; child = child->GetNextSibling())
-    child->InvalidateHierarchy();
+    child->InvalidateHierarchy(aViewManagerParent);
 }
 
 void nsView::InsertChild(nsView *aChild, nsView *aSibling)
@@ -528,7 +537,7 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     nsViewManager *vm = aChild->GetViewManager();
     if (vm->GetRootView() == aChild)
     {
-      aChild->InvalidateHierarchy();
+      aChild->InvalidateHierarchy(nsnull); // don't care about releasing grabs
     }
   }
 }
@@ -565,7 +574,7 @@ void nsView::RemoveChild(nsView *child)
     nsViewManager *vm = child->GetViewManager();
     if (vm->GetRootView() == child)
     {
-      child->InvalidateHierarchy();
+      child->InvalidateHierarchy(GetViewManager());
     }
   }
 }
