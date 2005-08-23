@@ -1128,15 +1128,6 @@ sub CheckIfVotedConfirmed {
                       "*** This bug has been confirmed by popular vote. ***",
                       0, $timestamp);
 
-        my $template = Bugzilla->template;
-        my $vars = $::vars;
-
-        $vars->{'type'} = "votes";
-        $vars->{'id'} = $id;
-        $vars->{'mailrecipients'} = { 'changer' => $who };
-
-        $template->process("bug/process/results.html.tmpl", $vars)
-          || ThrowTemplateError($template->error());
         $ret = 1;
     }
     return $ret;

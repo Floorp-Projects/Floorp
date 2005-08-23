@@ -319,13 +319,8 @@ sub record_votes {
     # need to clear the user's votes from the database.
     my %affected;
     $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE',
-             'votes WRITE', 'longdescs WRITE', 'profiles READ',
-             'products READ', 'components READ', 'cc READ',
-             'dependencies READ', 'groups READ', 'fielddefs READ',
-             'namedqueries READ', 'whine_queries READ', 'watch READ',
-             'profiles AS watchers READ', 'profiles AS watched READ',
-             'user_group_map READ', 'bug_group_map READ',
-             'email_setting READ');
+                         'votes WRITE', 'longdescs WRITE',
+                         'products READ', 'fielddefs READ');
     
     # Take note of, and delete the user's old votes from the database.
     SendSQL("SELECT bug_id FROM votes WHERE who = $who");
@@ -347,15 +342,33 @@ sub record_votes {
     
     # Update the cached values in the bugs table
     print $cgi->header();
-    foreach my $id (keys %affected) {
-        SendSQL("SELECT sum(vote_count) FROM votes WHERE bug_id = $id");
-        my $v = FetchOneColumn() || 0;
-        SendSQL("UPDATE bugs SET votes = $v WHERE bug_id = $id");
-        my $confirmed = CheckIfVotedConfirmed($id, $who);
-        $vars->{'header_done'} = 1 if $confirmed;
-    }
+    my @updated_bugs = ();
 
+    my $sth_getVotes = $dbh->prepare("SELECT SUM(vote_count) FROM votes
+                                      WHERE bug_id = ?");
+
+    my $sth_updateVotes = $dbh->prepare("UPDATE bugs SET votes = ?
+                                         WHERE bug_id = ?");
+
+    foreach my $id (keys %affected) {
+        $sth_getVotes->execute($id);
+        my $v = $sth_getVotes->fetchrow_array || 0;
+        $sth_updateVotes->execute($v, $id);
+
+        my $confirmed = CheckIfVotedConfirmed($id, $who);
+        push (@updated_bugs, $id) if $confirmed;
+    }
     $dbh->bz_unlock_tables();
 
+    $vars->{'type'} = "votes";
+    $vars->{'mailrecipients'} = { 'changer' => $who };
+
+    foreach my $bug_id (@updated_bugs) {
+        $vars->{'id'} = $bug_id;
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+        # Set header_done to 1 only after the first bug.
+        $vars->{'header_done'} = 1;
+    }
     $vars->{'votes_recorded'} = 1;
 }

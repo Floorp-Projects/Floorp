@@ -1369,16 +1369,28 @@ if ($action eq 'update') {
             }
         }
         # 3. enough votes to confirm
-        SendSQL("SELECT bug_id FROM bugs " .
-                "WHERE product_id = $product_id " .
-                "  AND bug_status = 'UNCONFIRMED' " .
-                "  AND votes >= $votestoconfirm");
-        if (MoreSQLData()) {
+        my $bug_list = $dbh->selectcol_arrayref("SELECT bug_id FROM bugs
+                                                 WHERE product_id = ?
+                                                 AND bug_status = 'UNCONFIRMED'
+                                                 AND votes >= ?",
+                                                 undef, ($product_id, $votestoconfirm));
+        if (scalar(@$bug_list)) {
             print "<br>Checking unconfirmed bugs in this product for any which now have sufficient votes.";
         }
-        while (MoreSQLData()) {
-            # The user id below is used for activity log purposes
-            CheckIfVotedConfirmed(FetchOneColumn(), Bugzilla->user->id);
+        my @updated_bugs = ();
+        foreach my $bug_id (@$bug_list) {
+            my $confirmed = CheckIfVotedConfirmed($bug_id, $whoid);
+            push (@updated_bugs, $bug_id) if $confirmed;
+        }
+
+        $vars->{'type'} = "votes";
+        $vars->{'mailrecipients'} = { 'changer' => $whoid };
+        $vars->{'header_done'} = 1;
+
+        foreach my $bug_id (@updated_bugs) {
+            $vars->{'id'} = $bug_id;
+            $template->process("bug/process/results.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());
         }
     }
 
