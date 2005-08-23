@@ -113,8 +113,9 @@ select1 {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
 }
 
-select1 itemset {
-  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1-itemset');
+select1 itemset,
+select itemset {
+  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-itemset');
 }
 
 /* Most of the select1 specific CSS is copied from forms.css */
@@ -231,4 +232,24 @@ case {
 case > html|div.-moz-xforms-case-container {
   display: inherit;
 }
+
+/* select */
+select {
+  -moz-binding: url('chrome://xforms/content/select.xml#xformswidget-select');
+}
+
+select[appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/select.xml#xformswidget-select-full');
+}
+
+select html|div.select-choice-label {
+  font: -moz-list;
+  font-style: italic;
+  font-weight: bold;
+}
+
+select html|div.select-choice-content {
+  padding-left: 10px;
+}
+
 

@@ -628,7 +628,7 @@
     </implementation>
   </binding>
 
-  <binding id="xformswidget-select1-itemset">
+  <binding id="xformswidget-itemset">
     <content>
       <html:div style="display:none;">
         <children/>

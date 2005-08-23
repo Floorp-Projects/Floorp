@@ -1,0 +1,676 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Doron Rosenberg <doronr@us.ibm.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!--
+  XBL select parses the childnodes of the xforms:select and then constructs
+  the anonymous content programmatically.
+
+  The main _buildSelect() method assumes that each select implementation
+  has three methods: _addSelectItem (for xf:item), _handleChoices (for xf:choice,
+  which can be nested) and _addItemSetItem for itemsets.
+
+  _controlArray is used to store each generated selectable item in the UI
+  (html:select for regular select and checkboxes for appearance="full" selects.
+
+  For a regular select (default appearance), the anonymous content generates
+  an html:select and child html:option and html:optgroup (for choices).
+
+  For an appearance="full" select, the anonymous content generates:
+
+    <html:table>
+      <html:tr>
+        <html:td valign="bottom">
+          // label goes here
+        </html:td>
+        <html:td anonid="checkbox-group"
+          <html:div>
+            <html:input type="checkbox"/>
+            <html:span>Label</html:span>
+          </html:div>
+        </html:td>
+      </html:tr>
+    </html:table>
+-->
+
+<bindings id="xformsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xforms="http://www.w3.org/2002/xforms">
+
+ <!-- SELECT: <DEFAULT> -->
+  <binding id="xformswidget-select"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:label>
+        <html:span>
+           <children includes="label"/>
+        </html:span>
+        <html:select xbl:inherits="style"
+                     onchange="this.parentNode.parentNode.selectionChanged();"
+                     onblur="this.parentNode.parentNode.handleBlur();"
+                     multiple="true"
+                     size="5"
+                     anonid="select"/>
+        <children/>
+      </html:label>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <constructor>
+        <![CDATA[
+        ]]>
+      </constructor>
+
+      <field name="_uiElement">null</field>
+      <property name="uiElement" readonly="true">
+        <getter>
+          if (!this._uiElement) {
+            this._uiElement =
+              document.getAnonymousElementByAttribute(this, "anonid", "select");
+          }
+
+          return this._uiElement;
+        </getter>
+      </property>
+
+      <property name="selectedIndex">
+        <setter>
+          this.uiElement.selectedIndex = val;
+        </setter>
+      </property>
+
+      <field name="_delegateValueCache">null</field>
+
+      <!-- Make sure we don't refresh while we are refreshing (race condition).
+           This happens when we are inside a repeat for example. We use the
+           _refreshing field to store if we are refreshing or not. -->
+      <field name="_refreshing">false</field>
+      <method name="refresh">
+        <body>
+        <![CDATA[
+          if (this._refreshing)
+            return;
+
+          if (this.delegate.isReadonly) {
+            this.uiElement.setAttribute("readonly", "readonly");
+          } else {
+            this.uiElement.removeAttribute("readonly");
+          }
+
+          if (!this.delegate.hasBoundNode)
+            return;
+
+          this._refreshing = true;
+
+          // We detect if the instance data we bind to has changed.  If it has,
+          // changed, we simply update the selection.  If it hasn't, that means
+          // we rebuild the select UI.  We also rebuild if the delegate cache is
+          // null (first load).
+          if (this._delegateValueCache == null ||
+              this._delegateValueCache == this.delegate.value) {
+            // refresh was not called due to instance data changing, so build the
+            // UI.
+            this._buildSelect();
+          } else {
+            // update selection
+            this._updateSelection();
+          }
+
+          // store the delegate value
+          this._delegateValueCache = this.delegate.value;
+
+          this._refreshing = false;
+
+          return true;
+         ]]>
+        </body>
+      </method>
+
+      <field name="_controlArraySize">0</field>
+      <field name="_controlArray">new Array()</field>
+
+      <method name="_buildSelect">
+        <body>
+        <![CDATA[
+          // select builds its own UI by parsing it's children.
+
+          // replace new line (\n), tabs (\t) and carriage returns (\r) with "".
+          var value = this.delegate.value.replace(/\n|\t|\r/g, " ");
+
+          // get an array of values selected in the bound node
+          var selectedArray = value.split(" ");
+
+          // create a hash from the default values so we can store how often
+          // we encountered them.  This allows us to figure out later if any were
+          // not hit, which requires us to send an event.
+          var defaultHash = new Object();
+          for (var run = 0; run < selectedArray.length; run++) {
+            defaultHash[selectedArray[run]] = {hits: 0}
+          }
+
+          // clear the UI children
+          for (var i = this.uiElement.childNodes.length; i > 0; i--) {
+             this.uiElement.removeChild(this.uiElement.childNodes[i-1]);
+          }
+
+          // create children
+          var child, option;
+          var childNodes = this.childNodes;
+
+          // these hold an array of generated HTML controls
+          this._controlArraySize = 0;
+          this._controlArray = new Array();
+
+          for (var i = 0; i < childNodes.length; i++) {
+            child = childNodes[i];
+
+            // we only care about element nodes in the XForms namespace.
+            if (child.nodeType == child.ELEMENT_NODE &&
+                child.namespaceURI == this.XFORMS_NS) {
+              if (child.localName == "item") {
+                // cache the item's label/value
+                var itemElement =
+                  child.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+                var value = itemElement.value;
+                var label = itemElement.labelText;
+
+                this._addSelectItem(label, value, child);
+
+                // check if we should pre-select this option
+                if (defaultHash[value] != null) {
+                  var control = this._controlArray[this._controlArraySize - 1]
+                  this._setItemSelection(control, true);
+
+                  defaultHash[value].hits++;
+                }
+              } else if (child.localName == "choices") {
+                var optGroup = this._handleChoices(child);
+                this.uiElement.appendChild(optGroup);
+              } else if (child.localName == "itemset") {
+                var uiElement =
+                  child.QueryInterface(Components.interfaces.nsIXFormsItemSetUIElement);
+                var containers = uiElement.anonymousItemSetContent.childNodes;
+                for (var y = 0; y < containers.length; y++) {
+                  if (containers[y].nodeType == containers[y].ELEMENT_NODE) {
+                    this._addItemSetItem(containers[y]);
+                  }
+                }
+              }
+            }
+          }
+
+          // check if any default values were not found
+          for (var index in defaultHash) {
+            if (defaultHash[index].hits == 0) {
+              // XXX: some of default values not found, we need to throw an
+              // xforms-out-of-range event, but only if the select is 'closed'.
+              // If the select is open, the missing elements should be added
+              // and selected per 8.1.10 in the spec.
+            }
+          }
+
+          return true;
+         ]]>
+        </body>
+      </method>
+
+      <method name="_buildSelectItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aControl"/>
+        <parameter name="aUseLabelValue"/>
+        <body>
+        <![CDATA[
+          // creates a select item element (html:option) and returns it
+
+          option = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                            "option");
+
+          option.setAttribute("value", aValue);
+          option.setAttribute("optionid", this._controlArraySize);
+
+          // itemsets needs to use aLabel and not the label element contents
+          if (aUseLabelValue) {
+            option.textContent = aLabel;
+          } else {
+            // label can contain other elements such as html, so we clone it
+            var label = aControl.getElementsByTagName("label")[0];
+            var newLabel = label.cloneNode(true);
+            option.appendChild(newLabel);
+          }
+
+          return option;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_addSelectItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aControl"/>
+        <body>
+        <![CDATA[
+          // adds a new select item into the select
+
+          var option = this._buildSelectItem(aLabel, aValue, aControl, false);
+
+          var newOption = this.uiElement.appendChild(option);
+          option = newOption;
+
+          // add to the control array
+          this._controlArray[this._controlArraySize] =
+            {control: aControl, option: option, type: "item"}
+          this._controlArraySize++;
+
+          return option;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setItemSelection">
+        <parameter name="aControl"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          aControl.option.selected = aValue;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_handleChoices">
+        <parameter name="aChoicesElement"/>
+        <body>
+        <![CDATA[
+          // creates the items for a choice and it's children
+
+          var child, label = "", option;
+
+          // create the html:optgroup
+          var optGroup = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                  "optgroup");
+
+          for (var i = 0; i < aChoicesElement.childNodes.length; i++) {
+            child = aChoicesElement.childNodes[i];
+
+            // we only care about element nodes
+            if (child.nodeType == child.ELEMENT_NODE) {
+              if (child.localName == "label") {
+                label = child.textContent;
+              } else if (child.localName == "item") {
+                var itemElm = child.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+                var itemValue = itemElm.value;
+                var itemLabel = itemElm.labelText;
+
+                var option = this._buildSelectItem(itemLabel, itemValue, child, false);
+                optGroup.appendChild(option);
+
+                // add to the control array
+                this._controlArray[this._controlArraySize] =
+                  {control: child, option: option, type: "item"}
+                this._controlArraySize++;
+              } else if (child.localName == "choices") {
+                optGroup.appendChild(this._handleChoices(child));
+              }
+            }
+          }
+
+          // set the label
+          optGroup.setAttribute("label", label);
+
+          return optGroup;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_addItemSetItem">
+        <parameter name="aItemElement"/>
+        <body>
+        <![CDATA[
+          var itemElm = aItemElement.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+          var itemValue = itemElm.value;
+          var itemLabel = itemElm.labelText;
+
+          var option = this._buildSelectItem(itemLabel, itemValue, aItemElement, true);
+
+          // add to the control array
+          this._controlArray[this._controlArraySize] =
+            {control: aItemElement, option: option, type: "item"}
+          this._controlArraySize++;
+
+          this.uiElement.appendChild(option);
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectionChanged">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          // if incremental, change instance data and send the value-changed event
+          if (this.incremental) {
+            this._setBoundValue();
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setBoundValue">
+        <body>
+        <![CDATA[
+          this.delegate.value = this._getSelectedValues();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_getSelectedValues">
+        <body>
+        <![CDATA[
+          var selectedValues = "";
+
+          // select if found, unselect if not
+          var options = this._controlArray;
+
+          for (var i = 0; i < options.length; i++) {
+            var isSelected =
+              options[i].option ? options[i].option.selected : options[i].checkbox.checked;
+
+            if (isSelected) {
+              // space delimeted list
+              if (selectedValues.length > 0) {
+                selectedValues += " ";
+              }
+
+              selectedValues +=
+                options[i].control.QueryInterface(Components.interfaces.nsIXFormsSelectChild).value;
+            }
+          }
+
+          return selectedValues;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_updateSelection">
+        <body>
+        <![CDATA[
+          // get an array of values selected in the bound node
+          var selectedArray = this.delegate.value.split(" ");
+
+          // store the values in a hash for quick access
+          var defaultHash = new Object();
+          for (var run = 0; run < selectedArray.length; run++) {
+            defaultHash[selectedArray[run]] = {}
+          }
+
+          // select if found, unselect if not
+          var options = this._controlArray;
+
+          for (var i = 0; i < options.length; i++) {
+            var value =
+              options[i].control.QueryInterface(Components.interfaces.nsIXFormsSelectChild).value;
+            var selectionValue = (defaultHash[value] != null);
+
+            // either a checkbox or an option
+            if (options[i].option) {
+              if (options[i].option.selected != selectionValue)
+                options[i].option.selected = selectionValue;
+            } else {
+              if (options[i].checkbox.checked != selectionValue)
+                options[i].checkbox.checked = selectionValue;
+            }
+          }
+        ]]>
+        </body>
+      </method>
+
+      <property name="incremental">
+        <getter>
+        <![CDATA[
+          // default is true
+          var incremental = true;
+
+          if (this.hasAttribute("incremental")) {
+            if (this.getAttribute("incremental") == "false")
+              incremental = false;
+          }
+
+          return incremental;
+        ]]>
+        </getter>
+      </property>
+
+      <method name="focus">
+        <body>
+        <![CDATA[
+          this.uiElement.focus();
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="handleBlur">
+        <body>
+        <![CDATA[
+          // update instance data if we are not incremental
+          if (!this.incremental) {
+            this._setBoundValue();
+          }
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+ <!-- SELECT: <FULL> -->
+  <binding id="xformswidget-select-full"
+           extends="chrome://xforms/content/select.xml#xformswidget-select">
+    <content>
+      <html:table xbl:inherits="style">
+        <html:tr>
+          <html:td valign="bottom">
+            <children includes="label"/>
+          </html:td>
+          <html:td anonid="checkbox-group"
+                   onchange="this.parentNode.parentNode.parentNode.selectionChanged();">
+          </html:td>
+        </html:tr>
+      </html:table>
+
+      <html:span style="display:none">
+        <children/>
+      </html:span>
+    </content>
+
+   <implementation implements="nsIXFormsUIWidget">
+
+      <field name="_uiElement">null</field>
+      <property name="uiElement" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._uiElement) {
+            this._uiElement =
+              document.getAnonymousElementByAttribute(this, "anonid",
+                                                      "checkbox-group");
+          }
+
+          return this._uiElement;
+        ]]>
+        </getter>
+      </property>
+
+      <method name="_buildSelectItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aControl"/>
+        <parameter name="aUseLabelValue"/>
+        <body>
+        <![CDATA[
+          var div = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                             "div");
+
+          var labelSpan = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                   "span");
+
+          if (aUseLabelValue) {
+            labelSpan.textContent = aLabel;
+          } else {
+            // label can contain other elements such as html, so we clone it
+            var label = aControl.getElementsByTagName("label")[0];
+            var newLabel = label.cloneNode(true);
+            labelSpan.appendChild(newLabel);
+          }
+
+          var input = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                               "input");
+          input.setAttribute("type", "checkbox");
+          input.setAttribute("value", aValue);
+          input.setAttribute("optionid", this._controlArraySize);
+
+          div.appendChild(input);
+          div.appendChild(labelSpan);
+
+          return div;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_addSelectItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aControl"/>
+        <body>
+        <![CDATA[
+          var item = this._buildSelectItem(aLabel, aValue, aControl, false);
+          var newElement = this.uiElement.appendChild(item);
+          item = newElement;
+
+          // add to the control array
+          this._controlArray[this._controlArraySize] =
+            {control: aControl, checkbox: item.firstChild, type: "item"}
+          this._controlArraySize++;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setItemSelection">
+        <parameter name="aControl"/>
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          aControl.checkbox.checked = aValue;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_handleChoices">
+        <parameter name="aChoicesElement"/>
+        <body>
+        <![CDATA[
+          var child;
+
+          var mainDiv = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                 "div");
+
+          var label = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                "div");
+          label.className = "select-choice-label"
+          mainDiv.appendChild(label);
+
+          var contentDiv = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                    "div");
+          contentDiv.className = "select-choice-content";
+
+          for (var i = 0; i < aChoicesElement.childNodes.length; i++) {
+            child = aChoicesElement.childNodes[i];
+
+            // we only care about element nodes
+            if (child.nodeType == child.ELEMENT_NODE) {
+              if (child.localName == "label") {
+                label.textContent = child.textContent;
+              } else if (child.localName == "item") {
+                var itemElm =
+                  child.QueryInterface(Components.interfaces.nsIXFormsItemElement)
+                var itemValue = itemElm.value;
+                var itemLabel = itemElm.labelText;
+
+                var item = this._buildSelectItem(itemLabel, itemValue, child, false);
+                contentDiv.appendChild(item);
+
+                // add to the control array
+                this._controlArray[this._controlArraySize] =
+                  {control: child, checkbox: item.firstChild, type: "item"}
+                this._controlArraySize++;
+
+              } else if (child.localName == "choices") {
+                contentDiv.appendChild(this._handleChoices(child));
+              }
+            }
+          }
+
+          mainDiv.appendChild(contentDiv);
+          return mainDiv;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_addItemSetItem">
+        <parameter name="aItemElement"/>
+        <body>
+        <![CDATA[
+          var itemElm = aItemElement.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+          var itemValue = itemElm.value;
+          var itemLabel = itemElm.labelText;
+
+          var item = this._buildSelectItem(itemLabel, itemValue, aItemElement, true);
+
+          // add to the control array
+          this._controlArray[this._controlArraySize] =
+            {control: aItemElement, checkbox: item.firstChild, type: "item"}
+          this._controlArraySize++;
+
+          this.uiElement.appendChild(item);
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+</bindings>

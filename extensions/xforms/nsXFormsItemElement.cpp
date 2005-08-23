@@ -69,10 +69,7 @@ class nsXFormsItemElement : public nsXFormsBindableStub,
                             public nsIXFormsItemElement
 {
 public:
-  nsXFormsItemElement() : mElement(nsnull),
-                          mContextPosition(0),
-                          mContextSize(0),
-                          mInsideSelect1(PR_FALSE)
+  nsXFormsItemElement() : mElement(nsnull), mDoneAddingChildren(PR_FALSE)
   {
   }
 
@@ -89,22 +86,14 @@ public:
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
-  // nsIXFormsControlBase overrides
-  NS_IMETHOD Refresh();
+  void Refresh();
 
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
 
 private:
-
   nsIDOMElement* mElement;
-  nsCOMPtr<nsIDOMHTMLOptionElement> mOption;
-
-  // context node (used by itemset in select)
-  nsCOMPtr<nsIDOMElement>           mContextNode;
-  PRInt32                           mContextPosition;
-  PRInt32                           mContextSize;
-  PRBool                            mInsideSelect1;
+  PRBool         mDoneAddingChildren;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemElement,
@@ -135,42 +124,13 @@ nsXFormsItemElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  // Our anonymous content structure in <select> will look like this:
-  //
-  // <option/>   (mOption, also insertion point)
-  //
-  //XXX Remove when XBLizing <select>
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDOMElement> element;
-  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          NS_LITERAL_STRING("option"),
-                          getter_AddRefs(element));
-
-  mOption = do_QueryInterface(element);
-  NS_ENSURE_TRUE(mOption, NS_ERROR_FAILURE);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsItemElement::ParentChanged(nsIDOMElement *aNewParent)
 {
-  mInsideSelect1 = PR_FALSE;
   if (aNewParent) {
-    nsCOMPtr<nsIDOMNode> parent, tmp;
-    mElement->GetParentNode(getter_AddRefs(parent));
-    while (parent) {
-      if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1"))) {
-        mInsideSelect1 = PR_TRUE;
-        break;
-      }
-      tmp.swap(parent);
-      tmp->GetParentNode(getter_AddRefs(parent));
-    }
-
     Refresh();
   }
 
@@ -236,6 +196,8 @@ nsXFormsItemElement::BeginAddingChildren()
 NS_IMETHODIMP
 nsXFormsItemElement::DoneAddingChildren()
 {
+  mDoneAddingChildren = PR_TRUE;
+
   // Unsuppress notifications
   nsCOMPtr<nsIXTFElementWrapper> wrapper = do_QueryInterface(mElement);
   NS_ASSERTION(wrapper, "huh? our element must be an xtf wrapper");
@@ -253,19 +215,6 @@ nsXFormsItemElement::DoneAddingChildren()
 // nsIXFormsSelectChild
 
 NS_IMETHODIMP
-nsXFormsItemElement::GetAnonymousNodes(nsIArray **aNodes)
-{
-  nsCOMPtr<nsIMutableArray> array;
-  nsresult rv = NS_NewArray(getter_AddRefs(array));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  array->AppendElement(mOption, PR_FALSE);
-
-  NS_ADDREF(*aNodes = array);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsItemElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSelected)
 {
   NS_ENSURE_ARG_POINTER(aSelected);
@@ -278,64 +227,6 @@ nsXFormsItemElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSe
     *aSelected = nsnull;
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsItemElement::SelectItemsByValue(const nsStringArray &aValueList)
-{
-  nsAutoString value;
-  nsresult rv = GetValue(value);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 count = aValueList.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    if (aValueList[i]->Equals(value)) {
-      mOption->SetSelected(PR_TRUE);
-      break;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsItemElement::SelectItemsByContent(nsIDOMNode *aNode)
-{
-  // TODO: implement support for \<copy\> element.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsItemElement::WriteSelectedItems(nsIDOMNode *aContainer, 
-                                        nsAString  &aStringBuffer)
-{
-  PRBool selected;
-  mOption->GetSelected(&selected);
-  if (!selected)
-    return NS_OK;
-
-  nsAutoString value;
-  nsresult rv = GetValue(value);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if(aStringBuffer.IsEmpty()){
-    aStringBuffer.Append(value);
-  }
-  else{
-    aStringBuffer.Append(NS_LITERAL_STRING(" ") + value);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsItemElement::SetContext(nsIDOMElement *aContextNode,
-                                PRInt32 aContextPosition, PRInt32 aContextSize)
-{
-  mContextNode = aContextNode;
-  mContextPosition = aContextPosition;
-  mContextSize = aContextSize;
   return NS_OK;
 }
 
@@ -380,67 +271,26 @@ nsXFormsItemElement::GetValue(nsAString &aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXFormsItemElement::Refresh()
 {
-  if (mInsideSelect1) {
-    // <select1> is XBLized, so there is no need to recreate UI -
-    // XBL will do it for us.
-    return NS_OK;
-  }
-
-  // Clear out all of the existing option text
-  nsCOMPtr<nsIDOMNode> child, child2;
-  while (NS_SUCCEEDED(mOption->GetFirstChild(getter_AddRefs(child))) && child)
-    mOption->RemoveChild(child, getter_AddRefs(child2));
-    
-  // We need to find our label child, serialize its contents
-  // (which can be xtf-generated), and set that as our label attribute.
-
-  nsCOMPtr<nsIDOMNodeList> children;
-  nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 childCount;
-  children->GetLength(&childCount);
-
-  nsAutoString value;
-
-  nsCOMPtr<nsIDOMDocument> doc;
-  mElement->GetOwnerDocument(getter_AddRefs(doc));
-
-  nsCOMPtr<nsIDOMElement> container;
-  doc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                       NS_LITERAL_STRING("contextcontainer-inline"),
-                       getter_AddRefs(container));
-
-  NS_NAMED_LITERAL_STRING(modelStr, "model");
-
-  nsAutoString modelID;
-  mElement->GetAttribute(modelStr, modelID);
-  container->SetAttribute(modelStr, modelID);
-
-  nsCOMPtr<nsIXFormsContextControl> context = do_QueryInterface(container);
-  context->SetContext(mContextNode, 1, 1);
-
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    children->Item(i, getter_AddRefs(child));
-    child->GetLocalName(value);
-    if (value.EqualsLiteral("label")) {
-      child->GetNamespaceURI(value);
-      if (value.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-        child->CloneNode(PR_TRUE, getter_AddRefs(child2));
-        container->AppendChild(child2, getter_AddRefs(child));
+  if (mDoneAddingChildren) {
+    nsCOMPtr<nsIDOMNode> parent, current;
+    current = mElement;
+    do {
+      current->GetParentNode(getter_AddRefs(parent));
+      if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1")) ||
+          nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select"))) {
+        nsCOMPtr<nsIXFormsControl> select(do_QueryInterface(parent));
+        if (select) {
+          select->Refresh();
+        }
+        return;
       }
-    }
+      current = parent;
+    } while(current);
   }
-
-  nsCOMPtr<nsIDOMNode> childReturn;
-  mOption->AppendChild(container, getter_AddRefs(childReturn));
-
-  return NS_OK;
 }
-
 NS_IMETHODIMP
 nsXFormsItemElement::SetActive(PRBool aActive)
 {
@@ -514,10 +364,11 @@ nsXFormsItemElement::LabelRefreshed()
   current = mElement;
   do {
     current->GetParentNode(getter_AddRefs(parent));
-    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1"))) {
-      nsCOMPtr<nsIXFormsControl> select1(do_QueryInterface(parent));
-      if (select1) {
-        select1->Refresh();
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select1")) ||
+        nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("select"))) {
+      nsCOMPtr<nsIXFormsControl> select(do_QueryInterface(parent));
+      if (select) {
+        select->Refresh();
       }
       return NS_OK;
     }

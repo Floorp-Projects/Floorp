@@ -55,47 +55,10 @@ class nsStringArray;
 [scriptable, uuid(a29ac2bd-f36a-451e-99e1-0f3bd94ffbef)]
 interface nsIXFormsSelectChild : nsISupports
 {
-  /**
-   * The DOM elements returned by this attribute are inserted into the select
-   * element's anonymous content tree.
-   */
-  readonly attribute nsIArray anonymousNodes;
-
-  /**
-   * selectItemsByValue() handles children that have a value element child.
-   * If the value element text for this child is contained in the |values|
-   * array, then the item should select itself. Used in \<select\>.
-   *
-   */
-  [noscript] void selectItemsByValue(in constStringArray values);
-  
-  /**
-   * selectItemsByContent() handles children that have a copy element child.
-   * If |node| points to the same instance data node as the item, then the
-   * item should select itself.
-   */
-  void selectItemsByContent(in nsIDOMNode node);
-
   /*
    * selectItemByValue is used in \<select1\>. If the XFormsSelectChild is or
    * contains an \<item\>, which has the same value as the parameter |value|,
    * this method returns that \<item\>.
    */
   nsIDOMNode selectItemByValue(in AString value);
-
-  /**
-   * Instructs the item to serialize its selected elements.
-   * For children that have a value child, they should append the value of
-   * any selected items to the provided string buffer.  For children
-   * that have a copy child, they should copy the instance data element into
-   * |container|.
-   */
-  void writeSelectedItems(in nsIDOMNode container, out AString stringBuffer);
-
-  /**
-   * Set the context node, position, and size to be used for XPath evaluation.
-   * This is used by itemset to create a context for its anonymous item
-   * elements.
-   */
-  void setContext(in nsIDOMElement node, in long position, in long size);
 };

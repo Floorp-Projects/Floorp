@@ -9,6 +9,7 @@ xforms.jar:
 * content/xforms/xforms-prefs.js               (resources/content/xforms-prefs.js)
   content/xforms/xforms.xml                    (resources/content/xforms.xml)
   content/xforms/select1.xml                   (resources/content/select1.xml)
+  content/xforms/select.xml                    (resources/content/select.xml)
 * locale/en-US/xforms/contents.rdf             (resources/locale/en-US/contents.rdf)
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
