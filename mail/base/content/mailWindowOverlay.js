@@ -1244,7 +1244,7 @@ function MsgOpenFromFile()
    var uri = fp.fileURL;
    uri.query = "type=application/x-message-display";
 
-  MsgOpenNewWindowForMessage(uri, null);
+  window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "all,chrome,dialog=no,status,toolbar", uri, null, null );
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
