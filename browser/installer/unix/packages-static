@@ -175,6 +175,7 @@ bin/components/xultmpl.xpt
 bin/components/shellservice.xpt
 ; JavaScript components
 bin/components/nsBrowserContentHandler.js
+bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
