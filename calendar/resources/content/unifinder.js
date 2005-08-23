@@ -653,7 +653,7 @@ function refreshEventTree( eventArray )
       case "current":
          var SelectedDate = gCalendarWindow.getSelectedDate();
          StartDate = new Date( SelectedDate.getFullYear(), SelectedDate.getMonth(), SelectedDate.getDate(), 0, 0, 0 );
-         EndDate = new Date( MidnightSelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1000 );
+         EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1000 );
          break;
       
       default: 
