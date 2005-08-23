@@ -222,6 +222,8 @@ public:
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
 
+  virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
+
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
 
@@ -291,6 +293,8 @@ protected:
                           PRBool aRemoveEventListeners,
                           PRBool aClearScopeHint,
                           PRBool aIsInternalCall);
+
+  PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocURI);
 
   // Get the parent, returns null if this is a toplevel window
   nsIDOMWindowInternal *GetParentInternal();

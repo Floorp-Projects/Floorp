@@ -4810,7 +4810,9 @@ nsDocShell::CreateAboutBlankContentViewer()
 }
 
 PRBool
-nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
+nsDocShell::CanSavePresentation(PRUint32 aLoadType,
+                                nsIRequest *aNewRequest,
+                                nsIDocument *aNewDocument)
 {
     if (!mOSHE)
         return PR_FALSE; // no entry to save into
@@ -4836,6 +4838,9 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest)
     // If the document is not done loading, don't cache it.
     nsCOMPtr<nsPIDOMWindow> pWin = do_QueryInterface(mScriptGlobal);
     if (!pWin || pWin->IsLoading())
+        return PR_FALSE;
+
+    if (pWin->WouldReuseInnerWindow(aNewDocument))
         return PR_FALSE;
 
     // Avoid doing the work of saving the presentation state in the case where
@@ -5166,7 +5171,7 @@ nsDocShell::RestoreFromHistory()
         nsIRequest *request = nsnull;
         if (doc)
             request = doc->GetChannel();
-        mSavingOldViewer = CanSavePresentation(mLoadType, request);
+        mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
     nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(do_QueryInterface(mContentViewer));
@@ -5444,7 +5449,10 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         // at the time we initiated the new load.  We need to check whether
         // it's still safe to do so, since there may have been DOM mutations
         // or new requests initiated.
-        mSavingOldViewer = CanSavePresentation(mLoadType, request);
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        viewer->GetDOMDocument(getter_AddRefs(domDoc));
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        mSavingOldViewer = CanSavePresentation(mLoadType, request, doc);
     }
 
     FirePageHideNotification(!mSavingOldViewer);
@@ -6352,7 +6360,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // This is necessary so that we can catch any pending requests.
     // Since the new request has not been created yet, we pass null for the
     // new request parameter.
-    PRBool savePresentation = CanSavePresentation(aLoadType, nsnull);
+    // Also pass nsnull for the document, since it doesn't affect the return
+    // value for our purposes here.
+    PRBool savePresentation = CanSavePresentation(aLoadType, nsnull, nsnull);
 
     // Don't stop current network activity for javascript: URL's since
     // they might not result in any data, and thus nothing should be

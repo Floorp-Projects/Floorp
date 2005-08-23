@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -72,11 +73,12 @@ enum OpenAllowValue {
 
 class nsIDocShell;
 class nsIFocusController;
+class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x26c9769c, 0xecfc, 0x46b9, \
- { 0x9f, 0x62, 0x8e, 0x9b, 0x1a, 0x6c, 0x0d, 0x28 } }
+{ 0x1f9346e6, 0x3814, 0x4c3b, \
+  { 0x9d, 0x04, 0x0b, 0x93, 0x86, 0x53, 0x2b, 0xbf } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -284,6 +286,8 @@ public:
   {
     return !IsInnerWindow();
   }
+
+  virtual PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

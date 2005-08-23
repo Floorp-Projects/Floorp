@@ -536,6 +536,89 @@ nsGlobalWindow::GetContext()
   return mContext;
 }
 
+PRBool
+nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
+{
+  return WouldReuseInnerWindow(aNewDocument, PR_TRUE);
+}
+
+PRBool
+nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocURI)
+{
+  // We reuse the inner window when:
+  // a. We are currently at about:blank
+  // b. At least one of the following conditions are true:
+  // -- We are not currently a content window (i.e., we're currently a chrome
+  //    window).
+  // -- The new document is the same as the old document. This means that we're
+  //    getting called from document.open().
+  // -- The new URI has the same origin as the script opener uri for our current
+  //    window.
+
+  nsCOMPtr<nsIDocument> curDoc(do_QueryInterface(mDocument));
+  if (!curDoc || !aNewDocument) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIURI> newURI;
+  if (useDocURI) {
+    newURI = aNewDocument->GetDocumentURI();
+  } else {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+
+    if (webNav) {
+      webNav->GetCurrentURI(getter_AddRefs(newURI));
+    }
+  }
+
+  nsIURI* curURI = curDoc->GetDocumentURI();
+  if (!curURI || !newURI) {
+    return PR_FALSE;
+  }
+
+  PRBool isAbout;
+  if (NS_FAILED(curURI->SchemeIs("about", &isAbout)) || !isAbout) {
+    return PR_FALSE;
+  }
+
+  nsCAutoString uri;
+  curURI->GetSpec(uri);
+  if (!uri.EqualsLiteral("about:blank")) {
+    return PR_FALSE;
+  }
+  
+  // Great, we're an about:blank document, check for one of the other
+  // conditions.
+  if (curDoc == aNewDocument) {
+    // aClearScopeHint is false.
+    return PR_TRUE;
+  }
+
+  if (mOpenerScriptURL) {
+    if (sSecMan) {
+      PRBool isSameOrigin = PR_FALSE;
+      sSecMan->SecurityCompareURIs(mOpenerScriptURL, newURI, &isSameOrigin);
+      if (isSameOrigin) {
+        // The origin is the same.
+        return PR_TRUE;
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+
+  if (treeItem) {
+    PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+    treeItem->GetItemType(&itemType);
+
+    // If we're a chrome window, then we want to reuse the inner window.
+    return itemType == nsIDocShellTreeItem::typeChrome;
+  }
+
+  // No treeItem: don't reuse the current inner window.
+  return PR_FALSE;
+}
+
 void
 nsGlobalWindow::SetOpenerScriptURL(nsIURI* aURI)
 {
@@ -793,58 +876,14 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // we don't ever call SetNewDocument(nsnull), so no need to null
   // check xpc here.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  PRBool reUseInnerWindow = PR_FALSE;
 
-  if (oldDoc) {
-    nsIURI *oldURL = oldDoc->GetDocumentURI();
+  PRBool reUseInnerWindow = WouldReuseInnerWindow(newDoc, PR_FALSE);
 
-    if (oldURL) {
-      nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
-      PRBool isContentWindow = PR_FALSE;
-
-      if (treeItem) {
-        PRInt32 itemType = nsIDocShellTreeItem::typeContent;
-        treeItem->GetItemType(&itemType);
-
-        isContentWindow = itemType != nsIDocShellTreeItem::typeChrome;
-      }
-
-      PRBool isSameOrigin = PR_FALSE;
-      PRBool isAboutBlank = PR_FALSE;
-      PRBool isAbout;
-      if (NS_SUCCEEDED(oldURL->SchemeIs("about", &isAbout)) && isAbout) {
-        nsCAutoString url;
-        oldURL->GetSpec(url);
-        isAboutBlank = url.EqualsLiteral("about:blank");
-
-        if (isAboutBlank && mOpenerScriptURL) {
-          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-          if (webNav) {
-            nsCOMPtr<nsIURI> newURI;
-            webNav->GetCurrentURI(getter_AddRefs(newURI));
-            if (newURI && sSecMan) {
-              // XXXjst: Uh, don't we want to compare the new URI
-              // against the calling URI (JS_GetScopeChain()?) and not
-              // the opener script URL?
-              sSecMan->SecurityCompareURIs(mOpenerScriptURL, newURI,
-                                           &isSameOrigin);
-            }
-          }
-        }
-      }
-
-      reUseInnerWindow =
-        isAboutBlank && (!isContentWindow || !aClearScopeHint ||
-                         isSameOrigin);
-
-      // XXXjst: Remove the aRemoveEventListeners argument, it's
-      // always passed the same value as aClearScopeHint.
-
-      // Don't remove event listeners in similar conditions
-      aRemoveEventListeners = aRemoveEventListeners &&
-        (!isAboutBlank || (isContentWindow && !isSameOrigin));
-    }
-  }
+  // XXX We used to share event listeners between inner windows in special
+  // circumstances (that were remarkably close to the conditions that we set
+  // reUseInnerWindow in) but that left dangling pointers to the old (destroyed)
+  // inner window (bug 303765). Setting this here should be a no-op.
+  aRemoveEventListeners = !reUseInnerWindow;
 
   // Remember the old document's principal.
   nsIPrincipal *oldPrincipal = nsnull;
