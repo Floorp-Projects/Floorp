@@ -69,6 +69,8 @@ const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,modal";
 const BROWSER_ADD_BM_FEATURES = "centerscreen,chrome,dialog,resizable,dependent";
 #endif
 
+var gBrowserGlue = Components.classes["@mozilla.org/browser/browserglue;1"]
+                             .getService(nsCI.nsIBrowserGlue);
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
@@ -1174,74 +1176,42 @@ function SanitizeListener()
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(this.promptDomain, this, false);
 
-  this._setSanitizeItem();
+  this._defaultLabel = document.getElementById("sanitizeItem")
+                               .getAttribute("label");
+  this._updateSanitizeItem();
 
-  if (gPrefService.prefHasUserValue(this.didSanitizeDomain))
-    gPrefService.clearUserPref(this.didSanitizeDomain)
-
-  this._os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-  this._os.addObserver(this, "quit-application-granted", false);
+  if (gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
+    gPrefService.clearUserPref(this.didSanitizeDomain);
+    // We need to persist this preference change, since we want to
+    // check it at next app start even if the browser exits abruptly,
+    // but we can afford some delay before I/O, so perceived 
+    // startup speed is not affected :)
+    window.setTimeout(function() { gPrefService.savePrefFile(null); }, 1000);
+  }
 }
 
 SanitizeListener.prototype =
 {
   promptDomain      : "privacy.sanitize.promptOnSanitize",
-  shutdownDomain    : "privacy.sanitize.sanitizeOnShutdown",
   didSanitizeDomain : "privacy.sanitize.didShutdownSanitize",
 
   observe: function (aSubject, aTopic, aPrefName)
   {
-    switch (aTopic) {
-    case "nsPref:changed":
-      if (aPrefName != this.promptDomain)
-        return;
-      this._setSanitizeItem();
-      break;
-    case "quit-application-granted":
-      if (gPrefService.getBoolPref(this.shutdownDomain) &&
-          !gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
-        this.sanitize(null);
-        gPrefService.setBoolPref(this.didSanitizeDomain, true);
-      }
-      break;
-    }
+    this._updateSanitizeItem();
   },
 
   shutdown: function ()
   {
     var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
     pbi.removeObserver(this.promptDomain, this);
-
-    this._os.removeObserver(this, "quit-application-granted");
   },
 
-  _setSanitizeItem: function ()
+  _updateSanitizeItem: function ()
   {
-    var shouldPrompt = gPrefService.getBoolPref(this.promptDomain);
-    if (shouldPrompt) {
-      var sanitizeItem = document.getElementById("sanitizeItem");
-      var bundleBrowser = document.getElementById("bundle_browser");
-      var bundleBrand = document.getElementById("bundle_brand");
-      var brandShortName = bundleBrand.getString("brandShortName");
-      sanitizeItem.label = bundleBrowser.getString("sanitizeWithPromptLabel");
-    }
-  },
-
-  sanitize: function (aParentWindow)
-  {
-    var promptOnSanitize = gPrefService.getBoolPref("privacy.sanitize.promptOnSanitize");
-    if (promptOnSanitize) {
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
-      ww.openWindow(aParentWindow,
-                    "chrome://browser/content/sanitize.xul",
-                    "Sanitize",
-                    "chrome,titlebar,centerscreen,modal",
-                    null);
-    }
-    else
-      (new Sanitizer()).sanitize();
+    var label = gPrefService.getBoolPref(this.promptDomain) ?
+        gNavigatorBundle.getString("sanitizeWithPromptLabel") : 
+        this._defaultLabel;
+    document.getElementById("sanitizeItem").setAttribute("label", label);
   }
 }
 

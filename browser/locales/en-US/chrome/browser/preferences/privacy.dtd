@@ -80,5 +80,5 @@
 <!ENTITY  clearCache.accesskey        "N">
 
 <!ENTITY  sanitizeSettings.label      "Settings...">
-<!ENTITY  sanitizeSettings.accesskey  "z">
+<!ENTITY  sanitizeSettings.accesskey  "t">
 <!ENTITY  sanitize.intro              "The Clear Private Data tool can be used to erase your private data using a keyboard shortcut or when &brandShortName; closes.">
