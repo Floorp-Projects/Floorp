@@ -137,7 +137,7 @@ nsSVGGDIPlusCanvas::Init(nsIRenderingContext* ctx,
 
   HDC hdc;
   // this ctx better be what we think it is...
-  mMozContext->RetrieveCurrentNativeGraphicData((PRUint32 *)(&hdc));
+  hdc = (HDC)(PRUint32 *)mMozContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
     
   mGraphics = new Graphics(hdc);
   if (!mGraphics) return NS_ERROR_FAILURE;
