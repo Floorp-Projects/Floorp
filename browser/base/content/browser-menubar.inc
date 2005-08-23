@@ -425,7 +425,7 @@
 #endif
               <menuseparator id="sanitizeSeparator"/>
               <menuitem id="sanitizeItem" 
-                        accesskey="&sanitizeCmd.accesskey;" label="&sanitizeCmd.label;"
+                        accesskey="&clearPrivateDataCmd.accesskey;" label="&clearPrivateDataCmd.label;"
                         key="key_sanitize" command="Tools:Sanitize"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
