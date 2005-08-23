@@ -5087,16 +5087,6 @@ nsDocument::UnblockOnload()
   }
 }
 
-struct OnloadBlockerEvent : public PLEvent
-{
-  OnloadBlockerEvent(PRBool aWouldFireOnload) :
-    mWouldFireOnload(aWouldFireOnload)
-  {}
-
-  // Whether we would have fired onload at the point when we posted this event
-  PRBool mWouldFireOnload;
-};
-
 void
 nsDocument::PostUnblockOnloadEvent()
 {
@@ -5112,22 +5102,8 @@ nsDocument::PostUnblockOnloadEvent()
   if (!eventQ) {
     return;
   }
-
-  PRBool wouldUnblockOnload = PR_FALSE;
-  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-  if (loadGroup) {
-    PRUint32 activeCount;
-    nsresult rv = loadGroup->GetActiveCount(&activeCount);
-    // If there is only one active request, then its our onload
-    // blocker; in that case we should fire onload as soon as our event
-    // fires.
-    if (NS_SUCCEEDED(rv)) {
-      NS_ASSERTION(activeCount > 0, "Why isn't mOnloadBlocker active?");
-      wouldUnblockOnload = (activeCount == 1);
-    }
-  }
-
-  PLEvent* evt = new OnloadBlockerEvent(wouldUnblockOnload);
+  
+  PLEvent* evt = new PLEvent();
   if (!evt) {
     return;
   }
@@ -5152,8 +5128,7 @@ void* PR_CALLBACK
 nsDocument::HandleOnloadBlockerEvent(PLEvent* aEvent)
 {
   nsDocument* doc = NS_STATIC_CAST(nsDocument*, aEvent->owner);
-  OnloadBlockerEvent* evt = NS_STATIC_CAST(OnloadBlockerEvent*, aEvent);
-  doc->DoUnblockOnload(evt->mWouldFireOnload);
+  doc->DoUnblockOnload();
   return nsnull;
 }
 
@@ -5163,12 +5138,11 @@ nsDocument::DestroyOnloadBlockerEvent(PLEvent* aEvent)
 {
   nsDocument* doc = NS_STATIC_CAST(nsDocument*, aEvent->owner);
   NS_RELEASE(doc);
-  OnloadBlockerEvent* evt = NS_STATIC_CAST(OnloadBlockerEvent*, aEvent);
-  delete evt;
+  delete aEvent;
 }
 
 void
-nsDocument::DoUnblockOnload(PRBool aWouldHaveUnblocked)
+nsDocument::DoUnblockOnload()
 {
   NS_ASSERTION(mOnloadBlockCount != 0,
                "Shouldn't have a count of zero here, since we stabilized in "
@@ -5176,10 +5150,9 @@ nsDocument::DoUnblockOnload(PRBool aWouldHaveUnblocked)
   
   --mOnloadBlockCount;
   
-  if (!aWouldHaveUnblocked && mOnloadBlockCount != 0) {
-    // We blocked again after the last unblock, and weren't obviously
-    // going to fire onload earlier.  Nothing to do here.  We'll post
-    // a new event when we unblock again.
+  if (mOnloadBlockCount != 0) {
+    // We blocked again after the last unblock.  Nothing to do here.  We'll
+    // post a new event when we unblock again.
     return;
   }
 
