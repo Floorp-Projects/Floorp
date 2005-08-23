@@ -101,7 +101,8 @@ nsXFormsDispatchElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> el;
-  doc->GetElementById(target, getter_AddRefs(el));
+  nsXFormsUtils::GetElementById(doc, target, PR_FALSE, mElement,
+                                getter_AddRefs(el));
   if (!el)
     return NS_OK;
   

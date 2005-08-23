@@ -44,6 +44,7 @@
 #include "nsISupports.idl"
 
 interface nsIXFormsControl;
+interface nsIDOMNode;
 
 [uuid(419e780d-4f31-4aa4-bae8-a18099d77bb6)]
 interface nsIXFormsRepeatElement : nsISupports
@@ -90,6 +91,13 @@ interface nsIXFormsRepeatElement : nsISupports
    */
   void setCurrentRepeat(in nsIXFormsRepeatElement aCurrentRepeat,
                         in unsigned long          aIndex);
+
+  /**
+   * Get currently selected repeat row
+   *
+   * @return                  The current repeat row
+   */
+  nsIDOMNode getCurrentRepeatRow();
 
   /**
    * Add user of repeat-index. The control will have Bind() and Refresh()

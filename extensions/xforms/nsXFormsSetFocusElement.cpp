@@ -71,10 +71,10 @@ nsXFormsSetFocusElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> el;
-  doc->GetElementById(control, getter_AddRefs(el));
+  nsXFormsUtils::GetElementById(doc, control, PR_TRUE, mElement,
+                                getter_AddRefs(el));
   if (!el)
     return NS_OK;
-  //XXX Should we check the type of the element?
   
   return nsXFormsUtils::DispatchEvent(el, eEvent_Focus);
 }

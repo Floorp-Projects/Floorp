@@ -422,6 +422,21 @@ public:
    */
   static NS_HIDDEN_(PRBool) IsDocumentReadyForBind(nsIDOMDocument *aDocument);
 
+  /**
+   * Retrieve an element by id, handling (cloned) elements inside repeats.
+   *
+   * @param aDoc              The document to get element from
+   * @param aId               The id of the element
+   * @param aOnlyXForms       Only search for XForms elements
+   * @param aCaller           The caller (or rather the caller's DOM element),
+                              ignored if nsnull
+   * @param aElement          The element (or nsnull if not found)
+   */
+  static NS_HIDDEN_(nsresult) GetElementById(nsIDOMDocument   *aDoc,
+                                             const nsAString  &aId,
+                                             const PRBool      aOnlyXForms,
+                                             nsIDOMElement    *aCaller,
+                                             nsIDOMElement   **aElement);
 };
 
 #endif

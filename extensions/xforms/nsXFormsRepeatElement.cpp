@@ -546,6 +546,25 @@ nsXFormsRepeatElement::SetCurrentRepeat(nsIXFormsRepeatElement *aRepeat,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsRepeatElement::GetCurrentRepeatRow(nsIDOMNode **aRow)
+{
+  if (mCurrentRepeat) {
+    // nested repeats
+    return mCurrentRepeat->GetCurrentRepeatRow(aRow);
+  }
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  NS_ENSURE_STATE(mHTMLElement);
+  mHTMLElement->GetChildNodes(getter_AddRefs(children));
+  NS_ENSURE_STATE(children);
+
+  nsCOMPtr<nsIDOMNode> child;
+  children->Item(mCurrentIndex - 1, // Indexes are 1-based, the DOM is 0-based
+                 getter_AddRefs(child));
+  NS_IF_ADDREF(*aRow = child);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXFormsRepeatElement::AddIndexUser(nsIXFormsControl *aControl)
@@ -916,11 +935,6 @@ nsXFormsRepeatElement::CloneNode(nsIDOMNode  *aSrc,
       parent->SetIsParent(PR_TRUE);
     }
   }
-
-  // Remove @id, if there
-  nsCOMPtr<nsIDOMElement> targElem(do_QueryInterface(*aTarget));
-  if (targElem)
-    targElem->RemoveAttribute(NS_LITERAL_STRING("id"));
 
   // Clone children of aSrc
   nsCOMPtr<nsIDOMNode> tmp;

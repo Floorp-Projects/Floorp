@@ -62,7 +62,8 @@ nsXFormsToggleElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
   
   nsAutoString caseAttr;
-  mElement->GetAttribute(NS_LITERAL_STRING("case"), caseAttr);
+  NS_NAMED_LITERAL_STRING(caseStr, "case");
+  mElement->GetAttribute(caseStr, caseAttr);
   if (caseAttr.IsEmpty())
     return NS_OK;
   
@@ -72,11 +73,12 @@ nsXFormsToggleElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> caseEl;
-  doc->GetElementById(caseAttr, getter_AddRefs(caseEl));
+  nsXFormsUtils::GetElementById(doc, caseAttr, PR_TRUE, mElement,
+                                getter_AddRefs(caseEl));
   if (!caseEl)
     return NS_OK;
-  
-  if (!nsXFormsUtils::IsXFormsElement(caseEl, NS_LITERAL_STRING("case")))
+
+  if (!nsXFormsUtils::IsXFormsElement(caseEl, caseStr))
     return NS_OK;
 
   nsCOMPtr<nsIDOMNode> parent;

@@ -61,6 +61,7 @@
 #include "nsIContent.h"
 #include "nsIAttribute.h"
 #include "nsXFormsAtoms.h"
+#include "nsIXFormsRepeatElement.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -1413,3 +1414,136 @@ nsXFormsUtils::IsDocumentReadyForBind(nsIDOMDocument *aDocument)
   return test ? PR_TRUE : PR_FALSE;
 }
 
+/**
+ * Find the repeat context for an element: Returns a parent repeat or
+ * contextcontainer (depending on |aFindContainer|).
+ *
+ * @param aElement            The element to retrieve context for
+ * @param aFindContainer      find true: "contextcontainer", false: "repeat"
+ * @return                    The repeat or contextcontainer node
+ */
+already_AddRefed<nsIDOMNode>
+FindRepeatContext(nsIDOMElement *aElement, PRBool aFindContainer)
+{
+  nsIDOMNode *result = nsnull;
+  
+  // XXX Possibly use mRepeatState functionality from nsXFormsDelegateStub to
+  // save running up the tree?
+  nsCOMPtr<nsIDOMNode> context, temp;
+  aElement->GetParentNode(getter_AddRefs(context));
+  nsresult rv;
+  while (context) {
+    if (nsXFormsUtils::IsXFormsElement(context,
+                                       aFindContainer ?
+                                         NS_LITERAL_STRING("contextcontainer") :
+                                         NS_LITERAL_STRING("repeat"))) {
+      break;
+    }
+    temp.swap(context);
+    rv = temp->GetParentNode(getter_AddRefs(context));
+  }
+  if (context && NS_SUCCEEDED(rv)) {
+      NS_ADDREF(result = context);
+  }
+  return result;
+}
+
+/* static */
+nsresult
+nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
+                              const nsAString  &aId,
+                              const PRBool      aOnlyXForms,
+                              nsIDOMElement    *aCaller,
+                              nsIDOMElement   **aElement)
+{
+  NS_ENSURE_TRUE(!aId.IsEmpty(), NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG_POINTER(aDoc);
+  NS_ENSURE_ARG_POINTER(aElement);
+  *aElement = nsnull;
+
+  nsCOMPtr<nsIDOMElement> element;
+  aDoc->GetElementById(aId, getter_AddRefs(element));
+  if (!element)
+    return NS_OK;
+
+  // Check whether the element is inside a repeat. If it is, find the cloned
+  // element for the currently selected row.
+  nsCOMPtr<nsIDOMNode> repeat = FindRepeatContext(element, PR_FALSE);
+  if (!repeat) {
+    // Element not inside a repeat, just return the element (eventually
+    // checking for XForms namespace)
+    if (aOnlyXForms) {
+      nsAutoString ns;
+      element->GetNamespaceURI(ns);
+      if (!ns.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
+        return NS_OK;
+      }
+    }
+    NS_ADDREF(*aElement = element);
+    return NS_OK;
+  }
+
+  // Check whether the caller is inside a repeat
+  nsCOMPtr<nsIDOMNode> repeatRow;
+  if (aCaller) {
+    repeatRow = FindRepeatContext(aCaller, PR_TRUE);
+  }
+
+  if (!repeatRow) {
+    // aCaller was either not set or not inside a repeat, used currently
+    // focused row of the element's repeat
+    nsCOMPtr<nsIXFormsRepeatElement> repeatInt(do_QueryInterface(repeat));
+    NS_ENSURE_STATE(repeatInt);
+    repeatInt->GetCurrentRepeatRow(getter_AddRefs(repeatRow));
+    NS_ASSERTION(repeatRow, "huh? No currently selected repeat row?");
+  }
+  
+  nsCOMPtr<nsIDOMElement> rowElement(do_QueryInterface(repeatRow));
+  NS_ENSURE_STATE(rowElement);
+
+  nsCOMPtr<nsIDOMDocument> repeatDoc;
+  rowElement->GetOwnerDocument(getter_AddRefs(repeatDoc));
+    
+  nsCOMPtr<nsIDOMNodeList> descendants;
+  nsresult rv;
+  rv = rowElement->GetElementsByTagNameNS(aOnlyXForms ?
+                                            NS_LITERAL_STRING(NS_NAMESPACE_XFORMS) :
+                                            NS_LITERAL_STRING("*"),
+                                          NS_LITERAL_STRING("*"),
+                                          getter_AddRefs(descendants));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(descendants);
+  PRUint32 elements;
+  descendants->GetLength(&elements);
+  if (!elements) {
+    return NS_OK;
+  }
+
+  PRUint32 i;
+  PRUint16 type;
+  nsAutoString idVal;
+  nsCOMPtr<nsIDOMNode> childNode;
+  for (i = 0; i < elements; ++i) {
+    descendants->Item(i, getter_AddRefs(childNode));
+    childNode->GetNodeType(&type);
+    if (type == nsIDOMNode::ELEMENT_NODE) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
+      NS_ASSERTION(content, "An ELEMENT_NODE not implementing nsIContent?!");
+      rv = content->GetAttr(kNameSpaceID_None, content->GetIDAttributeName(),
+                            idVal);
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE && idVal.Equals(aId)) {
+        element = do_QueryInterface(childNode);
+        break;
+      }
+    }
+  }
+
+  if (i == elements) {
+    return NS_OK;
+  }
+    
+  NS_ENSURE_STATE(element);
+  NS_ADDREF(*aElement = element);
+
+  return NS_OK;
+}
