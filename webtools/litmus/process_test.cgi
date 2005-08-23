@@ -66,6 +66,7 @@ if (scalar @tests > 1 && $c->param("isSimpleTest")) {
 
 my $testcount;
 my %resultcounts;
+my $product;
 foreach my $curtestid (@tests) {
     unless ($c->param("testresult_".$curtestid)) {
         # user didn't submit a result for this test so just skip 
@@ -80,6 +81,8 @@ foreach my $curtestid (@tests) {
     }
     
     $testcount++;
+    
+    $product = $curtest->product();
     
     my $ua = Litmus::UserAgentDetect->new();
     # for simpletest, build a temporary sysconfig based on the 
@@ -203,7 +206,7 @@ if ($c->param("isSimpleTest")) {
 } else {
     my $vars = {
         testcount => $testcount,
-        product   => $c->param("product") || undef,
+        product   => $product || undef,
         resultcounts => \%resultcounts || undef,
         changedlist => \@changed || undef,
         testgroup => $testgroup || undef,
