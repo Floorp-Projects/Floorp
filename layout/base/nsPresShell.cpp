@@ -3842,7 +3842,7 @@ struct CantRenderReplacedElementEvent : public PLEvent {
   CantRenderReplacedElementEvent(PresShell* aPresShell,
                                  nsIFrame* aFrame) NS_HIDDEN;
   ~CantRenderReplacedElementEvent() {
-    OurPresShell()->GetDocument()->UnblockOnload();
+    OurPresShell()->GetDocument()->UnblockOnload(PR_TRUE);
   }
   
   NS_HIDDEN_(PresShell*) OurPresShell() {
@@ -6835,7 +6835,7 @@ PresShell::DoneRemovingReflowCommands()
   // can well fire with no presentation in sight.  So just check
   // whether we actually blocked onload.
   if (mRCCreatedDuringLoad == 0 && mDocumentOnloadBlocked) {
-    mDocument->UnblockOnload();
+    mDocument->UnblockOnload(PR_FALSE);
     mDocumentOnloadBlocked = PR_FALSE;
   }
 }

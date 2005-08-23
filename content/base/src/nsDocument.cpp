@@ -2281,7 +2281,7 @@ nsDocument::EndLoad()
     observer->EndLoad(this);
   }
   DispatchContentLoadedEvents();
-  UnblockOnload();
+  UnblockOnload(PR_TRUE);
 }
 
 void
@@ -5079,7 +5079,7 @@ nsDocument::BlockOnload()
 }
 
 void
-nsDocument::UnblockOnload()
+nsDocument::UnblockOnload(PRBool aFireSync)
 {
   if (mOnloadBlockCount == 0) {
     NS_NOTREACHED("More UnblockOnload() calls than BlockOnload() calls; dropping call");
@@ -5091,7 +5091,13 @@ nsDocument::UnblockOnload()
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
-    PostUnblockOnloadEvent();
+    if (aFireSync) {
+      // Increment mOnloadBlockCount, since DoUnblockOnload will decrement it
+      ++mOnloadBlockCount;
+      DoUnblockOnload();
+    } else {
+      PostUnblockOnloadEvent();
+    }
   }
 }
 
