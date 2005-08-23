@@ -33,9 +33,10 @@
                    [%- product FILTER html %]'[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
+  onload = "document.forms['f'].milestone.select()"
 %]
 
-<form method="post" action="editmilestones.cgi">
+<form name="f" method="post" action="editmilestones.cgi">
   <table border="0" cellpadding="4" cellspacing="0">
 
     <tr>
