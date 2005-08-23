@@ -138,6 +138,7 @@ nsIConsoleService *nsContentUtils::sConsoleService;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
 nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
 nsIContentPolicy *nsContentUtils::sContentPolicyService;
+PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker = nsnull;
 nsIWordBreaker *nsContentUtils::sWordBreaker = nsnull;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
@@ -164,9 +165,6 @@ nsContentUtils::Init()
 
   // It's ok to not have prefs too.
   CallGetService(NS_PREF_CONTRACTID, &sPref);
-
-  // It's also OK to not have a content policy service
-  CallGetService(NS_CONTENTPOLICY_CONTRACTID, &sContentPolicyService);
 
   rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -426,6 +424,7 @@ nsContentUtils::Shutdown()
   sInitialized = PR_FALSE;
 
   NS_IF_RELEASE(sContentPolicyService);
+  sTriedToGetContentPolicy = PR_FALSE;
   PRInt32 i;
   for (i = 0; i < PRInt32(PropertiesFile_COUNT); ++i)
     NS_IF_RELEASE(sStringBundles[i]);
@@ -1868,7 +1867,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                                  EmptyCString(), //mime guess
                                  nsnull,         //extra
                                  &decision,
-                                 sContentPolicyService);
+                                 GetContentPolicy());
 
   if (aImageBlockingStatus) {
     *aImageBlockingStatus =
@@ -2377,4 +2376,17 @@ nsContentUtils::NotifyXPCIfExceptionPending(JSContext* aCx)
   if (nccx) {
     nccx->SetExceptionWasThrown(PR_TRUE);
   }
+}
+
+// static
+nsIContentPolicy*
+nsContentUtils::GetContentPolicy()
+{
+  if (!sTriedToGetContentPolicy) {
+    CallGetService(NS_CONTENTPOLICY_CONTRACTID, &sContentPolicyService);
+    // It's OK to not have a content policy service
+    sTriedToGetContentPolicy = PR_TRUE;
+  }
+
+  return sContentPolicyService;
 }

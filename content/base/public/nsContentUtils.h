@@ -571,10 +571,7 @@ public:
   /**
    * Return the content policy service
    */
-  static nsIContentPolicy *GetContentPolicy()
-  {
-    return sContentPolicyService;
-  }
+  static nsIContentPolicy *GetContentPolicy();
   
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
@@ -616,6 +613,7 @@ private:
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
 
   static nsIContentPolicy* sContentPolicyService;
+  static PRBool sTriedToGetContentPolicy;
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
