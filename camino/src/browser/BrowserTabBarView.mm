@@ -164,11 +164,13 @@ static const int kOverflowButtonMargin = 1;
 {
   NSPoint clickPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   TabButtonCell *clickedTabButton = [self buttonAtPoint:clickPoint];
-
   mLastClickPoint = clickPoint;
   
   if (clickedTabButton && ![clickedTabButton willTrackMouse:theEvent inRect:[clickedTabButton frame] ofView:self])
     [[[clickedTabButton tabViewItem] tabItemContentsView] mouseDown:theEvent];
+  else if (!clickedTabButton && [theEvent clickCount] == 2)
+    [[NSNotificationCenter defaultCenter] postNotificationName:kTabBarBackgroundDoubleClickedNotification
+                                                        object:mTabView];
 }
 
 -(void)mouseUp:(NSEvent*)theEvent

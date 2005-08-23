@@ -50,6 +50,9 @@
 #import "MainController.h"
 
 
+NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackgroundDoubleClickedNotification";
+
+
 //////////////////////////
 //     NEEDS IMPLEMENTED : Implement drag tracking for moving tabs around.
 //  Implementation hints : Track drags ;)

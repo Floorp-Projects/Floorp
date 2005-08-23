@@ -761,6 +761,10 @@ enum BWCOpenDest {
       if (NSAppKitVersionNumber < kPantherAppKit)
         [mURLBar setNextKeyView:mSearchBar];
     }
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(newTab:)
+                                        name:kTabBarBackgroundDoubleClickedNotification object:mTabBrowser];
+
 }
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
