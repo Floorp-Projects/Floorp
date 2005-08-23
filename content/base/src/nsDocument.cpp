@@ -2035,6 +2035,14 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     // We're detaching from the window.  We need to grab a pointer to
     // our layout history state now.
     mLayoutHistoryState = GetLayoutHistoryState();
+
+    // Also make sure to remove our onload blocker now if we haven't done it yet
+    if (mOnloadBlockCount != 0) {
+      nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+      if (loadGroup) {
+        loadGroup->RemoveRequest(mOnloadBlocker, nsnull, NS_OK);
+      }
+    }
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
