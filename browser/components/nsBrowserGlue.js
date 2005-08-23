@@ -97,7 +97,7 @@ BrowserGlue.prototype = {
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function() 
   {
-    his.Sanitizer.onShutdown();
+    this.Sanitizer.onShutdown();
   },
 
   // returns the (cached) Sanitizer constructor
