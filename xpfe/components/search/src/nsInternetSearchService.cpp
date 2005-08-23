@@ -2770,7 +2770,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	// we can only handle HTTP GET
 	if (!method.LowerCaseEqualsLiteral("get"))	return(NS_ERROR_UNEXPECTED);
 	// HTTP Get method support
-	action += NS_LITERAL_STRING("?") + input;
+	action += input;
 
 	// return a copy of the resulting search URL
 	*resultURL = ToNewCString(action);
@@ -4650,7 +4650,8 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
 
 	nsresult	rv = NS_OK;
 	PRBool		inSection = PR_FALSE;
-  PRBool        inDirInput; // directional input: "inputnext" or "inputprev"
+  PRBool    inDirInput; // directional input: "inputnext" or "inputprev"
+  PRBool    foundInput = PR_FALSE;
 
 	while(!buffer.IsEmpty())
 	{
@@ -4747,7 +4748,8 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
 					}
 				}
 			}
-			if (nameAttrib.IsEmpty())	continue;
+      if (foundInput && nameAttrib.IsEmpty()) 
+        continue;
 
 			// first look for value attribute
 			nsAutoString	valueAttrib;
@@ -4796,16 +4798,33 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
 			if (line.RFind("mode=browser", PR_TRUE) >= 0)
 				continue;
 
-			if (!nameAttrib.IsEmpty() && !valueAttrib.IsEmpty())
+			if (!valueAttrib.IsEmpty())
 			{
+        // Here's how we construct the input string:
+        // <input> is first: Name Attr: Prefix      Data           Example:
+        // YES               EMPTY      None        <value>        ACTION<value>
+        // YES               NON-EMPTY  ?           <name>=<value> ACTION?<name>=<value>
+        // NO                EMPTY      ----------- <ignored> -------------
+        // NO                NON-EMPTY  &           <name>=<value> ACTION?<n1>=<v1>&<n2>=<v2>
 				if (!input.IsEmpty())
-				{
 					input.AppendLiteral("&");
-				}
-				input += nameAttrib;
-        input.AppendLiteral("=");
+        else if (!nameAttrib.IsEmpty()) 
+          input.AppendLiteral("?");
+
+        if (!nameAttrib.IsEmpty()) 
+        {
+				  input += nameAttrib;
+          input.AppendLiteral("=");
+        }
+
+        // Indicate that we've already found an input, so we cannot have any 
+        // inputs after this that do not have names. I could be more sophisticated
+        // than this but I don't care right now since I'm only doing this for one
+        // plugin. --ben
+        foundInput = PR_TRUE;
+
         if (!inDirInput)
-				input += valueAttrib;
+          input += valueAttrib;
         else
           input.AppendInt( computeIndex(valueAttrib, pageNumber, direction) );
 			}
