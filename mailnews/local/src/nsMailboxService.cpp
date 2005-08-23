@@ -275,20 +275,40 @@ NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType,
                                                nsIMsgWindow *aMsgWindow, 
                                                nsIUrlListener *aUrlListener)
 {
-  nsCAutoString partMsgUrl(aMessageUri);
-  
-  // try to extract the specific part number out from the url string
-  partMsgUrl += "?";
-  const char *part = PL_strstr(aUrl, "part=");
-  partMsgUrl += part;
-  partMsgUrl += "&type=";
-  partMsgUrl += aContentType;
-  partMsgUrl += "&filename=";
-  partMsgUrl += aFileName;
-  return FetchMessage(partMsgUrl.get(), aDisplayConsumer,
-                      aMsgWindow,aUrlListener, aFileName,
-                      nsIMailboxUrl::ActionFetchPart, nsnull, nsnull);
+  nsCOMPtr <nsIURI> URL;
+  nsCAutoString urlString(aUrl);
+  // strip out ?type=application/x-message-display because it confuses libmime
 
+  PRInt32 typeIndex = urlString.Find("?type=application/x-message-display");
+  if (typeIndex != kNotFound)
+  {
+    urlString.Cut(typeIndex, sizeof("?type=application/x-message-display") - 1);
+    // we also need to replace the next '&' with '?'
+    PRInt32 firstPartIndex = urlString.FindChar('&');
+    if (firstPartIndex != kNotFound)
+      urlString.SetCharAt('?', firstPartIndex);
+  }
+  urlString += "&type=";
+  urlString += aContentType;
+  urlString += "&filename=";
+  urlString += aFileName;
+  CreateStartupUrl(urlString.get(), getter_AddRefs(URL));
+  nsresult rv;
+  // try to run the url in the docshell...
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+  // if we were given a docShell, run the url in the docshell..otherwise just run it normally.
+  if (NS_SUCCEEDED(rv) && docShell)
+  {
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    // DIRTY LITTLE HACK --> since we are opening an attachment we want the docshell to
+    // treat this load as if it were a user click event. Then the dispatching stuff will be much
+    // happier.
+    docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+    return docShell->LoadURI(URL, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+  }
+  return RunMailboxUrl(URL, aDisplayConsumer); 
+  
 }
 
 
