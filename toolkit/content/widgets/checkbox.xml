@@ -35,9 +35,9 @@
         <body>
         <![CDATA[
           var change = (aValue != (this.getAttribute('checked') == 'true'));
-          if (aValue) 
+          if (aValue)
             this.setAttribute('checked', 'true');
-          else 
+          else
             this.removeAttribute('checked');
           if (change) {
             var event = document.createEvent('Events');
@@ -50,15 +50,8 @@
       </method>
       
       <!-- public implementation -->
-      <property name="value"      onset="return this.checked = val;"
-                                  onget="return this.checked;"/>
       <property name="checked"    onset="return this.setChecked(val);"
                                   onget="return this.getAttribute('checked') == 'true';"/>
-
-      <constructor>
-        // Sync the checked value from the "value" attribute if necessary.
-        this.checked = this.value;
-      </constructor>
     </implementation>
     
     <handlers>
