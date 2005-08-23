@@ -553,8 +553,8 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   if (mEventCallback) {
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     nsRect rect(aX, aY, aWidth, aHeight);
-    event.point.x = aX;
-    event.point.y = aY; 
+    event.refPoint.x = aX;
+    event.refPoint.y = aY; 
     event.time = PR_Now(); /* No time in EXPOSE events */
     event.rect = &rect;
     

@@ -1459,9 +1459,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*            aPresContext,
       //XXX This should go away!  Border should have own view instead
       viewMan->SetViewCheckChildEvents(view, PR_FALSE);
 
-      // The point isn't in frameset coords, but we're using it to compute
-      // moves relative to the start position.
-      mFirstDragPoint.MoveTo(aEvent->point.x, aEvent->point.y);
+      mFirstDragPoint = aEvent->refPoint;
 
       // Store the original frame sizes
       if (mDragger->mVertical) {
@@ -1483,8 +1481,9 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
                                nsGUIEvent*     aEvent)
 {
   PRInt32 change; // measured positive from left-to-right or top-to-bottom
+  float p2t = aPresContext->PixelsToTwips();
   if (mDragger->mVertical) {
-    change = aEvent->point.x - mFirstDragPoint.x;
+    change = NSIntPixelsToTwips(aEvent->refPoint.x - mFirstDragPoint.x, p2t);
     if (change > mNextNeighborOrigSize - mMinDrag) {
       change = mNextNeighborOrigSize - mMinDrag;
     } else if (change <= mMinDrag - mPrevNeighborOrigSize) {
@@ -1507,7 +1506,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
       mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::cols, newColAttr, PR_TRUE);
     }
   } else {
-    change = aEvent->point.y - mFirstDragPoint.y;
+    change = NSIntPixelsToTwips(aEvent->refPoint.y - mFirstDragPoint.y, p2t);
     if (change > mNextNeighborOrigSize - mMinDrag) {
       change = mNextNeighborOrigSize - mMinDrag;
     } else if (change <= mMinDrag - mPrevNeighborOrigSize) {

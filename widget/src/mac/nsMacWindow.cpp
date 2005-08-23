@@ -1749,8 +1749,8 @@ nsMacWindow::ComeToFront()
 {
   nsZLevelEvent event(PR_TRUE, NS_SETZLEVEL, this);
 
-  event.point.x = mBounds.x;
-  event.point.y = mBounds.y;
+  event.refPoint.x = mBounds.x;
+  event.refPoint.y = mBounds.y;
   event.time = PR_IntervalNow();
 
   event.mImmediate = PR_TRUE;

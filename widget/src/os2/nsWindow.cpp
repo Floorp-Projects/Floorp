@@ -450,8 +450,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 
       PM2NS( ptl);
 
-      event.point.x = ptl.x;
-      event.point.y = ptl.y;
+      event.refPoint.x = ptl.x;
+      event.refPoint.y = ptl.y;
 
 #if 0
       printf("++++++++++nsWindow::InitEvent (!pt) converted point = %ld, %ld\n", ptl.x, ptl.y);
@@ -459,8 +459,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
    }
    else
    {                     // use the point override if provided
-      event.point.x = aPoint->x;
-      event.point.y = aPoint->y;
+      event.refPoint.x = aPoint->x;
+      event.refPoint.y = aPoint->y;
 
 #if 0
       printf("++++++++++nsWindow::InitEvent point = %ld, %ld\n", aPoint->x, aPoint->y);
@@ -470,8 +470,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
    event.time = WinQueryMsgTime( 0/*hab*/);
 
    /* OS2TODO
-   mLastPoint.x = event.point.x;
-   mLastPoint.y = event.point.y;
+   mLastPoint.x = event.refPoint.x;
+   mLastPoint.y = event.refPoint.y;
    */
 }
 
@@ -3147,8 +3147,8 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   // Params here are in XP-space for the desktop
   nsGUIEvent event(PR_TRUE, NS_MOVE, this);
   InitEvent( event);
-  event.point.x = aX;
-  event.point.y = aY;
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
 
   PRBool result = DispatchWindowEvent( &event);
   NS_RELEASE(event.widget);
@@ -3406,7 +3406,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
   pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
 */
-  pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
+  pluginEvent.lParam = MAKELONG(event.refPoint.x, event.refPoint.y);
 
   event.nativeMsg = (void *)&pluginEvent;
 
@@ -3472,7 +3472,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
       rect.x = 0;
       rect.y = 0;
 
-      if (rect.Contains(event.point.x, event.point.y)) {
+      if (rect.Contains(event.refPoint.x, event.refPoint.y)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
             MouseTrailer::IgnoreNextCycle();
@@ -3504,7 +3504,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
         result = ConvertStatus(mMouseListener->MouseMoved(event));
         nsRect rect;
         GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
+        if (rect.Contains(event.refPoint.x, event.refPoint.y)) {
           if (gCurrentWindow == NULL || gCurrentWindow != this) {
             gCurrentWindow = this;
           }
@@ -3553,8 +3553,8 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
 
     event.isMozWindowTakingFocus = isMozWindowTakingFocus;
 

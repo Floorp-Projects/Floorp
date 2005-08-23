@@ -82,6 +82,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsGUIEvent.h"
+#include "nsLayoutUtils.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -1572,31 +1573,15 @@ nsImageFrame::IsServerImageMap()
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::ismap, ismap);
 }
 
-//XXX the event come's in in view relative coords, but really should
-//be in frame relative coords by the time it hits our frame.
-
-// Translate an point that is relative to our view (or a containing
-// view) into a localized pixel coordinate that is relative to the
+// Translate an point that is relative to our frame
+// into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
 nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
-                                         nsPoint& aResult)
+                                   nsPoint&       aResult)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
-
-  // If we have a view then the event coordinates are already relative
-  // to this frame; otherwise we have to adjust the coordinates
-  // appropriately.
-  if (!HasView()) {
-    nsPoint offset;
-    nsIView *view;
-    GetOffsetFromView(offset, &view);
-    if (nsnull != view) {
-      x -= offset.x;
-      y -= offset.y;
-    }
-  }
 
   // Subtract out border and padding here so that the coordinates are
   // now relative to the content area of this frame.
@@ -1660,7 +1645,8 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
 
   if (nsnull != map) {
     nsPoint p;
-    TranslateEventCoords(aEvent->point, p);
+    TranslateEventCoords(
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
     PRBool inside = PR_FALSE;
     nsCOMPtr<nsIContent> area;
     inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
@@ -1693,7 +1679,8 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
       PRBool isServerMap = IsServerImageMap();
       if ((nsnull != map) || isServerMap) {
         nsPoint p;
-        TranslateEventCoords(aEvent->point, p);
+        TranslateEventCoords(
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
         PRBool inside = PR_FALSE;
         // Even though client-side image map triggering happens
         // through content, we need to make sure we're not inside

@@ -254,13 +254,13 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 	if (nsnull == aPoint) // use the point from the event
 	{
 		// get the message position in client coordinates and in twips
-		event.point.x = 0;
-		event.point.y = 0;
+		event.refPoint.x = 0;
+		event.refPoint.y = 0;
 	}
 	else // use the point override if provided
 	{
-		event.point.x = aPoint->x;
-		event.point.y = aPoint->y;
+		event.refPoint.x = aPoint->x;
+		event.refPoint.y = aPoint->y;
 	}
 	event.time = PR_IntervalNow();
 }
@@ -1804,8 +1804,8 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 			scrollEvent.time      = PR_IntervalNow();
 
-			scrollEvent.point.x = cursor.x;
-			scrollEvent.point.y = cursor.y;
+			scrollEvent.refPoint.x = cursor.x;
+			scrollEvent.refPoint.y = cursor.y;
 
 			// we don't use the mIsXDown bools because
 			// they get reset on Gecko reload (makes it harder
@@ -2342,8 +2342,8 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 {
 	nsGUIEvent event(PR_TRUE, NS_MOVE, this);
 	InitEvent(event);
-	event.point.x = aX;
-	event.point.y = aY;
+	event.refPoint.x = aX;
+	event.refPoint.y = aY;
 
 	PRBool result = DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);

@@ -2153,8 +2153,6 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
       // Reset event coordinates relative to focused frame in view
       nsPoint targetPt;
       GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
-      aEvent->point.x += targetPt.x - aEvent->refPoint.x;
-      aEvent->point.y += targetPt.y - aEvent->refPoint.y;
       aEvent->refPoint.x = targetPt.x;
       aEvent->refPoint.y = targetPt.y;
 

@@ -1857,7 +1857,7 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
         nsRect rect;
         GetBounds(rect);
-        if (rect.Contains(aEvent.point.x, aEvent.point.y)) 
+        if (rect.Contains(aEvent.refPoint.x, aEvent.refPoint.y)) 
         	{
           //if (mWindowPtr == NULL || mWindowPtr != this) 
           	//{
@@ -1914,8 +1914,8 @@ PRBool nsWindow::ReportMoveEvent()
 {
 	// nsEvent
 	nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
-	moveEvent.point.x			= mBounds.x;
-	moveEvent.point.y			= mBounds.y;
+	moveEvent.refPoint.x	= mBounds.x;
+	moveEvent.refPoint.y	= mBounds.y;
 	moveEvent.time				= PR_IntervalNow();
 
 	// dispatch event

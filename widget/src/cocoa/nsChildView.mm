@@ -1677,7 +1677,7 @@ PRBool nsChildView::DispatchMouseEvent(nsMouseEvent &aEvent)
         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
         nsRect rect;
         GetBounds(rect);
-        if (rect.Contains(aEvent.point.x, aEvent.point.y)) 
+        if (rect.Contains(aEvent.refPoint.x, aEvent.refPoint.y)) 
           {
           //if (mWindowPtr == NULL || mWindowPtr != this) 
             //{
@@ -1733,8 +1733,8 @@ PRBool nsChildView::ReportMoveEvent()
 {
   // nsEvent
   nsGUIEvent moveEvent(PR_TRUE, NS_MOVE, this);
-  moveEvent.point.x     = mBounds.x;
-  moveEvent.point.y     = mBounds.y;
+  moveEvent.refPoint.x     = mBounds.x;
+  moveEvent.refPoint.y     = mBounds.y;
   moveEvent.time        = PR_IntervalNow();
 
   // dispatch event
@@ -2079,7 +2079,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
 // hack, because we're currently getting the point in Carbon global coordinates,
 // but obviously the cocoa views don't know how to convert those (because they
 // use an entirely different coordinate system).
-  geckoEvent.point.x = 50; geckoEvent.point.y = 50;
+  geckoEvent.refPoint.x = 50; geckoEvent.refPoint.y = 50;
 //printf("mouse location is %d %d\n", geckoEvent.point.x, geckoEvent.point.y);
   DispatchWindowEvent(geckoEvent);
   
@@ -2919,8 +2919,8 @@ nsChildView::Idle()
     // convert point to view coordinate system
     NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];
     
-    outGeckoEvent->refPoint.x = outGeckoEvent->point.x = NS_STATIC_CAST(nscoord, localPoint.x);
-    outGeckoEvent->refPoint.y = outGeckoEvent->point.y = NS_STATIC_CAST(nscoord, localPoint.y);
+    outGeckoEvent->refPoint.x = NS_STATIC_CAST(nscoord, localPoint.x);
+    outGeckoEvent->refPoint.y = NS_STATIC_CAST(nscoord, localPoint.y);
   }
   
   // set up modifier keys
@@ -3311,7 +3311,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   {
     // Fire a key down.
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
-    geckoEvent.point.x = geckoEvent.point.y = 0;
+    geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
     [self convertKeyEvent:theEvent
                   message:NS_KEY_DOWN
              toGeckoEvent:&geckoEvent];
@@ -3339,7 +3339,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   {
     // Fire a key press.
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
-    geckoEvent.point.x = geckoEvent.point.y = 0;
+    geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
 
     [self convertKeyEvent:theEvent
                   message:NS_KEY_PRESS
@@ -3398,7 +3398,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   // Fire a key up.
   nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
-  geckoEvent.point.x = geckoEvent.point.y = 0;
+  geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
 
   [self convertKeyEvent:theEvent
                 message:NS_KEY_UP

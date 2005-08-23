@@ -857,8 +857,8 @@ nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 
     event.windowSize = &aRect;
-    event.point.x = aRect.x;
-    event.point.y = aRect.y;
+    event.refPoint.x = aRect.x;
+    event.refPoint.y = aRect.y;
     event.mWinWidth = aRect.width;
     event.mWinHeight = aRect.height;
 
@@ -1072,8 +1072,8 @@ nsCommonWidget::enterEvent(QEvent *)
 
     QPoint pt = QCursor::pos();
 
-    event.point.x = nscoord(pt.x());
-    event.point.y = nscoord(pt.y());
+    event.refPoint.x = nscoord(pt.x());
+    event.refPoint.y = nscoord(pt.y());
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1087,8 +1087,8 @@ nsCommonWidget::leaveEvent(QEvent *aEvent)
 
     QPoint pt = QCursor::pos();
 
-    event.point.x = nscoord(pt.x());
-    event.point.y = nscoord(pt.y());
+    event.refPoint.x = nscoord(pt.x());
+    event.refPoint.y = nscoord(pt.y());
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1112,8 +1112,8 @@ nsCommonWidget::paintEvent(QPaintEvent *e)
 
     // Generate XPFE paint event
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
     event.rect = &rect;
     // XXX fix this!
     event.region = nsnull;
@@ -1158,8 +1158,8 @@ nsCommonWidget::moveEvent(QMoveEvent *e)
     }
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
-    event.point.x = pos.x();
-    event.point.y = pos.y();
+    event.refPoint.x = pos.x();
+    event.refPoint.y = pos.y();
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
@@ -1196,8 +1196,8 @@ nsCommonWidget::closeEvent(QCloseEvent *)
 {
     nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
 
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1274,8 +1274,8 @@ nsCommonWidget::showEvent(QShowEvent *)
     nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
        // Generate XPFE paint event
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
     event.rect = &rect;
     // XXX fix this!
     event.region = nsnull;
@@ -1324,8 +1324,8 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent *nsEvent, QKeyEvent *qEvent)
 void
 nsCommonWidget::InitMouseEvent(nsMouseEvent *nsEvent, QMouseEvent *qEvent, int aClickCount)
 {
-    nsEvent->point.x = nscoord(qEvent->x());
-    nsEvent->point.y = nscoord(qEvent->y());
+    nsEvent->refPoint.x = nscoord(qEvent->x());
+    nsEvent->refPoint.y = nscoord(qEvent->y());
 
     nsEvent->isShift         = qEvent->state() & Qt::ShiftButton;
     nsEvent->isControl       = qEvent->state() & Qt::ControlButton;
@@ -1351,8 +1351,8 @@ nsCommonWidget::InitMouseWheelEvent(nsMouseScrollEvent *aEvent,
     }
     aEvent->delta = (int)((qEvent->delta() / WHEEL_DELTA) * -3);
 
-    aEvent->point.x = nscoord(qEvent->x());
-    aEvent->point.y = nscoord(qEvent->y());
+    aEvent->refPoint.x = nscoord(qEvent->x());
+    aEvent->refPoint.y = nscoord(qEvent->y());
 
     aEvent->isShift         = qEvent->state() & Qt::ShiftButton;
     aEvent->isControl       = qEvent->state() & Qt::ControlButton;

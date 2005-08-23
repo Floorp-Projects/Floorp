@@ -435,25 +435,64 @@ nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame
   nsresult rv = privateEvent->GetInternalNSEvent(&event);
   if (NS_FAILED(rv))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  if (!event || event->eventStructType != NS_MOUSE_EVENT)
+  return GetEventCoordinatesRelativeTo(event, aFrame);
+}
+
+nsPoint
+nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
+{
+  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
+                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  
-  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, event);
+
+  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsIView* view = nsIView::GetViewFor(GUIEvent->widget);
-  if (!view)
+
+  nsPoint frameToView;
+  nsIView* frameView = aFrame->GetClosestView(&frameToView);
+
+  return TranslateWidgetToView(aFrame->GetPresContext(),
+                               GUIEvent->widget, GUIEvent->refPoint,
+                               frameView) - frameToView;
+}
+
+nsPoint
+nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
+                                                 nsIFrame* aFrame,
+                                                 nsIView** aView)
+{
+  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
+                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  nsPoint widgetToView;
-  view->GetNearestWidget(&widgetToView);
-  nsPoint viewToFrame;
-  nsIView* frameView = aFrame->GetClosestView(&viewToFrame);
+  nsGUIEvent* GUIEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
+  if (!GUIEvent->widget)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  float p2t = aFrame->GetPresContext()->PixelsToTwips();
-  nsPoint mousePt(NSIntPixelsToTwips(GUIEvent->refPoint.x, p2t),
-                  NSIntPixelsToTwips(GUIEvent->refPoint.y, p2t));
-  return mousePt + widgetToView + (-frameView->GetOffsetTo(view)) +  viewToFrame;
+  nsPoint viewToFrame;
+  nsIView* frameView;
+  aFrame->GetOffsetFromView(viewToFrame, &frameView);
+  if (aView)
+    *aView = frameView;
+
+  return TranslateWidgetToView(aFrame->GetPresContext(), GUIEvent->widget,
+                               GUIEvent->refPoint, frameView);
+}
+
+nsPoint
+nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext, 
+                                     nsIWidget* aWidget, nsIntPoint aPt,
+                                     nsIView* aView)
+{
+  nsPoint widgetToView;
+  nsIView* baseView = nsIView::GetViewFor(aWidget);
+  nsIWidget* wid = baseView->GetNearestWidget(&widgetToView);
+  NS_ASSERTION(aWidget == wid, "Clashing widgets");
+  float pixelsToTwips = aPresContext->PixelsToTwips();
+  nsPoint refPointTwips(NSIntPixelsToTwips(aPt.x, pixelsToTwips),
+                        NSIntPixelsToTwips(aPt.y, pixelsToTwips));
+  return refPointTwips + widgetToView - aView->GetOffsetTo(baseView);
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types

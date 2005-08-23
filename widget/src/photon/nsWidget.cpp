@@ -380,8 +380,8 @@ PRBool nsWidget::OnResize( nsRect &aRect ) {
 		nsRect *foo = new nsRect(0, 0, aRect.width, aRect.height);
 		event.windowSize = foo;
 
-		event.point.x = 0;
-		event.point.y = 0;
+		event.refPoint.x = 0;
+		event.refPoint.y = 0;
 		event.mWinWidth = aRect.width;
 		event.mWinHeight = aRect.height;
   
@@ -400,8 +400,8 @@ PRBool nsWidget::OnResize( nsRect &aRect ) {
 PRBool nsWidget::OnMove( PRInt32 aX, PRInt32 aY ) {
   nsGUIEvent event(PR_TRUE, 0, nsnull);
   InitEvent(event, NS_MOVE);
-  event.point.x = aX;
-  event.point.y = aY;
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
   return DispatchWindowEvent(&event);
 	}
 
@@ -724,8 +724,8 @@ void nsWidget::InitMouseEvent(PhPointerEvent_t *aPhButtonEvent,
     anEvent.isControl = ( aPhButtonEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
     anEvent.isAlt =     ( aPhButtonEvent->key_mods & Pk_KM_Alt )   ? PR_TRUE : PR_FALSE;
 		anEvent.isMeta =		PR_FALSE;
-    anEvent.point.x =   aPhButtonEvent->pos.x; 
-    anEvent.point.y =   aPhButtonEvent->pos.y;
+    anEvent.refPoint.x =   aPhButtonEvent->pos.x; 
+    anEvent.refPoint.y =   aPhButtonEvent->pos.y;
     anEvent.clickCount = aPhButtonEvent->click_count;
   	}
 	}
@@ -1259,8 +1259,8 @@ void nsWidget::DispatchDragDropEvent( PhEvent_t *phevent, PRUint32 aEventType, P
 
   InitEvent( event, aEventType );
 
-  event.point.x = pos->x;
-  event.point.y = pos->y;
+  event.refPoint.x = pos->x;
+  event.refPoint.y = pos->y;
 
 	PhDndEvent_t *dnd = ( PhDndEvent_t * ) PhGetData( phevent );
   event.isControl = ( dnd->key_mods & Pk_KM_Ctrl ) ? PR_TRUE : PR_FALSE;
@@ -1270,7 +1270,7 @@ void nsWidget::DispatchDragDropEvent( PhEvent_t *phevent, PRUint32 aEventType, P
 
 	event.widget = this;
 
-///* ATENTIE */ printf("DispatchDragDropEvent pos=%d %d widget=%p\n", event.point.x, event.point.y, this );
+///* ATENTIE */ printf("DispatchDragDropEvent pos=%d %d widget=%p\n", event.refPoint.x, event.refPoint.y, this );
 
   DispatchEvent( &event, status );
 	}

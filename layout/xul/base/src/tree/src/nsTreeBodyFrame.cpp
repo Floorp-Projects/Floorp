@@ -96,6 +96,7 @@
 #include "imgILoader.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -3399,14 +3400,11 @@ nsTreeBodyFrame::ComputeDropPosition(nsGUIEvent* aEvent, PRInt32* aRow, PRInt16*
   *aOrient = -1;
   *aScrollLines = 0;
 
-  // Convert the event's point to our coordinates.  The point is currently in
-  // the coordinates of the view returned by GetOffsetFromView.  We want it in
+  // Convert the event's point to our coordinates.  We want it in
   // the coordinates of our inner box's coordinates.
-  nsPoint offsetFromView;
-  nsIView* dummy;
-  GetOffsetFromView(offsetFromView, &dummy);
-  PRInt32 xTwips = aEvent->point.x - offsetFromView.x - mInnerBox.x;
-  PRInt32 yTwips = aEvent->point.y - offsetFromView.y - mInnerBox.y;
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  PRInt32 xTwips = pt.x - mInnerBox.x;
+  PRInt32 yTwips = pt.y - mInnerBox.y;
 
   *aRow = GetRowAt(xTwips, yTwips);
   if (*aRow >=0) {

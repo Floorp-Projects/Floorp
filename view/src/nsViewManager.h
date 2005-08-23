@@ -317,8 +317,8 @@ private:
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
                         PRBool aCaptured, nsIView* aSuppressScrolling,
                         nsVoidArray* aDisplayList, PLArenaPool &aPool);
-  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView,
-                            nsGUIEvent* aEvent, PRBool aCaptured, PLArenaPool &aPool);
+  void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsPoint aPoint,
+                            PRBool aCaptured, PLArenaPool &aPool);
 
   PRBool CreateDisplayList(nsView *aView,
                            DisplayZTreeNode* &aResult,
@@ -461,7 +461,8 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   PRBool IsRootVM() const { return this == RootViewManager(); }
 
-  nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+  nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent,
+                            PRBool aCaptured);
 
   /**
    * Called to inform the view manager that a view is about to bit-blit.

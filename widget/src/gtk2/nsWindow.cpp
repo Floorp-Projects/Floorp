@@ -1335,8 +1335,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-    event.point.x = aEvent->area.x;
-    event.point.y = aEvent->area.y;
+    event.refPoint.x = aEvent->area.x;
+    event.refPoint.y = aEvent->area.y;
     event.rect = nsnull;
     event.region = updateRegion;
     event.renderingContext = rc;
@@ -1375,8 +1375,8 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
 
-    event.point.x = aEvent->x;
-    event.point.y = aEvent->y;
+    event.refPoint.x = aEvent->x;
+    event.refPoint.y = aEvent->y;
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
@@ -1415,8 +1415,8 @@ nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 {
     nsGUIEvent event(PR_TRUE, NS_XUL_CLOSE, this);
 
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1430,8 +1430,8 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
 
-    event.point.x = nscoord(aEvent->x);
-    event.point.y = nscoord(aEvent->y);
+    event.refPoint.x = nscoord(aEvent->x);
+    event.refPoint.y = nscoord(aEvent->y);
 
     LOG(("OnEnterNotify: %p\n", (void *)this));
 
@@ -1447,8 +1447,8 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
 
-    event.point.x = nscoord(aEvent->x);
-    event.point.y = nscoord(aEvent->y);
+    event.refPoint.x = nscoord(aEvent->x);
+    event.refPoint.y = nscoord(aEvent->y);
 
     LOG(("OnLeaveNotify: %p\n", (void *)this));
 
@@ -1480,8 +1480,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
 
     if (synthEvent) {
-        event.point.x = nscoord(xevent.xmotion.x);
-        event.point.y = nscoord(xevent.xmotion.y);
+        event.refPoint.x = nscoord(xevent.xmotion.x);
+        event.refPoint.y = nscoord(xevent.xmotion.y);
 
         event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
             ? PR_TRUE : PR_FALSE;
@@ -1491,8 +1491,8 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             ? PR_TRUE : PR_FALSE;
     }
     else {
-        event.point.x = nscoord(aEvent->x);
-        event.point.y = nscoord(aEvent->y);
+        event.refPoint.x = nscoord(aEvent->x);
+        event.refPoint.y = nscoord(aEvent->y);
 
         event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
             ? PR_TRUE : PR_FALSE;
@@ -1986,8 +1986,8 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     // now that we have initialized the event update our drag status
     UpdateDragStatus(event, aDragContext, dragService);
 
-    event.point.x = retx;
-    event.point.y = rety;
+    event.refPoint.x = retx;
+    event.refPoint.y = rety;
 
     innerMostWidget->AddRef();
 
@@ -2102,16 +2102,16 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     // now that we have initialized the event update our drag status
     UpdateDragStatus(event, aDragContext, dragService);
 
-    event.point.x = retx;
-    event.point.y = rety;
+    event.refPoint.x = retx;
+    event.refPoint.y = rety;
 
     nsEventStatus status;
     innerMostWidget->DispatchEvent(&event, status);
 
     event.message = NS_DRAGDROP_DROP;
     event.widget = innerMostWidget;
-    event.point.x = retx;
-    event.point.y = rety;
+    event.refPoint.x = retx;
+    event.refPoint.y = rety;
 
     innerMostWidget->DispatchEvent(&event, status);
 
@@ -2203,8 +2203,8 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 
     nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
 
-    event.point.x = aX;
-    event.point.y = aY;
+    event.refPoint.x = aX;
+    event.refPoint.y = aY;
 
     AddRef();
 
