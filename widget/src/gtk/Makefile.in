@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  view \
 		  util \
 		  unicharutil \
+		  content \
 		  layout \
 		  locale \
 		  $(NULL)
