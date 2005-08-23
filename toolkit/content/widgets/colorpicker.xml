@@ -451,7 +451,6 @@
       </property>
     
       <property name="open" onget="return this.mOpen"/>
-      <property name="value" onget="return this.color;" onset="return (this.color = val);"/>
       <property name="color">
         <getter><![CDATA[
           return this.getAttribute("color");

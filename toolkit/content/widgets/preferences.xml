@@ -336,10 +336,26 @@
             }
           }
           var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
-          if ("value" in aElement) 
-            aElement.value = val;
-          else
-            aElement.setAttribute("value", val);
+          
+          /**
+           * Initialize a UI element property with a value. Handles the case 
+           * where an element has not yet had a XBL binding attached for it and
+           * the property setter does not yet exist by setting the same attribute
+           * on the XUL element using DOM apis and assuming the element's 
+           * constructor or property getters appropriately handle this state. 
+           */
+          function setValue(element, attribute, value) {
+            if (attribute in element) 
+              element[attribute] = value;
+            else
+              element.setAttribute(attribute, value);
+          }
+          if (aElement.localName == "checkbox")
+            setValue(aElement, "checked", val);
+          else if (aElement.localName == "colorpicker")
+            setValue(aElement, "color", val);
+          else 
+            setValue(aElement, "value", val);
         ]]>
         </body>
       </method>
@@ -363,7 +379,24 @@
               dump(e);
             }
           }
-          var value = ("value" in aElement) ? aElement.value : aElement.getAttribute("value");
+          
+          /**
+           * Read the value of an attribute from an element, assuming the 
+           * attribute is a property on the element's node API. If the property
+           * is not present in the API, then assume its value is contained in
+           * an attribute, as is the case before a binding has been attached.
+           */
+          function getValue(element, attribute) {
+            if (attribute in element)
+              return element[attribute];
+            return element.getAttribute(attribute);
+          }
+          if (aElement.localName == "checkbox")
+            var value = getValue(aElement, "checked");
+          else if (aElement.localName == "colorpicker")
+            value = getValue(aElement, "color");
+          else
+            value = getValue(aElement, "value");
 
           switch (this.type) {
           case "int":
