@@ -128,7 +128,6 @@ sub create {
         
         FILTERS => {
             # disallow all html in testcase data except for non-evil tags
-            # XXX: FIXME
             testdata => sub {
                 my ($data) = @_;
                 
@@ -149,6 +148,13 @@ sub create {
                 $var =~ s/\@/\\x40/g; # anti-spam for email addresses
                 return $var;
             },
+            
+            # anti-spam filtering of email addresses
+            email => sub {
+            	my ($var) = @_;
+            	$var =~ s/\@/\&#64;/g;
+            	return $var;	
+            }
         },
     });
 }
