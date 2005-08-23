@@ -64,8 +64,6 @@
 #include "nsSound.h"
 #include "nsNativeScrollbar.h"
 
-#include "nsBidiKeyboard.h"
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -83,7 +81,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
+
+#include "nsBidiKeyboard.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+
+#include "nsNativeThemeMac.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
 
 static const nsModuleComponentInfo gComponents[] =
 {
@@ -155,14 +158,18 @@ static const nsModuleComponentInfo gComponents[] =
 		NS_DRAGHELPERSERVICE_CID,
 		"@mozilla.org/widget/draghelperservice;1",
 		nsDragHelperServiceConstructor },
-	{   "Cocoa Bidi Keyboard",
+	{ "Cocoa Bidi Keyboard",
 		NS_BIDIKEYBOARD_CID,
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
 	{	"Native Scrollbar",
 		NS_NATIVESCROLLBAR_CID,
 		"@mozilla.org/widget/nativescrollbar;1",
-		nsNativeScrollbarConstructor }
+		nsNativeScrollbarConstructor },
+  {	"Native Theme Renderer", 
+		NS_THEMERENDERER_CID,
+		"@mozilla.org/chrome/chrome-native-theme;1",
+		nsNativeThemeMacConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)
