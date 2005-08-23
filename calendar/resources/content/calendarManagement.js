@@ -40,7 +40,7 @@ function getListItem(aCalendar) {
     for (item = calendarList.firstChild;
          item;
          item = item.nextSibling) {
-        if (item.calendar == aCalendar ) {
+        if (item.calendar && item.calendar.uri.equals(aCalendar.uri)) {
             return item;
         }
     }
