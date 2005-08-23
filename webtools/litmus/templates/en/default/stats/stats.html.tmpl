@@ -47,7 +47,7 @@
 [% FOREACH curtester = toptesters %]
 <tr>
     <td>[% count FILTER html %]</td>
-    <td>[% curtester.email FILTER html %]</td>
+    <td>[% curtester.email FILTER html | email %]</td>
     <td>[% curtester.numtests FILTER html %]</td>
 </tr>
 [% count = count+1 %]
