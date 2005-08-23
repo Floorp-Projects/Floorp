@@ -93,8 +93,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xd0128d9f, 0x8d36, 0x4944, \
-  { 0xb2, 0x4b, 0x05, 0xba, 0xc2, 0x73, 0x1c, 0x66 } }
+{ 0x6a524f45, 0x4e21, 0x4049, \
+ { 0xb3, 0x57, 0x2d, 0x29, 0x75, 0x76, 0x7a, 0x43 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -725,12 +725,16 @@ public:
    * should block onload is posted.  onload is guaranteed to not fire until
    * either all calls to BlockOnload() have been matched by calls to
    * UnblockOnload() or the load has been stopped altogether (by the user
-   * pressing the Stop button, say).  onload will fire asynchronously after all
-   * onload blocks have been removed.  It will NOT fire from inside
-   * UnblockOnload.
+   * pressing the Stop button, say).
    */
   virtual void BlockOnload() = 0;
-  virtual void UnblockOnload() = 0;
+  /**
+   * @param aFireSync whether to fire onload synchronously.  If false,
+   * onload will fire asynchronously after all onload blocks have been
+   * removed.  It will NOT fire from inside UnblockOnload.  If true,
+   * onload may fire from inside UnblockOnload.
+   */
+  virtual void UnblockOnload(PRBool aFireSync) = 0;
 
   /**
    * Notification that the page has been shown, for documents which are loaded

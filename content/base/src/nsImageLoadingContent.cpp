@@ -670,7 +670,7 @@ PR_STATIC_CALLBACK(void)
 DestroyImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
-  evt->mDocument->UnblockOnload();
+  evt->mDocument->UnblockOnload(PR_TRUE);
 
   delete evt;
 }

@@ -646,7 +646,7 @@ public:
   virtual NS_HIDDEN_(already_AddRefed<nsILayoutHistoryState>) GetLayoutHistoryState() const;
 
   virtual NS_HIDDEN_(void) BlockOnload();
-  virtual NS_HIDDEN_(void) UnblockOnload();
+  virtual NS_HIDDEN_(void) UnblockOnload(PRBool aFireSync);
 
   virtual NS_HIDDEN_(void) AddStyleRelevantLink(nsIContent* aContent, nsIURI* aURI);
   virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
