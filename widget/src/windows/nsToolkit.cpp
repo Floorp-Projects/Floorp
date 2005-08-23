@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,10 +46,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsComponentManagerUtils.h"
-// objbase.h must be declared before initguid.h to use the |DEFINE_GUID|'s in aimm.h
-#include <objbase.h>
-#include <initguid.h>
-#include "aimm.h"
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
@@ -1048,5 +1045,397 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     mSingleton.DestroyTimer();
     mSingleton.mHoldMouseWindow = nsnull;
   }
+}
+
+//-------------------------------------------------------------------------
+//
+//  nsIMM class(Native IMM wrapper)
+//
+//-------------------------------------------------------------------------
+nsIMM&
+nsIMM::LoadModule()
+{
+  static nsIMM gIMM;
+  return gIMM;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
+{
+#ifndef WINCE
+  mInstance=::LoadLibrary(aModuleName);
+
+  if (mInstance) {
+    mGetCompositionStringA =
+      (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringA");
+    NS_ASSERTION(mGetCompositionStringA != NULL,
+                 "nsIMM.ImmGetCompositionStringA failed.");
+
+    mGetCompositionStringW =
+      (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringW");
+    NS_ASSERTION(mGetCompositionStringW != NULL,
+                 "nsIMM.ImmGetCompositionStringW failed.");
+
+    mGetContext =
+      (GetContextPtr)GetProcAddress(mInstance, "ImmGetContext");
+    NS_ASSERTION(mGetContext != NULL,
+                 "nsIMM.ImmGetContext failed.");
+
+    mReleaseContext =
+      (RelContextPtr)GetProcAddress(mInstance, "ImmReleaseContext");
+    NS_ASSERTION(mReleaseContext != NULL,
+                 "nsIMM.ImmReleaseContext failed.");
+
+    mNotifyIME =
+      (NotifyIMEPtr)GetProcAddress(mInstance, "ImmNotifyIME");
+    NS_ASSERTION(mNotifyIME != NULL,
+                 "nsIMM.ImmNotifyIME failed.");
+
+    mSetCandiateWindow =
+      (SetCandWindowPtr)GetProcAddress(mInstance, "ImmSetCandidateWindow");
+    NS_ASSERTION(mSetCandiateWindow != NULL,
+                 "nsIMM.ImmSetCandidateWindow failed.");
+
+    mGetCompositionWindow =
+      (GetCompWindowPtr)GetProcAddress(mInstance, "ImmGetCompositionWindow");
+    NS_ASSERTION(mGetCompositionWindow != NULL,
+                 "nsIMM.ImmGetCompositionWindow failed.");
+
+    mSetCompositionWindow =
+      (SetCompWindowPtr)GetProcAddress(mInstance, "ImmSetCompositionWindow");
+    NS_ASSERTION(mSetCompositionWindow != NULL,
+                 "nsIMM.ImmSetCompositionWindow failed.");
+
+    mGetProperty =
+      (GetPropertyPtr)GetProcAddress(mInstance, "ImmGetProperty");
+    NS_ASSERTION(mGetProperty != NULL,
+                 "nsIMM.ImmGetProperty failed.");
+
+    mGetDefaultIMEWnd =
+      (GetDefaultIMEWndPtr)GetProcAddress(mInstance, "ImmGetDefaultIMEWnd");
+    NS_ASSERTION(mGetDefaultIMEWnd != NULL,
+                 "nsIMM.ImmGetDefaultIMEWnd failed.");
+
+    mGetOpenStatus =
+      (GetOpenStatusPtr)GetProcAddress(mInstance,"ImmGetOpenStatus");
+    NS_ASSERTION(mGetOpenStatus != NULL,
+                 "nsIMM.ImmGetOpenStatus failed.");
+
+    mSetOpenStatus =
+      (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus");
+    NS_ASSERTION(mSetOpenStatus != NULL,
+                 "nsIMM.ImmSetOpenStatus failed.");
+  } else {
+    mGetCompositionStringA=NULL;
+    mGetCompositionStringW=NULL;
+    mGetContext=NULL;
+    mReleaseContext=NULL;
+    mNotifyIME=NULL;
+    mSetCandiateWindow=NULL;
+    mGetCompositionWindow=NULL;
+    mSetCompositionWindow=NULL;
+    mGetProperty=NULL;
+    mGetDefaultIMEWnd=NULL;
+    mGetOpenStatus=NULL;
+    mSetOpenStatus=NULL;
+  }
+
+#elif WINCE_EMULATOR
+  mInstance=NULL;
+
+  mGetCompositionStringA=NULL;
+  mGetCompositionStringW=NULL;
+  mGetContext=NULL;
+  mReleaseContext=NULL;
+  mNotifyIME=NULL;
+  mSetCandiateWindow=NULL;
+  mGetCompositionWindow=NULL;
+  mSetCompositionWindow=NULL;
+  mGetProperty=NULL;
+  mGetDefaultIMEWnd=NULL;
+  mGetOpenStatus=NULL;
+  mSetOpenStatus=NULL;
+#else // WinCE
+  mInstance=NULL;
+
+  mGetCompositionStringA=NULL;
+  mGetCompositionStringW=(GetCompStrPtr)ImmGetCompositionStringW;
+  mGetContext=(GetContextPtr)ImmGetContext;
+  mReleaseContext=(RelContextPtr)ImmReleaseContext;
+  mNotifyIME=(NotifyIMEPtr)ImmNotifyIME;
+  mSetCandiateWindow=(SetCandWindowPtr)ImmSetCandidateWindow;
+  mGetCompositionWindow=(GetCompWindowPtr)ImmGetCompositionWindow;
+  mSetCompositionWindow=(SetCompWindowPtr)ImmSetCompositionWindow;
+  mGetProperty=(GetPropertyPtr)ImmGetProperty;
+  mGetDefaultIMEWnd=(GetDefaultIMEWndPtr)ImmGetDefaultIMEWnd;
+  mGetOpenStatus=(GetOpenStatusPtr)ImmGetOpenStatus;
+  mSetOpenStatus=(SetOpenStatusPtr)ImmSetOpenStatus;
+#endif
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsIMM::~nsIMM()
+{
+  if(mInstance)
+    ::FreeLibrary(mInstance);
+
+  mGetCompositionStringA=NULL;
+  mGetCompositionStringW=NULL;
+  mGetContext=NULL;
+  mReleaseContext=NULL;
+  mNotifyIME=NULL;
+  mSetCandiateWindow=NULL;
+  mGetCompositionWindow=NULL;
+  mSetCompositionWindow=NULL;
+  mGetProperty=NULL;
+  mGetDefaultIMEWnd=NULL;
+  mGetOpenStatus=NULL;
+  mSetOpenStatus=NULL;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetCompositionStringA(HIMC aIMC, DWORD aIndex,
+                             LPVOID aBuf, DWORD aBufLen)
+{
+  return (mGetCompositionStringA) ?
+    mGetCompositionStringA(aIMC, aIndex, aBuf, aBufLen) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetCompositionStringW(HIMC aIMC, DWORD aIndex,
+                             LPVOID aBuf, DWORD aBufLen)
+{
+  return (mGetCompositionStringW) ?
+    mGetCompositionStringW(aIMC, aIndex, aBuf, aBufLen) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetContext(HWND aWnd)
+{
+  return (mGetContext) ? mGetContext(aWnd) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::ReleaseContext(HWND aWnd, HIMC aIMC)
+{
+  return (mReleaseContext) ? mReleaseContext(aWnd, aIMC) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::NotifyIME(HIMC aIMC, DWORD aAction, DWORD aIndex, DWORD aValue)
+{
+  return (mNotifyIME) ? mNotifyIME(aIMC, aAction, aIndex, aValue) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::SetCandidateWindow(HIMC aIMC, LPCANDIDATEFORM aCandidateForm)
+{
+  return (mSetCandiateWindow) ?
+    mSetCandiateWindow(aIMC, aCandidateForm) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::SetCompositionWindow(HIMC aIMC, LPCOMPOSITIONFORM aCompositionForm)
+{
+  return (mSetCompositionWindow) ?
+    mSetCompositionWindow(aIMC, aCompositionForm) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetCompositionWindow(HIMC aIMC, LPCOMPOSITIONFORM aCompositionForm)
+{
+  return (mGetCompositionWindow) ?
+    mGetCompositionWindow(aIMC, aCompositionForm) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetProperty(HKL aKL, DWORD aIndex)
+{
+  return (mGetProperty) ? mGetProperty(aKL, aIndex) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+LONG
+nsIMM::GetDefaultIMEWnd(HWND aWnd)
+{
+  return (mGetDefaultIMEWnd) ? mGetDefaultIMEWnd(aWnd) : 0L;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL
+nsIMM::GetOpenStatus(HIMC aIMC)
+{
+  return (mGetOpenStatus) ? mGetOpenStatus(aIMC) : FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+BOOL
+nsIMM::SetOpenStatus(HIMC aIMC, BOOL aStatus)
+{
+  return (mSetOpenStatus) ? mSetOpenStatus(aIMC, aStatus) : FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+//  nsWinNLS class(Native WinNLS wrapper)
+//
+//-------------------------------------------------------------------------
+nsWinNLS&
+nsWinNLS::LoadModule()
+{
+  static nsWinNLS gWinNLS;
+  return gWinNLS;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsWinNLS::nsWinNLS(const char* aModuleName /* = "USER32.DLL" */)
+{
+#ifndef WINCE
+  mInstance=::LoadLibrary(aModuleName);
+
+  if (mInstance) {
+    mWINNLSEnableIME =
+      (WINNLSEnableIMEPtr)GetProcAddress(mInstance, "WINNLSEnableIME");
+    NS_ASSERTION(mWINNLSEnableIME != NULL,
+                 "nsWinNLS.WINNLSEnableIME failed.");
+
+    mWINNLSGetEnableStatus =
+      (WINNLSGetEnableStatusPtr)GetProcAddress(mInstance,
+                                               "WINNLSGetEnableStatus");
+    NS_ASSERTION(mWINNLSGetEnableStatus != NULL,
+                 "nsWinNLS.WINNLSGetEnableStatus failed.");
+  } else {
+    mWINNLSEnableIME = NULL;
+    mWINNLSGetEnableStatus = NULL;
+  }
+#elif WINCE_EMULATOR
+  mInstance = NULL;
+
+  mWINNLSEnableIME = NULL;
+  mWINNLSGetEnableStatus = NULL;
+#else // WinCE
+  mInstance = NULL;
+
+  mWINNLSEnableIME = NULL;
+  mWINNLSGetEnableStatus = NULL;
+
+  // XXX If WINNLSEnableIME and WINNLSGetEnableStatus can be used on WinCE,
+  // Should use these.
+  // mWINNLSEnableIME = (WINNLSEnableIMEPtr)WINNLSEnableIME;
+  // mWINNLSGetEnableStatus = (WINNLSGetEnableStatusPtr)WINNLSGetEnableStatus;
+#endif
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsWinNLS::~nsWinNLS()
+{
+  if(mInstance)
+    ::FreeLibrary(mInstance);
+
+  mWINNLSEnableIME = NULL;
+  mWINNLSGetEnableStatus = NULL;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool
+nsWinNLS::SetIMEEnableStatus(HWND aWnd, PRBool aState)
+{
+  // If mWINNLSEnableIME wasn't loaded, we should return PR_TRUE.
+  // If we cannot load it, we cannot disable the IME. So, the IME enable state
+  // is *always* TRUE.
+  return (mWINNLSEnableIME) ? !!mWINNLSEnableIME(aWnd, aState) : PR_TRUE;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool
+nsWinNLS::GetIMEEnableStatus(HWND aWnd)
+{
+  // If mWINNLSGetEnableStatus wasn't loaded, we should return PR_TRUE.
+  // If we cannot load it, maybe we cannot load mWINNLSEnableIME too.
+  // So, if mWINNLSEnableIME wasn't loaded, the IME enable state is always TRUE.
+  return (mWINNLSGetEnableStatus) ? !!mWINNLSGetEnableStatus(aWnd) : PR_TRUE;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool
+nsWinNLS::CanUseSetIMEEnableStatus()
+{
+  return (mWINNLSEnableIME) ? PR_TRUE : PR_FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+PRBool
+nsWinNLS::CanUseGetIMEEnableStatus()
+{
+  return (mWINNLSGetEnableStatus) ? PR_TRUE : PR_FALSE;
 }
 

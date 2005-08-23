@@ -41,10 +41,10 @@
 
 #include "nsISupports.h"
 
-// {6A9AC731-988A-11d3-86CC-005004832142}
+// {8C636698-8075-4547-80AD-B032F08EF2D3}
 #define NS_IKBSTATECONTROL_IID \
-{ 0x6a9ac731, 0x988a, 0x11d3, \
-{ 0x86, 0xcc, 0x0, 0x50, 0x4, 0x83, 0x21, 0x42 } }
+{ 0x8c636698, 0x8075, 0x4547, \
+{ 0x80, 0xad, 0xb0, 0x32, 0xf0, 0x8e, 0xf2, 0xd3 } }
 
 
 /**
@@ -84,6 +84,20 @@ class nsIKBStateControl : public nsISupports {
      * If IME is 'Closed', aState is set PR_FALSE.
      */
     NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
+
+    /*
+     * Set the state to 'Enabled' or 'Disabled'.
+     * If aState is TRUE, IME enable state is set to 'Enabled'.
+     * If aState is FALSE, set to 'Disabled'.
+     */
+    NS_IMETHOD SetIMEEnabled(PRBool aState) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled'.
+     * If IME is 'Enabled', aState is set PR_TRUE.
+     * If IME is 'Disabled', aState is set PR_FALSE.
+     */
+    NS_IMETHOD GetIMEEnabled(PRBool* aState) = 0;
 
     /*
      * Destruct and don't commit the IME composition string.
