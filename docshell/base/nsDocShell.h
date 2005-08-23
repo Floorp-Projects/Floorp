@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -491,8 +492,11 @@ protected:
     // |aLoadType| should be the load type that will replace the current
     // presentation.  |aNewRequest| should be the request for the document to
     // be loaded in place of the current document, or null if such a request
-    // has not been created yet.
-    PRBool CanSavePresentation(PRUint32 aLoadType, nsIRequest *aNewRequest);
+    // has not been created yet. |aNewDocument| should be the document that will
+    // replace the current document.
+    PRBool CanSavePresentation(PRUint32 aLoadType,
+                               nsIRequest *aNewRequest,
+                               nsIDocument *aNewDocument);
 
     // Captures the state of the supporting elements of the presentation
     // (the "window" object, docshell tree, meta-refresh loads, and security
