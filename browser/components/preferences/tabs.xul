@@ -83,7 +83,7 @@
                 accesskey="&hideTabBar.accesskey;"
                 preference="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
-                accesskey="&loadBookmarksInBackground.accesskey;"
+                accesskey="&loadInBackground.accesskey;"
                 preference="browser.tabs.loadInBackground"/>
       <checkbox id="warnOnClose" label="&warnOnClose.label;"
                 accesskey="&warnOnClose.accesskey;"
