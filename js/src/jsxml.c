@@ -7028,6 +7028,7 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
     JSObject *vobj, *listobj;
     JSXML *xml, *list;
+    uint32 oldopts;
 
     v = argv[0];
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
@@ -7051,9 +7052,14 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
+    /* Toggle on XML support since the script has explicitly requested it. */
+    oldopts = cx->options;
+    JS_SetOptions(cx, oldopts | JSOPTION_XML);
     listobj = ToXMLList(cx, v);
+    JS_SetOptions(cx, oldopts);
     if (!listobj)
         return JS_FALSE;
+
     *rval = OBJECT_TO_JSVAL(listobj);
     return JS_TRUE;
 }
