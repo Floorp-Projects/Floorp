@@ -824,7 +824,8 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
     {
         "XPCWrappedNative_NoHelper",    // name;
         JSCLASS_HAS_PRIVATE |
-        JSCLASS_PRIVATE_IS_NSISUPPORTS, // flags;
+        JSCLASS_PRIVATE_IS_NSISUPPORTS |
+        JSCLASS_IS_EXTENDED, // flags;
 
         /* Mandatory non-null function pointer members. */
         XPC_WN_OnlyIWrite_PropertyStub, // addProperty;
