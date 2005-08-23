@@ -2119,6 +2119,9 @@ nsDocument::EndUpdate(nsUpdateType aUpdateType)
 void
 nsDocument::BeginLoad()
 {
+  // Block onload here to prevent having to deal with blocking and
+  // unblocking it while we know the document is loading.
+  BlockOnload();
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
@@ -2270,6 +2273,7 @@ nsDocument::EndLoad()
     observer->EndLoad(this);
   }
   DispatchContentLoadedEvents();
+  UnblockOnload();
 }
 
 void
