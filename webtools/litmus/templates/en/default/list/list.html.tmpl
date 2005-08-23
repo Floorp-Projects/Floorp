@@ -1,0 +1,59 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+#%]
+  
+[%# INTERFACE:
+  # @testlist - list of test objects to display
+  # 
+#%]
+
+[% INCLUDE global/header.html.tmpl title = "Test List" %] 
+
+<p class="pagetitle">Query Results</p>
+
+<table width="75%" border="0">
+<tr>
+<th width="5%"><div align="center"><strong>Test #</strong></div>
+</th>
+<th width="4%"><div align="center">Product</div>
+</th>
+<th width="53%"><div align="center"><strong>Summary</strong></div>
+</th>
+<th width="10%"><div align="center"><strong>Results</strong></div>
+</th>
+<th width="8%"><div align="center"><strong>Status</strong></div>
+</th>
+</tr>
+
+[% FOREACH test=testlist %]
+<tr>
+<td><div align="center">
+	<a href="show_test.cgi?id=[% test.testid FILTER html | uri %]">[% test.testid FILTER html %]</a>
+</div></td>
+<td><div align="center">[% INCLUDE product_to_img product=test.product %]</div></td>
+<td><div align="center">[% test.summary FILTER html %]</div></td>
+<td><div align="center">[% INCLUDE platformtable test=test %]</div></td>
+<td><div align="center">[% test.status.name FILTER html %]</div></td>
+</tr>
+[% END %]
+
+</table>
+
+
+[% INCLUDE global/footer.html.tmpl %]
