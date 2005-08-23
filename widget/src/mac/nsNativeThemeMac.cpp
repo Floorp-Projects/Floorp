@@ -37,7 +37,7 @@
 
 #include <Gestalt.h>
 #include "nsNativeThemeMac.h"
-#include "nsRenderingContextMac.h"
+#include "nsIRenderingContext.h"
 #include "nsDeviceContextMac.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -58,6 +58,22 @@
 #include "nsUnicharUtils.h"
 
 static PRBool sInitializedBorders = PR_FALSE;
+
+/* copied from nsRenderingContextMac */
+PRBool
+OnTigerOrLater()
+{
+  static PRBool sInitVer = PR_FALSE;
+  static PRBool sOnTigerOrLater = PR_FALSE;
+  if (!sInitVer) {
+    long version;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    sOnTigerOrLater = ((err == noErr) && (version >= 0x00001040));
+    sInitVer = PR_TRUE;
+  }
+  return sOnTigerOrLater;
+}
+
 
 static void 
 ConvertGeckoToNativeRect(const nsRect& aSrc, Rect& aDst) 
@@ -177,7 +193,7 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
       // draw the focus ring with DrawThemeButton(), there are ugly lines all
       // through the button.  This may get fixed in a dot-release, but until it
       // does, we can't draw the focus ring.
-      if (inKind != kThemePushButton || nsRenderingContextMac::OnTigerOrLater())
+      if (inKind != kThemePushButton || OnTigerOrLater())
         info.adornment = kThemeAdornmentFocus;
     }
     if ( inIsDefault )
