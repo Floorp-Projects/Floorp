@@ -3585,6 +3585,20 @@ DrillDownToBeginningOfLine(nsIFrame* aFrame,
 
   nsIFrame *firstFrame = aFrame;
   nsFrame::GetFirstLeaf(aFrame->GetPresContext(), &firstFrame);
+
+  // If it isn't a text frame, return the offset to its content from its parent content
+  if (firstFrame->GetType() != nsLayoutAtoms::textFrame)
+  {
+    nsIContent* content = firstFrame->GetContent();
+    aPos->mResultContent = content->GetParent();
+    aPos->mContentOffset = aPos->mResultContent->IndexOf(content);
+    // This actually means "associate the caret with the element at
+    // the offset" (the next element after this position). (BLECH!)
+    // Do this because we're returning the position *before* the element
+    // on the line and we want to stay on this line.
+    aPos->mPreferLeft = PR_TRUE;
+    return NS_OK;
+  }
   
   aPos->mResultContent = firstFrame->GetContent();
   PRInt32 startOffset, endOffset;
@@ -3623,8 +3637,22 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineFrameCount,
     //if we do hit an empty frame then back up the current frame to the frame before it if there is one.
     currentFrame = prevFrame;
   }
-  
+
   nsFrame::GetLastLeaf(aFrame->GetPresContext(), &currentFrame);
+
+  // If it isn't a text frame, return the offset to its content from its parent content
+  if (currentFrame->GetType() != nsLayoutAtoms::textFrame)
+  {
+    nsIContent* content = currentFrame->GetContent();
+    aPos->mResultContent = content->GetParent();
+    aPos->mContentOffset = aPos->mResultContent->IndexOf(content); 
+    // This actually means "associate the caret with the element at
+    // the offset" (the next element after this position). (BLECH!)
+    // Do this because we're returning the position *before* the element
+    // on the line and we want to stay on this line.
+    aPos->mPreferLeft = PR_TRUE;
+    return NS_OK;
+  }
   
   aPos->mResultContent = currentFrame->GetContent();
   PRInt32 startOffset, endOffset;
