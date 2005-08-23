@@ -4315,17 +4315,7 @@ MOZ_ARG_ENABLE_BOOL(pango,
 if test "$MOZ_ENABLE_PANGO"
 then
     AC_DEFINE(MOZ_ENABLE_PANGO)
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.5.0)
-
-    dnl Make sure that the pango version is _actually_ new enough
-    _SAVE_CFLAGS=$CFLAGS
-    _SAVE_LDFLAGS=$LDFLAGS
-    CFLAGS="$MOZ_PANGO_CFLAGS $CFLAGS"
-    LDFLAGS="$MOZ_PANGO_LIBS $LDFLAGS"
-    AC_CHECK_LIB(pangoft2-1.0, pango_fc_font_map_add_decoder_find_func,,
-                 AC_MSG_ERROR([Your Pango is too old. Sorry.]))
-    CFLAGS=$_SAVE_CFLAGS
-    LDFLAGS=$_SAVE_LDFLAGS
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.6.0 pangoft2 >= 1.6.0)
 
     AC_SUBST(MOZ_ENABLE_PANGO)
     AC_SUBST(MOZ_PANGO_CFLAGS)
