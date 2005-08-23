@@ -337,7 +337,7 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   // setup to draw into the correct port
   nsIDrawingSurface* surf;
   aContext->GetDrawingSurface(&surf);
-  nsDrawingSurfaceMac* macSurface = (nsDrawingSurfaceMac*)surf;
+  nsCOMPtr<nsIDrawingSurfaceMac> macSurface(do_QueryInterface(surf));
   CGrafPtr port = nsnull;
   NS_ASSERTION(macSurface,"no surface!!!\n");
   if ( macSurface )
