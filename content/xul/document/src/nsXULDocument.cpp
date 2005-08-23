@@ -3221,7 +3221,8 @@ nsXULDocument::ResumeWalk()
                 // We have completed initial layout, so just send the notification.
                 mOverlayLoadObservers.Get(overlayURI, getter_AddRefs(obs));
                 NS_ASSERTION(obs, "null overlay load observer?!");
-                obs->Observe(overlayURI, "xul-overlay-merged", EmptyString().get());
+                if (obs)
+                    obs->Observe(overlayURI, "xul-overlay-merged", EmptyString().get());
                 mOverlayLoadObservers.Remove(overlayURI);
             }
             else {
