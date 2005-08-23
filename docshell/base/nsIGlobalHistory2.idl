@@ -45,6 +45,14 @@
 #include "nsISupports.idl"
 interface nsIURI;
 
+%{ C++
+
+// nsIObserver topic to fire when you add new visited URIs to the history;
+// the nsIURI is the subject
+#define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
+
+%}
+
 [scriptable, uuid(cf777d42-1270-4b34-be7b-2931c93feda5)]
 interface nsIGlobalHistory2 : nsISupports
 {

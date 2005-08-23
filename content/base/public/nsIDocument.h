@@ -106,8 +106,6 @@ class nsILayoutHistoryState;
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
 
-#define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
-
 //----------------------------------------------------------------------
 
 // Document interface
