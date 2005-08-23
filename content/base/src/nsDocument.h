@@ -756,9 +756,7 @@ private:
   void PostUnblockOnloadEvent();
   static EventHandlerFunc HandleOnloadBlockerEvent;
   static EventDestructorFunc DestroyOnloadBlockerEvent;
-  // aWouldHaveUnblocked should be true if we would have fired onload in
-  // UnblockOnload were we doing so synchronously.
-  void DoUnblockOnload(PRBool aWouldHaveUnblocked);
+  void DoUnblockOnload();
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
