@@ -198,7 +198,8 @@ var Module = {
            .unregisterFactoryLocation(kServiceCId, fileSpec);
     const catman = Components.classes['@mozilla.org/categorymanager;1']
                              .getService(Components.interfaces.nsICategoryManager);
-    for (var j = 0, len = kServiceCats.length; j < len; j++) {
+    var len = kServiceCats.length;
+    for (var j = 0, j < len; j++) {
       catman.deleteCategoryEntry(kServiceCats[j], kServiceCtrId, true);
     }
   },
