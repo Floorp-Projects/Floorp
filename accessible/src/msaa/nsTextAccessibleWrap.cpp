@@ -147,16 +147,11 @@ STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds(
   if (!mDOMNode) {
     return E_FAIL; // Node already shut down
   }
-   if (NS_FAILED(GetCharacterExtents(aStartIndex, aEndIndex, 
+
+  if (NS_FAILED(GetCharacterExtents(aStartIndex, aEndIndex, 
                                     aX, aY, aWidth, aHeight))) {
     return NS_ERROR_FAILURE;
   }
-
-  // Add offsets for entire accessible
-  PRInt32 nodeX, nodeY, nodeWidth, nodeHeight;
-  GetBounds(&nodeX, &nodeY, &nodeWidth, &nodeHeight);
-  *aX += nodeX;
-  *aY += nodeY;
 
   return S_OK;
 }
@@ -255,15 +250,24 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   if (!startFrame || !endFrame) {
     return E_FAIL;
   }
+  
+  nsRect sum(0, 0, 0, 0);
+  nsIFrame *iter = startFrame;
+  nsIFrame *stopLoopFrame = endFrame->GetNextInFlow();
+  for (; iter != stopLoopFrame; iter = iter->GetNextInFlow()) {
+    nsRect rect = iter->GetScreenRectExternal();
+    nscoord start = (iter == startFrame) ? NSTwipsToIntPixels(startPoint.x, t2p) : 0;
+    nscoord end = (iter == endFrame) ? NSTwipsToIntPixels(endPoint.x, t2p) :
+                                       rect.width;
+    rect.x += start;
+    rect.width = end - start;
+    sum.UnionRect(sum, rect);
+  }
 
-  nsRect startRect = startFrame->GetRect();
-  nsRect endRect = endFrame->GetRect();
-
-  *aX      = NSTwipsToIntPixels(startPoint.x + startRect.x, t2p);
-  *aY      = NSTwipsToIntPixels(startPoint.y, t2p);
-  *aWidth  = NSTwipsToIntPixels(endPoint.x + endRect.x,     t2p) - *aX;
-  *aHeight = NSTwipsToIntPixels(endRect.y + endRect.height -
-                                startPoint.y - startRect.y , t2p);
+  *aX      = sum.x;
+  *aY      = sum.y;
+  *aWidth  = sum.width;
+  *aHeight = sum.height;
 
   return NS_OK;
 }
