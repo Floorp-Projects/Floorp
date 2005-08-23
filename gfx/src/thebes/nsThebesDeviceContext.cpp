@@ -105,7 +105,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
     mAppUnitsToDevUnits = 1.0f;
     mCPixelScale = 1.0f;
     mZoom = 1.0f;
-    mTextZoom = 1.0f;
 
     mWidgetSurfaceCache.Init();
 
