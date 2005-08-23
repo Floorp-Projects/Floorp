@@ -468,7 +468,7 @@ TRY_AGAIN_SAME_SCRIPT:
 #endif
 
             if (!aDraw) {
-                length += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC) * cairofontfactor * (mFont.size * app2dev);
+                length += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC) * cairofontfactor * (mFont.size * app2dev));
             } else {
                 PRInt32 *spacing = 0;
                 PRInt32 justTotal = 0;
