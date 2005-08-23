@@ -97,3 +97,17 @@ toolbar *, #appcontent * {
 	  list-style-image      : url("chrome://minimo/skin/reload.gif");
   }
 
+#item-call 
+  {
+      display:none;
+  }
+  
+#item-copy
+  {
+      display:none;
+  }
+  
+#item-paste
+  {
+      display:none;
+  } 

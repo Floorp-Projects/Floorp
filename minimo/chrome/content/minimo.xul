@@ -151,11 +151,15 @@
   <!-- place holder for our app popups and hook to the overlay --> 
 <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
-	   <menuitem  id="item_call" insertbefore="context-sep-view" label="" oncommand=""/>
-	   <menuitem  id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
+	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand=""/>
+	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
+	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
+       <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
 	</popup>
-	 <popup id="menu_FilePopup">
-             <menuitem id="menu_close"/>
+	
+	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
+	 <popup id="menu_FilePopup"> 
+         <menuitem id="menu_close"/>
 		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label="about"  />
 	</popup>
 </popupset>
