@@ -21,6 +21,7 @@
 [%# INTERFACE:
   # $numtests - the number of tests in the database
   # $numusers - the number of users in the database
+  # $numresults - the number of results in the database
   # @toptesters - an array of the top testers in the system, where each
   #               element contains a hash with keys "email" and "numtests"
 #%]
@@ -34,6 +35,7 @@
 <ul>
 <li>Testcases - [% numtests FILTER html %] testcases</li>
 <li>Users - [% numusers FILTER html %] users</li>
+<li>Results - [% numresults FILTER html %] results</li>
 </ul>
 
 <p class="pageinstruction">Tester Statistics</p>

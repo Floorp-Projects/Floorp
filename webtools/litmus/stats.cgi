@@ -39,6 +39,9 @@ my $numtests = Litmus::DB::Test->count_all();
 # find the number of users in the database
 my $numusers = Litmus::DB::User->count_all();
 
+# find the number of results in the database:
+my $numresults = Litmus::DB::Testresult->count_all();
+
 # get a list of the top 15 testers of all time, sorted by the number 
 # of test results submitted:
 my $dbh = Litmus::DB::User->db_Main();
@@ -63,6 +66,7 @@ while (@curtester = $sth->fetchrow_array()) {
 my $vars = {
     numtests   => $numtests,
     numusers   => $numusers,
+    numresults => $numresults,
     toptesters => \@toptesters,
 };
 
