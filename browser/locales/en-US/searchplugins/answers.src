@@ -1,0 +1,29 @@
+# Mozilla/Dictionary.com plug-in by fissure@netscape.net
+# Updated by rebron@meer.net on 11 August 2004
+
+<SEARCH
+    version = "7.1" 
+   name="Dictionary.com"
+   description="Dictionary.com Search"
+   method="get"
+   action="http://www.dictionary.com/search"
+   queryCharset="ISO-8859-1"
+>
+
+<input name="q" user>
+
+<interpret 
+    browserResultType="result" 
+    resultListStart="<!-- Content -->"
+    resultListEnd="For better results" 
+    resultItemStart="<p>" 
+    resultItemEnd="</p>"
+>
+</search>
+
+<BROWSER
+   update="http://www.mozilla.org/products/firefox/plugins/dictionary.src" 
+   updateIcon="http://www.mozilla.org/products/firefox/plugins/dictionary.png" 
+   updateCheckDays="3"
+>
+
