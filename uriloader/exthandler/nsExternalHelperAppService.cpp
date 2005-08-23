@@ -106,6 +106,7 @@
 #include "nsIWindowWatcher.h"
 
 #include "nsIGlobalHistory.h" // to mark downloads as visited
+#include "nsIGlobalHistory2.h" // to mark downloads as visited
 
 #include "nsCRT.h"
 
@@ -1785,7 +1786,18 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mSourceUrl->GetSpec(spec);
   if (history && !spec.IsEmpty())
   {
+    PRBool visited;
+    rv = history->IsVisited(spec.get(), &visited);
+    if (NS_FAILED(rv))
+        return rv;
     history->AddPage(spec.get());
+    if (!visited) {
+      nsCOMPtr<nsIObserverService> obsService =
+          do_GetService("@mozilla.org/observer-service;1");
+      if (obsService) {
+        obsService->NotifyObservers(mSourceUrl, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
+      }
+    }
   }
 
   return NS_OK;

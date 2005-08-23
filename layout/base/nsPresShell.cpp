@@ -139,6 +139,7 @@
 #include "nsSpaceManager.h"
 #include "prenv.h"
 #include "nsIAttribute.h"
+#include "nsIGlobalHistory2.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
 #include "nsIRenderingContext.h"
