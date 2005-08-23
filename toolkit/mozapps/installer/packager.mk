@@ -124,8 +124,8 @@ UNMAKE_PACKAGE	= \
   export PAGER=true; \
   mkdir mount-temp; \
   echo Y | hdiutil attach -readonly -mountpoint mount-temp -private -noautoopen $(UNPACKAGE) > hdi.output; \
-  DEV_NAME=`sed -e 's/^.*\(\/dev\/disk[^ ]*\).*$$/\1/;1q' < hdi.output`; \
-  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";}'< hdi.output`; \
+  DEV_NAME=`perl -n -e 'if($$_=~/(\/dev\/disk[^ ]*)/) {print $$1."\n";exit;}'< hdi.output`; \
+  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";exit;}'< hdi.output`; \
   rsync -a $${MOUNTPOINT}/$(_APPNAME) $(MOZ_PKG_APPNAME); \
   hdiutil detach $${DEV_NAME}; \
   $(NULL)
