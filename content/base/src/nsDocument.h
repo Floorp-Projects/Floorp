@@ -108,6 +108,17 @@ class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
+struct PLEvent;
+
+PR_BEGIN_EXTERN_C
+/* Note that these typedefs declare functions, not pointer to
+   functions.  That's the only way in which they differ from
+   PLHandleEventProc and PLDestroyEventProc. */
+typedef void*
+(PR_CALLBACK EventHandlerFunc)(PLEvent* self);
+typedef void
+(PR_CALLBACK EventDestructorFunc)(PLEvent* self);
+PR_END_EXTERN_C
 
 /**
  * Hashentry using a PRUint32 key and a cheap set of nsIContent* owning
@@ -741,6 +752,11 @@ protected:
 
 private:
   nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);
+
+  void PostUnblockOnloadEvent();
+  static EventHandlerFunc HandleOnloadBlockerEvent;
+  static EventDestructorFunc DestroyOnloadBlockerEvent;
+  void DoUnblockOnload();
 
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);

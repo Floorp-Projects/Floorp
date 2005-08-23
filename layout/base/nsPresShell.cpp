@@ -189,9 +189,6 @@
 #endif
 #include "nsPlaceholderFrame.h"
 
-// Dummy layout request
-#include "nsDummyLayoutRequest.h"
-
 // Content viewer interfaces
 #include "nsIContentViewer.h"
 
@@ -765,57 +762,6 @@ struct nsCallbackEventRequest
 };
 
 
-PRInt32 nsDummyLayoutRequest::gRefCnt;
-nsIURI* nsDummyLayoutRequest::gURI;
-
-NS_IMPL_ADDREF(nsDummyLayoutRequest)
-NS_IMPL_RELEASE(nsDummyLayoutRequest)
-NS_IMPL_QUERY_INTERFACE2(nsDummyLayoutRequest, nsIRequest, nsIChannel)
-
-nsresult
-nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
-{
-  *aResult = new nsDummyLayoutRequest(aPresShell);
-  if (!*aResult)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK; 
-}
-
-
-nsDummyLayoutRequest::nsDummyLayoutRequest(nsIPresShell* aPresShell)
-{
-  if (gRefCnt++ == 0) {
-      nsresult rv;
-      rv = NS_NewURI(&gURI, "about:layout-dummy-request", nsnull);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:layout-dummy-request");
-  }
-
-  mPresShell = do_GetWeakReference(aPresShell);
-}
-
-
-nsDummyLayoutRequest::~nsDummyLayoutRequest()
-{
-  if (--gRefCnt == 0) {
-      NS_IF_RELEASE(gURI);
-  }
-}
-
-NS_IMETHODIMP
-nsDummyLayoutRequest::Cancel(nsresult status)
-{
-  // Cancel layout
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (presShell) {
-    rv = presShell->CancelAllReflowCommands();
-  }
-  return rv;
-}
-
 // ----------------------------------------------------------------------------
 
 /**
@@ -1121,9 +1067,8 @@ public:
                                  nsIAtom*     aChildListName);
   NS_IMETHOD CancelReflowCommand(nsIFrame*     aTargetFrame, 
                                  nsReflowType* aCmdType);  
-  NS_IMETHOD CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
-                                         nsReflowType* aCmdType,
-                                         PRBool        aProcessDummyLayoutRequest = PR_TRUE);  
+  void CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
+                                   nsReflowType* aCmdType);
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType);
@@ -1334,16 +1279,12 @@ protected:
   nsresult ReflowCommandAdded(nsHTMLReflowCommand* aRC);
   nsresult ReflowCommandRemoved(nsHTMLReflowCommand* aRC);
 
-  // This method should be called after a reflow commands have been
+  // This method should be called after reflow commands have been
   // removed from the queue, but after the state in the presshell is
   // such that it's safe to flush (i.e. mIsReflowing == PR_FALSE)
-  // If we are not reflowing and there are no load-crated reflow commands, then
-  // the dummyLayoutRequest is removed
+  // If there are no load-created reflow commands and we blocked
+  // onload on the document, we'll unblock it.
   void DoneRemovingReflowCommands();
-
-  friend struct DummyLayoutRequestEvent;
-  nsresult AddDummyLayoutRequest(void);
-  nsresult RemoveDummyLayoutRequest();
 
   friend struct CantRenderReplacedElementEvent;
   NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
@@ -1405,6 +1346,7 @@ protected:
   PLDHashTable              mReflowCommandTable;
 
   PRPackedBool mDocumentLoading;
+  PRPackedBool mDocumentOnloadBlocked;
   PRPackedBool mIsReflowing;
   PRPackedBool mIsDestroying;
   PRPackedBool mIsReleasingAnonymousContent;
@@ -1432,9 +1374,6 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
-  // When mDummyLayoutRequestEventPosted is true, we have an event
-  // posted that will call RemoveDummyLayoutRequest when it fires.
-  PRPackedBool                  mDummyLayoutRequestEventPosted;
   PresShellViewEventListener    *mViewEventListener;
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
   nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
@@ -1442,24 +1381,6 @@ protected:
   StackArena*                   mStackArena;
   nsCOMPtr<nsIDragService>      mDragService;
   PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
-  // The dummy layout request is used to prevent onload from firing
-  // until after all the reflows that were posted during document load
-  // have been processed.  The control flow here is the following:
-  // 1)  Any time a reflow command is added while the document is loading, if
-  //     we do not already have a dummy layout request we go ahead and create
-  //     one.
-  // 2)  Any time we've removed all reflow commands that were added during
-  //     document load and have a mDummyLayoutRequest we post an event to
-  //     remove this request.  The one exception is when we're destroying the
-  //     presshell; then we don't post an event (see item #4).
-  // 3)  While the event to remove the request is posted,
-  //     mDummyLayoutRequestEventPosted is set to true.  It's set to false when
-  //     the event fires, before removing the request.  While this boolean is
-  //     set, additional events are _not_ posted.
-  // 4)  Destroy() guarantees that the dummy layout request is removed by
-  //     calling RemoveDummyLayoutRequest(), since we may already have no
-  //     reflow commands around and we revoke our events.
-  nsCOMPtr<nsIRequest>          mDummyLayoutRequest;
 
   CantRenderReplacedElementEvent* mPostedReplaces;
   
@@ -1992,8 +1913,9 @@ PresShell::Destroy()
 
   CancelAllReflowCommands();
 
-  RemoveDummyLayoutRequest();
-  
+  NS_ASSERTION(!mDocumentOnloadBlocked,
+               "CancelAllReflowCommands() didn't unblock onload?");
+
   KillResizeEventTimer();
 
   // Now that mReflowCommandTable won't be accessed anymore, finish it
@@ -3771,10 +3693,9 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   return scrollView;
 }
 
-NS_IMETHODIMP
+void
 PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
-                                       nsReflowType* aCmdType,
-                                       PRBool        aProcessDummyLayoutRequest)
+                                       nsReflowType* aCmdType)
 {
   PRInt32 i, n = mReflowCommands.Count();
   for (i = 0; i < n; i++) {
@@ -3796,18 +3717,15 @@ PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame,
     }
   }
 
-  if (aProcessDummyLayoutRequest) {
-    DoneRemovingReflowCommands();
-  }
-
-  return NS_OK;
+  DoneRemovingReflowCommands();
 }
 
 NS_IMETHODIMP
 PresShell::CancelReflowCommand(nsIFrame*     aTargetFrame, 
                                nsReflowType* aCmdType)
 {
-  return CancelReflowCommandInternal(aTargetFrame, aCmdType);
+  CancelReflowCommandInternal(aTargetFrame, aCmdType);
+  return NS_OK;
 }
 
 
@@ -3923,15 +3841,9 @@ struct CantRenderReplacedElementEvent : public PLEvent {
   CantRenderReplacedElementEvent(PresShell* aPresShell,
                                  nsIFrame* aFrame) NS_HIDDEN;
   ~CantRenderReplacedElementEvent() {
-    RemoveLoadGroupRequest();
+    OurPresShell()->GetDocument()->UnblockOnload();
   }
   
-  // XXXldb Should the pres shell maintain a reference count on a single
-  // dummy layout request instead of doing creation of a separate one
-  // here (and per-event!)?
-  // XXXbz absolutely!  Should be a per-document counter, actually....
-  NS_HIDDEN_(void) AddLoadGroupRequest();
-  NS_HIDDEN_(void) RemoveLoadGroupRequest();
   NS_HIDDEN_(PresShell*) OurPresShell() {
     return NS_STATIC_CAST(PresShell*, owner);
   }
@@ -3940,7 +3852,6 @@ struct CantRenderReplacedElementEvent : public PLEvent {
 
   nsIFrame*  mFrame;                     // the frame that can't be rendered
   CantRenderReplacedElementEvent* mNext; // next event in the list
-  nsCOMPtr<nsIRequest> mDummyLayoutRequest; // load group request
 };
 
 PR_STATIC_CALLBACK(void*)
@@ -3969,10 +3880,7 @@ CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aPresS
                ::HandleCantRenderReplacedElementEvent,
                ::DestroyCantRenderReplacedElementEvent);
 
-  // XXXbz why only for object frames?
-  if (nsLayoutAtoms::objectFrame == aFrame->GetType()) {
-    AddLoadGroupRequest();
-  }
+  aPresShell->GetDocument()->BlockOnload();
 }
 
 void
@@ -4010,57 +3918,6 @@ PresShell::DequeuePostedEventFor(nsIFrame* aFrame)
       PL_DequeueEvent(tmp, plqueue);
       PL_DestroyEvent(tmp);
     }
-  }
-}
-
-// Add a load group request in order to delay the onLoad handler when we have
-// pending replacements
-void
-CantRenderReplacedElementEvent::AddLoadGroupRequest()
-{
-  PresShell* presShell = OurPresShell();
-  nsIDocument *doc = presShell->GetDocument();
-  if (!doc) {
-    return;
-  }
-
-  nsDummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), presShell);
-  if (!mDummyLayoutRequest) {
-    return;
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-  if (!loadGroup) {
-    return;
-  }
-  
-  nsresult rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  
-  loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
-}
-
-// Remove the load group request added above
-void
-CantRenderReplacedElementEvent::RemoveLoadGroupRequest()
-{
-  if (mDummyLayoutRequest) {
-    nsCOMPtr<nsIRequest> request = mDummyLayoutRequest;
-    mDummyLayoutRequest = nsnull;
-
-    nsIDocument *doc = OurPresShell()->GetDocument();
-    if (!doc) {
-      return;
-    }
-
-    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-    if (!loadGroup) {
-      return;
-    }
-
-    loadGroup->RemoveRequest(request, nsnull, NS_OK);
   }
 }
 
@@ -6907,7 +6764,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 #endif
 
     // If there are no more reflow commands in the queue, we'll want
-    // to remove the ``dummy request''.
+    // to unblock onload.
     DoneRemovingReflowCommands();
 
     DidDoReflow();
@@ -6963,8 +6820,9 @@ PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
       }
 #endif
 
-      if (!mDummyLayoutRequest) {
-        AddDummyLayoutRequest();
+      if (!mDocumentOnloadBlocked) {
+        mDocument->BlockOnload();
+        mDocumentOnloadBlocked = PR_TRUE;
       }
     }
   }
@@ -6991,126 +6849,16 @@ PresShell::ReflowCommandRemoved(nsHTMLReflowCommand* aRC)
   return NS_OK;
 }
 
-struct DummyLayoutRequestEvent : public PLEvent {
-  DummyLayoutRequestEvent(PresShell* aPresShell) NS_HIDDEN;
-  ~DummyLayoutRequestEvent() { }
-
-  void HandleEvent() {
-    // Hold a ref here, just in case, since we can trigger DOM event dispatch
-    nsRefPtr<PresShell> presShell = NS_STATIC_CAST(PresShell*, owner);
-    presShell->mDummyLayoutRequestEventPosted = PR_FALSE;
-    presShell->RemoveDummyLayoutRequest();
-  }
-};
-
-PR_STATIC_CALLBACK(void*)
-HandleDummyLayoutRequestPLEvent(PLEvent* aEvent)
-{
-  DummyLayoutRequestEvent* evt = NS_STATIC_CAST(DummyLayoutRequestEvent*,
-                                                aEvent);
-  evt->HandleEvent();
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyDummyLayoutRequestPLEvent(PLEvent* aEvent)
-{
-  DummyLayoutRequestEvent* evt = NS_STATIC_CAST(DummyLayoutRequestEvent*,
-                                                aEvent);
-
-  delete evt;
-}
-
-DummyLayoutRequestEvent::DummyLayoutRequestEvent(PresShell* aPresShell)
-{
-  NS_PRECONDITION(aPresShell, "Must have a presshell");
-  NS_PRECONDITION(aPresShell->mDummyLayoutRequest, "No layout request?");
-
-  PL_InitEvent(this, aPresShell, ::HandleDummyLayoutRequestPLEvent,
-               ::DestroyDummyLayoutRequestPLEvent);
-}
-
 void
 PresShell::DoneRemovingReflowCommands()
 {
-  if (mRCCreatedDuringLoad == 0 && mDummyLayoutRequest && !mIsReflowing &&
-      !mIsDestroying && !mDummyLayoutRequestEventPosted) {
-    // Post an event to remove mDummyLayoutRequest from the loadgroup
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    mEventQueueService->
-      GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                           getter_AddRefs(eventQueue));
-    if (!eventQueue) {
-      NS_WARNING("onload won't fire, due to failure to get event queue.");
-      return;
-    }
-
-    DummyLayoutRequestEvent* evt = new DummyLayoutRequestEvent(this);
-    if (!evt) {
-      NS_WARNING("onload won't fire, due to failure to create event.");
-      return;
-    }
-
-    nsresult rv = eventQueue->PostEvent(evt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("onload won't fire, due to failure to post dummy layout "
-                 "request event");
-      PL_DestroyEvent(evt);
-      return;
-    }
-
-    mDummyLayoutRequestEventPosted = PR_TRUE;
+  // We want to unblock here even if we're destroying, since onload
+  // can well fire with no presentation in sight.  So just check
+  // whether we actually blocked onload.
+  if (mRCCreatedDuringLoad == 0 && mDocumentOnloadBlocked) {
+    mDocument->UnblockOnload();
+    mDocumentOnloadBlocked = PR_FALSE;
   }
-}
-
-nsresult
-PresShell::AddDummyLayoutRequest(void)
-{ 
-  nsresult rv = NS_OK;
-
-  if (gAsyncReflowDuringDocLoad && !mIsReflowing) {
-    rv = nsDummyLayoutRequest::Create(getter_AddRefs(mDummyLayoutRequest), this);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    if (mDocument)
-      loadGroup = mDocument->GetDocumentLoadGroup();
-
-    if (loadGroup) {
-      rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
-      if (NS_FAILED(rv)) return rv;
-      rv = loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
-      if (NS_FAILED(rv)) return rv;
-
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-             ("presshell=%p, Added dummy layout request %p", this, mDummyLayoutRequest.get()));
-    }
-  }
-  return rv;
-}
-
-nsresult
-PresShell::RemoveDummyLayoutRequest()
-{
-  nsresult rv = NS_OK;
-
-  if (gAsyncReflowDuringDocLoad) {
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    if (mDocument)
-      loadGroup = mDocument->GetDocumentLoadGroup();
-
-    if (loadGroup && mDummyLayoutRequest) {
-      rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-             ("presshell=%p, Removed dummy layout request %p", this,
-              mDummyLayoutRequest.get()));
-
-      mDummyLayoutRequest = nsnull;
-    }
-  }
-  return rv;
 }
 
 #ifdef MOZ_XUL
