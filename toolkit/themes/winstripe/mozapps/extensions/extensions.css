@@ -87,7 +87,6 @@ extension {
   -moz-padding-end: 7px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
-  background-image: url("chrome://mozapps/skin/shared/itemFader.png");
 }
 
 extension[disabled="true"] {
