@@ -166,7 +166,7 @@
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY preferencesCmdUnix.accesskey     "n"> 
 
-<!ENTITY sanitizeCmd.label            "Clear Private Data...">
+<!ENTITY sanitizeCmd.label            "Clear Private Data">
 <!ENTITY sanitizeCmd.accesskey        "P">
 
 <!ENTITY viewMenu.label         "View"> 

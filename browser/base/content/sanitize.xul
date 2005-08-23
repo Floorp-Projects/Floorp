@@ -21,6 +21,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Giorgio Maone <g.maone@informaction.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,11 +79,18 @@
         {
           var s = new Sanitizer();
           var sanitizePreferences = document.getElementById("sanitizePreferences");
+          var preference, name;
           for (var i = 0; i < sanitizePreferences.childNodes.length; ++i) {
-            var preference = sanitizePreferences.childNodes[i];
-            var name = s.getNameFromPreference(preference.name);
-            if (s.canClearItem(name) && preference.value) 
-              s.clearItem(name);
+            preference = sanitizePreferences.childNodes[i];
+            if (preference.value) {
+              name = s.getNameFromPreference(preference.name);
+              try {
+                s.clearItem(name);
+              } catch(er) {
+                dump(er + " sanitizing " + name); 
+                // TODO: give user feedback about partially failed sanitization
+              }
+            }
           }
         },
         

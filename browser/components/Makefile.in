@@ -47,10 +47,12 @@ XPIDL_MODULE = browsercompsbase
 
 XPIDLSRCS = \
 	nsIBrowserHandler.idl \
+	nsIBrowserGlue.idl \
 	$(NULL)
 
 EXTRA_PP_COMPONENTS = \
 	nsBrowserContentHandler.js \
+	nsBrowserGlue.js \
 	$(NULL)
 
 DIRS = \

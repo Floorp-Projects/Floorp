@@ -166,7 +166,7 @@
                                                                 'chrome,dialog=no,resizable');"/>
     <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
     <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
-    <command id="Tools:Sanitize" oncommand="gSanitizeListener.sanitize(window || null);"/>
+    <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
