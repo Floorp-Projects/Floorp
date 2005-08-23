@@ -102,9 +102,7 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
   if (!result) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("indexEvalError"),
                                mElement);
-    // beaufour: This makes sense, but is not according to the spec. I guess...
-    nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
-    return NS_ERROR_ABORT;
+    return NS_OK;
   }
   double indexDoub;
   rv = result->GetNumberValue(&indexDoub);
@@ -128,9 +126,7 @@ nsXFormsSetIndexElement::HandleAction(nsIDOMEvent            *aEvent,
     const PRUnichar *strings[] = { id.get(), repeatStr.get() };
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("idRefError"),
                                strings, 2, mElement, mElement);
-    // beaufour: This makes sense, but is not according to the spec. I guess...
-    nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
-    return NS_ERROR_ABORT;
+    return NS_OK;
   }
 
   // Set the index = |indexInt|
