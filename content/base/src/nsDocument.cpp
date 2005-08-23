@@ -127,6 +127,9 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
 #include "nsILink.h"
+#include "plevent.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 
 #include "nsICharsetAlias.h"
 #include "nsIParser.h"
@@ -5052,7 +5055,9 @@ nsDocument::GetLayoutHistoryState() const
 void
 nsDocument::BlockOnload()
 {
-  if (mOnloadBlockCount == 0) {
+  // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
+  // -- it's not ours.
+  if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
     nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
     if (loadGroup) {
       loadGroup->AddRequest(mOnloadBlocker, nsnull);
@@ -5065,17 +5070,96 @@ void
 nsDocument::UnblockOnload()
 {
   if (mOnloadBlockCount == 0) {
+    NS_NOTREACHED("More UnblockOnload() calls than BlockOnload() calls; dropping call");
     return;
   }
 
   --mOnloadBlockCount;
 
-  if (mOnloadBlockCount == 0) {
+  // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
+  // -- it's not ours.
+  if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
+    PostUnblockOnloadEvent();
+  }
+}
+
+void
+nsDocument::PostUnblockOnloadEvent()
+{
+  nsCOMPtr<nsIEventQueueService> eventQService =
+    do_GetService("@mozilla.org/event-queue-service;1");
+  if (!eventQService) {
+    return;
+  }
+
+  nsCOMPtr<nsIEventQueue> eventQ;
+  eventQService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                      getter_AddRefs(eventQ));
+  if (!eventQ) {
+    return;
+  }
+  
+  PLEvent* evt = new PLEvent();
+  if (!evt) {
+    return;
+  }
+
+  PL_InitEvent(evt, this, nsDocument::HandleOnloadBlockerEvent,
+               nsDocument::DestroyOnloadBlockerEvent);
+
+  // After this point, event destruction will release |this|
+  NS_ADDREF_THIS();
+
+  nsresult rv = eventQ->PostEvent(evt);
+  if (NS_FAILED(rv)) {
+    PL_DestroyEvent(evt);
+  } else {
+    // Stabilize block count so we don't post more events while this one is up
+    ++mOnloadBlockCount;
+  }
+}
+
+// static
+void* PR_CALLBACK
+nsDocument::HandleOnloadBlockerEvent(PLEvent* aEvent)
+{
+  nsDocument* doc = NS_STATIC_CAST(nsDocument*, aEvent->owner);
+  doc->DoUnblockOnload();
+  return nsnull;
+}
+
+// static
+void PR_CALLBACK
+nsDocument::DestroyOnloadBlockerEvent(PLEvent* aEvent)
+{
+  nsDocument* doc = NS_STATIC_CAST(nsDocument*, aEvent->owner);
+  NS_RELEASE(doc);
+  delete aEvent;
+}
+
+void
+nsDocument::DoUnblockOnload()
+{
+  NS_ASSERTION(mOnloadBlockCount != 0,
+               "Shouldn't have a count of zero here, since we stabilized in "
+               "PostUnblockOnloadEvent");
+  
+  --mOnloadBlockCount;
+  
+  if (mOnloadBlockCount != 0) {
+    // We blocked again after the last unblock.  Nothing to do here.  We'll
+    // post a new event when we unblock again.
+    return;
+  }
+
+  // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
+  // -- it's not ours.
+  if (mScriptGlobalObject) {
     nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
     if (loadGroup) {
       loadGroup->RemoveRequest(mOnloadBlocker, nsnull, NS_OK);
     }
-  }    
+  }
 }
 
 void

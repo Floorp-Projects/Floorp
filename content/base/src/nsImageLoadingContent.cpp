@@ -59,7 +59,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
-#include "nsDummyLayoutRequest.h"
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
