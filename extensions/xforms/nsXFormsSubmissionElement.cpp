@@ -509,33 +509,61 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
     }
   }
 
-  // get the nodeset that we are currently bound to
-  nsCOMPtr<nsIDOMNode> data;
+  // Get the appropriate instance node.  If the "instance" attribute is set,
+  // then get that instance node.  Otherwise, get the one we are bound to.
+  nsresult rv;
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   NS_ENSURE_STATE(model);
-  nsresult rv = GetSelectedInstanceData(getter_AddRefs(data));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMNode> instanceNode;
-    rv = nsXFormsUtils::GetInstanceNodeForData(data, model, 
-                                               getter_AddRefs(instanceNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIInstanceElementPrivate> instanceElement;
+  nsAutoString value;
+  mElement->GetAttribute(NS_LITERAL_STRING("instance"), value);
+  if (!value.IsEmpty()) {
+    rv = GetSelectedInstanceElement(value, model,
+                                    getter_AddRefs(instanceElement));
+  } else {
+    nsCOMPtr<nsIDOMNode> data;
+    rv = GetBoundInstanceData(getter_AddRefs(data));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMNode> instanceNode;
+      rv = nsXFormsUtils::GetInstanceNodeForData(data, model,
+                                                 getter_AddRefs(instanceNode));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIInstanceElementPrivate> instanceElement =
-      do_QueryInterface(instanceNode);
-
-    // replace the document referenced by this instance element with the info
-    // returned back from the submission
-    if (instanceElement) {
-      instanceElement->SetDocument(newDoc);
-
-      // refresh everything
-      model->Rebuild();
-      model->Recalculate();
-      model->Revalidate();
-      model->Refresh();
+      instanceElement = do_QueryInterface(instanceNode);
     }
   }
 
+  // replace the document referenced by this instance element with the info
+  // returned back from the submission
+  if (NS_SUCCEEDED(rv) && instanceElement) {
+    instanceElement->SetDocument(newDoc);
+
+    // refresh everything
+    model->Rebuild();
+    model->Recalculate();
+    model->Revalidate();
+    model->Refresh();
+  }
+
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsSubmissionElement::GetSelectedInstanceElement(
+                                            const nsAString &aInstanceID,
+                                            nsIModelElementPrivate *aModel,
+                                            nsIInstanceElementPrivate **aResult)
+{
+  aModel->FindInstanceElement(aInstanceID, aResult);
+  if (*aResult == nsnull) {
+    // if failed to get desired instance, dispatch binding exception
+    const PRUnichar *strings[] = { PromiseFlatString(aInstanceID).get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceBindError"),
+                               strings, 1, mElement, mElement);
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -598,7 +626,7 @@ nsXFormsSubmissionElement::Submit()
   // 2. get selected node from the instance data (use xpath, gives us node
   //    iterator)
   nsCOMPtr<nsIDOMNode> data;
-  rv = GetSelectedInstanceData(getter_AddRefs(data));
+  rv = GetBoundInstanceData(getter_AddRefs(data));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && data, rv);
 
 
@@ -628,7 +656,7 @@ nsXFormsSubmissionElement::Submit()
 }
 
 nsresult
-nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
+nsXFormsSubmissionElement::GetBoundInstanceData(nsIDOMNode **result)
 {
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> xpRes;

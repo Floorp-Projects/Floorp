@@ -98,7 +98,8 @@ public:
   NS_HIDDEN_(nsresult) Submit();
   NS_HIDDEN_(PRBool)   GetBooleanAttr(const nsAString &attrName, PRBool defaultVal = PR_FALSE);
   NS_HIDDEN_(void)     GetDefaultInstanceData(nsIDOMNode **result);
-  NS_HIDDEN_(nsresult) GetSelectedInstanceData(nsIDOMNode **result);
+  NS_HIDDEN_(nsresult) GetBoundInstanceData(nsIDOMNode **result);
+  NS_HIDDEN_(nsresult) GetSelectedInstanceElement(const nsAString &aInstance, nsIModelElementPrivate *aModel, nsIInstanceElementPrivate **result);
   NS_HIDDEN_(nsresult) SerializeData(nsIDOMNode *data, nsCString &uri, nsIInputStream **, nsCString &contentType);
   NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMNode *data, nsIInputStream **, nsCString &contentType, SubmissionAttachmentArray *);
   NS_HIDDEN_(nsresult) CreateSubmissionDoc(nsIDOMNode *source, const nsString &encoding, SubmissionAttachmentArray *, nsIDOMDocument **result);
