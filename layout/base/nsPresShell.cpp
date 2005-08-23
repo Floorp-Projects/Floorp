@@ -5619,7 +5619,7 @@ SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
 }
 
 static PRBool
-InClipRect(nsIFrame* aFrame, nsPoint& aEventPoint)
+InClipRect(nsIFrame* aFrame, const nsPoint& aEventPoint)
 {
   nsRect clipRect;
 
@@ -5895,7 +5895,6 @@ PresShell::HandleEvent(nsIView         *aView,
     }
     
     if (targetView) {
-      aEvent->point += aView->GetOffsetTo(targetView);
       aView = targetView;
       frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
     }
@@ -5966,7 +5965,8 @@ PresShell::HandleEvent(nsIView         *aView,
                                      aHandled, mCurrentEventContent);
       }
     }
-    else if (!InClipRect(frame, aEvent->point)) {
+    else if (!InClipRect(frame, 
+        nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, frame))) {
       // we only check for the clip rect on this frame ... all frames with clip
       // have views so any viewless children of this frame cannot have clip. 
       // Furthermore if the event is not in the clip for this frame, then none
@@ -5980,19 +5980,15 @@ PresShell::HandleEvent(nsIView         *aView,
       aHandled = PR_FALSE;
       rv = NS_OK;
     } else {
-      // aEvent->point is relative to aView's upper left corner. We need
-      // a point that is in the same coordinate system as frame's rect
-      // so that the frame->mRect.Contains(aPoint) calls in 
-      // GetFrameForPoint() work. The assumption here is that frame->GetView()
-      // will return aView, and frame's parent view is aView's parent.
-
-      nsPoint eventPoint = frame->GetPosition();
-      eventPoint += aEvent->point;
-
+      nsPoint eventPoint;
+      eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
+      // XXX Until GetFrameForPoint is cleaned up, we need to account for the
+      // weird input the function takes.  These adjustments counteract the
+      // adjustments GetFrameForPoint makes.
+      eventPoint += frame->GetPosition();
       nsPoint originOffset;
       nsIView *view = nsnull;
       frame->GetOriginToViewOffset(originOffset, &view);
-
       NS_ASSERTION(view == aView, "view != aView");
       if (view == aView)
         eventPoint -= originOffset;
@@ -6264,26 +6260,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         // If aView is non-null, adjust coordinates of aEvent to be in the
         // coordinate system of mCurrentEventFrame's closest view.  Don't use
         // aView here, since it may be dead by now.
-        nsPoint offset(0,0);
-        if (aView) {
-          NS_ASSERTION(mViewManager,
-                       "How did GetCurrentEventFrame() succeed?");
-          nsIView* rootView;
-          mViewManager->GetRootView(rootView);
-          nsIView* frameView;
-          nsPoint pt;
-          mCurrentEventFrame->GetOffsetFromView(pt, &frameView);
-          offset = frameView->GetOffsetTo(rootView) - offsetOfaView;
-        }
-
-        // Transform aEvent->point from aView's coordinate system to
-        // that of mCurrentEventFrame's closest view
-        aEvent->point -= offset;
-        
         rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
                                              aStatus);
-        // Now transform back
-        aEvent->point += offset;
       }
 
       // 4. Give event to event manager for post event state changes and

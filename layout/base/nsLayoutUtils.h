@@ -255,7 +255,50 @@ public:
    * for some reason the coordinates for the mouse are not known (e.g.,
    * the event is not a GUI event).
    */
-  static nsPoint GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame);
+  static nsPoint GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent,
+                                                  nsIFrame* aFrame);
+
+  /**
+   * Get the coordinates of a given native mouse event, relative to a given
+   * frame.
+   * @param aEvent the event
+   * @param aFrame the frame to make coordinates relative to
+   * @return the point, or (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if
+   * for some reason the coordinates for the mouse are not known (e.g.,
+   * the event is not a GUI event).
+   */
+  static nsPoint GetEventCoordinatesRelativeTo(nsEvent* aEvent,
+                                               nsIFrame* aFrame);
+
+/**
+   * Get the coordinates of a given native mouse event, relative to the nearest 
+   * view for a given frame.
+   * The "nearest view" is the view returned by nsFrame::GetOffsetFromView.
+   * XXX this is extremely BOGUS because "nearest view" is a mess; every
+   * use of this method is really a bug!
+   * @param aEvent the event
+   * @param aFrame the frame to make coordinates relative to
+   * @param aView  view to which returned coordinates are relative 
+   * @return the point, or (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if
+   * for some reason the coordinates for the mouse are not known (e.g.,
+   * the event is not a GUI event).
+   */
+  static nsPoint GetEventCoordinatesForNearestView(nsEvent* aEvent,
+                                                   nsIFrame* aFrame,
+                                                   nsIView** aView = nsnull);
+
+/**
+   * Translate from widget coordinates to the view's coordinates
+   * @param aPresContext the PresContext for the view
+   * @param aWidget the widget
+   * @param aPt the point relative to the widget
+   * @param aView  view to which returned coordinates are relative
+   * @return the point in the view's coordinates
+   */
+  static nsPoint TranslateWidgetToView(nsPresContext* aPresContext, 
+                                       nsIWidget* aWidget, nsIntPoint aPt,
+                                       nsIView* aView);
+
 };
 
 #endif // nsLayoutUtils_h__

@@ -322,8 +322,8 @@ nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
       StartDraw();
       {
         Point thePoint;
-        thePoint.h = aEvent.point.x;
-        thePoint.v = aEvent.point.y;
+        thePoint.h = aEvent.refPoint.x;
+        thePoint.v = aEvent.refPoint.y;
         mClickedPartCode = ::TestControl(mControl, thePoint);
         if (mClickedPartCode > 0)
           ::HiliteControl(mControl, mClickedPartCode);

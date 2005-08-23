@@ -1284,14 +1284,14 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
   nsCAutoString tempString; tempString.AssignWithConversion(debug_GuiEventToString(aGuiEvent).get());
   
   fprintf(aFileOut,
-          "%4d %-26s widget=%-8p name=%-12s id=%-8p pos=%d,%d\n",
+          "%4d %-26s widget=%-8p name=%-12s id=%-8p refpt=%d,%d\n",
           _GetPrintCount(),
           tempString.get(),
           (void *) aWidget,
           aWidgetName.get(),
           (void *) (aWindowID ? aWindowID : 0x0),
-          aGuiEvent->point.x,
-          aGuiEvent->point.y);
+          aGuiEvent->refPoint.x,
+          aGuiEvent->refPoint.y);
 }
 //////////////////////////////////////////////////////////////
 /* static */ void

@@ -76,6 +76,7 @@
 #include "nsAutoPtr.h"
 #include "nsContentCID.h"
 #include "nsStyleSet.h"
+#include "nsLayoutUtils.h"
 
 // was used in nsSplitterFrame::Init but now commented out
 //static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -161,7 +162,7 @@ public:
 
   nsSplitterFrame* mOuter;
   PRBool mDidDrag;
-  PRInt32 mDragStartPx;
+  nscoord mDragStart;
   nscoord mCurrentPos;
   nsIBox* mParentBox;
   PRBool mPressed;
@@ -518,14 +519,11 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
     PRBool isHorizontal = !mOuter->IsHorizontal();
     // convert coord to pixels
-    nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mOuter);
+    nscoord pos = isHorizontal ? pt.x : pt.y;
 
-    // mDragStartPx is in pixels and is in our client area's coordinate system.
-    // so we need to first convert it so twips and then get it into our
-    // coordinate system.
-
-    // convert start to twips
-    nscoord start = aPresContext->IntScaledPixelsToTwips(mDragStartPx);
+    // mDragStart is in frame coordinates
+    nscoord start = mDragStart;
 
     // get it into our coordinate system (that is, the coordinate
     // system that aEvent->point is in)
@@ -865,20 +863,22 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsRect vr = mOuter->GetView()->GetBounds();
 
-  PRInt32 c = 0;
+  PRInt32 c;
+  nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent,
+                                                               mOuter);
   if (isHorizontal) {
-     mouseEvent->GetClientX(&c);
+     c = pt.x;
      mSplitterPos = mOuter->mRect.x;
      mSplitterViewPos = vr.x;
   } else {
-     mouseEvent->GetClientY(&c);
+     c = pt.y;
      mSplitterPos = mOuter->mRect.y;
      mSplitterViewPos = vr.y;
   }
 
-  mDragStartPx = c;
+  mDragStart = c;
     
-  //printf("Pressed mDragStartPx=%d\n",mDragStartPx);
+  //printf("Pressed mDragStart=%d\n",mDragStart);
 
   mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
 

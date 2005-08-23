@@ -1369,12 +1369,10 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     if (count++ % 100 == 0) {
       //Since the high bits seem to be zero's most of the time,
       //let's only take the lowest half of the point structure.
-      PRInt16 myCoord[4];
+      PRInt16 myCoord[2];
 
-      myCoord[0] = aEvent->point.x;
-      myCoord[1] = aEvent->point.y;
-      myCoord[2] = aEvent->refPoint.x;
-      myCoord[3] = aEvent->refPoint.y;
+      myCoord[0] = aEvent->refPoint.x;
+      myCoord[1] = aEvent->refPoint.y;
       gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
       gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
     }

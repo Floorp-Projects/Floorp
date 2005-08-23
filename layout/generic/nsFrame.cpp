@@ -1201,7 +1201,7 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 PRBool
 ContentContainsPoint(nsPresContext *aPresContext,
                      nsIContent *aContent,
-                     nsPoint *aPoint,
+                     const nsPoint &aPoint,
                      nsIView *aRelativeView)
 {
   nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -1225,7 +1225,7 @@ ContentContainsPoint(nsPresContext *aPresContext,
   // that our point is in the same view space our content frame's
   // rects are in.
 
-  nsPoint point = *aPoint + aRelativeView->GetOffsetTo(frameView);
+  nsPoint point = aPoint + aRelativeView->GetOffsetTo(frameView);
 
   // Now check to see if the point is within the bounds of the
   // content's primary frame, or any of it's continuation frames.
@@ -1284,24 +1284,15 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   //weaaak. only the editor can display frame selction not just text and images
   isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
 
-  nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+  nsInputEvent* keyEvent = (nsInputEvent*)aEvent;
   if (!isEditor && !keyEvent->isAlt) {
     
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
       if ( nsContentUtils::ContentIsDraggable(content) ) {
         // coordinate stuff is the fix for bug #55921
-        nsIView *dummyView = 0;
-        nsRect frameRect = mRect;
-        nsPoint offsetPoint;
-
-        GetOffsetFromView(offsetPoint, &dummyView);
-
-        frameRect.x = offsetPoint.x;
-        frameRect.y = offsetPoint.y;
-
-        if (frameRect.x <= aEvent->point.x && (frameRect.x + frameRect.width >= aEvent->point.x) &&
-            frameRect.y <= aEvent->point.y && (frameRect.y + frameRect.height >= aEvent->point.y))
+        if ((mRect - GetPosition()).Contains(
+               nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this)))
           return NS_OK;
       }
     }
@@ -1370,7 +1361,10 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   PRInt32 startOffset = 0, endOffset = 0;
   PRBool  beginFrameContent = PR_FALSE;
 
-  rv = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+  rv = GetContentAndOffsetsFromPoint(aPresContext, pt, getter_AddRefs(content),
+                                     startOffset, endOffset,
+                                     beginFrameContent);
   // do we have CSS that changes selection behaviour?
   PRBool changeSelection = PR_FALSE;
   {
@@ -1511,6 +1505,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       // frame's parent view. Unfortunately, the only way to get
       // the parent view is to call GetOffsetFromView().
 
+      nsPoint pt = nsLayoutUtils::
+                     GetEventCoordinatesForNearestView(aEvent, this, &view);
+
       GetOffsetFromView(dummyPoint, &view);
 
       // Now check to see if the point is truly within the bounds
@@ -1518,7 +1515,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
       if (view)
         disableDragSelect = ContentContainsPoint(aPresContext, content,
-                                                 &aEvent->point, view);
+                                                 pt, view);
     }
     else
     {
@@ -1599,8 +1596,11 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   PRInt32 contentOffsetEnd = 0;
   nsCOMPtr<nsIContent> newContent;
   PRBool beginContent = PR_FALSE;
+
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+
   rv = GetContentAndOffsetsFromPoint(aPresContext,
-                                     aEvent->point,
+                                     pt,
                                      getter_AddRefs(newContent),
                                      startPos,
                                      contentOffsetEnd,
@@ -1746,19 +1746,22 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                     getter_AddRefs(parentContent),
                                     &contentOffset, &target);      
 
-  if (NS_SUCCEEDED(result) && parentContent)
+  if (NS_SUCCEEDED(result) && parentContent) {
     frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-  else
-    frameselection->HandleDrag(aPresContext, this, aEvent->point);
+  } else {
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+    frameselection->HandleDrag(aPresContext, this, pt);
+  }
 
   nsIView* captureView = GetNearestCapturingView(this);
   if (captureView) {
     // Get the view that aEvent->point is relative to. This is disgusting.
-    nsPoint dummyPoint;
-    nsIView* eventView;
-    GetOffsetFromView(dummyPoint, &eventView);
-    nsPoint pt = aEvent->point + eventView->GetOffsetTo(captureView);
-    frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
+    nsIView* eventView = nsnull;
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this,
+                                                                  &eventView);
+    nsPoint capturePt = pt + eventView->GetOffsetTo(captureView);
+    frameselection->StartAutoScrollTimer(aPresContext, captureView, capturePt,
+                                         30);
   }
 
   return NS_OK;
@@ -1843,7 +1846,12 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         PRInt32 startOffset = 0, endOffset = 0;
         PRBool  beginFrameContent = PR_FALSE;
 
-        result = GetContentAndOffsetsFromPoint(aPresContext, me->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(me,
+                                                                      this);
+        result = GetContentAndOffsetsFromPoint(aPresContext, pt,
+                                               getter_AddRefs(content),
+                                               startOffset, endOffset, 
+                                               beginFrameContent);
         if (NS_FAILED(result)) return result;
 
       // do we have CSS that changes selection behaviour?

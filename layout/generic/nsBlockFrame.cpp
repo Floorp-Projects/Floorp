@@ -6573,31 +6573,20 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       return NS_OK;
     nsCOMPtr<nsILineIterator> it( do_QueryInterface(mainframe, &result) );
     nsPeekOffsetStruct pos;
-    nsPoint viewOffset;
-    nsIView* parentWithView;
-    GetOffsetFromView(viewOffset, &parentWithView);
-    // The offset returned by GetOffsetFromView is not trustworthy.
-    // It's just the sum of frame positions and is not the true
-    // geometric offset. So recalculate the true geometric offset.
-    NS_ASSERTION(nsLayoutUtils::GetFrameFor(parentWithView),
-                 "GetOffsetFromView shouldn't be returning a frameless view");
-    viewOffset = GetOffsetTo(nsLayoutUtils::GetFrameFor(parentWithView));
 
     while(NS_OK == result)
     { //we are starting aloop to allow us to "drill down to the one we want"
       PRInt32 closestLine;
-
-      // aEvent->point is relative to our view. We need to make it relative to
-      // mainframe, via this frame.
-      if (NS_FAILED(result = GetClosestLine(it,
-          aEvent->point - viewOffset - mainframe->GetOffsetTo(this), closestLine)))
+      nsPoint pt =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mainframe);
+      if (NS_FAILED(result = GetClosestLine(it, pt, closestLine)))
         return result;
-      
+
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
       pos.mShell = shell;
       pos.mDirection = eDirNext;
-      pos.mDesiredX = aEvent->point.x;
+      pos.mDesiredX = pt.x;
       pos.mScrollViewStop = PR_FALSE;
       pos.mIsKeyboardSelect = PR_FALSE;
       result = nsFrame::GetNextPrevLineFromeBlockFrame(aPresContext,
@@ -6622,14 +6611,6 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
 
     if (resultFrame)
     {
-      // Translate aEvent->point to resultFrame's closest view (bug 180015).
-      nsPoint tmp;
-      nsIView* resultFrameParentView;
-      resultFrame->GetOffsetFromView(tmp, &resultFrameParentView);
-      if (parentWithView != resultFrameParentView && resultFrameParentView) {
-        aEvent->point -= resultFrameParentView->GetOffsetTo(parentWithView);
-      }
-
       if (NS_POSITION_BEFORE_TABLE == result)
       {
         nsCOMPtr<nsISelectionController> selCon;

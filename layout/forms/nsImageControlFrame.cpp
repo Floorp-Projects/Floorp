@@ -58,6 +58,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
+#include "nsLayoutUtils.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -263,7 +264,8 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
     {
       // Store click point for GetNamesValues
       // Do this on MouseUp because the specs don't say and that's what IE does
-      TranslateEventCoords(aEvent->point, mLastClickPoint);
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+      TranslateEventCoords(pt, mLastClickPoint);
       break;
     }
   }

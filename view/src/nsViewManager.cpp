@@ -2186,9 +2186,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // so we need to add the offset to the view origin
             rootOffset += baseView->GetDimensions().TopLeft();
             mMouseLocation.MoveTo(NSTwipsToIntPixels(rootOffset.x, t2p) +
-                                    aEvent->point.x,
+                                    aEvent->refPoint.x,
                                   NSTwipsToIntPixels(rootOffset.y, t2p) +
-                                    aEvent->point.y);
+                                    aEvent->refPoint.y);
 #ifdef DEBUG_MOUSE_LOCATION
             if (aEvent->message == NS_MOUSE_ENTER)
               printf("[vm=%p]got mouse enter for %p\n",
@@ -2229,32 +2229,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
               parent->ConvertFromParentCoords(&offset.x, &offset.y);
           }
 
-          //Dispatch the event
-          //Before we start mucking with coords, make sure we know our baseline
-          aEvent->refPoint.x = aEvent->point.x;
-          aEvent->refPoint.y = aEvent->point.y;
-
+          // Dispatch the event
           nsRect baseViewDimensions;
           if (baseView != nsnull) {
             baseView->GetDimensions(baseViewDimensions);
           }
 
-          nsPoint oldpt = aEvent->point;
-          // Set the mouse cursor to the middle of the pixel, because
-          // that's how we paint --- a frame paints a pixel if it covers
-          // the center of the pixel
-          aEvent->point.x = baseViewDimensions.x +
-            NSFloatPixelsToTwips(float(aEvent->point.x) + 0.5f, p2t);
-          aEvent->point.y = baseViewDimensions.y +
-            NSFloatPixelsToTwips(float(aEvent->point.y) + 0.5f, p2t);
+          nsPoint pt;
+          pt.x = baseViewDimensions.x + 
+            NSFloatPixelsToTwips(float(aEvent->refPoint.x) + 0.5f, p2t);
+          pt.y = baseViewDimensions.y + 
+            NSFloatPixelsToTwips(float(aEvent->refPoint.y) + 0.5f, p2t);
+          pt += offset;
 
-          aEvent->point.x += offset.x;
-          aEvent->point.y += offset.y;
-
-          *aStatus = HandleEvent(view, aEvent, capturedEvent);
-
-          // From here on out, "this" could have been deleted!!!
-          aEvent->point = oldpt;
+          *aStatus = HandleEvent(view, pt, aEvent, capturedEvent);
 
           //
           // if the event is an nsTextEvent, we need to map the reply back into platform coordinates
@@ -2474,8 +2462,9 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect,
   }
 }
 
-void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
-                                         PRBool aCaptured, PLArenaPool &aPool)
+void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView,
+                                         nsPoint aPoint, PRBool aCaptured,
+                                         PLArenaPool &aPool)
 {
   NS_ASSERTION(!IsPainting(),
                "View manager cannot handle events during a paint");
@@ -2483,7 +2472,7 @@ void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, n
     return;
   }
 
-  nsRect eventRect(aEvent->point.x, aEvent->point.y, 1, 1);
+  nsRect eventRect(aPoint.x, aPoint.y, 1, 1);
   nsAutoVoidArray displayList;
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured, nsnull, &displayList, aPool);
 
@@ -2501,7 +2490,8 @@ void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, n
   }
 }
 
-nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured) {
+nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsPoint aPoint,
+                                         nsGUIEvent* aEvent, PRBool aCaptured) {
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
 
@@ -2528,7 +2518,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   // In fact, we only need to take this expensive path when the event is a mouse event ... riiiight?
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
-  BuildEventTargetList(targetViews, aView, aEvent, aCaptured, displayArena);
+  BuildEventTargetList(targetViews, aView, aPoint, aCaptured, displayArena);
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -2546,8 +2536,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
     }
   }
 
-  // Save aEvent->point because child code might change it
-  nsPoint pt = aEvent->point;
   for (i = 0; i < targetViews.Count(); i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, targetViews.ElementAt(i));
     nsView* v = element->mView;
@@ -2556,8 +2544,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       PRBool handled = PR_FALSE;
       nsRect r;
       v->GetDimensions(r);
-
-      aEvent->point = pt - (nsPoint(element->mAbsX, element->mAbsY) - r.TopLeft());
 
       nsViewManager* vVM = v->GetViewManager();
       if (vVM == this) {
@@ -2581,9 +2567,6 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
       // we'll crash in the next iteration. Oh well. The old code would have crashed too.
     }
   }
-  // Need to restore the event point here because someone may use it later.
-  // In particular Windows seems to need this.
-  aEvent->point = pt;
 
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
@@ -4520,7 +4503,7 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
 
   nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, mRootView->GetWidget(),
                      nsMouseEvent::eSynthesized);
-  event.point = mMouseLocation;
+  event.refPoint = mMouseLocation;
   event.time = PR_IntervalNow();
   // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
 

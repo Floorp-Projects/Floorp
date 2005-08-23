@@ -1084,7 +1084,7 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      if (HandlePopup(aEvent.point.x, aEvent.point.y)){
+      if (HandlePopup(aEvent.refPoint.x, aEvent.refPoint.y)){
         // Should we return here as GTK does?
         return PR_TRUE;
       }
@@ -1201,7 +1201,7 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
          (void *) this,
          (void *) aWindow);
          
-  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
+  printf(" , x=%-3d, y=%d)",aEvent.refPoint.x,aEvent.refPoint.y);
 
   printf("\n");
 }

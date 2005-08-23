@@ -81,8 +81,8 @@ void
 nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent,
                                 GdkEventButton *aGdkEvent)
 {
-    aEvent.point.x = nscoord(aGdkEvent->x);
-    aEvent.point.y = nscoord(aGdkEvent->y);
+    aEvent.refPoint.x = nscoord(aGdkEvent->x);
+    aEvent.refPoint.y = nscoord(aGdkEvent->y);
 
     aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
         ? PR_TRUE : PR_FALSE;
@@ -129,8 +129,8 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
         break;
     }
 
-    aEvent.point.x = nscoord(aGdkEvent->x);
-    aEvent.point.y = nscoord(aGdkEvent->y);
+    aEvent.refPoint.x = nscoord(aGdkEvent->x);
+    aEvent.refPoint.y = nscoord(aGdkEvent->y);
 
     aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
         ? PR_TRUE : PR_FALSE;
@@ -196,8 +196,8 @@ nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
     nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 
     event.windowSize = &aRect;
-    event.point.x = aRect.x;
-    event.point.y = aRect.y;
+    event.refPoint.x = aRect.x;
+    event.refPoint.y = aRect.y;
     event.mWinWidth = aRect.width;
     event.mWinHeight = aRect.height;
 

@@ -127,8 +127,8 @@ HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta
   mouseLocRelativeToWidget.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 		
   scrollEvent.delta = inDelta;
-	scrollEvent.point.x = mouseLocRelativeToWidget.x;
-	scrollEvent.point.y = mouseLocRelativeToWidget.y;
+	scrollEvent.refPoint.x = mouseLocRelativeToWidget.x;
+	scrollEvent.refPoint.y = mouseLocRelativeToWidget.y;
 	scrollEvent.time = PR_IntervalNow();
 
   // dispatch scroll event
@@ -525,8 +525,8 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 
 	// nsEvent
 	nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, focusedWidget);
-	menuEvent.point.x		= aOSEvent.where.h;
-	menuEvent.point.y		= aOSEvent.where.v;
+	menuEvent.refPoint.x		= aOSEvent.where.h;
+	menuEvent.refPoint.y		= aOSEvent.where.v;
 	menuEvent.time			= PR_IntervalNow();
 
 	// nsGUIEvent
@@ -622,7 +622,7 @@ PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal,
 	nsMouseEvent geckoEvent(PR_TRUE, aMessage, widgetHit, nsMouseEvent::eReal);
 
 	// nsEvent
-	geckoEvent.point = widgetHitPoint;
+	geckoEvent.refPoint = widgetHitPoint;
 	geckoEvent.time	= PR_IntervalNow();
 
 	// nsInputEvent
@@ -1697,7 +1697,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 			if (lastWidgetPointed)
 			{
         // We need to convert the coords to be relative to lastWidgetPointed.
-        nsPoint widgetHitPoint = mouseEvent.point;
+        nsPoint widgetHitPoint = mouseEvent.refPoint;
 
         Point macPoint = aOSEvent.where;
         WindowRef wind = reinterpret_cast<WindowRef>(mTopLevelWidget->GetNativeData(NS_NATIVE_DISPLAY));
@@ -1716,12 +1716,12 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
           lastWidgetPointed->LocalToWindowCoordinate(widgetOrigin);
           lastWidgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
 				mouseEvent.widget = lastWidgetPointed;
-				mouseEvent.point = lastWidgetHitPoint;
+				mouseEvent.refPoint = lastWidgetHitPoint;
 				mouseEvent.message = NS_MOUSE_EXIT;
 				lastWidgetPointed->DispatchMouseEvent(mouseEvent);
 				retVal = PR_TRUE;
 
-				mouseEvent.point = widgetHitPoint;
+				mouseEvent.refPoint = widgetHitPoint;
 			}
 
       gEventDispatchHandler.SetWidgetPointed(widgetPointed);
@@ -1867,7 +1867,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 		
     // nsEvent
     aMouseEvent.message     = aMessage;
-    aMouseEvent.point       = widgetHitPoint;
+    aMouseEvent.refPoint    = widgetHitPoint;
     aMouseEvent.time        = PR_IntervalNow();
 
     // nsGUIEvent

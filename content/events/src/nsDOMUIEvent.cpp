@@ -51,11 +51,13 @@
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 
 nsDOMUIEvent::nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ?
                NS_STATIC_CAST(nsEvent *, aEvent) :
                NS_STATIC_CAST(nsEvent *, new nsUIEvent(PR_FALSE, 0, 0)))
+  , mClientPoint(0,0)
 {
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
@@ -140,9 +142,9 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
     return nsPoint(0, 0);
   }
 
-  if (!((nsGUIEvent*)mEvent)->widget ) {
-    return mEvent->point;
-  }
+  nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
+  if (!eventWidget)
+    return mClientPoint;
 
   //My god, man, there *must* be a better way to do this.
   nsCOMPtr<nsIWidget> docWidget;
@@ -156,8 +158,6 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
 
   nsPoint pt = mEvent->refPoint;
 
-  nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
-  
   // BUG 296004 (see also BUG 242833)
   //
   // For document events we want to return a point relative to the local view manager,
@@ -326,8 +326,10 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
     nsCOMPtr<nsIContent> parent;
     PRInt32 offset, endOffset;
     PRBool beginOfContent;
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(mEvent,
+                                                                  targetFrame);
     if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
-                                              mEvent->point,
+                                              pt,
                                               getter_AddRefs(parent),
                                               offset,
                                               endOffset,
@@ -355,8 +357,10 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
     nsIContent* parent = nsnull;
     PRInt32 endOffset;
     PRBool beginOfContent;
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(mEvent,
+                                                                  targetFrame);
     if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
-                                              mEvent->point,
+                                              pt,
                                               &parent,
                                               *aRangeOffset,
                                               endOffset,
@@ -396,19 +400,36 @@ nsDOMUIEvent::SetCancelBubble(PRBool aCancelBubble)
   return NS_OK;
 }
 
+nsPoint nsDOMUIEvent::GetLayerPoint() {
+  if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
+      !mPresContext) {
+    return nsPoint(0,0);
+  }
+
+  // XXX This is supposed to be relative to the nearest view?
+  // Any element can have a view, not just positioned ones.
+  float t2p = mPresContext->TwipsToPixels();
+  nsIFrame* targetFrame;
+  nsPoint pt;
+  mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+  while (targetFrame && !targetFrame->HasView()) {
+    targetFrame = targetFrame->GetParent();
+  }
+  if (targetFrame) {
+    pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, targetFrame);
+    pt.x =  NSTwipsToIntPixels(pt.x, t2p);
+    pt.y =  NSTwipsToIntPixels(pt.y, t2p);
+    return pt;
+  } else {
+    return nsPoint(0,0);
+  }
+}
+
 NS_IMETHODIMP
 nsDOMUIEvent::GetLayerX(PRInt32* aLayerX)
 {
   NS_ENSURE_ARG_POINTER(aLayerX);
-  if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
-      !mPresContext) {
-    *aLayerX = 0;
-    return NS_OK;
-  }
-
-  float t2p;
-  t2p = mPresContext->TwipsToPixels();
-  *aLayerX = NSTwipsToIntPixels(mEvent->point.x, t2p);
+  *aLayerX = GetLayerPoint().x;
   return NS_OK;
 }
 
@@ -416,15 +437,7 @@ NS_IMETHODIMP
 nsDOMUIEvent::GetLayerY(PRInt32* aLayerY)
 {
   NS_ENSURE_ARG_POINTER(aLayerY);
-  if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
-      !mPresContext) {
-    *aLayerY = 0;
-    return NS_OK;
-  }
-
-  float t2p;
-  t2p = mPresContext->TwipsToPixels();
-  *aLayerY = NSTwipsToIntPixels(mEvent->point.y, t2p);
+  *aLayerY = GetLayerPoint().y;
   return NS_OK;
 }
 

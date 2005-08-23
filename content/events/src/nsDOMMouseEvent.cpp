@@ -60,7 +60,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
   else {
     mEventIsInternal = PR_TRUE;
     mEvent->time = PR_Now();
-    mEvent->refPoint.x = mEvent->refPoint.y = mEvent->point.x = mEvent->point.y = 0;
+    mEvent->refPoint.x = mEvent->refPoint.y = 0;
   }
 
   switch (mEvent->eventStructType)
@@ -104,8 +104,8 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
        inputEvent->isAlt = aAltKey;
        inputEvent->isShift = aShiftKey;
        inputEvent->isMeta = aMetaKey;
-       inputEvent->point.x = aClientX;
-       inputEvent->point.y = aClientY;
+       mClientPoint.x = aClientX;
+       mClientPoint.y = aClientY;
        inputEvent->refPoint.x = aScreenX;
        inputEvent->refPoint.y = aScreenY;
        mButton = aButton;

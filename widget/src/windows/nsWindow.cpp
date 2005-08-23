@@ -1183,22 +1183,21 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 
     if (mWnd != NULL) {
       ::ScreenToClient(mWnd, &cpos);
-      event.point.x = cpos.x;
-      event.point.y = cpos.y;
+      event.refPoint.x = cpos.x;
+      event.refPoint.y = cpos.y;
     } else {
-      event.point.x = 0;
-      event.point.y = 0;
+      event.refPoint.x = 0;
+      event.refPoint.y = 0;
     }
   }
   else {                      // use the point override if provided
-    event.point.x = aPoint->x;
-    event.point.y = aPoint->y;
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
   }
 
   event.time = ::GetMessageTime();
 
-  mLastPoint.x = event.point.x;
-  mLastPoint.y = event.point.y;
+  mLastPoint = event.refPoint;
 }
 
 /* In some circumstances (opening dependent windows) it makes more sense
@@ -5663,8 +5662,8 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 
   nsGUIEvent event(PR_TRUE, NS_MOVE, this);
   InitEvent(event);
-  event.point.x = aX;
-  event.point.y = aY;
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
 
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
@@ -5990,7 +5989,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   }
 
   pluginEvent.wParam = wParam;     // plugins NEED raw OS event flags!
-  pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
+  pluginEvent.lParam = MAKELONG(event.refPoint.x, event.refPoint.y);
 
   event.nativeMsg = (void *)&pluginEvent;
 
@@ -6047,7 +6046,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       rect.x = 0;
       rect.y = 0;
 
-      if (rect.Contains(event.point.x, event.point.y)) {
+      if (rect.Contains(event.refPoint)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
             MouseTrailer::GetSingleton().IgnoreNextCycle();
@@ -6079,7 +6078,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         result = ConvertStatus(mMouseListener->MouseMoved(event));
         nsRect rect;
         GetBounds(rect);
-        if (rect.Contains(event.point.x, event.point.y)) {
+        if (rect.Contains(event.refPoint)) {
           if (gCurrentWindow == NULL || gCurrentWindow != this) {
             gCurrentWindow = this;
           }
@@ -6160,8 +6159,8 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
     InitEvent(event);
 
     //focus and blur event should go to their base widget loc, not current mouse pos
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
 
     event.isMozWindowTakingFocus = isMozWindowTakingFocus;
 
@@ -7551,11 +7550,11 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 
   if (mWnd != NULL) {
     ::ScreenToClient(mWnd, &point);
-    event.point.x = point.x;
-    event.point.y = point.y;
+    event.refPoint.x = point.x;
+    event.refPoint.y = point.y;
   } else {
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
   }
 
   NS_IMM_GETCOMPOSITIONWINDOW(hIMC, cpForm);

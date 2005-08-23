@@ -1452,7 +1452,6 @@ nsGenericHTMLElement::DispatchClickEvent(nsPresContext* aPresContext,
 
   nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_LEFT_CLICK,
                      aSourceEvent->widget, nsMouseEvent::eReal);
-  event.point = aSourceEvent->point;
   event.refPoint = aSourceEvent->refPoint;
   PRUint32 clickCount = 1;
   if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {

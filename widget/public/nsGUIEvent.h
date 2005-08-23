@@ -368,7 +368,6 @@ protected:
   nsEvent(PRBool isTrusted, PRUint32 msg, PRUint8 structType)
     : eventStructType(structType),
       message(msg),
-      point(0, 0),
       refPoint(0, 0),
       time(0),
       flags(0),
@@ -382,7 +381,6 @@ public:
   nsEvent(PRBool isTrusted, PRUint32 msg)
     : eventStructType(NS_EVENT),
       message(msg),
-      point(0, 0),
       refPoint(0, 0),
       time(0),
       flags(0),
@@ -396,9 +394,6 @@ public:
   PRUint8     eventStructType;
   // See GUI MESSAGES,
   PRUint32    message;              
-  // In widget relative coordinates, modified to be relative to
-  // current view in layout.
-  nsPoint     point;               
   // In widget relative coordinates, not modified by layout code.
   nsPoint     refPoint;               
   // Elapsed time, in milliseconds, from the time the system was

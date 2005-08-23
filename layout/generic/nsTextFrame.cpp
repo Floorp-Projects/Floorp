@@ -72,6 +72,7 @@
 #include "nsILineBreaker.h"
 #include "nsCompatibility.h"
 #include "nsCSSColorUtils.h"
+#include "nsLayoutUtils.h"
 
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
@@ -4835,7 +4836,8 @@ nsTextFrame::HandleMultiplePress(nsPresContext* aPresContext,
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
   nsCOMPtr<nsIContent> newContent;
-  nsresult rv = GetPosition(aPresContext, aEvent->point,
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+  nsresult rv = GetPosition(aPresContext, pt,
                             getter_AddRefs(newContent), startPos,
                             contentOffsetEnd);
   if (NS_FAILED(rv))

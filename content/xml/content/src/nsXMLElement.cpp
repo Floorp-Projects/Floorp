@@ -359,7 +359,6 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
           nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
           nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_LEFT_CLICK,
                              guiEvent->widget, nsMouseEvent::eReal);
-          event.point = aEvent->point;
           event.refPoint = aEvent->refPoint;
           event.clickCount = 1;
           event.isShift = keyEvent->isShift;

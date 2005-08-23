@@ -583,8 +583,11 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
                      nsMouseEvent::eReal);
-  event.point.x = aX;
-  event.point.y = aY;
+  // XXX The client point storage was moved to the DOM event, so now this can't
+  // work.  A real fix would require fixing the mess that is popup coordinates
+  // in layout.  For now, don't bother setting the point.
+  //event.point.x = aX;
+  //event.point.y = aY;
 
   if (aPopupContent) {
     nsIPresShell *shell = mPresContext->GetPresShell();
@@ -661,8 +664,9 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWN, nsnull,
                      nsMouseEvent::eReal);
-  event.point.x = aX;
-  event.point.y = aY;
+  // XXX See OnCreate above
+  //event.point.x = aX;
+  //event.point.y = aY;
 
   if (aPopupContent) {
     nsIPresShell *shell = mPresContext->GetPresShell();

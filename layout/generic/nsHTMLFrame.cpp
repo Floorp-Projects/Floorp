@@ -597,9 +597,7 @@ CanvasFrame::HandleEvent(nsPresContext* aPresContext,
       GetOffsetFromView(pt1, &eventView);
       firstChild->GetOffsetFromView(pt2, &newEventView);
       nsPoint offset = eventView->GetOffsetTo(newEventView);
-      aEvent->point += offset;
       firstChild->HandleEvent(aPresContext, aEvent, aEventStatus);
-      aEvent->point -= offset;
     } else {
       nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     }

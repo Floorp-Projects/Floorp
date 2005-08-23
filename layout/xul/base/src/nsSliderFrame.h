@@ -230,9 +230,6 @@ private:
   void RemoveListener();
   PRBool isDraggingThumb();
 
-  // Convert aEvent->point into our coordinate system
-  nsPoint EventPointInOurCoords(nsEvent* aEvent);
-
   float mRatio;
 
   nscoord mDragStart;

@@ -685,8 +685,8 @@ PRBool nsWidget::OnResize(nsRect &aRect)
   nsRect *foo = new nsRect(0, 0, aRect.width, aRect.height);
   event.windowSize = foo;
 
-  event.point.x = 0;
-  event.point.y = 0;
+  event.refPoint.x = 0;
+  event.refPoint.y = 0;
   event.mWinWidth = aRect.width;
   event.mWinHeight = aRect.height;
   
@@ -720,8 +720,8 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 
     nsGUIEvent event(PR_TRUE, NS_MOVE, this);
     InitEvent(event);
-    event.point.x = aX;
-    event.point.y = aY;
+    event.refPoint.x = aX;
+    event.refPoint.y = aY;
     PRBool result = DispatchWindowEvent(&event);
     return result;
 }
@@ -1407,19 +1407,19 @@ void nsWidget::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 
     if (ge != nsnull) {
       //       ::ScreenToClient(mWnd, &cpos);
-      event.point.x = PRInt32(ge->configure.x);
-      event.point.y = PRInt32(ge->configure.y);
+      event.refPoint.x = PRInt32(ge->configure.x);
+      event.refPoint.y = PRInt32(ge->configure.y);
     }  
   }    
   else {                      // use the point override if provided
-    event.point.x = aPoint->x;
-    event.point.y = aPoint->y;
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
   }
 
   event.time = gdk_event_get_time(ge);
 
-  //    mLastPoint.x = event.point.x;
-  //    mLastPoint.y = event.point.y;
+  //    mLastPoint.x = event.refPoint.x;
+  //    mLastPoint.y = event.refPoint.y;
 
   if (ge)
     gdk_event_free(ge);
@@ -1593,7 +1593,7 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 //         result = ConvertStatus(mMouseListener->MouseMoved(aEvent));
 //         nsRect rect;
 //         GetBounds(rect);
-//         if (rect.Contains(event.point.x, event.point.y)) {
+//         if (rect.Contains(event.refPoint.x, event.refPoint.y)) {
 //           if (mCurrentWindow == NULL || mCurrentWindow != this) {
 //             printf("Mouse enter");
 //             mCurrentWindow = this;
@@ -1756,8 +1756,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
     x = (gint) aGdkMotionEvent->x;
     y = (gint) aGdkMotionEvent->y;
 
-    event.point.x = nscoord(x);
-    event.point.y = nscoord(y);
+    event.refPoint.x = nscoord(x);
+    event.refPoint.y = nscoord(y);
     event.widget = this;
   }
 
@@ -1776,8 +1776,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
       
       // The event coords will be the initial *widget* coords plus the 
       // root difference computed above.
-      event.point.x = nscoord(sButtonMotionWidgetX + diffX);
-      event.point.y = nscoord(sButtonMotionWidgetY + diffY);
+      event.refPoint.x = nscoord(sButtonMotionWidgetX + diffX);
+      event.refPoint.y = nscoord(sButtonMotionWidgetY + diffY);
     }
   }
   else
@@ -1826,8 +1826,8 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 
   if (aGdkCrossingEvent != NULL) 
   {
-    event.point.x = nscoord(aGdkCrossingEvent->x);
-    event.point.y = nscoord(aGdkCrossingEvent->y);
+    event.refPoint.x = nscoord(aGdkCrossingEvent->x);
+    event.refPoint.y = nscoord(aGdkCrossingEvent->y);
     event.time = aGdkCrossingEvent->time;
   }
 
@@ -1860,8 +1860,8 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 
   if (aGdkCrossingEvent != NULL) 
   {
-    event.point.x = nscoord(aGdkCrossingEvent->x);
-    event.point.y = nscoord(aGdkCrossingEvent->y);
+    event.refPoint.x = nscoord(aGdkCrossingEvent->x);
+    event.refPoint.y = nscoord(aGdkCrossingEvent->y);
     event.time = aGdkCrossingEvent->time;
   }
 
@@ -1933,8 +1933,8 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
       else
         scrollEvent.delta = 3;
 
-      scrollEvent.point.x = nscoord(aGdkButtonEvent->x);
-      scrollEvent.point.y = nscoord(aGdkButtonEvent->y);
+      scrollEvent.refPoint.x = nscoord(aGdkButtonEvent->x);
+      scrollEvent.refPoint.y = nscoord(aGdkButtonEvent->y);
       
       scrollEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
       scrollEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
@@ -2039,8 +2039,8 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     event.widget = sButtonMotionTarget;
 
     // see comments in nsWidget::OnMotionNotifySignal
-    event.point.x = nscoord(sButtonMotionWidgetX + diffX);
-    event.point.y = nscoord(sButtonMotionWidgetY + diffY);
+    event.refPoint.x = nscoord(sButtonMotionWidgetX + diffX);
+    event.refPoint.y = nscoord(sButtonMotionWidgetY + diffY);
   }
 
   // Drop the motion target before dispatching the event so that we
@@ -2132,8 +2132,8 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
                          nsMouseEvent &anEvent)
 {
   if (aGdkButtonEvent != NULL) {
-    anEvent.point.x = nscoord(aGdkButtonEvent->x);
-    anEvent.point.y = nscoord(aGdkButtonEvent->y);
+    anEvent.refPoint.x = nscoord(aGdkButtonEvent->x);
+    anEvent.refPoint.y = nscoord(aGdkButtonEvent->y);
 
     anEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;

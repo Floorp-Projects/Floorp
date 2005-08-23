@@ -76,7 +76,7 @@
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
-#include "nsIPrivateDOMEvent.h"
+#include "nsLayoutUtils.h"
 
 PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
 PRInt32 nsSliderFrame::gSnapMultiplier = 6;
@@ -447,20 +447,20 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: {
+      nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                                         this);
       if (mChange) {
         // We're in the process of moving the thumb to the mouse,
         // but the mouse just moved.  Make sure to update our
         // destination point.
-        mDestinationPoint = EventPointInOurCoords(aEvent);
+        mDestinationPoint = eventPoint;
         nsRepeatService::GetInstance()->Stop();
         nsRepeatService::GetInstance()->Start(mMediator);
         break;
       }
 
-       // convert coord to pixels
-       nsPoint eventPoint = EventPointInOurCoords(aEvent);
        nscoord pos = isHorizontal ? eventPoint.x : eventPoint.y;
-         
+
        nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -534,7 +534,8 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
   else if ((aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && ((nsMouseEvent *)aEvent)->isShift)
       || (gMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
     // convert coord from twips to pixels
-    nsPoint eventPoint = EventPointInOurCoords(aEvent);
+    nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                                      this);
     nscoord pos = isHorizontal ? eventPoint.x : eventPoint.y;
 
     nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
@@ -902,18 +903,6 @@ nsSliderFrame::isDraggingThumb()
   return PR_FALSE;
 }
 
-nsPoint
-nsSliderFrame::EventPointInOurCoords(nsEvent* aEvent)
-{
-  // aEvent->point is in the coordinate system of the view returned by
-  // GetOffsetFromView.
-  nsPoint eventPoint = aEvent->point;
-  nsPoint viewOffset;
-  nsIView* dummy;
-  GetOffsetFromView(viewOffset, &dummy);
-  return eventPoint - viewOffset;
-}
-
 void
 nsSliderFrame::AddListener()
 {
@@ -961,7 +950,8 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   nsRect thumbRect = thumbFrame->GetRect();
   
   nscoord change = 1;
-  nsPoint eventPoint = EventPointInOurCoords(aEvent);
+  nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                                    this);
   if (IsHorizontal() ? eventPoint.x < thumbRect.x 
                      : eventPoint.y < thumbRect.y)
     change = -1;

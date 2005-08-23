@@ -195,11 +195,11 @@ nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, POINTL aPT)
 
   if (mHWnd != NULL) {
     ::ScreenToClient(mHWnd, &cpos);
-    event.point.x = cpos.x;
-    event.point.y = cpos.y;
+    event.refPoint.x = cpos.x;
+    event.refPoint.y = cpos.y;
   } else {
-    event.point.x = 0;
-    event.point.y = 0;
+    event.refPoint.x = 0;
+    event.refPoint.y = 0;
   }
 
   event.isShift   = IsKeyDown(NS_VK_SHIFT);

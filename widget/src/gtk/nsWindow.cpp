@@ -2972,8 +2972,8 @@ nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
     nsSizeEvent sevent(PR_TRUE, NS_SIZE, this);
     sevent.windowSize = new nsRect (event->xconfigure.x, event->xconfigure.y,
                                     event->xconfigure.width, event->xconfigure.height);
-    sevent.point.x = event->xconfigure.x;
-    sevent.point.y = event->xconfigure.y;
+    sevent.refPoint.x = event->xconfigure.x;
+    sevent.refPoint.y = event->xconfigure.y;
     sevent.mWinWidth = event->xconfigure.width;
     sevent.mWinHeight = event->xconfigure.height;
     // XXX fix sevent.time
@@ -3255,8 +3255,8 @@ gint nsWindow::OnDragMotionSignal      (GtkWidget *      aWidget,
   // now that we have initialized the event update our drag status
   UpdateDragStatus(event, aDragContext, dragService);
 
-  event.point.x = retx;
-  event.point.y = rety;
+  event.refPoint.x = retx;
+  event.refPoint.y = rety;
 
   innerMostWidget->AddRef();
 
@@ -3395,8 +3395,8 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
   // now that we have initialized the event update our drag status
   UpdateDragStatus(event, aDragContext, dragService);
 
-  event.point.x = retx;
-  event.point.y = rety;
+  event.refPoint.x = retx;
+  event.refPoint.y = rety;
 
   innerMostWidget->DispatchMouseEvent(event);
 
@@ -3404,8 +3404,8 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
 
   event.message = NS_DRAGDROP_DROP;
   event.widget = innerMostWidget;
-  event.point.x = retx;
-  event.point.y = rety;
+  event.refPoint.x = retx;
+  event.refPoint.y = rety;
 
   innerMostWidget->DispatchMouseEvent(event);
 
@@ -3516,8 +3516,8 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
   
   nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
 
-  event.point.x = aX;
-  event.point.y = aY;
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
 
   AddRef();
 
