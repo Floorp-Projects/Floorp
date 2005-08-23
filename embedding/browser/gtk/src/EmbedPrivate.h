@@ -48,8 +48,6 @@
 #include <nsIAppShell.h>
 #include <nsIDOMEventReceiver.h>
 #include <nsVoidArray.h>
-// for profiles
-#include <nsIPref.h>
 // app component registration
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
@@ -164,7 +162,6 @@ class EmbedPrivate {
   static char                   *sProfileName;
   // for profiles
   static nsProfileDirServiceProvider *sProfileDirServiceProvider;
-  static nsIPref                *sPrefs;
 
   static nsIDirectoryServiceProvider * sAppFileLocProvider;
 

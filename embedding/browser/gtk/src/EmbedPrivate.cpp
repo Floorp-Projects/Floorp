@@ -109,7 +109,6 @@ nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 char        *EmbedPrivate::sProfileDir  = nsnull;
 char        *EmbedPrivate::sProfileName = nsnull;
-nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
 nsIDirectoryServiceProvider *EmbedPrivate::sAppFileLocProvider = nsnull;
@@ -970,14 +969,6 @@ EmbedPrivate::StartupProfile(void)
       return rv;
     // Keep a ref so we can shut it down.
     NS_ADDREF(sProfileDirServiceProvider = locProvider);
-
-    // get prefs
-    nsCOMPtr<nsIPref> pref;
-    pref = do_GetService(NS_PREF_CONTRACTID);
-    if (!pref)
-      return NS_ERROR_FAILURE;
-    sPrefs = pref.get();
-    NS_ADDREF(sPrefs);
   }
   return NS_OK;
 }
@@ -990,10 +981,6 @@ EmbedPrivate::ShutdownProfile(void)
     sProfileDirServiceProvider->Shutdown();
     NS_RELEASE(sProfileDirServiceProvider);
     sProfileDirServiceProvider = 0;
-  }
-  if (sPrefs) {
-    NS_RELEASE(sPrefs);
-    sPrefs = 0;
   }
 }
 
