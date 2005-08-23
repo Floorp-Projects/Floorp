@@ -193,8 +193,7 @@ typedef struct RECapture {
 typedef struct REMatchState {
     const jschar *cp;
     RECapture parens[1];      /* first of 're->parenCount' captures,
-                               * allocated at end of this struct.
-                               */
+                                 allocated at end of this struct */
 } REMatchState;
 
 struct REBackTrackData;
@@ -228,8 +227,8 @@ typedef struct REBackTrackData {
     /* saved paren contents follow */
 } REBackTrackData;
 
-#define INITIAL_STATESTACK (100)
-#define INITIAL_BACKTRACK (8000)
+#define INITIAL_STATESTACK  100
+#define INITIAL_BACKTRACK   8000
 
 typedef struct REGlobalData {
     JSContext *cx;
@@ -237,7 +236,8 @@ typedef struct REGlobalData {
     JSBool ok;                      /* runtime error (out_of_memory only?) */
     size_t start;                   /* offset to start at */
     ptrdiff_t skipped;              /* chars skipped anchoring this r.e. */
-    const jschar *cpbegin, *cpend;  /* text base address and limit */
+    const jschar    *cpbegin;       /* text base address */
+    const jschar    *cpend;         /* text limit address */
 
     REProgState *stateStack;        /* stack of state of current parents */
     uint16 stateStackTop;
@@ -248,13 +248,10 @@ typedef struct REGlobalData {
     size_t backTrackStackSize;
     size_t cursz;                   /* size of current stack entry */
 
-    JSArenaPool pool;               /* I don't understand but it's faster to
-                                     * use this than to malloc/free the three
-                                     * items that are allocated from this pool
-                                     */
-
+    JSArenaPool     pool;           /* It's faster to use one malloc'd pool
+                                       than to malloc/free the three items
+                                       that are allocated from this pool */
 } REGlobalData;
-
 
 /*
  * 1. If IgnoreCase is false, return ch.
@@ -338,7 +335,8 @@ typedef struct {
  * operand in the penultimate slot. Update progLength and treeDepth.
  */
 static JSBool
-ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN operandSP)
+ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
+          intN operandSP)
 {
     RENode *result;
 
@@ -351,8 +349,8 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
         result->u.kid2 = operandStack[operandSP - 1];
         operandStack[operandSP - 2] = result;
         /*
-         * look at both alternates to see if there's a FLAT or a CLASS at
-         * the start of each. If so, use a prerequisite match
+         * Look at both alternates to see if there's a FLAT or a CLASS at
+         * the start of each. If so, use a prerequisite match.
          */
         ++state->treeDepth;
         if (((RENode *) result->kid)->op == REOP_FLAT &&
@@ -390,16 +388,19 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
                                           JUMP, <end> ... ENDALT */
             state->progLength += 13;
         }
-        else
+        else {
             /* ALT, <next>, ..., JUMP, <end> ... ENDALT */
             state->progLength += 7;
+        }
         break;
+
     case REOP_CONCAT:
         result = operandStack[operandSP - 2];
         while (result->next)
             result = result->next;
         result->next = operandStack[operandSP - 1];
         break;
+
     case REOP_ASSERT:
     case REOP_ASSERT_NOT:
     case REOP_LPARENNON:
@@ -409,6 +410,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
                                       JSREPORT_TS | JSREPORT_ERROR,
                                       JSMSG_MISSING_PAREN, opData->errPos);
         return JS_FALSE;
+
     default:;
     }
     return JS_TRUE;
@@ -458,7 +460,7 @@ ParseRegExp(CompilerState *state)
     if (!operandStack)
         goto out;
 
-    while (JS_TRUE) {
+    for (;;) {
         parenIndex = state->parenCount;
         if (state->cp == state->cpend) {
             /*
@@ -474,8 +476,7 @@ ParseRegExp(CompilerState *state)
             }
         } else {
             switch (*state->cp) {
-                /* balance '(' */
-            case '(':           /* balance ')' */
+            case '(':
                 ++state->cp;
                 if (state->cp + 1 < state->cpend &&
                     *state->cp == '?' &&
@@ -513,9 +514,10 @@ ParseRegExp(CompilerState *state)
                     }
                 }
                 goto pushOperator;
+
             case ')':
-                /* If there's not a stacked open parenthesis, throw
-                 * a syntax error.
+                /*
+                 * If there's no stacked open parenthesis, throw syntax error.
                  */
                 for (i = operatorSP - 1; ; i--) {
                     if (i < 0) {
@@ -533,13 +535,15 @@ ParseRegExp(CompilerState *state)
                         break;
                     }
                 }
-                /* fall thru... */
+                /* FALL THROUGH */
+
             case '|':
                 /* Expected an operand before these, so make an empty one */
                 operand = NewRENode(state, REOP_EMPTY);
                 if (!operand)
                     goto out;
                 goto pushOperand;
+
             default:
                 if (!ParseTerm(state))
                     goto out;
@@ -547,9 +551,9 @@ ParseRegExp(CompilerState *state)
 pushOperand:
                 if (operandSP == operandStackSize) {
                     operandStackSize += operandStackSize;
-                    operandStack =
-                      (RENode **)JS_realloc(state->context, operandStack,
-                                            sizeof(RENode *) * operandStackSize);
+                    operandStack = (RENode **)
+                        JS_realloc(state->context, operandStack,
+                                   sizeof(RENode *) * operandStackSize);
                     if (!operandStack)
                         goto out;
                 }
@@ -557,7 +561,8 @@ pushOperand:
                 break;
             }
         }
-            /* At the end; process remaining operators */
+
+        /* At the end; process remaining operators. */
 restartOperator:
         if (state->cp == state->cpend) {
             while (operatorSP) {
@@ -572,6 +577,7 @@ restartOperator:
             result = JS_TRUE;
             goto out;
         }
+
         switch (*state->cp) {
         case '|':
             /* Process any stacked 'concat' operators */
@@ -580,16 +586,17 @@ restartOperator:
                    operatorStack[operatorSP - 1].op == REOP_CONCAT) {
                 --operatorSP;
                 if (!ProcessOp(state, &operatorStack[operatorSP],
-                               operandStack, operandSP))
+                               operandStack, operandSP)) {
                     goto out;
+                }
                 --operandSP;
             }
             op = REOP_ALT;
             goto pushOperator;
 
         case ')':
-            /* If there's not a stacked open parenthesis,we
-             * accept the close as a flat.
+            /*
+             * If there's no stacked open parenthesis, throw syntax error.
              */
             for (i = operatorSP - 1; ; i--) {
                 if (i < 0) {
@@ -607,8 +614,9 @@ restartOperator:
                 }
             }
             ++state->cp;
-            /* process everything on the stack until the open */
-            while (JS_TRUE) {
+
+            /* Process everything on the stack until the open parenthesis. */
+            for (;;) {
                 JS_ASSERT(operatorSP);
                 --operatorSP;
                 switch (operatorStack[operatorSP].op) {
@@ -624,7 +632,8 @@ restartOperator:
                     operand->kid = operandStack[operandSP - 1];
                     operandStack[operandSP - 1] = operand;
                     ++state->treeDepth;
-                    /* fall thru... */
+                    /* FALL THROUGH */
+
                 case REOP_LPARENNON:
                     state->result = operandStack[operandSP - 1];
                     if (!ParseQuantifier(state))
@@ -649,15 +658,16 @@ restartOperator:
                                           JSMSG_BAD_QUANTIFIER, state->cp);
             result = JS_FALSE;
             goto out;
+
         default:
-            /* Anything else is the start of the next term */
+            /* Anything else is the start of the next term. */
             op = REOP_CONCAT;
 pushOperator:
             if (operatorSP == operatorStackSize) {
                 operatorStackSize += operatorStackSize;
-                operatorStack =
-                    (REOpData *)JS_realloc(state->context, operatorStack,
-                                           sizeof(REOpData) * operatorStackSize);
+                operatorStack = (REOpData *)
+                    JS_realloc(state->context, operatorStack,
+                               sizeof(REOpData) * operatorStackSize);
                 if (!operatorStack)
                     goto out;
             }
@@ -1128,8 +1138,8 @@ lexHex:
                 c = *state->cp++;
                 if (!isASCIIHexDigit(c, &digit)) {
                     /*
-                     *  back off to accepting the original
-                     *  'u' or 'x' as a literal
+                     * Back off to accepting the original 'u' or 'x' as a
+                     * literal.
                      */
                     state->cp -= i + 2;
                     n = *state->cp++;
@@ -1180,7 +1190,7 @@ doSimple:
             return JS_FALSE;
         termStart = state->cp;
         state->result->u.ucclass.startIndex = termStart - state->cpbegin;
-        while (JS_TRUE) {
+        for (;;) {
             if (state->cp == state->cpend) {
                 js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
                                               JSREPORT_TS | JSREPORT_ERROR,
@@ -1219,6 +1229,7 @@ doSimple:
             }
         }
         state->result->u.ucclass.index = state->classCount++;
+
     claim:
         /*
          * Call CalculateBitmapSize now as we want any errors it finds
@@ -1354,9 +1365,9 @@ quantifier:
     if (state->cp < state->cpend && *state->cp == '?') {
         ++state->cp;
         state->result->u.range.greedy = JS_FALSE;
-    }
-    else
+    } else {
         state->result->u.range.greedy = JS_TRUE;
+    }
     return JS_TRUE;
 }
 
@@ -1400,7 +1411,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
     emitStateSP = emitStateStack;
     op = t->op;
 
-    while (JS_TRUE) {
+    for (;;) {
         *pc++ = op;
         switch (op) {
         case REOP_EMPTY:
@@ -1487,16 +1498,12 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
                 SET_ARG(pc, t->u.flat.length);
                 pc += ARG_LEN;
             } else if (t->u.flat.chr < 256) {
-                if (state->flags & JSREG_FOLD)
-                    pc[-1] = REOP_FLAT1i;
-                else
-                    pc[-1] = REOP_FLAT1;
+                pc[-1] = (state->flags & JSREG_FOLD) ? REOP_FLAT1i : REOP_FLAT1;
                 *pc++ = (jsbytecode) t->u.flat.chr;
             } else {
-                if (state->flags & JSREG_FOLD)
-                    pc[-1] = REOP_UCFLAT1i;
-                else
-                    pc[-1] = REOP_UCFLAT1;
+                pc[-1] = (state->flags & JSREG_FOLD)
+                         ? REOP_UCFLAT1i
+                         : REOP_UCFLAT1;
                 SET_ARG(pc, t->u.flat.chr);
                 pc += ARG_LEN;
             }
@@ -1513,6 +1520,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             t = (RENode *) t->kid;
             op = t->op;
             continue;
+
         case REOP_RPAREN:
             SET_ARG(pc, t->u.parenIndex);
             pc += ARG_LEN;
@@ -1522,6 +1530,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             SET_ARG(pc, t->u.parenIndex);
             pc += ARG_LEN;
             break;
+
         case REOP_ASSERT:
             JS_ASSERT(emitStateSP);
             emitStateSP->nextTermFixup = pc;
@@ -1533,12 +1542,14 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             t = (RENode *) t->kid;
             op = t->op;
             continue;
+
         case REOP_ASSERTTEST:
         case REOP_ASSERTNOTTEST:
             diff = pc - emitStateSP->nextTermFixup;
             CHECK_OFFSET(diff);
             SET_OFFSET(emitStateSP->nextTermFixup, diff);
             break;
+
         case REOP_ASSERT_NOT:
             JS_ASSERT(emitStateSP);
             emitStateSP->nextTermFixup = pc;
@@ -1550,6 +1561,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             t = (RENode *) t->kid;
             op = t->op;
             continue;
+
         case REOP_QUANT:
             JS_ASSERT(emitStateSP);
             if (t->u.range.min == 0 && t->u.range.max == (uint16)-1) {
@@ -1575,11 +1587,13 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             t = (RENode *) t->kid;
             op = t->op;
             continue;
+
         case REOP_ENDCHILD:
             diff = pc - emitStateSP->nextTermFixup;
             CHECK_OFFSET(diff);
             SET_OFFSET(emitStateSP->nextTermFixup, diff);
             break;
+
         case REOP_CLASS:
             if (!t->u.ucclass.sense)
                 pc[-1] = REOP_NCLASS;
@@ -1592,9 +1606,11 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             charSet->u.src.length = t->u.ucclass.kidlen;
             charSet->sense = t->u.ucclass.sense;
             break;
+
         default:
             break;
         }
+
         t = t->next;
         if (!t) {
             if (emitStateSP == emitStateStack)
@@ -2016,7 +2032,6 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
                  *  This is a non-ECMA extension - decimal escapes (in this
                  *  case, octal!) are supposed to be an error inside class
                  *  ranges, but supported here for backwards compatibility.
-                 *
                  */
                 n = JS7_UNDEC(c);
                 c = *src;
@@ -2391,7 +2406,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
             return NULL;
     }
 
-    while (JS_TRUE) {
+    for (;;) {
         if (REOP_IS_SIMPLE(op)) {
             result = SimpleMatch(gData, x, op, &pc, JS_TRUE);
         } else {
@@ -2492,6 +2507,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 x->parens[parenIndex].length = 0;
                 op = (REOp) *pc++;
                 continue;
+
             case REOP_RPAREN:
                 parenIndex = GET_ARG(pc);
                 pc += ARG_LEN;
@@ -2520,6 +2536,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     return NULL;
                 }
                 continue;
+
             case REOP_ASSERT_NOT:
                 nextpc = pc + GET_OFFSET(pc);
                 pc += ARG_LEN;
@@ -2541,6 +2558,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                                         nextpc, x, x->cp, 0, 0))
                     return NULL;
                 continue;
+
             case REOP_ASSERTTEST:
                 --gData->stateStackTop;
                 --curState;
@@ -2552,6 +2570,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 if (result)
                     result = x;
                 break;
+
             case REOP_ASSERTNOTTEST:
                 --gData->stateStackTop;
                 --curState;
@@ -2784,6 +2803,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
             }
         break_switch:;
         }
+
         /*
          *  If the match failed and there's a backtrack option, take it.
          *  Otherwise this is a complete and utter failure.
@@ -3028,8 +3048,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                 } else if (morenum >= res->moreLength) {
                     res->moreLength += 10;
                     morepar = (JSSubString*)
-                        JS_realloc(cx, morepar, res->moreLength *
-                                                sizeof(JSSubString));
+                        JS_realloc(cx, morepar,
+                                   res->moreLength * sizeof(JSSubString));
                 }
                 if (!morepar) {
                     cx->newborn[GCX_OBJECT] = NULL;
