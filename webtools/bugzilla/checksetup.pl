@@ -3966,30 +3966,37 @@ if (!exists $dbh->bz_column_info('milestones', 'sortkey')->{DEFAULT}) {
 # when all bug fields have been correctly set.
 $dbh->bz_alter_column('bugs', 'creation_ts', {TYPE => 'DATETIME'});
 
-# Old Bugzillas have "other" as an OS choice, new ones have "Other"
-# (capital O).
-# XXX - This should be moved inside of a later schema change, once
-#       we have one to move it to the inside of.
-print "Setting any 'other' op_sys to 'Other'...\n";
-$dbh->do('UPDATE op_sys SET value = ? WHERE value = ?',
-         undef, "Other", "other");
-$dbh->do('UPDATE bugs SET op_sys = ? WHERE op_sys = ?',
-         undef, "Other", "other");
-if (Param('defaultopsys') eq 'other') {
-    # We can't actually fix the param here, because WriteParams() will
-    # make $datadir/params unwriteable to the webservergroup.
-    # It's too much of an ugly hack to copy the permission-fixing code
-    # down to here. (It would create more potential future bugs than
-    # it would solve problems.)
-    print "WARNING: Your 'defaultopsys' param is set to 'other', but"
-        . " Bugzilla now\n"
-        . "         uses 'Other' (capital O).\n";
-}
+if (!exists $dbh->bz_column_info('whine_queries', 'title')->{DEFAULT}) {
 
-# Add a DEFAULT to whine_queries stuff so that editwhines.cgi
-# works on PostgreSQL.
-$dbh->bz_alter_column('whine_queries', 'title', {TYPE => 'varchar(128)', 
-                      NOTNULL => 1, DEFAULT => "''"});
+    # The below change actually has nothing to do with the whine_queries
+    # change, it just has to be contained within a schema change so that
+    # it doesn't run every time we run checksetup.
+
+    # Old Bugzillas have "other" as an OS choice, new ones have "Other"
+    # (capital O).
+    # XXX - This should be moved inside of a later schema change, once
+    #       we have one to move it to the inside of.
+    print "Setting any 'other' op_sys to 'Other'...\n";
+    $dbh->do('UPDATE op_sys SET value = ? WHERE value = ?',
+             undef, "Other", "other");
+    $dbh->do('UPDATE bugs SET op_sys = ? WHERE op_sys = ?',
+             undef, "Other", "other");
+    if (Param('defaultopsys') eq 'other') {
+        # We can't actually fix the param here, because WriteParams() will
+        # make $datadir/params unwriteable to the webservergroup.
+        # It's too much of an ugly hack to copy the permission-fixing code
+        # down to here. (It would create more potential future bugs than
+        # it would solve problems.)
+        print "WARNING: Your 'defaultopsys' param is set to 'other', but"
+            . " Bugzilla now\n"
+            . "         uses 'Other' (capital O).\n";
+    }
+
+    # Add a DEFAULT to whine_queries stuff so that editwhines.cgi
+    # works on PostgreSQL.
+    $dbh->bz_alter_column('whine_queries', 'title', {TYPE => 'varchar(128)', 
+                          NOTNULL => 1, DEFAULT => "''"});
+}
 
 
 # If you had to change the --TABLE-- definition in any way, then add your
