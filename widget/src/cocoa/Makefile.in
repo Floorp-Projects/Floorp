@@ -86,10 +86,12 @@ MAC_LCPPSRCS = \
 		nsClipboard.cpp \
 		nsDragService.cpp \
 		nsDragHelperService.cpp \
+		nsEventQueueRegistrarService.cpp \
 		nsLookAndFeel.cpp \
 		nsMacNativeUnicodeConverter.cpp \
 		nsMacResources.cpp \
 		nsMimeMapper.cpp \
+		nsNativeThemeMac.cpp \
 		nsSound.cpp \
 		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
