@@ -519,27 +519,13 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
     PRBool isHorizontal = !mOuter->IsHorizontal();
     // convert coord to pixels
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mOuter);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
+                                                              mParentBox);
     nscoord pos = isHorizontal ? pt.x : pt.y;
 
     // mDragStart is in frame coordinates
     nscoord start = mDragStart;
 
-    // get it into our coordinate system (that is, the coordinate
-    // system that aEvent->point is in)
-    nsIView* eventCoordView;
-    nsPoint offsetFromView;
-    mOuter->GetOffsetFromView(offsetFromView, &eventCoordView);
-    NS_ASSERTION(eventCoordView, "No view?");
-
-    nsIView* rootView;
-    aPresContext->GetViewManager()->GetRootView(rootView);
-    NS_ASSERTION(rootView, "No root view?");
-    
-    nsPoint eventCoordViewOffset = eventCoordView->GetOffsetTo(rootView);
-    
-    start -= (isHorizontal ? eventCoordViewOffset.x : eventCoordViewOffset.y);
-    
     // take our current position and substract the start location
     pos -= start;
 
@@ -865,7 +851,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRInt32 c;
   nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent,
-                                                               mOuter);
+                                                               mParentBox);
   if (isHorizontal) {
      c = pt.x;
      mSplitterPos = mOuter->mRect.x;
