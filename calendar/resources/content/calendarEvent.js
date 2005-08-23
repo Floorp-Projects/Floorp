@@ -600,51 +600,6 @@ CalendarEventDataSource.prototype.orderRawEventsByDate = function calEvent_order
     return( getCurrentNextOrPreviousRecurrence( eventA ).getTime() - getCurrentNextOrPreviousRecurrence( eventB ).getTime() );
 }
 
-/** If now is during an occurrence, return the ocurrence.
-    Else if now is before an ocurrence, return the next ocurrence.
-    Otherwise return the previous ocurrence. **/
-function getCurrentNextOrPreviousRecurrence( calendarEvent )
-{
-   var isValid = false;
-
-   var eventStartDate;
-
-   if( calendarEvent.recur )
-   {
-      var now = new Date();
-
-      var result = new Object();
-
-      var dur = calendarEvent.endDate.jsDate - calendarEvent.startDate.jsDate;
-
-      // To find current event when now is during event, look for occurrence
-      // starting duration ago.
-      var probeTime = now.getTime() - dur;
-
-      isValid = calendarEvent.getNextRecurrence( probeTime, result );
-
-      if( isValid )
-      {
-         eventStartDate = new Date( result.value );
-      }
-      else
-      {
-         isValid = calendarEvent.getPreviousOccurrence( probeTime, result );
-         
-         if (isValid)
-         {
-            eventStartDate = new Date( result.value );
-         }
-      }
-   }
-   
-   if( !isValid )
-   {
-      eventStartDate = new Date( calendarEvent.startDate.jsDate );
-   }
-      
-   return eventStartDate;
-}
 
 /******************************************************************************************************
 ******************************************************************************************************
