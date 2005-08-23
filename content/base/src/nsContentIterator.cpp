@@ -1330,6 +1330,13 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
     return NS_ERROR_FAILURE;
   cEndP = do_QueryInterface(endParent);
   aRange->GetEndOffset(&endIndx);
+
+  if (!cStartP || !cEndP)
+  {
+    // XXX Hack to account for the fact that not everything QIs to nsIContent.
+    // See bug 302775
+    return NS_ERROR_FAILURE;
+  }
   
   // short circuit when start node == end node
   if (startParent == endParent)
