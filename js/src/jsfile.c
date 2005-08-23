@@ -1145,8 +1145,10 @@ js_parent(JSContext *cx, JSFile *file, jsval *resultp)
         *resultp = JSVAL_NULL;
     } else {
         JSObject *obj = js_NewFileObject(cx, str);
-        if (!obj)
+        if (!obj) {
+            JS_free(cx, str);
             return JS_FALSE;
+        }
         *resultp = OBJECT_TO_JSVAL(obj);
     }
 
