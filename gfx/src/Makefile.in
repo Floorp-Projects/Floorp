@@ -75,7 +75,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
 DIRS	    += mac
 endif
 
-ifneq (,$(filter beos os2 mac windows,$(MOZ_GFX_TOOLKIT)))
+ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
 DIRS        += $(MOZ_GFX_TOOLKIT)
 endif
 
@@ -106,7 +106,9 @@ else
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif
-
+ ifneq ($(MOZ_GFX_TOOLKIT),windows)
+ DIRS        += windows
+ endif
 endif
 
 CPPSRCS = \
