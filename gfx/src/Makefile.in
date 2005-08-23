@@ -106,7 +106,7 @@ else
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif
- ifneq ($(MOZ_GFX_TOOLKIT),windows)
+ ifeq ($(MOZ_GFX_TOOLKIT),windows)
  DIRS        += windows
  endif
 endif
