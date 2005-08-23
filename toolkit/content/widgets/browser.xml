@@ -603,7 +603,6 @@
 
           this.detachFormFill();
           
-          this.securityUI = null;
           this._fastFind = null;
           this._webBrowserFind = null;
 

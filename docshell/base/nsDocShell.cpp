@@ -3442,6 +3442,9 @@ nsDocShell::Destroy()
         mContentListener->SetParentContentListener(nsnull);
     }
 
+    // required to break ref cycle
+    mSecurityUI = nsnull;
+    
     return NS_OK;
 }
 

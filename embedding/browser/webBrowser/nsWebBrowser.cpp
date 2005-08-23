@@ -1215,6 +1215,9 @@ NS_IMETHODIMP nsWebBrowser::Create()
    rv = GetContentDOMWindow(getter_AddRefs(domWindow));
    if (NS_SUCCEEDED(rv))
    {
+       // this works because the implementation of nsISecureBrowserUI
+       // (nsSecureBrowserUIImpl) gets a docShell from the domWindow,
+       // and calls docShell->SetSecurityUI(this);
        nsCOMPtr<nsISecureBrowserUI> securityUI =
            do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
        if (NS_SUCCEEDED(rv)) securityUI->Init(domWindow);
