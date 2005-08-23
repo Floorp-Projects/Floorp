@@ -352,6 +352,10 @@ sub tb_loadquickparseinfo {
       if ($buildtime < $latest_time - 12*60*60) {
         # Hack: A build may give a bogus time. To compensate, we will
         # not stop until we hit 20 consecutive lines that are too early.
+        # XXX bug 225735: This is the wrong way of doing things.  When a
+        # flood of backed up mail from one machine comes in, it can easily
+        # be more than 20.  We should be looking at the mail receipt time
+        # to decide when we're done rather than the build time.
 
         last if $tooearly++ > 20;
         next;
@@ -510,6 +514,10 @@ sub load_buildlog {
       # Occasionally, a build might show up with a bogus time.  So,
       # we won't judge ourselves as having hit the end until we
       # hit a full 20 lines in a row that are too early.
+      # XXX bug 225735: This is the wrong way of doing things.  When a
+      # flood of backed up mail from one machine comes in, it can easily
+      # be more than 20.  We should be looking at the mail receipt time
+      # to decide when we're done rather than the build time.
       last if $tooearly++ > 20;
       
       next;
