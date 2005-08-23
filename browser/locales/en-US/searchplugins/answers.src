@@ -1,29 +1,17 @@
-# Mozilla/Dictionary.com plug-in by fissure@netscape.net
-# Updated by rebron@meer.net on 11 August 2004
+# Firefox Answers.com Sherlock Plugin by ben@mozilla.org
+# 4/6/2005
 
-<SEARCH
-    version = "7.1" 
-   name="Dictionary.com"
-   description="Dictionary.com Search"
-   method="get"
-   action="http://www.dictionary.com/search"
-   queryCharset="ISO-8859-1"
->
+<SEARCH version="1.0"
+        name="Dictionary"
+        description="Dictionary Search on Answers.com"
+        method="GET"
+        action="http://www.answers.com/"
+        queryCharset="ISO-8859-1">
 
-<input name="q" user>
-
-<interpret 
-    browserResultType="result" 
-    resultListStart="<!-- Content -->"
-    resultListEnd="For better results" 
-    resultItemStart="<p>" 
-    resultItemEnd="</p>"
->
+  <input name="" user>
+  
 </search>
 
-<BROWSER
-   update="http://www.mozilla.org/products/firefox/plugins/dictionary.src" 
-   updateIcon="http://www.mozilla.org/products/firefox/plugins/dictionary.png" 
-   updateCheckDays="3"
->
-
+<BROWSER update="http://www.mozilla.org/products/firefox/plugins/answers.src" 
+         updateIcon="http://www.mozilla.org/products/firefox/plugins/answers.png" 
+         updateCheckDays="3">
