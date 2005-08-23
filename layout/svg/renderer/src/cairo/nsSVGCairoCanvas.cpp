@@ -180,10 +180,9 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 
 #if defined(MOZ_ENABLE_CAIRO_GFX)
   mOwnsCR = PR_FALSE;
-  void* data;
-  ctx->RetrieveCurrentNativeGraphicData(&data);
+  void* data = ctx->GetNativeGraphicData(nsIRenderingContext::NATIVE_CAIRO_CONTEXT);
   mCR = (cairo_t*)data;
-  cairo_get_matrix(mCR, &mInitialTranslation);
+  cairo_get_matrix(mCR, &mInitialTransform);
   return NS_OK;
 
 #else // !MOZ_ENABLE_CAIRO_GFX

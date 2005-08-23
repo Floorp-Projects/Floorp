@@ -41,6 +41,7 @@
 
 #include "nsWindow.h"
 #include "nsToolkit.h"
+#include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
@@ -88,9 +89,13 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include <gdk/gdk.h>
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
+#include "nsGfxCIID.h"
 #include "nsIImage.h"
 #include "nsIGdkPixbufImage.h"
 #include "nsIInterfaceRequestorUtils.h"
+
+/* For PrepareNativeWidget */
+static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
@@ -2297,6 +2302,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
             GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentMozContainer)));
     }
 
+    GdkVisual* visual = nsnull;
+    if (!aContext) {
+        nsCOMPtr<nsIDeviceContext> dc = do_CreateInstance(kDeviceContextCID);
+        // no parent widget to initialize with
+        dc->Init(nsnull);
+        dc->PrepareNativeWidget(this, (void**)&visual);
+    } else {
+        aContext->PrepareNativeWidget(this, (void**)&visual);
+    }
+
     // ok, create our windows
     switch (mWindowType) {
     case eWindowType_dialog:
@@ -2369,7 +2384,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         gtk_window_set_focus(GTK_WINDOW(mShell), GTK_WIDGET(mContainer));
 
         // and the drawing area
-        mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
+        mDrawingarea = moz_drawingarea_new(nsnull, mContainer, visual);
 
         if (mWindowType == eWindowType_popup) {
             // gdk does not automatically set the cursor for "temporary"
@@ -2385,14 +2400,14 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         break;
     case eWindowType_child: {
         if (parentMozContainer) {
-            mDrawingarea = moz_drawingarea_new(parentArea, parentMozContainer);
+            mDrawingarea = moz_drawingarea_new(parentArea, parentMozContainer, visual);
         }
         else if (parentGtkContainer) {
             mContainer = MOZ_CONTAINER(moz_container_new());
             gtk_container_add(parentGtkContainer, GTK_WIDGET(mContainer));
             gtk_widget_realize(GTK_WIDGET(mContainer));
 
-            mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
+            mDrawingarea = moz_drawingarea_new(nsnull, mContainer, visual);
         }
         else {
             NS_WARNING("Warning: tried to create a new child widget with no parent!");

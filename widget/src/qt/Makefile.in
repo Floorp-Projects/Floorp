@@ -80,6 +80,7 @@ CPPSRCS		= \
 		nsScrollbar.cpp \
 		nsWindow.cpp \
 		nsFilePicker.cpp \
+		nsNativeThemeQt.cpp \
 		mozqwidget.cpp \
 		$(NULL)
 

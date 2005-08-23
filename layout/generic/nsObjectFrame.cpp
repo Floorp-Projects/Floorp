@@ -1964,13 +1964,10 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
 
     // we need the native printer device context to pass to plugin
     // On Windows, this will be the HDC
-    PRUint32 pDC = 0;
-    aRenderingContext.RetrieveCurrentNativeGraphicData(&pDC);
+    void* dc;
+    dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
-    if (!pDC)
-      return NS_OK;  // no dc implemented so quit
-
-    npprint.print.embedPrint.platformPrint = (void*)pDC;
+    npprint.print.embedPrint.platformPrint = dc;
     npprint.print.embedPrint.window = window;
     // send off print info to plugin
     rv = pi->Print(&npprint);
@@ -2011,9 +2008,9 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
         PRBool doupdatewindow = PR_FALSE;
 
         // check if we need to update hdc
-        PRUint32 hdc;
-        aRenderingContext.RetrieveCurrentNativeGraphicData(&hdc);
-        if (NS_REINTERPRET_CAST(PRUint32, window->window) != hdc) {
+        void* hdc;
+        hdc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+        if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
           window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
           doupdatewindow = PR_TRUE;
         }
@@ -2088,7 +2085,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
           inst->SetWindow(window);        
         }
 
-        mInstanceOwner->Paint(aDirtyRect, hdc);
+        mInstanceOwner->Paint(aDirtyRect, (PRUint32)(HDC)hdc);
       }
     }
   }

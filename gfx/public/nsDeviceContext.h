@@ -132,6 +132,9 @@ public:
   NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
 #endif
 
+  NS_IMETHOD PrepareNativeWidget(nsIWidget *aWidget, void **aOut);
+  NS_IMETHOD ClearCachedSystemFonts();
+
 private:
   /* Helper methods for |CreateRenderingContext|&co. */
   nsresult InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWindow);

@@ -1376,11 +1376,6 @@ NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsIDrawingSurface* aSrcS
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPS::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
-{
-  return NS_OK;
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextPS.h and
  *  gfx/public/nsIRenderingContext.h.

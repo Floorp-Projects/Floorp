@@ -2330,13 +2330,6 @@ nsRenderingContextXlib::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 a
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextXlib::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::RetrieveCurrentNativeGraphicData()\n"));
-  return NS_OK;
-}
-
 #ifdef MOZ_MATHML
 static
 void Widen8To16AndGetTextExtents(nsXFont    *xFont,  

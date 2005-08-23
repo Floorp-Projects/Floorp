@@ -58,6 +58,9 @@
 #include "nsDragService.h"
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
+#ifdef NATIVE_THEME_SUPPORT
+#include "nsNativeThemeGTK.h"
+#endif
 
 #include "nsGtkIMEHelper.h"
 
@@ -77,6 +80,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+#ifdef NATIVE_THEME_SUPPORT
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
+#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -147,7 +153,13 @@ static const nsModuleComponentInfo components[] =
   { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
-    nsBidiKeyboardConstructor }
+    nsBidiKeyboardConstructor },
+#ifdef NATIVE_THEME_SUPPORT
+   { "Native Theme Renderer",
+    NS_THEMERENDERER_CID,
+    "@mozilla.org/chrome/chrome-native-theme;1",
+    nsNativeThemeGTKConstructor }
+#endif
 };
 
 PR_STATIC_CALLBACK(void)

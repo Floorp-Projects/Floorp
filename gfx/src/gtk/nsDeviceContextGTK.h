@@ -86,8 +86,9 @@ public:
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
+  NS_IMETHOD ClearCachedSystemFonts();
+
   static int prefChanged(const char *aPref, void *aClosure);
-  static void ClearCachedSystemFonts();
 
 protected:
   nsresult   SetDPI(PRInt32 aPrefDPI);

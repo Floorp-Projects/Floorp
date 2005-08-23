@@ -1530,13 +1530,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::RetrieveCurrentNativeGraphicData(PRUint32 *ngd)
-{
-	return NS_OK;
-}
-
-
-
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string

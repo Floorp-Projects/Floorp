@@ -944,6 +944,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     localcx->SetClipRect(damageRect, nsClipCombine_kIntersect);
     // neither source nor destination are transformed
     localcx->CopyOffScreenBits(ds, 0, 0, widgetDamageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    localcx->ReleaseBackbuffer();
   } else {
     // undo earlier translation
     localcx->Translate(viewRect.x, viewRect.y);
@@ -970,8 +971,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
     RootViewManager()->mRecursiveRefreshPending = PR_FALSE;
     UpdateAllViews(aUpdateFlags);
   }
-
-  localcx->ReleaseBackbuffer();
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
@@ -1352,16 +1351,23 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     if (element->mFlags & PUSH_CLIP) {
       PushStateAndClip(RCs, 2, element->mBounds);
     }
+    PRBool usingBuffers = PR_FALSE;
     if (element->mFlags & PUSH_FILTER) {
-      NS_ASSERTION(aRCSurface,
-                   "Cannot support translucent elements with doublebuffering disabled");
-      if (aRCSurface) {
-        // Save current buffer on the stack and start rendering into a new
-        // offscreen buffer
-        filterStack.AppendElement(buffers);
-        buffers = CreateBlendingBuffers(&aRC, PR_FALSE, nsnull,
-                                        (element->mFlags & VIEW_TRANSPARENT) != 0,
-                                        element->mBounds);
+      nsresult rv = buffers->mBlackCX->PushFilter(element->mBounds,
+                                                  (element->mFlags & VIEW_TRANSPARENT) == 0,
+                                                  element->mView->GetOpacity());
+      if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+        NS_ASSERTION(aRCSurface,
+                     "Cannot support translucent elements with doublebuffering disabled");
+        if (aRCSurface) {
+          // Save current buffer on the stack and start rendering into a new
+          // offscreen buffer
+          filterStack.AppendElement(buffers);
+          buffers = CreateBlendingBuffers(&aRC, PR_FALSE, nsnull,
+                                          (element->mFlags & VIEW_TRANSPARENT) != 0,
+                                          element->mBounds);
+          usingBuffers = PR_TRUE;
+        }
       }
     }
 
@@ -1380,7 +1386,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     }
 
     if (element->mFlags & POP_FILTER) {
-      if (aRCSurface) {
+      if (usingBuffers) {
         // Pop the last buffer off the stack and composite the current buffer into
         // the last buffer
         BlendingBuffers* doneBuffers = buffers;
@@ -1408,6 +1414,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
         // probably should recycle these so we don't eat the cost of graphics memory
         // allocation
         delete doneBuffers;
+      } else {
+        buffers->mBlackCX->PopFilter();
       }
     }
     if (element->mFlags & POP_CLIP) {

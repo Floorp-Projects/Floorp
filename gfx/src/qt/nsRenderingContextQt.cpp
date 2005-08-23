@@ -1247,12 +1247,6 @@ nsRenderingContextQt::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextQt::RetrieveCurrentNativeGraphicData(PRUint32 *ngd)
-{
-  return NS_OK;
-}
-
 #ifdef MOZ_MATHML
 NS_IMETHODIMP
 nsRenderingContextQt::GetBoundingMetrics(const char *aString,PRUint32 aLength,

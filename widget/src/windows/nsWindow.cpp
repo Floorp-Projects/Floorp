@@ -92,7 +92,11 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
+#ifdef CAIRO_GFX
+#include "nsIThebesRenderingContext.h"
+#else
 #include "nsIRenderingContextWin.h"
+#endif
 #include "nsIImage.h"
 
 #ifdef ACCESSIBILITY
@@ -5735,8 +5739,11 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
       if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
       {
+#ifdef CAIRO_GFX
+        nsIThebesRenderingContext *winrc;
+#else
         nsIRenderingContextWin *winrc;
-
+#endif
         if (NS_SUCCEEDED(CallQueryInterface(event.renderingContext, &winrc)))
         {
           nsIDrawingSurface* surf;

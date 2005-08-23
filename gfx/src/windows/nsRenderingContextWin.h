@@ -89,6 +89,8 @@ public:
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(void);
 
+  void* GetNativeGraphicData(GraphicDataType aType);
+
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipState);
 
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
@@ -193,8 +195,6 @@ public:
 
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
-  //~~~
-  NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsIDrawingSurface* &aSurface);

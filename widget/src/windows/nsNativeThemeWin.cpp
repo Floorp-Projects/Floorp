@@ -38,8 +38,8 @@
 
 #include <windows.h>
 #include "nsNativeThemeWin.h"
-#include "nsRenderingContextWin.h"
-#include "nsDeviceContextWin.h"
+#include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"
@@ -54,7 +54,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIMenuFrame.h"
-#include "nsUnicharUtils.h"
 #include <malloc.h>
 
 /* 
@@ -675,6 +674,9 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (NS_FAILED(rv))
     return rv;
 
+  nsCOMPtr<nsIDeviceContext> dc;
+  aContext->GetDeviceContext(*getter_AddRefs(dc));
+  float T2P = dc->TwipsToDevUnits();
   nsTransform2D* transformMatrix;
   aContext->GetCurrentTransform(transformMatrix);
   RECT widgetRect;
@@ -682,10 +684,22 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 	nsRect tr(aRect);
   nsRect cr(aClipRect);
 	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+#ifdef MOZ_THEBES
+  tr.x = NSToCoordRound(tr.x * T2P);
+  tr.y = NSToCoordRound(tr.y * T2P);
+  tr.width  = NSToCoordRound(tr.width * T2P);
+  tr.height = NSToCoordRound(tr.height * T2P);
+#endif
   GetNativeRect(tr, widgetRect);
   transformMatrix->TransformCoord(&cr.x,&cr.y,&cr.width,&cr.height);
+#ifdef MOZ_THEBES
+  cr.x = NSToCoordRound(cr.x * T2P);
+  cr.y = NSToCoordRound(cr.y * T2P);
+  cr.width  = NSToCoordRound(cr.width * T2P);
+  cr.height = NSToCoordRound(cr.height * T2P);
+#endif
   GetNativeRect(cr, clipRect);
-  HDC hdc = NS_STATIC_CAST(nsRenderingContextWin*, aContext)->mDC;
+  HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
   if (!hdc)
     return NS_ERROR_FAILURE;
   
@@ -846,7 +860,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (NS_FAILED(rv))
     return rv;
 
-  HDC hdc = ((nsRenderingContextWin*)aContext)->mDC;
+  HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
   if (!hdc)
     return NS_ERROR_FAILURE;
 
@@ -1496,14 +1510,24 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   if (NS_FAILED(rv))
     return rv;
 
+  nsCOMPtr<nsIDeviceContext> dc;
+  aContext->GetDeviceContext(*getter_AddRefs(dc));
+  float T2P = dc->TwipsToDevUnits();
+
   nsTransform2D* transformMatrix;
   aContext->GetCurrentTransform(transformMatrix);
   RECT widgetRect;
 	nsRect tr(aRect);
 	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+#ifdef MOZ_THEBES
+  tr.x = NSToCoordRound(tr.x * T2P);
+  tr.y = NSToCoordRound(tr.y * T2P);
+  tr.width  = NSToCoordRound(tr.width * T2P);
+  tr.height = NSToCoordRound(tr.height * T2P);
+#endif
   GetNativeRect(tr, widgetRect); 
 
-  HDC hdc = NS_STATIC_CAST(nsRenderingContextWin*, aContext)->mDC;
+  HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
 
   switch (aWidgetType) { 
     // Draw button

@@ -76,7 +76,6 @@ CPPSRCS		= \
 		nsFontMetricsQt.cpp \
 		nsGfxFactoryQt.cpp \
 		nsImageQt.cpp \
-		nsNativeThemeQt.cpp \
 		nsRegionQt.cpp \
 		nsRenderingContextQt.cpp \
 		nsScreenManagerQt.cpp \

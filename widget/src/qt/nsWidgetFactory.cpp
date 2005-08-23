@@ -69,6 +69,7 @@
 #include "nsIPrefService.h"
 
 #include "nsBidiKeyboard.h"
+#include "nsNativeThemeQt.h"
 
 static NS_DEFINE_CID(kNativeScrollCID, NS_NATIVESCROLLBAR_CID);
 
@@ -87,6 +88,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeQt)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -149,7 +151,11 @@ static const nsModuleComponentInfo components[] =
     { "Qt File Picker",
       NS_FILEPICKER_CID,
       "@mozilla.org/filepicker;1",
-      nsFilePickerConstructor }
+      nsFilePickerConstructor },
+    { "Native Theme Renderer",
+      NS_THEMERENDERER_CID,
+      "@mozilla.org/chrome/chrome-native-theme;1",
+      nsNativeThemeQtConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetQtModule,components)

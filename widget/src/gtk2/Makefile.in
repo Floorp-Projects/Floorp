@@ -52,6 +52,8 @@ LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = widget_gtk2.pkg
 
+NATIVE_THEME_SUPPORT = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
@@ -62,7 +64,17 @@ REQUIRES	= xpcom \
 		  intl \
 		  gtkxtbin \
 		  imglib2 \
+		  view \
+		  content \
+		  layout \
+		  util \
+		  locale \
 		  $(NULL)
+
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+REQUIRES += thebes cairo
+EXTRA_DSO_LDOPTS += -lthebes $(MOZ_CAIRO_LIBS)
+endif
 
 CSRCS		= \
 		mozcontainer.c \
@@ -107,6 +119,12 @@ EXPORTS		= \
 		mozcontainer.h \
 		$(NULL)
 
+ifdef NATIVE_THEME_SUPPORT
+CSRCS		+= gtk2drawing.c
+CPPSRCS		+= nsNativeThemeGTK.cpp
+DEFINES		+= -DNATIVE_THEME_SUPPORT
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
@@ -114,6 +132,11 @@ CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
 DEFINES         += -DUSE_XIM
 
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+DEFINES		+= -DCAIRO_GFX
+endif
+
+DEFINES		+= 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
 		$(NULL)

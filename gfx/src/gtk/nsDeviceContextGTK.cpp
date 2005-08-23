@@ -658,6 +658,22 @@ nsDeviceContextGTK::SetDPI(PRInt32 aPrefDPI)
   return NS_OK;
 }
 
+static void DoClearCachedSystemFonts()
+{
+  //clear our cache of stored system fonts
+  if (gSystemFonts) {
+    delete gSystemFonts;
+    gSystemFonts = nsnull;
+  }
+}
+
+NS_IMETHODIMP
+nsDeviceContextGTK::ClearCachedSystemFonts()
+{
+  DoClearCachedSystemFonts();
+  return NS_OK;
+}
+
 int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
 {
   nsDeviceContextGTK *context = (nsDeviceContextGTK*)aClosure;
@@ -672,19 +688,10 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
 
     // If this pref changes, we have to clear our cache of stored system
     // fonts.
-    ClearCachedSystemFonts();
+    DoClearCachedSystemFonts();
   }
 
   return 0;
-}
-
-void nsDeviceContextGTK::ClearCachedSystemFonts()
-{
-  //clear our cache of stored system fonts
-  if (gSystemFonts) {
-    delete gSystemFonts;
-    gSystemFonts = nsnull;
-  }
 }
 
 #define DEFAULT_TWIP_FONT_SIZE 240
