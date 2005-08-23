@@ -1290,6 +1290,14 @@ NS_IMETHODIMP nsRenderingContextWin :: FillPolygon(const nsPoint aPoints[], PRIn
   return NS_OK;
 }
 
+void*
+nsRenderingContextWin::GetNativeGraphicData(GraphicDataType aType)
+{
+  if (aType == NATIVE_WINDOWS_DC)
+    return mDC;
+
+  return nsnull;
+}
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
 {
@@ -2516,14 +2524,6 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsIDrawingSurface* aSrc
   else
     NS_ASSERTION(0, "attempt to blit with bad DCs");
 
-  return NS_OK;
-}
-
-//~~~
-NS_IMETHODIMP nsRenderingContextWin::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
-{
-  if(ngd != nsnull)
-    *ngd = (PRUint32)mDC;
   return NS_OK;
 }
 

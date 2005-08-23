@@ -61,8 +61,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  locale \
 		  necko \
-		  content \
-		  layout \
 		  $(NULL)
 
 # Sun's Complex Text Layout support
@@ -73,8 +71,6 @@ endif
 ifdef MOZ_ENABLE_XPRINT
 REQUIRES	+= xprintutil
 endif
-
-NATIVE_THEME_SUPPORT = 1
 
 CSRCS		= nsPrintdGTK.c
 
@@ -133,26 +129,12 @@ ifdef MOZ_ENABLE_GTK
 CPPSRCS 	+= \
 		nsRegionGTK.cpp \
 		$(NULL)
-
-ifdef NATIVE_THEME_SUPPORT
-CSRCS		+= gtkdrawing.c
-CPPSRCS		+= nsNativeThemeGTK.cpp
-DEFINES		+= -DNATIVE_THEME_SUPPORT
-endif
-
 endif
 
 ifdef MOZ_ENABLE_GTK2
 CPPSRCS		+= \
 		nsRegionGTK2.cpp \
 		$(NULL)
-
-ifdef NATIVE_THEME_SUPPORT
-CSRCS		+= gtk2drawing.c
-CPPSRCS		+= nsNativeThemeGTK.cpp
-DEFINES		+= -DNATIVE_THEME_SUPPORT
-endif
-
 endif
 
 GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))

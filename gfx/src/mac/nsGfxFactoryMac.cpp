@@ -48,7 +48,6 @@
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
 #include "nsScriptableRegion.h"
-#include "nsNativeThemeMac.h"
 #include "nsDeviceContextSpecX.h"
 #include "nsPrintOptionsX.h"
 #include "nsPrintSessionX.h"
@@ -76,7 +75,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 static NS_IMETHODIMP
@@ -157,11 +155,7 @@ static const nsModuleComponentInfo components[] =
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
-    gfxImageFrameConstructor, },
-  { "Native Theme Renderer", 
-    NS_THEMERENDERER_CID,
-    "@mozilla.org/chrome/chrome-native-theme;1", 
-    nsNativeThemeMacConstructor }
+    gfxImageFrameConstructor, }
 };
 
 PR_STATIC_CALLBACK(void)

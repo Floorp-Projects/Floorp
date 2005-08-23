@@ -52,7 +52,6 @@
 #include "nsPrintOptionsWin.h"
 #include "nsFontList.h"
 #include "nsIGenericFactory.h"
-#include "nsNativeThemeWin.h"
 #include "nsPrintSession.h"
 #include "gfxImageFrame.h"
 
@@ -70,7 +69,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 #ifndef WINCE
@@ -221,11 +219,6 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerWinConstructor },
 
-  { "Native Theme Renderer", 
-    NS_THEMERENDERER_CID,
-    "@mozilla.org/chrome/chrome-native-theme;1", 
-    NS_NewNativeTheme
-  },
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",

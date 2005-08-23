@@ -52,6 +52,8 @@ LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = widget_gtk.pkg
 
+NATIVE_THEME_SUPPORT = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  appshell \
@@ -63,7 +65,10 @@ REQUIRES	= xpcom \
 		  view \
 		  util \
 		  unicharutil \
+		  layout \
+		  locale \
 		  $(NULL)
+
 ifdef NS_TRACE_MALLOC
 REQUIRES	+= tracemalloc
 endif
@@ -109,6 +114,12 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS +=  -L$(DIST)/lib -lgtksuperwin $(MOZ_GTK_LDFLAGS)
+
+ifdef NATIVE_THEME_SUPPORT
+CSRCS		+= gtkdrawing.c
+CPPSRCS		+= nsNativeThemeGTK.cpp
+DEFINES		+= -DNATIVE_THEME_SUPPORT
+endif
 
 include $(topsrcdir)/config/rules.mk
 

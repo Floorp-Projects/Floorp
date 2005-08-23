@@ -82,6 +82,7 @@ public:
   NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface);
   NS_IMETHOD GetDrawingSurface(nsIDrawingSurface* *aSurface);
   NS_IMETHOD GetHints(PRUint32& aResult);
+  virtual void* GetNativeGraphicData(GraphicDataType aType);
 
 #if 0
   NS_IMETHOD PushState(PRInt32 aFlags);
@@ -190,7 +191,6 @@ public:
 
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
-  NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
   NS_IMETHOD GetClusterInfo(const PRUnichar *aText, PRUint32 aLength,

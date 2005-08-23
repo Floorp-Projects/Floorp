@@ -1375,11 +1375,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const nsString& aString,
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextMac::InvertRect(const nsRect& aRect)
 {
 	return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);

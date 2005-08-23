@@ -83,12 +83,15 @@ public:
    */
   NS_IMETHOD GetPenMode(nsPenMode &aPenMode) { return NS_ERROR_FAILURE;}
 
+  virtual void* GetNativeGraphicData(nsIRenderingContext::GraphicDataType aType)
+  { return nsnull; }
+
   /**
    * Sets the Pen Mode for the RenderingContext 
    * @param aPenMode The Pen Mode
    * @return NS_OK if the Pen Mode is correctly set
    */
-  NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;};
+  NS_IMETHOD SetPenMode(nsPenMode aPenMode) { return NS_ERROR_FAILURE;}
 
   NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer); 
   NS_IMETHOD ReleaseBackbuffer(void);

@@ -205,6 +205,14 @@ NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
   return NS_OK;
 }
 
+void*
+nsRenderingContextGTK::GetNativeGraphicData(GraphicDataType aType)
+{
+  if (aType == NATIVE_GDK_DRAWABLE)
+    return mSurface->GetDrawable();
+  return nsnull;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
@@ -1410,11 +1418,6 @@ nsRenderingContextGTK::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
                          drect.width, drect.height);
                      
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextGTK::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
-{
   return NS_OK;
 }
 

@@ -45,6 +45,9 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsRect.h"
+#include "nsPoint.h"
+#include "nsSize.h"
 #include "nsIDrawingSurface.h"
 #include <stdio.h>
 
@@ -57,8 +60,6 @@ class nsIRegion;
 class nsIAtom;
 
 struct nsFont;
-struct nsPoint;
-struct nsRect;
 struct nsTextDimensions;
 #ifdef MOZ_MATHML
 struct nsBoundingMetrics;
@@ -185,6 +186,12 @@ public:
    * Get and and set RenderingContext to this graphical state
    */
   NS_IMETHOD PopState(void) = 0;
+
+  // XXX temporary
+  NS_IMETHOD PushFilter(const nsRect& aRect, PRBool aAreaIsOpaque, float aOpacity)
+  { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD PopFilter()
+  { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
    * Tells if a given rectangle is visible within the rendering context
@@ -701,9 +708,19 @@ public:
    */
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
-  //~~~
-  NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
 
+  enum GraphicDataType {
+    NATIVE_CAIRO_CONTEXT = 1,
+    NATIVE_GDK_DRAWABLE = 2,
+    NATIVE_WINDOWS_DC = 3,
+    NATIVE_MAC_THING = 4,
+    NATIVE_THEBES_CONTEXT = 5
+  };
+  /**
+   * Retrieve the native graphic data given by aType. Return
+   * nsnull if not available.
+   */
+  virtual void* GetNativeGraphicData(GraphicDataType aType) = 0;
 
   /**
    * Get a drawing surface used as a backbuffer.

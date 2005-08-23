@@ -313,6 +313,12 @@ NS_IMETHODIMP nsDeviceContextPS::SupportsNativeWidgets(PRBool &aSupportsWidgets)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextPS::PrepareNativeWidget(nsIWidget* aWidget, void ** aOut)
+{
+  *aOut = nsnull;
+  return NS_OK;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/21/98 dwc
@@ -574,5 +580,3 @@ NS_IMETHODIMP nsDeviceContextPS::CreateFontCache()
   
   return mFontCache->Init(this);
 }
-
-

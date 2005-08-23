@@ -84,6 +84,7 @@ ifneq ($(OS_ARCH), WINCE)
 CPPSRCS += \
 	nsNativeDragTarget.cpp  \
 	nsNativeDragSource.cpp  \
+	nsNativeThemeWin.cpp \
 	nsDragService.cpp  \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
@@ -115,6 +116,11 @@ ENABLE_CXX_EXCEPTIONS = 1
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+DEFINES		+= -DCAIRO_GFX
+endif
 
 # Silly case-insensitive fs
 export:: IENUMFE.CPP

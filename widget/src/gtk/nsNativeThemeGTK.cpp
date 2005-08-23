@@ -38,8 +38,6 @@
 
 #include "nsNativeThemeGTK.h"
 #include "nsThemeConstants.h"
-#include "nsDrawingSurfaceGTK.h"
-#include "nsDeviceContextGTK.h"
 #include "gtkdrawing.h"
 
 #include "nsIObserverService.h"
@@ -53,6 +51,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDeviceContext.h"
+#include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"
 #include "nsIMenuParent.h"
@@ -427,9 +426,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             &flags))
     return NS_OK;
 
-  nsDrawingSurfaceGTK* surface;
-  aContext->GetDrawingSurface((nsIDrawingSurface**)&surface);
-  GdkWindow* window = (GdkWindow*) surface->GetDrawable();
+  GdkWindow* window = NS_STATIC_CAST(GdkWindow*,
+    aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE));
 
   nsTransform2D* transformMatrix;
   aContext->GetCurrentTransform(transformMatrix);
@@ -678,7 +676,11 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
-  nsDeviceContextGTK::ClearCachedSystemFonts();
+  // this totally sucks.  this method is really supposed to be
+  // static, which is why we can call it without any initialization.
+  static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+  nsCOMPtr<nsIDeviceContext> dctx = do_CreateInstance(kDeviceContextCID);
+  dctx->ClearCachedSystemFonts();
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   return NS_OK;

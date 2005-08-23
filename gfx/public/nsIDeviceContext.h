@@ -272,6 +272,16 @@ public:
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets) = 0;
 
   /**
+   * We are in the process of creating the native widget for aWidget.
+   * Do any device-specific processing required to initialize the
+   * native widget for this device. A pointer to some platform-specific data is
+   * returned in aOut.
+   *
+   * GTK2 calls this to get the required visual for the window.
+   */
+  NS_IMETHOD PrepareNativeWidget(nsIWidget* aWidget, void** aOut) = 0;
+
+  /**
    * Obtain the size of a device unit relative to a Twip. A twip is 1/20 of
    * a point (which is 1/72 of an inch).
    * @return conversion value
@@ -553,6 +563,15 @@ public:
    */
   NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn) = 0;
 #endif
+
+  /**
+   * Clear cached system fonts (refresh from theme when
+   * requested).  This method is effectively static,
+   * and can be called on a new DeviceContext instance
+   * without any initialization.  Only really used by
+   * Gtk native theme stuff.
+   */
+  NS_IMETHOD ClearCachedSystemFonts() = 0;
 
 protected:
   float mTwipsToPixels;

@@ -2346,11 +2346,13 @@ NS_IMETHODIMP nsRenderingContextOS2::CopyOffScreenBits(
    return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::RetrieveCurrentNativeGraphicData(PRUint32* ngd)
+void*
+nsRenderingContextOS2::GetNativeGraphicData(GraphicDataType aType)
 {
-  if(ngd != nsnull)
-    *ngd = (PRUint32)mPS;
-  return NS_OK;
+  if (aType == NATIVE_WINDOWS_DC)
+    return = (void*)mPS;
+
+  return nsnull;
 }
 
 void nsRenderingContextOS2::SetupFontAndColor(void)

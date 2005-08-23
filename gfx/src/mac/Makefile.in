@@ -88,7 +88,6 @@ CPPSRCS = \
         nsPrintSettingsX.cpp \
         nsPrintSessionX.cpp \
         nsFontUtils.cpp \
-        nsNativeThemeMac.cpp \
         $(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

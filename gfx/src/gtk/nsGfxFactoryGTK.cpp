@@ -58,9 +58,6 @@
 #include "nsFontList.h"
 #include "nsRegionGTK.h"
 #include "nsGCCache.h"
-#ifdef NATIVE_THEME_SUPPORT
-#include "nsNativeThemeGTK.h"
-#endif
 #ifdef MOZ_ENABLE_PANGO
 #include "nsFontMetricsPango.h"
 #endif
@@ -91,9 +88,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
-#ifdef NATIVE_THEME_SUPPORT
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 #ifdef MOZ_ENABLE_FREETYPE2
@@ -324,12 +318,6 @@ static const nsModuleComponentInfo components[] =
     NS_FREETYPE2_CID,
     NS_FREETYPE2_CONTRACTID,
     nsFreeType2Constructor },
-#endif
-#ifdef NATIVE_THEME_SUPPORT
-   { "Native Theme Renderer",
-    NS_THEMERENDERER_CID,
-    "@mozilla.org/chrome/chrome-native-theme;1",
-    nsNativeThemeGTKConstructor }
 #endif
 };
 

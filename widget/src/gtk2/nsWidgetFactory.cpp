@@ -51,6 +51,9 @@
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
 #include "nsNativeKeyBindings.h"
+#ifdef NATIVE_THEME_SUPPORT
+#include "nsNativeThemeGTK.h"
+#endif
 
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
@@ -75,6 +78,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
+#ifdef NATIVE_THEME_SUPPORT
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
+#endif
 
 static NS_IMETHODIMP
 nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -204,7 +210,13 @@ static const nsModuleComponentInfo components[] =
   { "Editor Native Keybindings",
     NS_NATIVEKEYBINDINGSEDITOR_CID,
     NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID,
-    nsNativeKeyBindingsTextAreaConstructor }
+    nsNativeKeyBindingsTextAreaConstructor },
+#ifdef NATIVE_THEME_SUPPORT
+   { "Native Theme Renderer",
+    NS_THEMERENDERER_CID,
+    "@mozilla.org/chrome/chrome-native-theme;1",
+    nsNativeThemeGTKConstructor }
+#endif
 };
 
 PR_STATIC_CALLBACK(void)

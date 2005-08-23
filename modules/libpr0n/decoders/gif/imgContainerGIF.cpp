@@ -1001,8 +1001,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   if (!aFrame)
     return;
 
-  aFrame->LockImageData();
-
   PRInt32 widthFrame;
   PRInt32 heightFrame;
   aFrame->GetWidth(&widthFrame);
@@ -1012,7 +1010,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   const PRInt32 height = PR_MIN(aHeight, (heightFrame - aY));
 
   if (width <= 0 || height <= 0) {
-    aFrame->UnlockImageData();
     return;
   }
 
@@ -1030,7 +1027,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(bprToWrite));
 
   if (!tmpRow) {
-    aFrame->UnlockImageData();
     return;
   }
 
@@ -1040,8 +1036,6 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
     aFrame->SetImageData(tmpRow, bprToWrite, ((y + aY) * bpr) + xOffset);
   }
   nsMemory::Free(tmpRow);
-
-  aFrame->UnlockImageData();
 }
 
 
