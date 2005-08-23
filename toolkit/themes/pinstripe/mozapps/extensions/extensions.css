@@ -23,104 +23,15 @@ richlistbox {
   padding: 5px 8px 6px 8px;
 }
 
-#uninstallButton, #updateButton, #useThemeButton, #optionsButton, #installButton {
-  -moz-user-focus: normal !important;
-  -moz-appearance: none !important;
-  width: 32px !important;
-  height: 26px !important;
-  max-width: 32px !important;
-  padding: 0;
+#commandBar button {
+  -moz-appearance: button-bevel;
+  min-width: 1px;
+  padding: 3px 6px;
   margin: 0;
 }
 
-
-#uninstallButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(0px, 32px, 26px, 0px);
-}
-
-#uninstallButton:hover:active {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(26px, 32px, 52px, 0px);
-}
-
-#uninstallButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(52px, 32px, 78px, 0px) !important;
-}
-
-#updateButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(0px, 64px, 26px, 32px);
-  -moz-appearance: none;
-}
-
-#updateButton:hover:active {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(26px, 64px, 52px, 32px);
-}
-
-#updateButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(52px, 64px, 78px, 32px) !important;
-}
-
-#useThemeButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(0px, 96px, 26px, 64px);
-}
-
-#useThemeButton:hover:active {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(26px, 96px, 52px, 64px);
-}
-
-#useThemeButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(52px, 96px, 78px, 64px) !important;
-}
-
-#installButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(0px, 128px, 26px, 96px);
-}
-
-#installButton:hover:active {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(26px, 128px, 52px, 96px);
-}
-
-#installButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(52px, 128px, 78px, 96px) !important;
-}
-
-#optionsButton {
-  margin: 0px;
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(0px, 160px, 26px, 128px);
-}
-
-#optionsButton:not([disabled]):hover:active {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(26px, 160px, 52px, 128px);
-}
-
-#optionsButton[disabled="true"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
-  -moz-image-region: rect(52px, 160px, 78px, 128px) !important;
-}
-
-#commandBar .button-text {
-  display: none;
-}
-
 .commandBarSeparator {
-	width: 3px;
+	width: 6px;
 }
 
 #getMore {
@@ -161,8 +72,12 @@ extension[disabled="true"][selected="true"] {
   background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
 }
 
-extension[disabled="true"] .extension-icon {
-  opacity: 0.3;
+extension[disabled="true"] .extension-icon, extension[opType="needs-disable"] .extension-icon {
+  opacity: 0.5;
+}
+
+extension[opType="needs-uninstall"] .extension-icon {
+  opacity: 0.2;
 }
 
 .extension-item-name {

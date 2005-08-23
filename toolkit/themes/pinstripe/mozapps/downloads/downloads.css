@@ -2,49 +2,26 @@
 #downloadView {
   margin: 0px;
   border-bottom: 1px solid #8E8E8E;
-}
-
-.downloadViewInner2 {
-  background: url("chrome://mozapps/skin/downloads/background-stripe.png") #FFFFFF repeat;
   padding: 0px;
 }
 
+#downloadView scrollbox {
+  background: url("chrome://mozapps/skin/downloads/background-stripe.gif") #FFFFFF repeat;
+} 
+
 /* Download Manager Command Bar */
 #commandBar {
-	padding-right: 16px;
+	padding: 4px 16px 4px 0px;
+	-moz-box-align: center;
 }
 
 
 #cleanUpButton, #optionsButton {
- -moz-appearance: none;
- min-width: 32px;
- height: 26px;
- margin: 2px;
+  -moz-appearance: button-bevel;
+  min-width: 1px;
+  padding: 3px 6px;
+  margin: 0;
 } 
-
-#cleanUpButton {
-  background: url("chrome://mozapps/skin/downloads/cleanup-button.png") no-repeat;
-}
-
-#cleanUpButton[disabled=true] {
-  background: url("chrome://mozapps/skin/downloads/cleanup-button-disabled.png") no-repeat !important;
-}
-
-#cleanUpButton:hover:active {
-  background: url("chrome://mozapps/skin/downloads/cleanup-button-pressed.png") no-repeat;
-}
-
-#optionsButton {
-  background: url("chrome://mozapps/skin/downloads/options-button.png") no-repeat;
-}
-
-#optionsButton:hover:active {
-  background: url("chrome://mozapps/skin/downloads/options-button-pressed.png") no-repeat;
-}
-
-#optionsButton .button-text, #cleanUpButton .button-text  {
-  display: none;
-}
 
 #commandBarSeparator {
   display:none;
@@ -55,7 +32,6 @@ download {
  padding: 4px 8px 4px 4px;
  height: 32px !important;
  min-height: 40px !important;
- border-bottom: 1px dashed #C0C0C0;
 }
 
 download[selected="true"] {
@@ -68,10 +44,10 @@ download[state="0"], download[state="-1"], download[state="4"] {
   padding-bottom: 7px;
   padding-top: 7px;
   min-height: 80px !important;
-  background: url("chrome://mozapps/skin/downloads/background-gradient.png") repeat;
+  background: url("chrome://mozapps/skin/downloads/background-gradient.gif") repeat;
 }
 
-label:last-child {
+vbox:first-child label:last-child {
   color: #666666;
   font-size: 95%;
 }
@@ -98,10 +74,14 @@ download[state="4"] .progress-bar {
   border-right: 1px solid #DEDEDE !important;
 }
 
+label {
+  border: none !important;
+}
+
 dialog label {
 	color: #000000 !important;
 	font-size: 100% !important;
-        font: icon;
+    font: icon;
 }
 
 #saveToFolder .toolbarbutton-text {
