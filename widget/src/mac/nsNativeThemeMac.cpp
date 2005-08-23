@@ -38,6 +38,7 @@
 #include <Gestalt.h>
 #include "nsNativeThemeMac.h"
 #include "nsIRenderingContext.h"
+#include "nsIDrawingSurfaceMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsRect.h"
 #include "nsSize.h"
