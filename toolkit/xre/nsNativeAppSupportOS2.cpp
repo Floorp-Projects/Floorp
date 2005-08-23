@@ -77,10 +77,6 @@
 #include "nsNetUtil.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-//#include "nsXPCOM.h"
-#ifdef MOZ_PHOENIX
-#include "nsIShellService.h"
-#endif
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"

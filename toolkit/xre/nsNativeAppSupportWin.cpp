@@ -69,9 +69,6 @@
 #include "nsNetUtil.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#ifdef MOZ_PHOENIX
-#include "nsIShellService.h"
-#endif
 #include "nsIDOMLocation.h"
 #include "nsIJSContextStack.h"
 #include "nsIWebNavigation.h"
@@ -321,7 +318,6 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static PRBool mCanHandleRequests;
-    static PRBool mSupportingDDEExec;
     static char mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
@@ -433,7 +429,6 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 PRBool nsNativeAppSupportWin::mCanHandleRequests   = PR_FALSE;
-PRBool nsNativeAppSupportWin::mSupportingDDEExec   = PR_FALSE;
 
 char nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
 
@@ -685,19 +680,6 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
     return -1;
 }
 
-// Utility function that determines if we're handling http Internet shortcuts.
-static PRBool isDefaultBrowser() 
-{
-#ifdef MOZ_PHOENIX
-  nsCOMPtr<nsIShellService> shell(do_GetService("@mozilla.org/browser/shell-service;1"));
-  PRBool isDefault;
-  shell->IsDefaultBrowser(PR_FALSE, &isDefault);
-  return isDefault;
-#else
-  return FALSE;
-#endif
-}
-
 // Utility function to delete a registry subkey.
 static DWORD deleteKey( HKEY baseKey, const char *keyName ) {
     // Make sure input subkey isn't null.
@@ -838,15 +820,6 @@ nsNativeAppSupportWin::Quit() {
     mw.Destroy();
 
     if ( mInstance ) {
-        // Undo registry setting if we need to.
-        if ( mSupportingDDEExec && isDefaultBrowser() ) {
-            mSupportingDDEExec = PR_FALSE;
-#if MOZ_DEBUG_DDE
-            printf( "Deleting ddexec subkey on exit\n" );
-#endif
-            deleteKey( HKEY_CLASSES_ROOT, "http\\shell\\open\\ddeexec" );
-        }
-
         // Unregister application name.
         DdeNameService( mInstance, mApplication, 0, DNS_UNREGISTER );
         // Clean up strings.

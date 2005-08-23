@@ -256,11 +256,6 @@ ifdef MOZ_XUL_APP
 tier_50_dirs	+= toolkit
 endif
 
-ifdef MOZ_PHOENIX
-#XXXBlake this shell path is a temp hack; toolkit shouldn't depend on browser
-tier_50_dirs    += browser/components/shell/public
-endif
-
 ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
