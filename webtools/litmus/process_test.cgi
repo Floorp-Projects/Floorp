@@ -98,7 +98,7 @@ foreach my $curtestid (@tests) {
     # configuration and we're not doing the 
     # simpletest interface, then we make you enter it
     $sysconfig = $sysconfig || Litmus::SysConfig->getCookie(
-        Litmus::DB::Product->retrieve($c->param("product_$curtestid")));
+        Litmus::DB::Product->retrieve($c->param("product_initial_$curtestid")));
     if (! $sysconfig && ! $c->param("isSimpleTest")) {
         # users who don't have a sysconfig for this product
         # should go configure themselves first:
