@@ -67,10 +67,6 @@
 
   <toolbox>
 
-	<!-- command definitions --> 
-	<!-- WARNING: this should be enabled soon as the events menu fix is landed. -->
-	<!-- we shall enable all the command="cmd_commandName" for each Menu Item   -->  
-	<!-- so far, the -->
 	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
 	<command id="cmd_BrowserSSR" oncommand="BrowserToogleSSR()"/>
 	<command id="cmd_BrowserSiteSSR" oncommand="BrowserToogleSiteSSR()"/>

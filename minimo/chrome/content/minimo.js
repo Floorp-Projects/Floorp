@@ -424,19 +424,15 @@ function DoClipCheckPaste()
   } else return false;
 }
 
-/* 
- Currently supports pasting text/unicode within INPUT and TEXTAREA
- */
 function DoClipPaste()
 {
 
-  var pasteTxt=DoClipCheckPaste();
-
-  /* With 007 does not fail. Maybe now focus is on the context menu */
-  if(document.commandDispatcher.focusedElement) {
-
-    document.commandDispatcher.focusedElement.value=pasteTxt;
-  }
+  /* 008 note - value is there in the clipboard, however somehow paste action does not happen. 
+   If you evaluate the canpaste you get false. */ 
+   
+  var disp = document.commandDispatcher;
+  var cont = disp.getControllerForCommand("cmd_paste");
+  cont.doCommand("cmd_paste");
 }
 
 function addToUrlbarHistory()
