@@ -2406,7 +2406,30 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding,
           }
 
           nsCOMPtr<nsIDOMElement> next = aElement;
-          while (particleCount > 0) {
+          PRBool decoded;
+
+          /*
+             Since we are an xsd:all, the order of elements in the schema type
+             does not matter.  So we go element by element in the XML fragment
+             we are decoding.  We loop through all schema particles defined for
+             this type until we find one that DecodeStructParticle succeeds on.
+             DecodeStructParticle returns |after| with is what is left to decode,
+             so we can figure if the decoding succeeded by checking if |after|
+             is not equal to the element we are decoding (|next|).
+
+             We track if we couldn't decode using the |decoded| boolean.  If we
+             exit the particle walking for loop and |decoded| is false, we bail.
+
+             XXX: what if we get out of the while loop, and |all| still has
+             particles?  Should we walk them and see if any are minOccurs > 0
+             and return an error?
+           */
+
+          // loop as long as we have something to decode. 
+          while (next) {
+            decoded = PR_FALSE;
+
+            // we cycle through the schema particles
             for (i = 0; i < particleCount; i++) {
               nsAutoString name;
               rc = next->GetTagName(name);
@@ -2414,7 +2437,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding,
 
               // Get schema particle according SOAP element
               groupParticles.Get(name, getter_AddRefs(child));
-              
+
               if (NS_FAILED(rc) || !child) {
 #ifdef DEBUG
                 nsAutoString msg(NS_LITERAL_STRING("::DecodeStructParticle: "));
@@ -2424,31 +2447,41 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding,
                 NS_ERROR(NS_ConvertUTF16toUTF8(msg).get());
 #endif
               }
-              
+
               nsCOMPtr<nsIDOMElement> after;
               rc = DecodeStructParticle(aEncoding, next, child, aAttachments, aDestination, getter_AddRefs(after));
-              if (NS_SUCCEEDED(rc)) {
+
+              // DecodeStructParticle returns success even if decoding didn't
+              // work.  So we check if after != next to see if it did succeed.
+              if (NS_SUCCEEDED(rc) && after != next) {
+                decoded = PR_TRUE;
                 next = after;
                 mangled = PR_TRUE;
                 groupParticles.Remove(name);
                 particleCount--;
                 break;
               }
-              if (rc != NS_ERROR_NOT_AVAILABLE) {
-                break;
-              }
             }
-            if (mangled && rc == NS_ERROR_NOT_AVAILABLE) {  //  This detects ambiguous model (non-deterministic choice which fails after succeeding on first)
+
+            // This detects ambiguous model (non-deterministic choice which 
+            // fails after succeeding on first)
+            if ((mangled && rc == NS_ERROR_NOT_AVAILABLE) || !decoded) {
               rc = SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_AMBIGUOUS_DECODING","Cannot proceed due to ambiguity or error in content model");
               //  Error is not considered recoverable due to partially-created output.
             }
-            if (NS_FAILED(rc))
+
+            // if we failed to decode after the for loop, abort.
+            if (NS_FAILED(rc) || !decoded)
               break;
           }
+
+          // if *aResult is not null, then caller knows we couldn't decode
+          // everything.
           if (NS_SUCCEEDED(rc)) {
             NS_IF_ADDREF(*aResult = next);
-          }
-          if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+          } else if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) {
+            // If we succeeded or failed recoverably, but we were permitted to,
+            // then return success
             NS_IF_ADDREF(*aResult = aElement);
             rc = NS_OK;
           }
@@ -3152,7 +3185,7 @@ nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
   if (unhandled) {  //  Handle all the other cases
     DECODE_ARRAY(nsIVariant*,INTERFACE_IS,&NS_GET_IID(nsIVariant),
                  NS_ADDREF(a[p] = v);,
-                 for (si = 0; si < size; si++) NS_RELEASE(a[si]););
+                 for (si = 0; si < size; si++) NS_IF_RELEASE(a[si]););
   }
   NS_ENSURE_SUCCESS(rc, rc);
 
