@@ -136,11 +136,15 @@ var nsNewsBlogFeedDownloader =
     if (!aFolder)
       return;
 
-    // if aUrl is a feed url, then it is of the form: feed:http://somesite/feed.xml
-    // Strip off the feed: so we can subscribe to the contained URL.
-    // Questions: what about feed://, can the OS be giving us an escaped URL?
+    // if aUrl is a feed url, then it is of the form: feed:http://somesite/feed.xml or 
+    // feed://http://somesite/feed.xml
+    // Strip off the feed: part so we can subscribe to the contained URL.
     if (/^feed:/i.test(aUrl))
-      aUrl = aUrl.replace('feed:', '');
+    {
+      aUrl = aUrl.replace(/^feed:/i, '');
+      // Strip off the optional forward slashes if we were given feed://
+      aUrl = aUrl.replace(/^\x2f\x2f/, '');
+    }
 
     // make sure we aren't already subscribed to this feed before we attempt to subscribe to it.
     if (feedAlreadyExists(aUrl, aFolder.server))
