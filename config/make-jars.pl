@@ -80,9 +80,6 @@ my $jarDir = $chromeDir;
 if (defined($::opt_j)) {
     $jarDir = $::opt_j;
 }
-if ($jarDir !~ /^\//) {
-    $jarDir = getcwd() . '/' . $jarDir;
-}
 
 my $verbose = 0;
 if (defined($::opt_v)) {
@@ -218,7 +215,7 @@ sub JarIt
 {
     my ($destPath, $jarPath, $jarfile, $args, $overrides) = @_;
     my $oldDir = cwd();
-    my $jarchive = $jarPath . '/' . $jarfile . '.jar';
+    my $jarchive = _moz_abs2rel("$jarPath/$jarfile.jar", "$destPath/$jarfile", 1);
     chdir("$destPath/$jarfile");
 
     if ("$fileformat" eq "flat" || "$fileformat" eq "symlink") {
@@ -234,7 +231,6 @@ sub JarIt
     mozLock($lockfile) if (!$nofilelocks);
 
     if (!($args eq "")) {
-        my $cwd = getcwd;
         my $err = 0; 
 
         #print "$zipprog $zipmoveopt -uX $jarchive $args\n";
@@ -290,24 +286,26 @@ sub JarIt
 
 sub _moz_rel2abs
 {
-    my ($path, $keep_file) = @_;
-    $path = File::Spec->rel2abs($path, $objdir);
-    my ($volume, $dirs, $file) = File::Spec->splitpath($path);
-    my (@dirs) = reverse File::Spec->splitdir($dirs);
+    my ($path, $isdir) = @_;
+    $path = File::Spec->catfile(getcwd, $path)
+        unless File::Spec->file_name_is_absolute($path);
+    my (@dirs) = reverse split(m:/:, File::Spec->canonpath($path));
+    shift @dirs unless $isdir;
     my ($up) = File::Spec->updir();
     foreach (reverse 0 .. $#dirs) {
       splice(@dirs, $_, 2) if ($dirs[$_] eq $up);
     }
-    $dirs = File::Spec->catdir(reverse @dirs);
-    return File::Spec->catpath($volume, $dirs, $keep_file && $file);
+    return reverse @dirs;
 }
 
 sub _moz_abs2rel
 {
-    my ($target, $linkname) = @_;
-    $target = _moz_rel2abs($target, 1);
-    $linkname = _moz_rel2abs($linkname);
-    return File::Spec->abs2rel($target, $linkname);
+    my ($target, $basedir, $isdir) = @_;
+    my (@target) = _moz_rel2abs($target, 1);
+    my (@basedir) = _moz_rel2abs($basedir, $isdir);
+    shift @target, shift @basedir
+        while @target && @basedir && $target[0] eq $basedir[0];
+    return File::Spec->catfile((File::Spec->updir()) x @basedir, @target);
 }
 
 sub UniqIt
