@@ -44,7 +44,7 @@
 [% FOREACH test=testlist %]
 <tr>
 <td><div align="center">
-	<a href="show_test.cgi?id=[% test.testid FILTER html | uri %]">[% test.testid FILTER html %]</a>
+    <a href="show_test.cgi?id=[% test.testid FILTER html | uri %]">[% test.testid FILTER html %]</a>
 </div></td>
 <td><div align="center">[% INCLUDE product_to_img product=test.product %]</div></td>
 <td><div align="center">[% test.summary FILTER html %]</div></td>

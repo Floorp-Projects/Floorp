@@ -68,7 +68,7 @@ sub page_pickGroupSubgroup {
     
     my $product = Litmus::DB::Product->retrieve($c->param("product"));
     if (! $product) {
-    	print $c->header();
+        print $c->header();
         invalidInputError("Invalid product ".$c->param("product"));
     }
     
@@ -85,8 +85,8 @@ sub page_pickGroupSubgroup {
         # get the user id and set a login cookie:
         my $email = $c->param("email");
         if (!$email) {
-        	print $c->header();
-        	invalidInputError("You must enter your email address so we can track your results and contact you if we have any questions.");
+            print $c->header();
+            invalidInputError("You must enter your email address so we can track your results and contact you if we have any questions.");
         }
         $user = Litmus::DB::User->find_or_create(email => $email);
     

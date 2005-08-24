@@ -23,9 +23,9 @@ Litmus::DBI->set_db('Main',
 # Litmus::DBI's subclasses to set column aliases with the column_alias() sub. 
 # Takes the database column name and the alias name. 
 sub column_alias {
-	my ($self, $db_name, $alias_name) = @_;
-	
-	$column_aliases{$alias_name} = $db_name;
+    my ($self, $db_name, $alias_name) = @_;
+    
+    $column_aliases{$alias_name} = $db_name;
 }
 
 # here's where the actual work happens. We consult our alias list 
@@ -33,32 +33,32 @@ sub column_alias {
 # database column if we find a match
 memoize('find_column');
 sub find_column {
-	my $self = shift;
-	my $wanted = shift;
-	
-	if (ref $self) {
-		$wanted =~ s/^.*::(\w+)$/$1/;
-	}
-	if ($column_aliases{$wanted}) {
-		return $column_aliases{$wanted};
-	} else {
-		# not an alias, so we use the normal 
-		# find_column() from Class::DBI
-		$self->SUPER::find_column($wanted);
-	}
+    my $self = shift;
+    my $wanted = shift;
+    
+    if (ref $self) {
+        $wanted =~ s/^.*::(\w+)$/$1/;
+    }
+    if ($column_aliases{$wanted}) {
+        return $column_aliases{$wanted};
+    } else {
+        # not an alias, so we use the normal 
+        # find_column() from Class::DBI
+        $self->SUPER::find_column($wanted);
+    }
 }
 
 sub AUTOLOAD {
-	my $self = shift;
-	my @args = @_;
-	my $name = our $AUTOLOAD;
-	
-	my $col = $self->find_column($name);
-	if (!$col) {
-		internalEror("tried to call Litmus::DBI method $name which does not exist");
-	}
-	
-	return $self->$col(@args);
+    my $self = shift;
+    my @args = @_;
+    my $name = our $AUTOLOAD;
+    
+    my $col = $self->find_column($name);
+    if (!$col) {
+        internalEror("tried to call Litmus::DBI method $name which does not exist");
+    }
+    
+    return $self->$col(@args);
 }
                                          
 1;

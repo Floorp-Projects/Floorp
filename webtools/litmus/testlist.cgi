@@ -41,22 +41,22 @@ my @testlist;
 
 my $tests = $c->param("tests");
 if ($tests) {
-	my @tests = split("," => $tests);
-	foreach my $curtest (@tests) {
-		my $test = Litmus::DB::Test->retrieve($curtest);
-		push(@testlist, $test);
-	}
+    my @tests = split("," => $tests);
+    foreach my $curtest (@tests) {
+        my $test = Litmus::DB::Test->retrieve($curtest);
+        push(@testlist, $test);
+    }
 } else {
-	Litmus::DB::Test->set_sql('failing' => qq {
-		SELECT tests.test_id
-		FROM tests, test_results
-		WHERE
-			test_results.result_id != 1 AND
-			test_results.test_id = tests.test_id 
-		GROUP BY tests.test_id
-			
-	});
-	@testlist = Litmus::DB::Test->search_failing();
+    Litmus::DB::Test->set_sql('failing' => qq {
+        SELECT tests.test_id
+        FROM tests, test_results
+        WHERE
+            test_results.result_id != 1 AND
+            test_results.test_id = tests.test_id 
+        GROUP BY tests.test_id
+            
+    });
+    @testlist = Litmus::DB::Test->search_failing();
 }
 
 my $vars = {

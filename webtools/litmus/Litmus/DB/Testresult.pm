@@ -61,16 +61,16 @@ Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
 # for historical reasons, note() is a shorthand way of saying "the text of the first 
 # comment on this result if that comment was submitted by the result submitter"
 sub note {
-	my $self = shift;
-	
-	my @comments = $self->comments();
-	
-	if (@comments && $comments[0] &&
-		$comments[0]->user() == $self->user()) {
-		return $comments[0]->comment();
-	} else {
-		return undef;
-	}
+    my $self = shift;
+    
+    my @comments = $self->comments();
+    
+    if (@comments && $comments[0] &&
+        $comments[0]->user() == $self->user()) {
+        return $comments[0]->comment();
+    } else {
+        return undef;
+    }
 }
 
 # is this test result recent?

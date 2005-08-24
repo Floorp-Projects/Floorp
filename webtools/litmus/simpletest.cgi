@@ -54,9 +54,9 @@ sub showTest {
     my $prod = Litmus::DB::Product->search(name => "Firefox")->next();
     my @detectbranch = $ua->branch($prod);
     if ((! $ua->buildid()) || (! $detectbranch[0]) || 
-		$curbuildtime - $ua->buildid() > $maxbuildage ||
-		($detectbranch[0]->branchid() != $branch->branchid() &&
-		  $detectbranch[0]->branchid() != $branch2->branchid())) {
+        $curbuildtime - $ua->buildid() > $maxbuildage ||
+        ($detectbranch[0]->branchid() != $branch->branchid() &&
+          $detectbranch[0]->branchid() != $branch2->branchid())) {
             Litmus->template()->process("simpletest/simpletest.html.tmpl") || 
               internalError(Litmus->template()->error());
            exit;

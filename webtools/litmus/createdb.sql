@@ -148,43 +148,43 @@ create table test_format_lookup (
 );
 
 create table test_result_bugs (
-	test_result_id int(11) not null auto_increment,
-	last_updated datetime not null,
-	submission_time datetime not null,
-	user_id int(11),
-	bug_id int(11), 
-	
-	PRIMARY KEY (test_result_id,bug_id),
-	
-	INDEX(test_result_id),
-	INDEX(last_updated),
-	INDEX(submission_time),
-	INDEX(user_id)
+    test_result_id int(11) not null auto_increment,
+    last_updated datetime not null,
+    submission_time datetime not null,
+    user_id int(11),
+    bug_id int(11), 
+    
+    PRIMARY KEY (test_result_id,bug_id),
+    
+    INDEX(test_result_id),
+    INDEX(last_updated),
+    INDEX(submission_time),
+    INDEX(user_id)
 );
 
 create table test_result_comments (
-	comment_id int(11) not null primary key auto_increment,
-	test_result_id int(11) not null, 
-	last_updated datetime not null,
-	submission_time datetime not null,
-	user_id int(11),
-	comment text,
-	
-	INDEX(test_result_id),
-	INDEX(last_updated),
-	INDEX(submission_time),
-	INDEX(user_id)
+    comment_id int(11) not null primary key auto_increment,
+    test_result_id int(11) not null, 
+    last_updated datetime not null,
+    submission_time datetime not null,
+    user_id int(11),
+    comment text,
+    
+    INDEX(test_result_id),
+    INDEX(last_updated),
+    INDEX(submission_time),
+    INDEX(user_id)
 );
 
 create table test_result_logs (
-	log_id int(11) not null primary key auto_increment,
-	test_result_id int(11) not null,
-	last_updated datetime not null,
-	submission_time datetime not null,
-	log_path varchar(255),
-	
-	INDEX(test_result_id),
-	INDEX(last_updated),
-	INDEX(submission_time),
-	INDEX(log_path)
+    log_id int(11) not null primary key auto_increment,
+    test_result_id int(11) not null,
+    last_updated datetime not null,
+    submission_time datetime not null,
+    log_path varchar(255),
+    
+    INDEX(test_result_id),
+    INDEX(last_updated),
+    INDEX(submission_time),
+    INDEX(log_path)
 );

@@ -151,9 +151,9 @@ sub create {
             
             # anti-spam filtering of email addresses
             email => sub {
-            	my ($var) = @_;
-            	$var =~ s/\@/\&#64;/g;
-            	return $var;	
+                my ($var) = @_;
+                $var =~ s/\@/\&#64;/g;
+                return $var;    
             }
         },
     });

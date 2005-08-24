@@ -141,10 +141,10 @@ foreach my $curtestid (@tests) {
     
     # if there's a note, create an entry in the comments table for it
     Litmus::DB::Comment->create({
-    	testresult      => $tr,
-    	submission_time => $time,
-    	user			=> $user,
-    	comment			=> $note
+        testresult      => $tr,
+        submission_time => $time,
+        user            => $user,
+        comment            => $note
     });
 }
 
