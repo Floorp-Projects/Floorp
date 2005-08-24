@@ -571,7 +571,7 @@ const dch_CID = Components.ID("{47cd0651-b1be-4a0f-b5c4-10e5a573ef71}");
 var Module = {
   /* nsISupports */
   QueryInterface: function mod_QI(iid) {
-    if (iid.equals(Components.interfaces.nsIModule) &&
+    if (iid.equals(Components.interfaces.nsIModule) ||
         iid.equals(Components.interfaces.nsISupports))
       return this;
 
