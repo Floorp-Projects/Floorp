@@ -1119,10 +1119,10 @@
           this.value = aValue;
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
-          var oldIgnoreInput = this.mIgnoreInputEvent;
-          this.mIgnoreInputEvent = true;
+          var oldIgnoreInput = this.ignoreInputEvent;
+          this.ignoreInputEvent = true;
           this.dispatchEvent(evt);
-          this.mIgnoreInputEvent = oldIgnoreInput;
+          this.ignoreInputEvent = oldIgnoreInput;
         ]]></body>
       </method>
 
