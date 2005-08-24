@@ -2082,7 +2082,7 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   // we're given the point in global coordinates. We need to convert it to
   // window coordinates for convert:message:toGeckoEvent
 
-  NSPoint dragLoc = NSMakePoint(globalXPos, globalYPos);
+  NSPoint dragLoc = NSMakePoint(aMouseGlobalX, aMouseGlobalY);
 
   // need to flip the point relative to the main screen
   if ([[NSScreen screens] count] > 0)   // paranoia
