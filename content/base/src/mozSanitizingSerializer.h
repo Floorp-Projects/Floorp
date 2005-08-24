@@ -106,7 +106,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode)
                                                     { return NS_OK; }
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
-  virtual void FlushContent(PRBool aNotify) { }
+  virtual void FlushPendingNotifications(mozFlushType aType) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget() { return nsnull; }
 

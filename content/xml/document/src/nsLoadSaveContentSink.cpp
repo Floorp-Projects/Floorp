@@ -122,9 +122,9 @@ nsLoadSaveContentSink::SetParser(nsIParser* aParser)
 }
 
 void
-nsLoadSaveContentSink::FlushContent(PRBool aNotify)
+nsLoadSaveContentSink::FlushPendingNotifications(mozFlushType aType)
 {
-  mBaseSink->FlushContent(aNotify);
+  mBaseSink->FlushPendingNotifications(aType);
 }
 
 NS_IMETHODIMP

@@ -1213,8 +1213,7 @@ nsHTMLDocument::FlushPendingNotifications(mozFlushType aType)
       (!(aType & Flush_SinkNotifications) || IsSafeToFlush())) {
     nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
     if (sink) {
-      PRBool notify = ((aType & Flush_SinkNotifications) != 0);
-      sink->FlushContent(notify);
+      sink->FlushPendingNotifications(aType);
     }
   }
   

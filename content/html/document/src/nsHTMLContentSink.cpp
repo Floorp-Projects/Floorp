@@ -228,7 +228,7 @@ public:
   NS_IMETHOD WillInterrupt(void);
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
-  virtual void FlushContent(PRBool aNotify);
+  virtual void FlushPendingNotifications(mozFlushType aType);
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
 
@@ -4220,12 +4220,18 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 }
 
 void
-HTMLContentSink::FlushContent(PRBool aNotify)
+HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
 {
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
   if (mCurrentContext && !mInNotification) {
-    mCurrentContext->FlushTags(aNotify);
+    PRBool notify = ((aType & Flush_SinkNotifications) != 0);
+    mCurrentContext->FlushTags(notify);
+    if (aType & Flush_OnlyReflow) {
+      // Make sure that layout has started so that the reflow flush
+      // will actually happen.
+      StartLayout();
+    }
   }
 }
 
