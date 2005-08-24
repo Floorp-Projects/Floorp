@@ -445,12 +445,15 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sPrefBranch);
   NS_IF_RELEASE(sPref);
-  for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
-    nsISupports** ptrToPtr =
-      NS_STATIC_CAST(nsISupports**, sPtrsToPtrsToRelease->ElementAt(i));
-    NS_RELEASE(*ptrToPtr);
+  if (sPtrsToPtrsToRelease) {
+    for (i = 0; i < sPtrsToPtrsToRelease->Count(); ++i) {
+      nsISupports** ptrToPtr =
+        NS_STATIC_CAST(nsISupports**, sPtrsToPtrsToRelease->ElementAt(i));
+      NS_RELEASE(*ptrToPtr);
+    }
+    delete sPtrsToPtrsToRelease;
+    sPtrsToPtrsToRelease = nsnull;
   }
-  delete sPtrsToPtrsToRelease;
 }
 
 // static
