@@ -82,6 +82,7 @@ public:
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetName(nsAString& aName) { aName.Truncate(); return GetHTMLName(aName, PR_TRUE); }
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
