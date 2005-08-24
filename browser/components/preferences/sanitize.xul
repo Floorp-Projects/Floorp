@@ -52,7 +52,7 @@
             style="width: &window.width; !important;">
 
   <prefpane id="SanitizeDialogPane"
-            helpTopic="prefs-sanitize" helpURI="chrome://browser/locale/help/help.rdf">
+            helpTopic="prefs-clear-private-data" helpURI="chrome://browser/locale/help/help.rdf">
     <script type="application/x-javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
     <preferences>
