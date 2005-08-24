@@ -1026,21 +1026,10 @@ nsSVGOuterSVGFrame::SuspendRedraw()
   if (++mRedrawSuspendCount != 1)
     return NS_OK;
 
-  // get the view manager, so that we can wrap this up in a batch
-  // update.
-  nsIViewManager* vm = GetPresContext()->GetViewManager();
-
-  // we can get called in the process of ripping down a page, in
-  // which case the view manager isn't around anymore.
-  if (!vm)
-    return NS_OK;
-
-  vm->BeginUpdateViewBatch();
- 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawSuspended();
     }
@@ -1067,25 +1056,15 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
   if (mNeedsReflow)
     InitiateReflow();
   
-  // get the view manager, so that we can wrap this up in a batch
-  // update.
-  nsIViewManager* vm = GetPresContext()->GetViewManager();
-  
-  // we can get called in the process of ripping down a page, in
-  // which case the view manager isn't around anymore.
-  if (!vm)
-    return NS_OK;
-
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    CallQueryInterface(kid, &SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawUnsuspended();
     }
   }
 
-  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   return NS_OK;
 }
 
