@@ -2081,16 +2081,23 @@ nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
   
   // we're given the point in global coordinates. We need to convert it to
   // window coordinates for convert:message:toGeckoEvent
-  NSPoint pt; pt.x = aMouseGlobalX; pt.y = aMouseGlobalY;
-  [[mView window] convertScreenToBase:pt];
-  [mView convertLocation:pt message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
 
-// XXXPINK
-// hack, because we're currently getting the point in Carbon global coordinates,
-// but obviously the cocoa views don't know how to convert those (because they
-// use an entirely different coordinate system).
-  geckoEvent.refPoint.x = 50; geckoEvent.refPoint.y = 50;
-//printf("mouse location is %d %d\n", geckoEvent.point.x, geckoEvent.point.y);
+  NSPoint dragLoc = NSMakePoint(globalXPos, globalYPos);
+
+  // need to flip the point relative to the main screen
+  if ([[NSScreen screens] count] > 0)   // paranoia
+  {
+    // "global" coords are relative to the upper left of the main screen,
+    // which is the first screen in the array (not [NSScreen mainScreen]).
+    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
+    dragLoc.y = NSMaxY(mainScreenFrame) - dragLoc.y;
+  }
+
+  // convert to window coords
+  dragLoc = [[mView window] convertScreenToBase:dragLoc];
+  // and fill in the event
+  [mView convertLocation:dragLoc message:aMessage modifiers:0 toGeckoEvent:&geckoEvent];
+
   DispatchWindowEvent(geckoEvent);
   
   // we handled the event
@@ -2160,12 +2167,6 @@ nsChildView::Idle()
 
 - (void)dealloc
 {
-#if __GNUC__ < 4
-  // _savePort is @private and there's no other way to access it.
-  // gcc 3.3 doesn't care.
-  NS_ASSERTION(!_savePort || IsValidPort(_savePort), "Bad port");
-#endif
-
   [super dealloc];    // This sets the current port to _savePort (which should be
                       // a valid port, checked with the assertion above.
   SetPort(NULL);      // Bullet-proof against future changes in NSQDView
@@ -2468,7 +2469,7 @@ nsChildView::Idle()
     return;
   }
   
-  // Workaround for the fact that NSQuickDrawViews can't be opaque; see the rect
+  // Workaround for the fact that NSQuickDrawViews can't be opaque; see if the rect
   // being drawn is covered by a subview, and, if so, just bail.
   if ([self isRectObscuredBySubview:aRect])
     return;
