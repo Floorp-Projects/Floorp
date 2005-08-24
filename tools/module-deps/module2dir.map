@@ -705,9 +705,9 @@ extensions/webservices/build/src: websrvcs: xpcom string dom js content widget c
 extensions/spellcheck: spellchecker:
 extensions/spellcheck/src: spellchecker: xpcom string editor content layout dom necko widget pref gfx txtsvc uconv unicharutil
 extensions/spellcheck/idl: spellchecker:
+extensions/spellcheck/locales: :
 extensions/spellcheck/myspell: myspell:
 extensions/spellcheck/myspell/src: myspell: xpcom string editor content layout dom necko widget gfx txtsvc uconv unicharutil spellchecker nspr
-extensions/spellcheck/myspell/dictionaries: :
 extensions/datetime: nkdatetime: xpcom string necko mimetype
 extensions/finger: nkfinger: xpcom string necko mimetype
 extensions/cview: :
