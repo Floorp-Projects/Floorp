@@ -901,6 +901,8 @@ nsImageMap::AddArea(nsIContent* aArea)
   }
 
   mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
+  aArea->SetMayHaveFrame(PR_TRUE);
+  NS_ASSERTION(aArea->MayHaveFrame(), "SetMayHaveFrame failed?");
 
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
