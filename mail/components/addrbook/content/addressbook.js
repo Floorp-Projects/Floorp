@@ -119,7 +119,9 @@ var gAddressBookAbListener = {
 
 function OnUnloadAddressBook()
 {  
-  var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
+  var addrbookSession =
+        Components.classes["@mozilla.org/addressbook/services/session;1"]
+                  .getService(Components.interfaces.nsIAddrBookSession);
   addrbookSession.removeAddressBookListener(gAddressBookAbListener);
 
   RemovePrefObservers();
@@ -186,8 +188,8 @@ function delayedOnLoadAddressBook()
 
   //This migrates the LDAPServer Preferences from 4.x to mozilla format.
   try {
-      gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"].getService();       
-      gLDAPPrefsService = gLDAPPrefsService.QueryInterface( Components.interfaces.nsILDAPPrefsService);                  
+    Components.classes["@mozilla.org/ldapprefs-service;1"]
+              .getService(Components.interfaces.nsILDAPPrefsService);
   } catch (ex) {dump ("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
 
   GetCurrentPrefs();
@@ -208,7 +210,9 @@ function delayedOnLoadAddressBook()
 
   // add a listener, so we can switch directories if
   // the current directory is deleted
-  var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
+  var addrbookSession =
+        Components.classes["@mozilla.org/addressbook/services/session;1"]
+                  .getService(Components.interfaces.nsIAddrBookSession);
   // this listener cares when a directory (= address book), or a directory item
   // is/are removed. In the case of directory items, we are only really
   // interested in mailing list changes and not cards but we have to have both.
