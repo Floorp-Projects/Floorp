@@ -123,6 +123,7 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsMsgCompCID.h \
+		nsMsgComposeStringBundle.h \
 		$(NULL)
 
 # MacOSX requires the MoreFiles module
