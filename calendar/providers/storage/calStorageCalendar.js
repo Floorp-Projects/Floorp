@@ -1645,7 +1645,7 @@ calStorageCalendar.prototype = {
                                   "month",
                                   "setpos"];
                     for (j = 0; j < rtypes.length; j++) {
-                        var comp = "BY" + rtypes[i].toUpperCase();
+                        var comp = "BY" + rtypes[j].toUpperCase();
                         var comps = ritem.getComponent(comp, {});
                         if (comps && comps.length > 0) {
                             var compstr = comps.join(",");
