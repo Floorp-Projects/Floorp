@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Darin Fisher (original author)
+ *   Andreas Otte
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -576,7 +577,8 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
                     colon = p;
                 break;
             case ' ':
-                // hostname must not contain a space
+            case '%':
+                // hostname must not contain a space or a %
                 NS_WARNING("malformed hostname");
                 return NS_ERROR_MALFORMED_URI;
         }
