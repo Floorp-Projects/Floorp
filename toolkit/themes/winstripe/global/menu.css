@@ -168,10 +168,11 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 }
 
 .menubar-text {
-  margin-top: 1px !important;
+  margin-top: 1px;
   -moz-margin-end: 4px !important;
-  margin-bottom: 1px !important;
+  margin-bottom: 1px;
   -moz-margin-start: 5px !important;
+  padding-top: 1px;
   color: inherit;
 }
 
