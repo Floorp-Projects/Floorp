@@ -6273,10 +6273,6 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        else
            MOZ_CAIRO_LIBS="-lmozcairo -lmozlibpixman"
 
-           if test -z "$MACOSX"; then
-               MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype"
-           fi
-
            if test "$MOZ_X11"; then
                MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS -lXrender -lfreetype"
            fi
