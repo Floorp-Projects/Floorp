@@ -4697,23 +4697,7 @@ nsContextMenu.prototype = {
 
     // Returns true if anything is selected.
     isContentSelection : function() {
-        var focusedWindow = document.commandDispatcher.focusedWindow;
-        var selection = focusedWindow.getSelection();
-        if (selection.rangeCount == 0) {
-            return false;
-        }
-        var rangeFragment = selection.getRangeAt(0).cloneContents();
-        if (rangeFragment.childNodes.length == 0) {
-            return false;
-        }
-        // The selection object may also report an empty text node if there is no selection.
-        var node = rangeFragment.childNodes[0];
-        if (rangeFragment.childNodes.length == 1 &&
-            node.nodeType == node.TEXT_NODE &&
-            node.nodeValue.length == 0) {
-            return false;
-        }
-        return true;
+        return !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
     },
 
     searchSelected : function( charlen ) {
