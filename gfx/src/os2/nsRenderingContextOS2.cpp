@@ -2350,7 +2350,7 @@ void*
 nsRenderingContextOS2::GetNativeGraphicData(GraphicDataType aType)
 {
   if (aType == NATIVE_WINDOWS_DC)
-    return = (void*)mPS;
+    return (void*)mPS;
 
   return nsnull;
 }
