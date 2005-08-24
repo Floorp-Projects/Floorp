@@ -3998,6 +3998,16 @@ if (!exists $dbh->bz_column_info('whine_queries', 'title')->{DEFAULT}) {
                           NOTNULL => 1, DEFAULT => "''"});
 }
 
+# 2005-06-29 bugreport@peshkin.net, bug 299156
+if ($dbh->bz_index_info('attachments', 'attachments_submitter_id_idx')
+   && (scalar(@{$dbh->bz_index_info('attachments',
+                                    'attachments_submitter_id_idx'
+                                   )->{FIELDS}}) < 2)
+      ) {
+    $dbh->bz_drop_index('attachments', 'attachments_submitter_id_idx');
+}
+$dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
+                   [qw(submitter_id bug_id)]);
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
@@ -4020,17 +4030,6 @@ AddGroup('editclassifications', 'Can create, destroy, and edit classifications.'
 AddGroup('editcomponents', 'Can create, destroy, and edit components.');
 AddGroup('editkeywords', 'Can create, destroy, and edit keywords.');
 AddGroup('admin', 'Administrators');
-
-# 2005-06-29 bugreport@peshkin.net, bug 299156
-if ($dbh->bz_index_info('attachments', 'attachments_submitter_id_idx') 
-   && (scalar(@{$dbh->bz_index_info('attachments', 
-                                    'attachments_submitter_id_idx'
-                                   )->{FIELDS}}) < 2)
-      ) {
-    $dbh->bz_drop_index('attachments', 'attachments_submitter_id_idx');
-}
-$dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
-                   [qw(submitter_id bug_id)]);
 
 if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs', 'Can edit all bug fields.', ".*");
