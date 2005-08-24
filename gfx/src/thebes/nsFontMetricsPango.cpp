@@ -51,6 +51,7 @@
 
 #include "nsUnicharUtils.h"
 #include "nsQuickSort.h"
+#include "prlink.h"
 
 #include "cairo.h"
 #include "cairo-ft.h"
@@ -84,6 +85,42 @@ static int                         gNumInstances;
 // this factor larger than the height of the display, it's clamped to
 // that value instead of the requested size.
 #define FONT_MAX_FONT_SCALE 2
+
+// Glue to avoid build/runtime dependencies on Pango > 1.6
+
+static void
+(* PTR_pango_font_description_set_absolute_size)(PangoFontDescription*, double)
+    = nsnull;
+
+static void InitPangoLib()
+{
+    static PRBool initialized = PR_FALSE;
+    if (initialized)
+        return;
+    initialized = PR_TRUE;
+
+    PRLibrary* lib = PR_LoadLibrary("libpango-1.0.so");
+    if (!lib)
+        return;
+
+    PTR_pango_font_description_set_absolute_size =
+        (void (*)(PangoFontDescription*, double))
+        PR_FindFunctionSymbol(lib, "pango_font_description_set_absolute_size");
+
+    // leak lib deliberately
+}
+
+static void
+MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc,
+                                             double size)
+{
+    if (PTR_pango_font_description_set_absolute_size) {
+        PTR_pango_font_description_set_absolute_size(desc, size);
+    } else {
+        // Fake it! Assume the server DPI is 96. If it isn't, too bad
+        pango_font_description_set_size(desc, (gint)(size * 72.0/96.0));
+    }
+}
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -969,17 +1006,9 @@ nsFontMetricsPango::RealizeFont(void)
                                       familyList.get());
 
     // Set the point size
-
-    // this will take the DPI from the server, which is almost
-    // never what we want
-#if 0
-    pango_font_description_set_size(mPangoFontDesc,
-                                    (gint)(mPointSize * PANGO_SCALE));
-#endif
-    // XXX query the system for the dpi value
-    pango_font_description_set_absolute_size(mPangoFontDesc,
-                                             (96.0/72.0) * mPointSize * PANGO_SCALE);
-
+    MOZ_pango_font_description_set_absolute_size(mPangoFontDesc,
+                                                 (96.0/72.0) * mPointSize * PANGO_SCALE);
+    
     // Set the style
     pango_font_description_set_style(mPangoFontDesc,
                                      CalculateStyle(mFont.style));
