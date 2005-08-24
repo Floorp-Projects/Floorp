@@ -48,7 +48,7 @@
 #include "msgMapiFactory.h"
 #include "msgMapiMain.h"
 
-#include "nsMsgCompFields.h"
+#include "nsIMsgCompFields.h"
 #include "msgMapiHook.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
