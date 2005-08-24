@@ -41,6 +41,9 @@
 
 var  XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+var gPrintSettingsAreGlobal = false;
+var gSavePrintSettings = false;
+
 var PrintUtils = {
 
   showPageSetup: function ()
@@ -65,6 +68,11 @@ var PrintUtils = {
     var printSettings = this.getPrintSettings();
     try {
       webBrowserPrint.print(printSettings, null);
+      if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+        var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                              .getService(Components.interfaces.nsIPrintSettingsService);
+        PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveAll);
+      }
     } catch (e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
       // causing an exception to be thrown which we catch here.
@@ -120,9 +128,11 @@ var PrintUtils = {
 
   savePrintSettings: function (aPrintSettings)
   {
-    var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                          .getService(Components.interfaces.nsIPrintSettingsService);
-    PSSVC.savePrintSettingsToPrefs(aPrintSettings, false, aPrintSettings.kInitSaveNativeData);
+    if (gPrintSettingsAreGlobal && gSavePrintSettings) {
+      var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                            .getService(Components.interfaces.nsIPrintSettingsService);
+      PSSVC.savePrintSettingsToPrefs(aPrintSettings, false, aPrintSettings.kInitSaveNativeData);
+    }
   },
 
   ////////////////////////////////////////
@@ -142,12 +152,23 @@ var PrintUtils = {
 
   getPrintSettings: function ()
   {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    if (pref) {
+      gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
+      gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
+    }
+
     var printSettings;
     try {
       var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                             .getService(Components.interfaces.nsIPrintSettingsService);
-      printSettings = PSSVC.globalPrintSettings;
-      this.setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
+      if (gPrintSettingsAreGlobal) {
+        printSettings = PSSVC.globalPrintSettings;
+        this.setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
+      } else {
+        printSettings = PSSVC.newPrintSettings;
+      }
     } catch (e) {
       dump("getPrintSettings: "+e+"\n");
     }
