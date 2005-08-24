@@ -112,7 +112,9 @@ ifdef NS_USE_GCC
 		OS_CFLAGS += -MDupdate $(DEPENDENCIES)
 	endif
 	ifdef BUILD_OPT
-	    OPTIMIZER = -O2
+	    OPTIMIZER = -O3
+	    # Enable this for accurate dtrace profiling
+	    # OPTIMIZER += -mno-omit-leaf-frame-pointer -fno-omit-frame-pointer
 	endif
 else
 	CC         = cc

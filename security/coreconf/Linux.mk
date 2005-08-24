@@ -140,14 +140,15 @@ LIBC_TAG		= _glibc
 ifeq ($(OS_RELEASE),2.0)
 	OS_REL_CFLAGS	+= -DLINUX2_0
 	MKSHLIB		= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
-	ifdef BUILD_OPT
-		OPTIMIZER	= -O2
-	endif
 	ifdef MAPFILE
 		MKSHLIB += -Wl,--version-script,$(MAPFILE)
 	endif
 	PROCESS_MAP_FILE = grep -v ';-' $(LIBRARY_NAME).def | \
          sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
+endif
+
+ifdef BUILD_OPT
+	OPTIMIZER       = -O3
 endif
 
 ifeq ($(USE_PTHREADS),1)
