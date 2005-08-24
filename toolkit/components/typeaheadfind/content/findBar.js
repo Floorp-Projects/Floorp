@@ -22,6 +22,7 @@
 # Contributor(s):
 #     Blake Ross     <blake@cs.stanford.edu> (Original Author)
 #     Masayuki Nakano <masayuki@d-toybox.com>
+#     Ben Basson <contact@cusser.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -199,6 +200,7 @@ function highlightDoc(highBackColor, highTextColor, word, win)
 
         parent.removeChild(elem);
         parent.insertBefore(docfrag, next);
+        parent.normalize();
       }
       else {
         // Somehow we didn't highlight this instance; just skip it.
@@ -212,7 +214,8 @@ function highlightDoc(highBackColor, highTextColor, word, win)
   }
 
   var baseNode = doc.createElement("span");
-  baseNode.setAttribute("style", "background-color: " + highBackColor + "; color: " + highTextColor + ";");
+  baseNode.setAttribute("style", "background-color: " + highBackColor + "; color: " + highTextColor + ";"
+                                   + "display: inline; font-size: inherit; padding: 0;");
   baseNode.setAttribute("id", "__firefox-findbar-search-id");
 
   highlightText(word, baseNode);
