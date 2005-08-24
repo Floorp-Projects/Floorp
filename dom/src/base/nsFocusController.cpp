@@ -498,8 +498,10 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
     NS_ASSERTION(PR_FALSE, "Attempt to decrement focus controller's suppression when no suppression active!\n");
 
   // we are unsuppressing after activating, so update focus-related commands
-  // we need this to update commands in the case where an element is focused.
-  if (!mSuppressFocus && mCurrentElement)
+  // we need this to update command, including the case where there is no element
+  // because nsPresShell::UnsuppressPainting may have just now unsuppressed
+  // focus on the currently focused window
+  if (!mSuppressFocus)
     UpdateCommands(NS_LITERAL_STRING("focus"));
   
   return NS_OK;
