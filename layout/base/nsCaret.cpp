@@ -321,19 +321,17 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   // find the frame that contains the content node that has focus
   nsIFrame*       theFrame = nsnull;
   PRInt32         theFrameOffset = 0;
-  PRBool hintRight;
-  privateSelection->GetInterlinePosition(&hintRight);//translate hint.
-  nsIFrameSelection::HINT hint;
-  if (hintRight)
-    hint = nsIFrameSelection::HINTRIGHT;
-  else
-    hint = nsIFrameSelection::HINTLEFT;
 
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  err = presShell->FrameSelection()->GetFrameForNodeOffset(contentNode,
-                                                           focusOffset, hint,
-                                                           &theFrame,
-                                                           &theFrameOffset);
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+
+  nsIFrameSelection::HINT hint;
+  frameSelection->GetHint(&hint);
+
+  err = frameSelection->GetFrameForNodeOffset(contentNode,
+                                              focusOffset, hint,
+                                              &theFrame,
+                                              &theFrameOffset);
   if (NS_FAILED(err) || !theFrame)
     return err;
   
@@ -346,6 +344,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return NS_ERROR_UNEXPECTED;
   // ramp up to make a rendering context for measuring text.
   // First, we get the pres context ...
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   nsPresContext *presContext = presShell->GetPresContext();
 
   // ... then tell it to make a rendering context
@@ -507,8 +506,14 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell)
     return PR_FALSE;
-    
-  nsIFrameSelection *frameSelection = presShell->FrameSelection();
+
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryReferent(mDomSelectionWeak));
+  if (!privateSelection)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
