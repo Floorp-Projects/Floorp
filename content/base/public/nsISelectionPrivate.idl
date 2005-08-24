@@ -39,6 +39,7 @@
 #include "nsISelectionListener.idl"
 #include "nsIEnumerator.idl"
 
+interface nsIFrameSelection;
 interface nsIDOMRange;
 interface nsISelectionListener;
 
@@ -52,7 +53,7 @@ struct nsPoint;
 [ptr] native nsIPresShell(nsIPresShell);
 [ref] native nsPointRef(nsPoint);
 
-[scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
+[scriptable, uuid(3225CA54-D7E1-4FF5-8EE9-091B0BFCDA1F)]
 interface nsISelectionPrivate : nsISupports
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -108,5 +109,10 @@ interface nsISelectionPrivate : nsISupports
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
     [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in PRInt32 inOffset, in nsPointRef aPoint);
+
+    /* getFrameSelection
+     * Returnes a reference to the frame selection associated with this selection 
+     */
+    [noscript] nsIFrameSelection getFrameSelection();
 };
 

@@ -5089,6 +5089,14 @@ nsTypedSelection::GetCachedFrameOffset(nsIFrame *aFrame, PRInt32 inOffset, nsPoi
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTypedSelection::GetFrameSelection(nsIFrameSelection **aFrameSelection) {
+  NS_ENSURE_ARG_POINTER(aFrameSelection);
+  *aFrameSelection = mFrameSelection;
+  NS_ADDREF(*aFrameSelection);
+  return NS_OK;
+}
+
 nsresult
 nsTypedSelection::StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
