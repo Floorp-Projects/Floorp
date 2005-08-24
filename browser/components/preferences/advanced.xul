@@ -157,10 +157,6 @@
                         label="&enableExtensionUpdate.label;"
                         accesskey="&enableExtensionUpdate.accesskey;"
                         preference="extensions.update.enabled"/>
-              <spacer flex="1"/>
-              <button id="addonCheckNowButton" 
-                      label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                      oncommand="gAdvancedPane.checkForAddonUpdates();"/>
             </hbox>
             <hbox>
               <checkbox id="enableSearchUpdate"

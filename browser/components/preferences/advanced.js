@@ -199,24 +199,6 @@ var gAdvancedPane = {
     return !warnIncompatible.checked ? 0 : gAdvancedPane._modePreference;
   },
   
-  checkForAddonUpdates: function ()
-  {
-    var wm = 
-        Components.classes["@mozilla.org/appshell/window-mediator;1"].
-        getService(Components.interfaces.nsIWindowMediator);
-    var manager = wm.getMostRecentWindow("Extension:Manager-extensions");
-    if (!manager) {
-      const features = "chrome,dialog=no,resizable";
-      const URI_EXTENSIONS_WINDOW = 
-        "chrome://mozapps/content/extensions/extensions.xul?type=extensions";
-      openDialog(URI_EXTENSIONS_WINDOW, "", features, "updatecheck");
-    }
-    else {
-      manager.performUpdate();
-      manager.focus();
-    }
-  },
-  
   checkForUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
