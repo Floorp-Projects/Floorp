@@ -2086,7 +2086,15 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             break;
 
           case JSOP_TOOBJECT:
-            VALUE_TO_OBJECT(cx, FETCH_OPND(-1), obj);
+            rval = FETCH_OPND(-1);
+            if (!JSVAL_IS_PRIMITIVE(rval)) {
+                obj = JSVAL_TO_OBJECT(rval);
+            } else {
+                SAVE_SP(fp);
+                ok = js_ValueToObject(cx, rval, &obj);
+                if (!ok)
+                    goto out;
+            }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
