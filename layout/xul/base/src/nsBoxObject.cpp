@@ -183,13 +183,14 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
 
   if (doc) {
+    // Flush all pending notifications so that our frames are uptodate.  Must
+    // do this before we get the presshell, since this can destroy presshells.
+    doc->FlushPendingNotifications(Flush_Layout);
+
     // Get Presentation shell 0
     nsIPresShell *presShell = doc->GetShellAt(0);
 
     if(presShell) {
-      // Flush all pending notifications so that our frames are uptodate
-      doc->FlushPendingNotifications(Flush_Layout);
-
       // Get the Frame for our content
       nsIFrame* frame = presShell->GetPrimaryFrameFor(mContent);
       if(frame) {
