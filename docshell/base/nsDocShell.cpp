@@ -4736,7 +4736,7 @@ nsDocShell::EnsureDeviceContext()
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::CreateAboutBlankContentViewer()
 {
   nsCOMPtr<nsIDocument> blankDoc;
@@ -4809,6 +4809,10 @@ nsDocShell::CreateAboutBlankContentViewer()
     }
   }
   mCreatingDocument = PR_FALSE;
+
+  // The transient about:blank viewer doesn't have a session history entry.
+  SetHistoryEntry(&mOSHE, nsnull);
+
   return rv;
 }
 
@@ -5212,6 +5216,21 @@ nsDocShell::RestoreFromHistory()
     }
 
     mSavedRefreshURIList = nsnull;
+
+    // In cases where we use a transient about:blank viewer between loads,
+    // we never show the transient viewer, so _its_ previous viewer is never
+    // unhooked from the view hierarchy.  Destroy any such previous viewer now,
+    // before we grab the root view sibling, so that we don't grab a view
+    // that's about to go away.
+
+    if (mContentViewer) {
+        nsCOMPtr<nsIContentViewer> previousViewer;
+        mContentViewer->GetPreviousViewer(getter_AddRefs(previousViewer));
+        if (previousViewer) {
+            mContentViewer->SetPreviousViewer(nsnull);
+            previousViewer->Destroy();
+        }
+    }
 
     // Save off the root view's parent and sibling so that we can insert the
     // new content viewer's root view at the same position.  Also save the

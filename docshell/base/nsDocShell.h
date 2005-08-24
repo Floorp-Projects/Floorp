@@ -276,7 +276,7 @@ protected:
     // Content Viewer Management
     NS_IMETHOD EnsureContentViewer();
     NS_IMETHOD EnsureDeviceContext();
-    NS_IMETHOD CreateAboutBlankContentViewer();
+    nsresult CreateAboutBlankContentViewer();
     NS_IMETHOD CreateContentViewer(const char * aContentType, 
         nsIRequest * request, nsIStreamListener ** aContentHandler);
     NS_IMETHOD NewContentViewerObj(const char * aContentType, 
