@@ -1,10 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <meta http-equiv="content-type"
- content="text/html; charset=ISO-8859-1">
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
   <title>Midas Specification</title>
   <meta name="author" content="Kathleen Brade">
+  <style type="text/css">
+  td { vertical-align: top;  }
+  </style>
 </head>
 <body>
 Last revised:&nbsp; August 23, 2005<br>
@@ -14,38 +16,27 @@ available in recent mozilla browsers.<br>
 <br>
 <h1> Enabling Rich Text Editing in your web page:</h1>
 <div style="margin-left: 40px;">Given a document, you can add the
-attribute
-"designMode" and set it to "on" to get an editable document. &nbsp;For
-example,
-in JavaScript, if you have an iframe with an id of 'edit', you can get
-its
-contentDocument and set designMode to "on" like this:<br>
-<div style="margin-left: 40px;"><code>document.getElementById("edit").contentDocument.designMode="on";</code>
-</div>
+attribute "designMode" and set it to "on" to get an editable document.&nbsp;
+For example, in JavaScript, if you have an iframe with an id of 'edit', you
+can get its contentDocument and set designMode to "on" like this:<br>
+<div style="margin-left: 40px;"><code>document.getElementById("edit").contentDocument.designMode="on";</code></div>
 <br>
 Right now, you can't completely turn off editing by setting designMode
-to
-"off." &nbsp;Setting designMode to "off" will prevent certain
-operations
+to "off."&nbsp; Setting designMode to "off" will prevent certain operations
 from being handled but typing and other actions are still possible.<br>
 </div>
 <br>
 <h1>Invoking Commands:</h1>
-<h2>execCommand<br>
-</h2>
+<h2>execCommand</h2>
 <div style="margin-left: 40px;">Given a document that has rich text
-editing
-enabled (see above),
-you can invoke specific commands on the document by calling execCommand
-with
-3 parameters. &nbsp;For example, in JavaScript, if you have an editable
-document,
+editing enabled (see above), you can invoke specific commands on the
+document by calling execCommand with 3 parameters.&nbsp; For example,
+in JavaScript, if you have an editable document,
 you can invoke the bold command by calling this:<br>
 <div style="margin-left: 40px;"><code>editableDocument.execCommand("Bold",
-false, null); </code></div>
-Notes: &nbsp;If you haven't set designMode to "On", you will get an
-error.
-&nbsp;This could also happen if you call execCommand with the wrong
+false, null);</code></div><br>
+Notes:&nbsp; If you haven't set designMode to "On", you will get an
+error.&nbsp; This could also happen if you call execCommand with the wrong
 document.<br>
 <br>
 There are 3 required parameters for execCommand:<br>
@@ -54,15 +45,11 @@ There are 3 required parameters for execCommand:<br>
   <li>boolean flag for showing UI</li>
   <li>value string</li>
 </ol>
-The first parameter is a string which contains the command. &nbsp;The
-second
-parameter is a boolean flag. &nbsp;If it is set to true, you will get
-an
-error (NS_ERROR_NOT_IMPLEMENTED). &nbsp;The third parameter is a string
-which
-is the value. &nbsp;Some commands will require details such as the
-particular
-size you want to set when setting a font size.<br>
+The first parameter is a string which contains the command.&nbsp; The
+second parameter is a boolean flag. &nbsp;If it is set to true, you will
+get an error (NS_ERROR_NOT_IMPLEMENTED). &nbsp;The third parameter is a
+string which is the value.&nbsp; Some commands will require details such
+as the particular size you want to set when setting a font size.<br>
 <br>
 The section on Supported Commands will document each command and any
 corresponding values needed.<br>
@@ -70,15 +57,12 @@ corresponding values needed.<br>
 <div style="margin-left: 40px;"> </div>
 <br>
 <h2>queryCommandEnabled</h2>
-<blockquote>This command operates on the editable document. &nbsp;There
-is
-one required parameter (the command string). &nbsp;The result is a
-boolean
-which is true if the command is can be done given the current selection
-and/or
-caret position. &nbsp;The result is false if the command should not be
-invoked
-(execCommand) given the current selection and/or caret position. <br>
+<blockquote>This command operates on the editable document.&nbsp; There
+is one required parameter (the command string). &nbsp;The result is a
+boolean which is true if the command is can be done given the current
+selection and/or caret position. &nbsp;The result is false if the command
+should not be invoked (execCommand) given the current selection and/or
+caret position.<br>
 </blockquote>
 <br>
 <h2>queryCommandState</h2>
@@ -93,160 +77,106 @@ similarly to IE implementation.
 <br>
 <h1>Supported Commands:</h1>
 <div style="margin-left: 40px;">The following list of commands is
-presented
-in alphabetical order. &nbsp;The commands may be mixed case or whatever
-makes
-your code more readable.<br>
+presented in alphabetical order. &nbsp;The commands may be mixed case
+or whatever makes your code more readable.<br>
 <br>
 <table cellpadding="4" cellspacing="0" border="1"
  style="text-align: left; width: 100%;">
   <tbody>
     <tr>
-      <td style="vertical-align: top;">command<br>
-      </td>
-      <td style="vertical-align: top;">value<br>
-      </td>
-      <td style="vertical-align: top;">explanation / behavior<br>
-      </td>
+      <td>command</td>
+      <td>value</td>
+      <td>explanation / behavior</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">backcolor<br>
-      </td>
-      <td style="vertical-align: top;">????<br>
-      </td>
-      <td style="vertical-align: top;">This command will set the
-background color of the document.</td>
+      <td>backcolor</td>
+      <td>????</td>
+      <td>This command will set the background color of the document.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">bold<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">If there is no selection, the
-insertion
-point will set bold for subsequently typed characters. &nbsp;<br>
+      <td>bold</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion
+point will set bold for subsequently typed characters.<br>
       <br>
 If there is a selection and all of the characters are already bold, the
-bold
-will be removed. &nbsp;Otherwise, all selected characters will become
-bold.<br>
-      </td>
+bold will be removed. &nbsp;Otherwise, all selected characters will become
+bold.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">contentReadOnly</td>
-      <td style="vertical-align: top;">true<br>false</td>
-      <td style="vertical-align: top;">This command will make the
-editor readonly (true) or editable (false).&nbsp; Anticipated usage is
-for temporarily disabling input while something else is occurring
-elsewhere in the web page.</td>
+      <td>contentReadOnly</td>
+      <td>true<br>false</td>
+      <td>This command will make the editor readonly (true) or editable
+(false).&nbsp; Anticipated usage is for temporarily disabling input while
+something else is occurring elsewhere in the web page.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">copy<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">If there is a selection, this
-command
-will copy the selection to the clipboard. &nbsp;If there isn't a
-selection,
-nothing will happen.<br>
+      <td>copy</td>
+      <td>none</td>
+      <td>If there is a selection, this command will copy the selection
+to the clipboard.&nbsp; If there isn't a selection, nothing will happen.<br>
       <br>
 note: this command won't work without setting a pref or using signed
-JS.&nbsp; See:
-http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
+JS.&nbsp; See: http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
       <br>
-note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-C) with or without the signed JS or any code on the page to
-handle it.<br>
-      </td>
+note:&nbsp; the shortcut key will automatically trigger this command
+(typically accel-C) with or without the signed JS or any code on the page to
+handle it.</td>
     </tr>
     <tr>
-      <td valign="top">createlink<br>
-      </td>
-      <td valign="top">url (href)<br>
-      </td>
-      <td valign="top">This command will not do anything if no
-selection
+      <td>createlink</td>
+      <td>url (href)</td>
+      <td>This command will not do anything if no selection
 is made. &nbsp;If there is a selection, a link will be inserted around
-the
-selection with the url parameter as the href of the link.<br>
-      </td>
+the selection with the url parameter as the href of the link.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">cut<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">If there is a selection, this
-command
-will copy the selection to the clipboard and remove the selection from
-the
-edit control. &nbsp;If there isn't a selection, nothing will happen.<br>
+      <td>cut</td>
+      <td>none</td>
+      <td>If there is a selection, this command will copy the selection
+to the clipboard and remove the selection from the edit control.&nbsp;
+If there isn't a selection, nothing will happen.<br>
       <br>
 note: this command won't work without setting a pref or using signed
-JS.&nbsp; See:
-http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
+JS.&nbsp; See: http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
       <br>
 note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-X) with or without the signed JS or any code on the page to
-handle it.<br>
-      </td>
+(typically accel-X) with or without the signed JS or any code on the page to
+handle it.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">decreasefontsize<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will add a
-&lt;small&gt; tag around selection or at insertion point.<br>
-      </td>
+      <td>decreasefontsize</td>
+      <td>none</td>
+      <td>This command will add a &lt;small&gt; tag around selection or
+at insertion point.</td>
     </tr>
     <tr>
-      <td valign="top">delete<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top">This command will delete all text and objects
-that
-are selected.<br>
-      </td>
+      <td>delete</td>
+      <td>none</td>
+      <td>This command will delete all text and objects that
+are selected.</td>
     </tr>
     <tr>
-      <td valign="top">fontname<br>
-      </td>
-      <td valign="top">????<br>
-      </td>
-      <td valign="top">This command will set the fontface for a
-selection
-or at the insertion point if there is no selection.<br>
-      </td>
+      <td>fontname</td>
+      <td>????</td>
+      <td>This command will set the fontface for a selection
+or at the insertion point if there is no selection.</td>
     </tr>
     <tr>
-      <td valign="top">fontsize<br>
-      </td>
-      <td valign="top">????<br>
-      </td>
-      <td valign="top">This command will set the fontsize for a
-selection
-or at the insertion point if there is no selection.<br>
-      </td>
+      <td>fontsize</td>
+      <td>????</td>
+      <td>This command will set the fontsize for a selection
+or at the insertion point if there is no selection.</td>
     </tr>
     <tr>
-      <td valign="top">forecolor<br>
-      </td>
-      <td valign="top">????<br>
-      </td>
-      <td valign="top">This command will set the text color of the
-selection or at the insertion
-point.<br>
-      </td>
+      <td>forecolor</td>
+      <td>????</td>
+      <td>This command will set the text color of the
+selection or at the insertion point.</td>
     </tr>
     <tr>
-      <td valign="top">formatblock<br>
-      </td>
-      <td valign="top">&lt;h1&gt;<br>
+      <td>formatblock</td>
+      <td>&lt;h1&gt;<br>
 &lt;h2&gt;<br>
 &lt;h3&gt;<br>
 &lt;h4&gt;<br>
@@ -256,327 +186,214 @@ point.<br>
 &lt;address&gt;<br>
 &lt;p&gt;<br>
 p<br>
-[this list may not be completely]<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+[this list may not be complete]</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td valign="top">heading<br>
-      </td>
-      <td valign="top">&lt;h1&gt;<br>
+      <td>heading</td>
+      <td>&lt;h1&gt;<br>
 &lt;h2&gt;<br>
 &lt;h3&gt;<br>
 &lt;h4&gt;<br>
 &lt;h5&gt;<br>
-&lt;h6&gt;<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+&lt;h6&gt;</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">hilitecolor<br>
-      </td>
-      <td style="vertical-align: top;">????<br>
-      </td>
-      <td style="vertical-align: top;">This command will set the hilite
-color of the selection or at the insertion point.&nbsp; It only works
-with usecss enabled.<br>
-      </td>
+      <td>hilitecolor</td>
+      <td>????</td>
+      <td>This command will set the hilite color of the selection or at
+the insertion point.&nbsp; It only works with usecss enabled.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">increasefontsize<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will add a
+      <td>increasefontsize</td>
+      <td>none</td>
+      <td>This command will add a
 &lt;big&gt; tag around selection or at insertion point.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">indent<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">Indent the block where the caret
-is
-located.<br>
-      </td>
+      <td>indent</td>
+      <td>none</td>
+      <td>Indent the block where the caret is located.</td>
     </tr>
     <tr>
-      <td valign="top">inserthorizontalrule<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top">This command will insert a horizontal rule
-(line)
-at the insertion point.<br>
+      <td>inserthorizontalrule</td>
+      <td>none</td>
+      <td>This command will insert a horizontal rule
+(line) at the insertion point.<br>
       <br>
-Does it delete the selection?<br>
-      </td>
+Does it delete the selection?</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">inserthtml<br>
-      </td>
-      <td style="vertical-align: top;">valid html string<br>
-      </td>
-      <td style="vertical-align: top;">This command will insert the
-given html into the &lt;body&gt; in place of the current selection or
-at the caret location.<br>
-      </td>
+      <td>inserthtml</td>
+      <td>valid html string</td>
+      <td>This command will insert the given html into the &lt;body&gt;
+in place of the current selection or at the caret location.</td>
     </tr>
     <tr>
-      <td valign="top">insertimage<br>
-      </td>
-      <td valign="top">url (src)<br>
-      </td>
-      <td valign="top">This command will insert an image (referenced by
-url)
-at the insertion point.<br>
+      <td>insertimage</td>
+      <td>url (src)</td>
+      <td>This command will insert an image (referenced by
+url) at the insertion point.<br>
       <br>
-Does it delete the selection?<br>
-      </td>
+Does it delete the selection?</td>
     </tr>
     <tr>
-      <td valign="top">insertorderedlist<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>insertorderedlist</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td valign="top">insertunorderedlist<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>insertunorderedlist</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">insertparagraph<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;"><br>
-      </td>
+      <td>insertparagraph</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">italic<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">If there is no selection, the
-insertion
+      <td>italic</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion
 point will set italic for subsequently typed characters. &nbsp;<br>
       <br>
 If there is a selection and all of the characters are already italic,
-the
-italic will be removed. &nbsp;Otherwise, all selected characters will
-become
-italic.</td>
+the italic will be removed. &nbsp;Otherwise, all selected characters will
+become italic.</td>
     </tr>
     <tr>
-      <td valign="top">justifycenter<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>justifycenter</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td valign="top">justifyfull<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>justifyfull</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td valign="top">justifyleft<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>justifyleft</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td valign="top">justifyright<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>justifyright</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">outdent<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">Outdent the block where the
-caret
-is located. &nbsp;If the block is not indented prior to calling
-outdent,
-nothing will happen.<br>
+      <td>outdent</td>
+      <td>none</td>
+      <td>Outdent the block where the caret is located.&nbsp; If the
+block is not indented prior to calling outdent, nothing will happen.<br>
       <br>
-note: &nbsp;is an error thrown if no outdenting is done?<br>
-      </td>
+note: &nbsp;is an error thrown if no outdenting is done?</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">paste<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will paste the
-contents of the clipboard at the location of
-the caret. &nbsp;If there is a selection, it will be deleted prior to
-the
-insertion of the clipboard's contents.<br>
+      <td>paste</td>
+      <td>none</td>
+      <td>This command will paste the contents of the clipboard at the
+location of the caret.&nbsp; If there is a selection, it will be deleted
+prior to the insertion of the clipboard's contents.<br>
       <br>
 note: this command won't work without setting a pref or using signed
-JS.&nbsp; <br>
+JS.<br>
       <tt>user_pref("capability.policy.policynames", "allowclipboard");</tt><tt>
 user_pref("capability.policy.allowclipboard.Clipboard.paste",
-"allAccess");<br>
-      </tt>See:
-http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
+"allAccess");</tt><br>
+See: http://www.mozilla.org/editor/midasdemo/securityprefs.html<br>
       <br>
-note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-V) with or without the signed JS or any code on the page to
+note:&nbsp; the shortcut key will automatically trigger this command
+(typically accel-V) with or without the signed JS or any code on the page to
 handle it.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">redo<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will redo the
-previous
-undo action. &nbsp;If undo was not the most recent action, this command
-will
-have no effect.<br>
+      <td>redo</td>
+      <td>none</td>
+      <td>This command will redo the previous undo action.&nbsp; If undo
+was not the most recent action, this command will have no effect.<br>
       <br>
 note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-shift-Z)</td>
+(typically accel-shift-Z)</td>
     </tr>
     <tr>
-      <td valign="top">removeformat<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>removeformat</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">selectall<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will select all of
-the
-contents within the editable area.<br>
+      <td>selectall</td>
+      <td>none</td>
+      <td>This command will select all of the contents within the
+editable area.<br>
       <br>
 note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-A)<br>
-      </td>
+(typically accel-A)</td>
     </tr>
     <tr>
-      <td valign="top">strikethrough<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top">If there is no selection, the insertion point
-will
-set strikethrough for subsequently typed characters. &nbsp;<br>
+      <td>strikethrough</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion point
+will set strikethrough for subsequently typed characters.<br>
       <br>
 If there is a selection and all of the characters are already striked,
-the
-strikethrough will be removed. Otherwise, all selected characters will
-have
-a line drawn through them.<br>
-      </td>
+the strikethrough will be removed. Otherwise, all selected characters
+will have a line drawn through them.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">styleWithCSS</td>
-      <td style="vertical-align: top;">true<br>false</td>
-      <td style="vertical-align: top;">This command is used for
+      <td>styleWithCSS</td>
+      <td>true<br>false</td>
+      <td>This command is used for
 toggling the format of generated content.&nbsp; By default (at least
 today), this is true.&nbsp; An example of the differences is that the
 "bold" command will generate &lt;b&gt; if the styleWithCSS command is false
 and generate css style attribute if the styleWithCSS command is true.</td>
     </tr>
     <tr>
-      <td valign="top">subscript<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top">If there is no selection, the insertion point
-will
-set subscript for subsequently typed characters. &nbsp;<br>
+      <td>subscript</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion point
+will set subscript for subsequently typed characters. &nbsp;<br>
       <br>
 If there is a selection and all of the characters are already
-subscripted,
-the subscript will be removed. Otherwise, all selected characters will
-be
-drawn slightly lower than normal text.<br>
-      </td>
+subscripted, the subscript will be removed.&nbsp; Otherwise, all
+selected characters will be drawn slightly lower than normal text.</td>
     </tr>
     <tr>
-      <td valign="top">superscript<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top">If there is no selection, the insertion point
-will
-set superscript for subsequently typed characters. &nbsp;<br>
+      <td>superscript</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion point
+will set superscript for subsequently typed characters.<br>
       <br>
 If there is a selection and all of the characters are already
-superscripted,
-the superscript will be removed. Otherwise, all selected characters
-will
-be drawn slightly higher than normal text<br>
-      </td>
+superscripted, the superscript will be removed.&nbsp; Otherwise, all
+selected characters will be drawn slightly higher than normal text.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">underline<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">If there is no selection, the
-insertion
-point will set underline for subsequently typed characters. &nbsp;<br>
+      <td>underline</td>
+      <td>none</td>
+      <td>If there is no selection, the insertion
+point will set underline for subsequently typed characters.<br>
       <br>
 If there is a selection and all of the characters are already
-underlined,
-the underline will be removed. Otherwise, all selected characters will
-become
-underlined.</td>
+underlined, the underline will be removed.&nbsp; Otherwise, all
+selected characters will become underlined.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">undo<br>
-      </td>
-      <td style="vertical-align: top;">none<br>
-      </td>
-      <td style="vertical-align: top;">This command will undo the
-previous
-action. &nbsp;If no action has occurred in the document, then this
-command
-will have no effect.<br>
+      <td>undo</td>
+      <td>none</td>
+      <td>This command will undo the previous action.&nbsp; If no action
+has occurred in the document, then this command will have no effect.<br>
       <br>
 note: &nbsp;the shortcut key will automatically trigger this command
-(typically
-accel-Z)<br>
-      </td>
+(typically accel-Z)</td>
     </tr>
     <tr>
-      <td valign="top">unlink<br>
-      </td>
-      <td valign="top">none<br>
-      </td>
-      <td valign="top"><br>
-      </td>
+      <td>unlink</td>
+      <td>none</td>
+      <td><br></td>
     </tr>
   </tbody>
 </table>
@@ -585,21 +402,21 @@ accel-Z)<br>
  style="text-align: left; width: 100%;">
   <tbody>
     <tr>
-      <td style="vertical-align: top;" colspan="3">DEPRECATED COMMANDS</td>
+      <td colspan="3">DEPRECATED COMMANDS</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">readonly</td>
-      <td style="vertical-align: top;">true<br>false</td>
-      <td style="vertical-align: top;">This command has been replaced
-with contentReadOnly.&nbsp; It takes the same values as contentReadOnly, but
-the meaning of true and false are inversed.</td>
+      <td>readonly</td>
+      <td>true<br>false</td>
+      <td>This command has been replaced with contentReadOnly.&nbsp; It
+takes the same values as contentReadOnly, but the meaning of true and
+false are inversed.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">useCSS</td>
-      <td style="vertical-align: top;">truefalse</td>
-      <td style="vertical-align: top;">This command has been replaced
-with styleWithCSS.&nbsp; It takes the same values as styleWithCSS, but
-the meaning of true and false are inversed.</td>
+      <td>useCSS</td>
+      <td>truefalse</td>
+      <td>This command has been replaced with styleWithCSS.&nbsp; It takes
+the same values as styleWithCSS, but the meaning of true and false are
+inversed.</td>
     </tr>
   </tbody>
 </table>
