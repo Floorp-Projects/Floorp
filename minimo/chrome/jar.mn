@@ -12,3 +12,6 @@ minimo.jar:
 	skin/classic/minimo/reload.gif   (skin/reload.gif)
 	skin/classic/minimo/stop.gif     (skin/stop.gif)
 	skin/classic/minimo/transfer.gif (skin/transfer.gif)
+    branding/locale/brand.dtd        (locale/en-US/brand.dtd)
+	branding/locale/brand.properties (locale/en-US/brand.properties)
+	
