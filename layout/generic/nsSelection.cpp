@@ -1391,11 +1391,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
         return result;
       theFrame->GetOffsets(frameStart, frameEnd);
 
-      // the hint might have been reversed by an RTL frame, so make sure of it
-      if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
-        pos.mPreferLeft = PR_TRUE;
-      else if (nsIDOMKeyEvent::DOM_VK_END == aKeycode)
-        pos.mPreferLeft = PR_FALSE;
       tHint = (HINT)pos.mPreferLeft;
       if (frameStart !=0 || frameEnd !=0) // Otherwise the frame is not a text frame, so nothing more to do
       {
