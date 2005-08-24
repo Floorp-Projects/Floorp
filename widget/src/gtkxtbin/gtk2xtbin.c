@@ -602,7 +602,7 @@ xt_client_create ( XtClient* xtclient ,
 
   /* set the event handler */
   XtAddEventHandler(child_widget,
-                    (0x0FFFFF ^ (ResizeRedirectMask | SubstructureRedirectMask)),
+                    0x0FFFFF & ~ResizeRedirectMask,
                     TRUE, 
                     (XtEventHandler)xt_client_event_handler, xtclient);
   XtAddEventHandler(child_widget, 
