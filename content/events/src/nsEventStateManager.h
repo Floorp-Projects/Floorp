@@ -115,7 +115,7 @@ public:
   NS_IMETHOD GetEventRelatedContent(nsIContent** aContent);
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState);
-  NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
+  virtual PRBool SetContentState(nsIContent *aContent, PRInt32 aState);
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
   NS_IMETHOD SetFocusedContent(nsIContent* aContent);
   NS_IMETHOD GetLastFocusedContent(nsIContent **aContent);

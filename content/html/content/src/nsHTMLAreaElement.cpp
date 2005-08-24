@@ -182,11 +182,11 @@ nsHTMLAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
 void
 nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
 {
-  if (!aPresContext)
+  if (!aPresContext ||
+      !aPresContext->EventStateManager()->SetContentState(this, 
+                                                          NS_EVENT_STATE_FOCUS)) {
     return;
-
-  aPresContext->EventStateManager()->SetContentState(this,
-                                                     NS_EVENT_STATE_FOCUS);
+  }
     
   // Make sure the presentation is up-to-date
   nsIDocument* doc = GetCurrentDoc();

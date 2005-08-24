@@ -2550,11 +2550,16 @@ nsGenericElement::SetFocus(nsPresContext* aPresContext)
 
   nsIPresShell *presShell = aPresContext->PresShell();
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
-  if (frame && frame->IsFocusable()) {
+  if (frame && frame->IsFocusable() &&
     aPresContext->EventStateManager()->SetContentState(this,
-                                                        NS_EVENT_STATE_FOCUS);
-    presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
-                                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+                                                       NS_EVENT_STATE_FOCUS)) {
+    // Reget frame, setting content state can change style which can
+    // cause a frame reconstruction, for example if CSS overflow changes
+    frame = presShell->GetPrimaryFrameFor(this);
+    if (frame) {
+      presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+    }
   }
 }
 

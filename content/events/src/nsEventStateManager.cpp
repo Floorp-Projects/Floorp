@@ -3797,7 +3797,7 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
   return nsnull;
 }
 
-NS_IMETHODIMP
+PRBool
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
   const PRInt32 maxNotify = 5;
@@ -3813,8 +3813,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   {
     const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
     if (ui->mUserInput == NS_STYLE_USER_INPUT_NONE)
-      return NS_OK;
+      return PR_FALSE;
   }
+
+  PRBool didContentChangeAllStates = PR_TRUE;
 
   if ((aState & NS_EVENT_STATE_DRAGOVER) && (aContent != mDragOverContent)) {
     notifyContent[3] = mDragOverContent; // notify dragover first, since more common case
@@ -3869,6 +3871,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       NS_IF_ADDREF(gLastFocusedContent);
       // only raise window if the the focus controller is active
       SendFocusBlur(mPresContext, aContent, fcActive);
+      if (mCurrentFocus != aContent) {
+        didContentChangeAllStates = PR_FALSE;
+      }
 
 #ifdef DEBUG_aleventhal
       nsCOMPtr<nsPIDOMWindow> currentWindow =
@@ -4033,7 +4038,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     }
   }
 
-  return NS_OK;
+  return didContentChangeAllStates;
 }
 
 nsresult
@@ -4163,8 +4168,24 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 
   if (aContent) {
     // Check if the HandleDOMEvent calls above destroyed our frame (bug #118685)
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(aContent);
-    if (!frame) {
+    // or made it not focusable in any way
+    nsIFrame* focusFrame = presShell->GetPrimaryFrameFor(aContent);
+    if (focusFrame) {
+      if (aContent->Tag() != nsHTMLAtoms::area) {
+        if (!focusFrame->IsFocusable()) {
+          focusFrame = nsnull;
+        }
+      }
+      else if (!focusFrame->AreAncestorViewsVisible() ||
+               !focusFrame->GetStyleVisibility()->IsVisible() ||
+               !aContent->IsFocusable()) {
+        // HTML areas do not have their own frame, and the img frame we get from
+        // GetPrimaryFrameFor() is not relevant to whether it is focusable or not,
+        // so we have to do all the relevant checks manually for them.
+        focusFrame = nsnull;
+      }
+    }
+    if (!focusFrame) {
       aContent = nsnull;
     }
   }

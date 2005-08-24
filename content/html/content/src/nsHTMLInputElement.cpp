@@ -1093,16 +1093,13 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
     }
   }
 
-  aPresContext->EventStateManager()->SetContentState(this,
-                                                     NS_EVENT_STATE_FOCUS);
-
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    formControlFrame->ScrollIntoView(aPresContext);
-    // Could call SelectAll(aPresContext) here to automatically
-    // select text when we receive focus - only for text and password!
+  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+    if (formControlFrame) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      formControlFrame->ScrollIntoView(aPresContext);
+    }
   }
 }
 
@@ -1171,8 +1168,9 @@ nsHTMLInputElement::Select()
         // focus again if already focused.
         PRInt32 currentState;
         esm->GetContentState(this, currentState);
-        if (!(currentState & NS_EVENT_STATE_FOCUS)) {
-          esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+        if (!(currentState & NS_EVENT_STATE_FOCUS) &&
+            !esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+          return NS_ERROR_FAILURE; // Unable to focus
         }
       }
 

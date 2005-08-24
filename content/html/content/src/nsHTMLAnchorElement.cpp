@@ -233,10 +233,8 @@ nsHTMLAnchorElement::SetFocus(nsPresContext* aPresContext)
 
   // don't make the link grab the focus if there is no link handler
   nsILinkHandler *handler = aPresContext->GetLinkHandler();
-  if (handler) {
-    aPresContext->EventStateManager()->SetContentState(this,
-                                                       NS_EVENT_STATE_FOCUS);
-
+  if (handler && aPresContext->EventStateManager()->
+                               SetContentState(this, NS_EVENT_STATE_FOCUS)) {
     // Make sure the presentation is up-to-date
     nsIDocument* doc = GetCurrentDoc();
     if (doc) {
