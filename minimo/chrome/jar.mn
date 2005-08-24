@@ -2,7 +2,7 @@ minimo.jar:
 %   content minimo               %content/minimo/
 %   skin    minimo   classic/1.0 %skin/classic/minimo/
 %   locale  minimo   en-US       %locale/en-US/minimo/
-%   locale  branding             %branding/locale/
+%   locale  branding en-US       %branding/locale/
 	content/minimo/minimo.js		 (content/minimo.js)
 	content/minimo/minimo.xul		 (content/minimo.xul)
 	locale/en-US/minimo/minimo.dtd	 (locale/en-US/minimo.dtd)
