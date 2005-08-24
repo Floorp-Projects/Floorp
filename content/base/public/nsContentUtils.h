@@ -80,6 +80,7 @@ class nsIStringBundle;
 class nsIContentPolicy;
 class nsILineBreaker;
 class nsIWordBreaker;
+class nsIEventQueueService;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -572,6 +573,14 @@ public:
    * Return the content policy service
    */
   static nsIContentPolicy *GetContentPolicy();
+
+  /**
+   * Return the event queue service
+   */
+  static nsIEventQueueService* EventQueueService()
+  {
+    return sEventQueueService;
+  }
   
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
@@ -617,6 +626,8 @@ private:
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
+
+  static nsIEventQueueService* sEventQueueService;
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;

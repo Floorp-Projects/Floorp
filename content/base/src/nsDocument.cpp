@@ -5104,15 +5104,10 @@ nsDocument::UnblockOnload(PRBool aFireSync)
 void
 nsDocument::PostUnblockOnloadEvent()
 {
-  nsCOMPtr<nsIEventQueueService> eventQService =
-    do_GetService("@mozilla.org/event-queue-service;1");
-  if (!eventQService) {
-    return;
-  }
-
   nsCOMPtr<nsIEventQueue> eventQ;
-  eventQService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                      getter_AddRefs(eventQ));
+  nsContentUtils::EventQueueService()->
+    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                         getter_AddRefs(eventQ));
   if (!eventQ) {
     return;
   }
