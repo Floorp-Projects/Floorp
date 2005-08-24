@@ -50,11 +50,14 @@
  */
 #include "nsISupports.h"
 #include "nsString.h"
+#include "mozFlushType.h"
 
 class nsIParser;
 
 #define NS_ICONTENT_SINK_IID \
-{0x7f459e15, 0xd559, 0x4c50, {0x91, 0x30, 0x3a, 0xe7, 0x31, 0x46, 0x67, 0xa9}}
+{ 0x94ec4df1, 0x6885, 0x4b1f, \
+ { 0x85, 0x10, 0xe3, 0x5f, 0x4f, 0x36, 0xea, 0xaa } }
+
 // The base value for the content ID counter.
 // Values greater than or equal to this base value are used
 // by each of the content sinks to assign unique values
@@ -111,10 +114,9 @@ public:
    * Flush content so that the content model is in sync with the state
    * of the sink.
    *
-   * @param aNotify true if notifications should be fired in the
-   * process (instead of deferred for now).
+   * @param aType the type of flush to perform
    */
-  virtual void FlushContent(PRBool aNotify)=0;
+  virtual void FlushPendingNotifications(mozFlushType aType)=0;
 
   /**
    * Set the document character set. This should be passed on to the

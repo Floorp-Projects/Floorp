@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  uriloader \
 		  unicharutil \
+		  content \
 		  $(NULL)
 
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
