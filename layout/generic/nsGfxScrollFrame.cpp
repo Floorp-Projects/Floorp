@@ -497,6 +497,11 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
                                        vScrollbarPrefSize);
     availWidth = PR_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
+  if (availWidth != NS_UNCONSTRAINEDSIZE) {
+    // pixel align the content
+    nscoord twp = GetPresContext()->IntScaledPixelsToTwips(1);
+    availWidth -=  availWidth % twp;
+  }
 
   nsHTMLReflowState kidReflowState(GetPresContext(), aState.mReflowState,
                                    mInner.mScrolledFrame,
