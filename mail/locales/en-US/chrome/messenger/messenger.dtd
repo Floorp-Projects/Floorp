@@ -499,7 +499,7 @@
 <!ENTITY viewPickerAll.label "All">
 <!ENTITY viewPickerUnread.label "Unread">
 <!ENTITY viewPickerCustomView.label "Customize...">
-<!ENTITY viewPickerSaveAsVirtualFolder.label "Save Search as a Folder...">
+<!ENTITY viewPickerSaveAsVirtualFolder.label "Save View as a Folder...">
 <!ENTITY SearchNameOrEmail.label "Name or Email contains:">
 <!ENTITY SearchNameOrEmail.accesskey "N">
 <!ENTITY clearButton.label "Clear">

@@ -1910,10 +1910,9 @@
       <menuitem value="4" id="labelMenuItem3"/>
       <menuitem value="5" id="labelMenuItem4"/>
       <menuitem value="6" id="labelMenuItem5"/>
-      <menuseparator/>
-      <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
       <menuseparator id="lastDefaultView"/>
       <menuseparator id="createCustomViewSeparator"/>
+      <menuitem id="saveAsVirtualFolder" value="7" label="&viewPickerSaveAsVirtualFolder.label;"/>
       <menuitem id="createCustomView" value="8" label="&viewPickerCustomView.label;"/>
     </menupopup>
   </menulist>
