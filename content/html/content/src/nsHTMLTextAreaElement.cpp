@@ -245,16 +245,13 @@ nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
     return;
   }
 
-  aPresContext->EventStateManager()->SetContentState(this,
-                                                     NS_EVENT_STATE_FOCUS);
-
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    formControlFrame->ScrollIntoView(aPresContext);
-    // Could call SelectAll(aPresContext) here to automatically
-    // select text when we receive focus.
+  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+    if (formControlFrame) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      formControlFrame->ScrollIntoView(aPresContext);
+    }
   }
 }
 
@@ -287,9 +284,10 @@ nsHTMLTextAreaElement::Select()
   if (status == nsEventStatus_eIgnore) {
     PRBool shouldFocus = ShouldFocus(this);
 
-    if (shouldFocus) {
-      presContext->EventStateManager()->SetContentState(this,
-                                                        NS_EVENT_STATE_FOCUS);
+    if (shouldFocus &&
+        !presContext->EventStateManager()->SetContentState(this,
+                                                           NS_EVENT_STATE_FOCUS)) {
+      return NS_ERROR_FAILURE; // Unable to focus
     }
 
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);

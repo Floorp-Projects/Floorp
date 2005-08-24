@@ -53,10 +53,10 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// 2270e188-6743-441e-b6e1-af83f1047a53
+// {1dbe2518-06a1-461c-a1fd-dfbfb0ac0635}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x2270e188, 0x6743, 0x441e, \
-  { 0xb6, 0xe1, 0xaf, 0x83, 0xf1, 0x04, 0x7a, 0x53 } }
+{ 0x1dbe2518, 0x6a1, 0x461c, \
+  { 0xa1, 0xfd, 0xdf, 0xbf, 0xb0, 0xac, 0x6, 0x35 } };
 
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
@@ -96,7 +96,20 @@ public:
   NS_IMETHOD GetEventRelatedContent(nsIContent** aContent) = 0;
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
-  NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
+
+  /**
+   * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
+   * @param aContent Content which has changed states
+   * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS 
+   *                 defined in the nsIEventStateManager interface
+   * @return  Whether the content was able to change all states. Returns PR_FALSE
+   *                  if a resulting DOM event causes the content node passed in
+   *                  to not change states. Note, the frame for the content may
+   *                  change as a result of the content state change, because of
+   *                  frame reconstructions that may occur, but this does not
+   *                  affect the return value.
+   */
+  virtual PRBool SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
 
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
   NS_IMETHOD SetFocusedContent(nsIContent* aContent) = 0;

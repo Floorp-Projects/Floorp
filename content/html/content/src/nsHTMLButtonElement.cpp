@@ -244,14 +244,13 @@ nsHTMLButtonElement::SetFocus(nsPresContext* aPresContext)
     return;
   }
 
-  aPresContext->EventStateManager()->SetContentState(this,
-                                                     NS_EVENT_STATE_FOCUS);
-
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-
-  if (formControlFrame) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    formControlFrame->ScrollIntoView(aPresContext);
+  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+    if (formControlFrame) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      formControlFrame->ScrollIntoView(aPresContext);
+    }
   }
 }
 
