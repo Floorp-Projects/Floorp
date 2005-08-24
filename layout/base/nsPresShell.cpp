@@ -207,7 +207,6 @@ static void ColorToString(nscolor aColor, nsAutoString &aString);
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
 #undef NOISY
 
@@ -1376,7 +1375,6 @@ protected:
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
   PresShellViewEventListener    *mViewEventListener;
-  nsCOMPtr<nsIEventQueueService> mEventQueueService;
   nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
@@ -1749,14 +1747,6 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
   
-  mEventQueueService = do_GetService(kEventQueueServiceCID, &result);
-
-  if (!mEventQueueService) {
-    NS_WARNING("couldn't get event queue service");
-    mStyleSet = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =
       nsContentUtils::GetIntPref("layout.reflow.timeslice",
@@ -1908,8 +1898,9 @@ PresShell::Destroy()
   mPostedReplaces = nsnull;
   mReflowEventQueue = nsnull;
   nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQueue));
+  nsContentUtils::EventQueueService()->
+    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                         getter_AddRefs(eventQueue));
   eventQueue->RevokeEvents(this);
 
   CancelAllReflowCommands();
@@ -3900,7 +3891,7 @@ PresShell::DequeuePostedEventFor(nsIFrame* aFrame)
     
   // Dequeue it from the event queue
   nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->
+  nsContentUtils::EventQueueService()->
     GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                          getter_AddRefs(eventQueue));
   
@@ -3966,7 +3957,7 @@ PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
 
   // Handle this asynchronously
   nsCOMPtr<nsIEventQueue> eventQueue;
-  nsresult rv = mEventQueueService->
+  nsresult rv = nsContentUtils::EventQueueService()->
     GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                          getter_AddRefs(eventQueue));
 
@@ -6562,8 +6553,9 @@ void
 PresShell::PostReflowEvent()
 {
   nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQueue));
+  nsContentUtils::EventQueueService()->
+    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                         getter_AddRefs(eventQueue));
 
   if (eventQueue != mReflowEventQueue && !mIsDestroying &&
       !mIsReflowing && mReflowCommands.Count() > 0) {

@@ -687,16 +687,12 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
     // no use to fire events if there is no document....
     return NS_OK;
   }                                                                             
-  nsresult rv;
-  nsCOMPtr<nsIEventQueueService> eventQService =
-    do_GetService("@mozilla.org/event-queue-service;1", &rv);
-  NS_ENSURE_TRUE(eventQService, rv);
-
   nsCOMPtr<nsIEventQueue> eventQ;
   // Use the UI thread event queue (though we should not be getting called from
   // off the UI thread in any case....)
-  rv = eventQService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQ));
+  nsresult rv = nsContentUtils::EventQueueService()->
+    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                         getter_AddRefs(eventQ));
   NS_ENSURE_TRUE(eventQ, rv);
 
   nsIPresShell *shell = document->GetShellAt(0);

@@ -112,6 +112,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsLWBrkCIID.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
+#include "nsIEventQueueService.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -141,6 +142,7 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
 nsILineBreaker *nsContentUtils::sLineBreaker = nsnull;
 nsIWordBreaker *nsContentUtils::sWordBreaker = nsnull;
+nsIEventQueueService *nsContentUtils::sEventQueueService;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 
 
@@ -194,6 +196,9 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CallGetService(NS_EVENTQUEUESERVICE_CONTRACTID, &sEventQueueService);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Ignore failure and just don't load images
