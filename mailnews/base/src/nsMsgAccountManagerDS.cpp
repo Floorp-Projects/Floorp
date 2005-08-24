@@ -55,7 +55,6 @@
 #include "nsMsgRDFUtils.h"
 #include "nsIMsgFolder.h"
 #include "nsMsgBaseCID.h"
-#include "nsMsgIncomingServer.h"
 
 #include "nsICategoryManager.h"
 #include "nsXPCOM.h"

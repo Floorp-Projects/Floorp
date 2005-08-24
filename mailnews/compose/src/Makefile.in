@@ -123,34 +123,6 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsMsgCompCID.h \
-		nsSmtpUrl.h \
-		nsSmtpProtocol.h \
-		nsSmtpService.h \
-		nsMsgCreate.h \
-		nsMsgCopy.h \
-		nsMsgSendLater.h \
-		nsMsgDeliveryListener.h \
-		nsMsgComposeStringBundle.h \
-		nsMsgEncoders.h \
-		nsMsgCompUtils.h \
-		nsMsgComposeService.h \
-		nsMsgComposeParams.h \
-		nsMsgComposeProgressParams.h \
-		nsMsgComposeContentHandler.h \
-		nsMsgCompose.h \
-		nsMsgCompFields.h \
-		nsMsgAttachment.h \
-		nsMsgAttachmentHandler.h \
-		nsMsgPrompts.h \
-		nsMsgQuote.h \
-		nsMsgRecipientArray.h \
-		nsURLFetcher.h \
-		nsMsgSend.h \
-		nsMsgSendReport.h \
-		nsMsgSimulateError.h \
-		nsSmtpServer.h \
-		nsSmtpDataSource.h \
-		nsSmtpDelegateFactory.h \
 		$(NULL)
 
 # MacOSX requires the MoreFiles module

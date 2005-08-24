@@ -39,6 +39,7 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+LOCAL_INCLUDES += -I$(srcdir)/../src
 
 include $(DEPTH)/config/autoconf.mk
 

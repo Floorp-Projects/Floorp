@@ -61,7 +61,7 @@
 #include "nsIDOMWindow.h"
 #include "nsEscape.h"
 #include "nsIContentViewer.h"
-#include "nsMsgWindow.h"
+#include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"

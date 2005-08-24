@@ -68,7 +68,7 @@ REQUIRES	= xpcom \
 		  txmgr \
 		  import \
               addrbook \
-      	  docshell \
+		  docshell \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -86,12 +86,6 @@ CPPSRCS		= \
 		nsMsgFilterDataSource.cpp \
 		nsMsgFilterDelegateFactory.cpp \
 		$(NULL)
-
-EXPORTS		= nsMsgFilterService.h \
-		 	  nsMsgSearchSession.h \
-			  nsMsgFilterDataSource.h \
-			  nsMsgFilterDelegateFactory.h \
-			  $(NULL)
 
 EXPORT_RESOURCE_FILES	= \
 				  SpamAssassin.sfd \

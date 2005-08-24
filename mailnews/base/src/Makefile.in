@@ -167,43 +167,11 @@ endif
 
 endif
 
-EXPORTS		= \
+EXPORTS = \
 		nsMsgBaseCID.h \
-		nsMessenger.h \
-		nsMessengerBootstrap.h \
-		nsUrlListenerManager.h \
-		nsMsgMailSession.h \
-		nsMsgAccountManager.h \
-		nsMsgAccount.h \
-		nsMsgFolderDataSource.h \
-		nsMsgFolderCache.h \
-		nsMsgAccountManagerDS.h \
 		nsMsgRDFDataSource.h \
 		nsMsgRDFUtils.h \
-		nsMsgBiffManager.h \
-		nsMsgPurgeService.h \
-		nsCopyMessageStreamListener.h \
-		nsMsgCopyService.h \
-		nsMsgStatusFeedback.h \
-		nsMsgWindow.h \
-		nsMessengerMigrator.h \
-		nsMsgServiceProvider.h \
-		nsSubscribeDataSource.h \
-		nsSubscribableServer.h \
-		nsMsgPrintEngine.h \
-		nsStatusBarBiffManager.h \
-		nsMsgProgress.h \
-		nsMessengerContentHandler.h \
 		$(NULL)
-
-ifdef MOZ_THUNDERBIRD
-EXPORTS		+= nsMsgContentPolicy.h 
-
-ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= nsMessengerOSXIntegration.h 
-endif
-
-endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

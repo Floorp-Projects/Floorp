@@ -77,23 +77,9 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  $(NULL)
 
-EXPORTS		= \
+EXPORTS = \
 		nsMsgImapCID.h \
-		nsIMAPBodyShell.h \
-		nsIMAPGenericParser.h \
-		nsIMAPHostSessionList.h \
-		nsIMAPNamespace.h \
 		nsImapCore.h \
-		nsImapFlagAndUidState.h \
-		nsImapIncomingServer.h \
-		nsImapMailFolder.h \
-		nsImapProtocol.h \
-		nsImapProxyEvent.h \
-		nsImapSearchResults.h \
-		nsImapServerResponseParser.h \
-		nsImapService.h \
-		nsImapUrl.h \
-		nsImapUtils.h \
 		$(NULL)
 
 CPPSRCS		= \

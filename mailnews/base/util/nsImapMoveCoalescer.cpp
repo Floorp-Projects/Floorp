@@ -37,14 +37,14 @@
 
 #include "msgCore.h"
 #include "nsMsgImapCID.h"
-#include "nsImapMailFolder.h"
 #include "nsImapMoveCoalescer.h"
 #include "nsMsgKeyArray.h"
-#include "nsImapService.h"
+#include "nsIImapService.h"
 #include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMsgFolderFlags.h"
+#include "nsIMsgHdr.h"
 
 
 NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)

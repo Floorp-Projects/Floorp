@@ -39,9 +39,8 @@
 #define _nsImapMoveCoalescer_H
 
 #include "msgCore.h"
-class nsImapMailFolder;
-
 #include "nsISupportsArray.h"
+#include "nsIMsgWindow.h"
 #include "nsCOMPtr.h"
 
 // imap move coalescer class - in order to keep nsImapMailFolder from growing like Topsy
@@ -49,8 +48,6 @@ class nsImapMailFolder;
 // be able to retrieve them one by one and play back the moves.
 // This utility class will be used by both the filter code and the offline playback code,
 // to avoid multiple moves to the same folder.
-
-#include "nsISupportsArray.h"
 
 class NS_MSG_BASE nsImapMoveCoalescer : public nsISupports
 {

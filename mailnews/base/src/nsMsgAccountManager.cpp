@@ -87,7 +87,7 @@
 #include "nsIMessengerOSIntegration.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
-#include "nsMsgFilterService.h"
+#include "nsIMsgFilterService.h"
 #include "nsIMsgFilter.h"
 #include "nsIMsgSearchSession.h"
 #include "nsIDBChangeListener.h"
