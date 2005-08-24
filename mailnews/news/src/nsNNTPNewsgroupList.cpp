@@ -104,6 +104,7 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
     m_maxArticles(0),
     m_lastPercent(-1),
     m_lastProcessedNumber(0),
+    m_firstMsgNumber(0),
     m_lastMsgNumber(0),
     m_firstMsgToDownload(0),
     m_lastMsgToDownload(0),
@@ -952,6 +953,8 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
     m_set->AddRange(m_lastProcessedNumber + 1, m_lastMsgNumber);
   }
 
+  if (m_lastProcessedNumber)
+    AddToKnownArticles(m_firstMsgNumber, m_lastProcessedNumber);
   if (m_newsDB) {
     m_newsDB->Close(PR_TRUE);
     m_newsDB = nsnull;
