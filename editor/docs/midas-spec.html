@@ -7,7 +7,7 @@
   <meta name="author" content="Kathleen Brade">
 </head>
 <body>
-Last revised:&nbsp; May 30, 2003<br>
+Last revised:&nbsp; August 23, 2005<br>
 <br>
 This document describes the rich text editing controls for web pages
 available in recent mozilla browsers.<br>
@@ -98,7 +98,7 @@ in alphabetical order. &nbsp;The commands may be mixed case or whatever
 makes
 your code more readable.<br>
 <br>
-<table cellpadding="2" cellspacing="2" border="1"
+<table cellpadding="4" cellspacing="0" border="1"
  style="text-align: left; width: 100%;">
   <tbody>
     <tr>
@@ -131,6 +131,14 @@ bold
 will be removed. &nbsp;Otherwise, all selected characters will become
 bold.<br>
       </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">contentReadOnly</td>
+      <td style="vertical-align: top;">true<br>false</td>
+      <td style="vertical-align: top;">This command will make the
+editor readonly (true) or editable (false).&nbsp; Anticipated usage is
+for temporarily disabling input while something else is occurring
+elsewhere in the web page.</td>
     </tr>
     <tr>
       <td style="vertical-align: top;">copy<br>
@@ -438,18 +446,6 @@ accel-V) with or without the signed JS or any code on the page to
 handle it.</td>
     </tr>
     <tr>
-      <td style="vertical-align: top;">readonly<br>
-      </td>
-      <td style="vertical-align: top;">true<br>
-false<br>
-      </td>
-      <td style="vertical-align: top;">This command will make the
-editor readonly (true) or editable (false).&nbsp; Anticipated usage is
-for temporarily disabling input while something else is occurring
-elsewhere in the web page.<br>
-      </td>
-    </tr>
-    <tr>
       <td style="vertical-align: top;">redo<br>
       </td>
       <td style="vertical-align: top;">none<br>
@@ -501,6 +497,15 @@ strikethrough will be removed. Otherwise, all selected characters will
 have
 a line drawn through them.<br>
       </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">styleWithCSS</td>
+      <td style="vertical-align: top;">true<br>false</td>
+      <td style="vertical-align: top;">This command is used for
+toggling the format of generated content.&nbsp; By default (at least
+today), this is true.&nbsp; An example of the differences is that the
+"bold" command will generate &lt;b&gt; if the styleWithCSS command is false
+and generate css style attribute if the styleWithCSS command is true.</td>
     </tr>
     <tr>
       <td valign="top">subscript<br>
@@ -573,22 +578,31 @@ accel-Z)<br>
       <td valign="top"><br>
       </td>
     </tr>
-    <tr>
-      <td style="vertical-align: top;">useCSS<br>
-      </td>
-      <td style="vertical-align: top;">true<br>
-false<br>
-      </td>
-      <td style="vertical-align: top;">This command is used for
-toggling the format of generated content.&nbsp; By default (at least
-today), this is true.&nbsp; An example of the differences is that the
-"bold" command will generate &lt;b&gt; if the useCSS command is false
-and generate css style attribute if the useCSS command is true.<br>
-      </td>
-    </tr>
   </tbody>
 </table>
 <br>
+<table cellpadding="4" cellspacing="0" border="1"
+ style="text-align: left; width: 100%;">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;" colspan="3">DEPRECATED COMMANDS</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">readonly</td>
+      <td style="vertical-align: top;">true<br>false</td>
+      <td style="vertical-align: top;">This command has been replaced
+with contentReadOnly.&nbsp; It takes the same values as contentReadOnly, but
+the meaning of true and false are inversed.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">useCSS</td>
+      <td style="vertical-align: top;">truefalse</td>
+      <td style="vertical-align: top;">This command has been replaced
+with styleWithCSS.&nbsp; It takes the same values as styleWithCSS, but
+the meaning of true and false are inversed.</td>
+    </tr>
+  </tbody>
+</table>
 </div>
 <br>
 </body>
