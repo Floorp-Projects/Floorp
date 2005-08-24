@@ -182,6 +182,7 @@ bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
 ; JavaScript components
 bin\components\nsBrowserContentHandler.js
+bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
 bin\components\nsCloseAllWindows.js
 bin\components\nsDictionary.js
