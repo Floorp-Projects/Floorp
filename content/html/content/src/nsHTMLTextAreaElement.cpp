@@ -213,7 +213,9 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Blur()
 {
-  SetElementFocus(PR_FALSE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_FALSE);
+  }
 
   return NS_OK;
 }

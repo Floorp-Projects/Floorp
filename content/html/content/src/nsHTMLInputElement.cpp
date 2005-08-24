@@ -1041,7 +1041,9 @@ nsHTMLInputElement::FireOnChange()
 NS_IMETHODIMP
 nsHTMLInputElement::Blur()
 {
-  SetElementFocus(PR_FALSE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_FALSE);
+  }
 
   return NS_OK;
 }

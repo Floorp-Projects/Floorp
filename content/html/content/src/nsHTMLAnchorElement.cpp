@@ -207,7 +207,9 @@ nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 NS_IMETHODIMP
 nsHTMLAnchorElement::Blur()
 {
-  SetElementFocus(PR_FALSE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_FALSE);
+  }
 
   return NS_OK;
 }
