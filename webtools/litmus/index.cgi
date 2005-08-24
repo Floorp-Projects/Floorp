@@ -37,7 +37,8 @@ print $c->header();
 my @products = Litmus::DB::Product->retrieve_all();
 
 my @failingtests = Litmus::DB::Test->retrieve_all();
-my @hotlist = makeHotlist(15, Litmus::DB::Result->search(name => "Fail"), @failingtests);
+#my @hotlist = makeHotlist(15, Litmus::DB::Result->search(name => "Fail"), @failingtests);
+my @hotlist = undef;
 
 
 my $vars = {
