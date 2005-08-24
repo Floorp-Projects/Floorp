@@ -1160,10 +1160,8 @@ nsSVGOuterSVGFrame::GetCoordContextProvider()
 
   // Our <svg> content element is the CoordContextProvider for our children:
   nsSVGCoordCtxProvider *provider;
-  mContent->QueryInterface(NS_GET_IID(nsSVGCoordCtxProvider), (void**)&provider);
+  CallQueryInterface(mContent, &provider);
 
-  NS_IF_ADDREF(provider);
-  
   return provider;  
 }
 
