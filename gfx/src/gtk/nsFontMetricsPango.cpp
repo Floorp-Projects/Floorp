@@ -1720,7 +1720,7 @@ EnumFontsPango(nsIAtom* aLangGroup, const char* aGeneric,
     if (!pat)
         goto end;
 
-    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0);
+    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, NULL);
     if (!os)
         goto end;
 
