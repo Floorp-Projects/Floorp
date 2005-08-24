@@ -65,11 +65,6 @@ class nsIXTFXMLVisualWrapper;
 /**
  * Common stub for all XForms controls that inherit from nsIXFormsControl and
  * is bound to an instance node.
- *
- * @bug If a control has a model attribute, but no binding attributes we fail
- *      to set this as the context for children. We need to return the contextnode
- *      from EvaluateNodeBinding in that case, and return that in GetContext(). (XXX)
- *      @see http://bugzilla.mozilla.org/show_bug.cgi?id=280366
  */
 class nsXFormsControlStubBase : public nsIXFormsControl
 {
@@ -230,6 +225,16 @@ protected:
 
   /** Removes the index change event listeners */
   void RemoveIndexListeners();
+
+  /**
+   * Shows an error dialog for the user the first time an
+   * xforms-binding-exception event is received by the control.
+   *
+   * The dialog can be disabled via the |xforms.disablePopup| preference.
+   *
+   * @return                 Whether handling was successful
+   */
+  PRBool HandleBindingException();
 };
 
 

@@ -46,12 +46,17 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXPathResult.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDocument.h"
 #include "nsXFormsModelElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIServiceManager.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -418,11 +423,68 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
       } else {
         focusController->MoveFocus(PR_FALSE, nsnull);
       }
+    } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
+      *aHandled = HandleBindingException();
     }
   }
   
   return NS_OK;
 }
+
+PRBool
+nsXFormsControlStubBase::HandleBindingException()
+{
+  if (!mElement) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIDOMDocument> doc;
+  mElement->GetOwnerDocument(getter_AddRefs(doc));
+
+  nsCOMPtr<nsIDocument> iDoc(do_QueryInterface(doc));
+  if (!iDoc) {
+    return PR_FALSE;
+  }
+
+  // check for fatalError property, enforcing that only one fatal error will
+  // be shown to the user
+  if (iDoc->GetProperty(nsXFormsAtoms::fatalError)) {
+    return PR_FALSE;
+  }
+  iDoc->SetProperty(nsXFormsAtoms::fatalError, iDoc);
+
+  // Check for preference, disabling this popup
+  PRBool disablePopup = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && pref) {
+    PRBool val;
+    if (NS_SUCCEEDED(pref->GetBoolPref("xforms.disablePopup", &val)))
+      disablePopup = val;
+  }
+  if (disablePopup)
+    return PR_FALSE;
+
+  // Get nsIDOMWindowInternal
+  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
+  if (!dview)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMAbstractView> aview;
+  dview->GetDefaultView(getter_AddRefs(aview));
+
+  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
+  if (!internal)
+    return PR_FALSE;
+
+  // Show popup
+  nsCOMPtr<nsIDOMWindow> messageWindow;
+  rv = internal->OpenDialog(NS_LITERAL_STRING("chrome://xforms/content/bindingex.xul"),
+                            NS_LITERAL_STRING("XFormsBindingException"),
+                            NS_LITERAL_STRING("modal,dialog,chrome,dependent"),
+                            nsnull, getter_AddRefs(messageWindow));
+  return NS_SUCCEEDED(rv);
+}
+
 
 #ifdef DEBUG_smaug
 static nsVoidArray* sControlList = nsnull;

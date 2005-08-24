@@ -62,6 +62,7 @@ nsIAtom *nsXFormsAtoms::clazz;
 nsIAtom *nsXFormsAtoms::deferredBindListProperty;
 nsIAtom *nsXFormsAtoms::readyForBindProperty;
 nsIAtom *nsXFormsAtoms::accesskey;
+nsIAtom *nsXFormsAtoms::fatalError;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -86,7 +87,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "class",                    &nsXFormsAtoms::clazz },
   { "DeferredBindListProperty", &nsXFormsAtoms::deferredBindListProperty },
   { "ReadyForBindProperty",     &nsXFormsAtoms::readyForBindProperty },
-  { "accesskey",                &nsXFormsAtoms::accesskey }
+  { "accesskey",                &nsXFormsAtoms::accesskey },
+  { "fatalError",               &nsXFormsAtoms::fatalError }
 };
 
 void

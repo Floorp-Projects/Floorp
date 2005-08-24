@@ -70,6 +70,7 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) deferredBindListProperty;
   static NS_HIDDEN_(nsIAtom *) readyForBindProperty;
   static NS_HIDDEN_(nsIAtom *) accesskey;
+  static NS_HIDDEN_(nsIAtom *) fatalError;
 
   static NS_HIDDEN_(void) InitAtoms();
 
