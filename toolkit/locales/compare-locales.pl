@@ -15,11 +15,14 @@
 # The Original Code is libxul build automation.
 #
 # The Initial Developer of the Original Code is
-# Benjamin Smedberg <bsmedberg@covad.net>
+# Benjamin Smedberg <benjamin@smedbergs.us>
 # Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#	Soeren Munk Skroeder (sskroeder) @ 2005-08-24 - 
+#	  added support for inc files (defines)
+#	  added to-do description with "add/remove these keys from your locale"
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -81,12 +84,12 @@ sub compareDTD
         $failure = 1;
         print "Entities in $path don't match:\n";
         if (@extra1) {
-            print "  In $gSource1:\n";
+            print "  In $gSource1: (add these keys to you localization)\n";
             map { print "    $_\n"; } @extra1;
         }
 
         if (keys %entities2) {
-            print "  In $gSource2:\n";
+            print "  In $gSource2: (remove these keys from your localization)\n";
             map {print "    $_\n"; } keys %entities2;
         }
         print "\n";
@@ -129,12 +132,58 @@ sub compareProperties
         $failure = 1;
         print "Properties in $path don't match:\n";
         if (@extra1) {
-            print "  In $gSource1:\n";
+            print "  In $gSource1: (add these to your localization)\n";
             map { print "    $_\n"; } @extra1;
         }
 
         if (keys %entities2) {
-            print "  In $gSource2:\n";
+            print "  In $gSource2: (remove these from your localization)\n";
+            map {print "    $_\n"; } keys %entities2;
+        }
+        print "\n";
+    }
+}
+
+sub readDefines
+{
+    my ($file) = @_;
+
+    open DEFS, "<$file" || die ("Couldn't open file $file");
+
+    local $/ = undef;
+    my $contents = <DEFS>;
+    close DEFS;
+
+    return $contents =~ /#define\s+(\w+)/gm;
+}
+
+sub compareDefines
+{
+    my ($path) = @_;
+
+    my @entities1 = readDefines("$gSourceDir1/$path");
+    my %entities2 = map { $_ => 1 } readDefines("$gSourceDir2/$path");
+
+    my @extra1;
+
+    foreach my $entity (@entities1) {
+        if (exists $entities2{$entity}) {
+            delete $entities2{$entity};
+        } else {
+            push @extra1, $entity;
+        }
+    }
+
+    if (@extra1 or keys %entities2) {
+        $failure = 1;
+        print "Defines in $path don't match:\n";
+        if (@extra1) {
+            print "  In $gSource1: (add these to your localization)\n";
+            map { print "    $_\n"; } @extra1;
+        }
+
+        if (keys %entities2) {
+            print "  In $gSource2: (remove these from your localization)\n";
             map {print "    $_\n"; } keys %entities2;
         }
         print "\n";
@@ -166,6 +215,8 @@ sub compareDir
             } else {
                 if ($file =~ /\.dtd$/) {
                     compareDTD("$path/$file");
+                } elsif ($file =~ /\.inc$/) {
+                    compareDefines("$path/$file");
                 } elsif ($file =~ /\.properties$/) {
                     compareProperties("$path/$file");
                 } else {
