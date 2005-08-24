@@ -1315,6 +1315,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   if (getenv("MOZ_SHOW_DISPLAY_LIST")) ShowDisplayList(&aDisplayList);
 #endif
 
+  nsresult rv;
   PRInt32 index = 0;
   nsRect fakeClipRect;
   PRBool anyRendered;
@@ -1351,11 +1352,10 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     if (element->mFlags & PUSH_CLIP) {
       PushStateAndClip(RCs, 2, element->mBounds);
     }
-    PRBool usingBuffers = PR_FALSE;
     if (element->mFlags & PUSH_FILTER) {
-      nsresult rv = buffers->mBlackCX->PushFilter(element->mBounds,
-                                                  (element->mFlags & VIEW_TRANSPARENT) == 0,
-                                                  element->mView->GetOpacity());
+      rv = buffers->mBlackCX->PushFilter(element->mBounds,
+                                         (element->mFlags & VIEW_TRANSPARENT) == 0,
+                                         element->mView->GetOpacity());
       if (rv == NS_ERROR_NOT_IMPLEMENTED) {
         NS_ASSERTION(aRCSurface,
                      "Cannot support translucent elements with doublebuffering disabled");
@@ -1366,7 +1366,6 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
           buffers = CreateBlendingBuffers(&aRC, PR_FALSE, nsnull,
                                           (element->mFlags & VIEW_TRANSPARENT) != 0,
                                           element->mBounds);
-          usingBuffers = PR_TRUE;
         }
       }
     }
@@ -1386,7 +1385,10 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     }
 
     if (element->mFlags & POP_FILTER) {
-      if (usingBuffers) {
+      rv = buffers->mBlackCX->PopFilter();
+      if (rv == NS_ERROR_NOT_IMPLEMENTED &&
+          aRCSurface)
+      {
         // Pop the last buffer off the stack and composite the current buffer into
         // the last buffer
         BlendingBuffers* doneBuffers = buffers;
@@ -1414,8 +1416,6 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
         // probably should recycle these so we don't eat the cost of graphics memory
         // allocation
         delete doneBuffers;
-      } else {
-        buffers->mBlackCX->PopFilter();
       }
     }
     if (element->mFlags & POP_CLIP) {
