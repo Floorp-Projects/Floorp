@@ -6,7 +6,7 @@
         description="Dictionary Search on Answers.com"
         method="GET"
         action="http://www.answers.com/"
-        queryCharset="ISO-8859-1">
+        queryCharset="UTF-8">
 
   <input name="" user>
   
