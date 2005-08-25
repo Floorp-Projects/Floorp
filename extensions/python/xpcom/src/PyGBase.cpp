@@ -187,7 +187,7 @@ void *PyG_Base::ThisAsIID( const nsIID &iid )
 	if (iid.Equals(NS_GET_IID(nsIInternalPython))) 
 		return (nsISupports *)(nsIInternalPython *)this;
 	return NULL;
-};
+}
 
 // Call back into Python, passing a Python instance, and get back
 // an interface object that wraps the instance.

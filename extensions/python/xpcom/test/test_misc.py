@@ -105,15 +105,13 @@ class TestDumpInterfaces(unittest.TestCase):
 class TestEnumContractIDs(unittest.TestCase):
     def testContractIDs(self):
         """Enumerate all the ContractIDs registered"""
-        cm = xpcom._xpcom.NS_GetGlobalComponentManager()
-        enum = cm.EnumerateContractIDs()
-        rc = enum.First()
+        enum = xpcom.components.registrar.enumerateContractIDs()
         n = 0
-        while rc == 0:
+        while enum.hasMoreElements():
+            item = enum.getNext(xpcom.components.interfaces.nsISupportsCString)
             n = n + 1
             if verbose_level:
-                print "ContractID:", enum.CurrentItem()
-            rc = enum.Next()
+                print "ContractID:", item.data
         if n < 200:
             print "Only found", n, "ContractIDs - this seems unusually low!"
 
@@ -191,7 +189,7 @@ class TestRepr(unittest.TestCase):
             ob = xpcom.components.classes[progid].createInstance()
         else:
             ob = progid
-        self.failUnless(repr(ob).find(progid) >= 0, repr(ob))
+        self.failUnless(repr(ob).find(str(progid)) >= 0, repr(ob))
         for interface_name in interfaces.split():
             self.failUnless(repr(ob).find(interface_name) >= 0, repr(ob))
 

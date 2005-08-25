@@ -41,7 +41,7 @@ from xpcom import xpt, COMException, nsError
 
 # Suck in stuff from _xpcom we use regularly to prevent a module lookup
 from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, IID_nsISupportsCString, IID_nsISupportsWeakReference, \
-        IID_nsIWeakReference, XPTI_GetInterfaceInfoManager, NS_GetGlobalComponentManager, XPTC_InvokeByIndex
+        IID_nsIWeakReference, XPTI_GetInterfaceInfoManager, GetComponentManager, XPTC_InvokeByIndex
 
 # Attribute names we may be __getattr__'d for, but know we don't want to delegate
 # Could maybe just look for startswith("__") but this may screw things for some objects.
@@ -211,8 +211,8 @@ class Component(_XPCOMBase):
         ob_name = None
         if not hasattr(ob, "IID"):
             ob_name = ob
-            cm = NS_GetGlobalComponentManager()
-            ob = cm.CreateInstanceByContractID(ob)
+            cm = GetComponentManager()
+            ob = cm.createInstanceByContractID(ob)
             assert not hasattr(ob, "_comobj_"), "The created object should be a raw nsIWhatever, not a wrapped one"
         # Keep a reference to the object in the component too
         self.__dict__['_comobj_'] = ob

@@ -117,6 +117,10 @@ PYXPCOM_EXPORT void PyXPCOM_LogDebug(const char *fmt, ...);
 #define PYXPCOM_LOG_DEBUG()
 #endif // DEBUG
 
+// Create a Unicode Object from the PRUnichar buffer src of the given size
+#define PyUnicode_FromPRUnichar(src, size) \
+	PyUnicode_DecodeUTF16((char*)(src),sizeof(PRUnichar)*(size),NULL,NULL)
+
 /*************************************************************************
 **************************************************************************
 
@@ -466,7 +470,7 @@ public:
 	PyXPCOM_GatewayWeakReference(PyG_Base *base);
 	virtual ~PyXPCOM_GatewayWeakReference();
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEAKREFERENCE;
+	NS_DECL_NSIWEAKREFERENCE
 	PyG_Base *m_pBase; // NO REF COUNT!!!
 #ifdef NS_BUILD_REFCNT_LOGGING
 	char refcntLogRepr[41];
@@ -724,14 +728,15 @@ PyXPCOM_TypeObject *ClassName::type = NULL;
 
 
 // And the classes
-PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManager, nsIComponentManagerObsolete, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
 PyXPCOM_INTERFACE_DECLARE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
-PyXPCOM_INTERFACE_DECLARE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
 PyXPCOM_INTERFACE_DECLARE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
 PyXPCOM_ATTR_INTERFACE_DECLARE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
 PyXPCOM_ATTR_INTERFACE_DECLARE(Py_nsIVariant, nsIVariant, PyMethods_IVariant)
+// deprecated, but retained for backward compatibility:
+PyXPCOM_INTERFACE_DECLARE(Py_nsIComponentManagerObsolete, nsIComponentManagerObsolete, PyMethods_IComponentManagerObsolete)
 
 #endif // __PYXPCOM_H__

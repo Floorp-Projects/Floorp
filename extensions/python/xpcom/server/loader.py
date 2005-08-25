@@ -68,7 +68,7 @@ def FindCOMComponents(py_module):
 def register_self(klass, compMgr, location, registryLocation, componentType):
     pcl = PythonComponentLoader
     from xpcom import _xpcom
-    svc = _xpcom.GetGlobalServiceManager().getServiceByContractID("@mozilla.org/categorymanager;1", components.interfaces.nsICategoryManager)
+    svc = _xpcom.GetServiceManager().getServiceByContractID("@mozilla.org/categorymanager;1", components.interfaces.nsICategoryManager)
     svc.addCategoryEntry("component-loader", pcl._reg_component_type_, pcl._reg_contractid_, 1, 1)
 
 class PythonComponentLoader:
@@ -111,7 +111,9 @@ class PythonComponentLoader:
     def getFactory(self, clsid, location, type):
         # return the factory
         assert type == self._reg_component_type_, "Being asked to create an object not of my type:%s" % (type,)
-        file_interface = components.manager.specForRegistryLocation(location)
+        # FIXME: how to do this without obsolete component manager?
+        cmo = components.manager.queryInterface(components.interfaces.nsIComponentManagerObsolete)	
+        file_interface = cmo.specForRegistryLocation(location)
         # delegate to the module.
         m = self._getCOMModuleForLocation(file_interface)
         return m.getClassObject(components.manager, clsid, components.interfaces.nsIFactory)

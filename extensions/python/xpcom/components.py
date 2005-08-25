@@ -52,13 +52,16 @@ def _get_good_iid(iid):
     return iid
 
 # The "manager" object.
-manager = xpcom.client.Component(_xpcom.NS_GetGlobalComponentManager(), _xpcom.IID_nsIComponentManager)
+manager = xpcom.client.Component(_xpcom.GetComponentManager(), _xpcom.IID_nsIComponentManager)
+
+# The component registrar
+registrar = xpcom.client.Component(_xpcom.GetComponentManager(), _xpcom.IID_nsIComponentRegistrar)
 
 # The "interfaceInfoManager" object - JS doesnt have this.
 interfaceInfoManager = _xpcom.XPTI_GetInterfaceInfoManager()
 
 # The serviceManager - JS doesnt have this either!
-serviceManager = _xpcom.GetGlobalServiceManager()
+serviceManager = _xpcom.GetServiceManager()
 
 # The "Exception" object
 Exception = xpcom.COMException
@@ -172,7 +175,7 @@ class _Class:
         self.contractid = contractid
     def __getattr__(self, attr):
         if attr == "clsid":
-            rc = manager.contractIDToClassID(self.contractid)
+            rc = registrar.contractIDToCID(self.contractid)
             # stash it away - it can never change!
             self.clsid = rc
             return rc
@@ -199,12 +202,12 @@ class _Classes(_ComponentCollection):
 
     def _build_dict(self):
         ret = {}
-        enum = manager.EnumerateContractIDs()
-        while not enum.IsDone():
+        enum = registrar.enumerateContractIDs()
+        while enum.hasMoreElements():
             # Call the Python-specific FetchBlock, to keep the loop in C.
-            items = enum.FetchBlock(500)
+            items = enum.fetchBlock(2000, _xpcom.IID_nsISupportsCString)
             for item in items:
-                name = str(item)
+                name = str(item.data)
                 ret[name] = _Class(name)
         return ret
 
@@ -221,12 +224,12 @@ ID = _xpcom.IID
 class _ShutdownObserver:
     _com_interfaces_ = interfaces.nsIObserver
     def observe(self, service, topic, extra):
-        global manager, classes, interfaces, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
-        manager = classes = interfaces = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
+        global manager, registrar, classes, interfaces, interfaceInfoManager, _shutdownObserver, serviceManager, _constants_by_iid_map
+        manager = registrar = classes = interfaces = interfaceInfoManager = _shutdownObserver = serviceManager = _constants_by_iid_map = None
         xpcom.client._shutdown()
         xpcom.server._shutdown()
 
-svc = _xpcom.GetGlobalServiceManager().getServiceByContractID("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
+svc = _xpcom.GetServiceManager().getServiceByContractID("@mozilla.org/observer-service;1", interfaces.nsIObserverService)
 # Observers will be QI'd for a weak-reference, so we must keep the
 # observer alive ourself, and must keep the COM object alive,
 # _not_ just the Python instance!!!

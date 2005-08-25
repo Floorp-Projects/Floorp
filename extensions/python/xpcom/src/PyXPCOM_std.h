@@ -49,15 +49,23 @@
 //
 // (c) 2000, ActiveState corp.
 
+#include <Python.h>
+
+#ifdef HAVE_LONG_LONG
+	// Mozilla also defines this - we undefine it to
+	// prevent a compiler warning.
+#	undef HAVE_LONG_LONG
+#endif // HAVE_LONG_LONG
+
 #include "nsIAllocator.h"
 #include "nsIWeakReference.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIClassInfo.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentManagerObsolete.h"
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
 #include "nsIVariant.h"
-
 
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
@@ -68,11 +76,4 @@
 // we can use it to trigger "exports"
 #define BUILD_PYXPCOM
 
-#ifdef HAVE_LONG_LONG
-	// Mozilla also defines this - we undefine it to
-	// prevent a compiler warning.
-#	undef HAVE_LONG_LONG
-#endif // HAVE_LONG_LONG
-
-#include "Python.h"
 #include "PyXPCOM.h"
