@@ -388,6 +388,19 @@ nsImageDocument::GetImageIsResized(PRBool* aImageIsResized)
 }
 
 NS_IMETHODIMP
+nsImageDocument::GetImageRequest(imgIRequest** aImageRequest)
+{
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
+  if (imageLoader) {
+    return imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                                   aImageRequest);
+  }
+
+  *aImageRequest = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
   if (mImageResizingEnabled) {

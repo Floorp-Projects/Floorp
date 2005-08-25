@@ -476,8 +476,21 @@
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
             if (browser.contentDocument instanceof ImageDocument) {
-              if (this.mPrefs.getBoolPref("browser.chrome.site_icons"))
-                this.setIcon(aTab, browser.currentURI.spec);
+              if (this.mPrefs.getBoolPref("browser.chrome.site_icons")) {
+                try {
+                  var sz = this.mPrefs.getIntPref("browser.chrome.image_icons.max_size");
+                  if (!sz)
+                    return;
+
+                  var req = browser.contentDocument.imageRequest;
+                  if (!req || !req.image ||
+                      req.image.width > sz ||
+                      req.image.height > sz)
+                    return;
+
+                  this.setIcon(aTab, browser.currentURI.spec);
+                } catch (e) { }
+              }
             }
             else if (this.shouldLoadFavIcon(browser.currentURI)) {
               var url = browser.currentURI.prePath + "/favicon.ico";

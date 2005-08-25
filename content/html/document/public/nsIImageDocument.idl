@@ -42,7 +42,9 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(6a8812fd-d045-4835-bfc1-d26f487b8b89)]
+interface imgIRequest;
+
+[scriptable, uuid(7b80eebc-c98e-4461-8bdb-6e3b6e828890)]
 interface nsIImageDocument : nsISupports {
 
   /* Whether the pref for image resizing has been set. */
@@ -53,6 +55,9 @@ interface nsIImageDocument : nsISupports {
 
   /* Whether the image has been resized to fit visible area. */
   readonly attribute boolean imageIsResized;
+
+  /* The image request being displayed in the content area */
+  readonly attribute imgIRequest imageRequest;
 
   /* Resize the image to fit visible area. */
   void shrinkToFit();
