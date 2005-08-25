@@ -257,8 +257,8 @@ function findChildShell(aDocument, aDocShell, aSoughtURI) {
   aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
   aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
-  if ((aDocument && doc == aDocument) && 
-      aDocShell.currentURI.spec == aSoughtURI.spec)
+  if ((aDocument && doc == aDocument) || 
+      (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
     return aDocShell;
 
   var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
@@ -469,14 +469,27 @@ const gPopupBlockerObserver = {
 };
 
 const gXPInstallObserver = {
+  _findChildShell: function (aDocShell, aSoughtShell)
+  {
+    if (aDocShell == aSoughtShell)
+      return aDocShell;
+
+    var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+    for (var i = 0; i < node.childCount; ++i) {
+      var docShell = node.getChildAt(i);
+      docShell = this._findChildShell(docShell, aSoughtShell);
+      if (docShell == aSoughtShell)
+        return docShell;
+    }
+    return null;
+  },
+
   _getBrowser: function (aDocShell)
   {
     var tabbrowser = getBrowser();
     for (var i = 0; i < tabbrowser.browsers.length; ++i) {
       var browser = tabbrowser.getBrowserAtIndex(i);
-      var soughtShell = aDocShell;
-      var shell = findChildShell(null, browser.docShell, soughtShell);
-      if (shell)
+      if (this._findChildShell(browser.docShell, aDocShell))
         return browser;
     }
     return null;
@@ -6070,11 +6083,7 @@ var FeedHandler = {
 
       // find which tab this is for, and set the attribute on the browser
       // should there be a getTabForDocument method on tabbedbrowser?
-      var feedURI = 
-          Components.classes["@mozilla.org/network/io-service;1"].
-          getService(Components.interfaces.nsIIOService).
-          newURI(targetDoc.location.href, null, null);
-      var shellInfo = this._getContentShell(targetDoc, feedURI);
+      var shellInfo = this._getContentShell(targetDoc);
       var browserForLink = shellInfo.browser;
       if (!browserForLink) {
         // ??? this really shouldn't happen..
@@ -6095,17 +6104,15 @@ var FeedHandler = {
   },
   
   /**
-   * Locate the shell that has a specified URI loaded in it. 
+   * Locate the shell that has a specified document loaded in it. 
    * @param   doc
    *          The document that contains the feed
-   * @param   feedURI
-   *          The URI to locate a shell for
-   * @returns The doc shell that contains the specified URI
+   * @returns The doc shell that contains the specified document.
    */
-  _getContentShell: function(doc, feedURI) {
+  _getContentShell: function(doc) {
     var browsers = getBrowser().browsers;
     for (var i = 0; i < browsers.length; i++) {
-      var shell = findChildShell(doc, browsers[i].docShell, feedURI);
+      var shell = findChildShell(doc, browsers[i].docShell, null);
       if (shell)
         return { shell: shell, browser: browsers[i] };
     }
