@@ -490,7 +490,7 @@ __END__
 
 Bugzilla::Template - Wrapper around the Template Toolkit C<Template> object
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
   my $template = Bugzilla::Template->create;
 
@@ -515,7 +515,7 @@ C<Bugzilla-E<gt>instance-E<gt>template> to get an already created module.
 
 =item C<put_header($title, $h1, $h2)>
 
- Description: Display the header of the page.
+ Description: Display the header of the page for non yet templatized .cgi files.
 
  Params:      $title - Page title.
               $h1    - Main page header.
@@ -525,7 +525,7 @@ C<Bugzilla-E<gt>instance-E<gt>template> to get an already created module.
 
 =item C<put_footer()>
 
- Description: Display the footer of the page.
+ Description: Display the footer of the page for non yet templatized .cgi files.
 
  Params:      none
 
