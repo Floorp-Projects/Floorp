@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -161,3 +162,36 @@ nsSVGPoint::GetValueString(nsAString& aValue)
   NS_NOTYETIMPLEMENTED("nsSVGPoint::GetValueString");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implement a readonly version of SVGPoint
+//
+// We need this because attributes of some SVG interfaces *and* the objects the
+// attributes refer to (including SVGPoints) are supposed to be readonly
+
+class nsSVGReadonlyPoint : public nsSVGPoint
+{
+public:
+  nsSVGReadonlyPoint(float x, float y)
+    : nsSVGPoint(x, y)
+  {
+  };
+
+  // override setters to make the whole object readonly
+  NS_IMETHODIMP SetX(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetY(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetValueString(const nsAString&) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+};
+
+nsresult
+NS_NewSVGReadonlyPoint(nsIDOMSVGPoint** result, float x, float y)
+{
+  *result = new nsSVGReadonlyPoint(x, y);
+  if (!*result)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*result);
+  return NS_OK;
+}
+

@@ -1008,7 +1008,8 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
       content->HasAttr(kNameSpaceID_None, nsSVGAtoms::onload)) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(PR_TRUE, NS_PAGE_LOAD);
+    nsEvent event(PR_TRUE, NS_SVG_LOAD);
+    event.eventStructType = NS_SVG_EVENT;
     nsIPresShell *presShell = mDocument->GetShellAt(0);
     if (presShell)
       presShell->HandleDOMEventWithTarget(content, &event, &status);

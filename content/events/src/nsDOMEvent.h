@@ -124,6 +124,16 @@ public:
     eDOMEvents_DOMFocusOut,
     eDOMEvents_pageshow,
     eDOMEvents_pagehide
+#ifdef MOZ_SVG
+   ,
+    eDOMEvents_SVGLoad,
+    eDOMEvents_SVGUnload,
+    eDOMEvents_SVGAbort,
+    eDOMEvents_SVGError,
+    eDOMEvents_SVGResize,
+    eDOMEvents_SVGScroll,
+    eDOMEvents_SVGZoom
+#endif // MOZ_SVG
   };
 
   nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent);

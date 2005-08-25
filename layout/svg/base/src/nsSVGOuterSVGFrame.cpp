@@ -78,6 +78,7 @@
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDocument.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -326,10 +327,6 @@ nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
 
   if (mZoomAndPan)
     NS_REMOVE_SVGVALUE_OBSERVER(mZoomAndPan);
-  if (mCurrentTranslate)
-    NS_REMOVE_SVGVALUE_OBSERVER(mCurrentTranslate);
-  if (mCurrentScale)
-    NS_REMOVE_SVGVALUE_OBSERVER(mCurrentScale);
 
   RemoveAsWidthHeightObserver();
 }
@@ -420,13 +417,15 @@ nsresult nsSVGOuterSVGFrame::Init()
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(this);
 
-  SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
-  NS_ADD_SVGVALUE_OBSERVER(mZoomAndPan);
-  SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
-  NS_ADD_SVGVALUE_OBSERVER(mCurrentTranslate);
-  SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
-  NS_ADD_SVGVALUE_OBSERVER(mCurrentScale);
-  
+  // we only care about our content's zoom and pan values if it's the root element
+  nsIDocument* doc = mContent->GetCurrentDoc();
+  if (doc && doc->GetRootContent() == mContent) {
+    SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
+    NS_ADD_SVGVALUE_OBSERVER(mZoomAndPan);
+    SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
+    SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
+  }
+
   AddAsWidthHeightObserver();
   SuspendRedraw();
   return NS_OK;
@@ -639,7 +638,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   AddAsWidthHeightObserver();
   
   UnsuspendRedraw();
-
   
   return NS_OK;
 }
@@ -1111,20 +1109,24 @@ nsSVGOuterSVGFrame::GetCanvasTM()
     NS_ASSERTION(svgElement, "wrong content element");
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(mCanvasTM));
 
-    PRUint16 val;
-    mZoomAndPan->GetIntegerValue(val);
-    if (val == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
-      nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
-      nsCOMPtr<nsIDOMSVGMatrix> temp;
-      float scale, x, y;
-      mCurrentScale->GetValue(&scale);
-      mCurrentTranslate->GetX(&x);
-      mCurrentTranslate->GetY(&y);
-      svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
-      zoomPanMatrix->Translate(x, y, getter_AddRefs(temp));
-      temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
-      zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
-      temp.swap(mCanvasTM);
+    if (mZoomAndPan) {
+      // our content is the document element so we must premultiply the values
+      // of it's currentScale and currentTranslate properties
+      PRUint16 val;
+      mZoomAndPan->GetIntegerValue(val);
+      if (val == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+        nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
+        nsCOMPtr<nsIDOMSVGMatrix> temp;
+        float scale, x, y;
+        mCurrentScale->GetValue(&scale);
+        mCurrentTranslate->GetX(&x);
+        mCurrentTranslate->GetY(&y);
+        svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
+        zoomPanMatrix->Translate(x, y, getter_AddRefs(temp));
+        temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
+        zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
+        temp.swap(mCanvasTM);
+      }
     }
   }
   nsIDOMSVGMatrix* retval = mCanvasTM.get();

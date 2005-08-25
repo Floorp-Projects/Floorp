@@ -70,6 +70,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGDocument.idl \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEllipseElement.idl \
+		nsIDOMSVGEvent.idl \
 		nsIDOMSVGException.idl \
 		nsIDOMSVGFitToViewBox.idl \
 		nsIDOMSVGForeignObjectElem.idl \
@@ -112,6 +113,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGURIReference.idl \
 		nsIDOMSVGUseElement.idl \
 		nsIDOMSVGZoomAndPan.idl \
+		nsIDOMSVGZoomEvent.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

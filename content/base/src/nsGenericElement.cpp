@@ -107,7 +107,7 @@
 #include "nsICategoryManager.h"
 #include "nsIDOMNSFeatureFactory.h"
 
-#ifdef	MOZ_SVG
+#ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
 #endif /* MOZ_SVG */
 
@@ -1197,18 +1197,17 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
 
     *aReturn = gHaveXPathDOM;
   }
-
-#ifdef	MOZ_SVG
-  // Check for SVG Features
-  else if (NS_SVG_TestFeature(aFeature)) {
-    // Should we test the version also?  The SVG Test
-    // Suite (struct-dom-02-b.svg) uses version 2.0 in the
-    // domImpl.hasFeature call. This makes no sense to me,
-    // so I'm going to skip testing the version here for now....
-    *aReturn = PR_TRUE;
+#ifdef MOZ_SVG
+  else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
+           PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
+           NS_SVG_TestFeature(aFeature)) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "1.0") == 0 ||
+        PL_strcmp(v, "1.1") == 0) {
+      *aReturn = PR_TRUE;
+    }
   }
 #endif /* MOZ_SVG */
-
   else {
     nsCOMPtr<nsIDOMNSFeatureFactory> factory =
       GetDOMFeatureFactory(aFeature, aVersion);

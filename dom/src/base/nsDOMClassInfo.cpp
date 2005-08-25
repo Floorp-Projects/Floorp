@@ -336,6 +336,7 @@
 #include "nsIDOMSVGDocument.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGEllipseElement.h"
+#include "nsIDOMSVGEvent.h"
 #include "nsIDOMSVGException.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #ifdef MOZ_SVG_FOREIGNOBJECT
@@ -378,6 +379,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGUseElement.h"
 #include "nsIDOMSVGZoomAndPan.h"
+#include "nsIDOMSVGZoomEvent.h"
 #endif // MOZ_SVG
 
 #ifdef MOZ_ENABLE_CANVAS
@@ -929,6 +931,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedTransformList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
@@ -992,6 +996,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGTransform, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGTransformList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGZoomEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif // MOZ_SVG
 
@@ -2584,6 +2590,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedTransformList)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGEvent, nsIDOMSVGEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(SVGException, nsIDOMSVGException)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
@@ -2711,6 +2722,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(SVGTransformList, nsIDOMSVGTransformList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGZoomEvent, nsIDOMSVGZoomEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGZoomEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 #endif // MOZ_SVG
 
