@@ -1033,7 +1033,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveTopID = gExtensionsView.children[0].id;
       gExtensionManager.moveToIndexOf(movingID, moveTopID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_moveup: function (aSelectedItem)
@@ -1041,7 +1040,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveAboveID = aSelectedItem.previousSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveAboveID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_movedn: function (aSelectedItem)
@@ -1049,7 +1047,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveBelowID = aSelectedItem.nextSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveBelowID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_update: function (aSelectedItem)
@@ -1121,13 +1118,11 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
     },
     
     cmd_enable: function (aSelectedItem)
     {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
 #ifdef MOZ_PHOENIX
     }
   }

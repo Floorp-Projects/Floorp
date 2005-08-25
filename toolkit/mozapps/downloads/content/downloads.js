@@ -270,15 +270,39 @@ function onDownloadCancel(aEvent)
 
 function onDownloadPause(aEvent)
 {
+  var selectedIndex = gDownloadsView.selectedIndex;
+
   var uri = aEvent.target.id;
   gDownloadManager.pauseDownload(uri);
   setRDFProperty(uri, "DownloadStatus", aEvent.target.getAttribute("status-internal"));
   setRDFProperty(uri, "ProgressPercent", aEvent.target.getAttribute("progress"));
+
+  // now reset the richlistbox
+  gDownloadsView.clearSelection();
+  var rowCount = gDownloadsView.getRowCount();
+  if (selectedIndex >= rowCount)
+    gDownloadsView.selectedIndex = rowCount - 1;
+  else
+    gDownloadsView.selectedIndex = selectedIndex;
+
+  gDownloadsView.selectedItem.focus();
 }
 
 function onDownloadResume(aEvent)
 {
+  var selectedIndex = gDownloadsView.selectedIndex;
+
   gDownloadManager.resumeDownload(aEvent.target.id);
+
+  // now reset the richlistbox
+  gDownloadsView.clearSelection();
+  var rowCount = gDownloadsView.getRowCount();
+  if (selectedIndex >= rowCount)
+    gDownloadsView.selectedIndex = rowCount - 1;
+  else
+    gDownloadsView.selectedIndex = selectedIndex
+
+  gDownloadsView.selectedItem.focus();
 }
 
 function onDownloadRemove(aEvent)
@@ -286,16 +310,6 @@ function onDownloadRemove(aEvent)
   if (aEvent.target.removable) {
     var selectedIndex = gDownloadsView.selectedIndex;
     gDownloadManager.removeDownload(aEvent.target.id);
-
-    // now reset the richlistbox since the template was rebuilt
-    gDownloadsView.clearSelection();
-    if (selectedIndex >= gDownloadsView.getRowCount())
-      gDownloadsView.selectedIndex = selectedIndex - 1;
-    else
-      gDownloadsView.selectedIndex = selectedIndex;
-
-    gDownloadsView.focus();
-
     gDownloadViewController.onCommandUpdate();
   }
 }
