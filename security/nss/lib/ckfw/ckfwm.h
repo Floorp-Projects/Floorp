@@ -38,7 +38,7 @@
 #define CKFWM_H
 
 #ifdef DEBUG
-static const char CKFWM_CVS_ID[] = "@(#) $RCSfile: ckfwm.h,v $ $Revision: 1.5 $ $Date: 2005/01/20 02:25:45 $";
+static const char CKFWM_CVS_ID[] = "@(#) $RCSfile: ckfwm.h,v $ $Revision: 1.6 $ $Date: 2005/08/25 20:08:26 $";
 #endif /* DEBUG */
 
 /*
@@ -160,12 +160,5 @@ nssCKFWHash_Iterate
   nssCKFWHashIterator fcn,
   void *closure
 );
-
-NSS_EXTERN CK_RV
-nssSetLockArgs(
-   CK_C_INITIALIZE_ARGS_PTR pInitArgs,
-   CryptokiLockingState* returned
-);
-
 
 #endif /* CKFWM_H */

@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.7 $ $Date: 2005/01/20 02:25:45 $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.8 $ $Date: 2005/08/25 20:08:26 $"
 
 CORE_DEPTH = ../../..
 
@@ -68,7 +68,6 @@ CSRCS =		   \
 	hash.c	   \
 	instance.c \
 	mutex.c	   \
-	nsprstub.c \
 	object.c   \
 	session.c  \
 	sessobj.c  \
