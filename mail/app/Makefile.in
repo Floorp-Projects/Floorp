@@ -52,6 +52,7 @@ DIRS		= profile
 
 PREF_JS_EXPORTS = \
     $(srcdir)/profile/all-thunderbird.js \
+    $(srcdir)/profile/channel-prefs.js \
     $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
@@ -255,7 +256,7 @@ install:: thunderbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += thunderbird
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js all-thunderbird.js mailnews.js)
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js all-thunderbird.js channel-prefs.js mailnews.js)
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))

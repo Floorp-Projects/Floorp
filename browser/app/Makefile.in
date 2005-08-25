@@ -48,7 +48,9 @@ MOZILLA_INTERNAL_API = 1
 
 DIRS		= profile/extensions
 
-PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js
+PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
+		  $(srcdir)/profile/channel-prefs.js \
+		  $(NULL)
 
 # hardcode en-US for the moment
 AB_CD = en-US
