@@ -101,7 +101,7 @@
                       id="NC:BookmarksRoot"/>
             <menuitem class="menuitem-iconic folder-icon"
                       label="&bookmarksToolbar.label;"
-                      id="NC:PersonalToolbarFolder"/>
+                      id="btfMenuItem"/>
             <menuseparator/>
             <template>
               <!-- this parent="menupopup" here seems to prevent the template builder from recursing. -->

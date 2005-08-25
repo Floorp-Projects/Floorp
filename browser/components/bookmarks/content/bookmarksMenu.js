@@ -322,7 +322,7 @@ var BookmarksMenu = {
   // returns true if the node is a bookmark, a folder or a bookmark separator
   isBTBookmark: function (aURI)
   {
-    if (!aURI)
+    if (!aURI || aURI == "bookmarkAllCmd")
       return false;
     var type = BookmarksUtils.resolveType(aURI);
     return (type == "BookmarkSeparator"     ||
