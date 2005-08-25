@@ -444,6 +444,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
+  NS_IF_RELEASE(sEventQueueService);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif
