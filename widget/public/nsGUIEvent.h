@@ -93,6 +93,10 @@ class nsIURI;
 #define NS_UI_EVENT                       27
 #define NS_QUERYCARETRECT_EVENT           28
 #define NS_PAGETRANSITION_EVENT               29
+#ifdef MOZ_SVG
+#define NS_SVG_EVENT                      30
+#define NS_SVGZOOM_EVENT                  31
+#endif // MOZ_SVG
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -334,6 +338,21 @@ class nsIURI;
 #define NS_PAGETRANSITION_START    2700
 #define NS_PAGE_SHOW               (NS_PAGETRANSITION_START + 1)
 #define NS_PAGE_HIDE               (NS_PAGETRANSITION_START + 2)
+
+#ifdef MOZ_SVG
+// SVG events
+#define NS_SVG_EVENT_START              2800
+#define NS_SVG_LOAD                     (NS_SVG_EVENT_START)
+#define NS_SVG_UNLOAD                   (NS_SVG_EVENT_START + 1)
+#define NS_SVG_ABORT                    (NS_SVG_EVENT_START + 2)
+#define NS_SVG_ERROR                    (NS_SVG_EVENT_START + 3)
+#define NS_SVG_RESIZE                   (NS_SVG_EVENT_START + 4)
+#define NS_SVG_SCROLL                   (NS_SVG_EVENT_START + 5)
+
+// SVG Zoom events
+#define NS_SVGZOOM_EVENT_START          2900
+#define NS_SVG_ZOOM                     (NS_SVGZOOM_EVENT_START)
+#endif // MOZ_SVG
 
 /**
  * Return status for event processors, nsEventStatus, is defined in

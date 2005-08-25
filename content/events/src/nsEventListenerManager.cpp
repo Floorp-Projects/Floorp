@@ -57,6 +57,11 @@
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMUIListener.h"
 #include "nsIDOMPageTransitionListener.h"
+#ifdef MOZ_SVG
+#include "nsIDOMSVGListener.h"
+#include "nsIDOMSVGZoomListener.h"
+#include "nsSVGAtoms.h"
+#endif // MOZ_SVG
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
@@ -326,6 +331,28 @@ static const EventDispatchData sPageTransitionEvents[] = {
     NS_EVENT_BITS_PAGETRANSITION_HIDE }
 };
 
+#ifdef MOZ_SVG
+static const EventDispatchData sSVGEvents[] = {
+  { NS_SVG_LOAD, HANDLER(&nsIDOMSVGListener::Load),
+    NS_EVENT_BITS_SVG_LOAD },
+  { NS_SVG_UNLOAD, HANDLER(&nsIDOMSVGListener::Unload),
+    NS_EVENT_BITS_SVG_UNLOAD },
+  { NS_SVG_ABORT, HANDLER(&nsIDOMSVGListener::Abort),
+    NS_EVENT_BITS_SVG_ABORT },
+  { NS_SVG_ERROR, HANDLER(&nsIDOMSVGListener::Error),
+    NS_EVENT_BITS_SVG_ERROR },
+  { NS_SVG_RESIZE, HANDLER(&nsIDOMSVGListener::Resize),
+    NS_EVENT_BITS_SVG_RESIZE },
+  { NS_SVG_SCROLL, HANDLER(&nsIDOMSVGListener::Scroll),
+    NS_EVENT_BITS_SVG_SCROLL }
+};
+
+static const EventDispatchData sSVGZoomEvents[] = {
+  { NS_SVG_ZOOM, HANDLER(&nsIDOMSVGZoomListener::Zoom),
+    NS_EVENT_BITS_SVGZOOM_ZOOM }
+};
+#endif // MOZ_SVG
+
 #define IMPL_EVENTTYPEDATA(type) \
 { \
   s##type##Events, \
@@ -352,6 +379,11 @@ static const EventTypeData sEventTypes[] = {
   IMPL_EVENTTYPEDATA(Mutation),
   IMPL_EVENTTYPEDATA(UI),
   IMPL_EVENTTYPEDATA(PageTransition)
+#ifdef MOZ_SVG
+ ,
+  IMPL_EVENTTYPEDATA(SVG),
+  IMPL_EVENTTYPEDATA(SVGZoom)
+#endif // MOZ_SVG
 };
 
 // Strong references to event groups
@@ -628,6 +660,14 @@ nsEventListenerManager::GetTypeForIID(const nsIID& aIID)
 
   if (aIID.Equals(NS_GET_IID(nsIDOMUIListener)))
     return eEventArrayType_DOMUI;
+
+#ifdef MOZ_SVG
+  if (aIID.Equals(NS_GET_IID(nsIDOMSVGListener)))
+    return eEventArrayType_SVG;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMSVGZoomListener)))
+    return eEventArrayType_SVGZoom;
+#endif // MOZ_SVG
 
   return eEventArrayType_None;
 }
@@ -1035,6 +1075,36 @@ nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
     *aArrayType = eEventArrayType_PageTransition;
     *aFlags = NS_EVENT_BITS_PAGETRANSITION_HIDE;
   }
+#ifdef MOZ_SVG
+  else if (aType == nsLayoutAtoms::onSVGLoad) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_LOAD;
+  }
+  else if (aType == nsLayoutAtoms::onSVGUnload) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_UNLOAD;
+  }
+  else if (aType == nsLayoutAtoms::onSVGAbort) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_ABORT;
+  }
+  else if (aType == nsLayoutAtoms::onSVGError) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_ERROR;
+  }
+  else if (aType == nsLayoutAtoms::onSVGResize) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_RESIZE;
+  }
+  else if (aType == nsLayoutAtoms::onSVGScroll) {
+    *aArrayType = eEventArrayType_SVG;
+    *aFlags = NS_EVENT_BITS_SVG_SCROLL;
+  }
+  else if (aType == nsLayoutAtoms::onSVGZoom) {
+    *aArrayType = eEventArrayType_SVGZoom;
+    *aFlags = NS_EVENT_BITS_SVGZOOM_ZOOM;
+  }
+#endif // MOZ_SVG
   else {
     return NS_ERROR_FAILURE;
   }
@@ -1494,7 +1564,25 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
     NS_ASSERTION(content, "only content should have event handler attributes");
     if (content) {
       nsAutoString handlerBody;
-      result = content->GetAttr(kNameSpaceID_None, aName, handlerBody);
+      nsIAtom* attrName = aName;
+#ifdef MOZ_SVG
+      if (aName == nsLayoutAtoms::onSVGLoad)
+        attrName = nsSVGAtoms::onload;
+      else if (aName == nsLayoutAtoms::onSVGUnload)
+        attrName = nsSVGAtoms::onunload;
+      else if (aName == nsLayoutAtoms::onSVGAbort)
+        attrName = nsSVGAtoms::onabort;
+      else if (aName == nsLayoutAtoms::onSVGError)
+        attrName = nsSVGAtoms::onerror;
+      else if (aName == nsLayoutAtoms::onSVGResize)
+        attrName = nsSVGAtoms::onresize;
+      else if (aName == nsLayoutAtoms::onSVGScroll)
+        attrName = nsSVGAtoms::onscroll;
+      else if (aName == nsLayoutAtoms::onSVGZoom)
+        attrName = nsSVGAtoms::onzoom;
+#endif // MOZ_SVG
+
+      result = content->GetAttr(kNameSpaceID_None, attrName, handlerBody);
 
       if (NS_SUCCEEDED(result)) {
         PRUint32 lineNo = 0;
@@ -1757,6 +1845,14 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
       return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
                                           NS_STATIC_CAST(nsPageTransitionEvent*,
                                                          aEvent));
+#ifdef MOZ_SVG
+    case NS_SVG_EVENT:
+      return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
+                               aEvent);
+    case NS_SVGZOOM_EVENT:
+      return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext,
+                                   NS_STATIC_CAST(nsGUIEvent*,aEvent));
+#endif // MOZ_SVG
     }
 
     // For all other types of events, create a vanilla event object.
@@ -1795,6 +1891,16 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
       aEventType.LowerCaseEqualsLiteral("events") ||
       aEventType.LowerCaseEqualsLiteral("htmlevents"))
     return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+#ifdef MOZ_SVG
+  if (aEventType.LowerCaseEqualsLiteral("svgevent") ||
+      aEventType.LowerCaseEqualsLiteral("svgevents"))
+    return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
+                             aEvent);
+  if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
+      aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
+    return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext,
+                                 NS_STATIC_CAST(nsGUIEvent*,aEvent));
+#endif // MOZ_SVG
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

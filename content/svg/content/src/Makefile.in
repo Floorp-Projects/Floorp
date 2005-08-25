@@ -66,6 +66,8 @@ REQUIRES	= xpcom \
 		  docshell
 
 CPPSRCS		= \
+		nsDOMSVGZoomEvent.cpp \
+		nsDOMSVGEvent.cpp \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedEnumeration.cpp \
@@ -139,6 +141,8 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
+	nsIDOMSVGListener.h \
+	nsIDOMSVGZoomListener.h \
 	nsISVGTextContentMetrics.h \
 	nsISVGValue.h              \
 	nsISVGValueObserver.h      \
@@ -166,6 +170,7 @@ INCLUDES += 	\
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../../../layout/svg/base/src \
 		-I$(srcdir)/../../../../layout/style \
+		-I$(srcdir)/../../../events/src \
 		-I$(srcdir)/../../../html/content/src \
 		-I$(topsrcdir)/content/xbl/src \
 		$(NULL)

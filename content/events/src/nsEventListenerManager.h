@@ -85,6 +85,10 @@ enum EventArrayType {
   eEventArrayType_Mutation = 13,
   eEventArrayType_DOMUI = 14,
   eEventArrayType_PageTransition = 15,
+#ifdef MOZ_SVG
+  eEventArrayType_SVG = 16,
+  eEventArrayType_SVGZoom = 17,
+#endif // MOZ_SVG
   eEventArrayType_Hash,
   eEventArrayType_None
 };
@@ -357,5 +361,20 @@ protected:
 #define NS_EVENT_BITS_PAGETRANSITION_NONE 0x00
 #define NS_EVENT_BITS_PAGETRANSITION_SHOW 0x01
 #define NS_EVENT_BITS_PAGETRANSITION_HIDE 0x02
+
+#ifdef MOZ_SVG
+// nsIDOMSVGEventListener
+#define NS_EVENT_BITS_SVG_NONE      0x00
+#define NS_EVENT_BITS_SVG_LOAD      0x01
+#define NS_EVENT_BITS_SVG_UNLOAD    0x02
+#define NS_EVENT_BITS_SVG_ABORT     0x04
+#define NS_EVENT_BITS_SVG_ERROR     0x08
+#define NS_EVENT_BITS_SVG_RESIZE    0x10
+#define NS_EVENT_BITS_SVG_SCROLL    0x20
+
+// nsIDOMSVGZoomEventListener
+#define NS_EVENT_BITS_SVGZOOM_NONE  0x00
+#define NS_EVENT_BITS_SVGZOOM_ZOOM  0x01
+#endif // MOZ_SVG
 
 #endif // nsEventListenerManager_h__

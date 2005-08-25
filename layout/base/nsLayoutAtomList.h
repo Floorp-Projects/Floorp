@@ -216,6 +216,17 @@ LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
 LAYOUT_ATOM(onpageshow, "onpageshow")
 LAYOUT_ATOM(onpagehide, "onpagehide")
 
+#ifdef MOZ_SVG
+// Note: the attribute name for the 'SVGLoad' event is actually 'onload' etc.
+LAYOUT_ATOM(onSVGLoad, "onSVGLoad")
+LAYOUT_ATOM(onSVGUnload, "onSVGUnload")
+LAYOUT_ATOM(onSVGAbort, "onSVGAbort")
+LAYOUT_ATOM(onSVGError, "onSVGError")
+LAYOUT_ATOM(onSVGResize, "onSVGResize")
+LAYOUT_ATOM(onSVGScroll, "onSVGScroll")
+LAYOUT_ATOM(onSVGZoom, "onSVGZoom")
+#endif // MOZ_SVG
+
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")
 LAYOUT_ATOM(Chinese, "zh-CN")

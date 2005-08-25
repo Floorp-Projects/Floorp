@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,6 +46,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMSVGLength.h"
 #include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGRect class
@@ -205,6 +207,31 @@ NS_IMETHODIMP nsSVGRect::SetHeight(float aHeight)
 }
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Implement a readonly version of SVGRect
+//
+// We need this because attributes of some SVG interfaces *and* the objects the
+// attributes refer to (including SVGRects) are supposed to be readonly
+
+class nsSVGReadonlyRect : public nsSVGRect
+{
+public:
+  nsSVGReadonlyRect(float x, float y, float width, float height)
+    : nsSVGRect(x, y, width, height)
+  {
+  };
+
+  // override setters to make the whole object readonly
+  NS_IMETHODIMP SetX(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetY(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetWidth(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetHeight(float) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+  NS_IMETHODIMP SetValueString(const nsAString&) { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
+};
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // nsSVGViewBox : a special kind of nsIDOMSVGRect that defaults to
 // (0,0,viewportWidth.value,viewportHeight.value) until set explicitly.
@@ -357,6 +384,16 @@ NS_NewSVGRect(nsIDOMSVGRect** result, float x, float y,
               float width, float height)
 {
   *result = new nsSVGRect(x, y, width, height);
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*result);
+  return NS_OK;
+}
+
+nsresult
+NS_NewSVGReadonlyRect(nsIDOMSVGRect** result, float x, float y,
+                      float width, float height)
+{
+  *result = new nsSVGReadonlyRect(x, y, width, height);
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*result);
   return NS_OK;

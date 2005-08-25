@@ -288,6 +288,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGAnimatedRect_id,
   eDOMClassInfo_SVGAnimatedString_id,
   eDOMClassInfo_SVGAnimatedTransformList_id,
+  eDOMClassInfo_SVGEvent_id,
   eDOMClassInfo_SVGException_id,
   eDOMClassInfo_SVGLength_id,
   eDOMClassInfo_SVGLengthList_id,
@@ -320,6 +321,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGRect_id,
   eDOMClassInfo_SVGTransform_id,
   eDOMClassInfo_SVGTransformList_id,
+  eDOMClassInfo_SVGZoomEvent_id,
 #endif // MOZ_SVG
 
   // Canvas

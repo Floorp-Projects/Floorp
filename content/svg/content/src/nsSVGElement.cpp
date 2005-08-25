@@ -53,6 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsSVGAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsISVGSVGElement.h"
@@ -230,9 +231,9 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
     nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(getter_AddRefs(manager));
     if (manager) {
+      nsIAtom* eventName = GetEventNameForAttr(aName);
       nsIDocument *ownerDoc = GetOwnerDoc();
-
-      manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), aName,
+      manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), eventName,
                                       aValue, PR_TRUE,
                                       !nsContentUtils::IsChromeDoc(ownerDoc));
     }
@@ -249,9 +250,9 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
     nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(getter_AddRefs(manager));
-
     if (manager) {
-      manager->RemoveScriptEventListener(aName);
+      nsIAtom* eventName = GetEventNameForAttr(aName);
+      manager->RemoveScriptEventListener(eventName);
     }
   }
 
@@ -840,11 +841,34 @@ nsSVGElement::IsGraphicElementEventName(nsIAtom* aName)
     return PR_FALSE;
   }
 
-  return (aName == nsSVGAtoms::onclick     ||
+  return (aName == nsSVGAtoms::onabort     ||
+          aName == nsSVGAtoms::onclick     ||
+          aName == nsSVGAtoms::onerror     ||
           aName == nsSVGAtoms::onload      ||
           aName == nsSVGAtoms::onmousedown ||
           aName == nsSVGAtoms::onmouseup   ||
           aName == nsSVGAtoms::onmouseover ||
           aName == nsSVGAtoms::onmousemove ||
           aName == nsSVGAtoms::onmouseout);
+}
+
+/* static */
+nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
+{
+  if (aAttr == nsSVGAtoms::onload)
+    return nsLayoutAtoms::onSVGLoad;
+  if (aAttr == nsSVGAtoms::onunload)
+    return nsLayoutAtoms::onSVGUnload;
+  if (aAttr == nsSVGAtoms::onabort)
+    return nsLayoutAtoms::onSVGAbort;
+  if (aAttr == nsSVGAtoms::onerror)
+    return nsLayoutAtoms::onSVGError;
+  if (aAttr == nsSVGAtoms::onresize)
+    return nsLayoutAtoms::onSVGResize;
+  if (aAttr == nsSVGAtoms::onscroll)
+    return nsLayoutAtoms::onSVGScroll;
+  if (aAttr == nsSVGAtoms::onzoom)
+    return nsLayoutAtoms::onSVGZoom;
+
+  return aAttr;
 }

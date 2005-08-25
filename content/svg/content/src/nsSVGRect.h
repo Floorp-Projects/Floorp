@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,11 @@ nsresult
 NS_NewSVGRect(nsIDOMSVGRect** result,
               float x=0.0f, float y=0.0f,
               float width=0.0f, float height=0.0f);
+
+nsresult
+NS_NewSVGReadonlyRect(nsIDOMSVGRect** result,
+                      float x=0.0f, float y=0.0f,
+                      float width=0.0f, float height=0.0f);
 
 // A 'viewbox' is a special kind of nsIDOMSVGRect that defaults to
 // (0,0,viewportWidth.value,viewportHeight.value) until set explicitly.

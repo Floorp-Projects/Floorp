@@ -69,7 +69,12 @@ static const char* const sEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified",
   "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide"
-}; 
+#ifdef MOZ_SVG
+ ,
+  "SVGLoad", "SVGUnload", "SVGAbort", "SVGError", "SVGResize", "SVGScroll",
+  "SVGZoom"
+#endif // MOZ_SVG
+};
 
 static char *sPopupAllowedEvents;
 
@@ -466,6 +471,25 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsLayoutAtoms::onpagehide)
       mEvent->message = NS_PAGE_HIDE;
   }
+#ifdef MOZ_SVG
+  else if (mEvent->eventStructType == NS_SVG_EVENT) {
+    if (atom == nsLayoutAtoms::onSVGLoad)
+      mEvent->message = NS_SVG_LOAD;
+    else if (atom == nsLayoutAtoms::onSVGUnload)
+      mEvent->message = NS_SVG_UNLOAD;
+    else if (atom == nsLayoutAtoms::onSVGAbort)
+      mEvent->message = NS_SVG_ABORT;
+    else if (atom == nsLayoutAtoms::onSVGError)
+      mEvent->message = NS_SVG_ERROR;
+    else if (atom == nsLayoutAtoms::onSVGResize)
+      mEvent->message = NS_SVG_RESIZE;
+    else if (atom == nsLayoutAtoms::onSVGScroll)
+      mEvent->message = NS_SVG_SCROLL;
+  } else if (mEvent->eventStructType == NS_SVGZOOM_EVENT) {
+    if (atom == nsLayoutAtoms::onSVGZoom)
+      mEvent->message = NS_SVG_ZOOM;
+  }
+#endif // MOZ_SVG
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
     mEvent->userType = new nsStringKey(aEventTypeArg);
@@ -929,6 +953,22 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_pageshow];
   case NS_PAGE_HIDE:
     return sEventNames[eDOMEvents_pagehide];
+#ifdef MOZ_SVG
+  case NS_SVG_LOAD:
+    return sEventNames[eDOMEvents_SVGLoad];
+  case NS_SVG_UNLOAD:
+    return sEventNames[eDOMEvents_SVGUnload];
+  case NS_SVG_ABORT:
+    return sEventNames[eDOMEvents_SVGAbort];
+  case NS_SVG_ERROR:
+    return sEventNames[eDOMEvents_SVGError];
+  case NS_SVG_RESIZE:
+    return sEventNames[eDOMEvents_SVGResize];
+  case NS_SVG_SCROLL:
+    return sEventNames[eDOMEvents_SVGScroll];
+  case NS_SVG_ZOOM:
+    return sEventNames[eDOMEvents_SVGZoom];
+#endif // MOZ_SVG
   default:
     break;
   }

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,7 +51,7 @@ class nsISVGEnum;
 // nsISVGSVGElement: private interface implemented by <svg>-elements
 
 #define NS_ISVGSVGELEMENT_IID \
-{ 0x8ae345f3, 0x5232, 0x426b, { 0xba, 0x23, 0x47, 0x1e, 0x45, 0x64, 0x50, 0xf9 } }
+{ 0x968b7ff3, 0xcaa7, 0x4604, { 0x92, 0x98, 0x7a, 0x66, 0xee, 0x91, 0x83, 0xca } }
 
 class nsISVGSVGElement : public nsIDOMSVGSVGElement
 {
@@ -60,6 +61,34 @@ public:
   NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)=0;
   NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)=0;
   NS_IMETHOD GetZoomAndPanEnum(nsISVGEnum **aResult)=0;
+
+  /**
+   * For use by zoom controls to allow currentScale, currentTranslate.x and
+   * currentTranslate.y to be set by a single operation that dispatches a
+   * single SVGZoom event (instead of one SVGZoom and two SVGScroll events).
+   */
+  NS_IMETHOD SetCurrentScaleTranslate(float s, float x, float y)=0;
+
+  /**
+   * For use by pan controls to allow currentTranslate.x and currentTranslate.y
+   * to be set by a single operation that dispatches a single SVGScroll event
+   * (instead of two).
+   */
+  NS_IMETHOD SetCurrentTranslate(float x, float y)=0;
+
+  /**
+   * Record the current values of currentScale, currentTranslate.x and
+   * currentTranslate.y prior to changing the value of one of them.
+   */
+  NS_IMETHOD_(void) RecordCurrentScaleTranslate()=0;
+
+  /**
+   * Retrieve the value of currentScale, currentTranslate.x or
+   * currentTranslate.y prior to the last change made to any one of them.
+   */
+  NS_IMETHOD_(float) GetPreviousScale()=0;
+  NS_IMETHOD_(float) GetPreviousTranslate_x()=0;
+  NS_IMETHOD_(float) GetPreviousTranslate_y()=0;
 };
 
 #endif // __NS_ISVGSVGELEMENT__
