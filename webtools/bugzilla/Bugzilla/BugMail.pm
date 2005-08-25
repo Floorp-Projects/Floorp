@@ -711,10 +711,10 @@ sub encode_message {
         # than half the message is 7-bit clean
         my $count = ($body =~ tr/\x20-\x7E\x0A\x0D//);
         if ($count > length($body) / 2) {
-            $head->replace('Content-Transfer-Encoding', 'quoted-printable');
+            $head->mime_attr('Content-Transfer-Encoding' => 'quoted-printable');
             $body = encode_qp($body);
         } else {
-            $head->replace('Content-Transfer-Encoding', 'base64');
+            $head->mime_attr('Content-Transfer-Encoding' => 'base64');
             $body = encode_base64($body);
         }
     }
