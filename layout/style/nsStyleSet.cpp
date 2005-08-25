@@ -434,7 +434,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  1. UA normal rules                    = Agent        normal
   //  2. Presentation hints                 = PresHint     normal
   //  3. User normal rules                  = User         normal
-  //  2. HTML Presentation hints            = HTMLPresHint normal
+  //  4. HTML Presentation hints            = HTMLPresHint normal
   //  5. Author normal rules                = Document     normal
   //  6. Override normal rules              = Override     normal
   //  7. Author !important rules            = Document     !important
