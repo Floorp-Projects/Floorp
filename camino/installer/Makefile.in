@@ -60,10 +60,16 @@ MOZ_PKG_MAC_EXTRA=--copy "$(_ABS_TOPSRCDIR)/camino/docs/ReadMe.rtf" --copy "$(_A
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 # The core build system thinks it's Mozilla.  Override what's necessary.
+# Do this after including packager.mk because it has dependencies that
+# break if these are already set to Camino when it's included.
 MOZ_APP_DISPLAYNAME=Camino
 MOZ_PKG_APPNAME=camino
-MOZ_PKG_VERSION=0.9a2
 
-# Override toolkit/mozapps/installer/package-name.mk - we're Mac-only, and
-# handle localizations differently, so just use name-version.
-PKG_BASENAME=$(MOZ_PKG_APPNAME)-$(MOZ_PKG_VERSION)
+# packager.mk has its own exclude list that's appropriate for toolkit apps
+# but not appropriate for the Xcode-built Camino.  Specifically, it excludes
+# the files produced by Camino.app/Contents/MacOS/Camino -autoRegister YES,
+# although they belong in the package.  Override.
+NO_PKG_FILES=
+
+# Override toolkit/mozapps/installer/package-name.mk.
+PKG_BASENAME=$(MOZ_APP_DISPLAYNAME)
