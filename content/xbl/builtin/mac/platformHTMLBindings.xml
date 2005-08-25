@@ -25,6 +25,19 @@
       <handler event="keypress" keycode="VK_LEFT"  modifiers="accel,shift" command="cmd_selectBeginLine"/>
       <handler event="keypress" keycode="VK_RIGHT" modifiers="accel,shift" command="cmd_selectEndLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+
+      <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
+      <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
+      <handler event="keypress" key="d" modifiers="control" command="cmd_deleteCharForward"/>
+      <handler event="keypress" key="e" modifiers="control" command="cmd_endLine"/>
+      <handler event="keypress" key="f" modifiers="control" command="cmd_charNext"/>
+      <handler event="keypress" key="h" modifiers="control" command="cmd_deleteCharBackward"/>
+      <handler event="keypress" key="k" modifiers="control" command="cmd_deleteToEndOfLine"/>
+      <handler event="keypress" key="n" modifiers="control" command="cmd_lineNext"/>
+      <handler event="keypress" key="p" modifiers="control" command="cmd_linePrevious"/>
+      <handler event="keypress" key="u" modifiers="control" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" key="w" modifiers="control" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" key="v" modifiers="control" command="cmd_scrollPageDown"/>
     </handlers>
   </binding>
 
@@ -59,6 +72,19 @@
       <handler event="keypress" keycode="VK_LEFT"  modifiers="accel,shift" command="cmd_selectBeginLine"/>
       <handler event="keypress" keycode="VK_RIGHT" modifiers="accel,shift" command="cmd_selectEndLine"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+
+      <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
+      <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
+      <handler event="keypress" key="d" modifiers="control" command="cmd_deleteCharForward"/>
+      <handler event="keypress" key="e" modifiers="control" command="cmd_endLine"/>
+      <handler event="keypress" key="f" modifiers="control" command="cmd_charNext"/>
+      <handler event="keypress" key="h" modifiers="control" command="cmd_deleteCharBackward"/>
+      <handler event="keypress" key="k" modifiers="control" command="cmd_deleteToEndOfLine"/>
+      <handler event="keypress" key="n" modifiers="control" command="cmd_lineNext"/>
+      <handler event="keypress" key="p" modifiers="control" command="cmd_linePrevious"/>
+      <handler event="keypress" key="u" modifiers="control" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" key="w" modifiers="control" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" key="v" modifiers="control" command="cmd_scrollPageDown"/>
     </handlers>
   </binding>
 
@@ -116,6 +142,19 @@
       <handler event="keypress" keycode="VK_UP"   modifiers="accel,shift" command="cmd_selectTop"/>
       <handler event="keypress" keycode="VK_DOWN" modifiers="accel,shift" command="cmd_selectBottom"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_deleteWordBackward"/>
+
+      <handler event="keypress" key="a" modifiers="control" command="cmd_beginLine"/>
+      <handler event="keypress" key="b" modifiers="control" command="cmd_charPrevious"/>
+      <handler event="keypress" key="d" modifiers="control" command="cmd_deleteCharForward"/>
+      <handler event="keypress" key="e" modifiers="control" command="cmd_endLine"/>
+      <handler event="keypress" key="f" modifiers="control" command="cmd_charNext"/>
+      <handler event="keypress" key="h" modifiers="control" command="cmd_deleteCharBackward"/>
+      <handler event="keypress" key="k" modifiers="control" command="cmd_deleteToEndOfLine"/>
+      <handler event="keypress" key="n" modifiers="control" command="cmd_lineNext"/>
+      <handler event="keypress" key="p" modifiers="control" command="cmd_linePrevious"/>
+      <handler event="keypress" key="u" modifiers="control" command="cmd_deleteToBeginningOfLine"/>
+      <handler event="keypress" key="w" modifiers="control" command="cmd_deleteWordBackward"/>
+      <handler event="keypress" key="v" modifiers="control" command="cmd_scrollPageDown"/>
     </handlers>
   </binding>
 
