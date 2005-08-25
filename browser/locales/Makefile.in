@@ -137,13 +137,6 @@ ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
-MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
-MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
-endif
-
 PACKAGER_NO_LIBS = 1
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
