@@ -296,6 +296,7 @@ protected:
   mdb_column kToken_HostnameColumn;
   mdb_column kToken_HiddenColumn;
   mdb_column kToken_TypedColumn;
+  mdb_column kToken_GeckoFlagsColumn;
 
   // meta-data tokens
   mdb_column kToken_LastPageVisited;

@@ -75,6 +75,8 @@
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsPresState.h"
+#include "nsIGlobalHistory2.h"
+#include "nsDocShellCID.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -175,8 +177,8 @@ nsHTMLScrollFrame::Destroy(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLScrollFrame::
 SetInitialChildList(nsPresContext* aPresContext,
-                                   nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
+                    nsIAtom*       aListName,
+                    nsIFrame*      aChildList)
 {
   nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
@@ -537,36 +539,51 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   return rv;
 }
 
+PRBool
+nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
+{
+  if (aState.mStyles.mVertical != NS_STYLE_OVERFLOW_AUTO)
+    // no guessing required
+    return aState.mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
+
+  // If we've had at least one non-initial reflow, then just assume
+  // the state of the vertical scrollbar will be what we determined
+  // last time.
+  if (mInner.mHadNonInitialReflow) {
+    return mInner.mHasVerticalScrollbar;
+  }
+
+  // If this is the initial reflow, guess PR_FALSE because usually
+  // we have very little content by then.
+  if (aState.mReflowState.reason == eReflowReason_Initial)
+    return PR_FALSE;
+
+  if (mInner.mIsRoot) {
+    // For viewports, try getting a hint from global history
+    // as to whether we had a vertical scrollbar last time.
+    PRBool hint;
+    nsresult rv = mInner.GetVScrollbarHintFromGlobalHistory(&hint);
+    if (NS_SUCCEEDED(rv))
+      return hint;
+    // No hint. Assume that there will be a scrollbar; it seems to me
+    // that 'most pages' do have a scrollbar, and anyway, it's cheaper
+    // to do an extra reflow for the pages that *don't* need a
+    // scrollbar (because on average they will have less content).
+    return PR_TRUE;
+  }
+
+  // For non-viewports, just guess that we don't need a scrollbar.
+  // XXX I wonder if statistically this is the right idea; I'm
+  // basically guessing that there are a lot of overflow:auto DIVs
+  // that get their intrinsic size and don't overflow
+  return PR_FALSE;
+}
+
 nsresult
 nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
                                   const nsHTMLReflowMetrics& aDesiredSize)
 {
-  // Try layouts that keep the vertical scrollbar setting the same,
-  // first. That will minimize the work we have to do.
-  PRBool currentlyUsingVScrollbar = mInner.mHasVerticalScrollbar;
-
-  if (aState->mReflowState.reason == eReflowReason_Initial) {
-    // Set initial vertical scrollbar assumption.
-    if (aState->mStyles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-      currentlyUsingVScrollbar = PR_TRUE;
-    } else {
-      // If we're the viewport scrollframe, then let's start out assuming that
-      // there *is* a vertical scrollbar.
-      // XXX disable this for now so we can see what the Tp impact of the
-      // big changes is.
-      // if (mInner.mIsRoot) {
-      //   currentlyUsingVScrollbar = PR_TRUE;
-      // }
-    }
-  }
-
-  // Don't assume a vertical scrollbar if we're not allowed to have
-  // one
-  PRBool canHaveVerticalScrollbar =
-    aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
-  if (!canHaveVerticalScrollbar)
-    currentlyUsingVScrollbar = PR_FALSE;
-
+  PRBool currentlyUsingVScrollbar = GuessVScrollbarNeeded(*aState);
   nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mComputeMEW, aDesiredSize.mFlags);
   nsresult rv = ReflowScrolledFrame(*aState, currentlyUsingVScrollbar,
                                     &kidDesiredSize, PR_TRUE);
@@ -614,6 +631,8 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
   if (TryLayout(aState, kidDesiredSize, didUseScrollbar, PR_TRUE, PR_FALSE))
     return NS_OK;
 
+  PRBool canHaveVerticalScrollbar =
+    aState->mStyles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
   // That didn't work. Try the other setting for the vertical scrollbar.
   // But don't try to show a scrollbar if we know there can't be one.
   if (currentlyUsingVScrollbar || canHaveVerticalScrollbar) {
@@ -833,6 +852,15 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);
+
+  if (reason != eReflowReason_Initial && !mInner.mHadNonInitialReflow) {
+    mInner.mHadNonInitialReflow = PR_TRUE;
+    if (mInner.mIsRoot) {
+      // For viewports, record whether we needed a vertical scrollbar
+      // after the first non-initial reflow.
+      mInner.SaveVScrollbarStateToGlobalHistory();
+    }
+  }
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -1322,7 +1350,10 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aI
     mFrameInitiatedScroll(PR_FALSE),
     mDidHistoryRestore(PR_FALSE),
     mIsRoot(aIsRoot),
-    mSupppressScrollbarUpdate(PR_FALSE)
+    mSupppressScrollbarUpdate(PR_FALSE),
+    mDidLoadHistoryVScrollbarHint(PR_FALSE),
+    mHistoryVScrollbarHint(PR_FALSE),
+    mHadNonInitialReflow(PR_FALSE)
 {
 }
 
@@ -2337,6 +2368,9 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
     mInner.LayoutScrollbars(aState, clientRect, oldScrollAreaBounds, scrollAreaRect);
   }
   mInner.ScrollToRestoredPosition();
+  if (aState.GetReflowState()->reason != eReflowReason_Initial) {
+    mInner.mHadNonInitialReflow = PR_TRUE;
+  }
   return NS_OK;
 }
 
@@ -2546,6 +2580,70 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
     }
 
     return defaultValue;
+}
+
+static nsIURI* GetDocURI(nsIFrame* aFrame)
+{
+  nsIPresShell* shell = aFrame->GetPresContext()->GetPresShell();
+  if (!shell)
+    return nsnull;
+  nsIDocument* doc = shell->GetDocument();
+  if (!doc)
+    return nsnull;
+  return doc->GetDocumentURI();
+}
+
+void
+nsGfxScrollFrameInner::SaveVScrollbarStateToGlobalHistory()
+{
+  NS_ASSERTION(mIsRoot, "Only use this on viewports");
+
+  // If the hint is the same as the one we loaded, don't bother
+  // saving it
+  if (mDidLoadHistoryVScrollbarHint &&
+      (mHistoryVScrollbarHint == mHasVerticalScrollbar))
+    return;
+
+  nsIURI* uri = GetDocURI(mOuter);
+  if (!uri)
+    return;
+
+  nsCOMPtr<nsIGlobalHistory2> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
+  if (!history)
+    return;
+  
+  PRUint32 flags = 0;
+  if (mHasVerticalScrollbar) {
+    flags |= NS_GECKO_FLAG_NEEDS_VERTICAL_SCROLLBAR;
+  }
+  history->SetURIGeckoFlags(uri, flags);
+  // if it fails, we don't care
+}
+
+nsresult
+nsGfxScrollFrameInner::GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNeeded)
+{
+  NS_ASSERTION(mIsRoot, "Only use this on viewports");
+  NS_ASSERTION(!mDidLoadHistoryVScrollbarHint,
+               "Should only load a hint once, it can be expensive");
+
+  nsIURI* uri = GetDocURI(mOuter);
+  if (!uri)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIGlobalHistory2> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
+  if (!history)
+    return NS_ERROR_FAILURE;
+  
+  PRUint32 flags;
+  nsresult rv = history->GetURIGeckoFlags(uri, &flags);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *aVScrollbarNeeded = (flags & NS_GECKO_FLAG_NEEDS_VERTICAL_SCROLLBAR) != 0;
+  mDidLoadHistoryVScrollbarHint = PR_TRUE;
+  mHistoryVScrollbarHint = *aVScrollbarNeeded;
+  return NS_OK;
 }
 
 nsPresState*

@@ -1463,6 +1463,45 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   return SetRowValue(row, kToken_TypedColumn, 1);
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::SetURIGeckoFlags(nsIURI *aURI, PRUint32 aFlags)
+{
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return SetRowValue(row, kToken_GeckoFlagsColumn, (PRInt32)aFlags);
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::GetURIGeckoFlags(nsIURI *aURI, PRUint32* aFlags)
+{
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMdbRow> row;
+  rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!HasCell(mEnv, row, kToken_GeckoFlagsColumn))
+    return NS_ERROR_FAILURE;
+
+  PRInt32 val;
+  mdb_err err = GetRowValue(row, kToken_GeckoFlagsColumn, &val);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+  *aFlags = val;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -2941,6 +2980,9 @@ nsGlobalHistory::CreateTokens()
   if (err != 0) return NS_ERROR_FAILURE;
 
   err = mStore->StringToToken(mEnv, "Typed", &kToken_TypedColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  err = mStore->StringToToken(mEnv, "GeckoFlags", &kToken_GeckoFlagsColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   // meta-data tokens
