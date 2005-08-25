@@ -830,14 +830,22 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
 
     nsCOMPtr<nsIURI> subjectURI;
     nsCOMPtr<nsIURI> objectURI;
-    aSubject->GetDomain(getter_AddRefs(subjectURI));
-    if (!subjectURI) {
-      aSubject->GetURI(getter_AddRefs(subjectURI));
+    if (aIsCheckConnect)
+    {
+        // Don't use domain for CheckConnect calls, since that's called for
+        // data-only load checks like XMLHTTPRequest (bug 290100).
+        aSubject->GetURI(getter_AddRefs(subjectURI));
+        aObject->GetURI(getter_AddRefs(objectURI));
     }
+    else
+    {
+        aSubject->GetDomain(getter_AddRefs(subjectURI));
+        if (!subjectURI)
+            aSubject->GetURI(getter_AddRefs(subjectURI));
 
-    aObject->GetDomain(getter_AddRefs(objectURI));
-    if (!objectURI) {
-      aObject->GetURI(getter_AddRefs(objectURI));
+        aObject->GetDomain(getter_AddRefs(objectURI));
+        if (!objectURI)
+            aObject->GetURI(getter_AddRefs(objectURI));
     }
 
     PRBool isSameOrigin = PR_FALSE;
@@ -851,9 +859,8 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
         // DNS spoofing based on document.domain (154930)
 
         // But this restriction does not apply to CheckConnect calls, since
-        // that's called for data-only load checks like XMLHTTPRequest, where
-        // the target document has not yet loaded and can't have set its domain
-        // (bug 163950)
+        // that's called for data-only load checks like XMLHTTPRequest where
+        // we ignore domain (bug 290100).
         if (aIsCheckConnect)
             return NS_OK;
 
@@ -892,9 +899,7 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
                                                    aIsCheckConnect);
     
     if (NS_SUCCEEDED(rv))
-    {
         return NS_OK;
-    }
 
     /*
     * If we failed the origin tests it still might be the case that we
