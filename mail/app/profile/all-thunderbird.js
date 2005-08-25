@@ -72,14 +72,13 @@ pref("app.update.mode", 1);
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
 
-// Default service URL for testing.
-pref("app.update.url", "chrome://mozapps/locale/update/updates.properties");
+// Update service URL:
+pref("app.update.url", "https://aus2.mozilla.org/update2/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml");
 // URL user can browse to manually if for some reason all update installation
-// attempts fail.
-pref("app.update.url.manual", "chrome://mozapps/locale/update/updates.properties");
-// User-settable update preference that overrides app.update.url for testing 
-// purposes.
-pref("app.update.url.override", "chrome://mozapps/locale/update/updates.properties");
+// attempts fail.  TODO: Change this URL
+pref("app.update.url.manual", "http://www.mozilla.org/update");
+// User-settable override to app.update.url for testing purposes.
+//pref("app.update.url.override", "");
 
 // Interval: Time between checks for a new version (in seconds)
 //           default=1 day

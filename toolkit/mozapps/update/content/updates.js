@@ -1326,13 +1326,10 @@ var gErrorsPage = {
     var errorReason = document.getElementById("errorReason");
     errorReason.value = gUpdates.update.statusText;
     var errorLink = document.getElementById("errorLink");
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch2);
-    var manualURL = pref.getComplexValue(PREF_UPDATE_MANUAL_URL, 
-      Components.interfaces.nsIPrefLocalizedString);
-    errorLink.href = manualURL.data;
+    var manualURL = getPref("getCharPref", PREF_UPDATE_MANUAL_URL, "");
+    errorLink.href = manualURL;
     var errorLinkLabel = document.getElementById("errorLinkLabel");
-    errorLinkLabel.value = manualURL.data;
+    errorLinkLabel.value = manualURL;
   },
   
   /**
