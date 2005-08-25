@@ -307,6 +307,7 @@ function loadCalendarEventDialog()
             setElementValue("repeat-length-field", theRule.interval);
             menuListSelectItem("repeat-length-units", theRule.type);
 
+            //XXX display an error when there is no UI to display all the rules
             switch(theRule.type) {
             case "WEEKLY":
                 var recurWeekdays = theRule.getComponent("BYDAY", {});
@@ -325,6 +326,13 @@ function loadCalendarEventDialog()
                 setElementValue("advanced-repeat-week-"+dayNumber, true, "checked" );
                 setElementValue("advanced-repeat-week-"+dayNumber, true, "disabled");
                 setElementValue("advanced-repeat-week-"+dayNumber, true, "today"   );
+                break;
+            case "MONTHLY":
+                recDays = theRule.getComponent("BYDAY", {});
+                dump("rd: "+recDays[0]+"\n");
+                if (recDays.length && recDays[0] > 8) {
+                    radioGroupSelectItem("advanced-repeat-month", "advanced-repeat-dayofweek");
+                }
                 break;
             }
 
@@ -634,8 +642,6 @@ function onOKCommand()
         recRule.interval = recurInterval;
         recRule.type     = getElementValue("repeat-length-units");
 
-        // XXX need to do extra work for weeks here and for months incase 
-        // extra things are checked
         switch(recRule.type) {
         case "WEEKLY":
             var checkedState;
@@ -648,8 +654,13 @@ function onOKCommand()
             }
             recRule.setComponent("BYDAY", byDay.length, byDay);
             break;
-        //case "MONTHLY":
-        //case "YEARLY":
+        case "MONTHLY":
+            if (getElementValue("advanced-repeat-dayofweek", "selected")) {
+                var dow = getElementValue("start-datetime").getDay() + 1;
+                var weekno = getWeekNumberOfMonth();
+                recRule.setComponent("BYDAY", 1, [weekno * 8 + dow]);
+            }
+            break;
         }
 
         recurrenceInfo.appendRecurrenceItem(recRule);
