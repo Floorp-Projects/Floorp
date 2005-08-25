@@ -1230,6 +1230,21 @@ return_tearoff:
         }
     }
 
+    // If we didn't find a wrapper using the given funobj and obj, try
+    // again with obj's outer object, if it's got one.
+
+    JSClass *clazz = JS_GET_CLASS(cx, obj);
+
+    if((clazz->flags & JSCLASS_IS_EXTENDED) &&
+        ((JSExtendedClass*)clazz)->outerObject)
+    {
+        JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
+
+        if(outer && outer != obj)
+            return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
+                                              pTearOff);
+    }
+
     return nsnull;
 }
 
