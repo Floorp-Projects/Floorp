@@ -45,6 +45,7 @@ const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
+const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
 const PREF_APP_EXTENSIONS_VERSION         = "app.extensions.version";
@@ -1480,22 +1481,35 @@ Checker.prototype = {
    * about available updates.
    */
   get updateURL() {
-    var url;
-    try {
-      // Use the override URL if specified.
-      url = gPref.getComplexValue(PREF_APP_UPDATE_URL_OVERRIDE,
-                                  nsIPrefLocalizedString).data;
-      if (url && url != "")
-        return url;
-    } catch (e) {}
+    var defaults =
+        gPref.QueryInterface(Components.interfaces.nsIPrefService).
+        getDefaultBranch(null);
+
+    // Use the override URL if specified.
+    var url = getPref("getCharPref", PREF_APP_UPDATE_URL_OVERRIDE, null);
 
     // Otherwise, construct the update URL from component parts.
-    try {
-      url = gPref.getComplexValue(PREF_APP_UPDATE_URL,
-                                  nsIPrefLocalizedString).data;
-    } catch (e) {
-      LOG("Checker", PREF_APP_UPDATE_URL + " not defined");
+    if (!url) {
+      try {
+        url = defaults.getCharPref(PREF_APP_UPDATE_URL);
+      } catch (e) {
+      }
+    }
+
+    if (!url || url == "") {
+      LOG("Checker", "Update URL not defined");
       return null;
+    }
+
+    // Read the update channel from defaults only.  We do this to ensure that
+    // the channel is tightly coupled with the application and does not apply
+    // to other instances of the application that may use the same profile.
+    function getUpdateChannel() {
+      try {
+        return defaults.getCharPref(PREF_APP_UPDATE_CHANNEL);
+      } catch (e) {
+        return "default";  // failover when pref not found
+      }
     }
 
     url = url.replace(/%PRODUCT%/g, gApp.name);
@@ -1503,6 +1517,7 @@ Checker.prototype = {
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
     url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gApp.XPCOMABI);
     url = url.replace(/%LOCALE%/g, getLocale());
+    url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/\+/g, "%2B");
 
     LOG("Checker", "update url: " + url);
