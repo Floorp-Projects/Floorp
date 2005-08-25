@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1560,7 +1561,6 @@ NS_IMETHODIMP
 nsXPCComponents_Constructor::Call(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, PRUint32 argc, jsval * argv, jsval * vp, PRBool *_retval)
 {
     return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
-
 }
 
 /* PRBool construct (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 argc, in JSValPtr argv, in JSValPtr vp); */
@@ -1754,6 +1754,26 @@ nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
 }
 
 /***************************************************************************/
+// Javascript constructor for the sandbox object
+class nsXPCComponents_utils_Sandbox : public nsIXPCComponents_utils_Sandbox,
+                                      public nsIXPCScriptable
+{
+public:
+    // Aren't macros nice?
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPCCOMPONENTS_UTILS_SANDBOX
+    NS_DECL_NSIXPCSCRIPTABLE
+
+public:
+    nsXPCComponents_utils_Sandbox();
+    virtual ~nsXPCComponents_utils_Sandbox();
+
+private:
+    NS_METHOD CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
+                              JSContext * cx, JSObject * obj,
+                              PRUint32 argc, jsval * argv,
+                              jsval * vp, PRBool *_retval);
+};
 
 class nsXPCComponents_Utils :
             public nsIXPCComponents_Utils,
@@ -1774,6 +1794,9 @@ public:
 public:
     nsXPCComponents_Utils() { }
     virtual ~nsXPCComponents_Utils() { }
+
+private:
+    nsCOMPtr<nsIXPCComponents_utils_Sandbox> mSandbox;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
@@ -1793,6 +1816,18 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_Utils)
 #define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_Utils"
 #define XPC_MAP_FLAGS               nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
+{
+    NS_ENSURE_ARG_POINTER(aSandbox);
+    if (!mSandbox && !(mSandbox = new nsXPCComponents_utils_Sandbox())) {
+        *aSandbox = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(*aSandbox = mSandbox);
+    return NS_OK;
+}
 
 /* void lookupMethod (); */
 NS_IMETHODIMP
@@ -2072,10 +2107,17 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
+JS_STATIC_DLL_CALLBACK(void)
+sandbox_finalize(JSContext *cx, JSObject *obj)
+{
+    nsIPrincipal *principal = (nsIPrincipal *)JS_GetPrivate(cx, obj);
+    NS_IF_RELEASE(principal);
+}
+
 static JSClass SandboxClass = {
-    "Sandbox", 0,
+    "Sandbox", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    sandbox_enumerate, sandbox_resolve, JS_ConvertStub,  JS_FinalizeStub,
+    sandbox_enumerate, sandbox_resolve, JS_ConvertStub,  sandbox_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -2086,6 +2128,144 @@ static JSFunctionSpec SandboxFunctions[] = {
 };
 
 #endif /* !XPCONNECT_STANDALONE */
+
+/***************************************************************************/
+nsXPCComponents_utils_Sandbox::nsXPCComponents_utils_Sandbox()
+{
+}
+
+nsXPCComponents_utils_Sandbox::~nsXPCComponents_utils_Sandbox()
+{
+}
+
+NS_INTERFACE_MAP_BEGIN(nsXPCComponents_utils_Sandbox)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_utils_Sandbox)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_utils_Sandbox)
+NS_INTERFACE_MAP_END_THREADSAFE
+
+NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_utils_Sandbox)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
+
+// We use the nsIXPScriptable macros to generate lots of stuff for us.
+#define XPC_MAP_CLASSNAME           nsXPCComponents_utils_Sandbox
+#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_utils_Sandbox"
+#define                             XPC_MAP_WANT_CALL
+#define                             XPC_MAP_WANT_CONSTRUCT
+#define XPC_MAP_FLAGS               0
+#include "xpc_map_end.h" /* This #undef's the above. */
+
+/* PRBool call(in nsIXPConnectWrappedNative wrapper,
+               in JSContextPtr cx,
+               in JSObjectPtr obj,
+               in PRUint32 argc,
+               in JSValPtr argv,
+               in JSValPtr vp);
+*/
+NS_IMETHODIMP
+nsXPCComponents_utils_Sandbox::Call(nsIXPConnectWrappedNative *wrapper,
+                                    JSContext * cx,
+                                    JSObject * obj,
+                                    PRUint32 argc,
+                                    jsval * argv,
+                                    jsval * vp,
+                                    PRBool *_retval)
+{
+    return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
+}
+
+/* PRBool construct(in nsIXPConnectWrappedNative wrapper,
+                    in JSContextPtr cx,
+                    in JSObjectPtr obj,
+                    in PRUint32 argc,
+                    in JSValPtr argv,
+                    in JSValPtr vp);
+*/
+NS_IMETHODIMP
+nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative *wrapper,
+                                         JSContext * cx,
+                                         JSObject * obj,
+                                         PRUint32 argc,
+                                         jsval * argv,
+                                         jsval * vp,
+                                         PRBool *_retval)
+{
+    return CallOrConstruct(wrapper, cx, obj, argc, argv, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
+                                               JSContext * cx, JSObject * obj,
+                                               PRUint32 argc, jsval * argv,
+                                               jsval * vp, PRBool *_retval)
+{
+#ifdef XPCONNECT_STANDALONE
+    return NS_ERROR_NOT_AVAILABLE;
+#else
+    if (argc < 1)
+        return ThrowAndFail(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx, _retval);
+
+    if (!JSVAL_IS_STRING(argv[0]))
+        return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
+
+    // Create the sandbox global object
+    nsresult rv;
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+    if(NS_FAILED(rv))
+        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+
+    JSObject *sandbox = JS_NewObject(cx, &SandboxClass, nsnull, nsnull);
+    if (!sandbox)
+        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+
+    rv = xpc->InitClasses(cx, sandbox);
+    if (NS_SUCCEEDED(rv) &&
+        !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
+        rv = NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(rv))
+        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+
+    JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
+    nsCAutoString codebase(JS_GetStringBytes(codebasestr),
+                           JS_GetStringLength(codebasestr));
+    nsCOMPtr<nsIURL> iURL;
+    nsCOMPtr<nsIStandardURL> stdUrl =
+        do_CreateInstance(kStandardURLContractID, &rv);
+    if (!stdUrl ||
+        NS_FAILED(rv = stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
+                                    codebase, nsnull, nsnull)) ||
+       !(iURL = do_QueryInterface(stdUrl, &rv))) {
+        if (NS_SUCCEEDED(rv))
+            rv = NS_ERROR_FAILURE;
+        return ThrowAndFail(rv, cx, _retval);
+    }
+    
+    nsIPrincipal *principal;
+    nsCOMPtr<nsIScriptSecurityManager> secman =
+        do_GetService(kScriptSecurityManagerContractID);
+    if (!secman ||
+        NS_FAILED(rv = secman->GetCodebasePrincipal(iURL, &principal)) ||
+        !principal) {
+        if (NS_SUCCEEDED(rv))
+            rv = NS_ERROR_FAILURE;
+        return ThrowAndFail(rv, cx, _retval);
+    }
+
+    if (!JS_SetPrivate(cx, sandbox, principal)) {
+        NS_RELEASE(principal);
+        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+    }
+
+    if (vp)
+        *vp = OBJECT_TO_JSVAL(sandbox);
+
+    *_retval = JS_TRUE;
+    return NS_OK;
+#endif
+}
+
+/***************************************************************************/
 
 /*
  * Throw an exception on caller_cx that is made from message and report,
@@ -2099,10 +2279,9 @@ SandboxErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     JS_ThrowReportedError(caller_cx, message, report);
 }
 
-/* void evalInSandbox(in AString source, in AUTF8String codebase); */
+/* void evalInSandbox(in AString source, in nativeobj sandbox); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::EvalInSandbox(const nsAString &source,
-                                    const nsAUTF8String &codebase)
+nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 {
 #ifdef XPCONNECT_STANDALONE
     return NS_ERROR_NOT_AVAILABLE;
@@ -2137,43 +2316,27 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source,
     if(NS_FAILED(rv))
         return rv;
 
-    JSObject *sandbox = nsnull;
-    // Optional 3rd arg to reuse an existing sandbox.
-    if (argc > 2) {
-        jsval *argv;
-        rv = cc->GetArgvPtr(&argv);
-        if (NS_FAILED(rv))
-            return rv;
-        if (JSVAL_IS_PRIMITIVE(argv[2]))
-            return NS_ERROR_INVALID_ARG;
-        sandbox = JSVAL_TO_OBJECT(argv[2]);
-        if (JS_GetClass(cx, sandbox) != &SandboxClass)
-            return NS_ERROR_INVALID_ARG;
-    }
+    if (argc < 2)
+        return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
 
-    nsCOMPtr<nsIURL> iURL;
-    nsCOMPtr<nsIStandardURL> stdUrl =
-        do_CreateInstance(kStandardURLContractID, &rv);
-    if(!stdUrl ||
-       NS_FAILED((rv = stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
-                                    codebase, nsnull, nsnull))) ||
-       !(iURL = do_QueryInterface(stdUrl, &rv))) {
-       JS_ReportError(cx, "Can't create URL for evalInSandbox");
-       return rv;
-    }
+    // The second argument is the sandbox object. It is required.
+    jsval *argv;
+    rv = cc->GetArgvPtr(&argv);
+    if (NS_FAILED(rv))
+        return rv;
+    if (JSVAL_IS_PRIMITIVE(argv[1]))
+        return NS_ERROR_INVALID_ARG;
+    JSObject *sandbox = JSVAL_TO_OBJECT(argv[1]);
+    if (JS_GetClass(cx, sandbox) != &SandboxClass)
+        return NS_ERROR_INVALID_ARG;
 
+    nsCOMPtr<nsIPrincipal> prin = (nsIPrincipal *)JS_GetPrivate(cx, sandbox);
     JSPrincipals *jsPrincipals;
-    nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIScriptSecurityManager> secman =
-        do_GetService(kScriptSecurityManagerContractID);
-    if(!secman ||
-       NS_FAILED(secman->GetCodebasePrincipal(iURL,
-                                              getter_AddRefs(principal))) ||
-       !principal ||
-       NS_FAILED(principal->GetJSPrincipals(cx, &jsPrincipals)) ||
-       !jsPrincipals) {
-       JS_ReportError(cx, "Can't get principals for evalInSandbox");
-       return NS_ERROR_FAILURE;
+
+    if (!prin ||
+        NS_FAILED(prin->GetJSPrincipals(cx, &jsPrincipals)) ||
+        !jsPrincipals) {
+        return NS_ERROR_FAILURE;
     }
 
     JSContext *sandcx = JS_NewContext(JS_GetRuntime(cx), 1024);
@@ -2183,25 +2346,6 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if(!sandbox) {
-        sandbox = JS_NewObject(sandcx, &SandboxClass, nsnull, nsnull);
-        if(!sandbox) {
-            JS_DestroyContext(sandcx);
-            JSPRINCIPALS_DROP(cx, jsPrincipals);
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        rv = xpc->InitClasses(sandcx, sandbox);
-        if (NS_SUCCEEDED(rv) &&
-            !JS_DefineFunctions(sandcx, sandbox, SandboxFunctions)) {
-            rv = NS_ERROR_FAILURE;
-        }
-        if (NS_FAILED(rv)) {
-            JS_DestroyContext(sandcx);
-            JSPRINCIPALS_DROP(cx, jsPrincipals);
-            return rv;
-        }
-    }
     JS_SetGlobalObject(sandcx, sandbox);
 
     // Capture uncaught exceptions reported as errors on sandcx and
@@ -2209,19 +2353,18 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source,
     JS_SetContextPrivate(sandcx, cx);
     JS_SetErrorReporter(sandcx, SandboxErrorReporter);
 
+    nsCAutoString codebase(jsPrincipals->codebase);
+
     if (!JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
                                           NS_REINTERPRET_CAST(const jschar *,
                                               PromiseFlatString(source).get()),
-                                          source.Length(),
-                                          PromiseFlatUTF8String(codebase).get(),
-                                          1, rval)) {
+                                          source.Length(), codebase.get(), 1,
+                                          rval)) {
         rv = NS_ERROR_FAILURE;
     }
 
-    if (NS_SUCCEEDED(rv)) {
-        *rval = OBJECT_TO_JSVAL(sandbox);
+    if (NS_SUCCEEDED(rv))
         cc->SetReturnValueWasSet(PR_TRUE);
-    }
 
     JS_DestroyContextNoGC(sandcx);
     JSPRINCIPALS_DROP(cx, jsPrincipals);
