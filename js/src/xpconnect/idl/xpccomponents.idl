@@ -111,9 +111,17 @@ interface nsIXPCConstructor : nsISupports
 };
 
 /**
+* interface of object returned by Components.utils.Sandbox.
+*/
+[scriptable, uuid(4f8ae0dc-d266-4a32-875b-6a9de71a8ce9)]
+interface nsIXPCComponents_utils_Sandbox : nsISupports
+{
+};
+
+/**
 * interface of Components.utils
 */
-[scriptable, uuid(24E63203-A931-43B5-B2C7-3053B48A9E4F)]
+[scriptable, uuid(bcd54a63-34d9-468c-9a55-0fb5d2d8c677)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -144,24 +152,21 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     void lookupMethod();
 
+    readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
+
     /*
      * evalInSandbox is only meant to be called from JavaScript.
      *
-     * evalInSandbox evaluates the provided source string with the
-     * principals of the provided codebase, which must be a stringified
-     * HTTP URL, and returns the "sandbox" object that was used for the
-     * evaluation.  If the optional 3rd "obj" parameter is not provided, a
-     * new "sandbox" is created for the evaluation; if it is provided, it
-     * must be a "sandbox" object created by a previous call to evalInSandbox,
-     * and this evaluation will reuse the same object.
+     * evalInSandbox evaluates the provided source string in the given sandbox.
+     * It returns the result of the evaluation to the caller.
      *
-     * var s = C.u.evalInSandbox("var five = 5", "http://www.mozilla.org");
+     * var s = new C.u.Sandbox("http://www.mozilla.org");
+     * var res = C.u.evalInSandbox("var five = 5; 2 + five", s);
      * var outerFive = s.five;
-     * s.seven = 7;
-     * C.u.evalInSandbox("var thirtyFive = five * seven", "http:...", s);
-     * var outerThirtyFive = s.thirtyFive;
+     * s.seven = res;
+     * var thirtyFive = C.u.evalInSandbox("five * seven", s);
      */
-    void evalInSandbox(in AString source, in AUTF8String codebase /*, obj */);
+    void evalInSandbox(in AString source/*, obj */);
 };
 
 /**
