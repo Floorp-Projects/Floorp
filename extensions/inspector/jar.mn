@@ -1,5 +1,5 @@
 inspector.jar:
-% content inspector %content/inspector/
+% content inspector %content/inspector/ xpcnativewrappers=no
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://inspector/content/tasksOverlay.xul
 % overlay chrome://communicator/content/pref/preftree.xul chrome://inspector/content/prefs/prefsOverlay.xul
 % overlay chrome://browser/content/browser.xul chrome://inspector/content/tasksOverlay-ff.xul
