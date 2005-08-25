@@ -59,7 +59,17 @@ struct VersionPart {
 static char*
 ParseVP(char *part, VersionPart &result)
 {
-  char *dot = strchr(part, '.');
+  char *dot;
+
+  if (!part) {
+    result.strB = nsnull;
+    result.strBlen = 0;
+    result.numC = 0;
+    result.extraD = nsnull;
+    return part;
+  }
+
+  dot = strchr(part, '.');
   if (dot)
     *dot = '\0';
 
@@ -176,22 +186,6 @@ CompareVP(VersionPart &v1, VersionPart &v2)
   return ns_strcmp(v1.extraD, v2.extraD);
 }
 
-/**
- * Checks to see whether the remaining vesion parts are all 0.0.0...
- */
-static PRBool
-OnlyZeros(char* part)
-{
-  VersionPart vp;
-  do {
-    part = ParseVP(part, vp);
-    if (vp.numA || vp.strB || vp.numC || vp.extraD)
-      return PR_FALSE;
-  } while (part);
-
-  return PR_TRUE;
-}
-
 PRInt32
 NS_CompareVersions(const char *A, const char *B)
 {
@@ -218,27 +212,7 @@ NS_CompareVersions(const char *A, const char *B)
     if (result)
       break;
 
-    if (a) {
-      if (!b) {
-	// A has more parts, but B doesn't... check for 0.0.0...
-	if (OnlyZeros(a))
-	  result = 0;
-	else
-	  result = 1;
-
-	break;
-      }
-    }
-    else {
-      if (b && !OnlyZeros(b))
-	// A is done, but B isn't, check for 0.0.0...
-	result = -1;
-      else // A and B are both done, they are equal!
-	result = 0;
-
-      break;
-    }
-  } while (PR_TRUE);
+  } while (a || b);
 
   free(A2);
   free(B2);
