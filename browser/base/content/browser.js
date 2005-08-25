@@ -2233,8 +2233,15 @@ var urlbarObserver = {
       if (url) {
         getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
 
-        // XXXBlake Workaround caret crash when you try to set the textbox's value on dropping
-        setTimeout(function(u) { gURLBar.value = u; handleURLBarCommand(); }, 0, url);
+        try {
+          gURLBar.value = url;
+          var uri = makeURI(gURLBar.value);
+          const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                   .getService(Components.interfaces.nsIScriptSecurityManager);
+          const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+          secMan.checkLoadURI(gBrowser.currentURI, uri, nsIScriptSecMan.DISALLOW_SCRIPT_OR_DATA);
+          handleURLBarCommand();
+        } catch (ex) {}
       }
     },
   getSupportedFlavours: function ()
@@ -2639,12 +2646,16 @@ var goButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var xferData = aXferData.data.split("\n");
-      var uri = xferData[0] ? xferData[0] : xferData[1];
-      if (uri) {
+      var url = xferData[0] ? xferData[0] : xferData[1];
+      try {
+        var uri = makeURI(url);
         getBrowser().dragDropSecurityCheck(aEvent, aDragSession, uri);
-
+        const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                                 .getService(Components.interfaces.nsIScriptSecurityManager);
+        const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
+        secMan.checkLoadURI(gBrowser.currentURI, uri, nsIScriptSecMan.DISALLOW_SCRIPT_OR_DATA);
         loadURI(uri, null, null);
-      }
+      } catch (ex) {}
     },
   getSupportedFlavours: function ()
     {
