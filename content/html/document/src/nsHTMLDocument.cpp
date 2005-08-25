@@ -2354,8 +2354,12 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
                        PL_DHashTableOperate(&mIdAndNameHashTable, &aElementId,
                                             PL_DHASH_ADD));
       NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-      e = entry->mIdContent;
     }
+
+    // The we could now have either a new entry, or the entry could
+    // have been updated, so update e to point to the current entry's
+    // mIdContent.
+    e = entry->mIdContent;
   }
 
   if (e == ID_NOT_IN_DOCUMENT) {
@@ -2364,12 +2368,15 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
     // mIdAndNameHashTable is live for entries in the table)
 
     return NS_OK;
-  } else if (!e) {
+  }
+
+  if (!e) {
     NS_WARN_IF_FALSE(!aElementId.IsEmpty(),
                      "getElementById(\"\") called, fix caller?");
 
     if (mRootContent && !aElementId.IsEmpty()) {
-      e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId), aElementId);
+      e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId),
+                         aElementId);
     }
 
     if (!e) {
