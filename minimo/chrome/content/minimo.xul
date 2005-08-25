@@ -43,10 +43,11 @@
 
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
 %minimoDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+
 ]>
 
 <window id="main-window"
@@ -73,13 +74,21 @@
 	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
 	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
 	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
-	
+	<command id="cmd_ViewOptions" oncommand="BrowserViewOptions()"/>
+    <command id="cmd_BrowserBack" oncommand="BrowserBack()" />
+	<command id="cmd_BrowserForward" oncommand="BrowserForward()" />
+	<command id="cmd_BrowserReload" oncommand="BrowserReload()" />
+	<command id="cmd_BrowserZoomPlus" oncommand="BrowserResetZoomPlus()" />
+	<command id="cmd_BrowserZoomMinus" oncommand="BrowserResetZoomMinus()" />
+		
     <toolbar id="nav-bar">
        <menubar  class="chromeclass-menubar">
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+		     <menuitem id="command_ViewOptions"  type="checkbox" command="cmd_ViewOptions" label="View"  /> 
 
+			<!--
              <menu id="SSR" label="SSR">
                 <menupopup >
         		     <menuitem id="command_BrowserSSR" type="checkbox" command="cmd_BrowserSSR" label="Toggle SSR"  /> 
@@ -93,6 +102,8 @@
                   <menuitem id="" oncommand="BrowserResetZoomMinus()" label="ZOOM - " />
                 </menupopup>
              </menu>
+            -->
+            
 		     <!--
 		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
 		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
@@ -121,6 +132,29 @@
 -->
 
     </toolbar>
+	<toolbar id="toolbar-view" flex="1" collapsed="true" >
+		<groupbox flex="1" class="box-floatoptions">
+		    <caption label="Page View"/>
+			<hbox flex="1" >
+				<vbox flex="1"  style="padding:4px ! important">
+
+					<hbox flex="1">	
+						<checkbox command="cmd_BrowserSSR" label="&toggleSSR.label;"/>
+						<checkbox command="cmd_BrowserSiteSSR" label="&toggleSiteSSR.label;"/>
+					</hbox>
+					<hbox flex="1" style="margin-top:4px ! important">
+						<label value="&zoomText.label;" />
+						<toolbarbutton class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
+		                <toolbarbutton class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
+					</hbox>
+				</vbox>
+				<vbox>
+				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button" onclick="document.getElementById('toolbar-view').collapsed=true"/>  
+				</vbox>
+			</hbox>
+		</groupbox>
+    </toolbar>
+    
   </toolbox>
 
   <hbox flex="1" >
