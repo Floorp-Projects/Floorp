@@ -1273,7 +1273,7 @@ calStorageCalendar.prototype = {
                     for (i = 0; i < rtypes.length; i++) {
                         var comp = "BY" + rtypes[i].toUpperCase();
                         if (row[rtypes[i]]) {
-                            var rstr = row[rtypes[i]].split(",");
+                            var rstr = row[rtypes[i]].toString().split(",");
                             var rarray = [];
                             for (var j = 0; j < rstr.length; j++) {
                                 rarray[j] = parseInt(rstr[j]);
