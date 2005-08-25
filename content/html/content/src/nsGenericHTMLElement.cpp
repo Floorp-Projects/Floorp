@@ -489,7 +489,7 @@ nsGenericHTMLElement::GetDir(nsAString& aDir)
 {
   const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsHTMLAtoms::dir);
 
-  if (attr && attr->Type() == nsAttrValue::eInteger) {
+  if (attr && attr->Type() == nsAttrValue::eEnum) {
     attr->ToString(aDir);
   }
   else {
