@@ -76,7 +76,8 @@ nsFocusController::nsFocusController(void)
 : mSuppressFocus(0), 
   mSuppressFocusScroll(PR_FALSE), 
   mActive(PR_FALSE),
-  mUpdateWindowWatcher(PR_FALSE)
+  mUpdateWindowWatcher(PR_FALSE),
+  mNeedUpdateCommands(PR_FALSE)
 {
 }
 
@@ -127,13 +128,14 @@ nsFocusController::SetFocusedElement(nsIDOMElement* aElement)
   else if (aElement) 
     mPreviousElement = aElement;
 
+  mNeedUpdateCommands = mNeedUpdateCommands || mCurrentElement != aElement;
   mCurrentElement = aElement;
 
   if (!mSuppressFocus) {
     // Need to update focus commands when focus switches from
     // an element to no element, so don't test mCurrentElement
     // before updating.
-    UpdateCommands(NS_LITERAL_STRING("focus"));
+    UpdateCommands();
   }
   return NS_OK;
 }
@@ -176,6 +178,7 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
     mPreviousWindow = win;
   }
 
+  mNeedUpdateCommands = mNeedUpdateCommands || mCurrentWindow != win;
   mCurrentWindow = win;
 
   if (mUpdateWindowWatcher) {
@@ -189,25 +192,36 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 }
 
 
-NS_IMETHODIMP
-nsFocusController::UpdateCommands(const nsAString& aEventName)
+void
+nsFocusController::UpdateCommands()
 {
+  if (!mNeedUpdateCommands) {
+    return;
+  }
+  nsCOMPtr<nsIDOMWindowInternal> window;
+  nsCOMPtr<nsIDocument> doc;
   if (mCurrentWindow) {
-    mCurrentWindow->UpdateCommands(aEventName);
+    window = mCurrentWindow;
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(window));
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    domWin->GetDocument(getter_AddRefs(domDoc));
+    doc = do_QueryInterface(domDoc);
   }
   else if (mCurrentElement) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     mCurrentElement->GetOwnerDocument(getter_AddRefs(domDoc));
     if (domDoc) {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
- 
-      nsCOMPtr<nsIDOMWindowInternal> window =
-        do_QueryInterface(doc->GetScriptGlobalObject());
-      if (window)
-        window->UpdateCommands(aEventName);
+      doc = do_QueryInterface(domDoc);
+      window = do_QueryInterface(doc->GetScriptGlobalObject());
     }
   }
-  return NS_OK;
+
+  // If there is no presshell, it's a zombie document which can't handle the command updates
+  if (window && doc && doc->GetNumberOfShells()) {
+    // Not a zombie document, so we can handle the command update
+    window->UpdateCommands(NS_LITERAL_STRING("focus"));
+    mNeedUpdateCommands = PR_FALSE;
+  }
 }
 
   
@@ -346,8 +360,10 @@ nsFocusController::Focus(nsIDOMEvent* aEvent)
         else
           mPreviousElement = nsnull;
 
-        if (!mCurrentElement)
-          UpdateCommands(NS_LITERAL_STRING("focus"));
+        if (!mCurrentElement && mCurrentWindow != mPreviousWindow) {
+          mNeedUpdateCommands = PR_TRUE;
+          UpdateCommands();
+        }
       }
     }
   }
@@ -501,8 +517,9 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
   // we need this to update command, including the case where there is no element
   // because nsPresShell::UnsuppressPainting may have just now unsuppressed
   // focus on the currently focused window
-  if (!mSuppressFocus)
-    UpdateCommands(NS_LITERAL_STRING("focus"));
+  if (!mSuppressFocus) {
+    UpdateCommands();
+  }
   
   return NS_OK;
 }
