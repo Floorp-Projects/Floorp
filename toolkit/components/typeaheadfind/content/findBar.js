@@ -372,6 +372,20 @@ function setFoundLink(foundLink)
   gFoundLink = foundLink;
 }
 
+function finishFAYT(aKeypressEvent)
+{
+  if (!gFoundLink)
+    return false;
+
+  gFoundLink.focus(); // In this function, gFoundLink is set null.
+
+  if (aKeypressEvent)
+    aKeypressEvent.preventDefault();
+
+  closeFindBar();
+  return true;
+}
+
 function delayedCloseFindBar()
 {
   var findField = document.getElementById("find-field");
@@ -516,11 +530,19 @@ function onFindBarKeyPress(evt)
     else {
       if (gFoundLink) {
         var tmpLink = gFoundLink;
-        tmpLink.focus(); // In this function, gFoundLink is set null.
-        fireKeypressEvent(tmpLink, evt);
-        evt.preventDefault();
-        closeFindBar();
+        if (finishFAYT(evt))
+          fireKeypressEvent(tmpLink, evt);
       }
+    }
+  }
+  else if (evt.keyCode == KeyEvent.DOM_VK_TAB) {
+    var shouldHandle = !evt.altKey && !evt.ctrlKey && !evt.metaKey;
+    if (shouldHandle && gFindMode != FIND_NORMAL &&
+        gFoundLink && finishFAYT(evt)) {
+      if (evt.shiftKey)
+        document.commandDispatcher.rewindFocus();
+      else
+        document.commandDispatcher.advanceFocus();
     }
   }
   else if (evt.keyCode == KeyEvent.DOM_VK_ESCAPE) {
