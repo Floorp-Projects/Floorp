@@ -6741,7 +6741,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 
   holder->DidRestoreWindow();
 
-  return inner->ResumeTimeouts();
+  return NS_OK;
 }
 
 void

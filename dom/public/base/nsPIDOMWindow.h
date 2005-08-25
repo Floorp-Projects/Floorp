@@ -77,8 +77,8 @@ class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x1f9346e6, 0x3814, 0x4c3b, \
-  { 0x9d, 0x04, 0x0b, 0x93, 0x86, 0x53, 0x2b, 0xbf } }
+{ 0x55f987bc, 0xca30, 0x494c, \
+  { 0xa9, 0x85, 0xf1, 0xf3, 0x4b, 0x9d, 0x47, 0xd8 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -266,6 +266,9 @@ public:
 
   // Restore the window state from aState.
   virtual nsresult RestoreWindowState(nsISupports *aState) = 0;
+
+  // Resume suspended timeouts in this window and in child windows.
+  virtual nsresult ResumeTimeouts() = 0;
 
   nsPIDOMWindow *GetOuterWindow()
   {

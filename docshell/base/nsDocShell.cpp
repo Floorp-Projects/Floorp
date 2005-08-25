@@ -5389,6 +5389,10 @@ nsDocShell::RestoreFromHistory()
         }
     }
 
+    // Now that all of the child docshells have been put into place, we can
+    // restart the timers for the window and all of the child frames.
+    privWin->ResumeTimeouts();
+
     // Restore the refresh URI list.  The refresh timers will be restarted
     // when EndPageLoad() is called.
     mLSHE->GetRefreshURIList(getter_AddRefs(mRefreshURIList));
