@@ -63,8 +63,10 @@ var gLightningPane = {
         }
         return undefined;
     },
+
     setTimezone: function() {
-        prefValue = document.getElementById("calendar.timezone.local").value;
+        var prefValue = document.getElementById("calendar.timezone.local")
+            .value;
 
         var tzListBox = document.getElementById("timezone-listbox");
         var children = tzListBox.childNodes;
@@ -76,5 +78,5 @@ var gLightningPane = {
                 return;
             }
         }
-    },
+    }
 }
