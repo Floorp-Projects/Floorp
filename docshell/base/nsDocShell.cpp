@@ -5300,7 +5300,11 @@ nsDocShell::RestoreFromHistory()
     SetHistoryEntry(&mOSHE, mLSHE);
     
     // XXX special wyciwyg handling in Embed()?
-    // XXX SetLayoutHistoryState(null)?
+
+    // We aren't going to restore any items from the LayoutHistoryState,
+    // but we don't want them to stay around in case the page is reloaded.
+    SetLayoutHistoryState(nsnull);
+
     // This is the end of our Embed() replacement
 
     mSavingOldViewer = PR_FALSE;
