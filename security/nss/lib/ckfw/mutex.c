@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.6 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.7 $ $Date: 2005/08/25 20:08:26 $";
 #endif /* DEBUG */
 
 /*
@@ -67,11 +67,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.6 $ $Date:
  */
 
 struct NSSCKFWMutexStr {
-  CK_VOID_PTR etc;
-
-  CK_DESTROYMUTEX Destroy;
-  CK_LOCKMUTEX Lock;
-  CK_UNLOCKMUTEX Unlock;
+  PRLock *lock;
 };
 
 #ifdef DEBUG
@@ -144,23 +140,13 @@ nssCKFWMutex_Create
     *pError = CKR_HOST_MEMORY;
     return (NSSCKFWMutex *)NULL;
   }
-
-  switch (LockingState)
-  {
-      default:
-      case SingleThreaded:
-          *pError = CKR_OK;
-          mutex->Destroy = (CK_DESTROYMUTEX)mutex_noop;
-          mutex->Lock    = (CK_LOCKMUTEX   )mutex_noop;
-          mutex->Unlock  = (CK_UNLOCKMUTEX )mutex_noop;
-          break;
-
-      case MultiThreaded:
-          *pError = pInitArgs->CreateMutex(&mutex->etc);
-          mutex->Destroy = pInitArgs->DestroyMutex;
-          mutex->Lock    = pInitArgs->LockMutex;
-          mutex->Unlock  = pInitArgs->UnlockMutex;
-          break;
+  *pError = CKR_OK;
+  mutex->lock = NULL;
+  if (LockingState == MultiThreaded) {
+    mutex->lock = PR_NewLock();
+    if (!mutex->lock) {
+      *pError = CKR_HOST_MEMORY; /* we couldn't get the resource */
+    }
   }
     
   if( CKR_OK != *pError ) {
@@ -171,6 +157,9 @@ nssCKFWMutex_Create
 #ifdef DEBUG
   *pError = mutex_add_pointer(mutex);
   if( CKR_OK != *pError ) {
+    if (mutex->lock) {
+      PR_DestroyLock(mutex->lock);
+    }
     (void)nss_ZFreeIf(mutex);
     return (NSSCKFWMutex *)NULL;
   }
@@ -197,8 +186,10 @@ nssCKFWMutex_Destroy
     return rv;
   }
 #endif /* NSSDEBUG */
-  
-  rv = mutex->Destroy(mutex->etc);
+ 
+  if (mutex->lock) {
+    PR_DestroyLock(mutex->lock);
+  } 
 
 #ifdef DEBUG
   (void)mutex_remove_pointer(mutex);
@@ -224,8 +215,11 @@ nssCKFWMutex_Lock
     return rv;
   }
 #endif /* NSSDEBUG */
+  if (mutex->lock) {
+    PR_Lock(mutex->lock);
+  }
   
-  return mutex->Lock(mutex->etc);
+  return CKR_OK;
 }
 
 /*
@@ -238,14 +232,24 @@ nssCKFWMutex_Unlock
   NSSCKFWMutex *mutex
 )
 {
+  PRStatus nrv;
 #ifdef NSSDEBUG
   CK_RV rv = nssCKFWMutex_verifyPointer(mutex);
+
   if( CKR_OK != rv ) {
     return rv;
   }
 #endif /* NSSDEBUG */
 
-  return mutex->Unlock(mutex->etc);
+  if (!mutex->lock) 
+    return CKR_OK;
+
+  nrv =  PR_Unlock(mutex->lock);
+
+  /* if unlock fails, either we have a programming error, or we have
+   * some sort of hardware failure... in either case return CKR_DEVICE_ERROR.
+   */
+  return nrv == PR_SUCCESS ? CKR_OK : CKR_DEVICE_ERROR;
 }
 
 /*

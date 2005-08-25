@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.15 $ $Date: 2005/07/21 23:48:18 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.16 $ $Date: 2005/08/25 20:08:27 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -48,9 +48,6 @@ EXTRA_LIBS = \
 # can't do this in manifest.mn because OS_TARGET isn't defined there.
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
-# Link with the real NSPR DLLs for MinGW because the NSPR stubs in
-# nsprstub.c can't resolve the references to the _imp__PR_XXX symbols.
-# This is merely an expedient hack and not the right solution.
 ifdef NS_USE_GCC
 EXTRA_LIBS += \
 	-L$(NSPR_LIB_DIR) \
@@ -58,22 +55,22 @@ EXTRA_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+else 
+EXTRA_SHARED_LIBS += \
+        $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.lib \
+        $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.lib \
+        $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.lib \
+        $(NULL)
+endif # NS_USE_GCC
 else
+
 EXTRA_LIBS += \
-	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4_s.lib \
-	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4_s.lib \
+	-L$(NSPR_LIB_DIR) \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
 	$(NULL)
 endif
-
-else
-
-EXTRA_LIBS += \
-	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
-	$(NSPR_LIB_DIR)/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
-	$(NULL)
-
-endif
-
 
 
 include $(CORE_DEPTH)/coreconf/rules.mk

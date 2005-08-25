@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.12 $ $Date: 2005/01/20 02:25:45 $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.13 $ $Date: 2005/08/25 20:08:26 $";
 #endif /* DEBUG */
 
 /*
@@ -125,6 +125,46 @@ static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.12 $ $Date:
  * NSSCKFWC_CancelFunction
  */
 
+/* figure out out locking semantics */
+static CK_RV
+nssCKFW_GetThreadSafeState(CK_C_INITIALIZE_ARGS_PTR pInitArgs,
+                           CryptokiLockingState *pLocking_state) {
+  int functionCount = 0;
+
+  /* parsed according to (PKCS #11 Section 11.4) */
+  /* no args, the degenerate version of case 1 */
+  if (!pInitArgs) {
+    *pLocking_state = SingleThreaded;
+    return CKR_OK;
+  } 
+
+  /* CKF_OS_LOCKING_OK set, Cases 2 and 4 */
+  if (pInitArgs->flags & CKF_OS_LOCKING_OK) {
+    *pLocking_state = MultiThreaded;
+    return CKR_OK;
+  }
+  if ((CK_CREATEMUTEX) NULL != pInitArgs->CreateMutex) functionCount++;
+  if ((CK_DESTROYMUTEX) NULL != pInitArgs->DestroyMutex) functionCount++;
+  if ((CK_LOCKMUTEX) NULL != pInitArgs->LockMutex) functionCount++;
+  if ((CK_UNLOCKMUTEX) NULL != pInitArgs->UnlockMutex) functionCount++;
+
+  /* CKF_OS_LOCKING_OK is not set, and not functions supplied, 
+   * explicit case 1 */
+  if (0 == functionCount) {
+    *pLocking_state = SingleThreaded;
+    return CKR_OK;
+  }
+
+  /* OS_LOCKING_OK is not set and functions have been supplied. Since
+   * ckfw uses nssbase library which explicitly calls NSPR, and since 
+   * there is no way to reliably override these explicit calls to NSPR,
+   * therefore we can't support applications which have their own threading 
+   * module.  Return CKR_CANT_LOCK if they supplied the correct number of 
+   * arguments, or CKR_ARGUMENTS_BAD if they did not in either case we will 
+   * fail the initialize */
+  return (4 == functionCount) ? CKR_CANT_LOCK : CKR_ARGUMENTS_BAD;
+}
+
 /*
  * NSSCKFWC_Initialize
  *
@@ -155,12 +195,9 @@ NSSCKFWC_Initialize
     goto loser;
   }
 
-  /* remember the locking args for those times we need to get a lock in code
-   * outside the framework.
-   */
-  error = nssSetLockArgs(pInitArgs, &locking_state);
-  if (CKR_OK != error) {
-      goto loser;
+  error = nssCKFW_GetThreadSafeState(pInitArgs,&locking_state);
+  if( CKR_OK != error ) {
+    goto loser;
   }
 
   *pFwInstance = nssCKFWInstance_Create(pInitArgs, locking_state, mdInstance, &error);
