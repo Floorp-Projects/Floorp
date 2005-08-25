@@ -995,7 +995,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 }
 
 // open a new URL, observing the prefs on how to behave
-- (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer: (NSString*)aReferrer
+- (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer:(NSString*)aReferrer alwaysInFront:(BOOL)forceFront
 {
   // make sure we're initted
   [PreferenceManager sharedInstance];
@@ -1006,7 +1006,8 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   nsCOMPtr<nsIPref> prefService ( do_GetService(NS_PREF_CONTRACTID) );
   if ( prefService ) {
     prefService->GetIntPref("browser.reuse_window", &reuseWindow);
-    prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+    if (!forceFront)
+      prefService->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
   }
   
   // reuse the main window (if there is one) based on the pref in the 
@@ -1141,7 +1142,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [self ensureGeckoInitted];
   
   NSURL* urlToOpen = [MainController decodeLocalFileURL:[NSURL fileURLWithPath:filename]];
-  [self openNewWindowOrTabWithURL:[urlToOpen absoluteString] andReferrer:nil];
+  [self openNewWindowOrTabWithURL:[urlToOpen absoluteString] andReferrer:nil alwaysInFront:YES];
   return YES;    
 }
 
@@ -1379,47 +1380,47 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"SupportPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"SupportPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) infoLink:(id)aSender
 {
   NSString* pageToLoad = NSLocalizedStringFromTable(@"InfoPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"InfoPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) feedbackLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"FeedbackPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"FeedbackPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) releaseNoteLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"ReleaseNotesDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"ReleaseNotesDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) tipsTricksLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"TipsTricksPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"TipsTricksPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) searchCustomizeLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"SearchCustomPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"SearchCustomPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 -(IBAction) aboutPlugins:(id)aSender
 {
-  [self openNewWindowOrTabWithURL:@"about:plugins" andReferrer:nil];
+  [self openNewWindowOrTabWithURL:@"about:plugins" andReferrer:nil alwaysInFront:YES];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
@@ -1523,7 +1524,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [urlString appendString:tmpString];
   }
   
-  [self openNewWindowOrTabWithURL:urlString andReferrer:nil];
+  [self openNewWindowOrTabWithURL:urlString andReferrer:nil alwaysInFront:YES];
 }
 
 //
@@ -1671,7 +1672,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 {
   NSDictionary *dict = [note userInfo];
   if ([dict objectForKey:NetworkServicesClientKey] == self)
-    [self openNewWindowOrTabWithURL:[dict objectForKey:NetworkServicesResolvedURLKey] andReferrer:nil];
+    [self openNewWindowOrTabWithURL:[dict objectForKey:NetworkServicesResolvedURLKey] andReferrer:nil alwaysInFront:YES];
 }
 
 //
@@ -1703,7 +1704,7 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"RendezvousPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"RendezvousPageDefault"])
-    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil alwaysInFront:YES];
 }
 
 @end

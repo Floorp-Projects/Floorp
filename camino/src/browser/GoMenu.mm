@@ -442,7 +442,7 @@ static const unsigned int kMaxTitleLength = 50;
       }
     }
     else
-      [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:itemURL andReferrer:nil];
+      [(MainController *)[NSApp delegate] openNewWindowOrTabWithURL:itemURL andReferrer:nil alwaysInFront:NO];
   }
 }
 
