@@ -46,6 +46,7 @@
 #include "nsServiceManagerUtils.h"
 #include "calIICSService.h"
 #include "calIDuration.h"
+#include "calIErrors.h"
 
 #include "jsdate.h"
 
@@ -551,10 +552,16 @@ calDateTime::Compare(calIDateTime *aOther, PRInt32 *aResult)
     ToIcalTime(&a);
     aOther->ToIcalTime(&b);
 
-    if (mIsDate || otherIsDate)
-        *aResult = icaltime_compare_date_only(a,b);
-    else
+    if (mIsDate || otherIsDate) {
+        icaltimezone *tz;
+        nsresult rv = GetIcalTZ(mTimezone, &tz);
+        if (NS_FAILED(rv))
+            return calIErrors::INVALID_TIMEZONE;
+
+        *aResult = icaltime_compare_date_only(a, b, tz);
+    } else {
         *aResult = icaltime_compare(a, b);
+    }
 
     return NS_OK;
 }

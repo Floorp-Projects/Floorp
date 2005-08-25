@@ -40,8 +40,26 @@
 [scriptable, uuid(404c7d78-bec7-474c-aa2a-82c0d0563bb6)]
 interface calIErrors : nsISupports
 {
-  // sync with nsError.h
-  const unsigned long NS_ERROR_MODULE_CALENDAR = 5;
+  /**
+   * The first two constants are copied from nsError.h, but named slightly
+   * differently, because if they're named the same, the names collide and
+   * the compiler can't deal.
+   */
+  const unsigned long CAL_ERROR_MODULE_CALENDAR = 5;
+  const unsigned long CAL_ERROR_MODULE_BASE_OFFSET = 0x45;
 
-  const unsigned long CAL_ERROR_BASE = (1<<31) | (NS_ERROR_MODULE_CALENDAR + 0x45) << 16;
+  /**
+   * The beginning of this set of error codes, also copied from the macros
+   * in nsError.h.
+   */
+  const unsigned long ERROR_BASE = (1<<31) | 
+    (CAL_ERROR_MODULE_CALENDAR + CAL_ERROR_MODULE_BASE_OFFSET) << 16;
+
+  /* Onto the actual errors! */
+
+  /**
+   * An invalid or nonexistent timezone was encountered.
+   */
+  const unsigned long INVALID_TIMEZONE = ERROR_BASE + 1;
 };
+

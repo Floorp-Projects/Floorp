@@ -82,7 +82,7 @@
  *      - icaltime_compare_with_zone(struct icaltimetype a,struct icaltimetype b)
  *	- icaltime_compare(struct icaltimetype a,struct icaltimetype b)
  *	- icaltime_compare_date_only(struct icaltimetype a,
- *		struct icaltimetype b)
+ *		struct icaltimetype b, icaltimezone *tz)
  *	- icaltime_adjust(struct icaltimetype *tt, int days, int hours,
  *		int minutes, int seconds);
  *	- icaltime_normalize(struct icaltimetype t);
@@ -242,7 +242,7 @@ int icaltime_compare(const struct icaltimetype a,
 
 /** like icaltime_compare, but only use the date parts. */
 int icaltime_compare_date_only(const struct icaltimetype a,
-	const struct icaltimetype b);
+	const struct icaltimetype b, icaltimezone *tz);
 
 /** Adds or subtracts a number of days, hours, minutes and seconds. */
 void  icaltime_adjust(struct icaltimetype *tt, const int days,

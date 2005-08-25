@@ -206,6 +206,9 @@ interface calIDateTime : nsISupports
    *
    * If either this or aOther has isDate set, then only the date portion is
    * compared.
+   * 
+   * @exception calIErrors.INVALID_TIMEZONE  bad timezone on this object
+   *                                         (not the argument object)
    */
   long compare (in calIDateTime aOther);
 
