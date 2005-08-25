@@ -50,6 +50,9 @@
 #include "nsIWindowMediator.h"
 #include "nsIXULWindow.h"
 
+#include "nsIURI.h"
+#include "nsNetUtil.h"
+
 using namespace nsWindowUtils;
 
 
@@ -136,6 +139,16 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, Apple
 	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
 	ThrowIfNil(urlString);	
 	directParameter.GetCString(urlString, dataSize + 1);
+
+	// bail if it is a chrome URL for security reasons (bug 305374)
+	nsCOMPtr<nsIURI> uri;
+	PRBool isBlockedScheme = PR_FALSE;
+	if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), urlString)) ||
+	    NS_FAILED(uri->SchemeIs("chrome", &isBlockedScheme)) ||
+	    isBlockedScheme) {
+		nsMemory::Free(urlString);
+		return;
+	}
 
 	// get the destination window, if applicable
 	StAEDesc		openInWindowDesc;
