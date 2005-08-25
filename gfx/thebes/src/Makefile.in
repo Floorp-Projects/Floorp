@@ -46,3 +46,5 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
