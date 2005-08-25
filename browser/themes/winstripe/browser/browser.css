@@ -915,8 +915,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
-#urlbar[level="low"] > .autocomplete-textbox-container,
-#urlbar[level="broken"] > .autocomplete-textbox-container {
+#urlbar[level="low"] > .autocomplete-textbox-container {
   background-color: #F5F6BE; /* #F7F898; */
   color: #000000;
 }
