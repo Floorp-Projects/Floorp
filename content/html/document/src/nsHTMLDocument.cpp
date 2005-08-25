@@ -3641,8 +3641,8 @@ static const struct MidasCommand gMidasCommandTable[] = {
   { "insertparagraph", "cmd_paragraphState", "p", PR_TRUE, PR_FALSE },
   { "formatblock",   "cmd_paragraphState",  "", PR_FALSE, PR_FALSE },
   { "heading",       "cmd_paragraphState",  "", PR_FALSE, PR_FALSE },
-  { "useCSS",        "cmd_setDocumentUseCSS",   "", PR_FALSE, PR_TRUE },
-  { "readonly",      "cmd_setDocumentReadOnly", "", PR_FALSE, PR_TRUE },
+  { "styleWithCSS",  "cmd_setDocumentUseCSS", "", PR_FALSE, PR_TRUE },
+  { "contentReadOnly", "cmd_setDocumentReadOnly", "", PR_FALSE, PR_TRUE },
   { "insertBrOnReturn", "cmd_insertBrOnReturn", "", PR_FALSE, PR_TRUE },
   { "enableObjectResizing", "cmd_enableObjectResizing", "", PR_FALSE, PR_TRUE },
   { "enableInlineTableEditing", "cmd_enableInlineTableEditing", "", PR_FALSE, PR_TRUE },
@@ -3693,7 +3693,19 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                               PRBool& outIsBoolean,
                                               PRBool& outBooleanValue)
 {
-  NS_ConvertUCS2toUTF8 convertedCommandID(inCommandID);
+  NS_ConvertUTF16toUTF8 convertedCommandID(inCommandID);
+
+  // Hack to support old boolean commands that were backwards (see bug 301490).
+  PRBool invertBool = PR_FALSE;
+  if (convertedCommandID.LowerCaseEqualsLiteral("usecss")) {
+    convertedCommandID.Assign("styleWithCSS");
+    invertBool = PR_TRUE;
+  }
+  else if (convertedCommandID.LowerCaseEqualsLiteral("readonly")) {
+    convertedCommandID.Assign("contentReadOnly");
+    invertBool = PR_TRUE;
+  }
+
   PRUint32 i;
   PRBool found = PR_FALSE;
   for (i = 0; i < MidasCommandCount; ++i) {
@@ -3718,9 +3730,15 @@ nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID,
       // handle checking of param passed in
       if (outIsBoolean) {
         // if this is a boolean value and it's not explicitly false
-        // (e.g. no value) we default to "true"
-        outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
-        outParam.SetLength(0);
+        // (e.g. no value) we default to "true". For old backwards commands
+        // we invert the check (see bug 301490).
+        if (invertBool) {
+          outBooleanValue = inParam.LowerCaseEqualsLiteral("false");
+        }
+        else {
+          outBooleanValue = !inParam.LowerCaseEqualsLiteral("false");
+        }
+        outParam.Truncate();
       }
       else {
         NS_ConvertUCS2toUTF8 convertedParam(inParam);
