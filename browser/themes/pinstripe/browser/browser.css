@@ -651,8 +651,7 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
 
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
-#urlbar[level="low"] > .autocomplete-textbox-container,
-#urlbar[level="broken"] > .autocomplete-textbox-container
+#urlbar[level="low"] > .autocomplete-textbox-container
  {
   margin: -2px;
   padding: 2px;
@@ -661,8 +660,7 @@ toolbar[iconsize="small"] #mail-button[disabled="true"] {
 }
 
 #urlbar[level="high"] > .autocomplete-history-dropmarker,
-#urlbar[level="low"] > .autocomplete-history-dropmarker,
-#urlbar[level="broken"] > .autocomplete-history-dropmarker
+#urlbar[level="low"] > .autocomplete-history-dropmarker
  {
   margin: -2px;
   padding: 2px 6px;
