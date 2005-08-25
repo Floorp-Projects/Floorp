@@ -6066,18 +6066,23 @@ var FeedHandler = {
     var erel = event.target.rel;
     var etype = event.target.type;
     var etitle = event.target.title;
+    const alternateRelRegex = /(^|\s)alternate($|\s)/i;
+    const rssTitleRegex = /(^|\s)rss($|\s)/i;
 
-    // this is a blogger post service URL; so skip it
-    if (erel && erel == "service.post")
+    if (!alternateRelRegex.test(erel) ||
+        !etype)
       return;
+
+    etype = etype.replace(/^\s+/, "");
+    etype = etype.replace(/\s+$/, "");
+    etype = etype.toLowerCase();
 
     if (etype == "application/rss+xml" ||
         etype == "application/atom+xml" ||
-        etype == "application/x.atom+xml" ||
-        (etitle && 
-        (etitle.indexOf("RSS") != -1 ||
-          etitle.indexOf("Atom") != -1 ||
-          etitle.indexOf("rss") != -1)))
+        (etype == "text/xml" ||
+         etype == "application/xml" ||
+         etype == "application/rdf+xml") &&
+        rssTitleRegex.test(etitle))
     {
       const targetDoc = event.target.ownerDocument;
 
