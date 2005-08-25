@@ -89,9 +89,15 @@ prefwindow {
   font: message-box;
 }
 
+prefwindow {  font: -moz-dialog;}
+
+prefwindow .paneSelector {
+  font: message-box;
+}
 prefwindow[type="child"] {
   padding: 18px 20px 15px 18px !important;
 }
+
 
 /* deprecated */
 window.dialog { 
@@ -218,3 +224,4 @@ browser {
 #historyTree, #bookmarks-view {
 	border-top: 1px solid #bebebe;
 }
+
