@@ -942,6 +942,8 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
             // Let's restore the original auth flags from SendEhloResponse so we can
             // try them again with new password and username
             RestoreAuthFlags();
+            // except for gssapi, which doesn't care about the new password.
+            ClearFlag(SMTP_AUTH_GSSAPI_ENABLED);
         }
 
         m_nextState = SMTP_AUTH_PROCESS_STATE;
@@ -976,7 +978,11 @@ PRInt32 nsSmtpProtocol::AuthGSSAPIFirst()
  service.Append(hostName);
   rv = DoGSSAPIStep1(service.get(), userName, resp);
   if (NS_FAILED(rv))
-    command.Append("*");
+  {
+    m_nextState = SMTP_AUTH_PROCESS_STATE;
+    ClearFlag(SMTP_AUTH_GSSAPI_ENABLED);
+    return 0;
+  }
   else
     command.Append(resp);
   command.Append(CRLF);
