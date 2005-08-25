@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* This CSS rule has to be here because code is accessing styleSheets[1].rules[0]! */ 
+
+
 #urlbar input {
 	background-position:0px 100%;
 	background-repeat:no-repeat;
@@ -53,6 +55,25 @@ toolbar *, #appcontent * {
   font-size: 10px ! important;
   padding: 0px ! important;
   margin: 0px ! important;
+}
+
+.button-close {
+  background: url("chrome://minimo/skin/close.gif") no-repeat 50% 50%;
+  margin-right:4px ! important;
+  margin-top:0px ! important;
+  border:1px solid black;
+}
+
+.button-border {
+  border:1px solid black;
+  -moz-border-radius:4px;
+  margin-left:2px ! important;
+  padding-left:2px ! important;
+  padding-right:2px ! important;
+}
+
+.box-floatoptions {
+  margin:2px ! important;
 }
 
 * {
@@ -96,18 +117,3 @@ toolbar *, #appcontent * {
   {
 	  list-style-image      : url("chrome://minimo/skin/reload.gif");
   }
-
-#item-call 
-  {
-      display:none;
-  }
-  
-#item-copy
-  {
-      display:none;
-  }
-  
-#item-paste
-  {
-      display:none;
-  } 
