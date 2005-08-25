@@ -600,7 +600,7 @@ class JavaMembers
                 return members;
             }
             try {
-                members = new JavaMembers(scope, cl);
+                members = new JavaMembers(cache.scope, cl);
                 break;
             } catch (SecurityException e) {
                 // Reflection may fail for objects that are in a restricted

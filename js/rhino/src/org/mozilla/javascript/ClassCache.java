@@ -56,6 +56,8 @@ public class ClassCache
 
     Hashtable javaAdapterGeneratedClasses = new Hashtable();
 
+    ScriptableObject scope;
+    
     private Hashtable interfaceAdapterCache;
 
     private int generatedClassSerial;
@@ -101,7 +103,11 @@ public class ClassCache
             // Can only associate cache with top level scope
             throw new IllegalArgumentException();
         }
-        return this != topScope.associateValue(AKEY, this);
+        if(this == topScope.associateValue(AKEY, this)) {
+            scope = topScope;
+            return true;
+        }
+        return false;
     }
 
     /**
