@@ -43,13 +43,11 @@
 {
 	IBOutlet NSTextField *textFieldHomePage;
   
-	IBOutlet NSButton *checkboxUseSystemHomePage;
   IBOutlet NSButton *checkboxNewTabBlank;
   IBOutlet NSButton *checkboxNewWindowBlank;
   IBOutlet NSPopUpButton *defaultBrowserPopUp;
 }
 
-- (IBAction)checkboxUseSystemHomePageClicked:(id)sender;
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)defaultBrowserChange:(id)sender;
 

@@ -50,9 +50,37 @@
 
 const int kDefaultExpireDays = 9;
 
+// handly stack-based class to start and stop an Internet Config session
+class StInternetConfigSession
+{
+public:
+
+  StInternetConfigSession(OSType inSignature)
+  : mICInstance(NULL)
+  , mStartedOK(false)
+  {
+    mStartedOK = (::ICStart(&mICInstance, inSignature) == noErr);
+  }
+  
+  ~StInternetConfigSession()
+  {
+    if (mStartedOK)
+      ::ICStop(mICInstance);
+  }
+  
+  bool        Available() const { return mStartedOK;  }
+  ICInstance  Instance() const  { return mICInstance; }
+
+private:
+
+  ICInstance    mICInstance;
+  bool          mStartedOK;
+};
+
+
+
 @interface OrgMozillaChimeraPreferenceDownloads(Private)
 
-- (NSString*)getInternetConfigString:(ConstStr255Param)icPref;
 - (NSString*)getDownloadFolderDescription;
 - (void)setupDownloadMenuWithPath:(NSString*)inDLPath;
 - (void)setDownloadFolder:(NSString*)inNewFolder;
@@ -132,8 +160,8 @@ const int kDefaultExpireDays = 9;
   return [NSString stringWithUTF8String:(const char*)utf8path];
 }
 
-// Sets the IC download pref to the given path
-// NOTE: THIS DOES NOT WORK.
+// Sets the IC download pref to the given path. We write to Internet Config
+// because Gecko reads from IC when getting NS_MAC_DEFAULT_DOWNLOAD_DIR.
 - (void)setDownloadFolder:(NSString*)inNewFolder
 {
   if (!inNewFolder)
@@ -141,68 +169,38 @@ const int kDefaultExpireDays = 9;
 
   // it would be nice to use PreferenceManager, but I don't want to drag
   // all that code into the plugin
-  ICInstance icInstance = nil;
-  OSStatus error = ::ICStart(&icInstance, 'CHIM');
-  if (error != noErr)
+  StInternetConfigSession icSession('CHIM');
+  if (!icSession.Available())
     return;
   
   // make a ICFileSpec out of our path and shove it into IC. This requires
-  // creating an FSSpec and an alias. We can't just bail on error because
-  // we have to make sure we call ICStop() below.
-  BOOL noErrors = NO;
+  // creating an FSSpec and an alias.
   FSRef fsRef;
   Boolean isDir;
-  AliasHandle alias = nil;
+  OSStatus error = ::FSPathMakeRef((UInt8 *)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
+  if (error != noErr)
+    return;
+
   FSSpec fsSpec;
-  error = ::FSPathMakeRef((UInt8 *)[inNewFolder fileSystemRepresentation], &fsRef, &isDir);
-  if (!error) {
-    error = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nil, nil, &fsSpec, nil);
-    if (!error) {
-      error = ::FSNewAlias(nil, &fsRef, &alias);
-      if (!error)
-        noErrors = YES;
-    }
-  }
+  error = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNone, nil, nil, &fsSpec, nil);
+  if (error != noErr)
+    return;
+
+  AliasHandle alias = nil;
+  error = ::FSNewAlias(nil, &fsRef, &alias);
   
   // copy the data out of our variables into the ICFileSpec and hand it to IC.
-  if (noErrors) {
+  if (error == noErr && alias)
+  {
     long headerSize = offsetof(ICFileSpec, alias);
     long aliasSize = ::GetHandleSize((Handle)alias);
     ICFileSpec* realbuffer = (ICFileSpec*) calloc(headerSize + aliasSize, 1);
     realbuffer->fss = fsSpec;
     memcpy(&realbuffer->alias, *alias, aliasSize);
-    ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, headerSize + aliasSize);
+    ::ICSetPref(icSession.Instance(), kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, headerSize + aliasSize);
     free(realbuffer);
+    ::DisposeHandle((Handle)alias);
   }
-  
-  ::ICStop(icInstance);
-}
-
-- (NSString*)getInternetConfigString:(ConstStr255Param)icPref
-{
-  NSString*     resultString = @"";
-  ICInstance		icInstance = NULL;
-  
-  // it would be nice to use PreferenceManager, but I don't want to drag
-  // all that code into the plugin
-  OSStatus error = ICStart(&icInstance, 'CHIM');
-  if (error != noErr) {
-    NSLog(@"Error from ICStart");
-    return resultString;
-  }
-  
-  ICAttr	dummyAttr;
-  Str255	homePagePStr;
-  long		prefSize = sizeof(homePagePStr);
-  error = ICGetPref(icInstance, icPref, &dummyAttr, homePagePStr, &prefSize);
-  if (error == noErr)
-    resultString = [NSString stringWithCString: (const char*)&homePagePStr[1] length:homePagePStr[0]];
-  else
-    NSLog(@"Error getting pref from Internet Config");
-  
-  ICStop(icInstance);
-  
-  return resultString;
 }
 
 // Given a full path to the d/l dir, display the leaf name and the finder icon associated

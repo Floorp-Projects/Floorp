@@ -72,8 +72,6 @@ extern "C" {
 
 @interface OrgMozillaChimeraPreferenceNavigation(Private)
 
-- (NSString*)getInternetConfigString:(ConstStr255Param)icPref;
-- (NSString*)getSystemHomePage;
 - (NSString*)getCurrentHomePage;
 + (NSArray*)getWebBrowserList;
 + (NSString*)displayNameForURL:(NSURL*)url;
@@ -149,11 +147,6 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 1))
     [checkboxNewTabBlank setState:YES];
 
-  BOOL useSystemHomePage = [self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref;  
-  if (useSystemHomePage)
-    [textFieldHomePage setEnabled:NO];
-
-  [checkboxUseSystemHomePage setState:useSystemHomePage];
   [textFieldHomePage setStringValue:[self getCurrentHomePage]];
   
   // set up default browser menu
@@ -165,30 +158,11 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   if (!mPrefService)
     return;
   
-  // only save the home page pref if it's not the system one
-  if (![checkboxUseSystemHomePage state])
-    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
+  [self setPref:"browser.startup.homepage" toString:[textFieldHomePage   stringValue]];
   
   // ensure that the prefs exist
-  [self setPref:"browser.startup.page" toInt: [checkboxNewWindowBlank state] ? 1 : 0];
-  [self setPref:"browser.tabs.startPage" toInt: [checkboxNewTabBlank state] ? 1 : 0];
-}
-
-- (IBAction)checkboxUseSystemHomePageClicked:(id)sender
-{
-  if (!mPrefService)
-    return;
-  
-  BOOL useSystemHomePage = [sender state];
-
-  // save the mozilla pref
-  if (useSystemHomePage)
-    [self setPref:"browser.startup.homepage" toString:[textFieldHomePage stringValue]];
-  
-  [self setPref:"chimera.use_system_home_page" toBoolean:useSystemHomePage];
-  [textFieldHomePage setStringValue:[self getCurrentHomePage]];
-
-  [textFieldHomePage setEnabled:!useSystemHomePage];
+  [self setPref:"browser.startup.page"   toInt:[checkboxNewWindowBlank state] ? 1 : 0];
+  [self setPref:"browser.tabs.startPage" toInt:[checkboxNewTabBlank state] ? 1 : 0];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -206,45 +180,10 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
     [self setPref:prefName toInt: [sender state] ? 1 : 0];
 }
 
-- (NSString*)getInternetConfigString:(ConstStr255Param)icPref
-{
-  NSString* resultString = @"";
-  ICInstance icInstance = NULL;
-  
-  // it would be nice to use PreferenceManager, but I don't want to drag
-  // all that code into the plugin
-  OSStatus error = ICStart(&icInstance, 'CHIM');
-  if (error != noErr) {
-    NSLog(@"Error from ICStart");
-    return resultString;
-  }
-  
-  ICAttr dummyAttr;
-  Str255 homePagePStr;
-  long prefSize = sizeof(homePagePStr);
-  error = ICGetPref(icInstance, icPref, &dummyAttr, homePagePStr, &prefSize);
-  if (error == noErr)
-    resultString = [NSString stringWithCString:(const char*)&homePagePStr[1] length:homePagePStr[0]];
-  else
-    NSLog(@"Error getting pref from Internet Config");
-  
-  ICStop(icInstance);
-  
-  return resultString;
-}
-
-- (NSString*) getSystemHomePage
-{
-  return [self getInternetConfigString:kICWWWHomePage];
-}
-
 - (NSString*) getCurrentHomePage
 {
   BOOL gotPref;
   
-  if ([self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref)
-    return [self getSystemHomePage];
-    
   return [self getStringPref:"browser.startup.homepage" withSuccess:&gotPref];
 }
 

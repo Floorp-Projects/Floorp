@@ -142,11 +142,6 @@ static BOOL gMadePrefManager;
     
     [self registerNotificationListener];
 
-    if ([self initInternetConfig] == NO) {
-      // XXXw. throw here
-      NSLog (@"Failed to initialize Internet Config");
-    }
-
     if ([self initMozillaPrefs] == NO) {
       // XXXw. throw here too
       NSLog (@"Failed to initialize mozilla prefs");
@@ -167,8 +162,6 @@ static BOOL gMadePrefManager;
 
 - (void)termEmbedding: (NSNotification*)aNotification
 {
-  ::ICStop(mInternetConfig);
-  mInternetConfig = nil;
   NS_IF_RELEASE(mPrefs);
   // remove our runloop observer
   if (mRunLoopSource)
@@ -219,18 +212,6 @@ static BOOL gMadePrefManager;
   nsCOMPtr<nsIPrefService> prefsService = do_GetService(NS_PREF_CONTRACTID);
   if (prefsService)
       prefsService->SavePrefFile(nsnull);
-}
-
-- (BOOL)initInternetConfig
-{
-    OSStatus error;
-    error = ::ICStart(&mInternetConfig, 'CHIM');
-    if (error != noErr) {
-        // XXX throw here?
-        NSLog(@"Error initializing IC");
-        return NO;
-    }
-    return YES;
 }
 
 - (BOOL)initMozillaPrefs
@@ -782,53 +763,6 @@ typedef enum EProxyConfig {
     (void)mPrefs->SetBoolPref(prefName, (PRBool)value);
 }
 
-
-//- (BOOL) getICBoolPref:(ConstStr255Param) prefKey;
-//{
-//    ICAttr dummy;
-//    OSStatus error;
-//    SInt32 size;
-//    Boolean buf;
-
-//    error = ICGetPref (internetConfig, prefKey, &dummy, &buf, &size);
-//    if (error == noErr && buf)
-//        return YES;
-//    else
-//        return NO;
-// }
-
-- (NSString *) getICStringPref:(ConstStr255Param) prefKey;
-{
-    NSString *string;
-    ICAttr dummy;
-    OSStatus error;
-    SInt32 size = 256;
-    char *buf;
-
-    do {
-        if ((buf = (char*)malloc((unsigned int)size)) == NULL) {
-            return nil;
-        }
-        error = ICGetPref (mInternetConfig, prefKey, &dummy, buf, &size);
-        if (error != noErr && error != icTruncatedErr) {
-            free (buf);
-            NSLog (@"[IC error %d in [PreferenceManager getICStringPref]", (int) error);
-            return nil;
-        }
-        size *= 2;
-    } while (error == icTruncatedErr);
-    if (*buf == 0) {
-        NSLog (@"ICGetPref returned empty string");
-        free (buf);
-        return nil;
-    }
-    CopyPascalStringToC ((ConstStr255Param) buf, buf);
-    string = [NSString stringWithCString:buf];
-    free(buf);
-    return string;
-}
-
-
 - (NSString *) homePage:(BOOL)checkStartupPagePref
 {
   if (!mPrefs)
@@ -842,18 +776,10 @@ typedef enum EProxyConfig {
   // but we don't care about that. Default to 1 unless |checkStartupPagePref|
   // is true.
   nsresult rv = NS_OK;
-  if ( checkStartupPagePref )
+  if (checkStartupPagePref)
     rv = mPrefs->GetIntPref("browser.startup.page", &mode);
-  if (NS_FAILED(rv) || mode == 1) {
-    // see which home page to use
-    PRBool boolPref;
-    if (NS_SUCCEEDED(mPrefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref) {
-      NSString* homePage = [self getICStringPref:kICWWWHomePage];
-      if (!homePage)
-        homePage = @"about:blank";
-      return homePage;
-    }
 
+  if (NS_FAILED(rv) || mode == 1) {
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
     if (!prefBranch) return @"about:blank";
     
@@ -883,10 +809,6 @@ typedef enum EProxyConfig {
   NSString* resultString = @"http://www.google.com/";
   if (!mPrefs)
     return resultString;
-
-  PRBool boolPref;
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref)
-    return [self getICStringPref:kICWebSearchPagePrefs];
 
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefs);
   if (!prefBranch)

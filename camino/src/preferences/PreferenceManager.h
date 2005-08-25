@@ -45,7 +45,6 @@ class nsIPref;
 {
 @private
     NSUserDefaults* mDefaults;
-    ICInstance      mInternetConfig;
     nsProfileDirServiceProvider* mProfileProvider;
     nsIPref*        mPrefs;
     long            mLastRunPrefsVersion;
@@ -58,12 +57,10 @@ class nsIPref;
 
 - (id) init;
 - (void) dealloc;
-- (BOOL) initInternetConfig;
 - (BOOL) initMozillaPrefs;
 - (void) syncMozillaPrefs;
 - (void) savePrefsFile;
 
-- (NSString *) getICStringPref:(ConstStr255Param) prefKey;
 - (NSString *) homePage:(BOOL) checkStartupPagePref;
 - (NSString *) searchPage;
 
