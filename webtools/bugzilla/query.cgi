@@ -454,9 +454,9 @@ if (defined($vars->{'format'}) && IsValidQueryType($vars->{'format'})) {
 # If we submit back to ourselves (for e.g. boolean charts), we need to
 # preserve format information; hence query_format taking priority over
 # format.
-my $format = GetFormat("search/search", 
-                       $vars->{'query_format'} || $vars->{'format'}, 
-                       scalar $cgi->param('ctype'));
+my $format = $template->get_format("search/search", 
+                                   $vars->{'query_format'} || $vars->{'format'}, 
+                                   scalar $cgi->param('ctype'));
 
 print $cgi->header($format->{'ctype'});
 

@@ -52,7 +52,7 @@ if ($id) {
         ThrowCodeError("bad_page_cgi_id", { "page_id" => $id });
     }
 
-    my $format = GetFormat("pages/$1", undef, $2);
+    my $format = $template->get_format("pages/$1", undef, $2);
     
     $cgi->param('id', $id);
 

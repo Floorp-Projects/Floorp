@@ -269,8 +269,9 @@ my @selectable_products = GetSelectableProducts();
 $vars->{'products'} = \@selectable_products;
 
 
-my $format = GetFormat("reports/duplicates", scalar($cgi->param('format')),
-                       scalar($cgi->param('ctype')));
+my $format = $template->get_format("reports/duplicates",
+                                   scalar($cgi->param('format')),
+                                   scalar($cgi->param('ctype')));
 
 print $cgi->header($format->{'ctype'});
 

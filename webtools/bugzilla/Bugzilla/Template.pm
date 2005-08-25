@@ -25,12 +25,14 @@
 #                 Tobias Burnus <burnus@net-b.de>
 #                 Myk Melez <myk@mozilla.org>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 
 package Bugzilla::Template;
 
 use strict;
 
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
 use Bugzilla::Util;
 use Bugzilla::User;
@@ -132,7 +134,6 @@ sub getTemplateIncludePath {
              @usedlanguages)];
 }
 
-# Write the header for non yet templatized .cgi files.
 sub put_header {
     my $self = shift;
     ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
@@ -142,13 +143,51 @@ sub put_header {
     $vars->{'header_done'} = 1;
 }
 
-# Write the footer for non yet templatized .cgi files.
 sub put_footer {
     my $self = shift;
     $self->process("global/footer.html.tmpl", $vars)
       || ThrowTemplateError($self->error());
 }
 
+sub get_format {
+    my $self = shift;
+    my ($template, $format, $ctype) = @_;
+
+    $ctype ||= 'html';
+    $format ||= '';
+
+    # Security - allow letters and a hyphen only
+    $ctype =~ s/[^a-zA-Z\-]//g;
+    $format =~ s/[^a-zA-Z\-]//g;
+    trick_taint($ctype);
+    trick_taint($format);
+
+    $template .= ($format ? "-$format" : "");
+    $template .= ".$ctype.tmpl";
+
+    # Now check that the template actually exists. We only want to check
+    # if the template exists; any other errors (eg parse errors) will
+    # end up being detected later.
+    eval {
+        $self->context->template($template);
+    };
+    # This parsing may seem fragile, but its OK:
+    # http://lists.template-toolkit.org/pipermail/templates/2003-March/004370.html
+    # Even if it is wrong, any sort of error is going to cause a failure
+    # eventually, so the only issue would be an incorrect error message
+    if ($@ && $@->info =~ /: not found$/) {
+        ThrowUserError('format_not_found', {'format' => $format,
+                                            'ctype'  => $ctype});
+    }
+
+    # Else, just return the info
+    return
+    {
+        'template'    => $template,
+        'extension'   => $ctype,
+        'ctype'       => Bugzilla::Constants::contenttypes->{$ctype}
+    };
+}
 
 ###############################################################################
 # Templatization Code
@@ -449,11 +488,18 @@ __END__
 
 =head1 NAME
 
-Bugzilla::Template - Wrapper arround the Template Toolkit C<Template> object
+Bugzilla::Template - Wrapper around the Template Toolkit C<Template> object
 
 =head1 SYNOPSYS
 
   my $template = Bugzilla::Template->create;
+
+  $template->put_header($title, $h1, $h2);
+  $template->put_footer();
+
+  my $format = $template->get_format("foo/bar",
+                                     scalar($cgi->param('format')),
+                                     scalar($cgi->param('ctype')));
 
 =head1 DESCRIPTION
 
@@ -462,6 +508,41 @@ the C<Template> constructor.
 
 It should not be used directly by scripts or modules - instead, use
 C<Bugzilla-E<gt>instance-E<gt>template> to get an already created module.
+
+=head1 METHODS
+
+=over
+
+=item C<put_header($title, $h1, $h2)>
+
+ Description: Display the header of the page.
+
+ Params:      $title - Page title.
+              $h1    - Main page header.
+              $h2    - Page subheader.
+
+ Returns:     nothing
+
+=item C<put_footer()>
+
+ Description: Display the footer of the page.
+
+ Params:      none
+
+ Returns:     nothing
+
+=item C<get_format($file, $format, $ctype)>
+
+ Description: Construct a format object from URL parameters.
+
+ Params:      $file   - Name of the template to display.
+              $format - When the template exists under several formats
+                        (e.g. table or graph), specify the one to choose.
+              $ctype  - Content type, see Bugzilla::Constants::contenttypes.
+
+ Returns:     A format object.
+
+=back
 
 =head1 SEE ALSO
 

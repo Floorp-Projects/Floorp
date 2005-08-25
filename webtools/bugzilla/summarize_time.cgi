@@ -485,10 +485,9 @@ $vars->{'check_time'} = \&check_time;
 $vars->{'sort_bug_keys'} = \&sort_bug_keys;
 $vars->{'GetBugLink'} = \&GetBugLink;
 
-$ctype = "html" if !$ctype;
-my $format = GetFormat("bug/summarize-time", undef, $ctype);
+my $format = $template->get_format("bug/summarize-time", undef, $ctype);
 
 # Get the proper content-type
-print $cgi->header(-type=> Bugzilla::Constants::contenttypes->{$ctype});
+print $cgi->header(-type=> $format->{'ctype'});
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());

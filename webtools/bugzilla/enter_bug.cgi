@@ -581,9 +581,9 @@ $vars->{'group'} = \@groups;
 
 $vars->{'default'} = \%default;
 
-my $format = 
-  GetFormat("bug/create/create", scalar $cgi->param('format'), 
-            scalar $cgi->param('ctype'));
+my $format = $template->get_format("bug/create/create",
+                                   scalar $cgi->param('format'), 
+                                   scalar $cgi->param('ctype'));
 
 print $cgi->header($format->{'ctype'});
 $template->process($format->{'template'}, $vars)

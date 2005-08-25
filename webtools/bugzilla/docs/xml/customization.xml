@@ -202,7 +202,7 @@
       
       <para>
         To see if a CGI supports multiple output formats and types, grep the
-        CGI for <quote>GetFormat</quote>. If it's not present, adding
+        CGI for <quote>get_format</quote>. If it's not present, adding
         multiple format/type support isn't too hard - see how it's done in
         other CGIs, e.g. config.cgi.
       </para>

@@ -1082,54 +1082,6 @@ sub OpenStates {
     return ('NEW', 'REOPENED', 'ASSIGNED', 'UNCONFIRMED');
 }
 
-
-###############################################################################
-
-# Constructs a format object from URL parameters. You most commonly call it 
-# like this:
-# my $format = GetFormat("foo/bar", scalar($cgi->param('format')),
-#                        scalar($cgi->param('ctype')));
-
-sub GetFormat {
-    my ($template, $format, $ctype) = @_;
-
-    $ctype ||= "html";
-    $format ||= "";
-
-    # Security - allow letters and a hyphen only
-    $ctype =~ s/[^a-zA-Z\-]//g;
-    $format =~ s/[^a-zA-Z\-]//g;
-    trick_taint($ctype);
-    trick_taint($format);
-
-    $template .= ($format ? "-$format" : "");
-    $template .= ".$ctype.tmpl";
-
-    # Now check that the template actually exists. We only want to check
-    # if the template exists; any other errors (eg parse errors) will
-    # end up being detected later.
-    eval {
-        Bugzilla->template->context->template($template);
-    };
-    # This parsing may seem fragile, but its OK:
-    # http://lists.template-toolkit.org/pipermail/templates/2003-March/004370.html
-    # Even if it is wrong, any sort of error is going to cause a failure
-    # eventually, so the only issue would be an incorrect error message
-    if ($@ && $@->info =~ /: not found$/) {
-        ThrowUserError("format_not_found", { 'format' => $format,
-                                             'ctype' => $ctype,
-                                           });
-    }
-
-    # Else, just return the info
-    return
-    {
-        'template'    => $template ,
-        'extension'   => $ctype ,
-        'ctype'       => Bugzilla::Constants::contenttypes->{$ctype} ,
-    };
-}
-
 ############# Live code below here (that is, not subroutine defs) #############
 
 use Bugzilla;

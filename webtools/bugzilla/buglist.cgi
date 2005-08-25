@@ -115,8 +115,8 @@ if ((defined $cgi->param('ctype')) && ($cgi->param('ctype') eq "js")) {
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = GetFormat("list/list", scalar $cgi->param('format'),
-                       scalar $cgi->param('ctype'));
+my $format = $template->get_format("list/list", scalar $cgi->param('format'),
+                                   scalar $cgi->param('ctype'));
 
 # Use server push to display a "Please wait..." message for the user while
 # executing their query if their browser supports it and they are viewing

@@ -67,8 +67,8 @@ my $dbh = Bugzilla->dbh;
 # enter_bug template and then referencing them in the comment template.
 my $comment;
 
-my $format = GetFormat("bug/create/comment",
-                       scalar($cgi->param('format')), "txt");
+my $format = $template->get_format("bug/create/comment",
+                                   scalar($cgi->param('format')), "txt");
 
 $template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
