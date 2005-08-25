@@ -4306,32 +4306,34 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   //             achieves the desired effect
   //
   // When you move your caret by in some visual direction, and you find the
-  // new position is at the edge of a line (beginning or end), you want to
-  // stay on the current line rather than move to the next or the previous
-  // one.
+  // new position is at the edge of a line (beginning or end), you usually
+  // want to stay on the current line rather than move to the next or the 
+  // previous one; however, if you want to get to the edge of the next or
+  // the previous word (i.e. you're 'eating white space' when moving
+  // between words), and you couldn't find the word in the current line,
+  // you do _not_ want to stay on the current line - you want to get to that
+  // word.
   //
   // When your frames are ordered the same way logically as they are
   // visually (e.g. when they're frames of LTR text displayed in
   // left-then-down order), this translates to terms of 'prefer left' or
   // 'prefer right', i.e. if you move to the left and hit the beginning of
   // the line you have to choose between the frame "on the left" - the last
-  // frame on the previous line - rather than the frame "on the right" - the
-  // first frame of the text line. So you could say that you always prefer
-  // the frame closer to where you are now, i.e. the frame opposite to the
-  // movement.
-  // (see nsSelection::MoveCaret() for an example in code)
+  // frame on the previous line - and the frame "on the right" - the
+  // first frame of the current line.
   //
   // When the frames are displayed in right-then-down order (i.e. frames
   // within an RTL line), the last sentence remains correct, but now
-  // the directions are reversed - if you're moving left, the frame
-  // closer to you is the one "on the right" - the last frame on the current
-  // line - rather than the one "on the left" - the first frame on the next
-  // line. Now, although this implementation of this method (i.e.
-  // for nsTextFrame) has no use itself for aPos->mPreferLeft, we may
-  // be delegating the PeekOffset to another frame, and nsFrame's
-  // implementation does use aPos->mPreferLeft, so we have to set it 
-  // here (why?), and we have to maintain consistency along calls
-  // to PeekOffset of nsTextFrames on the same line.
+  // the directions are reversed - if you're moving left, you hit the end
+  // of a line; the frame closer to your original position is the one
+  // "on the right" - the last frame on the current line - rather than the
+  // one "on the left" - the first frame on the next
+  // line.
+  //
+  // Now, it seems the PeekOffset() method does not _use_ the mPreferLeft
+  // value, but it does _set_ it for the caller, and this must be done
+  // consistently along calls to PeekOffset of nsTextFrames on the _same_
+  // line as well as on different lines.
   //
   // Note:
   // eDirPrevious actually means 'in the visual left-then-down direction'
@@ -4342,7 +4344,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
   if ((eSelectCharacter == aPos->mAmount)
       || (eSelectWord == aPos->mAmount))
-    aPos->mPreferLeft = (eDirPrevious == aPos->mDirection) ^ isOddLevel;
+    // this 'flip' will be in effect only for this frame, not
+    // for recursive calls to PeekOffset()
+    aPos->mPreferLeft ^= isOddLevel;
 #endif
 
   if (!aPos || !mContent)
@@ -4351,9 +4355,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // XXX TODO: explain this policy; why the assymetry between
   // too high and too low start offsets?
   //
-  // There are 4 possible ranges from  aPos->mStartOffset:
+  // There are 4 possible ranges of aPos->mStartOffset:
   //
-  //            0    mContentLength   mContentLength+mContentLength
+  //            0    mContentOffset   mContentOffset+mContentLength
   //            |          |               |
   //   range #1 | range #2 |    range #3   | range #4
   //                        ***************
@@ -4391,6 +4395,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
     }
+    // undoing the RTL flipping of mPreferLeft for the delegation
+    // to the next frame
+    aPos->mPreferLeft ^= isOddLevel;
     return nextInFlow->PeekOffset(aPresContext, aPos);
   }
  
@@ -4603,6 +4610,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
+          // undoing the RTL flipping of mPreferLeft for the delegation
+          // to the next frame; note that there may have been another flip of mPreferLeft
+          // by the call to GetFrameFromDirection (if we are moving to another line)
+          aPos->mPreferLeft ^= isOddLevel;
           result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
           if (NS_FAILED(result))
             return result;
@@ -4772,6 +4783,10 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
+          // undoing the RTL flipping of mPreferLeft for the delegation
+          // to the next frame; note that there may have been another flip of mPreferLeft
+          // by the call to GetFrameFromDirection (if we are moving to another line)
+          aPos->mPreferLeft ^= isOddLevel;
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
           else if (aPos->mDirection == eDirNext)
