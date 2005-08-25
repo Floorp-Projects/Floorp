@@ -102,7 +102,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
 
 protected:
-  NS_IMETHOD UpdateCommands(const nsAString& aEventName);
+  void UpdateCommands();
   void UpdateWWActiveWindow();
 
 public:
@@ -120,6 +120,7 @@ protected:
   PRPackedBool mSuppressFocusScroll;
   PRPackedBool mActive;
   PRPackedBool mUpdateWindowWatcher;
+  PRPackedBool mNeedUpdateCommands;
 };
 
 #endif // nsFocusController_h__
