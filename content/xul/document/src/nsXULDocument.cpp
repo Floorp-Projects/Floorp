@@ -1781,7 +1781,7 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
     // 3. Check for a broadcaster hookup attribute, in which case
     // we'll hook the node up as a listener on a broadcaster.
     PRBool listener, resolved;
-    rv = CheckBroadcasterHookup(this, aElement, &listener, &resolved);
+    rv = CheckBroadcasterHookup(aElement, &listener, &resolved);
     if (NS_FAILED(rv)) return rv;
 
     // If it's not there yet, we may be able to defer hookup until
@@ -1902,33 +1902,14 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 
     // 4. Remove the element from our broadcaster map, since it is no longer
     // in the document.
-    // Do a getElementById to retrieve the broadcaster
-    nsCOMPtr<nsIDOMElement> broadcaster;
-    nsAutoString observesVal;
-
-    if (aElement->HasAttr(kNameSpaceID_None, nsXULAtoms::observes)) {
-        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, observesVal);
-        if (!observesVal.IsEmpty()) {
-            GetElementById(observesVal, getter_AddRefs(broadcaster));
-            if (broadcaster) {
-                nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-                RemoveBroadcastListenerFor(broadcaster, elt,
-                                           NS_LITERAL_STRING("*"));
-            }
-        }
+    nsCOMPtr<nsIDOMElement> broadcaster, listener;
+    nsAutoString attribute, broadcasterID;
+    rv = FindBroadcaster(aElement, getter_AddRefs(listener),
+                         broadcasterID, attribute, getter_AddRefs(broadcaster));
+    if (rv == NS_FINDBROADCASTER_FOUND) {
+        RemoveBroadcastListenerFor(broadcaster, listener, attribute);
     }
 
-    if (aElement->HasAttr(kNameSpaceID_None, nsXULAtoms::command)) {
-        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, observesVal);
-        if (!observesVal.IsEmpty()) {
-            GetElementById(observesVal, getter_AddRefs(broadcaster));
-            if (broadcaster) {
-                nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aElement));
-                RemoveBroadcastListenerFor(broadcaster, elt,
-                                           NS_LITERAL_STRING("*"));
-            }
-        }
-    }
     return NS_OK;
 }
 
@@ -3169,6 +3150,9 @@ nsXULDocument::ResumeWalk()
     rv = ApplyPersistentAttributes();
     if (NS_FAILED(rv)) return rv;
 
+    // XXXldb This is where we should really be setting the chromehidden
+    // attribute.
+
     PRBool didInitialReflow = PR_TRUE;
     nsIPresShell *shell = GetShellAt(0);
     if (shell)
@@ -4046,7 +4030,7 @@ nsXULDocument::BroadcasterHookup::Resolve()
     nsresult rv;
 
     PRBool listener;
-    rv = CheckBroadcasterHookup(mDocument, mObservesElement, &listener, &mResolved);
+    rv = mDocument->CheckBroadcasterHookup(mObservesElement, &listener, &mResolved);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     return mResolved ? eResolve_Succeeded : eResolve_Later;
@@ -4122,10 +4106,96 @@ nsXULDocument::TemplateBuilderHookup::Resolve()
 
 //----------------------------------------------------------------------
 
+nsresult
+nsXULDocument::FindBroadcaster(nsIContent* aElement,
+                               nsIDOMElement** aListener,
+                               nsString& aBroadcasterID,
+                               nsString& aAttribute,
+                               nsIDOMElement** aBroadcaster)
+{
+    nsresult rv;
+    nsINodeInfo *ni = aElement->GetNodeInfo();
+    *aListener = nsnull;
+    *aBroadcaster = nsnull;
+
+    if (ni && ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL)) {
+        // It's an <observes> element, which means that the actual
+        // listener is the _parent_ node. This element should have an
+        // 'element' attribute that specifies the ID of the
+        // broadcaster element, and an 'attribute' element, which
+        // specifies the name of the attribute to observe.
+        nsIContent* parent = aElement->GetParent();
+
+        // If we're still parented by an 'overlay' tag, then we haven't
+        // made it into the real document yet. Defer hookup.
+        if (parent->GetNodeInfo()->Equals(nsXULAtoms::overlay, kNameSpaceID_XUL)) {
+            return NS_FINDBROADCASTER_AWAIT_OVERLAYS;
+        }
+
+        if (NS_FAILED(CallQueryInterface(parent, aListener)))
+            *aListener = nsnull;
+
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, aBroadcasterID);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute,
+                               aAttribute);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else {
+        // It's a generic element, which means that we'll use the
+        // value of the 'observes' attribute to determine the ID of
+        // the broadcaster element, and we'll watch _all_ of its
+        // values.
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, aBroadcasterID);
+        if (NS_FAILED(rv)) return rv;
+
+        // Bail if there's no aBroadcasterID
+        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (aBroadcasterID.IsEmpty())) {
+            // Try the command attribute next.
+            rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, aBroadcasterID);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE && !aBroadcasterID.IsEmpty()) {
+                // We've got something in the command attribute.  We
+                // only treat this as a normal broadcaster if we are
+                // not a menuitem or a key.
+
+                if (ni->Equals(nsXULAtoms::menuitem, kNameSpaceID_XUL) ||
+                    ni->Equals(nsXULAtoms::key, kNameSpaceID_XUL)) {
+                return NS_FINDBROADCASTER_NOT_FOUND;
+              }
+            }
+            else {
+              return NS_FINDBROADCASTER_NOT_FOUND;
+            }
+        }
+
+        if (NS_FAILED(CallQueryInterface(aElement, aListener)))
+            *aListener = nsnull;
+
+        aAttribute.AssignLiteral("*");
+    }
+
+    // Make sure we got a valid listener.
+    NS_ENSURE_TRUE(*aListener, NS_ERROR_UNEXPECTED);
+
+    // Try to find the broadcaster element in the document.
+    rv = GetElementById(aBroadcasterID, aBroadcaster);
+    if (NS_FAILED(rv)) return rv;
+
+    // If we can't find the broadcaster, then we'll need to defer the
+    // hookup. We may need to resolve some of the other overlays
+    // first.
+    if (! *aBroadcaster) {
+        return NS_FINDBROADCASTER_AWAIT_OVERLAYS;
+    }
+
+    return NS_FINDBROADCASTER_FOUND;
+}
 
 nsresult
-nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
-                                      nsIContent* aElement,
+nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement,
                                       PRBool* aNeedsHookup,
                                       PRBool* aDidResolve)
 {
@@ -4139,88 +4209,24 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
     nsCOMPtr<nsIDOMElement> listener;
     nsAutoString broadcasterID;
     nsAutoString attribute;
+    nsCOMPtr<nsIDOMElement> broadcaster;
 
-    nsINodeInfo *ni = aElement->GetNodeInfo();
-
-    if (ni && ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL)) {
-        // It's an <observes> element, which means that the actual
-        // listener is the _parent_ node. This element should have an
-        // 'element' attribute that specifies the ID of the
-        // broadcaster element, and an 'attribute' element, which
-        // specifies the name of the attribute to observe.
-        nsIContent* parent = aElement->GetParent();
-
-        // If we're still parented by an 'overlay' tag, then we haven't
-        // made it into the real document yet. Defer hookup.
-        if (parent->GetNodeInfo()->Equals(nsXULAtoms::overlay, kNameSpaceID_XUL)) {
+    rv = FindBroadcaster(aElement, getter_AddRefs(listener),
+                         broadcasterID, attribute, getter_AddRefs(broadcaster));
+    switch (rv) {
+        case NS_FINDBROADCASTER_NOT_FOUND:
+            *aNeedsHookup = PR_FALSE;
+            return NS_OK;
+        case NS_FINDBROADCASTER_AWAIT_OVERLAYS:
             *aNeedsHookup = PR_TRUE;
             return NS_OK;
-        }
-
-        listener = do_QueryInterface(parent);
-
-        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        // It's a generic element, which means that we'll use the
-        // value of the 'observes' attribute to determine the ID of
-        // the broadcaster element, and we'll watch _all_ of its
-        // values.
-        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
-        if (NS_FAILED(rv)) return rv;
-
-        // Bail if there's no broadcasterID
-        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.IsEmpty())) {
-            // Try the command attribute next.
-            rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, broadcasterID);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE && !broadcasterID.IsEmpty()) {
-                // We've got something in the command attribute.  We
-                // only treat this as a normal broadcaster if we are
-                // not a menuitem or a key.
-
-                nsINodeInfo *ni = aElement->GetNodeInfo();
-                if (ni->Equals(nsXULAtoms::menuitem, kNameSpaceID_XUL) ||
-                    ni->Equals(nsXULAtoms::key, kNameSpaceID_XUL)) {
-                *aNeedsHookup = PR_FALSE;
-                return NS_OK;
-              }
-            }
-            else {
-              *aNeedsHookup = PR_FALSE;
-              return NS_OK;
-            }
-        }
-
-        listener = do_QueryInterface(aElement);
-
-        attribute.AssignLiteral("*");
+        case NS_FINDBROADCASTER_FOUND:
+            break;
+        default:
+            return rv;
     }
 
-    // Make sure we got a valid listener.
-    NS_ASSERTION(listener != nsnull, "no listener");
-    if (! listener)
-        return NS_ERROR_UNEXPECTED;
-
-    // Try to find the broadcaster element in the document.
-    nsCOMPtr<nsIDOMElement> broadcaster;
-    rv = aDocument->GetElementById(broadcasterID, getter_AddRefs(broadcaster));
-    if (NS_FAILED(rv)) return rv;
-
-    // If we can't find the broadcaster, then we'll need to defer the
-    // hookup. We may need to resolve some of the other overlays
-    // first.
-    if (! broadcaster) {
-        *aNeedsHookup = PR_TRUE;
-        return NS_OK;
-    }
-
-    rv = aDocument->AddBroadcastListenerFor(broadcaster, listener, attribute);
+    rv = AddBroadcastListenerFor(broadcaster, listener, attribute);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef PR_LOGGING

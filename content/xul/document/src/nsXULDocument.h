@@ -476,10 +476,19 @@ protected:
 
     friend class TemplateBuilderHookup;
 
-    static
+    // The out params of FindBroadcaster only have values that make sense when
+    // the method returns NS_FINDBROADCASTER_FOUND.  In all other cases, the
+    // values of the out params should not be relied on (though *aListener and
+    // *aBroadcaster do need to be released if non-null, of course).
     nsresult
-    CheckBroadcasterHookup(nsXULDocument* aDocument,
-                           nsIContent* aElement,
+    FindBroadcaster(nsIContent* aElement,
+                    nsIDOMElement** aListener,
+                    nsString& aBroadcasterID,
+                    nsString& aAttribute,
+                    nsIDOMElement** aBroadcaster);
+
+    nsresult
+    CheckBroadcasterHookup(nsIContent* aElement,
                            PRBool* aNeedsHookup,
                            PRBool* aDidResolve);
 
