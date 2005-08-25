@@ -394,7 +394,7 @@ protected:
   already_AddRefed<nsIWidget> GetMainWidget();
 
   void SuspendTimeouts();
-  nsresult ResumeTimeouts();
+  virtual nsresult ResumeTimeouts();
 
   void Freeze()
   {
