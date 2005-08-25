@@ -64,9 +64,6 @@
  *                        URL. (Usually the charset of the current 
  *                        document when launching this window). 
  *   window.arguments[4]: The mode of operation. See notes for details.
- *   window.arguments[5]: If the mode is "addGroup", this is an array
- *                        of objects with name, URL and charset
- *                        properties, one for each group member.
  *   window.arguments[6]: If the bookmark should become a web panel.
  *
  * Mode of Operation Notes:
@@ -86,19 +83,11 @@
  *      Opens the dialog as in (1) above except the Name/Location section
  *      is hidden, and the dialog takes on the utility of a Folder chooser.
  *      Used when the user must select a Folder for some purpose. 
- * 4) "addGroup" (fifth open parameter = String("addGroup"))
- *      Opens the dialog like <default>, with a checkbox to select between
- *      filing a single bookmark or a group. For the single bookmark the
- *      values are taken from the name, URL and charset arguments.
- *      For the group, the values are taken from the sixth argument.
- *      This parameter can also be String("addGroup,group") where "group"
- *      specifies that the dialog starts in filing as a group.
  */
 
 var gFld_Name   = null;
 var gFld_URL    = null; 
 var gFolderTree = null;
-var gCB_AddGroup = null;
 
 var gBookmarkCharset = null;
 
@@ -112,7 +101,6 @@ function Startup()
   initBMService();
   gFld_Name = document.getElementById("name");
   gFld_URL = document.getElementById("url");
-  gCB_AddGroup = document.getElementById("addgroup");
   var bookmarkView = document.getElementById("bookmarks-view");
 
   var shouldSetOKButton = true;
@@ -145,18 +133,6 @@ function Startup()
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
       document.getElementById("folderbox").setAttribute("hidden", "true");
-      sizeToFit();
-      break;
-    case "addGroup":
-      document.getElementById("showaddgroup").setAttribute("hidden", "false");
-      setupFields();
-      sizeToFit();
-      break;
-    case "addGroup,group":
-      document.getElementById("showaddgroup").setAttribute("hidden", "false");
-      gCB_AddGroup.setAttribute("checked", "true");
-      setupFields();
-      toggleGroup();
       sizeToFit();
       break;
     default:
@@ -210,7 +186,7 @@ function setupFields()
 function onFieldInput()
 {
   const ok = document.documentElement.getButton("accept");
-  ok.disabled = gFld_URL.value == "" && !addingGroup() ||
+  ok.disabled = gFld_URL.value == "" ||
                 gFld_Name.value == "";
 }    
 
@@ -238,26 +214,17 @@ function onOK()
       RDFC.Init(BMDS, rFolder);
     }
 
-    // if no URL was provided and we're not filing as a group, do nothing
-    if (!gFld_URL.value && !addingGroup())
+    // if no URL was provided, do nothing
+    if (!gFld_URL.value)
       return;
 
     var url, rSource;
-    if (addingGroup()) {
-      rSource = BMDS.createFolder(gFld_Name.value);
-      const groups  = window.arguments[5];
-      for (var i = 0; i < groups.length; ++i) {
-        url = getNormalizedURL(groups[i].url);
-        BMDS.createBookmarkInContainer(groups[i].name, url, null, null,
-                                       groups[i].charset, null, rSource, -1);
-      }
-    } else {
-      url = getNormalizedURL(gFld_URL.value);
-      rSource = BMDS.createBookmark(gFld_Name.value, url, null, null, gBookmarkCharset, false, "");
-      if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
-        window.arguments[5].newBookmark = rSource;
-      }
-    }
+   
+    url = getNormalizedURL(gFld_URL.value);
+    rSource = BMDS.createBookmark(gFld_Name.value, url, null, null, gBookmarkCharset, false, "");
+    if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
+      window.arguments[5].newBookmark = rSource;
+    }    
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
     var target    = BookmarksUtils.getTargetFromFolder(rFolder);
     BookmarksUtils.insertAndCheckSelection("newbookmark", selection, target);
@@ -295,29 +262,3 @@ function createNewFolder ()
   BookmarksCommand.createNewFolder(target);
 }
 
-var gOldNameValue = "";
-var gOldURLValue = "";
-
-function toggleGroup()
-{
-  // swap between single bookmark and group name
-  var temp = gOldNameValue;
-  gOldNameValue = gFld_Name.value;
-  gFld_Name.value = temp;
-
-  // swap between single bookmark and group url
-  temp = gOldURLValue;
-  gOldURLValue = gFld_URL.value;
-  gFld_URL.value = temp;
-  gFld_URL.disabled = gCB_AddGroup.getAttribute("checked") == "true";
-
-  gFld_Name.select();
-  gFld_Name.focus();
-  onFieldInput();
-}
-
-function addingGroup()
-{
-  const showAddGroup = document.getElementById("showaddgroup");
-  return showAddGroup.getAttribute("hidden") != "true" && gCB_AddGroup.getAttribute("checked") == "true";
-}

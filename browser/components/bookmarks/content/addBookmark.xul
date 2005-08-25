@@ -87,14 +87,6 @@
         <separator class="thin"/>
         <spacer/>
       </row>
-      <row observes="showaddgroup">
-        <spacer/>
-        <hbox pack="start">
-          <checkbox id="addgroup" label="&addGroup.label;"
-                    accesskey="&addGroup.accesskey;" oncommand="toggleGroup();"/>
-        </hbox>
-        <spacer/>
-      </row>
     </rows>
   </grid>
 
