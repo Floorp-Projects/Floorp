@@ -197,3 +197,15 @@ nsGlobalHistoryAdapter::SetPageTitle(nsIURI* aURI, const nsAString& aTitle)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP
+nsGlobalHistoryAdapter::SetURIGeckoFlags(nsIURI *aURI, PRUint32 aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsGlobalHistoryAdapter::GetURIGeckoFlags(nsIURI *aURI, PRUint32* aFlags)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

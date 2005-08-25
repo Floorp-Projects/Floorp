@@ -51,9 +51,12 @@ interface nsIURI;
 // the nsIURI is the subject
 #define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
 
+// This is NOT part of the interface! It could change.
+#define NS_GECKO_FLAG_NEEDS_VERTICAL_SCROLLBAR (1 << 0)
+
 %}
 
-[scriptable, uuid(cf777d42-1270-4b34-be7b-2931c93feda5)]
+[scriptable, uuid(fbcfa5ca-5d05-4726-b325-d0e6563a1715)]
 interface nsIGlobalHistory2 : nsISupports
 {
     /**
@@ -89,4 +92,17 @@ interface nsIGlobalHistory2 : nsISupports
      * @param aTitle  the page title
      */
     void setPageTitle(in nsIURI aURI, in AString aTitle);
+
+    /**
+     * Get the Gecko flags for this URI. These flags are used by Gecko as hints
+     * to optimize page loading. Not all histories have them; this need not be
+     * supported (just return NS_ERROR_NOT_IMPLEMENTED. These flags are opaque
+     * and should not be interpreted by the history engine.
+     */
+    unsigned long getURIGeckoFlags(in nsIURI aURI);
+    /**
+     * Set the Gecko flags for this URI. May fail if the history entry
+     * doesn't have any flags or if there is no entry for the URI.
+     */
+    void setURIGeckoFlags(in nsIURI aURI, in unsigned long aFlags);
 };

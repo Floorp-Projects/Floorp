@@ -117,6 +117,8 @@ public:
 
   nsPresState* SaveState();
   void RestoreState(nsPresState* aState);
+  void SaveVScrollbarStateToGlobalHistory();
+  nsresult GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNeeded);
 
   nsIFrame* GetScrolledFrame() const { return mScrolledFrame; }
 
@@ -160,6 +162,12 @@ public:
   // Is this the scrollframe for the document's viewport?
   PRPackedBool mIsRoot:1;
   PRPackedBool mSupppressScrollbarUpdate:1;
+  // Did we load a hint from global history
+  // about whether a vertical scrollbar is required?
+  PRPackedBool mDidLoadHistoryVScrollbarHint:1;
+  // The value of the hint loaded
+  PRPackedBool mHistoryVScrollbarHint:1;
+  PRPackedBool mHadNonInitialReflow:1;
 };
 
 /**
@@ -316,6 +324,7 @@ protected:
   void SetSuppressScrollbarUpdate(PRBool aSuppress) {
     mInner.mSupppressScrollbarUpdate = aSuppress;
   }
+  PRBool GuessVScrollbarNeeded(const ScrollReflowState& aState);
 
 private:
   friend class nsGfxScrollFrameInner;
