@@ -43,8 +43,10 @@ var XPInstallConfirm =
 
 XPInstallConfirm.init = function ()
 {
-  var _installCountdown = 2;
-  var _installCountdownInterval = -1;
+  var _installCountdown;
+  var _installCountdownInterval;
+  var _focused;
+  var _timeout;
 
   var bundle = document.getElementById("xpinstallConfirmStrings");
   
@@ -83,52 +85,75 @@ XPInstallConfirm.init = function ()
   introNode.appendChild(textNode);
   
   var okButton = document.documentElement.getButton("accept");
-  okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
-  okButton.disabled = true;
   okButton.focus();
+  okButton.disabled = true;
 
   function okButtonCountdown() {
-    _installCountdown -= 0.1;
+    _installCountdown -= 1;
 
-    if (_installCountdown <= 0) {
+    if (_installCountdown < 1) {
       okButton.label = bundle.getString("installButtonLabel");
       okButton.disabled = false;
       clearInterval(_installCountdownInterval);
-      _installCountdownInterval = -1;
     }
     else
-      okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
+      okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
   }
 
-  function myfocus(event) {
-    if (_installCountdownInterval == -1)
-      _installCountdownInterval = setInterval(okButtonCountdown, 100);
+  function myfocus() {
+    // Clear the timeout if it exists so only the last one will be used.
+    if (_timeout)
+      clearTimeout(_timeout);
 
-    // When the dialog is focused, we get *three* focus events, two targeted
-    // at the document itself and one at the internal XUL element. Only reset
-    // the counter if the document itself is the target.
-    if (event.target == document) {
-      _installCountdown = 2;
-      okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown.toFixed(1)]);
-      okButton.disabled = true;
-    }
+    // Use setTimeout since the last focus or blur event to fire is the one we
+    // want
+    _timeout = setTimeout(setWidgetsAfterFocus, 0);
   }
 
-  function myblur() { 
-    // When the dialog is blurred, we only get one blur event, targeted
-    // a the currently focused XUL element. We cannot distinguish between
-    // an internal focus change and a window change. Stop the countdown, but
-    // don't disable.
-    if (_installCountdownInterval != -1) {
-      clearInterval(_installCountdownInterval);
-      _installCountdownInterval = -1;
-    }
+  function setWidgetsAfterFocus() {
+    if (_focused)
+      return;
+
+    _installCountdown = 5;
+    _installCountdownInterval = setInterval(okButtonCountdown, 500);
+    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
+    _focused = true;
+  }
+
+  function myblur() {
+    // Clear the timeout if it exists so only the last one will be used.
+    if (_timeout)
+      clearTimeout(_timeout);
+
+    // Use setTimeout since the last focus or blur event to fire is the one we
+    // want
+    _timeout = setTimeout(setWidgetsAfterBlur, 0);
+  }
+
+  function setWidgetsAfterBlur() {
+    if (!_focused)
+      return;
+
+    // Set _installCountdown to the inital value set in setWidgetsAfterFocus
+    // plus 1 so when the window is focused there is immediate ui feedback.
+    _installCountdown = 6;
+    okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
+    okButton.disabled = true;
+    clearInterval(_installCountdownInterval);
+    _focused = false;
+  }
+
+  function myUnload() {
+    document.removeEventListener("focus", myfocus, true);
+    document.removeEventListener("blur", myblur, true);
+    window.removeEventListener("unload", myUnload, false);
   }
 
   document.addEventListener("focus", myfocus, true);
   document.addEventListener("blur", myblur, true);
+  window.addEventListener("unload", myUnload, false);
 
-  _installCountdownInterval = setInterval(okButtonCountdown, 100);
+  setWidgetsAfterFocus();
 }
 
 XPInstallConfirm.onOK = function ()
