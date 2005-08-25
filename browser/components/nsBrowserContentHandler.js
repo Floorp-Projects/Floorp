@@ -367,6 +367,13 @@ var nsBrowserContentHandler = {
 
     var uri = prefb.getComplexValue("browser.startup.homepage",
                                     nsIPrefLocalizedString).data;
+
+    if (!uri) {
+      prefb.clearUserPref("browser.startup.homepage");
+      uri = prefb.getComplexValue("browser.startup.homepage",
+                                  nsIPrefLocalizedString).data;
+    }
+                                
     var count;
     try {
       count = prefb.getIntPref("browser.startup.homepage.count");
