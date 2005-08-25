@@ -92,5 +92,5 @@ endif
 
 installer::
 ifdef INSTALLER_DIR
-	make -C $(INSTALLER_DIR) installer
+	$(MAKE) -C $(INSTALLER_DIR) installer
 endif
