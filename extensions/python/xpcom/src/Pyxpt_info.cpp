@@ -152,24 +152,27 @@ PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *c)
 			v = PyString_FromStringAndSize(&c->value.ch, 1);
 			break;
 		case TD_WCHAR:
-			v = PyUnicode_FromUnicode((PRUnichar *)&c->value.wch, 1);
+			v = PyUnicode_FromPRUnichar((PRUnichar *)&c->value.wch, 1);
 			break;
 	//    TD_VOID              = 13,  
 		case TD_PNSIID:
 			v = Py_nsIID::PyObjectFromIID(*c->value.iid);
 			break;
-	//    TD_PBSTR             = 15,
+	//    TD_DOMSTRING         = 15,
 		case TD_PSTRING:
 			v = PyString_FromString(c->value.str);
 			break;
 		case TD_PWSTRING:
-			v = PyUnicode_FromUnicode((PRUnichar *)c->value.wstr, nsCRT::strlen((PRUnichar *)c->value.wstr));
+			v = PyUnicode_FromPRUnichar((PRUnichar *)c->value.wstr, nsCRT::strlen((PRUnichar *)c->value.wstr));
 			break;
 	//    TD_INTERFACE_TYPE    = 18,
 	//    TD_INTERFACE_IS_TYPE = 19,
 	//    TD_ARRAY             = 20,
 	//    TD_PSTRING_SIZE_IS   = 21,
 	//    TD_PWSTRING_SIZE_IS  = 22
+	//    TD_UTF8STRING        = 23,
+	//    TD_CSTRING           = 24,
+	//    TD_ASTRING           = 25
 		default:
 			v = PyString_FromString("Unknown type code!!");
 			break;

@@ -64,10 +64,10 @@ static PyObject *MyChar( char c) {
 	return PyString_FromStringAndSize(&c, 1);
 }
 static PyObject *MyUChar( PRUnichar c) {
-	return PyUnicodeUCS2_FromUnicode(&c, 1);
+	return PyUnicode_FromPRUnichar(&c, 1);
 }
 static PyObject *MyUnicode( PRUnichar *p) {
-	return PyUnicodeUCS2_FromUnicode(p, nsCRT::strlen(p));
+	return PyUnicode_FromPRUnichar(p, nsCRT::strlen(p));
 }
 static PyObject *MyISupports( nsISupports *p) {
 	return Py_nsISupports::PyObjectFromInterface(p, NS_GET_IID(nsISupports), PR_FALSE);
@@ -110,26 +110,26 @@ static PyObject *FuncGet(PyObject *self, PyObject *args) { \
 	return ret; \
 }
 
-GET_SIMPLE(PRUint8, GetAsInt8, PyInt_FromLong);
-GET_SIMPLE(PRUint8, GetAsUint8, PyInt_FromLong);
-GET_SIMPLE(PRInt16, GetAsInt16, PyInt_FromLong);
-GET_SIMPLE(PRUint16, GetAsUint16, PyInt_FromLong);
-GET_SIMPLE(PRInt32, GetAsInt32, PyInt_FromLong);
-GET_SIMPLE(PRUint32, GetAsUint32, PyInt_FromLong);
-GET_SIMPLE(PRInt64, GetAsInt64, PyLong_FromLongLong);
-GET_SIMPLE(PRUint64, GetAsUint64, PyLong_FromUnsignedLongLong);
-GET_SIMPLE(float, GetAsFloat, PyFloat_FromDouble);
-GET_SIMPLE(double, GetAsDouble, PyFloat_FromDouble);
-GET_SIMPLE(PRBool, GetAsBool, MyBool);
-GET_SIMPLE(char, GetAsChar, MyChar);
-GET_SIMPLE(PRUnichar, GetAsWChar, MyUChar);
-GET_SIMPLE(nsISupports *, GetAsISupports, MyISupports);
-GET_SIMPLE(nsIID, GetAsID, Py_nsIID::PyObjectFromIID);
+GET_SIMPLE(PRUint8, GetAsInt8, PyInt_FromLong)
+GET_SIMPLE(PRUint8, GetAsUint8, PyInt_FromLong)
+GET_SIMPLE(PRInt16, GetAsInt16, PyInt_FromLong)
+GET_SIMPLE(PRUint16, GetAsUint16, PyInt_FromLong)
+GET_SIMPLE(PRInt32, GetAsInt32, PyInt_FromLong)
+GET_SIMPLE(PRUint32, GetAsUint32, PyInt_FromLong)
+GET_SIMPLE(PRInt64, GetAsInt64, PyLong_FromLongLong)
+GET_SIMPLE(PRUint64, GetAsUint64, PyLong_FromUnsignedLongLong)
+GET_SIMPLE(float, GetAsFloat, PyFloat_FromDouble)
+GET_SIMPLE(double, GetAsDouble, PyFloat_FromDouble)
+GET_SIMPLE(PRBool, GetAsBool, MyBool)
+GET_SIMPLE(char, GetAsChar, MyChar)
+GET_SIMPLE(PRUnichar, GetAsWChar, MyUChar)
+GET_SIMPLE(nsISupports *, GetAsISupports, MyISupports)
+GET_SIMPLE(nsIID, GetAsID, Py_nsIID::PyObjectFromIID)
 
-GET_ALLOCATED(char *, GetAsString, PyString_FromString, nsMemory::Free);
-GET_ALLOCATED(PRUnichar *, GetAsWString, MyUnicode, nsMemory::Free);
-GET_ALLOCATED_SIZE(char *, GetAsStringWithSize, PyString_FromStringAndSize, nsMemory::Free);
-GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyUnicodeUCS2_FromUnicode, nsMemory::Free);
+GET_ALLOCATED(char *, GetAsString, PyString_FromString, nsMemory::Free)
+GET_ALLOCATED(PRUnichar *, GetAsWString, MyUnicode, nsMemory::Free)
+GET_ALLOCATED_SIZE(char *, GetAsStringWithSize, PyString_FromStringAndSize, nsMemory::Free)
+GET_ALLOCATED_SIZE(PRUnichar *, GetAsWStringWithSize, PyUnicode_FromPRUnichar, nsMemory::Free)
 
 static PyObject *GetAsInterface(PyObject *self, PyObject *args) {
 	nsIVariant *pI = GetI(self);

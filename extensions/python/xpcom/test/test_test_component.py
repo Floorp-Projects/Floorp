@@ -180,7 +180,7 @@ def test_base_interface(c):
 
     test_attribute(c, "long_value",  5, 7)
     test_attribute(c, "long_value",  5, 0)
-    test_attribute(c, "long_value",  5, 0xFFFFFFFF, -1) # 32 bit signed.
+    test_attribute(c, "long_value",  5, -1, -1) # 32 bit signed.
     test_attribute(c, "long_value",  5, -1) # 32 bit signed.
     test_attribute(c, "long_value",  5, 0L)
     test_attribute(c, "long_value",  5, 1L)
@@ -190,7 +190,7 @@ def test_base_interface(c):
 
     test_attribute(c, "ulong_value", 6, 7)
     test_attribute(c, "ulong_value", 6, 0)
-    test_attribute(c, "ulong_value", 6, 0xFFFFFFFF) # 32 bit signed.
+    test_attribute(c, "ulong_value", 6, -1) # 32 bit signed.
     test_attribute_failure(c, "ulong_value", "boo", ValueError)
     
     test_attribute(c, "long_long_value", 7, 8)
@@ -305,15 +305,15 @@ def test_base_interface(c):
     test_constant(c, "Two", 2)
     test_constant(c, "MinusOne", -1)
     test_constant(c, "BigLong", 0x7FFFFFFF)
-    test_constant(c, "BiggerLong", 0xFFFFFFFF)
-    test_constant(c, "BigULong", 0xFFFFFFFF)
+    test_constant(c, "BiggerLong", -1)
+    test_constant(c, "BigULong", -1)
     # Test the components.Interfaces semantics
     i = xpcom.components.interfaces.nsIPythonTestInterface
     test_constant(i, "One", 1)
     test_constant(i, "Two", 2)
     test_constant(i, "MinusOne", -1)
     test_constant(i, "BigLong", 0x7FFFFFFF)
-    test_constant(i, "BigULong", 0xFFFFFFFF)
+    test_constant(i, "BigULong", -1)
 
 def test_derived_interface(c, test_flat = 0):
     val = "Hello\0there"

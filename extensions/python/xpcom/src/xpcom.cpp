@@ -52,6 +52,8 @@
 #include "nsIModule.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsIComponentRegistrar.h"
+#include "nsIComponentManagerObsolete.h"
 
 #ifdef XP_WIN
 #ifndef WIN32_LEAN_AND_MEAN
@@ -75,7 +77,7 @@ extern void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
 extern void PyXPCOM_InterpreterState_Ensure();
 #endif
 
-PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManagerObsolete, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
 PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
@@ -83,6 +85,8 @@ PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInter
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIVariant, nsIVariant, PyMethods_IVariant)
+// deprecated, but retained for backward compatibility:
+PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManagerObsolete, nsIComponentManagerObsolete, PyMethods_IComponentManagerObsolete)
 
 ////////////////////////////////////////////////////////////
 // This is the main entry point called by the Python component
@@ -145,30 +149,47 @@ done:
 // "boot-strap" methods - interfaces we need to get the base
 // interface support!
 
+/* deprecated, included for backward compatibility */
 static PyObject *
 PyXPCOMMethod_NS_GetGlobalComponentManager(PyObject *self, PyObject *args)
+{
+	if (PyErr_Warn(PyExc_DeprecationWarning, "Use GetComponentManager instead") < 0)
+	       return NULL;
+	if (!PyArg_ParseTuple(args, ""))
+		return NULL;
+	nsIComponentManager* cm;
+	nsresult rv;
+	Py_BEGIN_ALLOW_THREADS;
+	rv = NS_GetComponentManager(&cm);
+	Py_END_ALLOW_THREADS;
+	if ( NS_FAILED(rv) )
+		return PyXPCOM_BuildPyException(rv);
+
+	nsCOMPtr<nsIComponentManagerObsolete> ocm(do_QueryInterface(cm, &rv));
+	if ( NS_FAILED(rv) )
+		return PyXPCOM_BuildPyException(rv);
+
+	return Py_nsISupports::PyObjectFromInterface(cm, NS_GET_IID(nsIComponentManagerObsolete), PR_FALSE, PR_FALSE);
+}
+
+static PyObject *
+PyXPCOMMethod_GetComponentManager(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 	nsIComponentManager* cm;
 	nsresult rv;
 	Py_BEGIN_ALLOW_THREADS;
-	rv = NS_GetGlobalComponentManager(&cm);
+	rv = NS_GetComponentManager(&cm);
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(rv) )
 		return PyXPCOM_BuildPyException(rv);
-	// NOTE - NS_GetGlobalComponentManager DOES NOT ADD A REFCOUNT
-	// (naughty, naughty) - we we explicitly ask our converter to
-	// add one, even tho this is not the common pattern.
 
-	// Return a type based on the IID
-	// Can not auto-wrap the interface info manager as it is critical to
-	// building the support we need for autowrap.
-	return Py_nsISupports::PyObjectFromInterface(cm, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(cm, NS_GET_IID(nsIComponentManager), PR_FALSE, PR_FALSE);
 }
 
 static PyObject *
-PyXPCOMMethod_GetGlobalServiceManager(PyObject *self, PyObject *args)
+PyXPCOMMethod_GetServiceManager(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
@@ -184,8 +205,16 @@ PyXPCOMMethod_GetGlobalServiceManager(PyObject *self, PyObject *args)
 	return Py_nsISupports::PyObjectFromInterface(sm, NS_GET_IID(nsIServiceManager), PR_FALSE);
 }
 
+/* deprecated, included for backward compatibility */
+static PyObject *
+PyXPCOMMethod_GetGlobalServiceManager(PyObject *self, PyObject *args)
+{
+	if (PyErr_Warn(PyExc_DeprecationWarning, "Use GetServiceManager instead") < 0)
+		return NULL;
 
-
+	return PyXPCOMMethod_GetComponentManager(self, args);
+}
+		
 static PyObject *
 PyXPCOMMethod_XPTI_GetInterfaceInfoManager(PyObject *self, PyObject *args)
 {
@@ -439,10 +468,12 @@ extern PyObject *PyXPCOMMethod_IID(PyObject *self, PyObject *args);
 
 static struct PyMethodDef xpcom_methods[]=
 {
-	{"NS_GetGlobalComponentManager", PyXPCOMMethod_NS_GetGlobalComponentManager, 1},
+	{"GetComponentManager", PyXPCOMMethod_GetComponentManager, 1},
+	{"NS_GetGlobalComponentManager", PyXPCOMMethod_NS_GetGlobalComponentManager, 1}, // deprecated
 	{"XPTI_GetInterfaceInfoManager", PyXPCOMMethod_XPTI_GetInterfaceInfoManager, 1},
 	{"XPTC_InvokeByIndex", PyXPCOMMethod_XPTC_InvokeByIndex, 1},
-	{"GetGlobalServiceManager", PyXPCOMMethod_GetGlobalServiceManager, 1},
+	{"GetServiceManager", PyXPCOMMethod_GetServiceManager, 1},
+	{"GetGlobalServiceManager", PyXPCOMMethod_GetGlobalServiceManager, 1}, // deprecated
 	{"IID", PyXPCOMMethod_IID, 1}, // IID is wrong - deprecated - not just IID, but CID, etc. 
 	{"ID", PyXPCOMMethod_IID, 1}, // This is the official name.
 	{"NS_ShutdownXPCOM", PyXPCOMMethod_NS_ShutdownXPCOM, 1},
@@ -492,15 +523,17 @@ PRBool PyXPCOM_Globals_Ensure()
 		// Is there an official way to determine this?
 		if (NS_FAILED(nsIThread::GetMainThread(getter_AddRefs(thread_check)))) {
 			// not already initialized.
-
-			// We need to locate the Mozilla bin directory.
 #ifdef XP_WIN
-			// On Windows this by using "xpcom.dll"
-			
+			// On Windows, we need to locate the Mozilla bin
+			// directory.  This by using locating a Moz DLL we depend
+			// on, and assume it lives in that bin dir.  Different
+			// moz build types (eg, xulrunner, suite) package
+			// XPCOM itself differently - but all appear to require
+			// nspr4.dll - so this is what we use.
 			char landmark[MAX_PATH+1];
-			HMODULE hmod = GetModuleHandle("xpcom.dll");
+			HMODULE hmod = GetModuleHandle("nspr4.dll");
 			if (hmod==NULL) {
-				PyErr_SetString(PyExc_RuntimeError, "We dont appear to be linked against xpcom.dll!?!?");
+				PyErr_SetString(PyExc_RuntimeError, "We dont appear to be linked against nspr4.dll.");
 				return PR_FALSE;
 			}
 			GetModuleFileName(hmod, landmark, sizeof(landmark)/sizeof(landmark[0]));
@@ -510,7 +543,7 @@ PRBool PyXPCOM_Globals_Ensure()
 			if (end > landmark) *end = '\0';
 
 			nsCOMPtr<nsILocalFile> ns_bin_dir;
-            NS_ConvertASCIItoUCS2 strLandmark(landmark);
+			NS_ConvertASCIItoUCS2 strLandmark(landmark);
 			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
 			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
 #else
@@ -545,10 +578,7 @@ PRBool PyXPCOM_Globals_Ensure()
 ////////////////////////////////////////////////////////////
 // The module init code.
 //
-extern "C" 
-#ifdef MS_WIN32
-__declspec(dllexport)
-#endif
+extern "C" NS_EXPORT
 void 
 init_xpcom() {
 	PyObject *oModule;
@@ -588,6 +618,7 @@ init_xpcom() {
 	REGISTER_IID(nsISupportsWeakReference);
 	REGISTER_IID(nsIClassInfo);
 	REGISTER_IID(nsIServiceManager);
+	REGISTER_IID(nsIComponentRegistrar);
 	// Register our custom interfaces.
 
 	Py_nsISupports::InitType();
@@ -599,13 +630,8 @@ init_xpcom() {
 	Py_nsIInputStream::InitType(dict);
 	Py_nsIClassInfo::InitType(dict);
 	Py_nsIVariant::InitType(dict);
-
-	// yet another 
-	{ // temp scope nsIComponentManagerObsolete hack :(
-	PyObject *iid_ob = Py_nsIID::PyObjectFromIID(NS_GET_IID(nsIComponentManagerObsolete));
-	PyDict_SetItemString(dict, "IID_nsIComponentManager", iid_ob);
-	Py_DECREF(iid_ob);
-	} // end temp scope
+	// for backward compatibility:
+	Py_nsIComponentManagerObsolete::InitType(dict);
 
     // We have special support for proxies - may as well add their constants!
     REGISTER_INT(PROXY_SYNC);

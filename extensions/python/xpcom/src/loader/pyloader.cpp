@@ -43,8 +43,13 @@
 // the xpcom "components" directory.  Simply locates and loads the standard
 // _xpcom support module and transfers control to that.
 
+#include <Python.h>
+
+#ifdef HAVE_LONG_LONG
+#undef HAVE_LONG_LONG
+#endif
+
 #include "nsIComponentLoader.h"
-#include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIModule.h"
 #include "nsDirectoryServiceDefs.h"
@@ -57,14 +62,7 @@
 
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include <nsFileStream.h> // For console logging.
 #include "nspr.h" // PR_fprintf
-
-#ifdef HAVE_LONG_LONG
-#undef HAVE_LONG_LONG
-#endif
-
-#include "Python.h"
 
 #if (PY_VERSION_HEX >= 0x02030000)
 #define PYXPCOM_USE_PYGILSTATE
@@ -100,10 +98,10 @@ static void LogDebug(const char *fmt, ...);
 void AddStandardPaths()
 {
 	// Put {bin}\Python on the path if it exists.
+	nsresult rv;
 	nsCOMPtr<nsIFile> aFile;
-	nsCOMPtr<nsILocalFile> aLocalFile;
-	NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
-	if (!aFile) {
+	rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+	if (NS_FAILED(rv)) {
 		LogError("The Python XPCOM loader could not locate the 'bin' directory\n");
 		return;
 	}
@@ -245,9 +243,7 @@ void LogMessage(const char *prefix, const char *pszMessageText)
 
 void LogMessage(const char *prefix, nsACString &text)
 {
-	char *c = ToNewCString(text);
-	LogMessage(prefix, c);
-	nsCRT::free(c);
+	LogMessage(prefix, nsPromiseFlatCString(text).get());
 }
 
 // A helper for the various logging routines.

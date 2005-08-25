@@ -306,6 +306,10 @@ Py_nsISupports::PyObjectFromInterface(nsISupports *pis,
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
+
+	// FIXME: if !bAddRef, in all error cases, do NS_RELEASE(pis) before return
+	// since that means we have a spare reference
+        
 	PyTypeObject *createType = NULL;
 	// If the IID is for nsISupports, dont bother with
 	// a map lookup as we know the type!
@@ -352,7 +356,6 @@ Py_nsISupports::MakeInterfaceResult(PyObject *pyis,
 	NS_PRECONDITION(pyis, "NULL pyobject!");
 	PyObject *obIID = NULL;
 	PyObject *args = NULL;
-	PyObject *func = NULL;
 	PyObject *mod = NULL;
 	PyObject *ret = NULL;
 
