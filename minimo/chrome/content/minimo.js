@@ -305,6 +305,12 @@ function BrowserOpenTab()
 
 }
 
+
+function BrowserViewOptions() {
+	document.getElementById("toolbar-view").collapsed=!document.getElementById("toolbar-view").collapsed;
+}
+
+
 /** 
   * Work-in-progress, this handler is 100% generic and gets all the clicks for the entire tabbed 
   * content area. Need to fix with the approach where we handler only clicks for the actual tab. 
