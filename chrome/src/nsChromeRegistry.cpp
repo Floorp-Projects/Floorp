@@ -2093,7 +2093,7 @@ nsChromeRegistry::ProcessManifestBuffer(char *buf, PRInt32 length,
       // content packages, but they are *applied* to content|skin|locale.
 
       PRBool platform = PR_FALSE;
-      PRBool xpcNativeWrappers = PR_FALSE;
+      PRBool xpcNativeWrappers = PR_TRUE;
       TriState stAppVersion = eUnspecified;
       TriState stApp = eUnspecified;
 
