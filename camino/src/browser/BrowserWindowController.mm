@@ -1599,6 +1599,15 @@ enum BWCOpenDest {
   // trim off any whitespace around url
   NSString *theURL = [[inURLField stringValue] stringByTrimmingWhitespace];
   
+  if ([theURL length] == 0)
+  {
+    // re-focus the url bar if it's visible (might be in sheet?)
+    if ([inURLField window] == [self window])
+      [[self window] makeFirstResponder:inURLField];
+    
+    return;
+  }
+
   // look for bookmarks keywords match
   NSArray *resolvedURLs = [[BookmarkManager sharedBookmarkManager] resolveBookmarksKeyword:theURL];
   
