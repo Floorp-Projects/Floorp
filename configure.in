@@ -34,6 +34,8 @@ dnl               Howard Chu <hyc@symas.com>
 dnl                 MSYS support
 dnl               Mark Mentovai <mark@moxienet.com>:
 dnl                 Mac OS X 10.4 support
+dnl               Giorgio Maone <g.maone@informaction.com>
+dnl                 MSVC l10n compatible version check
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -357,14 +359,16 @@ case "$target" in
             [ unsigned *test = new unsigned(42); ],,
             AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
         AC_LANG_RESTORE
-
+        
+        _MSVC_VER_FILTER='s|.* \([[0-9]][[0-9]]*\.[[0-9]][[0-9]]*\.[[0-9]][[0-9]]*\).*|\1|p'
+        
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep ' [[0-9]]\+\.[[0-9]]\+\.[[0-9]]' | sed -e 's|.* \([[0-9]]\+\.[[0-9]]\+\.[[0-9]]\+\).*|\1|'`
+        CC_VERSION=`"${CC}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | grep ' [[0-9]]\+\.[[0-9]]\+\.[[0-9]]' | sed -e 's|.* \([[0-9]]\+\.[[0-9]]\+\.[[0-9]]\+\).*|\1|'`
+        CXX_VERSION=`"${CXX}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
@@ -381,7 +385,7 @@ case "$target" in
         fi
 
         # Check linker version
-        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep ' [[0-9]]\+\.[[0-9]]\+\.[[0-9]]' | sed -e 's|.* \([[0-9]]\+\.[[0-9]]\+\.[[0-9]]\+\).*|\1|'`
+        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
         _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
@@ -389,7 +393,7 @@ case "$target" in
         INCREMENTAL_LINKER=1
 
         # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep ' [[0-9]]\+\.[[0-9]]\+\.[[0-9]]' | sed -e 's|.* \([[0-9]]\+\.[[0-9]]\+\.[[0-9]]\+\).*|\1|'`
+        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
         _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
         _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
@@ -408,6 +412,9 @@ case "$target" in
              MIDL_FLAGS="${MIDL_FLAGS}"
              AC_MSG_RESULT([none needed])
         fi
+        
+        unset _MSVC_VER_FILTER
+        
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
