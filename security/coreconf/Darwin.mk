@@ -51,25 +51,30 @@ OS_REL_CFLAGS	= -Dppc
 CPU_ARCH	= ppc
 endif
 
-ifneq (,$(MACOS_SDK_DIR))
+ifneq (,$(NEXT_ROOT))
     GCC_VERSION_FULL := $(shell $(CC) -v 2>&1 | grep "gcc version" | sed -e "s/^.*gcc version[  ]*//" | awk '{ print $$1 }')
     GCC_VERSION_MAJOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$1 }')
     GCC_VERSION_MINOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$2 }')
-    GCC_VERSION = $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)
+    GCC_VERSION := $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)
+
+    DARWIN_SDK_CFLAGS := -nostdinc
 
     ifeq (,$(filter-out 2 3,$(GCC_VERSION_MAJOR)))
         # GCC <= 3
-        DARWIN_SDK_CFLAGS = -nostdinc -isystem $(MACOS_SDK_DIR)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(MACOS_SDK_DIR)/usr/include -F$(MACOS_SDK_DIR)/System/Library/Frameworks
-        ifneq (,$(shell find $(MACOS_SDK_DIR)/Library/Frameworks -maxdepth 0))
-            DARWIN_SDK_CFLAGS += -F$(MACOS_SDK_DIR)/Library/Frameworks
-        endif
-        DARWIN_SDK_LDFLAGS = -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin/$(GCC_VERSION_FULL) -L$(MACOS_SDK_DIR)/usr/lib
-        NEXT_ROOT = $(MACOS_SDK_DIR)
-        export NEXT_ROOT
+        DARWIN_TARGET_ARCH_LIB := darwin
+        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include/gcc/darwin/$(GCC_VERSION)
     else
         # GCC >= 4
-        DARWIN_SDK_CFLAGS = -isysroot $(MACOS_SDK_DIR)
-        DARWIN_SDK_LDFLAGS = -Wl,-syslibroot,$(MACOS_SDK_DIR)
+        CPU_ARCH_LONG := $(shell uname -p)
+        DARWIN_TARGET_ARCH_LIB := $(CPU_ARCH_LONG)-apple-darwin$(shell echo $NEXT_ROOT | perl -pe 's/MacOSX10\.([\d]*)//;if ($$1) {$$_=$$1+4;} else {$$_="'${OS_RELEASE}'";s/(\d+)//;$$_=$$1;}')
+        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL)/include
+    endif
+
+    DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include -F$(NEXT_ROOT)/System/Library/Frameworks
+    DARWIN_SDK_LDFLAGS := -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB) -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL) -L$(NEXT_ROOT)/usr/lib
+
+    ifneq (,$(shell find $(NEXT_ROOT)/Library/Frameworks -maxdepth 0))
+        DARWIN_SDK_CFLAGS += -F$(NEXT_ROOT)/Library/Frameworks
     endif
 
     LDFLAGS += $(DARWIN_SDK_LDFLAGS)
