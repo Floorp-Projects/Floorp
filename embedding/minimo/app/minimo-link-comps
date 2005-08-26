@@ -1,5 +1,5 @@
 caps
-chrmlite
+chrome
 popuplite
 docshell
 editor
@@ -19,3 +19,4 @@ uconv
 webbrwsr
 widget_gtk2
 xpconnect
+gkplugin
