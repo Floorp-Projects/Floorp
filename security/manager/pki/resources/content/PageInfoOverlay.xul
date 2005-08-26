@@ -84,7 +84,9 @@
         var ui = security._getSecurityUI();
         var status = null;
         var sp = null;
+        var isBroken = false;
         if (ui) {
+          isBroken = (ui.state == Components.interfaces.nsIWebProgressListener.STATE_IS_BROKEN);
           sp = ui.QueryInterface(nsISSLStatusProvider);
           if (sp)
             status = sp.SSLStatus;
@@ -104,6 +106,7 @@
             cAName : issuerName,
             encryptionAlgorithm : status.cipherName,
             encryptionStrength : status.secretKeyLength,
+            isBroken : isBroken,
             cert : cert
           };
         } else {
@@ -112,6 +115,7 @@
             cAName : "",
             encryptionAlgorithm : "",
             encryptionStrength : 0,
+            isBroken : isBroken,
             cert : null
           };
         } 
@@ -179,7 +183,16 @@
       var msg2;
       
       /* Set the encryption messages */
-      if (info.encryptionStrength >= 90) {
+      if (info.isBroken) {
+        hdr = bundle.GetStringFromName("pageInfo_MixedContent");
+        setText("security-privacy", hdr);
+
+        msg1 = bundle.GetStringFromName("pageInfo_Privacy_Mixed1");
+        setText("security-privacy-msg1", msg1);
+
+        msg2 = bundle.GetStringFromName("pageInfo_Privacy_None2");
+        setText("security-privacy-msg2", msg2);
+      } else if (info.encryptionStrength >= 90) {
         hdr = bundle.formatStringFromName("pageInfo_StrongEncryption",
                              [ info.encryptionAlgorithm, info.encryptionStrength+"" ], 2);
         setText("security-privacy", hdr);
