@@ -58,6 +58,10 @@
 
 #include "nsSVGLibartGradient.h"
 
+#include "nsSVGTypeCIDs.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMSVGRect.h"
+
 /**
  * \addtogroup libart_renderer Libart Rendering Engine
  * @{
@@ -316,4 +320,40 @@ nsSVGLibartGlyphGeometryFT::PaintFill(nsISVGLibartCanvas* canvas,
     }
     nsSVGLibartFreetype::ft2->DoneGlyph(glyph);
   }
+}
+
+NS_IMETHODIMP
+nsSVGLibartGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+{
+  *aBoundingBox = nsnull;
+
+  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
+  NS_ASSERTION(rect, "could not create rect");
+  if (!rect)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISVGLibartGlyphMetricsFT> metrics;
+  {
+    nsCOMPtr<nsISVGRendererGlyphMetrics> xpmetrics;
+    mSource->GetMetrics(getter_AddRefs(xpmetrics));
+    metrics = do_QueryInterface(xpmetrics);
+    NS_ASSERTION(metrics, "wrong metrics object!");
+    if (!metrics) return NS_ERROR_FAILURE;
+  }
+
+  const FT_BBox *box = metrics->GetBoundingBox();
+
+  float x,y;
+  mSource->GetX(&x);
+  mSource->GetY(&y);
+  
+  rect->SetX(box->xMin + x);
+  rect->SetY(box->yMin + y);
+  rect->SetWidth(box->xMax - box->xMin);
+  rect->SetHeight(box->yMax - box->yMin);
+
+  *aBoundingBox = rect;
+  NS_ADDREF(*aBoundingBox);
+
+  return NS_OK;
 }

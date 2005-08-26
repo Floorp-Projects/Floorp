@@ -57,6 +57,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
+#include "nsISVGPathFlatten.h"
 
 // comment from art_vpath_path.c: The Adobe PostScript reference
 // manual defines flatness as the maximum deviation between any
@@ -496,4 +497,12 @@ nsSVGLibartPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   
   return NS_OK;
 
+}
+
+NS_IMETHODIMP
+nsSVGLibartPathGeometry::Flatten(nsSVGPathData **aData)
+{
+  *aData = nsnull;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -220,28 +220,11 @@ nsSVGLibartGlyphMetricsFT::GetAdvance(float *aAdvance)
   return NS_OK;
 }
 
-/** Implements readonly attribute nsIDOMSVGRect #boundingBox; */
 NS_IMETHODIMP
-nsSVGLibartGlyphMetricsFT::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+nsSVGLibartGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
 {
-  InitializeGlyphArray();
-
-  *aBoundingBox = nsnull;
-
-  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
-
-  NS_ASSERTION(rect, "could not create rect");
-  if (!rect) return NS_ERROR_FAILURE;
-  
-  rect->SetX(mBBox.xMin);
-  rect->SetY(mBBox.yMin);
-  rect->SetWidth(mBBox.xMax-mBBox.xMin);
-  rect->SetHeight(mBBox.yMax-mBBox.yMin);
-
-  *aBoundingBox = rect;
-  NS_ADDREF(*aBoundingBox);
-  
-  return NS_OK;
+  *advance = 0.0f;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /** Implements [noscript] nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
