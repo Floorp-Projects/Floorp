@@ -61,6 +61,7 @@
 #include "nsIScriptError.h"
 #include "nsNodeInfoManager.h"
 #include "nsINodeInfo.h"
+#include "nsIPrincipal.h"
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
@@ -714,7 +715,25 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
       name = aAtts[1];
     }
     else if (localName == nsXBLAtoms::implements) {
-      mBinding->ConstructInterfaceTable(nsDependentString(aAtts[1]));
+      // Only allow implementation of interfaces via XBL if the principal of
+      // our XBL document has UniversalXPConnect privileges.  No principal
+      // means no privs!
+      
+      nsIPrincipal* principal = mDocument->GetPrincipal();
+      if (principal) {
+        // XXX this api is so badly tied to JS it's not even funny.  We don't
+        // have a concept of enabling capabilities on a per-principal basis,
+        // but only on a per-principal-and-JS-stackframe basis!  So for now
+        // this is basically equivalent to testing that we have the system
+        // principal, since there is no JS stackframe in sight here...
+        PRBool hasUniversalXPConnect;
+        nsresult rv = principal->IsCapabilityEnabled("UniversalXPConnect",
+                                                     nsnull,
+                                                     &hasUniversalXPConnect);
+        if (NS_SUCCEEDED(rv) && hasUniversalXPConnect) {
+          mBinding->ConstructInterfaceTable(nsDependentString(aAtts[1]));
+        }
+      }
     }
   }
 
