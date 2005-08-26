@@ -222,6 +222,8 @@ class nsInstall
             VALUE_DOES_NOT_EXIST        = -243,
 
             INVALID_SIGNATURE           = -260,
+            INVALID_HASH                = -261,
+            INVALID_HASH_TYPE           = -262,
 
             OUT_OF_MEMORY               = -299,
 

@@ -110,6 +110,7 @@ class nsXPInstallManager : public nsIXPIListener,
         NS_IMETHOD  LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams);
         PRBool      ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar** aPackage);
         PRBool      TimeToUpdate(PRTime now);
+        PRBool      VerifyHash(nsXPITriggerItem* aItem);
         PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
 
         nsXPITriggerInfo*   mTriggers;

@@ -40,10 +40,8 @@ interface nsIXPIProgressDialog;
 
 /**
  * Interface to XPInstallManager - manages download and install operations.
- *
- * @status UNDER_REVIEW
  */
-[scriptable, uuid(50941e6a-ecfd-481c-9725-d0695c7c538e)]
+[scriptable, uuid(566689cb-9926-4bec-a66e-a034e364ad2c)]
 interface nsIXPInstallManager : nsISupports
 {
     /** 
@@ -54,6 +52,22 @@ interface nsIXPInstallManager : nsISupports
      * @param aListener a listener to receive status notifications
      */
     void initManagerFromChrome([array, size_is(aURLCount)] in wstring aURLs,
+                               in unsigned long aURLCount,
+                               in nsIXPIProgressDialog aListener);
+    /**
+     * Initiates a set of downloads and checks the supplied hashes after
+     * download. Just like initManagerFromChrome() in all other respects
+     * @param aURLs     array of XPI urls to download and install
+     * @param aHashes   array of hash strings to validate. The entire array
+     *                  or individual hashes can be null to indicate no
+     *                  checking. If supplied looks like "type:hash", like
+     *                  "md5:3232bc5624041c507db0965324188024".
+     *                  Supports the types in nsICryptoHash
+     * @param aURLCount number of XPI urls in aURLs and aHashes
+     * @param aListener a listener to receive status notifications
+     */
+    void initManagerWithHashes([array, size_is(aURLCount)] in wstring aURLs,
+                               [array, size_is(aURLCount)] in string aHashes,
                                in unsigned long aURLCount,
                                in nsIXPIProgressDialog aListener);
 };

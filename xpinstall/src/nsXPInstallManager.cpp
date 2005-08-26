@@ -39,6 +39,7 @@
 #include "nscore.h"
 #include "pratom.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "nsInt64.h"
 
 #include "nsISupports.h"
@@ -53,6 +54,7 @@
 #include "nsIInputStream.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
+#include "nsICryptoHash.h"
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -145,7 +147,17 @@ NS_IMPL_THREADSAFE_ISUPPORTS9( nsXPInstallManager,
                                nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs, PRUint32 aURLCount, 
+nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs,
+                                          PRUint32 aURLCount,
+                                          nsIXPIProgressDialog* aListener)
+{
+    return InitManagerWithHashes(aURLs, nsnull, aURLCount, aListener);
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
+                                          const char **aHashes,
+                                          PRUint32 aURLCount,
                                           nsIXPIProgressDialog* aListener)
 {
     // If Software Installation is not enabled, we don't want to proceed with
@@ -164,7 +176,8 @@ nsXPInstallManager::InitManagerFromChrome(const PRUnichar **aURLs, PRUint32 aURL
 
     for (PRUint32 i = 0; i < aURLCount; ++i) 
     {
-        nsXPITriggerItem* item = new nsXPITriggerItem(0, aURLs[i], nsnull);
+        nsXPITriggerItem* item = new nsXPITriggerItem(0, aURLs[i], nsnull,
+                                                      aHashes ? aHashes[i] : nsnull);
         if (!item)
         {
             delete mTriggers; // nsXPITriggerInfo frees any alloc'ed nsXPITriggerItems
@@ -708,6 +721,31 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 continue;
             }
 
+            // If there was hash info in the trigger, but
+            // there wasn't a hash object created, then the
+            // algorithm used isn't known.
+
+            if (mItem->mHashFound && !mItem->mHasher)
+            {
+                // report failure
+                mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH_TYPE );
+                if (mDlg)
+                    mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
+                                         nsInstall::INVALID_HASH_TYPE );
+                continue;
+            }
+
+            // Don't install if we can't verify the hash (if specified)
+            if (mItem->mHasher && !VerifyHash(mItem))
+            {
+                // report failure
+                mTriggers->SendStatus( mItem->mURL.get(), nsInstall::INVALID_HASH );
+                if (mDlg)
+                    mDlg->OnStateChange( i, nsIXPIProgressDialog::INSTALL_DONE,
+                                         nsInstall::INVALID_HASH );
+                continue;
+            }
+
             // We've got one to install; increment count first so we
             // don't have to worry about thread timing.
             PR_AtomicIncrement(&mNumJars);
@@ -750,6 +788,45 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
     }
 
     return rv;
+}
+
+
+//-------------------------------------------------------------------
+// VerifyHash
+//
+// Returns true if the file hash matches the expected value (or if
+// the item has no hash value). False if we can't verify the hash
+// for any reason
+//
+PRBool nsXPInstallManager::VerifyHash(nsXPITriggerItem* aItem)
+{
+    NS_ASSERTION(aItem, "Null nsXPITriggerItem passed to VerifyHash");
+
+    nsresult rv;
+    if (!aItem->mHasher)
+      return PR_FALSE;
+    
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), aItem->mFile);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    rv = aItem->mHasher->UpdateFromStream(stream, PR_UINT32_MAX);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    nsCAutoString binaryHash;
+    rv = aItem->mHasher->Finish(PR_FALSE, binaryHash);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    char* hash = nsnull;
+    for (PRUint32 i=0; i < binaryHash.Length(); ++i)
+    {
+        hash = PR_sprintf_append(hash,"%.2x", (PRUint8)binaryHash[i]);
+    }
+
+    PRBool result = aItem->mHash.EqualsIgnoreCase(hash);
+
+    PR_smprintf_free(hash);
+    return result;
 }
 
 
