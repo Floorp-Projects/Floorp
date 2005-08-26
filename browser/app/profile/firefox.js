@@ -112,7 +112,7 @@ pref("app.update.nagTimer.download", 86400);
 pref("app.update.nagTimer.restart", 1800);
 // Interval: When all registered timers should be checked (in milliseconds)
 //           default=5 seconds
-pref("app.update.timer", 5000);
+pref("app.update.timer", 600000);
 
 // Whether or not we show a dialog box informing the user that the update was
 // successfully applied. This is off in Firefox by default since we show a 

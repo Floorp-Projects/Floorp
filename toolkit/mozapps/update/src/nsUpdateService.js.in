@@ -2225,7 +2225,7 @@ function TimerManager() {
   const nsITimer = Components.interfaces.nsITimer;
   this._timer = Components.classes["@mozilla.org/timer;1"]
                           .createInstance(nsITimer);
-  var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 5000);
+  var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 600000);
   this._timer.initWithCallback(this, timerInterval, 
                                nsITimer.TYPE_REPEATING_SLACK);
 }
