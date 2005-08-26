@@ -41,6 +41,7 @@
 interface nsISVGRendererRegion;
 interface nsISVGRendererCanvas;
 interface nsIDOMSVGRect;
+interface nsSVGPathData;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -62,7 +63,7 @@ interface nsIDOMSVGRect;
  * provide rendering, hit-testing and metrics for the path described
  * by the nsISVGPathGeometrySource members.
  */
-[scriptable, uuid(1e4a2bc7-96e6-4c4d-80a6-e284cec9e3aa)]
+[scriptable, uuid(95f9e432-90e6-48c1-a242-5346517b93d1)]
 interface nsISVGRendererPathGeometry : nsISupports
 {
   /**
@@ -108,8 +109,11 @@ interface nsISVGRendererPathGeometry : nsISupports
    * Bounding box (does not include stroke width)
    */
   readonly attribute nsIDOMSVGRect boundingBox;
-  
-  /* XXX segment at length, point at length */
+
+  /*
+   * Flattened path
+   */
+  void flatten(out nsSVGPathData data);
 };
 
 /** @} */

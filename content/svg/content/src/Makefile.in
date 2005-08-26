@@ -124,6 +124,7 @@ CPPSRCS		= \
 		nsSVGSymbolElement.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \
+		nsSVGTextPathElement.cpp \
 		nsSVGTitleElement.cpp \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \
@@ -156,6 +157,7 @@ EXPORTS =  			\
 	nsSVGMatrix.h              \
 	nsSVGAtomList.h            \
 	nsSVGAtoms.h               \
+	nsISVGPathFlatten.h        \
 	$(NULL)
 
 

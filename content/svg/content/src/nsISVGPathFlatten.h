@@ -34,44 +34,76 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SVGUTILS_H
-#define NS_SVGUTILS_H
+#ifndef __NS_ISVGPATHFLATTEN_H__
+#define __NS_ISVGPATHFLATTEN_H__
 
-class nsPresContext;
-class nsIContent;
-class nsStyleCoord;
-class nsIDOMSVGRect;
-class nsFrameList;
+#include "nsISupports.h"
+#include <stdlib.h>
+#include <math.h>
 
-class nsSVGUtils
+////////////////////////////////////////////////////////////////////////
+// nsISVGPathFlatten
+
+#define NS_ISVGPATHFLATTEN_IID \
+{ 0xefbe2079, 0x1d7b, 0x492c, { 0x90, 0x10, 0xa7, 0xf3, 0xe5, 0x8b, 0x35, 0xab } }
+
+#define NS_SVGPATHFLATTEN_LINE 0
+#define NS_SVGPATHFLATTEN_MOVE 1
+
+class nsSVGPathData
 {
-public:
-  /*
-   * Converts a nsStyleCoord into a userspace value.  Handles units
-   * Factor (straight userspace), Coord (dimensioned), and Percent (of
-   * the current SVG viewport)
-   */
-  static float CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
-                            const nsStyleCoord &aCoord);
-  /*
-   * Gets an internal frame for an element referenced by a URI.  Note that this
-   * only works for URIs that reference elements within the same document.
-   */
-  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uriSpec, 
-                                     nsIContent *aContent, 
-                                     nsIPresShell *aPresShell);
-  /*
-   * For SVGPaint attributes (fills, strokes), return the type of the Paint.  This
-   * is an expanded type that includes whether this is a solid fill, a gradient, or
-   * a pattern.
-   */
-  static nsresult GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& aPaint, 
-                               nsIContent *aContent, nsIPresShell *aPresShell);
+private:
+  PRUint32 arraysize;
 
-  /*
-   * Creates a bounding box by walking the children and doing union.
-   */
-  static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
+public:
+  PRUint32 count;
+  float *x;
+  float *y;
+  PRUint8 *type;
+  
+  nsSVGPathData() : arraysize(0), count(0), x(nsnull), y(nsnull), type(nsnull) {}
+  ~nsSVGPathData() {
+    if (x) free(x);
+    if (y) free(y);
+    if (type) free(type);
+  }
+
+  void AddPoint(float aX, float aY, PRUint8 aType) {
+    if (count + 1 > arraysize) {
+      if (!arraysize)
+        arraysize = 16;
+      x = (float *) realloc(x, 2*arraysize*sizeof(float));
+      y = (float *) realloc(y, 2*arraysize*sizeof(float));
+      type = (PRUint8 *) realloc(type, 2*arraysize*sizeof(PRUint8));
+      arraysize *= 2;
+    }
+    x[count] = aX;
+    y[count] = aY;
+    type[count] = aType;
+    count++;
+  }
+
+  float Length() {
+    float xx, yy, length = 0;
+    for (PRUint32 i = 0; i < count; i++) {
+      if (type[i] == NS_SVGPATHFLATTEN_LINE) {
+        float dx = x[i] - xx;
+        float dy = y[i] - yy;
+        length += sqrt(dx*dx + dy*dy);
+      }
+      xx = x[i];
+      yy = y[i];
+    }
+    return length;
+  }
 };
 
-#endif
+class nsISVGPathFlatten : public nsISupports
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ISVGPATHFLATTEN_IID; return iid; }
+  
+  NS_IMETHOD GetFlattenedPath(nsSVGPathData **_retval, nsIFrame *parent = nsnull)=0;
+};
+
+#endif // __NS_ISVGPATHFLATTEN_H__

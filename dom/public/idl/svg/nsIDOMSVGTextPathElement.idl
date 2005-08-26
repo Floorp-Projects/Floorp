@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,44 +34,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SVGUTILS_H
-#define NS_SVGUTILS_H
+#include "nsIDOMSVGTextContentElement.idl"
 
-class nsPresContext;
-class nsIContent;
-class nsStyleCoord;
-class nsIDOMSVGRect;
-class nsFrameList;
+interface nsIDOMSVGAnimatedLength;
+interface nsIDOMSVGAnimatedEnumeration;
 
-class nsSVGUtils
+[scriptable, uuid(5c29a76c-3489-48fe-b9ea-ea0f5b196dff)]
+interface nsIDOMSVGTextPathElement
+  : nsIDOMSVGTextContentElement
+/*
+        The SVG DOM makes use of multiple interface inheritance.
+        Since XPCOM only supports single interface inheritance,
+        the best thing that we can do is to promise that whenever
+        an object implements _this_ interface it will also
+        implement the following interfaces. (We then have to QI to
+        hop between them.)
+        
+    nsIDOMSVGURIReference,
+*/
 {
-public:
-  /*
-   * Converts a nsStyleCoord into a userspace value.  Handles units
-   * Factor (straight userspace), Coord (dimensioned), and Percent (of
-   * the current SVG viewport)
-   */
-  static float CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
-                            const nsStyleCoord &aCoord);
-  /*
-   * Gets an internal frame for an element referenced by a URI.  Note that this
-   * only works for URIs that reference elements within the same document.
-   */
-  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uriSpec, 
-                                     nsIContent *aContent, 
-                                     nsIPresShell *aPresShell);
-  /*
-   * For SVGPaint attributes (fills, strokes), return the type of the Paint.  This
-   * is an expanded type that includes whether this is a solid fill, a gradient, or
-   * a pattern.
-   */
-  static nsresult GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& aPaint, 
-                               nsIContent *aContent, nsIPresShell *aPresShell);
+    // textPath Method Types
+    const unsigned short TEXTPATH_METHODTYPE_UNKNOWN  = 0;
+    const unsigned short TEXTPATH_METHODTYPE_ALIGN    = 1;
+    const unsigned short TEXTPATH_METHODTYPE_STRETCH  = 2;
+    // textPath Spacing Types
+    const unsigned short TEXTPATH_SPACINGTYPE_UNKNOWN = 0;
+    const unsigned short TEXTPATH_SPACINGTYPE_AUTO    = 1;
+    const unsigned short TEXTPATH_SPACINGTYPE_EXACT   = 2;
 
-  /*
-   * Creates a bounding box by walking the children and doing union.
-   */
-  static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
+    readonly attribute nsIDOMSVGAnimatedLength startOffset;
+    readonly attribute nsIDOMSVGAnimatedEnumeration method;
+    readonly attribute nsIDOMSVGAnimatedEnumeration spacing;
 };
-
-#endif

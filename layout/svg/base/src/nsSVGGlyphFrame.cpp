@@ -65,6 +65,7 @@
 #include "nsContainerFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsISVGPathFlatten.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -181,7 +182,6 @@ protected:
   void UpdateFragmentTree();
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGTextFrame *GetTextFrame();
-  void TransformPoint(float& x, float& y);
   NS_IMETHOD Update(PRUint32 aFlags);
   
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
@@ -561,46 +561,9 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  if (!mMetrics || NS_FAILED(mMetrics->GetBoundingBox(_retval)))
-    return NS_ERROR_FAILURE;
-  
-  float x[4], y[4], width, height;
-  (*_retval)->GetX(&x[0]);
-  (*_retval)->GetY(&y[0]);
-  (*_retval)->GetWidth(&width);
-  (*_retval)->GetHeight(&height);
-
-  // offset the bounds by the position of this glyph fragment:
-  x[0] += mX;
-  y[0] += mY;
-
-  x[1] = x[0] + width;
-  y[1] = y[0];
-  x[2] = x[0] + width;
-  y[2] = y[0] + height;
-  x[3] = x[0];
-  y[3] = y[0] + height;
-
-  TransformPoint(x[0], y[0]);
-  TransformPoint(x[1], y[1]);
-  TransformPoint(x[2], y[2]);
-  TransformPoint(x[3], y[3]);
-
-  float xmin, xmax, ymin, ymax;
-  xmin = xmax = x[0];
-  ymin = ymax = y[0];
-  for (int i=1; i<4; i++) {
-    if (x[i] < xmin)
-      xmin = x[i];
-    if (y[i] < ymin)
-      ymin = y[i];
-    if (x[i] > xmax)
-      xmax = x[i];
-    if (y[i] > ymax)
-      ymax = y[i];
-  }
-
-  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
+  if (mGeometry)
+    return mGeometry->GetBoundingBox(_retval);
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -873,6 +836,101 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
 {
   aCharacterData = mCharacterData;
+  return NS_OK;
+}
+
+static void
+FindPoint(nsSVGPathData *data,
+          float aX, float aY, float aAdvance,
+          nsSVGCharacterPosition *aCP)
+{
+  float x, y, length = 0;
+  float midpoint = aX + aAdvance/2;
+  for (PRUint32 i = 0; i < data->count; i++) {
+    if (data->type[i] == NS_SVGPATHFLATTEN_LINE) {
+      float dx = data->x[i] - x;
+      float dy = data->y[i] - y;
+      float sublength = sqrt(dx*dx + dy*dy);
+      
+      if (length + sublength > midpoint) {
+        float ratio = (aX - length)/sublength;
+        aCP->x = x * (1.0f - ratio) + data->x[i] * ratio;
+        aCP->y = y * (1.0f - ratio) + data->y[i] * ratio;
+
+        float dx = data->x[i] - x;
+        float dy = data->y[i] - y;
+        aCP->angle = atan2(dy, dx);
+
+        float normalization = 1.0/sqrt(dx*dx+dy*dy);
+        aCP->x += - aY * dy * normalization;
+        aCP->y +=   aY * dx * normalization;
+        return;
+      }
+      length += sublength;
+    }
+    x = data->x[i];
+    y = data->y[i];
+  }
+}
+
+/* readonly attribute nsSVGCharacterPostion characterPosition; */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPosition)
+{
+  *aCharacterPosition = nsnull;
+  nsISVGPathFlatten *textPath = nsnull;
+
+  /* check if we're the child of a textPath */
+  for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent())
+    if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame) {
+      frame->QueryInterface(NS_GET_IID(nsISVGPathFlatten), (void **)&textPath);
+      break;
+    }
+
+  /* we're an ordinary fragment - return */
+  /* XXX: we might want to use this for individual x/y/dx/dy adjustment */
+  if (!textPath)
+    return NS_OK;
+
+  nsSVGPathData *data;
+  textPath->GetFlattenedPath(&data);
+
+  /* textPath frame, but invalid target */
+  if (!data)
+    return NS_ERROR_FAILURE;
+
+  float length = data->Length();
+  PRUint32 strLength = mCharacterData.Length();
+
+  nsSVGCharacterPosition *cp = new nsSVGCharacterPosition[strLength];
+
+  float x = mX;
+  for (PRUint32 i = 0; i < strLength; i++) {
+    float advance;
+    mMetrics->GetAdvanceOfChar(i, &advance);
+
+    if (x + advance/2 > length) {
+      cp[i].draw = PR_FALSE;
+      continue;
+    }
+
+    if (x + advance/2 < 0.0f)
+      cp[i].draw = PR_FALSE;
+    else {
+      cp[i].draw = PR_TRUE;
+
+      // add y (normal)
+      // add rotation
+      // move point back along tangent
+      FindPoint(data, x, mY, advance, &(cp[i]));
+    }
+    x += advance;
+  }
+
+  *aCharacterPosition = cp;
+
+  delete data;
+
   return NS_OK;
 }
 
@@ -1174,15 +1232,30 @@ nsSVGGlyphFrame::GetTextAnchor()
 NS_IMETHODIMP_(PRBool)
 nsSVGGlyphFrame::IsAbsolutelyPositioned()
 {
-  nsISVGTextContainerFrame *textFrame;
-  mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
-                          (void**)&textFrame);
-  if (textFrame) {
-    if (mParent->GetFirstChild(nsnull) == this &&
-        (mParent->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::x) ||
-         mParent->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)))
+  nsIFrame *lastFrame = this;
+
+  for (nsIFrame *frame = this->GetParent();
+       frame != nsnull;
+       lastFrame = frame, frame = frame->GetParent()) {
+
+    /* need to be the first child if we are absolutely positioned */
+    if (!frame ||
+        frame->GetFirstChild(nsnull) != lastFrame)
+      break;
+
+    // textPath is always absolutely positioned for our purposes
+    if (frame->GetType() == nsLayoutAtoms::svgTextPathFrame)
       return PR_TRUE;
+        
+    if (frame &&
+        (frame->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::x) ||
+         frame->GetContent()->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)))
+        return PR_TRUE;
+
+    if (frame->GetType() == nsLayoutAtoms::svgTextFrame)
+      break;
   }
+
   return PR_FALSE;
 }
 
@@ -1393,30 +1466,4 @@ nsSVGGlyphFrame::GetTextFrame()
   }
 
   return containerFrame->GetTextFrame();
-}
-
-void
-nsSVGGlyphFrame::TransformPoint(float& x, float& y)
-{
-  nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  GetCanvasTM(getter_AddRefs(ctm));
-  if (!ctm)
-    return;
-
-  // XXX this is absurd! we need to add another method (interface
-  // even?) to nsIDOMSVGMatrix to make this easier. (something like
-  // nsIDOMSVGMatrix::TransformPoint(float*x,float*y))
-  
-  nsCOMPtr<nsIDOMSVGPoint> point;
-  NS_NewSVGPoint(getter_AddRefs(point), x, y);
-  if (!point)
-    return;
-
-  nsCOMPtr<nsIDOMSVGPoint> xfpoint;
-  point->MatrixTransform(ctm, getter_AddRefs(xfpoint));
-  if (!xfpoint)
-    return;
-
-  xfpoint->GetX(&x);
-  xfpoint->GetY(&y);
 }
