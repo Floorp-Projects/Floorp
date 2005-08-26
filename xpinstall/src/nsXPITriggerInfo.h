@@ -51,7 +51,7 @@
 #include "prthread.h"
 #include "plevent.h"
 #include "nsIXPConnect.h"
-
+#include "nsICryptoHash.h"
 #include "nsIPrincipal.h"
 
 typedef struct XPITriggerEvent {
@@ -70,7 +70,11 @@ typedef struct XPITriggerEvent {
 class nsXPITriggerItem
 {
   public:
-    nsXPITriggerItem( const PRUnichar* name, const PRUnichar* URL, const PRUnichar* iconURL, PRInt32 flags = 0);
+    nsXPITriggerItem( const PRUnichar* name,
+                      const PRUnichar* URL,
+                      const PRUnichar* iconURL,
+                      const char* hash = nsnull,
+                      PRInt32 flags = 0);
     ~nsXPITriggerItem();
 
     nsString    mName;
@@ -78,6 +82,10 @@ class nsXPITriggerItem
     nsString    mIconURL;
     nsString    mArguments;
     nsString    mCertName;
+
+    PRBool      mHashFound; // this flag indicates that we found _some_ hash info in the trigger
+    nsCString   mHash;
+    nsCOMPtr<nsICryptoHash> mHasher;
     PRInt32     mFlags;
 
     nsCOMPtr<nsILocalFile>      mFile;

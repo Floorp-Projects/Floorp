@@ -45,9 +45,9 @@
 #include "nsIEventQueueService.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICryptoHash.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
 
 //
 // nsXPITriggerItem
@@ -57,8 +57,9 @@ MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
                                     const PRUnichar* aURL,
                                     const PRUnichar* aIconURL,
+                                    const char* aHash,
                                     PRInt32 aFlags)
-  : mName(aName), mURL(aURL), mIconURL(aIconURL), mFlags(aFlags)
+    : mName(aName), mURL(aURL), mIconURL(aIconURL), mFlags(aFlags), mHashFound(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsXPITriggerItem);
 
@@ -89,6 +90,27 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
             length = (qmark - namestart); // filename stops at the '?'
 
         mName = Substring( mURL, namestart, length );
+    }
+
+    // parse optional hash into its parts
+    if (aHash)
+    {
+        mHashFound = PR_TRUE;
+
+        PRUint32 htype = 1;
+        char * colon = PL_strchr(aHash, ':');
+        if (colon)
+        {
+            mHasher = do_CreateInstance("@mozilla.org/security/hash;1");
+            if (!mHasher) return;
+            
+            *colon = '\0'; // null the colon so that aHash is just the type.
+            nsresult rv = mHasher->InitWithString(aHash);
+            *colon = ':';  // restore the colon
+
+            if (NS_SUCCEEDED(rv))
+                mHash = colon+1;
+        }
     }
 }
 

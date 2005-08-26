@@ -2097,6 +2097,30 @@ nsCryptoHash::Init(PRUint32 algorithm)
 }
 
 NS_IMETHODIMP
+nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
+{
+  if (aAlgorithm.LowerCaseEqualsLiteral("md2"))
+    return Init(nsICryptoHash::MD2);
+
+  if (aAlgorithm.LowerCaseEqualsLiteral("md5"))
+    return Init(nsICryptoHash::MD5);
+
+  if (aAlgorithm.LowerCaseEqualsLiteral("sha1"))
+    return Init(nsICryptoHash::SHA1);
+
+  if (aAlgorithm.LowerCaseEqualsLiteral("sha256"))
+    return Init(nsICryptoHash::SHA256);
+
+  if (aAlgorithm.LowerCaseEqualsLiteral("sha384"))
+    return Init(nsICryptoHash::SHA384);
+
+  if (aAlgorithm.LowerCaseEqualsLiteral("sha512"))
+    return Init(nsICryptoHash::SHA512);
+
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
 nsCryptoHash::Update(const PRUint8 *data, PRUint32 len)
 {
   if (!mHashContext)

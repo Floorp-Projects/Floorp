@@ -1821,6 +1821,8 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::SUCCESS,                    "SUCCESS"                      },
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
     { nsInstall::INVALID_SIGNATURE,          "INVALID_SIGNATURE"            },
+    { nsInstall::INVALID_HASH,               "INVALID_HASH"                 },
+    { nsInstall::INVALID_HASH_TYPE,          "INVALID_HASH_TYPE"            },
 
     // these are flags supported by confirm
     { nsIPromptService::BUTTON_POS_0,            "BUTTON_POS_0"             },

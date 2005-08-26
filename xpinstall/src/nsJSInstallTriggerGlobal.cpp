@@ -90,6 +90,7 @@ JSClass InstallTriggerGlobalClass = {
   FinalizeInstallTriggerGlobal
 };
 
+
 //
 // InstallTriggerGlobal finalizer
 //
@@ -222,6 +223,7 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
   return JS_TRUE;
 }
 
+
 //
 // Native method Install
 //
@@ -236,13 +238,13 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_TRUE;
 
-  
+
   // make sure XPInstall is enabled, return false if not
   nsIScriptGlobalObject *globalObject = nsnull;
   nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
   if (scriptContext)
     globalObject = scriptContext->GetGlobalObject();
-  
+
   PRBool enabled = PR_FALSE;
   nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
   if (!enabled || !globalObject)
@@ -272,7 +274,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     JS_ReportError(cx, "Could not get the Subject Principal during InstallTrigger.Install()");
     return JS_FALSE;
   }
-  
+
   // get window.location to construct relative URLs
   nsCOMPtr<nsIURI> baseURL;
   JSObject* global = JS_GetGlobalObject(cx);
@@ -304,6 +306,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       jsval v;
       const PRUnichar *name, *URL;
       const PRUnichar *iconURL = nsnull;
+      const char *hash;
 
       for (int i = 0; i < ida->length && !abortLoad; i++ )
       {
@@ -311,15 +314,19 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         name = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v ) ));
 
         URL = iconURL = nsnull;
+        hash = nsnull;
         JS_GetUCProperty( cx, JSVAL_TO_OBJECT(argv[0]), NS_REINTERPRET_CAST(const jschar*, name), nsCRT::strlen(name), &v );
         if ( JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) ) 
         {
           jsval v2;
-          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ))
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "URL", &v2 ) && !JSVAL_IS_VOID(v2))
             URL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
 
-          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ))
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "IconURL", &v2 ) && !JSVAL_IS_VOID(v2))
             iconURL = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars( JS_ValueToString( cx, v2 ) ));
+
+          if (JS_GetProperty( cx, JSVAL_TO_OBJECT(v), "Hash", &v2) && !JSVAL_IS_VOID(v2))
+            hash = NS_REINTERPRET_CAST(const char*, JS_GetStringBytes( JS_ValueToString( cx, v2 ) ));
         }
         else
         {
@@ -359,7 +366,9 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
             if (!abortLoad)
             {
-                nsXPITriggerItem *item = new nsXPITriggerItem( name, xpiURL.get(), icon.get() );
+                // Add the install item to the trigger collection
+                nsXPITriggerItem *item =
+                    new nsXPITriggerItem( name, xpiURL.get(), icon.get(), hash );
                 if ( item )
                 {
                     trigger->Add( item );
