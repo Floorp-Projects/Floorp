@@ -122,7 +122,7 @@ Requires Ant version 1.2 or later
     <echo message="copy from docs"/>
     <mkdir dir="${dist.dir}/docs"/>
     <copy todir="${dist.dir}/docs">
-      <fileset dir="docs" includes="**/*.html,**/*.jpg,**/*.gif" />
+      <fileset dir="docs" includes="**/*.html,**/*.jpg,**/*.gif,**/*.js" />
     </copy>
   </target>
 
