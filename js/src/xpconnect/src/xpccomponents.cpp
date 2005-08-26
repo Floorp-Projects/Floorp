@@ -2353,22 +2353,47 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     JS_SetContextPrivate(sandcx, cx);
     JS_SetErrorReporter(sandcx, SandboxErrorReporter);
 
-    nsCAutoString codebase(jsPrincipals->codebase);
+    // Push a fake frame onto sandcx so that we can properly propagate uncaught
+    // exceptions.
+    JSStackFrame frame;
+    memset(&frame, 0, sizeof frame);
+
+    sandcx->fp = &frame;
+
+    // Get the current source info from xpc. Use the codebase as a fallback,
+    // though.
+    nsXPIDLCString filename;
+    PRInt32 lineNo = 0;
+    {
+        nsCOMPtr<nsIStackFrame> frame;
+        xpc->GetCurrentJSStack(getter_AddRefs(frame));
+        if (frame) {
+            frame->GetFilename(getter_Copies(filename));
+            frame->GetLineNumber(&lineNo);
+        } else {
+            filename.Assign(jsPrincipals->codebase);
+            lineNo = 1;
+        }
+    }
 
     if (!JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
                                           NS_REINTERPRET_CAST(const jschar *,
                                               PromiseFlatString(source).get()),
-                                          source.Length(), codebase.get(), 1,
-                                          rval)) {
-        rv = NS_ERROR_FAILURE;
-    }
+                                          source.Length(), filename.get(),
+                                          lineNo, rval)) {
 
-    if (NS_SUCCEEDED(rv))
+        jsval exn;
+        if (JS_GetPendingException(sandcx, &exn)) {
+            JS_SetPendingException(cx, exn);
+            cc->SetExceptionWasThrown(PR_TRUE);
+        }
+    } else {
         cc->SetReturnValueWasSet(PR_TRUE);
+    }
 
     JS_DestroyContextNoGC(sandcx);
     JSPRINCIPALS_DROP(cx, jsPrincipals);
-    return rv;
+    return NS_OK;
 #endif /* !XPCONNECT_STANDALONE */
 }
 
