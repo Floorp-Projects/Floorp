@@ -72,7 +72,7 @@ interface nsIVersionComparator : nsISupports
    * @param   B   The second version
    * @returns < 0 if A < B
    *          = 0 if A == B
-   *          > 0 if B > A
+   *          > 0 if A > B
    */
   long compare(in ACString A, in ACString B);
 };
