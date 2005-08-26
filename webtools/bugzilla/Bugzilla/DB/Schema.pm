@@ -301,7 +301,6 @@ use constant ABSTRACT_SCHEMA => {
             mimetype     => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             ispatch      => {TYPE => 'BOOLEAN'},
             filename     => {TYPE => 'varchar(100)', NOTNULL => 1},
-            thedata      => {TYPE => 'LONGBLOB', NOTNULL => 1},
             submitter_id => {TYPE => 'INT3', NOTNULL => 1},
             isobsolete   => {TYPE => 'BOOLEAN', NOTNULL => 1,
                              DEFAULT => 'FALSE'},
@@ -312,6 +311,13 @@ use constant ABSTRACT_SCHEMA => {
             attachments_bug_id_idx => ['bug_id'],
             attachments_creation_ts_idx => ['creation_ts'],
             attachments_submitter_id_idx => ['submitter_id', 'bug_id'],
+        ],
+    },
+    attach_data => {
+        FIELDS => [
+            id      => {TYPE => 'INT3', NOTNULL => 1,
+                        PRIMARYKEY => 1},
+            thedata => {TYPE => 'LONGBLOB', NOTNULL => 1},
         ],
     },
 

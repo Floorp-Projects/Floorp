@@ -472,6 +472,7 @@ sub view
 
     # Retrieve the attachment content and its content type from the database.
     SendSQL("SELECT mimetype, filename, thedata FROM attachments " .
+            "INNER JOIN attach_data ON id = attach_id " .
             "WHERE attach_id = $attach_id");
     my ($contenttype, $filename, $thedata) = FetchSQLData();
    
@@ -595,7 +596,11 @@ sub get_unified_diff
   require File::Temp;
 
   # Get the patch
-  SendSQL("SELECT bug_id, description, ispatch, thedata FROM attachments WHERE attach_id = $id");
+  SendSQL("SELECT bug_id, description, ispatch, thedata " . 
+          "FROM attachments " .
+          "INNER JOIN attach_data " .
+          "ON id = attach_id " .
+          "WHERE attach_id = $id");
   my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
   if (!$ispatch) {
     $vars->{'attach_id'} = $id;
@@ -726,6 +731,7 @@ sub diff
 
   # Get patch data
   SendSQL("SELECT bug_id, description, ispatch, thedata FROM attachments " .
+          "INNER JOIN attach_data ON id = attach_id " .
           "WHERE attach_id = $attach_id");
   my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
 
@@ -797,7 +803,10 @@ sub viewall
             $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
             mimetype, description, ispatch, isobsolete, isprivate, 
             LENGTH(thedata)
-            FROM attachments WHERE bug_id = $bugid $privacy 
+            FROM attachments 
+            INNER JOIN attach_data
+            ON attach_id = id
+            WHERE bug_id = $bugid $privacy 
             ORDER BY attach_id");
   my @attachments; # the attachments array
   while (MoreSQLData())
@@ -945,19 +954,23 @@ sub insert
 
   # Insert the attachment into the database.
   my $sth = $dbh->prepare("INSERT INTO attachments
-      (thedata, bug_id, creation_ts, filename, description,
+      (bug_id, creation_ts, filename, description,
        mimetype, ispatch, isprivate, submitter_id) 
-      VALUES (?, $bugid, $sql_timestamp, $sql_filename,
+      VALUES ($bugid, $sql_timestamp, $sql_filename,
               $description, $contenttype, " . $cgi->param('ispatch') . ",
               $isprivate, $userid)");
+  $sth->execute();
+  # Retrieve the ID of the newly created attachment record.
+  my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
+
   # We only use $data here in this INSERT with a placeholder,
   # so it's safe.
+  $sth = $dbh->prepare("INSERT INTO attach_data
+                           (id, thedata) VALUES ($attachid, ?)");
   trick_taint($data);
   $sth->bind_param(1, $data, $dbh->BLOB_TYPE);
   $sth->execute();
 
-  # Retrieve the ID of the newly created attachment record.
-  my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
 
   # If the file is to be stored locally, stream the file from the webserver
   # to the local file without reading it into a local variable.
@@ -1083,7 +1096,10 @@ sub edit
 
   # Retrieve the attachment from the database.
   SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate, LENGTH(thedata)
-           FROM attachments WHERE attach_id = $attach_id");
+           FROM attachments
+           INNER JOIN attach_data
+           ON id = attach_id
+           WHERE attach_id = $attach_id");
   my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate, $datasize) = FetchSQLData();
 
   my $isviewable = isViewable($contenttype);

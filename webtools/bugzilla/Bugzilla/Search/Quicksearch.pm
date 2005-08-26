@@ -80,8 +80,8 @@ my %mappings = (# Status, Resolution, Platform, OS, Priority, Severity
                 "attachment" => "attachments.description",
                 "attachmentdesc" => "attachments.description",
                 "attachdesc" => "attachments.description",
-                "attachmentdata" => "attachments.thedata",
-                "attachdata" => "attachments.thedata",
+                "attachmentdata" => "attach_data.thedata",
+                "attachdata" => "attach_data.thedata",
                 "attachmentmimetype" => "attachments.mimetype",
                 "attachmimetype" => "attachments.mimetype");
 

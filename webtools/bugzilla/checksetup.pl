@@ -1702,7 +1702,6 @@ AddFDef("cc", "CC", 1);
 AddFDef("dependson", "BugsThisDependsOn", 1);
 AddFDef("blocked", "OtherBugsDependingOnThis", 1);
 AddFDef("attachments.description", "Attachment description", 0);
-AddFDef("attachments.thedata", "Attachment data", 0);
 AddFDef("attachments.filename", "Attachment filename", 0);
 AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
@@ -1739,6 +1738,9 @@ AddFDef("work_time", "Hours Worked", 0);
 AddFDef("percentage_complete", "Percentage Complete", 0);
 
 AddFDef("content", "Content", 0);
+
+$dbh->do("DELETE FROM fielddefs WHERE name='attachments.thedata'");
+AddFDef("attach_data.thedata", "Attachment data", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -4009,6 +4011,27 @@ if ($dbh->bz_index_info('attachments', 'attachments_submitter_id_idx')
 $dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
                    [qw(submitter_id bug_id)]);
 
+# 2005-08-25 - bugreport@peshkin.net - Bug 305333
+if ($dbh->bz_column_info("attachments", "thedata")) {
+    print "Migrating attachment data to its own table...\n";
+    print "(This may take a very long time)\n";
+    my $sth_get1 = $dbh->prepare("SELECT attach_id 
+                                   FROM attachments");
+    my $sth_get2 = $dbh->prepare("SELECT thedata 
+                                   FROM attachments WHERE attach_id = ?");
+    $sth_get1->execute();
+    while (my ($id) = $sth_get1->fetchrow_array) {
+        $sth_get2->execute($id);
+        my ($thedata) = $sth_get2->fetchrow_array;
+        my $sth_put = $dbh->prepare("INSERT INTO attach_data
+                                     (id, thedata) VALUES ($id, ?)");
+        $sth_put->bind_param(1, $thedata, $dbh->BLOB_TYPE);
+        $sth_put->execute();
+    }
+    $dbh->bz_drop_column("attachments", "thedata");    
+}
+
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -4133,7 +4156,6 @@ add_setting ('csv_colsepchar', {',' => 1, ';' => 2 }, ',' );
 ###########################################################################
 # Create Administrator  --ADMIN--
 ###########################################################################
-
 
 sub bailout {   # this is just in case we get interrupted while getting passwd
     if ($^O !~ /MSWin32/i) {

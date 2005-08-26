@@ -78,6 +78,8 @@ sub query
                                       isobsolete, isprivate, LENGTH(thedata),
                                       submitter_id
                                       FROM attachments
+                                      INNER JOIN attach_data
+                                      ON id = attach_id
                                       WHERE bug_id = ? ORDER BY attach_id",
                                       undef, $bugid);
 

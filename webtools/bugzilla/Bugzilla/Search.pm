@@ -756,6 +756,19 @@ sub init {
                     "ON groups_$chartid.id = bug_group_map_$chartid.group_id");
             $f = "groups_$chartid.name";
          },
+         "^attach_data\.thedata," => sub {
+             my $atable = "attachments_$chartid";
+             my $dtable = "attachdata_$chartid";
+             my $extra = "";
+             if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
+                 $extra = "AND $atable.isprivate = 0";
+             }
+             push(@supptables, "INNER JOIN attachments AS $atable " .
+                               "ON bugs.bug_id = $atable.bug_id $extra");
+             push(@supptables, "INNER JOIN attach_data AS $dtable " .
+                               "ON $dtable.id = $atable.attach_id");
+             $f = "$dtable.thedata";
+         },
          "^attachments\..*," => sub {
              my $table = "attachments_$chartid";
              my $extra = "";
