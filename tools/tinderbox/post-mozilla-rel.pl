@@ -748,8 +748,8 @@ sub pushit {
   $Settings::ReleaseToLatest = 1 if !defined($Settings::ReleaseToLatest);
 
   if ( $Settings::ReleaseToDated ) {
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
-    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path/$short_ud";
+    TinderUtils::run_shell_command "rsync -av -e \"ssh $ssh_opts\" $upload_directory/ $Settings::ssh_user\@$ssh_server:$upload_path/$short_ud/";
     TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
 
     if ( $cachebuild and $Settings::ReleaseToLatest ) {
