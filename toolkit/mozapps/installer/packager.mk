@@ -122,7 +122,7 @@ UNMAKE_PACKAGE	= \
   set -ex; \
   function cleanup() { \
     hdiutil detach $${DEV_NAME} || \
-     (sleep 5 && hdiutil detach $${DEV_NAME} -force); \
+     { sleep 5 && hdiutil detach $${DEV_NAME} -force; }; \
     return $$1 && $$?; \
   }; \
   unset NEXT_ROOT; \
@@ -132,15 +132,15 @@ UNMAKE_PACKAGE	= \
   MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";exit;}'< hdi.output` || cleanup 1; \
   rsync -a "$${MOUNTPOINT}/$(_APPNAME)" $(MOZ_PKG_APPNAME) || cleanup 1; \
   test -n "$(MOZ_PKG_MAC_DSSTORE)" && \
-    (rsync -a "$${MOUNTPOINT}/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)" || cleanup 1); \
+    { rsync -a "$${MOUNTPOINT}/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)" || cleanup 1; }; \
   test -n "$(MOZ_PKG_MAC_BACKGROUND)" && \
-    (rsync -a "$${MOUNTPOINT}/.background/`basename "$(MOZ_PKG_MAC_BACKGROUND)"`" "$(MOZ_PKG_MAC_BACKGROUND)" || cleanup 1); \
+    { rsync -a "$${MOUNTPOINT}/.background/`basename "$(MOZ_PKG_MAC_BACKGROUND)"`" "$(MOZ_PKG_MAC_BACKGROUND)" || cleanup 1; }; \
   test -n "$(MOZ_PKG_MAC_ICON)" && \
-    (rsync -a "$${MOUNTPOINT}/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)" || cleanup 1); \
+    { rsync -a "$${MOUNTPOINT}/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)" || cleanup 1; }; \
   cleanup 0; \
   if test -n "$(MOZ_PKG_MAC_RSRC)" ; then \
     hdiutil unflatten $(UNPACKAGE) && \
-    (/Developer/Tools/DeRez -skip plst -skip blkx $(UNPACKAGE) > "$(MOZ_PKG_MAC_RSRC)" || (hdiutil flatten $(UNPACKAGE) && false)) && \
+    { /Developer/Tools/DeRez -skip plst -skip blkx $(UNPACKAGE) > "$(MOZ_PKG_MAC_RSRC)" || { hdiutil flatten $(UNPACKAGE) && false; }; } && \
     hdiutil flatten $(UNPACKAGE); \
   fi; \
   $(NULL)
