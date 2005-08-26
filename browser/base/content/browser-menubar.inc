@@ -370,7 +370,10 @@
                           label="&addCurPageAsCmd.label;"
                           command="Browser:AddBookmarkAs"/>
                 <menuitem id="bookmarkAllCmd"
-                          key="addBookmarkGroupKb"
+# Accel+Shit+A-F is reserved on GTK2
+#ifndef MOZ_WIDGET_GTK2
+                          key="bookmarkAllTabsKb"
+#endif
                           label="&bookmarkAllCmd.label;"
                           command="Browser:BookmarkAllTabs"/>
                 <menuitem key="manBookmarkKb" 
