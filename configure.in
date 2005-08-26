@@ -4043,7 +4043,7 @@ minimo)
   ENABLE_TESTS=
   MINIMO=1
   MOZ_ACTIVEX_SCRIPTING_SUPPORT=
-  MOZ_APP_VERSION=`cat $topsrcdir/embedding/minimo/wince/version.txt`
+  MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
   MOZ_COMPOSER=
   MOZ_ENABLE_POSTSCRIPT=
   MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras transformiix webservices spatialnavigation"
