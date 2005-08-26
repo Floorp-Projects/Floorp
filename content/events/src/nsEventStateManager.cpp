@@ -65,6 +65,7 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMXULControlElement.h"
+#include "nsIDOMXULTextboxElement.h"
 #include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
@@ -191,7 +192,6 @@ static nsIDocument *
 GetDocumentFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
-  nsPIDOMWindow *innerWin;
   nsCOMPtr<nsIDocument> doc;
 
   if (win) {
@@ -4164,8 +4164,24 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
 
   if (aContent) {
     // Check if the HandleDOMEvent calls above destroyed our frame (bug #118685)
-    // or made it not focusable in any way
+    // or made it not focusable in any way.
+    // Flush pending updates to the frame tree first (bug 305840).
+    presShell->FlushPendingNotifications(Flush_Frames);
+
     nsIFrame* focusFrame = presShell->GetPrimaryFrameFor(aContent);
+
+    // XUL textboxes are not focusable for various reasons so we check if
+    // the inner html:input frame is focusable instead (bug 305840).
+    if (aContent->IsContentOfType(nsIContent::eXUL)) {
+      nsCOMPtr<nsIDOMXULTextBoxElement> textbox = do_QueryInterface(aContent);
+      if (textbox) {
+        nsCOMPtr<nsIDOMNode> inputNode;
+        textbox->GetInputField(getter_AddRefs(inputNode));
+        nsCOMPtr<nsIContent> input = do_QueryInterface(inputNode);
+        focusFrame = input ? presShell->GetPrimaryFrameFor(input) : nsnull;
+      }
+    }
+
     if (focusFrame) {
       if (aContent->Tag() != nsHTMLAtoms::area) {
         if (!focusFrame->IsFocusable()) {
