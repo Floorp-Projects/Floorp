@@ -107,7 +107,7 @@ nc:link="chrome://help/locale/nav_help.xhtml#plugins_and_downloads"/> </rdf:li>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="nav-doc-charencode" nc:name="Selecting Character Encodings and Fonts" nc:link="nav_help.xhtml#selecting_character_encodings_and_fonts"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav-doc-languagepref" nc:name="Setting Language Preferences" nc:link="nav_help.xhtml#setting_language_preferences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding a &brandShortname; version in your own language" nc:link="nav_help.xhtml#finding_localized_version"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="nav-doc-webcontent" nc:name="Finding a &brandShortName; version in your own language" nc:link="nav_help.xhtml#finding_localized_version"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
