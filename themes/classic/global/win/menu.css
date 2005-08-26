@@ -46,9 +46,9 @@
 
 menu, 
 menuitem {
-#ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK2
   -moz-appearance: menuitem !important;
-#endif
+%endif
   -moz-box-align: center;
   color: MenuText;
   font: menu;
@@ -60,7 +60,7 @@ menuitem[default="true"] {
   font-weight: bold;
 }  
 
-#ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK2
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
   color: -moz-menuhovertext;
@@ -75,7 +75,7 @@ menubar > menu[open] {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
 }
-#endif
+%endif
   
 menu[disabled="true"], menuitem[disabled="true"],
 menu[_moz-menuactive="true"][disabled="true"],
@@ -138,13 +138,13 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-#ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK2
   padding: 0px 6px 0px 4px;
-#else
+%else
   border: 1px solid transparent;
   padding: 2px 5px 2px 7px;
   margin: 1px 0px 1px 0px;
-#endif
+%endif
 }
 
 menubar > menu[_moz-menuactive="true"] {
@@ -179,9 +179,9 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
-#ifndef MOZ_WIDGET_GTK2
+%ifndef MOZ_WIDGET_GTK2
   padding: 2px;
-#endif
+%endif
   max-width: 42em;
 }
 
@@ -219,11 +219,11 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
  
 /* ::::: checkbox menuitem ::::: */
 
-#ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK2
 menuitem[type="checkbox"] {
   -moz-appearance: checkmenuitem !important;
 }
-#else
+%else
 menuitem[checked="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
   -moz-image-region: auto;
@@ -238,15 +238,15 @@ menuitem[checked="true"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
   -moz-image-region: auto;
 }
-#endif
+%endif
 
 /* ::::: radio menuitem ::::: */
 
-#ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK2
 menuitem[type="radio"] {
   -moz-appearance: radiomenuitem !important;
 }
-#else
+%else
 menuitem[checked="true"][type="radio"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
   -moz-image-region: auto;
@@ -261,7 +261,7 @@ menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
   -moz-image-region: auto;
 }
-#endif
+%endif
 
 /* ::::: menuseparator ::::: */
 

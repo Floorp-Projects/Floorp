@@ -30,6 +30,7 @@ use strict;
 # output to stdout
 
 my $stack = new stack;
+my $marker = '#';
 
 # command line arguments
 my @includes;
@@ -71,6 +72,8 @@ while ($_ = $ARGV[0], defined($_) && /^-./) {
         $stack->{'lineEndings'} = "\x0A";
     } elsif (/^--line-endings=(.+)$/os) { 
         die "$0: unrecognised line ending: $1\n";
+    } elsif (/^--marker=(.)$/os) {
+        $marker = $1;
     } else {
         die "$0: invalid argument: $_\n";
     }
@@ -114,11 +117,11 @@ sub include {
         # on cygwin, line endings are screwed up, so normalise them.
         s/[\x0D\x0A]+$/\n/os if ($^O eq 'msys' || $^O eq 'cygwin' || "$^O" eq "MSWin32");
         $stack->newline;
-        if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
+        if (/^\Q$marker\E([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
-        } elsif (/^\#([a-z]+)\s(.*?)\n?$/os) { # processing instruction with arguments
+        } elsif (/^\Q$marker\E([a-z]+)\s(.*?)\n?$/os) { # processing instruction with arguments
             process($stack, $1, $2);
-        } elsif (/^\#/os) { # comment
+        } elsif (/^\Q$marker\E/os) { # comment
             # ignore it
         } elsif ($stack->enabled) {
             next if $stack->{'dependencies'};

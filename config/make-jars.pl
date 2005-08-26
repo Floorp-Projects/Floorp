@@ -450,6 +450,11 @@ sub EnsureFileInDir
         }
         unlink $destPath;       # in case we had a symlink on unix
         if ($preproc) {
+            my $preproc_flags = '';
+            if ($srcFile =~ /\.css$/o) {
+                $preproc_flags = '--marker=%';
+            }
+
             my $preproc_file = $file;
             if ($^O eq 'cygwin' && $file =~ /^[a-zA-Z]:/) {
                 # convert to a cygwin path
@@ -459,7 +464,7 @@ sub EnsureFileInDir
                 # use a temporary file otherwise cmd is too long for system()
                 my $tmpFile = "$destPath.tmp";
                 open(TMP, ">$tmpFile") || die("$tmpFile: $!");
-                print(TMP "$^X $preprocessor $defines $preproc_file > $destPath");
+                print(TMP "$^X $preprocessor $preproc_flags $defines $preproc_file > $destPath");
                 close(TMP);
                 print "+++ preprocessing $preproc_file > $destPath\n";
                 if (system("bash \"$tmpFile\"") != 0) {
@@ -467,7 +472,7 @@ sub EnsureFileInDir
                 }
                 unlink("$tmpFile") || die("$tmpFile: $!");
             } else {
-                if (system("$^X $preprocessor $defines $preproc_file > $destPath") != 0) {
+                if (system("$^X $preprocessor $preproc_flags $defines $preproc_file > $destPath") != 0) {
                     die "Preprocessing of $file failed: ".($? >> 8);
                 }
             }

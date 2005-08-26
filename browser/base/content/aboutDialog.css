@@ -26,11 +26,11 @@
    -moz-appearance: none;
    overflow: hidden;
 
-#ifdef XP_MACOSX
+%ifdef XP_MACOSX
    height: 3.8em;
-#else
+%else
    height: 2.4em;
-#endif
+%endif
 
    border: none;
  }
