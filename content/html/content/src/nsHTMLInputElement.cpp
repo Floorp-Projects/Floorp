@@ -1170,7 +1170,7 @@ nsHTMLInputElement::Select()
         esm->GetContentState(this, currentState);
         if (!(currentState & NS_EVENT_STATE_FOCUS) &&
             !esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
-          return NS_ERROR_FAILURE; // Unable to focus
+          return rv; // We ended up unfocused, e.g. due to a DOM event handler.
         }
       }
 

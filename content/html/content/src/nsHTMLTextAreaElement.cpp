@@ -287,7 +287,7 @@ nsHTMLTextAreaElement::Select()
     if (shouldFocus &&
         !presContext->EventStateManager()->SetContentState(this,
                                                            NS_EVENT_STATE_FOCUS)) {
-      return NS_ERROR_FAILURE; // Unable to focus
+      return rv; // We ended up unfocused, e.g. due to a DOM event handler.
     }
 
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
