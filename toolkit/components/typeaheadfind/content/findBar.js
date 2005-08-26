@@ -502,7 +502,9 @@ function onBrowserKeyPress(evt)
       focusFindBar();
       if (gFindMode != FIND_NORMAL) {
         findField.value = "";
-        fireKeypressEvent(findField.inputField, evt);
+        if (evt.charCode != CHAR_CODE_APOSTROPHE &&
+            evt.charCode != CHAR_CODE_SLASH)
+          fireKeypressEvent(findField.inputField, evt);
         evt.preventDefault();
       }
     }
