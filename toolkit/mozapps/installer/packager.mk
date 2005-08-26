@@ -119,16 +119,33 @@ MAKE_PACKAGE	= $(_ABS_TOPSRCDIR)/build/package/mac_osx/pkg-dmg \
   --source "$(MOZ_PKG_APPNAME)" --target "$(PACKAGE)" \
   --volname "$(MOZ_APP_DISPLAYNAME)" $(PKG_DMG_FLAGS)
 UNMAKE_PACKAGE	= \
-  set -e; \
+  set -ex; \
+  function cleanup() { \
+    hdiutil detach $${DEV_NAME} || \
+     (sleep 5 && hdiutil detach $${DEV_NAME} -force); \
+    return $$1 && $$?; \
+  }; \
   unset NEXT_ROOT; \
   export PAGER=true; \
-  mkdir mount-temp; \
-  echo Y | hdiutil attach -readonly -mountpoint mount-temp -private -noautoopen $(UNPACKAGE) > hdi.output; \
+  echo Y | hdiutil attach -readonly -mountroot /tmp -private -noautoopen $(UNPACKAGE) > hdi.output; \
   DEV_NAME=`perl -n -e 'if($$_=~/(\/dev\/disk[^ ]*)/) {print $$1."\n";exit;}'< hdi.output`; \
-  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";exit;}'< hdi.output`; \
-  rsync -a $${MOUNTPOINT}/$(_APPNAME) $(MOZ_PKG_APPNAME); \
-  hdiutil detach $${DEV_NAME}; \
+  MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$$_,2);if($$_[1]=~/(\/.*)/) {print $$1."\n";exit;}'< hdi.output` || cleanup 1; \
+  rsync -a "$${MOUNTPOINT}/$(_APPNAME)" $(MOZ_PKG_APPNAME) || cleanup 1; \
+  test -n "$(MOZ_PKG_MAC_DSSTORE)" && \
+    (rsync -a "$${MOUNTPOINT}/.DS_Store" "$(MOZ_PKG_MAC_DSSTORE)" || cleanup 1); \
+  test -n "$(MOZ_PKG_MAC_BACKGROUND)" && \
+    (rsync -a "$${MOUNTPOINT}/.background/`basename "$(MOZ_PKG_MAC_BACKGROUND)"`" "$(MOZ_PKG_MAC_BACKGROUND)" || cleanup 1); \
+  test -n "$(MOZ_PKG_MAC_ICON)" && \
+    (rsync -a "$${MOUNTPOINT}/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)" || cleanup 1); \
+  cleanup 0; \
+  if test -n "$(MOZ_PKG_MAC_RSRC)" ; then \
+    hdiutil unflatten $(UNPACKAGE) && \
+    (/Developer/Tools/DeRez -skip plst -skip blkx $(UNPACKAGE) > "$(MOZ_PKG_MAC_RSRC)" || (hdiutil flatten $(UNPACKAGE) && false)) && \
+    hdiutil flatten $(UNPACKAGE); \
+  fi; \
   $(NULL)
+# The plst and blkx resources are skipped because they belong to each
+# individual dmg and are created by hdiutil.
 endif
 
 # dummy macro if we don't have PSM built
