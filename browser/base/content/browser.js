@@ -993,8 +993,7 @@ function BrowserShutdown()
     gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
-  FeedHandler.uninit();
-
+  
   uninitFindBar();
 
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
@@ -5860,12 +5859,8 @@ function convertFromUnicode(charset, str)
 
 /**
  * The Feed Handler object manages discovery of RSS/ATOM feeds in web pages
- * and shows UI when they are discovered. It is also responsible for 
- * transforming XML feeds into a human-readable form when they are loaded. 
+ * and shows UI when they are discovered. 
  */
-const kFeedHandler_Stylesheet = 
-  "chrome://browser/content/feedview.xsl";
-
 var FeedHandler = {
   /**
    * The Feed icon in the location bar
@@ -5873,36 +5868,12 @@ var FeedHandler = {
   _feedButton: null,
   
   /**
-   * The XSLT Processor used to do feed transformation
-   */
-  _processor: null,
-
-  /**
-   * The XSLT Stylesheet used to transform feeds
-   */
-  _stylesheet: null,
-  
-  /**
-   * Initialize the Pretty Print mode, adding page load event listeners to
-   * check for and load the pretty print view if a feed is loaded. 
+   * Initialize the Feed Handler
    */
   init: function() {
-    var self = this;
-    function onPageLoad(event) {
-      self._checkForFeed(event);
-    }
-    addEventListener("load", onPageLoad, true);
     gBrowser.addEventListener("DOMLinkAdded", 
                               function (event) { FeedHandler.onLinkAdded(event); }, 
                               false);
-  },
-  
-  /**
-   * Release held objects to prevent leaks. 
-   */
-  uninit: function() {
-    this._processor = null;
-    this._stylesheet = null;
   },
   
   /**
@@ -5937,15 +5908,12 @@ var FeedHandler = {
      * supplied by the web page. It is fairly common for a site to supply
      * feeds in multiple formats but with divergent |title| attributes so
      * we need to make a rough pass at trying to not show a menu when there
-     * is in fact only one feed
+     * is in fact only one feed. If this is the case, by default select
+     * the ATOM feed if one is supplied, otherwise pick the first one. 
      * @param   feeds
      *          An array of Feed info JS Objects representing the list of
      *          feeds advertised by the web page
-     * @returns An array of what should be mostly unique feeds.
-     *
-     * Note: we should consider extending HTML in some way here to allow
-     *       pages to give "names" to <link> tags so that multiple tags can
-     *       be identified as pointing to the same content. 
+     * @returns An array of what should be mostly unique feeds. 
      */
     function harvestFeeds(feeds) {
       var feedHash = { };
@@ -5960,7 +5928,7 @@ var FeedHandler = {
       var defaultType = null;
       for (var type in feedHash) {
         // The default type is whichever is listed first on the web page.
-        // Nothing fancy, just something that works. 
+        // Nothing fancy, just something that works.
         if (!defaultType) {
           defaultType = type;
           count = feedHash[type].length;
@@ -5977,15 +5945,17 @@ var FeedHandler = {
       if (mismatch)
         return feeds;
         
-      // Return all the feeds for the selected type.
-      return feedHash[defaultType];
+      // Look for an atom feed by default, fall back to whichever was listed
+      // first if there is no atom feed supplied. 
+      const ATOMTYPE = "application/atom+xml";
+      return ATOMTYPE in feedHash ? feedHash[ATOMTYPE] : feedHash[defaultType];
     }
     
     // Get the list of unique feeds, and if there's only one unique entry, 
     // show the feed in the browser rather than displaying a menu. 
     var feeds = harvestFeeds(feeds);
     if (feeds.length == 1) {
-      this.showFeed(feeds[0].href);
+      this.addLiveBookmark(feeds[0].href);
       return false;
     }
 
@@ -6002,33 +5972,37 @@ var FeedHandler = {
     }
     return true;
   },
-
+  
   /**
-   * Adds a Live Bookmark to a feed
-   * @param   event
-   *          The click/command event handler fired by a piece of UI that 
-   *          contains metadata about the feed to add a Live Bookmark to.
+   * Locate the shell that has a specified URI loaded in it. 
+   * @param   doc
+   *          The document that contains the feed
+   * @param   feedURI
+   *          The URI to locate a shell for
+   * @returns The doc shell that contains the specified URI
    */
-  addLiveBookmark: function(event) {
-    var a = event.target;
-    var title = a.ownerDocument.title;
-    var description = BookmarksUtils.getDescriptionFromDocument(a.ownerDocument);
-    BookmarksUtils.addLivemark(a.ownerDocument.baseURI, a.getAttribute("feed"), 
-                               title, description);
-  },
-
-  /**
-   * Shows a feed in the content area, pretty printed with the stylesheet. 
-   * @param   url
-   *          The URL to the RSS feed
-   */  
-  showFeed: function(url) {
-    // If there's only one feed, load it and don't show the popup.
-    getWebNavigation().loadURI(url, nsIWebNavigation.LOAD_FLAGS_NONE, 
-                               null, null, null);
-    setTimeout(function () { gBrowser.selectedBrowser.focus(); }, 100);
+  _getContentShell: function(doc, feedURI) {
+    var browsers = getBrowser().browsers;
+    for (var i = 0; i < browsers.length; i++) {
+      var shell = findChildShell(doc, browsers[i].docShell, feedURI);
+      if (shell)
+        return { shell: shell, browser: browsers[i] };
+    }
+    return null;
   },
   
+  /**
+   * Adds a Live Bookmark to a feed
+   * @param   url
+   *          The URL of the feed being bookmarked
+   */
+  addLiveBookmark: function(url) {
+    var doc = gBrowser.selectedBrowser.contentDocument;
+    var title = doc.title;
+    var description = BookmarksUtils.getDescriptionFromDocument(doc);
+    BookmarksUtils.addLivemark(doc.baseURI, url, title, description);
+  },
+
   /**
    * Update the browser UI to show whether or not feeds are available when
    * a page is loaded or the user switches tabs to a page that has feeds. 
@@ -6106,213 +6080,5 @@ var FeedHandler = {
       if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
         this._feedButton.setAttribute("feeds", "true");
     }
-  },
-  
-  /**
-   * Locate the shell that has a specified document loaded in it. 
-   * @param   doc
-   *          The document that contains the feed
-   * @returns The doc shell that contains the specified document.
-   */
-  _getContentShell: function(doc) {
-    var browsers = getBrowser().browsers;
-    for (var i = 0; i < browsers.length; i++) {
-      var shell = findChildShell(doc, browsers[i].docShell, null);
-      if (shell)
-        return { shell: shell, browser: browsers[i] };
-    }
-    return null;
-  },
-  
-  /**
-   * Validate the document to see if it is a feed we should pretty print or 
-   * not.
-   * @param   doc
-   *          The document to inspect
-   * @returns true if this is an RSS feed we should pretty print, false 
-   *          otherwise.
-   */
-  _validate: function(doc) {
-    // See if the document is XML.  If not, it's definitely not a feed.
-    if (!(doc instanceof XMLDocument) &&
-        // bandaid for bug 256084
-        !(doc instanceof XULDocument))
-      return false;
-      
-    // See if the document we're dealing with is actually a feed.
-    if (!this._isDocumentFeed(doc.documentElement))
-      return false;
-
-    // Make sure the document is loaded into one of the browser tabs.
-    // Otherwise, it might have been loaded as data by some application
-    // that expects it not to change, and we shouldn't break the app
-    // by changing the document.
-    var feedURI = 
-        Components.classes["@mozilla.org/network/io-service;1"].
-        getService(Components.interfaces.nsIIOService).
-        newURI(doc.location.href, null, null);
-    if (!this._getContentShell(doc, feedURI))
-      return false;
-
-    return true;
-  },
-    
-  /**
-   * Loads the Pretty Print if necessary for the current document. 
-   * @param   event
-   *          The "load" DOM event
-   */
-  _checkForFeed: function(event) {
-    var doc = event.originalTarget;
-    if (!this._validate(doc))
-      return;
-    
-    var self = this;
-    /**
-     * Called back once we're guaranteed that an XSLT Processor has been 
-     * created and the transformation stylesheet loaded and ready for use.
-     * Does the work of translating the RSS feed into the output document.
-     * @param   processor
-     *          The XSLT Processor, initialized with the pretty print 
-     *          stylesheet
-     */
-    function transformFeed(processor) {
-      var strings = document.getElementById("bundle_browser");
-
-      // Get the values of the reloadInterval and showMenu preferences
-      // or fall back on hardcoded values.
-      var reloadInterval, showMenu;
-      if (gPrefService) {
-        try {
-          reloadInterval =
-            gPrefService.getIntPref("browser.feedview.reloadInterval");
-        } catch (e) {
-          reloadinterval = 0;
-        }
-        try {
-          showMenu = gPrefService.getBoolPref("browser.feedview.showMenu");
-        } catch (e) {
-          showMenu = true;
-        }
-      }
-
-      processor.setParameter(null, "url", doc.documentURI);
-      processor.setParameter(null, "title", 
-                             strings.getFormattedString("feedTitle", [""]));
-      /**
-       * @returns the number of articles in the feed
-       */
-      function getArticleCount() {
-        var len = doc.getElementsByTagName("item").length; 
-        if (len == 0)
-          len = doc.getElementsByTagName("entry").length;
-        return len;
-      }
-      processor.setParameter(null, "articleCount", 
-                             strings.getFormattedString("feedDescription", 
-                                                        [getArticleCount()]));
-      processor.setParameter(null, "showMenu", showMenu);
-
-      processor.setParameter(null, "reloadInterval", reloadInterval);
-      processor.setParameter(null, "addLiveBookmarkLink", 
-                             strings.getString("feedAddLiveBookmarkLink"));
-      var regionStrings = document.getElementById("bundle_browser_region");
-      processor.setParameter(null, "liveBookmarkInfoURL",
-                             regionStrings.getString("feedLiveBookmarkInfoURL"));
-      processor.setParameter(null, "liveBookmarkInfoText",
-                             strings.getString("feedLiveBookmarkInfoText"));
-
-      var ownerDocument = document.implementation.createDocument("", "", null);
-      var newFragment = processor.transformToFragment(doc, ownerDocument);
-      
-      var de = doc.documentElement;
-      while (de.hasChildNodes())
-        de.removeChild(de.firstChild);
-      de.appendChild(newFragment);
-      
-      // Update the title bar with the title of the feed. 
-      var h1s = doc.getElementsByTagName("h1");
-      if (h1s.length) 
-        doc.title = strings.getFormattedString("feedTitle", [h1s[0].textContent]);
-      
-      doc.getElementById("addLiveBookmarkLink").addEventListener("click",
-        function (event) { self.addLiveBookmark(event); }, false);
-    }
-    this._process(transformFeed);
-  },
-  
-  /** 
-   * Invoke the tranformation routine on the specified callback, once we've
-   * lazily instantiated and loaded the XSLTProcessor and stylesheet. 
-   * @param   callback
-   *          A function to be called when the processor and stylesheet are
-   *          ready for use.  
-   */
-  _process: function(callback) {
-    var async = false;
-    if (!this._processor) {
-      this._processor = new XSLTProcessor();
-    }
-    if (!this._stylesheet) {
-      this._stylesheet = document.implementation.createDocument("", "", null);
-      
-      var processor = this._processor;
-      var stylesheet = this._stylesheet;
-      function onStyleSheetLoaded() {
-        processor.importStylesheet(stylesheet);
-        callback(processor);
-      }
-      this._stylesheet.addEventListener("load", onStyleSheetLoaded, false);
-      this._stylesheet.load(kFeedHandler_Stylesheet);
-      async = true;
-    }
-    if (!async)
-      callback(this._processor);
-  },
-  
-  /**
-   * Determines if a DOM document is an RSS/ATOM feed or not. 
-   * @param   doc
-   *          The DOM document to test
-   * @returns true if the document is a feed, false otherwise.
-   */
-  _isDocumentFeed: function(doc) {
-    const ATOM_10_NS = "http://www.w3.org/2005/Atom";
-    const ATOM_03_NS = "http://purl.org/atom/ns#";
-    const RSS_10_NS = "http://purl.org/rss/1.0/";
-    const RSS_09_NS = "http://my.netscape.com/rdf/simple/0.9/";
-    const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-
-    var rootName = doc.localName;
-    var rootNS = doc.namespaceURI;
-    var channel;
-    
-    // Atom feeds have a root "feed" element in one of two namespaces.
-    if (rootName == "feed" && (rootNS == ATOM_10_NS || rootNS == ATOM_03_NS))
-      return true;
-
-    // RSS 2.0, 0.92, and 0.91 feeds have a non-namespaced root "rss" element
-    // containing a non-namespaced "channel" child.
-    else if (rootName == "rss" && rootNS == null) {
-      channel = doc.getElementsByTagName('channel')[0];
-      if (channel && channel.parentNode == doc)
-        return true;
-    }
-
-    // RSS 1.0 and 0.9 feeds have a root "RDF" element in the RDF namespace
-    // and a "channel" child in the RSS 1.0 or 0.9 namespaces.
-    else if (rootName == "RDF" && rootNS == RDF_NS) {
-      channel = doc.getElementsByTagNameNS(RSS_10_NS, 'channel')[0]
-                || doc.getElementsByTagNameNS(RSS_09_NS, 'channel')[0];
-      if (channel && channel.parentNode == doc)
-        return true;
-    }
-
-    // If it didn't match any criteria yet, it's probably not a feed,
-    // or perhaps it's a nonconformist feed.  If you see a number of those
-    // and they match some pattern, add a check for that pattern here,
-    // making sure to specify the strictest check that matches that pattern
-    // to minimize false positives.
-    return false;
   }
 };

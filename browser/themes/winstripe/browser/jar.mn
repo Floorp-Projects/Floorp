@@ -24,9 +24,6 @@ classic.jar:
         skin/classic/browser/bookmarks/addBookmark.css          (bookmarks/addBookmark.css)
         skin/classic/browser/bookmarks/bookmarksManager.css     (bookmarks/bookmarksManager.css)
         skin/classic/browser/bookmarks/Bookmarks-toolbar.png    (bookmarks/Bookmarks-toolbar.png)
-        skin/classic/browser/feedview.css                       (feedview.css)
-        skin/classic/browser/check.png                          (check.png)
-        skin/classic/browser/itemSelected.png                   (itemSelected.png)
         skin/classic/browser/preferences/Options.png            (preferences/Options.png)
         skin/classic/browser/preferences/preferences.css        (preferences/preferences.css)
         icon.png
