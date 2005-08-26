@@ -62,6 +62,7 @@ ParseVP(char *part, VersionPart &result)
   char *dot;
 
   if (!part) {
+    result.numA = 0;
     result.strB = nsnull;
     result.strBlen = 0;
     result.numC = 0;
