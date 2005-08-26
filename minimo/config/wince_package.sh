@@ -45,6 +45,7 @@ cp -a bin/chrome/en-US.jar                               wince/chrome
 cp -a bin/chrome/en-US.manifest                          wince/chrome
 
 cp -a bin/chrome/minimo.jar                              wince/chrome
+cp -a bin/chrome/minimo.manifest                         wince/chrome
 
 cp -a bin/chrome/toolkit.jar                             wince/chrome
 cp -a bin/chrome/toolkit.manifest                        wince/chrome
