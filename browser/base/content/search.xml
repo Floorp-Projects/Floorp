@@ -108,7 +108,11 @@
       ]]></constructor>
 
       <destructor><![CDATA[
-        this.controllers.removeController(this.searchbarController);
+        // Because XBL and the customize toolbar code interacts poorly,
+        // there may not be a controller to remove here
+        try {
+          this.controllers.removeController(this.searchbarController);
+        } catch (ex) { }
       ]]></destructor>
 
       <property name="mContextMenu" readonly="true">
