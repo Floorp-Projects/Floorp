@@ -803,8 +803,9 @@ sub FormToNewFlags {
         my $status = $cgi->param("flag_type-$type_id");
         trick_taint($status);
 
-        if ($status eq "?") {
-            foreach my $login ($cgi->param("requestee_type-$type_id")) {
+        my @logins = $cgi->param("requestee_type-$type_id");
+        if ($status eq "?" && scalar(@logins) > 0) {
+            foreach my $login (@logins) {
                 my $requestee = new Bugzilla::User(login_to_id($login));
                 push (@flags, { type      => $flag_type ,
                                 target    => $target , 
