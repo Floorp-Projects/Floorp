@@ -145,25 +145,10 @@ nsSVGLibartGlyphMetrics::GetAdvance(float *aAdvance)
   return NS_OK;
 }
 
-/** Implements readonly attribute nsIDOMSVGRect #boundingBox; */
 NS_IMETHODIMP
-nsSVGLibartGlyphMetrics::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+nsSVGLibartGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
 {
-  *aBoundingBox = nsnull;
-
-  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
-
-  NS_ASSERTION(rect, "could not create rect");
-  if (!rect) return NS_ERROR_FAILURE;
-  
-  rect->SetX(0);
-  rect->SetY(0);
-  rect->SetWidth(0);
-  rect->SetHeight(0);
-
-  *aBoundingBox = rect;
-  NS_ADDREF(*aBoundingBox);
-  
+  *advance = 0.0f;
   return NS_OK;
 }
 

@@ -45,6 +45,10 @@
 #include "nsPresContext.h"
 #include "nsMemory.h"
 
+#include "nsSVGTypeCIDs.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMSVGRect.h"
+
 /**
  * \addtogroup libart_renderer Libart Rendering Engine
  * @{
@@ -160,4 +164,24 @@ nsSVGLibartGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   return NS_OK;
 }
 
+/** Implements readonly attribute nsIDOMSVGRect #boundingBox; */
+NS_IMETHODIMP
+nsSVGLibartGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
+{
+  *aBoundingBox = nsnull;
 
+  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
+
+  NS_ASSERTION(rect, "could not create rect");
+  if (!rect) return NS_ERROR_FAILURE;
+  
+  rect->SetX(0);
+  rect->SetY(0);
+  rect->SetWidth(0);
+  rect->SetHeight(0);
+
+  *aBoundingBox = rect;
+  NS_ADDREF(*aBoundingBox);
+  
+  return NS_OK;
+}
