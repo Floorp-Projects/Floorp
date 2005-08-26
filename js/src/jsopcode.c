@@ -2560,8 +2560,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 quoteAttr = JS_FALSE;
                 break;
 
-              case JSOP_TOXML:
               case JSOP_TOXMLLIST:
+                todo = Sprint(&ss->sprinter, "<>%s</>", POP_STR());
+                inXML = JS_FALSE;
+                break;
+
+              case JSOP_TOXML:
                 inXML = JS_FALSE;
                 /* fall through */
 
