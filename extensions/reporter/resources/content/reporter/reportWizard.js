@@ -84,11 +84,6 @@ function getCharPref(prefname, aDefault) {
   }
 }
 
-function openPrivacyPolicy() {
-  var url = getCharPref("privacyURL", "http://reporter.mozilla.org/privacy/");
-  openDialog(window.opener.getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, null);
-}
-
 function initPrivacyNotice() {
   var reportWizard = document.getElementById('reportWizard');
   // If they agreed, we continue on
@@ -128,6 +123,11 @@ function initForm() {
 
   // Change next button to "submit report"
   reportWizard.getButton('next').label = strbundle.getString("submitReport") + ">";
+  
+  // Set the privacy policy link href
+  var url = getCharPref("privacyURL", "http://reporter.mozilla.org/privacy/");
+  var privacyLink = document.getElementById("privacyPolicy");
+  privacyLink.setAttribute("href", url);
 
   // We don't let the user go forward until they fufill certain requirements - see validateform()
   reportWizard.canAdvance = false;
