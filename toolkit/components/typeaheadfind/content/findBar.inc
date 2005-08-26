@@ -2,7 +2,7 @@
       <toolbarbutton id="find-closebutton" tooltiptext="&findCloseButton.tooltip;"
                      oncommand="closeFindBar();"/>
 
-      <label value="&find.label;"/>
+      <label control="find-field" value="&find.label;"/>
       <hbox id="find-field-container">
         <textbox id="find-field" oninput="find(this.value);"
                 onkeypress="onFindBarKeyPress(event);" onblur="onFindBarBlur();"
