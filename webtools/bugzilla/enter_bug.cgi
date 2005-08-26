@@ -475,15 +475,18 @@ if ( ($cloned_bug_id) &&
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
 
+# Only used with placeholders below
+trick_taint($product);
+
 # Get list of milestones.
 if ( Param('usetargetmilestone') ) {
     $vars->{'target_milestone'} = $::target_milestone{$product};
     if (formvalue('target_milestone')) {
        $default{'target_milestone'} = formvalue('target_milestone');
     } else {
-       SendSQL("SELECT defaultmilestone FROM products WHERE " .
-               "name = " . SqlQuote($product));
-       $default{'target_milestone'} = FetchOneColumn();
+       $default{'target_milestone'} =
+                $dbh->selectrow_array('SELECT defaultmilestone FROM products
+                                       WHERE name = ?', undef, $product);
     }
 }
 
@@ -498,9 +501,9 @@ my @status;
 #  confirmation, user cannot confirm    UNCONFIRMED
 #  confirmation, user can confirm       NEW, UNCONFIRMED.
 
-SendSQL("SELECT votestoconfirm FROM products WHERE name = " .
-        SqlQuote($product));
-if (FetchOneColumn()) {
+my $votestoconfirm = $dbh->selectrow_array('SELECT votestoconfirm FROM products
+                                            WHERE name = ?', undef, $product);
+if ($votestoconfirm) {
     if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
         push(@status, "NEW");
     }
@@ -520,17 +523,19 @@ if (formvalue('bug_status') && (lsearch(\@status, formvalue('bug_status')) >= 0)
     $default{'bug_status'} = $status[0];
 }
  
-SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description, " .
-        "membercontrol, othercontrol " .
-        "FROM groups LEFT JOIN group_control_map " .
-        "ON group_id = id AND product_id = $product_id " .
-        "WHERE isbuggroup != 0 AND isactive != 0 ORDER BY description");
+my $grouplist = $dbh->selectall_arrayref(
+                  q{SELECT DISTINCT groups.id, groups.name, groups.description,
+                                    membercontrol, othercontrol
+                      FROM groups
+                 LEFT JOIN group_control_map
+                        ON group_id = id AND product_id = ?
+                     WHERE isbuggroup != 0 AND isactive != 0
+                  ORDER BY description}, undef, $product_id);
 
 my @groups;
 
-while (MoreSQLData()) {
-    my ($id, $groupname, $description, $membercontrol, $othercontrol) 
-        = FetchSQLData();
+foreach my $row (@$grouplist) {
+    my ($id, $groupname, $description, $membercontrol, $othercontrol) = @$row;
     # Only include groups if the entering user will have an option.
     next if ((!$membercontrol) 
                || ($membercontrol == CONTROLMAPNA) 
