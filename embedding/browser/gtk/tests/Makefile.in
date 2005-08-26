@@ -105,6 +105,13 @@ ifndef MOZ_FAT_EMBED
 FINAL_LINK_COMPS=../src/embed-link-comps
 endif
 
+ifdef MINIMO
+FINAL_LINK_COMPS=$(topsrcdir)/minimo/base/linux/minimo-link-comps
+FINAL_LINK_COMP_NAMES=$(topsrcdir)/minimo/base/linux/minimo-link-names
+FINAL_LINK_LIBS=$(topsrcdir)/minimo/base/linux/minimo-link-libs
+endif
+
+
 include $(topsrcdir)/config/static-config.mk
 
 EXTRA_DEPS	+= $(STATIC_EXTRA_DEPS)
