@@ -5,6 +5,8 @@ minimo.jar:
 %   locale  branding en-US       %branding/locale/
 	content/minimo/minimo.js		 (content/minimo.js)
 	content/minimo/minimo.xul		 (content/minimo.xul)
+	content/minimo/preferences.js    (content/preferences.js)
+	content/minimo/preferences.xul   (content/preferences.xul)
 	locale/en-US/minimo/minimo.dtd	 (locale/en-US/minimo.dtd)
 	skin/classic/minimo/minimo.css   (skin/minimo.css)
 	skin/classic/minimo/m.jpg        (skin/m.jpg)
