@@ -38,6 +38,11 @@ var gConnectionsDialog = {
   beforeAccept: function ()
   {
     var proxyTypePref = document.getElementById("network.proxy.type");
+    if (proxyTypePref.value == 2) {
+      this.doAutoconfigURLFixup();
+      return true;
+    }
+    
     if (proxyTypePref.value != 1)
       return true;
 
@@ -57,6 +62,7 @@ var gConnectionsDialog = {
         proxyPortPref.value = httpProxyPortPref.value;
       }
     }
+    
     return true;
   },
   
@@ -146,17 +152,15 @@ var gConnectionsDialog = {
     pps.configureFromPAC(autoURL.value);
   },
   
-  writeAutoconfigURL: function ()
+  doAutoconfigURLFixup: function ()
   {
     var autoURL = document.getElementById("networkProxyAutoconfigURL");
+    var autoURLPref = document.getElementById("network.proxy.autoconfig_url");
     var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
                              .getService(Components.interfaces.nsIURIFixup);
     try {
-      return URIFixup.createFixupURI(autoURL.value, 0).spec;
-    }
-    catch(ex) {
-    }
-    return undefined;
+      autoURLPref.value = autoURL.value = URIFixup.createFixupURI(autoURL.value, 0).spec;
+    } catch(ex) {}
   },
   
   readHTTPProxyServer: function ()
