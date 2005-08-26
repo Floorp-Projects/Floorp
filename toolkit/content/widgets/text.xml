@@ -318,7 +318,12 @@
           catch (ex) {}
           
           // otherwise, fall back to opening the anchor directly
-          open(href);
+          var win = window;
+          if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
+            while (win.opener && !win.opener.closed) 
+              win = win.opener;
+          }
+          win.open(href);
         }
       ]]>
       </handler>
