@@ -105,7 +105,7 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
             if (!mHasher) return;
             
             *colon = '\0'; // null the colon so that aHash is just the type.
-            nsresult rv = mHasher->InitWithString(aHash);
+            nsresult rv = mHasher->InitWithString(nsDependentCString(aHash));
             *colon = ':';  // restore the colon
 
             if (NS_SUCCEEDED(rv))
