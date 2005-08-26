@@ -24,6 +24,8 @@ use vars qw( $vars );
 
 use Bugzilla;
 use Bugzilla::User;
+use Bugzilla::Bug;
+use Bugzilla::Flag;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
@@ -474,19 +476,29 @@ if ($action eq 'search') {
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
     my $otherUserLogin = $otherUser->login();
 
+    # Cache for user accounts.
+    my %usercache = (0 => new Bugzilla::User());
+    my %updatedbugs;
+
     # Lock tables during the check+removal session.
     # XXX: if there was some change on these tables after the deletion
     #      confirmation checks, we may do something here we haven't warned
     #      about.
-    $dbh->bz_lock_tables('products READ',
+    $dbh->bz_lock_tables('bugs WRITE',
+                         'bugs_activity WRITE',
+                         'attachments READ',
+                         'fielddefs READ',
+                         'products READ',
                          'components READ',
                          'logincookies WRITE',
                          'profiles WRITE',
                          'profiles_activity WRITE',
                          'groups READ',
+                         'bug_group_map READ',
                          'user_group_map WRITE',
                          'group_group_map READ',
                          'flags WRITE',
+                         'flagtypes READ',
                          'cc WRITE',
                          'namedqueries WRITE',
                          'tokens WRITE',
@@ -496,8 +508,7 @@ if ($action eq 'search') {
                          'series_data WRITE',
                          'whine_schedules WRITE',
                          'whine_queries WRITE',
-                         'whine_events WRITE',
-                         'bugs WRITE');
+                         'whine_events WRITE');
 
     Param('allowuserdeletion')
         || ThrowUserError('users_deletion_disabled');
@@ -514,12 +525,47 @@ if ($action eq 'search') {
 
     Bugzilla->logout_user_by_id($otherUserID);
 
-    # Reference removals.
-    $dbh->do('UPDATE flags set requestee_id = NULL WHERE requestee_id = ?',
-             undef, $otherUserID);
+    # Get the timestamp for LogActivityEntry.
+    my $timestamp = $dbh->selectrow_array('SELECT NOW()');
+
+    # When we update a bug_activity entry, we update the bug timestamp, too.
+    my $sth_set_bug_timestamp =
+        $dbh->prepare('UPDATE bugs SET delta_ts = ? WHERE bug_id = ?');
+
+    # Reference removals which need LogActivityEntry.
+    my $statement_flagupdate = 'UPDATE flags set requestee_id = NULL
+                                 WHERE bug_id = ?
+                                   AND attach_id %s
+                                   AND requestee_id = ?';
+    my $sth_flagupdate_attachment =
+        $dbh->prepare(sprintf($statement_flagupdate, '= ?'));
+    my $sth_flagupdate_bug =
+        $dbh->prepare(sprintf($statement_flagupdate, 'IS NULL'));
+
+    my $buglist = $dbh->selectall_arrayref('SELECT DISTINCT bug_id, attach_id
+                                              FROM flags
+                                             WHERE requestee_id = ?',
+                                           undef, $otherUserID);
+
+    foreach (@$buglist) {
+        my ($bug_id, $attach_id) = @$_;
+        my @old_summaries = Bugzilla::Flag::snapshot($bug_id, $attach_id);
+        if ($attach_id) {
+            $sth_flagupdate_attachment->execute($bug_id, $attach_id, $otherUserID);
+        }
+        else {
+            $sth_flagupdate_bug->execute($bug_id, $otherUserID);
+        }
+        my @new_summaries = Bugzilla::Flag::snapshot($bug_id, $attach_id);
+        # Let update_activity do all the dirty work, including setting
+        # the bug timestamp.
+        Bugzilla::Flag::update_activity($bug_id, $attach_id,
+                                        $dbh->quote($timestamp),
+                                        \@old_summaries, \@new_summaries);
+        $updatedbugs{$bug_id} = 1;
+    }
 
     # Simple deletions in referred tables.
-    $dbh->do('DELETE FROM cc WHERE who = ?', undef, $otherUserID);
     $dbh->do('DELETE FROM logincookies WHERE userid = ?', undef, $otherUserID);
     $dbh->do('DELETE FROM namedqueries WHERE userid = ?', undef, $otherUserID);
     $dbh->do('DELETE FROM profiles_activity WHERE userid = ? OR who = ?', undef,
@@ -531,7 +577,19 @@ if ($action eq 'search') {
     $dbh->do('DELETE FROM watch WHERE watcher = ? OR watched = ?', undef,
              ($otherUserID, $otherUserID));
 
-    # More complex deletions in referred tables.
+    # Deletions in referred tables which need LogActivityEntry.
+    $buglist = $dbh->selectcol_arrayref('SELECT bug_id FROM cc
+                                          WHERE who = ?',
+                                        undef, $otherUserID);
+    $dbh->do('DELETE FROM cc WHERE who = ?', undef, $otherUserID);
+    foreach my $bug_id (@$buglist) {
+        LogActivityEntry($bug_id, 'cc', $otherUser->login, '', $userid,
+                         $timestamp);
+        $sth_set_bug_timestamp->execute($timestamp, $bug_id);
+        $updatedbugs{$bug_id} = 1;
+    }
+
+    # Even more complex deletions in referred tables.
     my $id;
 
     # 1) Series
@@ -577,18 +635,26 @@ if ($action eq 'search') {
 
     # 3) Bugs
     # 3.1) fall back to the default assignee
-    my $buglist = $dbh->selectall_arrayref(
+    $buglist = $dbh->selectall_arrayref(
         'SELECT bug_id, initialowner
          FROM bugs
          INNER JOIN components ON components.id = bugs.component_id
          WHERE assigned_to = ?', undef, $otherUserID);
 
     my $sth_updateAssignee = $dbh->prepare(
-        'UPDATE bugs SET assigned_to = ? WHERE bug_id = ?');
+        'UPDATE bugs SET assigned_to = ?, delta_ts = ? WHERE bug_id = ?');
 
     foreach my $bug (@$buglist) {
-        my ($bug_id, $default_assignee) = @$bug;
-        $sth_updateAssignee->execute($default_assignee, $bug_id);
+        my ($bug_id, $default_assignee_id) = @$bug;
+        $sth_updateAssignee->execute($default_assignee_id,
+                                     $timestamp, $bug_id);
+        $updatedbugs{$bug_id} = 1;
+        $default_assignee_id ||= 0;
+        $usercache{$default_assignee_id} ||=
+            new Bugzilla::User($default_assignee_id);
+        LogActivityEntry($bug_id, 'assigned_to', $otherUser->login,
+                         $usercache{$default_assignee_id}->login,
+                         $userid, $timestamp);
     }
 
     # 3.2) fall back to the default QA contact
@@ -599,11 +665,19 @@ if ($action eq 'search') {
          WHERE qa_contact = ?', undef, $otherUserID);
 
     my $sth_updateQAcontact = $dbh->prepare(
-        'UPDATE bugs SET qa_contact = ? WHERE bug_id = ?');
+        'UPDATE bugs SET qa_contact = ?, delta_ts = ? WHERE bug_id = ?');
 
     foreach my $bug (@$buglist) {
-        my ($bug_id, $default_qa_contact) = @$bug;
-        $sth_updateQAcontact->execute($default_qa_contact, $bug_id);
+        my ($bug_id, $default_qa_contact_id) = @$bug;
+        $sth_updateQAcontact->execute($default_qa_contact_id,
+                                      $timestamp, $bug_id);
+        $updatedbugs{$bug_id} = 1;
+        $default_qa_contact_id ||= 0;
+        $usercache{$default_qa_contact_id} ||=
+            new Bugzilla::User($default_qa_contact_id);
+        LogActivityEntry($bug_id, 'qa_contact', $otherUser->login,
+                         $usercache{$default_qa_contact_id}->login,
+                         $userid, $timestamp);
     }
 
     # Finally, remove the user account itself.
@@ -616,6 +690,12 @@ if ($action eq 'search') {
     $vars->{'restrictablegroups'} = $user->bless_groups();
     $template->process('admin/users/search.html.tmpl', $vars)
        || ThrowTemplateError($template->error());
+
+    # Send mail about what we've done to bugs.
+    # The deleted user is not notified of the changes.
+    foreach (keys(%updatedbugs)) {
+        Bugzilla::BugMail::Send($_);
+    }
 
 ###########################################################################
 } else {
