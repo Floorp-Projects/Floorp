@@ -904,19 +904,20 @@ nsSVGGlyphFrame::GetCharacterPosition(nsSVGCharacterPosition **aCharacterPositio
 
   nsSVGCharacterPosition *cp = new nsSVGCharacterPosition[strLength];
 
+  for (PRUint32 k = 0; k < strLength; k++)
+      cp[k].draw = PR_FALSE;
+
   float x = mX;
   for (PRUint32 i = 0; i < strLength; i++) {
     float advance;
     mMetrics->GetAdvanceOfChar(i, &advance);
 
-    if (x + advance/2 > length) {
-      cp[i].draw = PR_FALSE;
-      continue;
-    }
+    /* have we run off the end of the path? */
+    if (x + advance/2 > length)
+      break;
 
-    if (x + advance/2 < 0.0f)
-      cp[i].draw = PR_FALSE;
-    else {
+    /* check that we've advanced to the start of the path */
+    if (x + advance/2 >= 0.0f) {
       cp[i].draw = PR_TRUE;
 
       // add y (normal)
