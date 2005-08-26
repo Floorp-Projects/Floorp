@@ -165,7 +165,7 @@ endif
 ARCH			= linux
 
 DSO_CFLAGS		= -fPIC
-DSO_LDOPTS		= -shared $(ARCHFLAG)
+DSO_LDOPTS		= -shared $(ARCHFLAG) -z defs
 DSO_LDFLAGS		=
 LDFLAGS			+= $(ARCHFLAG)
 
