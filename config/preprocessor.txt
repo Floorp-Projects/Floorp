@@ -208,7 +208,7 @@ Command Line Arguments
 
 Syntax:
    preprocessor.pl [-Dvariable[=value]] [-E] [-Ffilter]
-                   [-Ifilename] [-d] [--] filenames...
+                   [-Ifilename] [-d] [--marker=<c>] [--] filenames...
 
 -Dvariable
    Set variable to 1 before processing the files.
@@ -236,6 +236,10 @@ Syntax:
    Set the type of line endings to use. "type" can be either "cr",
    "lf", or "crlf". The default is whatever your platform uses for
    perl's "\n" character.
+
+--marker=<c>
+   Use the character <c> instead of '#' as the marker for preprocessor
+   instructions.
 
 --
    Indicates the end of non-filename arguments.

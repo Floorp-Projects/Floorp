@@ -34,16 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef XP_WIN
+%ifdef XP_WIN
 .noWin, .mac, .unix { display: none; } 
-#else
-#ifdef XP_MACOSX
+%else
+%ifdef XP_MACOSX
 .noMac, .win, .unix { display: none; }
-#else
-#ifdef XP_OS2
+%else
+%ifdef XP_OS2
 .noWin, .mac, .unix { display: none; }
-#else
+%else
 .noUnix, .win, .mac { display: none; }
-#endif
-#endif
-#endif
+%endif
+%endif
+%endif
