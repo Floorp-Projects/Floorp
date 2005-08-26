@@ -370,6 +370,11 @@ function BrowserPopupShowing () {
   }
 }
 
+
+function DoPanelPreferences() {
+  window.openDialog("chrome://minimo/content/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
+}
+
 /* 
   Testing the SMS and Call Services 
 */
