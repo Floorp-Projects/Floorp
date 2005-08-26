@@ -1865,41 +1865,32 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
       aEventType.LowerCaseEqualsLiteral("mouseevents") ||
       aEventType.LowerCaseEqualsLiteral("mousescrollevents") ||
       aEventType.LowerCaseEqualsLiteral("popupevents"))
-    return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
-                               NS_STATIC_CAST(nsInputEvent*,aEvent));
+    return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
       aEventType.LowerCaseEqualsLiteral("keyevents"))
-    return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
-                                  NS_STATIC_CAST(nsKeyEvent*,aEvent));
+    return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
         aEventType.LowerCaseEqualsLiteral("mutationevents"))
-    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
-                                  NS_STATIC_CAST(nsMutationEvent*,aEvent));
+    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("textevent") ||
       aEventType.LowerCaseEqualsLiteral("textevents"))
-    return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
-                              NS_STATIC_CAST(nsTextEvent*,aEvent));
+    return NS_NewDOMTextEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("popupblockedevents"))
-    return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
-                                      NS_STATIC_CAST(nsPopupBlockedEvent*,
-                                                     aEvent));
+    return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("uievent") ||
       aEventType.LowerCaseEqualsLiteral("uievents"))
-    return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
-                            NS_STATIC_CAST(nsGUIEvent*,aEvent));
+    return NS_NewDOMUIEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("event") ||
       aEventType.LowerCaseEqualsLiteral("events") ||
       aEventType.LowerCaseEqualsLiteral("htmlevents"))
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
+    return NS_NewDOMEvent(aDOMEvent, aPresContext, nsnull);
 #ifdef MOZ_SVG
   if (aEventType.LowerCaseEqualsLiteral("svgevent") ||
       aEventType.LowerCaseEqualsLiteral("svgevents"))
-    return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
-                             aEvent);
+    return NS_NewDOMSVGEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
       aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
-    return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext,
-                                 NS_STATIC_CAST(nsGUIEvent*,aEvent));
+    return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext, nsnull);
 #endif // MOZ_SVG
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;

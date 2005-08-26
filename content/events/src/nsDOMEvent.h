@@ -119,6 +119,7 @@ public:
     eDOMEvents_nodeinsertedintodocument,
     eDOMEvents_attrmodified,
     eDOMEvents_characterdatamodified,
+    eDOMEvents_DOMPopupBlocked,
     eDOMEvents_DOMActivate,
     eDOMEvents_DOMFocusIn,
     eDOMEvents_DOMFocusOut,
