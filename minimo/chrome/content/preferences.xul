@@ -1,0 +1,70 @@
+<?xml version="1.0"?> 
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % pageInfoDTD SYSTEM "chrome://minimo/locale/prefereces.dtd">
+  %pageInfoDTD;
+]>
+
+<window id="main-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="Browser:page-preferences"
+  >
+<!--    onload="onLoadPageInfo()" onclose="return closeWindow(false);"
+ align="stretch" class="dialog"
+  screenX="10" screenY="10"
+  width="100%" height="100%"
+  persist="screenX screenY width height sizemode"
+-->
+
+
+<script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
+
+
+<!--
+  <keyset>
+    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="closeWindow(true);"/>
+    <key keycode="VK_ESCAPE" oncommand="closeWindow(true);"/>
+    <key id="copy" key="c" modifiers="accel" oncommand="doCopy(event);"/>
+  </keyset>
+  <keyset id="dialogKeys"/>
+-->
+
+<!--
+  <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
+-->
+
+
+  <tabbox id="tabbox"  >
+    <tabs id="tabs">
+      <tab id="generalTab" modifiers="" accesskey="g" label="General"/>
+            <!-- oncommand --> 
+      <!-- Others added by overlay -->
+    </tabs>
+    <tabpanels id="tabpanels" flex="1">
+
+      <!-- General page information -->
+      <vbox >
+        <grid>
+          <columns>
+            <column/>
+            <column style="width: .5em;"/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <label value="Home Page"/>
+              <separator/>
+              <textbox readonly="true" crop="right" id="urltext" prefstring="browser.startup.homepage" />
+            </row>
+          </rows>
+        </grid>
+      </vbox>
+
+
+    </tabpanels>
+  </tabbox>
+
+</window>
