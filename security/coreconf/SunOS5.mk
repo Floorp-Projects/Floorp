@@ -191,6 +191,7 @@ ifdef NS_USE_GCC
 else
 	DSO_CFLAGS += -KPIC
 endif
+DSO_LDOPTS += -z combreloc -z defs -z ignore
 
 NOSUCHFILE   = /solaris-rm-f-sucks
 
