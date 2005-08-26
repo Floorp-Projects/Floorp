@@ -67,7 +67,7 @@ static const char* const sEventNames[] = {
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
-  "DOMActivate", "DOMFocusIn", "DOMFocusOut",
+  "DOMPopupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide"
 #ifdef MOZ_SVG
  ,
@@ -456,6 +456,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
     else if (atom == nsLayoutAtoms::onDOMSubtreeModified)
       mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
+  } else if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    if (atom == nsLayoutAtoms::onDOMPopupBlocked)
+      mEvent->message = NS_POPUPBLOCKED;
   } else if (mEvent->eventStructType == NS_UI_EVENT) {
     if (atom == nsLayoutAtoms::onDOMActivate)
       mEvent->message = NS_UI_ACTIVATE;
@@ -823,6 +826,8 @@ nsDOMEvent::Shutdown()
   }
 }
 
+// To be called ONLY by nsDOMEvent::GetType (which has the additional
+// logic for handling user-defined events).
 // static
 const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 {
@@ -943,6 +948,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_CONTEXTMENU:
   case NS_CONTEXTMENU_KEY:
     return sEventNames[eDOMEvents_contextmenu];
+  case NS_POPUPBLOCKED:
+    return sEventNames[eDOMEvents_DOMPopupBlocked];
   case NS_UI_ACTIVATE:
     return sEventNames[eDOMEvents_DOMActivate];
   case NS_UI_FOCUSIN:
@@ -972,11 +979,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   default:
     break;
   }
-  // XXXldb We can hit this case in many ways, partly thanks to
-  // nsDOMEvent::SetEventType being incomplete, and partly due to some
-  // event types not having message constants at all (e.g., popup
-  // blocked events).  Shouldn't we use the event's userType when we
-  // can?
+  // XXXldb We can hit this case for non-user-defined events (where
+  // returning null is fine, since GetType handles it) thanks to
+  // nsDOMEvent::SetEventType being incomplete.
   return nsnull;
 }
 

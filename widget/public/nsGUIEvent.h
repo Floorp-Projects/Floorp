@@ -354,6 +354,10 @@ class nsIURI;
 #define NS_SVG_ZOOM                     (NS_SVGZOOM_EVENT_START)
 #endif // MOZ_SVG
 
+// popupblocked events
+#define NS_POPUPBLOCKED_START           3000
+#define NS_POPUPBLOCKED                 (NS_POPUPBLOCKED_START)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
