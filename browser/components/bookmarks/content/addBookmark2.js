@@ -128,7 +128,6 @@ function Startup()
   sizeToContent();
   onFieldInput();
   initTitle();
-  gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
   gPostData = gArg.postData;
   
@@ -163,10 +162,14 @@ function Startup()
       if (folderItem)
         gMenulist.selectedItem = folderItem;
     }
+    gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   }
   setTimeout(initMenulist, 0);
+
+  // Reset the |id| attribute on the toolbar folder attribute to the URI of the
+  // Bookmarks toolbar folder. 
   var btfMenuItem = document.getElementById("btfMenuItem");
-  btfMenuItem.setAttribute("id", BMSVC.getBookmarksToolbarFolder().Value);
+  btfMenuItem.id = BMSVC.getBookmarksToolbarFolder().Value;
 } 
 
 function initTitle()
@@ -192,7 +195,7 @@ function onFieldInput()
 function onOK()
 {
   RDFC.Init(BMDS, gSelectedFolder);
-
+  
   var url, rSource;
   var livemarkFeed = gArg.feedURL;
   if (gArg.bBookmarkAllTabs) {
@@ -200,15 +203,19 @@ function onOK()
     const groups = gArg.objGroup;
     for (var i = 0; i < groups.length; ++i) {
       url = getNormalizedURL(groups[i].url);
-      BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, groups[i].description,
-                                     groups[i].charset, gPostData, rSource, -1);
+      BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, 
+                                     groups[i].description, groups[i].charset, 
+                                     gPostData, rSource, -1);
     }
   } else if (livemarkFeed != null) {
     url = getNormalizedURL(gArg.url);
-    rSource = BMDS.createLivemark(gName.value, url, livemarkFeed, null);
+    rSource = BMDS.createLivemark(gName.value, url, livemarkFeed, 
+                                  gArg.description);
   } else {
     url = getNormalizedURL(gArg.url);
-    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, gArg.description, gArg.charset, gPostData);
+    rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, 
+                                  gArg.description, gArg.charset, 
+                                  gPostData);
   }
 
   var selection = BookmarksUtils.getSelectionFromResource(rSource);

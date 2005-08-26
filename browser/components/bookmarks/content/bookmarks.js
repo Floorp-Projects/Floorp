@@ -1819,8 +1819,13 @@ var BookmarksUtils = {
       url: aURL,
       bWebPanel: false,
       feedURL: aFeedURL,
-      description: aDescription,
-      folderURI: "NC:PersonalToolbarFolder"
+      description: aDescription
+    };
+    try {
+      var toolbarFolderURI = BMDS.getBookmarksToolbarFolder().Value;
+      dArgs.folderURI = toolbarFolderURI;
+    }
+    catch (e) { 
     }
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                ADD_BM_DIALOG_FEATURES, dArgs);
