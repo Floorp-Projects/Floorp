@@ -65,8 +65,16 @@ const NS_BINDING_ABORTED = 0x80020006;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
 
-function resolveURIInternal(aCmdLine, aArgument)
-{
+function shouldLoadURI(aURI) {
+  if (aURI && !aURI.schemeIs("chrome"))
+    return true;
+
+  dump("*** Preventing external load of chrome: URI into browser window\n");
+  dump("    Use -chrome <uri> instead\n");
+  return false;
+}
+
+function resolveURIInternal(aCmdLine, aArgument) {
   var uri = aCmdLine.resolveURI(aArgument);
 
   if (!(uri instanceof nsIFileURL)) {
@@ -289,6 +297,8 @@ var nsBrowserContentHandler = {
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {
         var uri = resolveURIInternal(cmdLine, uriparam);
+        if (!shouldLoadURI(uri))
+          continue;
         openWindow(null, this.chromeURL, "_blank",
                    "chrome,dialog=no,all" + this.getFeatures(cmdLine),
                    uri.spec);
@@ -462,6 +472,9 @@ const CONTRACTID_PREFIX = "@mozilla.org/uriloader/content-handler;1?type=";
 
 function handURIToExistingBrowser(uri, location)
 {
+  if (!shouldLoadURI(uri))
+    return;
+
   var navWin = getMostRecentBrowserWindow();
   if (!navWin) {
     // if we couldn't load it in an existing window, open a new one
@@ -519,7 +532,7 @@ var nsDefaultCommandLineHandler = {
       } else {
         try {
           urilist.push(resolveURIInternal(cmdLine, curarg));
-       }
+        }
         catch (e) {
           Components.utils.reportError("Error opening URI '" + curarg + "' from the command line: " + e + "\n");
         }
@@ -541,12 +554,15 @@ var nsDefaultCommandLineHandler = {
 
       var speclist = [];
       for (var uri in urilist) {
-        speclist.push(urilist[uri].spec);
+        if (shouldLoadURI(urilist[uri]))
+          speclist.push(urilist[uri].spec);
       }
 
-      openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
-                 "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
-                 speclist.join("|"));
+      if (speclist.length) {
+        openWindow(null, nsBrowserContentHandler.chromeURL, "_blank",
+                   "chrome,dialog=no,all" + nsBrowserContentHandler.getFeatures(cmdLine),
+                   speclist.join("|"));
+      }
 
     }
     else if (!cmdLine.preventDefault) {

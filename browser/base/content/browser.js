@@ -591,15 +591,6 @@ function BrowserStartup()
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
     uriToLoad = window.arguments[0];
 
-  try {
-    if (makeURI(uriToLoad).schemeIs("chrome")) {
-      dump("*** Preventing external load of chrome: URI into browser window\n");
-      dump("    Use -chrome <uri> instead\n");
-      window.close();
-      return;
-    }
-  } catch(e) {}
-
   gIsLoadingBlank = uriToLoad == "about:blank";
 
   if (!gIsLoadingBlank)
