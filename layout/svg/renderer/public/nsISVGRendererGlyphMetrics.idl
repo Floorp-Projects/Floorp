@@ -62,19 +62,13 @@ interface nsIDOMSVGRect;
  * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::canvasTM, and
  * other relevant style such as nsISVGGlyphMetricsSource::strokeWidth.
  */
-[scriptable, uuid(8665f6e9-6ed6-4ff8-b511-46c8068b3960)]
+[scriptable, uuid(2cdc98a4-594f-42a7-970c-e4dcb7a72aa0)]
 interface nsISVGRendererGlyphMetrics : nsISupports
 {
   /**
    * Untransformed width of the composite glyph in pixels.
    */
   readonly attribute float advance;
-
-  /**
-   * Untransformed bounding box of the composite glyph in pixel
-   * coordinates.
-   */
-  readonly attribute nsIDOMSVGRect boundingBox;
 
   /**
    * Get the untransformed bounding box of an individual glyph.
@@ -85,6 +79,11 @@ interface nsISVGRendererGlyphMetrics : nsISupports
    * @return The untransformed bounding box in pixel coordinates
    */
   nsIDOMSVGRect getExtentOfChar(in unsigned long charnum);
+
+  /**
+   * Get the advance of an individual glyph.
+   */
+  float getAdvanceOfChar(in unsigned long charnum);
 
   /**
    * @name Baseline offset constants for getBaselineOffset()

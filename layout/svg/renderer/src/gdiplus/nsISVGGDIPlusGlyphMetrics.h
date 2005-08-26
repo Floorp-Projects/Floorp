@@ -41,9 +41,8 @@
 
 #include "nsISVGRendererGlyphMetrics.h"
 
-// {A0B0E2A4-4237-44C8-9FD8-8B1B48F43C93}
 #define NS_ISVGGDIPLUSGLYPHMETRICS_IID \
-{ 0xa0b0e2a4, 0x4237, 0x44c8, { 0x9f, 0xd8, 0x8b, 0x1b, 0x48, 0xf4, 0x3c, 0x93 } }
+{ 0xb5d945c2, 0x6a56, 0x4d6c, { 0xb6, 0x9f, 0x6c, 0x90, 0x65, 0x69, 0x1d, 0xd5 } }
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -70,7 +69,8 @@ public:
    * @param charoffset Offset into nsISVGGlyphMetricsSource::characterData.
    * @param count      Number of characters for which to get bounds.
    */   
-  NS_IMETHOD_(void) GetSubBoundingRect(PRUint32 charoffset, PRUint32 count, RectF* retval)=0;
+  NS_IMETHOD_(void) GetSubBoundingRect(PRUint32 charoffset, PRUint32 count,
+                                       RectF* retval, PRBool aLocalCoord = PR_TRUE)=0;
 
   /**
    * Obtain the Gdiplus::Font object selected for this glyph metrics object.

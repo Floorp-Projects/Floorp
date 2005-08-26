@@ -38,11 +38,18 @@
 
 %{C++
 #include "nsFont.h"
+
+struct nsSVGCharacterPosition {
+  PRBool draw;
+  float x, y;
+  float angle;
+};
 %}    
 
 #include "nsISVGGeometrySource.idl"
 
 native nsFont(nsFont);
+[ptr] native nsSVGCharacterPosition(nsSVGCharacterPosition);
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -63,14 +70,14 @@ native nsFont(nsFont);
  *
  * @nosubgrouping
  */
-[scriptable, uuid(8e96a973-c8bb-43a2-8584-4976e75ca478)]
+[uuid(bcd7ce03-9f17-4af1-9763-f44a323695e3)]
 interface nsISVGGlyphMetricsSource : nsISVGGeometrySource
 {
   /**
    * @name Font
    * @{
    */
-  [noscript] readonly attribute nsFont font;
+  readonly attribute nsFont font;
   const unsigned long UPDATEMASK_FONT            = 0x00008000;
   /** @} */
 
@@ -80,6 +87,14 @@ interface nsISVGGlyphMetricsSource : nsISVGGeometrySource
    */
   readonly attribute DOMString characterData;
   const unsigned long UPDATEMASK_CHARACTER_DATA  = 0x00010000;
+  /** @} */
+
+  /**
+   * @name Character positioning information
+   * @{
+   */
+  void GetCharacterPosition(out nsSVGCharacterPosition aCP);
+  const unsigned long UPDATEMASK_CHARACTER_POSITION  = 0x00020000;
   /** @} */
 
   /**
@@ -93,7 +108,7 @@ interface nsISVGGlyphMetricsSource : nsISVGGeometrySource
   const unsigned short TEXT_RENDERING_GEOMETRICPRECISION = 3;
 
   readonly attribute unsigned short textRendering;
-  const unsigned long UPDATEMASK_TEXT_RENDERING  = 0x00020000;
+  const unsigned long UPDATEMASK_TEXT_RENDERING  = 0x00040000;
   /** @} */
 };
 

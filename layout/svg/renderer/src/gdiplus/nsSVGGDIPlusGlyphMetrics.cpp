@@ -130,7 +130,8 @@ public:
 
   // nsISVGGDIPlusGlyphMetrics interface:
   NS_IMETHOD_(const RectF*) GetBoundingRect();
-  NS_IMETHOD_(void) GetSubBoundingRect(PRUint32 charoffset, PRUint32 count, RectF* retval);
+  NS_IMETHOD_(void) GetSubBoundingRect(PRUint32 charoffset, PRUint32 count,
+                                       RectF* retval, PRBool aLocalCoord = PR_TRUE);
   NS_IMETHOD_(const Font*) GetFont();
   NS_IMETHOD_(TextRenderingHint) GetTextRenderingHint();
   
@@ -301,27 +302,6 @@ nsSVGGDIPlusGlyphMetrics::GetAdvance(float *aAdvance)
   return NS_OK;
 }
 
-/** Implements readonly attribute nsIDOMSVGRect #boundingBox; */
-NS_IMETHODIMP
-nsSVGGDIPlusGlyphMetrics::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
-{
-  *aBoundingBox = nsnull;
-
-  nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
-
-  NS_ASSERTION(rect, "could not create rect");
-  if (!rect) return NS_ERROR_FAILURE;
-  
-  rect->SetX(GetBoundingRect()->X);
-  rect->SetY(GetBoundingRect()->Y);
-  rect->SetWidth(GetBoundingRect()->Width);
-  rect->SetHeight(GetBoundingRect()->Height);
-
-  *aBoundingBox = rect;
-  NS_ADDREF(*aBoundingBox);
-  
-  return NS_OK;
-}
 
 /** Implements nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
 NS_IMETHODIMP
@@ -344,6 +324,18 @@ nsSVGGDIPlusGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_ret
 
   *_retval = rect;
   NS_ADDREF(*_retval);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
+{
+  RectF bounds;
+  GetSubBoundingRect(charnum, 1, &bounds);
+
+  // not really correct, but seems the best that GDI+ has to offer
+  *advance = bounds.Width;
   
   return NS_OK;
 }
@@ -388,7 +380,7 @@ nsSVGGDIPlusGlyphMetrics::GetBoundingRect()
 
 NS_IMETHODIMP_(void)
 nsSVGGDIPlusGlyphMetrics::GetSubBoundingRect(PRUint32 charoffset, PRUint32 count,
-                                             RectF* retval)
+                                             RectF* retval, PRBool aLocalCoord)
 {
   nsCOMPtr<nsPresContext> presContext;
   mSource->GetPresContext(getter_AddRefs(presContext));
@@ -421,9 +413,11 @@ nsSVGGDIPlusGlyphMetrics::GetSubBoundingRect(PRUint32 charoffset, PRUint32 count
   graphics.MeasureCharacterRanges(PromiseFlatString(text).get(), -1, GetFont(),
                                   RectF(0.0f, 0.0f, FLT_MAX, FLT_MAX), &stringFormat, 1, &region);
   
-  graphics.Restore(state);
+  if (aLocalCoord) {
+    // ... and obtain the bounds in our local coord system
+    graphics.Restore(state);
+  }
   
-  // ... and obtain the bounds in our local coord system
   region.GetBounds(retval, &graphics);  
 }
 

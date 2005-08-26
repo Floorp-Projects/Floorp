@@ -41,6 +41,7 @@
 interface nsISVGRendererRegion;
 interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererCanvas;
+interface nsIDOMSVGRect;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -62,7 +63,7 @@ interface nsISVGRendererCanvas;
  * glyph rendering and hit-testing for the (composite) glyph described
  * by the nsISVGGlyphGeometrySource members.
  */
-[scriptable, uuid(cd302675-b093-4018-8081-3e65af962aa8)]
+[scriptable, uuid(e2b739d0-8415-4f36-982c-3579876e1435)]
 interface nsISVGRendererGlyphGeometry : nsISupports
 {
   /**
@@ -102,6 +103,11 @@ interface nsISVGRendererGlyphGeometry : nsISupports
    * PR_FALSE otherwise.
    */
   boolean containsPoint(in float x, in float y);
+
+  /**
+   * Transformed bounding box (does not include stroke width)
+   */
+  readonly attribute nsIDOMSVGRect boundingBox;
 };
 
 /** @} */

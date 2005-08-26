@@ -282,6 +282,7 @@ LAYOUT_ATOM(svgRadialGradientFrame,"SVGRadialGradientFrame")
 LAYOUT_ATOM(svgRectFrame,"SVGRectFrame")
 LAYOUT_ATOM(svgStopFrame,"SVGStopFrame")
 LAYOUT_ATOM(svgTextFrame,"SVGTextFrame")
+LAYOUT_ATOM(svgTextPathFrame,"SVGTextPathFrame")
 LAYOUT_ATOM(svgTSpanFrame,"SVGTSpanFrame")
 LAYOUT_ATOM(svgUseFrame,"SVGUseFrame")
 #endif // MOZ_SVG

@@ -44,6 +44,9 @@
 #include "nsIDOMSVGPathSeg.h"
 #include "nsSVGPathSeg.h"
 #include "nsCOMPtr.h"
+#include "nsISVGPathFlatten.h"
+#include "nsIDocument.h"
+#include "nsIFrame.h"
 
 typedef nsSVGGraphicElement nsSVGPathElementBase;
 
@@ -74,6 +77,9 @@ public:
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
+
+  already_AddRefed<nsISVGPathFlatten> GetPathFlatten();
+
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
 };
 
@@ -148,7 +154,18 @@ nsSVGPathElement::GetPathLength(nsIDOMSVGAnimatedNumber * *aPathLength)
 NS_IMETHODIMP
 nsSVGPathElement::GetTotalLength(float *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = 0;
+  nsCOMPtr<nsISVGPathFlatten> flattener = GetPathFlatten();
+  if (!flattener)
+    return NS_ERROR_FAILURE;
+
+  nsSVGPathData *data;
+  flattener->GetFlattenedPath(&data);
+  *_retval = data->Length();
+
+  delete data;
+
+  return NS_OK;
 }
 
 /* nsIDOMSVGPoint getPointAtLength (in float distance); */
@@ -342,4 +359,37 @@ nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGPathElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// implementation helpers:
+
+already_AddRefed<nsISVGPathFlatten>
+nsSVGPathElement::GetPathFlatten()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    NS_ERROR("no document");
+    return nsnull;
+  }
+  
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) {
+    NS_ERROR("no presshell");
+    return nsnull;
+  }
+
+  nsIFrame* frame;
+  frame = presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*,
+                                                       this));
+
+  if (!frame) {
+    NS_ERROR("no frame");
+    return nsnull;
+  }
+  
+  nsISVGPathFlatten* flattener;
+  frame->QueryInterface(NS_GET_IID(nsISVGPathFlatten),(void**)&flattener);
+  NS_ASSERTION(flattener, "wrong frame type");
+  return flattener;
 }

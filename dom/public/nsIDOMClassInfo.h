@@ -271,6 +271,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGSVGElement_id,
   eDOMClassInfo_SVGSymbolElement_id,
   eDOMClassInfo_SVGTextElement_id,
+  eDOMClassInfo_SVGTextPathElement_id,
   eDOMClassInfo_SVGTitleElement_id,
   eDOMClassInfo_SVGTSpanElement_id,
   eDOMClassInfo_SVGUseElement_id,

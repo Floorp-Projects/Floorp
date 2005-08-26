@@ -59,6 +59,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
+#include "nsISVGPathFlatten.h"
 
 extern cairo_surface_t *gSVGCairoDummySurface;
 
@@ -552,5 +553,54 @@ nsSVGCairoPathGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
   *aBoundingBox = rect;
   NS_ADDREF(*aBoundingBox);
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGCairoPathGeometry::Flatten(nsSVGPathData **aData)
+{
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
+  GeneratePath(ctx, nsnull);
+
+  *aData = new nsSVGPathData;
+
+  cairo_path_t *path;
+  cairo_path_data_t *data;
+
+  path = cairo_copy_path_flat(ctx);
+
+  for (PRInt32 i = 0; i < path->num_data; i += path->data[i].header.length) {
+    data = &path->data[i];
+    switch (data->header.type) {
+    case CAIRO_PATH_MOVE_TO:
+      (*aData)->AddPoint(data[1].point.x,
+                         data[1].point.y,
+                         NS_SVGPATHFLATTEN_MOVE);
+      break;
+    case CAIRO_PATH_LINE_TO:
+      (*aData)->AddPoint(data[1].point.x,
+                         data[1].point.y,
+                         NS_SVGPATHFLATTEN_LINE);
+      break;
+    case CAIRO_PATH_CURVE_TO:
+      /* should never happen with a flattened path */
+      break;
+    case CAIRO_PATH_CLOSE_PATH:
+    {
+      /* find beginning of current subpath */
+      for (PRUint32 i = (*aData)->count; i >= 0; i--)
+        if ((*aData)->type[i] = NS_SVGPATHFLATTEN_MOVE) {
+          (*aData)->AddPoint((*aData)->x[i],
+                             (*aData)->y[i],
+                             NS_SVGPATHFLATTEN_LINE);
+          break;
+        }
+    }
+    }
+  }
+
+  cairo_path_destroy(path);
+  cairo_destroy(ctx);
+
   return NS_OK;
 }
