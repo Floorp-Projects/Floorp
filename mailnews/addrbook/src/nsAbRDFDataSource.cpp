@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -55,6 +56,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsAutoLock.h"
+#include "nsIServiceManager.h"
 
 // this is used for notification of observers using nsVoidArray
 typedef struct _nsAbRDFNotification {

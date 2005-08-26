@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -389,7 +390,7 @@ nsAddrDatabase::CleanupCache()
 //----------------------------------------------------------------------
 // FindInCache - this addrefs the db it finds.
 //----------------------------------------------------------------------
-nsAddrDatabase* nsAddrDatabase::FindInCache(nsFileSpec *dbName)
+nsAddrDatabase* nsAddrDatabase::FindInCache(nsIFile *dbName)
 {
     PRInt32 i;
     for (i = 0; i < GetDBCache()->Count(); i++)
@@ -420,9 +421,15 @@ PRInt32 nsAddrDatabase::FindInCache(nsAddrDatabase* pAddrDB)
     return(-1);
 }
 
-PRBool nsAddrDatabase::MatchDbName(nsFileSpec* dbName)    // returns PR_TRUE if they match
+PRBool nsAddrDatabase::MatchDbName(nsIFile* dbName)    // returns PR_TRUE if they match
 {
-    return (m_dbName == (*dbName)); 
+    PRBool dbMatches = PR_FALSE;
+
+    nsresult rv = m_dbName->Equals(dbName, &dbMatches);
+    if (NS_FAILED(rv))
+      return PR_FALSE;
+
+    return dbMatches;
 }
 
 //----------------------------------------------------------------------
@@ -451,100 +458,18 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
     return gMDBFactory;
 }
 
-#if defined(XP_WIN) || defined(XP_OS2)
-// this code is stolen from nsFileSpecWin. Since MDB requires a native path, for 
-// the time being, we'll just take the Unix/Canonical form and munge it
-void nsAddrDatabase::UnixToNative(char*& ioPath)
-// This just does string manipulation.  It doesn't check reality, or canonify, or
-// anything
-//----------------------------------------------------------------------------------------
-{
-    // Allow for relative or absolute.  We can do this in place, because the
-    // native path is never longer.
-    
-    if (!ioPath || !*ioPath)
-        return;
-        
-    char* src = ioPath;
-    if (*ioPath == '/')
-    {
-      // Strip initial slash for an absolute path
-      src++;
-    }
-        
-    // Convert the vertical slash to a colon
-    char* cp = src + 1;
-    
-    // If it was an absolute path, check for the drive letter
-    if (*ioPath == '/' && strstr(cp, "|/") == cp)
-    *cp = ':';
-    
-    // Convert '/' to '\'.
-    while (*++cp)
-    {
-      if (*cp == '/')
-        *cp = '\\';
-    }
-
-    if (*ioPath == '/') {
-    for (cp = ioPath; *cp; ++cp)
-      *cp = *(cp + 1);
-  }
-}
-#endif /* XP_WIN || XP_OS2 */
-
-#ifdef XP_MAC
-// this code is stolen from nsFileSpecMac. Since MDB requires a native path, for 
-// the time being, we'll just take the Unix/Canonical form and munge it
-void nsAddrDatabase::UnixToNative(char*& ioPath)
-// This just does string manipulation.  It doesn't check reality, or canonify, or
-// anything
-//----------------------------------------------------------------------------------------
-{
-    // Relying on the fact that the unix path is always longer than the mac path:
-    size_t len = strlen(ioPath);
-    char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
-    if (result)
-    {
-        char* dst = result;
-        const char* src = ioPath;
-        if (*src == '/')             // * full path
-            src++;
-        else if (PL_strchr(src, '/'))    // * partial path, and not just a leaf name
-            *dst++ = ':';
-        strcpy(dst, src);
-
-        while ( *dst != 0)
-        {
-            if (*dst == '/')
-                *dst++ = ':';
-            else
-                *dst++;
-        }
-        nsCRT::free(ioPath);
-        ioPath = result;
-    }
-}
-#endif /* XP_MAC */
-
 /* caller need to delete *aDbPath */
-NS_IMETHODIMP nsAddrDatabase::GetDbPath(nsFileSpec * *aDbPath)
+NS_IMETHODIMP nsAddrDatabase::GetDbPath(nsIFile* *aDbPath)
 {
     if (!aDbPath)
         return NS_ERROR_NULL_POINTER;
 
-    nsFileSpec* pFilePath = new nsFileSpec();
-    if (!pFilePath)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *pFilePath = m_dbName;
-    *aDbPath = pFilePath;
-    return NS_OK;
+    return m_dbName->Clone(aDbPath);
 }
 
-NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
+NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsIFile* aDbPath)
 {
-    m_dbName = (*aDbPath);
-    return NS_OK;
+    return aDbPath->Clone(getter_AddRefs(m_dbName));
 }
 
 NS_IMETHODIMP nsAddrDatabase::Open
@@ -552,23 +477,14 @@ NS_IMETHODIMP nsAddrDatabase::Open
 { 
   *pAddrDB = nsnull;
   
-  nsCOMPtr<nsIFileSpec> mabIFileSpec;
-  nsFileSpec mabFileSpec;
-  // Convert the nsILocalFile into an nsIFileSpec
-  // TODO: convert users of nsIFileSpec to nsILocalFile
-  // and avoid this step.
-  nsresult rv = NS_NewFileSpecFromIFile(aMabFile, getter_AddRefs(mabIFileSpec));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mabIFileSpec->GetFileSpec(&mabFileSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAddrDatabase *pAddressBookDB = FindInCache(aMabFile);
 
-  nsAddrDatabase *pAddressBookDB = (nsAddrDatabase *) FindInCache(&mabFileSpec);
   if (pAddressBookDB) {
     *pAddrDB = pAddressBookDB;
     return NS_OK;
   }
   
-  rv = OpenInternal(&mabFileSpec, aCreate, pAddrDB);
+  nsresult rv = OpenInternal(aMabFile, aCreate, pAddrDB);
   if (NS_SUCCEEDED(rv))
     return NS_OK;
   
@@ -579,9 +495,10 @@ NS_IMETHODIMP nsAddrDatabase::Open
     if (!gAlreadyAlerted)
     {
       gAlreadyAlerted = PR_TRUE;
-      nsXPIDLCString mabFileName;
-      mabFileName.Adopt(mabFileSpec.GetLeafName());
-      AlertAboutLockedMabFile(NS_ConvertASCIItoUCS2(mabFileName).get());
+      nsAutoString mabFileName;
+      rv = aMabFile->GetLeafName(mabFileName);
+      NS_ENSURE_SUCCESS(rv, rv);
+      AlertAboutLockedMabFile(mabFileName.get());
     }
   }
   // try one more time
@@ -636,27 +553,17 @@ NS_IMETHODIMP nsAddrDatabase::Open
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to rename corrupt mab file");
 
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIFileSpec> newMabIFileSpec;
-      nsFileSpec newMabFileSpec;
-      // Convert the nsILocalFile into an nsIFileSpec
-      // TODO: convert users of nsIFileSpec to nsILocalFile
-      // and avoid this step.
-      nsresult rv = NS_NewFileSpecFromIFile(aMabFile, getter_AddRefs(newMabIFileSpec));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = newMabIFileSpec->GetFileSpec(&newMabFileSpec);
-      NS_ENSURE_SUCCESS(rv, rv);
-      
-      rv = OpenInternal(&newMabFileSpec, aCreate, pAddrDB);
+      // now we can try to recreate the original mab file
+      rv = OpenInternal(aMabFile, aCreate, pAddrDB);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create .mab file, after rename");
 
       if (NS_SUCCEEDED(rv)) {
-        nsCAutoString originalMabFileName;
-        rv = aMabFile->GetNativeLeafName(originalMabFileName);
+        nsAutoString originalMabFileName;
+        rv = aMabFile->GetLeafName(originalMabFileName);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // if this fails, we don't care
-        (void)AlertAboutCorruptMabFile(NS_ConvertASCIItoUCS2(originalMabFileName).get(), 
+        (void)AlertAboutCorruptMabFile(originalMabFileName.get(), 
           NS_ConvertASCIItoUCS2(backupMabFileName).get());
       }
     }
@@ -705,7 +612,7 @@ nsresult nsAddrDatabase::AlertAboutLockedMabFile(const PRUnichar *aFileName)
 }
 
 nsresult
-nsAddrDatabase::OpenInternal(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase** pAddrDB)
+nsAddrDatabase::OpenInternal(nsIFile *aMabFile, PRBool aCreate, nsIAddrDatabase** pAddrDB)
 {    
   nsAddrDatabase *pAddressBookDB = new nsAddrDatabase();
   if (!pAddressBookDB) {
@@ -734,7 +641,7 @@ nsAddrDatabase::OpenInternal(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDataba
 // Open the MDB database synchronously. If successful, this routine
 // will set up the m_mdbStore and m_mdbEnv of the database object 
 // so other database calls can work.
-NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
+NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsIFile *dbName, PRBool create)
 {
   nsresult ret = NS_OK;
   nsIMdbFactory *myMDBFactory = GetMDBFactory();
@@ -744,21 +651,22 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
     if (NS_SUCCEEDED(ret))
     {
       nsIMdbThumb *thumb = nsnull;
-      const char *pFilename = dbName->GetCString(); /* do not free */
-      char    *nativeFileName = nsCRT::strdup(pFilename);
+      nsCAutoString filePath;
+
+      ret = dbName->GetNativePath(filePath);
+      NS_ENSURE_SUCCESS(ret, ret);
+
       nsIMdbHeap* dbHeap = 0;
       mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
-      
-      if (!nativeFileName)
-        return NS_ERROR_OUT_OF_MEMORY;
       
       if (m_mdbEnv)
         m_mdbEnv->SetAutoClear(PR_TRUE);
       
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
-      UnixToNative(nativeFileName);
-#endif
-      if (!dbName->Exists()) 
+      PRBool dbNameExists = PR_FALSE;
+      ret = dbName->Exists(&dbNameExists);
+      NS_ENSURE_SUCCESS(ret, ret);
+
+      if (!dbNameExists) 
         ret = NS_ERROR_FILE_NOT_FOUND;
       else
       {
@@ -766,9 +674,11 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
         mdb_bool    canOpen;
         mdbYarn        outFormatVersion;
         nsIMdbFile* oldFile = 0;
-        PRBool isEmptyFile = !dbName->GetFileSize();
+        PRInt64 fileSize;
+        ret = dbName->GetFileSize(&fileSize);
+        NS_ENSURE_SUCCESS(ret, ret);
         
-        ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
+        ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, filePath.get(),
           dbFrozen, &oldFile);
         if ( oldFile )
         {
@@ -785,7 +695,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
               ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbHeap,
                 oldFile, &inOpenPolicy, &thumb); 
             }
-            else if (!isEmptyFile)
+            else if (fileSize != 0)
               ret = NS_ERROR_FILE_ACCESS_DENIED;
           }
           NS_RELEASE(oldFile); // always release our file ref, store has own
@@ -793,8 +703,6 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
         if (NS_FAILED(ret))
           ret = NS_ERROR_FILE_ACCESS_DENIED;
       }
-      
-      nsCRT::free(nativeFileName);
       
       if (NS_SUCCEEDED(ret) && thumb)
       {
@@ -825,7 +733,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
       else if (create && ret != NS_ERROR_FILE_ACCESS_DENIED)
       {
         nsIMdbFile* newFile = 0;
-        ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName->GetCString(), &newFile);
+        ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, filePath.get(), &newFile);
         if ( newFile )
         {
           if (ret == NS_OK)
@@ -3465,9 +3373,11 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result
         rowID = outOid.mOid_Id;
 
     char* listURI = nsnull;
-    char* file = nsnull;
-    file = m_dbName.GetLeafName();
-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, file, rowID);
+
+    nsAutoString fileName;
+    rv = m_dbName->GetLeafName(fileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUCS2toUTF8(fileName).get(), rowID);
 
     nsCOMPtr<nsIAbCard> personCard;
     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -3495,8 +3405,6 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result
         
         NS_IF_ADDREF(*result = personCard);
     }
-    if (file)
-        nsCRT::free(file);
     if (listURI)
         PR_smprintf_free(listURI);
 
@@ -3518,10 +3426,12 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
         rowID = outOid.mOid_Id;
 
     char* listURI = nsnull;
-    char* file = nsnull;
 
-    file = m_dbName.GetLeafName();
-    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, file, rowID);
+    nsAutoString fileName;
+    m_dbName->GetLeafName(fileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, NS_ConvertUCS2toUTF8(fileName).get(), rowID);
 
     nsCOMPtr<nsIAbDirectory> mailList;
     nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -3554,8 +3464,6 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
         }
     }
 
-    if (file)
-        nsCRT::free(file);
     if (listURI)
         PR_smprintf_free(listURI);
 
@@ -3655,9 +3563,13 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
     {
         nsCOMPtr<nsIRDFResource>    parentResource;
 
-        char* file = m_dbName.GetLeafName();
-        char *parentUri = PR_smprintf("%s%s", kMDBDirectoryRoot, file);
-        rv = rdfService->GetResource(nsDependentCString(parentUri), getter_AddRefs(parentResource));
+        nsAutoString parentURI;
+        rv = m_dbName->GetLeafName(parentURI);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        parentURI = NS_LITERAL_STRING(kMDBDirectoryRoot) + parentURI;
+
+        rv = rdfService->GetResource(NS_ConvertUCS2toUTF8(parentURI), getter_AddRefs(parentResource));
         nsCOMPtr<nsIAbDirectory> parentDir;
         rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),
                                     parentResource, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( parentDir));
@@ -3673,10 +3585,6 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
                     dbparentDir->NotifyDirItemAdded(mailList);
             }
         }
-        if (parentUri)
-            PR_smprintf_free(parentUri);
-        if (file)
-            nsCRT::free(file);
     }
     return rv;
 }

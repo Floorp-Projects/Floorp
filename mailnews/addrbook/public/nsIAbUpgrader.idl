@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,7 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
+
+interface nsIFileSpec;
 
 [scriptable, uuid(abd6c760-f396-11d3-b9fa-00108335942a)]    
 interface nsIAbUpgrader : nsISupports {

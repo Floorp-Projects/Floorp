@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsFileSpec is declared in nsIAbDirectory.idl */
 #include "nsIAddrDBAnnouncer.idl"
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
@@ -137,14 +137,34 @@ interface nsAddrDBCommitType
   const long kCompressCommit = 3;
 };
 
-[scriptable, uuid(8175a7ce-4414-489e-ba29-b22d8c4a1cae)]
+[scriptable, uuid(3c6e0a41-7f9d-4e46-a77e-cbeed22ed2be)]
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
-	[noscript] attribute nsFileSpec dbPath;
+  /**
+   * Path to the address book database that this instance represents.
+   */
+  attribute nsIFile dbPath;
 	nsIAddrDatabase open(in nsIFile dbFile, in boolean create, in boolean upgrading);
              
 	void close(in boolean forceCommit);
-	[noscript] void openMDB(in nsFileSpec dbName, in boolean create);
+
+  /**
+   * Open the MDB database synchronously creating it if required. If
+   * successful, this routine will set up the m_mdbStore and m_mdbEnv of the
+   * database object so other database calls can work.
+   *
+   * @param     dbName                      The location of the database file
+   *                                        to open.
+   * @param     create                      If set to true, will create the
+   *                                        database file if it does not
+   *                                        already exist.
+   * @exception NS_ERROR_FILE_NOT_FOUND     The file was not found at the
+   *                                        specified location (and create was
+   *                                        false).
+   * @exception NS_ERROR_FILE_ACCESS_DENIED The file could not be opened as
+   *                                        access was denied.
+   */
+  void openMDB(in nsIFile dbName, in boolean create);
 	void closeMDB(in boolean commit);
 
 	void commit(in unsigned long commitType);
@@ -183,9 +203,9 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void deleteCardFromMailList(in nsIAbDirectory mailList, in nsIAbCard card, in boolean aNotify);
 	readonly attribute wstring directoryName;
 
-    /**
-	 * aUTF8Value needs to be in UTF-8
-	 */
+  /**
+   * aUTF8Value needs to be in UTF-8
+   */
 	nsIAbCard getCardFromAttribute(in nsIAbDirectory directory, in string aName, in string aUTF8Value, in boolean caseInsensitive);
 
 	PRBool findMailListbyUnicodeName(in wstring listName);
@@ -256,37 +276,36 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addListDescription(in nsIMdbRow row, in string value);
 	[noscript] void addListDirNode(in nsIMdbRow listRow);
 
-    /**
-     * use for getting and setting generic string attributes
-     * like _AimScreenName
-     */
-    void setCardValue(in nsIAbCard card, in string name, in wstring value, in boolean notify);
-    wstring getCardValue(in nsIAbCard card, in string name);
+  /**
+   * use for getting and setting generic string attributes
+   * like _AimScreenName
+   */
+  void setCardValue(in nsIAbCard card, in string name, in wstring value, in boolean notify);
+  wstring getCardValue(in nsIAbCard card, in string name);
 
-    void getDeletedCardList(out unsigned long aCount, out nsISupportsArray aDeletedList); 
-    void getDeletedCardCount(out unsigned long count); 
+  void getDeletedCardList(out unsigned long aCount, out nsISupportsArray aDeletedList); 
+  void getDeletedCardCount(out unsigned long count); 
 
-    /**
-     * used for adding a string attributes to a row.
-     * used during LDIF and addressbook import.
-     *
-     * @param aRow
-     *        The row we're adding the column to
-     * @param aLDIFAttributeName
-     *        The column name  (examples: mozillaCategory, 
-     *                                    mozilla_AimScreenName)
-     * @param aColValue
-     *        The column value (example: jabroni316)
-     */
-    [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aLDIFAttributeName, in AString aColValue);
+  /**
+   * used for adding a string attributes to a row.
+   * used during LDIF and addressbook import.
+   *
+   * @param aRow
+   *        The row we're adding the column to
+   * @param aLDIFAttributeName
+   *        The column name  (examples: mozillaCategory, 
+   *                                    mozilla_AimScreenName)
+   * @param aColValue
+   *        The column value (example: jabroni316)
+   */
+  [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aLDIFAttributeName, in AString aColValue);
 
-    void AddListCardColumnsToRow(in nsIAbCard aPCard,
-                                            in nsIMdbRow aPListRow,
-                                            in unsigned long aPos,
-                                            out nsIAbCard aPNewCard,
-                                            in boolean aInMailingList);
-    void InitCardFromRow(in nsIAbCard aNewCard,in nsIMdbRow aCardRow);
-    void SetListAddressTotal(in nsIMdbRow aListRow, in PRUint32 aTotal);
-    nsIMdbRow FindRowByCard(in nsIAbCard aCard);
-
+  void AddListCardColumnsToRow(in nsIAbCard aPCard,
+                               in nsIMdbRow aPListRow,
+                               in unsigned long aPos,
+                               out nsIAbCard aPNewCard,
+                               in boolean aInMailingList);
+  void InitCardFromRow(in nsIAbCard aNewCard,in nsIMdbRow aCardRow);
+  void SetListAddressTotal(in nsIMdbRow aListRow, in PRUint32 aTotal);
+  nsIMdbRow FindRowByCard(in nsIAbCard aCard);
 };

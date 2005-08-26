@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,7 @@
 #include "nsIAbCard.h"  
 #include "nsCOMPtr.h"
 #include "nsIAddressBook.h"
+#include "nsString.h"
 
 class mozITXTToHTMLConv;
 struct AppendItem;

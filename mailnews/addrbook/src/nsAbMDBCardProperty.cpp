@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,6 +49,7 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
+#include "nsILocalFile.h"
 
 nsAbMDBCardProperty::nsAbMDBCardProperty(void)
 {

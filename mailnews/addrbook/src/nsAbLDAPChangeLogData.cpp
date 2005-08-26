@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Rajiv Dayal <rdayal@netscape.com>
  *   Dan Mosedale <dan.mosedale@oracle.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,6 +53,7 @@
 #include "nsIStringBundle.h"
 #include "nsIWindowWatcher.h"
 #include "nsUnicharUtils.h"
+#include "plstr.h"
 
 // defined here since to be used 
 // only locally to this file.

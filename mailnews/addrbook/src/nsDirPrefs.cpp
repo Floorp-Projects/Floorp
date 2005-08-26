@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,6 +52,8 @@
 #include "nsIAbUpgrader.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
+#include "nsILocalFile.h"
 
 #include "prlog.h"
 #include "plstr.h"

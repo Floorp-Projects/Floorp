@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Dan Mosedale <dmose@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,7 +49,7 @@
 #include "nsLDAP.h"
 #include "nsAbUtils.h"
 #include "nsDirPrefs.h"
-
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationQuery, nsIAbLDAPReplicationQuery)
 

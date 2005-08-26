@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,7 +44,6 @@
 #include "mdb.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
-#include "nsFileSpec.h"
 #include "nsIAddrDBListener.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
@@ -74,11 +74,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////////
 	// nsIAddrDatabase methods:
 
-	NS_IMETHOD GetDbPath(nsFileSpec * *aDbPath);
-	NS_IMETHOD SetDbPath(nsFileSpec * aDbPath);
+  NS_IMETHOD GetDbPath(nsIFile * *aDbPath);
+  NS_IMETHOD SetDbPath(nsIFile * aDbPath);
 	NS_IMETHOD Open(nsIFile *aMabFile, PRBool aCreate, PRBool upgrading, nsIAddrDatabase **pCardDB);
 	NS_IMETHOD Close(PRBool forceCommit);
-	NS_IMETHOD OpenMDB(nsFileSpec *dbName, PRBool create);
+  NS_IMETHOD OpenMDB(nsIFile *dbName, PRBool create);
 	NS_IMETHOD CloseMDB(PRBool commit);
 	NS_IMETHOD Commit(PRUint32 commitType);
 	NS_IMETHOD ForceClosed();
@@ -301,7 +301,7 @@ public:
 	nsIMdbTableRowCursor *GetTableRowCursor();
 	nsIMdbTable		*GetPabTable() {return m_mdbPabTable;}
 
-	static nsAddrDatabase*	FindInCache(nsFileSpec *dbName);
+  static nsAddrDatabase* FindInCache(nsIFile *dbName);
 
 	static void		CleanupCache();
 
@@ -328,12 +328,7 @@ protected:
   static void		AddToCache(nsAddrDatabase* pAddrDB) {GetDBCache()->AppendElement(pAddrDB);}
 	static void		RemoveFromCache(nsAddrDatabase* pAddrDB);
 	static PRInt32	FindInCache(nsAddrDatabase* pAddrDB);
-	PRBool			MatchDbName(nsFileSpec *dbName);	// returns TRUE if they match
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)	// this should go away when we can provide our own file stream to MDB/Mork
-	static void		UnixToNative(char*& ioPath);
-#endif
-
+  PRBool MatchDbName(nsIFile *dbName); // returns TRUE if they match
 
 	void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult);
 	void GetCharStringYarn(char* str, struct mdbYarn* strYarn);
@@ -389,7 +384,7 @@ protected:
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbPabTable;
 	nsIMdbTable                 *m_mdbDeletedCardsTable;
-	nsFileSpec		    m_dbName;
+  nsCOMPtr<nsIFile> m_dbName;
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray /*<nsIAddrDBListener>*/ *m_ChangeListeners;
 
@@ -475,7 +470,7 @@ protected:
 private:
   nsresult GetRowForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool bIsCard, nsIMdbRow **findRow);
   PRBool HasRowButDeletedForCharColumn(const PRUnichar *unicodeStr, mdb_column findColumn, PRBool aIsCard, nsIMdbRow **aFindRow);
-  nsresult OpenInternal(nsFileSpec *aMabFile, PRBool aCreate, nsIAddrDatabase **pCardDB);
+  nsresult OpenInternal(nsIFile *aMabFile, PRBool aCreate, nsIAddrDatabase **pCardDB);
   nsresult AlertAboutCorruptMabFile(const PRUnichar *aOldFileName, const PRUnichar *aNewFileName);
   nsresult AlertAboutLockedMabFile(const PRUnichar *aFileName);
   nsresult DisplayAlert(const PRUnichar *titleName, const PRUnichar *alertStringName, 

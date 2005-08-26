@@ -23,6 +23,7 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Dan Mosedale <dmose@netscape.com>
  *   Paul Sandoz <paul.sandoz@sun.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,6 +46,7 @@
 #include "nsAbBaseCID.h"
 #include "nsIAddrBookSession.h"
 #include "nsIRDFService.h"
+#include "nsIServiceManager.h"
 
 #include "nsString.h"
 #include "nsXPIDLString.h"

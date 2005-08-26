@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,7 +51,7 @@
 #include "plbase64.h"
 #include "nsIAddrBookSession.h"
 #include "nsIStringBundle.h"
-
+#include "plstr.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"

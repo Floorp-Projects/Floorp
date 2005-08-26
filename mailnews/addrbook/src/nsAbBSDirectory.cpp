@@ -23,6 +23,7 @@
  *   Paul Sandoz   <paul.sandoz@sun.com>
  *   Csaba Borbola <csaba.borbola@sun.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -56,6 +57,7 @@
 #include "nsAbDirFactoryService.h"
 #include "nsAbMDBDirFactory.h"
 #include "nsArrayEnumerator.h"
+#include "nsCRT.h"
 
 nsAbBSDirectory::nsAbBSDirectory()
 : nsRDFResource(),

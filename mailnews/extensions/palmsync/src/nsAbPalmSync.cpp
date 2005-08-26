@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *       Rajiv Dayal <rdayal@netscape.com>
+ *       Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -280,14 +281,13 @@ nsresult nsAbPalmHotSync::AddAllRecordsToAB(PRBool existingAB, PRInt32 aCount, l
       rv = OpenABDBForHotSync(PR_FALSE);
       NS_ENSURE_SUCCESS(rv, rv);
       // lets try deleting the db out from under ourselves. 
-      nsFileSpec *abFileSpec;
-      rv = mABDB->GetDbPath(&abFileSpec);
+      nsCOMPtr<nsIFile> abFile;
+      rv = mABDB->GetDbPath(getter_AddRefs(abFile));
       NS_ENSURE_SUCCESS(rv, rv);
       mABDB->ForceClosed();
       mDBOpen = PR_FALSE;
       mABDB = nsnull;
-      abFileSpec->Delete(PR_FALSE);
-      delete abFileSpec;
+      abFile->Remove(PR_FALSE);
     }
     else
     {

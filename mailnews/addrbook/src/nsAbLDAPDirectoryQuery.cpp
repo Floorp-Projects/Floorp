@@ -23,6 +23,7 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Dan Mosedale <dmose@netscape.com>
  *   Paul Sandoz <paul.sandoz@sun.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -53,9 +54,11 @@
 #include "nsAutoLock.h"
 #include "nsIProxyObjectManager.h"
 #include "prprf.h"
+#include "nsCRT.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsICategoryManager.h"
+#include "nsIServiceManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsAbLDAPDirectory.h"
 

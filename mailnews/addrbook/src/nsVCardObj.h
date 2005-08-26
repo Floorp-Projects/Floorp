@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -131,8 +132,8 @@ they will use an appropriately defined local type |vwchar_t|.
 #endif
 
 #include "prtypes.h"
-#include "nsFileSpec.h"
 
+class nsFileSpec;
 class nsOutputFileStream;
 
 PR_BEGIN_EXTERN_C

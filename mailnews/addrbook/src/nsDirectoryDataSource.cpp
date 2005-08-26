@@ -58,6 +58,8 @@
 #include "nsILocaleService.h"
 #include "nsCollationCID.h"
 #include "prmem.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCRT.h"
                 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
                                 

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Created by Cyrille Moureaux <Cyrille.Moureaux@sun.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,6 +52,8 @@
 #include "nsAbUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsEnumeratorUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCRT.h"
 #include "prlog.h"
 #include "prthread.h"
 

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -86,7 +87,7 @@
 #include "nsIDocShell.h"
 #include "nsAutoPtr.h"
 #include "nsIMsgVCardService.h"
-
+#include "nsIFileSpec.h"
 #include "nsCRT.h"
 
 #ifdef MOZ_XUL_APP
