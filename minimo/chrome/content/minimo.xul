@@ -80,13 +80,16 @@
 	<command id="cmd_BrowserReload" oncommand="BrowserReload()" />
 	<command id="cmd_BrowserZoomPlus" oncommand="BrowserResetZoomPlus()" />
 	<command id="cmd_BrowserZoomMinus" oncommand="BrowserResetZoomMinus()" />
+    <command id="cmd_DoPanelPreferences" oncommand="DoPanelPreferences()" />
 		
     <toolbar id="nav-bar">
        <menubar  class="chromeclass-menubar">
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
-		     <menuitem id="command_ViewOptions"  type="checkbox" command="cmd_ViewOptions" label="View"  /> 
+		     <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
+		     <!-- separator for now in CSS - need to redesign -->
+		     <menuitem id="command_ViewOptions" style='border-top:1px solid black'  type="checkbox" command="cmd_ViewOptions" label="View Options"  /> 
 
 			<!--
              <menu id="SSR" label="SSR">
