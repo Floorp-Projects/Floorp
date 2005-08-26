@@ -218,12 +218,12 @@ toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
 
-#ifdef XP_MACOSX
+%ifdef XP_MACOSX
 toolbar[type="menubar"] {
   min-height: 0 !important;
   border: 0 !important;
 }
-#endif
+%endif
 
 toolbarseparator {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbardecoration");
@@ -335,15 +335,15 @@ tooltip {
   margin-top: 21px;
 }
 
-#ifdef XP_MACOSX
+%ifdef XP_MACOSX
 .statusbar-resizerpanel {
   display: none;
 }
-#else
+%else
 window[sizemode="maximized"] statusbarpanel.statusbar-resizerpanel {
   visibility: collapse;
 }
-#endif
+%endif
 
 /********** floating popups **********/
 
@@ -679,13 +679,13 @@ textbox[type="timed"] {
 
 /* thunderbird and Nvu don't use the new toolkit's autocomplete widget yet.... */
 
-#ifdef MOZ_THUNDERBIRD
-#define AUTOCOMPLETE_OLD_STYLE
-#elifdef MOZ_STANDALONE_COMPOSER
-#define AUTOCOMPLETE_OLD_STYLE
-#endif
+%ifdef MOZ_THUNDERBIRD
+%define AUTOCOMPLETE_OLD_STYLE
+%elifdef MOZ_STANDALONE_COMPOSER
+%define AUTOCOMPLETE_OLD_STYLE
+%endif
 
-#ifdef AUTOCOMPLETE_OLD_STYLE
+%ifdef AUTOCOMPLETE_OLD_STYLE
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
@@ -715,7 +715,7 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
 }
 
-#else
+%else
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete");
@@ -747,7 +747,7 @@ popup[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#history-dropmarker");
 }
 
-#endif
+%endif
 
 
 
@@ -866,9 +866,9 @@ autorepeatbutton {
 statusbar 
 {
   -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar");
-#ifdef XP_MACOSX
+%ifdef XP_MACOSX
   padding-right: 14px;
-#endif
+%endif
 }
 
 statusbarpanel {
