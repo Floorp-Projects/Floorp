@@ -101,7 +101,7 @@ sub components {
         $self->{components} =
             Bugzilla::Component::get_components_by_product($self->id);
     }
-    return $self->{components}
+    return $self->{components};
 }
 
 sub classification {
@@ -128,9 +128,9 @@ sub versions {
     my $self = shift;
 
     if (!defined $self->{versions}) {
-        $self->{versions} =
+        my @versions =
             Bugzilla::Version::get_versions_by_product($self->id);
-
+        $self->{versions} = \@versions;
     }
     return $self->{versions};
 }
@@ -139,8 +139,9 @@ sub milestones {
     my $self = shift;
 
     if (!defined $self->{milestones}) {
-        $self->{milestones} =
+        my @milestones =
             Bugzilla::Milestone::get_milestones_by_product($self->id);
+        $self->{milestones} = \@milestones;
     }
     return $self->{milestones};
 }
@@ -249,8 +250,8 @@ Bugzilla::Product - Bugzilla product class.
     my $components      = $product->components();
     my $classification  = $product->classification();
     my $hash_ref        = $product->group_controls();
-    my $hash_ref        = $product->milestones();
-    my $hash_ref        = $product->versions();
+    my @array_ref       = $product->milestones();
+    my @array_ref       = $product->versions();
     my $bugcount        = $product->bug_count();
 
     my $id               = $product->id;
@@ -317,21 +318,19 @@ Product.pm represents a product object.
 
 =item C<versions()>
 
- Description: Returns a hash with of all product versions.
+ Description: Returns all valid versions for that product.
 
  Params:      none.
 
- Returns:     A hash with version id as key and a Bugzilla::Version
-              as value.
+ Returns:     An array of Bugzilla::Version objects.
 
 =item C<milestones()>
 
- Description: Returns a hash with of all product milestones.
+ Description: Returns all valid milestones for that product.
 
  Params:      none.
 
- Returns:     A hash with milestone id as key and a Bugzilla::Milestone
-              as value.
+ Returns:     An array of Bugzilla::Milestone objects.
 
 =item C<bug_count()>
 
