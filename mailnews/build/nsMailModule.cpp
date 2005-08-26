@@ -879,7 +879,7 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_ADDBOOKURL_CONTRACTID, nsAddbookUrlConstructor },   
     { "The addbook Protocol Handler", NS_ADDBOOK_HANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "addbook", nsAddbookProtocolHandlerConstructor },
-    { "add vCard content handler", NS_ADDRESSBOOK_CID, NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-addvcard", nsAddressBookConstructor },
+    { "add vCard content handler", NS_ADDRESSBOOK_CID, NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-addvcard", nsAddressBookConstructor },
     { "add vCard content handler", NS_ADDRESSBOOK_CID, NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/x-vcard", nsAddressBookConstructor },
 
     { "The directory factory service interface", NS_ABDIRFACTORYSERVICE_CID,

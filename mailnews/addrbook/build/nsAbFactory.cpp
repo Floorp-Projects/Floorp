@@ -209,7 +209,7 @@ static const nsModuleComponentInfo components[] =
 
   { "add vCard content handler",
     NS_ADDRESSBOOK_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-addvcard",
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-addvcard",
     nsAddressBookConstructor },
 
   { "add vCard content handler",

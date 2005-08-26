@@ -1190,7 +1190,7 @@ NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType,
   nsresult rv = NS_OK;
 
   // First of all, get the content type and make sure it is a content type we know how to handle!
-  if (nsCRT::strcasecmp(aContentType, "x-application-addvcard") == 0) {
+  if (nsCRT::strcasecmp(aContentType, "application/x-addvcard") == 0) {
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
     if (!aChannel) return NS_ERROR_FAILURE;
@@ -1262,7 +1262,7 @@ NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType,
     NS_ENSURE_SUCCESS(rv, rv);
 
   }
-  else // The content-type was not x-application-addvcard...
+  else // The content-type was not application/x-addvcard...
     return NS_ERROR_WONT_HANDLE_CONTENT;
 
   return rv;

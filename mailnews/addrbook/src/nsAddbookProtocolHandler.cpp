@@ -173,7 +173,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       pipeOut->Close();
       
       return NS_NewInputStreamChannel(_retval, aURI, pipeIn,
-          NS_LITERAL_CSTRING("x-application-addvcard"));
+          NS_LITERAL_CSTRING("application/x-addvcard"));
   }
 
   nsString output;
