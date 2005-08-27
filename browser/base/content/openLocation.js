@@ -64,6 +64,12 @@ function onLoad()
 
   if (pref) {
     try {
+      var useAutoFill = pref.getBoolPref("browser.urlbar.autoFill");
+      if (useAutoFill)
+        dialog.input.setAttribute("completedefaultindex", "true");
+    } catch (ex) {}
+
+    try {
       var value = pref.getIntPref("general.open_location.last_window_choice");
       var element = dialog.openWhereList.getElementsByAttribute("value", value)[0];
       if (element)
