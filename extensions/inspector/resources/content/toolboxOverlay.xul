@@ -30,6 +30,7 @@
 
     <menu id="tasksMenu"/> <!-- Seamonkey -->
     <menu id="windowMenu"/> <!-- Firefox-mac -->
+    <menupopup id="menu_ToolsPopup"/> <!-- Firefox-mac -->
     <menu id="menu_Help"/> <!-- Seamonkey -->
     <menu id="helpMenu"/>  <!-- Firefox -->
 
