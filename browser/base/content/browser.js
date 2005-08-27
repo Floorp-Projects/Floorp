@@ -282,7 +282,10 @@ const gPopupBlockerObserver = {
 
     if (gBrowser.selectedBrowser.pageReport) {
       this._reportButton.setAttribute("blocked", "true");
-      if (gPrefService && gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
+      if (!gPrefService)
+        gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
+      if (gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
         var bundle_browser = document.getElementById("bundle_browser");
         var brandBundle = document.getElementById("bundle_brand");
         var brandShortName = brandBundle.getString("brandShortName");
@@ -786,8 +789,9 @@ function delayedStartup()
   os.addObserver(gXPInstallObserver, "xpinstall-install-edit-permissions", false);
   os.addObserver(gMissingPluginInstaller, "missing-plugin", false);
 
-  gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
+  if (!gPrefService)
+    gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
   BrowserOffline.init();
   
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
