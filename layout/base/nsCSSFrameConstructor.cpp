@@ -1802,28 +1802,6 @@ nsAutoEnqueueBinding::~nsAutoEnqueueBinding()
   }
 }
 
-/**
- * If the parent frame is a |tableFrame| and the child is a
- * |captionFrame|, then we want to insert the frames beneath the
- * |tableFrame|'s parent frame. Returns |PR_TRUE| if the parent frame
- * needed to be fixed up.
- */
-static PRBool
-GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
-                         const nsIFrame*  aChildFrame,
-                         nsIFrame**       aAdjParentFrame)
-{
-  *aAdjParentFrame = aParentFrame;
-  PRBool haveCaption = PR_FALSE;
-
-  if (nsLayoutAtoms::tableCaptionFrame == aChildFrame->GetType()) {
-    haveCaption = PR_TRUE;
-    if (nsLayoutAtoms::tableFrame == aParentFrame->GetType()) {
-      *aAdjParentFrame = aParentFrame->GetParent();
-    }
-  }
-  return haveCaption;
-}
 
 // Helper function that determines the child list name that aChildFrame
 // is contained in
@@ -2430,7 +2408,28 @@ AdjustCaptionParentFrame(nsIFrame* aParentFrame)
   }
   return aParentFrame;
 }
-    
+ 
+/**
+ * If the parent frame is a |tableFrame| and the child is a
+ * |captionFrame|, then we want to insert the frames beneath the
+ * |tableFrame|'s parent frame. Returns |PR_TRUE| if the parent frame
+ * needed to be fixed up.
+ */
+static PRBool
+GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
+                         const nsIFrame*  aChildFrame,
+                         nsIFrame**       aAdjParentFrame)
+{
+  *aAdjParentFrame = aParentFrame;
+  PRBool haveCaption = PR_FALSE;
+
+  if (nsLayoutAtoms::tableCaptionFrame == aChildFrame->GetType()) {
+    haveCaption = PR_TRUE;
+    *aAdjParentFrame = AdjustCaptionParentFrame(aParentFrame);
+  }
+  return haveCaption;
+}
+   
 static nsresult 
 ProcessPseudoFrame(nsPresContext*    aPresContext,
                    nsPseudoFrameData& aPseudoData,
