@@ -1,159 +1,131 @@
 <!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
-        
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-        
-  <meta name="Author" content="Norris Boyd">
-        
-  <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
-        
-  <meta name="KeyWords" content="Rhino, JavaScript, Java">
-  <title>Rhino Documentation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Norris Boyd">
+<meta name="KeyWords" content="Rhino, JavaScript, Java">
+<title>Rhino Documentation</title>
 </head>
-  <body bgcolor="#ffffff">
-    
-<center>  
+<style>
+h1 { text-align: center }
+th { text-align: left; font-weight: normal; width: 220px }
+hr { width: 100% }
+</style>
+<body>
+
 <h1> Rhino Documentation</h1>
- </center>
-  <b><i><font size="+1">General</font></i></b>  
-<table width="100%">
-  <tbody>
-     <tr>
-  <td><a href="overview.html">Overview</a>
-       </td>
-   <td>An overview of the JavaScript language and of Rhino.</td>
+
+<h3>General</h3>
+<table>
+<tbody>
+  <tr>
+    <th><a href="overview.html">Overview</a></th>
+    <td>An overview of the JavaScript language and of Rhino.</td>
   </tr>
-   <tr>
-  <td><a href="limits.html">Requirements and Limitations</a>
-       </td>
-   <td>What you must have to run Rhino; what Rhino cannot do.</td>
+  <tr>
+    <th><a href="limits.html">Requirements and Limitations</a></th>
+    <td>What you must have to run Rhino; what Rhino cannot do.</td>
   </tr>
-   <tr>
-  <td><a href="changes.html">Change log</a>
-       </td>
-   <td>Recent Rhino Changes</td>
+  <tr>
+    <th><a href="changes.html">Change log</a></th>
+    <td>Recent Rhino Changes</td>
   </tr>
-   <tr>
-  <td><a href="debugger.html">Rhino Debugger</a>
-       </td>
-   <td>A debugger for debugging JavaScript running in Rhino.</td>
+  <tr>
+    <th><a href="opt.html">Optimization</a></th>
+    <td>Details on the various optimization levels.</td>
   </tr>
-   <tr>
-  <td><a href="opt.html">Optimization</a>
-       </td>
-   <td>Details on the various optimization levels.</td>
+  <tr>
+    <th><a href="faq.html">FAQ</a></th>
+    <td>Answers to frequently asked questions about Rhino.</td>
   </tr>
-   <tr>
-  <td><a href="http://sourceforge.net/projects/jscorba">JS/CORBA Adapter</a>
-       </td>
-   <td>Provides a mechanism for arbitrary JavaScript objects to interact
-with  each other transparently in a distributed JavaScript system using CORBA.</td>
+  <tr>
+    <th><a href="http://www.ociweb.com/jnb/archive/jnbMar2001.html">Scripting Languages for Java</a></th>
+    <td>An article comparing and contrasting Rhino and Jython.</td>
   </tr>
-   <tr>
-  <td><a href="bsf.html">Using Rhino with BSF and Apache</a>
-       </td>
-   <td>How to use Rhino with apps that support BSF.</td>
-  </tr>
-   <tr>
-  <td><a href="faq.html">FAQ</a>
-       </td>
-   <td>Answers to frequently asked questions about Rhino.</td>
-  </tr>
-    <tr>
-      <td valign="Top"><a href="http://www.ociweb.com/jnb/archive/jnbMar2001.html">
-Scripting Languages for Java</a>
-      <br>
-      </td>
-      <td valign="Top">An article comparing and contrasting Rhino and Jython.<br>
-      </td>
-    </tr>
-     
-  </tbody> 
+</tbody>
 </table>
-    
-<p><b><i><font size="+1">Writing Scripts</font></i></b>  
-<table width="100%">
-  <tbody>
-     <tr>
-  <td><a href="ScriptingJava.html">Scripting Java</a>
-       </td>
-   <td>How to use Rhino to script Java classes.</td>
+
+<h3>Writing Scripts</h3>
+<table>
+<tbody>
+  <tr>
+    <th><a href="ScriptingJava.html">Scripting Java</a></th>
+    <td>How to use Rhino to script Java classes.</td>
   </tr>
-     <tr>
-  <td><a href="scriptjava.html">Scripting Java</a>
-       </td>
-   <td>How to use Rhino to script Java classes (an older treatment).</td>
+  <tr>
+    <th><a href="scriptjava.html">Scripting Java</a></th>
+    <td>How to use Rhino to script Java classes (an older treatment).</td>
   </tr>
-   <tr>
-  <td><a href="perf.html">Performance Hints</a>
-       </td>
-   <td>Some tips on writing faster JavaScript code.</td>
+  <tr>
+    <th><a href="perf.html">Performance Hints</a></th>
+    <td>Some tips on writing faster JavaScript code.</td>
   </tr>
-   <tr>
-  <td><a href="tools.html">Tools</a>
-       </td>
-   <td>Some tools for developing JavaScript scripts.</td>
-  </tr>
-     
-  </tbody> 
+</tbody>
 </table>
-   </p>
- 
-<p><b><i><font size="+1">Embedding Rhino</font></i></b>  
-<table width="100%">
-  <tbody>
-     <tr>
-  <td><a href="tutorial.html">Embedding tutorial</a>
-       </td>
-   <td>A short tutorial on how to embed Rhino into your application.</td>
+
+<h3>JavaScript Tools</h3>
+<table>
+<tbody>
+  <tr>
+    <th><a href="shell.html">JavaScript Shell</a></th>
+    <td>Interactive or batch execution of scripts.</td>
   </tr>
-   <tr>
-  <td><a href="apidocs/index.html">API javadoc Reference</a>
-       </td>
-   <td>An annotated outline of the programming interface to Rhino (tip only).</td>
+  <tr>
+    <th><a href="debugger.html">JavaScript Debugger</a></th>
+    <td>Debugging scripts running in Rhino.</td>
   </tr>
-   <tr>
-  <td><a href="scopes.html">Scopes and Contexts</a>
-       </td>
-   <td>Describes how to use scopes and contexts for the best performance
+  <tr>
+    <th><a href="jsc.html">JavaScript Compiler</a></th>
+    <td>Compiling scripts into Java class files.</td>
+  </tr>
+  <tr>
+    <th><a href="http://www.mozilla.org/js/tests/library.html">Testing</a></th>
+    <td>Running the JavaScript test suite.</td>
+  </tr>
+</tbody>
+</table>
+
+<h3>Embedding Rhino</h3>
+<table>
+<tbody>
+  <tr>
+    <th><a href="tutorial.html">Embedding tutorial</a></th>
+    <td>A short tutorial on how to embed Rhino into your application.</td>
+  </tr>
+  <tr>
+    <th><a href="apidocs/index.html">API javadoc Reference</a></th>
+    <td>An annotated outline of the programming interface to Rhino (tip only).</td>
+  </tr>
+  <tr>
+    <th><a href="scopes.html">Scopes and Contexts</a></th>
+    <td>Describes how to use scopes and contexts for the best performance
 and  flexibility, with an eye toward multithreaded environments.</td>
   </tr>
-   <tr>
-  <td><a href="serialization.html">Serialization</a>
-       </td>
-   <td>How to serialize JavaScript objects and functions in Rhino.</td>
+  <tr>
+    <th><a href="serialization.html">Serialization</a></th>
+    <td>How to serialize JavaScript objects and functions in Rhino.</td>
   </tr>
-   <tr>
-  <td><a href="runtime.html">Runtime</a>
-       </td>
-   <td>A brief description of the JavaScript runtime.</td>
+  <tr>
+    <th><a href="runtime.html">Runtime</a></th>
+    <td>A brief description of the JavaScript runtime.</td>
   </tr>
-   <tr>
-  <td><a href="footprint.html">Small Footprint</a>
-       </td>
-   <td>Hints for those interested in small-footprint embeddings.</td>
+  <tr>
+    <th><a href="footprint.html">Small Footprint</a></th>
+    <td>Hints for those interested in small-footprint embeddings.</td>
   </tr>
-   <tr>
-  <td><a href="examples.html">Examples</a>
-       </td>
-   <td>A set of examples showing how to control the JavaScript engine and
+  <tr>
+    <th><a href="examples.html">Examples</a></th>
+    <td>A set of examples showing how to control the JavaScript engine and
 build JavaScript host objects.</td>
   </tr>
-   <tr>
-  <td><font color="#000000"><a href="http://www.mozilla.org/js/tests/library.html">
- Testing</a>
-       </font></td>
-   <td>How to run the JavaScript test suite.</td>
+  <tr>
+    <th><a href="bsf.html">Using Rhino with BSF</a></th>
+    <td>How to use Rhino with apps that support BSF (Bean Scripting Framework) from the Apache Jakarta project.</td>
   </tr>
-     
-  </tbody> 
+</tbody>
 </table>
-   </p>
- 
-<h3>   
-<hr width="100%"><a href="index.html">back to top</a>
- </h3>
-    
+
+<h3><hr><a href="index.html">back to top</a></h3>
+
 </body>
 </html>
