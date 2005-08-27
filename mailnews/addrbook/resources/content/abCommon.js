@@ -193,14 +193,14 @@ var DirPaneController =
           // disable the delete button.
           if (selectedDir.lastIndexOf(kLdapUrlPrefix, 0) == 0)
           {
-            var prefName = selectedDir.substr(kLdapUrlPrefix.length);
             var disable = false;
             try {
-	            disable = gPrefs.getBoolPref(prefName + ".disable_delete");
-	        }
-	        catch(ex){
-	          // if this preference is not set its ok.
-	        }
+              var prefName = selectedDir.substr(kLdapUrlPrefix.length);
+              disable = gPrefs.getBoolPref(prefName + ".disable_delete");
+            }
+            catch(ex) {
+              // if this preference is not set its ok.
+            }
             if (disable)
               return false;
           }
@@ -306,7 +306,7 @@ function GetSelectedCardTypes()
     return kNothingSelected; // no view
 
   var count = cards.length;
-  if (!count)
+  if (count == 0)
     return kNothingSelected;  // nothing selected
 
   var mailingListCnt = 0;
@@ -375,10 +375,7 @@ function GetSelectedCardIndex()
 function GetSelectedCard()
 {
   var index = GetSelectedCardIndex();
-  if (index == -1)
-    return null;
-  else 
-    return gAbView.getCardFromRow(index);
+  return (index == -1) ? null : gAbView.getCardFromRow(index);
 }
 
 function AbEditSelectedCard()
@@ -388,11 +385,9 @@ function AbEditSelectedCard()
 
 function AbEditCard(card)
 {
-  if (!card)
-    return;
-
-  // Not allowing AOL special groups to be edited.
-  if (card.isASpecialGroup)
+  // Need a card,
+  // but not allowing AOL special groups to be edited.
+  if (!card || card.isASpecialGroup)
     return;
 
   if (card.isMailList) {
@@ -459,7 +454,6 @@ function goToggleSplitter( id, elementID )
   if ( splitter )
   {
     var attribValue = splitter.getAttribute("state") ;
-
     if ( attribValue == "collapsed" )
     {
       splitter.setAttribute("state", "open" );
@@ -492,11 +486,9 @@ function GetSelectedAddressesFromDirTree()
     if (directory.isMailList) {
       var listCardsCount = directory.addressLists.Count();
       var cards = new Array(listCardsCount);
-      for ( var i = 0;  i < listCardsCount; i++ ) {
-        var card = directory.addressLists.GetElementAt(i);
-        card = card.QueryInterface(Components.interfaces.nsIAbCard);
-        cards[i] = card;
-      }
+      for (var i = 0; i < listCardsCount; ++i)
+        cards[i] = directory.addressLists.QueryElementAt(
+                     i, Components.interfaces.nsIAbCard);
       addresses = GetAddressesForCards(cards);
     }
   }
@@ -601,10 +593,8 @@ function GetSelectedAbCards()
     var start = new Object;
     var end = new Object;
     abView.selection.getRangeAt(i,start,end);
-    for (j=start.value;j<=end.value;j++) {
-      cards[current] = abView.getCardFromRow(j);
-      current++;
-    }
+    for (j = start.value; j <= end.value; ++j)
+      cards[current++] = abView.getCardFromRow(j);
   }
   return cards;
 }
@@ -729,10 +719,7 @@ function GetAbView()
 // done. to get the uri of the directory only, use GetSelectedDirectory().
 function GetAbViewURI()
 {
-  if (gAbView)
-    return gAbView.URI;
-  else 
-    return null;
+  return gAbView && gAbView.URI;
 }
 
 function ChangeDirectoryByURI(uri)
@@ -890,10 +877,7 @@ function GenerateAddressFromCard(card)
   if (card.isMailList) 
   {
     var directory = GetDirectoryFromURI(card.mailListURI);
-    if(directory.description)
-      email = directory.description;
-    else
-      email = card.displayName;
+    email = directory.description || card.displayName;
   }
   else 
     email = card.primaryEmail;
