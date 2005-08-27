@@ -2356,8 +2356,8 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
       NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    // The we could now have either a new entry, or the entry could
-    // have been updated, so update e to point to the current entry's
+    // We could now have a new entry, or the entry could have been
+    // updated, so update e to point to the current entry's
     // mIdContent.
     e = entry->mIdContent;
   }
