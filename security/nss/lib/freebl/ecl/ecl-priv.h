@@ -144,12 +144,12 @@ struct ECGroupStr {
 	mp_err (*points_mul) (const mp_int *k1, const mp_int *k2,
 						  const mp_int *px, const mp_int *py, mp_int *rx,
 						  mp_int *ry, const ECGroup *group);
+	mp_err (*validate_point) (const mp_int *px, const mp_int *py, const ECGroup *group);
 	/* Extra storage for implementation-specific data.  Any memory
 	 * allocated to these extra fields will be cleared by extra_free. */
 	void *extra1;
 	void *extra2;
 	void (*extra_free) (ECGroup *group);
-	mp_err (*validate_point) (const mp_int *px, const mp_int *py, const ECGroup *group);
 };
 
 /* Wrapper functions for generic prime field arithmetic. */

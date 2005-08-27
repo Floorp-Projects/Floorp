@@ -382,7 +382,7 @@ cleanup:
 }
 
 /* Validates an EC public key as described in Section 5.2.2 of
- * X9.63. The ECDH primitive when used without the cofactor does
+ * X9.62. The ECDH primitive when used without the cofactor does
  * not address small subgroup attacks, which may occur when the
  * public key is not valid. These attacks can be prevented by 
  * validating the public key before using ECDH.
@@ -404,8 +404,11 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 	
     /* NOTE: We only support uncompressed points for now */
     len = (ecParams->fieldID.size + 7) >> 3;
-    if ((publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) ||
-	(publicValue->len != (2 * len + 1))) {
+    if (publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) {
+	PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM); 
+	return SECFailure;
+    } else if (publicValue->len != (2 * len + 1)) {
+	PORT_SetError(SEC_ERROR_INPUT_LEN); 
 	return SECFailure;
     };
 
@@ -420,6 +423,8 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 
     /* construct from named params */
     group = ECGroup_fromName(ecParams->name);
+    if (group == NULL)
+	goto cleanup;
 
     /* validate public point */
     CHECK_MPI_OK( ECPoint_validate(group, &Px, &Py) );

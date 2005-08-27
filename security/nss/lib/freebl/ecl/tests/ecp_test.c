@@ -318,7 +318,7 @@ ectest_curve_GFp(ECGroup *group, int ectestPrint, int ectestTime,
 	}
 	MP_CHECKOK(mp_add_d(&gy, 1, &ry));
 	if (ECPoint_validate(group, &gx, &ry) == 0) {
-		printf("  Error: validate point on invalid point failed.\n");
+		printf("  Error: validate point on invalid point passed.\n");
 		res = MP_NO;
 		goto CLEANUP;
 	}

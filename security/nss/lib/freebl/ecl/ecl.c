@@ -68,10 +68,10 @@ ECGroup_new()
 	MP_CHECKOK(mp_init(&group->order));
 	group->base_point_mul = NULL;
 	group->points_mul = NULL;
+	group->validate_point = NULL;
 	group->extra1 = NULL;
 	group->extra2 = NULL;
 	group->extra_free = NULL;
-	group->validate_point = NULL;
 
   CLEANUP:
 	if (res != MP_OKAY) {
@@ -394,7 +394,7 @@ ECGroup_fromName(const ECCurveName name)
 	return group;
 }
 
-/* Validates an EC public key as described in Section 5.2.2 of X9.63. */
+/* Validates an EC public key as described in Section 5.2.2 of X9.62. */
 mp_err ECPoint_validate(const ECGroup *group, const mp_int *px, const 
 					mp_int *py)
 {
