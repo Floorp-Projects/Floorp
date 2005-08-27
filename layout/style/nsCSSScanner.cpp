@@ -922,7 +922,7 @@ PRBool nsCSSScanner::ParseRef(nsresult& aErrorCode,
 {
   aToken.mIdent.SetLength(0);
   aToken.mType = eCSSToken_Ref;
-  PRUnichar ch = Read(aErrorCode);
+  PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
     return PR_FALSE;
   }
