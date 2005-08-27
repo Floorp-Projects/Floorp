@@ -76,6 +76,8 @@ function acctNamePageValidate()
   }
 
   setPageData(pageData, "accname", "prettyName", accountname);
+  // Set this to true so we know the user has set the name.
+  setPageData(pageData, "accname", "userset", true);
   return true;
 }
 

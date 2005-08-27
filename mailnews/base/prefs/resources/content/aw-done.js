@@ -106,10 +106,13 @@ function donePageInit() {
     if (pageData.accname && pageData.accname.prettyName) {
         accountName = pageData.accname.prettyName.value;
 
-        // If the AccountData exists, tha means we have values read from rdf file.
+        // Only if the user hasn't set the account name should we use the
+        // values from the rdf file - if the account data exists.
         // Get the pretty name and polish the account name
-        if ( currentAccountData && 
-             currentAccountData.incomingServer.prettyName)
+        if (pageData.accname.userset &&
+            !pageData.accname.userset.value &&
+            currentAccountData && 
+            currentAccountData.incomingServer.prettyName)
         {
             var prettyName = currentAccountData.incomingServer.prettyName; 
             // Get the polished account name 
