@@ -41,6 +41,7 @@
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIWebBrowserStream.h"
+#include "nsIWebBrowserFocus.h"
 
 // for NS_APPSHELL_CID
 #include <nsWidgetsCID.h>
@@ -718,6 +719,7 @@ EmbedPrivate::ContentFinishedLoading(void)
   }
 }
 
+#ifdef MOZ_WIDGET_GTK
 // handle focus in and focus out events
 void
 EmbedPrivate::TopLevelFocusIn(void)
@@ -752,6 +754,7 @@ EmbedPrivate::TopLevelFocusOut(void)
   if (focusController)
     focusController->SetActive(PR_FALSE);
 }
+#endif /* MOZ_WIDGET_GTK */
 
 void
 EmbedPrivate::ChildFocusIn(void)
@@ -759,6 +762,21 @@ EmbedPrivate::ChildFocusIn(void)
   if (mIsDestroyed)
     return;
 
+#ifdef MOZ_WIDGET_GTK2
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIWebBrowserFocus> webBrowserFocus(do_QueryInterface(webBrowser));
+  if (!webBrowserFocus)
+    return;
+  
+  webBrowserFocus->Activate();
+#endif /* MOZ_WIDGET_GTK2 */
+
+#ifdef MOZ_WIDGET_GTK
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -766,6 +784,7 @@ EmbedPrivate::ChildFocusIn(void)
     return;
 
   piWin->Activate();
+#endif /* MOZ_WIDGET_GTK */
 }
 
 void
@@ -774,6 +793,21 @@ EmbedPrivate::ChildFocusOut(void)
   if (mIsDestroyed)
     return;
 
+#ifdef MOZ_WIDGET_GTK2
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  if (NS_FAILED(rv))
+	  return;
+
+  nsCOMPtr<nsIWebBrowserFocus> webBrowserFocus(do_QueryInterface(webBrowser));
+  if (!webBrowserFocus)
+	  return;
+  
+  webBrowserFocus->Deactivate();
+#endif /* MOZ_WIDGET_GTK2 */
+
+#ifdef MOZ_WIDGET_GTK
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -787,7 +821,7 @@ EmbedPrivate::ChildFocusOut(void)
   nsIFocusController *focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_TRUE);
-
+#endif /* MOZ_WIDGET_GTK */
 }
 
 // Get the event listener for the chrome event handler.
