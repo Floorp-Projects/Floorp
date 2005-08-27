@@ -118,7 +118,6 @@ function Startup()
       document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
       document.getElementById("createinseparator").setAttribute("hidden", "true");
       document.getElementById("nameseparator").setAttribute("hidden", "true");
-      sizeToFit();
       document.title = document.documentElement.getAttribute("title-selectFolder");
       shouldSetOKButton = false;
       if (window.arguments[2])
