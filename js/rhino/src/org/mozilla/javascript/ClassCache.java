@@ -57,7 +57,7 @@ public class ClassCache
     Hashtable javaAdapterGeneratedClasses = new Hashtable();
 
     ScriptableObject scope;
-    
+
     private Hashtable interfaceAdapterCache;
 
     private int generatedClassSerial;
