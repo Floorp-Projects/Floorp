@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.21 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
+/* $Id: blapi.h,v 1.22 2005/08/27 01:09:21 wtchang%redhat.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -208,7 +208,7 @@ extern SECStatus EC_NewKeyFromSeed(ECParams *  params,
                            int                 seedlen);
 
 /* Validates an EC public key as described in Section 5.2.2 of
- * X9.63. Such validation prevents against small subgroup attacks
+ * X9.62. Such validation prevents against small subgroup attacks
  * when the ECDH primitive is used with the cofactor.
  */
 extern SECStatus EC_ValidatePublicKey(ECParams * params, 
