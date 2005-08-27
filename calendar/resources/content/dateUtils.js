@@ -358,9 +358,12 @@ DateFormater.prototype.getFormatedTime = function( date )
 DateFormater.prototype.getFormatedDate = function( date )
 {
    // Format the date using user's format preference (long or short)
+   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
+   var dateBranch = prefService.getBranch("calendar.date.");
    try
    {     
-      if( getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "date.format", 0 ) == 0 )
+      if( dateBranch.getIntPref("format") == 0 )
          return( this.getLongFormatedDate( date ) );
       else
          return( this.getShortFormatedDate( date ) );
@@ -722,9 +725,13 @@ DateFormater.prototype.formatDateTime = function formatDateTime(datetime, relati
     }
   }
   var formattedDate = this.getFormatedDate( datetime );
-  if ( getBoolPref(gCalendarWindow.calendarPreferences.calendarPref, "date.formatTimeBeforeDate", false )) { 
-    return formattedTime+" "+formattedDate;
-  } else { // default
-    return formattedDate+" "+formattedTime; 
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  var dateBranch = prefService.getBranch("calendar.date.");
+  try {
+    if ( dateBranch.getBoolPref("formatTimeBeforeDate") ) 
+      return formattedTime+" "+formattedDate;
   }
+  catch(ex) {} // if the pref is undefined
+  return formattedDate+" "+formattedTime;
 }

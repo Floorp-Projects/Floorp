@@ -1264,13 +1264,13 @@ function addException(dateToAdd)
     if (!dateToAdd) {
        // get the date from the date and time box.
        // returns a date object
-       getElementValue("exceptions-date-picker");
+       dateToAdd = getElementValue("exceptions-date-picker");
     }
 
     if ( isAlreadyException( dateToAdd ) )
        return;
 
-    var DateLabel = (new dateFormater()).getFormatedDate(date);
+    var DateLabel = (new DateFormater()).getFormatedDate(dateToAdd);
 
     // add a row to the listbox.
     var listbox = document.getElementById("exception-dates-listbox");
