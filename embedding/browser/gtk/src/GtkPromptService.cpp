@@ -186,7 +186,7 @@ GtkPromptService::Prompt(nsIDOMWindow* aParent, const PRUnichar* aDialogTitle,
     if (aCheckValue)
         prompter.GetCheckValue(aCheckValue);
     prompter.GetConfirmValue(aConfirm);
-    if (aConfirm) {
+    if (*aConfirm) {
         if (*aValue)
             nsMemory::Free(*aValue);
         prompter.GetTextValue(aValue);
