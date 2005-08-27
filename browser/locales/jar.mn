@@ -19,6 +19,7 @@
 *   locale/browser/safeMode.dtd                    (%chrome/browser/safeMode.dtd)
     locale/browser/sanitize.dtd                    (%chrome/browser/sanitize.dtd)
     locale/browser/searchbar.properties            (%chrome/browser/searchbar.properties)
+*   locale/browser/searchDialog.dtd                (%chrome/browser/searchDialog.dtd)
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
 *   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)

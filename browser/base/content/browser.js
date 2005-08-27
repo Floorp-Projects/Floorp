@@ -1752,11 +1752,16 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
   content.focus();
 }
 
-function SearchLoadURL(aURL, aTriggeringEvent)
+function delayedSearchLoadURL(aURL, aInNewTab) {
+  setTimeout(SearchLoadURL, 0, aURL, aInNewTab);
+}
+
+function SearchLoadURL(aURL, aInNewTab)
 {
-  if (gBrowser.localName == "tabbrowser" &&
-      aTriggeringEvent && 'altKey' in aTriggeringEvent &&
-      aTriggeringEvent.altKey) {
+  if (!aURL)
+    return;
+
+  if (gBrowser.localName == "tabbrowser" && aInNewTab) {
     content.focus();
     var t = gBrowser.addTab(aURL, null); // open link in new tab
     gBrowser.selectedTab = t;
@@ -2709,15 +2714,8 @@ var DownloadsButtonDNDObserver = {
 
 function WebSearch()
 {
-  var searchBar = document.getElementById("searchbar");
-  if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
-      !(window.getComputedStyle(searchBar.parentNode, null).display == "none")) {
-    searchBar.select();
-    searchBar.focus();
-  }
-  // XXX: If the search box is hidden, we should open a search dialog (see bug 235204)
 #ifdef XP_MACOSX
-  else if (window.location.href != getBrowserURL()) {
+  if (window.location.href != getBrowserURL()) {
     var win = getTopWin();
     if (win) {
       // If there's an open browser window, it should handle this command
@@ -2730,8 +2728,18 @@ function WebSearch()
                               "chrome,all,dialog=no", "about:blank");
       win.addEventListener("load", WebSearchCallback, false);
     }
+    return;
   }
 #endif
+  var searchBar = document.getElementById("searchbar");
+  if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
+      !(window.getComputedStyle(searchBar.parentNode, null).display == "none")) {
+    searchBar.select();
+    searchBar.focus();
+  } else {
+    openDialog("chrome://browser/content/searchDialog.xul", "",
+               "chrome,dialog,resizable,modal");
+  }
 }
 
 function WebSearchCallback() {
