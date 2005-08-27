@@ -371,10 +371,11 @@ public class Global extends ImporterTopLevel
      * <li><tt>input</tt> - the process input. If it is not
      *   java.io.InputStream, it is converted to string and sent to the process
      *   as its input. If not specified, no input is provided to the process.
-     * <li><tt>output</tt> - the process output instead of java.lang.System.out.
-     *   If it is not instance of java.io.OutputStream, the process output is
-     *   read, converted to a string, appended to the output property value
-     *   converted to string and put as the new value of the output property.
+     * <li><tt>output</tt> - the process output instead of
+     *   java.lang.System.out. If it is not instance of java.io.OutputStream,
+     *   the process output is read, converted to a string, appended to the
+     *   output property value converted to string and put as the new value of
+     *   the output property.
      * <li><tt>err</tt> - the process error output instead of
      *   java.lang.System.err. If it is not instance of java.io.OutputStream,
      *   the process error output is read, converted to a string, appended to
@@ -757,10 +758,15 @@ public class Global extends ImporterTopLevel
                 }
             }
         } finally {
-            if (fromProcess) {
-                from.close();
-            } else {
-                to.close();
+            try {
+                if (fromProcess) {
+                    from.close();
+                } else {
+                    to.close();
+                }
+            } catch (IOException ex) {
+                // Ignore errors on close. On Windows JVM may throw invalid
+                // refrence exception if process terminates too fast.
             }
         }
     }
@@ -970,8 +976,7 @@ class PipeThread extends Thread {
         try {
             Global.pipe(fromProcess, from, to);
         } catch (IOException ex) {
-            throw Global.reportRuntimeError(
-                "msg.uncaughtIOException", ex.getMessage());
+            throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
 
