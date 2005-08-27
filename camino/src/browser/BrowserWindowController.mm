@@ -1233,6 +1233,22 @@ enum BWCOpenDest {
 
 #pragma mark -
 
+
+-(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
+{
+  SEL action = [aMenuItem action];
+  
+  if (action == @selector(moveTabToNewWindow:) ||
+      action == @selector(closeCurrentTab:)    ||
+      action == @selector(closeSendersTab:)    ||
+      action == @selector(closeOtherTabs:))
+    return ([mTabBrowser numberOfTabViewItems] > 1);
+  
+  return YES;
+}
+
+#pragma mark -
+
 // BrowserUIDelegate methods (called from the frontmost tab's BrowserWrapper)
 
 
@@ -2570,6 +2586,9 @@ enum BWCOpenDest {
 {
   [[NSApp delegate] fixCloseMenuItemKeyEquivalents];
   [mTabBrowser refreshTabBar:YES];
+  // paranoia, to avoid stale mBrowserView pointer (since we don't own it)
+  if ([aTabView numberOfTabViewItems] == 0)
+    mBrowserView = nil;
 }
 
 -(BrowserTabView*)getTabBrowser
