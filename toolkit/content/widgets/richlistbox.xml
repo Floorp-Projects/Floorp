@@ -60,9 +60,6 @@
         <![CDATA[
           var x = document.getAnonymousElementByAttribute(this, "anonid", "main-box");
           this.scrollBoxObject = x.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
-
-          // add a template build listener
-          this.builder.addListener(this._builder());
         ]]>
       </constructor>
 
@@ -88,54 +85,6 @@
         </getter>
       </property>
 
-      <method name="_builder">
-      <body>
-        <![CDATA[
-          var myThis = this;
-          return {
-            item: null,
-            willRebuild : function(builder) {},
-            didRebuild : function(builder) {
-              myThis._refreshSelection()
-            }
-          }
-        ]]>
-      </body>
-      </method>
-
-      <method name="_refreshSelection">
-      <body>
-        <![CDATA[
-          // cache the selected index
-          var selectedIndex = this._selectedIndex;
-
-          // refreshes selection.  Called for example when a template rebuild
-          // happens.
-          if (this.selectedItem && this.selectedItem.hasAttribute("id")) {
-            var id = this.selectedItem.getAttribute("id");
-            var item = document.getElementById(id);
-
-            // if we find no item, clear selection so that the code at the bottom
-            // takes over
-            if (item)
-              this.selectedItem = item;
-            else
-              this.clearSelection();
-          }
-
-          // if no id or the id no longer exists (above code fails)
-          if (!this.selectedItem) {
-            // if the selectedIndex is larger than the row count, select the last
-            // item.
-            if (selectedIndex >= this.getRowCount())
-              this.selectedIndex = this.getRowCount() - 1;
-            else
-              this.selectedIndex = selectedIndex;
-          }
-        ]]>
-      </body>
-      </method>
-
       <method name="fireActiveItemEvent">
       <body>
         <![CDATA[
@@ -149,7 +98,6 @@
       </body>
       </method>
 
-      <field name="_selectedIndex">-1</field>
       <property name="selectedIndex">
         <getter>
           <![CDATA[
@@ -179,10 +127,8 @@
             } else if (val >= 0) {
               // only set if we get an item returned
               var item = this.getItemAtIndex(val);
-              if (item) {
+              if (item)
                 this.selectedItem = item
-                this._selectedIndex = val;
-              }
             }
           ]]>
         </setter>
@@ -206,7 +152,6 @@
               this.fireActiveItemEvent();
             }
 
-            this._selectedIndex = this.getIndexOf(val);
             this._fireOnSelect();
           ]]>
         </setter>
@@ -216,7 +161,6 @@
         <body>
           <![CDATA[
             this.selectedItem = null;
-            this._selectedIndex = -1;
           ]]>
         </body>
       </method>
@@ -266,26 +210,6 @@
         <body>
           <![CDATA[
             return this.children[aIndex];
-          ]]>
-        </body>
-      </method>
-
-      <method name="getIndexOf">
-        <parameter name="aElement"/>
-        <body>
-          <![CDATA[
-            var run = 0;
-            var index = -1;
-            var children = this.children;
-
-            while (children[run] != aElement && run < children.length) {
-              run++;
-            }
-
-            if (children[run] == aElement)
-              index = run;
-
-            return index;
           ]]>
         </body>
       </method>
