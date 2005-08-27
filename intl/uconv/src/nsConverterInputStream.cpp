@@ -63,7 +63,7 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm =
         do_GetService(kCharsetConverterManagerCID, &rv);
-    if (NS_FAILED(rv)) return nsnull;
+    if (NS_FAILED(rv)) return rv;
 
     rv = ccm->GetUnicodeDecoder(aCharset ? aCharset : "ISO-8859-1", getter_AddRefs(mConverter));
     if (NS_FAILED(rv)) return rv;
