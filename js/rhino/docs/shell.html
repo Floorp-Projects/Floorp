@@ -248,9 +248,26 @@ js> runCommand("echo", { args: arg_array})
 1 2 3 4
 0
 </pre>
-
-
-
+<p>
+Examples for Windows are similar:
+<pre>
+js> // Invoke shell command
+js> runCommand("cmd", "/C", "date /T")
+27.08.2005
+0
+js> // Run sort collectiong the output 
+js> var opt={input: "c\na\nb", output: 'Sort Output:\n'}
+js> runCommand("sort", opt)
+0
+js> print(opt.output)
+Sort Output:
+a
+b
+c
+js> // Invoke notepad and wait until it exits
+js> runCommand("notepad")
+0
+</pre>
 <hr WIDTH="100%">
 <br><a href="index.html">back to top</a>
 </body>
