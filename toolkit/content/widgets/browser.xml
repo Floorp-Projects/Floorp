@@ -468,13 +468,13 @@
           <![CDATA[
             if (!this.pageReport) {
               this.pageReport = new Array();
-              this.updatePageReport(); 
             }
 
             var obj = { requestingWindowURI: evt.requestingWindowURI,
                         popupWindowURI: evt.popupWindowURI,
                         popupWindowFeatures: evt.popupWindowFeatures };
             this.pageReport.push(obj);
+            this.updatePageReport()
           ]]> 
         </body>
       </method>
