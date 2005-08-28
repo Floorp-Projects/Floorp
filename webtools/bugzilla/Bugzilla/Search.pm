@@ -732,6 +732,9 @@ sub init {
              }
              if ($oper ne "noop") {
                  my $table = "longdescs_$chartid";
+                 if(lsearch(\@fields, "bugs.remaining_time") == -1) {
+                     push(@fields, "bugs.remaining_time");                  
+                 }
                  push(@supptables, "INNER JOIN longdescs AS $table " .
                                    "ON $table.bug_id = bugs.bug_id");
                  my $expression = "(100 * ((SUM($table.work_time) *
