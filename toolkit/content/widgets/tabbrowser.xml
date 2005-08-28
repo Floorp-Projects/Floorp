@@ -316,12 +316,12 @@
               if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 // It's okay to clear what the user typed when we start
-                // loading a document. If the user types, this flag gets
-                // set to false, if the document load ends without an
-                // onLocationChange, this flag also gets set to false
-                // (so we keep it while switching tabs after failed load
+                // loading a document. If the user types, this counter gets
+                // set to zero, if the document load ends without an
+                // onLocationChange, this counter gets decremented
+                // (so we keep it while switching tabs after failed loads)
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedClear = true;
+                  this.mBrowser.userTypedClear++;
 
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
@@ -335,9 +335,10 @@
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow) {
-                  // The document is done loading, it's okay to clear
-                  // the value again.
-                  this.mBrowser.userTypedClear = false;
+                  // The document is done loading, we no longer want the
+                  // value cleared.
+                  if (this.mBrowser.userTypedClear > 0)
+                    this.mBrowser.userTypedClear--;
 
                   if (!this.mBrowser.mIconURL)
                     this.mTabBrowser.useDefaultIcon(this.mTab);
@@ -374,7 +375,7 @@
             onLocationChange : function(aWebProgress, aRequest, aLocation)
             {
               // The document loaded correctly, clear the value if we should
-              if (this.mBrowser.userTypedClear)
+              if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
@@ -657,11 +658,11 @@
 
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
-            // Remember the current clear state, then set it to false
+            // Remember the current clear state, then set it to zero
             // so we don't clear the userTypedValue when just switching
             // tabs. Set it back to its old state after we're done.
             var userTypedClear = this.mCurrentBrowser.userTypedClear;
-            this.mCurrentBrowser.userTypedClear = false;
+            this.mCurrentBrowser.userTypedClear = 0;
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];

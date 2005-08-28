@@ -509,7 +509,7 @@
       </property>
 
       <field name="userTypedClear">
-        true
+        1
       </field>
 
       <field name="_userTypedValue">
@@ -518,7 +518,7 @@
 
       <property name="userTypedValue"
                 onget="return this._userTypedValue;"
-                onset="this.userTypedClear = false; return this._userTypedValue = val;"/>
+                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
 
       <field name="mFormFillAttached">
         false

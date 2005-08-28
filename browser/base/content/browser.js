@@ -3428,7 +3428,7 @@ nsBrowserStatusHandler.prototype =
       }
 
       // The document loaded correctly, clear the value if we should
-      if (browser.userTypedClear)
+      if (browser.userTypedClear > 0)
         browser.userTypedValue = null;
 
       if (!gBrowser.mTabbedMode)
@@ -3548,11 +3548,11 @@ nsBrowserStatusHandler.prototype =
   startDocumentLoad : function(aRequest)
   {
     // It's okay to clear what the user typed when we start
-    // loading a document. If the user types, this flag gets
-    // set to false, if the document load ends without an
-    // onLocationChange, this flag also gets set to false
-    // (so we keep it while switching tabs after failed load
-    getBrowser().userTypedClear = true;
+    // loading a document. If the user types, this counter gets
+    // set to zero, if the document load ends without an
+    // onLocationChange, this counter gets decremented
+    // (so we keep it while switching tabs after failed loads)
+    getBrowser().userTypedClear++;
 
     // clear out feed data
     gBrowser.mCurrentBrowser.feeds = null;
@@ -3569,9 +3569,10 @@ nsBrowserStatusHandler.prototype =
 
   endDocumentLoad : function(aRequest, aStatus)
   {
-    // The document is done loading, it's okay to clear
-    // the value again.
-    getBrowser().userTypedClear = false;
+    // The document is done loading, we no longer want the
+    // value cleared.
+    if (getBrowser().userTypedClear > 0)
+      getBrowser().userTypedClear--;
 
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).originalURI.spec;
@@ -5387,10 +5388,10 @@ function updatePageStyles(evt)
   // XXX - Accessing window.content.document can generate an
   // onLocationChange for the current tab, this can cause the url
   // bar to be cleared. Prevent that happening by setting the clear
-  // state to false for the duration of this function.
+  // state to zero for the duration of this function.
   var browser = getBrowser().selectedBrowser;
   var userTypedClear = browser.userTypedClear;
-  browser.userTypedClear = false;
+  browser.userTypedClear = 0;
 
   if (!gPageStyleButton)
     gPageStyleButton = document.getElementById("page-theme-button");
