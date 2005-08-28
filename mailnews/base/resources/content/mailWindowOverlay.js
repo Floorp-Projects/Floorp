@@ -747,14 +747,22 @@ function MsgGetMessagesForAllServers(defaultServer)
             var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
             if (protocolinfo.canLoginAtStartUp && currentServer.loginAtStartUp)
             {
-                if (currentServer.type == "pop3" && currentServer.downloadOnBiff)
+                if (defaultServer && defaultServer.equals(currentServer) && 
+                  !defaultServer.isDeferredTo &&
+                  defaultServer.rootFolder == defaultServer.rootMsgFolder)
                 {
-                  CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadServersArray, localFoldersToDownloadTo);
-                  pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
+                    dump(currentServer.serverURI + "...skipping, already opened\n");
+                }
+                else if (currentServer.type == "pop3" && currentServer.downloadOnBiff)
+                {
+                    CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadServersArray, localFoldersToDownloadTo);
+                    pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
                 }
                 else
-                // Check to see if there are new messages on the server
-                currentServer.PerformBiff(msgWindow);
+                {
+                    // Check to see if there are new messages on the server
+                    currentServer.PerformBiff(msgWindow);
+                }
             }
         }
         for (i = 0; i < pop3DownloadServersArray.length; ++i)

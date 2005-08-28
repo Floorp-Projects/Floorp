@@ -827,7 +827,7 @@ function loadStartFolder(initialUri)
         // or the case where initialUri is non-null (non-startup)
         if (!initialUri && isLoginAtStartUpEnabled && gLoadStartFolder
             && defaultServer.type != "imap" && !defaultServer.isDeferredTo &&
-            defaultServer.msgFolder == defaultServer.rootMsgFolder)
+            defaultServer.rootFolder == defaultServer.rootMsgFolder)
           defaultServer.PerformBiff(msgWindow);        
 
         SelectFolder(startFolder.URI);
