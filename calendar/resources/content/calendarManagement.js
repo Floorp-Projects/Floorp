@@ -323,8 +323,7 @@ function updateStyleSheetForObject(object) {
     if (object.uri) {
         color = getCalendarManager().getCalendarPref(object, 'color');
         rule.style.backgroundColor = color;
-        if (color)
-            rule.style.color = getContrastingTextColor(color);
+        rule.style.color = getContrastingTextColor(color);
         return;
     }
     var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
