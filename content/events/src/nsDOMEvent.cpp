@@ -67,7 +67,7 @@ static const char* const sEventNames[] = {
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
   "DOMAttrModified", "DOMCharacterDataModified",
-  "DOMPopupBlocked", "DOMActivate", "DOMFocusIn", "DOMFocusOut",
+  "DOMActivate", "DOMFocusIn", "DOMFocusOut",
   "pageshow", "pagehide"
 #ifdef MOZ_SVG
  ,
@@ -945,8 +945,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_CONTEXTMENU:
   case NS_CONTEXTMENU_KEY:
     return sEventNames[eDOMEvents_contextmenu];
-  case NS_POPUPBLOCKED:
-    return sEventNames[eDOMEvents_DOMPopupBlocked];
   case NS_UI_ACTIVATE:
     return sEventNames[eDOMEvents_DOMActivate];
   case NS_UI_FOCUSIN:
@@ -976,9 +974,11 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   default:
     break;
   }
-  // XXXldb We can hit this case for non-user-defined events (where
-  // returning null is fine, since GetType handles it) thanks to
-  // nsDOMEvent::SetEventType being incomplete.
+  // XXXldb We can hit this case for nsEvent objects that we didn't
+  // create and that are not user defined events since this function and
+  // SetEventType are incomplete.  (But fixing that requires fixing the
+  // arrays in nsEventListenerManager too, since the events for which
+  // this is a problem generally *are* created by nsDOMEvent.)
   return nsnull;
 }
 
