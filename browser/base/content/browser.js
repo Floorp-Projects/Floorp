@@ -5977,17 +5977,15 @@ var FeedHandler = {
   },
   
   /**
-   * Locate the shell that has a specified URI loaded in it. 
+   * Locate the shell that has a specified document loaded in it. 
    * @param   doc
-   *          The document that contains the feed
-   * @param   feedURI
-   *          The URI to locate a shell for
-   * @returns The doc shell that contains the specified URI
+   *          The document to find a shell for.
+   * @returns The doc shell that contains the specified document.
    */
-  _getContentShell: function(doc, feedURI) {
+  _getContentShell: function(doc) {
     var browsers = getBrowser().browsers;
     for (var i = 0; i < browsers.length; i++) {
-      var shell = findChildShell(doc, browsers[i].docShell, feedURI);
+      var shell = findChildShell(doc, browsers[i].docShell, null);
       if (shell)
         return { shell: shell, browser: browsers[i] };
     }
