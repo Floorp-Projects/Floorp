@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -51,6 +51,7 @@
 #include "nsBookmarksService.h"
 #include "nsArrayEnumerator.h"
 #include "nsArray.h"
+#include "nsVoidArray.h"
 #include "nsIBrowserHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
@@ -4317,6 +4318,110 @@ nsBookmarksService::FlushTo(const char *aURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/**
+ *  ArchiveBookmarksFile()
+ *
+ *  Creates a dated backup once a day in <profile>/bookmarkbackups
+ *
+ *  PRBool forceArchive - forces creating an archive even if one was 
+ *                        already created that day (overwrites)
+ */
+
+nsresult
+nsBookmarksService::ArchiveBookmarksFile(PRBool forceArchive)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFile> bookmarksBackupDir;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(bookmarksBackupDir));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsDependentCString dirName("bookmarkbackups");
+    bookmarksBackupDir->AppendNative(dirName);
+    
+    bookmarksBackupDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+
+    PRBool exists;
+    bookmarksBackupDir->Exists(&exists);
+    if (!exists) {
+        rv = bookmarksBackupDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+        
+        // if there's no backup folder, there's no backup, fail
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // construct the new leafname
+    PRTime          now64 = PR_Now(), temp64, million;
+    PRExplodedTime  nowInfo;
+    PR_ExplodeTime(now64, PR_LocalTimeParameters, &nowInfo);
+    PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);
+
+    char timeString[128];
+    
+    PR_FormatTime(timeString, 128, "bookmarks-%Y-%m-%d.html", &nowInfo);
+
+    nsCAutoString backupFilenameCString(timeString);
+    nsAutoString backupFilenameString = NS_ConvertUTF8toUTF16(backupFilenameCString);
+
+    nsCOMPtr<nsIFile> backupFile;
+    if (forceArchive == PR_FALSE) {
+        nsCOMPtr<nsISimpleEnumerator> existingBackups;
+        bookmarksBackupDir->GetDirectoryEntries(getter_AddRefs(existingBackups));
+
+        nsStringArray backupFileNames;
+
+        PRBool hasMoreElements = PR_FALSE;
+        
+        while (NS_SUCCEEDED(existingBackups->HasMoreElements(&hasMoreElements)) &&
+               hasMoreElements)
+        {
+            existingBackups->GetNext(getter_AddRefs(backupFile));
+            nsAutoString backupName;
+            backupFile->GetLeafName(backupName);
+            
+            // if we have a match, we're done
+            if (backupName == backupFilenameString)
+                return NS_OK;
+            
+            if (Substring(backupName, 0, 10) == NS_LITERAL_STRING("bookmarks-"))
+                backupFileNames.AppendString(backupName);
+        }
+
+#define BACKUPS_TO_KEEP 4
+        if (backupFileNames.Count() > BACKUPS_TO_KEEP) {
+            PRInt16 numberOfBackupsToDelete = backupFileNames.Count() - BACKUPS_TO_KEEP;
+            backupFileNames.Sort();
+
+            while (numberOfBackupsToDelete--) {
+                bookmarksBackupDir->Clone(getter_AddRefs(backupFile));
+                backupFile->Append(*backupFileNames[0]);
+                backupFile->Remove(PR_FALSE);
+                backupFileNames.RemoveStringAt(0);
+            }
+        }
+    } else {
+        // if we have a backup from today, nuke it
+        nsCOMPtr<nsIFile> currentBackup;
+        bookmarksBackupDir->Clone(getter_AddRefs(currentBackup));
+        currentBackup->Append(backupFilenameString);
+        currentBackup->Exists(&exists);
+        if (exists) {
+            rv = currentBackup->Remove(PR_FALSE);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    nsCOMPtr<nsIFile> bookmarksFile;
+    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
+                                getter_AddRefs(bookmarksFile));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = bookmarksFile->CopyTo(bookmarksBackupDir, backupFilenameString);
+    // at least dump something out in case this fails in a debug build
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return rv;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
@@ -4475,35 +4580,37 @@ nsBookmarksService::LoadBookmarks()
 
     PRBool restoreDefaultBookmarks = PR_FALSE;
     if (mBookmarksPrefs)
-        mBookmarksPrefs->GetBoolPref("restore_default_bookmarks", &restoreDefaultBookmarks);
+        mBookmarksPrefs->GetBoolPref("restore_default_bookmarks", 
+                                     &restoreDefaultBookmarks);
 
-    if (restoreDefaultBookmarks)
+    // we want to force a backup to be current if we're restoring the defaults
+    // otherwise, only if one wasn't already created today
+    rv = ArchiveBookmarksFile(restoreDefaultBookmarks);
+    if (NS_SUCCEEDED(rv) && restoreDefaultBookmarks)
     {
+        mBookmarksPrefs->SetBoolPref("restore_default_bookmarks", PR_FALSE);
+
         nsCOMPtr<nsIFile> defaults;
         rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR,
                                     getter_AddRefs(defaults));
+
         nsDependentCString leafStr("bookmarks.html");
         defaults->AppendNative(leafStr);
-        
+
         nsCOMPtr<nsIFile> profileDir;
         rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                    getter_AddRefs(profileDir));
+                                        getter_AddRefs(profileDir));
 
-        nsDependentCString backupFilename("bookmarks-backup.html");
         PRBool exists;
         bookmarksFile->Exists(&exists);
-        if (exists) {
-            bookmarksFile->CopyToNative(nsnull, backupFilename);
+        if (exists)
             bookmarksFile->Remove(PR_FALSE);
-        }
 
         defaults->CopyToNative(profileDir, leafStr);
 
         bookmarksFile->Exists(&exists);
         if (!exists)
             return NS_OK;
-
-        mBookmarksPrefs->SetBoolPref("restore_default_bookmarks", PR_FALSE);      
     }
 
     PRBool foundIERoot = PR_FALSE;
