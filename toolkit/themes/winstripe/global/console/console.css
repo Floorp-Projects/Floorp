@@ -137,3 +137,10 @@
 toolbarseparator {
   min-height: 1em;
 }
+
+/* ::::: Fix JavaScript Console toolbar button text spacing ::::: */
+
+#ToolbarMode .toolbarbutton-text {
+  -moz-padding-start: 0px;
+  -moz-padding-end: 5px;
+}
