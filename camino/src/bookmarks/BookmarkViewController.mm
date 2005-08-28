@@ -663,9 +663,13 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     }
   }
 
-  // If we don't have a destination use the end of the bookmark menu
+  // If we don't have a destination use the end of the current collection, if possible
   if (!pasteDestinationFolder) {
-    pasteDestinationFolder = [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder];
+    BookmarkFolder* destFolder = [self activeCollection];
+    if ([destFolder isSmartFolder])
+      destFolder = [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder];
+
+    pasteDestinationFolder = destFolder;
     pasteDestinationIndex = [pasteDestinationFolder count];
   }
 
