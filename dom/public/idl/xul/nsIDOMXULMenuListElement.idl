@@ -52,6 +52,6 @@ interface nsIDOMXULMenuListElement : nsIDOMXULSelectControlElement {
   attribute DOMString image;
   
   // For editable menu lists only.
-  readonly attribute nsIDOMXULTextBoxElement inputField;
+  readonly attribute nsIDOMNode inputField;
 };
 
