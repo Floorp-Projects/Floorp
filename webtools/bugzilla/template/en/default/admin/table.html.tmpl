@@ -50,6 +50,21 @@
   #   Each hash contains data for a single row of data. The
   #   keys are column names from columns subhashes name field.
   #
+  # overrides:
+  #   Provides a method for overriding individual table cells. This is
+  #   a hash, whose key is the column name, so the column must be
+  #   named for one of it's cells to be overwritten. The hash value is
+  #   an array. Each item in this array is a hash specifying
+  #   row-matching criteria, and any overridden values. The
+  #   row-matching criteria consist of keys:
+  #     match_field: The name of the row value we want to match
+  #     match_value: The value to match against
+  #   Each column value mentioned in the 'columns' documentation above
+  #   can be overwritten (apart from name and heading). To override a
+  #   table-cell value 'xxx', specify a new 'xxx' value, and specify a
+  #   'override_xxx' value as well. See
+  #   admin/milestones/list.html.tmpl for example
+  #
   #%]
 
 [% PROCESS "global/field-descs.none.tmpl" %]
@@ -70,12 +85,47 @@
 [%###################  TABLE CONTENT  ######################%]
 
 [% FOREACH row = data %]
+
   <tr>
     [% FOREACH c = columns %]
-      <td [% IF c.align %] align="[% c.align FILTER html %]" [% END %]>
-      
-        [% IF c.contentlink %]
-          [% link_uri = c.contentlink %]
+
+      [%# Copy to local variables, as we may update these %]
+      [% contentlink = c.contentlink
+         content = c.content
+         content_use_field = c.content_use_field
+         align = c.align
+         allow_html_content = c.allow_html_content
+         yesno_field = c.yesno_field
+       %]
+
+      [%# Are there any specific overrides for this column? %]
+      [% FOREACH override = overrides.${c.name} %]
+
+        [%# Is the override for this row? %]
+        [% IF override.match_value == row.${override.match_field} %]
+
+          [% contentlink = override.contentlink 
+             IF override.override_contentlink %]
+          [% content = override.content
+             IF override.override_content %]
+          [% content_use_field = override.content_use_field
+             IF override.override_content_use_field %]
+          [% align = override.align
+             IF override.override_align %]
+          [% allow_html_content = override.allow_html_content
+             IF override.override_allow_html_content %]
+          [% yesno_field = override.yesno_field
+             IF override.override_yesno_field %]
+
+          [% LAST %]
+
+        [% END %]
+      [% END %]
+
+      <td [% IF align %] align="[% align FILTER html %]" [% END %]>
+
+        [% IF contentlink %]
+          [% link_uri = contentlink %]
           [% WHILE link_uri.search('%%(.+?)%%')%]
             [% FOREACH m = link_uri.match('%%(.+?)%%') %]
               [% IF row.$m %]
@@ -89,20 +139,20 @@
           <a href="[% link_uri %]">
         [% END %]
         
-        [% IF c.content_use_field %]
+        [% IF content_use_field %]
            [% colname = row.${c.name} %]
            [% field_descs.${colname} FILTER html %]
-        [% ELSIF c.content %]
-            [% c.content %]
+        [% ELSIF content %]
+            [% content FILTER none %]
         [% ELSE %]
-          [% IF c.yesno_field %]
+          [% IF yesno_field %]
             [% IF row.${c.name} %]
               Yes
             [% ELSE %]
               No
             [% END %]
           [% ELSE %]
-            [% IF c.allow_html_content %]
+            [% IF allow_html_content %]
               [% row.${c.name} FILTER none %]
             [% ELSE %]
               [% row.${c.name} FILTER html %]
@@ -110,7 +160,7 @@
           [% END %]
         [% END %]
         
-        [% IF c.contentlink %]
+        [% IF contentlink %]
           </a>
         [% END %]
          

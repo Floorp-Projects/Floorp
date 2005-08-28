@@ -54,24 +54,37 @@
        name => "sortkey"
        heading => "Sortkey"
      },
+     {
+       name => "action"
+       heading => "Action"
+       content => "Delete"
+       contentlink => delete_contentlink
+     }
    ]
 %]
 
-[% columns.push({
-     heading => "Action"
-     content => "Delete"
-     contentlink => delete_contentlink
-   }) %]
+[%# We want to override the usual 'Delete' link for the default
+    milestone %]
+[% overrides.action = [ {
+     match_value => "$default_milestone"
+     match_field => 'name'
+     override_content => 1
+     content => "(Default milestone)"
+     override_contentlink => 1
+     contentlink => undef
+   } ]
+%] 
 
 [% PROCESS admin/table.html.tmpl
      columns = columns
      data = milestones
+     overrides = overrides
 %]
 
 <p>
 
 [% PROCESS admin/milestones/footer.html.tmpl
   no_edit_other_milestones_link = 1
- %]
+%]
 
 [% PROCESS global/footer.html.tmpl %]

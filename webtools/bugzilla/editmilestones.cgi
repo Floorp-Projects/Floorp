@@ -84,6 +84,7 @@ unless ($action) {
 
     $vars->{'product'} = $product->name;
     $vars->{'milestones'} = \@milestones;
+    $vars->{'default_milestone'} = $product->default_milestone;
     $template->process("admin/milestones/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

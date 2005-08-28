@@ -493,8 +493,7 @@
 ],
 
 'admin/table.html.tmpl' => [
-  'link_uri',
-  'c.content'
+  'link_uri'
 ],
 
 'admin/classifications/del.html.tmpl' => [
