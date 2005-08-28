@@ -46,6 +46,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsComponentManagerUtils.h"
+#include <objbase.h>
+#include <initguid.h>
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
