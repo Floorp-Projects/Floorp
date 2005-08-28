@@ -1096,7 +1096,6 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
     [self setActiveCollection:activeCollection];
     [self clearSearchResults];
-    [self restoreFolderExpandedStates];
 
     if ([activeCollection isSmartFolder])
       [self setCanEditSelectedContainerContents:NO];
@@ -1118,6 +1117,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
     // this reload ensures that we display the newly selected activeCollection 
     [mBookmarksOutlineView reloadData];
+    // after we've reloaded data, restore twisty states
+    [self restoreFolderExpandedStates];
   }
 }
 
