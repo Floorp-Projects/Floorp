@@ -574,6 +574,11 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   if ([inURI hasPrefix:@"about:"])
     return inURI;
 
+  // show small file icon for local files (this assumes that someone has
+  // registered the blank document icon for "about:blank")
+  if ([inURI compare:@"file://" options:NSCaseInsensitiveSearch range:NSMakeRange(0, 7)] == NSOrderedSame)
+    return @"about:blank";
+
   nsAutoString uriString;
   [inURI assignTo_nsAString:uriString];
 
