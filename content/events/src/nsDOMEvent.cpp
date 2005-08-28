@@ -456,9 +456,6 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
     else if (atom == nsLayoutAtoms::onDOMSubtreeModified)
       mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
-  } else if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
-    if (atom == nsLayoutAtoms::onDOMPopupBlocked)
-      mEvent->message = NS_POPUPBLOCKED;
   } else if (mEvent->eventStructType == NS_UI_EVENT) {
     if (atom == nsLayoutAtoms::onDOMActivate)
       mEvent->message = NS_UI_ACTIVATE;
