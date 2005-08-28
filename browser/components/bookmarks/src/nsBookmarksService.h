@@ -165,6 +165,7 @@ protected:
     nsresult GetURLFromResource(nsIRDFResource* aResource, nsAString& aURL);
 
     nsresult LoadBookmarks();
+    nsresult ArchiveBookmarksFile(PRBool forceArchive);
     nsresult InitDataSource();
 
     nsresult GetLastModifiedFolders(nsISimpleEnumerator **aResult);
