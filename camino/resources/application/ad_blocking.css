@@ -131,12 +131,12 @@ iframe[src*="/rd."],
 iframe[src*="/0ad"],
 iframe[src*="trackoffer."],
 iframe[src*="tracksponsor."],
-iframe[src*="bridgetrack.com"]
+iframe[src*="bridgetrack.com"],
 
 table#overtureLinksWrapper,
-div#omniture,
+div#omniture
 
-{ display: none ! important } 
+{ display: none ! important }
 
 /* turn some false positives back off */
 a:link[href*="download."] img,
