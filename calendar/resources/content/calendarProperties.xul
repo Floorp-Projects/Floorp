@@ -86,7 +86,7 @@
            </row>
 
             <row align="center">
-                <label value="Location:"/>
+                <label value="&calendarproperties.location.label;"/>
                 <textbox id="calendar-uri" oninput="checkURL()"/>
             </row>
 
