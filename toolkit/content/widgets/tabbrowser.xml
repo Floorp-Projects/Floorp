@@ -1998,7 +1998,8 @@
 
           var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
           var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-          if (!autoHide && !forceHide)
+          var tabStripHide = !window.toolbar.visible;
+          if (!autoHide && !forceHide && !tabStripHide)
             this.setStripVisibilityTo(true);
 
           // Hook up a listener for <link>s.
