@@ -3533,7 +3533,12 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
   
   if (aPos->mDirection == eDirPrevious) {
     while (!reachedBlockAncestor) {
-      nsFrameList siblings(frame->GetParent()->GetFirstChild(nsnull));
+      nsIFrame* parent = frame->GetParent();
+      if (!parent) { // Treat the root frame as if it were a block frame.
+        reachedBlockAncestor = PR_TRUE;
+        break;
+      }
+      nsFrameList siblings(parent->GetFirstChild(nsnull));
       nsIFrame* sibling = siblings.GetPrevSiblingFor(frame);
       while (sibling && !stopFrame) {
         stopFrame = FindBlockFrameOrBR(sibling, eDirPrevious);
@@ -3545,7 +3550,7 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
         aPos->mContentOffset = aPos->mResultContent->IndexOf(startContent) + 1;
         break;
       }
-      frame = frame->GetParent();
+      frame = parent;
       reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
     }
     if (reachedBlockAncestor) { // no "stop frame" found
@@ -3554,6 +3559,11 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
     }
   } else { // eDirNext
     while (!reachedBlockAncestor) {
+      nsIFrame* parent = frame->GetParent();
+      if (!parent) { // Treat the root frame as if it were a block frame.
+        reachedBlockAncestor = PR_TRUE;
+        break;
+      }
       nsIFrame* sibling = frame->GetNextSibling();
       while (sibling && !stopFrame) {
         stopFrame = FindBlockFrameOrBR(sibling, eDirNext);
@@ -3565,12 +3575,13 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
         aPos->mContentOffset = aPos->mResultContent->IndexOf(endContent);
         break;
       }
-      frame = frame->GetParent();
+      frame = parent;
       reachedBlockAncestor = NS_SUCCEEDED(frame->QueryInterface(kBlockFrameCID, (void**)&bf));
     }
     if (reachedBlockAncestor) { // no "stop frame" found
       aPos->mResultContent = frame->GetContent();
-      aPos->mContentOffset = aPos->mResultContent->GetChildCount();
+      if (aPos->mResultContent)
+        aPos->mContentOffset = aPos->mResultContent->GetChildCount();
     }
   }
   return NS_OK;
