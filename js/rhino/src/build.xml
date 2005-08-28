@@ -15,6 +15,7 @@ Requires Ant version 1.2
            deprecation="on"
            debug="${debug}"
 	   target="${target-jvm}"
+	   source="${source-level}"
 	   >
     </javac>
     <copy todir="${classes}">

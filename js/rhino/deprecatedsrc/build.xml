@@ -11,6 +11,7 @@
            deprecation="on"
            debug="${debug}"
 	   target="${target-jvm}"
+ 	   source="${source-level}"
 	   >
     </javac>
   </target>
