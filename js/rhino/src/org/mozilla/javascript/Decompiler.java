@@ -783,6 +783,10 @@ public class Decompiler
                 result.append("..");
                 break;
 
+            case Token.DOTQUERY:
+                result.append(".(");
+                break;
+
             case Token.XMLATTR:
                 result.append('@');
                 break;

@@ -1702,6 +1702,7 @@ public class Parser
                 decompiler.addToken(Token.DOTQUERY);
                 pn = nf.createDotQuery(pn, expr(false), ts.getLineno());
                 mustMatchToken(Token.RP, "msg.no.paren");
+                decompiler.addToken(Token.RP);
                 break;
 
               case Token.LB:
