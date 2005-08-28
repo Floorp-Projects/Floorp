@@ -90,6 +90,8 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 - (NSString*)newProfilePath;
 - (void)migrateChimeraProfile:(NSString*)newProfilePath;
 
+- (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat;
+
 - (void)configureProxies;
 - (BOOL)updateOneProxy:(NSDictionary*)configDict
     protocol:(NSString*)protocol
@@ -143,7 +145,7 @@ static BOOL gMadePrefManager;
     [self registerNotificationListener];
 
     if ([self initMozillaPrefs] == NO) {
-      // XXXw. throw here too
+      // we should never get here
       NSLog (@"Failed to initialize mozilla prefs");
     }
     
@@ -214,6 +216,17 @@ static BOOL gMadePrefManager;
       prefsService->SavePrefFile(nsnull);
 }
 
+- (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat
+{
+  NSString* applicationName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
+  
+  NSString* errorString   = [NSString stringWithFormat:inTitleFormat, applicationName];
+  NSString* messageString = [NSString stringWithFormat:inMessageFormat, applicationName];
+
+  NSRunAlertPanel(errorString, messageString, NSLocalizedString(@"QuitButton", @""), nil, nil);
+  [NSApp terminate:self];
+}
+
 - (BOOL)initMozillaPrefs
 {
     nsresult rv;
@@ -223,7 +236,12 @@ static BOOL gMadePrefManager;
     nsCOMPtr<nsILocalFile> binDir;
     rv = NS_NewNativeLocalFile(nsDependentCString(binDirPath), PR_TRUE, getter_AddRefs(binDir));
     if (NS_FAILED(rv))
+    {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureBinPathMsg", @"")];
+      // not reached
       return NO;
+    }
 
     // This shouldn't be needed since we are initing XPCOM with this
     // directory but causes a (harmless) warning if not defined.
@@ -242,52 +260,88 @@ static BOOL gMadePrefManager;
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
     AppDirServiceProvider *provider = new AppDirServiceProvider(nsDependentCString(profileDirName));
-    if (!provider) return NO;
+    if (!provider)
+    {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
+      // not reached
+      return NO;
+    }
 
     nsCOMPtr<nsIDirectoryServiceProvider> dirProvider = (nsIDirectoryServiceProvider*)provider;
     rv = NS_InitEmbedding(binDir, dirProvider,
                           kPStaticModules, kStaticModuleCount);
     if (NS_FAILED(rv)) {
       NSLog(@"Embedding init failed.");
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureInitEmbeddingMsg", @"")];
+      // not reached
       return NO;
     }
     
-    NSString *newProfilePath = [self newProfilePath];
-    if (!newProfilePath) {
-        NSLog(@"Failed to determine profile path!");
-        return NO;
+    NSString* profilePath = [self newProfilePath];
+    if (!profilePath) {
+      NSLog(@"Failed to determine profile path!");
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureProfilePathMsg", @"")];
+      // not reached
+      return NO;
     }
-    // Check for the existance of prefs.js in our new (as of 0.8) profile dir.
+
+    // Check for the existence of prefs.js in our new (as of 0.8) profile dir.
     // If it doesn't exist, attempt to migrate over the contents of the old
     // one at ~/Library/Application Support/Chimera/Profiles/default/xxxxxxxx.slt/
     NSFileManager *fileMgr = [NSFileManager defaultManager];
-    if (![fileMgr fileExistsAtPath:[newProfilePath stringByAppendingPathComponent:@"prefs.js"]])
-        [self migrateChimeraProfile:newProfilePath];
+    if (![fileMgr fileExistsAtPath:[profilePath stringByAppendingPathComponent:@"prefs.js"]])
+        [self migrateChimeraProfile:profilePath];
+
     rv = NS_NewProfileDirServiceProvider(PR_TRUE, &mProfileProvider);
     if (NS_FAILED(rv))
-        return NO;
+    {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
+      
+      // not reached
+      return NO;
+    }
     mProfileProvider->Register();
 
     nsCOMPtr<nsILocalFile> profileDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString([newProfilePath fileSystemRepresentation]),
+    rv = NS_NewNativeLocalFile(nsDependentCString([profilePath fileSystemRepresentation]),
                                 PR_TRUE, getter_AddRefs(profileDir));
     if (NS_FAILED(rv))
+    {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
+      // not reached
       return NO;
+    }
+
     rv = mProfileProvider->SetProfileDir(profileDir);
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-        NSString *alert = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningAlert", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)];
-        NSString *message = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)];
-        NSString *quit = NSLocalizedString(@"AlreadyRunningButton",@"");
-        NSRunAlertPanel(alert,message,quit,nil,nil);
-        [NSApp terminate:self];
+        [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"AlreadyRunningAlert", @"")
+                                        errorMessage:NSLocalizedString(@"AlreadyRunningMsg", @"")];
       }
+      else {
+        [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                        errorMessage:NSLocalizedString(@"StartupFailureProfileSetupMsg", @"")];
+      }
+      // not reached
       return NO;
     }
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    if (!prefs)
+    {
+      [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
+                                      errorMessage:NSLocalizedString(@"StartupFailureNoPrefsMsg", @"")];
+      // not reached
+      return NO;
+    }
+    
     mPrefs = prefs;
-    NS_IF_ADDREF(mPrefs);
+    NS_ADDREF(mPrefs);
     
     [self syncMozillaPrefs];
 
