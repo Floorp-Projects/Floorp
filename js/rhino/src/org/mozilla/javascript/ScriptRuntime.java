@@ -2196,17 +2196,6 @@ public class ScriptRuntime {
         Script script = cx.compileString((String)x, new Interpreter(),
                                          reporter, sourceName, 1, null);
         ((InterpretedFunction)script).idata.evalScriptFlag = true;
-
-        // if the compile fails, an error has been reported by the
-        // compiler, but we need to stop execution to avoid
-        // infinite looping on while(true) { eval('foo bar') } -
-        // so we throw an EvaluatorException.
-        if (script == null) {
-            String message = ScriptRuntime.getMessage0("msg.syntax");
-            throw new EvaluatorException(message, filename, lineNumber,
-                                         null, 0);
-        }
-
         Callable c = (Callable)script;
         return c.call(cx, scope, (Scriptable)thisArg, ScriptRuntime.emptyArgs);
     }
