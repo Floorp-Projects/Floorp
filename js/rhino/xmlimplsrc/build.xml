@@ -47,9 +47,10 @@
            includes="org/**/*.java"
            deprecation="on"
            debug="${debug}"
-	   target="${target-jvm}"
 	   classpathref="xmlimpl.classpath"
 	   failonerror="${xmlimpl.compile.failonerror}"
+	   target="${target-jvm}"
+ 	   source="${source-level}"
 	   >
     </javac>
 
