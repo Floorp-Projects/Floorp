@@ -947,7 +947,9 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         currentInner->mListenerManager = nsnull;
       }
 
-      nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      if (!reUseInnerWindow || newDoc != oldDoc) {
+        nsWindowSH::InvalidateGlobalScopePolluter(cx, currentInner->mJSObject);
+      }
     }
 
     nsRefPtr<nsGlobalWindow> newInnerWindow;
@@ -1097,7 +1099,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       mInnerWindow = newInnerWindow;
     }
 
-    if (newDoc != oldDoc && !aState) {
+    if ((!reUseInnerWindow || newDoc != oldDoc) && !aState) {
       nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
       nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
                                              html_doc);
