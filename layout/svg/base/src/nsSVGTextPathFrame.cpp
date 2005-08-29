@@ -43,6 +43,8 @@
 #include "nsSVGLength.h"
 #include "nsSVGUtils.h"
 
+#include "nsIDOMSVGANimatedPathData.h"
+#include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -68,6 +70,10 @@ public:
   }
 #endif
 
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType);
+
   // nsISVGPathFlatten interface
   NS_IMETHOD GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent);
 
@@ -90,6 +96,8 @@ protected:
 private:
 
   nsCOMPtr<nsIDOMSVGLength> mStartOffset;
+  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
+  nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
@@ -133,6 +141,8 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 nsSVGTextPathFrame::~nsSVGTextPathFrame()
 {
   NS_REMOVE_SVGVALUE_OBSERVER(mStartOffset);
+  NS_REMOVE_SVGVALUE_OBSERVER(mHref);
+  NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
 }
 
 nsresult
@@ -148,6 +158,15 @@ nsSVGTextPathFrame::InitSVG()
     if (!mStartOffset)
       return NS_ERROR_FAILURE;
     NS_ADD_SVGVALUE_OBSERVER(mStartOffset);
+  }
+
+  {
+    nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(mContent);
+    if (aRef)
+      aRef->GetHref(getter_AddRefs(mHref));
+    if (!mHref)
+      return NS_ERROR_FAILURE;
+    NS_ADD_SVGVALUE_OBSERVER(mHref);
   }
 
   nsresult rv = nsSVGTextPathFrameBase::InitSVG();
@@ -202,11 +221,8 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
   *data = nsnull;
   nsIFrame *path;
 
-  nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMSVGAnimatedString> aHref;
-  aRef->GetHref(getter_AddRefs(aHref));
   nsAutoString aStr;
-  aHref->GetAnimVal(aStr);
+  mHref->GetAnimVal(aStr);
 
   nsCAutoString aCStr;
   CopyUTF16toUTF8(aStr, aCStr);
@@ -217,6 +233,15 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
   if (!path)
     return NS_ERROR_FAILURE;
 
+  if (!mSegments) {
+    nsCOMPtr<nsIDOMSVGAnimatedPathData> data =
+      do_QueryInterface(path->GetContent());
+    if (data) {
+      data->GetAnimatedPathSegList(getter_AddRefs(mSegments));
+      NS_ADD_SVGVALUE_OBSERVER(mSegments);
+    }
+  }
+
   nsISVGPathFlatten *flatten;
   CallQueryInterface(path, &flatten);
 
@@ -224,4 +249,20 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
     return NS_ERROR_FAILURE;
 
   return flatten->GetFlattenedPath(data, this);
+}
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGTextPathFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                           nsISVGValue::modificationType aModType)
+{
+  nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(observable);
+  if (s && mHref==s) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
+    mSegments = nsnull;
+  }
+
+  return nsSVGTextPathFrameBase::DidModifySVGObservable(observable, aModType);
 }
