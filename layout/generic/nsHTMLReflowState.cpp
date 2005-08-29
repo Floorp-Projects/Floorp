@@ -2232,41 +2232,31 @@ ComputeLineHeight(nsPresContext* aPresContext,
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
 
-  nscoord lineHeight = -1;
+  nscoord lineHeight;
 
-  const nsStyleText* text = aStyleContext->GetStyleText();
   const nsStyleFont* font = aStyleContext->GetStyleFont();
-  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
+  const nsStyleCoord& lhCoord = aStyleContext->GetStyleText()->mLineHeight;
   
-  nsStyleUnit unit = text->mLineHeight.GetUnit();
+  nsStyleUnit unit = lhCoord.GetUnit();
 
   if (unit == eStyleUnit_Coord) {
     // For length values just use the pre-computed value
-    lineHeight = text->mLineHeight.GetCoordValue();
+    lineHeight = lhCoord.GetCoordValue();
+  } else if (unit == eStyleUnit_Factor) {
+    // For factor units the computed value of the line-height property 
+    // is found by multiplying the factor by the font's computed size
+    // (adjusted for min-size prefs and text zoom).
+    float factor = lhCoord.GetFactorValue();
+    lineHeight = NSToCoordRound(factor * font->mFont.size);
   } else {
+    NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
     nsCOMPtr<nsIDeviceContext> deviceContext;
     aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
+    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     nsCOMPtr<nsIFontMetrics> fm;
     deviceContext->GetMetricsFor(font->mFont, vis->mLangGroup,
                                  *getter_AddRefs(fm));
-    if (unit == eStyleUnit_Factor) {
-      // For factor units the computed value of the line-height property 
-      // is found by multiplying the factor by the font's <b>actual</b> 
-      // em height. 
-      float factor;
-      factor = text->mLineHeight.GetFactorValue();
-      // Note: we normally use the actual font height for computing the
-      // line-height raw value from the style context. On systems where
-      // they disagree the actual font height is more appropriate. This
-      // little hack lets us override that behavior to allow for more
-      // precise layout in the face of imprecise fonts.
-      nscoord emHeight = font->mFont.size;
-      fm->GetEmHeight(emHeight);
-      lineHeight = NSToCoordRound(factor * emHeight);
-    } else {
-      NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
-      lineHeight = GetNormalLineHeight(fm);
-    }
+    lineHeight = GetNormalLineHeight(fm);
   }
   return lineHeight;
 }
