@@ -661,45 +661,35 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     return value;
                 reportConversionError(value, type);
             }
-            else if (type.isInterface()) {
-                if (value instanceof Function
-                    && interfaceAdapter_create != null)
-                {
-                    // Try to wrap function into interface with single method.
-                    Function f = (Function)value;
+            else if (type.isInterface() && value instanceof Callable) {
+                // Try to wrap function into interface with single method.
+                Callable callable = (Function)value;
 
-                    // Can not wrap generic Function since the resulting object
-                    // should be reused next time conversion is made
-                    // and generic Function has no storage for it.
-                    // WeakMap from JDK 1.2 can address it, but for now
-                    // restrict the conversion only to classes extending from
-                    // ScriptableObject to use associateValue for storage
-                    if (f instanceof ScriptableObject) {
-                        ScriptableObject so = (ScriptableObject)f;
-                        Object key = Kit.makeHashKeyFromPair(
-                                         COERCED_INTERFACE_KEY, type);
-                        Object old = so.getAssociatedValue(key);
-                        if (old != null) {
-                            // Function was already wrapped
-                            return old;
-                        }
-                        Object glue;
-                        Object[] args = { type, f };
-                        try {
-                            glue = interfaceAdapter_create.invoke(null, args);
-                        } catch (Exception ex) {
-                            throw Context.throwAsScriptRuntimeEx(ex);
-                        }
-                        if (glue != null) {
-                            // Store for later retrival
-                            glue = so.associateValue(key, glue);
-                            return glue;
-                        }
+                // Can not wrap generic Callable since the resulting object
+                // should be reused next time conversion is made
+                // and generic Function has no storage for it.
+                // Weak referencesfrom JDK 1.2 can address it, but for now
+                // restrict the conversion only to classes extending from
+                // ScriptableObject to use associateValue for storage
+                if (callable instanceof ScriptableObject) {
+                    ScriptableObject so = (ScriptableObject)callable;
+                    Object key = Kit.makeHashKeyFromPair(
+                        COERCED_INTERFACE_KEY, type);
+                    Object old = so.getAssociatedValue(key);
+                    if (old != null) {
+                        // Function was already wrapped
+                        return old;
+                    }
+                    Context cx = Context.getContext();
+                    Object glue = InterfaceAdapter.create(cx, type, callable);
+                    if (glue != null) {
+                        // Store for later retrival
+                        glue = so.associateValue(key, glue);
+                        return glue;
                     }
                 }
                 reportConversionError(value, type);
-            }
-            else {
+            } else {
                 reportConversionError(value, type);
             }
             break;
@@ -978,7 +968,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     private transient Hashtable fieldAndMethods;
 
     private static final Object COERCED_INTERFACE_KEY = new Object();
-    private static Method interfaceAdapter_create;
     private static Method adapter_writeAdapterObject;
     private static Method adapter_readAdapterObject;
 
@@ -1002,14 +991,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 adapter_writeAdapterObject = null;
                 adapter_readAdapterObject = null;
             }
-        }
-        cl = Kit.classOrNull("org.mozilla.javascript.InterfaceAdapter");
-        if (cl != null) {
-            try {
-                sig2[0] = ScriptRuntime.ClassClass;
-                sig2[1] = ScriptRuntime.FunctionClass;
-                interfaceAdapter_create = cl.getMethod("create", sig2);
-            } catch (Exception ex) { }
         }
     }
 

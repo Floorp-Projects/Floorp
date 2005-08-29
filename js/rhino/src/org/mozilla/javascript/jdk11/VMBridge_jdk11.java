@@ -34,8 +34,6 @@
  * file under either the NPL or the GPL.
  */
 
-// API class
-
 package org.mozilla.javascript.jdk11;
 
 import java.util.Hashtable;

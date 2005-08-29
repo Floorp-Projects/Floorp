@@ -35,11 +35,14 @@
  * file under either the NPL or the GPL.
  */
 
-// API class
-
 package org.mozilla.javascript.jdk13;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 import org.mozilla.javascript.*;
 
@@ -97,5 +100,53 @@ public class VMBridge_jdk13 extends VMBridge
         } catch (Exception ex) { }
 
         return accessible.isAccessible();
+    }
+
+    protected Object getInterfaceProxyHelper(ContextFactory cf,
+                                             Class[] interfaces)
+    {
+        // XXX: How to handle interfaces array withclasses from different
+        // class loaders? Using cf.getApplicationClassLoader() ?
+        ClassLoader loader = interfaces[0].getClassLoader();
+        Class cl = Proxy.getProxyClass(loader, interfaces);
+        Constructor c;
+        try {
+            c = cl.getConstructor(new Class[] { InvocationHandler.class });
+        } catch (NoSuchMethodException ex) {
+            // Should not happen
+            throw Kit.initCause(new IllegalStateException(), ex);
+        }
+        return c;
+    }
+
+    protected Object newInterfaceProxy(Object proxyHelper,
+                                       final ContextFactory cf,
+                                       final InterfaceAdapter adapter,
+                                       final Object target,
+                                       final Scriptable topScope)
+    {
+        Constructor c = (Constructor)proxyHelper;
+
+        InvocationHandler handler = new InvocationHandler() {
+                public Object invoke(Object proxy,
+                                     Method method,
+                                     Object[] args)
+                {
+                    return adapter.invoke(cf, target, topScope, method, args);
+                }
+            };
+        Object proxy;
+        try {
+            proxy = c.newInstance(new Object[] { handler });
+        } catch (InvocationTargetException ex) {
+            throw Context.throwAsScriptRuntimeEx(ex);
+        } catch (IllegalAccessException ex) {
+            // Shouls not happen
+            throw Kit.initCause(new IllegalStateException(), ex);
+        } catch (InstantiationException ex) {
+            // Shouls not happen
+            throw Kit.initCause(new IllegalStateException(), ex);
+        }
+        return proxy;
     }
 }

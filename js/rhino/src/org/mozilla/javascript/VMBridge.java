@@ -112,4 +112,45 @@ public abstract class VMBridge
      */
     protected abstract boolean tryToMakeAccessible(Object accessibleObject);
 
+    /**
+     * Create helper object to create later proxies implementing the specified
+     * interfaces later. Under JDK 1.3 the implementation can look like:
+     * <pre>
+     * return java.lang.reflect.Proxy.getProxyClass(..., interfaces).
+     *     getConstructor(new Class[] {
+     *         java.lang.reflect.InvocationHandler.class });
+     * </pre>
+     *
+     * @param interfaces Array with one or more interface class objects.
+     */
+    protected Object getInterfaceProxyHelper(ContextFactory cf,
+                                             Class[] interfaces)
+    {
+        throw Context.reportRuntimeError(
+            "VMBridge.getInterfaceProxyHelper is not supported");
+    }
+
+    /**
+     * Create proxy object for {@link InterfaceAdapter}. The proxy should call
+     * {@link InterfaceAdapter#invoke(ContextFactory cf,
+     *                                Object target,
+     *                                Scriptable topScope,
+     *                                Method method,
+     *                                Object[] args)}
+     * as implementation of interface methods associated with
+     * <tt>proxyHelper</tt>.
+     *
+     * @param proxyHelper The result of the previous call to
+     *        {@link #getInterfaceProxyHelper(ContextFactory, Class[]).
+     */
+    protected Object newInterfaceProxy(Object proxyHelper,
+                                       ContextFactory cf,
+                                       InterfaceAdapter adapter,
+                                       Object target,
+                                       Scriptable topScope)
+    {
+        throw Context.reportRuntimeError(
+            "VMBridge.newInterfaceProxy is not supported");
+    }
+
 }

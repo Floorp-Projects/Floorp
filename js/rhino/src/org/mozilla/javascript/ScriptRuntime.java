@@ -121,6 +121,17 @@ public class ScriptRuntime {
 
     private static final Object LIBRARY_SCOPE_KEY = new Object();
 
+    public static boolean isRhinoRuntimeType(Class cl)
+    {
+        if (cl.isPrimitive()) {
+            return (cl != Character.TYPE);
+        } else {
+            return (cl == StringClass || cl == BooleanClass
+                    || NumberClass.isAssignableFrom(cl)
+                    || ScriptableClass.isAssignableFrom(cl));
+        }
+    }
+
     public static ScriptableObject initStandardObjects(Context cx,
                                                        ScriptableObject scope,
                                                        boolean sealed)

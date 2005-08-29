@@ -89,7 +89,6 @@ Requires Ant version 1.2 or later
 
       <!-- exclude classes that uses class generation library -->
       <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
-      <exclude name="org/mozilla/javascript/InterfaceAdapter*.class"/>
 
       <include name="org/mozilla/javascript/regexp/*.class"
                unless="no-regexp"/>

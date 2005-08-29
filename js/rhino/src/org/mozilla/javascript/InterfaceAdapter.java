@@ -35,31 +35,33 @@
 
 package org.mozilla.javascript;
 
-import org.mozilla.classfile.*;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Method;
 
 /**
- * Base class for classes that runtime will generate to allow for
- * JS function to implement Java interfaces with single method
- * or multiple methods with the same signature.
+ * Adapter to use JS function as implementation of Java interfaces with
+ * single method or multiple methods with the same signature.
  */
-public class InterfaceAdapter implements Cloneable, Callable
+public class InterfaceAdapter
 {
-    private Function function;
-    private Class nonPrimitiveResultClass;
-    private int[] argsToConvert;
+    private final Object proxyHelper;
+    private boolean[] argsToConvert;
 
     /**
-     * Make glue object implementing single-method interface cl that will
+     * Make glue object implementing interface cl that will
      * call the supplied JS function when called.
+     * Only interfaces were all methods has the same signature is supported.
+     *
+     * @return The glue object or null if <tt>cl</tt> is not interface or
+     *         has methods with different signatures.
      */
-    public static InterfaceAdapter create(Class cl, Function f)
+    static Object create(Context cx, Class cl, Callable f)
     {
-        ClassCache cache = ClassCache.get(f);
-        InterfaceAdapter master;
-        master = (InterfaceAdapter)cache.getInterfaceAdapter(cl);
-        if (master == null) {
+        Scriptable topScope = ScriptRuntime.getTopCallScope(cx);
+        ClassCache cache = ClassCache.get(topScope);
+        InterfaceAdapter adapter;
+        adapter = (InterfaceAdapter)cache.getInterfaceAdapter(cl);
+        ContextFactory cf = cx.getFactory();
+        if (adapter == null) {
             if (!cl.isInterface())
                 return null;
             Method[] methods = cl.getMethods();
@@ -76,128 +78,73 @@ public class InterfaceAdapter implements Cloneable, Callable
                 }
             }
 
-            String className = "iadapter"+cache.newClassSerialNumber();
-            byte[] code = createCode(cl, methods, returnType, argTypes,
-                                     className);
-
-            Class iadapterClass = JavaAdapter.loadAdapterClass(className, code);
-            try {
-                master = (InterfaceAdapter)iadapterClass.newInstance();
-            } catch (Exception ex) {
-                throw Context.throwAsScriptRuntimeEx(ex);
-            }
-            master.initMaster(returnType, argTypes);
-            cache.cacheInterfaceAdapter(cl, master);
+            adapter = new InterfaceAdapter(cf, cl, argTypes);
+            cache.cacheInterfaceAdapter(cl, adapter);
         }
-        return master.wrap(f);
+        return VMBridge.instance.newInterfaceProxy(
+            adapter.proxyHelper, cf, adapter, f, topScope);
     }
 
-    private static byte[] createCode(Class interfaceClass,
-                                     Method[] methods,
-                                     Class returnType,
-                                     Class[] argTypes,
-                                     String className)
+    private InterfaceAdapter(ContextFactory cf, Class cl, Class[] argTypes)
     {
-        String superName = "org.mozilla.javascript.InterfaceAdapter";
-        ClassFileWriter cfw = new ClassFileWriter(className,
-                                                  superName,
-                                                  "<ifglue>");
-        cfw.addInterface(interfaceClass.getName());
-
-        // Generate empty constructor
-        cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                      superName, "<init>", "()V");
-        cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)1); // 1: single this argument
-
-        for (int i = 0; i != methods.length; ++i) {
-            Method method = methods[i];
-            StringBuffer sb = new StringBuffer();
-            int localsEnd = JavaAdapter.appendMethodSignature(argTypes,
-                                                              returnType, sb);
-            String methodSignature = sb.toString();
-            cfw.startMethod(method.getName(), methodSignature,
-                            ClassFileWriter.ACC_PUBLIC);
-            cfw.addLoadThis();
-            JavaAdapter.generatePushWrappedArgs(cfw, argTypes,
-                                                argTypes.length + 1);
-            // add method name as the last JS parameter
-            cfw.add(ByteCode.DUP); // duplicate array reference
-            cfw.addPush(argTypes.length);
-            cfw.addPush(method.getName());
-            cfw.add(ByteCode.AASTORE);
-
-            cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "doCall",
-                          "([Ljava/lang/Object;)Ljava/lang/Object;");
-            JavaAdapter.generateReturnResult(cfw, returnType, false);
-
-            cfw.stopMethod((short)localsEnd);
-        }
-
-        return cfw.toByteArray();
-    }
-
-    private void initMaster(Class returnType, Class[] argTypes)
-    {
-        // Can only be called on master
-        if (this.function != null) Kit.codeBug();
-        if (!returnType.isPrimitive()) {
-            nonPrimitiveResultClass = returnType;
-        }
-        this.argsToConvert = JavaAdapter.getArgsToConvert(argTypes);
-    }
-
-    private InterfaceAdapter wrap(Function function)
-    {
-        // Arguments can not be null
-        if (function == null)
-            Kit.codeBug();
-        // Can only be called on master
-        if (this.function != null) Kit.codeBug();
-        InterfaceAdapter copy;
-        try {
-            copy = (InterfaceAdapter)clone();
-        } catch (CloneNotSupportedException ex) {
-            // Should not happen
-            copy = null;
-        }
-        copy.function = function;
-        return copy;
-    }
-
-    protected final Object doCall(Object[] args)
-    {
-        Scriptable scope = function.getParentScope();
-        Scriptable thisObj = scope;
-        Object result = Context.call(null, this, scope, thisObj, args);
-        if (nonPrimitiveResultClass != null) {
-            if (result == Undefined.instance) {
-                // Avoid an error for an undefined value; return null instead.
-                result = null;
-            } else {
-                result = Context.jsToJava(result, nonPrimitiveResultClass);
+        this.proxyHelper
+            = VMBridge.instance.getInterfaceProxyHelper(
+                cf, new Class[] { cl });
+        for (int i = 0; i != argTypes.length; ++i) {
+            if (!ScriptRuntime.isRhinoRuntimeType(argTypes[i])) {
+                if (argsToConvert == null) {
+                    argsToConvert = new boolean[argTypes.length];
+                }
+                argsToConvert[i] = true;
             }
         }
-        return result;
     }
 
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
+    public Object invoke(ContextFactory cf,
+                         final Object target,
+                         final Scriptable topScope,
+                         final Method method,
+                         final Object[] args)
     {
+        ContextAction action = new ContextAction() {
+                public Object run(Context cx)
+                {
+                    return invokeImpl(cx, target, topScope, method, args);
+                }
+            };
+        return cf.call(action);
+    }
+
+    Object invokeImpl(Context cx,
+                      Object target,
+                      Scriptable topScope,
+                      Method method,
+                      Object[] args)
+    {
+        Callable callable = (Callable)target;
+        int N = (args == null) ? 0 : args.length;
+        Object[] jsargs = new Object[N + 1];
+        if (N != 0) {
+            System.arraycopy(args, 0, jsargs, 0, N);
+        }
+        jsargs[N] = method.getName();
         if (argsToConvert != null) {
             WrapFactory wf = cx.getWrapFactory();
-            for (int i = 0, N = argsToConvert.length; i != N; ++i) {
-                int index = argsToConvert[i];
-                Object arg = args[index];
-                if (arg != null && !(arg instanceof Scriptable)) {
-                    args[index] = wf.wrap(cx, scope, arg, null);
+            for (int i = 0; i != N; ++i) {
+                if (argsToConvert[i]) {
+                    jsargs[i] = wf.wrap(cx, topScope, jsargs[i], null);
                 }
             }
         }
-        return function.call(cx, scope, thisObj, args);
+
+        Scriptable thisObj = topScope;
+        Object result = callable.call(cx, topScope, thisObj, jsargs);
+        Class javaResultType = method.getReturnType();
+        if (javaResultType == Void.TYPE) {
+            result = null;
+        } else {
+            result = Context.jsToJava(result, javaResultType);
+        }
+        return result;
     }
-
-
 }
