@@ -77,11 +77,18 @@ typedef int PRInt32;
 #define FILE_IDI_GETREDIRECT            "getredirect.idi"
 #define FILE_INI_REDIRECT               "redirect.ini"
 #define FILE_WGET_LOG                   "wget.log"
-#define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install_wizard.log"
 #define FILE_INSTALL_STATUS_LOG         "install_status.log"
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
+
+#ifdef MOZ_PHOENIX
+#define WIZ_TEMP_DIR                    "ff_temp"
+#elif defined(MOZ_THUNDERBIRD)
+#define WIZ_TEMP_DIR                    "tb_temp"
+#else
+#define WIZ_TEMP_DIR                    "ns_temp"
+#endif
 
 #define FORCE_ADD_TO_UNINSTALL_LOG        TRUE
 #define DO_NOT_FORCE_ADD_TO_UNINSTALL_LOG FALSE
