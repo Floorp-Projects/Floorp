@@ -2187,6 +2187,9 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   return rv;
 }
 
+// Return the selection for the document. Note that text fields have their
+// own selection, which cannot be accessed with this method. Use
+// mPresShell->GetSelectionForCopy() instead.
 nsresult DocumentViewerImpl::GetDocumentSelection(nsISelection **aSelection,
                                                   nsIPresShell *aPresShell)
 {
@@ -2265,6 +2268,7 @@ NS_IMETHODIMP DocumentViewerImpl::ClearSelection()
   nsresult rv;
   nsCOMPtr<nsISelection> selection;
 
+  // use mPresShell->GetSelectionForCopy() ?
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
@@ -2278,6 +2282,8 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
   // functions to make this easier.
   nsCOMPtr<nsISelection> selection;
   nsresult rv;
+
+  // use mPresShell->GetSelectionForCopy() ?
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
@@ -2343,9 +2349,10 @@ NS_IMETHODIMP DocumentViewerImpl::CopyImage(PRInt32 aCopyFlags)
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 {
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+
   nsCOMPtr<nsISelection> selection;
-  nsresult rv;
-  rv = GetDocumentSelection(getter_AddRefs(selection));
+  nsresult rv = mPresShell->GetSelectionForCopy(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
 
   PRBool isCollapsed;
@@ -2389,17 +2396,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetContents(const char *mimeType, PRBool selec
 /* readonly attribute boolean canGetContents; */
 NS_IMETHODIMP DocumentViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
 {
-  NS_ENSURE_ARG_POINTER(aCanGetContents);
-
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetDocumentSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
-  
-  PRBool isCollapsed;
-  selection->GetIsCollapsed(&isCollapsed);
-  
-  *aCanGetContents = !isCollapsed;
-  return NS_OK;
+  return GetCopyable(aCanGetContents);
 }
 
 #ifdef XP_MAC
