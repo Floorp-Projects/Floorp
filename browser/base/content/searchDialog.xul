@@ -51,7 +51,7 @@
         buttonlabelaccept="&searchButton.label;"
         persist="screenX screenY width height"
         screenX="24" screenY="24"
-        width="320" height="150">
+        style="&searchDialog.style;">
 
   <stringbundle id="searchbarBundle"
                 src="chrome://browser/locale/searchbar.properties"/>
