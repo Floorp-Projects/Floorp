@@ -1170,11 +1170,11 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                    notNowButtonText;
       GetLocalizedString(NS_LITERAL_STRING("savePasswordTitle"), dialogTitle);
 
-      GetLocalizedString(NS_LITERAL_STRING("neverForSiteButton"), 
+      GetLocalizedString(NS_LITERAL_STRING("neverForSiteButtonText"), 
                          neverButtonText);
-      GetLocalizedString(NS_LITERAL_STRING("rememberButton"), 
+      GetLocalizedString(NS_LITERAL_STRING("rememberButtonText"), 
                          rememberButtonText);
-      GetLocalizedString(NS_LITERAL_STRING("notNowButton"),
+      GetLocalizedString(NS_LITERAL_STRING("notNowButtonText"),
                          notNowButtonText);
 
       PRInt32 selection;
