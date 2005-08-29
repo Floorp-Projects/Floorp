@@ -87,5 +87,9 @@ dialog label {
 #saveToFolder .toolbarbutton-text {
   text-align: left;
   margin-left: 5px !important;
+  border: 1px solid transparent !important;
 }
 
+#saveToFolder:focus .toolbarbutton-text {
+  border: 1px solid -moz-mac-focusring !important;
+}
