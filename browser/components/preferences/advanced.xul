@@ -147,10 +147,6 @@
                         label="&enableAppUpdate.label;"
                         accesskey="&enableAppUpdate.accesskey;"
                         preference="app.update.enabled"/>
-              <spacer flex="1"/>
-              <button id="appCheckNowButton" 
-                      label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                      oncommand="gAdvancedPane.checkForUpdates();"/>
             </hbox>
             <hbox>
               <checkbox id="enableAddonUpdate"
