@@ -43,6 +43,7 @@
 #include "prtypes.h"
 #include "nsID.h"
 #include "nscore.h"
+#include "nsXPCOM.h"
 
 // XXXbsmedberg - eventually we're going to freeze the XULAPI
 // symbols, and we don't want every consumer to define MOZ_ENABLE_LIBXUL.
@@ -57,8 +58,6 @@
 #else
 #define XULAPI
 #endif
-
-class nsILocalFile;
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -206,5 +205,12 @@ XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
  */
 extern "C" XULAPI nsresult
 XRE_GetBinaryPath(const char *argv0, nsILocalFile* *aResult);
+
+/**
+ * Get the static components built in to libxul.
+ */
+extern "C" XULAPI void
+XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
+                        PRUint32 *aComponentCount);
 
 #endif // _nsXULAppAPI_h__
