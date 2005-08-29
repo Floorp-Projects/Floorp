@@ -43,7 +43,7 @@
 #include "nsSVGLength.h"
 #include "nsSVGUtils.h"
 
-#include "nsIDOMSVGANimatedPathData.h"
+#include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSegList.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMDocument.h"
