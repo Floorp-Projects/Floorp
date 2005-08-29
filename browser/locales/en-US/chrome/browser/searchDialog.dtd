@@ -43,3 +43,4 @@
 <!ENTITY searchWith.accesskey         "W">
 <!ENTITY searchInNewTab.label         "Open search results in a new tab">
 <!ENTITY searchInNewTab.accesskey     "O">
+<!ENTITY searchDialog.style           "width: 30em;">
