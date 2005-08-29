@@ -164,21 +164,23 @@ repackage-win32-installer: $(WIN32_INSTALLER_IN)
 	$(RM) -rf $(DIST)/l10n-temp-stage
 	mkdir $(DIST)/l10n-temp-stage
 	mv $(DIST)/xpi-stage/locale-$(AB_CD) $(DIST)/l10n-temp-stage/bin
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -I$(topsrcdir)/xpinstall/packager/common/share.t $(topsrcdir)/browser/installer/windows/ab-CD.jst | \
-	  sed -e 's/\$$SpaceRequired\$$:bin/50/' > $(DIST)/l10n-temp-stage/install.js
-	cd $(DIST)/l10n-temp-stage && \
-	  $(ZIP) -D -0 -r ../l10n-stage/$(AB_CD).xpi .
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer/installer.inc > \
-	  $(DIST)/l10n-temp-stage/installer.inc
+	  installer.inc
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
-	  -I$(DIST)/l10n-temp-stage/installer.inc \
+	  -Iinstaller.inc \
 	  -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/install.it \
 	  $(topsrcdir)/browser/installer/windows/install.it > install.it
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
 	  $(topsrcdir)/browser/installer/windows/installer.cfg > installer.cfg
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makeinstallini.pl \
 	  installer.cfg install.it
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  $(topsrcdir)/browser/installer/windows/ab-CD.jst > $(AB_CD).jst
+	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/parseandmakejs.pl \
+	  installer.cfg $(AB_CD).jst $(DIST)/l10n-temp-stage
+	cp $(AB_CD).js $(DIST)/l10n-temp-stage/install.js
+	cd $(DIST)/l10n-temp-stage && \
+	  $(ZIP) -D -0 -r ../l10n-stage/$(AB_CD).xpi .
 	$(SYSINSTALL) install.ini $(DIST)/l10n-stage
 	cd $(DIST)/l10n-stage && \
 	  $(CYGWIN_WRAPPER) 7z a -t7z ../l10n-temp-stage/app.7z *.* -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3

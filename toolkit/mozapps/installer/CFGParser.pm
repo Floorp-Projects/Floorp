@@ -114,6 +114,25 @@ sub ParseInstallerCfg
     }
 
     close(fpInstallCfg);
+
+    # $gDefaultProductVersion has the form maj.min.release.bld where maj, min, release
+    #   and bld are numerics representing version information.
+    # Other variables need to use parts of the version info also so we'll
+    #   split out the dot separated values into the array @versionParts
+    #   such that:
+    #
+    #   $versionParts[0] = maj
+    #   $versionParts[1] = min
+    #   $versionParts[2] = release
+    #   $versionParts[3] = bld
+    @versionParts = split /\./, $ENV{WIZ_versionProduct};
+    if($versionParts[2] eq "0" || $versionParts[2] == "") {
+      $versionMain = "$versionParts[0].$versionParts[1]";
+    }
+    else {
+      $versionMain = "$versionParts[0].$versionParts[1].$versionParts[2]";
+    }
+    $ENV{WIZ_userAgentShort}       = "$versionMain";
 }
 
 1;

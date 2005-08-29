@@ -67,7 +67,14 @@ typedef int PRInt32;
 #define CLASS_NAME_UNINSTALL_DLG        "MozillaSetupDlg"
 #define FILE_INI_UNINSTALL              "uninstall.ini"
 #define FILE_LOG_INSTALL                "install_wizard.log"
+
+#ifdef MOZ_PHOENIX
+#define WIZ_TEMP_DIR                    "ff_temp"
+#elif defined(MOZ_THUNDERBIRD)
+#define WIZ_TEMP_DIR                    "tb_temp"
+#else
 #define WIZ_TEMP_DIR                    "ns_temp"
+#endif
 
 #define MAX_KILL_PROCESS_RETRIES        10
 
