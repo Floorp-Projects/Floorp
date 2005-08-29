@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,11 +70,6 @@ nsBaseDragService::nsBaseDragService()
   : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0)
 {
-  nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
-  if (NS_FAILED(result)) {
-    //what do we do? we can't throw!
-    ;
-  }
 }
 
 //-------------------------------------------------------------------------
@@ -276,33 +272,3 @@ nsBaseDragService::EndDragSession()
 
   return NS_OK;
 }
-
-
-//
-// GetFrameFromNode
-//
-// Get the frame for this content node (note: frames are not refcounted).
-//
-void
-nsBaseDragService::GetFrameFromNode(nsIDOMNode* inNode, nsIFrame** outFrame,
-                                    nsPresContext** outContext)
-{
-  *outFrame = nsnull;
-  *outContext = nsnull;
-  if (!inNode || !outContext)
-    return;
-
-  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(inNode);
-  if (contentNode) {
-    nsIDocument* doc = contentNode->GetDocument();
-    if (doc) {
-      nsIPresShell *presShell = doc->GetShellAt(0);
-      if (presShell) {
-        NS_IF_ADDREF(*outContext = presShell->GetPresContext());
-        *outFrame = presShell->GetPrimaryFrameFor(contentNode);
-        NS_ASSERTION(*outFrame, "Can't get frame for this dom node");
-      }
-    }
-  }
-
-} // GetFrameFromNode
