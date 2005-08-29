@@ -6249,9 +6249,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // 3. Give event to the Frames for browser default processing.
       if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
           aEvent->eventStructType != NS_EVENT) {
-        // If aView is non-null, adjust coordinates of aEvent to be in the
-        // coordinate system of mCurrentEventFrame's closest view.  Don't use
-        // aView here, since it may be dead by now.
         rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
                                              aStatus);
       }
