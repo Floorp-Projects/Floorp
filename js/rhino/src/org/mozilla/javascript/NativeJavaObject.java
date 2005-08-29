@@ -661,17 +661,15 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 reportConversionError(value, type);
             }
             else if (type.isInterface() && value instanceof Callable) {
-                // Try to wrap function into interface with single method.
-                Callable callable = (Function)value;
-
-                // Can not wrap generic Callable since the resulting object
-                // should be reused next time conversion is made
-                // and generic Function has no storage for it.
-                // Weak referencesfrom JDK 1.2 can address it, but for now
-                // restrict the conversion only to classes extending from
-                // ScriptableObject to use associateValue for storage
-                if (callable instanceof ScriptableObject) {
-                    ScriptableObject so = (ScriptableObject)callable;
+                // Try to use function as implementation of Java interface.
+                //
+                // XXX: Curently only instances of ScriptableObject are
+                // supported since the resulting interface proxies should
+                // be reused next time conversion is made and generic
+                // Callable has no storage for it. Weak references can
+                // address it but for now use this restriction.
+                if (value instanceof ScriptableObject) {
+                    ScriptableObject so = (ScriptableObject)value;
                     Object key = Kit.makeHashKeyFromPair(
                         COERCED_INTERFACE_KEY, type);
                     Object old = so.getAssociatedValue(key);
@@ -680,7 +678,8 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                         return old;
                     }
                     Context cx = Context.getContext();
-                    Object glue = InterfaceAdapter.create(cx, type, callable);
+                    Object glue
+                        = InterfaceAdapter.create(cx, type, (Callable)value);
                     if (glue != null) {
                         // Store for later retrival
                         glue = so.associateValue(key, glue);

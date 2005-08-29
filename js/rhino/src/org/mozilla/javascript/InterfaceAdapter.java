@@ -44,7 +44,6 @@ import java.lang.reflect.Method;
 public class InterfaceAdapter
 {
     private final Object proxyHelper;
-    private boolean[] argsToConvert;
 
     /**
      * Make glue object implementing interface cl that will
@@ -54,16 +53,16 @@ public class InterfaceAdapter
      * @return The glue object or null if <tt>cl</tt> is not interface or
      *         has methods with different signatures.
      */
-    static Object create(Context cx, Class cl, Callable f)
+    static Object create(Context cx, Class cl, Callable function)
     {
+        if (!cl.isInterface()) throw new IllegalArgumentException();
+
         Scriptable topScope = ScriptRuntime.getTopCallScope(cx);
         ClassCache cache = ClassCache.get(topScope);
         InterfaceAdapter adapter;
         adapter = (InterfaceAdapter)cache.getInterfaceAdapter(cl);
         ContextFactory cf = cx.getFactory();
         if (adapter == null) {
-            if (!cl.isInterface())
-                return null;
             Method[] methods = cl.getMethods();
             if (methods.length == 0) { return null; }
             Class returnType = methods[0].getReturnType();
@@ -78,26 +77,18 @@ public class InterfaceAdapter
                 }
             }
 
-            adapter = new InterfaceAdapter(cf, cl, argTypes);
+            adapter = new InterfaceAdapter(cf, cl);
             cache.cacheInterfaceAdapter(cl, adapter);
         }
         return VMBridge.instance.newInterfaceProxy(
-            adapter.proxyHelper, cf, adapter, f, topScope);
+            adapter.proxyHelper, cf, adapter, function, topScope);
     }
 
-    private InterfaceAdapter(ContextFactory cf, Class cl, Class[] argTypes)
+    private InterfaceAdapter(ContextFactory cf, Class cl)
     {
         this.proxyHelper
             = VMBridge.instance.getInterfaceProxyHelper(
                 cf, new Class[] { cl });
-        for (int i = 0; i != argTypes.length; ++i) {
-            if (!ScriptRuntime.isRhinoRuntimeType(argTypes[i])) {
-                if (argsToConvert == null) {
-                    argsToConvert = new boolean[argTypes.length];
-                }
-                argsToConvert[i] = true;
-            }
-        }
     }
 
     public Object invoke(ContextFactory cf,
@@ -121,24 +112,21 @@ public class InterfaceAdapter
                       Method method,
                       Object[] args)
     {
-        Callable callable = (Callable)target;
         int N = (args == null) ? 0 : args.length;
+        String methodName = method.getName();
+
+        Callable function = (Callable)target;
+        Scriptable thisObj = topScope;
         Object[] jsargs = new Object[N + 1];
-        if (N != 0) {
-            System.arraycopy(args, 0, jsargs, 0, N);
-        }
         jsargs[N] = method.getName();
-        if (argsToConvert != null) {
+        if (N != 0) {
             WrapFactory wf = cx.getWrapFactory();
             for (int i = 0; i != N; ++i) {
-                if (argsToConvert[i]) {
-                    jsargs[i] = wf.wrap(cx, topScope, jsargs[i], null);
-                }
+                jsargs[i] = wf.wrap(cx, topScope, args[i], null);
             }
         }
 
-        Scriptable thisObj = topScope;
-        Object result = callable.call(cx, topScope, thisObj, jsargs);
+        Object result = function.call(cx, topScope, thisObj, jsargs);
         Class javaResultType = method.getReturnType();
         if (javaResultType == Void.TYPE) {
             result = null;
