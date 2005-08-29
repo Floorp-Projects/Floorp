@@ -175,7 +175,7 @@ nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 PRBool
 nsHTMLObjectElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  if (!nsGenericHTMLElement::IsFocusable(aTabIndex)) {
+  if (!nsGenericHTMLFormElement::IsFocusable(aTabIndex)) {
     return PR_FALSE;
   }
   if (aTabIndex && (sTabFocusModel & eTabFocus_formElementsMask) == 0) {
@@ -302,7 +302,7 @@ nsHTMLObjectElement::ParseAttribute(nsIAtom* aAttribute,
     return PR_TRUE;
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFormElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 static void
