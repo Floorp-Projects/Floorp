@@ -199,13 +199,6 @@ var gAdvancedPane = {
     return !warnIncompatible.checked ? 0 : gAdvancedPane._modePreference;
   },
   
-  checkForUpdates: function ()
-  {
-    var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
-                             .createInstance(Components.interfaces.nsIUpdatePrompt);
-    prompter.checkForUpdates();
-  },
-  
   showUpdates: function ()
   {
     var prompter = Components.classes["@mozilla.org/updates/update-prompt;1"]
