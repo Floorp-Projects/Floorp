@@ -106,6 +106,10 @@ CPPSRCS = \
 	nsNativeAppSupportBase.cpp \
 	$(NULL)
 
+ifdef MOZ_ENABLE_LIBXUL
+CPPSRCS += nsEmbedFunctions.cpp
+endif
+
 ifdef MOZ_UPDATER
 CPPSRCS += nsUpdateDriver.cpp
 DEFINES += -DMOZ_UPDATER
