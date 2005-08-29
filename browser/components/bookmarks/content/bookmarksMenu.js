@@ -213,19 +213,22 @@ var BookmarksMenu = {
   // Clean up after closing the context menu popup
   destroyContextMenu: function (aEvent)
   {
-#   note that this method is called after doCommand.
-#   let''s focus the content and dismiss the popup chain (needed when the user
-#   type escape or if he/she clicks outside the context menu)
+    // note that this method is called after doCommand.
+    // let's focus the content and dismiss the popup chain (needed when the user
+    // type escape or if he/she clicks outside the context menu)
     if (content)
       content.focus();
     // XXXpch: see bug 210910, it should be done properly in the backend
     BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
     BookmarksMenuDNDObserver.onDragCloseTarget();
 
-#   if the user types escape, we need to remove the feedback
+    // if the user types escape, we need to remove the feedback
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
 
-    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false)
+    aEvent.target.removeEventListener("mousemove", BookmarksMenuController.onMouseMove, false);
+
+    this._target = null;
+    this._selection = null;
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -477,16 +480,16 @@ var BookmarksMenuController = {
 
   doCommand: function (aCommand)
   {
-#   we needed to focus the element that has the bm command controller
-#   to get here. Now, let''s focus the content before performing the command:
-#   if a modal dialog is called from now, the content will be focused again
-#   automatically after dismissing the dialog
+    // we needed to focus the element that has the bm command controller
+    // to get here. Now, let's focus the content before performing the command:
+    // if a modal dialog is called from now, the content will be focused again
+    // automatically after dismissing the dialog
     if (content)
       content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
 
-#   if a dialog opens, the "open" attribute of a menuitem-container
-#   rclicked on won''t be removed. We do it manually.
+    // if a dialog opens, the "open" attribute of a menuitem-container
+    // clicked on won't be removed. We do it manually.
     var element = document.popupNode.firstChild;
     if (element && element.localName == "menupopup")
       element.hidePopup();
@@ -711,7 +714,7 @@ var BookmarksMenuDNDObserver = {
     if (!this._observers) {
       this._observers = [
         document.getElementById("bookmarks-ptf"),
-#       menubar menus haven''t an "open" attribute: we can take the child
+        // menubar menus haven't an "open" attribute: we can take the child
         document.getElementById("bookmarks-menu").firstChild,
         document.getElementById("bookmarks-chevron").parentNode
       ]
