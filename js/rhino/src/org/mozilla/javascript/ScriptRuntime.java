@@ -3304,6 +3304,9 @@ public class ScriptRuntime {
         // XXX Use value for better error reporting
         String msg = (messageHelper == null)
                      ? "null" : messageHelper.toString();
+        if (value == Scriptable.NOT_FOUND) {
+            return typeError1("msg.function.not.found", msg);
+        }
         return typeError2("msg.isnt.function", msg,
                 value == null ? "null" : value.getClass().getName());
     }
