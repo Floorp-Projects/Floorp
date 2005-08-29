@@ -640,7 +640,11 @@ calDateTime::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
             LL_DIV(tmp, mNativeTime, thousand);
             LL_L2D(msec, tmp);
 
-            JSObject *obj = ::js_NewDateObjectMsec(cx, msec);
+            JSObject *obj;
+            if (mTimezone.EqualsLiteral("floating"))
+                obj = ::js_NewDateObject(cx, mYear, mMonth, mDay, mHour, mMinute, mSecond);
+            else
+                obj = ::js_NewDateObjectMsec(cx, msec);
 
             *vp = OBJECT_TO_JSVAL(obj);
             *_retval = PR_TRUE;

@@ -126,6 +126,20 @@ function jsDateToDateTime(date)
     return newDate;
 }
 
+function jsDateToFloatingDateTime(date)
+{
+    var newDate = createDateTime();
+    newDate.timezone = "floating";
+    newDate.year = date.getFullYear();
+    newDate.month = date.getMonth();
+    newDate.day = date.getDate();
+    newDate.hour = date.getHours();
+    newDate.minute = date.getMinutes();
+    newDate.second = date.getSeconds();
+    newDate.normalize();
+    return newDate;
+}
+
 function isEvent(aObject)
 {
    return aObject instanceof Components.interfaces.calIEvent;

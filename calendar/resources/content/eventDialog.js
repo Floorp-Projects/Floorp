@@ -489,7 +489,7 @@ function onOKCommand()
         if (!event.isMutable) // I will cut vlad for making me do this QI
             event = originalEvent.clone().QueryInterface(Components.interfaces.calIEvent);
 
-        event.startDate = jsDateToDateTime(getElementValue("start-datetime"));
+        event.startDate = jsDateToFloatingDateTime(getElementValue("start-datetime"));
         var endDate = getElementValue("end-datetime");
         if (getElementValue("all-day-event-checkbox", "checked") ) {
             event.startDate.isDate = true;
@@ -497,7 +497,7 @@ function onOKCommand()
             // displayed all day end date is inclusive date, convert to exclusive end date.
             endDate.setDate(endDate.getDate() + 1); 
         }
-        event.endDate = jsDateToDateTime(endDate);
+        event.endDate = jsDateToFloatingDateTime(endDate);
         if (event.startDate.isDate) {
             event.endDate.isDate = true;
         }
@@ -511,13 +511,13 @@ function onOKCommand()
             event = originalEvent.clone().QueryInterface(Components.interfaces.calITodo);
 
         if ( getElementValue("start-checkbox", "checked") ) {
-            event.entryDate = jsDateToDateTime(getElementValue("start-datetime"));
+            event.entryDate = jsDateToFloatingDateTime(getElementValue("start-datetime"));
         } else {
             event.entryDate = null;
         }
 
         if ( getElementValue("due-checkbox", "checked") ) {
-            event.dueDate = jsDateToDateTime(getElementValue("due-datetime"));
+            event.dueDate = jsDateToFloatingDateTime(getElementValue("due-datetime"));
         } else {
             event.dueDate = null;
         }
@@ -525,7 +525,7 @@ function onOKCommand()
         event.status          = getElementValue("todo-status-field");
         event.percentComplete = getElementValue("percent-complete-menulist");
         if ( event.status == "COMPLETED" && event.percentComplete == 100 ) {
-            event.completedDate = jsDateToDateTime(getElementValue("completed-date-picker"));
+            event.completedDate = jsDateToFloatingDateTime(getElementValue("completed-date-picker"));
         } else {
             event.completedDate = null;
         }
@@ -630,7 +630,7 @@ function onOKCommand()
             recRule.count = Math.max(1, getElementValue("repeat-numberoftimes-textbox"));
         } else if (getElementValue("repeat-until-radio", "selected")) {
             var recurEndDate = getElementValue("repeat-end-date-picker");
-            recRule.endDate = jsDateToDateTime(recurEndDate);
+            recRule.endDate = jsDateToFloatingDateTime(recurEndDate);
         }
 
         // don't allow for a null interval here; js
@@ -672,7 +672,7 @@ function onOKCommand()
         for (i = 0; i < listbox.childNodes.length; i++) {
             dump ("valuestr '" + listbox.childNodes[i].value + "'\n");
             var dateObj = new Date(parseInt(listbox.childNodes[i].value));
-            var dt = jsDateToDateTime(dateObj);
+            var dt = jsDateToFloatingDateTime(dateObj);
             dt.isDate = true;
 
             var dateitem = new calRecurrenceDate();
