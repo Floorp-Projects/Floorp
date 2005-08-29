@@ -317,7 +317,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
 function HandleBookmarkIcon(iconURL, addFlag)
 {
-  var url = getWebNavigation().currentURI.spec
+  var url = content.document.documentURI;
   if (url) {
     // update URL with new icon reference
     if (!gBookmarksService)
