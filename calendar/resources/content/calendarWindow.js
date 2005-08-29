@@ -887,9 +887,11 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       //update vars for next loop
       if( !(eventStartListIndex in dayEventStartList) || dayEventStartList[eventStartListIndex] == null )
         done = true;
-      else
-        nextEventIsStarting = dayEventStartList[eventStartListIndex].start
+      else {
+        var compResult = dayEventStartList[eventStartListIndex].start
                                   .compare(dayEventEndList[eventEndListIndex].end);
+        nextEventIsStarting = compResult < 0 ? true : false;
+      }
     }
     //  set totalSlotCount for the last contiguous group of events
     for ( i = groupStartIndex; i < dayEventStartList.length; i++ )
