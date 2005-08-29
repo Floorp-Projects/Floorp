@@ -68,6 +68,9 @@
     locale/browser/help/tabbed_browsing.xhtml         (%chrome/help/tabbed_browsing.xhtml)
     locale/browser/help/glossary.xhtml                (%chrome/help/glossary.xhtml)
     locale/browser/help/firebird-glossary.rdf         (%chrome/help/firebird-glossary.rdf)
+# the following files are browser-specific overrides
+*   locale/@AB_CD@/global/netError.dtd                (%chrome/overrides/netError.dtd)
+*   locale/@AB_CD@/global/appstrings.properties       (%chrome/overrides/appstrings.properties)
 #ifdef MOZ_USE_GENERIC_BRANDING
 % locale branding @AB_CD@ %locale/branding/
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)
