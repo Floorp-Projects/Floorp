@@ -6220,13 +6220,23 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         }
       }
 
-      // Continue with second dispatch to system event handlers.
-
       // Stopping propagation in the default group does not affect
       // propagation in the system event group.
       // (see also section 1.2.2.6 of the DOM3 Events Working Draft)
 
       aEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
+
+      // 3. Give event to the Frames for browser default processing.
+      // This is the nearest we can get to being an at target
+      // system event group handler. In particular we need to
+      // fire before bubbling system event group handlers.
+      if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
+          aEvent->eventStructType != NS_EVENT) {
+        rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
+                                             aStatus);
+      }
+
+      // Continue with second dispatch to system event handlers.
 
       // Need to null check mCurrentEventContent and mCurrentEventFrame
       // since the previous dispatch could have nuked them.
@@ -6244,13 +6254,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                              aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
                                              aStatus);
         }
-      }
-
-      // 3. Give event to the Frames for browser default processing.
-      if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
-          aEvent->eventStructType != NS_EVENT) {
-        rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
-                                             aStatus);
       }
 
       // 4. Give event to event manager for post event state changes and
