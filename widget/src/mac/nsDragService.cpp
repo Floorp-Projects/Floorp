@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,6 +86,23 @@
 #include "nsICharsetConverterManager.h"
 #include "nsStylClipboardUtils.h"
 
+//
+// Get the primary frame for a content node in the current document.
+//
+static nsIFrame*
+GetPrimaryFrameFor(nsIContent* aContent)
+{
+  nsIFrame* result = nsnull;
+  nsIDocument* doc = aContent->GetCurrentDoc();
+  if (doc) {
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (presShell) {
+      result = presShell->GetPrimaryFrameFor(aContent);
+    }
+  }
+  return result;
+}
+
 
 // we need our own stuff for MacOS because of nsIDragSessionMac.
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
@@ -130,13 +148,14 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
 {
   NS_ASSERTION ( aDOMNode, "Oopps, no DOM node" );
 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
+
 // this isn't so much of an issue as long as we're just dragging around outlines,
 // but it is when we are showing the text being drawn. Comment it out for now
 // but leave it around when we turn this all back on (pinkerton).
 #if USE_TRANSLUCENT_DRAGGING && defined(MOZ_XUL)
   // until bug 41237 is fixed, only do translucent dragging if the drag is in
   // the chrome or it's a link.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
   if (!content || !content->IsContentOfType(nsIContent::eXUL)) {
     // the link node is the parent of the node we have (which is probably text or image).
     nsCOMPtr<nsIDOMNode> parent;
@@ -154,11 +173,12 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   
   outScreenRect.left = outScreenRect.right = outScreenRect.top = outScreenRect.bottom = 0;
 
+  if (!content)
+    return PR_FALSE;
+
   // Get the frame for this content node (note: frames are not refcounted)
-  nsIFrame *aFrame = nsnull;
-  nsCOMPtr<nsPresContext> presContext;
-  GetFrameFromNode ( aDOMNode, &aFrame, getter_AddRefs(presContext) );
-  if ( !aFrame || !presContext )
+  nsIFrame *frame = ::GetPrimaryFrameFor(content);
+  if (!frame)
     return PR_FALSE;
   
   //
@@ -166,12 +186,12 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   // coordinates.
   //
   
-  nsRect rect = aFrame->GetRect();
+  nsRect rect = frame->GetRect();
 
   // Find offset from our view
 	nsIView *containingView = nsnull;
 	nsPoint	viewOffset(0,0);
-	aFrame->GetOffsetFromView(viewOffset, &containingView);
+	frame->GetOffsetFromView(viewOffset, &containingView);
   NS_ASSERTION(containingView, "No containing view!");
   if ( !containingView )
     return PR_FALSE;
@@ -180,8 +200,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   nsPoint widgetOffset;
   nsIWidget* aWidget = containingView->GetNearestWidget ( &widgetOffset );
 
-  float t2p = 1.0;
-  t2p = presContext->TwipsToPixels();
+  float t2p = frame->GetPresContext()->TwipsToPixels();
 
   // Shift our offset rect by offset into our view, and
   // the view's offset to the closest widget. Then convert that to global coordinates.
@@ -1064,7 +1083,7 @@ nsDragService::ExtractDataFromOS ( DragReference inDragRef, ItemReference inItem
       err = ::GetFlavorData ( inDragRef, inItemRef, inFlavor, buff, &buffSize, 0 );
       if ( err ) {
         #ifdef NS_DEBUG
-          printf("nsDragService: Error getting data out of drag manager, #%ld\n", err);
+          printf("nsDragService: Error getting data out of drag manager, #%d\n", err);
         #endif
         retval = NS_ERROR_FAILURE;
       }

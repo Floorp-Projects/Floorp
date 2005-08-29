@@ -71,14 +71,10 @@ public:
 
 protected:
 
-  virtual void GetFrameFromNode(nsIDOMNode* inNode, nsIFrame** outFrame,
-                                nsPresContext** outContext);
-
   PRPackedBool mCanDrop;
   PRPackedBool mDoingDrag;
   PRUint32 mDragAction;
   nsSize mTargetSize;
-  nsCOMPtr<nsISupportsArray> mTransArray;
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
