@@ -45,6 +45,8 @@ class nsIDOMEvent;
 class nsIDOMNode;
 class nsIWebNavigation;
 
+class BWCDataOwner;
+
 //
 // ThrobberHandler
 //
@@ -159,11 +161,9 @@ typedef enum
 
   unsigned int mChromeMask; // Indicates which parts of the window to show (e.g., don't show toolbars)
 
-  // Context menu members.
-  int mContextMenuFlags;
-  nsIDOMEvent* mContextMenuEvent;
-  nsIDOMNode* mContextMenuNode;
-
+  // C++ object that holds owning refs to XPCOM objects (and related data)
+  BWCDataOwner*               mDataOwner;
+  
   // Throbber state variables.
   ThrobberHandler* mThrobberHandler;
   NSArray* mThrobberImages;
@@ -176,10 +176,7 @@ typedef enum
   // someone from messing up in the nib when making changes.
   NSView* mProgressSuperview;                // WEAK ptr
   NSView* mPopupBlockSuperview;              // WEAK ptr
-  
-  nsIURIFixup* mURIFixer;                   // [STRONG] should be nsCOMPtr, but can't
-  nsIBrowserHistory* mGlobalHistory;        // [STRONG] should be nsCOMPtr, but can't
-  
+    
   // saving window titles when opening the bookmark manager
   NSString* mSavedTitle;
 }

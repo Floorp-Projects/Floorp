@@ -851,11 +851,11 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
 - (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  if ([mBookmarksMenu isTargetOfWillDisplayNotification:[inNotification object]])
+  if ([mBookmarksMenu isTargetOfMenuDisplayNotification:[inNotification object]])
   {
     [self adjustBookmarkMenuItems];
   }
-  else if ([mTextEncodingsMenu isTargetOfWillDisplayNotification:[inNotification object]])
+  else if ([mTextEncodingsMenu isTargetOfMenuDisplayNotification:[inNotification object]])
   {
     [self adjustTextEncodingMenu];
   }

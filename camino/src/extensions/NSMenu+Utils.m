@@ -43,6 +43,7 @@
 
 
 NSString* const NSMenuWillDisplayNotification = @"NSMenuWillDisplayNotification";
+NSString* const NSMenuClosedNotification      = @"NSMenuClosedNotification";
 
 // internal API
 extern MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
@@ -53,6 +54,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   switch (eventKind)
   {
     case kEventMenuOpening:
+    case kEventMenuClosed:
       {
         MenuRef theCarbonMenu;
         OSStatus err = GetEventParameter(inEvent, kEventParamDirectObject, typeMenuRef, NULL, sizeof(MenuRef), NULL, &theCarbonMenu);
@@ -61,7 +63,13 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
           NS_DURING
             // we can't map from MenuRef to NSMenu, so we have to let receivers of the notification
             // do the test.
-            [[NSNotificationCenter defaultCenter] postNotificationName:NSMenuWillDisplayNotification
+            NSString* notificationName = @"";
+            if (eventKind == kEventMenuOpening)
+              notificationName = NSMenuWillDisplayNotification;
+            else if (eventKind == kEventMenuClosed)
+              notificationName = NSMenuClosedNotification;
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:notificationName
                                                                 object:[NSValue valueWithPointer:theCarbonMenu]];
           NS_HANDLER
             NSLog(@"Caught exception %@", localException);
@@ -85,7 +93,10 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   
   if (!sInstalled)
   {
-    const EventTypeSpec menuEventList[] = { { kEventClassMenu, kEventMenuOpening } };
+    const EventTypeSpec menuEventList[] = {
+      { kEventClassMenu, kEventMenuOpening },
+      { kEventClassMenu, kEventMenuClosed  }
+    };
 
     InstallApplicationEventHandler(NewEventHandlerUPP(MenuEventHandler), 
                                    GetEventTypeCount(menuEventList),
@@ -164,7 +175,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
 
 // because there's no way to map back from a MenuRef to a Cocoa NSMenu, we have
 // to let receivers of the notification do the test by calling this method.
-- (BOOL)isTargetOfWillDisplayNotification:(id)inObject
+- (BOOL)isTargetOfMenuDisplayNotification:(id)inObject
 {
   return ([inObject pointerValue] == _NSGetCarbonMenu(self));
 }

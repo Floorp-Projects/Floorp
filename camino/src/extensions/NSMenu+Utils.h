@@ -40,6 +40,7 @@
 // notification fire before a menu is displayed. the notification object
 // is an opaque id which should be compared with a NSMenu using -isTargetOfWillDisplayNotification
 extern NSString* const NSMenuWillDisplayNotification;
+extern NSString* const NSMenuClosedNotification;
 
 @interface NSMenu(ChimeraMenuUtils)
 
@@ -68,7 +69,7 @@ extern NSString* const NSMenuWillDisplayNotification;
 
 // return YES if this menu is the target of the 'will display' notification.
 // the param should be the [NSNotification object]
-- (BOOL)isTargetOfWillDisplayNotification:(id)inObject;
+- (BOOL)isTargetOfMenuDisplayNotification:(id)inObject;
 
 @end
 

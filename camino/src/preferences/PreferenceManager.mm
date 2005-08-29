@@ -87,7 +87,6 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 - (void)xpcomTerminate: (NSNotification*)aNotification;
 
 - (NSString*)oldProfilePath;
-- (NSString*)newProfilePath;
 - (void)migrateChimeraProfile:(NSString*)newProfilePath;
 
 - (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat;

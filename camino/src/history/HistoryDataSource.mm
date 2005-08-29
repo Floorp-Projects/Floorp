@@ -445,7 +445,11 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                          minutes:0
                                          seconds:0];
 
-    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:curDayStart ageInDays:(i + 2) title:[curDayStart descriptionWithCalendarFormat:dateFormat locale:curCalendarLocale] childCapacity:10];
+    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource
+                                                                             startDate:curDayStart
+                                                                             ageInDays:(i + 2)
+                                                                                 title:[curDayStart descriptionWithCalendarFormat:dateFormat locale:curCalendarLocale]
+                                                                         childCapacity:10];
     [mDateCategories addObject:dayItem];
     [dayItem release];
   }

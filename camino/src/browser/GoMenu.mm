@@ -273,7 +273,7 @@ static const unsigned int kMaxTitleLength = 50;
 
 - (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  if ([self isTargetOfWillDisplayNotification:[inNotification object]])
+  if ([self isTargetOfMenuDisplayNotification:[inNotification object]])
   {
     [self menuWillBeDisplayed];
   }

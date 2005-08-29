@@ -140,11 +140,66 @@ static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
 
-enum BWCOpenDest {
-  kDestinationNewWindow = 0,
-  kDestinationNewTab,
-  kDestinationCurrentView
+#pragma mark -
+
+// small class that owns C++ objects in behalf of BrowserWindowController.
+// this just allows us to use nsCOMPtr rather than doing manual refcounting.
+class BWCDataOwner
+{
+public:
+
+  BWCDataOwner()
+  : mContextMenuFlags(0)
+  {
+    mGlobalHistory = do_GetService("@mozilla.org/browser/global-history;2");
+    mURIFixer      = do_GetService("@mozilla.org/docshell/urifixup;1");
+  }
+  
+  nsCOMPtr<nsIURIFixup>         mURIFixer;
+  nsCOMPtr<nsIBrowserHistory>   mGlobalHistory;
+
+  int                           mContextMenuFlags;
+  nsCOMPtr<nsIDOMEvent>         mContextMenuEvent;
+  nsCOMPtr<nsIDOMNode>          mContextMenuNode;
 };
+
+
+#pragma mark -
+
+// This little class exists so that we can clear up the context menu-related
+// pointers in the mDataOwner at autorelease time. See the comments in -onShowContextMenu:
+@interface ContextMenuDataClearer : NSObject
+{
+  id              mTarget;    // retained
+  SEL             mSelector;
+}
+
+- (id)initWithTarget:(id)inTarget selector:(SEL)inSelector;
+
+@end
+
+@implementation ContextMenuDataClearer
+
+- (id)initWithTarget:(id)inTarget selector:(SEL)inSelector
+{
+  if ((self = [super init]))
+  {
+    mTarget   = [inTarget retain];
+    mSelector = inSelector;
+  }
+  return self;
+}
+
+-(void)dealloc
+{
+  [mTarget performSelector:mSelector];    // do our work
+  [mTarget release];
+  [super dealloc];
+}
+
+@end // ContextMenuDataClearer
+
+#pragma mark -
 
 //////////////////////////////////////
 @interface AutoCompleteTextFieldEditor : NSTextView
@@ -353,6 +408,12 @@ enum BWCOpenDest {
 
 #pragma mark -
 
+enum BWCOpenDest {
+  kDestinationNewWindow = 0,
+  kDestinationNewTab,
+  kDestinationCurrentView
+};
+
 @interface BrowserWindowController(Private)
   // open a new window or tab, but doesn't load anything into them. Must be matched
   // with a call to do that.
@@ -373,11 +434,15 @@ enum BWCOpenDest {
 - (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
 - (void)bookmarkableTitle:(NSString **)outTitle URL:(NSString**)outURLString forWrapper:(BrowserWrapper*)inWrapper;
 
+- (void)clearContextMenuTarget;
+
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
 - (IBAction)forwardMenu:(id)inSender;
 
 @end
+
+#pragma mark -
 
 @implementation BrowserWindowController
 
@@ -388,14 +453,12 @@ enum BWCOpenDest {
     // we cannot rely on the OS to correctly cascade new windows (RADAR bug 2972893)
     // so we turn off the cascading. We do it at the end of |windowDidLoad|
     [self setShouldCascadeWindows:NO];
+    
     mInitialized = NO;
     mMoveReentrant = NO;
     mShouldAutosave = YES;
     mShouldLoadHomePage = YES;
     mChromeMask = 0;
-    mContextMenuFlags = 0;
-    mContextMenuEvent = nsnull;
-    mContextMenuNode = nsnull;
     mThrobberImages = nil;
     mThrobberHandler = nil;
     mURLFieldEditor = nil;
@@ -409,14 +472,7 @@ enum BWCOpenDest {
     NSArray* returnTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
     
-    nsCOMPtr<nsIBrowserHistory> globalHist = do_GetService("@mozilla.org/browser/global-history;2");
-    mGlobalHistory = globalHist;
-    if ( mGlobalHistory )
-      NS_ADDREF(mGlobalHistory);
-    nsCOMPtr<nsIURIFixup> fixer ( do_GetService("@mozilla.org/docshell/urifixup;1") );
-    mURIFixer = fixer;
-    if ( fixer )
-      NS_ADDREF(mURIFixer);
+    mDataOwner = new BWCDataOwner();
   }
   return self;
 }
@@ -500,13 +556,15 @@ enum BWCOpenDest {
   // database is shut down, or we crash
   [mURLBar clearResults];
 
-  { // scope...
-    nsCOMPtr<nsIHistoryItems> history(do_QueryInterface(mGlobalHistory));
+  if (mDataOwner)
+  {
+    nsCOMPtr<nsIHistoryItems> history(do_QueryInterface(mDataOwner->mGlobalHistory));
     if (history)
       history->Flush();
-    NS_IF_RELEASE(mGlobalHistory);
-    NS_IF_RELEASE(mURIFixer);
-  } // matters
+  }
+
+  delete mDataOwner;
+  mDataOwner = NULL;
 
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
   if ( pref )
@@ -566,6 +624,8 @@ enum BWCOpenDest {
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
+
+  delete mDataOwner;    // paranoia; should have been deleted in -windowWillClose
 
   [super dealloc];
 }
@@ -1646,15 +1706,19 @@ enum BWCOpenDest {
   // global history needs to know the user typed this url so it can present it
   // in autocomplete. We use the URI fixup service to strip whitespace and remove
   // invalid protocols, etc. Don't save keyword-expanded urls.
-  if (resolvedURL && [theURL isEqualToString:resolvedURL] && mGlobalHistory && mURIFixer && [theURL length] > 0) {
+  if (resolvedURL && [theURL isEqualToString:resolvedURL] &&
+      mDataOwner &&
+      mDataOwner->mGlobalHistory &&
+      mDataOwner->mURIFixer && [theURL length] > 0)
+  {
     nsAutoString url;
     [theURL assignTo_nsAString:url];
     NS_ConvertUCS2toUTF8 utf8URL(url);
     
     nsCOMPtr<nsIURI> fixedURI;
-    mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
+    mDataOwner->mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
     if (fixedURI)
-      mGlobalHistory->MarkPageAsTyped(fixedURI);
+      mDataOwner->mGlobalHistory->MarkPageAsTyped(fixedURI);
   }
 }
 - (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView
@@ -1849,9 +1913,12 @@ enum BWCOpenDest {
 
 - (IBAction)sendURLFromLink:(id)aSender
 {
+  if (!mDataOwner->mContextMenuNode)
+    return;
+
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(mDataOwner->mContextMenuNode, getter_AddRefs(linkContent), href);
   
   // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
   // really uses these anyway? :)
@@ -2000,9 +2067,12 @@ enum BWCOpenDest {
 
 - (IBAction)addBookmarkForLink:(id)aSender
 {
+  if (!mDataOwner->mContextMenuNode)
+    return;
+
   nsCOMPtr<nsIDOMElement> linkContent;
   nsAutoString href;
-  GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  GeckoUtils::GetEnclosingLinkElementAndHref(mDataOwner->mContextMenuNode, getter_AddRefs(linkContent), href);
   nsAutoString linkText;
   GeckoUtils::GatherTextUnder(linkContent, linkText);
   NSString* urlStr = [NSString stringWith_nsAString:href];
@@ -2201,10 +2271,10 @@ enum BWCOpenDest {
 
 - (NSString*)getContextMenuNodeDocumentURL
 {
-  if (!mContextMenuNode) return @"";
+  if (!mDataOwner->mContextMenuNode) return @"";
   
   nsCOMPtr<nsIDOMDocument> ownerDoc;
-  mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+  mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
 
   nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(ownerDoc);
   if (!nsDoc) return @"";
@@ -2806,9 +2876,34 @@ enum BWCOpenDest {
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode
 {
-  mContextMenuFlags = flags;
-  mContextMenuNode = aNode;
-  mContextMenuEvent = aEvent;
+  if (mDataOwner)
+  {
+    mDataOwner->mContextMenuFlags = flags;
+    mDataOwner->mContextMenuNode  = aNode;
+    mDataOwner->mContextMenuEvent = aEvent;
+  }
+  
+  // There is no simple way of getting a callback when the context menu handling
+  // has finished, so we don't have a good place to clear mContextMenuNode etc.
+  // Cocoa doesn't provide any methods that can be overridden on the menu, view
+  // or window.
+  // The menu closes before the actions are dispatched, so that's too early.
+  // And we can't just use -performSelector:afterDelay:0 because that will fire
+  // while the menu is still up.
+  // So the best solution I've been able to come up with is relying on the
+  // autorelease of an object, which will happen when we get back to the
+  // main loop.
+  [[[ContextMenuDataClearer alloc] initWithTarget:self selector:@selector(clearContextMenuTarget)] autorelease];
+}
+
+- (void)clearContextMenuTarget
+{
+  if (mDataOwner)
+  {
+    mDataOwner->mContextMenuFlags = 0;
+    mDataOwner->mContextMenuNode  = nsnull;
+    mDataOwner->mContextMenuEvent = nsnull;
+  }
 }
 
 // Returns the text of the href attribute for the link the context menu is
@@ -2816,18 +2911,18 @@ enum BWCOpenDest {
 // link or we couldn't work out the href for some other reason.
 - (NSString*)getContextMenuNodeHrefText
 {
-  if (mContextMenuNode) {
-    nsCOMPtr<nsIDOMElement> linkContent;
-    nsAutoString href;
-    GeckoUtils::GetEnclosingLinkElementAndHref(mContextMenuNode, getter_AddRefs(linkContent), href);
+  if (!mDataOwner->mContextMenuNode)
+    return @"";
 
-    // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
-    // really uses these anyway? :)
-    if (linkContent && !href.IsEmpty())
-      return [NSString stringWith_nsAString:href];
-  }
-  
-  // Not on a link or a link we don't understand
+  nsCOMPtr<nsIDOMElement> linkContent;
+  nsAutoString href;
+  GeckoUtils::GetEnclosingLinkElementAndHref(mDataOwner->mContextMenuNode, getter_AddRefs(linkContent), href);
+
+  // XXXdwh Handle simple XLINKs if we want to be compatible with Mozilla, but who
+  // really uses these anyway? :)
+  if (linkContent && !href.IsEmpty())
+    return [NSString stringWith_nsAString:href];
+
   return @"";
 }
 
@@ -2902,11 +2997,13 @@ enum BWCOpenDest {
   BOOL showFrameItems = NO;
   
   NSMenu* menuPrototype = nil;
-  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
+  int contextMenuFlags = mDataOwner->mContextMenuFlags;
+  
+  if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
   {
     NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
     
-    if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
+    if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
       if (emailAddress) {
         [self prepareAddToAddressBookMenuItem:mAddToAddressBook2 address:emailAddress];
         menuPrototype = mImageMailToLinkMenu;
@@ -2923,14 +3020,14 @@ enum BWCOpenDest {
         menuPrototype = mLinkMenu;
     }
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
-           (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
+  else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
+           (contextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
     menuPrototype = mInputMenu;
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
+  else if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
     menuPrototype = mImageMenu;
   }
-  else if (!mContextMenuFlags || (mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
+  else if (!contextMenuFlags || (contextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
     // if there aren't any flags or we're in the background of a page,
     // show the document menu. This prevents us from failing to find a case
     // and not showing the context menu.
@@ -2940,9 +3037,9 @@ enum BWCOpenDest {
     [mCopyItem		setEnabled: [[mBrowserView getBrowserView] canCopy]];
   }
   
-  if (mContextMenuNode) {
+  if (mDataOwner->mContextMenuNode) {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
-    mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
+    mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
   
     nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([[mBrowserView getBrowserView] getContentWindow]);
 
@@ -3017,20 +3114,19 @@ enum BWCOpenDest {
 - (IBAction)saveLinkAs:(id)aSender
 {
   NSString* hrefStr = [self getContextMenuNodeHrefText];
-  
   if ([hrefStr length] == 0)
     return;
 
   // The user wants to save this link.
   nsAutoString text;
-  GeckoUtils::GatherTextUnder(mContextMenuNode, text);
+  GeckoUtils::GatherTextUnder(mDataOwner->mContextMenuNode, text);
 
   [self saveURL:nil url:hrefStr suggestedFilename:[NSString stringWith_nsAString:text]];
 }
 
 - (IBAction)saveImageAs:(id)aSender
 {
-  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mContextMenuNode));
+  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mDataOwner->mContextMenuNode));
   if (imgElement) {
       nsAutoString text;
       imgElement->GetAttribute(NS_LITERAL_STRING("src"), text);
@@ -3071,7 +3167,7 @@ enum BWCOpenDest {
 
 - (IBAction)viewOnlyThisImage:(id)aSender
 {
-  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mContextMenuNode));
+  nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mDataOwner->mContextMenuNode));
   if (imgElement) {
     nsAutoString url;
     imgElement->GetSrc(url);

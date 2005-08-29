@@ -140,7 +140,7 @@ const long kOpenInTabsTag = 0xBEEF;
 
 - (void)menuWillDisplay:(NSNotification*)inNotification
 {
-  if ([self isTargetOfWillDisplayNotification:[inNotification object]])
+  if ([self isTargetOfMenuDisplayNotification:[inNotification object]])
   {
     [self menuWillBeDisplayed];
   }
