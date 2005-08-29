@@ -37,8 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.*;
-
 /**
  * This class reflects Java packages into the JavaScript environment.  We
  * lazily reflect classes and subpackages, and use a caching/sharing

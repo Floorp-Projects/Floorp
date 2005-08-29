@@ -38,10 +38,6 @@
 
 package org.mozilla.javascript.debug;
 
-import org.mozilla.javascript.*;
-
-import java.util.Enumeration;
-
 /**
  * This interface exposes debugging information from executable
  * code (either functions or top-level scripts).

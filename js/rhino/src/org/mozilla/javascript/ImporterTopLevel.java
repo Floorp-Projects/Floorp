@@ -39,8 +39,6 @@
 
 package org.mozilla.javascript;
 
-import java.io.Serializable;
-
 /**
  * Class ImporterTopLevel
  *

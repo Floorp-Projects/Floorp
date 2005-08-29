@@ -40,7 +40,6 @@ import org.mozilla.javascript.ObjArray;
 import org.mozilla.javascript.UintMap;
 
 import java.io.*;
-import java.util.*;
 
 /**
  * ClassFileWriter

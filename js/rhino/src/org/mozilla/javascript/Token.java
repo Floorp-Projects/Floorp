@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.io.*;
-
 /**
  * This class implements the JavaScript scanner.
  *

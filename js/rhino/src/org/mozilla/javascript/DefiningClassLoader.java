@@ -37,8 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.Method;
-
 /**
  * Load generated classes.
  *

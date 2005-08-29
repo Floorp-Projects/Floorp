@@ -37,10 +37,8 @@
 package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
-import org.mozilla.classfile.*;
 
 import java.util.Hashtable;
-import java.util.Enumeration;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

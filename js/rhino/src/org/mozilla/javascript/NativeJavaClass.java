@@ -41,7 +41,6 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.*;
 import java.util.Hashtable;
-import java.io.*;
 
 /**
  * This class reflects Java classes into the JavaScript environment, mainly

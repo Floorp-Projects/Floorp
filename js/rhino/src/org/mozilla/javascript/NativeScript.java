@@ -38,9 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.io.StringReader;
-import java.io.IOException;
-
 /**
  * The JavaScript Script object.
  *

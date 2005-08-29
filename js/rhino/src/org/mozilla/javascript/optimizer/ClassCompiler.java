@@ -34,9 +34,6 @@
 
 package org.mozilla.javascript.optimizer;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-
 import org.mozilla.javascript.*;
 
 /**

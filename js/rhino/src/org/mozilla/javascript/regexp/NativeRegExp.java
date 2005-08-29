@@ -38,7 +38,6 @@
 
 package org.mozilla.javascript.regexp;
 
-import java.lang.reflect.Method;
 import java.io.Serializable;
 
 import org.mozilla.javascript.*;

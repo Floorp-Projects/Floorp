@@ -38,7 +38,6 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
-import java.io.*;
 
 /**
  * This class reflects Java methods into the JavaScript environment and

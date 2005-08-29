@@ -37,8 +37,6 @@
 
 package org.mozilla.javascript.debug;
 
-import org.mozilla.javascript.*;
-
 /**
  * This interface exposes debugging information from objects.
  */

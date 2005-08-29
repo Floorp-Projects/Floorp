@@ -37,9 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.*;
-import java.io.*;
-
 /**
  * This class reflects a single Java constructor into the JavaScript
  * environment.  It satisfies a request for an overloaded constructor,

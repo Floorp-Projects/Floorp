@@ -36,8 +36,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.*;
-
 public class FunctionNode extends ScriptOrFnNode {
 
     public FunctionNode(String name) {

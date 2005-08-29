@@ -34,8 +34,6 @@
  */
 
 package org.mozilla.javascript;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 /**
  * A wrapper for runtime exceptions.

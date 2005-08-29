@@ -38,7 +38,6 @@
 package org.mozilla.javascript.regexp;
 
 import org.mozilla.javascript.*;
-import java.lang.reflect.Method;
 
 /**
  * This class implements the RegExp constructor native object.

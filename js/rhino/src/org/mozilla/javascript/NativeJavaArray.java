@@ -40,7 +40,6 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.Array;
-import java.io.*;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.

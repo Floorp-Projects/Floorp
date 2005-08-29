@@ -37,11 +37,7 @@
 package org.mozilla.javascript;
 
 import java.util.Date;
-import java.util.TimeZone;
-import java.util.Locale;
-import java.text.NumberFormat;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 /**
  * This class implements the Date native object.

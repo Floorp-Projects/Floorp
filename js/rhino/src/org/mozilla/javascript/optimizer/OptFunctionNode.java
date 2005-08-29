@@ -37,7 +37,6 @@
 package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
-import java.util.*;
 
 final class OptFunctionNode
 {

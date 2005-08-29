@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import org.mozilla.javascript.xml.XMLLib;
-
 /**
  * Embeddings that wish to provide their own custom wrappings for Java
  * objects may extend this class and call

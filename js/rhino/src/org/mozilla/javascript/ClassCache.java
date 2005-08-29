@@ -35,7 +35,6 @@
 
 package org.mozilla.javascript;
 
-import java.io.*;
 import java.util.Hashtable;
 
 /**

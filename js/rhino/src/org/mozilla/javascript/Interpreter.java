@@ -42,7 +42,6 @@
 package org.mozilla.javascript;
 
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 
 import org.mozilla.javascript.continuations.Continuation;
