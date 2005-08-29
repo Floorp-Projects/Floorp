@@ -47,7 +47,7 @@
 
 menupopup,
 popup {
-  -moz-appearance: menupopup;;
+  -moz-appearance: menupopup;
 }
 
 /* ::::: popup internal box ::::: */
