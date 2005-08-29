@@ -325,8 +325,12 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         // need this because the |stringWith_nsAString| returns a NSString 
         // with an extension that the savePanel does not like and will add
         // the extensions on top of an extensions
+        if (filterIndex == eSaveFormatPlainText) {
+          file = [file stringByDeletingPathExtension];
+          file = [file stringByAppendingPathExtension:@"txt"];
+        }
         NSLog([file pathExtension]);
-        [savePanel setRequiredFileType: [file pathExtension]];
+        [savePanel setRequiredFileType:[file pathExtension]];
         [savePanel setCanSelectHiddenExtension: YES];
     }
         
