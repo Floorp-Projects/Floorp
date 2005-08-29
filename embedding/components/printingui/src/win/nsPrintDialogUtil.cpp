@@ -38,6 +38,8 @@
 #ifdef MOZ_REQUIRE_CURRENT_SDK
 #undef WINVER
 #define WINVER 0x0500
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x500
 #endif
 
 /* -------------------------------------------------------------------
