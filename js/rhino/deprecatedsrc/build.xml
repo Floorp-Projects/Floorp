@@ -17,8 +17,8 @@
   </target>
 
   <target name="copy-source">
-    <mkdir dir="${dist.dir}/src"/>
-    <copy todir="${dist.dir}/src">
+    <mkdir dir="${dist.dir}/deprecatedsrc"/>
+    <copy todir="${dist.dir}/deprecatedsrc">
       <fileset dir="deprecatedsrc"
                includes="**/*.java,**/*.properties,**/*.xml,manifest"/>
     </copy>
