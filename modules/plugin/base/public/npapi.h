@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.40 $
+ *  npapi.h $Revision: 3.41 $
  *  Netscape client plug-in API spec
  */
 
@@ -711,8 +711,8 @@ NPError NP_LOADDS NPN_SetValue(NPP instance, NPPVariable variable, void *value);
 void    NP_LOADDS NPN_InvalidateRect(NPP instance, NPRect *invalidRect);
 void    NP_LOADDS NPN_InvalidateRegion(NPP instance, NPRegion invalidRegion);
 void    NP_LOADDS NPN_ForceRedraw(NPP instance);
-void    NP_LOADDS NPN_PushPopupEnabledState(NPP instance, NPBool enabled);
-void    NP_LOADDS NPN_PopPopupEnabledState(NPP instance);
+void    NP_LOADDS NPN_PushPopupsEnabledState(NPP instance, NPBool enabled);
+void    NP_LOADDS NPN_PopPopupsEnabledState(NPP instance);
 
 #ifdef __cplusplus
 }  /* end extern "C" */
