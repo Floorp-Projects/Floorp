@@ -75,7 +75,7 @@ interface nsIDOMXULDocument : nsISupports
    *          An object implementing nsIObserver that will be notified with a
    *          message of topic "xul-overlay-merged" when the merge is complete. 
    *          The subject parameter of |observe| will QI to a nsIURI - the URI 
-   *          of the merged overlay. 
+   *          of the merged overlay. This parameter is optional and may be null.
    *
    * NOTICE:  In the 2.0 timeframe this API will change such that the 
    *          implementation will fire a DOMXULOverlayMerged event upon merge
