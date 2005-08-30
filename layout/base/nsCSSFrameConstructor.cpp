@@ -658,8 +658,18 @@ DoCleanupFrameReferences(nsPresContext*  aPresContext,
 {
   nsIContent* content = aFrameIn->GetContent();
 
-  // if the frame is a placeholder use the out of flow frame
-  nsIFrame* frame = nsPlaceholderFrame::GetRealFrameFor(aFrameIn);
+  if (aFrameIn->GetType() == nsLayoutAtoms::placeholderFrame) {
+    nsPlaceholderFrame* placeholder = NS_STATIC_CAST(nsPlaceholderFrame*,
+                                                     aFrameIn);
+    // if the frame is a placeholder use the out of flow frame
+    aFrameIn = nsPlaceholderFrame::GetRealFrameForPlaceholder(placeholder);
+
+    // And don't forget to unregister the placeholder mapping.  Note that this
+    // means it's the caller's responsibility to actually destroy the
+    // out-of-flow pointed to placeholder, since after this point the
+    // out-of-flow is not reachable via the placeholder.
+    aFrameManager->UnregisterPlaceholderFrame(placeholder);
+  }
 
   // Remove the mapping from the content object to its frame
   aFrameManager->SetPrimaryFrameFor(content, nsnull);
