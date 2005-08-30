@@ -195,16 +195,16 @@ public class Main {
                     break;
             }
             if (bad_tag) {
-                String text = R.getMessage("msg.idswitch.bad_tag_order",
-                                           tag_name(tag_id));
+                String text = ToolErrorReporter.getMessage(
+                    "msg.idswitch.bad_tag_order", tag_name(tag_id));
                 throw R.runtimeError
                     (text, source_file, body.getLineNumber(), null, 0);
             }
         }
 
         if (cur_state != 0) {
-            String text = R.getMessage("msg.idswitch.file_end_in_switch",
-                                       tag_name(cur_state));
+            String text = ToolErrorReporter.getMessage(
+                "msg.idswitch.file_end_in_switch", tag_name(cur_state));
             throw R.runtimeError
                 (text, source_file, body.getLineNumber(), null, 0);
         }
@@ -285,7 +285,8 @@ public class Main {
                                         (array, cursor + 1, end, id);
                                 }
                                 if (bad != null) {
-                                    String s = R.getMessage(bad, tag_name(id));
+                                    String s = ToolErrorReporter.getMessage(
+                                        bad, tag_name(id));
                                     throw R.runtimeError
                                         (s, source_file, body.getLineNumber(),
                                          null, 0);
@@ -481,13 +482,13 @@ public class Main {
         int arg_count = process_options(args);
 
         if (arg_count == 0) {
-            option_error(R.getMessage
-                ("msg.idswitch.no_file_argument"));
+            option_error(ToolErrorReporter.getMessage(
+                             "msg.idswitch.no_file_argument"));
             return -1;
         }
         if (arg_count > 1) {
-            option_error(R.getMessage
-                ("msg.idswitch.too_many_arguments"));
+            option_error(ToolErrorReporter.getMessage(
+                             "msg.idswitch.too_many_arguments"));
             return -1;
         }
 
@@ -499,8 +500,8 @@ public class Main {
             process_file(args[0]);
         }
         catch (IOException ex) {
-            print_error(R.getMessage
-                ("msg.idswitch.io_error", ex.toString()));
+            print_error(ToolErrorReporter..getMessage(
+                            "msg.idswitch.io_error", ex.toString()));
             return -1;
         }
         catch (EvaluatorException ex) {
@@ -533,8 +534,8 @@ public class Main {
                             show_version = true;
                         }
                         else {
-                            option_error(R.getMessage
-                                ("msg.idswitch.bad_option", arg));
+                            option_error(ToolErrorReporter.getMessage(
+                                             "msg.idswitch.bad_option", arg));
                             status = -1; break L;
                         }
                     }
@@ -544,9 +545,10 @@ public class Main {
                             switch (c) {
                                 case 'h': show_usage = true; break;
                                 default:
-                                    option_error(R.getMessage
-                                        ("msg.idswitch.bad_option_char",
-                                         "" + c));
+                                    option_error(
+                                        ToolErrorReporter.getMessage(
+                                            "msg.idswitch.bad_option_char",
+                                            String.valueOf(c)));
                                     status = -1;
                                     break L;
                             }
@@ -569,16 +571,19 @@ public class Main {
     }
 
     private void show_usage() {
-        System.out.println(R.getMessage("msg.idswitch.usage"));
+        System.out.println(
+            ToolErrorReporter.getMessage("msg.idswitch.usage"));
         System.out.println();
     }
 
     private void show_version() {
-        System.out.println(R.getMessage("msg.idswitch.version"));
+        System.out.println(
+            ToolErrorReporter.getMessage("msg.idswitch.version"));
     }
 
     private void option_error(String str) {
-        print_error(R.getMessage("msg.idswitch.bad_invocation", str));
+        print_error(
+            ToolErrorReporter.getMessage("msg.idswitch.bad_invocation", str));
     }
 
     private void print_error(String text) {
