@@ -548,14 +548,15 @@
 // Note: these values pickup after the text-align values because there
 // are a few html cases where an object can have both types of
 // alignment applied with a single attribute
-#define NS_STYLE_VERTICAL_ALIGN_BASELINE        10
-#define NS_STYLE_VERTICAL_ALIGN_SUB             11
-#define NS_STYLE_VERTICAL_ALIGN_SUPER           12
-#define NS_STYLE_VERTICAL_ALIGN_TOP             13
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP        14
-#define NS_STYLE_VERTICAL_ALIGN_MIDDLE          15
-#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM     16
-#define NS_STYLE_VERTICAL_ALIGN_BOTTOM          17
+#define NS_STYLE_VERTICAL_ALIGN_BASELINE             10
+#define NS_STYLE_VERTICAL_ALIGN_SUB                  11
+#define NS_STYLE_VERTICAL_ALIGN_SUPER                12
+#define NS_STYLE_VERTICAL_ALIGN_TOP                  13
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_TOP             14
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE               15
+#define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM          16
+#define NS_STYLE_VERTICAL_ALIGN_BOTTOM               17
+#define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 18
 
 // See nsStyleDisplay
 #define NS_STYLE_VISIBILITY_HIDDEN              0
