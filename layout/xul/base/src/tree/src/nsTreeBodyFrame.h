@@ -24,6 +24,7 @@
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Brian Ryner <bryner@brianryner.com>
  *   Jan Varga <varga@ku.sk>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -231,21 +232,31 @@ protected:
   // Calculates our width/height once border and padding have been removed.
   void CalcInnerBox();
 
+  // Calculate the total width of our scrollable portion
+  nscoord CalcHorzWidth();
+
+  // Calculate the horizontal position of a column in the tree
+  nscoord CalcColumnPosition(const PRUnichar* aColID, nscoord* aWidth);
+
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
   nsStyleContext* GetPseudoStyleContext(nsIAtom* aPseudoElement);
 
-  // Makes |mScrollbar| non-null if at all possible, and returns it.
-  nsIFrame* EnsureScrollbar();
+  // Makes |mScrollbar| and (when both set) |mHorzScrollbar| non-null if at all possible.
+  PRBool EnsureScrollable(PRBool both);
+
+  // Finds the actual scrollbars and views in the table children
+  void InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame* aCurrFrame, 
+                           nsIScrollbarMediator* aSM);
 
   // Update the curpos of the scrollbar.
-  void UpdateScrollbar();
+  void UpdateScrollbars();
 
   // Update the maxpos of the scrollbar.
-  void InvalidateScrollbar();
+  void InvalidateScrollbars();
 
-  // Check vertical overflow.
-  void CheckVerticalOverflow();
+  // Check overflow and generate events.
+  void CheckOverflow();
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
@@ -253,6 +264,7 @@ protected:
 
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
+  nsresult ScrollHorzInternal(PRInt32 aPosition);
   
   // Convert client pixels into twips in our coordinate space.
   void AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
@@ -273,6 +285,12 @@ protected:
                     nsIRenderingContext* aRenderingContext,
                     nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth();
+
+  // Updates the contained rect for the horizontal scroll 
+  // position. If clip is true then limits tree area
+  // Returns whether the rect is valid in tree view
+  PRBool OffsetHorzScroll(nsRect& rect, PRBool clip);
+  void OffsetHorzScroll(nscoord& pt);
 
   PRBool CanAutoScroll(PRInt32 aRowIndex);
 
@@ -334,14 +352,22 @@ protected: // Data Members
   // It maps directly to an imgIRequest.
   nsSupportsHashtable* mImageCache;
 
-  // Our vertical scrollbar.
+  // Our scrollbars.
   nsIFrame* mScrollbar;
+  nsIFrame* mHorzScrollbar;
+
+  // The scrollable view the columns are contained in 
+  nsIScrollableView* mColScrollView;
 
   // The index of the first visible row and the # of rows visible onscreen.  
   // The tree only examines onscreen rows, starting from
   // this index and going up to index+pageLength.
   PRInt32 mTopRowIndex;
   PRInt32 mPageLength;
+
+  // The horizontal scroll position
+  nscoord mHorzPosition;
+  nscoord mHorzWidth;
 
   // Cached heights and indent info.
   nsRect mInnerBox;
@@ -359,6 +385,7 @@ protected: // Data Members
   PRPackedBool mHasFixedRowCount;
 
   PRPackedBool mVerticalOverflow;
+  PRPackedBool mHorizontalOverflow;
 
   PRPackedBool mReflowCallbackPosted;
 

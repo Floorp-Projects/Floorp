@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Brian Ryner <bryner@brianryner.com>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -241,6 +242,14 @@ NS_IMETHODIMP nsTreeBoxObject::GetRowHeight(PRInt32* _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::GetRowWidth(PRInt32 *aRowWidth)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body) 
+    return body->GetRowWidth(aRowWidth);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
 {
   nsITreeBoxObject* body = GetTreeBody();
@@ -254,6 +263,14 @@ NS_IMETHODIMP nsTreeBoxObject::GetLastVisibleRow(PRInt32 *_retval)
   nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetLastVisibleRow(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBoxObject::GetHorizontalPosition(PRInt32 *aHorizontalPosition)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->GetHorizontalPosition(aHorizontalPosition);
   return NS_OK;
 }
 
@@ -272,6 +289,16 @@ nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
   if (body)
     return body->EnsureRowIsVisible(aRow);
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, const PRUnichar *aColID)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->EnsureCellIsVisible(aRow, aColID);
+  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -301,6 +328,32 @@ nsTreeBoxObject::ScrollByPages(PRInt32 aNumPages)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsTreeBoxObject::ScrollToCell(PRInt32 aRow, const PRUnichar *aColID)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->ScrollToCell(aRow, aColID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTreeBoxObject::ScrollToColumn(const PRUnichar *aColID)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->ScrollToColumn(aColID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTreeBoxObject::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->ScrollToHorizontalPosition(aHorizontalPosition);
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsTreeBoxObject::Invalidate()
 {

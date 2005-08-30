@@ -566,6 +566,30 @@ treecol[hidden="true"] {
   display: -moz-box;
 }
 
+treecols .tree-scrollable-columns {
+	/* Yes, Virginia, this makes it scrollable */
+	overflow: hidden;
+}
+
+tree .tree-scrollbar,
+tree .tree-scrollbar-horizontal, 
+tree .tree-scrollbar-spacer {
+	visibility: collapse;
+}
+
+tree[show-vscroll="true"] .tree-scrollbar,
+tree[show-hscroll="true"] .tree-scrollbar-horizontal {
+	visibility: visible;
+}
+
+/* XXX: The size below needs to find it's way into themes */
+
+tree[show-hscroll="true"][show-vscroll="true"] .tree-scrollbar-spacer {
+	min-width: 16px;
+	visibility: visible;
+	background-color: ThreeDFace;
+}
+
 /********** deck & stack *********/
 
 deck {

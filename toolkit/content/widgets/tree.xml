@@ -32,6 +32,10 @@
       <xul:treerows class="tree-rows" flex="1">
         <children/>
       </xul:treerows>
+      <xul:hbox>
+        <xul:scrollbar orient="horizontal" class="tree-scrollbar-horizontal" flex="1"/>
+        <xul:spacer class="tree-scrollbar-spacer"/>
+      </xul:hbox>
     </content>
     
     <implementation implements="nsIDOMXULTreeElement, nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
@@ -105,9 +109,10 @@
           while (cols && cols.localName != "treecols")
             cols = cols.nextSibling;
 
-          if (cols)
-            return cols.boxObject.firstChild;
-          else
+          if (cols) {
+            var cols = cols.getElementsByTagName("treecol");
+            return cols && cols.length > 0 ? cols[0] : null;
+          } else
             return null;
         ]]></getter>
       </property>
@@ -554,9 +559,11 @@
   </binding>
 
   <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
-    <content>
-      <children includes="treecol|splitter"/>
-      <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647" xbl:inherits="tooltiptext=pickertooltiptext"/>
+    <content orient="horizontal">
+      <xul:hbox class="tree-scrollable-columns" flex="1">
+        <children includes="treecol|splitter"/>
+      </xul:hbox>
+      <xul:treecolpicker class="treecol-image" fixed="true" xbl:inherits="tooltiptext=pickertooltiptext"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
@@ -575,18 +582,47 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" class="tree-scrollbar" collapsed="true"/>
+      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" class="tree-scrollbar"/>
     </content>
     <handlers>
       <handler event="underflow">
         <![CDATA[
-          document.getAnonymousNodes(this)[1].collapsed = true;
+
+          // Scrollport event orientation
+          // 0: vertical
+          // 1: horizontal
+          // 2: both
+
+          var parent = this.parentNode;
+
+          while(parent && parent.localName != "tree")
+            parent = parent.parentNode;
+
+          if (parent) {
+            if (event.detail == 1 || event.detail == 2)
+              parent.removeAttribute("show-hscroll");
+            if (event.detail == 0 || event.detail == 2)
+              parent.removeAttribute("show-vscroll");
+          }
+           
           event.preventBubble();
         ]]>
       </handler>
       <handler event="overflow">
         <![CDATA[
-          document.getAnonymousNodes(this)[1].collapsed = false;
+
+          var parent = this.parentNode;
+
+          while(parent && parent.localName != "tree")
+            parent = parent.parentNode;
+
+          if (parent) {
+            if (event.detail == 1 || event.detail == 2)
+              parent.setAttribute("show-hscroll", "true");
+            if (event.detail == 0 || event.detail == 2)
+              parent.setAttribute("show-vscroll", "true");
+          }
+
           event.preventBubble();
         ]]>
       </handler>
@@ -625,22 +661,27 @@
            if (row.value == -1)
              return;
 
-           if (col.value && obj.value != "twisty") {
-             if (col.value.cycler)
+           if (obj.value == "twisty")
+             return;
+
+           if (col.value) {
+             if (col.value.cycler) {
                b.view.cycleCell(row.value, col.value);
-             else if (col.value.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+               return;
+             } else if (col.value.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
                if (this.parentNode.editable && col.value.editable &&
                    b.view.isEditable(row.value, col.value)) {
                  var value = b.view.getCellValue(row.value, col.value);
                  value = value == "true" ? "false" : "true";
                  b.view.setCellValue(row.value, col.value, value);
+                 return;
                }
              }
-             else
-               if (!b.view.selection.isSelected(row.value)) {
-                 b.view.selection.select(row.value);
-                 b.ensureRowIsVisible(row.value);
-               }
+           } 
+
+           if (!b.view.selection.isSelected(row.value)) {
+             b.view.selection.select(row.value);
+             b.ensureRowIsVisible(row.value);
            }
          }
       ]]>
