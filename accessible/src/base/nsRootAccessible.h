@@ -109,6 +109,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
+    void TryFireEarlyLoadEvent(cnsIAccessible *focusAccessible,
+                                  nsIDOMNode *focusNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,
                                   nsIDOMNode *focusNode,
                                   PRBool aForceEvent = PR_FALSE);

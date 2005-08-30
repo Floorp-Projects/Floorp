@@ -160,7 +160,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 {
   NS_ASSERTION(aStateFlags & STATE_IS_DOCUMENT, "Other notifications excluded");
 
-  if (0 == (aStateFlags & (STATE_START | STATE_STOP))) {
+  if (0 == (aStateFlags & (STATE_START | STATE_STOP)) || NS_FAILED(aStatus)) {
     return NS_OK;
   }
 
@@ -197,8 +197,9 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
   docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
   PRBool isFinished = !(aStateFlags & STATE_START);
-  if (sameTypeRoot != docShellTreeItem && !isFinished) {
-    return NS_OK;   // A frame or iframe has begun to load new content
+  if (sameTypeRoot != docShellTreeItem) {
+    // Frame and iframe handling done via DOMContentLoaded in nsRootAccessible::HandleEvent()
+    return NS_OK;
   }
 
   docAccessible->FireDocLoadingEvent(isFinished);
