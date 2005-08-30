@@ -7709,21 +7709,39 @@ nsDocShell::SetChildHistoryEntry(nsISHEntry *aEntry, nsDocShell *aShell,
 
     nsISHEntry *destTreeRoot = data->destTreeRoot;
 
-    // aEntry is a clone of the child of destTreeParent with the same index.
     nsCOMPtr<nsISHEntry> destEntry;
     nsCOMPtr<nsISHContainer> container =
         do_QueryInterface(data->destTreeParent);
 
     if (container) {
-        container->GetChildAt(aEntryIndex, getter_AddRefs(destEntry));
-        NS_ASSERTION(destEntry, "oops, history trees are out of sync");
+        // aEntry is a clone of some child of destTreeParent, but since the
+        // trees aren't necessarily in sync, we'll have to locate it.
+        // Note that we could set aShell's entry to null if we don't find a
+        // corresponding entry under destTreeParent.
 
-#ifdef DEBUG
-        PRUint32 id1, id2;
-        aEntry->GetID(&id1);
-        destEntry->GetID(&id2);
-        NS_ASSERTION(id1 == id2, "oops, history trees are out of sync");
-#endif
+        PRUint32 targetID, id;
+        aEntry->GetID(&targetID);
+
+        // First look at the given index, since this is the common case.
+        nsCOMPtr<nsISHEntry> entry;
+        container->GetChildAt(aEntryIndex, getter_AddRefs(entry));
+        if (entry && NS_SUCCEEDED(entry->GetID(&id)) && id == targetID) {
+            destEntry.swap(entry);
+        } else {
+            PRInt32 childCount;
+            container->GetChildCount(&childCount);
+            for (PRInt32 i = 0; i < childCount; ++i) {
+                container->GetChildAt(i, getter_AddRefs(entry));
+                if (!entry)
+                    continue;
+
+                entry->GetID(&id);
+                if (id == targetID) {
+                    destEntry.swap(entry);
+                    break;
+                }
+            }
+        }
     } else {
         destEntry = destTreeRoot;
     }
