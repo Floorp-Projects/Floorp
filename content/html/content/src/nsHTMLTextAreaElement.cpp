@@ -100,7 +100,7 @@ public:
   NS_DECL_NSIDOMNSHTMLTEXTAREAELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_TEXTAREA; }
+  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);

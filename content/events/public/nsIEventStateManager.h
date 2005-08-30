@@ -161,9 +161,11 @@ public:
 // The following states are used only for ContentStatesChanged
 // CSS 3 Selectors
 #define NS_EVENT_STATE_CHECKED      0x00000020
+#define NS_EVENT_STATE_ENABLED      0x00000040
+#define NS_EVENT_STATE_DISABLED     0x00000080
 // CSS 3 UI
-#define NS_EVENT_STATE_REQUIRED     0x00000040
-#define NS_EVENT_STATE_OPTIONAL     0x00000080
-#define NS_EVENT_STATE_VISITED      0x00000100
+#define NS_EVENT_STATE_REQUIRED     0x00000100
+#define NS_EVENT_STATE_OPTIONAL     0x00000200
+#define NS_EVENT_STATE_VISITED      0x00000400
 
 #endif // nsIEventStateManager_h__

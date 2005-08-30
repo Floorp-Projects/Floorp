@@ -82,7 +82,7 @@ public:
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_OBJECT; }
+  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_OBJECT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
