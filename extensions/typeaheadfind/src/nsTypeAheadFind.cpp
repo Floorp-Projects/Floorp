@@ -876,7 +876,7 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     return NS_ERROR_FAILURE;
   }
 
-  aChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, aChar));
+  aChar = ToLowerCase(aChar);
   PRInt32 bufferLength = mTypeAheadBuffer.Length();
 
   mIsFirstVisiblePreferred = PR_FALSE;
