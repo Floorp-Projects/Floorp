@@ -156,7 +156,6 @@
 
 #include "nsIBindingManager.h"
 #include "nsIXBLService.h"
-#include "nsInt64.h"
 
 // used for popup blocking, needs to be converted to something
 // belonging to the back-end like nsIContentPolicy
@@ -5755,7 +5754,6 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   JSObject *funobj = nsnull;
   nsTimeout *timeout;
   jsdouble interval = 0.0;
-  PRInt64 now, delta;
 
   if (argc < 1) {
     ::JS_ReportError(cx, "Function %s requires at least 1 parameter",
@@ -5874,9 +5872,8 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     return NS_ERROR_FAILURE;
   }
 
-  LL_I2L(now, PR_IntervalNow());
-  LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
-  LL_ADD(timeout->mWhen, now, delta);
+  timeout->mWhen = PR_IntervalNow() +
+                     PR_MillisecondsToInterval((PRUint32)interval);
 
   timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_FAILED(rv)) {
@@ -5954,7 +5951,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   nsTimeout *last_expired_timeout, **last_insertion_point;
   nsTimeout dummy_timeout;
   JSContext *cx;
-  PRInt64 now, deadline;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
 
   // Make sure that the window and the script context don't go away as
@@ -5965,9 +5961,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
   // A native timer has gone off. See which of our timeouts need
   // servicing
-  LL_I2L(now, PR_IntervalNow());
+  PRIntervalTime now = PR_IntervalNow();
+  PRIntervalTime deadline;
 
-  if (aTimeout && LL_CMP(aTimeout->mWhen, >, now)) {
+  if (aTimeout && aTimeout->mWhen > now) {
     // The OS timer fired early (yikes!), and possibly out of order
     // too. Set |deadline| to be the time when the OS timer *should*
     // have fired so that any timers that *should* have fired before
@@ -5985,7 +5982,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
   // as the deadline.
   last_expired_timeout = nsnull;
   for (timeout = mTimeouts; timeout; timeout = timeout->mNext) {
-    if (((timeout == aTimeout) || !LL_CMP(timeout->mWhen, >, deadline)) &&
+    if (((timeout == aTimeout) || (timeout->mWhen <= deadline)) &&
         (timeout->mFiringDepth == 0)) {
       // Mark any timeouts that are on the list to be fired with the
       // firing depth so that we can reentrantly run timeouts
@@ -6067,14 +6064,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
                           timeout->mLineNo, timeout->mVersion, nsnull,
                           &is_undefined);
     } else {
-      PRInt64 lateness64;
-      PRInt32 lateness;
-
       // Add a "secret" final argument that indicates timeout lateness
       // in milliseconds
-      LL_SUB(lateness64, now, timeout->mWhen);
-      LL_L2I(lateness, lateness64);
-      lateness = PR_IntervalToMilliseconds(lateness);
+      PRIntervalTime lateness =
+        PR_IntervalToMilliseconds(now - timeout->mWhen);
       timeout->mArgv[timeout->mArgc] = INT_TO_JSVAL((jsint) lateness);
 
       jsval dummy;
@@ -6118,38 +6111,29 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
-      PRInt32 delay32;
-
-      {
-        PRInt64 interval, delay;
-
-        LL_I2L(interval, PR_MillisecondsToInterval(timeout->mInterval));
-        LL_ADD(timeout->mWhen, timeout->mWhen, interval);
-        LL_I2L(now, PR_IntervalNow());
-        LL_SUB(delay, timeout->mWhen, now);
-        LL_L2I(delay32, delay);
-      }
+      timeout->mWhen += PR_MillisecondsToInterval(timeout->mInterval);
+      PRInt32 delay = timeout->mWhen - PR_IntervalNow();
 
       // If the next interval timeout is already supposed to have
       // happened then run the timeout immediately.
-      if (delay32 < 0) {
-        delay32 = 0;
+      if (delay < 0) {
+        delay = 0;
       }
 
-      delay32 = PR_IntervalToMilliseconds(delay32);
+      delay = PR_IntervalToMilliseconds(delay);
 
-      if (delay32 < DOM_MIN_TIMEOUT_VALUE) {
+      if (delay < DOM_MIN_TIMEOUT_VALUE) {
         // Don't let intervals starve the message pump, no matter
         // what. Just like we do for non-interval timeouts.
 
-        delay32 = DOM_MIN_TIMEOUT_VALUE;
+        delay = DOM_MIN_TIMEOUT_VALUE;
       }
 
       // Reschedule the OS timer. Don't bother returning any error
       // codes if this fails since nobody who cares about them is
       // listening anyways.
       nsresult rv =
-        timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout, delay32,
+        timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout, delay,
                                               nsITimer::TYPE_ONE_SHOT);
 
       if (NS_FAILED(rv)) {
@@ -6424,7 +6408,7 @@ nsGlobalWindow::InsertTimeoutIntoList(nsTimeout **aList,
   NS_ASSERTION(aList,
                "nsGlobalWindow::InsertTimeoutIntoList null timeoutList");
   while ((to = *aList) != nsnull) {
-    if (LL_CMP(to->mWhen, >, aTimeout->mWhen))
+    if (to->mWhen > aTimeout->mWhen)
       break;
     aList = &to->mNext;
   }
@@ -6751,10 +6735,10 @@ nsGlobalWindow::SuspendTimeouts()
 {
   FORWARD_TO_INNER_VOID(SuspendTimeouts, ());
 
-  nsInt64 now = PR_IntervalNow();
+  PRIntervalTime now = PR_IntervalNow();
   for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
-    // Change mWhen to be the time remaining for this timer.
-    t->mWhen = PR_MAX(nsInt64(0), nsInt64(t->mWhen) - now);
+    // Change mWhen to be the time remaining for this timer.    
+    t->mWhen = PR_MAX(0, t->mWhen - now);
 
     // Drop the XPCOM timer; we'll reschedule when restoring the state.
     if (t->mTimer) {
@@ -6796,17 +6780,18 @@ nsGlobalWindow::ResumeTimeouts()
 
   // Restore all of the timeouts, using the stored time remaining.
 
-  nsInt64 now = PR_IntervalNow();
+  PRIntervalTime now = PR_IntervalNow();
   nsresult rv;
 
   for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
-    PRInt32 interval = (PRInt32)PR_MAX(t->mWhen, DOM_MIN_TIMEOUT_VALUE);
-    t->mWhen = now + nsInt64(t->mWhen);
+    PRUint32 delay = PR_IntervalToMilliseconds(PR_MAX(t->mWhen,
+                                                      DOM_MIN_TIMEOUT_VALUE));
+    t->mWhen += now;
 
     t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, interval,
+    rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, delay,
                                          nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
   }

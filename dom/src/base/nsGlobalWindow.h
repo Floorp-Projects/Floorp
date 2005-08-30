@@ -559,7 +559,7 @@ struct nsTimeout
   PRInt32 mInterval;
 
   // Nominal time to run this timeout
-  PRInt64 mWhen;
+  PRIntervalTime mWhen;
 
   // Principal with which to execute
   nsCOMPtr<nsIPrincipal> mPrincipal;
