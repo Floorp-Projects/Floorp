@@ -75,9 +75,13 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
   NS_ADDREF(*_retval = printSettings); // ref count
 
   rv = printSettings->Init();
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     NS_RELEASE(*_retval);
+    return rv;
+  }
 
+  (void)InitPrintSettingsFromPrefs(*_retval, PR_FALSE,
+                                   nsIPrintSettings::kInitSaveAll);
   return rv;
 }
 
@@ -102,11 +106,11 @@ nsPrintOptionsX::GetNativeData(PRInt16 aDataType, void * *_retval)
 #pragma mark -
 
 nsresult
-nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
+nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
 {
   nsresult rv;
   
-  rv = nsPrintOptions::ReadPrefs(aPS, aPrefName, aFlags);
+  rv = nsPrintOptions::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
   
   nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
@@ -119,11 +123,11 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRU
 }
 
 nsresult
-nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUint32 aFlags)
+nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, PRUint32 aFlags)
 {
   nsresult rv;
   
-  rv = nsPrintOptions::WritePrefs(aPS, aPrefName, aFlags);
+  rv = nsPrintOptions::WritePrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
   
   nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
