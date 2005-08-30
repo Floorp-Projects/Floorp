@@ -220,6 +220,9 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
 /* ::::: checkbox menuitem ::::: */
 
 %ifdef MOZ_WIDGET_GTK2
+menuitem[checked="true"] {
+  -moz-appearance: checkmenuitem !important;
+}
 menuitem[type="checkbox"] {
   -moz-appearance: checkmenuitem !important;
 }
