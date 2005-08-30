@@ -385,6 +385,7 @@ sub packit {
 
   if ($cachebuild and $Settings::update_package) {
     my($update_product, $update_version, $update_platform);
+    my($update_appv, $update_extv);
 
     if ( defined($Settings::update_product) ) {
         $update_product = $Settings::update_product;
@@ -404,6 +405,20 @@ sub packit {
         $update_platform = $Settings::update_platform;
     } else {
         TinderUtils::print_log "update_platform is undefined, skipping update generation.\n";
+        goto NOUPDATE;
+    }
+
+    if ( defined($Settings::update_appv) ) {
+        $update_appv = $Settings::update_appv;
+    } else {
+        TinderUtils::print_log "update_appv is undefined, skipping update generation.\n";
+        goto NOUPDATE;
+    }
+
+    if ( defined($Settings::update_extv) ) {
+        $update_extv = $Settings::update_extv;
+    } else {
+        TinderUtils::print_log "update_extv is undefined, skipping update generation.\n";
         goto NOUPDATE;
     }
 
@@ -435,6 +450,8 @@ sub packit {
                            output_file => "$builddir/dist/update/update.snippet",
                            url => $update_fullurl,
                            buildid => $buildid,
+                           appversion => $update_appv,
+                           extversion => $update_extv,
                          );
 
       # Push update information to update-staging/auslite.
@@ -446,7 +463,7 @@ sub packit {
           $path = "$path/$update_product/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
       } else {
           TinderUtils::print_log "\nNot pushing first-gen update info...\n";
       }
@@ -458,7 +475,17 @@ sub packit {
           $path = "$path/$update_product/$update_version/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+      }
+
+      # Push the build schema 2 data.
+      {
+          TinderUtils::print_log "\nPushing third-gen update info...\n";
+          my $path = "/opt/aus2/build/0";
+          $path = "$path/$update_product/$update_version/$update_platform/$buildid/en-US";
+
+          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt";
       }
 
       TinderUtils::print_log "\nCompleted pushing update info...\n";
@@ -479,11 +506,13 @@ sub update_create_stats {
   my %args = @_;
   my $update = $args{'update'};
   my $type = $args{'type'};
-  my $output_file = $args{'output_file'};
+  my $output_file_base = $args{'output_file'};
   my $url = $args{'url'};
   my $buildid = $args{'buildid'};
+  my $appversion = $args{'appversion'};
+  my $extversion = $args{'extversion'};
 
-  my($hashfunction, $hashvalue, $size, $output);
+  my($hashfunction, $hashvalue, $size, $output, $output_file);
 
   $hashfunction = "md5";
   if ( defined($Settings::update_hash) ) {
@@ -513,6 +542,26 @@ sub update_create_stats {
   $output .= "$size\n";
   $output .= "$buildid\n";
 
+  $output_file = "$output_file_base.0";
+  if (defined($output_file)) {
+    open(UPDATE_FILE, ">$output_file")
+      or die "ERROR: Can't open '$output_file' for writing!";
+    print UPDATE_FILE $output;
+    close(OUTPUT_FILE);
+  } else {
+    printf($output);
+  }
+
+  $output  = "$type\n";
+  $output .= "$url\n";
+  $output .= "$hashfunction\n";
+  $output .= "$hashvalue\n";
+  $output .= "$size\n";
+  $output .= "$buildid\n";
+  $output .= "$appversion\n";
+  $output .= "$extversion\n";
+
+  $output_file = "$output_file_base.1";
   if (defined($output_file)) {
     open(UPDATE_FILE, ">$output_file")
       or die "ERROR: Can't open '$output_file' for writing!";
