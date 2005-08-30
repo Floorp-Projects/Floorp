@@ -44,6 +44,7 @@
 
 #include "xpcprivate.h"
 #include "nsReadableUtils.h"
+#include "nsIScriptObjectPrincipal.h"
 
 /***************************************************************************/
 // stuff used by all
@@ -2065,6 +2066,36 @@ nsXPCComponents_Utils::ReportError()
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
 const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";
 
+#define PRINCIPALHOLDER_IID \
+{0xbf109f49, 0xf94a, 0x43d8, {0x93, 0xdb, 0xe4, 0x66, 0x49, 0xc5, 0xd9, 0x7d}}
+
+class PrincipalHolder : public nsIScriptObjectPrincipal
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(PRINCIPALHOLDER_IID)
+
+    PrincipalHolder(nsIPrincipal *holdee)
+        : mHoldee(holdee)
+    {
+    }
+    virtual ~PrincipalHolder() { }
+
+    NS_DECL_ISUPPORTS
+
+    nsIPrincipal *GetPrincipal();
+
+private:
+    nsCOMPtr<nsIPrincipal> mHoldee;
+};
+
+NS_IMPL_ISUPPORTS1(PrincipalHolder, nsIScriptObjectPrincipal)
+
+nsIPrincipal *
+PrincipalHolder::GetPrincipal()
+{
+    return mHoldee;
+}
+
 JS_STATIC_DLL_CALLBACK(JSBool)
 SandboxDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -2110,12 +2141,12 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
 JS_STATIC_DLL_CALLBACK(void)
 sandbox_finalize(JSContext *cx, JSObject *obj)
 {
-    nsIPrincipal *principal = (nsIPrincipal *)JS_GetPrivate(cx, obj);
-    NS_IF_RELEASE(principal);
+    PrincipalHolder *ph = (PrincipalHolder *)JS_GetPrivate(cx, obj);
+    NS_IF_RELEASE(ph);
 }
 
 static JSClass SandboxClass = {
-    "Sandbox", JSCLASS_HAS_PRIVATE,
+    "Sandbox", JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
     JS_PropertyStub,   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     sandbox_enumerate, sandbox_resolve, JS_ConvertStub,  sandbox_finalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -2241,19 +2272,25 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         return ThrowAndFail(rv, cx, _retval);
     }
     
-    nsIPrincipal *principal;
+    nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(kScriptSecurityManagerContractID);
     if (!secman ||
-        NS_FAILED(rv = secman->GetCodebasePrincipal(iURL, &principal)) ||
+        NS_FAILED(rv = secman->GetCodebasePrincipal(iURL, getter_AddRefs(principal))) ||
         !principal) {
         if (NS_SUCCEEDED(rv))
             rv = NS_ERROR_FAILURE;
         return ThrowAndFail(rv, cx, _retval);
     }
 
-    if (!JS_SetPrivate(cx, sandbox, principal)) {
-        NS_RELEASE(principal);
+    PrincipalHolder *ph = new PrincipalHolder(principal);
+    if (!ph)
+        return ThrowAndFail(NS_ERROR_OUT_OF_MEMORY, cx, _retval);
+
+    NS_ADDREF(ph);
+
+    if (!JS_SetPrivate(cx, sandbox, ph)) {
+        NS_RELEASE(ph);
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
     }
 
@@ -2330,7 +2367,10 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     if (JS_GetClass(cx, sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsIPrincipal> prin = (nsIPrincipal *)JS_GetPrivate(cx, sandbox);
+    PrincipalHolder *ph = (PrincipalHolder *)JS_GetPrivate(cx, sandbox);
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(ph);
+    nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
+
     JSPrincipals *jsPrincipals;
 
     if (!prin ||
