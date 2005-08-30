@@ -39,7 +39,6 @@ import java.util.*;
 import org.apache.xmlbeans.XmlCursor;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.xml.*;
 
 class NamespaceHelper
 {

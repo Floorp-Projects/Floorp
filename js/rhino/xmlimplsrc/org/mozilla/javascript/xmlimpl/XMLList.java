@@ -38,8 +38,6 @@
 package org.mozilla.javascript.xmlimpl;
 
 import java.util.Vector;
-import java.util.HashMap;
-import java.lang.reflect.Member;
 
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.xml.*;
@@ -48,7 +46,8 @@ import org.apache.xmlbeans.XmlCursor;
 
 class XMLList extends XMLObjectImpl implements Function
 {
-
+    static final long serialVersionUID = -4543618751670781135L;
+    
     static class AnnotationList
     {
         private Vector v;

@@ -39,12 +39,13 @@ package org.mozilla.javascript.xmlimpl;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Kit;
 import org.mozilla.javascript.Ref;
-import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Undefined;
 
 class XMLName extends Ref
 {
+    static final long serialVersionUID = 3832176310755686977L;
+    
     private String uri;
     private String localName;
     private boolean isAttributeName;

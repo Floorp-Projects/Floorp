@@ -45,6 +45,8 @@ import org.mozilla.javascript.*;
  */
 final class QName extends IdScriptableObject
 {
+    static final long serialVersionUID = 416745167693026750L;
+    
     private static final Object QNAME_TAG = new Object();
 
     XMLLibImpl lib;

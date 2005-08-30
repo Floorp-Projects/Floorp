@@ -37,11 +37,9 @@
 
 package org.mozilla.javascript.xmlimpl;
 
-import java.lang.reflect.Member;
 import java.util.*;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.xml.*;
 
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlCursor.XmlBookmark;
@@ -52,6 +50,8 @@ import org.apache.xmlbeans.XmlOptions;
 
 class XML extends XMLObjectImpl
 {
+    static final long serialVersionUID = -630969919086449092L;
+    
     final static class XScriptAnnotation extends XmlBookmark
     {
         javax.xml.namespace.QName _name;

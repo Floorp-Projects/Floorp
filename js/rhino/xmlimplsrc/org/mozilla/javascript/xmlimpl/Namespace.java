@@ -45,6 +45,8 @@ import org.mozilla.javascript.*;
  */
 class Namespace extends IdScriptableObject
 {
+    static final long serialVersionUID = -5765755238131301744L;
+    
     private static final Object NAMESPACE_TAG = new Object();
 
     private XMLLibImpl lib;
