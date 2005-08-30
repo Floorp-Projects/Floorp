@@ -2650,10 +2650,10 @@ nsXULDocument::LoadOverlay(const nsAString& aURL, nsIObserver* aObserver)
 
     if (aObserver) {
         nsIObserver* obs = nsnull;
-        if (!mOverlayLoadObservers.IsInitialized())
-            mOverlayLoadObservers.Init();
-        else
-            obs = mOverlayLoadObservers.GetWeak(uri);
+        NS_ENSURE_TRUE(mOverlayLoadObservers.IsInitialized() || mOverlayLoadObservers.Init(), 
+                       NS_ERROR_OUT_OF_MEMORY);
+        
+        obs = mOverlayLoadObservers.GetWeak(uri);
 
         if (obs) {
             // We don't support loading the same overlay twice into the same
@@ -3204,7 +3204,6 @@ nsXULDocument::ResumeWalk()
             if (mInitialLayoutComplete) {
                 // We have completed initial layout, so just send the notification.
                 mOverlayLoadObservers.Get(overlayURI, getter_AddRefs(obs));
-                NS_ASSERTION(obs, "null overlay load observer?!");
                 if (obs)
                     obs->Observe(overlayURI, "xul-overlay-merged", EmptyString().get());
                 mOverlayLoadObservers.Remove(overlayURI);
@@ -3224,10 +3223,11 @@ nsXULDocument::ResumeWalk()
                 // whether or not the overlay prototype is in the XUL cache. The
                 // most likely effect of this bug is odd UI initialization due to
                 // methods and properties that do not work.
-                if (!mPendingOverlayLoadNotifications.IsInitialized())
-                    mPendingOverlayLoadNotifications.Init();
-                else
-                    mPendingOverlayLoadNotifications.Get(overlayURI, getter_AddRefs(obs));
+
+                NS_ENSURE_TRUE(mPendingOverlayLoadNotifications.IsInitialized() || mPendingOverlayLoadNotifications.Init(), 
+                               NS_ERROR_OUT_OF_MEMORY);
+                
+                mPendingOverlayLoadNotifications.Get(overlayURI, getter_AddRefs(obs));
                 if (!obs) {
                     mOverlayLoadObservers.Get(overlayURI, getter_AddRefs(obs));
                     NS_ASSERTION(obs, "null overlay load observer?");
