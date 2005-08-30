@@ -84,7 +84,7 @@
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
-  mEditor(nsnull), mScrollPositionChangedTicks(0)
+  mEditor(nsnull), mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
   // Because of the way document loading happens, the new nsIWidget is created before
   // the old one is removed. Since it creates the nsDocAccessible, for a brief moment 
@@ -189,15 +189,8 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   }
   nsAccessible::GetState(aState);
   *aState |= STATE_FOCUSABLE;
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    GetDocShellTreeItemFor(mDOMNode);
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(docShellTreeItem));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  PRUint32 busyFlags;
-  docShell->GetBusyFlags(&busyFlags);
-  if (busyFlags != nsIDocShell::BUSY_FLAGS_NONE) {
+  
+  if (!mIsContentLoaded) {
     *aState |= STATE_BUSY;
   }
 
@@ -538,12 +531,7 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 nsresult nsDocAccessible::AddEventListeners()
 {
   // 1) Set up scroll position listener
-  // 2) Set up web progress listener - we need to know 
-  //    when page loading is finished
-  //    That way we can send the STATE_CHANGE events for 
-  //    the MSAA root "pane" object (ROLE_PANE),
-  //    and change the STATE_BUSY bit flag
-  //    Do this only for top level content documents
+  // 2) Check for editor and listen for changes to editor
 
   nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
@@ -616,6 +604,11 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadingEvent(PRBool aIsFinished)
   if (!mDocument || !mWeakShell) {
     return NS_OK;  // Document has been shut down
   }
+
+  if (mIsContentLoaded == aIsFinished) {
+    return NS_OK;
+  }
+  mIsContentLoaded = aIsFinished;
 
   if (aIsFinished) {
     // Need to wait until scrollable view is available
@@ -1060,14 +1053,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
 
-  // Don't fire any other events if doc is still loading
-  nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  PRUint32 busyFlags;
-  docShell->GetBusyFlags(&busyFlags);
-  if (busyFlags && mAccessNodeCache.Count() <= 1) {
+  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
     return NS_OK; // Still loading and nothing to invalidate yet
   }
 
@@ -1101,7 +1087,10 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   nsCOMPtr<nsIAccessible> containerAccessible;
   if (childNode == mDOMNode) {
     // Don't get parent accessible if already at the root of a docshell chain like UI or content
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
+    // Don't fire any other events if doc is still loading
+    nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+    NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     if (sameTypeRoot == docShellTreeItem) {
@@ -1117,7 +1106,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     privateContainerAccessible->InvalidateChildren();
   }
 
-  if (busyFlags) {
+  if (!mIsContentLoaded) {
     return NS_OK;
   }
 

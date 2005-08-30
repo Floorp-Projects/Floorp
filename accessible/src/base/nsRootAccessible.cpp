@@ -69,6 +69,7 @@
 #include "nsRootAccessible.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 
@@ -274,6 +275,9 @@ nsresult nsRootAccessible::AddEventListeners()
     
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = target->AddEventListener(NS_LITERAL_STRING("DOMContentLoaded"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
@@ -320,6 +324,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("DOMContentLoaded"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
@@ -350,6 +355,65 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessible **aCaretAccessi
   }
 
   return NS_OK;
+}
+
+void nsRootAccessible::TryFireEarlyLoadEvent(nsIAccessible *aAccessible, nsIDOMNode *aDocNode)
+{
+  // We can fire an early load event based on DOMContentLoaded unless we 
+  // have subdocuments. For that we wait until WebProgressListener
+  // STATE_STOP handling in nsAccessibilityService.
+
+  // Note, we don't fire any page load finished events for chrome or for
+  // frame/iframe page loads during the initial complete page load -- that page
+  // load event for the entire content pane needs to stand alone.
+
+  // This also works for firing events for error pages
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    GetDocShellTreeItemFor(aDocNode);
+  NS_ASSERTION(treeItem, "No docshelltreeitem for aDocNode");
+  if (!treeItem) {
+    return;
+  }
+  PRInt32 itemType;
+  treeItem->GetItemType(&itemType);
+  if (itemType != nsIDocShellTreeItem::typeContent) {
+    return;
+  }
+  nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(treeItem));
+  if (treeNode) {
+    PRInt32 subDocuments;
+    treeNode->GetChildCount(&subDocuments);
+    if (subDocuments) {
+      return;
+    }
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
+  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(rootContentTreeItem));
+  NS_ASSERTION(rootContentTreeItem, "No root content tree item");
+  if (!rootContentTreeItem) { // Not at root of content
+    return;
+  }
+  if (rootContentTreeItem != treeItem) {
+    nsCOMPtr<nsIAccessibleDocument> rootContentDocAccessible =
+      GetDocAccessibleFor(rootContentTreeItem);
+    nsCOMPtr<nsIAccessible> rootContentAccessible =
+      do_QueryInterface(rootContentDocAccessible);
+    PRUint32 state;
+    rootContentAccessible->GetFinalState(&state);
+    if (state & STATE_BUSY) {
+      // Don't fire page load events on subdocuments for initial page load of entire page
+      return;
+    }
+  }
+
+  // No frames or iframes, so we can fire the doc load finished event early
+  nsCOMPtr<nsPIAccessibleDocument> docAccessible =
+    do_QueryInterface(aAccessible);
+  NS_ASSERTION(docAccessible, "No doc aAccessible for DOMContentLoaded");
+  if (docAccessible) {
+    docAccessible->FireDocLoadingEvent(PR_TRUE);
+  }
 }
 
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
@@ -679,6 +743,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     // Focus was inside of popup that's being hidden
     FireCurrentFocusEvent();
+  }
+  else if (eventType.LowerCaseEqualsLiteral("domcontentloaded")) {
+    TryFireEarlyLoadEvent(accessible, targetNode);
   }
   else {
     // Menu popup events

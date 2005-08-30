@@ -330,9 +330,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
   // we have to move forward in the document to get one
-  PRUint32 state;
-  GetState(&state);
-  if (state & STATE_BUSY) {
+  if (!mIsContentLoaded) {
     return NS_OK;
   }
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
@@ -418,14 +416,19 @@ void nsDocAccessibleWrap::DocLoadCallback(nsITimer *aTimer, void *aClosure)
       return;
     }
 
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    NS_ASSERTION(docShell, "No docShell for docShellTreeItem");
-    PRBool hasFocus;
-    docShell->GetHasFocus(&hasFocus);
-    if (hasFocus) {
-      docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                              docAcc, nsnull);
-      docAcc->FireAnchorJumpEvent();
+    // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
+    if (gLastFocusedNode) {
+      nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
+        GetDocShellTreeItemFor(gLastFocusedNode);
+      if (focusedTreeItem) {
+        nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
+        focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
+        if (sameTypeRoot == sameTypeRootOfFocus) {
+          docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                                  docAcc, nsnull);
+          docAcc->FireAnchorJumpEvent();
+        }
+      }
     }
   }
 }
@@ -434,6 +437,12 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
 {
   if (!mDocument || !mWeakShell)
     return NS_OK;  // Document has been shut down
+
+  if (mIsContentLoaded == aIsFinished) {
+    return NS_OK;  // Already fired the event
+  }
+
+  nsDocAccessible::FireDocLoadingEvent(aIsFinished);
 
   if (aIsFinished) {
     // Use short timer before firing state change event for finished doc,
@@ -450,7 +459,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
   }
 
-  return nsDocAccessible::FireDocLoadingEvent(aIsFinished);
+  return NS_OK;
 }
 
 STDMETHODIMP nsDocAccessibleWrap::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
