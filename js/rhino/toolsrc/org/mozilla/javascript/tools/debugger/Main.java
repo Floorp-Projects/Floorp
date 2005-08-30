@@ -39,7 +39,6 @@
 package org.mozilla.javascript.tools.debugger;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.debug.*;
 import java.io.*;
 
 

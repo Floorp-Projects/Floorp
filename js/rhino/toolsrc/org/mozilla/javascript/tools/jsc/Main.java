@@ -38,8 +38,6 @@ package org.mozilla.javascript.tools.jsc;
 
 import java.io.*;
 import java.util.*;
-import java.lang.reflect.*;
-import java.text.MessageFormat;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.optimizer.ClassCompiler;
 import org.mozilla.javascript.tools.ToolErrorReporter;

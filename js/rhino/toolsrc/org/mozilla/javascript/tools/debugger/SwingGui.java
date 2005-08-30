@@ -44,16 +44,12 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.StringTokenizer;
 
 import java.util.*;
 import java.io.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import java.lang.reflect.Method;
-
-import org.mozilla.javascript.Scriptable;
 
 import org.mozilla.javascript.Kit;
 

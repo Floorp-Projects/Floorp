@@ -38,11 +38,9 @@ package org.mozilla.javascript.tools.shell;
 import java.security.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Hashtable;
 import java.util.Enumeration;
 
 import org.mozilla.javascript.*;
-import org.mozilla.classfile.*;
 
 public class JavaPolicySecurity extends SecurityProxy
 {

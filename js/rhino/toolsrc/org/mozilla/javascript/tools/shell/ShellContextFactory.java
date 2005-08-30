@@ -36,7 +36,6 @@
 package org.mozilla.javascript.tools.shell;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.tools.ToolErrorReporter;
 
 public class ShellContextFactory extends ContextFactory
 {
