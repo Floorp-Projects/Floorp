@@ -323,7 +323,31 @@
         <![CDATA[
           var listBox = this.control;
           if (!listBox.selectedItem)
-            listBox.goDown();  // Ensure viable initial focus position
+            listBox.goDown();  // Fix up initial focus as items are created
+          else if (!listBox.selectedItem.parentNode) {
+            // The currently selected item has been removed.
+            // Select the same numbered child in the current list.
+            // The selectedIndex setter will just null out the current selection 
+            // if we pass it an out-of-range index.
+            var focusAncestor = document.commandDispatcher.focusedElement;
+            while (true) {
+               if (!focusAncestor) {
+                 // The focus has been orphaned
+                 listBox.focus();
+                 break;
+               }
+               if (focusAncestor instanceof Components.interfaces.nsIDOMDocument) {
+                 break; // focus has not been orphaned
+               }
+               focusAncestor = focusAncestor.parentNode;
+            }
+            var index = listBox.selectedIndex;
+            var numItems = this.control.getRowCount();
+            if (index >= numItems) {
+              index = numItems - 1;
+            }
+            listBox.selectedIndex = index;
+          }
         ]]>
       </constructor>
 
