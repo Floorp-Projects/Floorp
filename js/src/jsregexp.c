@@ -421,6 +421,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
  */
 static JSBool ParseTerm(CompilerState *state);
 static JSBool ParseQuantifier(CompilerState *state);
+static intN ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues);
 
 /*
  * Top-down regular expression grammar, based closely on Perl4.
@@ -649,10 +650,27 @@ restartOperator:
                 }
             }
             break;
+
+        case '{':
+        {
+            const jschar *errp = state->cp;
+
+            if (ParseMinMaxQuantifier(state, JS_TRUE) < 0) {
+                /* 
+                 * This didn't even scan correctly as a quantifier, so we should
+                 * treat it as flat.
+                 */
+                op = REOP_CONCAT;
+                goto pushOperator;
+            }
+
+            state->cp = errp;
+            /* FALL THROUGH */
+        }
+
         case '+':
         case '*':
         case '?':
-        case '{':
             js_ReportCompileErrorNumberUC(state->context, state->tokenStream,
                                           JSREPORT_TS | JSREPORT_ERROR,
                                           JSMSG_BAD_QUANTIFIER, state->cp);
@@ -1243,6 +1261,20 @@ doSimple:
     case '.':
         state->result = NewRENode(state, REOP_DOT);
         goto doSimple;
+
+    case '{':
+    {
+        const jschar *errp = state->cp--;
+        intN err;
+
+        err = ParseMinMaxQuantifier(state, JS_TRUE);
+        state->cp = errp;
+
+        if (err < 0)
+            goto asFlat;
+
+        /* FALL THROUGH */
+    }
     case '*':
     case '+':
     case '?':
@@ -1251,6 +1283,7 @@ doSimple:
                                       JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
     default:
+asFlat:
         state->result = NewRENode(state, REOP_FLAT);
         if (!state->result)
             return JS_FALSE;
@@ -1298,62 +1331,23 @@ ParseQuantifier(CompilerState *state)
             state->progLength += 4;
             goto quantifier;
         case '{':       /* balance '}' */
-            {
-                intN err;
-                uintN min, max;
-                jschar c;
-                const jschar *errp = state->cp++;
+        {
+            intN err;
+            const jschar *errp = state->cp;
 
-                c = *state->cp;
-                if (JS7_ISDEC(c)) {
-                    ++state->cp;
-                    min = GetDecimalValue(c, 0xFFFF, NULL, state);
-                    c = *state->cp;
-
-                    if (min == OVERFLOW_VALUE) {
-                        err = JSMSG_MIN_TOO_BIG;
-                        goto quantError;
-                    }
-                    if (c == ',') {
-                        c = *++state->cp;
-                        if (JS7_ISDEC(c)) {
-                            ++state->cp;
-                            max = GetDecimalValue(c, 0xFFFF, NULL, state);
-                            c = *state->cp;
-                            if (max == OVERFLOW_VALUE) {
-                                err = JSMSG_MAX_TOO_BIG;
-                                goto quantError;
-                            }
-                            if (min > max) {
-                                err = JSMSG_OUT_OF_ORDER;
-                                goto quantError;
-                            }
-                        } else {
-                            max = (uintN)-1;
-                        }
-                    } else {
-                        max = min;
-                    }
-                    if (c == '}') {
-                        state->result = NewRENode(state, REOP_QUANT);
-                        if (!state->result)
-                            return JS_FALSE;
-                        state->result->u.range.min = min;
-                        state->result->u.range.max = max;
-                        /* QUANT, <min>, <max>, <next> ... <ENDCHILD> */
-                        state->progLength += 8;
-                        goto quantifier;
-                    }
-                }
-                state->cp = errp;
+            err = ParseMinMaxQuantifier(state, JS_FALSE);
+            if (err == 0)
+                goto quantifier;
+            if (err == -1)
                 return JS_TRUE;
-quantError:
-                js_ReportCompileErrorNumberUC(state->context,
-                                              state->tokenStream,
-                                              JSREPORT_TS | JSREPORT_ERROR,
-                                              err, errp);
-                return JS_FALSE;
-            }
+
+            js_ReportCompileErrorNumberUC(state->context,
+                                          state->tokenStream,
+                                          JSREPORT_TS | JSREPORT_ERROR,
+                                          err, errp);
+            return JS_FALSE;
+        }
+        default:;
         }
     }
     return JS_TRUE;
@@ -1369,6 +1363,55 @@ quantifier:
         state->result->u.range.greedy = JS_TRUE;
     }
     return JS_TRUE;
+}
+
+static intN
+ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues)
+{
+    uintN min, max;
+    jschar c;
+    const jschar *errp = state->cp++;
+
+    c = *state->cp;
+    if (JS7_ISDEC(c)) {
+        ++state->cp;
+        min = GetDecimalValue(c, 0xFFFF, NULL, state);
+        c = *state->cp;
+
+        if (!ignoreValues && min == OVERFLOW_VALUE)
+            return JSMSG_MIN_TOO_BIG;
+
+        if (c == ',') {
+            c = *++state->cp;
+            if (JS7_ISDEC(c)) {
+                ++state->cp;
+                max = GetDecimalValue(c, 0xFFFF, NULL, state);
+                c = *state->cp;
+                if (!ignoreValues && max == OVERFLOW_VALUE)
+                    return JSMSG_MAX_TOO_BIG;
+                if (!ignoreValues && min > max)
+                    return JSMSG_OUT_OF_ORDER;
+            } else {
+                max = (uintN)-1;
+            }
+        } else {
+            max = min;
+        }
+        if (c == '}') {
+            state->result = NewRENode(state, REOP_QUANT);
+            if (!state->result)
+                return JS_FALSE;
+            state->result->u.range.min = min;
+            state->result->u.range.max = max;
+            /* QUANT, <min>, <max>, <next> ... <ENDCHILD> */
+            state->progLength += 8;
+
+            return 0;
+        }
+    }
+
+    state->cp = errp;
+    return -1;
 }
 
 #define CHECK_OFFSET(diff) (JS_ASSERT(((diff) >= -32768) && ((diff) <= 32767)))
