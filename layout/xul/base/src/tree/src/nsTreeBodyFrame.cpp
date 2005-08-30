@@ -3448,10 +3448,8 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
     }
   }
 
-  nsScrollbarEvent event;
-  event.eventStructType = NS_SCROLLBAR_EVENT;  
+  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
   event.flags = 0;
-  event.message = NS_SCROLL_EVENT;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -3502,10 +3500,8 @@ nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
   mColScrollView->ScrollTo(mHorzPosition, 0, 0);
 
   // And fire off an event about it all
-  nsScrollbarEvent event;
-  event.eventStructType = NS_SCROLLBAR_EVENT;  
+  nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
   event.flags = 0;
-  event.message = NS_SCROLL_EVENT;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
