@@ -710,8 +710,8 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
     return NS_ERROR_FAILURE;
 
   double xmin, ymin, xmax, ymax;
-  // NULL isn't legal here without our patch to cairo.c
-  cairo_t *ctx = cairo_create(nsnull);
+
+  cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
   GetGlobalTransform(ctx, nsnull);
 
