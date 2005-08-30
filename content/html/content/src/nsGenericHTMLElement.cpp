@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2401,37 +2402,21 @@ nsGenericHTMLElement::GetPresContext()
   return nsnull;
 }
 
-// XXX check all mappings against ebina's usage
 static const nsAttrValue::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "left",      NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right",     NS_STYLE_TEXT_ALIGN_RIGHT },
 
-  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },// verified
-  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },// verified
-  { "center", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BASELINE },//verified
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
-  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },//verified
-  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },//verified
-  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX not the same as ebina */
-  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX ditto */
-  { 0 }
-};
+  { "top",       NS_STYLE_VERTICAL_ALIGN_TOP },
+  { "middle",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
+  { "bottom",    NS_STYLE_VERTICAL_ALIGN_BASELINE },
 
-// Elements that should return vertical align values "middle", "bottom", and "top" 
-//  instead of "center", "baseline", and "texttop" from GetAttribute() should use this
-static const nsAttrValue::EnumTable kVAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
-  { "texttop", NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },// verified
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BASELINE },//verified
-  { "baseline", NS_STYLE_VERTICAL_ALIGN_BASELINE },// verified
-  { "middle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },//verified
-  { "center", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },//verified
-  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX not the same as ebina */
-  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },/* XXX ditto */
+  { "center",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
+  { "baseline",  NS_STYLE_VERTICAL_ALIGN_BASELINE },
+
+  { "texttop",   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
+  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
   { 0 }
 };
 

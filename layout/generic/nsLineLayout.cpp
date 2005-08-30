@@ -25,6 +25,7 @@
  *   L. David Baron <dbaron@dbaron.org>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   IBM Corporation
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2279,6 +2280,17 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
             }
             pfd->mVerticalAlign = VALIGN_OTHER;
             break;
+
+          case NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE:
+            // Align the midpoint of the frame with the baseline of the parent.
+            if (frameSpan) {
+              pfd->mBounds.y = baselineY - pfd->mBounds.height/2;
+            }
+            else {
+              pfd->mBounds.y = baselineY - logicalHeight/2 + pfd->mMargin.top;
+            }
+            pfd->mVerticalAlign = VALIGN_OTHER;
+            break; 	    
         }
         break;
 

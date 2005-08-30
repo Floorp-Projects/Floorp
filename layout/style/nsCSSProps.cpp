@@ -897,6 +897,7 @@ const PRInt32 nsCSSProps::kVerticalAlignKTable[] = {
   eCSSKeyword_top, NS_STYLE_VERTICAL_ALIGN_TOP,
   eCSSKeyword_text_top, NS_STYLE_VERTICAL_ALIGN_TEXT_TOP,
   eCSSKeyword_middle, NS_STYLE_VERTICAL_ALIGN_MIDDLE,
+  eCSSKeyword__moz_middle_with_baseline, NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE,
   eCSSKeyword_bottom, NS_STYLE_VERTICAL_ALIGN_BOTTOM,
   eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM,
   eCSSKeyword_UNKNOWN,-1
