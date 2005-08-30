@@ -680,11 +680,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     Context cx = Context.getContext();
                     Object glue
                         = InterfaceAdapter.create(cx, type, (Callable)value);
-                    if (glue != null) {
-                        // Store for later retrival
-                        glue = so.associateValue(key, glue);
-                        return glue;
-                    }
+                    // Store for later retrival
+                    glue = so.associateValue(key, glue);
+                    return glue;
                 }
                 reportConversionError(value, type);
             } else {

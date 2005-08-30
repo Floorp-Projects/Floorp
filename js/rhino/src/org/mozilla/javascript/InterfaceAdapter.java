@@ -48,7 +48,7 @@ public class InterfaceAdapter
     /**
      * Make glue object implementing interface cl that will
      * call the supplied JS function when called.
-     * Only interfaces were all methods has the same signature is supported.
+     * Only interfaces were all methods have the same signature is supported.
      *
      * @return The glue object or null if <tt>cl</tt> is not interface or
      *         has methods with different signatures.
@@ -64,19 +64,35 @@ public class InterfaceAdapter
         ContextFactory cf = cx.getFactory();
         if (adapter == null) {
             Method[] methods = cl.getMethods();
-            if (methods.length == 0) { return null; }
-            Class returnType = methods[0].getReturnType();
-            Class[] argTypes = methods[0].getParameterTypes();
-            // check that the rest of methods has the same signature
-            for (int i = 1; i != methods.length; ++i) {
-                if (returnType != methods[i].getReturnType()) { return null; }
-                Class[] types2 = methods[i].getParameterTypes();
-                if (types2.length != argTypes.length) { return null; }
-                for (int j = 0; j != argTypes.length; ++j) {
-                    if (types2[j] != argTypes[j]) { return null; }
-                }
+            if (methods.length == 0) {
+                throw Context.reportRuntimeError2(
+                    "msg.no.empty.interface.conversion",
+                    String.valueOf(function),
+                    cl.getClass().getName());
             }
-
+            boolean canCallFunction = false;
+          canCallFunctionChecks: {
+                Class[] argTypes = methods[0].getParameterTypes();
+                // check that the rest of methods has the same signature
+                for (int i = 1; i != methods.length; ++i) {
+                    Class[] types2 = methods[i].getParameterTypes();
+                    if (types2.length != argTypes.length) {
+                        break canCallFunctionChecks;
+                    }
+                    for (int j = 0; j != argTypes.length; ++j) {
+                        if (types2[j] != argTypes[j]) {
+                            break canCallFunctionChecks;
+                        }
+                    }
+                }
+                canCallFunction= true;
+            }
+            if (!canCallFunction) {
+                throw Context.reportRuntimeError2(
+                    "msg.no.function.interface.conversion",
+                    String.valueOf(function),
+                    cl.getClass().getName());
+            }
             adapter = new InterfaceAdapter(cf, cl);
             cache.cacheInterfaceAdapter(cl, adapter);
         }
