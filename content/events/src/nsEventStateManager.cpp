@@ -4037,6 +4037,40 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   return didContentChangeAllStates;
 }
 
+static PRBool
+IsFocusable(nsIPresShell* aPresShell, nsIContent* aContent)
+{
+  // Flush pending updates to the frame tree first (bug 305840).
+  aPresShell->FlushPendingNotifications(Flush_Frames);
+
+  nsIFrame* focusFrame = aPresShell->GetPrimaryFrameFor(aContent);
+  if (!focusFrame) {
+    return PR_FALSE;
+  }
+
+  // XUL frames in general have a somewhat confusing notion of
+  // focusability so we only require a visible frame and that
+  // the content is focusable (not disabled).
+  // We don't use nsIFrame::IsFocusable() because it defaults
+  // tabindex to -1 for -moz-user-focus:ignore (bug 305840).
+  if (aContent->IsContentOfType(nsIContent::eXUL)) {
+    PRBool tabIndex = 0;
+    return focusFrame->AreAncestorViewsVisible() &&
+           focusFrame->GetStyleVisibility()->IsVisible() &&
+           aContent->IsFocusable(&tabIndex);
+  }
+
+  if (aContent->Tag() != nsHTMLAtoms::area) {
+    return focusFrame->IsFocusable();
+  }
+  // HTML areas do not have their own frame, and the img frame we get from
+  // GetPrimaryFrameFor() is not relevant to whether it is focusable or not,
+  // so we have to do all the relevant checks manually for them.
+  return focusFrame->AreAncestorViewsVisible() &&
+         focusFrame->GetStyleVisibility()->IsVisible() &&
+         aContent->IsFocusable();
+}
+
 nsresult
 nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
                                    nsIContent *aContent,
@@ -4162,44 +4196,10 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     }
   }
 
-  if (aContent) {
-    // Check if the HandleDOMEvent calls above destroyed our frame (bug #118685)
-    // or made it not focusable in any way.
-    // Flush pending updates to the frame tree first (bug 305840).
-    presShell->FlushPendingNotifications(Flush_Frames);
-
-    nsIFrame* focusFrame = presShell->GetPrimaryFrameFor(aContent);
-
-    // XUL textboxes are not focusable for various reasons so we check if
-    // the inner html:input frame is focusable instead (bug 305840).
-    if (aContent->IsContentOfType(nsIContent::eXUL)) {
-      nsCOMPtr<nsIDOMXULTextBoxElement> textbox = do_QueryInterface(aContent);
-      if (textbox) {
-        nsCOMPtr<nsIDOMNode> inputNode;
-        textbox->GetInputField(getter_AddRefs(inputNode));
-        nsCOMPtr<nsIContent> input = do_QueryInterface(inputNode);
-        focusFrame = input ? presShell->GetPrimaryFrameFor(input) : nsnull;
-      }
-    }
-
-    if (focusFrame) {
-      if (aContent->Tag() != nsHTMLAtoms::area) {
-        if (!focusFrame->IsFocusable()) {
-          focusFrame = nsnull;
-        }
-      }
-      else if (!focusFrame->AreAncestorViewsVisible() ||
-               !focusFrame->GetStyleVisibility()->IsVisible() ||
-               !aContent->IsFocusable()) {
-        // HTML areas do not have their own frame, and the img frame we get from
-        // GetPrimaryFrameFor() is not relevant to whether it is focusable or not,
-        // so we have to do all the relevant checks manually for them.
-        focusFrame = nsnull;
-      }
-    }
-    if (!focusFrame) {
-      aContent = nsnull;
-    }
+  // Check if the HandleDOMEvent calls above destroyed our frame (bug #118685)
+  // or made it not focusable in any way.
+  if (aContent && !::IsFocusable(presShell, aContent)) {
+    aContent = nsnull;
   }
 
   NS_IF_RELEASE(gLastFocusedContent);
