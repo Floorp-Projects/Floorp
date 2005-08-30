@@ -954,51 +954,6 @@ sub GetBugLink {
     }
 }
 
-sub GetLongDescriptionAsText {
-    my ($id, $start, $end) = (@_);
-    my $result = "";
-    my $count = 0;
-    my $anyprivate = 0;
-    my $dbh = Bugzilla->dbh;
-    my ($query) = ("SELECT profiles.login_name, " .
-                   $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . ", " .
-                   "       longdescs.thetext, longdescs.isprivate, " .
-                   "       longdescs.already_wrapped " .
-                   "FROM   longdescs, profiles " .
-                   "WHERE  profiles.userid = longdescs.who " .
-                   "AND    longdescs.bug_id = $id ");
-
-    # $start will be undef for New bugs, and defined for pre-existing bugs.
-    if ($start) {
-        # If $start is not NULL, obtain the count-index
-        # of this comment for the leading "Comment #xxx" line.)
-        SendSQL("SELECT count(*) FROM longdescs " .
-                " WHERE bug_id = $id AND bug_when <= '$start'");
-        ($count) = (FetchSQLData());
-         
-        $query .= " AND longdescs.bug_when > '$start'"
-                . " AND longdescs.bug_when <= '$end' ";
-    }
-
-    $query .= "ORDER BY longdescs.bug_when";
-    SendSQL($query);
-    while (MoreSQLData()) {
-        my ($who, $when, $text, $isprivate, $work_time, $already_wrapped) = 
-            (FetchSQLData());
-        if ($count) {
-            $result .= "\n\n------- Comment #$count from $who".Param('emailsuffix')."  ".
-                Bugzilla::Util::format_time($when) . " -------\n";
-        }
-        if (($isprivate > 0) && Param("insidergroup")) {
-            $anyprivate = 1;
-        }
-        $result .= ($already_wrapped ? $text : wrap_comment($text));
-        $count++;
-    }
-
-    return ($result, $anyprivate);
-}
-
 # Returns a list of all the legal values for a field that has a
 # list of legal values, like rep_platform or resolution.
 sub get_legal_field_values {
