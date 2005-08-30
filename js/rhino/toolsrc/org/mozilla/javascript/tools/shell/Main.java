@@ -44,7 +44,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.MalformedURLException;
 import java.util.*;
-import java.lang.reflect.*;
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.tools.ToolErrorReporter;
 
@@ -346,9 +345,9 @@ public class Main
                                                      lineno, null);
                 if (script != null) {
                     Object result = evaluateScript(script, cx, global);
-                    if (result != cx.getUndefinedValue()) {
+                    if (result != Context.getUndefinedValue()) {
                         try {
-                            global.getErr().println(cx.toString(result));
+                            global.getErr().println(Context.toString(result));
                         } catch (RhinoException rex) {
                             errorReporter.reportException(rex);
                         }
@@ -499,7 +498,7 @@ public class Main
             exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(msg);
         }
-        return cx.getUndefinedValue();
+        return Context.getUndefinedValue();
     }
 
     private static void p(String s) {

@@ -152,7 +152,7 @@ public class Global extends ImporterTopLevel
     {
         double result = (double) cx.getLanguageVersion();
         if (args.length > 0) {
-            double d = cx.toNumber(args[0]);
+            double d = Context.toNumber(args[0]);
             cx.setLanguageVersion((int) d);
         }
         return result;
@@ -168,7 +168,7 @@ public class Global extends ImporterTopLevel
                             Object[] args, Function funObj)
     {
         for (int i=0; i < args.length; i++) {
-            Main.processFile(cx, thisObj, cx.toString(args[i]));
+            Main.processFile(cx, thisObj, Context.toString(args[i]));
         }
     }
 
@@ -258,7 +258,7 @@ public class Global extends ImporterTopLevel
                 "the serialization to");
         }
         Object obj = args[0];
-        String filename = cx.toString(args[1]);
+        String filename = Context.toString(args[1]);
         FileOutputStream fos = new FileOutputStream(filename);
         Scriptable scope = ScriptableObject.getTopLevelScope(thisObj);
         ScriptableOutputStream out = new ScriptableOutputStream(fos, scope);
@@ -274,13 +274,13 @@ public class Global extends ImporterTopLevel
             throw Context.reportRuntimeError(
                 "Expected a filename to read the serialization from");
         }
-        String filename = cx.toString(args[0]);
+        String filename = Context.toString(args[0]);
         FileInputStream fis = new FileInputStream(filename);
         Scriptable scope = ScriptableObject.getTopLevelScope(thisObj);
         ObjectInputStream in = new ScriptableInputStream(fis, scope);
         Object deserialized = in.readObject();
         in.close();
-        return cx.toObject(deserialized, scope);
+        return Context.toObject(deserialized, scope);
     }
 
     /**
@@ -453,8 +453,8 @@ public class Global extends ImporterTopLevel
             }
             Object addArgsObj = ScriptableObject.getProperty(params, "args");
             if (addArgsObj != Scriptable.NOT_FOUND) {
-                Scriptable s = cx.toObject(addArgsObj,
-                                           getTopLevelScope(thisObj));
+                Scriptable s = Context.toObject(addArgsObj,
+                                                getTopLevelScope(thisObj));
                 addArgs = cx.getElements(s);
             }
         }
