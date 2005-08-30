@@ -500,7 +500,7 @@ public class Main {
             process_file(args[0]);
         }
         catch (IOException ex) {
-            print_error(ToolErrorReporter..getMessage(
+            print_error(ToolErrorReporter.getMessage(
                             "msg.idswitch.io_error", ex.toString()));
             return -1;
         }

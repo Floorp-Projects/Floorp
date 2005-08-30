@@ -382,8 +382,8 @@ public class SwitchGenerator {
         StringBuffer sb = new StringBuffer();
         int line1 = a.getLineNumber(), line2 = b.getLineNumber();
         if (line2 > line1) { int tmp = line1; line1 = line2; line2 = tmp; }
-        String error_text = R.getMessage("msg.idswitch.same_string",
-                                         a.id, new Integer(line2));
+        String error_text = ToolErrorReporter.getMessage(
+			"msg.idswitch.same_string", a.id, new Integer(line2));
         return R.runtimeError(error_text, source_file, line1, null, 0);
     }
 
