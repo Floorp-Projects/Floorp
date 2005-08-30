@@ -3283,15 +3283,82 @@ JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
     return OBJ_GET_CLASS(cx, obj) == &js_FunctionClass;
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
+                                    uintN argc, jsval *argv, jsval *rval)
+{
+    jsval fsv;
+    JSFunctionSpec *fs;
+    JSObject *tmp;
+
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &fsv))
+        return JS_FALSE;
+    fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
+
+    if (argc == 0) {
+        /*
+         * Follow Function.prototype.apply and .call by using the global
+         * object as the 'this' param if no args.  We know argv[0] is valid
+         * because JS_DefineFunctions, below, defined us as requiring at
+         * least one argument (it passes fs->nargs + 1 as the penultimate
+         * argument to JS_DefineFunction).
+         */
+        while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+            obj = tmp;
+        argv[0] = OBJECT_TO_JSVAL(obj);
+        argc = 1;
+    }
+
+    /*
+     * Copy all actual (argc) and required but missing (fs->nargs + 1 - argc)
+     * args down over our |this| parameter, argv[-1], which is almost always
+     * the class constructor object, e.g. Array.  Then call the corresponding
+     * prototype native method with our first argument passed as |this|.
+     */
+    memmove(argv - 1, argv, (fs->nargs + 1) * sizeof(jsval));
+    return fs->call(cx, JSVAL_TO_OBJECT(argv[-1]), argc - 1, argv, rval);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 {
+    uintN flags;
+    JSObject *ctor;
     JSFunction *fun;
 
     CHECK_REQUEST(cx);
+    ctor = NULL;
     for (; fs->name; fs++) {
-        fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs,
-                                fs->flags);
+        flags = fs->flags;
+
+        /*
+         * Define a generic arity N+1 static method for the arity N prototype
+         * method if flags contains JSFUN_GENERIC_NATIVE.
+         */
+        if (flags & JSFUN_GENERIC_NATIVE) {
+            if (!ctor) {
+                ctor = JS_GetConstructor(cx, obj);
+                if (!ctor)
+                    return JS_FALSE;
+            }
+
+            flags &= ~JSFUN_GENERIC_NATIVE;
+            fun = JS_DefineFunction(cx, ctor, fs->name,
+                                    js_generic_native_method_dispatcher,
+                                    fs->nargs + 1, flags);
+            if (!fun)
+                return JS_FALSE;
+            fun->extra = fs->extra;
+
+            /*
+             * As jsapi.h notes, fs must point to storage that lives as long
+             * as fun->object lives.
+             */
+            if (!JS_SetReservedSlot(cx, fun->object, 0, PRIVATE_TO_JSVAL(fs)))
+                return JS_FALSE;
+        }
+
+        fun = JS_DefineFunction(cx, obj, fs->name, fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
         fun->extra = fs->extra;

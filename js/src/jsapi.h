@@ -135,6 +135,19 @@ JS_BEGIN_EXTERN_C
 #define JSFUN_FLAGS_MASK        0xf8    /* overlay JSFUN_* attributes */
 
 /*
+ * Re-use JSFUN_LAMBDA, which applies only to scripted functions, for use in
+ * JSFunctionSpec arrays that specify generic native prototype methods, i.e.,
+ * methods of a class prototype that are exposed as static methods taking an
+ * extra leading argument: the generic |this| parameter.
+ *
+ * If you set this flag in a JSFunctionSpec struct's flags initializer, then
+ * that struct must live at least as long as the native static method object
+ * created due to this flag by JS_DefineFunctions or JS_InitClass.  Typically
+ * JSFunctionSpec structs are allocated in static arrays.
+ */
+#define JSFUN_GENERIC_NATIVE    JSFUN_LAMBDA
+
+/*
  * Well-known JS values.  The extern'd variables are initialized when the
  * first JSContext is created by JS_NewContext (see below).
  */

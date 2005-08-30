@@ -1718,32 +1718,32 @@ static JSFunctionSpec array_methods[] = {
 
     /* Perl-ish methods. */
 #if JS_HAS_SOME_PERL_FUN
-    {"join",                array_join,             1,0,0},
-    {"reverse",             array_reverse,          0,0,0},
-    {"sort",                array_sort,             1,0,0},
+    {"join",                array_join,             1,JSFUN_GENERIC_NATIVE,0},
+    {"reverse",             array_reverse,          0,JSFUN_GENERIC_NATIVE,0},
+    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,0},
 #endif
 #if JS_HAS_MORE_PERL_FUN
-    {"push",                array_push,             1,0,0},
-    {"pop",                 array_pop,              0,0,0},
-    {"shift",               array_shift,            0,0,0},
-    {"unshift",             array_unshift,          1,0,0},
-    {"splice",              array_splice,           2,0,0},
+    {"push",                array_push,             1,JSFUN_GENERIC_NATIVE,0},
+    {"pop",                 array_pop,              0,JSFUN_GENERIC_NATIVE,0},
+    {"shift",               array_shift,            0,JSFUN_GENERIC_NATIVE,0},
+    {"unshift",             array_unshift,          1,JSFUN_GENERIC_NATIVE,0},
+    {"splice",              array_splice,           2,JSFUN_GENERIC_NATIVE,0},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",              array_concat,           1,0,0},
-    {"slice",               array_slice,            2,0,0},
+    {"concat",              array_concat,           1,JSFUN_GENERIC_NATIVE,0},
+    {"slice",               array_slice,            2,JSFUN_GENERIC_NATIVE,0},
 #endif
 
 #if JS_HAS_ARRAY_EXTRAS
-    {"indexOf",             array_indexOf,          1,0,0},
-    {"lastIndexOf",         array_lastIndexOf,      1,0,0},
-    {"forEach",             array_forEach,          1,0,0},
-    {"map",                 array_map,              1,0,0},
-    {"filter",              array_filter,           1,0,0},
-    {"some",                array_some,             1,0,0},
-    {"every",               array_every,            1,0,0},
+    {"indexOf",             array_indexOf,          1,JSFUN_GENERIC_NATIVE,0},
+    {"lastIndexOf",         array_lastIndexOf,      1,JSFUN_GENERIC_NATIVE,0},
+    {"forEach",             array_forEach,          1,JSFUN_GENERIC_NATIVE,0},
+    {"map",                 array_map,              1,JSFUN_GENERIC_NATIVE,0},
+    {"filter",              array_filter,           1,JSFUN_GENERIC_NATIVE,0},
+    {"some",                array_some,             1,JSFUN_GENERIC_NATIVE,0},
+    {"every",               array_every,            1,JSFUN_GENERIC_NATIVE,0},
 #endif
 
     {0,0,0,0,0}
