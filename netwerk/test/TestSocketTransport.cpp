@@ -51,6 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
+#include "nsIDNSService.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
@@ -303,6 +304,11 @@ main(int argc, char* argv[])
         gTestLog = PR_NewLogModule("Test");
 #endif
 
+        // Make sure the DNS service is initialized on the main thread
+        nsCOMPtr<nsIDNSService> dns =
+                 do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
         nsCOMPtr<nsIEventQueueService> eventQService =
                  do_GetService(kEventQueueServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
@@ -391,5 +397,5 @@ main(int argc, char* argv[])
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    return NS_OK;
+    return 0;
 }
