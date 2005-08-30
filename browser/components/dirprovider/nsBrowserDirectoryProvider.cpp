@@ -162,7 +162,7 @@ nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
     }
   }
 
-  if (NS_SUCCEEDED(rv) || !exists) {
+  if (NS_SUCCEEDED(rv) && !exists) {
     if (!restoreBookmarksBackup ||
 	NS_FAILED(RestoreBookmarksFromBackup(leafstr, parentDir, file)))
       EnsureProfileFile(leafstr, parentDir, file);
