@@ -1,16 +1,6 @@
-
 # This file specifies the build flags for Thunderbird.  You can use it by adding:
 #  . $topsrcdir/mail/config/mozconfig
 # to the top of your mozconfig file.
 
 mk_add_options MOZ_CO_PROJECT=mail
 ac_add_options --enable-application=mail
-
-ac_add_options --disable-mathml
-ac_add_options --disable-activex
-ac_add_options --disable-activex-scripting
-ac_add_options --disable-tests
-ac_add_options --disable-oji
-ac_add_options --disable-necko-disk-cache
-ac_add_options --enable-necko-protocols=http,file,jar,viewsource,res,data
-ac_add_options --enable-image-decoders=default,-xbm
