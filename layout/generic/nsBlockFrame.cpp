@@ -2129,6 +2129,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState, PRBool aTryPull)
     ::DirtyLinesWithDirtyContinuations(line, line_end);
   }
 
+  if (line == line_end)
+    mAscent=0; // there are no lines, reset the previously computed ascent
+
   // Reflow the lines that are already ours
   for ( ; line != line_end; ++line, aState.AdvanceToNextLine()) {
     DumpLine(aState, line, deltaY, 0);
