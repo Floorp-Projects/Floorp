@@ -856,8 +856,10 @@ nsTreeBodyFrame::CheckOverflow()
   }
 
   if (horizontalOverflowChanged) {
-    nsScrollPortEvent event(mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW
-                            : NS_SCROLLPORT_UNDERFLOW);
+    nsScrollPortEvent event(PR_TRUE,
+                            mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW
+                                                : NS_SCROLLPORT_UNDERFLOW,
+                            nsnull);
     event.orient = nsScrollPortEvent::horizontal;
 
     nsEventStatus status = nsEventStatus_eIgnore;
