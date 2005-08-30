@@ -746,7 +746,7 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  NS_HIDDEN_(nsresult) GetBoolAttr(nsIAtom* aAttr, PRBool* aValue);
+  NS_HIDDEN_(nsresult) GetBoolAttr(nsIAtom* aAttr, PRBool* aValue) const;
 
   /**
    * Helper method for NS_IMPL_BOOL_ATTR macro.
@@ -848,6 +848,9 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             PRBool aNotify);
+
 protected:
   /**
    * Find the form for this element and set aFormControl's form to it
@@ -856,6 +859,28 @@ protected:
    * @param aFormControl the form control to set the form for
    */
   void FindAndSetForm();
+
+  /**
+   * Called when an attribute has just been changed.
+   *
+   * Note that this function is also called if the attribute change fails.
+   *
+   * @param aNameSpaceID      The namespace ID of the attribute
+   * @param aName             The attribute name (atom)
+   * @param aValue            The new value (nsnull if it being removed)
+   * @param aNotify           Notify about changes?
+   */
+  virtual void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            const nsAString* aValue, PRBool aNotify);
+
+  /**
+   * Returns true if the control is a form control element (according to
+   * http://whatwg.org/specs/web-forms/current-work/#terminology) or a field
+   * set.
+   */
+  PRBool IsFormControlOrFieldSet() const;
+
+  virtual PRInt32 IntrinsicState() const;
 
   /** The form that contains this control */
   nsIForm* mForm;

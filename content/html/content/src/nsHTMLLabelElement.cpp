@@ -76,7 +76,7 @@ public:
   NS_DECL_NSIDOMHTMLLABELELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() { return NS_FORM_LABEL; }
+  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_LABEL; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);

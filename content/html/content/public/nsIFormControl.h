@@ -103,7 +103,7 @@ public:
    * Get the type of this control as an int (see NS_FORM_* above)
    * @return the type of this control
    */
-  NS_IMETHOD_(PRInt32) GetType() = 0;
+  NS_IMETHOD_(PRInt32) GetType() const = 0 ;
 
   /**
    * Reset this form control (as it should be when the user clicks the Reset

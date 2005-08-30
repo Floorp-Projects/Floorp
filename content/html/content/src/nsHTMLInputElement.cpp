@@ -164,7 +164,7 @@ public:
   NS_DECL_NSIPHONETIC
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(PRInt32) GetType() { return mType; }
+  NS_IMETHOD_(PRInt32) GetType() const { return mType; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -275,8 +275,8 @@ protected:
   /**
    * Called when an attribute has just been changed
    */
-  void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                    const nsAString* aValue, PRBool aNotify);
+  virtual void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            const nsAString* aValue, PRBool aNotify);
 
   void SelectAll(nsPresContext* aPresContext);
   PRBool IsImage() const
@@ -460,6 +460,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
                                  PRBool aNotify)
 {
+  nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue, aNotify);
+
   if (aNameSpaceID != kNameSpaceID_None) {
     return;
   }

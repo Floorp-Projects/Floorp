@@ -3066,7 +3066,7 @@ nsGenericHTMLElement::SetBoolAttr(nsIAtom* aAttr, PRBool aValue)
 }
 
 nsresult
-nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, PRBool* aValue)
+nsGenericHTMLElement::GetBoolAttr(nsIAtom* aAttr, PRBool* aValue) const
 {
   *aValue = HasAttr(kNameSpaceID_None, aAttr);
   return NS_OK;
@@ -3306,69 +3306,112 @@ nsGenericHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   nsIAtom* aPrefix, const nsAString& aValue,
                                   PRBool aNotify)
 {
-  if (aNameSpaceID != kNameSpaceID_None) {
-    return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                         aNotify);
-  }
-
-  nsCOMPtr<nsIFormControl> thisControl;
-  nsAutoString tmp;
   nsresult rv = NS_OK;
 
-  QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(thisControl));
+  if (aNameSpaceID != kNameSpaceID_None) {
+    rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                         aNotify);
+  } else {
+    nsCOMPtr<nsIFormControl> thisControl;
+    nsAutoString tmp;
 
-  // Add & remove the control to and/or from the hash table
-  if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
-    GetAttr(kNameSpaceID_None, aName, tmp);
+    QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(thisControl));
 
-    if (!tmp.IsEmpty()) {
-      mForm->RemoveElementFromTable(thisControl, tmp);
+    // Add & remove the control to and/or from the hash table
+    if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+      GetAttr(kNameSpaceID_None, aName, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->RemoveElementFromTable(thisControl, tmp);
+      }
+    }
+
+    if (mForm && aName == nsHTMLAtoms::type) {
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->RemoveElementFromTable(thisControl, tmp);
+      }
+
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->RemoveElementFromTable(thisControl, tmp);
+      }
+
+      mForm->RemoveElement(thisControl);
+    }
+
+    rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                       aNotify);
+
+    if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+      GetAttr(kNameSpaceID_None, aName, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->AddElementToTable(thisControl, tmp);
+      }
+    }
+
+    if (mForm && aName == nsHTMLAtoms::type) {
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->AddElementToTable(thisControl, tmp);
+      }
+
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
+
+      if (!tmp.IsEmpty()) {
+        mForm->AddElementToTable(thisControl, tmp);
+      }
+
+      mForm->AddElement(thisControl);
     }
   }
 
-  if (mForm && aName == nsHTMLAtoms::type) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->RemoveElementFromTable(thisControl, tmp);
-    }
-
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->RemoveElementFromTable(thisControl, tmp);
-    }
-
-    mForm->RemoveElement(thisControl);
-  }
-
-  rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
-
-  if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
-    GetAttr(kNameSpaceID_None, aName, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->AddElementToTable(thisControl, tmp);
-    }
-  }
-
-  if (mForm && aName == nsHTMLAtoms::type) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->AddElementToTable(thisControl, tmp);
-    }
-
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->AddElementToTable(thisControl, tmp);
-    }
-
-    mForm->AddElement(thisControl);
-  }
+  AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
 
   return rv;
+}
+
+nsresult
+nsGenericHTMLFormElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aName, aNotify);
+
+  AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);
+
+  return rv;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsFormControlOrFieldSet() const
+{
+  PRInt32 type = GetType();
+  // It's easier to test the types that do _not_ match
+  return
+    type != NS_FORM_LABEL &&
+    type != NS_FORM_OPTION &&
+    type != NS_FORM_OPTGROUP &&
+    type != NS_FORM_LEGEND &&
+    type != NS_FORM_OBJECT;
+}
+
+void
+nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                       const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsHTMLAtoms::disabled && IsFormControlOrFieldSet()) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DISABLED |
+                                     NS_EVENT_STATE_ENABLED);
+    }
+  }
 }
 
 void
@@ -3378,6 +3421,27 @@ nsGenericHTMLFormElement::FindAndSetForm()
   if (form) {
     SetForm(form);  // always succeeds
   }
+}
+
+PRInt32
+nsGenericHTMLFormElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+
+  if (IsFormControlOrFieldSet()) {
+    // :enabled/:disabled
+    PRBool disabled;
+    GetBoolAttr(nsHTMLAtoms::disabled, &disabled);
+    if (disabled) {
+      state |= NS_EVENT_STATE_DISABLED;
+      state &= ~NS_EVENT_STATE_ENABLED;
+    } else {
+      state &= ~NS_EVENT_STATE_DISABLED;
+      state |= NS_EVENT_STATE_ENABLED;
+    }
+  }
+
+  return state;
 }
 
 //----------------------------------------------------------------------

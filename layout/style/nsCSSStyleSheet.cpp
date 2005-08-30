@@ -3128,6 +3128,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       //  <input type=radio>
       result = STATE_CHECK(NS_EVENT_STATE_CHECKED);
     }
+    else if (nsCSSPseudoClasses::enabled == pseudoClass->mAtom) {
+      result = STATE_CHECK(NS_EVENT_STATE_ENABLED);
+    }
+    else if (nsCSSPseudoClasses::disabled == pseudoClass->mAtom) {
+      result = STATE_CHECK(NS_EVENT_STATE_DISABLED);
+    }
     else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
       result = STATE_CHECK(NS_EVENT_STATE_REQUIRED);
     }
@@ -3649,6 +3655,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::target) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::link) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::visited) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::enabled) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::disabled) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::required) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::optional)) {
       return PR_TRUE;
