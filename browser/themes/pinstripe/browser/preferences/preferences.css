@@ -40,8 +40,21 @@ prefwindow {
   padding: 0 !important;
 }
 
-prefpane {
+.prefWindow-dlgbuttons {
+  margin: 0 12px 8px 12px;
+}
+
+#BrowserPreferences .prefWindow-dlgbuttons {
+  padding-top: 0 !important;
+}
+
+.windowDialog {
   padding: 12px;
+  font: -moz-dialog;
+}
+
+prefpane {
+  padding: 12px 12px 0 12px;
 }
 
 .paneSelector {
@@ -116,6 +129,17 @@ radio[pane=paneAdvanced]:active {
 	-moz-image-region: rect(32px, 192px, 64px, 160px)
 }
 
+.content-box > separator {
+  border: 1px solid red;
+}
+
+description {
+  font: small-caption;
+  font-weight: normal;
+  line-height: 1.3em;
+  margin-bottom: 4px !important;
+}
+
 #browserStartupHomepage {
   padding: 2px 2px 3px 4px;
 }
@@ -161,7 +185,7 @@ prefpane .groupbox-body {
 }
 
 #paneTabs > vbox {
-  margin: 8px;
+  margin: 12px 4px;
 }
 
 prefpane .groupbox-title {
@@ -174,12 +198,27 @@ caption {
   padding: 4px 4px 0px 0px !important;
 }
 
+#paneGeneral description, #paneAdvanced description {
+  font: -moz-dialog;
+}
+
 #paneContent {
   padding-top: 8px;
 }
 
 #paneContent row {
-  padding: 0 4px;
+  padding: 2px 4px;
+  -moz-box-align: center;
+}
+
+#popupPolicyRow, #enableSoftwareInstallRow, #enableImagesRow {
+  margin-bottom: 4px !important;
+  padding-bottom: 4px !important;
+  border-bottom: 1px solid #ccc;
+}
+
+#enableImagesRow {
+  -moz-box-align: start !important;
 }
 
 #browserUseCurrent, #browserUseBookmark, #browserUseBlank {
@@ -194,16 +233,16 @@ caption {
   padding: 0 4px;
 }
 
-#privacyPrefs .tab-text {
-  font: message-box;
-}
-
 #privacyPrefs > tabpanels {
   padding: 18px 10px 10px 10px;
 }
 
 #browserStartupHomepage {
   padding: 0;
+}
+
+#OCSPDialogPane {
+  font: message-box !important;
 }
 
 /**
@@ -216,4 +255,5 @@ caption {
 .updateControls {
   -moz-margin-start: 10px;
 }
+
 
