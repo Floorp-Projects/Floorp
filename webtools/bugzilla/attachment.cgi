@@ -1190,12 +1190,10 @@ sub update
           # cc, bug_group_map, user_group_map, and groups are in here so we
           # can check the permissions of flag requestees and email addresses
           # on the flag type cc: lists via the CanSeeBug
-          # function call in Flag::notify. group_group_map is in here in case
-          # Bugzilla::User needs to rederive groups. profiles and 
-          # user_group_map would be READ locks instead of WRITE locks if it
-          # weren't for derive_groups, which needs to write to those tables.
-          'bugs WRITE', 'profiles WRITE', 'email_setting READ',
-          'cc READ', 'bug_group_map READ', 'user_group_map WRITE',
+          # function call in Flag::notify. group_group_map is in here si
+          # Bugzilla::User can flatten groups.
+          'bugs WRITE', 'profiles READ', 'email_setting READ',
+          'cc READ', 'bug_group_map READ', 'user_group_map READ',
           'group_group_map READ', 'groups READ');
 
   # Get a copy of the attachment record before we make changes

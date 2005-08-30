@@ -134,6 +134,7 @@ sub show_user {
 
     $dbh->bz_lock_tables('bugs READ', 'products READ', 'votes WRITE',
              'cc READ', 'bug_group_map READ', 'user_group_map READ',
+             'group_group_map READ',
              'cc AS selectVisible_cc READ', 'groups READ');
 
     if ($canedit && $bug_id) {

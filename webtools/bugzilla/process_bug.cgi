@@ -620,8 +620,6 @@ if ($action eq Param('move-button-text')) {
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
     $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
 
-    # $user->derive_groups() has already been called by Bugzilla->login(),
-    # so the related tables do not need to be locked.
     $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE', 'duplicates WRITE',
                          'longdescs WRITE', 'profiles READ', 'groups READ',
                          'bug_group_map READ', 'group_group_map READ',
@@ -1266,16 +1264,11 @@ foreach my $id (@idlist) {
                                 # whether we do LOW_PRIORITY ...
     $dbh->bz_lock_tables("bugs $write", "bugs_activity $write",
             "cc $write", "cc AS selectVisible_cc $write",
-            "profiles $write", "dependencies $write", "votes $write",
+            "profiles READ", "dependencies $write", "votes $write",
             "products READ", "components READ",
             "keywords $write", "longdescs $write", "fielddefs $write",
             "bug_group_map $write", "flags $write", "duplicates $write",
-            # user_group_map would be a READ lock except that Flag::process
-            # may call Flag::notify, which creates a new user object,
-            # which might call derive_groups, which wants a WRITE lock on that
-            # table. group_group_map is in here at all because derive_groups
-            # needs it.
-            "user_group_map $write", "group_group_map READ", "flagtypes READ",
+            "user_group_map READ", "group_group_map READ", "flagtypes READ",
             "flaginclusions AS i READ", "flagexclusions AS e READ",
             "keyworddefs READ", "groups READ", "attachments READ",
             "group_control_map AS oldcontrolmap READ",

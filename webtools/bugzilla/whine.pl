@@ -228,10 +228,10 @@ sub get_next_event {
 
         $dbh->bz_lock_tables('whine_schedules WRITE',
                              'whine_events READ',
-                             'profiles WRITE',
+                             'profiles READ',
                              'groups READ',
                              'group_group_map READ',
-                             'user_group_map WRITE');
+                             'user_group_map READ');
 
         # Get the event ID for the first pending schedule
         $sth_next_scheduled_event->execute;

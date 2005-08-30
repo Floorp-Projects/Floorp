@@ -370,7 +370,8 @@ while (MoreSQLData()) {
 # Add the bug report to the DB.
 $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
                      'cc WRITE', 'keywords WRITE', 'dependencies WRITE',
-                     'bugs_activity WRITE', 'groups READ', 'user_group_map READ',
+                     'bugs_activity WRITE', 'groups READ',
+                     'user_group_map READ', 'group_group_map READ',
                      'keyworddefs READ', 'fielddefs READ');
 
 SendSQL($sql);
