@@ -179,8 +179,9 @@
     [% END %] 
 
   [% ELSIF error == "flag_requestee_disabled" %]
-    [% title = "Flag not Specifically Requestable" %]
-    The flag <em>[% name FILTER html %]</em> is not specifically requestable.
+    [% title = "Flag not Requestable from Specific Person" %]
+    You can't ask a specific person for
+    <em>[% type.name FILTER html %]</em>.
   
   [% ELSIF error == "flag_status_invalid" %]
     The flag status <em>[% status FILTER html %]</em>

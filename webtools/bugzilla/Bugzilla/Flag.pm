@@ -278,6 +278,7 @@ sub validate {
 
     foreach my $id (@ids) {
         my $status = $cgi->param("flag-$id");
+        my @requestees = $cgi->param("requestee-$id");
         
         # Make sure the flag exists.
         my $flag = get($id);
@@ -294,66 +295,79 @@ sub validate {
                             { id => $id, status => $status });
                 
         # Make sure the user didn't request the flag unless it's requestable.
-        # If the flag was requested before it became unrequestable, leave it as is.
-        if ($status eq '?' && $flag->{status} ne '?' && 
-            !$flag->{type}->{is_requestable}) {
+        # If the flag was requested before it became unrequestable, leave it
+        # as is.
+        if ($status eq '?'
+            && $flag->{status} ne '?'
+            && !$flag->{type}->{is_requestable})
+        {
             ThrowCodeError("flag_status_invalid", 
                            { id => $id, status => $status });
         }
 
         # Make sure the user didn't specify a requestee unless the flag
         # is specifically requestable. If the requestee was set before
-        # the flag became specifically unrequestable, leave it as is.
-        my $old_requestee =
-            $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
-        my $new_requestee = trim($cgi->param("requestee-$id") || '');
-
-        if ($status eq '?'
-            && !$flag->{type}->{is_requesteeble}
-            && $new_requestee
-            && ($new_requestee ne $old_requestee))
-        {
-            ThrowCodeError("flag_requestee_disabled",
-                           { name => $flag->{type}->{name} });
+        # the flag became specifically unrequestable, don't let the user
+        # change the requestee, but let the user remove it by entering
+        # an empty string for the requestee.
+        if ($status eq '?' && !$flag->{type}->{is_requesteeble}) {
+            my $old_requestee =
+                $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+            my $new_requestee = join('', @requestees);
+            if ($new_requestee && $new_requestee ne $old_requestee) {
+                ThrowCodeError("flag_requestee_disabled",
+                               { type => $flag->{type} });
+            }
         }
 
-        # Make sure the requestee is authorized to access the bug.
+        # Make sure the user didn't enter multiple requestees for a flag
+        # that can't be requested from more than one person at a time.
+        if ($status eq '?'
+            && !$flag->{type}->{is_multiplicable}
+            && scalar(@requestees) > 1)
+        {
+            ThrowUserError("flag_not_multiplicable", { type => $flag->{type} });
+        }
+
+        # Make sure the requestees are authorized to access the bug.
         # (and attachment, if this installation is using the "insider group"
         # feature and the attachment is marked private).
-        if ($status eq '?'
-            && $flag->{type}->{is_requesteeble}
-            && $new_requestee
-            && ($old_requestee ne $new_requestee))
-        {
-            # We know the requestee exists because we ran
-            # Bugzilla::User::match_field before getting here.
-            my $requestee = Bugzilla::User->new_from_login($new_requestee);
+        if ($status eq '?' && $flag->{type}->{is_requesteeble}) {
+            my $old_requestee =
+                $flag->{'requestee'} ? $flag->{'requestee'}->login : '';
+            foreach my $login (@requestees) {
+                next if $login eq $old_requestee;
 
-            # Throw an error if the user can't see the bug.
-            # Note that if permissions on this bug are changed,
-            # can_see_bug() will refer to old settings.
-            if (!$requestee->can_see_bug($bug_id)) {
-                ThrowUserError("flag_requestee_unauthorized",
-                               { flag_type => $flag->{'type'},
-                                 requestee => $requestee,
-                                 bug_id => $bug_id,
-                                 attach_id =>
-                                   $flag->{target}->{attachment}->{id} });
-            }
-
-            # Throw an error if the target is a private attachment and
-            # the requestee isn't in the group of insiders who can see it.
-            if ($flag->{target}->{attachment}->{exists}
-                && $cgi->param('isprivate')
-                && Param("insidergroup")
-                && !$requestee->in_group(Param("insidergroup")))
-            {
-                ThrowUserError("flag_requestee_unauthorized_attachment",
-                               { flag_type => $flag->{'type'},
-                                 requestee => $requestee,
-                                 bug_id    => $bug_id,
-                                 attach_id =>
-                                  $flag->{target}->{attachment}->{id} });
+                # We know the requestee exists because we ran
+                # Bugzilla::User::match_field before getting here.
+                my $requestee = Bugzilla::User->new_from_login($login);
+                
+                # Throw an error if the user can't see the bug.
+                # Note that if permissions on this bug are changed,
+                # can_see_bug() will refer to old settings.
+                if (!$requestee->can_see_bug($bug_id)) {
+                    ThrowUserError("flag_requestee_unauthorized",
+                                   { flag_type => $flag->{'type'},
+                                     requestee => $requestee,
+                                     bug_id => $bug_id,
+                                     attach_id =>
+                                       $flag->{target}->{attachment}->{id} });
+                }
+    
+                # Throw an error if the target is a private attachment and
+                # the requestee isn't in the group of insiders who can see it.
+                if ($flag->{target}->{attachment}->{exists}
+                    && $cgi->param('isprivate')
+                    && Param("insidergroup")
+                    && !$requestee->in_group(Param("insidergroup")))
+                {
+                    ThrowUserError("flag_requestee_unauthorized_attachment",
+                                   { flag_type => $flag->{'type'},
+                                     requestee => $requestee,
+                                     bug_id    => $bug_id,
+                                     attach_id =>
+                                      $flag->{target}->{attachment}->{id} });
+                }
             }
         }
 

@@ -420,6 +420,10 @@
     you could convert it to a compressible format like JPG or PNG and try
     again.
 
+  [% ELSIF error == "flag_not_multiplicable" %]
+    You can't ask more than one person at a time for
+    <em>[% type.name FILTER html %]</em>.
+  
   [% ELSIF error == "flag_requestee_unauthorized" %]
     [% title = "Flag Requestee Not Authorized" %]
 
@@ -430,8 +434,8 @@
     but that [% terms.bug %] has been restricted to users in certain groups, 
     and the user you asked isn't in all the groups to which 
     the [% terms.bug %] has been restricted.
-    Please choose someone else to ask, or make the [% terms.bug %] accessible to users
-    on its CC: list and add that user to the list.
+    Please choose someone else to ask, or make the [% terms.bug %] accessible
+    to users on its CC: list and add that user to the list.
 
   [% ELSIF error == "flag_requestee_unauthorized_attachment" %]
     [% title = "Flag Requestee Not Authorized" %]
