@@ -2288,39 +2288,39 @@ str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    {"quote",               str_quote,              0,0,0},
+    {"quote",               str_quote,              0,JSFUN_GENERIC_NATIVE,0},
     {js_toSource_str,       str_toSource,           0,0,0},
 #endif
 
     /* Java-like methods. */
     {js_toString_str,       str_toString,           0,0,0},
     {js_valueOf_str,        str_valueOf,            0,0,0},
-    {"substring",           str_substring,          2,0,0},
-    {"toLowerCase",         str_toLowerCase,        0,0,0},
-    {"toUpperCase",         str_toUpperCase,        0,0,0},
-    {"charAt",              str_charAt,             1,0,0},
-    {"charCodeAt",          str_charCodeAt,         1,0,0},
-    {"indexOf",             str_indexOf,            1,0,0},
-    {"lastIndexOf",         str_lastIndexOf,        1,0,0},
-    {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,0,0},
-    {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,0,0},
-    {"localeCompare",       str_localeCompare,      1,0,0},
+    {"substring",           str_substring,          2,JSFUN_GENERIC_NATIVE,0},
+    {"toLowerCase",         str_toLowerCase,        0,JSFUN_GENERIC_NATIVE,0},
+    {"toUpperCase",         str_toUpperCase,        0,JSFUN_GENERIC_NATIVE,0},
+    {"charAt",              str_charAt,             1,JSFUN_GENERIC_NATIVE,0},
+    {"charCodeAt",          str_charCodeAt,         1,JSFUN_GENERIC_NATIVE,0},
+    {"indexOf",             str_indexOf,            1,JSFUN_GENERIC_NATIVE,0},
+    {"lastIndexOf",         str_lastIndexOf,        1,JSFUN_GENERIC_NATIVE,0},
+    {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,JSFUN_GENERIC_NATIVE,0},
+    {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,JSFUN_GENERIC_NATIVE,0},
+    {"localeCompare",       str_localeCompare,      1,JSFUN_GENERIC_NATIVE,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
 #if JS_HAS_REGEXPS
-    {"match",               str_match,              1,0,2},
-    {"search",              str_search,             1,0,0},
-    {"replace",             str_replace,            2,0,0},
-    {"split",               str_split,              2,0,0},
+    {"match",               str_match,              1,JSFUN_GENERIC_NATIVE,2},
+    {"search",              str_search,             1,JSFUN_GENERIC_NATIVE,0},
+    {"replace",             str_replace,            2,JSFUN_GENERIC_NATIVE,0},
+    {"split",               str_split,              2,JSFUN_GENERIC_NATIVE,0},
 #endif
 #if JS_HAS_PERL_SUBSTR
-    {"substr",              str_substr,             2,0,0},
+    {"substr",              str_substr,             2,JSFUN_GENERIC_NATIVE,0},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",              str_concat,             0,0,0},
-    {"slice",               str_slice,              0,0,0},
+    {"concat",              str_concat,             0,JSFUN_GENERIC_NATIVE,0},
+    {"slice",               str_slice,              0,JSFUN_GENERIC_NATIVE,0},
 #endif
 
     /* HTML string methods. */
