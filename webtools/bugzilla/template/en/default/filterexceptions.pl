@@ -563,6 +563,7 @@
   'type.sortkey || 1',
   'typeLabelLowerPlural',
   'typeLabelLowerSingular',
+  'selname',
 ],
 
 'admin/flag-type/list.html.tmpl' => [

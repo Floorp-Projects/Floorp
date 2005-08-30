@@ -36,6 +36,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
+use Bugzilla::Group;
 use Bugzilla::User;
 use Bugzilla::Util;
 
@@ -153,7 +154,9 @@ sub edit {
         $vars->{'type'} = { 'target_type' => scalar $cgi->param('target_type'),
                             'inclusions'  => \%inclusions };
     }
-    
+    # Get a list of groups available to restrict this flag type against.
+    my @groups = Bugzilla::Group::get_all_groups();
+    $vars->{'groups'} = \@groups;
     # Return the appropriate HTTP response headers.
     print $cgi->header();
 
@@ -203,7 +206,8 @@ sub processCategoryChange {
     $vars->{'products'} = \@::legal_product;
     $vars->{'components'} = \@::legal_components;
     $vars->{'components_by_product'} = \%::components;
-    
+    my @groups = Bugzilla::Group::get_all_groups();
+    $vars->{'groups'} = \@groups;
     $vars->{'action'} = $cgi->param('action');
     my $type = {};
     foreach my $key ($cgi->param()) { $type->{$key} = $cgi->param($key) }
