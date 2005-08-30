@@ -182,6 +182,10 @@ menulist > menupopup > menu > .menu-iconic-left {
 
 /* ::::: checkbox menuitem ::::: */
 
+menuitem[checked="true"] {
+  -moz-appearance: checkmenuitem !important;
+}
+
 menuitem[type="checkbox"] {
   -moz-appearance: checkmenuitem !important;
 }
