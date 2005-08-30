@@ -34,7 +34,7 @@ cp -a bin/libnssckbi.so                                  minimo
 cp -a bin/libsmime3.so                                   minimo
 cp -a bin/libsoftokn3.so                                 minimo
 cp -a bin/libsoftokn3.chk                                minimo
-cp -a bin/libssl3.dll                                    minimo
+cp -a bin/libssl3.so                                   minimo
 
 
 mkdir -p minimo/chrome
@@ -53,8 +53,6 @@ cp -a bin/chrome/toolkit.manifest                        minimo/chrome
 
 cp -a bin/chrome/pippki.jar                              minimo/chrome
 cp -a bin/chrome/pippki.manifest                         minimo/chrome
-
-cp -a bin/chrome/installed-chrome.txt                    minimo/chrome
 
 
 mkdir -p minimo/components

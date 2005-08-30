@@ -53,9 +53,6 @@ cp -a bin/chrome/toolkit.manifest                        wince/chrome
 cp -a bin/chrome/pippki.jar                              wince/chrome
 cp -a bin/chrome/pippki.manifest                         wince/chrome
 
-cp -a bin/chrome/installed-chrome.txt                    wince/chrome
-
-
 mkdir -p wince/components
 
 cp -a bin/components/nsHelperAppDlg.js                   wince/components
