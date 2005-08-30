@@ -50,12 +50,32 @@
 button[dlgtype="help"] {
 	min-width: 1px !important;
 	padding: 0px 0px 0px 0px !important;
-	-moz-appearance: button-small;
+	-moz-appearance: none;
 	-moz-box-align: start !important;
+	height: 24px;
+	width: 24px;
+	margin: 4px;
 }
+
+button[dlgtype="help"][disabled] {
+  opacity: 0.5;
+}
+
+button[dlgtype="help"]:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 100%;
+}
+
 button[dlgtype="help"] > .button-box > .button-icon {
-list-style-image: url("chrome://global/skin/icons/question-mark.png");
-padding: 0px !important;
+  list-style-image: url("chrome://global/skin/icons/question-mark.png");
+  -moz-image-region: rect(0 24px 24px 0); 
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+button[dlgtype="help"]:active > .button-box > .button-icon {
+  -moz-image-region: rect(0 48px 24px 24px); 
 }
 
 button[dlgtype="help"] > .button-box > .button-text {
@@ -89,7 +109,9 @@ prefwindow {
   font: message-box;
 }
 
-prefwindow {  font: -moz-dialog;}
+prefwindow {
+  font: -moz-dialog;
+}
 
 prefwindow .paneSelector {
   font: message-box;
@@ -208,17 +230,8 @@ browser {
 
 /* miscellaneous stuff */
 
-#pref-navigator, #prefFontsDialog, #scriptsAndWindowPanel, #ImagesManager {
-	font: menu;
-}
-
-#prefFontsDialog description{
-	font-size: 95%;
-}
-
-#pref-navigator > groupbox > hbox > button {
-	font: message-box;
-	-moz-appearance: button-small;
+#OCSPDialog {
+  font: message-box;
 }
 
 #historyTree, #bookmarks-view {
