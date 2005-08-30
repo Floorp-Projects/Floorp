@@ -1649,7 +1649,7 @@ foreach my $id (@idlist) {
         # - Is the bug in this group?
         SendSQL("SELECT DISTINCT groups.id, isactive, " .
                 "oldcontrolmap.membercontrol, newcontrolmap.membercontrol, " .
-                "CASE WHEN groups_id IN ($grouplist) THEN 1 ELSE 0 END, " .
+                "CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END, " .
                 "bug_group_map.group_id IS NOT NULL " .
                 "FROM groups " .
                 "LEFT JOIN group_control_map AS oldcontrolmap " .
