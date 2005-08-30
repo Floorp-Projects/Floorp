@@ -94,8 +94,11 @@ class MessageDialogWrapper {
     }
 };
 
-class EvalTextArea extends JTextArea implements KeyListener,
-DocumentListener {
+class EvalTextArea
+    extends JTextArea implements KeyListener, DocumentListener
+{
+    static final long serialVersionUID = -3918033649601064194L;
+
     SwingGui debugGui;
     private java.util.Vector history;
     private int historyIndex = -1;
@@ -261,8 +264,10 @@ DocumentListener {
     }
 };
 
-class EvalWindow extends JInternalFrame
-implements ActionListener {
+class EvalWindow
+    extends JInternalFrame implements ActionListener
+{
+    static final long serialVersionUID = -2860585845212160176L;
 
     EvalTextArea evalTextArea;
 
@@ -295,8 +300,10 @@ implements ActionListener {
     }
 };
 
-class JSInternalConsole extends JInternalFrame
-    implements ActionListener {
+class JSInternalConsole
+    extends JInternalFrame implements ActionListener
+{
+    static final long serialVersionUID = -5523468828771087292L;
 
     ConsoleTextArea consoleTextArea;
 
@@ -345,7 +352,10 @@ class JSInternalConsole extends JInternalFrame
 
 };
 
-class FilePopupMenu extends JPopupMenu {
+class FilePopupMenu extends JPopupMenu
+{
+    static final long serialVersionUID = 3589525009546013565L;
+
     FileTextArea w;
     int x, y;
 
@@ -368,10 +378,11 @@ class FilePopupMenu extends JPopupMenu {
     }
 };
 
-class FileTextArea extends JTextArea implements ActionListener,
-                                                PopupMenuListener,
-                                                KeyListener,
-                                                MouseListener {
+class FileTextArea extends JTextArea
+    implements ActionListener, PopupMenuListener, KeyListener, MouseListener
+{
+    static final long serialVersionUID = -25032065448563720L;
+
     FileWindow w;
     FilePopupMenu popup;
 
@@ -482,7 +493,9 @@ class FileTextArea extends JTextArea implements ActionListener,
     }
 }
 
-class MoreWindows extends JDialog implements ActionListener {
+class MoreWindows extends JDialog implements ActionListener
+{
+    static final long serialVersionUID = 5177066296457377546L;
 
     private String value = null;
     private JList list;
@@ -605,7 +618,10 @@ class MoreWindows extends JDialog implements ActionListener {
     }
 };
 
-class FindFunction extends JDialog implements ActionListener {
+class FindFunction extends JDialog implements ActionListener
+{
+    static final long serialVersionUID = 559491015232880916L;
+
     private String value = null;
     private JList list;
     SwingGui debugGui;
@@ -745,7 +761,10 @@ class FindFunction extends JDialog implements ActionListener {
     }
 };
 
-class FileHeader extends JPanel implements MouseListener {
+class FileHeader extends JPanel implements MouseListener
+{
+    static final long serialVersionUID = -2858905404778259127L;
+
     private int pressLine = -1;
     FileWindow fileWindow;
 
@@ -871,7 +890,9 @@ class FileHeader extends JPanel implements MouseListener {
     }
 };
 
-class FileWindow extends JInternalFrame implements ActionListener {
+class FileWindow extends JInternalFrame implements ActionListener
+{
+    static final long serialVersionUID = -6212382604952082370L;
 
     SwingGui debugGui;
     Dim.SourceInfo sourceInfo;
@@ -1010,6 +1031,8 @@ class FileWindow extends JInternalFrame implements ActionListener {
 
 class MyTableModel extends AbstractTableModel
 {
+    static final long serialVersionUID = 2971618907207577000L;
+
     SwingGui debugGui;
     Vector expressions;
     Vector values;
@@ -1096,7 +1119,10 @@ class MyTableModel extends AbstractTableModel
     }
 };
 
-class Evaluator extends JTable {
+class Evaluator extends JTable
+{
+    static final long serialVersionUID = 8133672432982594256L;
+
     MyTableModel tableModel;
     Evaluator(SwingGui debugGui) {
         super(new MyTableModel(debugGui));
@@ -1303,7 +1329,9 @@ class VariableModel implements TreeTableModel
 
 }
 
-class MyTreeTable extends JTreeTable {
+class MyTreeTable extends JTreeTable
+{
+    static final long serialVersionUID = 3457265548184453049L;
 
     public MyTreeTable(VariableModel model) {
         super(model);
@@ -1393,6 +1421,8 @@ class MyTreeTable extends JTreeTable {
 
 class ContextWindow extends JPanel implements ActionListener
 {
+    static final long serialVersionUID = 2306040975490228051L;
+
     SwingGui debugGui;
 
     JComboBox context;
@@ -1681,6 +1711,7 @@ class ContextWindow extends JPanel implements ActionListener
 
 class Menubar extends JMenuBar implements ActionListener
 {
+    static final long serialVersionUID = 3217170497245911461L;
 
     private Vector interruptOnlyItems = new Vector();
     private Vector runOnlyItems = new Vector();
@@ -1968,6 +1999,8 @@ class RunProxy implements Runnable
 
 class SwingGui extends JFrame implements GuiCallback
 {
+    static final long serialVersionUID = -8217029773456711621L;
+
     Dim dim;
     Runnable exitAction;
     JDesktopPane desk;

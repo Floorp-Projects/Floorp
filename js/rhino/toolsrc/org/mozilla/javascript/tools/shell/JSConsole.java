@@ -38,7 +38,9 @@ import java.io.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class JSConsole extends JFrame implements ActionListener {
+public class JSConsole extends JFrame implements ActionListener
+{
+    static final long serialVersionUID = 2551225560631876300L;
 
     private File CWD;
     private JFileChooser dlg;
