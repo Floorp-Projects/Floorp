@@ -1325,11 +1325,10 @@ var gErrorsPage = {
     
     var errorReason = document.getElementById("errorReason");
     errorReason.value = gUpdates.update.statusText;
-    var errorLink = document.getElementById("errorLink");
     var manualURL = getPref("getCharPref", PREF_UPDATE_MANUAL_URL, "");
-    errorLink.href = manualURL;
     var errorLinkLabel = document.getElementById("errorLinkLabel");
     errorLinkLabel.value = manualURL;
+    errorLinkLabel.href = manualURL;
   },
   
   /**

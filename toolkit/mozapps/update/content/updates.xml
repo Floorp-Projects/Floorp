@@ -7,57 +7,6 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="link">
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessible">
-        <getter>
-          <![CDATA[
-            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return accService.createXULLinkAccessible(this);
-          ]]>
-        </getter>
-      </property>
-      <property name="href"
-                onget="return this.getAttribute('href');"
-                onset="this.setAttribute('href', val); return val;"/>
-    </implementation>
-    <handlers>
-      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
-      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
-      <handler event="click">
-      <![CDATA[
-        if (event.button != 0)
-          return;
-          
-# If we're not a browser, use the external protocol service to load the URI.
-#ifndef MOZ_PHOENIX
-        var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService)
-                            .newURI(this.getAttribute("href"), null, null);
-
-        var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                                    .getService(Components.interfaces.nsIExternalProtocolService);
-        if (protocolSvc.isExposedProtocol(uri.scheme))
-          protocolSvc.loadUrl(uri);
-# If we're a browser, open a new browser window instead.    
-#else
-        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                           .getService(Components.interfaces.nsIWindowWatcher);
-        var ary = Components.classes["@mozilla.org/supports-array;1"]
-                            .createInstance(Components.interfaces.nsISupportsArray);
-        var url = Components.classes["@mozilla.org/supports-string;1"]
-                            .createInstance(Components.interfaces.nsISupportsString);
-        url.data = this.getAttribute("href")
-        ary.AppendElement(url);
-        
-        ww.openWindow(null, "chrome://browser/content/browser.xul",
-                      "_blank", "chrome,all,dialog=no", ary);
-#endif
-      ]]>
-      </handler>
-    </handlers>
-  </binding>
-
   <binding id="update" extends="chrome://mozapps/content/shared/richview.xml#richview-item">
     <resources>
       <stylesheet src="chrome://mozapps/content/update/updates.css"/>

@@ -110,9 +110,7 @@
             </hbox>
           </vbox>
         </hbox>
-        <link id="updateMoreInfoURL">
-          <label id="updateMoreInfoURLLabel">&clickHere.label;</label>
-        </link>
+        <label class="text-link" id="updateMoreInfoURL" value="&clickHere.label;"/>
       </vbox>
     </deck>
   </wizardpage>
@@ -132,9 +130,7 @@
               onpageshow="gDownloadingPage.onPageShow();">
     <hbox pack="start">
       <label id="downloadName" crop="right" flex="1">&downloading.intro;</label>
-      <link id="detailsLink">
-        <label>&details.link;</label>
-      </link>
+      <label class="text-link" id="detailsLink" value="&details.link;"/>
     </hbox>
     <progressmeter id="downloadProgress" mode="undetermined"/>
     <hbox id="downloadStatusLine">
@@ -159,9 +155,7 @@
     <separator/>
     <label id="errorManual">&errorManual.label;</label>
     <hbox>
-      <link id="errorLink">
-        <label id="errorLinkLabel"/>
-      </link>
+      <label class="text-link" id="errorLinkLabel"/>
     </hbox>
   </wizardpage>
   
@@ -185,9 +179,7 @@
     <hbox align="center">
       <label>&finishedBackground.name;</label>
       <label id="updateFinishedName" flex="1" crop="right"/>
-      <link id="finishedBackgroundLink">
-        <label>&details.link;</label>
-      </link>
+      <label id="finishedBackgroundLink" class="text-link" value="&details.link;"/>
     </hbox>
     <spacer flex="1"/>
     <label>&finishedBackground.instruction1;</label>
@@ -201,9 +193,7 @@
     <label>&installed.intro;</label>
     <separator/>
     <hbox>
-      <link id="whatsnewLink" hidden="true">
-        <label>&whatsnew.label;</label>
-      </link>
+      <label id="whatsnewLink" class="text-link" hidden="true" value="&whatsnew.label;"/>
     </hbox>
   </wizardpage>
   
