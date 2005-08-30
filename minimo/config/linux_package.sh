@@ -80,7 +80,7 @@ mkdir -p minimo/plugins
 
 echo Linking XPT files.
 
-host/bin/host_xpt_link minimo/components/all.xpt          bin/components/*.xpt
+bin/xpt_link minimo/components/all.xpt          bin/components/*.xpt
 
 echo Chewing on chrome
 
