@@ -356,7 +356,7 @@ public class NativeArray extends IdScriptableObject
         // Only use 1 arg as first element for version 1.2; for
         // any other version (including 1.3) follow ECMA and use it as
         // a length.
-        if (cx.getLanguageVersion() == cx.VERSION_1_2) {
+        if (cx.getLanguageVersion() == Context.VERSION_1_2) {
             return new NativeArray(args);
         } else {
             Object arg0 = args[0];
