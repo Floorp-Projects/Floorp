@@ -96,10 +96,7 @@
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
-const PRInt32 kDefaultMultiselectHeight = 4; // This is compatible with 4.x browsers
 const PRInt32 kNothingSelected          = -1;
-const PRInt32 kMaxZ                     = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
-const PRInt32 kNoSizeSpecified          = -1;
 
 
 nsListControlFrame * nsListControlFrame::mFocused = nsnull;
@@ -3101,8 +3098,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   keyEvent->GetKeyCode(&keycode);
   keyEvent->GetCharCode(&charcode);
 #ifdef DO_REFLOW_DEBUG
-  if (code >= 32) {
-    REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", code, code);
+  if (charcode >= 32) {
+    REFLOW_DEBUG_MSG3("KeyCode: %c %d\n", charcode, charcode);
   }
 #endif
 

@@ -559,8 +559,11 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
 
   // Get the keycode or charcode of the key event.
   PRUint32 code;
-  if (mMisc)
+
+  if (mMisc) {
     aKeyEvent->GetCharCode(&code);
+    code = ToLowerCase(PRUnichar(code));
+  }
   else
     aKeyEvent->GetKeyCode(&code);
 
@@ -576,7 +579,7 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
     return PR_TRUE; // No filters set up. It's generic.
 
-  unsigned short button;
+  PRUint16 button;
   aMouseEvent->GetButton(&button);
   if (mDetail != -1 && (button != mDetail))
     return PR_FALSE;
@@ -843,7 +846,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     mKeyMask = cAllModifiers;
     char* str = ToNewCString(modifiers);
     char* newStr;
-    char* token = nsCRT::strtok( str, ", ", &newStr );
+    char* token = nsCRT::strtok( str, ", \t", &newStr );
     while( token != NULL ) {
       if (PL_strcmp(token, "shift") == 0)
         mKeyMask |= cShift | cShiftMask;
@@ -860,7 +863,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       else if (PL_strcmp(token, "any") == 0)
         mKeyMask &= ~(mKeyMask << 4);
     
-      token = nsCRT::strtok( newStr, ", ", &newStr );
+      token = nsCRT::strtok( newStr, ", \t", &newStr );
     }
 
     nsMemory::Free(str);
@@ -878,12 +881,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   if (!key.IsEmpty()) {
     if (mKeyMask == 0)
       mKeyMask = cAllModifiers;
-    if (!(mKeyMask & cShift))
-      mKeyMask &= ~cShiftMask;
-    if ((mKeyMask & cShift) != 0)
-      ToUpperCase(key);
-    else
-      ToLowerCase(key);
+    ToLowerCase(key);
 
     // We have a charcode.
     mMisc = 1;

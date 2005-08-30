@@ -214,7 +214,6 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
       // Do shortcut navigation.
       // A letter was pressed. We want to see if a shortcut gets matched. If
       // so, we'll know the menu got activated.
-      keyEvent->GetCharCode(&theChar);
       mMenuParent->ShortcutNavigation(keyEvent, handled);
     }
   }
