@@ -50,6 +50,7 @@
 #include "nsIFileSpec.h"
 #include "nsISpamSettings.h"
 #include "nsIMsgFilterPlugin.h"
+#include "nsHashtable.h"
 
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;
@@ -106,7 +107,10 @@ protected:
   nsresult getProtocolInfo(nsIMsgProtocolInfo **aResult);
   nsCOMPtr <nsIFileSpec> mFilterFile;
   nsCOMPtr <nsIMsgFilterList> mFilterList;
-
+  // these allow us to handle duplicate incoming messages, e.g. delete them.
+  nsHashtable m_downloadedHdrs;
+  PRInt32  m_numMsgsDownloaded;
+static PRBool evictOldEntries(nsHashKey *aKey, void *element, void *aData);
 private:
   nsIPrefBranch *m_prefBranch;
   nsCString m_password;

@@ -2909,6 +2909,20 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
     char *headers;
     PRInt32 headersSize;
 
+    nsCOMPtr <nsIMsgWindow> msgWindow;
+    if (aProtocol)
+    {
+      nsCOMPtr <nsIImapUrl> aImapUrl;
+      nsCOMPtr <nsIMsgMailNewsUrl> msgUrl;
+      rv = aProtocol->GetRunningImapURL(getter_AddRefs(aImapUrl));
+      if (NS_SUCCEEDED(rv) && aImapUrl)
+      {
+        msgUrl = do_QueryInterface(aImapUrl);
+        if (msgUrl)
+          msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+      }
+
+    }
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = GetServer(getter_AddRefs(server));
     if (NS_SUCCEEDED(rv)) // don't use NS_ENSURE_SUCCESS here; it's not a fatal error
@@ -2934,26 +2948,69 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       newMsgHdr->GetFlags(&msgFlags);
       if (!(msgFlags & (MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED))) // only fire on unread msgs that haven't been deleted
       {
+        PRInt32 duplicateAction = nsIMsgIncomingServer::keepDups;
+        if (server)
+          server->GetIncomingDuplicateAction(&duplicateAction);
+        if (duplicateAction != nsIMsgIncomingServer::keepDups)
+        {
+          PRBool isDup;
+          server->IsNewHdrDuplicate(newMsgHdr, &isDup);
+          if (isDup)
+          {
+            // we want to do something similar to applying filter hits.
+            // if a dup is marked read, it shouldn't trigger biff.
+            // Same for deleting it or moving it to trash.
+            switch (duplicateAction)
+            {
+              case nsIMsgIncomingServer::deleteDups:
+                {
+                  PRUint32 newFlags;
+                  newMsgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED, &newFlags);
+                  nsMsgKeyArray keysToFlag;
+
+                  keysToFlag.Add(m_curMsgUid);
+                  StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag.GetArray(), 
+                                keysToFlag.GetSize(), nsnull);
+                  m_msgMovedByFilter = PR_TRUE;
+
+                }
+                break;
+              case nsIMsgIncomingServer::moveDupsToTrash:
+                {
+                  nsCOMPtr <nsIMsgFolder> trash;
+                  GetTrashFolder(getter_AddRefs(trash));
+                  if (trash)
+                  {
+                    nsXPIDLCString trashUri;
+                    trash->GetURI(getter_Copies(trashUri));
+                    nsresult err = MoveIncorporatedMessage(newMsgHdr, mDatabase, trashUri, nsnull, msgWindow);
+                    if (NS_SUCCEEDED(err))
+                      m_msgMovedByFilter = PR_TRUE;
+                  }
+                }
+                break;
+              case nsIMsgIncomingServer::markDupsRead:
+                {
+                  PRUint32 newFlags;
+                  nsMsgKeyArray keysToFlag;
+                  keysToFlag.Add(m_curMsgUid);
+                  newMsgHdr->OrFlags(MSG_FLAG_READ, &newFlags);
+                  StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize(), nsnull);
+                }
+                break;
+            }
+            PRInt32 numNewMessages;
+            GetNumNewMessages(PR_FALSE, &numNewMessages);
+            SetNumNewMessages(numNewMessages - 1);
+
+          }
+        }
         rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
 
-        if (NS_SUCCEEDED(rv) && headers)
+        if (NS_SUCCEEDED(rv) && headers && !m_msgMovedByFilter)
         {
           if (m_filterList)
           {
-            nsCOMPtr <nsIMsgWindow> msgWindow;
-            if (aProtocol)
-            {
-              nsCOMPtr <nsIImapUrl> aImapUrl;
-              nsCOMPtr <nsIMsgMailNewsUrl> msgUrl;
-              rv = aProtocol->GetRunningImapURL(getter_AddRefs(aImapUrl));
-              if (NS_SUCCEEDED(rv) && aImapUrl)
-              {
-                msgUrl = do_QueryInterface(aImapUrl);
-                if (msgUrl)
-                  msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-              }
-
-            }
             GetMoveCoalescer();  // not sure why we're doing this here.
             m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
                                             headers, headersSize, this, msgWindow);
@@ -3789,7 +3846,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       destIFolder->GetParent(getter_AddRefs(parentFolder));
       if (parentFolder)
         destIFolder->GetCanFileMessages(&canFileMessages);
-      if (!parentFolder || !canFileMessages)
+      if (filter && (!parentFolder || !canFileMessages))
       {
         filter->SetEnabled(PR_FALSE);
         m_filterList->SaveToDefaultFile();

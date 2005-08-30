@@ -67,7 +67,7 @@
 #include "nsNetUtil.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
-
+#include "nsIMsgHdr.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIInterfaceRequestor.h"
@@ -91,6 +91,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefBranch(0),
     m_biffState(nsIMsgFolder::nsMsgBiffState_NoMail),
     m_serverBusy(PR_FALSE),
+    m_numMsgsDownloaded(0),
     m_canHaveFilters(PR_TRUE),
     m_displayStartupPage(PR_TRUE),
     mPerformingBiff(PR_FALSE)
@@ -1752,6 +1753,8 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
 
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, MaxMessageSize, "max_size")
 
+NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, IncomingDuplicateAction, "dup_action");
+
 NS_IMETHODIMP nsMsgIncomingServer::SetUnicharAttribute(const char *aName, const PRUnichar *val)
 {
   return SetUnicharValue(aName, val);
@@ -2515,3 +2518,52 @@ NS_IMETHODIMP nsMsgIncomingServer::GetIsDeferredTo(PRBool *aIsDeferredTo)
   *aIsDeferredTo = PR_FALSE;
   return NS_OK;
 }
+
+const long kMaxDownloadTableSize = 500;
+
+// aData is the server, from that we get the cutoff point, below which we evict
+// element is the arrival index of the msg.
+/* static */PRBool nsMsgIncomingServer::evictOldEntries(nsHashKey *aKey, void *element, void *aData)
+{
+  nsMsgIncomingServer *server = (nsMsgIncomingServer *)aData;
+  if ((PRInt32) element < server->m_numMsgsDownloaded - kMaxDownloadTableSize/2)
+    return kHashEnumerateRemove;
+  return server->m_downloadedHdrs.Count() > kMaxDownloadTableSize/2;
+}
+
+// hash the concatenation of the message-id and subject as the hash table key, 
+// and store the arrival index as the value. To limit the size of the hash table,
+// we just throw out ones with a lower ordinal value than the cut-off point.
+NS_IMETHODIMP nsMsgIncomingServer::IsNewHdrDuplicate(nsIMsgDBHdr *aNewHdr, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  nsCAutoString strHashKey;
+  nsXPIDLCString messageId, subject;
+  aNewHdr->GetMessageId(getter_Copies(messageId));
+  strHashKey.Append(messageId);
+  aNewHdr->GetSubject(getter_Copies(subject));
+  // err on the side of caution and ignore messages w/o subject or messageid.
+  if (subject.IsEmpty() || messageId.IsEmpty())
+    return NS_OK;
+  strHashKey.Append(subject);
+  nsCStringKey hashKey(strHashKey);
+  PRInt32 hashValue = (PRInt32) m_downloadedHdrs.Get(&hashKey);
+  if (hashValue)
+  {
+    *aResult = PR_TRUE;
+  }
+  else
+  {
+    // we store the current size of the hash table as the hash
+    // value - this allows us to delete older entries.
+    m_downloadedHdrs.Put(&hashKey, (void *) ++m_numMsgsDownloaded);
+    // Check if hash table is larger than some reasonable size
+    // and if is it, iterate over hash table deleting messages
+    // with an arrival index < number of msgs downloaded - half the reasonable size.
+    if (m_downloadedHdrs.Count() >= kMaxDownloadTableSize)
+      m_downloadedHdrs.Enumerate(evictOldEntries, this);
+  }
+  return NS_OK;
+}
+

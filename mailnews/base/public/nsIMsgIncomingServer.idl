@@ -49,14 +49,14 @@ interface nsIMsgDownloadSettings;
 interface nsISpamSettings;
 interface nsIMsgFilterPlugin;
 interface nsIUrlListener;
-
+interface nsIMsgDBHdr;
 /*
  * Interface for incoming mail/news host
  * this is the base interface for all mail server types (imap, pop, nntp, etc)
  * often you will want to add extra interfaces that give you server-specific
  * attributes and methods.
  */
-[scriptable, uuid(dc2f06f9-0ee8-47ad-901e-168d14323576)]
+[scriptable, uuid(e0446c10-1bb1-4282-be4b-7fdadce4717a)]
 interface nsIMsgIncomingServer : nsISupports {
 
   /**
@@ -407,6 +407,16 @@ interface nsIMsgIncomingServer : nsISupports {
   nsIMsgFolder getMsgFolderFromURI(in nsIMsgFolder aFolderResource, in string aURI);
 
   readonly attribute boolean isDeferredTo;
+
+  const long keepDups = 0;
+  const long deleteDups = 1;
+  const long moveDupsToTrash = 2;
+  const long markDupsRead = 3;
+
+  attribute long incomingDuplicateAction;
+
+  // check if new hdr is a duplicate of a recently arrived header
+  boolean isNewHdrDuplicate(in nsIMsgDBHdr aNewHdr);
 };
 
 %{C++

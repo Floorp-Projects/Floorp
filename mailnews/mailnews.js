@@ -430,6 +430,7 @@ pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
 pref("mail.server.default.empty_trash_on_exit", false);
+pref("mail.server.default.dup_action", 0);
 
 pref("mail.server.default.using_subscription", true);
 pref("mail.server.default.dual_use_folders", true);
