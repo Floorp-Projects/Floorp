@@ -2144,10 +2144,12 @@ function ToggleInlineSpellChecker(target)
 
 function initLanguageMenu()
 {
+  var languageMenuList = document.getElementById('LanguageMenulist');
+  if (!languageMenuList) return;
+
   var spellChecker = Components.classes['@mozilla.org/spellchecker/myspell;1'].getService(Components.interfaces.mozISpellCheckingEngine);
   var o1 = {};
   var o2 = {};
-  var languageMenuList = document.getElementById('LanguageMenulist');
 
   // Get the list of dictionaries from
   // the spellchecker.
