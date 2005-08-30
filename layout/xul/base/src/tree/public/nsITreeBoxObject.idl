@@ -23,6 +23,7 @@
  *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Ben Goodger <ben@netscape.com>
  *   Jan Varga <varga@ku.sk>
+ *   Nate Nielsen <nielsen@memberwebs.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -77,6 +78,16 @@ interface nsITreeBoxObject : nsISupports
   readonly attribute long rowHeight;
 
   /**
+   * Obtain the width of a row.
+   */
+  readonly attribute long rowWidth;
+
+  /**
+   * Get the pixel position of the horizontal scrollbar. 
+   */
+  readonly attribute long horizontalPosition;
+
+  /**
    * Get the index of the first visible row.
    */
   long getFirstVisibleRow();
@@ -95,6 +106,11 @@ interface nsITreeBoxObject : nsISupports
    * Ensures that a row at a given index is visible.
    */
   void ensureRowIsVisible(in long index);
+
+  /**
+   * Ensures that a given cell in the tree is visible.
+   */
+  void ensureCellIsVisible(in long row, in wstring colID);
 
   /**
    * Scrolls such that the row at index is at the top of the visible view.
@@ -116,6 +132,23 @@ interface nsITreeBoxObject : nsISupports
    */
   void scrollByPages(in long numPages);
   
+  /**
+   * Scrolls such that a given cell is visible (if possible) 
+   * at the top left corner of the visible view. 
+   */
+  void scrollToCell(in long row, in wstring colID);
+
+  /**
+   * Scrolls horizontally so that the specified column is 
+   * at the left of the view (if possible).
+   */
+  void scrollToColumn(in wstring colID);
+
+  /**
+   * Scroll to a specific horizontal pixel position.
+   */
+  void scrollToHorizontalPosition(in long horizontalPosition);
+
   /**
    * Invalidation methods for fine-grained painting control.
    */

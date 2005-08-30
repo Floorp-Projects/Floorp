@@ -506,22 +506,24 @@ nsTreeColumns::EnsureColumns()
     if (!shell)
       return;
 
-    nsIFrame* colsFrame = shell->GetPrimaryFrameFor(colsContent);
-    if (!colsFrame)
+    nsCOMPtr<nsIContent> colContent;
+    nsTreeUtils::GetDescendantChild(colsContent, nsXULAtoms::treecol, getter_AddRefs(colContent));
+    if (!colContent)
       return;
 
-    nsIBox* colBox = nsnull;
-    colsFrame->GetChildBox(&colBox);
+    nsIFrame* colFrame = shell->GetPrimaryFrameFor(colContent);
+    if (!colFrame)
+      return;
 
     NS_IF_RELEASE(mFirstColumn);
     nsTreeColumn* currCol = nsnull;
-    while (colBox) {
-      nsIContent* colContent = colBox->GetContent();
+    while (colFrame) {
+      nsIContent* colContent = colFrame->GetContent();
 
       nsINodeInfo *ni = colContent->GetNodeInfo();
       if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) { 
         // Create a new column structure.
-        nsTreeColumn* col = new nsTreeColumn(this, colBox);
+        nsTreeColumn* col = new nsTreeColumn(this, colFrame);
         if (!col)
           return;
 
@@ -535,7 +537,7 @@ nsTreeColumns::EnsureColumns()
         currCol = col;
       }
 
-      colBox->GetNextBox(&colBox);
+      colFrame = colFrame->GetNextSibling();
     }
 
     mDirty = PR_FALSE;
