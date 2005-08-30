@@ -33,9 +33,3 @@ checkbox[type="update"] {
   -moz-binding: url("chrome://mozapps/content/update/updates.xml#updateItem"); 
 }
 
-link {
-  -moz-binding: url("chrome://mozapps/content/update/updates.xml#link"); 
-  -moz-user-focus: normal;
-}
-
-
