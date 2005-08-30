@@ -32,6 +32,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::Group;
 require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
@@ -146,33 +147,12 @@ sub CheckGroupRegexp {
 # If no action is specified, get a list of all groups available.
 
 unless ($action) {
-    my @groups;
-
-    my $group_list =
-      $dbh->selectall_arrayref('SELECT id, name, description,
-                                       userregexp, isactive, isbuggroup
-                                  FROM groups
-                                 ORDER BY isbuggroup, name');
-
-    foreach (@$group_list) {
-        my ($id, $name, $description, $regexp, $isactive, $isbuggroup) = @$_;
-        my $group = {};
-        $group->{'id'}          = $id;
-        $group->{'name'}        = $name;
-        $group->{'description'} = $description;
-        $group->{'regexp'}      = $regexp;
-        $group->{'isactive'}    = $isactive;
-        $group->{'isbuggroup'}  = $isbuggroup;
-
-        push(@groups, $group);
-    }
-
+    my @groups = Bugzilla::Group::get_all_groups();
     $vars->{'groups'} = \@groups;
     
     print $cgi->header();
     $template->process("admin/groups/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
-
     exit;
 }
 

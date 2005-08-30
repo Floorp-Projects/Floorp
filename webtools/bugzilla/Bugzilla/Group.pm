@@ -145,6 +145,19 @@ sub get_group_controls_by_product {
     return $groups;
 }
 
+sub get_all_groups {
+    my $dbh = Bugzilla->dbh;
+
+    my $group_ids = $dbh->selectcol_arrayref('SELECT id FROM groups
+                                              ORDER BY isbuggroup, name');
+
+    my @groups;
+    foreach my $gid (@$group_ids) {
+        push @groups, new Bugzilla::Group($gid);
+    }
+    return @groups;
+}
+
 1;
 
 __END__
@@ -168,8 +181,8 @@ Bugzilla::Group - Bugzilla group class.
     my $is_active    = $group->is_active;
 
     my $group_id = Bugzilla::Group::ValidateGroupName('admin', @users);
-
-    my $grops = Bugzilla::Group::get_group_controls_by_product(1);
+    my $groups = Bugzilla::Group::get_group_controls_by_product(1);
+    my @groups = Bugzilla::get_all_groups();
 
 =head1 DESCRIPTION
 
@@ -220,6 +233,15 @@ Group.pm represents a Bugzilla Group object.
 
  Returns:     A hash with group id as key and hash containing the
               group data as value.
+
+=item C<get_all_groups()>
+
+ Description: Returns all groups available, including both
+              system groups and bug groups.
+
+ Params:      none
+
+ Returns:     An array of group objects.
 
 =back
 

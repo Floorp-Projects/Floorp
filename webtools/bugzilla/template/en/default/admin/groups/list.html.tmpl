@@ -27,7 +27,7 @@
   #   - id: number. The ID of the group.
   #   - name: string. The name of the group.
   #   - description: string. The description of the group.
-  #   - regexp: string. The user regexp for the given group.
+  #   - userregexp: string. The user regexp for the given group.
   #   - isactive: boolean int. Specifies if the group is active or not.
   #   - isbuggroup: boolean int. Specifies if it can be used for bugs.
   #%]
@@ -52,7 +52,7 @@
     <tr>
       <td>[% group.name FILTER html %]</td>
       <td>[% group.description FILTER html %]</td>
-      <td>[% group.regexp FILTER html %]&nbsp</td>
+      <td>[% group.userregexp FILTER html %]&nbsp</td>
 
       <td align="center">
         [% IF (group.isactive != 0) && (group.isbuggroup) %]
