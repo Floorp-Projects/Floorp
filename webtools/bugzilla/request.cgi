@@ -30,7 +30,7 @@ use strict;
 # Include the Bugzilla CGI and general utility library.
 use lib qw(.);
 require "globals.pl";
-
+use Bugzilla;
 # Use Bugzilla's Request module which contains utilities for handling requests.
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
@@ -46,6 +46,20 @@ Bugzilla->login();
 ################################################################################
 # Main Body Execution
 ################################################################################
+
+my $cgi = Bugzilla->cgi;
+
+my $fields;
+$fields->{'requester'}->{'type'} = 'single';
+# If the user doesn't restrict his search to requests from the wind
+# (requestee ne '-'), include the requestee for completion.
+unless (defined $cgi->param('requestee')
+        && $cgi->param('requestee') eq '-')
+{
+    $fields->{'requestee'}->{'type'} = 'single';
+}
+
+Bugzilla::User::match_field($cgi, $fields);
 
 queue();
 exit;
