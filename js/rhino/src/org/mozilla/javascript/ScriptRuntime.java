@@ -1116,9 +1116,11 @@ public class ScriptRuntime {
             return (Function)ctorVal;
         }
         if (ctorVal == Scriptable.NOT_FOUND) {
-            throw cx.reportRuntimeError1("msg.ctor.not.found", constructorName);
+            throw Context.reportRuntimeError1(
+                "msg.ctor.not.found", constructorName);
         } else {
-            throw cx.reportRuntimeError1("msg.not.ctor", constructorName);
+            throw Context.reportRuntimeError1(
+                "msg.not.ctor", constructorName);
         }
     }
 
@@ -3209,15 +3211,9 @@ public class ScriptRuntime {
 
     public static EcmaError constructError(String error, String message)
     {
-        int line = 0;
-        String filename = null;
-        Context cx = Context.getCurrentContext();
-        if (cx != null) {
-            int[] linep = new int[1];
-            filename = cx.getSourcePositionFromStack(linep);
-            line = linep[0];
-        }
-        return constructError(error, message, filename, line, null, 0);
+        int[] linep = new int[1];
+        String filename = Context.getSourcePositionFromStack(linep);
+        return constructError(error, message, filename, linep[0], null, 0);
     }
 
     public static EcmaError constructError(String error,
@@ -3341,7 +3337,7 @@ public class ScriptRuntime {
     {
         RegExpProxy result = getRegExpProxy(cx);
         if (result == null) {
-            throw cx.reportRuntimeError0("msg.no.regexp");
+            throw Context.reportRuntimeError0("msg.no.regexp");
         }
         return result;
     }
