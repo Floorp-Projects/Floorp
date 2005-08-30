@@ -46,6 +46,7 @@ package org.mozilla.javascript;
  */
 final class Arguments extends IdScriptableObject
 {
+    static final long serialVersionUID = 4275508002492040609L;
 
     public Arguments(NativeCall activation)
     {

@@ -52,7 +52,9 @@ import org.mozilla.javascript.*;
  * @author Brendan Eich
  * @author Norris Boyd
  */
-class NativeRegExpCtor extends BaseFunction {
+class NativeRegExpCtor extends BaseFunction
+{
+    static final long serialVersionUID = -5733330028285400526L;
 
     NativeRegExpCtor()
     {

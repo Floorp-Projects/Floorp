@@ -66,6 +66,8 @@ public class JavaPolicySecurity extends SecurityProxy
 
     private static class ContextPermissions extends PermissionCollection
     {
+        static final long serialVersionUID = -1721494496320750721L;
+
 // Construct PermissionCollection that permits an action only
 // if it is permitted by staticDomain and by security context of Java stack on
 // the moment of constructor invocation

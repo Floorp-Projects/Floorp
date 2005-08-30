@@ -146,9 +146,14 @@ public class ScriptableOutputStream extends ObjectOutputStream {
         return result;
     }
 
-    static class PendingLookup implements Serializable {
+    static class PendingLookup implements Serializable
+    {
+        static final long serialVersionUID = -2692990309789917727L;
+
         PendingLookup(String name) { this.name = name; }
+
         String getName() { return name; }
+
         private String name;
     };
 

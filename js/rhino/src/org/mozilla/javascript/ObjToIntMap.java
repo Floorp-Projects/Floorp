@@ -50,8 +50,9 @@ import java.io.ObjectOutputStream;
  *
  */
 
-public class ObjToIntMap implements Serializable {
-
+public class ObjToIntMap implements Serializable
+{
+    static final long serialVersionUID = -1542220580748809402L;
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth

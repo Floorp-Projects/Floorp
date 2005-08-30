@@ -71,6 +71,8 @@ package org.mozilla.javascript;
  */
 public class ImporterTopLevel extends IdScriptableObject
 {
+    static final long serialVersionUID = -9095380847465315412L;
+
     private static final Object IMPORTER_TAG = new Object();
 
     public ImporterTopLevel() { }

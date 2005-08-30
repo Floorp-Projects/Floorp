@@ -1990,6 +1990,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     private static class Slot implements Serializable
     {
+        static final long serialVersionUID = -3539051633409902634L;
+
         private void readObject(ObjectInputStream in)
             throws IOException, ClassNotFoundException
         {
@@ -2008,6 +2010,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     private static final class GetterSlot extends Slot
     {
+        static final long serialVersionUID = -4900574849788797588L;
+
         Object delegateTo;
         MemberBox getter;
         MemberBox setter;

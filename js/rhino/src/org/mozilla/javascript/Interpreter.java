@@ -204,6 +204,8 @@ public class Interpreter
      */
     private static class CallFrame implements Cloneable, Serializable
     {
+        static final long serialVersionUID = -2843792508994958978L;
+
         CallFrame parentFrame;
         // amount of stack frames before this one on the interpretation stack
         int frameIndex;
@@ -267,6 +269,8 @@ public class Interpreter
 
     private static final class ContinuationJump implements Serializable
     {
+        static final long serialVersionUID = 7687739156004308247L;
+
         CallFrame capturedFrame;
         CallFrame branchFrame;
         Object result;

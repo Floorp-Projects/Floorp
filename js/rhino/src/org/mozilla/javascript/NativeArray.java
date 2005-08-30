@@ -44,6 +44,7 @@ package org.mozilla.javascript;
  */
 public class NativeArray extends IdScriptableObject
 {
+    static final long serialVersionUID = 7331366857676127338L;
 
     /*
      * Optimization possibilities and open issues:

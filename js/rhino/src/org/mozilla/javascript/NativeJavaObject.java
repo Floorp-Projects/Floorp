@@ -55,7 +55,9 @@ import java.util.Date;
  * @see NativeJavaClass
  */
 
-public class NativeJavaObject implements Scriptable, Wrapper, Serializable {
+public class NativeJavaObject implements Scriptable, Wrapper, Serializable
+{
+    static final long serialVersionUID = -6948590651130498591L;
 
     public NativeJavaObject() { }
 

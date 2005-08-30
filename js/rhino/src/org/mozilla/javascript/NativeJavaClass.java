@@ -58,7 +58,9 @@ import java.util.Hashtable;
  * @see NativeJavaPackage
  */
 
-public class NativeJavaClass extends NativeJavaObject implements Function {
+public class NativeJavaClass extends NativeJavaObject implements Function
+{
+    static final long serialVersionUID = -6460763940409461664L;
 
     public NativeJavaClass() {
     }

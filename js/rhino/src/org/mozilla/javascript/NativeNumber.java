@@ -46,6 +46,8 @@ package org.mozilla.javascript;
  */
 final class NativeNumber extends IdScriptableObject
 {
+    static final long serialVersionUID = 3504516769741512101L;
+
     private static final Object NUMBER_TAG = new Object();
 
     private static final int MAX_PRECISION = 100;

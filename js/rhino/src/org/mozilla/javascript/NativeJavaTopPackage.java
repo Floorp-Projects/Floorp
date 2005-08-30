@@ -53,6 +53,7 @@ package org.mozilla.javascript;
 public class NativeJavaTopPackage
     extends NativeJavaPackage implements Function, IdFunctionCall
 {
+    static final long serialVersionUID = -1455787259477709999L;
 
     // we know these are packages so we can skip the class check
     // note that this is ok even if the package isn't present.

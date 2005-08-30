@@ -51,6 +51,7 @@ import java.lang.reflect.*;
 
 public class NativeJavaMethod extends BaseFunction
 {
+    static final long serialVersionUID = -3440381785576412928L;
 
     NativeJavaMethod(MemberBox[] methods)
     {

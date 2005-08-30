@@ -45,6 +45,7 @@ import java.io.*;
 
 public class FunctionObject extends BaseFunction
 {
+    static final long serialVersionUID = -5332312783643935019L;
 
     /**
      * Create a JavaScript function object from a Java method.

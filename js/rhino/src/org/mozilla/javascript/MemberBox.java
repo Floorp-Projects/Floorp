@@ -49,6 +49,7 @@ import java.io.*;
 
 final class MemberBox implements Serializable
 {
+    static final long serialVersionUID = 6358550398665688245L;
 
     MemberBox(Method method)
     {

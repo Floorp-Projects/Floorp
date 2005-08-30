@@ -42,6 +42,7 @@ import org.mozilla.javascript.debug.DebuggableScript;
 
 final class InterpreterData implements Serializable, DebuggableScript
 {
+    static final long serialVersionUID = 5067677351589230234L;
 
     static final int INITIAL_MAX_ICODE_LENGTH = 1024;
     static final int INITIAL_STRINGTABLE_SIZE = 64;

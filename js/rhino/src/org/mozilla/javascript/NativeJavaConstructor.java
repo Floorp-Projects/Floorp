@@ -53,6 +53,8 @@ package org.mozilla.javascript;
 
 public class NativeJavaConstructor extends BaseFunction
 {
+    static final long serialVersionUID = -8149253217482668463L;
+
     MemberBox ctor;
 
     public NativeJavaConstructor(MemberBox ctor)

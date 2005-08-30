@@ -660,6 +660,7 @@ class BeanProperty
 
 class FieldAndMethods extends NativeJavaMethod
 {
+    static final long serialVersionUID = -9222428244284796755L;
 
     FieldAndMethods(Scriptable scope, MemberBox[] methods, Field field)
     {

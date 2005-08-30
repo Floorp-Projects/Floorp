@@ -44,6 +44,8 @@ package org.mozilla.javascript;
  */
 final class NativeBoolean extends IdScriptableObject
 {
+    static final long serialVersionUID = -3716996899943880933L;
+
     private static final Object BOOLEAN_TAG = new Object();
 
     static void init(Scriptable scope, boolean sealed)

@@ -39,6 +39,8 @@ import org.mozilla.javascript.*;
 
 public final class Continuation extends IdScriptableObject implements Function
 {
+    static final long serialVersionUID = 1794167133757605367L;
+
     private static final Object FTAG = new Object();
 
     private Object implementation;

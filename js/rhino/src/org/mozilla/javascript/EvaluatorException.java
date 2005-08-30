@@ -41,6 +41,8 @@ package org.mozilla.javascript;
  */
 public class EvaluatorException extends RhinoException
 {
+    static final long serialVersionUID = -8743165779676009808L;
+
     public EvaluatorException(String detail)
     {
         super(detail);

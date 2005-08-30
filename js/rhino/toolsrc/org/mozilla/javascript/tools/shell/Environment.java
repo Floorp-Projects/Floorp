@@ -56,7 +56,10 @@ import java.util.Properties;
  *
  * @author Patrick C. Beard
  */
-public class Environment extends ScriptableObject {
+public class Environment extends ScriptableObject
+{
+    static final long serialVersionUID = -430727378460177065L;
+
     private Environment thePrototypeInstance = null;
 
     public static void defineClass(ScriptableObject scope) {

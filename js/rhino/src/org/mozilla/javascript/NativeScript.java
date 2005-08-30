@@ -54,6 +54,8 @@ package org.mozilla.javascript;
 
 class NativeScript extends BaseFunction
 {
+    static final long serialVersionUID = -6795101161980121700L;
+
     private static final Object SCRIPT_TAG = new Object();
 
     static void init(Scriptable scope, boolean sealed)

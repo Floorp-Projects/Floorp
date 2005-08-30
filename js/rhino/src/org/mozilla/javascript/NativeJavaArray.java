@@ -50,7 +50,9 @@ import java.lang.reflect.Array;
  * @see NativeJavaPackage
  */
 
-public class NativeJavaArray extends NativeJavaObject {
+public class NativeJavaArray extends NativeJavaObject
+{
+    static final long serialVersionUID = -924022554283675333L;
 
     public String getClassName() {
         return "JavaArray";

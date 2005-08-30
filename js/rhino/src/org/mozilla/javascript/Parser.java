@@ -93,6 +93,7 @@ public class Parser
     // Exception to unwind
     private static class ParserException extends RuntimeException
     {
+        static final long serialVersionUID = 5882582646773765630L;
     }
 
     public Parser(CompilerEnvirons compilerEnv, ErrorReporter errorReporter)

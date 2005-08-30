@@ -46,6 +46,7 @@ Implementation of resizable array with focus on minimizing memory usage by stori
 
 public class ObjArray implements Serializable
 {
+    static final long serialVersionUID = 4174889037736658296L;
 
     public ObjArray() { }
 

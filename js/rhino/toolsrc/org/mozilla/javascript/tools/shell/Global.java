@@ -55,6 +55,7 @@ import org.mozilla.javascript.serialize.*;
  */
 public class Global extends ImporterTopLevel
 {
+    static final long serialVersionUID = 4029130780977538005L;
 
     public Global()
     {
