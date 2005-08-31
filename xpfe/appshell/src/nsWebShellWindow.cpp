@@ -483,14 +483,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             // on eventWindow. -bryner
             nsCOMPtr<nsIXULWindow> kungFuDeathGrip(eventWindow);
 
+            focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
+
             nsCOMPtr<nsIDOMWindowInternal> domWindow = 
               do_QueryInterface(piWin);
-
-            if (domWindow == focusedWindow) {
-              break; // Already focused
-            }
-
-            focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
 
             NS_ASSERTION(domWindow,
                          "windows must support nsIDOMWindowInternal");
