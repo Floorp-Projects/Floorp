@@ -700,7 +700,7 @@ nsTreeBodyFrame::InvalidateColumn(nsITreeColumn* aCol)
     nsRect columnRect(col->GetX(), mInnerBox.y, col->GetWidth(), mInnerBox.height);
 
     // When false then column is out of view
-    if (OffsetHorzScroll(columnRect, PR_TRUE))
+    if (OffsetForHorzScroll(columnRect, PR_TRUE))
         nsIFrame::Invalidate(columnRect, PR_FALSE);
   }
 
@@ -743,7 +743,7 @@ nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, nsITreeColumn* aCol)
   if (col) {
     nscoord yPos = mInnerBox.y+mRowHeight*aIndex;
     nsRect cellRect(col->GetX(), yPos, col->GetWidth(), mRowHeight);
-    if (OffsetHorzScroll(cellRect, PR_TRUE))
+    if (OffsetForHorzScroll(cellRect, PR_TRUE))
       nsIFrame::Invalidate(cellRect, PR_FALSE);
   }
 
@@ -1338,7 +1338,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
   for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol; 
        currCol = currCol->GetNext()) {
     nsRect cellRect(currCol->GetX(), mInnerBox.y+mRowHeight*(*aRow-mTopRowIndex), currCol->GetWidth(), mRowHeight);
-    if (!OffsetHorzScroll(cellRect, PR_TRUE))
+    if (!OffsetForHorzScroll(cellRect, PR_TRUE))
         continue;
 
     PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
@@ -2231,7 +2231,7 @@ nsTreeBodyFrame::Paint(nsPresContext*      aPresContext,
       // Don't paint hidden columns.
       if (currCol->GetWidth()) {
         nsRect colRect(currCol->GetX(), mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
-        if (OffsetHorzScroll(colRect, PR_FALSE)) {
+        if (OffsetForHorzScroll(colRect, PR_FALSE)) {
           nsRect dirtyRect;
           if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
             PaintColumn(currCol, colRect, aPresContext, aRenderingContext, aDirtyRect); 
@@ -2368,7 +2368,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     if (primaryCol) {
       // Paint the primary cell.
       nsRect cellRect(primaryCol->GetX(), rowRect.y, primaryCol->GetWidth(), rowRect.height);
-      if (OffsetHorzScroll(cellRect, PR_FALSE)) {
+      if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
         nsRect dirtyRect;
         if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
           PaintCell(aRowIndex, primaryCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, primaryX);
@@ -2409,7 +2409,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
       // Don't paint cells in hidden columns.
       if (currCol->GetWidth()) {
         nsRect cellRect(currCol->GetX(), rowRect.y, currCol->GetWidth(), rowRect.height);
-        if (OffsetHorzScroll(cellRect, PR_FALSE)) {
+        if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
           nsRect dirtyRect;
           nscoord dummy;
           if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
@@ -3526,10 +3526,13 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldInd
       ScrollToRow(mTopRowIndex-1);
   } else {
     float t2p = mPresContext->PixelsToTwips();
+    // Scroll by 10px horizontally for compat with the code in
+    // nsGfxScrollFrame::LayoutScrollbars which handles horizontal scrolling
+    // for scroll frames.
     if (aNewIndex > aOldIndex)
-      ScrollHorzInternal(mHorzPosition + t2p);
+      ScrollHorzInternal(mHorzPosition + (t2p * 10));
     else 
-      ScrollHorzInternal(mHorzPosition - t2p);
+      ScrollHorzInternal(mHorzPosition - (t2p * 10));
   }
 
   UpdateScrollbars();
@@ -3670,33 +3673,29 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
 }
 
 PRBool 
-nsTreeBodyFrame::OffsetHorzScroll(nsRect& rect, PRBool clip)
+nsTreeBodyFrame::OffsetForHorzScroll(nsRect& rect, PRBool clip)
 {
+  rect.x -= mHorzPosition;
+
   // Scrolled out before
-  if ((rect.x + rect.width) - mHorzPosition <= mInnerBox.x)
+  if (rect.XMost() <= mInnerBox.x)
     return PR_FALSE;
 
   // Scrolled out after
-  if (rect.x - mHorzPosition > mInnerBox.x + mInnerBox.width)
+  if (rect.x > mInnerBox.XMost())
     return PR_FALSE;
 
-  rect.x -= mHorzPosition;
-
-  if (clip && rect.x < mInnerBox.x) {
-    rect.width -= mInnerBox.x - rect.x;
-    rect.x = mInnerBox.x;
+  if (clip) {
+    nscoord leftEdge = PR_MAX(rect.x, mInnerBox.x);
+    nscoord rightEdge = PR_MIN(rect.XMost(), mInnerBox.XMost());
+    rect.x = leftEdge;
+    rect.width = rightEdge - leftEdge;
 
     // Should have returned false above
     NS_ASSERTION(rect.width >= 0, "horz scroll code out of sync");
   }
 
   return PR_TRUE;
-}
-
-void
-nsTreeBodyFrame::OffsetHorzScroll(nscoord& pt)
-{
-  pt -= mHorzPosition;
 }
 
 PRBool
