@@ -241,10 +241,11 @@ CertReader::OnDataAvailable(nsIRequest *request,
     if (orgData)  
         free(orgData);
     
+    // Cancel the load now that we've verified the signature
     return NS_BINDING_ABORTED;
   }
 
-  return NS_BINDING_ABORTED;
+  return NS_OK; // continue reading
 }
 
 NS_IMETHODIMP
