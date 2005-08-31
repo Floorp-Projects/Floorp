@@ -663,7 +663,7 @@ label.text-link, label[onclick] {
   -moz-user-focus: normal;
 }
 
-description[control], label[control], label.radio-label, label.checkbox-label {
+label[control], label.radio-label, label.checkbox-label {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
 }
 
