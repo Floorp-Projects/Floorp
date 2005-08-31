@@ -7148,7 +7148,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
         ResolvePseudoStyleFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
-      nsIFrame* bullet = new (shell) nsBulletFrame;
+      nsBulletFrame* bullet = new (shell) nsBulletFrame;
 
       if (nsnull == bullet) {
         return NS_ERROR_OUT_OF_MEMORY;
