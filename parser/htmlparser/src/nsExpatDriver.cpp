@@ -1003,10 +1003,13 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
                               nsITokenizer* aTokenizer,
                               nsIContentSink* aSink)
 {
-  NS_ENSURE_ARG_POINTER(aSink);
-
   mSink = do_QueryInterface(aSink);
-  NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
+  if (!mSink) {
+    NS_ERROR("nsExpatDriver didn't get an nsIExpatSink");
+    // Make sure future calls to us bail out as needed
+    mInternalState = NS_ERROR_UNEXPECTED;
+    return mInternalState;
+  }
 
   static const XML_Memory_Handling_Suite memsuite =
     {

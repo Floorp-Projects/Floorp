@@ -1151,6 +1151,9 @@ void DetermineParseMode(const nsString& aBuffer,
   } else if (aMimeType.EqualsLiteral(kPlainTextContentType) ||
              aMimeType.EqualsLiteral(kTextCSSContentType) ||
              aMimeType.EqualsLiteral(kApplicationJSContentType) ||
+             aMimeType.EqualsLiteral(kApplicationXJSContentType) ||
+             aMimeType.EqualsLiteral(kTextECMAScriptContentType) ||
+             aMimeType.EqualsLiteral(kApplicationECMAScriptContentType) ||
              aMimeType.EqualsLiteral(kTextJSContentType)) {
     aDocType = ePlainText;
     aParseMode = eDTDMode_quirks;
@@ -2716,7 +2719,9 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   if (mParserFilter)
     mParserFilter->Finish();
 
-  rv = ResumeParse(PR_TRUE, PR_TRUE);
+  if (NS_SUCCEEDED(rv)) {
+    rv = ResumeParse(PR_TRUE, PR_TRUE);
+  }
 
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
