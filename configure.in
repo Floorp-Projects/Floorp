@@ -3955,6 +3955,7 @@ MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
 MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
+MOZ_IMG_ENCODERS_DEFAULT="png"
 MOZ_IPCD=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
@@ -4058,6 +4059,7 @@ minimo)
   MOZ_ENABLE_POSTSCRIPT=
   MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras transformiix webservices spatialnavigation"
   MOZ_IMG_DECODERS="png,gif,jpeg"
+  MOZ_IMG_ENCODERS=
   MOZ_INSTALLER=
   MOZ_JSDEBUGGER=
   MOZ_LDAP_XPCOM=
@@ -4884,8 +4886,35 @@ MOZ_ARG_ENABLE_STRING(image-decoders,
 done],
     MOZ_IMG_DECODERS="$MOZ_IMG_DECODERS_DEFAULT")
 
+dnl Dupes are removed in the encoder section because it will also add decoders
+
+dnl ========================================================
+dnl Image encoders
+dnl ========================================================
+MOZ_ARG_ENABLE_STRING(image-encoders,
+[  --enable-image-encoders[={mod1,mod2,default,all,none}]
+                          Enable specific image encoders],
+[ for option in `echo $enableval | sed 's/,/ /g'`; do
+    if test "$option" = "yes" || test "$option" = "all"; then
+        addencoder="$MOZ_IMG_ENCODERS_DEFAULT"
+    elif test "$option" = "no" || test "$option" = "none"; then
+        MOZ_IMG_ENCODERS=""
+        addencoder=""
+    elif test "$option" = "default"; then
+        addencoder="$MOZ_IMG_ENCODERS_DEFAULT"
+    elif test `echo "$option" | grep -c \^-` != 0; then
+        option=`echo $option | sed 's/^-//'`
+        addencoder=`echo "$MOZ_IMG_ENCODERS" | sed "s/ ${option}//"`
+    else
+        addencoder="$option"
+    fi
+    MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS $addencoder"
+done],
+    MOZ_IMG_ENCODERS="$MOZ_IMG_ENCODERS_DEFAULT")
+
 dnl Remove dupes
 MOZ_IMG_DECODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_DECODERS}`
+MOZ_IMG_ENCODERS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_IMG_ENCODERS}`
 
 dnl ========================================================
 dnl experimental ldap features
@@ -6609,6 +6638,7 @@ AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_IMG_DECODERS)
+AC_SUBST(MOZ_IMG_ENCODERS)
 AC_SUBST(MOZ_JSDEBUGGER)
 AC_SUBST(MOZ_OJI)
 AC_SUBST(MOZ_NO_XPCOM_OBSOLETE)
