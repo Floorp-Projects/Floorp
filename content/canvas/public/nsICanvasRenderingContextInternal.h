@@ -42,6 +42,7 @@
 #include "nsPresContext.h"
 #include "gfxIImageFrame.h"
 #include "nsICanvasElement.h"
+#include "nsIInputStream.h"
 
 // {0be74436-51a3-4be3-8357-ede741750080}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
@@ -57,6 +58,16 @@ public:
 
   // Will be called whenever the target image frame changes
   NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame) = 0;
+
+  // Gives you a stream containing the image represented by this context.
+  // The format is given in aMimeTime, for example "image/png".
+  //
+  // If the image format does not support transparency or aIncludeTransparency
+  // is false, alpha will be discarded and the result will be the image
+  // composited on black.
+  NS_IMETHOD GetInputStream(const nsACString& aMimeType,
+                            const nsAString& aEncoderOptions,
+                            nsIInputStream **aStream) = 0;
 
   // Will be called whenever the element needs to be redrawn,
   // e.g. due to a Redraw on the frame.

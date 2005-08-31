@@ -49,11 +49,20 @@
 
 // XXX This should inherit from nsIDOMHTMLImageElement instead,
 // and implement that interface as well.
-[scriptable, uuid(332dd7d0-97e2-44a0-af5b-1c3bafb0b1f2)]
+[scriptable, uuid(d0090186-a2b1-4591-9160-e1f044c69da0)]
 interface nsIDOMHTMLCanvasElement : nsIDOMHTMLElement
 {
   attribute long width;
   attribute long height;
+
+  DOMString toDataURL();
+
+  // This version lets you specify different image types and pass parameters
+  // to the encoder. For example toDataURLAs("image/png", "transparency=none")
+  // gives you a PNG with the alpha channel discarded. See the encoder for
+  // the options string that it supports. Separate multiple options with
+  // semicolons.
+  DOMString toDataURLAs(in DOMString mimeType, in DOMString encoderOptions);
 
   nsISupports getContext(in DOMString contextId);
 };

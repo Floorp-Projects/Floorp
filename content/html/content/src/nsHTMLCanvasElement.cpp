@@ -45,6 +45,9 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsNodeInfoManager.h"
+#include "plbase64.h"
+#include "nsNetUtil.h"
+#include "prmem.h"
 
 #include "nsICanvasElement.h"
 
@@ -249,6 +252,91 @@ nsHTMLCanvasElement::ParseAttribute(nsIAtom* aAttribute,
     return PR_TRUE;
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+}
+
+
+// nsHTMLCanvasElement::toDataURL
+//
+//    This is the version in the spec, it returns a PNG with transparency
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::ToDataURL(nsAString& aDataURL)
+{
+  return ToDataURLAs(NS_LITERAL_STRING("image/png"), EmptyString(),
+                     aDataURL);
+}
+
+
+// nsHTMLCanvasElement::toDataURLAs
+//
+//    http://www.mozilla.org/quality/networking/docs/aboutdata.html
+//
+//    Get the data
+//    encode it as PNG
+//    base64 encode it
+NS_IMETHODIMP
+nsHTMLCanvasElement::ToDataURLAs(const nsAString& aMimeType,
+                                 const nsAString& aEncoderOptions,
+                                 nsAString& aDataURL)
+{
+  nsresult rv;
+
+  // We get an input stream from the context. If more than one context type
+  // is supported in the future, this will have to be changed to do the right
+  // thing. For now, just assume that the 2D context has all the goods.
+  nsCOMPtr<nsICanvasRenderingContextInternal> context;
+  rv = GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(context));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get image bytes
+  nsCOMPtr<nsIInputStream> imgStream;
+  NS_ConvertUTF16toUTF8 aMimeType8(aMimeType);
+  rv = context->GetInputStream(aMimeType8, aEncoderOptions,
+                               getter_AddRefs(imgStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Generally, there will be only one chunk of data, and it will be available
+  // for us to read right away, so optimize this case.
+  PRUint32 bufSize;
+  rv = imgStream->Available(&bufSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // ...leave a little extra room so we can call read again and make sure we
+  // got everything. 16 bytes for better padding (maybe)
+  bufSize += 16;
+  PRUint32 imgSize = 0;
+  char* imgData = (char*)PR_Malloc(bufSize);
+  if (! imgData)
+    return NS_ERROR_OUT_OF_MEMORY;
+  PRUint32 numReadThisTime = 0;
+  while ((rv = imgStream->Read(&imgData[imgSize], bufSize - imgSize,
+                         &numReadThisTime)) == NS_OK && numReadThisTime > 0) {
+    imgSize += numReadThisTime;
+    if (imgSize == bufSize) {
+      // need a bigger buffer, just double
+      bufSize *= 2;
+      char* newImgData = (char*)PR_Realloc(imgData, bufSize);
+      if (! newImgData) {
+        PR_Free(imgData);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      imgData = newImgData;
+    }
+  }
+
+  // base 64, result will be NULL terminated
+  char* encodedImg = PL_Base64Encode(imgData, imgSize, nsnull);
+  PR_Free(imgData);
+  if (!encodedImg) // not sure why this would fail
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // build data URL string
+  aDataURL = NS_LITERAL_STRING("data:") + aMimeType +
+    NS_LITERAL_STRING(";base64,") + NS_ConvertUTF8toUTF16(encodedImg);
+
+  PR_Free(encodedImg);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
