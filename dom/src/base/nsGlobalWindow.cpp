@@ -5801,9 +5801,10 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   if (!timeout)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Increment the timeout's reference count to indicate that this
-  // timeout struct will be held as the closure of a timer.
+  // Increment the timeout's reference count to represent this function's hold
+  // on the timeout.
   timeout->AddRef();
+
   if (aIsInterval) {
     timeout->mInterval = (PRInt32)interval;
   }
@@ -5872,23 +5873,40 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     return NS_ERROR_FAILURE;
   }
 
-  timeout->mWhen = PR_IntervalNow() +
-                     PR_MillisecondsToInterval((PRUint32)interval);
+  PRIntervalTime delta = PR_MillisecondsToInterval((PRUint32)interval);
 
-  timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_FAILED(rv)) {
-    timeout->Release(scx);
+  if (!IsFrozen()) {
+    // If we're not currently frozen, then we set timeout->mWhen to be the
+    // actual firing time of the timer (i.e., now + delta). We also actually
+    // create a timer and fire it off.
 
-    return rv;
-  }
+    timeout->mWhen = PR_IntervalNow() + delta;
 
-  rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
-                                             (PRInt32)interval,
-                                             nsITimer::TYPE_ONE_SHOT);
-  if (NS_FAILED(rv)) {
-    timeout->Release(scx);
+    timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_FAILED(rv)) {
+      timeout->Release(scx);
 
-    return rv;
+      return rv;
+    }
+
+    rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
+                                               (PRInt32)interval,
+                                               nsITimer::TYPE_ONE_SHOT);
+    if (NS_FAILED(rv)) {
+      timeout->Release(scx);
+
+      return rv;
+    }
+
+    // The timeout is now also held in the timer's closure.
+    timeout->AddRef();
+  } else {
+    // If we are frozen, however, then we instead simply set timeout->mWhen to
+    // be the "time remaining" in the timeout (i.e., the interval itself). We
+    // don't create a timer for it, since that will happen when we are thawed
+    // and the timeout will then get a timer and run to completion.
+
+    timeout->mWhen = delta;
   }
 
   timeout->mWindow = this;
@@ -5912,8 +5930,13 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   }
 
   InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
+
   timeout->mPublicId = ++mTimeoutPublicIdCounter;
   *aReturn = timeout->mPublicId;
+
+  // Our hold on the timeout is expiring. Note that this should not actually
+  // free the timeout (since the list should have taken ownership as well).
+  timeout->Release(scx);
 
   return NS_OK;
 }
@@ -5923,6 +5946,7 @@ void
 nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 {
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
+  NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
   // Make sure that the script context doesn't go away as a result of
   // running timeouts
@@ -6234,7 +6258,6 @@ nsTimeout::Release(nsIScriptContext *aContext)
       // window having a context. It would be good to remedy this
       // workable but clumsy situation someday.
 
-      NS_WARNING("nsTimeout::Release() proceeding without context.");
       nsCOMPtr<nsIJSRuntimeService> rtsvc =
         do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
 
@@ -6746,7 +6769,11 @@ nsGlobalWindow::SuspendTimeouts()
       t->mTimer = nsnull;
     }
 
-    // We don't Release() the timeout because we still need it.
+    // Drop the reference that the timer's closure had on this timeout, we'll
+    // add it back in ResumeTimeouts. Note that it shouldn't matter that we're
+    // passing null for the context, since this shouldn't actually release this
+    // timeout.
+    t->Release(nsnull);
   }
 
   // Suspend our children as well.
@@ -6793,7 +6820,13 @@ nsGlobalWindow::ResumeTimeouts()
 
     rv = t->mTimer->InitWithFuncCallback(TimerCallback, t, delay,
                                          nsITimer::TYPE_ONE_SHOT);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      t->mTimer = nsnull;
+      return rv;
+    }
+
+    // Add a reference for the new timer's closure.
+    t->AddRef();
   }
 
   // Resume our children as well.
