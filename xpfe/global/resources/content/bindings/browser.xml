@@ -64,8 +64,15 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoBack)
-              webNavigation.goBack();
+            if (webNavigation.canGoBack) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goBack();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -74,8 +81,15 @@
         <body>
           <![CDATA[
             var webNavigation = this.webNavigation;
-            if (webNavigation.canGoForward)
-              webNavigation.goForward();
+            if (webNavigation.canGoForward) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goForward();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
           ]]>
         </body>
       </method>
@@ -141,7 +155,13 @@
               catch (e) {
               }
             }
-            this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
+            try {
+              this.userTypedClear++;
+              this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
           ]]>
         </body>
       </method>
@@ -183,7 +203,13 @@
         <parameter name="aIndex"/>
         <body>
           <![CDATA[
-            this.webNavigation.gotoIndex(aIndex);
+            try {
+              this.userTypedClear++;
+              this.webNavigation.gotoIndex(aIndex);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
           ]]>
         </body>
       </method>
