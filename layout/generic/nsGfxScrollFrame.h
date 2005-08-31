@@ -78,6 +78,7 @@ public:
 
   void CreateAnonymousContent(nsISupportsArray& aAnonymousChildren);
   void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
+  void PostOverflowEvents();
 
   nsresult GetChildContentAndOffsetsFromPoint(nsPresContext* aCX,
                                               const nsPoint&  aPoint,
@@ -168,6 +169,10 @@ public:
   // The value of the hint loaded
   PRPackedBool mHistoryVScrollbarHint:1;
   PRPackedBool mHadNonInitialReflow:1;
+  // State used only by PostScrollEvents so we know
+  // which overflow states have changed.
+  PRPackedBool mHorizontalOverflow:1;
+  PRPackedBool mVerticalOverflow:1;
 };
 
 /**
@@ -500,8 +505,6 @@ private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner mInner;
   nscoord mMaxElementWidth;
-  PRPackedBool mHorizontalOverflow;
-  PRPackedBool mVerticalOverflow;
 };
 
 #endif /* nsGfxScrollFrame_h___ */

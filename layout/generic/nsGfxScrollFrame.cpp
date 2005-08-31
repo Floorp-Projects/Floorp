@@ -689,6 +689,8 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                                              mInner.mScrolledFrame->GetView(),
                                              &childRect,
                                              NS_FRAME_NO_MOVE_VIEW);
+                                             
+  mInner.PostOverflowEvents();
 }
 
 PRBool
@@ -950,9 +952,7 @@ NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsR
 nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
   : nsBoxFrame(aShell, aIsRoot),
     mInner(this, aIsRoot),
-    mMaxElementWidth(0),
-    mHorizontalOverflow(PR_FALSE),
-    mVerticalOverflow(PR_FALSE)
+    mMaxElementWidth(0)
 {
     SetLayoutManager(nsnull);
 }
@@ -1353,7 +1353,9 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aI
     mSupppressScrollbarUpdate(PR_FALSE),
     mDidLoadHistoryVScrollbarHint(PR_FALSE),
     mHistoryVScrollbarHint(PR_FALSE),
-    mHadNonInitialReflow(PR_FALSE)
+    mHadNonInitialReflow(PR_FALSE),
+    mHorizontalOverflow(PR_FALSE),
+    mVerticalOverflow(PR_FALSE)
 {
 }
 
@@ -2116,57 +2118,43 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
 
   aState.SetLayoutFlags(oldflags);
 
-  childRect = mInner.mScrolledFrame->GetRect();
   // XXX hack! force the scrolled frame to think it has overflow
   // to avoid problems with incorrect event targeting.
   mInner.mScrolledFrame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+  
+  mInner.PostOverflowEvents();
+}
 
-  // first see what changed
-  PRBool vertChanged = PR_FALSE;
-  PRBool horizChanged = PR_FALSE;
+void nsGfxScrollFrameInner::PostOverflowEvents()
+{
+  nsSize childSize = mScrolledFrame->GetSize();
+  nsSize scrollportSize = mScrollableView->View()->GetBounds().Size();
+    
+  PRBool newVerticalOverflow = childSize.height > scrollportSize.height;
+  PRBool vertChanged = mVerticalOverflow != newVerticalOverflow;
+  mVerticalOverflow = newVerticalOverflow;
 
-  if (mVerticalOverflow && childRect.height <= aRect.height) {
-    mVerticalOverflow = PR_FALSE;
-    vertChanged = PR_TRUE;
-  } else if (childRect.height > aRect.height) {
-    // XXX we fire an event every time we reflow with overflowing height. Do
-    // we really need to?
-    if (!mVerticalOverflow) {
-       mVerticalOverflow = PR_TRUE;
-    }
-    vertChanged = PR_TRUE;
-  }
+  PRBool newHorizontalOverflow = childSize.width > scrollportSize.width;
+  PRBool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
+  mHorizontalOverflow = newHorizontalOverflow;
 
-  if (mHorizontalOverflow && childRect.width <= aRect.width) {
-    mHorizontalOverflow = PR_FALSE;
-    horizChanged = PR_TRUE;
-  } else if (childRect.width > aRect.width) {
-    // XXX we fire an event every time we reflow with overflowing width. Do
-    // we really need to?
-    if (!mHorizontalOverflow) {
-      mHorizontalOverflow = PR_TRUE;
-    }
-    horizChanged = PR_TRUE;
-  }
-
-  // if either changed
-  if (vertChanged || horizChanged) 
-  {
-    // are there 2 events or 1?
-    if (vertChanged && horizChanged) {
-      if (mVerticalOverflow == mHorizontalOverflow)
-      {
+  if (vertChanged) {
+    if (horizChanged) {
+      if (mVerticalOverflow == mHorizontalOverflow) {
         // both either overflowed or underflowed. 1 event
-        mInner.PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::both);
+        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::both);
       } else {
         // one overflowed and one underflowed
-        mInner.PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
-        mInner.PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
+        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
+        PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
       }
-    } else if (vertChanged) // only one changed either vert or horiz
-       mInner.PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
-    else
-       mInner.PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
+    } else {
+      PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
+    }
+  } else {
+    if (horizChanged) {
+      PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
+    }
   }
 }
 
