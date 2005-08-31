@@ -980,6 +980,7 @@ if ($dotweak) {
     my @enterable_products = GetEnterableProducts();
     $vars->{'products'} = \@enterable_products;
     $vars->{'platforms'} = \@::legal_platform;
+    $vars->{'op_sys'} = \@::legal_opsys;
     $vars->{'priorities'} = \@::legal_priority;
     $vars->{'severities'} = \@::legal_severity;
     $vars->{'resolutions'} = \@::settable_resolution;

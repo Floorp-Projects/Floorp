@@ -67,14 +67,10 @@
   </tr>
   <tr>
 
-    <th>
-      <label for="rep_platform">
-        <a href="page.cgi?id=fields.html#rep_platform">Platform</a>:
-      </label>
-    </th>
+    <th><label for="component">Component:</label></th>
     <td>
-      [% PROCESS selectmenu menuname = "rep_platform"
-                            menuitems = platforms %]
+      [% PROCESS selectmenu menuname = "component"
+                            menuitems = components %]
     </td>
 
     <th>
@@ -90,10 +86,14 @@
   </tr>
   <tr>
 
-    <th><label for="component">Component:</label></th>
+    <th>
+      <label for="rep_platform">
+        <a href="page.cgi?id=fields.html#rep_platform">Platform</a>:
+      </label>
+    </th>
     <td>
-      [% PROCESS selectmenu menuname = "component"
-                            menuitems = components %]
+      [% PROCESS selectmenu menuname = "rep_platform"
+                            menuitems = platforms %]
     </td>
 
     <th>
@@ -108,15 +108,25 @@
 
   </tr>
 
-  [% IF Param("usetargetmilestone") %]
-    <tr>
+  <tr>
+    <th>
+      <label for="op_sys">
+        <a href="page.cgi?id=fields.html#op_sys">OS</a>:
+      </label>
+    </th>
+    <td [% " colspan=\"3\"" IF !Param("usetargetmilestone") %]>
+      [% PROCESS selectmenu menuname = "op_sys"
+                            menuitems = op_sys %]
+    </td>
+
+    [% IF Param("usetargetmilestone") %]
       <th><label for="target_milestone">Target Milestone:</label></th>
-      <td colspan="3">
+      <td>
         [% PROCESS selectmenu menuname = "target_milestone"
                               menuitems = targetmilestones %]
       </td>
-    </tr>
-  [% END %]
+    [% END %]
+  </tr>
 
   [% IF UserInGroup(Param("timetrackinggroup")) %]
     <tr>
