@@ -61,10 +61,9 @@
 static const PRUnichar CSS_ESCAPE = PRUnichar('\\');
 const PRUint8 nsCSSScanner::IS_DIGIT = 0x01;
 const PRUint8 nsCSSScanner::IS_HEX_DIGIT = 0x02;
-const PRUint8 nsCSSScanner::IS_ALPHA = 0x04;
-const PRUint8 nsCSSScanner::START_IDENT = 0x08;
-const PRUint8 nsCSSScanner::IS_IDENT = 0x10;
-const PRUint8 nsCSSScanner::IS_WHITESPACE = 0x20;
+const PRUint8 nsCSSScanner::START_IDENT = 0x04;
+const PRUint8 nsCSSScanner::IS_IDENT = 0x08;
+const PRUint8 nsCSSScanner::IS_WHITESPACE = 0x10;
 
 static PRBool gLexTableSetup = PR_FALSE;
 PRUint8 nsCSSScanner::gLexTable[256];
@@ -104,8 +103,8 @@ nsCSSScanner::BuildLexTable()
       lt[i] |= IS_HEX_DIGIT;
       lt[i+32] |= IS_HEX_DIGIT;
     }
-    lt[i] |= IS_ALPHA | IS_IDENT | START_IDENT;
-    lt[i+32] |= IS_ALPHA | IS_IDENT | START_IDENT;
+    lt[i] |= IS_IDENT | START_IDENT;
+    lt[i+32] |= IS_IDENT | START_IDENT;
   }
 }
 
@@ -983,7 +982,8 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
   for (;;) {
     c = Read(aErrorCode);
     if (c < 0) break;
-    if (!gotDot && (c == '.')) {
+    if (!gotDot && (c == '.') &&
+        CheckLexTable(Peek(aErrorCode), IS_DIGIT, lexTable)) {
       gotDot = PR_TRUE;
     } else if ((c > 255) || ((lexTable[c] & IS_DIGIT) == 0)) {
       break;

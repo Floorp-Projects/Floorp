@@ -234,7 +234,6 @@ protected:
 
   static const PRUint8 IS_DIGIT;
   static const PRUint8 IS_HEX_DIGIT;
-  static const PRUint8 IS_ALPHA;
   static const PRUint8 START_IDENT;
   static const PRUint8 IS_IDENT;
   static const PRUint8 IS_WHITESPACE;
