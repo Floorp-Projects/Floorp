@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,100 +39,84 @@
         File Name:      array-005.js
         Description:
 
-        Put and Get JavaArray Elements
+   Put and Get JavaArray Elements
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "Java Array to JavaScript JavaArray object";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "Java Array to JavaScript JavaArray object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+//  In all test cases, the expected type is "object, and the expected
+//  class is "JavaArray"
 
-    //  In all test cases, the expected type is "object, and the expected
-    //  class is "JavaArray"
+var E_TYPE = "object";
+var E_CLASS = "[object JavaArray]";
 
-    var E_TYPE = "object";
-    var E_CLASS = "[object JavaArray]";
+var byte_array = ( new java.lang.String("hi") ).getBytes();
 
-    var byte_array = ( new java.lang.String("hi") ).getBytes();
+new TestCase(
+    SECTION,
+    "byte_array = new java.lang.String(\"hi\")).getBytes(); delete byte_array.length",
+    false,
+    delete byte_array.length );
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array = new java.lang.String(\"hi\")).getBytes(); delete byte_array.length",
-        false,
-        delete byte_array.length );
+new TestCase(
+    SECTION,
+    "byte_array[0]",
+    ("hi").charCodeAt(0),
+    byte_array[0]);
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array[0]",
-        ("hi").charCodeAt(0),
-        byte_array[0]);
+new TestCase(
+    SECTION,
+    "byte_array[1]",
+    ("hi").charCodeAt(1),
+    byte_array[1]);
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array[1]",
-        ("hi").charCodeAt(1),
-        byte_array[1]);
+byte_array.length = 0;
 
-    byte_array.length = 0;
+new TestCase(
+    SECTION,
+    "byte_array.length = 0; byte_array.length",
+    2,
+    byte_array.length );
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array.length = 0; byte_array.length",
-        2,
-        byte_array.length );
-
-    var properties = "";
-    for ( var p in byte_array ) {
-        properties += ( p == "length" ) ? p : "";
-    }
-
-
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "for ( var p in byte_array ) { properties += p ==\"length\" ? p : \"\" }; properties",
-        "",
-        properties );
-
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array[\"length\"]",
-        2,
-        byte_array["length"] );
-
-    byte_array["0"] = 127;
-
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array[\"0\"] = 127; byte_array[0]",
-        127,
-        byte_array[0] );
-
-    byte_array[1] = 99;
-
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array[1] = 99; byte_array[\"1\"]",
-        99,
-        byte_array["1"] );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+var properties = "";
+for ( var p in byte_array ) {
+    properties += ( p == "length" ) ? p : "";
 }
+
+new TestCase(
+    SECTION,
+    "for ( var p in byte_array ) { properties += p ==\"length\" ? p : \"\" }; properties",
+    "",
+    properties );
+
+new TestCase(
+    SECTION,
+    "byte_array[\"length\"]",
+    2,
+    byte_array["length"] );
+
+byte_array["0"] = 127;
+
+new TestCase(
+    SECTION,
+    "byte_array[\"0\"] = 127; byte_array[0]",
+    127,
+    byte_array[0] );
+
+byte_array[1] = 99;
+
+new TestCase(
+    SECTION,
+    "byte_array[1] = 99; byte_array[\"1\"]",
+    99,
+    byte_array["1"] );
+
+test();
+

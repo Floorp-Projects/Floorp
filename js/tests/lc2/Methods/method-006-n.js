@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,43 +35,49 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-        File Name:      method-006-n.js
-        Description:
+   File Name:      method-006-n.js
+   Description:
 
-        Assigning a Java method to a JavaScript object should not change the
-        context associated with the Java method -- its this object should
-        be the Java object, not the JavaScript object.
+   Assigning a Java method to a JavaScript object should not change the
+   context associated with the Java method -- its this object should
+   be the Java object, not the JavaScript object.
 
-        That is from Flanagan.  In practice, this fails all implementations.
+   That is from Flanagan.  In practice, this fails all implementations.
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect Objects";
-    var VERSION = "1_3";
-    var TITLE   = "Assigning a Non-Static Java Method to a JavaScript Object";
+var SECTION = "LiveConnect Objects";
+var VERSION = "1_3";
+var TITLE   = "Assigning a Non-Static Java Method to a JavaScript Object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+var java_string = new java.lang.String("LiveConnect");
+var js_string   = "JavaScript";
 
-    var java_string = new java.lang.String("LiveConnect");
-    var js_string   = "JavaScript";
+DESCRIPTION = "var java_string = new java.lang.String(\"LiveConnect\");" +
+    "var js_string = \"JavaScript\"" +
+    "js_string.startsWith = java_string.startsWith"+
+    "js_string.startsWith(\"J\")";
 
-    js_string.startsWith = java_string.startsWith;
+EXPECTED = "error";
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "var java_string = new java.lang.String(\"LiveConnect\");" +
-        "var js_string = \"JavaScript\"" +
-        "js_string.startsWith = java_string.startsWith"+
-        "js_string.startsWith(\"J\")",
-        false,
-        js_string.startsWith("J") );
+js_string.startsWith = java_string.startsWith;
 
-    test();
+new TestCase(
+    SECTION,
+    "var java_string = new java.lang.String(\"LiveConnect\");" +
+    "var js_string = \"JavaScript\"" +
+    "js_string.startsWith = java_string.startsWith"+
+    "js_string.startsWith(\"J\")",
+    false,
+    js_string.startsWith("J") );
+
+test();
 
 function MyObject() {
     this.println = java.lang.System.out.println;
@@ -78,16 +85,3 @@ function MyObject() {
     return this;
 }
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

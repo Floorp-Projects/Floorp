@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,75 +35,74 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-        File Name:      object-005.js
-        Description:
+   File Name:      object-005.js
+   Description:
 
-        Call ToNumber, ToString, and use the addition operator to
-        access the DefaultValue with hints Number, String, and no
-        hint (respectively).
+   Call ToNumber, ToString, and use the addition operator to
+   access the DefaultValue with hints Number, String, and no
+   hint (respectively).
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect Objects";
-    var VERSION = "1_3";
-    var TITLE   = "Getting the Class of JavaObjects";
+var SECTION = "LiveConnect Objects";
+var VERSION = "1_3";
+var TITLE   = "Getting the Class of JavaObjects";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+var a = new Array();
+var i = 0;
 
-    var a = new Array();
-    var i = 0;
+// here's an object that should be converted to a number
+a[i++] = new TestObject( "new java.lang.Integer(999)",
+			 new java.lang.Integer(999), "Number", 999, "number" );
 
-    // here's an object that should be converted to a number
-    a[i++] = new TestObject( "new java.lang.Integer(999)",
-        new java.lang.Integer(999), "Number", 999, "number" );
+a[i++] = new TestObject(
+    "new java.lang.Float(999.0)",
+    new java.lang.Float(999.0),
+    "Number",
+    999,
+    "number" );
 
-    a[i++] = new TestObject(
-        "new java.lang.Float(999.0)",
-        new java.lang.Float(999.0),
-        "Number",
-        999,
-        "number" );
+a[i++] = new TestObject(
+    "new java.lang.String(\"hi\")",
+    new java.lang.String("hi"),
+    "String",
+    "hi",
+    "string" );
 
-    a[i++] = new TestObject(
-        "new java.lang.String(\"hi\")",
-        new java.lang.String("hi"),
-        "String",
-        "hi",
-        "string" );
+a[i++] = new TestObject(
+    "new java.lang.Integer(2134)",
+    new java.lang.Integer(2134),
+    "0 + ",
+    "21340",
+    "string" );
 
-    a[i++] = new TestObject(
-        "new java.lang.Integer(2134)",
-        new java.lang.Integer(2134),
-        "0 + ",
-        "21340",
-        "string" );
+a[i++] = new TestObject(
+    "new java.lang.Integer(666)",
+    new java.lang.Integer(666),
+    "Boolean",
+    true,
+    "boolean" );
 
-    a[i++] = new TestObject(
-        "new java.lang.Integer(666)",
-        new java.lang.Integer(666),
-        "Boolean",
-        true,
-        "boolean" );
+for ( i = 0; i < a.length; i++ ) {
+    CompareValues( a[i] );
+}
 
-    for ( i = 0; i < a.length; i++ ) {
-        CompareValues( a[i] );
-    }
-
-    test();
+test();
 
 function CompareValues( t ) {
-    testcases[testcases.length] = new TestCase(
+    new TestCase(
         SECTION,
         t.converter +"("+ t.description +")",
         t.expect,
         t.actual );
 
-    testcases[testcases.length] = new TestCase(
+    new TestCase(
         SECTION,
         "typeof (" + t.converter +"( "+ t.description +" ) )",
         t.type,
@@ -111,28 +111,15 @@ function CompareValues( t ) {
 function TestObject( description, javaobject, converter, expect, type ) {
     this.description = description;
     this.javavalue = javaobject
-    this.converter = converter;
+	this.converter = converter;
     this.expect = expect;
     this.type = type;
 
     switch ( converter ) {
-        case( "Number" ) :  this.actual = Number( javaobject ); break;
-        case( "String" ) :  this.actual = String( javaobject ); break;
-        case( "Boolean") :  this.actual = Boolean(javaobject ); break;
-        default:            this.actual = javaobject + 0;
+    case( "Number" ) :  this.actual = Number( javaobject ); break;
+    case( "String" ) :  this.actual = String( javaobject ); break;
+    case( "Boolean") :  this.actual = Boolean(javaobject ); break;
+    default:            this.actual = javaobject + 0;
     }
     return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
 }

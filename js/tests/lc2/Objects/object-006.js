@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-        File Name:      object-006.js
-        Description:
+   File Name:      object-006.js
+   Description:
 
-        Attempt to construct a java.lang.Character.  currently this fails because of
-        http://scopus/bugsplat/show_bug.cgi?id=106464
+   Attempt to construct a java.lang.Character.  currently this fails because of
+   http://scopus/bugsplat/show_bug.cgi?id=106464
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
 
-    var SECTION = "LiveConnect Objects";
-    var VERSION = "1_3";
-    var TITLE   = "Construct a java.lang.Character";
+var SECTION = "LiveConnect Objects";
+var VERSION = "1_3";
+var TITLE   = "Construct a java.lang.Character";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var error = err;
+var testcase = new TestCase (
+    SECTION,
+    "var string = new java.lang.String(\"hi\"); "+
+    "var c = new java.lang.Character(string.charAt(0)); String(c.toString())",
+    "h",
+    "" );
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+var string = new java.lang.String("hi");
+var c = new java.lang.Character( string.charAt(0) );
 
-    testcases[testcases.length] = new TestCase (
-        SECTION,
-        "var string = new java.lang.String(\"hi\"); "+
-        "var c = new java.lang.Character(string.charAt(0)); String(c.toString())",
-        "h",
-        "" )
+testcase.actual = String(c.toString());
 
-    var string = new java.lang.String("hi");
-    var c = new java.lang.Character( string.charAt(0) );
+test();
 
-    testcases[0].actual = String(c.toString());
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

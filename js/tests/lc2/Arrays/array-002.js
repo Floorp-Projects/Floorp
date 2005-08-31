@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,69 +39,67 @@
         File Name:      array-002.js
         Description:
 
-        JavaArrays should have a length property that specifies the number of
-        elements in the array.
+   JavaArrays should have a length property that specifies the number of
+   elements in the array.
 
-        JavaArray elements can be referenced with the [] array index operator.
+   JavaArray elements can be referenced with the [] array index operator.
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "Java Array to JavaScript JavaArray object";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "Java Array to JavaScript JavaArray object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+//  In all test cases, the expected type is "object, and the expected
+//  class is "JavaArray"
 
-    //  In all test cases, the expected type is "object, and the expected
-    //  class is "JavaArray"
+var E_TYPE = "object";
+var E_CLASS = "[object JavaArray]";
 
-    var E_TYPE = "object";
-    var E_CLASS = "[object JavaArray]";
+//  Create arrays of actual results (java_array) and expected results
+//  (test_array).
 
-    //  Create arrays of actual results (java_array) and expected results
-    //  (test_array).
+var java_array = new Array();
+var test_array = new Array();
 
-    var java_array = new Array();
-    var test_array = new Array();
+var i = 0;
 
-    var i = 0;
+// byte[]
 
-    // byte[]
+var byte_array = ( new java.lang.String("ABCDEFGHIJKLMNOPQRSTUVWXYZ") ).getBytes();
 
-    var byte_array = ( new java.lang.String("ABCDEFGHIJKLMNOPQRSTUVWXYZ") ).getBytes();
-
-    java_array[i] = new JavaValue( byte_array );
-    test_array[i] = new TestValue( "( new java.lang.String('ABCDEFGHIJKLMNOPQRSTUVWXYZ') ).getBytes()",
-                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ".length
-                                   );
-    i++;
+java_array[i] = new JavaValue( byte_array );
+test_array[i] = new TestValue( "( new java.lang.String('ABCDEFGHIJKLMNOPQRSTUVWXYZ') ).getBytes()",
+			       "ABCDEFGHIJKLMNOPQRSTUVWXYZ".length
+    );
+i++;
 
 
-    // char[]
-    var char_array = ( new java.lang.String("rhino") ).toCharArray();
+// char[]
+var char_array = ( new java.lang.String("rhino") ).toCharArray();
 
-    java_array[i] = new JavaValue( char_array );
-    test_array[i] = new TestValue( "( new java.lang.String('rhino') ).toCharArray()",
-                                   "rhino".length );
-    i++;
+java_array[i] = new JavaValue( char_array );
+test_array[i] = new TestValue( "( new java.lang.String('rhino') ).toCharArray()",
+			       "rhino".length );
+i++;
 
 
-    for ( i = 0; i < java_array.length; i++ ) {
-        CompareValues( java_array[i], test_array[i] );
-    }
+for ( i = 0; i < java_array.length; i++ ) {
+    CompareValues( java_array[i], test_array[i] );
+}
 
-    test();
+test();
 
 function CompareValues( javaval, testval ) {
     //  Check length
-    testcases[testcases.length] = new TestCase( SECTION,
-                                                "("+ testval.description +").length",
-                                                testval.value,
-                                                javaval.length );
+    new TestCase( SECTION,
+		  "("+ testval.description +").length",
+		  testval.value,
+		  javaval.length );
 }
 function JavaValue( value ) {
     this.value  = value;
@@ -113,21 +112,8 @@ function JavaValue( value ) {
 function TestValue( description, value ) {
     this.description = description;
     this.length = value
-    this.value = value;
+	this.value = value;
     this.type =  E_TYPE;
     this.classname = E_CLASS;
     return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
 }

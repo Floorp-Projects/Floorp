@@ -34,33 +34,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          wrapUnwrap.js
-    Section:            LiveConnect
-    Description:
 
-    Tests wrapping and unwrapping objects.
-     @author mikeang
+/**
+   File Name:          wrapUnwrap.js
+   Section:            LiveConnect
+   Description:
+
+   Tests wrapping and unwrapping objects.
+   @author mikeang
 
 */
-    var SECTION = "wrapUnwrap.js";
-    var VERSION = "JS1_3";
-    var TITLE   = "LiveConnect";
+var SECTION = "wrapUnwrap.js";
+var VERSION = "JS1_3";
+var TITLE   = "LiveConnect";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-
-    var hashtable = new java.util.Hashtable();
-    var sameHashtable = hashtable;
+var hashtable = new java.util.Hashtable();
+var sameHashtable = hashtable;
 
 jsEquals(hashtable,sameHashtable);
 javaEquals(hashtable,sameHashtable);
 
 function returnString(theString) {
-  return theString;
+    return theString;
 }
 var someString = new java.lang.String("foo");
 var sameString = returnString(someString);
@@ -73,9 +71,9 @@ jsEquals(someString,assignToProperty.assignedString);
 javaEquals(someString,assignToProperty.assignedString);
 
 function laConstructor(a,b,c) {
-  this.one = a;
-  this.two = b;
-  this.three = c;
+    this.one = a;
+    this.two = b;
+    this.three = c;
 }
 var stack1 = new java.util.Stack();
 var stack2 = new java.util.Stack();
@@ -85,32 +83,18 @@ javaEquals(stack1, constructed.one);
 javaEquals(stack2, constructed.two);
 jsEquals(num, constructed.three);
 
-    test();
+test();
 
 function jsEquals(expectedResult, actualResult, message) {
-    testcases[testcases.length] = new TestCase( SECTION,
-        expectedResult +" == "+actualResult,
-        expectedResult,
-        actualResult );
+    new TestCase( SECTION,
+		  expectedResult +" == "+actualResult,
+		  expectedResult,
+		  actualResult );
 }
 
 function javaEquals(expectedResult, actualResult, message) {
-    testcases[testcases.length] = new TestCase( SECTION,
-        expectedResult +" == "+actualResult,
-        expectedResult,
-        actualResult );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+    new TestCase( SECTION,
+		  expectedResult +" == "+actualResult,
+		  expectedResult,
+		  actualResult );
 }

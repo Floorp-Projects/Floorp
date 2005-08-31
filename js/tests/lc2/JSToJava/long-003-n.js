@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,64 +35,63 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-        Template for LiveConnect Tests
+   Template for LiveConnect Tests
 
-        File Name:      number-001.js
-        Description:
+   File Name:      number-001.js
+   Description:
 
-        This test fails in lc3, but will succeed if the underlying version
-        of liveconnect only supports LC2.
+   This test fails in lc3, but will succeed if the underlying version
+   of liveconnect only supports LC2.
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "LiveConnect JavaScript to Java Data Type Conversion";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "LiveConnect JavaScript to Java Data Type Conversion";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+// typeof all resulting objects is "object";
+var E_TYPE = "object";
 
-    // typeof all resulting objects is "object";
-    var E_TYPE = "object";
+// JS class of all resulting objects is "JavaObject";
+var E_JSCLASS = "[object JavaObject]";
 
-    // JS class of all resulting objects is "JavaObject";
-    var E_JSCLASS = "[object JavaObject]";
+var a = new Array();
+var i = 0;
 
-    var a = new Array();
-    var i = 0;
+a[i++] = new TestObject( "java.lang.Long.toString(NaN)",
+			 java.lang.Long.toString(NaN), "0" );
 
-    a[i++] = new TestObject( "java.lang.Long.toString(NaN)",
-        java.lang.Long.toString(NaN), "0" );
+for ( var i = 0; i < a.length; i++ ) {
 
-    for ( var i = 0; i < a.length; i++ ) {
-
-        // check typeof
-        testcases[testcases.length] = new TestCase(
-            SECTION,
-            "typeof (" + a[i].description +")",
-            a[i].type,
-            typeof a[i].javavalue );
+    // check typeof
+    new TestCase(
+	SECTION,
+	"typeof (" + a[i].description +")",
+	a[i].type,
+	typeof a[i].javavalue );
 /*
-        // check the js class
-        testcases[testcases.length] = new TestCase(
-            SECTION,
-            "("+ a[i].description +").getJSClass()",
-            E_JSCLASS,
-            a[i].jsclass );
+// check the js class
+new TestCase(
+SECTION,
+"("+ a[i].description +").getJSClass()",
+E_JSCLASS,
+a[i].jsclass );
 */
-        // check the number value of the object
-        testcases[testcases.length] = new TestCase(
-            SECTION,
-            "String(" + a[i].description +")",
-            a[i].jsvalue,
-            String( a[i].javavalue ) );
-    }
+    // check the number value of the object
+    new TestCase(
+	SECTION,
+	"String(" + a[i].description +")",
+	a[i].jsvalue,
+	String( a[i].javavalue ) );
+}
 
-    test();
+test();
 
 function TestObject( description, javavalue, jsvalue ) {
     this.description = description;
@@ -102,17 +102,4 @@ function TestObject( description, javavalue, jsvalue ) {
 //    this.javavalue.__proto__.getJSClass = Object.prototype.toString;
 //    this.jsclass = this.javavalue.getJSClass();
     return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,45 +35,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-        File Name:      method-004-n.js
-        Description:
+   File Name:      method-004-n.js
+   Description:
 
-        Passing arguments of the wrong type, or the wrong number of arguments,
-        should cause a runtime error.
+   Passing arguments of the wrong type, or the wrong number of arguments,
+   should cause a runtime error.
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect Objects";
-    var VERSION = "1_3";
-    var TITLE   = "Passing bad arguments to a method";
+var SECTION = "LiveConnect Objects";
+var VERSION = "1_3";
+var TITLE   = "Passing bad arguments to a method";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+DESCRIPTION = "var string = new java.lang.String(\"\"); string.charAt(\"foo\")";
+EXPECTED = "error";
 
-    var string = new java.lang.String("");
+var string = new java.lang.String("");
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "var string = new java.lang.String(\"\"); string.charAt(\"foo\")",
-        "error",
-        string.charAt("foo") );
+new TestCase(
+    SECTION,
+    "var string = new java.lang.String(\"\"); string.charAt(\"foo\")",
+    "error",
+    string.charAt("foo") );
 
-    test();
+test();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
