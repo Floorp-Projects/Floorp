@@ -518,7 +518,6 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
 
 CalendarWindow.prototype.compareDisplayEventStart = function calWin_compareDisplayEventStart(a, b) {
    // If the events have the same start time, return the longest item first
-//dump(a.start+" "+b.start+" "+a.start.compare(b.start)"\n");
    if (!(a.start.compare(b.start)))
       return (b.end.compare(a.end));
 
