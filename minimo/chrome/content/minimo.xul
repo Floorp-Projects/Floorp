@@ -120,9 +120,6 @@
         <toolbarbutton id="forward-button" onclick="BrowserForward()"/>  
         <toolbarbutton id="reload-stop-button" class="reload-button" onclick="BrowserReload()"/>
 
-
-        <textbox id="urlbar" flex="100%" onkeypress="if(event.keyCode == 13 ) { BrowserLoadURL(); }"/>
-<!--
         <textbox id="urlbar" 
                  flex="100%" 
                  type="autocomplete"
@@ -132,7 +129,6 @@
                  autocompletepopup="PopupAutoComplete"
                  onfocus="URLBarFocusHandler();"
                  ontextentered="return URLBarEntered();"/>
--->
 
     </toolbar>
 	<toolbar id="toolbar-view" flex="1" collapsed="true" >
@@ -164,7 +160,7 @@
     <hbox id="appcontent" flex="100%">
       <hbox id="browser" context="context" flex="1">
         <tabbrowser contentcontextmenu="contentAreaContextMenu"
-                    context="context"
+                    context="context" disablehistory="false"
                     type="content-primary"
                     id="content" 
                     src="about:blank"
