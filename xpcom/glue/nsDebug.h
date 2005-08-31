@@ -56,34 +56,34 @@
  * conditionally compiled out.
  */
 
-/* in case this is included by a C file */
-#ifdef __cplusplus
+PR_BEGIN_EXTERN_C
 
-class nsDebug {
-public:
+/**
+ * Log a warning message to the debug log.
+ */
+NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NSGlue_Warning(const char *aMessage, const char *aFile, PRIntn aLine);
 
-  /**
-   * Log a warning message to the debug log.
-   */
-  static NS_COM_GLUE void Warning(const char* aMessage,
-                             const char* aFile, PRIntn aLine);
+/**
+ * Abort the executing program. This works on all architectures.
+ */
+NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NSGlue_Abort(const char *aFile, PRIntn aLine);
 
-  /**
-   * Abort the executing program. This works on all architectures.
-   */
-  static NS_COM_GLUE void Abort(const char* aFile, PRIntn aLine);
+/**
+ * Break the executing program into the debugger. 
+ */
+NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NSGlue_Break(const char* aFile, PRIntn aLine);
 
-  /**
-   * Break the executing program into the debugger. 
-   */
-  static NS_COM_GLUE void Break(const char* aFile, PRIntn aLine);
+/**
+ * Log an assertion message to the debug log
+ */
+NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NSGlue_Assertion(const char* aStr, const char* aExpr,
+                 const char* aFile, PRIntn aLine);
 
-  /**
-   * Log an assertion message to the debug log
-   */
-  static NS_COM_GLUE void Assertion(const char* aStr, const char* aExpr,
-                               const char* aFile, PRIntn aLine);
-};
+PR_END_EXTERN_C
 
 #ifdef DEBUG
 
@@ -106,7 +106,7 @@ public:
 #define NS_ABORT_IF_FALSE(_expr, _msg)                        \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      nsDebug::Assertion(_msg, #_expr, __FILE__, __LINE__);   \
+      NSGlue_Assertion(_msg, #_expr, __FILE__, __LINE__);     \
     }                                                         \
   PR_END_MACRO
 
@@ -121,7 +121,7 @@ public:
 #define NS_WARN_IF_FALSE(_expr,_msg)                          \
   PR_BEGIN_MACRO                                              \
     if (!(_expr)) {                                           \
-      nsDebug::Assertion(_msg, #_expr, __FILE__, __LINE__);   \
+      NSGlue_Assertion(_msg, #_expr, __FILE__, __LINE__);     \
     }                                                         \
   PR_END_MACRO
 
@@ -132,7 +132,7 @@ public:
 #define NS_PRECONDITION(expr, str)                            \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
+      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
     }                                                         \
   PR_END_MACRO
 
@@ -143,7 +143,7 @@ public:
 #define NS_ASSERTION(expr, str)                               \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
+      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
     }                                                         \
   PR_END_MACRO
 
@@ -154,7 +154,7 @@ public:
 #define NS_POSTCONDITION(expr, str)                           \
   PR_BEGIN_MACRO                                              \
     if (!(expr)) {                                            \
-      nsDebug::Assertion(str, #expr, __FILE__, __LINE__);     \
+      NSGlue_Assertion(str, #expr, __FILE__, __LINE__);       \
     }                                                         \
   PR_END_MACRO
 
@@ -163,38 +163,38 @@ public:
  * an attempt was made to execute some unimplemented functionality.
  */
 #define NS_NOTYETIMPLEMENTED(str)                             \
-  nsDebug::Assertion(str, "NotYetImplemented", __FILE__, __LINE__)
+  NSGlue_Assertion(str, "NotYetImplemented", __FILE__, __LINE__)
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplemented functionality.
  */
 #define NS_NOTREACHED(str)                                    \
-  nsDebug::Assertion(str, "Not Reached", __FILE__, __LINE__)
+  NSGlue_Assertion(str, "Not Reached", __FILE__, __LINE__)
 
 /**
  * Log an error message.
  */
 #define NS_ERROR(str)                                         \
-  nsDebug::Assertion(str, "Error", __FILE__, __LINE__)
+  NSGlue_Assertion(str, "Error", __FILE__, __LINE__)
 
 /**
  * Log a warning message.
  */
 #define NS_WARNING(str)                                       \
-  nsDebug::Warning(str, __FILE__, __LINE__)
+  NSGlue_Warning(str, __FILE__, __LINE__)
 
 /**
  * Trigger an abort
  */
 #define NS_ABORT()                                            \
-  nsDebug::Abort(__FILE__, __LINE__)
+  NSGlue_Abort(__FILE__, __LINE__)
 
 /**
  * Cause a break
  */
 #define NS_BREAK()                                            \
-  nsDebug::Break(__FILE__, __LINE__)
+  NSGlue_Break(__FILE__, __LINE__)
 
 #else /* NS_DEBUG */
 
@@ -215,7 +215,6 @@ public:
 #define NS_BREAK()                     PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
 
 #endif /* ! NS_DEBUG */
-#endif /* __cplusplus */
 
 // Macros for checking the trueness of an expression passed in within an 
 // interface implementation.  These need to be compiled regardless of the 

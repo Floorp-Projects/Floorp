@@ -181,7 +181,7 @@ private:
 #define NS_BOX_ASSERTION(box,expr,str) \
   if (!(expr)) { \
        box->DumpBox(stdout); \
-       nsDebug::Assertion(str, #expr, __FILE__, __LINE__); \
+       NSGlue_Assertion(str, #expr, __FILE__, __LINE__); \
   }
 #else
 #define NS_BOX_ASSERTION(box,expr,str) {}

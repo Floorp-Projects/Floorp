@@ -85,7 +85,7 @@ WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
              "Click Ignore to continue running the Application.", 
              lpszCmdLine);
              
-    return MessageBox(NULL, msg, "nsDebug::Assertion",
+    return MessageBox(NULL, msg, "NSGlue_Assertion",
                       MB_ICONSTOP | MB_SYSTEMMODAL| 
                       MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);
 }
