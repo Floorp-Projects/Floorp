@@ -517,10 +517,15 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
 }
 
 CalendarWindow.prototype.compareDisplayEventStart = function calWin_compareDisplayEventStart(a, b) {
-   return ( a.start.compare(b.start) );
+   // If the events have the same start time, return the longest item first
+//dump(a.start+" "+b.start+" "+a.start.compare(b.start)"\n");
+   if (!(a.start.compare(b.start)))
+      return (b.end.compare(a.end));
+
+   return (a.start.compare(b.start));
 }
 
-CalendarWindow.prototype.compareDisplayEventEnd = function calWin_compareDisplayEventStart(a, b) {
+CalendarWindow.prototype.compareDisplayEventEnd = function calWin_compareDisplayEventEnd(a, b) {
    return ( a.end.compare(b.end) );
 }
 
@@ -793,12 +798,8 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
   // parallel events
   var currEventSlots = new Array();
 
-  // start index of the current (contiguous) group of events.
+  // start index (in dayEventStartList) of the current (contiguous) group of events.
   var groupStartIndex = 0;
-
-  var nextEventIsStarting = true;
-  var currEventSlotsIsEmpty
-  var done = false;
 
   // Add non-allday events to dayEventStartList and dayEventEndList.
   var i;
@@ -824,55 +825,72 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
       dayEventStartList[i].totalSlotCount = -1;
     }
     
-    while( !done ) {
-      if( nextEventIsStarting ) { 
-        
+    while( eventStartListIndex < dayEventStartList.length ) {
+      var nextEventStarting = dayEventStartList[eventStartListIndex];
+      var nextEventEnding = dayEventEndList[eventEndListIndex];
+      if (nextEventStarting.start.compare(nextEventEnding.end) < 0) { 
+        var event = nextEventStarting;
         //find a slot for the event
         for( i = 0; i <currEventSlots.length; i++ )
           if( currEventSlots[i] == null ) {            
             // found empty slot, set event here
             // also check if there is room for event wider than 1 slot.
+            event.startDrawSlot = i;
             var k = i;
-            dayEventStartList[eventStartListIndex].startDrawSlot = i;
-            while( ( k < currEventSlots.length ) && ( currEventSlots[k] == null )) {
-              currEventSlots[k] = dayEventStartList[eventStartListIndex];
-              dayEventStartList[eventStartListIndex].drawSlotCount = k - i + 1;
-              k++;
-            }
+            for (; k < currEventSlots.length && currEventSlots[k] == null; k++)
+              currEventSlots[k] = event;
+            event.drawSlotCount = k - i;
             break;
           }
-        if( dayEventStartList[eventStartListIndex].startDrawSlot == -1 ) {
-          // there were no empty slots, see if some existing event could be thinner
-          for( var m = currEventSlots.length - 1; m > 0; m-- )
+        if( event.startDrawSlot == -1 ) {
+          // there were no empty slots, see if previous event could be thinner.
+          // check slots from low to high so events at same time stay in order.
+          // (want same-time events to stay in same order as in source file.
+          //  note: may be shuffled by data source sort if sort is not stable.)
+          var m;
+          for( m = 1; m < currEventSlots.length; m++ ) 
             if( currEventSlots[m] == currEventSlots[m-1] ) {
-              dayEventStartList[eventStartListIndex].drawSlotCount = 1;
-              currEventSlots[m] = dayEventStartList[eventStartListIndex];
-              currEventSlots[m-1].drawSlotCount--;
+              // take all but first slot, so events at same time stay in order
+              var wideEvent = currEventSlots[m];
+              event.startDrawSlot = wideEvent.startDrawSlot + 1;
+              event.drawSlotCount = wideEvent.drawSlotCount - 1;
+              wideEvent.drawSlotCount = 1;
+              // set slots taken to event
+              while(m < currEventSlots.length && currEventSlots[m] == wideEvent)
+                currEventSlots[m++] = event;
+
               break;
             }
             
-          if( dayEventStartList[eventStartListIndex].startDrawSlot == -1 ) {
-            
+          if (event.startDrawSlot == -1) {
             //event's not yet placed: must add a new slot
-            currEventSlots[currEventSlots.length] = dayEventStartList[eventStartListIndex];
-            dayEventStartList[eventStartListIndex].startDrawSlot = i;
-            dayEventStartList[eventStartListIndex].drawSlotCount = 1;
+            var oldTotal = currEventSlots.length;
+            currEventSlots[currEventSlots.length] = event;
+            event.startDrawSlot = i;
+            event.drawSlotCount = 1;
+            // find ended events occupying old last slot and extend them 1 slot
+            for (i = groupStartIndex; i < eventStartListIndex; i++) {
+              var prevEvent = dayEventStartList[i];
+              if (prevEvent.startDrawSlot + prevEvent.drawSlotCount == oldTotal
+                  && prevEvent.end.compare(event.start) < 0)
+                prevEvent.drawSlotCount += 1;
+            }
           }
         }
         eventStartListIndex++;
-      } else {
-        
-        // nextEventIsStarting==false, remove one event from the slots
-        currEventSlotsIsEmpty = true;
+      } else { // event ended
+        // remove event from its slot(s), note if any slots remain filled
+        var currEventSlotsAreAllEmpty = true;
         for( i = 0; i < currEventSlots.length; i++ ) {
-          if( currEventSlots[i] == dayEventEndList[eventEndListIndex] )
+          if( currEventSlots[i] != null ) {
+            if( currEventSlots[i] == nextEventEnding )
             currEventSlots[i] = null;
-          
-          if( currEventSlots[i] != null )
-            currEventSlotsIsEmpty = false;
+            else
+              currEventSlotsAreAllEmpty = false;
+          }
         }
         
-        if( currEventSlotsIsEmpty ) {
+        if( currEventSlotsAreAllEmpty ) {
           // There are no events in the slots, so we can set totalSlotCount 
           // for the previous contiguous group of events
           for( i = groupStartIndex; i < eventStartListIndex; i++ ) {
@@ -882,15 +900,6 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
           groupStartIndex = eventStartListIndex;
         }         
         eventEndListIndex++;
-      }
-       
-      //update vars for next loop
-      if( !(eventStartListIndex in dayEventStartList) || dayEventStartList[eventStartListIndex] == null )
-        done = true;
-      else {
-        var compResult = dayEventStartList[eventStartListIndex].start
-                                  .compare(dayEventEndList[eventEndListIndex].end);
-        nextEventIsStarting = compResult < 0 ? true : false;
       }
     }
     //  set totalSlotCount for the last contiguous group of events
