@@ -130,27 +130,32 @@
     <tr>
       <td valign="top">
         <table cellspacing="1" cellpadding="1">
-  
           <tr>
             <td align="right">
-              [% IF Param('useclassification') %]
-                [% IF bug.classification_id != "1" %]
-                  <b>[[% bug.classification FILTER html %]]</b>
-                [% END %]
+              [% IF Param('useclassification') && bug.classification_id != 1 %]
+                <b>[[% bug.classification FILTER html %]]</b>
               [% END %]
               <b>[% terms.Bug %]#:</b>
             </td>
             <td>
               <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
                 [% bug.bug_id %]</a>
-                [% IF Param("usebugaliases") %]
-                  <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
-                    <b>alias:</b>
-                    <input id="alias" name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
-                  </label>
-                [% END %]
             </td>
           </tr>
+
+          [% IF Param("usebugaliases") %]
+            <tr>
+              <td align="right">
+                <b>Alias:</b>
+              </td>
+              <td>
+                <label for="alias" title="a name for the [% terms.bug %] that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+                  <input id="alias" name="alias" value="[% bug.alias FILTER html %]"
+                         size="20" maxlength="20">
+                </label>
+              </td>
+            </tr>
+          [% END %]
 
           <tr>
             <td align="right">
