@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,59 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          enum-001.js
-    Section:            LiveConnect
-    Description:
+   File Name:          enum-001.js
+   Section:            LiveConnect
+   Description:
 
-    Tests enumeration of a java object.
+   Tests enumeration of a java object.
 
-    Regression test for bug:
+   Regression test for bug:
 
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=107638
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=107638
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "enum-001";
-    var VERSION = "JS1_3";
-    var TITLE   = "The variable statment";
+var SECTION = "enum-001";
+var VERSION = "JS1_3";
+var TITLE   = "The variable statement";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var v = new java.util.Vector();
+v.addElement("PASSED!");
+v.addElement("PASSED!");
+v.addElement("PASSED!");
 
-    var v = new java.util.Vector();
-    v.addElement("PASSED!");
-    v.addElement("PASSED!");
-    v.addElement("PASSED!");
-
-    for (e = v.elements(), result = new Array(), i = 0 ; e.hasMoreElements();
-        i++ )
-    {
-        result[i] = String( e.nextElement() );
-    }
-
-    for ( i = 0; i < result.length; i++ ) {
-        testcases[testcases.length] = new TestCase( SECTION,
-            "test enumeration of a java object:  element at " + i,
-            "PASSED!",
-            result[i] );
-    }
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+for (e = v.elements(), result = new Array(), i = 0 ; e.hasMoreElements();
+     i++ )
+{
+    result[i] = String( e.nextElement() );
 }
+
+for ( i = 0; i < result.length; i++ ) {
+    new TestCase( SECTION,
+		  "test enumeration of a java object:  element at " + i,
+		  "PASSED!",
+		  result[i] );
+}
+
+test();
+

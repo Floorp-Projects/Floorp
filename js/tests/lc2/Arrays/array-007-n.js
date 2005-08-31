@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,50 +39,38 @@
         File Name:      array-005.js
         Description:
 
-        Put and Get JavaArray Elements
+   Put and Get JavaArray Elements
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "Java Array to JavaScript JavaArray object";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "Java Array to JavaScript JavaArray object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+//  In all test cases, the expected type is "object, and the expected
+//  class is "JavaArray"
 
-    //  In all test cases, the expected type is "object, and the expected
-    //  class is "JavaArray"
+var E_TYPE = "object";
+var E_CLASS = "[object JavaArray]";
 
-    var E_TYPE = "object";
-    var E_CLASS = "[object JavaArray]";
+var byte_array = ( new java.lang.String("hi") ).getBytes();
 
-    var byte_array = ( new java.lang.String("hi") ).getBytes();
+byte_array.name = "name";
 
-    byte_array.name = "name";
+DESCRIPTION = "byte_array.name = \"name\"; byte_array.name";
+EXPECTED = "error";
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "byte_array.name = \"name\"; byte_array.name",
-        void 0,
-        byte_array.name );
+new TestCase(
+    SECTION,
+    "byte_array.name = \"name\"; byte_array.name",
+    void 0,
+    byte_array.name );
 
-    byte_array["0"] = 127;
+byte_array["0"] = 127;
 
-    test();
+test();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

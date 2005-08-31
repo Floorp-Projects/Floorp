@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,33 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          println-001.js
-    Section:       LiveConnect
-    Description:
+   File Name:          println-001.js
+   Section:       LiveConnect
+   Description:
 
-    Regression test for
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=114820
+   Regression test for
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=114820
 
-    Verify that java.lang.System.out.println does not cause an error.
-    Not sure how to get to the error any other way.
+   Verify that java.lang.System.out.println does not cause an error.
+   Not sure how to get to the error any other way.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "println-001.js";
-    var VERSION = "JS1_3";
-    var TITLE   = "java.lang.System.out.println";
+var SECTION = "println-001.js";
+var VERSION = "JS1_3";
+var TITLE   = "java.lang.System.out.println";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+new TestCase(
+    SECTION,
+    "java.lang.System.out.println( \"output from test live/Methods/println-001.js\")",
+    void 0,
+    java.lang.System.out.println( "output from test live/Methods/println-001.js" ) );
 
-    testcases[testcases.length] = new TestCase(
-        SECTION,
-        "java.lang.System.out.println( \"output from test live/Methods/println-001.js\")",
-        void 0,
-        java.lang.System.out.println( "output from test live/Methods/println-001.js" ) );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

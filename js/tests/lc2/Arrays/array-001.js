@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -54,83 +55,81 @@
         5.  Check the class of the JavaArray, using getClass, and compare
             it to java.lang.Class.forName("java.lang.Array");
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "Java Array to JavaScript JavaArray object";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "Java Array to JavaScript JavaArray object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+//  In all test cases, the expected type is "object, and the expected
+//  class is "Number"
 
-    //  In all test cases, the expected type is "object, and the expected
-    //  class is "Number"
+var E_TYPE = "object";
+var E_CLASS = "[object JavaArray]";
+var test_array = new Array();
 
-    var E_TYPE = "object";
-    var E_CLASS = "[object JavaArray]";
-    var test_array = new Array();
+//  Create arrays of actual results (java_array) and expected results
+//  (test_array).
 
-    //  Create arrays of actual results (java_array) and expected results
-    //  (test_array).
+var java_array = new Array();
 
-    var java_array = new Array();
+var i = 0;
 
-    var i = 0;
+// byte[]
 
-    // byte[]
+var byte_array = ( new java.lang.String("hello") ).getBytes();
 
-    var byte_array = ( new java.lang.String("hello") ).getBytes();
+java_array[i] = new JavaValue( byte_array );
+test_array[i] = new TestValue( "( new java.lang.String('hello') ).getBytes()",
+			       ["h".charCodeAt(0),
+				"e".charCodeAt(0),
+				"l".charCodeAt(0),
+				"l".charCodeAt(0),
+				"o".charCodeAt(0) ],
+			       "[B"
+    );
+i++;
 
-    java_array[i] = new JavaValue( byte_array );
-    test_array[i] = new TestValue( "( new java.lang.String('hello') ).getBytes()",
-                                   ["h".charCodeAt(0),
-                                   "e".charCodeAt(0),
-                                   "l".charCodeAt(0),
-                                   "l".charCodeAt(0),
-                                   "o".charCodeAt(0) ],
-                                   "[B"
-                                   );
-    i++;
+// char[]
+var char_array = ( new java.lang.String("rhino") ).toCharArray();
 
-    // char[]
-    var char_array = ( new java.lang.String("rhino") ).toCharArray();
-
-    java_array[i] = new JavaValue( char_array );
-    test_array[i] = new TestValue( "( new java.lang.String('rhino') ).toCharArray()",
-                                   [ "r".charCodeAt(0),
-                                     "h".charCodeAt(0),
-                                     "i".charCodeAt(0),
-                                     "n".charCodeAt(0),
-                                     "o".charCodeAt(0)],
-                                     "[C");
-    i++;
+java_array[i] = new JavaValue( char_array );
+test_array[i] = new TestValue( "( new java.lang.String('rhino') ).toCharArray()",
+			       [ "r".charCodeAt(0),
+				 "h".charCodeAt(0),
+				 "i".charCodeAt(0),
+				 "n".charCodeAt(0),
+				 "o".charCodeAt(0)],
+			       "[C");
+i++;
 
 
-    for ( i = 0; i < java_array.length; i++ ) {
-        CompareValues( java_array[i], test_array[i] );
-    }
+for ( i = 0; i < java_array.length; i++ ) {
+    CompareValues( java_array[i], test_array[i] );
+}
 
-    test();
+test();
 
 function CompareValues( javaval, testval ) {
     //  Check value
 
     for ( var i = 0; i < testval.value.length; i++ ) {
-        testcases[testcases.length] = new TestCase( SECTION,
-                                                "("+ testval.description +")["+i+"]",
-                                                testval.value[i],
-                                                javaval.value[i] );
+        new TestCase( SECTION,
+		      "("+ testval.description +")["+i+"]",
+		      testval.value[i],
+		      javaval.value[i] );
     }
 
     //  Check type
 
-    testcases[testcases.length] = new TestCase( SECTION,
-                                                "typeof (" + testval.description +")",
-                                                testval.type,
-                                                javaval.type );
+    new TestCase( SECTION,
+		  "typeof (" + testval.description +")",
+		  testval.type,
+		  javaval.type );
 
 
     //  Check class
@@ -146,8 +145,8 @@ function JavaValue( value ) {
     this.classname = this.value.getClass();
 
     jlo_class = java.lang.Class.forName("java.lang.Object")
-    jlo_getClass_method = jlo_class.getMethod("getClass", null)
-    this.lcclass = jlo_getClass_method.invoke(value, null );
+	jlo_getClass_method = jlo_class.getMethod("getClass", null)
+	this.lcclass = jlo_getClass_method.invoke(value, null );
 
     return this;
 }
@@ -158,17 +157,4 @@ function TestValue( description, value, lcclass ) {
     this.type =  E_TYPE;
     this.classname = E_CLASS;
     return this;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
 }

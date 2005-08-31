@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,47 +39,35 @@
         File Name:      array-008-n.js
         Description:
 
-        JavaArrays should have a length property that specifies the number of
-        elements in the array.
+   JavaArrays should have a length property that specifies the number of
+   elements in the array.
 
-        JavaArray elements can be referenced with the [] array index operator.
+   JavaArray elements can be referenced with the [] array index operator.
 
-        This attempts to access an array index that is out of bounds.  It should
-        fail with a JS runtime error.
+   This attempts to access an array index that is out of bounds.  It should
+   fail with a JS runtime error.
 
-        @author     christine@netscape.com
-        @version    1.00
+   @author     christine@netscape.com
+   @version    1.00
 */
-    var SECTION = "LiveConnect";
-    var VERSION = "1_3";
-    var TITLE   = "Java Array to JavaScript JavaArray object";
+var SECTION = "LiveConnect";
+var VERSION = "1_3";
+var TITLE   = "Java Array to JavaScript JavaArray object";
 
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass;
 
-    dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass;
+var ba_length = dt.PUB_ARRAY_BYTE.length;
 
-    var ba_length = dt.PUB_ARRAY_BYTE.length;
+DESCRIPTION = "dt.PUB_ARRAY_BYTE.length = "+ ba_length;
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "dt.PUB_ARRAY_BYTE.length = "+ ba_length,
-        "error",
-        dt.PUB_ARRAY_BYTE[ba_length] );
+new TestCase(
+    SECTION,
+    "dt.PUB_ARRAY_BYTE.length = "+ ba_length,
+    "error",
+    dt.PUB_ARRAY_BYTE[ba_length] );
 
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();
