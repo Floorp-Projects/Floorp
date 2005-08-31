@@ -787,6 +787,7 @@ function CCKWriteDefaultJS(destdir)
     fos.write(useragent2end, useragent2end.length);
   }
   
+  
   // For these guys Idid something a little clever - the preference name is stored in the XUL
 
   var proxystringlist = ["HTTPproxyname","SSLproxyname","FTPproxyname","Gopherproxyname","NoProxyname","autoproxyurl" ];
@@ -812,6 +813,22 @@ function CCKWriteDefaultJS(destdir)
   var proxyitem = document.getElementById("shareAllProxies");
   var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
   fos.write(line, line.length);
+
+
+  // Preferences
+  for (var i=1; i <= 5; i++) {
+    var prefname = document.getElementById("PreferenceName" + i).value;
+    if (prefname && prefname.length) {
+      var prefvalue = document.getElementById("PreferenceValue" + i).value;
+      if (prefvalue && prefvalue.length) {
+        var line = 'pref("' + prefname + '", ' + prefvalue + ');\n';
+        fos.write(line, line.length);
+      }
+    }
+  }
+
+
+
   
   fos.close();
 }

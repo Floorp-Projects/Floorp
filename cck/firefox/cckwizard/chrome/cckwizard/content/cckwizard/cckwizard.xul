@@ -522,6 +522,46 @@
       </hbox>
     </groupbox>
   </wizardpage>
+
+  <wizardpage>
+    <groupbox>
+      <caption label="Preferences"/>
+      <description>
+        You can add up to five custom preferences. Note these preferences are stored exactly as written, so put quotes around string preferences.
+      </description>
+      <hbox>
+        <label>Preference Name1:</label>
+        <textbox id="PreferenceName1"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue1"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name2:</label>
+        <textbox id="PreferenceName2"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue2"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name3:</label>
+        <textbox id="PreferenceName3"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue3"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name4:</label>
+        <textbox id="PreferenceName4"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue4"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name5:</label>
+        <textbox id="PreferenceName5"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue5"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
   
   <wizardpage>
   <groupbox>
