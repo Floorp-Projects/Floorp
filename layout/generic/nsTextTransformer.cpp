@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1488,7 +1489,13 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
   
   ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, !isVisual, !isVisual);
 
-  aTextLength = newLen;
+  if (newLen <= aTextLength) {
+    aTextLength = newLen;
+  } else {
+    // Increasing |aTextLength| would cause a buffer overflow on |aText|
+    // by |StripZeroWidthJoinControls()| below.
+    NS_ERROR("ArabicShaping should not have increased the text length");
+  }
   *aWasTransformed = PR_TRUE;
 
   StripZeroWidthJoinControls(buffer, aText, aTextLength, aWasTransformed);
@@ -1552,21 +1559,26 @@ nsTextTransformer::StripZeroWidthJoinControls(PRUnichar* aSource,
                                               PRInt32& aTextLength, 
                                               PRBool* aWasTransformed)
 {
-  PRUnichar *src, *dest;
-  PRInt32 stripped = 0;
+  if (aTextLength < 0) {
+    NS_ERROR("negative text length");
+    aTextLength = 0;
+    return;
+  }
 
-  src = aSource;
-  dest = aTarget;
+  const PRUnichar* src = aSource;
+  const PRUnichar* const end = aSource + aTextLength;
+  PRUnichar* dest = aTarget;
 
-  for (PRInt32 i = 0; i < aTextLength; ++i) {
-    while (*src == CH_ZWNJ || *src == CH_ZWJ) {
-      ++stripped;
+  while (src != end) {
+    if (*src == CH_ZWNJ || *src == CH_ZWJ) {
       ++src;
       *aWasTransformed = PR_TRUE;
+      continue;
     }
     *dest++ = *src++;
   }
-  aTextLength -= stripped;
+
+  aTextLength = dest - aTarget;
 }
 
 //----------------------------------------------------------------------

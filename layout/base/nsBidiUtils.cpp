@@ -357,6 +357,7 @@ nsresult ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
     *lDest++ = *lSrc++; 
 
   *aBufLen = lDest - aBuf;
+  NS_ASSERTION(*aBufLen <= aLen, "ArabicShaping() likely did a buffer overflow!");
 
   if (aOutputLogical) {
     ReverseString(aBuf, *aBufLen);
