@@ -50,7 +50,7 @@ printStatus (summary);
 var results = [];
 for (var k = 0; k < 600000; k++) {
   if (! (k %100000)) { 
-    print('hi');
+    printStatus('hi');
     if (0) {
       results.length = 0;
       gc();
