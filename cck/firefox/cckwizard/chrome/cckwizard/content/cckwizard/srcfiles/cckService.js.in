@@ -90,24 +90,13 @@ CCKService.prototype={
     } catch (ex) {
       return;
     }
-
-    try {
-      sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                      .getService(Components.interfaces.nsIStringBundleService	);
-      bundle = sbs.createBundle("chrome://cck/content/cck.properties");
-      pm = Components.classes["@mozilla.org/permissionmanager;1"].getService(Components.interfaces.nsIPermissionManager);
-      ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);	  
-    } catch (ex) {
-      return;
-    }
-
 	var cckinited;
 	try {
-	  cckinited = prefbranch.getBoolPref("cck." + bundle.GetStringFromName("OrganizationName") + ".initialized");
+	  cckinited = prefbranch.getBoolPref("cck.initialized");
 	} catch (ex) {
 	  cckinited = false;
 	}
-
+    
     var sbs;
     var bundle;
     var pm;
@@ -120,6 +109,36 @@ CCKService.prototype={
       ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);	  
     } catch (ex) {
       return;
+    }
+    
+    const nsIX509CertDB2 = Components.interfaces.nsIX509CertDB2;
+    const nsX509CertDBContractID = "@mozilla.org/security/x509certdb;1";
+    var certDB = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB2);
+
+    for (var i=1; i<=5; i++) {
+      try {
+        CertName = bundle.GetStringFromName("Cert" + i);
+      } catch (ex) {
+        CertName = "";
+      }
+      if (CertName && CertName.length) {
+        var ioService=Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+        var scriptableStream=Components.classes["@mozilla.org/scriptableinputstream;1"]
+                                       .getService(Components.interfaces.nsIScriptableInputStream);
+
+        var channel=ioService.newChannel("chrome://cck/content/"+CertName,null,null);
+        var input=channel.open();
+        scriptableStream.init(input);
+        var cert=scriptableStream.read(input.available());
+        scriptableStream.close();
+        input.close();
+        cert = cert.replace(/-----BEGIN CERTIFICATE-----[\r\n]/, "");
+        cert = cert.replace(/-----END CERTIFICATE-----[\r\n]/, "");
+        cert = cert.replace(/[\r\n]/g, "");
+        if (!cert.isPerm )
+          certDB.addCertFromBase64(cert, "C,C,C", "");
+      }
     }
 
     var popupAllowedSites;
@@ -199,7 +218,7 @@ CCKService.prototype={
         addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
       }
 
-	  prefbranch.setBoolPref("cck." + bundle.GetStringFromName("OrganizationName") + ".initialized", true);
+	  prefbranch.setBoolPref("cck.initialized", true);
     }
   }
 }
