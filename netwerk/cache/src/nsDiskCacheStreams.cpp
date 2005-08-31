@@ -851,6 +851,8 @@ nsresult
 nsDiskCacheStreamIO::SetEOF()
 {
     nsresult    rv;
+    PRBool      needToCloseFD = PR_FALSE;
+
     NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
     
@@ -860,6 +862,7 @@ nsDiskCacheStreamIO::SetEOF()
                 // we need an mFD, we better open it now
                 rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
                 if (NS_FAILED(rv))  return rv;
+                needToCloseFD = PR_TRUE;
             }
         } else {
             // data in cache block files
@@ -893,6 +896,10 @@ nsDiskCacheStreamIO::SetEOF()
     
     if (mFD) {
         UpdateFileSize();
+        if (needToCloseFD) {
+            (void) PR_Close(mFD);
+            mFD = nsnull;
+        } 
     }
 
     return  NS_OK;
