@@ -3309,6 +3309,15 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
             obj = tmp;
         argv[0] = OBJECT_TO_JSVAL(obj);
         argc = 1;
+    } else if (JSVAL_IS_PRIMITIVE(argv[0])) {
+        /*
+         * Make sure that this is an object, as required by the generic
+         * functions.
+         */
+        tmp = js_ValueToNonNullObject(cx, argv[0]);
+        if (!tmp)
+            return JS_FALSE;
+        argv[0] = OBJECT_TO_JSVAL(tmp);
     }
 
     /*
