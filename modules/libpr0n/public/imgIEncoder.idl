@@ -1,0 +1,90 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is Oracle Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Brett Wilson <brettw@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIInputStream.idl"
+
+/**
+ * imgIEncoder interface
+ */
+
+[scriptable, uuid(CCC5B3AD-3E67-4e3d-97E1-B06B2E96FEF8)]
+interface imgIEncoder : nsIInputStream
+{
+  // Possible values for input format (note that not all image formats
+  // support saving alpha channels):
+
+    // Input is RGB each pixel is represented by three bytes:
+    // R, G, and B (in that order, regardless of host endianness)
+  const PRUint32 INPUT_FORMAT_RGB = 0;
+
+    // Input is RGB each pixel is represented by four bytes:
+    // R, G, and B (in that order, regardless of host endianness).
+    // POST-MULTIPLIED alpha us used (50% transparent red is 0xff000080)
+  const PRUint32 INPUT_FORMAT_RGBA = 1;
+
+    // Input is host-endian ARGB: On big-endian machines each pixel is therefore
+    // ARGB, and for little-endian machiens (Intel) each pixel is BGRA
+    // (This is used by canvas to match it's internal representation)
+    //
+    // PRE-MULTIPLIED alpha is used (That is, 50% transparent red is 0x80800000,
+    // not 0x80ff0000
+  const PRUint32 INPUT_FORMAT_HOSTARGB = 2;
+
+  /* data - list of bytes in the format specified by inputFormat
+   * width  - width in pixels
+   * height - height in pixels
+   * stride - number of bytes per row in the image
+   *          Normally (width*3) or (width*4), depending on your input format,
+   *          but some data uses padding at the end of each row, which would
+   *          be extra.
+   * inputFormat - one of INPUT_FORMAT_* specifying the format of data
+   * outputOptions - semicolon-delimited list of name=value pairs that can
+   *                 give options to the output encoder. Options are encoder-
+   *                 specific. Just give empty string for default behavior.
+   */
+  void initFromData([array, size_is(length), const] in PRUint8 data,
+                    in unsigned long length,
+                    in PRUint32 width,
+                    in PRUint32 height,
+                    in PRUint32 stride,
+                    in PRUint32 inputFormat,
+                    in AString outputOptions);
+};
+
+

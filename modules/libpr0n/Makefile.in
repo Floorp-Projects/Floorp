@@ -50,6 +50,10 @@ ifdef MOZ_IMG_DECODERS
 DIRS		+= decoders
 endif
 
+ifdef MOZ_IMG_ENCODERS
+DIRS		+= encoders
+endif
+
 DIRS		+= build
 
 include $(topsrcdir)/config/rules.mk

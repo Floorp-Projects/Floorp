@@ -64,6 +64,11 @@ FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
 
+#ifeq (png,$(filter png,$(MOZ_IMG_ENCODERS)))
+ifdef MOZ_IMG_ENCODERS
+DEFINES		+= -DMOZ_PNG_WRITE
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DZLIB_DLL
 ifdef BUILD_DEBUG_GC

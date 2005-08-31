@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,9 +13,8 @@
 #
 # The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -42,74 +40,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= imglib2
-LIBRARY_NAME	= imglib2
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsImageLib2Module
-GRE_MODULE	= 1
-LIBXUL_LIBRARY = 1
-
-PACKAGE_FILE = imglib2.pkg
-
-REQUIRES	= xpcom \
-		  string \
-		  necko \
-		  nkcache \
-		  gfx \
-		  $(JPEG_REQUIRES) \
-		  $(PNG_REQUIRES) \
-		  $(ZLIB_REQUIRES) \
-		  $(NULL)
-
-CPPSRCS = \
-		nsImageModule.cpp \
-		$(NULL)
-
-DEFINES		+= $(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			-DIMG_BUILD_DECODER_${d}) \
-		   $(foreach d,$(MOZ_IMG_ENCODERS), \
-			-DIMG_BUILD_ENCODER_${d})
-
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../src \
-		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			-I$(srcdir)/../decoders/${d}) \
-		$(foreach d,$(MOZ_IMG_ENCODERS), \
-			-I$(srcdir)/../encoders/${d}) \
-		$(NULL)
-
-SHARED_LIBRARY_LIBS = \
-		../src/$(LIB_PREFIX)imglib2_s.$(LIB_SUFFIX) \
-		$(foreach d,$(filter-out icon,$(MOZ_IMG_DECODERS)), \
-			../decoders/${d}/$(LIB_PREFIX)img${d}_s.$(LIB_SUFFIX))\
-		$(foreach d,$(MOZ_IMG_ENCODERS), \
-			../encoders/${d}/$(LIB_PREFIX)img${d}e_s.$(LIB_SUFFIX))\
-		$(NULL)
-
-EXTRA_DSO_LIBS	= \
-		gkgfx \
-		$(NULL)
-
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(JPEG_LIBS) \
-		$(PNG_LIBS) $(ZLIB_LIBS) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+DIRS += $(MOZ_IMG_ENCODERS)
 
 include $(topsrcdir)/config/rules.mk
-
-export::
-	@echo "$(MOZ_IMG_DECODERS)" > tmp_img_list
-	@if `cmp -s _img_list tmp_img_list`; then \
-		rm -f tmp_img_list; \
-	else \
-		rm -f _img_list; \
-		mv tmp_img_list _img_list; \
-		touch Makefile; \
-	fi
-
 
