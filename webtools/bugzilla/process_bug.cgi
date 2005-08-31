@@ -1107,19 +1107,17 @@ SWITCH: for ($cgi->param('knob')) {
         last SWITCH;
     };
     /^duplicate$/ && CheckonComment( "duplicate" ) && do {
+        # You cannot mark bugs as duplicates when changing
+        # several bugs at once.
+        unless (defined $cgi->param('id')) {
+            ThrowUserError('dupe_not_allowed');
+        }
+
         # Make sure we can change the original bug (issue A on bug 96085)
         check_form_field_defined($cgi, 'dup_id');
         $duplicate = $cgi->param('dup_id');
         ValidateBugID($duplicate, 'dup_id');
         $cgi->param('dup_id', $duplicate);
-
-        # Also, let's see if the reporter has authorization to see
-        # the bug to which we are duping. If not we need to prompt.
-        DuplicateUserConfirm();
-
-        if (!defined $cgi->param('id') || $duplicate == $cgi->param('id')) {
-            ThrowUserError("dupe_of_self_disallowed");
-        }
 
         # Make sure the bug is not already marked as a dupe
         # (may appear in race condition)
@@ -1130,6 +1128,32 @@ SWITCH: for ($cgi->param('knob')) {
         if ($dupe_of) {
             ThrowUserError("dupe_entry_found", { dupe_of => $dupe_of });
         }
+
+        # Make sure a loop isn't created when marking this bug
+        # as duplicate.
+        my %dupes;
+        $dupe_of = $duplicate;
+        my $sth = $dbh->prepare('SELECT dupe_of FROM duplicates
+                                 WHERE dupe = ?');
+
+        while ($dupe_of) {
+            if ($dupe_of == $cgi->param('id')) {
+                ThrowUserError('dupe_loop_detected', { bug_id  => $cgi->param('id'),
+                                                       dupe_of => $duplicate });
+            }
+            # If $dupes{$dupe_of} is already set to 1, then a loop
+            # already exists which does not involve this bug.
+            # As the user is not responsible for this loop, do not
+            # prevent him from marking this bug as a duplicate.
+            last if exists $dupes{"$dupe_of"};
+            $dupes{"$dupe_of"} = 1;
+            $sth->execute($dupe_of);
+            $dupe_of = $sth->fetchrow_array;
+        }
+
+        # Also, let's see if the reporter has authorization to see
+        # the bug to which we are duping. If not we need to prompt.
+        DuplicateUserConfirm();
 
         # DUPLICATE bugs should have no time remaining.
         _remove_remaining_time();

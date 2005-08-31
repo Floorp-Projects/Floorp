@@ -336,9 +336,21 @@
     This [% terms.bug %] has already been marked as a duplicate
     of [% terms.bug %] [%+ dupe_of FILTER html %].
 
-  [% ELSIF error == "dupe_of_self_disallowed" %]
-    [% title = "Cannot mark $terms.abug as a duplicate of itself" %]
-    You can't mark [% terms.abug %] as a duplicate of itself.
+  [% ELSIF error == "dupe_not_allowed" %]
+    [% title = "Cannot mark $terms.bugs as duplicates" %]
+    You cannot mark [% terms.bugs %] as duplicates when
+    changing several [% terms.bugs %] at once.
+
+  [% ELSIF error == "dupe_loop_detected" %]
+    [% title = "Loop detected among duplicates" %]
+    You cannot mark [% terms.bug %] [%+ bug_id FILTER html %] as
+    a duplicate of
+    [% IF dupe_of == bug_id %]
+      itself
+    [% ELSE %]
+      [%+ terms.bug %] [%+ dupe_of FILTER html %], because it
+      would create a duplicate loop
+    [% END %].
 
   [% ELSIF error == "email_change_in_progress" %]
     [% title = "Email Change Already In Progress" %]
