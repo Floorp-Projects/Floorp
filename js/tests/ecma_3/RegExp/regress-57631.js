@@ -71,7 +71,7 @@ legalpatterns[5] = '[^\f\n\r\t\v](123.5)([4 - 8]$)';
 illegalpatterns[0] = '(?)';
 illegalpatterns[1] = '(a';
 illegalpatterns[2] = '( ]';
-illegalpatterns[3] = '\d{1,s}';
+//illegalpatterns[3] = '\d{1,s}';
 
 // valid flags to try -
 legalflags[0] = 'i';
