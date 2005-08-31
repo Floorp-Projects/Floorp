@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -44,55 +45,55 @@
  *  date:  12/9/1998
  *
  */
-    var SECTION = "Call static methods from an instance";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 " +
-                    SECTION;
-    startTest();
+var SECTION = "Call static methods from an instance";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 " +
+SECTION;
+startTest();
 
-    var DT = Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass;
-    var dt = new DT();
+var DT = Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass;
+var dt = new DT();
 
-    var a = new Array;
-    var i = 0;
+var a = new Array;
+var i = 0;
 
-    a[i++] = new TestObject(
-        "dt.staticSetBoolean( true )",
-        "dt.PUB_STATIC_BOOLEAN",
-        "dt.staticGetBoolean()",
-        "typeof dt.staticGetBoolean()",
-        true,
-        "boolean" );
+a[i++] = new TestObject(
+    "dt.staticSetBoolean( true )",
+    "dt.PUB_STATIC_BOOLEAN",
+    "dt.staticGetBoolean()",
+    "typeof dt.staticGetBoolean()",
+    true,
+    "boolean" );
 
-    a[i++] = new TestObject(
-        "dt.staticSetBoolean( false )",
-        "dt.PUB_STATIC_BOOLEAN",
-        "dt.staticGetBoolean()",
-        "typeof dt.staticGetBoolean()",
-        false,
-        "boolean" );
+a[i++] = new TestObject(
+    "dt.staticSetBoolean( false )",
+    "dt.PUB_STATIC_BOOLEAN",
+    "dt.staticGetBoolean()",
+    "typeof dt.staticGetBoolean()",
+    false,
+    "boolean" );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
-    }
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -102,7 +103,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = eval( javaType );
+	this.javaTypeValue = eval( javaType );
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

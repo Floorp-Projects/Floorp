@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,54 +40,51 @@
  *
  *
  */
-    var SECTION = "instanceof";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "instanceof";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
 
-    testcases[tc++] = new TestCase(
-        "\"hi\" instance of java.lang.String",
-        false,
-        "hi" instanceof java.lang.String );
+new TestCase(
+    "\"hi\" instance of java.lang.String",
+    false,
+    "hi" instanceof java.lang.String );
 
-    testcases[tc++] = new TestCase(
-        "new java.lang.String(\"hi\") instanceof java.lang.String",
-        true,
-        new java.lang.String("hi") instanceof java.lang.String );
+new TestCase(
+    "new java.lang.String(\"hi\") instanceof java.lang.String",
+    true,
+    new java.lang.String("hi") instanceof java.lang.String );
 
-    testcases[tc++] = new TestCase(
-        "new java.lang.String(\"hi\") instanceof java.lang.Object",
-        true,
-        new java.lang.String("hi") instanceof java.lang.Object );
+new TestCase(
+    "new java.lang.String(\"hi\") instanceof java.lang.Object",
+    true,
+    new java.lang.String("hi") instanceof java.lang.Object );
 
-    testcases[tc++] = new TestCase(
-        "java.lang.String instanceof java.lang.Class",
-        false,
-        java.lang.String instanceof java.lang.Class );
+new TestCase(
+    "java.lang.String instanceof java.lang.Class",
+    false,
+    java.lang.String instanceof java.lang.Class );
 
-    testcases[tc++] = new TestCase(
-        "java.lang.Class.forName(\"java.lang.String\") instanceof java.lang.Class",
-        true,
-        java.lang.Class.forName("java.lang.String") instanceof java.lang.Class );
+new TestCase(
+    "java.lang.Class.forName(\"java.lang.String\") instanceof java.lang.Class",
+    true,
+    java.lang.Class.forName("java.lang.String") instanceof java.lang.Class );
 
-    testcases[tc++] = new TestCase(
-        "new java.lang.Double(5.0) instanceof java.lang.Double",
-        true,
-        new java.lang.Double(5.0) instanceof java.lang.Double );
+new TestCase(
+    "new java.lang.Double(5.0) instanceof java.lang.Double",
+    true,
+    new java.lang.Double(5.0) instanceof java.lang.Double );
 
-    testcases[tc++] = new TestCase(
-        "new java.lang.Double(5.0) instanceof java.lang.Number",
-        true,
-        new java.lang.Double(5.0) instanceof java.lang.Number );
+new TestCase(
+    "new java.lang.Double(5.0) instanceof java.lang.Number",
+    true,
+    new java.lang.Double(5.0) instanceof java.lang.Number );
 
-    testcases[tc++] = new TestCase(
-        "new java.lang.String(\"hi\").getBytes() instanceof java.lang.Double",
-        true,
-        new java.lang.Double(5.0) instanceof java.lang.Double );
+new TestCase(
+    "new java.lang.String(\"hi\").getBytes() instanceof java.lang.Double",
+    true,
+    new java.lang.Double(5.0) instanceof java.lang.Double );
 
-
-
-
-    test();
+test();

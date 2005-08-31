@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,26 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          throw_js_type.js
-    Title:              Throw JS types as exceptions through Java
-    Description:        Attempt to throw all of the basic JS primitive types
-				ie. 	String
-					Number
-					Boolean
-					Object
-			as exceptions through Java. If wrapping/unwrapping
-			occurs as expected, the original type will be
-			preserved.
+   File Name:          throw_js_type.js
+   Title:              Throw JS types as exceptions through Java
+   Description:        Attempt to throw all of the basic JS primitive types
+   ie. 	String
+   Number
+   Boolean
+   Object
+   as exceptions through Java. If wrapping/unwrapping
+   occurs as expected, the original type will be
+   preserved.
 
-    Author:             Chris Cooper
-    Email:              coop@netscape.com
-    Date:               12/04/1998
+   Author:             Chris Cooper
+   Email:              coop@netscape.com
+   Date:               12/04/1998
 */
 
 var SECTION = "LC3";
 var TITLE   = "Throw JS types as exceptions through Java";
 startTest();
-var testcases = new Array();
+
 var exception = "No exception thrown";
 var result = "Failed";
 var data_type = "no type";
@@ -71,10 +72,10 @@ try {
 	result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS string through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS string through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Number (int)
@@ -92,10 +93,10 @@ try {
 	result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS number (int) through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS number (int) through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Number (float)
@@ -113,10 +114,10 @@ try {
 	result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS number (float) through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS number (float) through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Boolean
@@ -134,10 +135,10 @@ try {
 	result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS boolean through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS boolean through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Object
@@ -154,10 +155,10 @@ try {
     result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS Object through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS Object through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Object (Date)
@@ -170,14 +171,14 @@ try {
     exception = Packages.com.netscape.javascript.qa.liveconnect.JSObjectEval.eval(this, "throw new Date();");
 } catch ( e ) {
     exception = e.toString();
-        data_type = typeof e;
-        result = "Passed!";
+    data_type = typeof e;
+    result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS Object (Date)through Java "+
-        		       "\n=> threw ("+data_type+") "+exception+" ",
-        		       "Passed!",
-        		       result );
+new TestCase("Throwing JS Object (Date)through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * JS Object (String)
@@ -194,10 +195,10 @@ try {
     result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing JS Object (String) through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing JS Object (String) through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * Undefined
@@ -214,10 +215,10 @@ try {
     result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing undefined through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing undefined through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 /**************************
  * null
@@ -234,38 +235,11 @@ try {
     result = "Passed!";
 }
 
-testcases[tc++] = new TestCase("Throwing null through Java "+
-			       "\n=> threw ("+data_type+") "+exception+" ",
-			       "Passed!",
-			       result );
+new TestCase("Throwing null through Java "+
+	     "\n=> threw ("+data_type+") "+exception+" ",
+	     "Passed!",
+	     result );
 
 test();
 
 
-function test() {
-    //  Iterate through testcases, and print results to the display.  You
-    //  probably want to leave this block alone.  You don't really need to
-    //  do this, but it helps if you want the test case results to be
-    //  written to the display.
-
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-
-    //  Leave the following line alone.  All tests must call stop tests just
-    //  before they return the testcases object.  This lets Navigator know that
-    //  the test has completed.
-
-    stopTest();
-
-    //  Leave the following alone.  All tests must return an array of
-    //  TestCase objects.
-
-    return ( testcases );
-}

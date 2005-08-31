@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,57 +42,57 @@
  *  a Java method of the same name that expects a Java boolean.
  *
  */
-    var SECTION = "Preferred argument conversion:  boolean";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  boolean";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_005;
+var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_005;
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new String() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous(new String()) +'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new String() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous(new String()) +'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Boolean() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new Boolean() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Boolean() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new Boolean() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Number() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new Number() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Number() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new Number() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Date() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new Date() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Date() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new Date() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Function() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new Function() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Function() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new Function() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( this ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( this )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( this ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( this )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new RegExp() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new RegExp() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new RegExp() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new RegExp() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( Math ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( Math )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( Math ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( Math )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Object() ) +''",
-        "FLOAT",
-        TEST_CLASS.ambiguous( new Object() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Object() ) +''",
+    "FLOAT",
+    TEST_CLASS.ambiguous( new Object() )+'' );
 
-    test();
+test();

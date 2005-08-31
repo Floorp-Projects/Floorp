@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,17 +41,17 @@
  *
  *
  */
-    var SECTION = "java array object inheritance JavaScript Array methods";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 " + SECTION;
+var SECTION = "java array object inheritance JavaScript Array methods";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 " + SECTION;
 
-    startTest();
+startTest();
 
-    var b = new java.lang.String("abcdefghijklmnopqrstuvwxyz").getBytes();
+var b = new java.lang.String("abcdefghijklmnopqrstuvwxyz").getBytes();
 
-    testcases[tc++] = new TestCase(
-        "var b = new java.lang.String(\"abcdefghijklmnopqrstuvwxyz\").getBytes(); b.valueOf()",
-        b,
-        b.valueOf() );
+new TestCase(
+    "var b = new java.lang.String(\"abcdefghijklmnopqrstuvwxyz\").getBytes(); b.valueOf()",
+    b,
+    b.valueOf() );
 
-    test();
+test();

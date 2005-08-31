@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,34 +42,34 @@
  *  a Java method of the same name that expects a Java boolean.
  *
  */
-    var SECTION = "Preferred argument conversion:  JavaScript Object to short";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  JavaScript Object to short";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_009;
+var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_009;
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new String() ) +''",
-        "CHAR",
-        TEST_CLASS.ambiguous(new String()) +'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new String() ) +''",
+    "CHAR",
+    TEST_CLASS.ambiguous(new String()) +'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Boolean() ) +''",
-        "CHAR",
-        TEST_CLASS.ambiguous( new Boolean() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Boolean() ) +''",
+    "CHAR",
+    TEST_CLASS.ambiguous( new Boolean() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Number() ) +''",
-        "CHAR",
-        TEST_CLASS.ambiguous( new Number() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Number() ) +''",
+    "CHAR",
+    TEST_CLASS.ambiguous( new Number() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Date(999) ) +''",
-        "CHAR",
-        TEST_CLASS.ambiguous( new Date(999) )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Date(999) ) +''",
+    "CHAR",
+    TEST_CLASS.ambiguous( new Date(999) )+'' );
 
-    test();
+test();
 
 

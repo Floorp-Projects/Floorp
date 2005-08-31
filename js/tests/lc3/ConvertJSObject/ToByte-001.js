@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,55 +42,55 @@
  *  a Java method of the same name that expects a Java boolean.
  *
  */
-    var SECTION = "Preferred argument conversion:  JavaScript Object to short";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  JavaScript Object to short";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_010;
+var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_010;
 
-    function MyObject( value ) {
-        this.value = value;
-        this.valueOf = new Function( "return this.value" );
-    }
+function MyObject( value ) {
+    this.value = value;
+    this.valueOf = new Function( "return this.value" );
+}
 
-    function MyFunction() {
-        return;
-    }
-    MyFunction.valueOf = new Function( "return -128" );
+function MyFunction() {
+    return;
+}
+MyFunction.valueOf = new Function( "return -128" );
 
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new String() ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous(new String()) +'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new String() ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous(new String()) +'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Boolean() ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( new Boolean() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Boolean() ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous( new Boolean() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Number() ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( new Number() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Number() ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous( new Number() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Date(99) ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( new Date(99) )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Date(99) ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous( new Date(99) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new MyObject(127) ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( new MyObject(127) )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new MyObject(127) ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous( new MyObject(127) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( MyFunction ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( MyFunction )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( MyFunction ) +''",
+    "BYTE",
+    TEST_CLASS.ambiguous( MyFunction )+'' );
 
-    test();
+test();
 
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,68 +56,68 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "null";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "null";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // passing a JavaScript null to a method that expect a class or interface
-    // converts null to a java null.  passing null to methods that expect
-    // number types convert null to 0.  passing null to methods that expect
-    // a boolean convert null to false.
+// passing a JavaScript null to a method that expect a class or interface
+// converts null to a java null.  passing null to methods that expect
+// number types convert null to 0.  passing null to methods that expect
+// a boolean convert null to false.
 
-    a[i++] = new TestObject(
-        "dt.setBooleanObject( null )",
-        "dt.PUB_BOOLEAN_OBJECT",
-        "dt.getBooleanObject()",
-        "typeof dt.getBooleanObject()",
-        null,
-        "object" );
+a[i++] = new TestObject(
+    "dt.setBooleanObject( null )",
+    "dt.PUB_BOOLEAN_OBJECT",
+    "dt.getBooleanObject()",
+    "typeof dt.getBooleanObject()",
+    null,
+    "object" );
 
-    a[i++] = new TestObject(
-        "dt.setDoubleObject( null )",
-        "dt.PUB_BOOLEAN_OBJECT",
-        "dt.getDoubleObject()",
-        "typeof dt.getDoubleObject()",
-        null,
-        "object" );
+a[i++] = new TestObject(
+    "dt.setDoubleObject( null )",
+    "dt.PUB_BOOLEAN_OBJECT",
+    "dt.getDoubleObject()",
+    "typeof dt.getDoubleObject()",
+    null,
+    "object" );
 
-    a[i++] = new TestObject(
-        "dt.setStringObject( null )",
-        "dt.PUB_STRING",
-        "dt.getStringObject()",
-        "typeof dt.getStringObject()",
-        null,
-        "object" );
+a[i++] = new TestObject(
+    "dt.setStringObject( null )",
+    "dt.PUB_STRING",
+    "dt.getStringObject()",
+    "typeof dt.getStringObject()",
+    null,
+    "object" );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 /*
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+  new TestCase(
+  a[i].description +"; " + a[i].javaMethodName,
+  a[i].jsValue,
+  a[i].javaMethodValue );
 */
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
 
-    }
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -126,7 +127,7 @@ function TestObject( description, javaField, javaMethod, javaType,
 //    this.javaMethodName = javaMethod;
 //    this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = typeof this.javaFieldValue;
+	this.javaTypeValue = typeof this.javaFieldValue;
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

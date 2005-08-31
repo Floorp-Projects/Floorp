@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,57 +56,61 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "JavaObject to int";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "JavaObject to int";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // 1. If the object does not have a doubleValue() method, a runtime error
-    //    occurs.
-    // 2. Call the object's doubleValue() method
-    // 3. If result(2) is NaN, a runtime error occurs
-    // 3. Convert Result(2) to Java numeric type. Round JS number to integral
-    //    value using round-to-negative-infinity mode.
-    //    Numbers with a magnitude too large to be represented in the target
-    //    integral type should result in a runtime error.
+// 1. If the object does not have a doubleValue() method, a runtime error
+//    occurs.
+// 2. Call the object's doubleValue() method
+// 3. If result(2) is NaN, a runtime error occurs
+// 3. Convert Result(2) to Java numeric type. Round JS number to integral
+//    value using round-to-negative-infinity mode.
+//    Numbers with a magnitude too large to be represented in the target
+//    integral type should result in a runtime error.
 
-    a[i++] = new TestObject (
-         "dt.PUB_DOUBLE_REPRESENTATION = Infinity ;"+
-         "dt.setInteger( dt )",
-         "dt.PUB_INTEGER",
-         "dt.getInteger()",
-         "typeof dt.getInteger()",
-         "error",
-         "number" );
+DESCRIPTION = "dt.PUB_DOUBLE_REPRESENTATION = Infinity ;"+
+"dt.setInteger( dt )";
+EXPECTED = "error";
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+a[i++] = new TestObject (
+    "dt.PUB_DOUBLE_REPRESENTATION = Infinity ;"+
+    "dt.setInteger( dt )",
+    "dt.PUB_INTEGER",
+    "dt.getInteger()",
+    "typeof dt.getInteger()",
+    "error",
+    "number" );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-    }
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
 
-    test();
+}
+
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -115,7 +120,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = typeof this.javaFieldValue;
+	this.javaTypeValue = typeof this.javaFieldValue;
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

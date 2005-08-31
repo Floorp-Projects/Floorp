@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,51 +36,52 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-    var SECTION = "JavaObject Field or method access";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
 
-    var dt = new DT();
+var SECTION = "JavaObject Field or method access";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+              SECTION;
+startTest();
 
-    var a = [
-		"boolean",
-		"byte",
-		"integer", 
-		"double",
-		"float",
-		"short",
-		"char"
-	    ];
+var dt = new DT();
 
-    var v = [
-		true,
-                1,
-		2,
-		3.0,
-                4.0,
-                5,
-		'a'.charCodeAt(0)
-            ];
+var a = [
+  "boolean",
+  "byte",
+  "integer", 
+  "double",
+  "float",
+  "short",
+  "char"
+  ];
 
-    for (var i=0; i < a.length; i++) {
-            var name = a[i];
-            var getterName = "get" + a[i].charAt(0).toUpperCase() + 
-                             a[i].substring(1);
-            var setterName = "set" + a[i].charAt(0).toUpperCase() + 
-                             a[i].substring(1);
-	    testcases[testcases.length] = new TestCase(
-		 "dt['" + name + "'] == dt." + getterName + "()",
-		 dt[name],
-		 dt[getterName]() );
+var v = [
+  true,
+  1,
+  2,
+  3.0,
+  4.0,
+  5,
+  'a'.charCodeAt(0)
+  ];
 
-            dt[name] = v[i];
-	    testcases[testcases.length] = new TestCase(
-		 "dt['" + name + "'] = "+ v[i] +"; dt." + getterName + "() == " + v[i],
-		 dt[getterName](),
-		 v[i]);
-    }
+for (var i=0; i < a.length; i++) {
+  var name = a[i];
+  var getterName = "get" + a[i].charAt(0).toUpperCase() + 
+    a[i].substring(1);
+  var setterName = "set" + a[i].charAt(0).toUpperCase() + 
+    a[i].substring(1);
+  new TestCase(
+    "dt['" + name + "'] == dt." + getterName + "()",
+    dt[name],
+    dt[getterName]() );
 
-    test();
+  dt[name] = v[i];
+  new TestCase(
+    "dt['" + name + "'] = "+ v[i] +"; dt." + getterName + "() == " + v[i],
+    dt[getterName](),
+    v[i]);
+}
+
+test();
 

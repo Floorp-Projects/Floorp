@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,20 +42,23 @@
  *  invokation syntax to override the preferred argument conversion.
  *
  */
-    var SECTION = "Preferred argument conversion: string";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion: string";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new
-        Packages.com.netscape.javascript.qa.lc3.string.String_001;
+var TEST_CLASS = new
+Packages.com.netscape.javascript.qa.lc3.string.String_001;
 
-    var string = "255";
+var string = "255";
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(boolean)\"](string))",
-        "error",
-        TEST_CLASS["ambiguous(boolean)"](string) +'');
+DESCRIPTION = "TEST_CLASS[\"ambiguous(boolean)\"](string))";
+EXPECTED = "error";
 
-    test();
+new TestCase(
+    "TEST_CLASS[\"ambiguous(boolean)\"](string))",
+    "error",
+    TEST_CLASS["ambiguous(boolean)"](string) +'');
+
+test();

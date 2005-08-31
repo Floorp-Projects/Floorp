@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,34 +42,34 @@
  *  undefined value.
  *
  */
-    var SECTION = "Preferred argument conversion:  null";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  null";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    // pass null to a static method that expects an Object with explicit
-    // method syntax.
+// pass null to a static method that expects an Object with explicit
+// method syntax.
 
-    testcases[testcases.length] = new TestCase(
-        "java.lang.String[\"valueOf(java.lang.Object)\"](null) +''",
-        "null",
-        java.lang.String["valueOf(java.lang.Object)"](null) + "" );
+new TestCase(
+    "java.lang.String[\"valueOf(java.lang.Object)\"](null) +''",
+    "null",
+    java.lang.String["valueOf(java.lang.Object)"](null) + "" );
 
-    // Pass null to a static method that expects a string without explicit
-    // method syntax.  In this case, there is only one matching method.
+// Pass null to a static method that expects a string without explicit
+// method syntax.  In this case, there is only one matching method.
 
-    testcases[testcases.length] = new TestCase(
-        "java.lang.Boolean.valueOf(null) +''",
-        "false",
-        java.lang.Boolean.valueOf(null) +"" );
+new TestCase(
+    "java.lang.Boolean.valueOf(null) +''",
+    "false",
+    java.lang.Boolean.valueOf(null) +"" );
 
-    // Pass null to a static method that expects a string  using explicit
-    // method syntax.
+// Pass null to a static method that expects a string  using explicit
+// method syntax.
 
-    testcases[testcases.length] = new TestCase(
-        "java.lang.Boolean[\"valueOf(java.lang.String)\"](null)",
-        "false",
-        java.lang.Boolean["valueOf(java.lang.String)"](null) +"" );
+new TestCase(
+    "java.lang.Boolean[\"valueOf(java.lang.String)\"](null)",
+    "false",
+    java.lang.Boolean["valueOf(java.lang.String)"](null) +"" );
 
-    test();
+test();

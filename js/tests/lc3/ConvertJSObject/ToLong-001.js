@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,54 +42,54 @@
  *  a Java method of the same name that expects a Java boolean.
  *
  */
-    var SECTION = "Preferred argument conversion:  JavaScript Object to Long";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  JavaScript Object to Long";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_006;
+var TEST_CLASS = new Packages.com.netscape.javascript.qa.lc3.jsobject.JSObject_006;
 
-    function MyObject( value ) {
-        this.value = value;
-        this.valueOf = new Function( "return this.value" );
-    }
+function MyObject( value ) {
+    this.value = value;
+    this.valueOf = new Function( "return this.value" );
+}
 
-    function MyFunction() {
-        return;
-    }
-    MyFunction.valueOf = new Function( "return 6060842" );
+function MyFunction() {
+    return;
+}
+MyFunction.valueOf = new Function( "return 6060842" );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new String() ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous(new String()) +'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new String() ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous(new String()) +'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Boolean() ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( new Boolean() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Boolean() ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous( new Boolean() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Number() ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( new Number() )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Number() ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous( new Number() )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Date(0) ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( new Date(0) )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new Date(0) ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous( new Date(0) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new MyObject(999) ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( new MyObject(999) )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( new MyObject(999) ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous( new MyObject(999) )+'' );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( MyFunction ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( MyFunction )+'' );
+new TestCase(
+    "TEST_CLASS.ambiguous( MyFunction ) +''",
+    "LONG",
+    TEST_CLASS.ambiguous( MyFunction )+'' );
 
-    test();
+test();
 
 

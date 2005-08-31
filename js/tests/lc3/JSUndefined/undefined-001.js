@@ -1,3 +1,7 @@
+/* -*- Mode: java; tab-width: 8 -*-
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation,
+ * All Rights Reserved.
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,10 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* -*- Mode: java; tab-width: 8 -*-
- * Copyright (C) 1997, 1998 Netscape Communications Corporation,
- * All Rights Reserved.
- */
 
 /**
  *  JavaScript to Java type conversion.
@@ -56,60 +56,60 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "undefined conversion";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "undefined conversion";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // passing undefined to a java method that expects an object should convert
-    // undefined to the java.lang.String whose value is "undefined"
+// passing undefined to a java method that expects an object should convert
+// undefined to the java.lang.String whose value is "undefined"
 
-    a[i++] = new TestObject(
-        "dt.setObject( undefined )",
-        "dt.PUB_OBJECT +''",
-        "dt.getObject() + ''",
-        "dt.getObject().getClass()",
-        "undefined",
-        java.lang.Class.forName( "java.lang.String" ) );
+a[i++] = new TestObject(
+    "dt.setObject( undefined )",
+    "dt.PUB_OBJECT +''",
+    "dt.getObject() + ''",
+    "dt.getObject().getClass()",
+    "undefined",
+    java.lang.Class.forName( "java.lang.String" ) );
 
-    // passing undefined to a java method that expects a string should convert
-    // undefined to the java.lang.String whose value is "undefined"
+// passing undefined to a java method that expects a string should convert
+// undefined to the java.lang.String whose value is "undefined"
 
-    a[i++] = new TestObject(
-        "dt.setStringObject( undefined )",
-        "dt.PUB_STRING +''",
-        "dt.getStringObject() + ''",
-        "dt.getStringObject().getClass()",
-        "undefined",
-        java.lang.Class.forName( "java.lang.String" ) );
+a[i++] = new TestObject(
+    "dt.setStringObject( undefined )",
+    "dt.PUB_STRING +''",
+    "dt.getStringObject() + ''",
+    "dt.getStringObject().getClass()",
+    "undefined",
+    java.lang.Class.forName( "java.lang.String" ) );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
-    }
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -119,7 +119,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = eval( javaType );
+	this.javaTypeValue = eval( javaType );
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;
