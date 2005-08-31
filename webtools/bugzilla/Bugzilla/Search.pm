@@ -26,6 +26,7 @@
 #                 Michael Schindler <michael@compressconsult.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Joel Peshkin <bugreport@peshkin.net>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 use strict;
 
@@ -724,9 +725,15 @@ sub init {
              } elsif ($t eq "notequal") {
                  $oper = "<>";
              } elsif ($t eq "regexp") {
-                 $oper = $dbh->sql_regexp();
+                 # This is just a dummy to help catch bugs- $oper won't be used
+                 # since "regexp" is treated as a special case below.  But
+                 # leaving $oper uninitialized seems risky...
+                 $oper = "sql_regexp";
              } elsif ($t eq "notregexp") {
-                 $oper = $dbh->sql_not_regexp();
+                 # This is just a dummy to help catch bugs- $oper won't be used
+                 # since "notregexp" is treated as a special case below.  But
+                 # leaving $oper uninitialized seems risky...
+                 $oper = "sql_not_regexp";
              } else {
                  $oper = "noop";
              }
@@ -744,7 +751,13 @@ sub init {
                                               COUNT(DISTINCT $table.bug_when) /
                                               COUNT(bugs.bug_id)) +
                                              bugs.remaining_time)))";
-                 push(@having, "$expression $oper " . &::SqlQuote($v));
+                 if ($t eq "regexp") {
+                     push(@having, $dbh->sql_regexp($expression, &::SqlQuote($v)));
+                 } elsif ($t eq "notregexp") {
+                     push(@having, $dbh->sql_not_regexp($expression, &::SqlQuote($v)));
+                 } else {
+                     push(@having, "$expression $oper " . &::SqlQuote($v));
+                 }
                  push(@groupby, "bugs.remaining_time");
              }
              $term = "0=0";
@@ -1024,10 +1037,10 @@ sub init {
              $term = $dbh->sql_position(lc($q), "LOWER($ff)") . " = 0";
          },
          ",regexp" => sub {
-             $term = "$ff " . $dbh->sql_regexp() . " $q";
+             $term = $dbh->sql_regexp($ff, $q);
          },
          ",notregexp" => sub {
-             $term = "$ff " . $dbh->sql_not_regexp() . " $q";
+             $term = $dbh->sql_not_regexp($ff, $q);
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -1517,7 +1530,7 @@ sub ListIDsForEmail {
         }
     } elsif ($type eq 'regexp') {
         &::SendSQL("SELECT userid FROM profiles WHERE " .
-            "login_name " . $dbh->sql_regexp() . ::SqlQuote($email) .
+            $dbh->sql_regexp("login_name", ::SqlQuote($email)) .
             " " . $dbh->sql_limit(51));
         while (&::MoreSQLData()) {
             my ($id) = &::FetchSQLData();
@@ -1558,7 +1571,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-            push(@list, "$field " . $dbh->sql_regexp() . " '$word'");
+            push(@list, $dbh->sql_regexp($field, "'$word'"));
         }
     }
 

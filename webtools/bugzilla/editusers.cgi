@@ -14,6 +14,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 use strict;
 use lib ".";
@@ -109,15 +110,16 @@ if ($action eq 'search') {
     else {
         # Handle selection by user name.
         if (defined($matchtype)) {
-            $query .= " $nextCondition profiles.login_name ";
+            $query .= " $nextCondition ";
+            my $expr = "profiles.login_name";
             if ($matchtype eq 'regexp') {
-                $query .= $dbh->sql_regexp . ' ?';
+                $query .= $dbh->sql_regexp($expr, '?');
                 $matchstr = '.' unless $matchstr;
             } elsif ($matchtype eq 'notregexp') {
-                $query .= $dbh->sql_not_regexp . ' ?';
+                $query .= $dbh->sql_not_regexp($expr, '?');
                 $matchstr = '.' unless $matchstr;
             } else { # substr or unknown
-                $query .= 'like ?';
+                $query .= $expr . ' like ?';
                 $matchstr = "%$matchstr%";
             }
             $nextCondition = 'AND';

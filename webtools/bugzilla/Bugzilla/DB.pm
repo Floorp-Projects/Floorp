@@ -24,6 +24,7 @@
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Tomas Kopal <Tomas.Kopal@altap.cz>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 package Bugzilla::DB;
 
@@ -1081,7 +1082,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               searches (case insensitive) in format suitable for a given
               database.
               Abstract method, should be overriden by database specific code.
- Params:      none
+ Params:      $expr = SQL expression for the text to be searched (scalar)
+              $pattern = the regular expression to search for (scalar)
  Returns:     formatted SQL for regular expression search (e.g. REGEXP)
               (scalar)
 
@@ -1091,7 +1093,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
               regex searches (case insensitive) in format suitable for a given
               database.
               Abstract method, should be overriden by database specific code.
- Params:      none
+ Params:      $expr = SQL expression for the text to be searched (scalar)
+              $pattern = the regular expression to search for (scalar)
  Returns:     formatted SQL for negative regular expression search
               (e.g. NOT REGEXP) (scalar)
 

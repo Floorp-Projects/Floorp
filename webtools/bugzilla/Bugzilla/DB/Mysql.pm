@@ -23,6 +23,7 @@
 #                 Dave Lawrence <dkl@redhat.com>
 #                 Tomas Kopal <Tomas.Kopal@altap.cz>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 =head1 NAME
 
@@ -83,11 +84,15 @@ sub bz_last_key {
 }
 
 sub sql_regexp {
-    return "REGEXP";
+    my ($self, $expr, $pattern) = @_;
+
+    return "$expr REGEXP $pattern";
 }
 
 sub sql_not_regexp {
-    return "NOT REGEXP";
+    my ($self, $expr, $pattern) = @_;
+
+    return "$expr NOT REGEXP $pattern";
 }
 
 sub sql_limit {

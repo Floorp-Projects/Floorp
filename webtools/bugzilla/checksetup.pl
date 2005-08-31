@@ -32,6 +32,7 @@
 #                 Dave Lawrence <dkl@redhat.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Joel Peshkin <bugreport@peshkin.net>
+#                 Lance Larsh <lance.larsh@oracle.com>
 #
 #
 #
@@ -2446,8 +2447,8 @@ if (!($sth->fetchrow_arrayref()->[0])) {
         "SELECT longdescs.bug_id, thetext " .
           "FROM longdescs " .
      "LEFT JOIN bugs using(bug_id) " .
-         "WHERE (thetext " . $dbh->sql_regexp .
-                 " '[.*.]{3} This bug has been marked as a duplicate of [[:digit:]]+ [.*.]{3}') " .
+         "WHERE (" . $dbh->sql_regexp("thetext",
+                 "'[.*.]{3} This bug has been marked as a duplicate of [[:digit:]]+ [.*.]{3}'") . ") " .
            "AND (resolution = 'DUPLICATE') " .
       "ORDER BY longdescs.bug_when");
     $sth->execute();
