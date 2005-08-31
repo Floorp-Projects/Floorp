@@ -37,7 +37,11 @@
 
 #ifndef nsAppRunner_h__
 #define nsAppRunner_h__
- 
+
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 #ifndef MAXPATHLEN
 #ifdef _MAX_PATH
 #define MAXPATHLEN _MAX_PATH
@@ -109,6 +113,11 @@ NS_LockProfilePath(nsILocalFile* aPath, nsILocalFile* aTempPath,
 
 NS_HIDDEN_(void)
 WriteConsoleLog();
+
+#ifdef XP_WIN
+BOOL
+WinLaunchChild(const char *exePath, int argc, char **argv);
+#endif
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
 

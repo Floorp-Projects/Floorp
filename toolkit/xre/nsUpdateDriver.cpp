@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include "nsUpdateDriver.h"
 #include "nsXULAppAPI.h"
+#include "nsAppRunner.h"
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIDirectoryEnumerator.h"
@@ -314,20 +315,6 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
     return;
   }
 
-#if defined(XP_WIN)
-  // Avoid paths that contain spaces...
-  char tempBuf[_MAX_PATH];
-
-  ::GetShortPathName(updaterPath.get(), tempBuf, sizeof(tempBuf));
-  updaterPath = tempBuf;
-
-  ::GetShortPathName(updateDirPath.get(), tempBuf, sizeof(tempBuf));
-  updateDirPath = tempBuf;
-
-  ::GetShortPathName(appFilePath.get(), tempBuf, sizeof(tempBuf));
-  appFilePath = tempBuf;
-#endif
-
   // Construct the PID argument for this process.  If we are using execv, then
   // we pass "0" which is then ignored by the updater.
 #if defined(USE_EXECV)
@@ -363,7 +350,9 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
   _chdir(appDirPath.get());
-  _spawnv(_P_NOWAIT, updaterPath.get(), argv);
+
+  if (!WinLaunchChild(updaterPath.get(), appArgc + 3, argv))
+    return;
   _exit(0);
 #else
   PRStatus status;

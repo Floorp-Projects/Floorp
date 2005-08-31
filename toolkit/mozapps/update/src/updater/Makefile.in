@@ -108,8 +108,13 @@ libs::
 	mkdir -p $(DIST)/bin/updater.app
 	rsync -a --exclude CVS $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app
 	mkdir -p $(DIST)/bin/updater.app/Contents/MacOS
-	# copy and remove to un-symlink (FSCopyObject seems to not copy symlinks)
+# copy and remove to un-symlink (FSCopyObject seems to not copy symlinks)
 	rm -f $(DIST)/bin/updater.app/Contents/MacOS/updater
 	cp -f $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
 	rm -f $(DIST)/bin/updater
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+# Pick up nsWindowsRestart.cpp
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif

@@ -948,6 +948,10 @@ PatchIfFile::Finish(int status)
 
 //-----------------------------------------------------------------------------
 
+#ifdef XP_WIN
+#include "nsWindowsRestart.cpp"
+#endif
+
 static void
 LaunchCallbackApp(int argc, char **argv)
 {
@@ -956,13 +960,7 @@ LaunchCallbackApp(int argc, char **argv)
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
 #elif defined(XP_WIN)
-  // _spawnv gets angry if the executable path has spaces in it.
-  char shortPath[_MAX_PATH];
-  ::GetShortPathName(argv[0], shortPath, sizeof(shortPath));
-
-  argv[0] = shortPath;
-
-  _spawnv(_P_NOWAIT, shortPath, argv);
+  WinLaunchChild(argv[0], argc, argv);
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif

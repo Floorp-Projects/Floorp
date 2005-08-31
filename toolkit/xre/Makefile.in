@@ -184,6 +184,7 @@ export::
 endif
 
 LOCAL_INCLUDES += \
+	-I$(srcdir) \
 	-I$(topsrcdir)/xpfe/bootstrap \
 	-I$(srcdir)/../profile/src \
 	-I$(topsrcdir)/config \
