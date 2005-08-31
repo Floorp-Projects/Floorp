@@ -3,9 +3,10 @@
   margin: 0px;
   border-bottom: 1px solid #8E8E8E;
   padding: 0px;
+  -moz-appearance: none;
 }
 
-#downloadView scrollbox {
+#downloadView .scrollbox-innerbox {
   background: url("chrome://mozapps/skin/downloads/background-stripe.gif") #FFFFFF repeat;
 } 
 
