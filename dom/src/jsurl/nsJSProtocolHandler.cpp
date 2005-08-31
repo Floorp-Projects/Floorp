@@ -148,6 +148,12 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     }
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+
+    // Get the document out of the window to make sure we create a new
+    // inner window if one doesn't already exist.
+    nsCOMPtr<nsIDOMDocument> doc;
+    win->GetDocument(getter_AddRefs(doc));
+
     nsPIDOMWindow *innerWin = win->GetCurrentInnerWindow();
 
     if (!innerWin) {
@@ -174,7 +180,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     // Now get the DOM Document.  Accessing the document will create one
     // if necessary.  So, basically, this call ensures that a document gets
     // created -- if necessary.
-    nsCOMPtr<nsIDOMDocument> doc;
     rv = domWindow->GetDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "No DOMDocument!");
     if (NS_FAILED(rv)) {
