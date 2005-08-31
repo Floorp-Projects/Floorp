@@ -3997,6 +3997,15 @@ NECKO_DISK_CACHE=1
 NECKO_SMALL_BUFFERS=
 SUNCTL=
 
+case "$target_os" in
+    msvc*|mks*|cygwin*|mingw*)
+        if test -z "$GNU_CC"; then 
+            MOZ_NO_ACTIVEX_SUPPORT=
+            MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
+        fi
+        ;;
+esac
+ 
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
                           Options include:
@@ -5048,15 +5057,6 @@ AC_SUBST(MOZ_UPDATE_PACKAGING)
 dnl ========================================================
 dnl ActiveX
 dnl ========================================================
-case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*)
-        if test -z "$GNU_CC"; then 
-            MOZ_NO_ACTIVEX_SUPPORT=
-            MOZ_ACTIVEX_SCRIPTING_SUPPORT=1
-        fi
-        ;;
-esac
- 
 MOZ_ARG_DISABLE_BOOL(activex,
 [  --disable-activex       Disable building of ActiveX control (win32 only)],
     MOZ_NO_ACTIVEX_SUPPORT=1,
