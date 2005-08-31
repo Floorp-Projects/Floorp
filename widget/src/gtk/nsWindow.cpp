@@ -82,6 +82,7 @@
 
 #include "nsIDragService.h"
 #include "nsIDragSessionGTK.h"
+#include "nsAutoPtr.h"
 
 #include "nsGtkIMEHelper.h"
 #include "nsKeyboardUtils.h"
@@ -3513,15 +3514,8 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 #ifdef DEBUG_DND_EVENTS
   g_print("nsWindow::OnDragEnter\n");
 #endif /* DEBUG_DND_EVENTS */
-  
-  nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
 
-  event.refPoint.x = aX;
-  event.refPoint.y = aY;
-
-  AddRef();
-
-  DispatchMouseEvent(event);
+  nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
   nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
 
@@ -3530,7 +3524,12 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
     dragService->StartDragSession();
   }
 
-  Release();
+  nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
+
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
+
+  DispatchMouseEvent(event);
 }
 
 void
