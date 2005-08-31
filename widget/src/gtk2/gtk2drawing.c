@@ -592,6 +592,11 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
     else
         GTK_WIDGET_UNSET_FLAGS(w, GTK_HAS_FOCUS);
 
+    if (state_type != GTK_STATE_INSENSITIVE)
+         GTK_WIDGET_SET_FLAGS(w, GTK_SENSITIVE);
+    else
+         GTK_WIDGET_UNSET_FLAGS(w, GTK_SENSITIVE);
+
     GTK_TOGGLE_BUTTON(w)->active = selected;
       
     if (isradio) {
