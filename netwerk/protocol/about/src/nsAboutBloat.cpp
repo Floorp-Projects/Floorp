@@ -148,7 +148,8 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsIChannel* channel;
     rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
-                                  NS_LITERAL_CSTRING("text/plain"));
+                                  NS_LITERAL_CSTRING("text/plain"),
+                                  NS_LITERAL_CSTRING("utf-8"));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

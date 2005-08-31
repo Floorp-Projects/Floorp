@@ -68,7 +68,8 @@ nsAboutCacheEntry::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsCOMPtr<nsIChannel> chan;
     rv = NS_NewInputStreamChannel(getter_AddRefs(chan), aURI, nsnull,
-                                  NS_LITERAL_CSTRING("application/xhtml+xml"));
+                                  NS_LITERAL_CSTRING("application/xhtml+xml"),
+                                  NS_LITERAL_CSTRING("utf-8"));
     if (NS_FAILED(rv)) return rv;
 
     mStreamChannel = do_QueryInterface(chan, &rv);
@@ -476,7 +477,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     if (NS_SUCCEEDED(rv)) {
         nsAutoString filePath;
         cacheFile->GetPath(filePath);
-        APPEND_ROW("file on disk", NS_ConvertUCS2toUTF8(filePath));
+        APPEND_ROW("file on disk", NS_ConvertUTF16toUTF8(filePath));
     }
     else
         APPEND_ROW("file on disk", "none");
