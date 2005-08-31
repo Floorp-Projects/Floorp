@@ -93,6 +93,7 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include "nsIImage.h"
 #include "nsIGdkPixbufImage.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsAutoPtr.h"
 
 /* For PrepareNativeWidget */
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
@@ -2201,15 +2202,7 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
 
     LOG(("nsWindow::OnDragEnter(%p)\n", this));
 
-    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
-
-    event.refPoint.x = aX;
-    event.refPoint.y = aY;
-
-    AddRef();
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
     nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
 
@@ -2218,7 +2211,13 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
         dragService->StartDragSession();
     }
 
-    Release();
+    nsMouseEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this, nsMouseEvent::eReal);
+
+    event.refPoint.x = aX;
+    event.refPoint.y = aY;
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
 }
 
 nsresult
