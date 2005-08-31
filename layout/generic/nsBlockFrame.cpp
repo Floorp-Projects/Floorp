@@ -25,6 +25,7 @@
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   L. David Baron <dbaron@dbaron.org>
  *   IBM Corporation
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -5274,6 +5275,8 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
   // If we're inserting at the beginning of our list and we have an
   // inside bullet, insert after that bullet.
   if (!aPrevSibling && mBullet && !HaveOutsideBullet()) {
+    NS_ASSERTION(!nsFrameList(aFrameList).ContainsFrame(mBullet),
+                 "Trying to make mBullet prev sibling to itself");
     aPrevSibling = mBullet;
   }
   
@@ -7145,23 +7148,25 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
         ResolvePseudoStyleFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
-      mBullet = new (shell) nsBulletFrame;
+      nsIFrame* bullet = new (shell) nsBulletFrame;
 
-      if (nsnull == mBullet) {
+      if (nsnull == bullet) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      mBullet->Init(aPresContext, mContent, this, kidSC, nsnull);
+      bullet->Init(aPresContext, mContent, this, kidSC, nsnull);
 
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
-        AddFrames(mBullet, nsnull);
+        AddFrames(bullet, nsnull);
         mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
       else {
         mState |= NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
+
+      mBullet = bullet;
     }
   }
 
