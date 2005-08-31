@@ -5187,8 +5187,18 @@ nsDocShell::RestoreFromHistory()
     if (oldMUDV && newMUDV)
         oldMUDV->GetTextZoom(&zoom);
 
+    // Protect against mLSHE going away via a load triggered from
+    // pagehide or unload.
+    nsCOMPtr<nsISHEntry> origLSHE = mLSHE;
+
     // Notify the old content viewer that it's being hidden.
     FirePageHideNotification(!mSavingOldViewer);
+
+    // If mLSHE was changed as a result of the pagehide event, then
+    // something else was loaded.  Don't finish restoring.
+    if (mLSHE != origLSHE)
+      return NS_OK;
+
     // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
     // *new* document will fire.
     mFiredUnloadEvent = PR_FALSE;
