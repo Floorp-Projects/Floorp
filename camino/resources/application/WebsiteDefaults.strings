@@ -9,5 +9,5 @@ RendezvousPageDefault="http://www.zeroconf.org/webbrowsers.html";
 
 SearchCustomPageDefault="http://www.mozilla.org/products/camino/features/searchCustomization.html";
 TipsTricksPageDefault="http://www.mozilla.org/products/camino/features/tipsTricks.html";
-ReleaseNotesDefault="http://www.mozilla.org/products/camino/releases/0.9a2.html";
+ReleaseNotesDefault="http://www.mozilla.org/products/camino/releases/1.0.html";
 
