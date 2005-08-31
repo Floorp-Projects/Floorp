@@ -61,25 +61,25 @@ PR_BEGIN_EXTERN_C
 /**
  * Log a warning message to the debug log.
  */
-NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NS_COM_GLUE void NS_FASTCALL
 NSGlue_Warning(const char *aMessage, const char *aFile, PRIntn aLine);
 
 /**
  * Abort the executing program. This works on all architectures.
  */
-NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NS_COM_GLUE void NS_FASTCALL
 NSGlue_Abort(const char *aFile, PRIntn aLine);
 
 /**
  * Break the executing program into the debugger. 
  */
-NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NS_COM_GLUE void NS_FASTCALL
 NSGlue_Break(const char* aFile, PRIntn aLine);
 
 /**
  * Log an assertion message to the debug log
  */
-NS_COM_GLUE NS_HIDDEN_(void) NS_FASTCALL
+NS_COM_GLUE void NS_FASTCALL
 NSGlue_Assertion(const char* aStr, const char* aExpr,
                  const char* aFile, PRIntn aLine);
 
