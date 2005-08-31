@@ -659,9 +659,11 @@ nsSliderFrame::CurrentPositionChanged(nsPresContext* aPresContext)
     // set the rect
     thumbFrame->SetRect(newThumbRect);
 
-    // figure out the union of the rect so we know what to redraw
+    // Figure out the union of the rect so we know what to redraw.
+    // Combine the old and new thumb overflow areas.
     nsRect changeRect;
-    changeRect.UnionRect(thumbRect, newThumbRect);
+    changeRect.UnionRect(thumbFrame->GetOverflowRect() + thumbRect.TopLeft(),
+                         thumbFrame->GetOverflowRect() + newThumbRect.TopLeft());
 
     // redraw just the change
     Invalidate(changeRect, mRedrawImmediate);

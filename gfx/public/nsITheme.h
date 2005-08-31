@@ -81,11 +81,19 @@ public:
   // This method can return PR_FALSE to indicate that the CSS padding value
   // should be used.  Otherwise, it will fill in aResult with the desired
   // padding and return PR_TRUE.
-
   virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsMargin* aResult) = 0;
+
+  // This method can return PR_FALSE to indicate that no special overflow
+  // area is required by the native widget. Otherwise it will fill in
+  // aResult with the desired overflow area and return PR_TRUE.
+  virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
+                                   nsIFrame* aFrame,
+                                   PRUint8 aWidgetType,
+                                   nsRect* aResult)
+  { return PR_FALSE; }
 
   NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
