@@ -129,10 +129,18 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     // the document.
     nsIDOMDocument* theDocument = nsnull;
     rv = loader->LoadDocumentAsXML(channel, loaderUri, &theDocument);
-    if (NS_FAILED(rv) || !theDocument) {
+
+    PRBool succeeded = NS_SUCCEEDED(rv) && theDocument;
+    if (succeeded && http) {
+      PRBool httpSucceeded;
+      rv = http->GetRequestSucceeded(&httpSucceeded);
+      succeeded = NS_SUCCEEDED(rv) && httpSucceeded;
+    }
+
+    if (!succeeded) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
                        aHref + NS_LITERAL_STRING(" failed."));
-        return rv;
+        return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
     }
 
     *aResult = txXPathNativeNode::createXPathNode(theDocument);
