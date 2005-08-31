@@ -6761,7 +6761,10 @@ nsGlobalWindow::SuspendTimeouts()
   PRIntervalTime now = PR_IntervalNow();
   for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
     // Change mWhen to be the time remaining for this timer.    
-    t->mWhen = PR_MAX(0, t->mWhen - now);
+    if (t->mWhen > now)
+      t->mWhen -= now;
+    else
+      t->mWhen = 0;
 
     // Drop the XPCOM timer; we'll reschedule when restoring the state.
     if (t->mTimer) {
@@ -6811,8 +6814,8 @@ nsGlobalWindow::ResumeTimeouts()
   nsresult rv;
 
   for (nsTimeout *t = mTimeouts; t; t = t->mNext) {
-    PRUint32 delay = PR_IntervalToMilliseconds(PR_MAX(t->mWhen,
-                                                      DOM_MIN_TIMEOUT_VALUE));
+    PRUint32 delay = PR_MAX(PR_IntervalToMilliseconds(t->mWhen),
+                            DOM_MIN_TIMEOUT_VALUE);
     t->mWhen += now;
 
     t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
