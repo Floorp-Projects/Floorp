@@ -5957,7 +5957,7 @@ PresShell::HandleEvent(nsIView         *aView,
       }
     }
     else if (!InClipRect(frame, 
-        nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, frame))) {
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame))) {
       // we only check for the clip rect on this frame ... all frames with clip
       // have views so any viewless children of this frame cannot have clip. 
       // Furthermore if the event is not in the clip for this frame, then none
