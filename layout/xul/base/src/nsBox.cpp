@@ -866,7 +866,8 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
           nsRect bounds;
           if (box->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
             nsRect* overflowArea = box->GetOverflowAreaProperty();
-            NS_ASSERTION(overflowArea, "Should have created property for overflowing frame");
+            NS_ASSERTION(overflowArea,
+                         "Should have created property for overflowing frame");
             bounds = *overflowArea + box->GetPosition();
           } else {
             bounds = box->GetRect();
@@ -875,6 +876,18 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
 
           box->GetNextBox(&box);
         }
+    }
+
+    const nsStyleDisplay* disp = GetStyleDisplay();
+    if (disp->mAppearance && gTheme) {
+      // Add in the theme's desired overflow
+      if (gTheme->ThemeSupportsWidget(presContext, this, disp->mAppearance)) {
+        nsRect r;
+        if (gTheme->GetWidgetOverflow(presContext->DeviceContext(), this,
+                                      disp->mAppearance, &r)) {
+          rect.UnionRect(rect, r);
+        }
+      }
     }
 
     FinishAndStoreOverflow(&rect, GetSize());

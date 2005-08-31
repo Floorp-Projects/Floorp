@@ -535,6 +535,37 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
   return PR_FALSE;
 }
 
+PRBool
+nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
+                                    nsIFrame* aFrame, PRUint8 aWidgetType,
+                                    nsRect* aResult)
+{
+  nsIntMargin extraSize(0,0,0,0);
+  // Allow an extra one pixel above and below the thumb for certain
+  // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
+  // see moz_gtk_scrollbar_thumb_paint in gtk2drawing.c
+  switch (aWidgetType) {
+  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    extraSize.top = extraSize.bottom = 1;
+    break;
+  case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    extraSize.left = extraSize.right = 1;
+    break;
+  default:
+    return PR_FALSE;
+  }
+
+  float p2t = aContext->DevUnitsToAppUnits();
+  nsMargin m(NSIntPixelsToTwips(extraSize.left, p2t),
+             NSIntPixelsToTwips(extraSize.top, p2t),
+             NSIntPixelsToTwips(extraSize.right, p2t),
+             NSIntPixelsToTwips(extraSize.bottom, p2t));
+  nsRect r(nsPoint(0, 0), aFrame->GetSize());
+  r.Inflate(m);
+  *aResult = r;
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame, PRUint8 aWidgetType,
