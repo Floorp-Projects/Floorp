@@ -1,3 +1,7 @@
+/* -*- Mode: java; tab-width: 8 -*-
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation,
+ * All Rights Reserved.
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,10 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* -*- Mode: java; tab-width: 8 -*-
- * Copyright (C) 1997, 1998 Netscape Communications Corporation,
- * All Rights Reserved.
- */
 /**
  *  JavaScript to Java type conversion.
  *
@@ -55,51 +55,51 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "JavaClass to java.lang.Class";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "JavaClass to java.lang.Class";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // Pass a JavaClass to a method that expects an Object should wrap
-    // the object in a new instance of JSObject.
+// Pass a JavaClass to a method that expects an Object should wrap
+// the object in a new instance of JSObject.
 
-    a[i++] = new TestObject (
-         "var newClass = java.lang.Class.forName(\"java.lang.Integer\"); "+
-         "dt.setObject( newClass )",
-         "dt.PUB_OBJECT",
-         "dt.getObject()",
-         "dt.getObject()",
-         java.lang.Class.forName("java.lang.Integer"),
-         "object" );
+a[i++] = new TestObject (
+    "var newClass = java.lang.Class.forName(\"java.lang.Integer\"); "+
+    "dt.setObject( newClass )",
+    "dt.PUB_OBJECT",
+    "dt.getObject()",
+    "dt.getObject()",
+    java.lang.Class.forName("java.lang.Integer"),
+    "object" );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
 
-    }
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -109,7 +109,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = typeof this.javaFieldValue;
+	this.javaTypeValue = typeof this.javaFieldValue;
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,18 +40,21 @@
  *
  *
  */
-    var SECTION = "Preferred argument conversion:  boolean";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  boolean";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new
-        Packages.com.netscape.javascript.qa.lc3.bool.Boolean_005;
+var TEST_CLASS = new
+Packages.com.netscape.javascript.qa.lc3.bool.Boolean_005;
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( true )",
-        "error",
-        TEST_CLASS.ambiguous(true) );
+DESCRIPTION = "TEST_CLASS.ambiguous( true )";
+EXPECTED = "error";
 
-    test();
+new TestCase(
+    "TEST_CLASS.ambiguous( true )",
+    "error",
+    TEST_CLASS.ambiguous(true) );
+
+test();

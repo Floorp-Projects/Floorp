@@ -1,3 +1,7 @@
+/* -*- Mode: java; tab-width: 8 -*-
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation,
+ * All Rights Reserved.
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,10 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* -*- Mode: java; tab-width: 8 -*-
- * Copyright (C) 1997, 1998 Netscape Communications Corporation,
- * All Rights Reserved.
- */
 /**
  *  JavaScript to Java type conversion.
  *
@@ -55,116 +55,116 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "JavaArray to boolean";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "JavaArray to boolean";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // Passing a JavaArray to a method that expects a boolean should
-    // always convert the array to true
+// Passing a JavaArray to a method that expects a boolean should
+// always convert the array to true
 
-    var emptyByteArray = new java.lang.String("").getBytes();
+var emptyByteArray = new java.lang.String("").getBytes();
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( emptyByteArray )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+a[i++] = new TestObject (
+    "dt.setBoolean( emptyByteArray )",
+    "dt.PUB_BOOLEAN ",
+    "dt.getBoolean() ",
+    "typeof dt.getBoolean() ",
+    true,
+    "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetByteArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+a[i++] = new TestObject (
+    "dt.setBoolean( DT.staticGetByteArray() )",
+    "dt.PUB_BOOLEAN ",
+    "dt.getBoolean() ",
+    "typeof dt.getBoolean() ",
+    true,
+    "boolean" );
 /*
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetByteArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetByteArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetCharArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetCharArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetShortArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetShortArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetLongArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetLongArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetIntArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetIntArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetFloatArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetFloatArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 
-    a[i++] = new TestObject (
-         "dt.setBoolean( DT.staticGetObjectArray() )",
-         "dt.PUB_BOOLEAN ",
-         "dt.getBoolean() ",
-         "typeof dt.getBoolean() ",
-         true,
-         "boolean" );
+  a[i++] = new TestObject (
+  "dt.setBoolean( DT.staticGetObjectArray() )",
+  "dt.PUB_BOOLEAN ",
+  "dt.getBoolean() ",
+  "typeof dt.getBoolean() ",
+  true,
+  "boolean" );
 */
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
 
-    }
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -174,7 +174,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = typeof this.javaFieldValue;
+	this.javaTypeValue = typeof this.javaFieldValue;
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

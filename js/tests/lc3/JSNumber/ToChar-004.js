@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -56,93 +57,93 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "number conversion to char";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "number conversion to char";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // passing a JS number to a method that expects a char:
-    // round JS number to integral value using round-to-negative-infinity mode
-    // numbers with a magnitude too large to be represented in the target integral
-    //  type result in a runtime error.
-    // Nan converts to 0.
+// passing a JS number to a method that expects a char:
+// round JS number to integral value using round-to-negative-infinity mode
+// numbers with a magnitude too large to be represented in the target integral
+//  type result in a runtime error.
+// Nan converts to 0.
 
-    // Special cases:  0, -0, Infinity, -Infinity, and NaN
+// Special cases:  0, -0, Infinity, -Infinity, and NaN
 
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MAX_VALUE - 0.5)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MAX_VALUE - 1,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MAX_VALUE - 0.5)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MAX_VALUE - 1,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MAX_VALUE - 0.5)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MAX_VALUE - 1,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MAX_VALUE - 0.5)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MAX_VALUE - 1,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MAX_VALUE - 0.4)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MAX_VALUE - 1,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MAX_VALUE - 0.4)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MAX_VALUE - 1,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MIN_VALUE + 0.6)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MIN_VALUE,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MIN_VALUE + 0.6)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MIN_VALUE,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MIN_VALUE + 0.4)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MIN_VALUE,
-        "number" );
-    a[i++] = new TestObject(
-        "dt.setChar(java.lang.Character.MIN_VALUE + 0.6)",
-        "dt.PUB_CHAR",
-        "dt.getChar()",
-        "typeof dt.getChar()",
-        java.lang.Character.MIN_VALUE,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MIN_VALUE + 0.4)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MIN_VALUE,
+    "number" );
+a[i++] = new TestObject(
+    "dt.setChar(java.lang.Character.MIN_VALUE + 0.6)",
+    "dt.PUB_CHAR",
+    "dt.getChar()",
+    "typeof dt.getChar()",
+    java.lang.Character.MIN_VALUE,
+    "number" );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
-    }
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -152,7 +153,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = eval( javaType );
+	this.javaTypeValue = eval( javaType );
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;

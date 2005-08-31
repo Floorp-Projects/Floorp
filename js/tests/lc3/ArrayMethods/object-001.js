@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,48 +40,48 @@
  *  can inherit JavaScript Array object methods join, reverse, sort and valueOf
  *
  */
-    var SECTION = "java array object inheritance JavaScript Array methods";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 " + SECTION;
+var SECTION = "java array object inheritance JavaScript Array methods";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 " + SECTION;
 
-    startTest();
+startTest();
 
-    dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass();
+dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass();
 
-    obArray = dt.PUB_ARRAY_OBJECT;
+obArray = dt.PUB_ARRAY_OBJECT;
 
-    // check string value
+// check string value
 
-    testcases[tc++] = new TestCase(
-        "dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass(); "+
-        "obArray = dt.PUB_ARRAY_OBJECT" +
-        "obArray.join() +''",
-        join(obArray),
-        obArray.join() );
+new TestCase(
+    "dt = new Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass(); "+
+    "obArray = dt.PUB_ARRAY_OBJECT" +
+    "obArray.join() +''",
+    join(obArray),
+    obArray.join() );
 
-    // check type of object returned by method
+// check type of object returned by method
 
-    testcases[tc++] = new TestCase(
-        "typeof obArray.reverse().join()",
-        reverse(obArray),
-        obArray.reverse().join() );
+new TestCase(
+    "typeof obArray.reverse().join()",
+    reverse(obArray),
+    obArray.reverse().join() );
 
-    testcases[tc++] = new TestCase(
-        "obArray.reverse().getClass().getName() +''",
-        "[Ljava.lang.Object;",
-        obArray.reverse().getClass().getName() +'');
+new TestCase(
+    "obArray.reverse().getClass().getName() +''",
+    "[Ljava.lang.Object;",
+    obArray.reverse().getClass().getName() +'');
 
-    test();
+test();
 
-    function join( a ) {
-        for ( var i = 0, s = ""; i < a.length; i++ ) {
-            s += a[i].toString() + ( i + 1 < a.length ? "," : "" );
-        }
-        return s;
+function join( a ) {
+    for ( var i = 0, s = ""; i < a.length; i++ ) {
+	s += a[i].toString() + ( i + 1 < a.length ? "," : "" );
     }
-    function reverse( a ) {
-        for ( var i = a.length -1, s = ""; i >= 0; i-- ) {
-            s += a[i].toString() + ( i> 0 ? "," : "" );
-        }
-        return s;
+    return s;
+}
+function reverse( a ) {
+    for ( var i = a.length -1, s = ""; i >= 0; i-- ) {
+	s += a[i].toString() + ( i> 0 ? "," : "" );
     }
+    return s;
+}

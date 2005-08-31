@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,7 +49,10 @@
     var TEST_CLASS = new
         Packages.com.netscape.javascript.qa.lc3.bool.Boolean_005;
 
-    testcases[testcases.length] = new TestCase(
+DESCRIPTION = "TEST_CLASS.ambiguous( false )";
+EXPECTED = "error";
+
+new TestCase(
         "TEST_CLASS.ambiguous( false )",
         "error",
         TEST_CLASS.ambiguous(false) );

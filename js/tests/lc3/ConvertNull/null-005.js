@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,32 +42,32 @@
  *  undefined value.
  *
  */
-    var SECTION = "Preferred argument conversion:  null";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  null";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    TEST_CLASS = new
-        Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001;
+TEST_CLASS = new
+Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001;
 
-    // Call an ambiguous static method using the explicit method
-    // syntax should succeed.
+// Call an ambiguous static method using the explicit method
+// syntax should succeed.
 
-    testcases[testcases.length] = new TestCase(
-        "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.Object)\"](null)",
-        "STATIC_OBJECT",
-        Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.Object)"](null) +"");
+new TestCase(
+    "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.Object)\"](null)",
+    "STATIC_OBJECT",
+    Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.Object)"](null) +"");
 
-    testcases[testcases.length] = new TestCase(
-        "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.Boolean)\"](null)",
-        "STATIC_BOOLEAN_OBJECT",
-        Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.Boolean)"](null) +"");
+new TestCase(
+    "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.Boolean)\"](null)",
+    "STATIC_BOOLEAN_OBJECT",
+    Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.Boolean)"](null) +"");
 
-    testcases[testcases.length] = new TestCase(
-        "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.String)\"](null)",
-        "STATIC_STRING",
-        Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.String)"](null) +"");
+new TestCase(
+    "Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001[\"staticAmbiguous(java.lang.String)\"](null)",
+    "STATIC_STRING",
+    Packages.com.netscape.javascript.qa.lc3.jsnull.Null_001["staticAmbiguous(java.lang.String)"](null) +"");
 
 
-    test();
+test();

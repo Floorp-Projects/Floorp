@@ -34,17 +34,23 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 var completed = false;
-var testcases;
-var tc;
+var testcases = new Array();
+var tc = testcases.length;
 var DT;
 
-TITLE   = "";
-SECTION = "";
-VERSION = "";
-BUGNUMBER="";
+var TITLE   = "";
+var SECTION = "";
+var VERSION = "";
+var BUGNUMBER="";
 
 var GLOBAL= "[object global]";
+var PASSED = " PASSED!"
+var FAILED = " FAILED! expected: ";
+
+var DEBUG = false;
+
 var TT = "";
 var TT_ = "";
 var BR = "";
@@ -60,34 +66,49 @@ var H2 = "";
 var H2_ = "";
 var HR = "";
 
-var PASSED = " PASSED!"
-var FAILED = " FAILED! expected: ";
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+/* 
+ * wrapper for test case constructor that doesn't require the SECTION
+ * argument.
+ */
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+function AddTestCase( description, expect, actual ) {
+  new TestCase( SECTION, description, expect, actual );
 }
 
-function TestCase( d, e, a ) {
-    this.name        = SECTION;
-    this.description = d;
-    this.expect      = e;
-    this.actual      = a;
-    this.passed      = true;
-    this.reason      = "";
-    this.bugnumber   = BUGNUMBER;
 
-    this.passed = getTestCaseResult( this.expect, this.actual );
+/*
+ * TestCase constructor
+ *
+ */
+function TestCase( n, d, e, a ) {
+  this.name        = n;
+  this.description = d;
+  this.expect      = e;
+  this.actual      = a;
+  this.passed      = true;
+  this.reason      = "";
+  this.bugnumber   = BUGNUMBER;
+
+  this.passed = getTestCaseResult( this.expect, this.actual );
+  if ( DEBUG ) {
+    writeLineToLog( "added " + this.description );
+  }
+  /*
+   * testcases are solely maintained in the TestCase
+   * constructor. tc will _always_ point to one past the
+   * last testcase. If an exception occurs during the call
+   * to the constructor, then we are assured that the tc
+   * index has not been incremented.
+   */
+  
+  testcases[tc++] = this;
 }
+
+/*
+ * Set up test environment.
+ *
+ */
 function startTest() {
     testcases = new Array();
     tc = 0;
@@ -110,17 +131,48 @@ function startTest() {
     }
 
     writeHeaderToLog( SECTION + " "+ TITLE);
+  if ( BUGNUMBER ) {
+    writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
+  }
+
 
     // verify that DataTypeClass is on the CLASSPATH
 
     DT = Packages.com.netscape.javascript.qa.liveconnect.DataTypeClass;
 
-    if ( typeof DT != "function" ) {
+    if ( typeof DT == "undefined" ) {
         throw "Test Exception:  "+
         "com.netscape.javascript.qa.liveconnect.DataTypeClass "+
         "is not on the CLASSPATH";
     }
 }
+
+function test() {
+  for ( tc=0; tc < testcases.length; tc++ ) {
+    try
+    {
+    testcases[tc].passed = writeTestCaseResult(
+      testcases[tc].expect,
+      testcases[tc].actual,
+      testcases[tc].description +" = "+
+      testcases[tc].actual );
+
+    testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+    }
+    catch(e)
+    {
+      writeLineToLog('test(): empty testcase for tc = ' + tc + ' ' + e);
+    }
+  }
+  stopTest();
+  return ( testcases );
+}
+
+
+/*
+ * Compare expected result to the actual result and figure out whether
+ * the test case passed.
+ */
 
 function getTestCaseResult( expect, actual ) {
     //  because ( NaN == NaN ) always returns false, need to do
@@ -160,6 +212,14 @@ function getTestCaseResult( expect, actual ) {
 
         return passed;
 }
+
+/*
+ * Begin printing functions.  These functions use the shell's
+ * print function.  When running tests in the browser, these
+ * functions, override these functions with functions that use
+ * document.write.
+ */
+
 function writeTestCaseResult( expect, actual, string ) {
         var passed = getTestCaseResult( expect, actual );
         writeFormattedResult( expect, actual, string, passed );
@@ -188,6 +248,12 @@ function writeLineToLog( string ) {
 function writeHeaderToLog( string ) {
     print( H2 + string + H2_ );
 }
+
+/*
+ * When running in the shell, run the garbage collector after the
+ * test has completed.
+ */
+
 function stopTest() {
     var gc;
 
@@ -196,6 +262,12 @@ function stopTest() {
     }
     print( HR );
 }
+
+/*
+ * Convenience function for displaying failed test cases.  Useful
+ * when running tests manually.
+ *
+ */
 function getFailedCases() {
   for ( var i = 0; i < testcases.length; i++ ) {
      if ( ! testcases[i].passed ) {

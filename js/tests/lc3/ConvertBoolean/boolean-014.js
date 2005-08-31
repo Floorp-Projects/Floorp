@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,49 +42,49 @@
  * preferred argument conversion.
  *
  */
-    var SECTION = "Preferred argument conversion:  boolean";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion:  boolean";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new
-        Packages.com.netscape.javascript.qa.lc3.bool.Boolean_001;
+var TEST_CLASS = new
+Packages.com.netscape.javascript.qa.lc3.bool.Boolean_001;
 
-    // invoke method that accepts java.lang.Boolean
+// invoke method that accepts java.lang.Boolean
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](true)",
-        TEST_CLASS.BOOLEAN_OBJECT,
-        TEST_CLASS["ambiguous(java.lang.Boolean)"](true) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](true)",
+    TEST_CLASS.BOOLEAN_OBJECT,
+    TEST_CLASS["ambiguous(java.lang.Boolean)"](true) );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
-        TEST_CLASS.BOOLEAN_OBJECT,
-        TEST_CLASS["ambiguous(java.lang.Boolean)"](false) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
+    TEST_CLASS.BOOLEAN_OBJECT,
+    TEST_CLASS["ambiguous(java.lang.Boolean)"](false) );
 
-    // invoke method that expects java.lang.Object
+// invoke method that expects java.lang.Object
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.Object)\"](true)",
-        TEST_CLASS.OBJECT,
-        TEST_CLASS["ambiguous(java.lang.Object)"](true) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.Object)\"](true)",
+    TEST_CLASS.OBJECT,
+    TEST_CLASS["ambiguous(java.lang.Object)"](true) );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
-        TEST_CLASS.OBJECT,
-        TEST_CLASS["ambiguous(java.lang.Object)"](false) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
+    TEST_CLASS.OBJECT,
+    TEST_CLASS["ambiguous(java.lang.Object)"](false) );
 
-    // invoke method that expects a String
+// invoke method that expects a String
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.String)\"](true)",
-        TEST_CLASS.STRING,
-        TEST_CLASS["ambiguous(java.lang.String)"](true) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.String)\"](true)",
+    TEST_CLASS.STRING,
+    TEST_CLASS["ambiguous(java.lang.String)"](true) );
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
-        TEST_CLASS.STRING,
-        TEST_CLASS["ambiguous(java.lang.String)"](false) );
+new TestCase(
+    "TEST_CLASS[\"ambiguous(java.lang.Boolean)\"](false)",
+    TEST_CLASS.STRING,
+    TEST_CLASS["ambiguous(java.lang.String)"](false) );
 
-    test();
+test();

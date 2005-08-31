@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,20 +41,20 @@
  *  Pass a JavaScript number to ambiguous method.
  *
  */
-    var SECTION = "Preferred argument conversion: string";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "Preferred argument conversion: string";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var TEST_CLASS = new
-        Packages.com.netscape.javascript.qa.lc3.string.String_001;
+var TEST_CLASS = new
+Packages.com.netscape.javascript.qa.lc3.string.String_001;
 
-    var string = "JavaScript Test String";
+var string = "JavaScript Test String";
 
-    testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous(string)",
-        TEST_CLASS.expect(),
-        TEST_CLASS.ambiguous(string) );
+new TestCase(
+    "TEST_CLASS.ambiguous(string)",
+    TEST_CLASS.expect(),
+    TEST_CLASS.ambiguous(string) );
 
-    test();
+test();

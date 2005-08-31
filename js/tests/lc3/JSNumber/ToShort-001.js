@@ -1,3 +1,7 @@
+/* -*- Mode: java; tab-width: 8 -*-
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation,
+ * All Rights Reserved.
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,10 +38,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* -*- Mode: java; tab-width: 8 -*-
- * Copyright (C) 1997, 1998 Netscape Communications Corporation,
- * All Rights Reserved.
- */
 
 /**
  *  JavaScript to Java type conversion.
@@ -56,104 +56,104 @@
  *  @author: christine@netscape.com
  *
  */
-    var SECTION = "number conversion to int";
-    var VERSION = "1_4";
-    var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
-                    SECTION;
-    startTest();
+var SECTION = "number conversion to int";
+var VERSION = "1_4";
+var TITLE   = "LiveConnect 3.0 JavaScript to Java Data Type Conversion " +
+SECTION;
+startTest();
 
-    var dt = new DT();
+var dt = new DT();
 
-    var a = new Array();
-    var i = 0;
+var a = new Array();
+var i = 0;
 
-    // passing a JS number to a method that expects a int:
-    // round JS number to integral value using round-to-negative-infinity mode
-    // numbers with a magnitude too large to be represented in the target integral
-    //  type result in a runtime error.
-    // Nan converts to 0.
+// passing a JS number to a method that expects a int:
+// round JS number to integral value using round-to-negative-infinity mode
+// numbers with a magnitude too large to be represented in the target integral
+//  type result in a runtime error.
+// Nan converts to 0.
 
-    // Special cases:  0, -0, Infinity, -Infinity, and NaN
+// Special cases:  0, -0, Infinity, -Infinity, and NaN
 
-    a[i++] = new TestObject(
-        "dt.setShort( 0 )",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        0,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort( 0 )",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    0,
+    "number" );
 
-    // only doubles and floats know about -0
+// only doubles and floats know about -0
 
-    a[i++] = new TestObject(
-        "dt.setShort( -0 )",
-        "Infinity / dt.PUB_SHORT",
-        "Infinity / dt.getShort()",
-        "typeof dt.getShort()",
-        Infinity,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort( -0 )",
+    "Infinity / dt.PUB_SHORT",
+    "Infinity / dt.getShort()",
+    "typeof dt.getShort()",
+    Infinity,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setShort( java.lang.Short.MAX_VALUE )",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        java.lang.Short.MAX_VALUE,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort( java.lang.Short.MAX_VALUE )",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    java.lang.Short.MAX_VALUE,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setShort( java.lang.Short.MIN_VALUE )",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        java.lang.Short.MIN_VALUE,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort( java.lang.Short.MIN_VALUE )",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    java.lang.Short.MIN_VALUE,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setShort( -java.lang.Short.MAX_VALUE )",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        -java.lang.Short.MAX_VALUE,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort( -java.lang.Short.MAX_VALUE )",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    -java.lang.Short.MAX_VALUE,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setShort(1e-2000)",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        0,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort(1e-2000)",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    0,
+    "number" );
 
-    a[i++] = new TestObject(
-        "dt.setShort(-1e-2000)",
-        "dt.PUB_SHORT",
-        "dt.getShort()",
-        "typeof dt.getShort()",
-        0,
-        "number" );
+a[i++] = new TestObject(
+    "dt.setShort(-1e-2000)",
+    "dt.PUB_SHORT",
+    "dt.getShort()",
+    "typeof dt.getShort()",
+    0,
+    "number" );
 
-    for ( i = 0; i < a.length; i++ ) {
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; "+ a[i].javaFieldName,
-            a[i].jsValue,
-            a[i].javaFieldValue );
+for ( i = 0; i < a.length; i++ ) {
+    new TestCase(
+	a[i].description +"; "+ a[i].javaFieldName,
+	a[i].jsValue,
+	a[i].javaFieldValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].description +"; " + a[i].javaMethodName,
-            a[i].jsValue,
-            a[i].javaMethodValue );
+    new TestCase(
+	a[i].description +"; " + a[i].javaMethodName,
+	a[i].jsValue,
+	a[i].javaMethodValue );
 
-        testcases[testcases.length] = new TestCase(
-            a[i].javaTypeName,
-            a[i].jsType,
-            a[i].javaTypeValue );
-    }
+    new TestCase(
+	a[i].javaTypeName,
+	a[i].jsType,
+	a[i].javaTypeValue );
+}
 
-    test();
+test();
 
 function TestObject( description, javaField, javaMethod, javaType,
-    jsValue, jsType )
+		     jsValue, jsType )
 {
     eval (description );
 
@@ -163,7 +163,7 @@ function TestObject( description, javaField, javaMethod, javaType,
     this.javaMethodName = javaMethod;
     this.javaMethodValue = eval( javaMethod );
     this.javaTypeName = javaType,
-    this.javaTypeValue = eval( javaType );
+	this.javaTypeValue = eval( javaType );
 
     this.jsValue   = jsValue;
     this.jsType      = jsType;
