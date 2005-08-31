@@ -284,7 +284,6 @@ typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
 #define DISPID_WINDOWRESIZE             (__LINE__ + 3000) /* 110 */
 #define DISPID_WINDOWACTIVATE           (__LINE__ + 3000) /* 111 */
 
-
 #define CBM_INIT 4
 
 #ifndef MM_TEXT
@@ -322,6 +321,18 @@ typedef struct _BLENDFUNCTION
 
 #ifndef LR_LOADFROMFILE
 #define LR_LOADFROMFILE 0
+#endif
+
+#ifndef MA_NOACTIVATE
+#define MA_NOACTIVATE 1
+#endif
+
+#ifndef MA_ACTIVATE
+#define MA_ACTIVATE 1
+#endif
+
+#ifndef WM_MOUSEACTIVATE
+#define WM_MOUSEACTIVATE WM_ACTIVATE
 #endif
 
 #endif
