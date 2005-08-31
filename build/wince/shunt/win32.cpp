@@ -160,6 +160,12 @@ MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
     // RGN_DIFF = 4
     // RGN_COPY = 5
     
+
+    if (inMode == RGN_COPY)
+    {
+        return SelectClipRgn(inDC, inRGN);
+    }
+
     HRGN cRGN = NULL;
     int result = GetClipRgn(inDC, cRGN);
     
@@ -759,6 +765,27 @@ MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock,
 
     return retval;
 }
+
+MOZCE_SHUNT_API LRESULT mozce_OleInitialize(LPVOID pvReserved)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_OleInitialize called\n");
+#endif
+
+    return S_OK;
+}
+
+MOZCE_SHUNT_API void mozce_OleUninitialize()
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_OleUninitialize called\n");
+#endif
+}
+
 MOZCE_SHUNT_API HRESULT mozce_OleQueryLinkFromData(IDataObject* inSrcDataObject)
 {
     MOZCE_PRECHECK

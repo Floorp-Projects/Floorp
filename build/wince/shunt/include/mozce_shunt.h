@@ -187,6 +187,10 @@
 #endif
 #define getpid		mozce_getpid
 
+#ifdef _getpid
+#undef _getpid
+#endif
+#define _getpid		mozce_getpid
 
 // From signal.cpp
 #ifdef raise
@@ -701,6 +705,16 @@
 #undef IsClipboardFormatAvailable
 #endif
 #define IsClipboardFormatAvailable mozce_IsClipboardFormatAvailable
+
+#ifdef OleInitialize
+#undef OleInitialize
+#endif
+#define OleInitialize             mozce_OleInitialize
+
+#ifdef OleUninitialize
+#undef OleUninitialize
+#endif
+#define OleUninitialize          mozce_OleUninitialize
 
 #ifdef OleFlushClipboard
 #undef OleFlushClipboard
@@ -1360,6 +1374,8 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_GetScrollPos(HWND inWnd, int inBar);
   MOZCE_SHUNT_API BOOL mozce_GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos);
   MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock, BOOL inLastUnlockReleases);
+  MOZCE_SHUNT_API LRESULT mozce_OleInitialize(LPVOID pvReserved);
+  MOZCE_SHUNT_API void    mozce_OleUninitialize();;
   MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject* inDataObj);
   MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject** outDataObj);
   MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard(void);
@@ -1388,7 +1404,7 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_PeekMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg);
   MOZCE_SHUNT_API BOOL mozce_GetMessage(LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax);
   MOZCE_SHUNT_API LONG mozce_GetMessageTime(void);
-
+  
   // from win32a.cpp
   
   MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineA(HDC inDC, CHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST mozce_MAT2* inMAT2);
