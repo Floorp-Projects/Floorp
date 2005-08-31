@@ -57,7 +57,8 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in,
-                                  NS_LITERAL_CSTRING("text/html"));
+                                  NS_LITERAL_CSTRING("text/html"),
+                                  NS_LITERAL_CSTRING("utf-8"));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
