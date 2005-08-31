@@ -61,7 +61,7 @@ libs locale::
 	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DIST)/bin
 
 install::
-	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
 endif
 
 ifneq (,$(filter windows mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
