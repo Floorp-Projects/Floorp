@@ -562,6 +562,35 @@
     </groupbox>
   </wizardpage>
 
+  <wizardpage>
+    <groupbox>
+      <caption label="Certificates"/>
+      <description>
+        You may select up to five certificates to be preinstalled.
+      </description>
+      <hbox>
+        <textbox readonly="true" id="CertPath1" flex="1"/>
+        <button label="Choose File..." oncommand="choosefile('CertPath1');"/>
+      </hbox>
+      <hbox>
+        <textbox readonly="true" id="CertPath2" flex="1"/>
+        <button label="Choose File..." oncommand="choosefile('CertPath2');"/>
+      </hbox>
+      <hbox>
+        <textbox readonly="true" id="CertPath3" flex="1"/>
+        <button label="Choose File..." oncommand="choosefile('CertPath3');"/>
+      </hbox>
+      <hbox>
+        <textbox readonly="true" id="CertPath4" flex="1"/>
+        <button label="Choose File..." oncommand="choosefile('CertPath4');"/>
+      </hbox>
+      <hbox>
+        <textbox readonly="true" id="CertPath5" flex="1"/>
+        <button label="Choose File..." oncommand="choosefile('CertPath5');"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
   
   <wizardpage>
   <groupbox>

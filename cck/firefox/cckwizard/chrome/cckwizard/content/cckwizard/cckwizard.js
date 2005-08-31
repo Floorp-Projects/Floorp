@@ -251,6 +251,13 @@ function CreateCCK()
   CCKCopyFile(document.getElementById("LargeAnimPath").value, destdir);
   CCKCopyFile(document.getElementById("LargeStillPath").value, destdir);
   CCKCopyChromeToFile("cck.js", destdir)
+  
+  CCKCopyFile(document.getElementById("CertPath1").value, destdir);
+  CCKCopyFile(document.getElementById("CertPath2").value, destdir);
+  CCKCopyFile(document.getElementById("CertPath3").value, destdir);
+  CCKCopyFile(document.getElementById("CertPath4").value, destdir);
+  CCKCopyFile(document.getElementById("CertPath5").value, destdir);
+  
 /* copy/create contents.rdf if 1.0 */
   var zipdir = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
@@ -580,7 +587,7 @@ var liststyleimageend = '");\n}\n';
   if (animatedlogopath && (animatedlogopath.length > 0)) {
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
-    file.initWithPath(document.getElementById("LargeAnimPath").value);
+    file.initWithPath(animatedlogopath);
 
     fos.write(animated1, animated1.length);
     fos.write(liststyleimage, liststyleimage.length);
@@ -597,7 +604,7 @@ var liststyleimageend = '");\n}\n';
   if (atrestlogopath && (animatedlogopath.length > 0)) {
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
-    file.initWithPath(document.getElementById("LargeStillPath").value);
+    file.initWithPath(atrestlogopath);
 
     fos.write(atrest1, atrest1.length);
     fos.write(liststyleimage, liststyleimage.length);
@@ -743,8 +750,16 @@ function CCKWriteProperties(destdir)
     }
   }
 
-  
-
+  for (var i = 1; i <= 5; ++i) {
+    var certpath = document.getElementById("CertPath"+i).value;
+    if (certpath && (certpath.length > 0)) {
+      var file = Components.classes["@mozilla.org/file/local;1"]
+                           .createInstance(Components.interfaces.nsILocalFile);
+      file.initWithPath(certpath);
+      var line = "Cert"+i+"="+file.leafName;
+      fos.write(line, line.length);
+    }
+  }  
   fos.close();
 }
 
