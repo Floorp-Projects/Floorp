@@ -77,6 +77,7 @@
 #include "nsIDOMWindow.h"
 
 #include "cairo.h"
+#include "imgIEncoder.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 
@@ -198,6 +199,9 @@ public:
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame);
+    NS_IMETHOD GetInputStream(const nsACString& aMimeType,
+                              const nsAString& aEncoderOptions,
+                              nsIInputStream **aStream);
     NS_IMETHOD UpdateImageFrame();
 
     // nsISupports interface
@@ -536,6 +540,26 @@ nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
     mImageFrame = aImageFrame;
 
     return ClearRect (0, 0, mWidth, mHeight);
+}
+ 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
+                                           const nsAString& aEncoderOptions,
+                                           nsIInputStream **aStream)
+{
+    nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
+    conid += aMimeType;
+
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid.get());
+    if (!encoder)
+        return NS_ERROR_FAILURE;
+
+    encoder->InitFromData(mSurfaceData,
+                          mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                          aEncoderOptions);
+
+    return CallQueryInterface(encoder, aStream);
 }
 
 NS_IMETHODIMP
