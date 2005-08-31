@@ -291,7 +291,6 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
-#ifndef WINCE
 ////////////////////////////////////////////////////
 // Manager for Registering and unregistering OLE
 // This is needed for drag & drop & Clipboard support
@@ -326,7 +325,6 @@ OleRegisterMgr::~OleRegisterMgr()
 #endif
   ::OleUninitialize();
 }
-#endif //WINCE
 
 ////////////////////////////////////////////////////
 // nsWindow Class static variable definitions
@@ -980,13 +978,14 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 
   if (nsnull == aPoint) {     // use the point from the event
     // get the message position in client coordinates and in twips
-    DWORD pos = ::GetMessagePos();
-    POINT cpos;
-
-    cpos.x = GET_X_LPARAM(pos);
-    cpos.y = GET_Y_LPARAM(pos);
-
     if (mWnd != NULL) {
+
+      DWORD pos = ::GetMessagePos();
+      POINT cpos;
+      
+      cpos.x = GET_X_LPARAM(pos);
+      cpos.y = GET_Y_LPARAM(pos);
+
       ::ScreenToClient(mWnd, &cpos);
       event.refPoint.x = cpos.x;
       event.refPoint.y = cpos.y;
@@ -1165,8 +1164,15 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   RECT r;
 
   if (Msg == WM_ACTIVATE)
+#ifndef WINCE
     // don't care about activation/deactivation
     return PR_FALSE;
+#else
+    // but on Windows CE we do care about
+    // activation/deactivation because there doesn't exist
+    // cancelable Mouse Activation events
+    return TRUE;
+#endif
 
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
@@ -1365,7 +1371,6 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
   mHas3DBorder = (extendedStyle & WS_EX_CLIENTEDGE) > 0;
 
-#ifndef WINCE
   if (mWindowType == eWindowType_dialog) {
     struct {
       DLGTEMPLATE t;
@@ -1392,10 +1397,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                        (DLGPROC)DummyDialogProc,
                                        NULL);
 
-  } 
-  else 
-#endif //WINCE
-  {
+  } else {
 
     mWnd = nsToolkit::mCreateWindowEx(extendedStyle,
                                       aInitData && aInitData->mDropShadow ?
@@ -4507,9 +4509,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           PRBool result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
 
-#ifdef WINCE
-          *aRetValue = 1;
-#else
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
           else
@@ -4517,7 +4516,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
-#endif
         }
       }
       break;
@@ -4544,7 +4542,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         info->flags &= ~SWP_SHOWWINDOW;
     }
     break;
-
 #endif
 
     case WM_SETFOCUS:
@@ -5670,6 +5667,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   DWORD pos = ::GetMessagePos();
   mp.x      = GET_X_LPARAM(pos);
   mp.y      = GET_Y_LPARAM(pos);
+
   PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
                                    (abs(gLastMousePoint.y - mp.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
@@ -7743,10 +7741,9 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
   if (gRollupListener && gRollupWidget && ::IsWindowVisible(inWnd)) {
 
     if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-        inMsg == WM_MOUSEWHEEL  || inMsg == uMSH_MOUSEWHEEL
+        inMsg == WM_MOUSEWHEEL  || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATE
 #ifndef WINCE
         || 
-        inMsg == WM_ACTIVATE || 
         inMsg == WM_NCRBUTTONDOWN || 
         inMsg == WM_MOVING || 
         inMsg == WM_SIZING || 
@@ -7795,7 +7792,6 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         } // if rollup listener knows about menus
       }
 
-#ifndef WINCE
       if (inMsg == WM_MOUSEACTIVATE) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
@@ -7822,9 +7818,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         }
       }
       // if we've still determined that we should still rollup everything, do it.
-      else
-#endif // WINCE
-     if ( rollup ) {
+      else if ( rollup ) {
         gRollupListener->Rollup();
 
         // Tell hook to stop processing messages
