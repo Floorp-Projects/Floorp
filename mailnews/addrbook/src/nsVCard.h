@@ -78,17 +78,11 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #define __VCC_H__ 1
 
 #include "prtypes.h"
-#include "nsFileStream.h"
-#include "nsFileSpec.h"
 #include "nsVCardObj.h"
 
 PR_BEGIN_EXTERN_C
 
 VObject* parse_MIME(const char *input, unsigned long len);
-
-VObject* parse_MIME_FromFile(nsInputFileStream *file);
-
-VObject* parse_MIME_FromFileName(nsFileSpec * fname);
 
 typedef void (*MimeErrorHandler)(char *);
 

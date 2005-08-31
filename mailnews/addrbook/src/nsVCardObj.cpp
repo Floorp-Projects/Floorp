@@ -496,166 +496,6 @@ VObject* addPropSizedValue(VObject *o, const char *p, const char *v,
     return addPropSizedValue_(o,p,dupStr(v,size),size);
 }
 
-
-
-/*----------------------------------------------------------------------
-  The following pretty print a VObject
-  ----------------------------------------------------------------------*/
-
-static void indent(nsOutputFileStream *fp, int level)
-{
-  int i;
-  for (i=0;i<level*4;i++) {
-    fp->write(" ", 1);
-  }
-}
-
-static void printValue(nsOutputFileStream *fp, VObject *o, int level)
-{
-  char *buf = nsnull;
-
-  switch (VALUE_TYPE(o)) {
-  case VCVT_USTRINGZ: {
-    char c;
-    char *t,*s;
-    s = t = fakeCString(USTRINGZ_VALUE_OF(o));
-    fp->write("'",1);
-    while (c=*t,c) {
-      fp->write(&c,1);
-      if (c == '\n') indent(fp,level+2);
-      t++;
-    }
-    fp->write("'",1);
-    deleteString(s);
-    break;
-                      }
-  case VCVT_STRINGZ: {
-    char c;
-    char *str = &c;
-    const char *s = STRINGZ_VALUE_OF(o);
-    fp->write("'",1);
-    while (c=*s,c) {
-      fp->write(str,1);
-      if (c == '\n') indent(fp,level+2);
-      s++;
-    }
-    fp->write("'",1);
-    break;
-                     }
-  case VCVT_UINT:    
-    buf = PR_smprintf("%d", INTEGER_VALUE_OF(o)); 
-    if (buf)
-    {
-      fp->write(buf, strlen(buf));
-      PR_FREEIF(buf);
-    }
-    break;
-
-  case VCVT_ULONG:
-    buf = PR_smprintf("%ld", LONG_VALUE_OF(o)); 
-    if (buf)
-    {
-      fp->write(buf, strlen(buf));
-      PR_FREEIF(buf);
-    }
-    break;
-
-  case VCVT_RAW:
-    fp->write("[raw data]", 10); 
-    break;
-
-  case VCVT_VOBJECT:
-    fp->write("[vobject]\n", 11);
-    printVObject_(fp,VOBJECT_VALUE_OF(o),level+1);
-    break;
-
-  case 0:
-    fp->write("[none]", 6); 
-    break;
-  default:
-    fp->write("[unknown]", 9); 
-    break;
-  }
-}
-
-static void printNameValue(nsOutputFileStream *fp,VObject *o, int level)
-{
-  char  *buf;
-
-  indent(fp,level);
-  if (NAME_OF(o)) 
-  {
-    buf = PR_smprintf("%s", NAME_OF(o)); 
-    if (buf)
-    {
-      fp->write(buf, strlen(buf));
-      PR_FREEIF(buf);
-    }
-  }
-
-  if (VALUE_TYPE(o)) 
-  {
-    fp->write("=",1);
-    printValue(fp,o, level);
-  }
-
-  fp->write("\n", 1);
-}
-
-void printVObject_(nsOutputFileStream *fp, VObject *o, int level)
-{
-  VObjectIterator t;
-  if (o == 0) {
-    fp->write("[NULL]\n", 7);
-    return;
-  }
-
-  printNameValue(fp,o,level);
-  initPropIterator(&t,o);
-
-  while (moreIteration(&t)) 
-  {
-    VObject *eachProp = nextVObject(&t);
-    printVObject_(fp,eachProp,level+1);
-  }
-}
-
-void printVObject(nsOutputFileStream *fp,VObject *o)
-{
-  printVObject_(fp,o,0);
-}
-
-void printVObjectToFile(nsFileSpec *fname, VObject *o)
-{
-#if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
-
-  if (fp) {
-    printVObject(fp,o);
-    fp->close();
-  }
-#else
-  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
-#endif
-}
-
-void printVObjectsToFile(nsFileSpec *fname,VObject *list)
-{
-#if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
-  if (fp) {
-    while (list) {
-      printVObject(fp,list);
-      list = nextVObjectInList(list);
-    }
-    fp->close();
-  }
-#else
-  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
-#endif
-}
-
-
 void cleanVObject(VObject *o)
 {
     if (o == 0) return;
@@ -1042,23 +882,11 @@ const char* lookupProp(const char* str)
   APIs to Output text form.
   ----------------------------------------------------------------------*/
 #define OFILE_REALLOC_SIZE 256
-/* typedef struct OFile {
-    nsOutputFileStream *fp;
-    char *s;
-    int len;
-    int limit;
-    int alloc:1;
-    int fail:1;
-    } OFile; */
 
 static void appendcOFile_(OFile *fp, char c)
 {
   if (fp->fail) 
     return;
-  if (fp->fp) {
-    fp->fp->write(&c,1);
-  }
-  else {
 stuff:
   if (fp->len+1 < fp->limit) {
     fp->s[fp->len] = c;
@@ -1074,7 +902,6 @@ stuff:
     PR_FREEIF(fp->s);
   fp->s = 0;
   fp->fail = 1;
-  }
 }
 
 static void appendcOFile(OFile *fp, char c)
@@ -1100,19 +927,8 @@ static void appendsOFile(OFile *fp, const char *s)
   }
 }
 
-static void initOFile(OFile *fp, nsOutputFileStream *ofp)
-{
-    fp->fp = ofp;
-    fp->s = 0;
-    fp->len = 0;
-    fp->limit = 0;
-    fp->alloc = 0;
-    fp->fail = 0;
-}
-
 static void initMemOFile(OFile *fp, char *s, int len)
 {
-    fp->fp = 0;
     fp->s = s;
     fp->len = 0;
     fp->limit = s?len:0;
@@ -1443,43 +1259,6 @@ void writeVObject_(OFile *fp, VObject *o)
       appendsOFile(fp,"\n\n");
       }
   }
-}
-
-void writeVObject(nsOutputFileStream *fp, VObject *o)
-{
-    OFile ofp;
-    initOFile(&ofp,fp);
-    writeVObject_(&ofp,o);
-}
-
-void writeVObjectToFile(nsFileSpec *fname, VObject *o)
-{
-#if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
-  
-  if (fp) {
-    writeVObject(fp,o);
-    fp->close();
-  }
-#else
-  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
-#endif
-}
-
-void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
-{
-#if !defined(MOZADDRSTANDALONE)
-  nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
-    if (fp) {
-  while (list) {
-      writeVObject(fp,list);
-      list = nextVObjectInList(list);
-      }
-  fp->close();
-  }
-#else
-  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
-#endif
 }
 
 char* writeMemVObject(char *s, int *len, VObject *o)
