@@ -1697,6 +1697,7 @@ nsPrintEngine::IsThereARangeSelection(nsIDOMWindow* aDOMWin)
         return !isCollapsed;
       }
     }
+    if (count > 1) return PR_TRUE;
   }
   return PR_FALSE;
 }

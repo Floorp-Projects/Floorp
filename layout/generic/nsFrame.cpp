@@ -1459,7 +1459,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, me->isMeta, beginFrameContent);
+#else
+    rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, me->isControl, beginFrameContent);
+#endif
 
   if (NS_FAILED(rv))
     return rv;
