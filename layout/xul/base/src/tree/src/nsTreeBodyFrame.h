@@ -286,11 +286,12 @@ protected:
                     nscoord& aDesiredSize, nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth();
 
-  // Updates the contained rect for the horizontal scroll 
-  // position. If clip is true then limits tree area
-  // Returns whether the rect is valid in tree view
-  PRBool OffsetHorzScroll(nsRect& rect, PRBool clip);
-  void OffsetHorzScroll(nscoord& pt);
+  // Translate the given rect horizontally from tree coordinates into the
+  // coordinate system of our nsTreeBodyFrame.  If clip is true, then clip the
+  // rect to its intersection with mInnerBox in the horizontal direction.
+  // Return whether the result has a nonempty intersection with mInnerBox
+  // after projecting both onto the horizontal coordinate axis.
+  PRBool OffsetForHorzScroll(nsRect& rect, PRBool clip);
 
   PRBool CanAutoScroll(PRInt32 aRowIndex);
 
@@ -367,6 +368,8 @@ protected: // Data Members
 
   // The horizontal scroll position
   nscoord mHorzPosition;
+  // Our desired horizontal width (the width for which we actually have tree
+  // columns).
   nscoord mHorzWidth;
 
   // Cached heights and indent info.
