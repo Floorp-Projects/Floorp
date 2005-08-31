@@ -2193,8 +2193,12 @@ public class Interpreter
                 }
                 sb.append('(');
                 sb.append(idata.itsSourceFile);
-                sb.append(':');
-                sb.append(getIndex(idata.itsICode, linePC[linePCIndex]));
+                int pc = linePC[linePCIndex];
+                if (pc >= 0) {
+                    // Include line info only if available
+                    sb.append(':');
+                    sb.append(getIndex(idata.itsICode, pc));
+                }
                 sb.append(')');
                 frame = frame.parentFrame;
             }
