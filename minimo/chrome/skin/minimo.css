@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* This CSS rule has to be here because code is accessing styleSheets[1].rules[0]! */ 
-
-
 #urlbar input {
 	background-position:0px 100%;
 	background-repeat:no-repeat;
@@ -49,6 +47,10 @@
 
 #urlbar {
 	padding:1px;
+}
+
+.tabs-closebutton-box{
+    list-style-image: url("chrome://minimo/skin/close.gif");
 }
 
 toolbar *, #appcontent * {
