@@ -46,7 +46,7 @@
 #include <string.h>
 #include "prbit.h"
 #include "pldhash.h"
-#include "prlog.h"     /* for PR_ASSERT */
+#include "nsDebug.h"     /* for PR_ASSERT */
 
 #ifdef PL_DHASHMETER
 # if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
@@ -247,7 +247,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
      * Reject obviously insane bounds, rather than trying to guess what the
      * buggy caller intended.
      */
-    PR_ASSERT(0.5 <= maxAlpha && maxAlpha < 1 && 0 <= minAlpha);
+    NS_ASSERTION(0.5 <= maxAlpha && maxAlpha < 1 && 0 <= minAlpha, "PLDHash precondition");
     if (maxAlpha < 0.5 || 1 <= maxAlpha || minAlpha < 0)
         return;
 
@@ -256,7 +256,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
      * minimum size leaves no entries free, reduce maxAlpha based on minimum
      * size and the precision limit of maxAlphaFrac's fixed point format.
      */
-    PR_ASSERT(PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) >= 1);
+    NS_ASSERTION(PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) >= 1, "PLDHash precondition");
     if (PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) < 1) {
         maxAlpha = (float)
                    (PL_DHASH_MIN_SIZE - PR_MAX(PL_DHASH_MIN_SIZE / 256, 1))
@@ -268,7 +268,7 @@ PL_DHashTableSetAlphaBounds(PLDHashTable *table,
      * not to truncate an entry's worth of alpha when storing in minAlphaFrac
      * (8-bit fixed point format).
      */
-    PR_ASSERT(minAlpha < maxAlpha / 2);
+    NS_ASSERTION(minAlpha < maxAlpha / 2, "PLDHash precondition");
     if (minAlpha >= maxAlpha / 2) {
         size = PL_DHASH_TABLE_SIZE(table);
         minAlpha = (size * maxAlpha - PR_MAX(size / 256, 1)) / (2 * size);
@@ -362,7 +362,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
     PRUint32 sizeMask;
 
     METER(table->stats.searches++);
-    PR_ASSERT(!(keyHash & COLLISION_FLAG));
+    NS_ASSERTION(!(keyHash & COLLISION_FLAG), "PLDHash precondition");
 
     /* Compute the primary hash address. */
     hashShift = table->hashShift;
@@ -470,7 +470,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
             oldEntry->keyHash &= ~COLLISION_FLAG;
             newEntry = SearchTable(table, getKey(table, oldEntry),
                                    oldEntry->keyHash, PL_DHASH_ADD);
-            PR_ASSERT(PL_DHASH_ENTRY_IS_FREE(newEntry));
+            NS_ASSERTION(PL_DHASH_ENTRY_IS_FREE(newEntry), "PLDHash precondition");
             moveEntry(table, oldEntry, newEntry);
             newEntry->keyHash = oldEntry->keyHash;
         }
@@ -575,7 +575,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
         break;
 
       default:
-        PR_ASSERT(0);
+        NS_ASSERTION(0, "PLDHash precondition");
         entry = NULL;
     }
 
@@ -587,7 +587,7 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PLDHashNumber keyHash;      /* load first in case clearEntry goofs it */
 
-    PR_ASSERT(PL_DHASH_ENTRY_IS_LIVE(entry));
+    NS_ASSERTION(PL_DHASH_ENTRY_IS_LIVE(entry), "PLDHash precondition");
     keyHash = entry->keyHash;
     table->ops->clearEntry(table, entry);
     if (keyHash & COLLISION_FLAG) {

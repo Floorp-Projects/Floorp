@@ -244,7 +244,7 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, P
                 "Click Enter to continue running the Application.", buf);
       ULONG code = MBID_ERROR;
       code = WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, msg, 
-                           "nsDebug::Assertion", 0,
+                           "NSGlue_Assertion", 0,
                            MB_ERROR | MB_ENTERCANCEL);
 
       /* It is possible that we are executing on a thread that doesn't have a

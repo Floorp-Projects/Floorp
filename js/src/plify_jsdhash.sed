@@ -9,7 +9,7 @@ s/jsbit\.h/prbit.h/
 s/jsdhash\.h/pldhash.h/
 s/jsdhash\.c/pldhash.c/
 s/jsdhash:/pldhash:/
-s/jsutil\.h/prlog.h/
+s/jsutil\.h/nsDebug.h/
 s/JS_DHASH/PL_DHASH/g
 s/JS_DHash/PL_DHash/g
 s/JSDHash/PLDHash/g
@@ -28,4 +28,5 @@ s/JS_PUBLIC_API(\([^()]*\))/\1/
 s/JS_DLL_CALLBACK/PR_CALLBACK/
 s/JS_STATIC_DLL_CALLBACK/PR_STATIC_CALLBACK/
 s/JS_NewDHashTable/PL_NewDHashTable/
+s/JS_ASSERT(\(.*\));/NS_ASSERTION(\1, "PLDHash precondition");/
 s/JS_/PR_/g
