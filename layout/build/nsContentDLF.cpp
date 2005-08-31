@@ -86,6 +86,8 @@ static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
+// XXXbz if you change the MIME types here, be sure to update
+// nsIParser.h and DetermineParseMode in nsParser.cpp accordingly.
 static const char* const gHTMLTypes[] = {
   "text/html",
   "text/plain",
