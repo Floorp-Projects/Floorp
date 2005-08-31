@@ -621,7 +621,9 @@ JS_TypeOfValue(JSContext *cx, jsval v)
                  */
                 clasp = OBJ_GET_CLASS(cx, obj);
                 if ((ops == &js_ObjectOps)
-                    ? clasp == &js_FunctionClass || clasp->call
+                    ? (clasp->call
+                       ? (clasp == &js_RegExpClass || clasp == &js_ScriptClass)
+                       : clasp == &js_FunctionClass)
                     : ops->call != NULL) {
                     type = JSTYPE_FUNCTION;
                 } else {
