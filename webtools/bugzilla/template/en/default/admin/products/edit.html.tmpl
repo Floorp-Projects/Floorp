@@ -1,0 +1,152 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Jack Nerad     <jnerad@bellsouth.net>
+  #                 Tiago R. Mello <tiago@async.com.br>
+  #                 Gabriel S. Oliveira <gabriel@async.com.br>
+  #%]
+
+[%# INTERFACE:
+  # classification: string; name of classification product is in.
+  #        product: an array of product objects.
+  #     components: an array of component object(s) related to the product.
+  #         groups: an array of group objects related to the product.
+  #       versions: an array of version objects related to product.
+  #     milestones: an array of milestones objects related to product.
+  #      bug_count: integer; number of bugs in this product.
+  #%]
+
+[% title = BLOCK %]Edit Product[% END %]
+
+[% PROCESS global/header.html.tmpl
+  title = title
+%]
+
+<form method="post" action="editproducts.cgi">
+  <table border="0" cellpadding="4" cellspacing="0">
+
+    [% PROCESS "admin/products/edit-common.html.tmpl" %]
+
+    <tr>
+      <th align="right" valign="top">
+        <a href="editcomponents.cgi?product=[% product.name FILTER url_quote %]">
+        Edit components:
+        </a>
+      </th>
+      <td>
+        [% IF components.size -%]
+          [% FOREACH component = components %]
+            <b>[% component.name FILTER html %]:</b>&nbsp;
+            [% IF component.description %]
+              [% component.description FILTER none %]
+            [% ELSE %]
+              <font color="red">description missing</font>
+            [% END %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          <font color="red">missing</font>
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right" valign="top">
+        <a href="editversions.cgi?product=[% product.name FILTER html %]">Edit
+versions:</a>
+      </th>
+      <td>
+        [%- IF versions.size -%]
+          [% FOREACH v = versions %]
+            [% v FILTER html %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          <font color="red">missing</font>
+        [% END %]
+      </td>
+    </tr>
+    [% IF Param('usetargetmilestone') %]
+      <tr>
+        <th align="right" valign="top">
+          <a href="editmilestones.cgi?product=[% product.name FILTER url_quote %]">
+          Edit milestones:</a>
+        </th>
+        <td>
+          [%- IF milestones.size -%]
+            [%- FOREACH m = milestones -%]
+              [% m FILTER html %]
+            <br>
+            [% END %]
+          [% ELSE %]
+            <font color="red">missing</font>
+          [% END %]
+        </td>
+      </tr>
+    [% END %]
+    <tr>
+      <th align="right" valign="top">
+        <a href="editproducts.cgi?action=editgroupcontrols&product=
+          [%- product.name FILTER url_quote %]">
+          Edit Group Access Controls:
+        </a>
+      </th>
+      <td>
+        [% IF groups.size %]
+          [% FOREACH g = groups %]
+            <b>[% g.name FILTER html %]:</b>&nbsp;
+            [% IF g.isactive %]
+              [% g.membercontrol FILTER html %]/
+              [% g.othercontrol FILTER html %]
+              [% IF g.entry %], ENTRY[% END %]
+              [% IF g.canedit %], CANEDIT[% END %]
+            [% ELSE %]
+              DISABLED
+            [% END %]
+            <br>
+          [% END %]
+        [% ELSE %]
+          no groups
+        [% END %]
+      </td>
+    </tr>
+    <tr>
+      <th align="right">[% terms.Bugs %]:</th>
+      <td>[% bug_count FILTER html %]</td>
+    </tr>
+  </table>
+  
+  <input type="hidden" name="productold" 
+        value="[% product.name FILTER html %]">
+  <input type="hidden" name="descriptionold"
+         value="[% product.description FILTER html %]">
+  <input type="hidden" name="milestoneurlold" 
+         value="[% product.milestoneurl FILTER html %]">
+  <input type="hidden" name="disallownewold"
+         value="[% product.disallownew FILTER html %]">
+  <input type="hidden" name="votesperuserold"
+       value="[% product.votesperuser FILTER html %]">
+  <input type="hidden" name="maxvotesperbugold" 
+         value="[% product.maxvotesperbug FILTER html %]">
+  <input type="hidden" name="votestoconfirmold" 
+         value="[% product.votestoconfirm FILTER html %]">
+  <input type="hidden" name="defaultmilestoneold"
+         value="[% product.defaultmilestone FILTER html %]">
+  <input type="hidden" name="action" value="update">
+  <input type="hidden" name="classification"
+         value="[% classification FILTER html %]">
+  <input type="submit" name="submit" value="Update">
+</form>
+  
+[% PROCESS "admin/products/footer.html.tmpl" no_add_product_link = 1 %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -1,0 +1,89 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # Contributor(s): Jack Nerad     <jnerad@bellsouth.net>
+  #                 Tiago R. Mello <tiago@async.com.br>
+  #                 Gabriel S. Oliveira <gabriel@async.com.br>
+  #%]
+
+[%# INTERFACE:
+  # classification: string; name of classification product is in.
+  #        product: array;  an array of product objects.
+  #%]
+
+[% IF Param('useclassification') %]
+  <tr>
+    <th align="right"><b>Classification:</b></th>
+    <td><b>[% classification FILTER html %]</b></td>
+  </tr>
+[% END %]
+    
+<tr>
+  <th align="right">Product:</th>
+  <td><input size="64" maxlength="64" name="product" 
+             value="[% product.name FILTER html %]">
+  </td>
+</tr>
+<tr>
+  <th align="right">Description:</th>
+  <td><textarea rows="4" cols="64" wrap="virtual" name="description">
+        [% product.description FILTER none %]</textarea>
+  </td>
+</tr>
+
+[% IF Param('usetargetmilestone') -%]
+  <tr>
+    <th align="right">URL describing milestones for this product:</th>
+    <td><input type="text" size="64" maxlength="255" name="milestoneurl"
+               value="[% product.milestoneurl FILTER html %]">
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Default milestone:</th>
+    <td><input type="text" size="20" maxlength="20" name="defaultmilestone"
+              value="[% product.defaultmilestone FILTER html %]">
+    </td>
+  </tr>
+[% END %]
+    
+<tr>
+  <th align="right">Closed for [% terms.bug %] entry:</th>
+  <td><input type="checkbox" name="disallownew" value="1"
+       [% IF product.disallownew == "1" %]
+             checked="checked"[% END %]>
+  </td>
+</tr>
+<tr>
+  <th align="right">Maximum votes per person:</th>
+  <td><input size="5" maxlength="5" name="votesperuser" 
+             value="[% product.votesperuser FILTER html %]">
+  </td>
+</tr>
+<tr>
+  <th align="right">
+    Maximum votes a person can put on a single [% terms.bug %]:
+  </th>
+  <td><input size="5" maxlength="5" name="maxvotesperbug" 
+             value="[% product.maxvotesperbug FILTER html %]">
+  </td>
+</tr>
+<tr>
+  <th align="right">
+    Number of votes [% terms.abug %] in this product needs to
+    automatically get out of the
+    <a href="page.cgi?id=fields.html#status">UNCONFIRMED</a> state:
+  </th>
+  <td><input size="5" maxlength="5" name="votestoconfirm" 
+             value="[% product.votestoconfirm FILTER html %]">
+  </td>
+</tr>

@@ -44,13 +44,6 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 # doesn't work for me.
 use vars qw(@legal_bug_status @legal_resolution);
 
-my %ctl = ( 
-    &::CONTROLMAPNA => 'NA',
-    &::CONTROLMAPSHOWN => 'Shown',
-    &::CONTROLMAPDEFAULT => 'Default',
-    &::CONTROLMAPMANDATORY => 'Mandatory'
-);
-
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
 
@@ -185,67 +178,6 @@ sub CheckClassificationProductNew
                        { product => $prod, classification => $cl });
     }
 }
-
-#
-# Displays the form to edit a products parameters
-#
-
-sub EmitFormElements
-{
-    my ($classification, $product, $description, $milestoneurl, $disallownew,
-        $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
-        = @_;
-
-    $product = value_quote($product);
-    $description = value_quote($description);
-
-    if (Param('useclassification')) {
-        print "  <TH ALIGN=\"right\">Classification:</TH>\n";
-        print "  <TD><b>",html_quote($classification),"</b></TD>\n";
-        print "</TR><TR>\n";
-    }
-
-    print "  <TH ALIGN=\"right\">Product:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"product\" VALUE=\"$product\"></TD>\n";
-    print "</TR><TR>\n";
-
-    print "  <TH ALIGN=\"right\">Description:</TH>\n";
-    print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">$description</TEXTAREA></TD>\n";
-
-    $defaultmilestone = value_quote($defaultmilestone);
-    if (Param('usetargetmilestone')) {
-        $milestoneurl = value_quote($milestoneurl);
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">URL describing milestones for this product:</TH>\n";
-        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
-
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">Default milestone:</TH>\n";
-        
-        print "  <TD><INPUT TYPE=TEXT SIZE=20 MAXLENGTH=20 NAME=\"defaultmilestone\" VALUE=\"$defaultmilestone\"></TD>\n";
-    } else {
-        print qq{<INPUT TYPE=HIDDEN NAME="defaultmilestone" VALUE="$defaultmilestone">\n};
-    }
-
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Closed for bug entry:</TH>\n";
-    my $closed = $disallownew ? "CHECKED" : "";
-    print "  <TD><INPUT TYPE=CHECKBOX NAME=\"disallownew\" $closed VALUE=\"1\"></TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Maximum votes per person:</TH>\n";
-    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votesperuser\" VALUE=\"$votesperuser\"></TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Maximum votes a person can put on a single bug:</TH>\n";
-    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"maxvotesperbug\" VALUE=\"$maxvotesperbug\"></TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Number of votes a bug in this product needs to automatically get out of the <A HREF=\"page.cgi?id=fields.html#status\">UNCONFIRMED</A> state:</TH>\n";
-    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votestoconfirm\" VALUE=\"$votestoconfirm\"></TD>\n";
-}
-
 
 #
 # Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
@@ -408,40 +340,16 @@ if (!$action && !$product) {
 #
 
 if ($action eq 'add') {
-    $template->put_header("Add product");
 
     if (Param('useclassification')) {
         CheckClassification($classification);
     }
-    #print "This page lets you add a new product to bugzilla.\n";
+    $vars->{'classification'} = $classification;
+    $template->process("admin/products/create.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 
-    print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements($classification,'', '', '', 0, 0, 10000, 0, "---");
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Version:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"version\" VALUE=\"unspecified\"></TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Create chart datasets for this product:</TH>\n";
-    print "  <TD><INPUT TYPE=CHECKBOX NAME=\"createseries\" VALUE=1></TD>";
-    print "</TR>\n";
-
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "<INPUT TYPE=HIDDEN NAME='subcategory' VALUE='-All-'>\n";
-    print "<INPUT TYPE=HIDDEN NAME='open_name' VALUE='All Open'>\n";
-    print "<INPUT TYPE=HIDDEN NAME='classification' VALUE='",html_quote($classification),"'>\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
-
 
 
 #
@@ -781,8 +689,9 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product)) {
-    $template->put_header("Edit product");
     CheckProduct($product);
+    trick_taint($product);
+    my $product_id = get_product_id($product); 
     my $classification_id=1;
     if (Param('useclassification')) {
         # If a product has been given with no classification associated
@@ -790,7 +699,6 @@ if ($action eq 'edit' || (!$action && $product)) {
         if ($classification) {
             CheckClassificationProduct($classification, $product);
         } else {
-            trick_taint($product);
             $classification =
                 $dbh->selectrow_array("SELECT classifications.name
                                        FROM products, classifications
@@ -800,144 +708,79 @@ if ($action eq 'edit' || (!$action && $product)) {
         }
         $classification_id = get_classification_id($classification);
     }
+    
+    $vars->{'classification'} = $classification;
 
     # get data of product
-    SendSQL("SELECT classifications.description,
-                    products.id,products.description,milestoneurl,disallownew,
-                    votesperuser,maxvotesperbug,votestoconfirm,defaultmilestone
-             FROM products,classifications
-             WHERE products.name=" . SqlQuote($product) .
-            " AND classifications.id=" . SqlQuote($classification_id));
-    my ($class_description, $product_id,$prod_description, $milestoneurl, $disallownew,
-        $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
-        FetchSQLData();
-
-    print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
-    print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements($classification, $product, $prod_description, $milestoneurl, 
-                     $disallownew, $votesperuser, $maxvotesperbug,
-                     $votestoconfirm, $defaultmilestone);
+    $vars->{'product'} = $dbh->selectrow_hashref(qq{
+            SELECT id, name, classification_id, description,
+                   milestoneurl, disallownew, votesperuser,
+                   maxvotesperbug, votestoconfirm, defaultmilestone
+              FROM products
+             WHERE id = ?}, undef, $product_id);
     
-    print "</TR><TR VALIGN=top>\n";
-    print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit components:</A></TH>\n";
-    print "  <TD>";
-    SendSQL("SELECT name,description
-             FROM components
-             WHERE product_id=$product_id");
-    if (MoreSQLData()) {
-        print "<table>";
-        while ( MoreSQLData() ) {
-            my ($component, $description) = FetchSQLData();
-            $description ||= "<FONT COLOR=\"red\">description missing</FONT>";
-            print "<tr><th align=right valign=top>$component:</th>";
-            print "<td valign=top>$description</td></tr>\n";
-        }
-        print "</table>\n";
-    } else {
-        print "<FONT COLOR=\"red\">missing</FONT>";
-    }
+   
+    $vars->{'components'} = $dbh->selectall_arrayref(qq{
+            SELECT name, description
+              FROM components
+             WHERE product_id = ?
+          ORDER BY name}, {'Slice' => {}},$product_id); 
+    
+    
+    $vars->{'versions'} = $dbh->selectcol_arrayref(q{
+        SELECT value FROM versions
+         WHERE product_id = ?
+      ORDER BY value}, undef, $product_id);
 
-
-    print "</TD>\n</TR><TR>\n";
-    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit versions:</A></TH>\n";
-    print "  <TD>";
-    SendSQL("SELECT value
-             FROM versions
-             WHERE product_id=$product_id
-             ORDER BY value");
-    if (MoreSQLData()) {
-        my $br = 0;
-        while ( MoreSQLData() ) {
-            my ($version) = FetchSQLData();
-            print "<BR>" if $br;
-            print $version;
-            $br = 1;
-        }
-    } else {
-        print "<FONT COLOR=\"red\">missing</FONT>";
-    }
-
-    #
-    # Adding listing for associated target milestones - matthew@zeroknowledge.com
-    #
     if (Param('usetargetmilestone')) {
-        print "</TD>\n</TR><TR>\n";
-        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), $classhtmlvar, "\">Edit milestones:</A></TH>\n";
-        print "  <TD>";
-        SendSQL("SELECT value
-                 FROM milestones
-                 WHERE product_id=$product_id
-                 ORDER BY sortkey,value");
-        if(MoreSQLData()) {
-            my $br = 0;
-            while ( MoreSQLData() ) {
-                my ($milestone) = FetchSQLData();
-                print "<BR>" if $br;
-                print $milestone;
-                $br = 1;
-            }
-        } else {
-            print "<FONT COLOR=\"red\">missing</FONT>";
-        }
+        $vars->{'milestones'} = $dbh->selectcol_arrayref(q{
+                                    SELECT value 
+                                      FROM milestones
+                                     WHERE product_id = ?
+                                  ORDER BY sortkey, value}, 
+                                     undef, $product_id);
     }
+        
+    my $query = qq{SELECT
+                       groups.id, groups.name, groups.isactive,
+                       group_control_map.entry,
+                       group_control_map.membercontrol,
+                       group_control_map.othercontrol,
+                       group_control_map.canedit
+                  FROM groups
+                 INNER JOIN group_control_map
+                        ON groups.id = group_control_map.group_id
+                  WHERE group_control_map.product_id = ?
+                  AND   groups.isbuggroup != 0
+                  ORDER BY groups.name};
+    my $groups = $dbh->selectall_arrayref($query, {'Slice' => {}},
+                                          $product_id);
+    
+    # Convert Group Controls(membercontrol and othercontrol) from 
+    # integer to string to display Membercontrol/Othercontrol names
+    # at the template. <gabriel@async.com.br>
+    my $constants = {
+        (CONTROLMAPNA) => 'NA',
+        (CONTROLMAPSHOWN) => 'Shown',
+        (CONTROLMAPDEFAULT) => 'Default',
+        (CONTROLMAPMANDATORY) => 'Mandatory'};
 
-    print "</TD>\n</TR><TR>\n";
-    print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=editgroupcontrols&product=", url_quote($product), $classhtmlvar,"\">Edit Group Access Controls</A></TH>\n";
-    print "<TD>\n";
-    SendSQL("SELECT id, name, isactive, entry, membercontrol, othercontrol, canedit " .
-            "FROM groups, " .
-            "group_control_map " .
-            "WHERE group_control_map.group_id = id AND product_id = $product_id " .
-            "AND isbuggroup != 0 ORDER BY name");
-    while (MoreSQLData()) {
-        my ($id, $name, $isactive, $entry, $membercontrol, $othercontrol, $canedit) 
-            = FetchSQLData();
-        print "<B>" . html_quote($name) . ":</B> ";
-        if ($isactive) {
-            print $ctl{$membercontrol} . "/" . $ctl{$othercontrol}; 
-            print ", ENTRY" if $entry;
-            print ", CANEDIT" if $canedit;
-        } else {
-            print "DISABLED";
-        }
-        print "<BR>\n";
+    foreach my $group (@$groups) {
+        $group->{'membercontrol'} =
+            $constants->{$group->{'membercontrol'}};
+        $group->{'othercontrol'} =
+            $constants->{$group->{'othercontrol'}};
     }
-    print "</TD>\n</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
-    print "  <TD>";
-    SendSQL("SELECT count(bug_id), product_id
-             FROM bugs " .
-            $dbh->sql_group_by('product_id') . "
-             HAVING product_id = $product_id");
-    my $bugs = '';
-    $bugs = FetchOneColumn() if MoreSQLData();
-    print $bugs || 'none';
+   
+    $vars->{'groups'} = $groups;
+    
+    $vars->{'bug_count'} = $dbh->selectrow_array(qq{
+            SELECT COUNT(*) FROM bugs
+            WHERE product_id = ?}, undef, $product_id);
+    
+    $template->process("admin/products/edit.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
 
-    print "</TD>\n</TR></TABLE>\n";
-
-    print "<INPUT TYPE=HIDDEN NAME=\"classification\" VALUE=\"" .
-        html_quote($classification) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"productold\" VALUE=\"" .
-        html_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"" .
-        html_quote($prod_description) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"milestoneurlold\" VALUE=\"" .
-        html_quote($milestoneurl) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"votestoconfirmold\" VALUE=\"$votestoconfirm\">\n";
-    $defaultmilestone = value_quote($defaultmilestone);
-    print "<INPUT TYPE=HIDDEN NAME=\"defaultmilestoneold\" VALUE=\"$defaultmilestone\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-
-    print "</FORM>";
-
-    my $x = $localtrailer;
-    $x =~ s/more/other/;
-    PutTrailer($x);
     exit;
 }
 
