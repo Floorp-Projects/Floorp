@@ -253,7 +253,11 @@ sub generate_chart {
     my ($data_file, $image_file, $type, $product, $datasets) = @_;
     
     if (! open FILE, $data_file) {
-        ThrowCodeError("chart_data_not_generated");
+        if ($product eq '-All-') {
+            $product = '';
+        }
+
+        ThrowCodeError("chart_data_not_generated", {'product' => $product});
     }
 
     my @fields;

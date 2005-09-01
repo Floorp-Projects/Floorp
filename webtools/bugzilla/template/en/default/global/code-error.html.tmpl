@@ -70,8 +70,18 @@
     the error [% bug.error FILTER html %].
     
   [% ELSIF error == "chart_data_not_generated" %]
-    The tool which gathers [% terms.bug %] counts has not been run yet.
-        
+    [% IF product %]
+      Charts for the <em>[% product FILTER html %]</em> product are not
+      available yet because no charting data has been collected for it since it
+      was created.
+    [% ELSE %]
+      No charting data has been collected yet.
+    [% END %]
+    Please wait a day and try again.
+    If you're seeing this message after a day, then you should contact
+    <a href="mailto:[% Param('maintainer') %]">[% Param('maintainer') %]</a>
+    and reference this error.
+
   [% ELSIF error == "chart_datafile_corrupt" %]
     The chart data file [% file FILTER html %] is corrupt.
         
