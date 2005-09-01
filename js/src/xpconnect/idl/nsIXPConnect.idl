@@ -418,7 +418,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(DEB1D48E-7469-4B01-B186-D9854C7D3F2D)]
+[uuid(C9D5888D-F187-48F7-8BB1-C0361A429E82)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -644,15 +644,4 @@ interface nsIXPConnect : nsISupports
      *                        should end with a slash (/) character
      */
     void flagSystemFilenamePrefix(in string aFilenamePrefix);
-
-    /**
-     * Restore an old prototype for wrapped natives of type
-     * aClassInfo. This should be used only when restoring an old
-     * scope into a state close to where it was prior to
-     * being reinitialized.
-     */
-    void restoreWrappedNativePrototype(in JSContextPtr aJSContext,
-                                       in JSObjectPtr  aScope,
-                                       in nsIClassInfo aClassInfo,
-                                       in nsIXPConnectJSObjectHolder aPrototype);
 };

@@ -1616,10 +1616,9 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     }
   } else {
     // If there's already a global object in mContext we're called
-    // after ::JS_ClearScope() was called. We'll have to tell
-    // XPConnect to re-initialize the global object to do things like
-    // define the Components object on the global again and forget all
-    // old prototypes in this scope.
+    // after ::JS_ClearScope() was called. We'll have to tell XPConnect
+    // to re-initialize the global object to do things like define the
+    // Components object on the global again.
     rv = xpc->InitClasses(mContext, global);
     NS_ENSURE_SUCCESS(rv, rv);
 
