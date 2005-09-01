@@ -3297,25 +3297,18 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     fs = (JSFunctionSpec *) JSVAL_TO_PRIVATE(fsv);
 
-    if (argc == 0) {
+    /*
+     * We know that argv[0] is valid because JS_DefineFunctions, which is our
+     * only (indirect) referrer, defined us as requiring at least one argument
+     * (notice how it passes fs->nargs + 1 as the next-to-last argument to
+     * JS_DefineFunction).
+     */
+    if (JSVAL_IS_PRIMITIVE(argv[0])) {
         /*
-         * Follow Function.prototype.apply and .call by using the global
-         * object as the 'this' param if no args.  We know argv[0] is valid
-         * because JS_DefineFunctions, below, defined us as requiring at
-         * least one argument (it passes fs->nargs + 1 as the penultimate
-         * argument to JS_DefineFunction).
-         */
-        while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
-            obj = tmp;
-        argv[0] = OBJECT_TO_JSVAL(obj);
-        argc = 1;
-    } else if (JSVAL_IS_PRIMITIVE(argv[0])) {
-        /*
-         * Make sure that this is an object, as required by the generic
+         * Make sure that this is an object or null, as required by the generic
          * functions.
          */
-        tmp = js_ValueToNonNullObject(cx, argv[0]);
-        if (!tmp)
+        if (!js_ValueToObject(cx, argv[0], &tmp))
             return JS_FALSE;
         argv[0] = OBJECT_TO_JSVAL(tmp);
     }
@@ -3327,6 +3320,22 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * prototype native method with our first argument passed as |this|.
      */
     memmove(argv - 1, argv, (fs->nargs + 1) * sizeof(jsval));
+
+    /*
+     * Follow Function.prototype.apply and .call by using the global object as
+     * the 'this' param if no args.
+     */
+    JS_ASSERT(cx->fp->argv == argv);
+    if (!js_ComputeThis(cx, JSVAL_TO_OBJECT(argv[-1]), cx->fp))
+        return JS_FALSE;
+
+    /*
+     * Protect against argc - 1 underflowing below. By calling js_ComputeThis,
+     * we made it as if the static was called with one parameter.
+     */
+    if (argc == 0)
+        argc = 1;
+
     return fs->call(cx, JSVAL_TO_OBJECT(argv[-1]), argc - 1, argv, rval);
 }
 
