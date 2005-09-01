@@ -655,7 +655,7 @@ nsGlobalWindow::GetPopupControlState() const
 }
 
 #define WINDOWSTATEHOLDER_IID \
-{0x0b917c3e, 0xbd50, 0x4683, {0xaf, 0xc9, 0xc7, 0x81, 0x07, 0xae, 0x33, 0x26}}
+{0x6fb7a1b5, 0x2dfe, 0x40a7, {0xbc, 0xee, 0x1f, 0xac, 0xd2, 0x8d, 0x47, 0x62}}
 
 class WindowStateHolder : public nsISupports
 {
@@ -666,8 +666,7 @@ public:
   WindowStateHolder(nsGlobalWindow *aWindow,
                     nsIXPConnectJSObjectHolder *aHolder,
                     nsNavigator *aNavigator,
-                    nsLocation *aLocation,
-                    nsIXPConnectJSObjectHolder *aOuterProto);
+                    nsLocation *aLocation);
 
   // Get the contents of focus memory when the state was saved
   // (if the focus was inside of this window).
@@ -680,7 +679,6 @@ public:
 
   nsNavigator* GetNavigator() { return mNavigator; }
   nsLocation* GetLocation() { return mLocation; }
-  nsIXPConnectJSObjectHolder* GetOuterProto() { return mOuterProto; }
 
   void DidRestoreWindow()
   {
@@ -688,7 +686,6 @@ public:
     mInnerWindowHolder = nsnull;
     mNavigator = nsnull;
     mLocation = nsnull;
-    mOuterProto = nsnull;
   }
 
 protected:
@@ -702,19 +699,16 @@ protected:
   nsRefPtr<nsLocation> mLocation;
   nsCOMPtr<nsIDOMElement> mFocusedElement;
   nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterProto;
 };
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
                                      nsIXPConnectJSObjectHolder *aHolder,
                                      nsNavigator *aNavigator,
-                                     nsLocation *aLocation,
-                                     nsIXPConnectJSObjectHolder *aOuterProto)
+                                     nsLocation *aLocation)
   : mInnerWindow(aWindow),
     mInnerWindowHolder(aHolder),
     mNavigator(aNavigator),
-    mLocation(aLocation),
-    mOuterProto(aOuterProto)
+    mLocation(aLocation)
 {
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
@@ -1029,10 +1023,10 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
         // and proto, which makes the JS engine look up classes in
         // cx->globalObject, i.e. this outer window].
 
+        Freeze();
         mInnerWindow = nsnull;
 
-        Freeze();
-        rv = xpc->
+        nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(cx, sgo, NS_GET_IID(nsISupports),
                                           flags,
                                           getter_AddRefs(mInnerWindowHolder));
@@ -1110,82 +1104,12 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
                                              html_doc);
     }
 
-    if (!aState && !reUseInnerWindow) {
-      // Loading a new page and creating a new inner window, *not*
-      // restoring from session history.
-
-      // InitClassesWithNewWrappedGlobal() for the new inner window
-      // sets the global object in cx to be the new wrapped global. We
-      // don't want that, but re-initializing the outer window will
-      // fix that for us. And perhaps more importantly, this will
-      // ensure that the outer window gets a new prototype so we don't
-      // leak prototype properties from the old inner window to the
-      // new one.
-
-      scx->InitContext(this);
-
-      // Now that both the the inner and outer windows are initialized
-      // we can clear the outer scope again to make *all* properties
-      // forward to the inner window.
-      ::JS_ClearScope(cx, mJSObject);
-
-      // Make the inner and outer window both share the same
-      // prototype. The prototype we share is the outer window's
-      // prototype, this way XPConnect can still find the wrapper to
-      // use when making a call like alert() (w/o qualifying it with
-      // "window."). XPConnect looks up the wrapper based on the
-      // function object's parent, which is the object the function
-      // was called on, and when calling alert() we'll be calling the
-      // alert() function from the outer window's prototype off of the
-      // inner window. In this case XPConnect is able to find the
-      // outer (through the JSExtendedClass hook outerObject), so this
-      // prototype sharing works.
-
-      // We do *not* want to use anything else out of the outer
-      // object's prototype chain than the first prototype, which is
-      // the XPConnect prototype. The rest we want from the inner
-      // window's prototype, i.e. the global scope polluter and
-      // Object.prototype. This way the outer also gets the benefits
-      // of the global scope polluter, and the inner window's
-      // Object.prototype.
-      JSObject *proto = ::JS_GetPrototype(cx, mJSObject);
-      JSObject *innerProto = ::JS_GetPrototype(cx, newInnerWindow->mJSObject);
-      JSObject *innerProtoProto = ::JS_GetPrototype(cx, innerProto);
-
-      ::JS_SetPrototype(cx, newInnerWindow->mJSObject, proto);
-      ::JS_SetPrototype(cx, proto, innerProtoProto);
-    }
-
-    if (aState) {
-      // Restoring from session history.
-
-      nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
-      NS_ASSERTION(wsh, "What kind of weird state are you giving me here?");
-
-      // Restore the prototype for the Window/ChromeWindow class in
-      // the outer window scope.
-      nsCOMPtr<nsIClassInfo> ci =
-        do_QueryInterface((nsIScriptGlobalObject *)this);
-
-      rv = xpc->RestoreWrappedNativePrototype(cx, mJSObject, ci,
-                                              wsh->GetOuterProto());
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // Refresh the outer window's prototype to what it was when the
-      // window state was saved. This will make the outer window
-      // object (and wrapper) pick up the prototype it had when the
-      // window state was saved. This means Object.prototype etc from
-      // the old inner will again be on the outer window's prototype
-      // chain.
-
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-      rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
-                                           getter_AddRefs(wrapper));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = wrapper->RefreshPrototype();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    // InitClassesWithNewWrappedGlobal() for the new inner window sets
+    // the global object in cx to be the new wrapped global. We don't
+    // want that, but re-initializing the outer window will fix that
+    // for us. This has to happen unconditionally since we clear the
+    // outer window's scope unconditionally.
+    scx->InitContext(this);
 
     if (newDoc) {
       newDoc->SetScriptGlobalObject(newInnerWindow);
@@ -6746,20 +6670,10 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
   NS_ASSERTION(inner, "No inner window to save");
 
-  // Remember the outer window's XPConnect prototype.
-  nsCOMPtr<nsIClassInfo> ci =
-    do_QueryInterface((nsIScriptGlobalObject *)this);
-  nsCOMPtr<nsIXPConnectJSObjectHolder> proto;
-  nsresult rv = nsContentUtils::XPConnect()->
-    GetWrappedNativePrototype((JSContext *)mContext->GetNativeContext(),
-                              mJSObject, ci, getter_AddRefs(proto));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
                                                       mInnerWindowHolder,
                                                       mNavigator,
-                                                      mLocation,
-                                                      proto);
+                                                      mLocation);
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);
 
 #ifdef DEBUG_PAGE_CACHE

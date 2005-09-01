@@ -2996,15 +2996,6 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
-
-    NS_ASSERTION(!sgo || sgo->GetGlobalJSObject() == nsnull,
-                 "Multiple wrappers created for global object!");
-  }
-#endif
-
   JSObject *proto = nsnull;
 
   wrapper->GetJSObjectPrototype(&proto);
@@ -5186,30 +5177,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
 
-      // In most cases we want to find the wrapped native prototype in
-      // aWin's scope and use that prototype for
-      // ClassName.prototype. But in the case where we're setting up
-      // "Window.prototype" or "ChromeWindow.prototype" we want to do
-      // the look up in aWin's outer window's scope since the inner
-      // window's wrapped native prototype comes from the outer
-      // window's scope.
-      nsGlobalWindow *scopeWindow;
-
-      if (ci_id == eDOMClassInfo_Window_id ||
-          ci_id == eDOMClassInfo_ChromeWindow_id) {
-        scopeWindow = aWin->GetOuterWindowInternal();
-
-        if (!scopeWindow) {
-          scopeWindow = aWin;
-        }
-      } else {
-        scopeWindow = aWin;
-      }
-
       rv =
-        sXPConnect->GetWrappedNativePrototype(cx,
-                                              scopeWindow->GetGlobalJSObject(),
-                                              ci,
+        sXPConnect->GetWrappedNativePrototype(cx, obj, ci,
                                               getter_AddRefs(proto_holder));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
@@ -5425,6 +5394,39 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
 
         OBJ_DROP_PROPERTY(cx, pobj, prop);
+
+        JSObject *proto;
+        if (pobj != innerObj && (proto = ::JS_GetPrototype(cx, obj))) {
+          // A property was found on one of innerObj's prototypes,
+          // this means the property could've been found on the
+          // XPCWrappedNative proto, which means that the property is
+          // likely a function (getter, setter, or a method). In this
+          // case we can't expose this method as a property of the
+          // outer since a call to it would be on the wrong object and
+          // XPConnect can't deal. In this case only, check if the
+          // property also exists on our prototype, and if it does,
+          // return it instead of the one found on the inner object's
+          // prototype chain.
+
+#ifdef DEBUG_SH_FORWARDING
+          printf(" ... but the propety was found on the prototype, "
+                 "checking to see if the property also exists on our "
+                 "prototype.\n");
+#endif
+
+          JSObject *mypobj;
+          OBJ_LOOKUP_PROPERTY(cx, proto, interned_id, &mypobj,
+                              &prop);
+
+          if (prop) {
+            // We found the prop on obj's prototype too, use it
+            // instead.
+
+            OBJ_DROP_PROPERTY(cx, mypobj, prop);
+
+            pobj = mypobj;
+          }
+        }
 
         *objp = pobj;
       }

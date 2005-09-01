@@ -982,63 +982,6 @@ nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
     return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies(ccx);
 }
 
-/* void restoreWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo, in nsIXPConnectJSObjectHolder aPrototype); */
-NS_IMETHODIMP 
-nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext, 
-                                           JSObject * aScope, 
-                                           nsIClassInfo * aClassInfo, 
-                                           nsIXPConnectJSObjectHolder * aPrototype)
-{
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if(!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if(!aClassInfo || !aPrototype)
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    JSObject *protoJSObject;
-    nsresult rv = aPrototype->GetJSObject(&protoJSObject);
-    if(NS_FAILED(rv))
-        return UnexpectedFailure(rv);
-
-    if(!IS_PROTO_CLASS(JS_GET_CLASS(ccx, protoJSObject)))
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
-    if(!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCWrappedNativeProto *proto =
-        (XPCWrappedNativeProto*)JS_GetPrivate(ccx, protoJSObject);
-    if(!proto)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if(scope != proto->GetScope())
-    {
-        NS_ERROR("Attempt to reset prototype to a prototype from a"
-                 "different scope!");
-
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-    }
-
-    XPCNativeScriptableInfo *si = proto->GetScriptableInfo();
-
-    if(si && si->GetFlags().DontSharePrototype())
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    ClassInfo2WrappedNativeProtoMap* map = scope->GetWrappedNativeProtoMap();
-    XPCLock* lock = scope->GetRuntime()->GetMapLock();
-
-    {   // scoped lock
-        XPCAutoLock al(lock);
-        map->Remove(aClassInfo);
-        map->Add(aClassInfo, proto);
-    }
-
-    return NS_OK;
-}
-
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
 NS_IMETHODIMP 
 nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext, 

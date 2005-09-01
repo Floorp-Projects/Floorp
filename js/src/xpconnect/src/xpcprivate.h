@@ -985,10 +985,6 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
 extern JSBool
 xpc_InitWrappedNativeJSOps();
 
-#define IS_PROTO_CLASS(clazz)                                                 \
-          ((clazz) == &XPC_WN_NoMods_Proto_JSClass ||                         \
-           (clazz) == &XPC_WN_ModsAllowed_Proto_JSClass)
-
 // Comes from xpcwrappednativeops.cpp
 extern void
 xpc_MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg);
@@ -1671,7 +1667,7 @@ protected:
     XPCWrappedNativeProto(const XPCWrappedNativeProto& r); // not implemented
     XPCWrappedNativeProto& operator= (const XPCWrappedNativeProto& r); // not implemented
 
-    // hide ctor
+    // hide ctor and dtor
     XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
                           nsIClassInfo* ClassInfo,
                           PRUint32 ClassInfoFlags,
