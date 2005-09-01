@@ -41,4 +41,7 @@ void xxxNeverCalledXUL()
 {
   XRE_main(0, nsnull, nsnull);
   XRE_GetFileFromPath(nsnull, nsnull);
+  XRE_GetStaticComponents(nsnull, nsnull);
+  XRE_InitEmbedding(nsnull, nsnull, nsnull, nsnull, 0);
+  XRE_TermEmbedding();
 }

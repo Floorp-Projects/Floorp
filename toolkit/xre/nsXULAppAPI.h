@@ -213,4 +213,39 @@ extern "C" XULAPI void
 XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
                         PRUint32 *aComponentCount);
 
+/**
+ * Initialize libXUL for embedding purposes.
+ *
+ * @param aLibXULDirectory   The directory in which the libXUL shared library
+ *                           was found.
+ * @param aAppDirectory      The directory in which the application components
+ *                           and resources can be found. This will map to
+ *                           the "resource:app" directory service key.
+ * @param aAppDirProvider    A directory provider for the application. This
+ *                           provider will be aggregated by a libxul provider
+ *                           which will provide the base required GRE keys.
+ * @param aStaticComponents  Static components provided by the embedding
+ *                           application. This should *not* include the
+ *                           components from XRE_GetStaticComponents. May be
+ *                           null if there are no static components.
+ * @param aStaticComponentCount the number of static components in
+ *                           aStaticComponents
+ *
+ * @note This function must be called from the "main" thread.
+ *
+ * @note At the present time, this function may only be called once in
+ * a given process. Use XRE_TermEmbedding to clean up and free
+ * resources allocated by XRE_InitEmbedding.
+ */
+
+extern "C" XULAPI nsresult
+XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
+                  nsILocalFile *aAppDirectory,
+                  nsIDirectoryServiceProvider *aAppDirProvider = nsnull,
+                  nsStaticModuleInfo const *aStaticComponents = nsnull,
+                  PRUint32 aStaticComponentCount = 0);
+
+extern "C" XULAPI void
+XRE_TermEmbedding();
+
 #endif // _nsXULAppAPI_h__

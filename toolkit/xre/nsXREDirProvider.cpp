@@ -175,17 +175,20 @@ NS_IMETHODIMP
 nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
 			  nsIFile** aFile)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   *aPersistent = PR_TRUE;
-  nsCOMPtr<nsIFile> file;
 
   if (!strcmp(aProperty, NS_OS_CURRENT_PROCESS_DIR) ||
       !strcmp(aProperty, NS_APP_INSTALL_CLEANUP_DIR)) {
-    // NOTE: this is *different* than NS_XPCOM_CURRENT_PROCESS_DIR. This points
-    // to the application dir. NS_XPCOM_CURRENT_PROCESS_DIR points to the toolkit.
+    // NOTE: this should be *different* than NS_XPCOM_CURRENT_PROCESS_DIR.
+    // This should point to the application dir.
+    // NS_XPCOM_CURRENT_PROCESS_DIR points to the toolkit. But we suck.
     return mAppDir->Clone(aFile);
   }
-  else if (!strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_50_DIR) ||
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIFile> file;
+
+  if (!strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_50_DIR) ||
            !strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR)) {
     return GetProfileDefaultsDir(aFile);
   }
