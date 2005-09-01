@@ -220,7 +220,6 @@ var gLanguagesDialog = {
     this._buildAvailableLanguageList(); 
     
     this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("label2"));
-    this._availableLanguages.setAttribute("accesskey", this._availableLanguages.getAttribute("accesskey2"));
   },
   
   removeLanguage: function ()
