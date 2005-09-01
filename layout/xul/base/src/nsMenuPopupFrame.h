@@ -106,6 +106,7 @@ public:
   NS_IMETHOD HideChain();
 
   NS_IMETHOD KillPendingTimers();
+  NS_IMETHOD CancelPendingTimers();
 
   NS_IMETHOD InstallKeyboardNavigator();
   NS_IMETHOD RemoveKeyboardNavigator();
