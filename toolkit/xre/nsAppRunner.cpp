@@ -253,6 +253,7 @@ static char **gRestartArgv;
 #include <qapplication.h>
 #endif
 
+// Save the path of the given file to the specified environment variable.
 static void
 SaveFileToEnv(const char *name, nsIFile *file)
 {
@@ -262,8 +263,17 @@ SaveFileToEnv(const char *name, nsIFile *file)
   char *expr = PR_smprintf("%s=%s", name, path.get());
   if (expr)
     PR_SetEnv(expr);
-
   // We intentionally leak |expr| here since it is required by PR_SetEnv.
+}
+
+// Save the path of the given file to the specified environment variable
+// provided the environment variable does not have a value.
+static void
+SaveFileToEnvIfUnset(const char *name, nsIFile *file)
+{
+  const char *val = PR_GetEnv(name);
+  if (!(val && *val))
+    SaveFileToEnv(name, file);
 }
 
 static PRBool
@@ -2351,10 +2361,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 
     // Ensure that these environment variables are set:
-    if (!PR_GetEnv("XRE_PROFILE_PATH"))
-      SaveFileToEnv("XRE_PROFILE_PATH", profD);
-    if (!PR_GetEnv("XRE_PROFILE_LOCAL_PATH"))
-      SaveFileToEnv("XRE_PROFILE_LOCAL_PATH", profLD);
+    SaveFileToEnvIfUnset("XRE_PROFILE_PATH", profD);
+    SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", profLD);
 
 #ifdef XP_MACOSX
     if (gBinaryPath) {
