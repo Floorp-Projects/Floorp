@@ -1147,6 +1147,7 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
     JSObject* cur;
 
     XPCWrappedNativeProto* proto = nsnull;
+    nsIClassInfo* protoClassInfo = nsnull;
 
     // If we were passed a function object then we need to find the correct
     // wrapper out of those that might be in the callee obj's proto chain.
@@ -1162,6 +1163,8 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
         {
             NS_ASSERTION(JS_GetParent(cx, funObjParent), "funobj's parent (proto) is global");
             proto = (XPCWrappedNativeProto*) JS_GetPrivate(cx, funObjParent);
+            if(proto)
+                protoClassInfo = proto->GetClassInfo();
         }
         else if(IS_WRAPPER_CLASS(funObjParentClass))
         {
@@ -1192,7 +1195,10 @@ XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
 return_wrapper:
             XPCWrappedNative* wrapper =
                 (XPCWrappedNative*) JS_GetPrivate(cx, cur);
-            if(proto && proto != wrapper->GetProto())
+            if(proto && proto != wrapper->GetProto() &&
+               (proto->GetScope() != wrapper->GetScope() ||
+                !protoClassInfo ||
+                protoClassInfo != wrapper->GetProto()->GetClassInfo()))
                 continue;
             if(pobj2)
                 *pobj2 = cur;
@@ -1204,7 +1210,10 @@ return_wrapper:
 return_tearoff:
             XPCWrappedNative* wrapper =
                 (XPCWrappedNative*) JS_GetPrivate(cx, JS_GetParent(cx,cur));
-            if(proto && proto != wrapper->GetProto())
+            if(proto && proto != wrapper->GetProto() &&
+               (proto->GetScope() != wrapper->GetScope() ||
+                !protoClassInfo ||
+                protoClassInfo != wrapper->GetProto()->GetClassInfo()))
                 continue;
             if(pobj2)
                 *pobj2 = cur;
@@ -2722,7 +2731,7 @@ static void DEBUG_PrintShadowObjectInfo(const char* header,
     if(header)
         printf("%s\n", header);
 
-    printf("   XPCNativeSet @ 0x%p for the class:\n", set);
+    printf("   XPCNativeSet @ 0x%p for the class:\n", (void*)set);
 
     char* className = nsnull;
     char* contractID = nsnull;
