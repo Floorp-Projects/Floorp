@@ -2441,18 +2441,10 @@ nsHTMLInputElement::DoneCreatingElement()
   SET_BOOLBIT(mBitField, BF_PARSER_CREATING, PR_FALSE);
 
   //
-  // Restore state for checkbox, radio, text and file
+  // Restore state as needed.  Note that disabled state applies to all control
+  // types.
   //
-  PRBool restoredCheckedState = PR_FALSE;
-  switch (mType) {
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_INPUT_FILE:
-    case NS_FORM_INPUT_HIDDEN:
-      restoredCheckedState = RestoreFormControlState(this, this);
-      break;
-  }
+  PRBool restoredCheckedState = RestoreFormControlState(this, this);
 
   //
   // If restore does not occur, we initialize .checked using the CHECKED
