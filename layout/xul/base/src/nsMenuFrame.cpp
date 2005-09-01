@@ -568,6 +568,14 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
   nsAutoString domEventToFire;
 
   if (aActivateFlag) {
+    if (mMenuParent) {
+      nsIMenuParent* ancestor = nsnull;
+      nsresult rv = mMenuParent->GetParentPopup(&ancestor);
+      while (NS_SUCCEEDED(rv) && ancestor) {
+        ancestor->CancelPendingTimers();
+        rv = ancestor->GetParentPopup(&ancestor);
+      }
+    }
     // Highlight the menu.
     mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
     // The menuactivated event is used by accessibility to track the user's movements through menus

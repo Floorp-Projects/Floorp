@@ -1754,12 +1754,15 @@ NS_IMETHODIMP
 nsMenuPopupFrame::GetParentPopup(nsIMenuParent** aMenuParent)
 {
   *aMenuParent = nsnull;
-  nsIFrame* frame = GetParent();
-  if (frame) {
-    nsIFrame* grandparent = frame->GetParent();
-    if (grandparent ) {
-      CallQueryInterface(grandparent, aMenuParent);
+  nsIFrame* parent = GetParent();
+  while (parent) {
+    nsCOMPtr<nsIMenuParent> menuParent = do_QueryInterface(parent);
+    if (menuParent) {
+      *aMenuParent = menuParent.get();
+      NS_ADDREF(*aMenuParent);
+      return NS_OK;
     }
+    parent = parent->GetParent();
   }
   return NS_OK;
 }
@@ -2031,39 +2034,11 @@ nsMenuPopupFrame::Notify(nsITimer* aTimer)
   if (aTimer == mCloseTimer.get()) {
     PRBool menuOpen = PR_FALSE;
     mTimerMenu->MenuIsOpen(menuOpen);
-    if (menuOpen) {
-      if (mCurrentMenu != mTimerMenu) {
-        // Walk through all of the sub-menus of this menu item until we get to the
-        // last sub-menu, then check if that sub-menu has an active menu item.  If it
-        // does, then keep that menu open.  If it doesn't, close menu and its sub-menus.
-        nsIFrame* child = mTimerMenu->GetMenuChild();
-        nsIMenuFrame *currentMenuItem = nsnull;
-        nsIMenuParent *menuParent;
-        while (child && NS_SUCCEEDED(CallQueryInterface(child, &menuParent)))
-        {
-          // get the selected menu item for this sub-menu
-          currentMenuItem = menuParent->GetCurrentMenuItem();
-          // if this sub-menu has a selected menu item, does that item open a sub-menu?
-          child = currentMenuItem ? currentMenuItem->GetMenuChild() : nsnull;
-        } // while we're not at the last submenu
+    if (menuOpen)
+      mTimerMenu->OpenMenu(PR_FALSE);
 
-        if (currentMenuItem)
-        {
-          // the sub-menu has a selected menu item, we're dealing with case (1)
-          SetCurrentMenuItem(mTimerMenu);
-        }
-        else {
-          // Nothing selected. Either the mouse never made it to the submenu 
-          // in case (1) or we're in a sibling of a grandparent in case (2).
-          // Regardless, close up the open chain.
-          mTimerMenu->OpenMenu(PR_FALSE);
-        }
-      } // if not the menu with an open submenu
-    } // if menu open
-    
-    if (mCloseTimer) {
+    if (mCloseTimer)
       mCloseTimer->Cancel();
-    }
   }
   
   mCloseTimer = nsnull;
@@ -2095,6 +2070,20 @@ nsMenuPopupFrame::KillPendingTimers ( )
   return KillCloseTimer();
 
 } // KillPendingTimers
+
+NS_IMETHODIMP
+nsMenuPopupFrame::CancelPendingTimers()
+{
+  if (mCloseTimer && mTimerMenu) {
+    if (mTimerMenu != mCurrentMenu) {
+      SetCurrentMenuItem(mTimerMenu);
+    }
+    mCloseTimer->Cancel();
+    mCloseTimer = nsnull;
+    mTimerMenu = nsnull;
+  }
+  return NS_OK;
+}
 
 void
 nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)

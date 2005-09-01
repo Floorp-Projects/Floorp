@@ -40,9 +40,9 @@
 #define nsIMenuParent_h___
 
 
-// {81C0BF71-9F50-4f4d-8B6A-D6B233C100C2}
+// {0D1F2281-A530-419c-AE2C-21672590A9EC}
 #define NS_IMENUPARENT_IID \
-{ 0x81c0bf71, 0x9f50, 0x4f4d, { 0x8b, 0x6a, 0xd6, 0xb2, 0x33, 0xc1, 0x0, 0xc2 } };
+{ 0x0d1f2281, 0xa530, 0x419c, { 0xae, 0x2c, 0x21, 0x67, 0x25, 0x90, 0xa9, 0xec } }
 
 class nsIMenuFrame;
 class nsIDOMKeyEvent;
@@ -156,6 +156,7 @@ public:
   NS_IMETHOD DismissChain() = 0;
   NS_IMETHOD HideChain() = 0;
   NS_IMETHOD KillPendingTimers() = 0;
+  NS_IMETHOD CancelPendingTimers() = 0;
 
   NS_IMETHOD CreateDismissalListener() = 0;
 
@@ -172,7 +173,8 @@ public:
 
   NS_IMETHOD SetIsContextMenu(PRBool aIsContextMenu) = 0;
   NS_IMETHOD GetIsContextMenu(PRBool& aIsContextMenu) = 0;
-  
+
+  NS_IMETHOD GetParentPopup(nsIMenuParent** aResult) = 0;
 };
 
 #endif
