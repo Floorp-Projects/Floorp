@@ -48,22 +48,45 @@ class nsILocalFile;
  * dynamically linked versions of the glue.
  */
 
+struct GREVersionRange {
+    const char *lower;
+    PRBool      lowerInclusive;
+    const char *upper;
+    PRBool      upperInclusive;
+};
+
+struct GREProperty {
+    const char *property;
+    const char *value;
+};
+
 /**
- * Locate the path of a particular version of the GRE.
+ * Locate the path of a GRE with certain properties.
  * 
- * @param version  The GRE version to search for.
- * @param buffer   A buffer to be filled with the appropriate path. If the
- *                 "local" GRE is specified (via the USE_LOCAL_GRE environment
- *                 variable, for example), this buffer will be set to the empty
- *                 string.
- * @param buflen   The length of buffer. This must be at least
- *                 PATH_MAX/MAXPATHLEN.
+ * @param versions         An array of version ranges: if any version range
+ *                         matches, the GRE is considered acceptable.
+ * @param versionsLength   The length of the versions array.
+ * @param properties       A null-terminated list of GRE property/value pairs
+ *                         which must all be satisfied.
+ * @param propertiesLength Length of the properties array.
+ * @param buffer           A buffer to be filled with the appropriate path. If
+ *                         the "local" GRE is specified (via the USE_LOCAL_GRE
+ *                         environment variable, for example), this buffer
+ *                         will be set to the empty string.
+ * @param buflen           The length of buffer. This must be at least
+ *                         PATH_MAX/MAXPATHLEN.
  * @throws NS_ERROR_FAILURE if an appropriate GRE could not be found.
+ * @note The properties parameter is ignored on macintosh, because of the
+ *       manner in which the XUL frameworks are installed by version.
+ * @note Currently this uses a "first-fit" algorithm, it does not select
+ *       the newest available GRE.
  */
 extern "C" NS_COM_GLUE nsresult
-GRE_GetGREPathForVersion(const char *version,
-                         char *buffer, PRUint32 buflen);
-
+GRE_GetGREPathWithProperties(const GREVersionRange *versions,
+                             PRUint32 versionsLength,
+                             const GREProperty *properties,
+                             PRUint32 propertiesLength,
+                             char *buffer, PRUint32 buflen);
 
 #ifdef XPCOM_GLUE
 
