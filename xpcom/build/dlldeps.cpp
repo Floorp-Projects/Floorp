@@ -100,7 +100,7 @@
 
 void XXXNeverCalled()
 {
-    GRE_GetGREPathForVersion(nsnull, nsnull, 0);
+    GRE_GetGREPathWithProperties(nsnull, 0, nsnull, 0, nsnull, 0);
     nsTextFormatter::snprintf(nsnull,0,nsnull);
     nsTextFormatter::smprintf(nsnull, nsnull);
     nsTextFormatter::smprintf_free(nsnull);
