@@ -306,10 +306,17 @@ function BrowserOpenTab()
 }
 
 
+/**
+  * Has to go through some other approach like a XML-based rule system. 
+  * Those are constraints conditions and action. 
+  **/
+  
 function BrowserViewOptions() {
-	document.getElementById("toolbar-view").collapsed=!document.getElementById("toolbar-view").collapsed;
+  document.getElementById("toolbar-view").collapsed=!document.getElementById("toolbar-view").collapsed;
+  if(document.getElementById("toolbar-view").collapsed &&  document.getElementById("command_ViewOptions").getAttribute("checked")=="true") {
+	document.getElementById("command_ViewOptions").setAttribute("checked","false");
+  }
 }
-
 
 /** 
   * Work-in-progress, this handler is 100% generic and gets all the clicks for the entire tabbed 
