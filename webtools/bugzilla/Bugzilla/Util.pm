@@ -23,6 +23,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 package Bugzilla::Util;
 
@@ -40,7 +41,8 @@ use base qw(Exporter);
                              perform_substs
                              format_time format_time_decimal validate_date
                              file_mod_time is_7bit_clean
-                             bz_crypt validate_email_syntax);
+                             bz_crypt generate_random_password
+                             validate_email_syntax);
 
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -356,6 +358,11 @@ sub bz_crypt {
     return $cryptedpassword;
 }
 
+sub generate_random_password {
+    my $size = shift || 10; # default to 10 chars if nothing specified
+    return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));
+}
+
 sub validate_email_syntax {
     my ($addr) = @_;
     my $match = Param('emailregexp');
@@ -435,6 +442,7 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Cryptographic Functions
   $crypted_password = bz_crypt($password);
+  $new_password = generate_random_password($password_length);
 
   # Validation Functions
   validate_email_syntax($email);
@@ -688,6 +696,12 @@ password string this has the effect of revealing the first two
 characters of the password to anyone who views the encrypted version.
 
 =end undocumented
+
+=item C<generate_random_password($password_length)>
+
+Returns an alphanumeric string with the specified length
+(10 characters by default). Use this function to generate passwords
+and tokens.
 
 =back
 

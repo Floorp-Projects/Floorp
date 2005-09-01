@@ -150,7 +150,7 @@ sub CleanTokenTable {
 }
 
 sub GenerateUniqueToken {
-    # Generates a unique random token.  Uses &GenerateRandomPassword 
+    # Generates a unique random token.  Uses generate_random_password 
     # for the tokens themselves and checks uniqueness by searching for
     # the token in the "tokens" table.  Gives up if it can't come up
     # with a token after about one hundred tries.
@@ -167,7 +167,7 @@ sub GenerateUniqueToken {
         if ($tries > 100) {
             ThrowCodeError("token_generation_error");
         }
-        $token = &::GenerateRandomPassword();
+        $token = generate_random_password();
         $sth->execute($token);
         $duplicate = $sth->fetchrow_array;
     }

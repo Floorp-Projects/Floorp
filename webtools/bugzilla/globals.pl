@@ -341,11 +341,6 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
-sub GenerateRandomPassword {
-    my $size = (shift or 10); # default to 10 chars if nothing specified
-    return join("", map{ ('0'..'9','a'..'z','A'..'Z')[rand 62] } (1..$size));
-}
-
 #
 # This function checks if there are any entry groups defined.
 # If called with no arguments, it identifies
