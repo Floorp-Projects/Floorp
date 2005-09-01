@@ -23,7 +23,7 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% title = BLOCK %]Edit Value '[% value FILTER html %]'  '
-                   [%- filter FILTER html %]'[% END %]
+                   [%- field FILTER html %]'[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
 %]
