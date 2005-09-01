@@ -192,6 +192,9 @@
     XREMOTE_MODULES                          \
     MODULE(nsSoftwareUpdate)                 \
     MODULE(JavaScript_Debugger)              \
+    MODULE(PKI)                              \
+    MODULE(BOOT)                             \
+    MODULE(NSS)                              \
     /* end of list */
 
 #define MODULE(_name) \

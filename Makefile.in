@@ -264,6 +264,10 @@ ifdef MOZ_JSDEBUGGER
 tier_50_dirs += js/jsd
 endif
 
+ifdef MOZ_PSM
+tier_50_dirs	+= security/manager
+endif
+
 ifdef MOZ_ENABLE_LIBXUL
 tier_50_dirs += \
 		toolkit/library \
@@ -273,10 +277,6 @@ endif
 
 ifdef NS_TRACE_MALLOC
 tier_50_dirs += tools/trace-malloc
-endif
-
-ifdef MOZ_PSM
-tier_50_dirs	+= security/manager
 endif
 
 ifdef MOZ_STORAGE
