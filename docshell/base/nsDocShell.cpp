@@ -4766,13 +4766,15 @@ nsDocShell::CreateAboutBlankContentViewer()
       return NS_ERROR_FAILURE;
     }
 
+    mSavingOldViewer = CanSavePresentation(LOAD_NORMAL, nsnull, nsnull);
+
     // Notify the current document that it is about to be unloaded!!
     //
     // It is important to fire the unload() notification *before* any state
     // is changed within the DocShell - otherwise, javascript will get the
     // wrong information :-(
     //
-    (void) FirePageHideNotification(PR_TRUE);
+    (void) FirePageHideNotification(!mSavingOldViewer);
   }
 
   // one helper factory, please
