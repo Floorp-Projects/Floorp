@@ -649,11 +649,10 @@ function onThemeSelect(aEvent)
 var gExtensionContextMenus = ["menuitem_options", "menuitem_homepage", "menuitem_about", 
                               "menuseparator_1", "menuitem_uninstall", "menuitem_update",
                               "menuitem_enable", "menuitem_disable", "menuseparator_2", 
-                              "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn",
-                              "menuseparator_3", "menuitem_showFolder"];
+                              "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn"];
 var gThemeContextMenus = ["menuitem_useTheme", "menuitem_homepage", "menuitem_about", 
                           "menuseparator_1", "menuitem_uninstall", "menuitem_update",
-                          "menuitem_enable", "menuseparator_3", "menuitem_showFolder"];
+                          "menuitem_enable"];
 
 function buildContextMenu(aEvent)
 {
@@ -928,9 +927,6 @@ var gExtensionsViewController = {
     case "cmd_movedn":
       var children = gExtensionsView.children;
       return selectedItem && (children[children.length-1] != selectedItem);
-    case "cmd_showFolder":
-      return selectedItem && 
-             opType != OP_NEEDS_INSTALL;
 #ifndef MOZ_PHOENIX
     case "cmd_install":
       return true;   
@@ -1109,15 +1105,6 @@ var gExtensionsViewController = {
 
     },
 
-    cmd_showFolder: function (aSelectedItem)
-    {
-      var id = getIDFromResourceURI(aSelectedItem.id);
-      var installLocation = gExtensionManager.getInstallLocation(id);
-      var location = installLocation.getItemLocation(id);
-      if (location instanceof Components.interfaces.nsILocalFile)
-        location.reveal();
-    },
-    
     cmd_disable: function (aSelectedItem)
     {
       gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));

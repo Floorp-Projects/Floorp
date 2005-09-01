@@ -101,7 +101,6 @@
     <command id="cmd_moveup"/>
     <command id="cmd_movedn"/>
     <command id="cmd_useTheme"/>
-    <command id="cmd_showFolder"/>
   </commandset>
   
   <vbox id="contextMenuPalette" hidden="true">
@@ -133,9 +132,6 @@
               label="&cmd.moveUp.label;" accesskey="&cmd.moveUp.accesskey;"/>
     <menuitem id="menuitem_moveDn" command="cmd_movedn"
               label="&cmd.moveDn.label;" accesskey="&cmd.moveDn.accesskey;"/>
-    <menuseparator id="menuseparator_3"/>
-    <menuitem id="menuitem_showFolder" command="cmd_showFolder"
-              label="&cmd.showFolder.label;" accesskey="&cmd.showFolder.accesskey;"/>
   </vbox>
 
   <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
