@@ -37,8 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXPCOMPrivate.h"
 #include "nsXPCOMGlue.h"
+
+#include "nsINIParser.h"
+#include "nsVersionComparator.h"
+#include "nsXPCOMPrivate.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +59,7 @@
 #elif defined(XP_MACOSX)
 # include <CFBundle.h>
 # include <unistd.h>
+# include <dirent.h>
 #elif defined(XP_UNIX)
 # include <unistd.h>
 # include <sys/param.h>
@@ -71,33 +75,57 @@
 
 #include <sys/stat.h>
 
+static PRBool
+CheckVersion(const char* toCheck,
+             const GREVersionRange *versions,
+             PRUint32 versionsLength);
 
 #if defined(XP_MACOSX)
 
 static PRBool
-GRE_FindGREFramework(const char* version, const char* rootPath,
+GRE_FindGREFramework(const char* rootPath,
+                     const GREVersionRange *versions,
+                     PRUint32 versionsLength,
+                     const GREProperty *properties,
+                     PRUint32 propertiesLength,
                      char* buffer, PRUint32 buflen);
 
 #elif defined(XP_UNIX)
 
 static PRBool
-GRE_GetPathFromConfigDir(const char* version, const char* dirname,
+GRE_GetPathFromConfigDir(const char* dirname,
+                         const GREVersionRange *versions,
+                         PRUint32 versionsLength,
+                         const GREProperty *properties,
+                         PRUint32 propertiesLength,
                          char* buffer, PRUint32 buflen);
+
 static PRBool
-GRE_GetPathFromConfigFile(const char* version, const char* dirname,
+GRE_GetPathFromConfigFile(const char* filename,
+                          const GREVersionRange *versions,
+                          PRUint32 versionsLength,
+                          const GREProperty *properties,
+                          PRUint32 propertiesLength,
                           char* buffer, PRUint32 buflen);
 
 #elif defined(XP_WIN)
 
 static PRBool
-GRE_GetPathFromRegKey(const char* version, HKEY aRegKey,
+GRE_GetPathFromRegKey(HKEY aRegKey,
+                      const GREVersionRange *versions,
+                      PRUint32 versionsLength,
+                      const GREProperty *properties,
+                      PRUint32 propertiesLength,
                       char* buffer, PRUint32 buflen);
 
 #endif
 
 nsresult
-GRE_GetGREPathForVersion(const char *aVersion,
-                         char *aBuffer, PRUint32 aBufLen)
+GRE_GetGREPathWithProperties(const GREVersionRange *versions,
+                             PRUint32 versionsLength,
+                             const GREProperty *properties,
+                             PRUint32 propertiesLength,
+                             char *aBuffer, PRUint32 aBufLen)
 {
   // if GRE_HOME is in the environment, use that GRE
   const char* env = getenv("GRE_HOME");
@@ -180,18 +208,27 @@ GRE_GetGREPathForVersion(const char *aVersion,
 
   // Check ~/Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
   const char *home = getenv("HOME");
-  if (home && *home && GRE_FindGREFramework(aVersion, home, aBuffer, aBufLen)) {
+  if (home && *home && GRE_FindGREFramework(home,
+                                            versions, versionsLength,
+                                            properties, propertiesLength,
+                                            aBuffer, aBufLen)) {
     return NS_OK;
   }
 
   // Check /Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
-  if (GRE_FindGREFramework(aVersion, "", aBuffer, aBufLen)) {
+  if (GRE_FindGREFramework("",
+                           versions, versionsLength,
+                           properties, propertiesLength,
+                           aBuffer, aBufLen)) {
     return NS_OK;
   }
 
 #elif defined(XP_UNIX) 
   env = getenv("MOZ_GRE_CONF");
-  if (env && GRE_GetPathFromConfigFile(aVersion, env, aBuffer, aBufLen)) {
+  if (env && GRE_GetPathFromConfigFile(env,
+                                       versions, versionsLength,
+                                       properties, propertiesLength,
+                                       aBuffer, aBufLen)) {
     return NS_OK;
   }
 
@@ -204,7 +241,10 @@ GRE_GetGREPathForVersion(const char *aVersion,
     snprintf(buffer, sizeof(buffer),
              "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, env);
     
-    if (GRE_GetPathFromConfigFile(aVersion, buffer, aBuffer, aBufLen)) {
+    if (GRE_GetPathFromConfigFile(buffer,
+                                  versions, versionsLength,
+                                  properties, propertiesLength,
+                                  aBuffer, aBufLen)) {
       return NS_OK;
     }
 
@@ -213,18 +253,27 @@ GRE_GetGREPathForVersion(const char *aVersion,
     snprintf(buffer, sizeof(buffer),
              "%s" XPCOM_FILE_PATH_SEPARATOR GRE_USER_CONF_DIR, env);
 
-    if (GRE_GetPathFromConfigDir(aVersion, buffer, aBuffer, aBufLen)) {
+    if (GRE_GetPathFromConfigDir(buffer,
+                                 versions, versionsLength,
+                                 properties, propertiesLength,
+                                 aBuffer, aBufLen)) {
       return NS_OK;
     }
   }
 
   // Look for a global /etc/gre.conf file
-  if (GRE_GetPathFromConfigFile(aVersion, GRE_CONF_PATH, aBuffer, aBufLen)) {
+  if (GRE_GetPathFromConfigFile(GRE_CONF_PATH,
+                                versions, versionsLength,
+                                properties, propertiesLength,
+                                aBuffer, aBufLen)) {
     return NS_OK;
   }
 
   // Look for a group of config files in /etc/gre.d/
-  if (GRE_GetPathFromConfigDir(aVersion, GRE_CONF_DIR, aBuffer, aBufLen)) {
+  if (GRE_GetPathFromConfigDir(GRE_CONF_DIR,
+                               versions, versionsLength,
+                               properties, propertiesLength,
+                               aBuffer, aBufLen)) {
     return NS_OK;
   }
 
@@ -244,7 +293,10 @@ GRE_GetGREPathForVersion(const char *aVersion,
   //
   if (::RegOpenKeyEx(HKEY_CURRENT_USER, GRE_WIN_REG_LOC, 0,
                      KEY_READ, &hRegKey) == ERROR_SUCCESS) {
-    PRBool ok = GRE_GetPathFromRegKey(aVersion, hRegKey, aBuffer, aBufLen);
+    PRBool ok = GRE_GetPathFromRegKey(hRegKey,
+                                      versions, versionsLength,
+                                      properties, propertiesLength,
+                                      aBuffer, aBufLen);
     ::RegCloseKey(hRegKey);
 
     if (ok)
@@ -253,7 +305,10 @@ GRE_GetGREPathForVersion(const char *aVersion,
 
   if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, GRE_WIN_REG_LOC, 0,
                      KEY_ENUMERATE_SUB_KEYS, &hRegKey) == ERROR_SUCCESS) {
-    PRBool ok = GRE_GetPathFromRegKey(aVersion, hRegKey, aBuffer, aBufLen);
+    PRBool ok = GRE_GetPathFromRegKey(hRegKey,
+                                      versions, versionsLength,
+                                      properties, propertiesLength,
+                                      aBuffer, aBufLen);
     ::RegCloseKey(hRegKey);
 
     if (ok)
@@ -264,16 +319,65 @@ GRE_GetGREPathForVersion(const char *aVersion,
   return NS_ERROR_FAILURE;
 }
 
+static PRBool
+CheckVersion(const char* toCheck,
+             const GREVersionRange *versions,
+             PRUint32 versionsLength)
+{
+  
+  for (const GREVersionRange *versionsEnd = versions + versionsLength;
+       versions < versionsEnd;
+       ++versions) {
+    PRInt32 c = NS_CompareVersions(toCheck, versions->lower);
+    if (c < 0)
+      continue;
+
+    if (!c && !versions->lowerInclusive)
+      continue;
+
+    c = NS_CompareVersions(toCheck, versions->upper);
+    if (c > 0)
+      continue;
+
+    if (!c && !versions->upperInclusive)
+      continue;
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 #ifdef XP_MACOSX
 PRBool
-GRE_FindGREFramework(const char* version, const char* rootPath,
+GRE_FindGREFramework(const char* rootPath,
+                     const GREVersionRange *versions,
+                     PRUint32 versionsLength,
+                     const GREProperty *properties,
+                     PRUint32 propertiesLength,
                      char* buffer, PRUint32 buflen)
 {
-  snprintf(buffer, buflen,
-           "%s/Library/Frameworks/" GRE_FRAMEWORK_NAME "/Versions/%s/" XPCOM_DLL,
-           rootPath, version);
+  PRBool found = PR_FALSE;
 
-  if (access(buffer, R_OK | X_OK) == 0)
+  snprintf(buffer, buflen,
+           "%s/Library/Frameworks/" GRE_FRAMEWORK_NAME "/Versions", rootPath);
+  DIR *dir = opendir(buffer);
+  if (dir) {
+    struct dirent *entry;
+    while (!found && (entry = readdir(dir))) {
+      if (CheckVersion(entry->d_name, versions, versionsLength)) {
+        snprintf(buffer, buflen,
+                 "%s/Library/Frameworks/" GRE_FRAMEWORK_NAME
+                 "/Versions/%s/" XPCOM_DLL, rootPath, entry->d_name);
+        if (access(buffer, R_OK | X_OK) == 0)
+          found = PR_TRUE;
+      }
+    }
+
+    closedir(dir);
+  }
+  
+  if (found)
     return PR_TRUE;
 
   buffer[0] = '\0';
@@ -290,7 +394,11 @@ static PRBool IsConfFile(const char *filename)
 }
 
 PRBool
-GRE_GetPathFromConfigDir(const char* version, const char* dirname,
+GRE_GetPathFromConfigDir(const char* dirname,
+                         const GREVersionRange *versions,
+                         PRUint32 versionsLength,
+                         const GREProperty *properties,
+                         PRUint32 propertiesLength,
                          char* buffer, PRUint32 buflen)
 {
   // Open the directory provided and try to read any files in that
@@ -314,7 +422,10 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
     snprintf(fullPath, sizeof(fullPath), "%s" XPCOM_FILE_PATH_SEPARATOR "%s",
              dirname, entry->d_name);
 
-    found = GRE_GetPathFromConfigFile(version, fullPath, buffer, buflen);
+    found = GRE_GetPathFromConfigFile(fullPath,
+                                      versions, versionsLength,
+                                      properties, propertiesLength,
+                                      buffer, buflen);
   }
 
   closedir(dir);
@@ -324,50 +435,73 @@ GRE_GetPathFromConfigDir(const char* version, const char* dirname,
 
 #define READ_BUFFER_SIZE 1024
 
+struct INIClosure
+{
+  nsINIParser           &parser;
+  const GREVersionRange *versions;
+  PRUint32               versionsLength;
+  const GREProperty     *properties;
+  PRUint32               propertiesLength;
+  char                  *pathBuffer;
+  PRUint32               buflen;
+  PRBool                 found;
+};
+
+static PRBool
+CheckINIHeader(const char *aHeader, void *aClosure)
+{
+  nsresult rv;
+
+  INIClosure *c = NS_REINTERPRET_CAST(INIClosure *, aClosure);
+
+  if (!CheckVersion(aHeader, c->versions, c->versionsLength))
+    return PR_TRUE;
+
+  const GREProperty *properties = c->properties;
+  const GREProperty *endProperties = properties + c->propertiesLength;
+  for (; properties < endProperties; ++properties) {
+    char buffer[MAXPATHLEN];
+    rv = c->parser.GetString(aHeader, properties->property,
+                             buffer, sizeof(buffer));
+    if (NS_FAILED(rv))
+      return PR_TRUE;
+
+    if (strcmp(buffer, properties->value))
+      return PR_TRUE;
+  }
+
+  rv = c->parser.GetString(aHeader, "GRE_PATH", c->pathBuffer, c->buflen);
+  if (NS_FAILED(rv))
+    return PR_TRUE;
+
+  // We found a good GRE! Stop looking.
+  c->found = PR_TRUE;
+  return PR_FALSE;
+}
+
 PRBool
-GRE_GetPathFromConfigFile(const char* version, const char* filename,
+GRE_GetPathFromConfigFile(const char* filename,
+                          const GREVersionRange *versions,
+                          PRUint32 versionsLength,
+                          const GREProperty *properties,
+                          PRUint32 propertiesLength,
                           char* pathBuffer, PRUint32 buflen)
 {
-  int versionlen = strlen(version);
+  nsINIParser parser;
+  nsresult rv = parser.Init(filename);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
 
-  *pathBuffer = '\0';
-  char buffer[READ_BUFFER_SIZE];
-  FILE *cfg;
-  PRBool foundHeader = PR_FALSE;
+  INIClosure c = {
+    parser,
+    versions, versionsLength,
+    properties, propertiesLength,
+    pathBuffer, buflen,
+    PR_FALSE
+  };
 
-  if ((cfg = fopen(filename,"r")) == nsnull) {
-    return nsnull;
-  }
-
-  while (fgets(buffer, READ_BUFFER_SIZE, cfg) != nsnull) {
-    // skip over comment lines and blank lines
-    if (buffer[0] == '#' || buffer[0] == '\n') {
-      continue;
-    }
-
-    // we found a section heading, check to see if it is the one we
-    // are interested in.
-    if (buffer[0] == '[') {
-      foundHeader = (buffer[versionlen + 1] == ']' &&
-                     strncmp(buffer + 1, version, versionlen) == 0);
-      continue;
-    }
-
-    static const char kGreHome[] = "GRE_PATH=";
-
-    if (foundHeader && !strncmp(buffer, kGreHome, sizeof(kGreHome) - 1)) {
-      strncpy(pathBuffer, buffer + 9, buflen);
-      // kill the line feed if any
-      PRInt32 len = strlen(pathBuffer);
-      len--;
-
-      if (pathBuffer[len] == '\n')
-        pathBuffer[len] = '\0';
-      break;
-    }
-  }
-  fclose(cfg);
-  return (*pathBuffer != '\0');
+  parser.GetSections(CheckINIHeader, &c);
+  return c.found;
 }
 
 #elif defined(XP_WIN)
@@ -397,14 +531,19 @@ CopyWithEnvExpansion(char* aDest, const char* aSource, PRUint32 aBufLen,
 }
 
 PRBool
-GRE_GetPathFromRegKey(const char* aVersion, HKEY aRegKey,
-              char* aBuffer, PRUint32 aBufLen)
+GRE_GetPathFromRegKey(HKEY aRegKey,
+                      const GREVersionRange *versions,
+                      PRUint32 versionsLength,
+                      const GREProperty *properties,
+                      PRUint32 propertiesLength,
+                      char* aBuffer, PRUint32 aBufLen)
 {
   // Formerly, GREs were registered at the key HKLM/Software/Mozilla/GRE/<version>
   // valuepair GreHome=Path. Nowadays, they are registered in any subkey of
   // Software/Mozilla/GRE, with the following valuepairs:
   //   Version=<version> (REG_SZ)
   //   GreHome=<path>    (REG_SZ or REG_EXPAND_SZ)
+  //   <Property>=<value> (REG_SZ)
   //
   // Additional meta-info may be available in the future, including
   // localization info, ABI, and other information which might be pertinent
@@ -436,23 +575,41 @@ GRE_GetPathFromRegKey(const char* aVersion, HKEY aRegKey,
     char version[40];
     DWORD versionlen = 40;
     char pathbuf[MAXPATHLEN];
-    DWORD pathlen = sizeof(pathbuf);
+    DWORD pathlen;
     DWORD pathtype;
+
+    PRBool ok = PR_FALSE;
 
     if (::RegQueryValueEx(subKey, "Version", NULL, NULL,
                           (BYTE*) version, &versionlen) == ERROR_SUCCESS &&
-        strncmp(aVersion, version, versionlen) == 0) {
-      if (::RegQueryValueEx(subKey, "GreHome", NULL, &pathtype,
-                            (BYTE*) pathbuf, &pathlen) == ERROR_SUCCESS &&
-          *pathbuf &&
-          CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype) &&
-          access(aBuffer, R_OK) == 0) {
-        RegCloseKey(subKey);
-        return PR_TRUE;
+        CheckVersion(version, versions, versionsLength)) {
+
+      ok = PR_TRUE;
+      const GREProperty *props = properties;
+      const GREProperty *propsEnd = properties + propertiesLength;
+      for (; ok && props < propsEnd; ++props) {
+        pathlen = sizeof(pathbuf);
+        if (!::RegQueryValueEx(subKey, props->property, NULL, &pathtype,
+                               (BYTE*) pathbuf, &pathlen) ||
+            strcmp(pathbuf, props->value))
+          ok = PR_FALSE;
+      }
+
+      pathlen = sizeof(pathbuf);
+      if (ok &&
+          (!::RegQueryValueEx(subKey, "GreHome", NULL, &pathtype,
+                              (BYTE*) pathbuf, &pathlen) == ERROR_SUCCESS ||
+           !*pathbuf ||
+           !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype) ||
+           access(aBuffer, R_OK))) {
+        ok = PR_FALSE;
       }
     }
 
     RegCloseKey(subKey);
+
+    if (ok)
+      return PR_TRUE;
 
     ++i;
   }

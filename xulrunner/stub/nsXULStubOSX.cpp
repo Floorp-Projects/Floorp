@@ -36,29 +36,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <CFBundle.h>
 #include <Processes.h>
 
 #include "nsBuildID.h"
 #include "nsXPCOMGlue.h"
+#include "nsINIParser.h"
+
+#define VERSION_MAXLEN 128
 
 int
 main(int argc, char **argv)
 {
-  char greDir[PATH_MAX];
-
-  // XXXbsmedberg: read application.ini version information instead of
-  // using compiled-in GRE_BUILD_ID
-  nsresult rv = GRE_GetGREPathForVersion(GRE_BUILD_ID, greDir, sizeof(greDir));
-  if (NS_FAILED(rv)) {
-    // XXXbsmedberg: Do something much smarter here: notify the
-    // user/offer to download/?
-
-    fprintf(stderr,
-            "Could not find compatible GRE, version <" GRE_BUILD_ID ">\n");
-    return 1;
-  }
+  nsresult rv;
 
   CFBundleRef appBundle = CFBundleGetMainBundle();
   if (!appBundle)
@@ -95,9 +87,51 @@ main(int argc, char **argv)
                      kCFStringEncodingUTF8);
   CFRelease(iniPathStr);
 
-  char **argv2 = (char**) malloc(sizeof(char*) * (argc + 2));
-  if (!argv2)
+  nsINIParser parser;
+  rv = parser.Init(iniPath);
+  if (NS_FAILED(rv)) {
+    fprintf(stderr, "Could not read application.ini\n");
     return 1;
+  }
+
+  char greDir[PATH_MAX];
+  char minVersion[VERSION_MAXLEN];
+
+  // If a gecko maxVersion is not specified, we assume that the app uses only
+  // frozen APIs, and is therefore compatible with any xulrunner 1.x.
+  char maxVersion[VERSION_MAXLEN] = "2";
+
+  GREVersionRange range = {
+    minVersion,
+    PR_TRUE,
+    maxVersion,
+    PR_FALSE
+  };
+
+  rv = parser.GetString("Gecko", "MinVersion", minVersion, sizeof(minVersion));
+  if (NS_FAILED(rv)) {
+    fprintf(stderr,
+            "The application.ini does not specify a [Gecko] MinVersion\n");
+    return 1;
+  }
+
+  rv = parser.GetString("Gecko", "MaxVersion", maxVersion, sizeof(maxVersion));
+  if (NS_SUCCEEDED(rv))
+    range.upperInclusive = PR_TRUE;
+
+  rv = GRE_GetGREPathWithProperties(&range, 1, nsnull, 0,
+                                    greDir, sizeof(greDir));
+  if (NS_FAILED(rv)) {
+    // XXXbsmedberg: Do something much smarter here: notify the
+    // user/offer to download/?
+
+    fprintf(stderr,
+            "Could not find compatible GRE between version %s and %s.\n", 
+            range.lower, range.upper);
+    return 1;
+  }
+
+  char **argv2 = (char**) alloca(sizeof(char*) * (argc + 2));
 
   char xulBin[PATH_MAX];
   snprintf(xulBin, sizeof(xulBin), "%s/xulrunner-bin", greDir);

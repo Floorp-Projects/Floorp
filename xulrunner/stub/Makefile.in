@@ -49,6 +49,8 @@ PROGRAM   = xulrunner$(BIN_SUFFIX)
 
 CPPSRCS   = nsXULStubOSX.cpp
 
+REQUIRES = xpcom
+
 endif # OS_ARCH
 
 DEFINES  += -DXPCOM_GLUE

@@ -46,6 +46,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
+#include "nsMemory.h"
 
 #include "nspr.h"
 #include "plstr.h"
@@ -293,7 +294,14 @@ GRE_GetGREPath()
     }
   }
 
-  GRE_GetGREPathForVersion(GRE_BUILD_ID, sGRELocation, MAXPATHLEN);
+  static const GREVersionRange version = {
+    GRE_BUILD_ID, PR_TRUE,
+    GRE_BUILD_ID, PR_TRUE
+  };
+
+  GRE_GetGREPathWithProperties(&version, 1,
+                               nsnull, 0,
+                               sGRELocation, MAXPATHLEN);
   if (*sGRELocation)
     return sGRELocation;
 

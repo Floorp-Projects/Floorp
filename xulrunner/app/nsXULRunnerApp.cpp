@@ -353,12 +353,17 @@ int main(int argc, char* argv[])
         return 1;
       }
 
-      char version[MAXPATHLEN];
-      nsresult rv = GRE_GetGREPathForVersion(argv[2], version, MAXPATHLEN);
+      char path[MAXPATHLEN];
+      const GREVersionRange vr = {
+        argv[2], PR_TRUE,
+        argv[2], PR_TRUE
+      };
+      nsresult rv = GRE_GetGREPathWithProperties(&vr, 1, nsnull, 0,
+                                                 path, sizeof(path));
       if (NS_FAILED(rv))
         return 1;
 
-      printf("%s\n", version);
+      printf("%s\n", path);
       return 0;
     }
 
