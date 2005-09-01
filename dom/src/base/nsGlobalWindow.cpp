@@ -3416,6 +3416,9 @@ nsGlobalWindow::Stop()
   FORWARD_TO_OUTER(Stop, (), NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+  if (!webNav)
+    return NS_OK;
+
   return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
@@ -3430,7 +3433,7 @@ nsGlobalWindow::Print()
 
     nsCOMPtr<nsIPrintSettingsService> printSettingsService = 
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
-    
+
     nsCOMPtr<nsIPrintSettings> printSettings;
     if (printSettingsService) {
       PRBool printSettingsAreGlobal =
