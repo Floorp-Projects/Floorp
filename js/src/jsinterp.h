@@ -257,6 +257,20 @@ extern void         js_DumpCallTable(JSContext *cx);
 #endif
 
 /*
+ * Compute the 'this' parameter and store it in frame as frame.thisp.
+ * Activation objects ("Call" objects not created with "new Call()", i.e.,
+ * "Call" objects that have private data) may not be referred to by 'this',
+ * as dictated by ECMA.
+ *
+ * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' paramter as
+ * a jsval, and fp->argv[-2] must be the callee object reference, usually a
+ * function object.  Also, fp->flags must contain JSFRAME_CONSTRUCTING if we
+ * are preparing for a constructor call.
+ */
+extern JSBool
+js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp);
+
+/*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
  * is non-null), and that the callee, |this| parameter, and actual arguments
  * are already pushed on the stack under cx->fp->sp.

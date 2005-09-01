@@ -457,19 +457,8 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-/*
- * Compute the 'this' parameter and store it in frame as frame.thisp.
- * Activation objects ("Call" objects not created with "new Call()", i.e.,
- * "Call" objects that have private data) may not be referred to by 'this',
- * as dictated by ECMA.
- *
- * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' paramter as
- * a jsval, and fp->argv[-2] must be the callee object reference, usually a
- * function object.  Also, fp->flags must contain JSFRAME_CONSTRUCTING if we
- * are preparing for a constructor call.
- */
-static JSBool
-ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
+JSBool
+js_ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
 {
     JSObject *parent;
 
@@ -925,7 +914,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
          * any such defaulting of |this| to callee (v, *vp) ancestor.
          */
         frame.argv = vp + 2;
-        ok = ComputeThis(cx, thisp, &frame);
+        ok = js_ComputeThis(cx, thisp, &frame);
         if (!ok)
             goto out2;
         thisp = frame.thisp;
@@ -1076,7 +1065,7 @@ have_fun:
     frame.xmlNamespace = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
-    ok = ComputeThis(cx, thisp, &frame);
+    ok = js_ComputeThis(cx, thisp, &frame);
     if (!ok)
         goto out2;
 
@@ -3419,7 +3408,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 newifp->mark = newmark;
 
                 /* Compute the 'this' parameter now that argv is set. */
-                ok = ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &newifp->frame);
+                ok = js_ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &newifp->frame);
                 if (!ok) {
                     js_FreeRawStack(cx, newmark);
                     goto bad_inline_call;
