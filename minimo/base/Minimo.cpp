@@ -210,6 +210,123 @@ nsFullScreen::GetChromeItems(nsISimpleEnumerator **_retval)
 }
 
 
+class nsBadCertListener : public nsIBadCertListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIBADCERTLISTENER
+
+  nsBadCertListener();
+  ~nsBadCertListener();
+};
+
+
+#include "nsIWindowWatcher.h"
+
+nsBadCertListener::nsBadCertListener()
+{
+}
+
+nsBadCertListener::~nsBadCertListener()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsBadCertListener, nsIBadCertListener)
+
+#define MINIMO_PROPERTIES_URL "chrome://minimo/locale/minimo.properties"
+
+
+NS_IMETHODIMP 
+nsBadCertListener::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRInt16 *certAddType, PRBool *_retval)
+{
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
+
+  if (!bundle)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLString message;
+  nsXPIDLString title;
+  bundle->GetStringFromName(NS_LITERAL_STRING("confirmUnknownIssuer").get(), getter_Copies(message));
+  bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
+
+  PRBool result;
+  nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+  dlgService->Confirm(nsnull, title, message, &result);
+
+  *_retval = result;
+
+  if (result)
+    *certAddType = ADD_TRUSTED_FOR_SESSION;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBadCertListener::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert, PRBool *_retval)
+{
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
+
+  if (!bundle)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLString message;
+  nsXPIDLString title;
+  bundle->GetStringFromName(NS_LITERAL_STRING("confirmMismatch").get(), getter_Copies(message));
+  bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
+
+  PRBool result;
+  nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+  dlgService->Confirm(nsnull, title, message, &result);
+
+  *_retval = result;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBadCertListener::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRBool *_retval)
+{
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
+
+  if (!bundle)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLString message;
+  nsXPIDLString title;
+  bundle->GetStringFromName(NS_LITERAL_STRING("confirmCertExpired").get(), getter_Copies(message));
+  bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
+
+  PRBool result;
+  nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
+  dlgService->Confirm(nsnull, title, message, &result);
+
+  *_retval = result;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBadCertListener::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 nsresult StartupProfile()
 {    
     NS_TIMELINE_MARK_FUNCTION("Profile Startup");
@@ -255,8 +372,18 @@ void DoPreferences()
   {0xa5, 0x9b, 0x93, 0x63, 0xa0, 0xbf, 0x9a, 0x87} \
 }
 
+#define NS_BADCERTLISTENER_CID                     \
+{ /* a4bdf79a-ed05-4256-bf12-4581a03f966e */       \
+  0xa4bdf79a,                                      \
+  0xed05,                                          \
+  0x4256,                                          \
+  {0xbf, 0x12, 0x45, 0x81, 0xa0, 0x3f, 0x96, 0x6e} \
+}
+
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBadCertListener)
 
 static const nsModuleComponentInfo defaultAppComps[] = {
   {
@@ -273,6 +400,12 @@ static const nsModuleComponentInfo defaultAppComps[] = {
      nsFullScreenConstructor
   },
 
+  {
+     "Bad Cert Dialogs",
+     NS_BADCERTLISTENER_CID,
+     NS_BADCERTLISTENER_CONTRACTID,
+     nsBadCertListenerConstructor
+  },
 };
 
 void OverrideComponents()

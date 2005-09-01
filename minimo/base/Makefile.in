@@ -68,6 +68,8 @@ REQUIRES	= xpcom					 \
 		      content				 \
 		      profdirserviceprovider \
 		      pref					 \
+		      pipnss                 \
+		      intl                   \
 		      embedcomponents		 \
 		      appcomps				 \
 		      phone					 \
