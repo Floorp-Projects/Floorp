@@ -110,6 +110,7 @@ static JSDJContext *_jsdjc;
 #endif /* JSDEBUGGER */
 
 static JSBool reportWarnings = JS_TRUE;
+static JSBool compileOnly = JS_FALSE;
 
 typedef enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
@@ -218,7 +219,8 @@ Process(JSContext *cx, JSObject *obj, char *filename)
         ungetc(ch, file);
         script = JS_CompileFileHandle(cx, obj, filename, file);
         if (script) {
-            (void)JS_ExecuteScript(cx, obj, script, &result);
+            if (!compileOnly)
+                (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
         return;
@@ -252,13 +254,15 @@ Process(JSContext *cx, JSObject *obj, char *filename)
         script = JS_CompileScript(cx, obj, buffer, strlen(buffer), "typein",
                                   startline);
         if (script) {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
-            if (ok && result != JSVAL_VOID) {
-                str = JS_ValueToString(cx, result);
-                if (str)
-                    fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
-                else
-                    ok = JS_FALSE;
+            if (!compileOnly) {
+                ok = JS_ExecuteScript(cx, obj, script, &result);
+                if (ok && result != JSVAL_VOID) {
+                    str = JS_ValueToString(cx, result);
+                    if (str)
+                        fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
+                    else
+                        ok = JS_FALSE;
+                }
             }
             JS_DestroyScript(cx, script);
         }
@@ -271,7 +275,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswWx] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWxC] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -444,6 +448,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 
         }
+        case 'C':
+            compileOnly = JS_TRUE;
+            isInteractive = JS_FALSE;
+            break;
+
         case 'S':
             if (++i == argc) {
                 return usage();
@@ -571,7 +580,9 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!script) {
             ok = JS_FALSE;
         } else {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+            ok = !compileOnly
+                 ? JS_ExecuteScript(cx, obj, script, &result)
+                 : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
         JS_SetOptions(cx, oldopts);

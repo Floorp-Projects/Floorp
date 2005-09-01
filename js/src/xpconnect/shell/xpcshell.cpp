@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=2 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -97,6 +98,7 @@ FILE *gErrFile = NULL;
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 static JSBool reportWarnings = JS_TRUE;
+static JSBool compileOnly = JS_FALSE;
 
 JSPrincipals *gJSPrincipals = nsnull;
 
@@ -227,7 +229,9 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!script)
             ok = JS_FALSE;
         else {
-            ok = JS_ExecuteScript(cx, obj, script, &result);
+            ok = !compileOnly
+                 ? JS_ExecuteScript(cx, obj, script, &result)
+                 : JS_TRUE;
             JS_DestroyScript(cx, script);
         }
         if (!ok)
@@ -581,7 +585,8 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
                                                    gJSPrincipals);
 
         if (script) {
-            (void)JS_ExecuteScript(cx, obj, script, &result);
+            if (!compileOnly)
+                (void)JS_ExecuteScript(cx, obj, script, &result);
             JS_DestroyScript(cx, script);
         }
         DoEndRequest(cx);
@@ -619,33 +624,35 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
         if (script) {
             JSErrorReporter older;
 
-            ok = JS_ExecuteScript(cx, obj, script, &result);
-            if (ok && result != JSVAL_VOID) {
-                /* Suppress error reports from JS_ValueToString(). */
-                older = JS_SetErrorReporter(cx, NULL);
-                str = JS_ValueToString(cx, result);
-                JS_SetErrorReporter(cx, older);
-
-                if (str)
-                    fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
-                else
-                    ok = JS_FALSE;
-            }
+            if (!compileOnly) {
+                ok = JS_ExecuteScript(cx, obj, script, &result);
+                if (ok && result != JSVAL_VOID) {
+                    /* Suppress error reports from JS_ValueToString(). */
+                    older = JS_SetErrorReporter(cx, NULL);
+                    str = JS_ValueToString(cx, result);
+                    JS_SetErrorReporter(cx, older);
+    
+                    if (str)
+                        fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
+                    else
+                        ok = JS_FALSE;
+                }
 #if 0
 #if JS_HAS_ERROR_EXCEPTIONS
-            /*
-             * Require that any time we return failure, an exception has
-             * been set.
-             */
-            JS_ASSERT(ok || JS_IsExceptionPending(cx));
-
-            /*
-             * Also that any time an exception has been set, we've
-             * returned failure.
-             */
-            JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
+                /*
+                 * Require that any time we return failure, an exception has
+                 * been set.
+                 */
+                JS_ASSERT(ok || JS_IsExceptionPending(cx));
+    
+                /*
+                 * Also that any time an exception has been set, we've
+                 * returned failure.
+                 */
+                JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
 #endif /* JS_HAS_ERROR_EXCEPTIONS */
 #endif
+            }
             JS_DestroyScript(cx, script);
         }
         DoEndRequest(cx);
@@ -679,7 +686,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-PswWx] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswWxC] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -813,6 +820,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             isInteractive = JS_FALSE;
             break;
         }
+        case 'C':
+            compileOnly = JS_TRUE;
+            isInteractive = JS_FALSE;
+            break;
+
         default:
             return usage();
         }
