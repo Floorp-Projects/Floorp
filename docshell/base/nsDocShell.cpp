@@ -7464,6 +7464,11 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     NS_ENSURE_SUCCESS(aEntry->GetContentType(contentType), NS_ERROR_FAILURE);
 
     PRBool isJavaScript, isViewSource, isData;
+    // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
+    // that's the only thing holding a ref to aEntry that will cause aEntry to
+    // die while we're loading it.  So hold a strong ref to aEntry here, just
+    // in case.
+    nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
     if ((NS_SUCCEEDED(uri->SchemeIs("javascript", &isJavaScript)) &&
          isJavaScript) ||
         (NS_SUCCEEDED(uri->SchemeIs("view-source", &isViewSource)) &&
