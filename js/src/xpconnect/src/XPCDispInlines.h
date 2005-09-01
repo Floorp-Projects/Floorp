@@ -405,14 +405,14 @@ PRUint32 XPCDispNameArray::GetSize() const
 inline
 void XPCDispNameArray::SetName(DISPID dispid, nsAString const & name) 
 {
-    NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::SetName");
+    NS_ASSERTION(dispid <= (PRInt32)mCount, "Array bounds error in XPCDispNameArray::SetName");
     mNames[dispid - 1] = name;
 }
 
 inline
 const nsAString & XPCDispNameArray::GetName(DISPID dispid) const 
 {
-    NS_ASSERTION(dispid <= mCount, "Array bounds error in XPCDispNameArray::Get");
+    NS_ASSERTION(dispid <= (PRInt32)mCount, "Array bounds error in XPCDispNameArray::Get");
     if(dispid > 0)
         return mNames[dispid - 1];
     return sEmpty;
