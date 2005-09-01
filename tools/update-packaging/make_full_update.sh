@@ -57,6 +57,13 @@ make_add_instruction() {
   fi
 }
 
+# List all files in the current directory, stripping leading "./"
+# Skip the channel-prefs.js file as it should not be included in any
+# generated MAR files (see bug 306077).
+list_files() {
+  find . -type f ! -name "channel-prefs.js" | sed 's/\.\/\(.*\)/"\1"/'
+}
+
 archive="$1"
 targetdir="$2"
 workdir="$targetdir.work"
@@ -64,7 +71,7 @@ manifest="$workdir/update.manifest"
 targetfiles="update.manifest"
 
 # Generate a list of all files in the target directory.
-list=$(cd "$targetdir" && find . -type f | sed 's/\.\/\(.*\)/"\1"/')
+list=$(cd "$targetdir" && list_files)
 eval "files=($list)"
 
 mkdir -p "$workdir"
