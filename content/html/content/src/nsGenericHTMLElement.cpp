@@ -3378,6 +3378,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_LABEL &&
+    type != NS_FORM_OPTION &&
+    type != NS_FORM_OPTGROUP &&
     type != NS_FORM_LEGEND &&
     type != NS_FORM_FIELDSET &&
     type != NS_FORM_OBJECT;
