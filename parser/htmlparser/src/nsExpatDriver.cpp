@@ -413,10 +413,15 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
+  if (mInExternalDTD) {
+    // Ignore comments from external DTDs
+    return NS_OK;
+  }
+
   if (mInInternalSubset) {
-    if (!mInExternalDTD) {
-      mInternalSubset.Append(aValue);
-    }
+    mInternalSubset.AppendLiteral("<!--");
+    mInternalSubset.Append(aValue);
+    mInternalSubset.AppendLiteral("-->");
   }
   else if (mSink) {
     mInternalState = mSink->HandleComment(aValue);
@@ -431,9 +436,22 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
-  if (mSink &&
-      mSink->HandleProcessingInstruction(aTarget, aData) ==
-      NS_ERROR_HTMLPARSER_BLOCK) {
+  if (mInExternalDTD) {
+    // Ignore PIs in external DTDs for now.  Eventually we want to
+    // pass them to the sink in a way that doesn't put them in the DOM
+    return NS_OK;
+  }
+
+  if (mInInternalSubset) {
+    mInternalSubset.AppendLiteral("<?");
+    mInternalSubset.Append(aTarget);
+    mInternalSubset.Append(' ');
+    mInternalSubset.Append(aData);
+    mInternalSubset.AppendLiteral("?>");
+  }
+  else if (mSink &&
+           mSink->HandleProcessingInstruction(aTarget, aData) ==
+           NS_ERROR_HTMLPARSER_BLOCK) {
     mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
     MOZ_XML_StopParser(mExpatParser, XML_TRUE);
   }
@@ -455,10 +473,13 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
 {
   NS_ASSERTION(mSink, "content sink not found!");
 
+  if (mInExternalDTD) {
+    // Ignore newlines in external DTDs
+    return NS_OK;
+  }
+
   if (mInInternalSubset) {
-    if (!mInExternalDTD) {
-      mInternalSubset.Append(aValue, aLength);
-    }
+    mInternalSubset.Append(aValue, aLength);
   }
   else if (mSink) {
     static const PRUnichar newline[] = { '\n', '\0' };
