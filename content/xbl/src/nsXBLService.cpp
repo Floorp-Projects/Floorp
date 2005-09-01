@@ -613,8 +613,8 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
     // XXX Handle adjusting the prototype chain! We need to somehow indicate to
     // InstallImplementation that the whole chain should just be whacked and rebuilt.
     // We are becoming the new binding.
-    bindingManager->SetBinding(aContent, newBinding);
     baseBinding->SetBaseBinding(binding);
+    bindingManager->SetBinding(aContent, newBinding);
   }
   else {
     // We loaded a style binding.  It goes on the end.
