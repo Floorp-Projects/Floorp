@@ -12666,7 +12666,7 @@ calendar)
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-  MOZ_EXTENSIONS_DEFAULT=pref xmlextras transformiix
+  MOZ_EXTENSIONS_DEFAULT=" pref xmlextras transformiix"
   cat >> confdefs.h <<\EOF
 #define MOZ_SUNBIRD 1
 EOF
