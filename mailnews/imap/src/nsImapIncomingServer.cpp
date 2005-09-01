@@ -833,6 +833,10 @@ nsImapIncomingServer::GetImapConnection(nsIEventQueue *aEventQueue,
   }
   nsImapState requiredState;
   aImapUrl->GetRequiredImapState(&requiredState);
+  // refresh cnt in case we killed one or more dead connections. This
+  // will prevent us from not spinning up a new connection when all
+  // connections were dead.
+  (void) m_connectionCache->Count(&cnt);
   // if we got here and we have a connection, then we should return it!
   if (canRunUrlImmediately && connection)
   {
