@@ -4054,10 +4054,10 @@ IsFocusable(nsIPresShell* aPresShell, nsIContent* aContent)
   // We don't use nsIFrame::IsFocusable() because it defaults
   // tabindex to -1 for -moz-user-focus:ignore (bug 305840).
   if (aContent->IsContentOfType(nsIContent::eXUL)) {
-    PRBool tabIndex = 0;
-    return focusFrame->AreAncestorViewsVisible() &&
-           focusFrame->GetStyleVisibility()->IsVisible() &&
-           aContent->IsFocusable(&tabIndex);
+    // XXX Eventually we should have a better check, but for
+    // now checking for style visibility and focusability caused
+    // too many regressions.
+    return focusFrame->AreAncestorViewsVisible();
   }
 
   if (aContent->Tag() != nsHTMLAtoms::area) {
