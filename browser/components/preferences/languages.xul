@@ -107,9 +107,7 @@
         <row>
           <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
                     label="&languages.customize.selectLanguage.label;"
-                    label2="&languages.customize.selectLanguage.label;"
-                    accesskey="&languages.customize.selectLanguage.accesskey;"
-                    accesskey2="&languages.customize.selectLanguage.accesskey;">
+                    label2="&languages.customize.selectLanguage.label;">
             <menupopup id="availableLanguagesPopup"/>
           </menulist>
           <button id="addButton" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
