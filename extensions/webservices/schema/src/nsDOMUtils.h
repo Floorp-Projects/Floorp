@@ -98,6 +98,8 @@ public:
     aParent->GetChildNodes(getter_AddRefs(mNodeList));
     if (mNodeList) {
       mNodeList->GetLength(&mLength);
+      // if we change the element, reset the index
+      mIndex = 0;
     }    
   }
 

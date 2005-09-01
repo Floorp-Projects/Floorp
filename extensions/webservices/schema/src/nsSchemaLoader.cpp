@@ -901,13 +901,16 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
     }
   }
 
+  // We need to add this schema into the schema collection because resolving
+  // forward references may require resolving types with namespace prefixes,
+  // which could easily point back at this schema file.
+  mSchemas.Put(targetNamespace, schemaInst);
+
   // Resolve all forward references 
   rv = schemaInst->Resolve(aErrorHandler);
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  mSchemas.Put(targetNamespace, schemaInst);
 
   NS_ADDREF(*aResult = schemaInst);
 
