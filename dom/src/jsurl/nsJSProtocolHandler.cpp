@@ -150,7 +150,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
 
     // Get the document out of the window to make sure we create a new
-    // inner window if one doesn't already exist.
+    // inner window if one doesn't already exist (see bug 306630).
     nsCOMPtr<nsIDOMDocument> doc;
     win->GetDocument(getter_AddRefs(doc));
 
