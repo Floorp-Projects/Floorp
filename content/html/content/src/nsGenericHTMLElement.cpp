@@ -3372,15 +3372,14 @@ nsGenericHTMLFormElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 PRBool
-nsGenericHTMLFormElement::IsFormControlOrFieldSet() const
+nsGenericHTMLFormElement::CanBeDisabled() const
 {
   PRInt32 type = GetType();
-  // It's easier to test the types that do _not_ match
+  // It's easier to test the types that _cannot_ be disabled
   return
     type != NS_FORM_LABEL &&
-    type != NS_FORM_OPTION &&
-    type != NS_FORM_OPTGROUP &&
     type != NS_FORM_LEGEND &&
+    type != NS_FORM_FIELDSET &&
     type != NS_FORM_OBJECT;
 }
 
@@ -3389,7 +3388,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        const nsAString* aValue, PRBool aNotify)
 {
   if (aNotify && aNameSpaceID == kNameSpaceID_None &&
-      aName == nsHTMLAtoms::disabled && IsFormControlOrFieldSet()) {
+      aName == nsHTMLAtoms::disabled && CanBeDisabled()) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
       mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
@@ -3413,7 +3412,7 @@ nsGenericHTMLFormElement::IntrinsicState() const
 {
   PRInt32 state = nsGenericHTMLElement::IntrinsicState();
 
-  if (IsFormControlOrFieldSet()) {
+  if (CanBeDisabled()) {
     // :enabled/:disabled
     PRBool disabled;
     GetBoolAttr(nsHTMLAtoms::disabled, &disabled);

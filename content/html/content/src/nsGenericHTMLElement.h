@@ -874,11 +874,9 @@ protected:
                             const nsAString* aValue, PRBool aNotify);
 
   /**
-   * Returns true if the control is a form control element (according to
-   * http://whatwg.org/specs/web-forms/current-work/#terminology) or a field
-   * set.
+   * Returns true if the control can be disabled
    */
-  PRBool IsFormControlOrFieldSet() const;
+  PRBool CanBeDisabled() const;
 
   virtual PRInt32 IntrinsicState() const;
 
