@@ -42,8 +42,6 @@
 <!ENTITY cmd.moveUp.accesskey             "p">
 <!ENTITY cmd.moveDn.label                 "Move Down">
 <!ENTITY cmd.moveDn.accesskey             "w">
-<!ENTITY cmd.showFolder.label             "Show Item Contents...">
-<!ENTITY cmd.showFolder.accesskey         "C">
 
 <!-- Extension Items -->
 <!ENTITY options.tooltip                  "Options">
