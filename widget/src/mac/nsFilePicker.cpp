@@ -698,7 +698,7 @@ nsFilePicker::MapFilterToFileTypes ( )
     }
     
     // Now loop through each of the filter strings
-    for (PRInt32 loop1 = 0; loop1 < mFilters.Count(); loop1++)
+    for (PRInt32 loop1 = 0; loop1 < mFilters.Count() && loop1 < kMaxTypeListCount; loop1++)
     {
       const nsString& filterWide = *mFilters[loop1];
       char* filter = ToNewCString(filterWide);
