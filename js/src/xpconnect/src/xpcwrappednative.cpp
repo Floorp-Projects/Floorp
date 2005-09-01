@@ -1134,10 +1134,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
 #define IS_TEAROFF_CLASS(clazz)                                               \
           ((clazz) == &XPC_WN_Tearoff_JSClass)
 
-#define IS_PROTO_CLASS(clazz)                                                 \
-          ((clazz) == &XPC_WN_NoMods_Proto_JSClass ||                         \
-           (clazz) == &XPC_WN_ModsAllowed_Proto_JSClass)
-
 // static
 XPCWrappedNative*
 XPCWrappedNative::GetWrappedNativeOfJSObject(JSContext* cx,
