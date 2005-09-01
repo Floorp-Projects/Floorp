@@ -354,7 +354,9 @@ sub attachments {
     my ($self) = @_;
     return $self->{'attachments'} if exists $self->{'attachments'};
     return [] if $self->{'error'};
-    $self->{'attachments'} = Bugzilla::Attachment::query($self->{bug_id});
+
+    $self->{'attachments'} =
+        Bugzilla::Attachment->get_attachments_by_bug($self->bug_id);
     return $self->{'attachments'};
 }
 

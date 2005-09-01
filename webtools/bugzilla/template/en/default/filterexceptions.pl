@@ -368,7 +368,7 @@
 
 'bug/show.xml.tmpl' => [
   'VERSION', 
-  'a.attachid', 
+  'a.id', 
   'field', 
 ],
 
@@ -458,7 +458,7 @@
 ],
 
 'attachment/list.html.tmpl' => [
-  'attachment.attachid', 
+  'attachment.id', 
   'flag.status',
   'bugid',
 ],

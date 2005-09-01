@@ -37,7 +37,7 @@
     [% IF !attachment.isprivate || canseeprivate %]
       <tr [% "class=\"bz_private\"" IF attachment.isprivate %]>
         <td valign="top">
-          <a href="attachment.cgi?id=[% attachment.attachid %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
+          <a href="attachment.cgi?id=[% attachment.id %]">[% attachment.description FILTER html FILTER obsolete(attachment.isobsolete) %]</a>
         </td>
 
         <td valign="top">
@@ -49,11 +49,11 @@
         </td>
 
         <td valign="top">
-          <a href="mailto:[% attachment.submitter.email FILTER html %]">
-          [% attachment.submitter.name || attachment.submitter.login FILTER html %]
+          <a href="mailto:[% attachment.attacher.email FILTER html %]">
+          [% attachment.attacher.name || attachment.attacher.login FILTER html %]
           </a>
         </td>
-        <td valign="top">[% attachment.date FILTER time %]</td>
+        <td valign="top">[% attachment.attached FILTER time %]</td>
         <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
 
         [% IF show_attachment_flags %]
@@ -75,9 +75,9 @@
         [% END %]
 
         <td valign="top">
-          <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=edit">Edit</a>
+          <a href="attachment.cgi?id=[% attachment.id %]&amp;action=edit">Edit</a>
           [% IF attachment.ispatch && patchviewerinstalled %]
-            | <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=diff">Diff</a>
+            | <a href="attachment.cgi?id=[% attachment.id %]&amp;action=diff">Diff</a>
           [% END %]
           [% Hook.process("action") %]
         </td>

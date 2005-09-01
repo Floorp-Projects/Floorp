@@ -73,8 +73,8 @@
               ispatch="1"
             [% END %]
           >
-            <attachid>[% a.attachid %]</attachid>
-            <date>[% a.date FILTER time FILTER xml %]</date>
+            <attachid>[% a.id %]</attachid>
+            <date>[% a.attached FILTER time FILTER xml %]</date>
             <desc>[% a.description FILTER xml %]</desc>
             <ctype>[% a.contenttype FILTER xml %]</ctype>
             [% FOREACH flag = a.flags %]

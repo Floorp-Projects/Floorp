@@ -347,26 +347,26 @@ sub validate {
                 # can_see_bug() will refer to old settings.
                 if (!$requestee->can_see_bug($bug_id)) {
                     ThrowUserError("flag_requestee_unauthorized",
-                                   { flag_type => $flag->{'type'},
-                                     requestee => $requestee,
-                                     bug_id => $bug_id,
-                                     attach_id =>
-                                       $flag->{target}->{attachment}->{id} });
+                                   { flag_type  => $flag->{'type'},
+                                     requestee  => $requestee,
+                                     bug_id     => $bug_id,
+                                     attachment => $flag->{target}->{attachment}
+                                   });
                 }
     
                 # Throw an error if the target is a private attachment and
                 # the requestee isn't in the group of insiders who can see it.
-                if ($flag->{target}->{attachment}->{exists}
+                if ($flag->{target}->{attachment}
                     && $cgi->param('isprivate')
                     && Param("insidergroup")
                     && !$requestee->in_group(Param("insidergroup")))
                 {
                     ThrowUserError("flag_requestee_unauthorized_attachment",
-                                   { flag_type => $flag->{'type'},
-                                     requestee => $requestee,
-                                     bug_id    => $bug_id,
-                                     attach_id =>
-                                      $flag->{target}->{attachment}->{id} });
+                                   { flag_type  => $flag->{'type'},
+                                     requestee  => $requestee,
+                                     bug_id     => $bug_id,
+                                     attachment => $flag->{target}->{attachment}
+                                   });
                 }
             }
         }
@@ -532,7 +532,9 @@ sub create {
     $flag->{'id'} = (&::FetchOneColumn() || 0) + 1;
     
     # Insert a record for the flag into the flags table.
-    my $attach_id = $flag->{'target'}->{'attachment'}->{'id'} || "NULL";
+    my $attach_id =
+      $flag->{target}->{attachment} ? $flag->{target}->{attachment}->{id}
+                                    : "NULL";
     my $requestee_id = $flag->{'requestee'} ? $flag->{'requestee'}->id : "NULL";
     &::SendSQL("INSERT INTO flags (id, type_id, 
                                       bug_id, attach_id, 
@@ -807,7 +809,8 @@ sub FormToNewFlags {
             { 'type_id'     => $type_id,
               'target_type' => $target->{'type'},
               'bug_id'      => $target->{'bug'}->{'id'},
-              'attach_id'   => $target->{'attachment'}->{'id'},
+              'attach_id'   => $target->{'attachment'} ?
+                                 $target->{'attachment'}->{'id'} : undef,
               'is_active'   => 1 });
 
         # Do not create a new flag of this type if this flag type is
@@ -902,15 +905,18 @@ sub get_target {
     my $target = { 'exists' => 0 };
 
     if ($attach_id) {
-        $target->{'attachment'} = new Bugzilla::Attachment($attach_id);
+        $target->{'attachment'} = Bugzilla::Attachment->get($attach_id);
         if ($bug_id) {
             # Make sure the bug and attachment IDs correspond to each other
             # (i.e. this is the bug to which this attachment is attached).
-            $bug_id == $target->{'attachment'}->{'bug_id'}
-              || return { 'exists' => 0 };
+            if (!$target->{'attachment'}
+                || $target->{'attachment'}->{'bug_id'} != $bug_id)
+            {
+              return { 'exists' => 0 };
+            }
         }
-        $target->{'bug'} = GetBug($target->{'attachment'}->{'bug_id'});
-        $target->{'exists'} = $target->{'attachment'}->{'exists'};
+        $target->{'bug'} = GetBug($bug_id);
+        $target->{'exists'} = 1;
         $target->{'type'} = "attachment";
     }
     elsif ($bug_id) {
@@ -937,20 +943,21 @@ Sends an email notification about a flag being created or fulfilled.
 sub notify {
     my ($flag, $template_file) = @_;
 
+    my $attachment_is_private = $flag->{'target'}->{'attachment'} ?
+      $flag->{'target'}->{'attachment'}->{'isprivate'} : undef;
+
     # If the target bug is restricted to one or more groups, then we need
     # to make sure we don't send email about it to unauthorized users
     # on the request type's CC: list, so we have to trawl the list for users
     # not in those groups or email addresses that don't have an account.
-    if ($flag->{'target'}->{'bug'}->{'restricted'}
-        || $flag->{'target'}->{'attachment'}->{'isprivate'})
-    {
+    if ($flag->{'target'}->{'bug'}->{'restricted'} || $attachment_is_private) {
         my @new_cc_list;
         foreach my $cc (split(/[, ]+/, $flag->{'type'}->{'cc_list'})) {
             my $ccuser = Bugzilla::User->new_from_login($cc) || next;
 
             next if $flag->{'target'}->{'bug'}->{'restricted'}
               && !$ccuser->can_see_bug($flag->{'target'}->{'bug'}->{'id'});
-            next if $flag->{'target'}->{'attachment'}->{'isprivate'}
+            next if $attachment_is_private
               && Param("insidergroup")
               && !$ccuser->in_group(Param("insidergroup"));
             push(@new_cc_list, $cc);
