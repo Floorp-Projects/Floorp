@@ -133,6 +133,9 @@ COMPONENT_LIBS += \
 	toolkitcomps \
 	xpinstall \
 	jsd \
+	pippki \
+	pipboot \
+	pipnss \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -256,6 +259,7 @@ EXTRA_DSO_LDOPTS += \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
 	$(MOZ_JS_LIBS) \
+	$(NSS_LIBS) \
 	$(NULL)
 
 ifdef MOZ_NATIVE_ZLIB
