@@ -690,8 +690,8 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
          */
 
         /*
-         * Only try to raise an exception if there isn't one already set -
-         * otherwise the exception will describe only the last compile error,
+         * Try to raise an exception only if there isn't one already set --
+         * otherwise the exception will describe the last compile-time error,
          * which is likely spurious.
          */
         if (!ts || !(ts->flags & TSF_ERROR)) {
@@ -705,12 +705,16 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
          * don't really want to call the error reporter, as when js is called
          * by other code which could catch the error.
          */
-        if (cx->interpLevel != 0)
+        if (cx->interpLevel != 0 && !JSREPORT_IS_WARNING(flags))
             onError = NULL;
 #endif
-        if (cx->runtime->debugErrorHook && onError) {
+        if (onError) {
             JSDebugErrorHook hook = cx->runtime->debugErrorHook;
-            /* test local in case debugErrorHook changed on another thread */
+
+            /*
+             * If debugErrorHook is present then we give it a chance to veto
+             * sending the error on to the regular error reporter.
+             */
             if (hook && !hook(cx, message, report,
                               cx->runtime->debugErrorHookData)) {
                 onError = NULL;
