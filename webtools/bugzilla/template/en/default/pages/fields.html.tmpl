@@ -82,7 +82,7 @@ cycle of [% terms.abug %].
         <dd>
           This [% terms.bug %] is not yet resolved, but is assigned to the 
           proper person. From here [% terms.bugs %] can be given to another 
-          person and become <b>[% status_descs.NEW FILTER html %]</b>, or resolved and become <b>[% descs.bug_status_descs.RESOLVED FILTER html  %]</b>.
+          person and become <b>[% status_descs.NEW FILTER html %]</b>, or resolved and become <b>[% status_descs.RESOLVED FILTER html  %]</b>.
         </dd>
 
         <dt>
@@ -93,7 +93,7 @@ cycle of [% terms.abug %].
           deemed incorrect. For example, a <b>[% status_descs.WORKSFORME FILTER html %]</b> [% terms.bug %] is
           <b>[% status_descs.REOPENED FILTER html %]</b> when more information shows up and
           the [% terms.bug %] is now reproducible. From here [% terms.bugs %] are
-          either marked <b>[% status_descs.ASSIGNED FILTER html %]</b> or <b>[% descs.bug_status_descs.RESOLVED FILTER html %]</b>.
+          either marked <b>[% status_descs.ASSIGNED FILTER html %]</b> or <b>[% status_descs.RESOLVED FILTER html %]</b>.
         </dd>
       </dl>
     </td>
@@ -119,7 +119,7 @@ cycle of [% terms.abug %].
         <dd>
           A resolution has been taken, and it is awaiting verification by
           QA. From here [% terms.bugs %] are either re-opened and become 
-          <b>[% status_descs.REOPENED FILTER html %]</b>, are marked <b>[% descs.bug_status_descs.VERIFIED FILTER html %]</b>, or are closed for
+          <b>[% status_descs.REOPENED FILTER html %]</b>, are marked <b>[% status_descs.VERIFIED FILTER html %]</b>, or are closed for
           good and marked <b>[% status_descs.CLOSED FILTER html %]</b>.
         </dd>
 
