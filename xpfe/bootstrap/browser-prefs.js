@@ -253,3 +253,7 @@ pref("browser.urlbar.clickSelectsAll", false);
 pref("browser.backspace_action", 1);
 #endif
 #endif
+
+// Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
+// to be exposed. By default, only expose it for bidi-associated system locales.
+pref("bidi.browser.ui", false);
