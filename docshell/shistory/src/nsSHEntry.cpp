@@ -99,8 +99,20 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
 {
 }
 
+PR_STATIC_CALLBACK(PRBool)
+ClearParentPtr(nsISHEntry* aEntry, void* /* aData */)
+{
+  if (aEntry) {
+    aEntry->SetParent(nsnull);
+  }
+  return PR_TRUE;
+}
+
 nsSHEntry::~nsSHEntry()
 {
+  // Since we never really remove kids from SHEntrys, we need to null
+  // out the mParent pointers on all our kids.
+  mChildren.EnumerateForwards(ClearParentPtr, nsnull);
   mChildren.Clear();
   RemoveDocumentObserver();
   if (mContentViewer)
@@ -469,6 +481,15 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
   //
   NS_ASSERTION(aOffset < (mChildren.Count()+1023), "Large frames array!\n");
 
+  if (aOffset < mChildren.Count()) {
+    nsISHEntry* oldChild = mChildren.ObjectAt(aOffset);
+    if (oldChild && oldChild != aChild) {
+      NS_ERROR("Adding child where we already have a child?  "
+               "This will likely misbehave");
+      oldChild->SetParent(nsnull);
+    }
+  }
+  
   // This implicitly extends the array to include aOffset
   mChildren.ReplaceObjectAt(aChild, aOffset);
 
