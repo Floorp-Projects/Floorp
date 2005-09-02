@@ -98,9 +98,11 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   nsCOMPtr<nsIAccessible> parentAccessible;
   if (parentAccessible) {
     GetParent(getter_AddRefs(parentAccessible));
-    parentAccessible->GetFinalState(&parentState);
-    *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
-    *_retval |= (parentState & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
+    if (parentAccessible) {
+      parentAccessible->GetFinalState(&parentState);
+      *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
+      *_retval |= (parentState & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
+    }
   }
 
   return NS_OK;

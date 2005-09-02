@@ -170,10 +170,11 @@ NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
 
 NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
 {
-  nsFormControlAccessible::GetState(_retval);
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No nsIDOMElement for button node!");
-
+  if (!element) {
+    return NS_ERROR_FAILURE;  // Button accessible shut down
+  }
+  nsFormControlAccessible::GetState(_retval);
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
   if (buttonType.LowerCaseEqualsLiteral("submit"))
@@ -274,11 +275,12 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
 {
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if (!element) {
+    return NS_ERROR_FAILURE;  // Button accessible shut down
+  }
   nsAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE;
-
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No nsIDOMElement for button node!");
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);

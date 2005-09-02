@@ -460,13 +460,6 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-/** Return our cached parent */
-NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetParent(nsIAccessible **aParent)
-{   
-  NS_IF_ADDREF(*aParent = mParent);
-  return NS_OK;
-}
-
 /**
   * Get our Name from our Content's subtree
   */
@@ -602,7 +595,9 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
       return NS_ERROR_FAILURE;
     // Clear old selection
     nsCOMPtr<nsIDOMNode> oldHTMLOptionNode, selectNode;
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mParent));
+    nsCOMPtr<nsIAccessible> parent;
+    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(parent));
     NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
     accessNode->GetDOMNode(getter_AddRefs(selectNode));
     GetFocusedOptionNode(selectNode, getter_AddRefs(oldHTMLOptionNode));
