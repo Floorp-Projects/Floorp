@@ -191,7 +191,7 @@ interface nsIChannel : nsIRequest
 
     /** 
      * If the end consumer for this load has been retargeted after discovering 
-     * it's content, this flag will be set:
+     * its content, this flag will be set:
      */
     const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 17;
 
