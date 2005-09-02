@@ -441,7 +441,18 @@
 #ifdef ExpandEnvironmentStrings
 #undef ExpandEnvironmentStrings
 #endif
-#define ExpandEnvironmentStrings  mozce_ExpandEnvironmentStrings
+
+#ifdef ExpandEnvironmentStringsA
+#undef ExpandEnvironmentStringsA
+#endif
+
+#ifdef ExpandEnvironmentStringsW
+#undef ExpandEnvironmentStringsW
+#endif
+
+#define ExpandEnvironmentStrings   mozce_ExpandEnvironmentStrings
+#define ExpandEnvironmentStringsA  mozce_ExpandEnvironmentStrings
+#define ExpandEnvironmentStringsW  mozce_ExpandEnvironmentStringsW
 
 #ifdef FIXED
 #undef FIXED
@@ -675,6 +686,11 @@
 #undef SetWindowTextA
 #endif
 #define SetWindowTextA            mozce_SetWindowTextA
+
+#ifdef ShellExecute
+#undef ShellExecute
+#endif
+#define ShellExecute              mozce_ShellExecute
 
 #ifdef TlsAlloc
 #undef TlsAlloc
@@ -1344,6 +1360,7 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode);
   MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode);
   MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize);
+  MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStringsW(const unsigned short * lpSrc, const unsigned short * lpDst, DWORD nSize);
 
   MOZCE_SHUNT_API BOOL mozce_LineDDA(int inXStart, int inYStart, int inXEnd, int inYEnd, mozce_LINEDDAPROC inLineFunc, LPARAM inData);
   MOZCE_SHUNT_API int mozce_FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush);
@@ -1367,6 +1384,7 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_IsIconic(HWND inWnd);
   MOZCE_SHUNT_API BOOL mozce_OpenIcon(HWND inWnd);
   MOZCE_SHUNT_API HHOOK mozce_SetWindowsHookEx(int inType, void* inFunc, HINSTANCE inMod, DWORD inThreadId);
+  MOZCE_SHUNT_API HINSTANCE mozce_ShellExecute(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
   MOZCE_SHUNT_API BOOL mozce_UnhookWindowsHookEx(HHOOK inHook);
   MOZCE_SHUNT_API LRESULT mozce_CallNextHookEx(HHOOK inHook, int inCode, WPARAM wParam, LPARAM lParam);
   MOZCE_SHUNT_API BOOL mozce_GetWindowPlacement(HWND window, WINDOWPLACEMENT *lpwndpl);

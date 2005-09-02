@@ -1091,6 +1091,17 @@ MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst
     return 0;
 }
 
+MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStringsW(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_ExpandEnvironmentStrings called\n");
+#endif
+
+    return 0;
+}
+
 MOZCE_SHUNT_API BOOL mozce_GdiFlush(void)
 {
     MOZCE_PRECHECK
@@ -1115,6 +1126,43 @@ MOZCE_SHUNT_API BOOL mozce_GetWindowPlacement(HWND hWnd, WINDOWPLACEMENT *lpwndp
    return TRUE;
 }
 
+MOZCE_SHUNT_API HINSTANCE mozce_ShellExecute(HWND hwnd, 
+                                             LPCSTR lpOperation, 
+                                             LPCSTR lpFile, 
+                                             LPCSTR lpParameters, 
+                                             LPCSTR lpDirectory, 
+                                             INT nShowCmd)
+{
+    
+    LPTSTR op   = a2w_malloc(lpOperation, -1, NULL);
+    LPTSTR file = a2w_malloc(lpFile, -1, NULL);
+    LPTSTR parm = a2w_malloc(lpParameters, -1, NULL);
+    LPTSTR dir  = a2w_malloc(lpDirectory, -1, NULL);
+    
+    SHELLEXECUTEINFO info;
+    info.cbSize = sizeof(SHELLEXECUTEINFO);
+    info.fMask  = SEE_MASK_NOCLOSEPROCESS;
+    info.hwnd   = hwnd;
+    info.lpVerb = op;
+    info.lpFile = file;
+    info.lpParameters = parm;
+    info.lpDirectory  = dir;
+    info.nShow  = nShowCmd;
+    
+    BOOL b = ShellExecuteEx(&info);
+    
+    if (op)
+        free(op);
+    if (file)
+        free(file);
+    if (parm)
+        free(parm);
+    if (dir)
+        free(dir);
+    
+    return (HINSTANCE) info.hProcess;
+}
+
 #if 0
 {
 #endif
@@ -1124,7 +1172,7 @@ void dumpMemoryInfo()
 {
     MEMORYSTATUS ms;
     ms.dwLength = sizeof(MEMORYSTATUS);
-
+    
 
     GlobalMemoryStatus(&ms);
 
