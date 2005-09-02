@@ -78,9 +78,17 @@ toolbar *, #appcontent * {
   margin:2px ! important;
 }
 
+/*  Disabled this seems like affects the popup contextAreaContextMenu causing font to be bigger
 * {
   font-size: small ! important;
   font-family: sans-serif ! important;
+}
+
+*/
+
+#contentAreaContextMenu {
+  font-size: small;
+  font-family: sans-serif;
 }
 
 #menu-button {
