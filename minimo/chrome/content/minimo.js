@@ -523,3 +523,18 @@ function BrowserToogleSiteSSR()
   BrowserReload(); // hack until this is done by ssr itself
 }
 
+var gRotationDirection = true;
+
+function BrowserScreenRotate()
+{
+  try {
+  var deviceSupport = Components.classes["@mozilla.org/device/support;1"].getService(Components.interfaces.nsIDeviceSupport);
+  
+  deviceSupport.rotateScreen(gRotationDirection);
+  gRotationDirection != gRotationDirection;
+  }
+  catch (ex)
+  {
+    alert(ex);
+  }
+}

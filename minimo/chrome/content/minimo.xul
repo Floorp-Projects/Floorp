@@ -69,6 +69,7 @@
   <toolbox>
 
 	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
+	<command id="cmd_BrowserScreenRotate" oncommand="BrowserScreenRotate()"/>
 	<command id="cmd_BrowserSSR" oncommand="BrowserToogleSSR()"/>
 	<command id="cmd_BrowserSiteSSR" oncommand="BrowserToogleSiteSSR()"/>
 	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
@@ -87,6 +88,10 @@
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+
+<!--          not working just yet.
+		     <menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
+-->
 		     <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
 		     <!-- separator for now in CSS - need to redesign -->
 		     <menuitem id="command_ViewOptions" style='border-top:1px solid black'  type="checkbox" command="cmd_ViewOptions" label="View Options"  /> 

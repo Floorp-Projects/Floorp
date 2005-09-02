@@ -41,6 +41,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = phone softkb ssr
+DIRS = phone softkb ssr device
 
 include $(topsrcdir)/config/rules.mk
