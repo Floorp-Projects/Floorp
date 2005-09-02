@@ -239,6 +239,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   }
   else {
     childID = GetChildIDFor(aAccessible); // get the id for the accessible
+    if (!childID) {
+      return NS_OK; // Can't fire an event without a child ID
+    }
     if (aAccessible != this) {
       // See if we're in a scrollable area with its own window
       nsCOMPtr<nsIAccessible> accessible;
@@ -278,6 +281,9 @@ PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 
   void *uniqueID;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
+  if (!accessNode) {
+    return 0;
+  }
   accessNode->GetUniqueID(&uniqueID);
 
   // Yes, this means we're only compatibible with 32 bit

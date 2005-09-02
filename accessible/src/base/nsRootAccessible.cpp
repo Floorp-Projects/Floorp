@@ -399,6 +399,9 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIAccessible *aAccessible, nsIDOMN
       GetDocAccessibleFor(rootContentTreeItem);
     nsCOMPtr<nsIAccessible> rootContentAccessible =
       do_QueryInterface(rootContentDocAccessible);
+    if (!rootContentAccessible) {
+      return;
+    }
     PRUint32 state;
     rootContentAccessible->GetFinalState(&state);
     if (state & STATE_BUSY) {

@@ -157,7 +157,6 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetName(nsAString& aName);
   nsIFrame*  GetBoundsFrame();
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
