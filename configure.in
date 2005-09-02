@@ -2458,20 +2458,22 @@ case $target in
 	AC_CHECK_LIB(c_r, gethostbyname_r)
 	;;
 esac
-AC_CHECK_LIB(m, atan)
 
 dnl We don't want to link with libdl even if it's present on OS X, since
 dnl it's not used and not part of the default installation.
-
+dnl We don't want to link against libm or libpthread on Darwin since
+dnl they both are just symlinks to libSystem and explicitly linking
+dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
-	;;
+    ;;
 *)
-	AC_CHECK_LIB(dl, dlopen,
-        AC_CHECK_HEADER(dlfcn.h, 
-            LIBS="-ldl $LIBS"
-            AC_DEFINE(HAVE_LIBDL)))
-	;;
+    AC_CHECK_LIB(m, atan)
+    AC_CHECK_LIB(dl, dlopen,
+    AC_CHECK_HEADER(dlfcn.h, 
+        LIBS="-ldl $LIBS"
+        AC_DEFINE(HAVE_LIBDL)))
+    ;;
 esac
 if test ! "$GNU_CXX"; then
 
@@ -2576,18 +2578,25 @@ dnl ========================================================
 dnl = pthread support
 dnl = Start by checking whether the system support pthreads
 dnl ========================================================
-MOZ_CHECK_PTHREADS(pthreads,
-    USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
-    MOZ_CHECK_PTHREADS(pthread,
-        USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-        MOZ_CHECK_PTHREADS(c_r,
-            USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-            MOZ_CHECK_PTHREADS(c,
-                USE_PTHREADS=1
+case "$target_os" in
+darwin*)
+    USE_PTHREADS=1
+    ;;
+*)
+    MOZ_CHECK_PTHREADS(pthreads,
+        USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
+        MOZ_CHECK_PTHREADS(pthread,
+            USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+            MOZ_CHECK_PTHREADS(c_r,
+                USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+                MOZ_CHECK_PTHREADS(c,
+                    USE_PTHREADS=1
+                )
             )
         )
     )
-)
+    ;;
+esac
 
 dnl ========================================================
 dnl Check the command line for --with-pthreads 
