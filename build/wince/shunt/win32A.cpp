@@ -237,24 +237,16 @@ MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine
     mozce_printf("mozce_CreateProcessA called\n");
 #endif
 
-    BOOL retval = FALSE;
-    TCHAR pszImageNameW[MAX_PATH];
+	LPTSTR image   = a2w_malloc(pszImageName, -1, NULL);
+	LPTSTR cmdline = a2w_malloc(pszCmdLine, -1, NULL);
 
-    if(a2w_buffer(pszImageName, -1, pszImageNameW, MAX_PATH))
-    {
-        LPTSTR pszCmdLineW = NULL;
+	BOOL retval = CreateProcessW(image, cmdline, NULL, NULL, FALSE, fdwCreate, NULL, NULL, NULL, pProcInfo);
 
-        pszCmdLineW = a2w_malloc(pszCmdLine, -1, NULL);
-        if(NULL != pszCmdLineW || NULL == pszCmdLine)
-        {
-            retval = CreateProcessW(pszImageNameW, pszCmdLineW, NULL, NULL, FALSE, fdwCreate, NULL, NULL, NULL, pProcInfo);
-
-            if(NULL != pszCmdLineW)
-            {
-                free(pszCmdLineW);
-            }
-        }
-    }
+	if (image)
+		free(image);
+	
+	if (cmdline)
+		free(cmdline);
 
     return retval;
 }
