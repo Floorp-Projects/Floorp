@@ -2188,19 +2188,26 @@ echo "
     fi
 ])
 
-MOZ_CHECK_PTHREADS(pthreads,
-    _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
-    MOZ_CHECK_PTHREADS(pthread,
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-        MOZ_CHECK_PTHREADS(c_r,
-            _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-            MOZ_CHECK_PTHREADS(c,
-                _HAVE_PTHREADS=1
+case "$target_os" in
+darwin*)
+    _HAVE_PTHREADS=1
+    ;;
+*)
+    MOZ_CHECK_PTHREADS(pthreads,
+        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
+        MOZ_CHECK_PTHREADS(pthread,
+            _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
+            MOZ_CHECK_PTHREADS(c_r,
+                _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
+                MOZ_CHECK_PTHREADS(c,
+                    _HAVE_PTHREADS=1
+                )
             )
         )
     )
-)
-                        
+    ;;
+esac
+
 AC_ARG_WITH(pthreads,
     [  --with-pthreads         Use system pthreads library as thread subsystem],
     [ if test "$withval" = "yes"; then
