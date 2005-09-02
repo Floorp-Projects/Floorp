@@ -2345,7 +2345,6 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-#ifndef WINCE
     const nsCString &path = mWorkingPath;
 
     // use the app registry name to launch a shell execute....
@@ -2386,7 +2385,6 @@ nsLocalFile::Launch()
             return NS_ERROR_FILE_EXECUTION_FAILED;
         }
     }
-#endif
     return NS_OK;
 }
 

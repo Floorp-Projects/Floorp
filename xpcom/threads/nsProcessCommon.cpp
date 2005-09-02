@@ -236,7 +236,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     // null terminate the array
     my_argv[count+1] = NULL;
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined (WINCE) /* wince uses nspr */
     STARTUPINFO startupInfo;
     PROCESS_INFORMATION procInfo;
     BOOL retVal;
