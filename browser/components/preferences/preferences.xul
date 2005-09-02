@@ -77,7 +77,7 @@
 #ifdef XP_MACOSX
             style="&prefWindow.styleMac;">
 #else
-            style="&prefWindow.styleUnix;">
+            style="&prefWindow.styleGNOME;">
 #endif
 #endif
   
