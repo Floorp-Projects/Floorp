@@ -60,8 +60,24 @@
         <![CDATA[
           var x = document.getAnonymousElementByAttribute(this, "anonid", "main-box");
           this.scrollBoxObject = x.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+
+          // add a template build listener
+          if (this.builder)
+            this.builder.addListener(this._builderListener);
+          else
+            this._refreshSelection();
         ]]>
       </constructor>
+
+      <destructor>
+        <![CDATA[
+          // remove the template build listener
+          if (this.builder)
+            this.builder.removeListener(this._builderListener);
+
+          this._selectedItem = null;
+        ]]>
+      </destructor>
 
       <property name="accessible">
         <getter>
@@ -85,6 +101,80 @@
         </getter>
       </property>
 
+      <field name="_builderListener">
+        <![CDATA[
+          ({
+            mOuter: this,
+            item: null,
+            willRebuild : function(builder) {},
+            didRebuild : function(builder) {
+              this.mOuter._refreshSelection();
+            }
+          });
+        ]]>
+      </field>
+
+      <method name="_refreshSelection">
+        <body>
+          <![CDATA[
+            // when this method is called, we know that either the selectedItem
+            // we have is null (ctor) or a reference to an element no longer in
+            // the DOM (template).
+  
+            // fist look for a last-selected attribute
+            var lastSelected = this.getAttribute("last-selected");
+            if (lastSelected != "") {
+              var element = document.getElementById(lastSelected);
+  
+              if (element) {
+                this.selectedItem = element;
+                this.scrollBoxObject.scrollToElement(this.selectedItem);
+                return;
+              }
+            }
+  
+            // cache the selected index
+            var selectedIndex = this._selectedIndex;
+  
+            // refreshes selection.  Called for example when a template rebuild
+            // happens.
+            if (this.selectedItem) {
+              if (this.selectedItem.hasAttribute("id")) {
+                var id = this.selectedItem.getAttribute("id");
+                var item = document.getElementById(id);
+  
+                // if we find no item, clear selection so that the code at the bottom
+                // takes over
+                if (item) {
+                  this.selectedItem = item;
+                } else {
+                  this.clearSelection();
+                }
+              } else {
+                 // if no id, we clear selection so that the below code will select
+                 // based on the current index
+                 this.clearSelection();
+              }
+            }
+  
+            // if we have no previously selected item or the above if check fails to
+            // find the previous node (which causes it to clear selection)
+            if (!this.selectedItem) {
+              // if the selectedIndex is larger than the row count, select the last
+              // item.
+              if (selectedIndex >= this.getRowCount())
+                this.selectedIndex = this.getRowCount() - 1;
+              else
+                this.selectedIndex = selectedIndex;
+  
+              // XXX: downloadmanager needs the following line, else we scroll to
+              // the middle on inital load.
+              this.ensureSelectedElementIsVisible();
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="fireActiveItemEvent">
       <body>
         <![CDATA[
@@ -98,6 +188,7 @@
       </body>
       </method>
 
+      <field name="_selectedIndex">0</field>
       <property name="selectedIndex">
         <getter>
           <![CDATA[
@@ -128,7 +219,7 @@
               // only set if we get an item returned
               var item = this.getItemAtIndex(val);
               if (item)
-                this.selectedItem = item
+                this.selectedItem = item;
             }
           ]]>
         </setter>
@@ -141,21 +232,36 @@
         </getter>
         <setter>
           <![CDATA[
-            if (this._selectedItem)
-              this._selectedItem.selected = false;
+            this._setItemSelection(val);
 
-            this._selectedItem = val;
-
-            if (val) {
-              val.selected = true;
-              this.scrollBoxObject.ensureElementIsVisible(val);
+            if (val)
               this.fireActiveItemEvent();
-            }
 
             this._fireOnSelect();
           ]]>
         </setter>
       </property>
+
+      <!-- sets selection but doesn't cause any events -->
+      <method name="_setItemSelection">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            // unselect current item
+            if (this._selectedItem)
+              this._selectedItem.selected = false
+
+            this._selectedItem = aItem;
+            this._selectedIndex = this.getIndexOf(aItem);
+
+            if (aItem) {
+              this.ensureSelectedElementIsVisible();
+              aItem.selected = true;
+              aItem.focus();
+            }
+          ]]>
+        </body>
+      </method>
 
       <method name="clearSelection">
         <body>
@@ -214,21 +320,22 @@
         </body>
       </method>
 
-      <method name="init">
+      <method name="getIndexOf">
+        <parameter name="aElement"/>
         <body>
           <![CDATA[
-            var lastSelected = this.getAttribute("last-selected");
+            var run = 0;
+            var index = -1;
+            var children = this.children;
 
-            if (lastSelected != "")
-              lastSelected = document.getElementById(lastSelected);
+            while (children[run] != aElement && run < children.length) {
+              run++;
+            }
 
-            if (!lastSelected)
-              this.goDown();
-            else
-              this.selectedItem = lastSelected;
+            if (children[run] == aElement)
+              index = run;
 
-            if (this.selectedItem)
-              this.scrollBoxObject.scrollToElement(this.selectedItem);
+            return index;
           ]]>
         </body>
       </method>
@@ -245,7 +352,7 @@
       <method name="ensureSelectedElementIsVisible">
         <body>
           <![CDATA[
-            this.scrollBoxObject.ensureElementIsVisible(this.selectedItem);
+            this.ensureElementIsVisible(this.selectedItem);
           ]]>
         </body>
       </method>
@@ -261,6 +368,11 @@
       <method name="_fireOnSelect">
         <body>
           <![CDATA[
+            if (this.selectedItem)
+              this.setAttribute("last-selected", this.selectedItem.getAttribute("id"));
+            else
+              this.removeAttribute("last-selected");
+
             if (!this.suppressOnSelect) {
               var event = document.createEvent("Events");
               event.initEvent("select", false, true);
@@ -319,44 +431,13 @@
     </resources>
 
     <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
-      <constructor>
-        <![CDATA[
-          var listBox = this.control;
-          if (!listBox.selectedItem)
-            listBox.goDown();  // Fix up initial focus as items are created
-          else if (!listBox.selectedItem.parentNode) {
-            // The currently selected item has been removed.
-            // Select the same numbered child in the current list.
-            // The selectedIndex setter will just null out the current selection 
-            // if we pass it an out-of-range index.
-            var focusAncestor = document.commandDispatcher.focusedElement;
-            while (true) {
-               if (!focusAncestor) {
-                 // The focus has been orphaned
-                 listBox.focus();
-                 break;
-               }
-               if (focusAncestor instanceof Components.interfaces.nsIDOMDocument) {
-                 break; // focus has not been orphaned
-               }
-               focusAncestor = focusAncestor.parentNode;
-            }
-            var index = listBox.selectedIndex;
-            var numItems = this.control.getRowCount();
-            if (index >= numItems) {
-              index = numItems - 1;
-            }
-            listBox.selectedIndex = index;
-          }
-        ]]>
-      </constructor>
-
       <destructor>
         <![CDATA[
-          // when we are destructed and we are selected, unselect ourselves so
+          // When we are destructed and we are selected, unselect ourselves so
           // that richlistbox's selection doesn't point to something not in the DOM.
+          // We don't want to reset last-selected, so we don't call clearSelection().
           if (this.selected) {
-            this.control.clearSelection();
+            this.control._setItemSelection(null);
           }
         ]]>
       </destructor>
