@@ -240,8 +240,8 @@ PK11SymKey *PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 				PRBool isToken, void *wincx);
 PK11SymKey *PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot,
 				CK_MECHANISM_TYPE type, SECItem *param,
-				int keySize, SECItem *keyid, CK_FLAGS flags,
-				PRBool isToken, void *wincx);
+				int keySize, SECItem *keyid, CK_FLAGS opFlags,
+				PK11AttrFlags attrFlags, void *wincx);
 PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
 								void *wincx);
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
@@ -351,6 +351,14 @@ SECStatus PK11_ExtractKeyValue(PK11SymKey *symKey);
 SECItem * PK11_GetKeyData(PK11SymKey *symKey);
 PK11SlotInfo * PK11_GetSlotFromKey(PK11SymKey *symKey);
 void *PK11_GetWindow(PK11SymKey *symKey);
+/*
+ * The attrFlags is the logical OR of the PK11_ATTR_XXX bitflags.
+ * These flags apply to the private key.  The PK11_ATTR_TOKEN and
+ * PK11_ATTR_READONLY flags also apply to the public key.
+ */
+SECKEYPrivateKey *PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,
+   CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
+		 	    PK11AttrFlags attrFlags, void *wincx);
 SECKEYPrivateKey *PK11_GenerateKeyPair(PK11SlotInfo *slot,
    CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
 		 	    PRBool isPerm, PRBool isSensitive, void *wincx);
