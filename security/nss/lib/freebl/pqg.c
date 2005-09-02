@@ -37,7 +37,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.8 2004/04/25 15:03:08 gerv%gerv.net Exp $
+ * $Id: pqg.c,v 1.9 2005/09/02 20:05:35 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "prerr.h"
@@ -76,13 +76,11 @@ static const unsigned char fips_186_1_a5_pqseed[] = {
 ** global random number generator.
 */
 static SECStatus
-getPQseed(SECItem *seed)
+getPQseed(SECItem *seed, PRArenaPool* arena)
 {
-    if (seed->data) {
-        PORT_Free(seed->data);
-        seed->data = NULL;
+    if (!seed->data) {
+        seed->data = (unsigned char*)PORT_ArenaZAlloc(arena, seed->len);
     }
-    seed->data = (unsigned char*)PORT_ZAlloc(seed->len);
     if (!seed->data) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
@@ -455,7 +453,7 @@ step_1:
         goto cleanup;
     }
     seed->len = seedBytes;
-    CHECK_SEC_OK( getPQseed(seed) );
+    CHECK_SEC_OK( getPQseed(seed, verify->arena) );
     /* ******************************************************************
     ** Step 2.
     ** "Compute U = SHA[SEED] XOR SHA[(SEED+1) mod 2**g]."
@@ -568,6 +566,9 @@ cleanup:
     if (rv) {
 	PORT_FreeArena(params->arena, PR_TRUE);
 	PORT_FreeArena(verify->arena, PR_TRUE);
+    }
+    if (hit.data) {
+        SECITEM_FreeItem(&hit, PR_FALSE);
     }
     return rv;
 }
