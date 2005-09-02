@@ -4270,6 +4270,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
             break;
         case NS_ERROR_NET_RESET:
+        case NS_BASE_STREAM_CLOSED:
         case NS_ERROR_NET_INTERRUPT:
           if (TestFlag(IMAP_RECEIVED_GREETING) && m_runningUrl && !m_retryUrlOnError)
           {
