@@ -886,15 +886,18 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
                                           nsIDOMCanvasPattern **_retval)
 {
     nsresult rv;
+    cairo_extend_t extend;
 
     if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
-        // XX
+        extend = CAIRO_EXTEND_REPEAT;
     } else if (repeat.EqualsLiteral("repeat-x")) {
         // XX
+        extend = CAIRO_EXTEND_REPEAT;
     } else if (repeat.EqualsLiteral("repeat-y")) {
         // XX
+        extend = CAIRO_EXTEND_REPEAT;
     } else if (repeat.EqualsLiteral("no-repeat")) {
-        // XX
+        extend = CAIRO_EXTEND_NONE;
     } else {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
@@ -908,6 +911,8 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
 
     cairo_pattern_t *cairopat = cairo_pattern_create_for_surface(imgSurf);
     cairo_surface_destroy(imgSurf);
+
+    cairo_pattern_set_extend (cairopat, extend);
 
     nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData);
     if (!pat) {
@@ -1095,12 +1100,12 @@ nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float 
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, int clockwise)
+nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, int ccw)
 {
-    if (clockwise)
-        cairo_arc (mCairo, x, y, r, startAngle, endAngle);
-    else
+    if (ccw)
         cairo_arc_negative (mCairo, x, y, r, startAngle, endAngle);
+    else
+        cairo_arc (mCairo, x, y, r, startAngle, endAngle);
     return NS_OK;
 }
 
@@ -1348,10 +1353,7 @@ nsCanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op)
     if (op.EqualsLiteral(cvsop))   \
         cairo_op = CAIRO_OPERATOR_##cairoop;
 
-    // XXX Need to confirm if these are the right ops;
-    // will be irrelevant once we switch to CVS cairo,
-    // because the operators there have names that exactly
-    // match the canvas ops.
+    // XXX "darker" isn't really correct
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
     else CANVAS_OP_TO_CAIRO_OP("copy", SOURCE)
     else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
@@ -1383,10 +1385,7 @@ nsCanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op)
     if (cairo_op == CAIRO_OPERATOR_##cairoop) \
         op.AssignLiteral(cvsop);
 
-    // XXX Need to confirm if these are the right ops;
-    // will be irrelevant once we switch to CVS cairo,
-    // because the operators there have names that exactly
-    // match the canvas ops.
+    // XXX "darker" isn't really correct
     CANVAS_OP_TO_CAIRO_OP("clear", CLEAR)
     else CANVAS_OP_TO_CAIRO_OP("copy", SOURCE)
     else CANVAS_OP_TO_CAIRO_OP("darker", SATURATE)  // XXX
