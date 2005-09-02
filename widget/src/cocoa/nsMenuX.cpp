@@ -880,7 +880,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
 		  char* str = ToNewCString(modifiersStr);
 		  char* newStr;
-		  char* token = nsCRT::strtok( str, ", ", &newStr );
+		  char* token = nsCRT::strtok( str, ", \t", &newStr );
 		  while( token != NULL ) {
 		    if (PL_strcmp(token, "shift") == 0)
 		      modifiers |= knsMenuItemShiftModifier;
@@ -893,7 +893,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
           modifiers |= knsMenuItemCommandModifier;
 		    }
 		    
-		    token = nsCRT::strtok( newStr, ", ", &newStr );
+		    token = nsCRT::strtok( newStr, ", \t", &newStr );
 		  }
 		  nsMemory::Free(str);
 
