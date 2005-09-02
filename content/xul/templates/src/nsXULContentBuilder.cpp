@@ -1108,6 +1108,8 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
                                                         nsIContent** aContainer,
                                                         PRInt32* aNewIndexInContainer)
 {
+    NS_PRECONDITION(!aContainer == !aNewIndexInContainer,
+                    "Must ask for either both or neither");
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
     // container resource in the RDF graph).
@@ -1534,7 +1536,22 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
 
     NS_ASSERTION(IsElementInBuilder(aElement, this), "element not managed by this template builder");
 
-    return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
+    // Now, regenerate both the template- and container-generated
+    // contents for the current element...
+    nsCOMPtr<nsIContent> container;
+    PRInt32 newIndex;
+    nsresult rv = CreateTemplateAndContainerContents(aElement, getter_AddRefs(container), &newIndex);
+
+    if (container) {
+        nsIDocument * doc = mRoot->GetCurrentDoc();
+        NS_ASSERTION(doc, "element has no document");
+        if (! doc)
+            return NS_ERROR_UNEXPECTED;
+
+        doc->ContentAppended(container, newIndex);
+    }
+
+    return rv;
 }
 
 //----------------------------------------------------------------------
