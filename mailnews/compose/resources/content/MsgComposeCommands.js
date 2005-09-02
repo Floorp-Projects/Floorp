@@ -1425,6 +1425,10 @@ var gMsgEditorCreationObserver =
       var editor = GetCurrentEditor();
       if (editor && GetCurrentCommandManager() == aSubject)
         InitEditor(editor);
+      // Now that we know this document is an editor, ensure
+      // that CommandUpdate_MsgCompose() will update commands
+      // next time the editable document receives focus
+      gLastWindowToHaveFocus = null;
     }
   }
 }
