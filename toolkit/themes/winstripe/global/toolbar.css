@@ -47,6 +47,8 @@
 toolbox {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
+  border-top: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
 }
 
 /* ::::: toolbar & menubar ::::: */
@@ -61,11 +63,7 @@ toolbar {
 toolbar[type="menubar"], menubar {
   min-width: 1px;
   border-bottom: 1px solid ThreeDShadow;
-}
-
-toolbox > toolbar:first-child, toolbox > menubar:first-child {
-  border-top: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
+  border-top: 0px !important;
 }
 
 /* ::::: toolbar decorations ::::: */
