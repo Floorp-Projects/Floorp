@@ -388,7 +388,7 @@
 ],
 
 'bug/votes/list-for-bug.html.tmpl' => [
-  'voter.count', 
+  'voter.vote_count', 
   'total', 
 ],
 
