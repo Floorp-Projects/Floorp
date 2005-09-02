@@ -3,7 +3,7 @@
 <!ENTITY  prefWindow.titleGNOME   "&brandShortName; Preferences">
 <!ENTITY  prefWindow.styleWin     "width: 42em; height: 36em;">
 <!ENTITY  prefWindow.styleMac     "width: 47em;">
-<!ENTITY  prefWindow.styleUnix    "width: 42em;">
+<!ENTITY  prefWindow.styleGNOME   "width: 42em; height: 34.5em;">
 
 <!ENTITY  paneGeneral.title       "General">
 <!ENTITY  panePrivacy.title       "Privacy">
