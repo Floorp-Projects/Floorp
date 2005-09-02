@@ -112,7 +112,7 @@ ifdef NS_USE_GCC
 		OS_CFLAGS += -MDupdate $(DEPENDENCIES)
 	endif
 	ifdef BUILD_OPT
-	    OPTIMIZER = -O3
+	    OPTIMIZER = -O2
 	    # Enable this for accurate dtrace profiling
 	    # OPTIMIZER += -mno-omit-leaf-frame-pointer -fno-omit-frame-pointer
 	endif
@@ -183,6 +183,7 @@ ifeq ($(USE_64), 1)
 endif
 	DSO_LDOPTS += -G -h $(notdir $@)
 endif
+DSO_LDOPTS += -z combreloc -z defs -z ignore
 
 # -KPIC generates position independent code for use in shared libraries.
 # (Similarly for -fPIC in case of gcc.)
@@ -191,7 +192,6 @@ ifdef NS_USE_GCC
 else
 	DSO_CFLAGS += -KPIC
 endif
-DSO_LDOPTS += -z combreloc -z defs -z ignore
 
 NOSUCHFILE   = /solaris-rm-f-sucks
 

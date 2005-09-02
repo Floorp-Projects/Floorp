@@ -148,7 +148,7 @@ ifeq ($(OS_RELEASE),2.0)
 endif
 
 ifdef BUILD_OPT
-	OPTIMIZER       = -O3
+	OPTIMIZER	= -O2
 endif
 
 ifeq ($(USE_PTHREADS),1)
