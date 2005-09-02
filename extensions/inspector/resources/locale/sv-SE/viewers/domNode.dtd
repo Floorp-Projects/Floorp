@@ -38,6 +38,6 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY nodeName.label "Nodnamn:">
-<!ENTITY namespaceURI.label "Namnområdets URI:">
+<!ENTITY namespaceURI.label "Namnrymdens URI:">
 <!ENTITY nodeType.label "Nodtyp:">
 <!ENTITY nodeValue.label "Nodvärde:">
