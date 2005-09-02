@@ -225,6 +225,12 @@ JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval);
 
+/**
+ * Return fp's callee function object (fp->argv[-2]) if it has one.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp);
+
 /************************************************************************/
 
 extern JS_PUBLIC_API(const char *)

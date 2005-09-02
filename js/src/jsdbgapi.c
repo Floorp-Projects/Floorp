@@ -830,6 +830,12 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
     return (fp->flags & JSFRAME_CONSTRUCTING) != 0;
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
+{
+    return fp->argv ? JSVAL_TO_OBJECT(fp->argv[-2]) : NULL;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
