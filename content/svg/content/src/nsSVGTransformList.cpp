@@ -295,7 +295,7 @@ nsSVGTransformList::ParseParameterList(char *paramstr, float *vars, PRInt32 nvar
   while ((arg = nsCRT::strtok(argrest, arg_delimiters, &argrest))) {
     if (num_args_found < nvars) {
       f = (float) PR_strtod(arg, &argend);
-      if (arg == argend)
+      if (arg == argend || *argend != '\0')
         return -1;
 
       vars[num_args_found] = f;
