@@ -83,6 +83,7 @@ public:
   PRBool AppendElement(nsIDOMSVGTransform* aElement);
   
 protected:
+  PRInt32 ParseParameterList(char *paramstr, float *vars, PRInt32 nvars);
   void ReleaseTransforms();
   
   nsAutoVoidArray mTransforms;
