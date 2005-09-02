@@ -74,7 +74,7 @@ Check_Message=Download of $ProductName$ was successful. $ProductNameInternal$ mu
 Check_FullMessage=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 Check_Wait=Shutting down $ProductNameInternal$.  Please wait...
 
-Component_XPCOM=Cross Platform COM
+Component_XPCOM=Cross-Platform COM
 Component_Mail=$ProductName$
 Component_Offline=Offline Support
 Component_Offline_Long=Adds Offline support to $ProductName$ Mail.
