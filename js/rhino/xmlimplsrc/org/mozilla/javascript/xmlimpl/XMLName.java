@@ -45,7 +45,7 @@ import org.mozilla.javascript.Undefined;
 class XMLName extends Ref
 {
     static final long serialVersionUID = 3832176310755686977L;
-    
+
     private String uri;
     private String localName;
     private boolean isAttributeName;

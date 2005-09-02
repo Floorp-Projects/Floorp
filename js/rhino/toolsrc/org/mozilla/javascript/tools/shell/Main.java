@@ -94,7 +94,6 @@ public class Main
         }
     }
 
-
     /**
      * Main entry point.
      *
@@ -123,21 +122,15 @@ public class Main
      */
     public static int exec(String origArgs[])
     {
-
-        for (int i=0; i < origArgs.length; i++) {
-            String arg = origArgs[i];
-            if (arg.equals("-sealedlib")) {
-                sealedStdLib = true;
-                break;
-            }
-        }
-
         errorReporter = new ToolErrorReporter(false, global.getErr());
         shellContextFactory.setErrorReporter(errorReporter);
         String[] args = processOptions(origArgs);
         if (processStdin)
             fileList.addElement(null);
 
+        if (!global.initialized) {
+            global.init(shellContextFactory);
+        }
         IProxy iproxy = new IProxy(IProxy.PROCESS_FILES);
         iproxy.args = args;
         shellContextFactory.call(iproxy);
@@ -147,9 +140,6 @@ public class Main
 
     static void processFiles(Context cx, String[] args)
     {
-        if (!global.initialized) {
-            global.init(cx);
-        }
         // define "arguments" array in the top-level object:
         // need to allocate new array since newArray requires instances
         // of exactly Object[], not ObjectSubclass[]
@@ -239,6 +229,9 @@ public class Main
                     usageError = arg;
                     break goodUsage;
                 }
+                if (!global.initialized) {
+                    global.init(shellContextFactory);
+                }
                 IProxy iproxy = new IProxy(IProxy.EVAL_INLINE_SCRIPT);
                 iproxy.scriptText = args[i];
                 shellContextFactory.call(iproxy);
@@ -258,15 +251,15 @@ public class Main
                 continue;
             }
             if (arg.equals("-sealedlib")) {
-                // Should already be processed
-                if (!sealedStdLib) Kit.codeBug();
+                global.setSealedStdLib(true);
                 continue;
             }
             usageError = arg;
             break goodUsage;
         }
         // print usage message
-        p(ToolErrorReporter.getMessage("msg.shell.usage", usageError));
+        global.getOut().println(
+            ToolErrorReporter.getMessage("msg.shell.usage", usageError));
         System.exit(1);
         return null;
     }
@@ -303,9 +296,10 @@ public class Main
     public static void processSource(Context cx, String filename)
     {
         if (filename == null || filename.equals("-")) {
+            PrintStream ps = global.getErr();
             if (filename == null) {
                 // print implementation version
-                getOut().println(cx.getImplementationVersion());
+                ps.println(cx.getImplementationVersion());
             }
 
             // Use the interpreter for interactive input
@@ -318,8 +312,8 @@ public class Main
             while (!hitEOF) {
                 int startline = lineno;
                 if (filename == null)
-                    global.getErr().print("js> ");
-                global.getErr().flush();
+                    ps.print("js> ");
+                ps.flush();
                 String source = "";
 
                 // Collect lines of source to compile.
@@ -329,7 +323,7 @@ public class Main
                         newline = in.readLine();
                     }
                     catch (IOException ioe) {
-                        global.getErr().println(ioe.toString());
+                        ps.println(ioe.toString());
                         break;
                     }
                     if (newline == null) {
@@ -347,16 +341,17 @@ public class Main
                     Object result = evaluateScript(script, cx, global);
                     if (result != Context.getUndefinedValue()) {
                         try {
-                            global.getErr().println(Context.toString(result));
+                            ps.println(Context.toString(result));
                         } catch (RhinoException rex) {
-                            errorReporter.reportException(rex);
+                            ToolErrorReporter.reportException(
+                                cx.getErrorReporter(), rex);
                         }
                     }
                     NativeArray h = global.history;
                     h.put((int)h.getLength(), h, source);
                 }
             }
-            global.getErr().println();
+            ps.println();
         } else {
             processFile(cx, global, filename);
         }
@@ -412,14 +407,12 @@ public class Main
         try {
             return cx.compileString(scriptSource, path, lineno,
                                     securityDomain);
-        } catch (WrappedException we) {
-            global.getErr().println(we.getWrappedException().toString());
-            we.printStackTrace();
         } catch (EvaluatorException ee) {
             // Already printed message.
             exitCode = EXITCODE_RUNTIME_ERROR;
         } catch (RhinoException rex) {
-            errorReporter.reportException(rex);
+            ToolErrorReporter.reportException(
+                cx.getErrorReporter(), rex);
             exitCode = EXITCODE_RUNTIME_ERROR;
         } catch (VirtualMachineError ex) {
             // Treat StackOverflow and OutOfMemory as runtime errors
@@ -464,7 +457,8 @@ public class Main
             }
             return (Script) clazz.newInstance();
          } catch (RhinoException rex) {
-            errorReporter.reportException(rex);
+            ToolErrorReporter.reportException(
+                cx.getErrorReporter(), rex);
             exitCode = EXITCODE_RUNTIME_ERROR;
         } catch (IllegalAccessException iaex) {
             exitCode = EXITCODE_RUNTIME_ERROR;
@@ -479,16 +473,11 @@ public class Main
     public static Object evaluateScript(Script script, Context cx,
                                         Scriptable scope)
     {
-        if (!global.initialized) {
-            global.init(cx);
-        }
         try {
             return script.exec(cx, scope);
-        } catch (WrappedException we) {
-            global.getErr().println(we.getWrappedException().toString());
-            we.printStackTrace();
         } catch (RhinoException rex) {
-            errorReporter.reportException(rex);
+            ToolErrorReporter.reportException(
+                cx.getErrorReporter(), rex);
             exitCode = EXITCODE_RUNTIME_ERROR;
         } catch (VirtualMachineError ex) {
             // Treat StackOverflow and OutOfMemory as runtime errors
@@ -501,39 +490,28 @@ public class Main
         return Context.getUndefinedValue();
     }
 
-    private static void p(String s) {
-        global.getOut().println(s);
-    }
-
-    public static ScriptableObject getScope() {
-        if (!global.initialized) {
-            global.init(Context.getCurrentContext());
-        }
-        return global;
-    }
-
     public static InputStream getIn() {
-        return Global.getInstance(getGlobal()).getIn();
+        return getGlobal().getIn();
     }
 
     public static void setIn(InputStream in) {
-        Global.getInstance(getGlobal()).setIn(in);
+        getGlobal().setIn(in);
     }
 
     public static PrintStream getOut() {
-        return Global.getInstance(getGlobal()).getOut();
+        return getGlobal().getOut();
     }
 
     public static void setOut(PrintStream out) {
-        Global.getInstance(getGlobal()).setOut(out);
+        getGlobal().setOut(out);
     }
 
     public static PrintStream getErr() {
-        return Global.getInstance(getGlobal()).getErr();
+        return getGlobal().getErr();
     }
 
     public static void setErr(PrintStream err) {
-        Global.getInstance(getGlobal()).setErr(err);
+        getGlobal().setErr(err);
     }
 
     /**
@@ -613,9 +591,7 @@ public class Main
     static protected int exitCode = 0;
     static private final int EXITCODE_RUNTIME_ERROR = 3;
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
-    //static private DebugShell debugShell;
     static boolean processStdin = true;
-    static boolean sealedStdLib = false;
     static Vector fileList = new Vector(5);
     private static SecurityProxy securityImpl;
 }

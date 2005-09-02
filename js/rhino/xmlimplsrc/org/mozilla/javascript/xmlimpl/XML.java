@@ -51,7 +51,7 @@ import org.apache.xmlbeans.XmlOptions;
 class XML extends XMLObjectImpl
 {
     static final long serialVersionUID = -630969919086449092L;
-    
+
     final static class XScriptAnnotation extends XmlBookmark
     {
         javax.xml.namespace.QName _name;

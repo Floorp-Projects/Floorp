@@ -40,7 +40,7 @@ import org.mozilla.javascript.*;
 class XMLCtor extends IdFunctionObject
 {
     static final long serialVersionUID = -8708195078359817341L;
-    
+
     private static final Object XMLCTOR_TAG = new Object();
 
     private XMLLibImpl lib;

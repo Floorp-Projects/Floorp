@@ -38,8 +38,11 @@
 
 package org.mozilla.javascript.tools.debugger;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+
 import org.mozilla.javascript.*;
-import java.io.*;
+import org.mozilla.javascript.tools.shell.Global;
 
 
 public class Main implements ContextListener
@@ -59,10 +62,18 @@ public class Main implements ContextListener
         static final int SCOPE_PROVIDER = 2;
 
         private final int type;
+        Scriptable scope;
 
         IProxy(int type)
         {
             this.type = type;
+        }
+
+        public static ScopeProvider newScopeProvider(Scriptable scope)
+        {
+            IProxy scopeProvider = new IProxy(SCOPE_PROVIDER);
+            scopeProvider.scope = scope;
+            return scopeProvider;
         }
 
         public void run()
@@ -74,7 +85,8 @@ public class Main implements ContextListener
         public Scriptable getScope()
         {
             if (type != SCOPE_PROVIDER) Kit.codeBug();
-            return org.mozilla.javascript.tools.shell.Main.getScope();
+            if (scope == null) Kit.codeBug();
+            return scope;
         }
     }
 
@@ -132,6 +144,11 @@ public class Main implements ContextListener
     public void go()
     {
         dim.go();
+    }
+
+    public void setScope(Scriptable scope)
+    {
+        setScopeProvider(IProxy.newScopeProvider(scope));
     }
 
     public void setScopeProvider(ScopeProvider p) {
@@ -257,14 +274,20 @@ public class Main implements ContextListener
         Main main = new Main("Rhino JavaScript Debugger");
         main.doBreak();
         main.setExitAction(new IProxy(IProxy.EXIT_ACTION));
+
         System.setIn(main.getIn());
         System.setOut(main.getOut());
         System.setErr(main.getErr());
 
+        Global global = org.mozilla.javascript.tools.shell.Main.getGlobal();
+        global.setIn(main.getIn());
+        global.setOut(main.getOut());
+        global.setErr(main.getErr());
+
         main.attachTo(
             org.mozilla.javascript.tools.shell.Main.shellContextFactory);
 
-        main.setScopeProvider(new IProxy(IProxy.SCOPE_PROVIDER));
+        main.setScope(global);
 
         main.pack();
         main.setSize(600, 460);
@@ -275,8 +298,19 @@ public class Main implements ContextListener
 
     public static void mainEmbedded(String title)
     {
-        IProxy scopeProvider = new IProxy(IProxy.SCOPE_PROVIDER);
-        mainEmbedded(ContextFactory.getGlobal(), scopeProvider, title);
+        ContextFactory factory = ContextFactory.getGlobal();
+        Global global = new Global();
+        global.init(factory);
+        mainEmbedded(factory, global, title);
+    }
+
+    // same as plain main(), stdin/out/err redirection removed and
+    // explicit ContextFactory and scope
+    public static void mainEmbedded(ContextFactory factory,
+                                    Scriptable scope,
+                                    String title)
+    {
+        mainEmbeddedImpl(factory, scope, title);
     }
 
     // same as plain main(), stdin/out/err redirection removed and
@@ -284,6 +318,14 @@ public class Main implements ContextListener
     public static void mainEmbedded(ContextFactory factory,
                                     ScopeProvider scopeProvider,
                                     String title)
+    {
+        mainEmbeddedImpl(factory, scopeProvider, title);
+    }
+
+
+    private static void mainEmbeddedImpl(ContextFactory factory,
+                                         Object scopeProvider,
+                                         String title)
     {
         if (title == null) {
             title = "Rhino JavaScript Debugger (embedded usage)";
@@ -293,7 +335,18 @@ public class Main implements ContextListener
         main.setExitAction(new IProxy(IProxy.EXIT_ACTION));
 
         main.attachTo(factory);
-        main.setScopeProvider(scopeProvider);
+        if (scopeProvider instanceof ScopeProvider) {
+            main.setScopeProvider((ScopeProvider)scopeProvider);
+        } else {
+            Scriptable scope = (Scriptable)scopeProvider;
+            if (scope instanceof Global) {
+                Global global = (Global)scope;
+                global.setIn(main.getIn());
+                global.setOut(main.getOut());
+                global.setErr(main.getErr());
+            }
+            main.setScope(scope);
+        }
 
         main.pack();
         main.setSize(600, 460);

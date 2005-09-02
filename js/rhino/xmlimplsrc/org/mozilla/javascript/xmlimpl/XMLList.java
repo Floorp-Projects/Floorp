@@ -47,7 +47,7 @@ import org.apache.xmlbeans.XmlCursor;
 class XMLList extends XMLObjectImpl implements Function
 {
     static final long serialVersionUID = -4543618751670781135L;
-    
+
     static class AnnotationList
     {
         private Vector v;

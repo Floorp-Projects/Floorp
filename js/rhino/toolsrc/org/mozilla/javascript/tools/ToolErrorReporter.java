@@ -101,6 +101,19 @@ public class ToolErrorReporter implements ErrorReporter {
         }
     }
 
+    private static String getExceptionMessage(RhinoException ex)
+    {
+        String msg;
+        if (ex instanceof JavaScriptException) {
+            msg = getMessage("msg.uncaughtJSException", ex.details());
+        } else if (ex instanceof EcmaError) {
+            msg = getMessage("msg.uncaughtEcmaError", ex.details());
+        } else {
+            msg = ex.toString();
+        }
+        return msg;
+    }
+
     public void warning(String message, String sourceName, int line,
                         String lineSource, int lineOffset)
     {
@@ -139,18 +152,27 @@ public class ToolErrorReporter implements ErrorReporter {
         this.reportWarnings = reportWarnings;
     }
 
+    public static void reportException(ErrorReporter er, RhinoException ex)
+    {
+        if (er instanceof ToolErrorReporter) {
+            ((ToolErrorReporter)er).reportException(ex);
+        } else {
+            String msg = getExceptionMessage(ex);
+            er.error(msg, ex.sourceName(), ex.lineNumber(),
+                     ex.lineSource(), ex.columnNumber());
+        }
+    }
+
     public void reportException(RhinoException ex)
     {
-        String msg;
-        if (ex instanceof JavaScriptException) {
-            msg = getMessage("msg.uncaughtJSException", ex.details());
-        } else if (ex instanceof EcmaError) {
-            msg = getMessage("msg.uncaughtEcmaError", ex.details());
+        if (ex instanceof WrappedException) {
+            WrappedException we = (WrappedException)ex;
+            we.printStackTrace(err);
         } else {
-            msg = ex.toString();
+            String msg = getExceptionMessage(ex);
+            reportErrorMessage(msg, ex.sourceName(), ex.lineNumber(),
+                               ex.lineSource(), ex.columnNumber(), false);
         }
-        reportErrorMessage(msg, ex.sourceName(), ex.lineNumber(),
-                           ex.lineSource(), ex.columnNumber(), false);
     }
 
     private void reportErrorMessage(String message, String sourceName, int line,

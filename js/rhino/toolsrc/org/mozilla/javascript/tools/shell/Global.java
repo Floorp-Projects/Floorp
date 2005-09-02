@@ -66,11 +66,22 @@ public class Global extends ImporterTopLevel
         init(cx);
     }
 
+    public void init(ContextFactory factory)
+    {
+        factory.call(new ContextAction() {
+                public Object run(Context cx)
+                {
+                    init(cx);
+                    return null;
+                }
+            });
+    }
+
     public void init(Context cx)
     {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
-        initStandardObjects(cx, Main.sealedStdLib);
+        initStandardObjects(cx, sealedStdLib);
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand",
@@ -98,7 +109,7 @@ public class Global extends ImporterTopLevel
     public static void help(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-        PrintStream out = getInstance(thisObj).getOut();
+        PrintStream out = getInstance(funObj).getOut();
         out.println(ToolErrorReporter.getMessage("msg.help"));
     }
 
@@ -114,7 +125,7 @@ public class Global extends ImporterTopLevel
     public static Object print(Context cx, Scriptable thisObj,
                                Object[] args, Function funObj)
     {
-        PrintStream out = getInstance(thisObj).getOut();
+        PrintStream out = getInstance(funObj).getOut();
         for (int i=0; i < args.length; i++) {
             if (i > 0)
                 out.print(" ");
@@ -168,7 +179,7 @@ public class Global extends ImporterTopLevel
     public static void load(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-        for (int i=0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             Main.processFile(cx, thisObj, Context.toString(args[i]));
         }
     }
@@ -313,6 +324,7 @@ public class Global extends ImporterTopLevel
         } else {
             throw reportRuntimeError("msg.spawn.args");
         }
+        runner.factory = cx.getFactory();
         Thread thread = new Thread(runner);
         thread.start();
         return thread;
@@ -459,7 +471,7 @@ public class Global extends ImporterTopLevel
                 addArgs = cx.getElements(s);
             }
         }
-        Global global = getInstance(thisObj);
+        Global global = getInstance(funObj);
         if (out == null) {
             out = (global != null) ? global.getOut() : System.out;
         }
@@ -602,17 +614,18 @@ public class Global extends ImporterTopLevel
         errStream = err;
     }
 
-    public static Global getInstance(Scriptable scope)
+    public void setSealedStdLib(boolean value)
     {
-        scope = ScriptableObject.getTopLevelScope(scope);
-        do {
-            if (scope instanceof Global) {
-                return (Global)scope;
-            }
-            scope = scope.getPrototype();
-        } while (scope != null);
+        sealedStdLib = value;
+    }
 
-        return null;
+    private static Global getInstance(Function function)
+    {
+        Scriptable scope = function.getParentScope();
+        if (!(scope instanceof Global))
+            throw reportRuntimeError("msg.bad.shell.function.scope",
+                                     String.valueOf(scope));
+        return (Global)scope;
     }
 
     /**
@@ -925,9 +938,10 @@ public class Global extends ImporterTopLevel
     }
 
     NativeArray history;
-    public InputStream inStream;
-    public PrintStream outStream;
-    public PrintStream errStream;
+    private InputStream inStream;
+    private PrintStream outStream;
+    private PrintStream errStream;
+    private boolean sealedStdLib = false;
     boolean initialized;
 }
 
@@ -947,7 +961,7 @@ class Runner implements Runnable, ContextAction {
 
     public void run()
     {
-        Main.shellContextFactory.call(this);
+        factory.call(this);
     }
 
     public Object run(Context cx)
@@ -958,6 +972,7 @@ class Runner implements Runnable, ContextAction {
             return s.exec(cx, scope);
     }
 
+    ContextFactory factory;
     private Scriptable scope;
     private Function f;
     private Script s;
