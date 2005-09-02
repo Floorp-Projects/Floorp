@@ -1471,7 +1471,6 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    PORT_SetError( PK11_MapError(crv) );
 	}
 	break;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
         {
 	    CK_BBOOL cktrue = CK_TRUE;
@@ -1525,10 +1524,6 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    if (crv == CKR_OK) return symKey;
 	    PORT_SetError( PK11_MapError(crv) );
 	}
-#else
-	case ecKey:
-	break;
-#endif /* NSS_ENABLE_ECC */
    }
 
    PK11_FreeSymKey(symKey);
@@ -1544,10 +1539,8 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 {
     PK11SlotInfo *slot = privKey->pkcs11Slot;
     PK11SymKey *symKey;
-#ifdef NSS_ENABLE_ECC
     CK_MECHANISM mechanism;
     CK_RV crv;
-#endif
 
     /* get our key Structure */
     symKey = pk11_CreateSymKey(slot,target,PR_TRUE,wincx);
@@ -1567,7 +1560,6 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	PK11_FreeSymKey(symKey);
 	return PK11_PubDerive(privKey, pubKey, isSender, randomA, randomB,
 		derive, target, operation, keySize, wincx);
-#ifdef NSS_ENABLE_ECC
     case ecKey:
         {
 	    CK_BBOOL cktrue = CK_TRUE;
@@ -1630,10 +1622,6 @@ PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 	    if (crv == CKR_OK) return symKey;
 	    PORT_SetError( PK11_MapError(crv) );
 	}
-#else
-	case ecKey:
-	break;
-#endif /* NSS_ENABLE_ECC */
    }
 
    PK11_FreeSymKey(symKey);

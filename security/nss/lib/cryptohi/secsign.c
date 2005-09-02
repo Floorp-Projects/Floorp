@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: secsign.c,v 1.13 2005/08/16 01:52:17 wtchang%redhat.com Exp $ */
+/* $Id: secsign.c,v 1.14 2005/09/02 01:24:44 wtchang%redhat.com Exp $ */
 
 #include <stdio.h>
 #include "cryptohi.h"
@@ -121,13 +121,11 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
 	signalg = SEC_OID_MISSI_DSS; /* XXX Is there a better algid? */
 	keyType = fortezzaKey;
 	break;
-#ifdef NSS_ENABLE_ECC
       case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
 	hashalg = SEC_OID_SHA1;
 	signalg = SEC_OID_ANSIX962_EC_PUBLIC_KEY;
 	keyType = ecKey;
 	break;
-#endif /* NSS_ENABLE_ECC */
       /* we don't implement MD4 hashes. 
        * we *CERTAINLY* don't want to sign one! */
       case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
@@ -374,11 +372,9 @@ SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 	  case dsaKey:
 	    algID = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
 	    break;
-#ifdef NSS_ENABLE_ECC
 	  case ecKey:
 	    algID = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	  default:
 	    PORT_SetError(SEC_ERROR_INVALID_KEY);
 	    return SECFailure;
@@ -506,12 +502,10 @@ SEC_GetSignatureAlgorithmOidTag(KeyType keyType, SECOidTag hashAlgTag)
 	    break;
 	}
 	break;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
         /* XXX For now only ECDSA with SHA1 is supported */
         sigTag = SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST;
 	break;
-#endif /* NSS_ENABLE_ECC */
     default:
     	break;
     }

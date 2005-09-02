@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.12 2005/02/24 00:35:51 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: keyhi.h,v 1.13 2005/09/02 01:24:42 wtchang%redhat.com Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -283,9 +283,7 @@ SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
 #define PUBKEY_LIST_NEXT(n) ((SECKEYPublicKeyListNode *)n->links.next)
 #define PUBKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
 
-#ifdef NSS_ENABLE_ECC
 extern int SECKEY_ECParamsToKeySize(const SECItem *params);
-#endif /* NSS_ENABLE_ECC */
 
 SEC_END_PROTOS
 

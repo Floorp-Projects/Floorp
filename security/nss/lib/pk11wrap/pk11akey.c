@@ -152,7 +152,6 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	    PK11_SETATTRS(attrs, CKA_VALUE,    pubKey->u.dh.publicValue.data, 
 					pubKey->u.dh.publicValue.len); attrs++;
 	    break;
-#ifdef NSS_ENABLE_ECC
         case ecKey:
 	    keyType = CKK_EC;
 	    PK11_SETATTRS(attrs, CKA_VERIFY, &cktrue, sizeof(CK_BBOOL));attrs++;
@@ -164,7 +163,6 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
 	    PK11_SETATTRS(attrs, CKA_EC_POINT, pubKey->u.ec.publicValue.data,
 			  pubKey->u.ec.publicValue.len); attrs++;
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	default:
 	    PORT_SetError( SEC_ERROR_BAD_KEY );
 	    return CK_INVALID_HANDLE;
@@ -221,9 +219,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
     CK_ATTRIBUTE template[8];
     CK_ATTRIBUTE *attrs= template;
     CK_ATTRIBUTE *modulus,*exponent,*base,*prime,*subprime,*value;
-#ifdef NSS_ENABLE_ECC
     CK_ATTRIBUTE *ecparams;
-#endif /* NSS_ENABLE_ECC */
 
     /* if we didn't know the key type, get it */
     if (keyType== nullKey) {
@@ -242,11 +238,9 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	case CKK_DH:
 	    keyType = dhKey;
 	    break;
-#ifdef NSS_ENABLE_ECC
 	case CKK_EC:
 	    keyType = ecKey;
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	default:
 	    PORT_SetError( SEC_ERROR_BAD_KEY );
 	    return NULL;
@@ -351,7 +345,6 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	crv = pk11_Attr2SecItem(arena,value,&pubKey->u.dh.publicValue);
 	if (crv != CKR_OK) break;
 	break;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	pubKey->u.ec.size = 0;
 	ecparams = attrs;
@@ -374,7 +367,6 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 	crv = pk11_Attr2SecItem(arena,value,&pubKey->u.ec.publicValue);
 	if (crv != CKR_OK) break;
 	break;
-#endif /* NSS_ENABLE_ECC */
     case fortezzaKey:
     case nullKey:
     default:
@@ -417,9 +409,7 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
 	case CKK_DSA: keyType = dsaKey; break;
 	case CKK_DH: keyType = dhKey; break;
 	case CKK_KEA: keyType = fortezzaKey; break;
-#ifdef NSS_ENABLE_ECC
 	case CKK_EC: keyType = ecKey; break;
-#endif /* NSS_ENABLE_ECC */
 	default:
 		break;
 	}
@@ -578,12 +568,10 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	ap->type = CKA_BASE; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
 	break;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	ap->type = CKA_EC_PARAMS; ap++; count++; extra_count++;
 	ap->type = CKA_VALUE; ap++; count++; extra_count++;
 	break;
-#endif /* NSS_ENABLE_ECC */       
      default:
 	count = 0;
 	extra_count = 0;
@@ -710,7 +698,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
       { CKA_VERIFY_RECOVER,  NULL, 0},
       { CKA_ENCRYPT,  NULL, 0},
     };
-#ifdef NSS_ENABLE_ECC
     CK_ATTRIBUTE ecPubTemplate[] = {
       { CKA_EC_PARAMS, NULL, 0 }, 
       { CKA_TOKEN,  NULL, 0},
@@ -722,7 +709,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     };
     int ecPubCount = sizeof(ecPubTemplate)/sizeof(ecPubTemplate[0]);
     SECKEYECParams * ecParams;
-#endif /* NSS_ENABLE_ECC */
 
     int dsaPubCount = sizeof(dsaPubTemplate)/sizeof(dsaPubTemplate[0]);
     /*CK_ULONG key_size = 0;*/
@@ -870,7 +856,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
         keyType = dhKey;
         test_mech.mechanism = CKM_DH_PKCS_DERIVE;
 	break;
-#ifdef NSS_ENABLE_ECC
     case CKM_EC_KEY_PAIR_GEN:
         ecParams = (SECKEYECParams *)param;
         attrs = ecPubTemplate;
@@ -886,7 +871,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	 */
         test_mech.mechanism = CKM_ECDH1_DERIVE;
         break;
-#endif /* NSS_ENABLE_ECC */
     default:
 	PORT_SetError( SEC_ERROR_BAD_KEY );
 	return NULL;
@@ -910,7 +894,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	case CKM_DH_PKCS_DERIVE:
 		mechanism_info.flags = CKF_DERIVE;
 		break;
-#ifdef NSS_ENABLE_ECC
 	case CKM_ECDH1_DERIVE:
 		mechanism_info.flags = CKF_DERIVE;
 		break;
@@ -918,7 +901,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	case CKM_ECDSA_SHA1:
 		mechanism_info.flags = CKF_SIGN | CKF_VERIFY;
 		break;
-#endif /* NSS_ENABLE_ECC */
 	default:
 	       break;
 	}
@@ -1019,11 +1001,9 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     case CKM_DH_PKCS_KEY_PAIR_GEN:
       pubKeyIndex = &(*pubKey)->u.dh.publicValue;
       break;      
-#ifdef NSS_ENABLE_ECC
     case CKM_EC_KEY_PAIR_GEN:
       pubKeyIndex = &(*pubKey)->u.ec.publicValue;
       break;      
-#endif /* NSS_ENABLE_ECC */
     }
     PORT_Assert(pubKeyIndex != NULL);
 
@@ -1125,9 +1105,7 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 		 CKA_UNWRAP, CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER };
     CK_ATTRIBUTE_TYPE dsaUsage[] = { CKA_SIGN };
     CK_ATTRIBUTE_TYPE dhUsage[] = { CKA_DERIVE };
-#ifdef NSS_ENABLE_ECC
     CK_ATTRIBUTE_TYPE ecUsage[] = { CKA_SIGN, CKA_DERIVE };
-#endif /* NSS_ENABLE_ECC */
     if((epki == NULL) || (pwitem == NULL))
 	return SECFailure;
 
@@ -1166,7 +1144,6 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 	usage = dsaUsage;
 	usageCount = sizeof(dsaUsage)/sizeof(dsaUsage[0]);
 	break;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	key_type = CKK_EC;
 	switch  (keyUsage & (KU_DIGITAL_SIGNATURE|KU_KEY_AGREEMENT)) {
@@ -1185,7 +1162,6 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
 	    break;
 	}
 	break;	
-#endif /* NSS_ENABLE_ECC */
     }
 
 try_faulty_3des:
@@ -1286,7 +1262,6 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
 {
     CK_ATTRIBUTE rsaTemplate = { CKA_MODULUS, NULL, 0 };
     CK_ATTRIBUTE dsaTemplate = { CKA_PRIME, NULL, 0 };
-#ifdef NSS_ENABLE_ECC
     /* XXX We should normally choose an attribute such that
      * factor times its size is enough to hold the private key.
      * For EC keys, we have no choice but to use CKA_EC_PARAMS,
@@ -1295,7 +1270,6 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
      * is quite small so we bump up factor from 10 to 15.
      */
     CK_ATTRIBUTE ecTemplate = { CKA_EC_PARAMS, NULL, 0 };
-#endif /* NSS_ENABLE_ECC */
     CK_ATTRIBUTE_PTR pTemplate;
     CK_RV crv;
     int length;
@@ -1313,12 +1287,10 @@ pk11_private_key_encrypt_buffer_length(SECKEYPrivateKey *key)
 	case dhKey:
 	    pTemplate = &dsaTemplate;
 	    break;
-#ifdef NSS_ENABLE_ECC
         case ecKey:
 	    pTemplate = &ecTemplate;
 	    factor = 15;
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	case fortezzaKey:
 	default:
 	    pTemplate = NULL;

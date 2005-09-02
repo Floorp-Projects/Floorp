@@ -59,8 +59,4 @@ CSRCS = \
 
 REQUIRES = dbm
 
-ifdef NSS_ENABLE_ECC
-DEFINES += -DNSS_ENABLE_ECC
-endif
-
 LIBRARY_NAME = pkcs12

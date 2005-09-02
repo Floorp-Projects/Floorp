@@ -1749,10 +1749,8 @@ pk11_mapSignKeyType(KeyType keyType)
     case fortezzaKey:
     case dsaKey:
 	return CKM_DSA;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	return CKM_ECDSA;
-#endif /* NSS_ENABLE_ECC */
     case dhKey:
     default:
 	break;

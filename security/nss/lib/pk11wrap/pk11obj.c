@@ -505,11 +505,9 @@ int
 PK11_SignatureLen(SECKEYPrivateKey *key)
 {
     int val;
-#ifdef NSS_ENABLE_ECC
     CK_ATTRIBUTE theTemplate = { CKA_EC_PARAMS, NULL, 0 };
     SECItem params = {siBuffer, NULL, 0};
     int length; 
-#endif /* NSS_ENABLE_ECC */
 
     switch (key->keyType) {
     case rsaKey:
@@ -522,7 +520,6 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
     case fortezzaKey:
     case dsaKey:
 	return 40;
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	if (PK11_GetAttributes(NULL, key->pkcs11Slot, key->pkcs11ID,
 			       &theTemplate, 1) == CKR_OK) {
@@ -536,7 +533,6 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
 	    return length;
 	}
 	break;
-#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }

@@ -38,7 +38,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.12 2005/08/12 23:22:28 wtchang%redhat.com Exp $
+ * $Id: cmsutil.c,v 1.13 2005/09/02 01:24:56 wtchang%redhat.com Exp $
  */
 
 #include "nssrenam.h"
@@ -256,7 +256,6 @@ NSS_CMSUtil_MakeSignatureAlgorithm(SECOidTag hashalg, SECOidTag encalg)
 	  default:
 	    return SEC_OID_UNKNOWN;
 	}
-#ifdef NSS_ENABLE_ECC
       case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
 	switch (hashalg) {
 	  case SEC_OID_SHA1:
@@ -264,7 +263,6 @@ NSS_CMSUtil_MakeSignatureAlgorithm(SECOidTag hashalg, SECOidTag encalg)
 	  default:
 	    return SEC_OID_UNKNOWN;
 	}
-#endif /* NSS_ENABLE_ECC */
       default:
 	break;
     }

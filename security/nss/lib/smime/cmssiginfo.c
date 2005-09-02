@@ -38,7 +38,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.28 2005/08/12 23:26:38 wtchang%redhat.com Exp $
+ * $Id: cmssiginfo.c,v 1.29 2005/09/02 01:24:56 wtchang%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -386,9 +386,7 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
     case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
     case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
     case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
-#ifdef NSS_ENABLE_ECC
     case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
-#endif /* NSS_ENABLE_ECC */
 	/* ok */
 	break;
     case SEC_OID_UNKNOWN:
