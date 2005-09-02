@@ -773,9 +773,10 @@ js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
 }
 
 typedef struct CompareArgs {
-    JSContext  *context;
-    jsval      fval;
-    JSBool     status;
+    JSContext   *context;
+    jsval       fval;
+    jsval       *localroot;     /* need one local root, for sort_compare */
+    JSBool      status;
 } CompareArgs;
 
 static int
@@ -813,11 +814,20 @@ sort_compare(const void *a, const void *b, void *arg)
 
         if (av == bv) {
             cmp = 0;
-        } else if ((astr = js_ValueToString(cx, av)) != NULL &&
-                   (bstr = js_ValueToString(cx, bv)) != NULL) {
-            cmp = js_CompareStrings(astr, bstr);
         } else {
-            ca->status = JS_FALSE;
+            /*
+             * Set our local root to astr in case the second js_ValueToString
+             * displaces the newborn root in cx, and the GC nests under that
+             * call.  Don't bother guarding the local root store with an astr
+             * non-null test.  If we tag null as a string, the GC will untag,
+             * null-test, and avoid dereferencing null.
+             */
+            astr = js_ValueToString(cx, av);
+            *ca->localroot = STRING_TO_JSVAL(astr);
+            if (astr && (bstr = js_ValueToString(cx, bv)))
+                cmp = js_CompareStrings(astr, bstr);
+            else
+                ca->status = JS_FALSE;
         }
     } else {
         argv[0] = av;
@@ -827,20 +837,24 @@ sort_compare(const void *a, const void *b, void *arg)
                              fval, 2, argv, &rval);
         if (ok) {
             ok = js_ValueToNumber(cx, rval, &cmp);
+
             /* Clamp cmp to -1, 0, 1. */
-            if (JSDOUBLE_IS_NaN(cmp)) {
-                /* XXX report some kind of error here?  ECMA talks about
-                 * 'consistent compare functions' that don't return NaN, but is
-                 * silent about what the result should be.  So we currently
-                 * ignore it.
-                 */
-                cmp = 0;
-            } else if (cmp != 0) {
-                cmp = cmp > 0 ? 1 : -1;
+            if (ok) {
+                if (JSDOUBLE_IS_NaN(cmp)) {
+                    /*
+                     * XXX report some kind of error here?  ECMA talks about
+                     * 'consistent compare functions' that don't return NaN,
+                     * but is silent about what the result should be.  So we
+                     * currently ignore it.
+                     */
+                    cmp = 0;
+                } else if (cmp != 0) {
+                    cmp = cmp > 0 ? 1 : -1;
+                }
             }
-        } else {
-            ca->status = ok;
         }
+        if (!ok)
+            ca->status = ok;
     }
     return (int)cmp;
 }
@@ -936,6 +950,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     ca.context = cx;
     ca.fval = fval;
+    ca.localroot = argv + argc;         /* 1 local GC root */
     ca.status = JS_TRUE;
     if (!js_HeapSort(vec, (size_t) len, sizeof(jsval),
                      all_strings ? sort_compare_strings : sort_compare,
@@ -1720,7 +1735,7 @@ static JSFunctionSpec array_methods[] = {
 #if JS_HAS_SOME_PERL_FUN
     {"join",                array_join,             1,JSFUN_GENERIC_NATIVE,0},
     {"reverse",             array_reverse,          0,JSFUN_GENERIC_NATIVE,0},
-    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,0},
+    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,1},
 #endif
 #if JS_HAS_MORE_PERL_FUN
     {"push",                array_push,             1,JSFUN_GENERIC_NATIVE,0},
