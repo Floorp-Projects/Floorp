@@ -61,8 +61,6 @@ use constant USER_MATCH_SUCCESS  => 1;
 
 use constant MATCH_SKIP_CONFIRM  => 1;
 
-use constant GET_PRODUCTS_BY_ID => 1;
-
 ################################################################################
 # Functions
 ################################################################################
@@ -420,13 +418,12 @@ sub can_see_bug {
 sub get_selectable_products {
     my ($self, $by_id) = @_;
 
-    if (defined $self->{SelectableProducts}) {
-        my %list = @{$self->{SelectableProducts}};
-        return \%list if $by_id;
-        return values(%list);
+    if (defined $self->{selectable_products}) {
+        return $self->{selectable_products};
     }
 
-    my $query = "SELECT id, name " .
+    my $dbh = Bugzilla->dbh;
+    my $query = "SELECT id " .
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
                 "ON group_control_map.product_id = products.id ";
@@ -439,38 +436,31 @@ sub get_selectable_products {
     $query .= "AND group_id NOT IN(" . 
                $self->groups_as_string . ") " .
               "WHERE group_id IS NULL ORDER BY name";
-    my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare($query);
-    $sth->execute();
-    my @products = ();
-    while (my @row = $sth->fetchrow_array) {
-        push(@products, @row);
+
+    my $prod_ids = $dbh->selectcol_arrayref($query);
+    my @products;
+    foreach my $prod_id (@$prod_ids) {
+        push(@products, new Bugzilla::Product($prod_id));
     }
-    $self->{SelectableProducts} = \@products;
-    my %list = @products;
-    return \%list if $by_id;
-    return values(%list);
+    $self->{selectable_products} = \@products;
+    return $self->{selectable_products};
 }
 
-sub get_selectable_classifications ($) {
+sub get_selectable_classifications {
     my ($self) = @_;
 
     if (defined $self->{selectable_classifications}) {
         return $self->{selectable_classifications};
     }
- 
-    my $products = $self->get_selectable_products(GET_PRODUCTS_BY_ID);
-    
-    my $selectable_classifications;
-   
-    foreach my $prod_id (keys %$products) {
-        my $product = new Bugzilla::Product($prod_id);
-        
-        $selectable_classifications->{$product->classification_id} =
-            $product->classification;
+
+    my $products = $self->get_selectable_products;
+
+    my $class;
+    foreach my $product (@$products) {
+        $class->{$product->classification_id} ||= $product->classification;
     }
-    $self->{selectable_classifications} = 
-        [values %$selectable_classifications];
+    my @sorted_class = sort {lc($a->name) cmp lc($b->name)} (values %$class);
+    $self->{selectable_classifications} = \@sorted_class;
     return $self->{selectable_classifications};
 }
 
@@ -1450,22 +1440,23 @@ care of by the constructor. However, when updating the email address, the
 user may be placed into different groups, based on a new email regexp. This
 method should be called in such a case to force reresolution of these groups.
 
-=item C<get_selectable_products(by_id)>
+=item C<get_selectable_products>
 
-Returns an alphabetical list of product names from which
-the user can select bugs.  If the $by_id parameter is true, it returns
-a hash where the keys are the product ids and the values are the
-product names.
+ Description: Returns all products the user is allowed to access.
+
+ Params:      none
+
+ Returns:     An array of product objects, sorted by the product name.
 
 =item C<get_selectable_classifications>
 
- Description: Returns the classifications that a user, according his
-              groups ownership, can select to entering, serch, view or
-              edit a bug.
+ Description: Returns all classifications containing at least one product
+              the user is allowed to view.
 
- Params:      none.
+ Params:      none
 
- Returns:     Bugzilla::Classification objects values.
+ Returns:     An array of Bugzilla::Classification objects, sorted by
+              the classification name.
 
 =item C<get_userlist>
 

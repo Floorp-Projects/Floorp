@@ -265,8 +265,7 @@ $vars->{'openonly'} = $openonly;
 $vars->{'reverse'} = $reverse;
 $vars->{'format'} = $cgi->param('format');
 $vars->{'query_products'} = \@query_products;
-my @selectable_products = GetSelectableProducts();
-$vars->{'products'} = \@selectable_products;
+$vars->{'products'} = Bugzilla->user->get_selectable_products;
 
 
 my $format = $template->get_format("reports/duplicates",

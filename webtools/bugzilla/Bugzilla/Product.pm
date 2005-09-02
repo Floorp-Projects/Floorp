@@ -98,8 +98,9 @@ sub components {
     my $self = shift;
 
     if (!defined $self->{components}) {
-        $self->{components} =
+        my @components =
             Bugzilla::Component::get_components_by_product($self->id);
+        $self->{components} = \@components;
     }
     return $self->{components};
 }
@@ -247,11 +248,11 @@ Bugzilla::Product - Bugzilla product class.
     my $product = new Bugzilla::Product(1);
     my $product = new Bugzilla::Product('AcmeProduct');
 
-    my $components      = $product->components();
+    my @components      = $product->components();
     my $classification  = $product->classification();
-    my $hash_ref        = $product->group_controls();
-    my @array_ref       = $product->milestones();
-    my @array_ref       = $product->versions();
+    my $groups_controls = $product->group_controls();
+    my @milestones      = $product->milestones();
+    my @versions        = $product->versions();
     my $bugcount        = $product->bug_count();
 
     my $id               = $product->id;
@@ -290,12 +291,12 @@ Product.pm represents a product object.
 
 =item C<components()>
 
- Description: Returns a hash with all product components.
+ Description: Returns an array of component objects belonging to
+              the product.
 
  Params:      none.
 
- Returns:     A hash where component id is the hash key and
-              Bugzilla::Component object is the hash value.
+ Returns:     An array of Bugzilla::Component object.
 
 =item C<classification()>
 

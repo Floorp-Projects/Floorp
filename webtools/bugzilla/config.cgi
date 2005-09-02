@@ -64,11 +64,8 @@ $vars->{'keyword'}    = \@::legal_keywords;
 $vars->{'resolution'} = \@::legal_resolution;
 $vars->{'status'}    = \@::legal_bug_status;
 
-# Include lists of products, components, versions, and target milestones.
-my $selectables = GetSelectableProductHash();
-foreach my $selectable (keys %$selectables) {
-    $vars->{$selectable} = $selectables->{$selectable};
-}
+# Include a list of product objects.
+$vars->{'products'} = Bugzilla->user->get_selectable_products;
 
 # Create separate lists of open versus resolved statuses.  This should really
 # be made part of the configuration.

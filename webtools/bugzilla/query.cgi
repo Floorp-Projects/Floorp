@@ -66,7 +66,8 @@ if ($cgi->param("GoAheadAndLogIn")) {
     Bugzilla->login();
 }
 
-my $userid = Bugzilla->user->id;
+my $user = Bugzilla->user;
+my $userid = $user->id;
 
 # Backwards compatibility hack -- if there are any of the old QUERY_*
 # cookies around, and we are logged in, then move them into the database
@@ -219,23 +220,26 @@ GetVersionTable();
 # if using groups for entry, then we don't want people to see products they 
 # don't have access to. Remove them from the list.
 
-my @products = ();
+my @selectable_product_objects = @{$user->get_selectable_products};
+
 my %component_set;
 my %version_set;
 my %milestone_set;
-foreach my $p (GetSelectableProducts()) {
+# extract product names
+my @products = map { $_->name } @selectable_product_objects;
+
+foreach my $prod_name (@products) {
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.
-    push @products, $p;
-    if ($::components{$p}) {
-        foreach my $c (@{$::components{$p}}) {
+    if ($::components{$prod_name}) {
+        foreach my $c (@{$::components{$prod_name}}) {
             $component_set{$c} = 1;
         }
     }
-    foreach my $v (@{$::versions{$p}}) {
+    foreach my $v (@{$::versions{$prod_name}}) {
         $version_set{$v} = 1;
     }
-    foreach my $m (@{$::target_milestone{$p}}) {
+    foreach my $m (@{$::target_milestone{$prod_name}}) {
         $milestone_set{$m} = 1;
     }
 }
@@ -296,11 +300,16 @@ $vars->{'product'} = \@products;
 if (Param('useclassification')) {
     my @classifications = ();
 
-    foreach my $c (GetSelectableClassifications()) {
+    my $class = $user->get_selectable_classifications;
+    foreach my $c (@$class) {
+        # Extract the name of products being in this classification.
+        my @prod_in_class
+            = grep { $_->classification_id == $c->id } @selectable_product_objects;
+        @prod_in_class = map { $_->name } @prod_in_class;
         # Create hash to hold attributes for each classification.
         my %classification = (
-            'name'       => $c,
-            'products'   => [ GetSelectableProducts(0,$c) ]
+            'name'       => $c->name,
+            'products'   => \@prod_in_class
         );
         # Assign hash back to classification array.
         push @classifications, \%classification;

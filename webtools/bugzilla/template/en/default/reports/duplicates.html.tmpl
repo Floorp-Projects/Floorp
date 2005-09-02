@@ -20,7 +20,7 @@
   #%]
 
 [%# INTERFACE:
-  # products: list of strings. The products this user can see.
+  # products: an array of product objects this user can see.
   #
   # sortby: string. the column on which we are sorting the buglist.
   # reverse: boolean. True if we are reversing the current sort.
@@ -84,9 +84,9 @@
       <td rowspan="4" valign="top">
         <select name="product" size="5" multiple="multiple">
           [% FOREACH p = products %]
-            <option name="[% p FILTER html %]"
-            [% " selected" IF lsearch(query_products, p) != -1 %]
-            >[% p FILTER html %]</option>
+            <option name="[% p.name FILTER html %]"
+            [% " selected" IF lsearch(query_products, p.name) != -1 %]
+            >[% p.name FILTER html %]</option>
           [% END %]
         </select>
       </td>

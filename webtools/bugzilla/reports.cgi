@@ -54,7 +54,7 @@ use Bugzilla;
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
-Bugzilla->login();
+my $user = Bugzilla->login();
 
 GetVersionTable();
 
@@ -66,7 +66,8 @@ my $template = Bugzilla->template;
 # We only want those products that the user has permissions for.
 my @myproducts;
 push( @myproducts, "-All-");
-push( @myproducts, GetSelectableProducts());
+# Extract product names from objects and add them to the list.
+push( @myproducts, map { $_->name } @{$user->get_selectable_products} );
 
 if (! defined $cgi->param('product')) {
 

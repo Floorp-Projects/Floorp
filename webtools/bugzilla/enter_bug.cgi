@@ -80,21 +80,13 @@ if (!defined $product || $product eq "") {
    }
 
    if (!$cgi->param('classification')) {
-       my %classdesc;
-       my %classifications;
-    
-       foreach my $c (GetSelectableClassifications()) {
-           $classdesc{$c} = $::classdesc{$c};
-           $classifications{$c} = $::classifications{$c};
-       }
+       my $classifications = Bugzilla->user->get_selectable_classifications();
 
-       my $classification_size = scalar(keys %classdesc);
-       if ($classification_size == 0) {
+       if (scalar(@$classifications) == 0) {
            ThrowUserError("no_products");
        } 
-       elsif ($classification_size > 1) {
-           $vars->{'classdesc'} = \%classdesc;
-           $vars->{'classifications'} = \%classifications;
+       elsif (scalar(@$classifications) > 1) {
+           $vars->{'classifications'} = $classifications;
 
            $vars->{'target'} = "enter_bug.cgi";
            $vars->{'format'} = $cgi->param('format');
@@ -106,7 +98,7 @@ if (!defined $product || $product eq "") {
              || ThrowTemplateError($template->error());
            exit;        
        }
-       $cgi->param(-name => 'classification', -value => (keys %classdesc)[0]);
+       $cgi->param(-name => 'classification', -value => @$classifications[0]->name);
    }
 
     my %products;

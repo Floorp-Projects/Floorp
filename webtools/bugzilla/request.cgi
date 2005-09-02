@@ -27,27 +27,25 @@
 # Make it harder for us to do dangerous things in Perl.
 use strict;
 
-# Include the Bugzilla CGI and general utility library.
 use lib qw(.);
 require "globals.pl";
 use Bugzilla;
-# Use Bugzilla's Request module which contains utilities for handling requests.
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
-
-# use Bugzilla's User module which contains utilities for handling users.
 use Bugzilla::User;
 
-use vars qw($template $vars @legal_product @legal_components %components);
+use vars qw($template $vars);
 
 # Make sure the user is logged in.
-Bugzilla->login();
+my $user = Bugzilla->login();
+my $userid = $user->id;
+
+my $cgi = Bugzilla->cgi;
+
 
 ################################################################################
 # Main Body Execution
 ################################################################################
-
-my $cgi = Bugzilla->cgi;
 
 my $fields;
 $fields->{'requester'}->{'type'} = 'single';
@@ -116,17 +114,17 @@ sub queue {
            LEFT JOIN bug_group_map AS bgmap
                   ON bgmap.bug_id = bugs.bug_id
                  AND bgmap.group_id NOT IN (" .
-                     join(', ', (-1, values(%{Bugzilla->user->groups}))) . ")
+                     join(', ', (-1, values(%{$user->groups}))) . ")
            LEFT JOIN cc AS ccmap
-                  ON ccmap.who = $::userid
+                  ON ccmap.who = $userid
                  AND ccmap.bug_id = bugs.bug_id
     " .
 
     # Weed out bug the user does not have access to
     " WHERE     ((bgmap.group_id IS NULL) OR
                  (ccmap.who IS NOT NULL AND cclist_accessible = 1) OR
-                 (bugs.reporter = $::userid AND bugs.reporter_accessible = 1) OR
-                 (bugs.assigned_to = $::userid))";
+                 (bugs.reporter = $userid AND bugs.reporter_accessible = 1) OR
+                 (bugs.assigned_to = $userid))";
     
     # Non-deleted flags only
     $query .= " AND flags.is_active = 1 ";
@@ -279,15 +277,7 @@ sub queue {
     SendSQL("SELECT DISTINCT(name) FROM flagtypes ORDER BY name");
     push(@types, FetchOneColumn()) while MoreSQLData();
     
-    # products and components and the function used to modify the components
-    # menu when the products menu changes; used by the template to populate
-    # the menus and keep the components menu consistent with the products menu
-    GetVersionTable();
-    my $selectable = GetSelectableProductHash();
-    $vars->{'products'} = $selectable->{legal_products};
-    $vars->{'components'} = $selectable->{legal_components};
-    $vars->{'components_by_product'} = $selectable->{components_by_product};
-    
+    $vars->{'products'} = $user->get_selectable_products;
     $vars->{'excluded_columns'} = \@excluded_columns;
     $vars->{'group_field'} = $form_group;
     $vars->{'requests'} = \@requests;

@@ -244,7 +244,7 @@
 ],
 
 'global/choose-classification.html.tmpl' => [
-  'classdesc.$p', 
+  'class.description', 
 ],
 
 'global/choose-product.html.tmpl' => [

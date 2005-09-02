@@ -121,11 +121,11 @@ sub get_components_by_product {
         SELECT id FROM components
         WHERE product_id = ?}, undef, $product_id);
 
-    my $components;
+    my @components;
     foreach my $id (@$ids) {
-        $components->{$id} = new Bugzilla::Component($id);
+        push @components, new Bugzilla::Component($id);
     }
-    return $components;
+    return @components;
 }
 
 1;
@@ -151,8 +151,7 @@ Bugzilla::Component - Bugzilla product component class.
     my $default_assignee   = $component->default_assignee;
     my $default_qa_contact = $component->default_qa_contact;
 
-    my $hash_ref = Bugzilla::Component::get_components_by_product(1);
-    my $component = $hash_ref->{1};
+    my @components = Bugzilla::Component::get_components_by_product($id);
 
 =head1 DESCRIPTION
 
@@ -184,13 +183,11 @@ Component.pm represents a Product Component object.
 
 =item C<get_components_by_product($product_id)>
 
- Description: Returns all Bugzilla components that belong to the
-              supplied product.
+ Description: Returns all components that belong to the supplied product.
 
  Params:      $product_id - Integer with a Bugzilla product id.
 
- Returns:     A hash with component id as key and Bugzilla::Component
-              object as value.
+ Returns:     An array of Bugzilla::Component objects.
 
 =back
 
