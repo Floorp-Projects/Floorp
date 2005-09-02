@@ -124,8 +124,14 @@ CK_SESSION_HANDLE pk11_GetNewSession(PK11SlotInfo *slot, PRBool *owner);
 void pk11_CloseSession(PK11SlotInfo *slot, CK_SESSION_HANDLE sess, PRBool own);
 PK11SymKey *pk11_ForceSlot(PK11SymKey *symKey, CK_MECHANISM_TYPE type,
 						CK_ATTRIBUTE_TYPE operation);
-unsigned int pk11_FlagsToAttributes(CK_FLAGS flags, 
+/* Convert key operation flags to PKCS #11 attributes. */
+unsigned int pk11_OpFlagsToAttributes(CK_FLAGS flags, 
 				CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue);
+/* Check for bad (conflicting) attribute flags */
+PRBool pk11_BadAttrFlags(PK11AttrFlags attrFlags);
+/* Convert key attribute flags to PKCS #11 attributes. */
+unsigned int pk11_AttrFlagsToAttributes(PK11AttrFlags attrFlags,
+		CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue, CK_BBOOL *ckFalse);
 PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE *attr, unsigned int numAttrs,
 					CK_ATTRIBUTE_TYPE target);
 

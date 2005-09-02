@@ -853,6 +853,7 @@ NSS_Get_CERT_SignedCrlTemplate;
 ;+NSS_3.10.2 { 	# NSS 3.10.2 release
 ;+    global:
 PK11_TokenKeyGenWithFlags;
+PK11_GenerateKeyPairWithFlags;
 ;+    local:
 ;+       *;
 ;+};

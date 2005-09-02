@@ -194,6 +194,129 @@ struct PK11DefaultArrayEntryStr {
 #define CKA_DIGEST            0x81000000L
 #define CKA_FLAGS_ONLY        0 /* CKA_CLASS */
 
+/*
+ * PK11AttrFlags
+ *
+ * A 32-bit bitmask of PK11_ATTR_XXX flags
+ */
+typedef PRUint32 PK11AttrFlags;
+
+/*
+ * PK11_ATTR_XXX
+ *
+ * The following PK11_ATTR_XXX bitflags are used to specify
+ * PKCS #11 object attributes that have Boolean values.  Some NSS
+ * functions have a "PK11AttrFlags attrFlags" parameter whose value
+ * is the logical OR of these bitflags.  NSS use these bitflags on
+ * private keys or secret keys.  Some of these bitflags also apply
+ * to the public keys associated with the private keys.
+ *
+ * Some of these PKCS #11 object attributes have a token-specific
+ * default value.  For such attributes, we need two bitflags to
+ * specify not only "true" and "false" but also "default".  For
+ * example, PK11_ATTR_PRIVATE and PK11_ATTR_PUBLIC control the
+ * CKA_PRIVATE attribute.  If PK11_ATTR_PRIVATE is set, we add
+ *     { CKA_PRIVATE, &cktrue, sizeof(CK_BBOOL) }
+ * to the template.  If PK11_ATTR_PUBLIC is set, we add
+ *     { CKA_PRIVATE, &ckfalse, sizeof(CK_BBOOL) }
+ * to the template.  If neither flag is set, we don't add any
+ * CKA_PRIVATE entry to the template.
+ */
+
+/*
+ * Attributes for PKCS #11 storage objects, which include not only
+ * keys but also certificates and domain parameters.
+ */
+
+/*
+ * PK11_ATTR_TOKEN
+ *
+ * If this flag is set, the object is a token object.  If this
+ * flag is not set, the object is *by default* a session object.
+ * This flag specifies the value of the PKCS #11 CKA_TOKEN
+ * attribute.
+ */
+#define PK11_ATTR_TOKEN         0x00000001L
+/*      Reserved                0x00000002L */
+
+/*
+ * PK11_ATTR_PRIVATE
+ * PK11_ATTR_PUBLIC
+ *
+ * These two flags determine whether the object is a private or
+ * public object.  A user may not access a private object until the
+ * user has authenticated to the token.
+ *
+ * These two flags are related and cannot both be set.
+ * If the PK11_ATTR_PRIVATE flag is set, the object is a private
+ * object.  If the PK11_ATTR_PUBLIC flag is set, the object is a
+ * public object.  If neither flag is set, it is token-specific
+ * whether the object is private or public.
+ *
+ * These two flags specify the value of the PKCS #11 CKA_PRIVATE
+ * attribute.  NSS only uses this attribute on private and secret
+ * keys, so public keys created by NSS get the token-specific
+ * default value of the CKA_PRIVATE attribute.
+ */
+#define PK11_ATTR_PRIVATE       0x00000004L
+#define PK11_ATTR_PUBLIC        0x00000008L
+
+/*
+ * PK11_ATTR_READONLY
+ *
+ * If this flag is set, the object is read-only.  If this flag is
+ * not set, the object is *by default* modifiable.
+ *
+ * This flag specifies the value of the PKCS #11 CKA_MODIFIABLE
+ * attribute.
+ *
+ * XXX Should we name this flag PK11_ATTR_UNMODIFIABLE?
+ */
+/*      Reserved                0x00000010L */
+#define PK11_ATTR_READONLY      0x00000020L
+
+/* Attributes for PKCS #11 key objects. */
+
+/*
+ * PK11_ATTR_SENSITIVE
+ * PK11_ATTR_INSENSITIVE
+ *
+ * These two flags are related and cannot both be set.
+ * If the PK11_ATTR_SENSITIVE flag is set, the key is sensitive.
+ * If the PK11_ATTR_INSENSITIVE flag is set, the key is not
+ * sensitive.  If neither flag is set, it is token-specific whether
+ * the key is sensitive or not.
+ *
+ * If a key is sensitive, certain attributes of the key cannot be
+ * revealed in plaintext outside the token.
+ *
+ * This flag specifies the value of the PKCS #11 CKA_SENSITIVE
+ * attribute.  Although the default value of the CKA_SENSITIVE
+ * attribute for secret keys is CK_FALSE per PKCS #11, some FIPS
+ * tokens set the default value to CK_TRUE because only CK_TRUE
+ * is allowed.  So in practice the default value of this attribute
+ * is token-specific, hence the need for two bitflags.
+ */
+#define PK11_ATTR_SENSITIVE     0x00000040L
+#define PK11_ATTR_INSENSITIVE   0x00000080L
+
+/*
+ * PK11_ATTR_EXTRACTABLE
+ * PK11_ATTR_UNEXTRACTABLE
+ *
+ * These two flags are related and cannot both be set.
+ * If the PK11_ATTR_EXTRACTABLE flag is set, the key is extractable
+ * and can be wrapped.  If the PK11_ATTR_UNEXTRACTABLE flag is set,
+ * the key is not extractable, and certain attributes of the key
+ * cannot be revealed in plaintext outside the token (just like a
+ * sensitive key).  If neither flag is set, it is token-specific
+ * whether the key is extractable or not.
+ *
+ * These two flags specify the value of the PKCS #11 CKA_EXTRACTABLE
+ * attribute.
+ */
+#define PK11_ATTR_EXTRACTABLE   0x00000100L
+#define PK11_ATTR_UNEXTRACTABLE 0x00000200L
 
 /* Cryptographic module types */
 #define SECMOD_EXTERNAL	0	/* external module */

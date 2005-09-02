@@ -501,18 +501,14 @@ PK11_GetPrivateModulusLen(SECKEYPrivateKey *key)
  *  This is used to do a key gen using one pkcs11 module and storing the
  *  result into another.
  */
-SECKEYPrivateKey *
-pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey, 
-		SECKEYPublicKey *pubKey, PRBool token, PRBool sensitive) 
+static SECKEYPrivateKey *
+pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey, 
+		SECKEYPublicKey *pubKey, PK11AttrFlags attrFlags) 
 {
     CK_ATTRIBUTE privTemplate[] = {
         /* class must be first */
 	{ CKA_CLASS, NULL, 0 },
 	{ CKA_KEY_TYPE, NULL, 0 },
-	/* these three must be next */
-	{ CKA_TOKEN, NULL, 0 },
-	{ CKA_PRIVATE, NULL, 0 },
-	{ CKA_SENSITIVE, NULL, 0 },
 	{ CKA_ID, NULL, 0 },
 #ifdef notdef
 	{ CKA_LABEL, NULL, 0 },
@@ -527,15 +523,31 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	{ CKA_EXPONENT_1, NULL, 0 },
 	{ CKA_EXPONENT_2, NULL, 0 },
 	{ CKA_COEFFICIENT, NULL, 0 },
+	/* reserve space for the attributes that may be
+	 * specified in attrFlags */
+	{ CKA_TOKEN, NULL, 0 },
+	{ CKA_PRIVATE, NULL, 0 },
+	{ CKA_MODIFIABLE, NULL, 0 },
+	{ CKA_SENSITIVE, NULL, 0 },
+	{ CKA_EXTRACTABLE, NULL, 0 },
+#define NUM_RESERVED_ATTRS 5    /* number of reserved attributes above */
     };
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
     CK_ATTRIBUTE *attrs = NULL, *ap;
-    int templateSize = sizeof(privTemplate)/sizeof(privTemplate[0]);
+    const int templateSize = sizeof(privTemplate)/sizeof(privTemplate[0]);
     PRArenaPool *arena;
     CK_OBJECT_HANDLE objectID;
     int i, count = 0;
     int extra_count = 0;
     CK_RV crv;
     SECStatus rv;
+    PRBool token = ((attrFlags & PK11_ATTR_TOKEN) != 0);
+
+    if (pk11_BadAttrFlags(attrFlags)) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
 
     for (i=0; i < templateSize; i++) {
 	if (privTemplate[i].type == CKA_MODULUS) {
@@ -554,8 +566,8 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 
     switch (privKey->keyType) {
     case rsaKey:
-	count = templateSize;
-	extra_count = templateSize - (attrs - privTemplate);
+	count = templateSize - NUM_RESERVED_ATTRS;
+	extra_count = count - (attrs - privTemplate);
 	break;
     case dsaKey:
 	ap->type = CKA_PRIME; ap++; count++; extra_count++;
@@ -596,10 +608,9 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	return NULL;
      }
 
-     /* Reset sensitive, token, and private */
-     *(CK_BBOOL *)(privTemplate[2].pValue) = token ? CK_TRUE : CK_FALSE;
-     *(CK_BBOOL *)(privTemplate[3].pValue) = token ? CK_TRUE : CK_FALSE;
-     *(CK_BBOOL *)(privTemplate[4].pValue) = sensitive ? CK_TRUE : CK_FALSE;
+     /* Set token, private, modifiable, sensitive, and extractable */
+     count += pk11_AttrFlagsToAttributes(attrFlags, &privTemplate[count],
+					&cktrue, &ckfalse);
 
      /* Not everyone can handle zero padded key values, give
       * them the raw data as unsigned */
@@ -630,6 +641,24 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 						objectID, privKey->wincx);
 }
 
+static SECKEYPrivateKey *
+pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey, 
+		SECKEYPublicKey *pubKey, PRBool token, PRBool sensitive) 
+{
+    PK11AttrFlags attrFlags = 0;
+    if (token) {
+	attrFlags |= (PK11_ATTR_TOKEN | PK11_ATTR_PRIVATE);
+    } else {
+	attrFlags |= PK11_ATTR_PUBLIC;
+    }
+    if (sensitive) {
+	attrFlags |= PK11_ATTR_SENSITIVE;
+    } else {
+	attrFlags |= PK11_ATTR_INSENSITIVE;
+    }
+    return pk11_loadPrivKeyWithFlags(slot, privKey, pubKey, attrFlags);
+}
+
 /*
  * export this for PSM
  */
@@ -647,9 +676,8 @@ PK11_LoadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
  * from this interface!
  */
 SECKEYPrivateKey *
-PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
-   void *param, SECKEYPublicKey **pubKey, PRBool token, 
-					PRBool sensitive, void *wincx)
+PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
+   void *param, SECKEYPublicKey **pubKey, PK11AttrFlags attrFlags, void *wincx)
 {
     /* we have to use these native types because when we call PKCS 11 modules
      * we have to make sure that we are using the correct sizes for all the
@@ -666,6 +694,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	{ CKA_UNWRAP,  NULL, 0},
 	{ CKA_SIGN,  NULL, 0},
 	{ CKA_DECRYPT,  NULL, 0},
+	{ CKA_EXTRACTABLE, NULL, 0},
+	{ CKA_MODIFIABLE,  NULL, 0},
     };
     CK_ATTRIBUTE rsaPubTemplate[] = {
 	{ CKA_MODULUS_BITS, NULL, 0},
@@ -676,6 +706,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	{ CKA_VERIFY,  NULL, 0},
 	{ CKA_VERIFY_RECOVER,  NULL, 0},
 	{ CKA_ENCRYPT,  NULL, 0},
+	{ CKA_MODIFIABLE,  NULL, 0},
     };
     CK_ATTRIBUTE dsaPubTemplate[] = {
 	{ CKA_PRIME, NULL, 0 },
@@ -687,6 +718,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	{ CKA_VERIFY,  NULL, 0},
 	{ CKA_VERIFY_RECOVER,  NULL, 0},
 	{ CKA_ENCRYPT,  NULL, 0},
+	{ CKA_MODIFIABLE,  NULL, 0},
     };
     CK_ATTRIBUTE dhPubTemplate[] = {
       { CKA_PRIME, NULL, 0 }, 
@@ -697,6 +729,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
       { CKA_VERIFY,  NULL, 0},
       { CKA_VERIFY_RECOVER,  NULL, 0},
       { CKA_ENCRYPT,  NULL, 0},
+      { CKA_MODIFIABLE,  NULL, 0},
     };
     CK_ATTRIBUTE ecPubTemplate[] = {
       { CKA_EC_PARAMS, NULL, 0 }, 
@@ -706,16 +739,13 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
       { CKA_VERIFY,  NULL, 0},
       { CKA_VERIFY_RECOVER,  NULL, 0},
       { CKA_ENCRYPT,  NULL, 0},
+      { CKA_MODIFIABLE,  NULL, 0},
     };
-    int ecPubCount = sizeof(ecPubTemplate)/sizeof(ecPubTemplate[0]);
     SECKEYECParams * ecParams;
 
-    int dsaPubCount = sizeof(dsaPubTemplate)/sizeof(dsaPubTemplate[0]);
     /*CK_ULONG key_size = 0;*/
     CK_ATTRIBUTE *pubTemplate;
-    int privCount = sizeof(privTemplate)/sizeof(privTemplate[0]);
-    int rsaPubCount = sizeof(rsaPubTemplate)/sizeof(rsaPubTemplate[0]);
-    int dhPubCount = sizeof(dhPubTemplate)/sizeof(dhPubTemplate[0]);
+    int privCount = 0;
     int pubCount = 0;
     PK11RSAGenParams *rsaParams;
     SECKEYPQGParams *dsaParams;
@@ -738,6 +768,13 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     SECItem *cka_id;
     PRBool haslock = PR_FALSE;
     PRBool pubIsToken = PR_FALSE;
+    PRBool token = ((attrFlags & PK11_ATTR_TOKEN) != 0);
+    PRBool readOnly = ((attrFlags & PK11_ATTR_READONLY) != 0);
+
+    if (pk11_BadAttrFlags(attrFlags)) {
+	PORT_SetError( SEC_ERROR_INVALID_ARGS );
+	return NULL;
+    }
 
     PORT_Assert(slot != NULL);
     if (slot == NULL) {
@@ -770,8 +807,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
 	/* if successful, load the temp key into the new token */
 	if (privKey != NULL) {
-	    SECKEYPrivateKey *newPrivKey = pk11_loadPrivKey(slot,privKey,
-						*pubKey,token,sensitive);
+	    SECKEYPrivateKey *newPrivKey = pk11_loadPrivKeyWithFlags(slot,
+						privKey,*pubKey,attrFlags);
 	    SECKEY_DestroyPrivateKey(privKey);
 	    if (newPrivKey == NULL) {
 		SECKEY_DestroyPublicKey(*pubKey);
@@ -791,12 +828,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
     /* set up the private key template */
     privattrs = privTemplate;
-    PK11_SETATTRS(privattrs, CKA_SENSITIVE, sensitive ? &cktrue : &ckfalse, 
-					sizeof(CK_BBOOL)); privattrs++;
-    PK11_SETATTRS(privattrs, CKA_TOKEN, token ? &cktrue : &ckfalse,
-					 sizeof(CK_BBOOL)); privattrs++;
-    PK11_SETATTRS(privattrs, CKA_PRIVATE, sensitive ? &cktrue : &ckfalse,
-					 sizeof(CK_BBOOL)); privattrs++;
+    privattrs += pk11_AttrFlagsToAttributes(attrFlags, privattrs,
+						&cktrue, &ckfalse);
 
     /* set up the mechanism specific info */
     switch (type) {
@@ -826,7 +859,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	PK11_SETATTRS(attrs, CKA_PUBLIC_EXPONENT, 
 				publicExponent, peCount);attrs++;
 	pubTemplate = rsaPubTemplate;
-	pubCount = rsaPubCount;
 	keyType = rsaKey;
 	test_mech.mechanism = CKM_RSA_PKCS;
 	break;
@@ -840,7 +872,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	PK11_SETATTRS(attrs, CKA_BASE, dsaParams->base.data,
 						dsaParams->base.len); attrs++;
 	pubTemplate = dsaPubTemplate;
-	pubCount = dsaPubCount;
 	keyType = dsaKey;
 	test_mech.mechanism = CKM_DSA;
 	break;
@@ -852,7 +883,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
         PK11_SETATTRS(attrs, CKA_BASE, dhParams->base.data,
                       dhParams->base.len);    attrs++;
         pubTemplate = dhPubTemplate;
-	pubCount = dhPubCount;
         keyType = dhKey;
         test_mech.mechanism = CKM_DH_PKCS_DERIVE;
 	break;
@@ -862,7 +892,6 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
         PK11_SETATTRS(attrs, CKA_EC_PARAMS, ecParams->data, 
 	              ecParams->len);   attrs++;
         pubTemplate = ecPubTemplate;
-        pubCount = ecPubCount;
         keyType = ecKey;
 	/* XXX An EC key can be used for other mechanisms too such
 	 * as CKM_ECDSA and CKM_ECDSA_SHA1. How can we reflect
@@ -905,7 +934,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	       break;
 	}
     }
-    /* set the public key objects */
+    /* set the public key attributes */
     PK11_SETATTRS(attrs, CKA_TOKEN, token ? &cktrue : &ckfalse,
 					 sizeof(CK_BBOOL)); attrs++;
     PK11_SETATTRS(attrs, CKA_DERIVE, 
@@ -923,6 +952,12 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     PK11_SETATTRS(attrs, CKA_ENCRYPT, 
 		mechanism_info.flags & CKF_ENCRYPT? &cktrue : &ckfalse,
 					 sizeof(CK_BBOOL)); attrs++;
+    if (readOnly) {
+	/* the default value of the CKA_MODIFIABLE attribute is CK_TRUE */
+	PK11_SETATTRS(attrs, CKA_MODIFIABLE, &ckfalse,
+					 sizeof(CK_BBOOL)); attrs++;
+    }
+    /* set the private key attributes */
     PK11_SETATTRS(privattrs, CKA_DERIVE, 
 		mechanism_info.flags & CKF_DERIVE ? &cktrue : &ckfalse,
 					 sizeof(CK_BBOOL)); privattrs++;
@@ -952,6 +987,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     	PORT_SetError(SEC_ERROR_BAD_DATA);
 	return NULL;
     }
+    privCount = privattrs - privTemplate;
+    pubCount = attrs - pubTemplate;
     crv = PK11_GETTAB(slot)->C_GenerateKeyPair(session_handle, &mechanism,
 	pubTemplate,pubCount,privTemplate,privCount,&pubID,&privID);
 
@@ -1047,6 +1084,25 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     }
 
     return privKey;
+}
+
+SECKEYPrivateKey *
+PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
+   void *param, SECKEYPublicKey **pubKey, PRBool token, 
+					PRBool sensitive, void *wincx)
+{
+    PK11AttrFlags attrFlags = 0;
+
+    if (token) {
+	attrFlags |= PK11_ATTR_TOKEN;
+    }
+    if (sensitive) {
+	attrFlags |= (PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE);
+    } else {
+	attrFlags |= (PK11_ATTR_INSENSITIVE | PK11_ATTR_PUBLIC);
+    }
+    return PK11_GenerateKeyPairWithFlags(slot, type, param, pubKey,
+						attrFlags, wincx);
 }
 
 /* build a public KEA key from the public value */
