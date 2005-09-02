@@ -130,14 +130,6 @@ function setRestartMessage(aItem)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event Handlers
-function onExtensionSelect(aEvent)
-{
-  if (aEvent.target.selectedItem)
-    aEvent.target.setAttribute("last-selected", aEvent.target.selectedItem.id);
-  else
-    aEvent.target.removeAttribute("last-selected");
-}
-
 function onExtensionUpdateNow(aEvent)
 {
   var item = gExtensionManager.getItemForID(getIDFromResourceURI(
@@ -168,8 +160,6 @@ function Startup()
   // Extension Command Updating is handled by a command controller.
   gExtensionsView.controllers.appendController(gExtensionsViewController);
 
-  // This persists the last-selected extension
-  gExtensionsView.addEventListener("select", onExtensionSelect, false);
   gExtensionsView.addEventListener("extension-updatenow", onExtensionUpdateNow, false);
 
   // Finally, update the UI. 
@@ -197,10 +187,6 @@ function Startup()
     optionsButton.hidden = true;
   }
   
-  // Initialize the richlistbox.  This will select the last selected extension
-  // or default to the first listed one.
-  gExtensionsView.init();
-
   var extensionsStrings = document.getElementById("extensionsStrings");
   document.title = extensionsStrings.getString(gWindowState + "Title");
   
@@ -266,7 +252,6 @@ function Shutdown()
   if (gWindowState != "extensions")
     gExtensionsView.removeEventListener("select", onThemeSelect, false);
   
-  gExtensionsView.removeEventListener("select", onExtensionSelect, false);
   gExtensionsView.removeEventListener("extension-updatenow", onExtensionUpdateNow, false);
 
   gExtensionsView.database.RemoveDataSource(gExtensionManager.datasource);
@@ -1029,7 +1014,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveTopID = gExtensionsView.children[0].id;
       gExtensionManager.moveToIndexOf(movingID, moveTopID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_moveup: function (aSelectedItem)
@@ -1037,7 +1021,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveAboveID = aSelectedItem.previousSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveAboveID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_movedn: function (aSelectedItem)
@@ -1045,7 +1028,6 @@ var gExtensionsViewController = {
       var movingID = aSelectedItem.id;
       var moveBelowID = aSelectedItem.nextSibling.id;
       gExtensionManager.moveToIndexOf(movingID, moveBelowID);
-      gExtensionsView.selectedItem = document.getElementById(movingID);
     },
     
     cmd_update: function (aSelectedItem)
@@ -1108,13 +1090,11 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
     },
     
     cmd_enable: function (aSelectedItem)
     {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
-      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
 #ifdef MOZ_PHOENIX
     }
   }

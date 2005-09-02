@@ -217,13 +217,13 @@ var gDownloadObserver = {
       downloadCompleted(dl);
       break;
     case "dl-start":
+      // whenever a new download starts, it is added to the top, so switch the
+      // view to it
+      gDownloadsView.selectedIndex = 0;
+
       // Add this download to the percentage average tally
       var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);
       gActiveDownloads.push(dl);
-
-      // now reset the richlistbox since the template was rebuilt
-      gDownloadsView.clearSelection();
-      gDownloadsView.focus();
 
       break;
     case "xpinstall-download-started":
@@ -250,6 +250,8 @@ var gDownloadObserver = {
 
 function onDownloadCancel(aEvent)
 {
+  var selectedIndex = gDownloadsView.selectedIndex;
+
   gDownloadManager.cancelDownload(aEvent.target.id);
 
   setRDFProperty(aEvent.target.id, "DownloadAnimated", "false");
@@ -266,19 +268,47 @@ function onDownloadCancel(aEvent)
     f.remove(false);
 
   gDownloadViewController.onCommandUpdate();
+
+  // now reset the richlistbox
+  gDownloadsView.clearSelection();
+  var rowCount = gDownloadsView.getRowCount();
+  if (selectedIndex >= rowCount)
+    gDownloadsView.selectedIndex = rowCount - 1;
+  else
+    gDownloadsView.selectedIndex = selectedIndex;
 }
 
 function onDownloadPause(aEvent)
 {
+  var selectedIndex = gDownloadsView.selectedIndex;
+
   var uri = aEvent.target.id;
   gDownloadManager.pauseDownload(uri);
   setRDFProperty(uri, "DownloadStatus", aEvent.target.getAttribute("status-internal"));
   setRDFProperty(uri, "ProgressPercent", aEvent.target.getAttribute("progress"));
+
+  // now reset the richlistbox
+  gDownloadsView.clearSelection();
+  var rowCount = gDownloadsView.getRowCount();
+  if (selectedIndex >= rowCount)
+    gDownloadsView.selectedIndex = rowCount - 1;
+  else
+    gDownloadsView.selectedIndex = selectedIndex;
 }
 
 function onDownloadResume(aEvent)
 {
+  var selectedIndex = gDownloadsView.selectedIndex;
+
   gDownloadManager.resumeDownload(aEvent.target.id);
+
+  // now reset the richlistbox
+  gDownloadsView.clearSelection();
+  var rowCount = gDownloadsView.getRowCount();
+  if (selectedIndex >= rowCount)
+    gDownloadsView.selectedIndex = rowCount - 1;
+  else
+    gDownloadsView.selectedIndex = selectedIndex;
 }
 
 function onDownloadRemove(aEvent)
@@ -286,16 +316,6 @@ function onDownloadRemove(aEvent)
   if (aEvent.target.removable) {
     var selectedIndex = gDownloadsView.selectedIndex;
     gDownloadManager.removeDownload(aEvent.target.id);
-
-    // now reset the richlistbox since the template was rebuilt
-    gDownloadsView.clearSelection();
-    if (selectedIndex >= gDownloadsView.getRowCount())
-      gDownloadsView.selectedIndex = selectedIndex - 1;
-    else
-      gDownloadsView.selectedIndex = selectedIndex;
-
-    gDownloadsView.focus();
-
     gDownloadViewController.onCommandUpdate();
   }
 }
@@ -423,6 +443,9 @@ function onDownloadRetry(aEvent)
   }
   
   gDownloadViewController.onCommandUpdate();
+
+  // retry always places the item in the first spot
+  gDownloadsView.selectedIndex = 0;
 }
 
 // This is called by the progress listener. We don't actually use the event
@@ -548,8 +571,6 @@ function Startup()
   // Finally, update the UI. 
   gDownloadsView.database.AddDataSource(gDownloadManager.datasource);
   gDownloadsView.builder.rebuild();
-  
-  gDownloadsView.focus();
   
   // downloads can finish before Startup() does, so check if the window should close
   autoClose();
