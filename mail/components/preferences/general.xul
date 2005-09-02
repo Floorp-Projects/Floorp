@@ -164,7 +164,7 @@
     <groupbox>
       <caption label="&connectionsInfo.caption;"/>
       <hbox align="center">
-        <description flex="1">&proxiesInfo.label;</description>
+        <description flex="1" control="catProxiesButton">&proxiesInfo.label;</description>
         <button id="catProxiesButton" label="&showConnections.label;" 
                 accesskey="&showConnections.accesskey;" 
                 oncommand="gGeneralPane.showConnections();"/>

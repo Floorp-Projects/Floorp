@@ -45,7 +45,10 @@
 <overlay id="AdvancedPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
            
-  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();">
+  <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
+            xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+            xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+            xmlns:aaa="http://www.w3.org/2005/07/aaa">
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/advanced.js"/>
 
     <preferences>
@@ -197,21 +200,15 @@
               <checkbox id="enableAppUpdate"
                         label="&enableAppUpdate.label;"
                         accesskey="&enableAppUpdate.accesskey;"
-                        preference="app.update.enabled"/>
-              <spacer flex="1"/>
-              <button id="appCheckNowButton" 
-                      label="&checkNow.label;" accesskey="&appCheckNow.accesskey;"
-                      oncommand="gAdvancedPane.checkForUpdates();"/>
+                        preference="app.update.enabled"
+                        xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
             </hbox>
             <hbox>
               <checkbox id="enableAddonUpdate"
                         label="&enableExtensionUpdate.label;"
                         accesskey="&enableExtensionUpdate.accesskey;"
-                        preference="extensions.update.enabled"/>
-              <spacer flex="1"/>
-              <button id="addonCheckNowButton" 
-                      label="&checkNow.label;" accesskey="&extensionsCheckNow.accesskey;"
-                      oncommand="gAdvancedPane.checkForAddonUpdates();"/>
+                        preference="extensions.update.enabled"
+                        xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
             </hbox>
           </vbox>
           <separator/>

@@ -47,6 +47,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gChangeActionDialog.init();" 
         ondialogaccept="return gChangeActionDialog.onAccept();" 
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xmlns:aaa="http://www.w3.org/2005/07/aaa"         
         style="width: &window.width;;"
         persist="screenX screenY">
 
@@ -63,8 +66,9 @@
     </vbox>
   </hbox>
   <vbox id="changeActionContent" flex="1">
-    <label>&whenDownloading.label;</label>
-    <radiogroup id="handlerGroup" onselect="gChangeActionDialog.doEnabling(this.selectedItem);" flex="1">
+    <label control="handlerGroup">&whenDownloading.label;</label>
+    <radiogroup id="handlerGroup" onselect="gChangeActionDialog.doEnabling(this.selectedItem);" 
+                flex="1" xhtml2:role="wairole:radiogroup" aaa:describedby="changeActionHeader">
       <separator class="thin"/>
       <radio id="openDefault" value="system" 
              label="&openDefault.label;" accesskey="&openDefault.accesskey;"/>

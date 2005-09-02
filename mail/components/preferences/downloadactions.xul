@@ -74,7 +74,9 @@
               oncommand="gDownloadActionsWindow.clearFilter();" disabled="true"/>
     </hbox>
     <separator class="thin"/>
-    <label id="actionsIntro">&fileTypesDescription.label;</label>
+    <label id="actionsIntro" control="fileHandlersList">
+      &fileTypesDescription.label;
+    </label>
     <separator class="thin"/>
     <tree id="fileHandlersList" flex="1"
           lastSelected="0" persist="lastSelected"
