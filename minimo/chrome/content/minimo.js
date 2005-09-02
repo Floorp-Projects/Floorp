@@ -223,9 +223,14 @@ function browserInit(refTab)
 
       getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
       gBrowserStatusHandlerArray.push(BrowserStatusHandler);
+
       var refBrowser=getBrowser().getBrowserForTab(refTab);
       var webNavigation=refBrowser.webNavigation;
       webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+
+      // enable global history
+      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+
     } catch (e) {
       alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
     }

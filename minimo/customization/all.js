@@ -154,3 +154,4 @@ pref("security.warn_submit_insecure", false);
 pref("network.autodial-helper.enabled", true);
 
 pref("config.wince.useOKBtn", true);
+

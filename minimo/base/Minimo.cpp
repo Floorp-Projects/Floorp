@@ -361,6 +361,9 @@ void DoPreferences()
         return;
 
     prefBranch->SetIntPref("snav.keyCode.modifier", 0);
+
+
+
     prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
 }
 
@@ -559,64 +562,66 @@ int main(int argc, char *argv[])
   gtk_set_locale();
   gtk_init(&argc, &argv);
 #endif
-
-    if (DoesProcessAlreadyExist())
-        return 0;
-
-    CreateSplashScreen();
-
+  
+  if (DoesProcessAlreadyExist())
+    return 0;
+  
+  CreateSplashScreen();
+  
 #ifdef HACKY_PRE_LOAD_LIBRARY
-    LoadKnownLibs();
+  LoadKnownLibs();
 #endif
-
+  
 #ifdef _BUILD_STATIC_BIN
-    NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
+  NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
 #else
-    NS_InitEmbedding(nsnull, nsnull);
+  NS_InitEmbedding(nsnull, nsnull);
 #endif
     // Choose the new profile
-    if (NS_FAILED(StartupProfile()))
-        return 1;
-    
-    DoPreferences();
-    OverrideComponents();
-
-    NS_TIMELINE_ENTER("appStartup");
-    nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
-    appShell->Create(nsnull, nsnull);
-    
-    ApplicationObserver *appObserver = new ApplicationObserver(appShell);
-    if (!appObserver)
-        return 1;
-    NS_ADDREF(appObserver);
-    
-    WindowCreator *creatorCallback = new WindowCreator(appShell);
-    if (!creatorCallback)
-        return 1;
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    wwatch->SetWindowCreator(creatorCallback);
-
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
-
-    appShell->Run();
-
-    appShell = nsnull;
-    wwatch = nsnull;
-    newWindow = nsnull;
-
-    delete appObserver;
-    delete creatorCallback;
-
-    if (gDumpJSConsole)
-      WriteConsoleLog();
-
-    // Close down Embedding APIs
-    NS_TermEmbedding();
-
+  if (NS_FAILED(StartupProfile()))
+    return 1;
+  
+  DoPreferences();
+  OverrideComponents();
+  
+  NS_TIMELINE_ENTER("appStartup");
+  nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
+  appShell->Create(nsnull, nsnull);
+  
+  ApplicationObserver *appObserver = new ApplicationObserver(appShell);
+  if (!appObserver)
+    return 1;
+  NS_ADDREF(appObserver);
+  
+  WindowCreator *creatorCallback = new WindowCreator(appShell);
+  if (!creatorCallback)
+    return 1;
+  
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  wwatch->SetWindowCreator(creatorCallback);
+  
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  wwatch->OpenWindow(nsnull, start_url, "_blank", "chrome,dialog=no,all", nsnull, getter_AddRefs(newWindow));
+  
+  appShell->Run();
+  
+  appShell = nsnull;
+  wwatch = nsnull;
+  newWindow = nsnull;
+  
+  delete appObserver;
+  delete creatorCallback;
+  
+  if (gDumpJSConsole)
+    WriteConsoleLog();
+  
+  // Close down Embedding APIs
+  NS_TermEmbedding();
+  
 #ifdef HACKY_PRE_LOAD_LIBRARY
-    UnloadKnownLibs();
+  UnloadKnownLibs();
 #endif
-    return NS_OK;
+  return NS_OK;
 }
+
+
