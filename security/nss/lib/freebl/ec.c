@@ -405,10 +405,10 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
     /* NOTE: We only support uncompressed points for now */
     len = (ecParams->fieldID.size + 7) >> 3;
     if (publicValue->data[0] != EC_POINT_FORM_UNCOMPRESSED) {
-	PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM); 
+	PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
 	return SECFailure;
     } else if (publicValue->len != (2 * len + 1)) {
-	PORT_SetError(SEC_ERROR_INPUT_LEN); 
+	PORT_SetError(SEC_ERROR_INPUT_LEN);
 	return SECFailure;
     };
 

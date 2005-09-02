@@ -2793,11 +2793,9 @@ sec_pkcs12_get_public_value_and_type(sec_PKCS12SafeBag *certBag,
 	case rsaKey:
 	    pubValue = SECITEM_DupItem(&pubKey->u.rsa.modulus);
 	    break;
-#ifdef NSS_ENABLE_ECC
         case ecKey:
 	    pubValue = SECITEM_DupItem(&pubKey->u.ec.publicValue);
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	default:
 	    pubValue = NULL;
     }

@@ -243,7 +243,6 @@ SECKEY_CreateDHPrivateKey(SECKEYDHParams *param, SECKEYPublicKey **pubk, void *c
 SECKEYPrivateKey *
 SECKEY_CreateECPrivateKey(SECKEYECParams *param, SECKEYPublicKey **pubk, void *cx)
 {
-#ifdef NSS_ENABLE_ECC
     SECKEYPrivateKey *privk;
     PK11SlotInfo *slot = PK11_GetBestSlot(CKM_EC_KEY_PAIR_GEN,cx);
 
@@ -255,9 +254,6 @@ SECKEY_CreateECPrivateKey(SECKEYECParams *param, SECKEYPublicKey **pubk, void *c
 
     PK11_FreeSlot(slot);
     return(privk);
-#else
-    return NULL;
-#endif /* NSS_ENABLE_ECC */
 }
 
 void
@@ -1105,7 +1101,6 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 
         break;
 
-#ifdef NSS_ENABLE_ECC
       case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
 	pubk->keyType = ecKey;
 	pubk->u.ec.size = 0;
@@ -1120,7 +1115,6 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
         rv = SECITEM_CopyItem(arena, &pubk->u.ec.publicValue, &newOs);
 	if (rv == SECSuccess) return pubk;
 	break;
-#endif /* NSS_ENABLE_ECC */
 
       default:
 	rv = SECFailure;
@@ -1317,7 +1311,6 @@ SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
 	    pubk->u.dh.publicValue.len - 1;
     case fortezzaKey:
 	return PR_MAX(pubk->u.fortezza.KEAKey.len, pubk->u.fortezza.DSSKey.len);
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	/* Get the key size in bits and adjust */
 	if (pubk->u.ec.size == 0) {
@@ -1325,7 +1318,6 @@ SECKEY_PublicKeyStrength(SECKEYPublicKey *pubk)
 		SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
 	} 
 	return (pubk->u.ec.size + 7)/8;
-#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }
@@ -1342,14 +1334,12 @@ SECKEY_PublicKeyStrengthInBits(SECKEYPublicKey *pubk)
     case dhKey:
     case fortezzaKey:
 	return SECKEY_PublicKeyStrength(pubk) * 8; /* 1 byte = 8 bits */
-#ifdef NSS_ENABLE_ECC
     case ecKey:
 	if (pubk->u.ec.size == 0) {
 	    pubk->u.ec.size = 
 		SECKEY_ECParamsToKeySize(&pubk->u.ec.DEREncodedParams);
 	} 
 	return pubk->u.ec.size;
-#endif /* NSS_ENABLE_ECC */
     default:
 	break;
     }
@@ -1505,7 +1495,6 @@ SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
 	    rv = SECITEM_CopyItem(arena, &copyk->u.dh.publicValue, 
 				&pubk->u.dh.publicValue);
 	    break;
-#ifdef NSS_ENABLE_ECC
 	  case ecKey:
 	    copyk->u.ec.size = pubk->u.ec.size;
             rv = SECITEM_CopyItem(arena,&copyk->u.ec.DEREncodedParams,
@@ -1514,7 +1503,6 @@ SECKEY_CopyPublicKey(SECKEYPublicKey *pubk)
             rv = SECITEM_CopyItem(arena,&copyk->u.ec.publicValue,
 		&pubk->u.ec.publicValue);
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	  case nullKey:
 	    return copyk;
 	  default:
@@ -1673,7 +1661,6 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 	    }
 	    SECITEM_FreeItem(&params, PR_FALSE);
 	    break;
-#ifdef NSS_ENABLE_ECC
 	  case ecKey:
 	    rv = SECITEM_CopyItem(arena, &params, 
 				  &pubk->u.ec.DEREncodedParams);
@@ -1699,7 +1686,6 @@ SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *pubk)
 		return spki;
 	    }
 	    break;
-#endif /* NSS_ENABLE_ECC */
 	  case keaKey:
 	  case dhKey: /* later... */
 

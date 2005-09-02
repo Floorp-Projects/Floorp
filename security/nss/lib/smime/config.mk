@@ -97,7 +97,3 @@ ifeq ($(OS_TARGET),SunOS)
 # dependencies in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
 endif
-
-ifdef NSS_ENABLE_ECC
-DEFINES += -DNSS_ENABLE_ECC
-endif

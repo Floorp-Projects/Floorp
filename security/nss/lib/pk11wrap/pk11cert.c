@@ -191,11 +191,9 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
 						pubKey->u.dh.publicValue.len);
 	    break;
 	case ecKey:
-#ifdef NSS_ENABLE_ECC
 	    PK11_SETATTRS(&theTemplate,CKA_EC_POINT, 
 			  pubKey->u.ec.publicValue.data,
 			  pubKey->u.ec.publicValue.len);
-#endif /* NSS_ENABLE_ECC */
 	    break;
 	case keaKey:
 	case fortezzaKey:
@@ -759,9 +757,7 @@ PK11_GetPubIndexKeyID(CERTCertificate *cert) {
         newItem = SECITEM_DupItem(&pubk->u.dh.publicValue);
 	break;
     case ecKey:
-#ifdef NSS_ENABLE_ECC
         newItem = SECITEM_DupItem(&pubk->u.ec.publicValue);
-#endif /* NSS_ENABLE_ECC */
 	break;
     case fortezzaKey:
     default:
