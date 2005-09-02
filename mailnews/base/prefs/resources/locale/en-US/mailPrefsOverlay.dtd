@@ -6,6 +6,8 @@
 
 <!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY mail.accesskey "m">
+<!ENTITY addressbook.label "Address Book">
+<!ENTITY addressbook.accesskey "a">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY notifications.label "Notifications">
 <!ENTITY address.label "Addressing">
