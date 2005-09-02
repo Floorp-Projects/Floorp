@@ -1352,8 +1352,8 @@ calTransaction.prototype = {
                 this.mCalendar.addItem(this.mItem, null);
                 break;
             case 'move':
-                this.mOldCalendar.addItem(this.mOldItem, this.mListener);
                 this.mCalendar.deleteItem(this.mItem, this.mListener);
+                this.mOldCalendar.addItem(this.mOldItem, this.mListener);
                 break;
         }
     },
