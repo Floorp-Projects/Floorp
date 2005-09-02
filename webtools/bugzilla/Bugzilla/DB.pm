@@ -513,7 +513,10 @@ sub bz_drop_column {
             $table, $column);
         print "Deleting unused column $column from table $table ...\n";
         foreach my $sql (@statements) {
-            $self->do($sql);
+            # Because this is a deletion, we don't want to die hard if
+            # we fail because of some local customization. If something
+            # is already gone, that's fine with us!
+            eval { $self->do($sql); } or warn "Failed SQL: [$sql] Error: $@";
         }
         $self->_bz_real_schema->delete_column($table, $column);
         $self->_bz_store_real_schema;
@@ -553,7 +556,12 @@ sub bz_drop_index_raw {
     my @statements = $self->_bz_schema->get_drop_index_ddl(
         $table, $name);
     print "Removing index '$name' from the $table table...\n" unless $silent;
-    $self->do($_) foreach (@statements);
+    foreach my $sql (@statements) {
+        # Because this is a deletion, we don't want to die hard if
+        # we fail because of some local customization. If something
+        # is already gone, that's fine with us!
+        eval { $self->do($sql) } or warn "Failed SQL: [$sql] Error: $@";
+    }
 }
 
 sub bz_drop_table {
@@ -564,7 +572,12 @@ sub bz_drop_table {
     if ($table_exists) {
         my @statements = $self->_bz_schema->get_drop_table_ddl($name);
         print "Dropping table $name...\n";
-        $self->do($_) foreach (@statements);
+        foreach my $sql (@statements) {
+            # Because this is a deletion, we don't want to die hard if
+            # we fail because of some local customization. If something
+            # is already gone, that's fine with us!
+            eval { $self->do($sql); } or warn "Failed SQL: [$sql] Error: $@";
+        }
         $self->_bz_real_schema->delete_table($name);
         $self->_bz_store_real_schema;
     }
