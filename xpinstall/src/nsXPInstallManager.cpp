@@ -67,7 +67,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsPIDOMWindow.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -218,29 +217,18 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
 
     mParentWindow = do_QueryInterface(aGlobalObject);
 
-    // Don't launch installs while page is still loading
-    PRBool isPageLoading = PR_FALSE;
-    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(mParentWindow);
-    if (piWindow)
-        isPageLoading = piWindow->IsLoadingOrRunningTimeout();
+    // Start downloading initial chunks looking for signatures,
+    mOutstandingCertLoads = mTriggers->Size();
 
-    if (isPageLoading)
-        rv = NS_ERROR_FAILURE;
+    nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL));
+    nsCOMPtr<nsIStreamListener> listener = new CertReader(uri, nsnull, this);
+    if (listener)
+        rv = NS_OpenURI(listener, nsnull, uri);
     else
-    {
-        // Start downloading initial chunks looking for signatures,
-        mOutstandingCertLoads = mTriggers->Size();
-
-        nsXPITriggerItem *item = mTriggers->Get(--mOutstandingCertLoads);
-
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL));
-        nsCOMPtr<nsIStreamListener> listener = new CertReader(uri, nsnull, this);
-        if (listener)
-            rv = NS_OpenURI(listener, nsnull, uri);
-        else
-            rv = NS_ERROR_OUT_OF_MEMORY;
-    }
+        rv = NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv)) {
         Shutdown();
