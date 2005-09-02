@@ -1514,7 +1514,7 @@ nsMenuFrame::BuildAcceleratorText()
   
   char* str = ToNewCString(modifiers);
   char* newStr;
-  char* token = nsCRT::strtok(str, ", ", &newStr);
+  char* token = nsCRT::strtok(str, ", \t", &newStr);
   while (token) {
       
     if (PL_strcmp(token, "shift") == 0)
@@ -1545,7 +1545,7 @@ nsMenuFrame::BuildAcceleratorText()
     
     accelText += *gModifierSeparator;
 
-    token = nsCRT::strtok(newStr, ", ", &newStr);
+    token = nsCRT::strtok(newStr, ", \t", &newStr);
   }
 
   nsMemory::Free(str);
