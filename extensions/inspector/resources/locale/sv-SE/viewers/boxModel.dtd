@@ -40,5 +40,5 @@
 <!ENTITY boxPosition.label "Position">
 <!ENTITY boxDimension.label "Dimensioner">
 <!ENTITY boxMargin.label "Marginal">
-<!ENTITY boxBorder.label "Kant">
+<!ENTITY boxBorder.label "Ram">
 <!ENTITY boxPadding.label "Utfyllnad">
