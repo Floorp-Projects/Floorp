@@ -107,15 +107,18 @@ public class DigestTest {
         /////////////////////////////////////////////////////////////
         CryptoManager cm = CryptoManager.getInstance();
         CryptoToken token = cm.getInternalCryptoToken();
+        Password pass = new Password("password".toCharArray());
         byte[] salt = { 0, 1, 2, 3,4 ,5 ,6 ,7 };
         PBEKeyGenParams pbe = new PBEKeyGenParams(
-                    new Password("password".toCharArray()),
+                    pass,
                     salt,
                     1 );
+        pass.clear();
         KeyGenerator kg = token.getKeyGenerator(
                                 PBEAlgorithm.PBE_SHA1_DES3_CBC );
         kg.initialize(pbe);
         SymmetricKey symkey = kg.generate();
+        pbe.clear();
         org.mozilla.jss.crypto.JSSMessageDigest digest =
                 token.getDigestContext( HMACAlgorithm.SHA1 );
         digest.initHMAC(symkey);
