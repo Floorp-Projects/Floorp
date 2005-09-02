@@ -318,6 +318,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="menu-bookmarks-add-to-bookmarks" nc:name="Bookmark This Page..." nc:link="menu_reference.xhtml#add_to_bookmarks"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-bookmarks-bookmark-all-tabs" nc:name="Bookmark All Tabs..." nc:link="menu_reference.xhtml#bookmark_all_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-bookmarks-manage" nc:name="Manage Bookmarks..." nc:link="menu_reference.xhtml#manage_bookmarks"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
