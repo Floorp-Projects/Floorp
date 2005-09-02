@@ -342,10 +342,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
 
     //This is a HACK because startDate and indexOfDate don't get along well
     //in terms of timezones.
-    var adjustedDate = new Date();
-    adjustedDate.setDate(startDate.day);
-    adjustedDate.setMonth(startDate.month);
-    adjustedDate.setFullYear(startDate.year);
+    var adjustedDate = new Date(startDate.year, startDate.month, startDate.day);
     var DisplayDate = new Date(adjustedDate);
     dayBoxItem = this.dayBoxItemArray[this.indexOfDate(DisplayDate)];
     // Check if the day is visible
