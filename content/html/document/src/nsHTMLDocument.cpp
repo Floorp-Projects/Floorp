@@ -1850,14 +1850,13 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   // Grab a reference to the calling documents security info (if any)
   // and principal as it may be lost in the call to Reset().
   nsCOMPtr<nsISupports> securityInfo;
-  nsCOMPtr<nsIPrincipal> callerPrincipal;
-
   if (callerDoc) {
     securityInfo = callerDoc->GetSecurityInfo();
-
-    nsContentUtils::GetSecurityManager()->
-      GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
   }
+
+  nsCOMPtr<nsIPrincipal> callerPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
 
   // The URI for the document after this call. Get it from the calling
   // principal (if available), or set it to "about:blank" if no

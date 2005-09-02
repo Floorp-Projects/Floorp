@@ -241,9 +241,9 @@ public:
 
   /**
    * Get the document through the JS context that's currently on the stack.
-   * If there's no JS context currently on the stack aDocument will be null.
+   * If there's no JS context currently on the stack it will return null.
    *
-   * @param aDocument The document or null if no JS context
+   * @return The document or null if no JS context
    */
   static nsIDOMDocument *GetDocumentFromCaller();
 
