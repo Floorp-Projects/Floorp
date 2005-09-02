@@ -855,11 +855,14 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             vlength = JSSTRING_LENGTH(valstr);
 
 #ifndef OLD_GETTER_SETTER
-            /* Remove 'function ' from beginning of valstr. */
+            /*
+             * Remove '(function ' from the beginning of valstr and ')' from the
+             * end so that we can put "get" in front of the function definition.
+             */
             if (gsop[j]) {
-                int n = strlen(js_function_str) + 1;
+                int n = strlen(js_function_str) + 2;
                 vchars += n;
-                vlength -= n;
+                vlength -= n + 1;
             }
 #endif
 
