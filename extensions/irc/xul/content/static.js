@@ -4185,8 +4185,8 @@ function usr_updres()
         }
     }
 
-    // Counts up from Z to A.
-    var sortname = String.fromCharCode(90 - modeLevel) + "-" + this.unicodeName;
+    // Counts numerically down from 9.
+    var sortname = (9 - modeLevel) + "-" + this.unicodeName;
 
     // We want to show mode symbols, but only those we don't 'style'.
     if (mode && !mode.match(/^[@%+]$/))
