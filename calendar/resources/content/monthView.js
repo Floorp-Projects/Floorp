@@ -194,10 +194,6 @@ function MonthView( calendarWindow )
          
          dayBoxItem.setAttribute( "onclick", "gCalendarWindow.monthView.clickDay( event )" );
          dayBoxItem.setAttribute( "oncontextmenu", "gCalendarWindow.monthView.contextClickDay( event )" );
-
-         //set the drop
-         dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
-         dayBoxItem.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,monthViewEventDragAndDropObserver)" );
          
          //set the double click of day boxes
          dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.monthView.doubleClickDay( event )" );
@@ -285,7 +281,6 @@ MonthView.prototype.createEventDotInternal = function(itemOccurrence, startDate,
     eventDot.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventDot.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
     eventDot.setAttribute("tooltip", "gridOccurrenceTooltip" );
-    eventDot.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     eventDot.occurrence = itemOccurrence; // for mouseover preview
     eventDot.event = calEvent;
     eventDotBox.appendChild( eventDot );
@@ -350,7 +345,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     eventBox.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventBox.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
     eventBox.setAttribute("tooltip", "gridOccurrenceTooltip" );
-    eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     // add a property to the event box that holds the calendarEvent that the
     // box represents
 
@@ -381,7 +375,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
         eventBox.setAttribute( "eventselected", "true" );
 
     eventBoxText.setAttribute("flex", "1");
-    eventBoxText.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);");
 
     // add the text to the event box and the event box to the day box
 
@@ -451,7 +444,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
          eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
-         eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
          // add a property to the event box that holds the calendarEvent that the
          // box represents
 
@@ -485,7 +477,6 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
 
          //you need this flex in order for text to crop
          eventBoxText.setAttribute( "flex", "1" );
-         eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
          // add the text to the event box and the event box to the day box
          

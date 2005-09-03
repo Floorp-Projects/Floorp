@@ -479,9 +479,6 @@ DayView.prototype.createEventBoxInternal = function(event)
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "onmouseover", "onMouseOverGridOccurrence(event)" );
    eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
-   eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
-   eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );
-   eventBox.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)" );
    
    // mark the box as selected, if the event is
    if (this.calendarWindow.EventSelection.isSelectedEvent(calEvent))

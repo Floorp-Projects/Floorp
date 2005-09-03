@@ -499,10 +499,15 @@
 
 <vbox id="calendar-top-box"
       flex="1"
+      context="context-menu">
+
+<!--Bug 306877: Removed drag and drop support for 0.3a1.  Reimplement this!
+<vbox id="calendar-top-box"
+      flex="1"
       context="context-menu"
       ondraggesture="nsDragAndDrop.startDrag(event,calendarManagerDNDObserver);"
       ondragover="nsDragAndDrop.dragOver(event,calendarManagerDNDObserver)"
-      ondragdrop="nsDragAndDrop.drop(event,calendarManagerDNDObserver)">
+      ondragdrop="nsDragAndDrop.drop(event,calendarManagerDNDObserver)">-->
 
   <!-- Calendar Controls-->
  

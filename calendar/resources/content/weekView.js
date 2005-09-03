@@ -447,9 +447,6 @@ WeekView.prototype.createEventBoxInternal = function (event)
     eventBox.setAttribute("dayindex", index + 1);
     eventBox.setAttribute("onclick", "weekEventItemClick(this, event)" );
     eventBox.setAttribute("ondblclick", "weekEventItemDoubleClick(this, event)");
-    eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);");
-    eventBox.setAttribute("ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)");
-    eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
     eventBox.setAttribute("id", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("name", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );

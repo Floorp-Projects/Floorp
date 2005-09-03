@@ -198,10 +198,6 @@ function MultiweekView( calendarWindow )
          
          dayBoxItem.setAttribute( "onclick", "gCalendarWindow.multiweekView.clickDay( event )" );
          dayBoxItem.setAttribute( "oncontextmenu", "gCalendarWindow.multiweekView.contextClickDay( event )" );
-
-         //set the drop
-         dayBoxItem.setAttribute( "ondragdrop", "nsDragAndDrop.drop(event,monthViewEventDragAndDropObserver)" );
-         dayBoxItem.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,monthViewEventDragAndDropObserver)" );
          
          //set the double click of day boxes
          dayBoxItem.setAttribute( "ondblclick", "gCalendarWindow.multiweekView.doubleClickDay( event )" );
@@ -300,7 +296,6 @@ MultiweekView.prototype.createEventDotInternal = function(itemOccurrence, startD
     eventDot.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventDot.setAttribute("onmouseover", "onMouseOverGridOccurrence(event)" );
     eventDot.setAttribute("tooltip", "gridOccurrenceTooltip" );
-    eventDot.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     eventDot.occurrence = itemOccurrence; // for mouseover preview
     eventDot.event = calEvent;
     eventDotBox.appendChild( eventDot );
@@ -367,7 +362,6 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
     eventBox.setAttribute( "onmouseover", "onMouseOverGridOccurrence(event)" );
     eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
-    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
     eventBox.occurrence = itemOccurrence;
     eventBox.event = calEvent;
@@ -428,7 +422,6 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   eventBox.setAttribute( "ondblclick", "multiweekToDoBoxDoubleClickEvent( this, event )" );
   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarToDo, event )" );
   eventBox.setAttribute( "tooltip", "gridOccurrenceTooltip" );
-  //eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
   // add a property to the event box that holds the calendarEvent that the
   // box represents
   
