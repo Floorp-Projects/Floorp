@@ -708,6 +708,7 @@ var BookmarksCommand = {
     if (aTargetBrowser == "current" || aTargetBrowser == "tab") {
       var browser  = w.document.getElementById("content");
       var tabPanels = browser.browsers;
+      var tabs = browser.mTabContainer.childNodes;
       var tabCount  = tabPanels.length;
       var doReplace = PREF.getBoolPref("browser.tabs.loadFolderAndReplace");
       var loadInBackground = PREF.getBoolPref("browser.tabs.loadBookmarksInBackground");
@@ -716,7 +717,7 @@ var BookmarksCommand = {
         index0 = 0;
       else {
         for (index0=tabCount-1; index0>=0; --index0)
-          if (browser.browsers[index0].webNavigation.currentURI.spec != "about:blank")
+          if (tabPanels[index0].webNavigation.currentURI.spec != "about:blank")
             break;
         ++index0;
       }
@@ -747,7 +748,6 @@ var BookmarksCommand = {
         function selectNewForegroundTab(browser, tab) {
           browser.selectedTab = tab;
         }
-        var tabs = browser.mTabContainer.childNodes;
         setTimeout(selectNewForegroundTab, 0, browser, tabs[index0]);
       }
 
