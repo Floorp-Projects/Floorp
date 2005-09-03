@@ -177,11 +177,6 @@
     </hbox>
   </hbox>
 
-  <statusbar id="statusbar" hidden="false">
-    <statusbarpanel id="statusbar-text" label="Minimo" flex="1" crop="right"/>
-    <statusbarpanel id="security" label="" style="display: none"/>
-  </statusbar>
-  
   <!-- place holder for our app popups and hook to the overlay --> 
 <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">

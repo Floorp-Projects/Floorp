@@ -69,9 +69,7 @@ nsBrowserStatusHandler.prototype =
   init : function()
   {
     this.urlBar           = document.getElementById("urlbar");
-    this.statusbarText    = document.getElementById("statusbar-text");
     this.stopreloadButton = document.getElementById("reload-stop-button");
-    this.statusbar        = document.getElementById("statusbar");
     this.progressBGPosition = 0;  /* To be removed, fix in onProgressChange ... */ 
     
   },
@@ -79,9 +77,7 @@ nsBrowserStatusHandler.prototype =
   destroy : function()
   {
     this.urlBar = null;
-    this.statusbarText = null;
     this.stopreloadButton = null;
-    this.statusbar = null;
     this.progressBGPosition = null;  /* To be removed, fix in onProgressChange ... */ 
     
   },
@@ -96,7 +92,7 @@ nsBrowserStatusHandler.prototype =
       {
         this.stopreloadButton.className = "stop-button";
         this.stopreloadButton.onClick = "BrowserStop()";
-        this.statusbar.hidden = false;
+
         return;
       }
       
@@ -108,8 +104,6 @@ nsBrowserStatusHandler.prototype =
         this.stopreloadButton.className = "reload-button";
         this.stopreloadButton.onClick = "BrowserReload()";
         
-        this.statusbar.hidden = true;
-        this.statusbarText.label = "";
         return;
       }
       return;
@@ -158,7 +152,6 @@ nsBrowserStatusHandler.prototype =
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
-    this.statusbarText.label = aMessage;
   },
 
   onSecurityChange : function(aWebProgress, aRequest, aState)
@@ -400,7 +393,6 @@ function DoFullScreen()
   gFullScreen = !gFullScreen;
   
   document.getElementById("nav-bar").hidden = gFullScreen;
-  document.getElementById("statusbar").hidden = gFullScreen;
 
   getBrowser().setStripVisibilityTo(!gFullScreen);
   window.fullScreen = gFullScreen;  
