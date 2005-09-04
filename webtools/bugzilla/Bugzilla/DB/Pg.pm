@@ -217,6 +217,11 @@ sub bz_setup_database {
     # field, because it can't have index data longer than 2770
     # characters on that field.
     $self->bz_drop_index('longdescs', 'longdescs_thetext_idx');
+
+    # PostgreSQL also wants an index for calling LOWER on
+    # login_name, which we do with sql_istrcmp all over the place.
+    $self->bz_add_index('profiles', 'profiles_login_name_lower_idx', 
+        {FIELDS => ['LOWER(login_name)'], TYPE => 'UNIQUE'});
 }
 
 #####################################################################
