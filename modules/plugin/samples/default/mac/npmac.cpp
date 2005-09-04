@@ -85,7 +85,7 @@
 #if PLUGIN_TRACE
 #define PLUGINDEBUGSTR(msg)		::DebugStr(msg)
 #else
-#define PLUGINDEBUGSTR
+#define PLUGINDEBUGSTR(msg)    ((void) 0)
 #endif
 
 
@@ -150,6 +150,8 @@ struct {
     TTVtoFPGlue             invalidaterect;
     TTVtoFPGlue             invalidateregion;
     TTVtoFPGlue             forceredraw;
+    TTVtoFPGlue             pushpopupsenabledstate;
+    TTVtoFPGlue             poppopupsenabledstate;
 } gNetscapeFuncsGlueTable;
 
 static void* SetupTVtoFPGlue(TTVtoFPGlue* functionGlue, void* tvp)
@@ -367,6 +369,16 @@ void NPN_InvalidateRegion(NPP instance, NPRegion region)
 void NPN_ForceRedraw(NPP instance)
 {
 	CallNPN_ForceRedrawProc( gNetscapeFuncs.forceredraw, instance);
+}
+
+void NPN_PushPopupsEnabledState(NPP instance, NPBool enabled)
+{
+	CallNPN_PushPopupsEnabledStateProc( gNetscapeFuncs.pushpopupsenabledstate, instance, enabled);
+}
+
+void NPN_PopPopupsEnabledState(NPP instance)
+{
+	CallNPN_PopPopupsEnabledStateProc( gNetscapeFuncs.poppopupsenabledstate, instance);
 }
 
 #pragma mark -
@@ -728,6 +740,8 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
 		gNetscapeFuncs.invalidaterect   = (NPN_InvalidateRectUPP)HOST_TO_PLUGIN_GLUE(invalidaterect, nsTable->invalidaterect);
 		gNetscapeFuncs.invalidateregion = (NPN_InvalidateRegionUPP)HOST_TO_PLUGIN_GLUE(invalidateregion, nsTable->invalidateregion);
 		gNetscapeFuncs.forceredraw      = (NPN_ForceRedrawUPP)HOST_TO_PLUGIN_GLUE(forceredraw, nsTable->forceredraw);
+		gNetscapeFuncs.pushpopupsenabledstate = (NPN_PushPopupsEnabledStateUPP)HOST_TO_PLUGIN_GLUE(pushpopupsenabledstate, nsTable->pushpopupsenabledstate);
+		gNetscapeFuncs.poppopupsenabledstate  = (NPN_PopPopupsEnabledStateUPP)HOST_TO_PLUGIN_GLUE(poppopupsenabledstate, nsTable->poppopupsenabledstate);
 		
 		//
 		// Set up the plugin function table that Netscape will use to

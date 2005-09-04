@@ -1211,6 +1211,8 @@ void CPlugin::AskAndLoadURL()
 		// is arbitrary since it has nothing to do with the actual
 		// window title shown to the user (it’s only used internally).
 		//
+		NPN_PushPopupsEnabledState(fInstance, true);
+
 		if (fFileURL != NULL) {
 			(void) NPN_GetURL(fInstance, fFileURL, "_current");
 		} else if (fPageURL != NULL) {
@@ -1224,6 +1226,8 @@ void CPlugin::AskAndLoadURL()
 			}
 			NPN_MemFree(pTheURL);
 		}
+
+		NPN_PopPopupsEnabledState(fInstance);
 
 		fUserInstalledPlugin = true;
 		if (FocusDraw()) {
