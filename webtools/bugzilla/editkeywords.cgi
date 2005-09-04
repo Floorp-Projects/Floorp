@@ -25,6 +25,7 @@ use lib ".";
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::User;
@@ -46,6 +47,12 @@ sub Validate {
     if ($description eq "") {
         ThrowUserError("keyword_blank_description");
     }
+    # It is safe to detaint these values as they are only
+    # used in placeholders.
+    trick_taint($name);
+    $_[0] = $name;
+    trick_taint($description);
+    $_[1] = $description;
 }
 
 
@@ -55,7 +62,7 @@ sub Validate {
 
 Bugzilla->login(LOGIN_REQUIRED);
 
-print Bugzilla->cgi->header();
+print $cgi->header();
 
 UserInGroup("editkeywords")
   || ThrowUserError("auth_failure", {group  => "editkeywords",
@@ -69,29 +76,18 @@ $vars->{'action'} = $action;
 if ($action eq "") {
     my @keywords;
 
-    SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
-                    COUNT(keywords.bug_id)
-             FROM keyworddefs LEFT JOIN keywords
-               ON keyworddefs.id = keywords.keywordid " .
-             $dbh->sql_group_by('keyworddefs.id',
-                    'keyworddefs.name, keyworddefs.description') . "
-             ORDER BY keyworddefs.name");
+    $vars->{'keywords'} =
+      $dbh->selectall_arrayref('SELECT keyworddefs.id, keyworddefs.name,
+                                       keyworddefs.description,
+                                       COUNT(keywords.bug_id) AS bug_count
+                                  FROM keyworddefs
+                             LEFT JOIN keywords
+                                    ON keyworddefs.id = keywords.keywordid ' .
+                                  $dbh->sql_group_by('id', 'name, description') . '
+                                 ORDER BY keyworddefs.name', {'Slice' => {}});
 
-    while (MoreSQLData()) {
-        my ($id, $name, $description, $bugs) = FetchSQLData();
-        my $keyword = {};
-        $keyword->{'id'} = $id;
-        $keyword->{'name'} = $name;
-        $keyword->{'description'} = $description;
-        $keyword->{'bug_count'} = $bugs;
-        push(@keywords, $keyword);
-    }
-
-    print Bugzilla->cgi->header();
-
-    $vars->{'keywords'} = \@keywords;
-    $template->process("admin/keywords/list.html.tmpl",
-                       $vars)
+    print $cgi->header();
+    $template->process("admin/keywords/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -99,10 +95,9 @@ if ($action eq "") {
     
 
 if ($action eq 'add') {
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
-    $template->process("admin/keywords/create.html.tmpl",
-                       $vars)
+    $template->process("admin/keywords/create.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -119,10 +114,11 @@ if ($action eq 'new') {
     my $description  = trim($cgi->param('description')  || '');
 
     Validate($name, $description);
-    
-    SendSQL("SELECT id FROM keyworddefs WHERE name = " . SqlQuote($name));
 
-    if (FetchOneColumn()) {
+    my $id = $dbh->selectrow_array('SELECT id FROM keyworddefs
+                                    WHERE name = ?', undef, $name);
+
+    if ($id) {
         $vars->{'name'} = $name;
         ThrowUserError("keyword_already_exists");
     }
@@ -133,12 +129,12 @@ if ($action eq 'new') {
     # rarely enough, and there really aren't ever going to be that many
     # keywords anyway.
 
-    SendSQL("SELECT id FROM keyworddefs ORDER BY id");
+    my $existing_ids =
+        $dbh->selectcol_arrayref('SELECT id FROM keyworddefs ORDER BY id');
 
     my $newid = 1;
 
-    while (MoreSQLData()) {
-        my $oldid = FetchOneColumn();
+    foreach my $oldid (@$existing_ids) {
         if ($oldid > $newid) {
             last;
         }
@@ -146,18 +142,17 @@ if ($action eq 'new') {
     }
 
     # Add the new keyword.
-    SendSQL("INSERT INTO keyworddefs (id, name, description) VALUES ($newid, " .
-            SqlQuote($name) . "," .
-            SqlQuote($description) . ")");
+    $dbh->do('INSERT INTO keyworddefs
+              (id, name, description) VALUES (?, ?, ?)',
+              undef, ($newid, $name, $description));
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     $vars->{'name'} = $name;
-    $template->process("admin/keywords/created.html.tmpl",
-                       $vars)
+    $template->process("admin/keywords/created.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -176,30 +171,27 @@ if ($action eq 'edit') {
     detaint_natural($id);
 
     # get data of keyword
-    SendSQL("SELECT name,description
-             FROM keyworddefs
-             WHERE id=$id");
-    my ($name, $description) = FetchSQLData();
+    my ($name, $description) =
+        $dbh->selectrow_array('SELECT name, description FROM keyworddefs
+                               WHERE id = ?', undef, $id);
+
     if (!$name) {
         $vars->{'id'} = $id;
         ThrowCodeError("invalid_keyword_id", $vars);
     }
 
-    SendSQL("SELECT count(*)
-             FROM keywords
-             WHERE keywordid = $id");
-    my $bugs = '';
-    $bugs = FetchOneColumn() if MoreSQLData();
+    my $bugs = $dbh->selectrow_array('SELECT COUNT(*) FROM keywords
+                                      WHERE keywordid = ?',
+                                      undef, $id);
 
     $vars->{'keyword_id'} = $id;
     $vars->{'name'} = $name;
     $vars->{'description'} = $description;
     $vars->{'bug_count'} = $bugs;
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
-    $template->process("admin/keywords/edit.html.tmpl",
-                       $vars)
+    $template->process("admin/keywords/edit.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -219,27 +211,24 @@ if ($action eq 'update') {
 
     Validate($name, $description);
 
-    SendSQL("SELECT id FROM keyworddefs WHERE name = " . SqlQuote($name));
-
-    my $tmp = FetchOneColumn();
+    my $tmp = $dbh->selectrow_array('SELECT id FROM keyworddefs
+                                     WHERE name = ?', undef, $name);
 
     if ($tmp && $tmp != $id) {
         $vars->{'name'} = $name;
         ThrowUserError("keyword_already_exists", $vars);
     }
 
-    SendSQL("UPDATE keyworddefs SET name = " . SqlQuote($name) .
-            ", description = " . SqlQuote($description) .
-            " WHERE id = $id");
+    $dbh->do('UPDATE keyworddefs SET name = ?, description = ?
+              WHERE id = ?', undef, ($name, $description, $id));
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     $vars->{'name'} = $name;
-    $template->process("admin/keywords/rebuild-cache.html.tmpl",
-                       $vars)
+    $template->process("admin/keywords/rebuild-cache.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
@@ -250,42 +239,38 @@ if ($action eq 'delete') {
     my $id = $cgi->param('id');
     detaint_natural($id);
 
-    SendSQL("SELECT name FROM keyworddefs WHERE id=$id");
-    my $name = FetchOneColumn();
+    my $name = $dbh->selectrow_array('SELECT name FROM keyworddefs
+                                      WHERE id= ?', undef, $id);
 
     if (!$cgi->param('reallydelete')) {
-        SendSQL("SELECT count(*)
-                 FROM keywords
-                 WHERE keywordid = $id");
-        
-        my $bugs = FetchOneColumn();
-        
+        my $bugs = $dbh->selectrow_array('SELECT COUNT(*) FROM keywords
+                                          WHERE keywordid = ?',
+                                          undef, $id);
+
         if ($bugs) {
             $vars->{'bug_count'} = $bugs;
             $vars->{'keyword_id'} = $id;
             $vars->{'name'} = $name;
 
-            print Bugzilla->cgi->header();
+            print $cgi->header();
 
-            $template->process("admin/keywords/confirm-delete.html.tmpl",
-                               $vars)
+            $template->process("admin/keywords/confirm-delete.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
 
             exit;
         }
     }
 
-    SendSQL("DELETE FROM keywords WHERE keywordid = $id");
-    SendSQL("DELETE FROM keyworddefs WHERE id = $id");
+    $dbh->do('DELETE FROM keywords WHERE keywordid = ?', undef, $id);
+    $dbh->do('DELETE FROM keyworddefs WHERE id = ?', undef, $id);
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print Bugzilla->cgi->header();
+    print $cgi->header();
 
     $vars->{'name'} = $name;
-    $template->process("admin/keywords/rebuild-cache.html.tmpl",
-                       $vars)
+    $template->process("admin/keywords/rebuild-cache.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
     exit;
