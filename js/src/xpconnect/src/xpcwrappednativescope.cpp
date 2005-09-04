@@ -548,7 +548,6 @@ void DEBUG_CheckForComponentsInScope(XPCCallContext& ccx, JSObject* obj,
         return;
 
     static const char msg[] =
-    "\n"
     "XPConnect is being called on a scope without a 'Components' property!\n"
     "\n"
     "This is pretty much always bad. It usually means that native code is\n"
