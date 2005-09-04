@@ -1105,8 +1105,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 for (i = 0; i < length; ++i) {
                     nodeList->Item(i, getter_AddRefs(node));
 
-                    txXPathNode *xpathNode =
-                        txXPathNativeNode::createXPathNode(node);
+                    nsAutoPtr<txXPathNode> xpathNode(
+                        txXPathNativeNode::createXPathNode(node));
                     if (!xpathNode) {
                         return NS_ERROR_FAILURE;
                     }
@@ -1188,8 +1188,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
                 NS_ASSERTION(node, "Huh, we checked this in SetParameter?");
 
-                txXPathNode *xpathNode =
-                    txXPathNativeNode::createXPathNode(node);
+                nsAutoPtr<txXPathNode> xpathNode(
+                    txXPathNativeNode::createXPathNode(node));
                 if (!xpathNode) {
                     while (i < count) {
                         NS_RELEASE(values[i++]);
