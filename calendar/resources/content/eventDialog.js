@@ -586,9 +586,15 @@ function onOKCommand()
         var alarmTime = null;
 
         if (alarmRelated == "START") {
-            alarmTime = event.startDate.clone();
+            if (event.startDate)
+                alarmTime = event.startDate.clone();
+            else if (event.entryDate)
+                alarmTime = event.entryDate.clone();
         } else if (alarmRelated == "END") {
-            alarmTime = event.endDate.clone();
+            if (event.endDate)
+                alarmTime = event.endDate.clone();
+            else if(event.dueDate)
+                alarmTime = event.dueDate.clone();
         }
 
         switch (alarmUnits) {
