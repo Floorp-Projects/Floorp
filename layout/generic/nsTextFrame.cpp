@@ -2762,9 +2762,6 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsIView * view;
-  nsPoint origin;
-  GetOffsetFromView(origin, &view);
 
   /* This if clause is the cause of much pain.  If aNewContent is set, then any
    * code path that returns an error must set aNewContent to null before returning,
@@ -2782,7 +2779,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
    * If this clause is removed, then some of the bullet-proofing code
    * prefaced with "bug 56704" comments can be removed as well.
    */
-  if (aPoint.x - origin.x < 0)
+  if (aPoint.x < 0)
   {
       *aNewContent = mContent;
       aOffset =0;
@@ -2839,12 +2836,12 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
 
   if (prefInt)
   {
-    if (aPoint.y < origin.y)//above rectangle
+    if (aPoint.y < 0)//above rectangle
     {
       aOffset = mContentOffset;
       outofstylehandled = PR_TRUE;
     }
-    else if ((aPoint.y - origin.y) > mRect.height)
+    else if (aPoint.y > mRect.height)
     {
       aOffset = mContentOffset + mContentLength;
       outofstylehandled = PR_TRUE;
@@ -2855,7 +2852,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
 //END STYLE RULE
   {
     //the following will first get the index into the PAINTBUFFER then the actual content
-    nscoord adjustedX = PR_MAX(0,aPoint.x-origin.x);
+    nscoord adjustedX = PR_MAX(0,aPoint.x);
 
 #ifdef IBMBIDI
     if (isOddLevel)
@@ -3818,10 +3815,6 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
         return NS_ERROR_FAILURE;
       }
 
-      nsPoint origin;
-      nsIView * view;
-      GetOffsetFromView(origin, &view);
-
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
       PRInt32 prefInt =
         nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
@@ -3829,13 +3822,13 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
 
       if (prefInt)
       {
-        if ((aPoint.y - origin.y) < 0)//above rectangle
+        if (aPoint.y < 0)//above rectangle
         {
           aContentOffset = mContentOffset;
           aContentOffsetEnd = aContentOffset;
           outofstylehandled = PR_TRUE;
         }
-        else if ((aPoint.y - origin.y) > mRect.height)
+        else if (aPoint.y > mRect.height)
         {
           aContentOffset = mContentOffset + mContentLength;
           aContentOffsetEnd = aContentOffset;
@@ -3857,24 +3850,21 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
         rendContext->GetHints(clusterHint);
         clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
         if (clusterHint) {
-          nsPoint pt;
-          pt.x = aPoint.x - origin.x;
-          pt.y = aPoint.y - origin.y;
-          indx = rendContext->GetPosition(text, textLength, pt);
+          indx = rendContext->GetPosition(text, textLength, aPoint);
         }
         else {
 #ifdef IBMBIDI
         PRBool getReversedPos = NS_GET_EMBEDDING_LEVEL(this) & 1;
         nscoord posX = (getReversedPos) ?
-                       (mRect.width + origin.x) - (aPoint.x - origin.x) : aPoint.x;
+                       (mRect.width) - (aPoint.x) : aPoint.x;
 
-        PRBool found = BinarySearchForPosition(rendContext, text, origin.x, 0, 0,
+        PRBool found = BinarySearchForPosition(rendContext, text, 0, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(posX) , //go to local coordinates
                                                indx, textWidth);
 
 #else
-        PRBool found = BinarySearchForPosition(rendContext, text, origin.x, 0, 0,
+        PRBool found = BinarySearchForPosition(rendContext, text, 0, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(aPoint.x) , //go to local coordinates
                                                indx, textWidth);
@@ -3889,13 +3879,13 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
 
 #ifdef IBMBIDI
           if (getReversedPos) {
-            if (mRect.width - aPoint.x + origin.x > textWidth+charWidth ) {
+            if (mRect.width - aPoint.x> textWidth+charWidth ) {
               indx++;
             }
           }
           else
 #endif // IBMBIDI
-          if ((aPoint.x - origin.x) > textWidth+charWidth) {
+          if ((aPoint.x) > textWidth+charWidth) {
             indx++;
           }
         }
@@ -4851,7 +4841,7 @@ nsTextFrame::HandleMultiplePress(nsPresContext* aPresContext,
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
   nsCOMPtr<nsIContent> newContent;
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
   nsresult rv = GetPosition(aPresContext, pt,
                             getter_AddRefs(newContent), startPos,
                             contentOffsetEnd);

@@ -1361,7 +1361,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   PRInt32 startOffset = 0, endOffset = 0;
   PRBool  beginFrameContent = PR_FALSE;
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
   rv = GetContentAndOffsetsFromPoint(aPresContext, pt, getter_AddRefs(content),
                                      startOffset, endOffset,
                                      beginFrameContent);
@@ -1601,7 +1601,7 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> newContent;
   PRBool beginContent = PR_FALSE;
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
 
   rv = GetContentAndOffsetsFromPoint(aPresContext,
                                      pt,
@@ -1753,7 +1753,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   if (NS_SUCCEEDED(result) && parentContent) {
     frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
   } else {
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(aEvent, this);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
     frameselection->HandleDrag(aPresContext, this, pt);
   }
 
@@ -1850,8 +1850,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         PRInt32 startOffset = 0, endOffset = 0;
         PRBool  beginFrameContent = PR_FALSE;
 
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(me,
-                                                                      this);
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(me, this);
         result = GetContentAndOffsetsFromPoint(aPresContext, pt,
                                                getter_AddRefs(content),
                                                startOffset, endOffset, 
@@ -1919,7 +1918,6 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
   // to if it fails the getposition call, make it yourself also only
   // look at primary list
   nsIFrame *closestFrame = nsnull;
-  nsIView *view = GetClosestView();
   nsIFrame *kid = GetFirstChild(nsnull);
 
   if (kid) {
@@ -1934,30 +1932,6 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
       // that don't have a proper parent-child relationship!
 
       PRBool skipThisKid = (kid->GetStateBits() & NS_FRAME_GENERATED_CONTENT) != 0;
-#if 0
-      if (!skipThisKid) {
-        // The frame's content is not generated. Now check
-        // if it is anonymous content!
-
-        nsIContent* kidContent = kid->GetContent();
-        if (kidContent) {
-          nsCOMPtr<nsIContent> content = kidContent->GetParent();
-
-          if (content) {
-            PRInt32 kidCount = content->ChildCount();
-            PRInt32 kidIndex = content->IndexOf(kidContent);
-
-            // IndexOf() should return -1 for the index if it doesn't
-            // find kidContent in it's child list.
-
-            if (kidIndex < 0 || kidIndex >= kidCount) {
-              // Must be anonymous content! So skip it!
-              skipThisKid = PR_TRUE;
-            }
-          }
-        }
-      }
-#endif //XXX we USED to skip anonymous content i dont think we should anymore leaving this here as a flah
 
       if (skipThisKid) {
         kid = kid->GetNextSibling();
@@ -1968,13 +1942,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
       // relationship. Now see if the aPoint inside it's bounding
       // rect or close by.
 
-      nsPoint offsetPoint(0,0);
-      nsIView * kidView = nsnull;
-      kid->GetOffsetFromView(offsetPoint, &kidView);
-
       nsRect rect = kid->GetRect();
-      rect.x = offsetPoint.x;
-      rect.y = offsetPoint.y;
 
       nscoord fromTop = aPoint.y - rect.y;
       nscoord fromBottom = aPoint.y - rect.y - rect.height;
@@ -2030,28 +1998,17 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
       // the coordinates because GetPosition() expects
       // them to be relative to the closest view.
 
-      nsPoint newPoint     = aPoint;
-      nsIView *closestView = closestFrame->GetClosestView();
-
-      if (closestView && view != closestView)
-        newPoint -= closestView->GetOffsetTo(view);
-
-      // printf("      0x%.8x   0x%.8x  %4d  %4d\n",
-      //        closestFrame, closestView, closestXDistance, closestYDistance);
-
-      return closestFrame->GetContentAndOffsetsFromPoint(aCX, newPoint, aNewContent,
-                                                         aContentOffset, aContentOffsetEnd,aBeginFrameContent);
+      nsPoint newPoint = aPoint - closestFrame->GetOffsetTo(this);
+      return closestFrame->GetContentAndOffsetsFromPoint(aCX, newPoint,
+                                                         aNewContent,
+                                                         aContentOffset,
+                                                         aContentOffsetEnd,
+                                                         aBeginFrameContent);
     }
   }
 
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
-
-  nsPoint offsetPoint;
-  GetOffsetFromView(offsetPoint, &view);
-  nsRect thisRect = GetRect();
-  thisRect.x = offsetPoint.x;
-  thisRect.y = offsetPoint.y;
 
   NS_IF_ADDREF(*aNewContent = mContent->GetParent());
   if (*aNewContent){
@@ -2066,6 +2023,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
     aContentOffset = contentOffset; //its clear save the result
 
     aBeginFrameContent = PR_TRUE;
+    nsRect thisRect(nsPoint(0, 0), GetSize());
     if (thisRect.Contains(aPoint))
       aContentOffsetEnd = aContentOffset +1;
     else 
@@ -3336,12 +3294,16 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
           rect = resultFrame->GetRect();
           if (!rect.width || !rect.height)
             result = NS_ERROR_FAILURE;
-          else
-            result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
+          else {
+            nsIView* view;
+            nsPoint offset;
+            resultFrame->GetOffsetFromView(offset, &view);
+            result = resultFrame->GetContentAndOffsetsFromPoint(context,point - offset,
                                           getter_AddRefs(aPos->mResultContent),
                                           aPos->mContentOffset,
                                           aPos->mContentOffsetEnd,
                                           aPos->mPreferLeft);
+          }
           if (NS_SUCCEEDED(result))
           {
             PRBool selectable;
@@ -3381,7 +3343,10 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         point.x = aPos->mDesiredX;
         point.y = 0;
 
-        result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
+        nsIView* view;
+        nsPoint offset;
+        resultFrame->GetOffsetFromView(offset, &view);
+        result = resultFrame->GetContentAndOffsetsFromPoint(context,point - offset,
                                           getter_AddRefs(aPos->mResultContent), aPos->mContentOffset,
                                           aPos->mContentOffsetEnd, aPos->mPreferLeft);
         if (NS_SUCCEEDED(result))
@@ -3679,7 +3644,6 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineFrameCount,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
@@ -3726,7 +3690,10 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsPresContext *context = aPos->mShell->GetPresContext();
       if (!context)
         return NS_OK;
-      result = GetContentAndOffsetsFromPoint(context,point,
+      nsIView* view;
+      nsPoint offset;
+      GetOffsetFromView(offset, &view);
+      result = GetContentAndOffsetsFromPoint(context,point - offset,
                              getter_AddRefs(aPos->mResultContent),
                              aPos->mContentOffset,
                              endoffset,

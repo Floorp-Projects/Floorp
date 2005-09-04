@@ -1406,25 +1406,6 @@ nsGfxScrollFrameInner::NeedsClipWidget() const
   return PR_TRUE;
 }
 
-nsresult
-nsGfxScrollFrameInner::GetChildContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                                          const nsPoint&  aPoint,
-                                                          nsIContent **   aNewContent,
-                                                          PRInt32&        aContentOffset,
-                                                          PRInt32&        aContentOffsetEnd,
-                                                          PRBool&         aBeginFrameContent)
-{
-  // We need to overrride this to ensure that scrollbars are ignored
-
-  // Since we definitely have a view, aPoint is relative to this frame's view. We
-  // need to make it relative to the scrolled frame.
-  nsPoint point = aPoint - mScrollableView->View()->GetOffsetTo(mOuter->GetView());
-
-  return mScrolledFrame->GetContentAndOffsetsFromPoint(aCX, point, aNewContent,
-                                                       aContentOffset, aContentOffsetEnd, 
-                                                       aBeginFrameContent);
-}
-
 void
 nsGfxScrollFrameInner::CreateScrollableView()
 {

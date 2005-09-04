@@ -751,6 +751,9 @@ public:
                                  nsEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
+  /**
+  * Find the content offset from a point.  aPoint is in frame coordinates.
+   */
   NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
