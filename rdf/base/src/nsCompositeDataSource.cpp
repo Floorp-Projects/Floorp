@@ -1264,7 +1264,7 @@ CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* aSource,
 NS_IMETHODIMP
 CompositeDataSourceImpl::GetAllResources(nsISimpleEnumerator** aResult)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTYETIMPLEMENTED("CompositeDataSourceImpl::GetAllResources");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
