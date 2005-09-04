@@ -118,6 +118,9 @@ if ($action eq 'search') {
             } elsif ($matchtype eq 'notregexp') {
                 $query .= $dbh->sql_not_regexp($expr, '?');
                 $matchstr = '.' unless $matchstr;
+            } elsif ($matchtype eq 'exact') {
+                $query .= $expr . ' = ?';
+                $matchstr = '.' unless $matchstr;
             } else { # substr or unknown
                 $query .= $expr . ' like ?';
                 $matchstr = "%$matchstr%";
@@ -142,10 +145,17 @@ if ($action eq 'search') {
         $vars->{'users'} = $dbh->selectall_arrayref($query,
                                                     {'Slice' => {}},
                                                     @bindValues);
+
     }
 
-    $template->process('admin/users/list.html.tmpl', $vars)
-       || ThrowTemplateError($template->error());
+    if ($matchtype eq 'exact' && scalar(@{$vars->{'users'}}) == 1) {
+        $otherUserID = $vars->{'users'}[0]->{'userid'};
+        $otherUser = new Bugzilla::User($otherUserID);
+        edit_processing();
+    } else {
+        $template->process('admin/users/list.html.tmpl', $vars)
+            || ThrowTemplateError($template->error());
+    }
 
 ###########################################################################
 } elsif ($action eq 'add') {
@@ -198,18 +208,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'edit') {
-    $otherUser 
-        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
 
-    $user->can_see_user($otherUser)
-        || ThrowUserError('auth_failure', {reason => "not_visible",
-                                           action => "modify",
-                                           object => "user"});
-
-    userDataToVars($otherUserID);
-
-    $template->process('admin/users/edit.html.tmpl', $vars)
-       || ThrowTemplateError($template->error());
+    edit_processing();
 
 ###########################################################################
 } elsif ($action eq 'update') {
@@ -777,4 +777,21 @@ sub userDataToVars {
         # Merge indirect bless permissions into permission variable.
         $vars->{'permissions'}{${$_}[0]}{'indirectbless'} = 1;
     }
+}
+
+sub edit_processing
+{
+    $otherUser 
+        || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
+
+    $user->can_see_user($otherUser)
+        || ThrowUserError('auth_failure', {reason => "not_visible",
+                                           action => "modify",
+                                           object => "user"});
+
+    userDataToVars($otherUserID);
+
+    $template->process('admin/users/edit.html.tmpl', $vars)
+       || ThrowTemplateError($template->error());
+
 }
