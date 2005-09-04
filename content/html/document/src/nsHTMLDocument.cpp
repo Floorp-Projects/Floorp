@@ -2958,7 +2958,8 @@ nsresult
 nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
                                      nsIContent *aContent)
 {
-  NS_ASSERTION(!IsXHTML(), "Don't call me on an XHTML document!!!");
+  NS_ASSERTION(!IsXHTML(), 
+  "nsHTMLDocument::UpdateNameTableEntry Don't call me on an XHTML document!!!");
 
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
@@ -3023,7 +3024,8 @@ nsresult
 nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
                                     nsIContent *aContent)
 {
-  NS_ASSERTION(!IsXHTML(), "Don't call me on an XHTML document!!!");
+  NS_ASSERTION(!IsXHTML(), 
+  "nsHTMLDocument::RemoveFromNameTable Don't call me on an XHTML document!!!");
 
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
