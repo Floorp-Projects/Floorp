@@ -284,7 +284,9 @@
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
+#ifndef XP_MACOSX
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
+#endif
     <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
     <key key="&reloadCmd.commandkey;" command="Browser:ReloadSkipCache" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
