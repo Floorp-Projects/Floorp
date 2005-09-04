@@ -2779,9 +2779,11 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     // Handle Like List
     CaptureMouseEvents(GetPresContext(), PR_TRUE);
     mChangesSinceDragStart = HandleListSelection(aMouseEvent, selectedIndex);
+#ifdef ACCESSIBILITY
     if (mChangesSinceDragStart) {
-      UpdateSelection(); // dispatch event, update combobox, etc.
+      FireMenuItemActiveEvent();
     }
+#endif
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
