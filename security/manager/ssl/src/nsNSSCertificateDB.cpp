@@ -941,12 +941,18 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
                                   PRUint32 trustType,
                                   PRBool *_isTrusted)
 {
+  NS_ENSURE_ARG_POINTER(_isTrusted);
+  *_isTrusted = PR_FALSE;
+
   nsNSSShutDownPreventionLock locker;
   SECStatus srv;
   nsNSSCertificate *pipCert = NS_STATIC_CAST(nsNSSCertificate *, cert);
   CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert, &nsstrust);
+  if (srv != SECSuccess)
+    return NS_ERROR_FAILURE;
+
   nsNSSCertTrust trust(&nsstrust);
   CERT_DestroyCertificate(nsscert);
   if (certType == nsIX509Cert::CA_CERT) {
