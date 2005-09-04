@@ -227,7 +227,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         }
     }
     
-    NS_ASSERTION(*aFile, "nsDirectoryService - Could not determine CurrentProcessDir.\n");  
+    NS_ASSERTION(*aFile, "nsDirectoryService - Could not determine CurrentProcessDir.\n");
     if (*aFile)
         return NS_OK;
 
@@ -235,8 +235,8 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
     // In the absence of a good way to get the executable directory let
     // us try this for unix:
-    //	- if MOZILLA_FIVE_HOME is defined, that is it
-    //	- else give the current directory
+    //    - if MOZILLA_FIVE_HOME is defined, that is it
+    //    - else give the current directory
     char buf[MAXPATHLEN];
 
     // The MOZ_DEFAULT_MOZILLA_FIVE_HOME variable can be set at configure time with
@@ -512,14 +512,15 @@ static const nsStaticAtom directory_atoms[] = {
 NS_IMETHODIMP
 nsDirectoryService::Init()
 {
-    NS_NOTREACHED("Don't call me, I was for internal use only!");
+    NS_NOTREACHED("nsDirectoryService::Init() for internal use only!");
     return NS_OK;
 }
 
 nsresult
 nsDirectoryService::RealInit()
 {
-    NS_ASSERTION(!gService, "Mustn't initialize twice!");
+    NS_ASSERTION(!gService, 
+                 "nsDirectoryService::RealInit Mustn't initialize twice!");
 
     nsresult rv;
 
@@ -650,7 +651,8 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     {
         nsCOMPtr<nsIFile> cloneFile;
         nsCOMPtr<nsIFile> cachedFile = do_QueryInterface(value);
-        NS_ASSERTION(cachedFile, "nsIFile expected");
+        NS_ASSERTION(cachedFile, 
+                     "nsDirectoryService::Get nsIFile expected");
 
         cachedFile->Clone(getter_AddRefs(cloneFile));
         return cloneFile->QueryInterface(uuid, result);
@@ -796,15 +798,15 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider *prov)
 NS_IMETHODIMP
 nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {
-	nsCOMPtr<nsILocalFile> localFile;
-	nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult rv = NS_ERROR_FAILURE;
 
-	*_retval = nsnull;
-	*persistent = PR_TRUE;
+    *_retval = nsnull;
+    *persistent = PR_TRUE;
 
     nsIAtom* inAtom = NS_NewAtom(prop);
 
-	// check to see if it is one of our defaults
+    // check to see if it is one of our defaults
         
     if (inAtom == nsDirectoryService::sCurrentProcess || 
         inAtom == nsDirectoryService::sOS_CurrentProcessDirectory )
@@ -849,7 +851,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (localFile)
-		    localFile->AppendNative(COMPONENT_DIRECTORY);           
+            localFile->AppendNative(COMPONENT_DIRECTORY);           
     }
     else if (inAtom == nsDirectoryService::sOS_DriveDirectory)
     {
@@ -950,7 +952,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
                         {
                             ICAttr attrs;
                             ICFileSpec icFileSpec;
-            	            long size = kICFileSpecHeaderSize;
+                            long size = kICFileSpecHeaderSize;
                             err = ::ICGetPref(icInstance, kICDownloadFolder, &attrs, &icFileSpec, &size);
                             if (err == noErr || (err == icTruncatedErr && size >= kICFileSpecHeaderSize))
                             {
@@ -1210,12 +1212,12 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 
     NS_RELEASE(inAtom);
 
-	if (localFile && NS_SUCCEEDED(rv))
-		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+    if (localFile && NS_SUCCEEDED(rv))
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
 #ifdef DEBUG_dougt
     printf("Failed to find directory for key: %s\n", prop);
 #endif
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
