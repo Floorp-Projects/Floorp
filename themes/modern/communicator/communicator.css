@@ -89,3 +89,13 @@
   margin-right: 2px;
 }
 
+/* :::::: autoscroll popup ::::: */
+
+#autoscroller { 
+  height: 28px;
+  width: 28px;
+  border: 0px;
+  margin: -14px;
+  padding: 0px;
+  background-image: url("chrome://communicator/skin/icons/autoscroll.gif");
+}
