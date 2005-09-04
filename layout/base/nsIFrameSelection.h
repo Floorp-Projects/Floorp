@@ -190,7 +190,7 @@ public:
   /** HandleDrag extends the selection to contain the frame closest to aPoint.
    *  @param aPresContext is the context to use when figuring out what frame contains the point.
    *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
-   *  @param aPoint is relative to aFrame's parent view.
+   *  @param aPoint is relative to aFrame
    */
   NS_IMETHOD HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint) = 0;
 

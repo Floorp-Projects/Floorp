@@ -80,13 +80,6 @@ public:
   void PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType);
   void PostOverflowEvents();
 
-  nsresult GetChildContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                              const nsPoint&  aPoint,
-                                              nsIContent **   aNewContent,
-                                              PRInt32&        aContentOffset,
-                                              PRInt32&        aContentOffsetEnd,
-                                              PRBool&         aBeginFrameContent);
-
   // nsIScrollPositionListener
 
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -235,17 +228,6 @@ public:
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                           const nsPoint&  aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent) {
-    return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
-                                                     aContentOffsetEnd, aBeginFrameContent);
-  }
-
   virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
     return mInner.GetParentViewForChildFrame(aFrame);
   }
@@ -380,17 +362,6 @@ public:
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-
-
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                           const nsPoint&  aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent) {
-    return mInner.GetChildContentAndOffsetsFromPoint(aCX, aPoint, aNewContent, aContentOffset,
-                                                     aContentOffsetEnd, aBeginFrameContent);
-  }
 
   virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const {
     return mInner.GetParentViewForChildFrame(aFrame);

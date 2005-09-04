@@ -326,7 +326,7 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
     nsCOMPtr<nsIContent> parent;
     PRInt32 offset, endOffset;
     PRBool beginOfContent;
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(mEvent,
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent,
                                                                   targetFrame);
     if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
                                               pt,
@@ -357,7 +357,7 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
     nsIContent* parent = nsnull;
     PRInt32 endOffset;
     PRBool beginOfContent;
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesForNearestView(mEvent,
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent,
                                                                   targetFrame);
     if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
                                               pt,

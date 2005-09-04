@@ -6588,11 +6588,15 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       if (NS_FAILED(result = GetClosestLine(it, pt, closestLine)))
         return result;
 
+      // XXX mDesiredX needs to be in GetOffsetFromView coords
+      nsPoint offset;
+      nsIView* view;
+      mainframe->GetOffsetFromView(offset, &view);
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
       pos.mShell = shell;
       pos.mDirection = eDirNext;
-      pos.mDesiredX = pt.x;
+      pos.mDesiredX = pt.x + offset.x;
       pos.mScrollViewStop = PR_FALSE;
       pos.mIsKeyboardSelect = PR_FALSE;
       result = nsFrame::GetNextPrevLineFromeBlockFrame(aPresContext,
