@@ -50,7 +50,6 @@
 #include "nsICharsetAlias.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
-#include "COtherDTD.h"
 #include "prenv.h" 
 #include "nsParserCIID.h"
 #include "nsReadableUtils.h"

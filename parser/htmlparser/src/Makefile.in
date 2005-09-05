@@ -82,7 +82,6 @@ CPPSRCS = \
 		nsElementTable.cpp  \
 		nsExpatDriver.cpp   \
 		CNavDTD.cpp         \
-		COtherDTD.cpp       \
 		nsHTMLEntities.cpp  \
 		nsHTMLTags.cpp      \
 		nsHTMLTokens.cpp    \

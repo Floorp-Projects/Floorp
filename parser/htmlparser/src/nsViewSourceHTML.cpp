@@ -84,7 +84,6 @@
 
 #include "nsIServiceManager.h"
 
-#include "COtherDTD.h"
 #include "nsElementTable.h"
 
 #include "prenv.h"  //this is here for debug reasons...

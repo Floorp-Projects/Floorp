@@ -79,7 +79,8 @@ public:
   static PRBool IsMailCite(nsIDOMNode *aNode);
   static PRBool IsFormWidget(nsIDOMNode *aNode);
   static PRBool SupportsAlignAttr(nsIDOMNode *aNode);
-
+  static PRBool CanContain(PRInt32 aParent, PRInt32 aChild);
+  static PRBool IsContainer(PRInt32 aTag);
 };
 
 #endif /* nsHTMLEditUtils_h__ */

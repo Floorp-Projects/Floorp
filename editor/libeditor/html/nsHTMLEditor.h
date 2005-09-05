@@ -346,6 +346,9 @@ public:
   /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
   virtual PRBool TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag);
   
+  /** returns PR_TRUE if aNode is a container */
+  virtual PRBool IsContainer(nsIDOMNode *aNode);
+
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 

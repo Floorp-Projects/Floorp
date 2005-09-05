@@ -45,7 +45,6 @@
 #include "nsParserCIID.h"
 #include "nsParser.h"
 #include "CNavDTD.h"
-#include "COtherDTD.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLTokenizer.h"
 //#include "nsTextTokenizer.h"
@@ -70,7 +69,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsExpatDriver)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
-NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 
 #ifdef MOZ_VIEW_SOURCE
@@ -86,8 +84,6 @@ static const nsModuleComponentInfo gComponents[] = {
 
   { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
   { "Navigator HTML DTD", NS_CNAVDTD_CID, NULL, CNavDTDConstructor },
-  { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
-    CTransitionalDTDConstructor },
 #ifdef MOZ_VIEW_SOURCE
   { "ViewSource DTD", NS_VIEWSOURCE_DTD_CID, NULL, CViewSourceHTMLConstructor },
 #endif
