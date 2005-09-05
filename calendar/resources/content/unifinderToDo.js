@@ -411,15 +411,15 @@ var toDoTreeView =
            // return title, or "Untitled" if empty/null
            return calendarToDo.title || gCalendarBundle.getString( "eventUntitled" );
          case "unifinder-todo-tree-col-startdate":
-            return( formatUnifinderToDoDateTime( calendarToDo.start ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.entryDate ) );
          case "unifinder-todo-tree-col-duedate":
-            return( formatUnifinderToDoDateTime( calendarToDo.due ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.dueDate ) );
          case "unifinder-todo-tree-col-completeddate":
             return( formatUnifinderToDoDateTime( calendarToDo.completedDate ) );
          case "unifinder-todo-tree-col-percentcomplete":
-            return( calendarToDo.percent+"%" );
+            return( calendarToDo.percentComplete+"%" );
          case "unifinder-todo-tree-col-categories":
-            return( calendarToDo.categories );
+            return( calendarToDo.getProperty("CATEGORIES") );
          case "unifinder-todo-tree-col-location":
             return( calendarToDo.getProperty("LOCATION") );
          case "unifinder-todo-tree-col-status":
@@ -449,20 +449,20 @@ function compareTasks( taskA, taskB )
          return compareString(taskA.title, taskB.title) * modifier;
    
       case "unifinder-todo-tree-col-startdate":
-         return compareDate(taskA.start, taskB.start) * modifier;
+         return compareDate(taskA.entryDate, taskB.entryDate) * modifier;
    
       case "unifinder-todo-tree-col-duedate":
-         return compareDate(taskA.due, taskB.due) * modifier;
+         return compareDate(taskA.dueDate, taskB.dueDate) * modifier;
    
       case "unifinder-todo-tree-col-completed": // checkbox if date exists
       case "unifinder-todo-tree-col-completeddate":
          return compareDate(taskA.completedDate, taskB.completedDate) * modifier;
       
       case "unifinder-todo-tree-col-percentcomplete":
-         return compareNumber(taskA.percent, taskB.percent) * modifier;
+         return compareNumber(taskA.percentComplete, taskB.percentComplete) * modifier;
    
       case "unifinder-todo-tree-col-categories":
-         return compareString(taskA.categories, taskB.categories) * modifier;
+         return compareString(taskA.getProperty("CATEGORIES"), taskB.getProperty("CATEGORIES")) * modifier;
 
       case "unifinder-todo-tree-col-location":
          return compareString(taskA.getProperty("LOCATION"), taskB.getProperty("LOCATION")) * modifier;
@@ -496,22 +496,14 @@ function compareNumber(a, b) {
   return ((a < b) ? -1 :      // avoid underflow problems of subtraction
           (a > b) ?  1 : 0); 
 }
+// Takes two calDateTimes
 function compareDate(a, b) {
-  a = dateToMilliseconds(a);
-  b = dateToMilliseconds(b);
-  return ((a < b) ? -1 :      // avoid underflow problems of subtraction
-          (a > b) ?  1 : 0); 
+  if (!a)
+    return 1;
+  if (!b)
+    return -1;
+  return (a.compare(b)); 
 }
-function dateToMilliseconds(oeICalDateTime) {
-  // Treat unset time as "time when sort started", so incomplete tasks
-  // stay current.  "Time when sort started" is computed once per sort
-  // (just before sort) so sort is stable.
-  if (oeICalDateTime && oeICalDateTime.isSet)
-    return oeICalDateTime.getTime();
-  else 
-    return treeView.sortStartedTime;
-}
-
 
 function calendarTaskView( taskArray )
 {
