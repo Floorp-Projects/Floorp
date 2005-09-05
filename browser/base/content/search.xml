@@ -113,7 +113,6 @@
         // there may not be anything to remove here
         try {
           this.controllers.removeController(this.searchbarController);
-          this.mPrefObserver.unregister();
         } catch (ex) { }
       ]]></destructor>
 
@@ -140,7 +139,6 @@
                               .getService(Components.interfaces.nsIPrefBranch2);
 
           this._initializeEngine();
-          this.mPrefObserver.register();
 
           var element;
           element = document.createElementNS(XUL_NS, "menuseparator");
@@ -184,25 +182,6 @@
       <field name="rdfService"/>
       <field name="internetSearchDS"/>
       <field name="formHistSvc"/>
-      <field name="mPrefObserver" readonly="true"><![CDATA[
-      ({
-
-        mOuter: this,
-
-        register: function() {
-          this.mOuter.prefService.addObserver("browser.search.selectedEngine", this, false);
-        },
-
-        unregister: function() {
-          this.mOuter.prefService.removeObserver("browser.search.selectedEngine", this);
-        },
-
-        observe: function(aSubject, aTopic, aData) {
-          if (aTopic == "nsPref:changed")
-            this.mOuter._initializeEngine();
-        }
-      });
-      ]]></field>
 
       <method name="openSearch">
         <body>
@@ -264,7 +243,6 @@
           // because the searchbar isn't currently destroyed when
           // removed from the toolbar
           if (!this.parentNode) {
-            this.mPrefObserver.unregister();
             return false;
           }
 
