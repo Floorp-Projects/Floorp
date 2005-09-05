@@ -52,6 +52,7 @@
 
 #include "nsUnicharUtils.h"
 #include "nsQuickSort.h"
+#include "nsFontConfigUtils.h"
 
 #include <fontconfig/fontconfig.h>
 #include <gdk/gdk.h>
@@ -79,25 +80,6 @@ static int                         gNumInstances;
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 
-struct MozPangoLangGroup {
-    const char *mozLangGroup;
-    const char *PangoLang;
-};
-
-static const MozPangoLangGroup MozPangoLangGroups[] = {
-    { "x-western",      "en" },
-    { "x-central-euro", "pl" },
-    { "x-cyrillic",     "ru" },
-    { "x-baltic",       "lv" },
-    { "x-devanagari",   "hi" },
-    { "x-tamil",        "ta" },
-    { "x-unicode",      0    },
-    { "x-user-def",     0    },
-};
-
-#define NUM_PANGO_LANG_GROUPS (sizeof (MozPangoLangGroups) / \
-                               sizeof (MozPangoLangGroups[0]))
-
 #ifdef DEBUG
 #define DUMP_PRUNICHAR(ustr, ulen) for (PRUint32 llen=0;llen<ulen;llen++) \
                                       printf("0x%x ", ustr[llen]); \
@@ -114,11 +96,7 @@ static const MozPangoLangGroup MozPangoLangGroups[] = {
 
 // Static function decls
 
-static PRBool IsASCIIFontName  (const nsString& aName);
-static int    FFRECountHyphens (nsACString &aFFREName);
-
 static PangoLanguage *GetPangoLanguage(nsIAtom *aLangGroup);
-static const MozPangoLangGroup* FindPangoLangGroup (nsACString &aLangGroup);
 
 static void   FreeGlobals    (void);
 
@@ -1159,10 +1137,8 @@ nsresult
 nsFontMetricsPango::FamilyExists(nsIDeviceContext *aDevice,
                                  const nsString &aName)
 {
-    if (!IsASCIIFontName(aName))
-        return NS_ERROR_FAILURE;
-
-    NS_ConvertUCS2toUTF8 name(aName);
+    // fontconfig family name is always in UTF-8
+    NS_ConvertUTF16toUTF8 name(aName);
 
     nsresult rv = NS_ERROR_FAILURE;
     PangoContext *context = gdk_pango_context_get();
@@ -1230,7 +1206,7 @@ nsFontMetricsPango::RealizeFont(void)
 
             // we ignore prefs that have three hypens since they are X
             // style prefs.
-            if (FFRECountHyphens(value) < 3) {
+            if (NS_FFRECountHyphens(value) < 3) {
                 nsCString tmpstr;
                 tmpstr.Append(value);
 
@@ -1288,13 +1264,12 @@ PRBool
 nsFontMetricsPango::EnumFontCallback(const nsString &aFamily,
                                      PRBool aIsGeneric, void *aData)
 {
-    // make sure it's an ascii name, if not then return and continue
-    // enumerating
-    if (!IsASCIIFontName(aFamily))
-        return PR_TRUE;
+    NS_ConvertUTF16toUTF8 name(aFamily);
 
-    nsCAutoString name;
-    name.AssignWithConversion(aFamily.get());
+    // The newest fontconfig does the full Unicode case folding so that 
+    // we're being lazy here by calling |ToLowerCase| after converting
+    // to UTF-8  assuming that in virtually all cases, we just have to
+    // fold [A-Z].  (bug 223653). 
     ToLowerCase(name);
     nsFontMetricsPango *metrics = (nsFontMetricsPango *)aData;
     metrics->mFontList.AppendCString(name);
@@ -1556,37 +1531,6 @@ nsFontMetricsPango::FixupSpaceWidths (PangoLayout *aLayout,
 }
 
 /* static */
-PRBool
-IsASCIIFontName(const nsString& aName)
-{
-    PRUint32 len = aName.Length();
-    const PRUnichar* str = aName.get();
-    for (PRUint32 i = 0; i < len; i++) {
-        /*
-         * X font names are printable ASCII, ignore others (for now)
-         */
-        if ((str[i] < 0x20) || (str[i] > 0x7E)) {
-            return PR_FALSE;
-        }
-    }
-  
-    return PR_TRUE;
-}
-
-/* static */
-int
-FFRECountHyphens (nsACString &aFFREName)
-{
-    int h = 0;
-    PRInt32 hyphen = 0;
-    while ((hyphen = aFFREName.FindChar('-', hyphen)) >= 0) {
-        ++h;
-        ++hyphen;
-    }
-    return h;
-}
-
-/* static */
 PangoLanguage *
 GetPangoLanguage(nsIAtom *aLangGroup)
 {
@@ -1596,8 +1540,8 @@ GetPangoLanguage(nsIAtom *aLangGroup)
 
     // see if the lang group needs to be translated from mozilla's
     // internal mapping into fontconfig's
-    const struct MozPangoLangGroup *langGroup;
-    langGroup = FindPangoLangGroup(cname);
+    const MozGtkLangGroup *langGroup;
+    langGroup = NS_FindFCLangGroup(cname);
 
     // if there's no lang group, just use the lang group as it was
     // passed to us
@@ -1606,24 +1550,10 @@ GetPangoLanguage(nsIAtom *aLangGroup)
     // safe.
     if (!langGroup)
         return pango_language_from_string(cname.get());
-    else if (langGroup->PangoLang) 
-        return pango_language_from_string(langGroup->PangoLang);
+    else if (langGroup->Lang) 
+        return pango_language_from_string((char *) langGroup->Lang);
 
     return pango_language_from_string("en");
-}
-
-/* static */
-const MozPangoLangGroup*
-FindPangoLangGroup (nsACString &aLangGroup)
-{
-    for (unsigned int i=0; i < NUM_PANGO_LANG_GROUPS; ++i) {
-        if (aLangGroup.Equals(MozPangoLangGroups[i].mozLangGroup,
-                              nsCaseInsensitiveCStringComparator())) {
-            return &MozPangoLangGroups[i];
-        }
-    }
-
-    return nsnull;
 }
 
 /* static */
@@ -1783,7 +1713,6 @@ EnumFontsPango(nsIAtom* aLangGroup, const char* aGeneric,
 
     for (int i=0; i < fs->nfont; ++i) {
         char *family;
-        PRUnichar *name;
 
         // if there's no family, just move to the next iteration
         if (FcPatternGetString (fs->fonts[i], FC_FAMILY, 0,
@@ -1791,17 +1720,11 @@ EnumFontsPango(nsIAtom* aLangGroup, const char* aGeneric,
             continue;
         }
 
-        name = NS_STATIC_CAST(PRUnichar *,
-                              nsMemory::Alloc ((strlen (family) + 1)
-                                               * sizeof (PRUnichar)));
+        // fontconfig always returns family names in UTF-8
+        PRUnichar* name =  UTF8ToNewUnicode(nsDependentCString(family));
 
         if (!name)
             goto end;
-
-        PRUnichar *r = name;
-        for (char *f = family; *f; ++f)
-            *r++ = *f;
-        *r = '\0';
 
         array[narray++] = name;
     }
