@@ -415,6 +415,12 @@ sub can_see_bug {
                 || (!$missinggroup)));
 }
 
+sub can_see_product {
+    my ($self, $product_name) = @_;
+
+    return scalar(grep {$_->name eq $product_name} @{$self->get_selectable_products});
+}
+
 sub get_selectable_products {
     my ($self, $by_id) = @_;
 
@@ -1431,6 +1437,11 @@ Returns 1 if the specified user account exists and is visible to the user,
 =item C<can_see_bug(bug_id)>
 
 Determines if the user can see the specified bug.
+
+=item C<can_see_product(product_name)>
+
+Returns 1 if the user can access the specified product, and 0 if the user
+should not be aware of the existence of the product.
 
 =item C<derive_regexp_groups>
 
