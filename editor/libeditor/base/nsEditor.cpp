@@ -3839,23 +3839,7 @@ nsEditor::TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild)
 PRBool 
 nsEditor::TagCanContainTag(const nsAString &aParentTag, const nsAString &aChildTag)
 {
-  // if we don't have a dtd then assume we can insert whatever want
-  if (!mDTD) return PR_TRUE;
-
-  PRInt32 childTagEnum;
-  // XXX Should this handle #cdata-section too?
-  if (aChildTag.EqualsLiteral("#text")) {
-    childTagEnum = eHTMLTag_text;
-  }
-  else {
-    childTagEnum = sParserService->HTMLStringTagToId(aChildTag);
-  }
-
-  PRInt32 parentTagEnum = sParserService->HTMLStringTagToId(aParentTag);
-  NS_ASSERTION(parentTagEnum < NS_HTML_TAG_MAX,
-               "Fix the caller, this type of node can never contain children.");
-
-  return mDTD->CanContain(parentTagEnum, childTagEnum);
+  return PR_TRUE;
 }
 
 PRBool 
@@ -3896,13 +3880,7 @@ nsEditor::IsDescendantOfBody(nsIDOMNode *inNode)
 PRBool 
 nsEditor::IsContainer(nsIDOMNode *aNode)
 {
-  if (!aNode) return PR_FALSE;
-  nsAutoString stringTag;
-  nsresult res = aNode->GetNodeName(stringTag);
-  if (NS_FAILED(res)) return PR_FALSE;
-  PRInt32 tagEnum = sParserService->HTMLStringTagToId(stringTag);
-
-  return mDTD->IsContainer(tagEnum);
+  return aNode ? PR_TRUE : PR_FALSE;
 }
 
 PRBool

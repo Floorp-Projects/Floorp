@@ -56,7 +56,6 @@
 #include "nsIComponentManager.h"
 #include "nsISupportsArray.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIDTD.h"
 #include "nsIDOMElement.h"
 #include "nsSelectionState.h"
 #include "nsIEditorSpellCheck.h"
@@ -489,7 +488,7 @@ public:
   PRBool IsDescendantOfBody(nsIDOMNode *inNode);
 
   /** returns PR_TRUE if aNode is a container */
-  PRBool IsContainer(nsIDOMNode *aNode);
+  virtual PRBool IsContainer(nsIDOMNode *aNode);
 
   /** returns PR_TRUE if aNode is an editable node */
   PRBool IsEditable(nsIDOMNode *aNode);
@@ -626,7 +625,6 @@ protected:
   // receiver when we get it off anonymous content because during document
   // teardown the anonymous content can get unhooked before we get unhooked.
   nsCOMPtr<nsIDOMEventReceiver> mDOMEventReceiver;
-  nsCOMPtr<nsIDTD> mDTD;
 
   nsString* mPhonetic;
 

@@ -96,7 +96,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsParserCIID.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
@@ -131,8 +130,6 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 #include "nsIParserService.h"
-
-static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
@@ -283,10 +280,6 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,
   {
     // block to scope nsAutoEditInitRulesTrigger
     nsAutoEditInitRulesTrigger rulesTrigger(NS_STATIC_CAST(nsPlaintextEditor*,this), rulesRes);
-
-    // Set up a DTD   
-    mDTD = do_CreateInstance(kCTransitionalDTDCID);
-    if (!mDTD) result = NS_ERROR_FAILURE;
 
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
@@ -4266,40 +4259,37 @@ nsHTMLEditor::EndOperation()
 PRBool 
 nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aChildTag)  
 {
-  // COtherDTD gives some unwanted results.  We override them here.
-  if (aParentTag.LowerCaseEqualsLiteral("ol") ||
-      aParentTag.LowerCaseEqualsLiteral("ul"))
-  {
-    // if parent is a list and tag is also a list, say "yes".
-    // This is because the editor does sublists illegally for now. 
-      if (aChildTag.LowerCaseEqualsLiteral("ol") ||
-          aChildTag.LowerCaseEqualsLiteral("ul"))
-      return PR_TRUE;
+  PRInt32 childTagEnum;
+  // XXX Should this handle #cdata-section too?
+  if (aChildTag.EqualsLiteral("#text")) {
+    childTagEnum = eHTMLTag_text;
+  }
+  else {
+    childTagEnum = sParserService->HTMLStringTagToId(aChildTag);
   }
 
-  if (aParentTag.LowerCaseEqualsLiteral("li"))
-  {
-    // list items cant contain list items
-    if (aChildTag.LowerCaseEqualsLiteral("li"))
-      return PR_FALSE;
+  PRInt32 parentTagEnum = sParserService->HTMLStringTagToId(aParentTag);
+  NS_ASSERTION(parentTagEnum < NS_HTML_TAG_MAX,
+               "Fix the caller, this type of node can never contain children.");
+
+  return nsHTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
+}
+
+PRBool 
+nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
+{
+  if (!aNode) {
+    return PR_FALSE;
   }
 
-/*  
-  // if parent is a pre, and child is not inline, say "no"
-  if ( aParentTag.EqualsLiteral("pre") )
-  {
-    if (aChildTag.EqualsLiteral("#text"))
-      return PR_TRUE;
+  nsAutoString stringTag;
 
-    PRInt32 childTagEnum = sParserService->HTMLStringTagToId(aChildTag);
-    PRInt32 parentTagEnum = sParserService->HTMLStringTagToId(aParentTag);
+  nsresult rv = aNode->GetNodeName(stringTag);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
-    if (!mDTD->IsInlineElement(childTagEnum, parentTagEnum))
-      return PR_FALSE;
-  }
-*/
-  // else fall thru
-  return nsEditor::TagCanContainTag(aParentTag, aChildTag);
+  PRInt32 tagEnum = sParserService->HTMLStringTagToId(stringTag);
+
+  return nsHTMLEditUtils::IsContainer(tagEnum);
 }
 
 
