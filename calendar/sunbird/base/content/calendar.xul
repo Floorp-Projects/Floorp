@@ -404,7 +404,7 @@
   </toolbarpalette>
   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
            iconsize="big"
-           defaultset="calendar-new-event-button,calendar-new-task-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
+           defaultset="calendar-new-event-button,calendar-new-task-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-go-to-today-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
            customizable="true" mode="full"
            toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
            context="toolbar-context-menu"/>
