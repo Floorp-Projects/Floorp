@@ -45,6 +45,11 @@
 
 #include <fontconfig/fontconfig.h>
 
+struct MozGtkLangGroup {
+    const char    *mozLangGroup;
+    const FcChar8 *Lang;
+};
+
 extern int     NS_CalculateSlant   (PRUint8  aStyle);
 extern int     NS_CalculateWeight  (PRUint16 aWeight);
 extern void    NS_AddLangGroup     (FcPattern *aPattern, nsIAtom *aLangGroup);
@@ -55,5 +60,6 @@ extern void    NS_AddGenericFontFromPref (const nsCString *aGenericFont,
                                           nsIAtom *aLangGroup,
                                           FcPattern *aPattern, 
                                           const PRLogModuleInfo *aLogModule);
+extern const   MozGtkLangGroup* NS_FindFCLangGroup (nsACString &aLangGroup);
 #endif
 

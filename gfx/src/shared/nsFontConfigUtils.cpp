@@ -39,12 +39,7 @@
 #include "nsIPrefBranch.h"
 #include "nsFontConfigUtils.h"
 
-struct MozXftLangGroup {
-    const char    *mozLangGroup;
-    const FcChar8 *XftLang;
-};
-
-const MozXftLangGroup MozXftLangGroups[] = {
+const MozGtkLangGroup MozGtkLangGroups[] = {
     { "x-western",      (const FcChar8 *)"en" },
     { "x-central-euro", (const FcChar8 *)"pl" },
     { "x-cyrillic",     (const FcChar8 *)"ru" },
@@ -64,20 +59,19 @@ const MozXftLangGroup MozXftLangGroups[] = {
     { "x-user-def",                      0    },
 };
 
-#define NUM_XFT_LANG_GROUPS (sizeof (MozXftLangGroups) / \
-                             sizeof (MozXftLangGroups[0]))
+#define NUM_GTK_LANG_GROUPS (sizeof (MozGtkLangGroups) / \
+                             sizeof (MozGtkLangGroups[0]))
 
 static 
 void FFREToFamily(nsACString &aFFREName, nsACString &oFamily);
 
-static
-const MozXftLangGroup*
-FindFCLangGroup (nsACString &aLangGroup)
+const MozGtkLangGroup*
+NS_FindFCLangGroup (nsACString &aLangGroup)
 {
-    for (unsigned int i=0; i < NUM_XFT_LANG_GROUPS; ++i) {
-        if (aLangGroup.Equals(MozXftLangGroups[i].mozLangGroup,
+    for (unsigned int i=0; i < NUM_GTK_LANG_GROUPS; ++i) {
+        if (aLangGroup.Equals(MozGtkLangGroups[i].mozLangGroup,
                               nsCaseInsensitiveCStringComparator())) {
-            return &MozXftLangGroups[i];
+            return &MozGtkLangGroups[i];
         }
     }
 
@@ -162,8 +156,8 @@ NS_AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
 
     // see if the lang group needs to be translated from mozilla's
     // internal mapping into fontconfig's
-    const struct MozXftLangGroup *langGroup;
-    langGroup = FindFCLangGroup(cname);
+    const struct MozGtkLangGroup *langGroup;
+    langGroup = NS_FindFCLangGroup(cname);
 
     // if there's no lang group, just use the lang group as it was
     // passed to us
@@ -172,8 +166,8 @@ NS_AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
     // safe.
     if (!langGroup)
         FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)cname.get());
-    else if (langGroup->XftLang)
-        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)langGroup->XftLang);
+    else if (langGroup->Lang)
+        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)langGroup->Lang);
 }
 
 void
