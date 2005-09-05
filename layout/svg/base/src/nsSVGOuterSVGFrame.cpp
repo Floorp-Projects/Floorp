@@ -72,11 +72,6 @@
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGRect.h"
-
-#include "nsIStringBundle.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDialogParamBlock.h"
-#include "nsIDOMWindow.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 
@@ -331,64 +326,6 @@ nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
   RemoveAsWidthHeightObserver();
 }
 
-#ifdef MOZ_SVG_RENDERER_GDIPLUS
-// alert the user if GDI+ is not installed.
-// it is non-modal (i.e., it doesn't wait for input from the user)
-// adapted from nsMathMLChar.cpp
-static void
-AlertMissingGDIPlus()
-{
-  // only display once per session
-  static PRBool alertShown = PR_FALSE;
-  if (alertShown)
-    return;
-
-  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (!sbs)
-    return;
-
-  nsCOMPtr<nsIStringBundle> sb;
-  sbs->CreateBundle("chrome://global/locale/svg.properties", getter_AddRefs(sb));
-  if (!sb)
-    return;
-
-  nsXPIDLString title, message;
-  sb->GetStringFromName(NS_LITERAL_STRING("gdiplus_missing_dialog_title").get(), getter_Copies(title));
-  sb->GetStringFromName(NS_LITERAL_STRING("gdiplus_missing_dialog_message").get(), getter_Copies(message));
-
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  if (!wwatch)
-    return;
-
-  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
-  if (!paramBlock)
-    return;
-
-  // copied from nsICommonDialogs.idl which curiously isn't part of the build
-  // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
-  enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
-        eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
-        eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
-  enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
-        eEditField1Password=4};
-
-  paramBlock->SetInt(eNumberButtons, 1);
-  paramBlock->SetString(eIconClass, NS_LITERAL_STRING("alert-icon").get());
-  paramBlock->SetString(eDialogTitle, title.get());
-  paramBlock->SetString(eMsg, message.get());
-
-  nsCOMPtr<nsIDOMWindow> parent;
-  wwatch->GetActiveWindow(getter_AddRefs(parent));
-
-  nsCOMPtr<nsIDOMWindow> dialog;
-  wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
-                     "dependent,centerscreen,chrome,titlebar", paramBlock,
-                     getter_AddRefs(dialog));
-
-  alertShown = PR_TRUE;
-}
-#endif
-
 nsresult nsSVGOuterSVGFrame::Init()
 {
 #if (defined(MOZ_SVG_RENDERER_GDIPLUS) + \
@@ -397,8 +334,6 @@ nsresult nsSVGOuterSVGFrame::Init()
 #error "Multiple SVG renderers. Please choose one manually."
 #elif defined(MOZ_SVG_RENDERER_GDIPLUS)  
   mRenderer = do_CreateInstance(NS_SVG_RENDERER_GDIPLUS_CONTRACTID);
-  if (!mRenderer)
-    AlertMissingGDIPlus();
 #elif defined(MOZ_SVG_RENDERER_LIBART)
   mRenderer = do_CreateInstance(NS_SVG_RENDERER_LIBART_CONTRACTID);
 #elif defined(MOZ_SVG_RENDERER_CAIRO)

@@ -51,6 +51,10 @@
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 
+#ifdef MOZ_SVG
+#include "nsSVGUtils.h"
+#endif
+
 #define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"
 #define kXMLNameSpaceURI "http://www.w3.org/XML/1998/namespace"
 #define kXHTMLNameSpaceURI "http://www.w3.org/1999/xhtml"
@@ -254,7 +258,8 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
   }
 #endif
 #ifdef MOZ_SVG
-  if (aElementType == kNameSpaceID_SVG) {
+  if (aElementType == kNameSpaceID_SVG &&
+      nsSVGUtils::SVGEnabled()) {
     return NS_NewSVGElement(aResult, aNodeInfo);
   }
 #endif
