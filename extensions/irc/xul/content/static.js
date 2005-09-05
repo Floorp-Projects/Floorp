@@ -174,6 +174,7 @@ function init()
     importFromFrame("updateHeader");
     importFromFrame("setHeaderState");
     importFromFrame("changeCSS");
+    importFromFrame("updateMotifSettings");
     importFromFrame("addUsers");
     importFromFrame("updateUsers");
     importFromFrame("removeUsers");
@@ -3763,17 +3764,41 @@ function addHistory (source, obj, mergeData)
         var rowExtents = ci.extents;
         var nickColumnCount = nickColumns.length;
 
-        // Are we the same user as last time?
-        var sameNick = (nickColumnCount > 0 &&
-                        nickColumns[nickColumnCount - 1].parentNode.
-                        getAttribute("msg-user") ==
-                        thisUserCol.parentNode.getAttribute("msg-user"));
+        var lastRowSpan, sameNick, sameDest, haveSameType, needSameType;
+        var isAction, collapseActions;
+        if (nickColumnCount == 0) // No message to collapse to.
+        {
+            sameNick = sameDest = needSameType = haveSameType = false;
+            lastRowSpan = 0;
+        }
+        else // 1 or more messages, check for doubles
+        {
+            var lastRow = nickColumns[nickColumnCount - 1].parentNode;
+            // What was the span last time?
+            lastRowSpan = Number(nickColumns[0].getAttribute("rowspan"));
+            // Are we the same user as last time?
+            sameNick = (lastRow.getAttribute("msg-user") ==
+                        inobj.getAttribute("msg-user"));
+            // Do we have the same destination as last time?
+            sameDest = (lastRow.getAttribute("msg-dest") ==
+                        inobj.getAttribute("msg-dest"));
+            // Is this message the same type as the last one?
+            haveSameType = (lastRow.getAttribute("msg-type") ==
+                            inobj.getAttribute("msg-type"));
+            // Is either of the messages an action? We may not want to collapse
+            // depending on the collapseActions pref
+            isAction = ((inobj.getAttribute("msg-type") == "ACTION") || 
+                        (lastRow.getAttribute("msg-type") == "ACTION"));
+            // Do we collapse actions?
+            collapseActions = source.prefs["collapseActions"];
 
-        // What was the span last time?
-        var lastRowSpan = (nickColumnCount > 0) ?
-            Number(nickColumns[0].getAttribute("rowspan")) : 0;
+            // Does the motif collapse everything, regardless of type?
+            // NOTE: the collapseActions pref can override this for actions
+            needSameType = !("collapsemore" in source.motifSettings);
+        }
 
-        if (sameNick)
+        if (sameNick && sameDest && (haveSameType || !needSameType) &&
+            (!isAction || collapseActions))
         {
             obj = inobj;
             if (ci.nested)

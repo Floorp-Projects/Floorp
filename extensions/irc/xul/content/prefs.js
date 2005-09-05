@@ -125,6 +125,7 @@ function initPrefs()
          ["channelMaxLines",    500,      "global.maxLines"],
          ["charset",            "utf-8",  ".connect"],
          ["clientMaxLines",     200,      "global.maxLines"],
+         ["collapseActions",    true,     "appearance.misc"],
          ["collapseMsgs",       false,    "appearance.misc"],
          ["connectTries",       5,        ".connect"],
          ["copyMessages",       true,     "global"],
@@ -383,6 +384,7 @@ function getNetworkPrefManager(network)
          ["awayNick",         defer, ".ident"],
          ["bugURL",           defer, "appearance.misc"],
          ["charset",          defer, ".connect"],
+         ["collapseActions",  defer, "appearance.misc"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["connectTries",     defer, ".connect"],
          ["dcc.useServerIP",  defer, "dcc"],
@@ -468,6 +470,7 @@ function getChannelPrefManager(channel)
          ["autoRejoin",       defer, ".connect"],
          ["bugURL",           defer, "appearance.misc"],
          ["charset",          defer, ".connect"],
+         ["collapseActions",  defer, "appearance.misc"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["displayHeader",    client.prefs["channelHeader"],
                                                              "appearance.misc"],
@@ -521,6 +524,7 @@ function getUserPrefManager(user)
     var prefs =
         [
          ["charset",          defer, ".connect"],
+         ["collapseActions",  defer, "appearance.misc"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["displayHeader",    client.prefs["userHeader"], "appearance.misc"],
          ["font.family",      defer, "appearance.misc"],
