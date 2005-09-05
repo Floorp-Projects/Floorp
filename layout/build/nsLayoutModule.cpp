@@ -209,6 +209,7 @@ static void Shutdown();
 #include "nsSVGTypeCIDs.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGRect.h"
+#include "nsSVGUtils.h"
 
 #ifdef MOZ_SVG_RENDERER_LIBART
 void NS_InitSVGRendererLibartGlobals();
@@ -218,9 +219,6 @@ void NS_FreeSVGRendererLibartGlobals();
 void NS_InitSVGRendererGDIPlusGlobals();
 void NS_FreeSVGRendererGDIPlusGlobals();
 #endif
-
-// defined in nsSVGElementFactory.cpp
-extern PRBool SVGEnabled();
 #endif
 
 //-----------------------------------------------------------------------------
@@ -314,7 +312,7 @@ Initialize(nsIModule* aSelf)
 #endif
 
 #ifdef MOZ_SVG
-  if (SVGEnabled())
+  if (nsSVGUtils::SVGEnabled())
     nsContentDLF::RegisterSVG();
   nsSVGAtoms::AddRefAtoms();
 #ifdef MOZ_SVG_RENDERER_LIBART

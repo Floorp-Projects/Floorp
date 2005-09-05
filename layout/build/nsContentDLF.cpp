@@ -111,13 +111,12 @@ static const char* const gXMLTypes[] = {
 };
 
 #ifdef MOZ_SVG
-static char* gSVGTypes[] = {
+static const char* const gSVGTypes[] = {
   "image/svg+xml",
   0
 };
 
-// defined in nsSVGElementFactory.cpp
-extern PRBool SVGEnabled();
+#include "nsSVGUtils.h"
 #endif
 
 static const char* const gRDFTypes[] = {
@@ -197,7 +196,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
 
 #ifdef MOZ_SVG
-    if (SVGEnabled()) {
+    if (nsSVGUtils::SVGEnabled()) {
       for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
         if (type.Equals(gSVGTypes[typeIndex])) {
           knownType = PR_TRUE;
@@ -245,7 +244,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 
 #ifdef MOZ_SVG
-  if (SVGEnabled()) {
+  if (nsSVGUtils::SVGEnabled()) {
     // Try SVG
     typeIndex = 0;
     while(gSVGTypes[typeIndex]) {
