@@ -39,6 +39,7 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
+var gPrefs = null;
 var gURLBar = null;
 var gBrowserStatusHandlerArray=new Array();
 var gtabCounter=0;
@@ -190,14 +191,17 @@ nsBrowserStatusHandler.prototype =
 
 function MiniNavStartup()
 {
+  gPrefs = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
 
   gURLBar = document.getElementById("urlbar");
   var currentTab=getBrowser().selectedTab;
   browserInit(currentTab);
   gSelectedTab=currentTab;
-  loadURI("http://www.google.com/");
-  
 
+  var homepage = gPrefs.getCharPref("browser.startup.homepage");
+
+  loadURI(homepage);
 }
 
 /** 

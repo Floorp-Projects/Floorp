@@ -1,5 +1,7 @@
 pref("general.useragent.extra.minimo", "Minimo/0.007");
 
+pref("browser.startup.homepage",            "http://www.google.com");
+
 pref("browser.active_color",                "#EE0000");
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.blink_allowed",               true);

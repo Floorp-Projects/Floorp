@@ -8,63 +8,32 @@
   %pageInfoDTD;
 ]>
 
-<window id="main-window"
+<prefwindow id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  windowtype="Browser:page-preferences"
-  >
-<!--    onload="onLoadPageInfo()" onclose="return closeWindow(false);"
- align="stretch" class="dialog"
-  screenX="10" screenY="10"
-  width="100%" height="100%"
-  persist="screenX screenY width height sizemode"
--->
+  windowtype="Browser:page-preferences">
 
+  <script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
+  <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
+     
+  <prefpane id="GeneralPane">
+    <preferences>
+      <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="wstring"/>
+      <preference id="permissions.default.image"  name="permissions.default.image" type="int"/>
+    </preferences>
+ 
+    <groupbox>
+        <caption label="Home Page"/>
+        <textbox id="browserStartupHomepage" class="padded" flex="1" type="autocomplete" autocompletesearch="history"
+                 preference="browser.startup.homepage"/>
+    </groupbox>
+  </prefpane>
 
-<script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
-
-
-<!--
-  <keyset>
-    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="closeWindow(true);"/>
-    <key keycode="VK_ESCAPE" oncommand="closeWindow(true);"/>
-    <key id="copy" key="c" modifiers="accel" oncommand="doCopy(event);"/>
-  </keyset>
-  <keyset id="dialogKeys"/>
--->
-
-<!--
-  <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
--->
-
-
-  <tabbox id="tabbox"  >
-    <tabs id="tabs">
-      <tab id="generalTab" modifiers="" accesskey="g" label="General"/>
-            <!-- oncommand --> 
-      <!-- Others added by overlay -->
-    </tabs>
-    <tabpanels id="tabpanels" flex="1">
-
-      <!-- General page information -->
-      <vbox >
-        <grid>
-          <columns>
-            <column/>
-            <column style="width: .5em;"/>
-            <column flex="1"/>
-          </columns>
-          <rows>
-            <row>
-              <label value="Home Page"/>
-              <separator/>
-              <textbox readonly="true" crop="right" id="urltext" prefstring="browser.startup.homepage" />
-            </row>
-          </rows>
-        </grid>
-      </vbox>
-
-
-    </tabpanels>
-  </tabbox>
-
-</window>
+  <prefpane id="ConnectionsDialogPane">
+    <preferences>
+      <preference id="network.proxy.type"           name="network.proxy.type"           type="int"/>
+      <preference id="network.proxy.http"           name="network.proxy.http"           type="string"/>
+      <preference id="network.proxy.http_port"      name="network.proxy.http_port"      type="int"/>
+    </preferences>
+  </prefpane>
+   
+</prefwindow>
