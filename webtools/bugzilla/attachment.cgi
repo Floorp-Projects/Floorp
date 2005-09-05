@@ -48,6 +48,7 @@ use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Bug;
+use Bugzilla::Field;
 
 Bugzilla->login();
 
@@ -1008,7 +1009,7 @@ sub insert
   AppendComment($bugid, $userid, $comment, $isprivate, $timestamp);
 
   # Make existing attachments obsolete.
-  my $fieldid = GetFieldID('attachments.isobsolete');
+  my $fieldid = get_field_id('attachments.isobsolete');
   foreach my $obsolete_id (@obsolete_ids) {
       # If the obsolete attachment has request flags, cancel them.
       # This call must be done before updating the 'attachments' table.
@@ -1057,7 +1058,7 @@ sub insert
       # Add the changes to the bugs_activity table
       for (my $i = 0; $i < 3; $i++) {
           if ($oldvalues[$i] ne $newvalues[$i]) {
-              my $fieldid = GetFieldID($fields[$i]);
+              my $fieldid = get_field_id($fields[$i]);
               SendSQL("INSERT INTO bugs_activity " .
                       "(bug_id, who, bug_when, fieldid, removed, added) " .
                       "VALUES ($bugid, $userid, $sql_timestamp, " .
@@ -1233,7 +1234,7 @@ sub update
   my $sql_timestamp = SqlQuote($timestamp);
   if ($olddescription ne $cgi->param('description')) {
     my $quotedolddescription = SqlQuote($olddescription);
-    my $fieldid = GetFieldID('attachments.description');
+    my $fieldid = get_field_id('attachments.description');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
@@ -1241,7 +1242,7 @@ sub update
   }
   if ($oldcontenttype ne $cgi->param('contenttype')) {
     my $quotedoldcontenttype = SqlQuote($oldcontenttype);
-    my $fieldid = GetFieldID('attachments.mimetype');
+    my $fieldid = get_field_id('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
@@ -1249,28 +1250,28 @@ sub update
   }
   if ($oldfilename ne $cgi->param('filename')) {
     my $quotedoldfilename = SqlQuote($oldfilename);
-    my $fieldid = GetFieldID('attachments.filename');
+    my $fieldid = get_field_id('attachments.filename');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
                      $quotedoldfilename, $quotedfilename)");
   }
   if ($oldispatch ne $cgi->param('ispatch')) {
-    my $fieldid = GetFieldID('attachments.ispatch');
+    my $fieldid = get_field_id('attachments.ispatch');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
                      $oldispatch, " . $cgi->param('ispatch') . ")");
   }
   if ($oldisobsolete ne $cgi->param('isobsolete')) {
-    my $fieldid = GetFieldID('attachments.isobsolete');
+    my $fieldid = get_field_id('attachments.isobsolete');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
                      $oldisobsolete, " . $cgi->param('isobsolete') . ")");
   }
   if ($oldisprivate ne $cgi->param('isprivate')) {
-    my $fieldid = GetFieldID('attachments.isprivate');
+    my $fieldid = get_field_id('attachments.isprivate');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
              VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,

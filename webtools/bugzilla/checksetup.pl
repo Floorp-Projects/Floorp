@@ -1677,7 +1677,7 @@ sub AddFDef {
 }
 
 
-# Note that all of these entries are unconditional, from when GetFieldID
+# Note that all of these entries are unconditional, from when get_field_id
 # used to create an entry if it wasn't found. New fielddef columns should
 # be created with their associated schema change.
 AddFDef("bug_id", "Bug \#", 1);

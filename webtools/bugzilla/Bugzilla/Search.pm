@@ -44,6 +44,7 @@ use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Group;
 use Bugzilla::User;
+use Bugzilla::Field;
 
 use Date::Format;
 use Date::Parse;
@@ -312,7 +313,7 @@ sub init {
                     push(@l, "bugs.creation_ts <= $sql_chto") if($sql_chto);
                     $bug_creation_clause = "(" . join(' AND ', @l) . ")";
                 } else {
-                    push(@list, "\nactcheck.fieldid = " . &::GetFieldID($f));
+                    push(@list, "\nactcheck.fieldid = " . get_field_id($f));
                 }
             }
 
@@ -998,7 +999,7 @@ sub init {
                 }
                 my $cutoff = "NOW() - " .
                              $dbh->sql_interval("$quantity $unitinterval");
-                my $assigned_fieldid = &::GetFieldID('assigned_to');
+                my $assigned_fieldid = get_field_id('assigned_to');
                 push(@supptables, "LEFT JOIN longdescs AS comment_$table " .
                                   "ON comment_$table.who = bugs.assigned_to " .
                                   "AND comment_$table.bug_id = bugs.bug_id " .

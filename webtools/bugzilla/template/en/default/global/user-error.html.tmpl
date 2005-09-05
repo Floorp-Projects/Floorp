@@ -641,10 +641,6 @@
     The context [% context FILTER html %] is invalid (must be a number,
     "file" or "patch").
 
-  [% ELSIF error == "invalid_field_name" %]
-    [% title = "Invalid Field Name" %]
-    The field "[% name FILTER html %]" is invalid.
-
   [% ELSIF error == "invalid_format" %]
     [% title = "Invalid Format" %]
     The format "[% format FILTER html %]" is invalid (must be one of

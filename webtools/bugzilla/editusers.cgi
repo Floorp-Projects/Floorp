@@ -30,6 +30,7 @@ use Bugzilla::Flag;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Util;
+use Bugzilla::Field;
 
 Bugzilla->login(LOGIN_REQUIRED);
 
@@ -377,7 +378,7 @@ if ($action eq 'search') {
                    },
                  undef,
                  ($otherUserID, $userid,
-                  GetFieldID('bug_group'),
+                  get_field_id('bug_group'),
                   join(', ', @groupsRemovedFrom), join(', ', @groupsAddedTo)));
         $dbh->do('UPDATE profiles SET refreshed_when=? WHERE userid = ?',
                  undef, ('1900-01-01 00:00:00', $otherUserID));

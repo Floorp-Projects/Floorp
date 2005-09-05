@@ -72,6 +72,7 @@ use Bugzilla::Error;
 use Bugzilla::Attachment;
 use Bugzilla::BugMail;
 use Bugzilla::Constants;
+use Bugzilla::Field;
 
 # Note that this line doesn't actually import these variables for some reason,
 # so I have to use them as $::template and $::vars in the package code.
@@ -500,7 +501,7 @@ sub update_activity {
     if ($removed ne $added) {
         my $sql_removed = &::SqlQuote($removed);
         my $sql_added = &::SqlQuote($added);
-        my $field_id = &::GetFieldID('flagtypes.name');
+        my $field_id = get_field_id('flagtypes.name');
         $dbh->do("INSERT INTO bugs_activity
                   (bug_id, attach_id, who, bug_when, fieldid, removed, added)
                   VALUES ($bug_id, $attach_id, $::userid, $timestamp,

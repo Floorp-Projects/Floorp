@@ -40,6 +40,7 @@ use Bugzilla::Attachment;
 use Bugzilla::BugMail;
 use Bugzilla::Config;
 use Bugzilla::Constants;
+use Bugzilla::Field;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;
@@ -956,7 +957,7 @@ sub LogActivityEntry {
         }
         trick_taint($addstr);
         trick_taint($removestr);
-        my $fieldid = &::GetFieldID($col);
+        my $fieldid = get_field_id($col);
         $dbh->do("INSERT INTO bugs_activity
                   (bug_id, who, bug_when, fieldid, removed, added)
                   VALUES (?, ?, ?, ?, ?, ?)",
@@ -1106,7 +1107,7 @@ sub CheckIfVotedConfirmed {
     my $ret = 0;
     if ($votes >= $votestoconfirm && !$everconfirmed) {
         if ($status eq 'UNCONFIRMED') {
-            my $fieldid = &::GetFieldID("bug_status");
+            my $fieldid = get_field_id("bug_status");
             $dbh->do("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1, " .
                      "delta_ts = ? WHERE bug_id = ?",
                      undef, ($timestamp, $id));
@@ -1120,7 +1121,7 @@ sub CheckIfVotedConfirmed {
                      "WHERE bug_id = ?", undef, ($timestamp, $id));
         }
 
-        my $fieldid = &::GetFieldID("everconfirmed");
+        my $fieldid = get_field_id("everconfirmed");
         $dbh->do("INSERT INTO bugs_activity " .
                  "(bug_id, who, bug_when, fieldid, removed, added) " .
                  "VALUES (?, ?, ?, ?, ?, ?)",

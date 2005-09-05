@@ -108,14 +108,6 @@ $::SIG{PIPE} = 'IGNORE';
 #}
 #$::SIG{__DIE__} = \&die_with_dignity;
 
-sub GetFieldID {
-    my ($f) = (@_);
-    SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
-    my $fieldid = FetchOneColumn();
-    die "Unknown field id: $f" if !$fieldid;
-    return $fieldid;
-}
-
 # XXXX - this needs to go away
 sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;

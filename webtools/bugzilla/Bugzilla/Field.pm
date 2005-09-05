@@ -20,7 +20,8 @@ package Bugzilla::Field;
 use strict;
 
 use base qw(Exporter);
-@Bugzilla::Field::EXPORT = qw(check_form_field check_form_field_defined);
+@Bugzilla::Field::EXPORT = qw(check_form_field check_form_field_defined
+                              get_field_id);
 
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -52,6 +53,22 @@ sub check_form_field_defined {
     }
 }
 
+sub get_field_id {
+    my ($name) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    trick_taint($name);
+    my $id = $dbh->selectrow_array('SELECT fieldid FROM fielddefs
+                                    WHERE name = ?', undef, $name);
+
+    ThrowCodeError('invalid_field_name', {field => $name}) unless $id;
+    return $id
+}
+
+1;
+
+__END__
+
 =head1 NAME
 
 Bugzilla::Field - Useful routines for fields manipulation
@@ -63,7 +80,7 @@ Bugzilla::Field - Useful routines for fields manipulation
   # Validation Routines
   check_form_field($cgi, $fieldname, \@legal_values);
   check_form_field_defined($cgi, $fieldname);
-
+  $fieldid = get_field_id($fieldname);
 
 =head1 DESCRIPTION
 
@@ -100,5 +117,15 @@ Params:      $cgi       - a CGI object
              $fieldname - the field name to check
 
 Returns:     nothing
+
+=item C<get_field_id($fieldname)>
+
+Description: Returns the ID of the specified field name and throws
+             an error if this field does not exist.
+
+Params:      $fieldname - a field name
+
+Returns:     the corresponding field ID or an error if the field name
+             does not exist.
 
 =back
