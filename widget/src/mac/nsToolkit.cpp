@@ -43,6 +43,7 @@
 
 #include <Gestalt.h>
 #include <Appearance.h>
+#include <Movies.h>
 
 #include "nsIEventSink.h"
 
@@ -159,6 +160,8 @@ nsToolkit::nsToolkit()
 {
   if (gEventQueueHandler == nsnull)
     gEventQueueHandler = new nsMacNSPREventQueueHandler;
+    
+  ::EnterMovies();	// Required for nsSound to Work! -- fix for bug 194632
 }
 
 //-------------------------------------------------------------------------
@@ -177,6 +180,7 @@ nsToolkit::~nsToolkit()
       gEventQueueHandler = nsnull;
     }
   }
+  ::ExitMovies();	// done with Movie Toolbox -- fix for bug 194632
 }
 
 
