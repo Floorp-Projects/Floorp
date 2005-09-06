@@ -125,8 +125,8 @@ protected:
   PRBool IsEventName(nsIAtom* aName);
 
   // implementation helpers:
-  void GetScreenPosition(PRInt32 &x, PRInt32 &y);
-  
+  void GetClientPosition(PRInt32 &x, PRInt32 &y);
+
   nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
   nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
@@ -1105,22 +1105,36 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     
     nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
     if (locatableElement) {
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      locatableElement->GetScreenCTM(getter_AddRefs(ctm));
-      if (!ctm) {
-        NS_ERROR("couldn't get CTM");
-        break;
-      }
-      
+      locatableElement->GetScreenCTM(getter_AddRefs(screenCTM));
+      if (!screenCTM) break;
+
       nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
       if (viewportElement) {
-        // It is a viewport element. we need to append the viewbox xform:
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(matrix));
-        ctm->Multiply(matrix, getter_AddRefs(screenCTM));
+        // it is a viewport element
+        nsCOMPtr<nsIDOMSVGMatrix> tmp;
+        nsCOMPtr<nsIDOMSVGMatrix> res;
+
+        nsCOMPtr<nsIContent> vpElement = do_QueryInterface(viewportElement);
+        if (ownerDoc && ownerDoc->GetRootContent() == vpElement) {
+          // it is also the document element
+          // first append its currentScale and currentTranslate values
+          float cs, ctx, cty;
+          nsCOMPtr<nsIDOMSVGPoint> currentTranslate;
+          viewportElement->GetCurrentScale(&cs);
+          viewportElement->GetCurrentTranslate(getter_AddRefs(currentTranslate));
+          currentTranslate->GetX(&ctx);
+          currentTranslate->GetY(&cty);
+          NS_NewSVGMatrix(getter_AddRefs(tmp), cs, 0, 0, cs, ctx, cty);
+          screenCTM->Multiply(tmp, getter_AddRefs(res));
+          screenCTM.swap(res);
+          if (!screenCTM) break; // out of memory
+        }
+
+        // append its viewbox transform
+        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(tmp));
+        screenCTM->Multiply(tmp, getter_AddRefs(res));
+        screenCTM.swap(res);
       }
-      else
-        screenCTM = ctm;
 
       break;
     }
@@ -1146,12 +1160,11 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   if (!screenCTM) {
     // We either didn't find an SVG parent, or our parent failed in
     // giving us a CTM.
-    // In either case, we'll just assume that we are the outermost element:
-    nsCOMPtr<nsIDOMSVGMatrix> matrix;
-    NS_NewSVGMatrix(getter_AddRefs(matrix));
+    // In either case, we'll just assume that we are the outermost SVG element:
+    // we get our client offset in case we're inline in some other content
     PRInt32 x, y;
-    GetScreenPosition(x, y);
-    matrix->Translate((float)x, (float)y, getter_AddRefs(screenCTM));
+    GetClientPosition(x, y);
+    NS_NewSVGMatrix(getter_AddRefs(screenCTM), 1, 0, 0, 1, (float)x, (float)y);
   }
 
   // XXX do we have to append our viewboxToViewport  transformation?
@@ -1482,7 +1495,8 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
 
 //----------------------------------------------------------------------
 // implementation helpers
-void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
+
+void nsSVGSVGElement::GetClientPosition(PRInt32 &x, PRInt32 &y)
 {
   x = 0;
   y = 0;
@@ -1503,8 +1517,10 @@ void nsSVGSVGElement::GetScreenPosition(PRInt32 &x, PRInt32 &y)
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (frame) {
-    nsIntRect rect = frame->GetScreenRect();
-    x = rect.x;
-    y = rect.y;
+    nsPoint point;
+    nsIView *view;
+    frame->GetOriginToViewOffset(point, &view);
+    x = point.x;
+    y = point.y;
   }
 }
