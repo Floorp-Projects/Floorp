@@ -851,6 +851,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
 
       if (focusController) {
+        // Make sure the focus controller is up-to-date, since restoring
+        // focus memory may have caused focus to go elsewhere.
+
+        if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+          nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(mCurrentFocus);
+          focusController->SetFocusedElement(focusElement);
+        }
 
         PRBool isSuppressed;
         focusController->GetSuppressFocus(&isSuppressed);
@@ -862,14 +869,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           focusController->GetSuppressFocus(&isSuppressed);
         }
         focusController->SetSuppressFocusScroll(PR_FALSE);
-
-        // Make sure the focus controller is up-to-date, since restoring
-        // focus memory may have caused focus to go elsewhere.
-
-        if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
-          nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(mCurrentFocus);
-          focusController->SetFocusedElement(focusElement);
-        }
       }
     }
     break;
