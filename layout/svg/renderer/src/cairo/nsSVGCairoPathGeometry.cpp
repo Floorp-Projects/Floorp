@@ -587,11 +587,14 @@ nsSVGCairoPathGeometry::Flatten(nsSVGPathData **aData)
       break;
     case CAIRO_PATH_CLOSE_PATH:
     {
+      if (!(*aData)->count)
+        break;
+
       /* find beginning of current subpath */
-      for (PRUint32 i = (*aData)->count; i >= 0; i--)
-        if ((*aData)->type[i] = NS_SVGPATHFLATTEN_MOVE) {
-          (*aData)->AddPoint((*aData)->x[i],
-                             (*aData)->y[i],
+      for (PRUint32 k = (*aData)->count - 1; k >= 0; k--)
+        if ((*aData)->type[k] == NS_SVGPATHFLATTEN_MOVE) {
+          (*aData)->AddPoint((*aData)->x[k],
+                             (*aData)->y[k],
                              NS_SVGPATHFLATTEN_LINE);
           break;
         }

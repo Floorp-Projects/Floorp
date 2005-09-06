@@ -648,8 +648,8 @@ nsSVGGDIPlusPathGeometry::Flatten(nsSVGPathData **aData)
 
   *aData = new nsSVGPathData;
 
-  for (PRInt32 i = 0; i< pdata.Count; i++) {
-    switch (pdata.Types[i]) {
+  for (PRInt32 i = 0; i < pdata.Count; i++) {
+    switch (pdata.Types[i] & PathPointTypePathTypeMask) {
     case PathPointTypeStart:
       (*aData)->AddPoint(pdata.Points[i].X,
                          pdata.Points[i].Y,
@@ -660,20 +660,21 @@ nsSVGGDIPlusPathGeometry::Flatten(nsSVGPathData **aData)
                          pdata.Points[i].Y,
                          NS_SVGPATHFLATTEN_LINE);
       break;
-    case PathPointTypeCloseSubpath:
-    {
-      /* find beginning of current subpath */
-      for (PRUint32 i = (*aData)->count; i >= 0; i--)
-        if ((*aData)->type[i] = NS_SVGPATHFLATTEN_MOVE) {
-          (*aData)->AddPoint((*aData)->x[i],
-                             (*aData)->y[i],
-                             NS_SVGPATHFLATTEN_LINE);
-          break;
-        }
-    }
     default:
       /* should never happen with a flattened path */
       break;
+    }
+    
+    if ((pdata.Types[i] & PathPointTypeCloseSubpath) &&
+        (*aData)->count) {
+      /* find beginning of current subpath */
+      for (PRUint32 k = (*aData)->count - 1; k >= 0; k--)
+        if ((*aData)->type[k] == NS_SVGPATHFLATTEN_MOVE) {
+          (*aData)->AddPoint((*aData)->x[k],
+                             (*aData)->y[k],
+                             NS_SVGPATHFLATTEN_LINE);
+          break;
+        }
     }
   }
 
