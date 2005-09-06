@@ -63,7 +63,6 @@ REQUIRES	= \
 		  $(NULL)
 
 CPPSRCS   = nsSSRSupport.cpp
-XPIDLSRCS = nsISSRSupport.idl
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
