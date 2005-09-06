@@ -166,7 +166,7 @@ public:
                    PRUint32             aFlags = 0);
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
-  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD VerifyTree() const;

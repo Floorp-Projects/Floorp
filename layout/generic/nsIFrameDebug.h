@@ -55,7 +55,7 @@ class nsIFrameDebug : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
   
-  NS_IMETHOD  List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
   /**
    * lists the frames beginning from the root frame
    * - calls root frame's List(...)

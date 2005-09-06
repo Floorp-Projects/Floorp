@@ -355,7 +355,7 @@ nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
 
 #ifdef DEBUG
 NS_METHOD
-nsBlockFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -420,7 +420,7 @@ nsBlockFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
          line != line_end;
          ++line)
     {
-      line->List(aPresContext, out, aIndent);
+      line->List(out, aIndent);
     }
   }
 
@@ -444,7 +444,7 @@ nsBlockFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
         nsIFrameDebug*  frameDebug;
 
         if (NS_SUCCEEDED(CallQueryInterface(kid, &frameDebug))) {
-          frameDebug->List(aPresContext, out, aIndent + 1);
+          frameDebug->List(out, aIndent + 1);
         }
         kid = kid->GetNextSibling();
       }
@@ -4269,7 +4269,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     }
     printf("\n");
     if (gReallyNoisyReflow) {
-      aLine->List(aState.mPresContext, stdout, gNoiseIndent+1);
+      aLine->List(stdout, gNoiseIndent+1);
     }
   }
 #endif
@@ -4289,7 +4289,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     aLine->SetChildCount(aLine->GetChildCount() - pushCount);
 #ifdef DEBUG
     if (gReallyNoisyReflow) {
-      newLine->List(aState.mPresContext, stdout, gNoiseIndent+1);
+      newLine->List(stdout, gNoiseIndent+1);
     }
 #endif
 

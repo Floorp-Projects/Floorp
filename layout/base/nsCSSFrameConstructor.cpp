@@ -8629,7 +8629,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     CallQueryInterface(parentFrame, &fdbg);
     if (fdbg) {
       printf("nsCSSFrameConstructor::ContentAppended: resulting frame model:\n");
-      fdbg->List(state.mPresContext, stdout, 0);
+      fdbg->List(stdout, 0);
     }
   }
 #endif
@@ -8968,7 +8968,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
         CallQueryInterface(docElementFrame, &fdbg);
         if (fdbg) {
           printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
-          fdbg->List(state.mPresContext, stdout, 0);
+          fdbg->List(stdout, 0);
         }
       }
 #endif
@@ -9299,7 +9299,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     CallQueryInterface(parentFrame, &fdbg);
     if (fdbg) {
       printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
-      fdbg->List(state.mPresContext, stdout, 0);
+      fdbg->List(stdout, 0);
     }
   }
 #endif
@@ -9670,7 +9670,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
         nsIFrameDebug* fdbg = nsnull;
         CallQueryInterface(parentFrame, &fdbg);
         if (fdbg)
-          fdbg->List(presContext, stdout, 0);
+          fdbg->List(stdout, 0);
       }
       else
         printf("  ==> no parent frame\n");
@@ -9806,7 +9806,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
         CallQueryInterface(parentFrame, &fdbg);
         if (fdbg) {
           printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
-          fdbg->List(presContext, stdout, 0);
+          fdbg->List(stdout, 0);
         }
       }
 #endif
@@ -13014,16 +13014,16 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     printf("nsCSSFrameConstructor::ConstructInline:\n");
     if (NS_SUCCEEDED(CallQueryInterface(aNewFrame, &frameDebug))) {
       printf("  ==> leading inline frame:\n");
-      frameDebug->List(aState.mPresContext, stdout, 2);
+      frameDebug->List(stdout, 2);
     }
     if (NS_SUCCEEDED(CallQueryInterface(blockFrame, &frameDebug))) {
       printf("  ==> block frame:\n");
-      frameDebug->List(aState.mPresContext, stdout, 2);
+      frameDebug->List(stdout, 2);
     }
     if (inlineFrame &&
         NS_SUCCEEDED(CallQueryInterface(inlineFrame, &frameDebug))) {
       printf("  ==> trailing inline frame:\n");
-      frameDebug->List(aState.mPresContext, stdout, 2);
+      frameDebug->List(stdout, 2);
     }
   }
 #endif

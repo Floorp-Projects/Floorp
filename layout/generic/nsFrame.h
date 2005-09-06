@@ -237,7 +237,7 @@ public:
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
 #ifdef NS_DEBUG
-  NS_IMETHOD  List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);

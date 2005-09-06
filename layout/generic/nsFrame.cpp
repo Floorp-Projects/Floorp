@@ -257,7 +257,7 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
       nsresult rv;
       rv = frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&debugFrame);
       if(NS_SUCCEEDED(rv))
-        debugFrame->List(aPresContext, out, aIndent);
+        debugFrame->List(out, aIndent);
     }
   }
 }
@@ -2671,7 +2671,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 void
 DebugListFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
-  ((nsFrame*) aFrame)->List(aPresContext, stdout, 0);
+  ((nsFrame*) aFrame)->List(stdout, 0);
   printf("\n");
 }
 
@@ -2684,7 +2684,7 @@ DebugListFrameTree(nsPresContext* aPresContext, nsIFrame* aFrame)
   nsIFrameDebug* fdbg;
   aFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
   if (fdbg)
-    fdbg->List(aPresContext, stdout, 0);
+    fdbg->List(stdout, 0);
 }
 
 #endif
@@ -2692,7 +2692,7 @@ DebugListFrameTree(nsPresContext* aPresContext, nsIFrame* aFrame)
 
 // Debugging
 NS_IMETHODIMP
-nsFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsFrame::List(FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

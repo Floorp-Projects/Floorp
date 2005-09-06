@@ -1221,7 +1221,7 @@ nsContainerFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsContainerFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -1284,7 +1284,7 @@ nsContainerFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) 
         // Have the child frame list
         nsIFrameDebug*  frameDebug;
         if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-          frameDebug->List(aPresContext, out, aIndent + 1);
+          frameDebug->List(out, aIndent + 1);
         }
         kid = kid->GetNextSibling();
       }
