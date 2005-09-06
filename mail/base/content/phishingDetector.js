@@ -92,6 +92,9 @@ function isPhishingURL(aLinkNode, aSilentMode)
 
   var phishingType = kPhishingNotSuspicious;
   var href = aLinkNode.href;
+  if(!href) 
+    return false;
+  
   var linkTextURL = {};
   var unobscuredHostName = {};
   var isPhishingURL = false;
