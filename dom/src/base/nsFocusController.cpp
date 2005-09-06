@@ -360,8 +360,7 @@ nsFocusController::Focus(nsIDOMEvent* aEvent)
         else
           mPreviousElement = nsnull;
 
-        if (!mCurrentElement && mCurrentWindow != mPreviousWindow) {
-          mNeedUpdateCommands = PR_TRUE;
+        if (!mCurrentElement) {
           UpdateCommands();
         }
       }
@@ -518,6 +517,8 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
   // because nsPresShell::UnsuppressPainting may have just now unsuppressed
   // focus on the currently focused window
   if (!mSuppressFocus) {
+    // Always update commands if we have a current element
+    mNeedUpdateCommands = mNeedUpdateCommands || mCurrentElement;
     UpdateCommands();
   }
   
