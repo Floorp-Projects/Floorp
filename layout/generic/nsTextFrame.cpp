@@ -5921,7 +5921,20 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
   mContentLength = textData.mOffset - startingOffset;
 
   // Compute space and letter counts for justification, if required
-  if (ts.mJustifying) {
+  // Also use this one-shot path to compute the metrics needed for MathML, if required
+  // (the flag is set only if this text happens to be inside MathML)
+  PRBool calcMathMLMetrics = PR_FALSE;
+  nsAutoTextBuffer* textBufferPtr = nsnull;
+#ifdef MOZ_MATHML
+  nsAutoTextBuffer textBuffer;
+  calcMathMLMetrics = (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags) != 0;
+  if (calcMathMLMetrics) {
+    textBufferPtr = &textBuffer;
+    // always use the Unicode path with MathML fonts in gfx, it is safer this way
+    mState |= TEXT_HAS_MULTIBYTE;
+  }
+#endif
+  if (ts.mJustifying || calcMathMLMetrics) {
     PRIntn numJustifiableCharacter;
     PRInt32 textLength;
 
@@ -5932,47 +5945,26 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     // there because of the need to repair counts when wrapped words are backed out.
     // So I do it via PrepareUnicodeText ... a little slower perhaps, but a lot saner,
     // and it localizes the counting logic to one place.
-    PrepareUnicodeText(tx, nsnull, nsnull, &textLength, PR_TRUE, &numJustifiableCharacter);
+    PrepareUnicodeText(tx, nsnull, textBufferPtr, &textLength, PR_TRUE, &numJustifiableCharacter);
     lineLayout.SetTextJustificationWeights(numJustifiableCharacter, textLength - numJustifiableCharacter);
-  }
-
 
 #ifdef MOZ_MATHML
-  // Simple minded code to also return the bounding metrics if the caller wants it...
-  // More consolidation is needed -- a better approach is to follow what is done by
-  // the other routines that are doing measurements.
-  if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags) {
-    rv = NS_ERROR_UNEXPECTED; // initialize with an error; it is reset if things turn out well
-    aMetrics.mBoundingMetrics.Clear();
-    // Get the text to measure. 
-    nsCOMPtr<nsIDOMText> domText(do_QueryInterface(mContent));
-    if (domText.get()) {
-      nsAutoString aData;
-      domText->GetData(aData);
-
-      // Extract the piece of text relevant to us -- XXX whitespace cause a mess here  
-      nsAutoString aText;
-      aData.Mid(aText, mContentOffset, mContentLength);
-
-      // Set the font
+    if (calcMathMLMetrics) {
       SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-
-      // Now get the exact bounding metrics of the text
       nsBoundingMetrics bm;
-      rv = aReflowState.rendContext->GetBoundingMetrics(aText.get(), PRUint32(mContentLength), bm);
-      if (NS_SUCCEEDED(rv)) aMetrics.mBoundingMetrics = bm;
+      rv = aReflowState.rendContext->GetBoundingMetrics(textBuffer.mBuffer, textLength, bm);
+      if (NS_SUCCEEDED(rv))
+        aMetrics.mBoundingMetrics = bm;
+      else {
+        // Things didn't turn out well, just return the reflow metrics.
+        aMetrics.mBoundingMetrics.ascent = aMetrics.ascent;
+        aMetrics.mBoundingMetrics.descent = aMetrics.descent;
+        aMetrics.mBoundingMetrics.width = aMetrics.width;
+        aMetrics.mBoundingMetrics.rightBearing = aMetrics.width;
+      }
     }
-    if (NS_FAILED(rv)) { 
-      // Things didn't turn out well, just return the reflow metrics.
-      aMetrics.mBoundingMetrics.ascent  = aMetrics.ascent;
-      aMetrics.mBoundingMetrics.descent = aMetrics.descent;
-      aMetrics.mBoundingMetrics.width   = aMetrics.width;
-#ifdef MOZ_MATHML_BOUNDINGMETRICS
-      printf("nsTextFrame: could not perform GetBoundingMetrics()\n");
 #endif
-    }
   }
-#endif
 
   nscoord maxFrameWidth  = mRect.width;
   nscoord maxFrameHeight = mRect.height;
