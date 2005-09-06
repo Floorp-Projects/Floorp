@@ -43,10 +43,14 @@
 
 typedef nsSVGDefsFrame nsSVGGFrameBase;
 
+class nsISVGFilterFrame;
+
 class nsSVGGFrame : public nsSVGGFrameBase
 {
 public:
-  nsSVGGFrame() : mPropagateTransform(PR_TRUE) {}
+  nsSVGGFrame() : mFilter(nsnull), mPropagateTransform(PR_TRUE) {}
+  virtual ~nsSVGGFrame();
+
 
   /**
    * Get the "type" of the frame
@@ -67,14 +71,33 @@ protected:
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
+    *_retval = mFilterRegion;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+  }
 
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
+
+  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
+  nsISVGFilterFrame *mFilter;
 
   PRBool mPropagateTransform;
 };

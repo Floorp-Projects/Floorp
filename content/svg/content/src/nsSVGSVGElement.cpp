@@ -981,10 +981,10 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
     frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
     if (svgframe) {
       svgframe->SetMatrixPropagation(PR_FALSE);
-      svgframe->NotifyCanvasTMChanged();
+      svgframe->NotifyCanvasTMChanged(PR_TRUE);
       nsresult rv = svgframe->GetBBox(_retval);
       svgframe->SetMatrixPropagation(PR_TRUE);
-      svgframe->NotifyCanvasTMChanged();
+      svgframe->NotifyCanvasTMChanged(PR_TRUE);
       return rv;
     } else {
       // XXX: outer svg

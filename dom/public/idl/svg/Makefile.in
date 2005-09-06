@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAngle.idl \
 		nsIDOMSVGAnimatedAngle.idl \
 		nsIDOMSVGAnimatedEnum.idl \
+		nsIDOMSVGAnimatedInteger.idl \
 		nsIDOMSVGAnimatedLength.idl \
 		nsIDOMSVGAnimatedLengthList.idl \
 		nsIDOMSVGAnimatedNumber.idl \
@@ -72,6 +73,8 @@ XPIDLSRCS	= \
 		nsIDOMSVGEllipseElement.idl \
 		nsIDOMSVGEvent.idl \
 		nsIDOMSVGException.idl \
+		nsIDOMSVGFilterElement.idl \
+		nsIDOMSVGFilters.idl \
 		nsIDOMSVGFitToViewBox.idl \
 		nsIDOMSVGForeignObjectElem.idl \
 		nsIDOMSVGGElement.idl \

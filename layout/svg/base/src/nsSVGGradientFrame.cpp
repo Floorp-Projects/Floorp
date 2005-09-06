@@ -479,10 +479,10 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
     nsCOMPtr<nsIDOMSVGRect> rect;
     if (frame) {
       frame->SetMatrixPropagation(PR_FALSE);
-      frame->NotifyCanvasTMChanged();
+      frame->NotifyCanvasTMChanged(PR_TRUE);
       frame->GetBBox(getter_AddRefs(rect));
       frame->SetMatrixPropagation(PR_TRUE);
-      frame->NotifyCanvasTMChanged();
+      frame->NotifyCanvasTMChanged(PR_TRUE);
     }
     if (rect) {
       float x, y, width, height;

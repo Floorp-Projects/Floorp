@@ -55,6 +55,8 @@
 #include "imgIRequest.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsISVGValueUtils.h"
+#include "nsSVGFilterFrame.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -95,7 +97,9 @@ public:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
 
   // nsISVGGeometrySource interface:
   NS_IMETHOD GetStrokePaintType(PRUint16 *aStrokePaintType);
@@ -305,10 +309,32 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
-nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                          const nsRect& dirtyRectTwips,
+                          PRBool ignoreFilter)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
+
+  nsIURI *aURI;
+
+  /* check for filter */
+  if (!ignoreFilter) {
+    if (!mFilter) {
+      aURI = GetStyleSVGReset()->mFilter;
+      if (aURI)
+        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
+      if (mFilter)
+        NS_ADD_SVGVALUE_OBSERVER(mFilter);
+    }
+
+    if (mFilter) {
+      if (!mFilterRegion)
+        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      mFilter->FilterPaint(canvas, this);
+      return NS_OK;
+    }
+  }
 
   if (mSurfaceInvalid) {
     nsCOMPtr<imgIRequest> currentRequest;
@@ -336,7 +362,6 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
   canvas->PushClip();
 
   /* check for a clip path */
-  nsIURI *aURI;
   nsSVGClipPathFrame *clip = NULL;
   aURI = GetStyleSVGReset()->mClipPath;
   if (aURI) {

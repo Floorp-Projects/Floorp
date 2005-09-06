@@ -132,10 +132,10 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->SetMatrixPropagation(PR_FALSE);
-      svgframe->NotifyCanvasTMChanged();
+      svgframe->NotifyCanvasTMChanged(PR_TRUE);
       nsresult rv = svgframe->GetBBox(_retval);
       svgframe->SetMatrixPropagation(PR_TRUE);
-      svgframe->NotifyCanvasTMChanged();
+      svgframe->NotifyCanvasTMChanged(PR_TRUE);
       return rv;
     }
   }

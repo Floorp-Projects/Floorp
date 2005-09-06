@@ -261,6 +261,7 @@ LAYOUT_ATOM(svgCircleFrame,"SVGCircleFrame")
 LAYOUT_ATOM(svgClipPathFrame,"SVGClipPathFrame")
 LAYOUT_ATOM(svgDefsFrame,"SVGDefsFrame")
 LAYOUT_ATOM(svgEllipseFrame,"SVGEllipseFrame")
+LAYOUT_ATOM(svgFilterFrame,"SVGFilterFrame")
 #ifdef MOZ_SVG_FOREIGNOBJECT
 LAYOUT_ATOM(svgForeignObjectFrame,"SVGForeignObjectFrame")
 #endif

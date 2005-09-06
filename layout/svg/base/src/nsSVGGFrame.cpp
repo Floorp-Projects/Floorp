@@ -48,6 +48,8 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsSVGFilterFrame.h"
+#include "nsISVGValueUtils.h"
 #include <math.h>
 
 //----------------------------------------------------------------------
@@ -81,11 +83,20 @@ nsSVGGFrame::GetType() const
   return nsLayoutAtoms::svgGFrame;
 }
 
+nsSVGGFrame::~nsSVGGFrame()
+{
+  if (mFilter) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
+  }
+}
+
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter)
 {
   nsCOMPtr<nsISVGRendererSurface> surface;
 
@@ -94,6 +105,26 @@ nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips
     return NS_OK;
 
   nsIURI *aURI;
+
+  /* check for filter */
+  
+  if (!ignoreFilter) {
+    if (!mFilter) {
+      aURI = GetStyleSVGReset()->mFilter;
+      if (aURI)
+        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
+      if (mFilter)
+        NS_ADD_SVGVALUE_OBSERVER(mFilter);
+    }
+
+    if (mFilter) {
+      if (!mFilterRegion)
+        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      mFilter->FilterPaint(canvas, this);
+      return NS_OK;
+    }
+  }
+
   nsSVGClipPathFrame *clip = NULL;
   aURI = GetStyleSVGReset()->mClipPath;
   if (aURI) {
@@ -135,7 +166,7 @@ nsSVGGFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
   }
 
   if (surface) {
@@ -212,14 +243,80 @@ nsSVGGFrame::SetMatrixPropagation(PRBool aPropagate)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSVGGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
+{
+  mOverrideCTM = aCTM;
+  return NS_OK;
+}
+
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGGFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {
     nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
+    if (mOverrideCTM) {
+      retval = mOverrideCTM;
+      NS_ADDREF(retval);
+    } else {
+      NS_NewSVGMatrix(&retval);
+    }
     return retval;
   }
 
   return nsSVGDefsFrame::GetCanvasTM();
+}
+
+NS_IMETHODIMP
+nsSVGGFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType)
+{
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  // need to handle filters because we might be the topmost filtered frame and
+  // the filter region could be changing.
+  if (filter && mFilterRegion) {
+    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    if (!outerSVGFrame)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISVGRendererRegion> region;
+    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
+    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+
+    return NS_OK;
+  }
+
+  return nsSVGGFrameBase::WillModifySVGObservable(observable, aModType);
+}
+
+NS_IMETHODIMP
+nsSVGGFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType)
+{
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  if (filter) {
+    if (aModType == nsISVGValue::mod_die) {
+      mFilter = nsnull;
+      mFilterRegion = nsnull;
+    }
+
+    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    if (!outerSVGFrame)
+      return NS_ERROR_FAILURE;
+
+    if (mFilter)
+      mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      
+    nsCOMPtr<nsISVGRendererRegion> region;
+    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
+    
+    if (region)
+      outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+  }
+
+  return nsSVGGFrameBase::DidModifySVGObservable(observable, aModType);
 }

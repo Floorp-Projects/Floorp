@@ -71,6 +71,7 @@ CPPSRCS		= \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedEnumeration.cpp \
+		nsSVGAnimatedInteger.cpp \
 		nsSVGAnimatedLength.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumber.cpp \
@@ -91,6 +92,8 @@ CPPSRCS		= \
 		nsSVGEllipseElement.cpp \
 		nsSVGEnum.cpp \
 		nsSVGFeatures.cpp \
+		nsSVGFilterElement.cpp \
+		nsSVGFilters.cpp \
 		nsSVGGElement.cpp \
 		nsSVGGenericStringValue.cpp \
 		nsSVGGradientElement.cpp \
@@ -144,6 +147,7 @@ FORCE_STATIC_LIB = 1
 EXPORTS =  			\
 	nsIDOMSVGListener.h \
 	nsIDOMSVGZoomListener.h \
+	nsISVGFilter.h             \
 	nsISVGTextContentMetrics.h \
 	nsISVGValue.h              \
 	nsISVGValueObserver.h      \

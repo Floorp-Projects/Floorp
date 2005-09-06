@@ -44,6 +44,9 @@ class nsIDOMSVGRect;
 class nsFrameList;
 class nsIFrame;
 struct nsStyleSVGPaint;
+class nsISVGRendererRegion;
+class nsIDOMSVGLength;
+class nsIDOMSVGMatrix;
 
 class nsSVGUtils
 {
@@ -79,6 +82,39 @@ public:
    * Creates a bounding box by walking the children and doing union.
    */
   static nsresult GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval);
+
+  /*
+   * Figures out the worst case invalidation area for a frame, taking
+   * into account filters.  Null return if no filter in the hierarcy.
+   */
+  static void FindFilterInvalidation(nsIFrame *aFrame,
+                                     nsISVGRendererRegion **aRegion);
+
+  /* enum for specifying coordinate direction for ObjectSpace/UserSpace */
+  enum ctxDirection { X, Y, XY };
+
+  /* Computes the input length in terms of object space coordinates.
+     Input: rect - bounding box
+            length - length to be converted
+            direction - direction of length
+  */
+  static float ObjectSpace(nsIDOMSVGRect *rect,
+                           nsIDOMSVGLength *length,
+                           ctxDirection direction);
+
+  /* Computes the input length in terms of user space coordinates.
+     Input: content - object to be used for determining user space
+            length - length to be converted
+            direction - direction of length
+  */
+  static float UserSpace(nsIContent *content,
+                         nsIDOMSVGLength *length,
+                         ctxDirection direction);
+
+  /* Tranforms point by the matrix.  In/out: x,y */
+  static void
+  TransformPoint(nsIDOMSVGMatrix *matrix,
+                 float *x, float *y);
 };
 
 #endif

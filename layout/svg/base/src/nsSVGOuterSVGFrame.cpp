@@ -845,7 +845,7 @@ nsSVGOuterSVGFrame::Paint(nsPresContext* aPresContext,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, aDirtyRect);
+      SVGFrame->PaintSVG(canvas, aDirtyRect, PR_FALSE);
   }
   
   canvas->Flush();
@@ -1020,7 +1020,7 @@ nsSVGOuterSVGFrame::NotifyViewportChange()
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(); 
+      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); 
     kid = kid->GetNextSibling();
   }
   UnsuspendRedraw();

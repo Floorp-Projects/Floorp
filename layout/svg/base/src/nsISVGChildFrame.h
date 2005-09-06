@@ -47,10 +47,11 @@
 class nsISVGRendererCanvas;
 class nsPresContext;
 class nsIDOMSVGRect;
+class nsIDOMSVGMatrix;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0x13c16e09, 0x049d, 0x407c, { 0x91, 0xf2, 0xf0, 0xbc, 0xf1, 0xb3, 0xab, 0x81 } }
+{ 0xe3280ee5, 0x0980, 0x45f4, { 0xb4, 0x84, 0xc4, 0x11, 0xbc, 0x36, 0xcd, 0xda } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
@@ -60,8 +61,12 @@ public:
   // XXX Ideally we don't want to pass the dirtyRect along but extract
   // it from nsIRenderingContext where needed (only in foreign
   // objects) dirtyRectTwips is the unmodified region passed to the
-  // outer svg frame's ::Paint
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)=0;
+  // outer svg frame's ::Paint.  ignoreFilter tells the frame if it
+  // should ignore any filter attribute set, as filters need to call
+  // back to the frame to render source image(s).
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter)=0;
 
   // Check if this frame or children contain the given point,
   // specified in device pixels relative to the origin of the outer
@@ -76,14 +81,25 @@ public:
 
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion()=0;
   NS_IMETHOD InitialUpdate()=0;
-  NS_IMETHOD NotifyCanvasTMChanged()=0;
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation)=0;
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;
 
+  // Set whether we should stop multiplying matrices when building up
+  // the current transformation matrix at this frame.
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
+
+  // Set the current transformation matrix to a particular matrix.
+  // Value is only used if matrix propogation is prevented
+  // (SetMatrixPropagation()).  nsnull aCTM means identity transform.
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM)=0;
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords
+
+  // Get the filtered invalidation area for this frame.  Null return
+  // if frame is not directly filtered.
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval)=0;
 };
 
 #endif // __NS_ISVGCHILDFRAME_H__

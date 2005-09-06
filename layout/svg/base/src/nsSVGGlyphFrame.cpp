@@ -131,15 +131,22 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_OK; }
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM) { return NS_ERROR_FAILURE; }
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
   
   // nsISVGGeometrySource interface: 
   NS_DECL_NSISVGGEOMETRYSOURCE
@@ -177,7 +184,8 @@ public:
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended();
   
 protected:
-  void UpdateGeometry(PRUint32 flags, PRBool bRedraw=PR_TRUE);
+  void UpdateGeometry(PRUint32 flags, PRBool bRedraw,
+                      PRBool suppressInvalidation);
   void UpdateMetrics(PRUint32 flags);
   void UpdateFragmentTree();
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
@@ -321,7 +329,7 @@ nsSVGGlyphFrame::Update(PRUint32 aFlags)
   outerSVGFrame->SuspendRedraw();
   UpdateFragmentTree();
   UpdateMetrics(aFlags);
-  UpdateGeometry(aFlags);
+  UpdateGeometry(aFlags, PR_TRUE, PR_FALSE);
   outerSVGFrame->UnsuspendRedraw();
 
   return NS_OK;
@@ -369,7 +377,7 @@ nsSVGGlyphFrame::SetSelected(nsPresContext* aPresContext,
 
   UpdateGeometry(nsISVGGlyphGeometrySource::UPDATEMASK_HIGHLIGHT |
                  nsISVGGlyphGeometrySource::UPDATEMASK_HAS_HIGHLIGHT,
-                 PR_FALSE);  
+                 PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
@@ -444,7 +452,9 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                          const nsRect& dirtyRectTwips,
+                          PRBool ignoreFilter)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::Paint\n", this);
@@ -523,9 +533,10 @@ nsSVGGlyphFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::NotifyCanvasTMChanged()
+nsSVGGlyphFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+  UpdateGeometry(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM,
+                 PR_TRUE, suppressInvalidation);
   
   return NS_OK;
 }
@@ -1129,7 +1140,7 @@ nsSVGGlyphFrame::SetGlyphPosition(float x, float y)
   mX = x;
   mY = y;
   UpdateGeometry(nsISVGGlyphGeometrySource::UPDATEMASK_X |
-                 nsISVGGlyphGeometrySource::UPDATEMASK_Y);
+                 nsISVGGlyphGeometrySource::UPDATEMASK_Y, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP_(float)
@@ -1363,7 +1374,8 @@ nsSVGGlyphFrame::NotifyGlyphFragmentTreeUnsuspended()
 //----------------------------------------------------------------------
 //
 
-void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw)
+void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw,
+                                     PRBool suppressInvalidation)
 {
   mGeometryUpdateFlags |= flags;
   
@@ -1373,6 +1385,11 @@ void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw)
     return;
   }
   
+  if (suppressInvalidation) {
+    mGeometryUpdateFlags = 0;
+    return;
+  }
+
   PRBool suspended;
   outerSVGFrame->IsRedrawSuspended(&suspended);
   if (!suspended) {
@@ -1381,21 +1398,21 @@ void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw)
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     if (mGeometry)
       mGeometry->Update(mGeometryUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region) {
-      // if we're being used as a clippath, this will get called
-      // during the paint - don't need to invalidate (which causes
-      // us to loop busy-painting)
 
-      nsIView *view = GetClosestView();
-      if (!view) return;
-      nsIViewManager *vm = view->GetViewManager();
-      PRBool painting;
-      vm->IsPainting(painting);
+    mGeometryUpdateFlags = 0;
 
-      if (!painting)
+    if (suppressInvalidation)
+      return;
+
+    nsCOMPtr<nsISVGRendererRegion> filter_region;
+    nsSVGUtils::FindFilterInvalidation(this,
+                                       getter_AddRefs(filter_region));
+    if (filter_region) {
+      outerSVGFrame->InvalidateRegion(filter_region, bRedraw);
+    } else {
+      if (dirty_region)
         outerSVGFrame->InvalidateRegion(dirty_region, bRedraw);
     }
-    mGeometryUpdateFlags = 0;
   }  
 }
 

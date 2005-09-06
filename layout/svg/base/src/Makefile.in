@@ -71,6 +71,7 @@ CPPSRCS		= \
 		nsSVGClipPathFrame.cpp \
 		nsSVGDefsFrame.cpp \
 		nsSVGEllipseFrame.cpp \
+		nsSVGFilterFrame.cpp \
 		nsSVGGFrame.cpp \
 		nsSVGGenericContainerFrame.cpp \
 		nsSVGGlyphFrame.cpp \
@@ -102,7 +103,10 @@ include $(topsrcdir)/config/config.mk
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-EXPORTS = nsSVGUtils.h
+EXPORTS = \
+	nsSVGUtils.h \
+	nsSVGFilterInstance.h \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -222,6 +222,8 @@ nsresult
 NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
+nsresult
+NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -7309,6 +7311,9 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   }
   else if (aTag == nsSVGAtoms::textPath) {
     rv = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::filter) {
+    rv = NS_NewSVGFilterFrame(mPresShell, aContent, &newFrame);
   }
   
   if (newFrame == nsnull) {

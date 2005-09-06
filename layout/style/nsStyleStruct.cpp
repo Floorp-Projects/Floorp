@@ -834,6 +834,7 @@ nsStyleSVGReset::nsStyleSVGReset()
     mStopColor.mType         = eStyleSVGPaintType_Color;
     mStopColor.mPaint.mColor = NS_RGB(0,0,0);
     mClipPath                = nsnull;
+    mFilter                  = nsnull;
     mStopOpacity             = 1.0f;
     mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
 }
@@ -846,6 +847,7 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 {
   mStopColor = aSource.mStopColor;
   mClipPath = aSource.mClipPath;
+  mFilter = aSource.mFilter;
   mStopOpacity = aSource.mStopOpacity;
   mDominantBaseline = aSource.mDominantBaseline;
 }
@@ -854,6 +856,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   if (mStopColor             != aOther.mStopColor   ||
       !EqualURIs(mClipPath, aOther.mClipPath)       ||
+      !EqualURIs(mFilter, aOther.mFilter)           ||
       mStopOpacity           != aOther.mStopOpacity ||
       mDominantBaseline != aOther.mDominantBaseline)
     return NS_STYLE_HINT_VISUAL;
