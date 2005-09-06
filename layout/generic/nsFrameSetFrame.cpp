@@ -182,7 +182,7 @@ class nsHTMLFramesetBlankFrame : public nsLeafFrame {
 
 public:
 #ifdef DEBUG
-  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
@@ -1860,12 +1860,11 @@ nsHTMLFramesetBlankFrame::Paint(nsPresContext*      aPresContext,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(nsPresContext* aPresContext,
-                                             FILE*   out, 
+NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE*   out, 
                                              PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%p BLANK \n", this);
-  return nsLeafFrame::List(aPresContext, out, aIndent);
+  return nsLeafFrame::List(out, aIndent);
 }
 #endif

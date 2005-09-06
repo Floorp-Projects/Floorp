@@ -7426,12 +7426,12 @@ PresShell::VerifyIncrementalReflow()
 
     if (NS_SUCCEEDED(root1->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                            (void**)&frameDebug))) {
-      frameDebug->List(mPresContext, stdout, 0);
+      frameDebug->List(stdout, 0);
     }
     printf("Verification tree:\n");
     if (NS_SUCCEEDED(root2->QueryInterface(NS_GET_IID(nsIFrameDebug),
                                            (void**)&frameDebug))) {
-      frameDebug->List(mPresContext, stdout, 0);
+      frameDebug->List(stdout, 0);
     }
   }
 

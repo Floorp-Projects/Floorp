@@ -481,7 +481,7 @@ public:
   virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
-  NS_IMETHOD List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
 #endif
@@ -6445,7 +6445,7 @@ nsTextFrame::GetDebugStateBits() const
 }
 
 NS_IMETHODIMP
-nsTextFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Output the tag
   IndentBy(out, aIndent);

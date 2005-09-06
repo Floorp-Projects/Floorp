@@ -288,7 +288,7 @@ nsHTMLCanvasFrame::GetFrameName(nsAString& aResult) const
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+nsHTMLCanvasFrame::List(FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);

@@ -412,7 +412,7 @@ public:
 #ifdef DEBUG
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
-  void List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+  void List(FILE* out, PRInt32 aIndent) const;
 #endif
 
   nsIFrame* LastChild() const;

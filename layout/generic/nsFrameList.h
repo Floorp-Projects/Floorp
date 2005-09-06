@@ -164,7 +164,7 @@ public:
   void VerifyParent(nsIFrame* aParent) const;
 
 #ifdef NS_DEBUG
-  void List(nsPresContext* aPresContext, FILE* out) const;
+  void List(FILE* out) const;
 #endif
 
 private:
