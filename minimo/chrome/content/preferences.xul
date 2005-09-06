@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
 
-<!DOCTYPE window [
-  <!ENTITY % pageInfoDTD SYSTEM "chrome://minimo/locale/prefereces.dtd">
-  %pageInfoDTD;
+<!DOCTYPE prefwindow [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+%preferencesDTD;
 ]>
 
 <prefwindow id="main-window"
@@ -16,7 +16,7 @@
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
      
   <prefpane id="Privacy">
-    <button label="Sanitize All" oncommand="sanitizeAll();"/>
+    <button label="&sanitizeButton.label;" oncommand="sanitizeAll();"/>
   </prefpane>
 
   <prefpane id="ConnectionsDialogPane">
@@ -27,8 +27,8 @@
     </preferences>
 
     <groupbox>
-      <caption label="HTTP Proxy Settings"/>
-        <checkbox id="UseProxy" label="Use Proxy" preference="network.proxy.type" 
+      <caption label="&proxyCaption.label;"/>
+        <checkbox id="UseProxy" label="&useproxyCheckbox.label;" preference="network.proxy.type" 
                   onsyncfrompreference="return readProxyPref();"
                   onsynctopreference="return writeProxyPref();"/>
       <hbox>
@@ -48,19 +48,19 @@
     </preferences>
  
     <groupbox>
-        <caption label="Home Page"/>
+        <caption label="&homeCaption.label;"/>
         <textbox id="browserStartupHomepage" class="padded" flex="1" preference="browser.startup.homepage"/>
     </groupbox>
     
     <groupbox>
-        <caption label="Small Screen Settings"/>
+        <caption label="&sssCaption.label;"/>
 
-        <checkbox id="enableImages" label="Display Images" preference="permissions.default.image"
+        <checkbox id="enableImages" label="&imagesCheckbox.label;" preference="permissions.default.image"
                   onsyncfrompreference="return readEnableImagesPref();"
                   onsynctopreference="return writeEnableImagesPref();"/>
 
-        <checkbox id="ssr"     label="Use SSR" preference="ssr.enabled"/>
-        <checkbox id="sitessr" label="Use Site-Specific SSR" preference="ssr.site.enabled"/>
+        <checkbox id="ssr"     label="&useSSRCheckbox.label;" preference="ssr.enabled"/>
+        <checkbox id="sitessr" label="&usesiteSSRCheckbox.label;" preference="ssr.site.enabled"/>
 
     </groupbox>
     
