@@ -370,6 +370,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
     if (!CheckFontExistence(aPresContext, *mFontName[0])) {
+      mState = NS_TABLE_STATE_ERROR;
       return kNullGlyph;
     }
     nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
@@ -2204,11 +2205,22 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     }
   }
   else { // glue is present
+    nscoord overlap;
+    nsCOMPtr<nsIFontMetrics> fm;
+    aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+    nsMathMLFrame::GetRuleThickness(fm, overlap);
+    overlap = 2 * PR_MAX(overlap, onePixel);
+
+    // to protect against gaps, pretend the glue is smaller than 
+    // it says to allow a small overlap when adjoining it
+    bmdata[3].ascent -= overlap;
+    bmdata[3].descent -= overlap;
+
     for (i = 0; i < 2; i++) {
       PRInt32 count = 0;
       dy = offset[i];
       clipRect.SetRect(dx, end[i], width, start[i+1]-end[i]);
-      clipRect.Inflate(onePixel, onePixel);
+      clipRect.Inflate(overlap, overlap);
 #ifdef SHOW_BORDERS
       // exact area to fill
       aRenderingContext.SetColor(NS_RGB(255,0,0));
@@ -2218,16 +2230,16 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
       bm = bmdata[i];
       while (dy + bm.descent < start[i+1]) {
-        if (2 > count) {
+        if (count++ < 2) {
           stride = bm.descent;
           bm = bmdata[3]; // glue
           stride += bm.ascent;
         }
-        count++;
+        // defensive code against odd things such as a smallish TextZoom...
+        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
+        if (stride < onePixel || 1000 == count) return NS_ERROR_UNEXPECTED;
         dy += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
-        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
-        if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
       aRenderingContext.PopState();
 #ifdef SHOW_BORDERS
@@ -2379,11 +2391,22 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     }
   }
   else { // glue is present
+    nscoord overlap;
+    nsCOMPtr<nsIFontMetrics> fm;
+    aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+    nsMathMLFrame::GetRuleThickness(fm, overlap);
+    overlap = 2 * PR_MAX(overlap, onePixel);
+
+    // to protect against gaps, pretend the glue is smaller than 
+    // it says to allow a small overlap when adjoining it
+    bmdata[3].leftBearing += overlap;
+    bmdata[3].rightBearing -= overlap;
+
     for (i = 0; i < 2; i++) {
       PRInt32 count = 0;
       dx = offset[i];
       clipRect.SetRect(end[i], aRect.y, start[i+1]-end[i], aRect.height);
-      clipRect.Inflate(onePixel, onePixel);
+      clipRect.Inflate(overlap, overlap);
 #ifdef SHOW_BORDERS
       // rectangles in-between that are to be filled
       aRenderingContext.SetColor(NS_RGB(255,0,0));
@@ -2393,16 +2416,16 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
       bm = bmdata[i];
       while (dx + bm.rightBearing < start[i+1]) {
-        if (2 > count) {
+        if (count++ < 2) {
           stride = bm.rightBearing;
           bm = bmdata[3]; // glue
           stride -= bm.leftBearing;
         }
-        count++;
+        // defensive code against odd things such as a smallish TextZoom...
+        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
+        if (stride < onePixel || 1000 == count) return NS_ERROR_UNEXPECTED;
         dx += stride;
         aGlyphTable->DrawGlyph(aRenderingContext, aFont, glue, dx, dy);
-        NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
-        if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
       aRenderingContext.PopState();
 #ifdef SHOW_BORDERS
