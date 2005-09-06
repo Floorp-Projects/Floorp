@@ -134,6 +134,13 @@ nsMathMLmfracFrame::Init(nsPresContext*  aPresContext,
   return rv;
 }
 
+nsIAtom*
+nsMathMLmfracFrame::GetType() const
+{
+  // frac is "inner" in TeXBook, Appendix G, rule 15e. See also page 170.
+  return nsMathMLAtoms::innerMathMLFrame;
+}
+
 NS_IMETHODIMP
 nsMathMLmfracFrame::TransmitAutomaticData()
 {
@@ -158,9 +165,6 @@ nsMathMLmfracFrame::TransmitAutomaticData()
     // even when embellished, we need to record that <mfrac> won't fire
     // Stretch() on its embellished child
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    // break the embellished hierarchy to stop propagating the stretching
-    // process, but keep access to mEmbellishData.coreFrame for convenience
-    mEmbellishData.nextFrame = nsnull;
   }
 
   return NS_OK;

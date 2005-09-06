@@ -79,6 +79,9 @@ math[display="inline"] {
 [-moz-math-font-style="normal"] {
   font-style: normal; /* if the textual content consists of multiple characters */
 }
+[-moz-math-font-style="invariant"] {
+  font-style: normal; /* a non-stylable character preserves its own style */
+}
 /* change of size induced by changing the scriptlevel */
 [-moz-math-font-size="+1"] {
   font-size: 71%;

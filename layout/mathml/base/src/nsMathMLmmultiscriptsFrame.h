@@ -66,8 +66,6 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
 private:
-  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
-                         // = 0.5pt in plain TeX
   nscoord mSubScriptShift;
   nscoord mSupScriptShift;
 

@@ -322,9 +322,6 @@ struct nsEmbellishData {
   // bits used to mark certain properties of our embellishments 
   PRUint32 flags;
 
-  // handy pointer on our embellished child to descend the embellished hierarchy
-  nsIFrame* nextFrame;
-
   // pointer on the <mo> frame at the core of the embellished hierarchy
   nsIFrame* coreFrame;
 
@@ -340,7 +337,6 @@ struct nsEmbellishData {
 
   nsEmbellishData() {
     flags = 0;
-    nextFrame = nsnull;
     coreFrame = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     leftSpace = 0;
@@ -360,6 +356,11 @@ struct nsPresentationData {
   // bits for: displaystyle, compressed, etc
   PRUint32 flags;
 
+  // handy pointer on our base child (the 'nucleus' in TeX), but it may be
+  // null here (e.g., tags like <mrow>, <mfrac>, <mtable>, etc, won't
+  // pick a particular child in their child list to be the base)
+  nsIFrame* baseFrame;
+
   // up-pointer on the mstyle frame, if any, that defines the scope
   nsIFrame* mstyle;
 
@@ -369,6 +370,7 @@ struct nsPresentationData {
 
   nsPresentationData() {
     flags = 0;
+    baseFrame = nsnull;
     mstyle = nsnull;
     scriptLevel = 0;
   }

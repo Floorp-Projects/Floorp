@@ -89,24 +89,9 @@ static const PRUnichar kNullCh         = PRUnichar('\0');
 nsIAtom*
 nsMathMLmoFrame::GetType() const
 {
-  if (mFrames.GetLength() > 1) {
-    return nsMathMLAtoms::operatorVisibleMathMLFrame;
-  }
-
-  nsAutoString data;
-  ((nsMathMLChar&)mMathMLChar).GetData(data); // VC++ insists for this cast :-(
-  PRInt32 length = data.Length();
-  PRUnichar ch = (length == 0) ? kNullCh : data[0];
-  if (length > 1)
-    return nsMathMLAtoms::operatorVisibleMathMLFrame;
-  
-  if (ch == kInvisibleComma || 
-      ch == kApplyFunction  ||
-      ch == kInvisibleTimes ||
-      ch == kNullCh)
-    return nsMathMLAtoms::operatorInvisibleMathMLFrame;
-
-  return nsMathMLAtoms::operatorVisibleMathMLFrame;
+  return NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)
+    ? nsMathMLAtoms::operatorInvisibleMathMLFrame
+    : nsMathMLAtoms::operatorOrdinaryMathMLFrame;
 }
 
 // since a mouse click implies selection, we cannot just rely on the
@@ -161,7 +146,8 @@ nsMathMLmoFrame::Paint(nsPresContext*      aPresContext,
   PRBool useMathMLChar =
     (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
      NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
-    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
+    NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
 
   if (!useMathMLChar || NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // let the base class paint the background, border, outline
@@ -201,21 +187,12 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
 {
   mFlags = 0;
 
-  // don't bother doing anything special if we don't have a
-  // single child with a text content
-  nsAutoString data;
-  if (mFrames.GetLength() != 1) {
-    mMathMLChar.SetData(aPresContext, data); // empty data to reset the char
-    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, PR_FALSE);
-    return;
-  }
-
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
+  nsAutoString data;
   PRUint32 numKids = mContent->GetChildCount();
   for (PRUint32 kid = 0; kid < numKids; ++kid) {
     nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(mContent->GetChildAt(kid)));
-
     if (kidText) {
       nsAutoString kidData;
       kidText->GetData(kidData);
@@ -223,12 +200,29 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
     }
   }
   PRInt32 length = data.Length();
+  PRUnichar ch = (length == 0) ? kNullCh : data[0];
+
+  if ((length == 1) && 
+      (ch == kInvisibleComma || 
+       ch == kApplyFunction  || 
+       ch == kInvisibleTimes)) {
+    mFlags |= NS_MATHML_OPERATOR_INVISIBLE;
+  }
+
+  // don't bother doing anything special if we don't have a
+  // single child with a visible text content
+  if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags) || mFrames.GetLength() != 1) {
+    data.Truncate(); // empty data to reset the char
+    mMathMLChar.SetData(aPresContext, data);
+    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar, PR_FALSE);
+    return;
+  }
 
   // special... in math mode, the usual minus sign '-' looks too short, so
   // what we do here is to remap <mo>-</mo> to the official Unicode minus
   // sign (U+2212) which looks much better. For background on this, see
   // http://groups.google.com/groups?hl=en&th=66488daf1ade7635&rnum=1
-  if (1 == length && data[0] == '-') {
+  if (1 == length && ch == '-') {
     data = PRUnichar(0x2212);
     mFlags |= NS_MATHML_OPERATOR_CENTERED;
   }
@@ -259,7 +253,6 @@ nsMathMLmoFrame::ProcessTextData(nsPresContext* aPresContext)
   // see if this is an operator that should be centered to cater for 
   // fonts that are not math-aware
   if (1 == length) {
-    PRUnichar ch = data[0];
     if ((ch == '+') || (ch == '=') || (ch == '*') ||
         (ch == 0x2264) || // &le;
         (ch == 0x2265) || // &ge;
@@ -300,7 +293,8 @@ nsMathMLmoFrame::ProcessOperatorData()
   mFlags &= NS_MATHML_OPERATOR_MUTABLE |
             NS_MATHML_OPERATOR_ACCENT | 
             NS_MATHML_OPERATOR_MOVABLELIMITS |
-            NS_MATHML_OPERATOR_CENTERED;
+            NS_MATHML_OPERATOR_CENTERED |
+            NS_MATHML_OPERATOR_INVISIBLE;
 
   if (!mEmbellishData.coreFrame) {
     // i.e., we haven't been here before, the default form is infix
@@ -309,7 +303,6 @@ nsMathMLmoFrame::ProcessOperatorData()
     // reset everything so that we don't keep outdated values around
     // in case of dynamic changes
     mEmbellishData.flags = 0;
-    mEmbellishData.nextFrame = nsnull; 
     mEmbellishData.coreFrame = nsnull;
     mEmbellishData.leftSpace = 0;
     mEmbellishData.rightSpace = 0;
@@ -649,7 +642,8 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
   PRBool useMathMLChar =
     (NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
      NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) ||
-    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags) ||
+    NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags);
 
   nsBoundingMetrics charSize;
   if (useMathMLChar) {
@@ -960,6 +954,27 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
   // certain values use units that depend on our style context, so
   // it is safer to just process the whole lot here
   ProcessOperatorData();
+
+  // play safe by not passing invisible operators to the font subsystem because
+  // some platforms risk selecting strange glyphs for them and give bad inter-space
+  if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)) {
+    // return empty space for now, but this is not yet final since there
+    // can be lspace and rspace attributes that reclaim some room.
+    // These will be dealt with later in Stretch().
+    aDesiredSize.width = 0;
+    aDesiredSize.height = 0;
+    aDesiredSize.ascent = 0;
+    aDesiredSize.descent = 0;
+    if (aDesiredSize.mComputeMEW) {
+      aDesiredSize.mMaxElementWidth = 0;
+    }
+    aDesiredSize.mBoundingMetrics.Clear();
+    aStatus = NS_FRAME_COMPLETE;
+
+    NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+    return NS_OK;
+  }
+
   return nsMathMLTokenFrame::Reflow(aPresContext, aDesiredSize,
                                     aReflowState, aStatus);
 }

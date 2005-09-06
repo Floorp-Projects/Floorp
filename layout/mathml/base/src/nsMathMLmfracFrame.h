@@ -93,6 +93,8 @@ public:
   virtual nsStyleContext*
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
+  virtual nsIAtom* GetType() const;
+
   NS_IMETHOD
   AttributeChanged(nsIContent*     aChild,
                    PRInt32         aNameSpaceID,

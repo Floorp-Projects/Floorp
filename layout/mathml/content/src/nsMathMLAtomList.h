@@ -54,20 +54,22 @@
 
  ******/
 
-MATHML_ATOM(fontsize, "-moz-math-font-size") // different from fontsize_
-MATHML_ATOM(fontstyle, "-moz-math-font-style") // different from fontstyle_
-MATHML_ATOM(rowline, "-moz-math-rowline") // different from rowlines_
-MATHML_ATOM(columnline, "-moz-math-columnline") // different from columnlines_
-MATHML_ATOM(firstrow, "-moz-math-firstrow")
-MATHML_ATOM(lastrow, "-moz-math-lastrow")
-MATHML_ATOM(firstcolumn, "-moz-math-firstcolumn")
-MATHML_ATOM(lastcolumn, "-moz-math-lastcolumn")
+MATHML_ATOM(MOZfontsize, "-moz-math-font-size") // different from fontsize_
+MATHML_ATOM(MOZfontstyle, "-moz-math-font-style") // different from fontstyle_
+MATHML_ATOM(MOZrowline, "-moz-math-rowline") // different from rowlines_
+MATHML_ATOM(MOZcolumnline, "-moz-math-columnline") // different from columnlines_
+MATHML_ATOM(MOZfirstrow, "-moz-math-firstrow")
+MATHML_ATOM(MOZlastrow, "-moz-math-lastrow")
+MATHML_ATOM(MOZfirstcolumn, "-moz-math-firstcolumn")
+MATHML_ATOM(MOZlastcolumn, "-moz-math-lastcolumn")
 
-// Alphabetical list of MathML frame types
-MATHML_ATOM(operatorVisibleMathMLFrame, "OperatorVisibleMathMLFrame")
-MATHML_ATOM(operatorInvisibleMathMLFrame, "OperatorInvisibleMathMLFrame")
 MATHML_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
-MATHML_ATOM(schemataMathMLFrame, "SchemataMathMLFrame") // 'inner' in TeX
+MATHML_ATOM(operatorOrdinaryMathMLFrame, "OperatorOrdinaryMathMLFrame")
+MATHML_ATOM(operatorInvisibleMathMLFrame, "OperatorInvisibleMathMLFrame")
+MATHML_ATOM(operatorUserDefinedMathMLFrame, "OperatorUserDefinedMathMLFrame")
+MATHML_ATOM(innerMathMLFrame, "InnerMathMLFrame") // 'inner' in TeX
+MATHML_ATOM(italicIdentifierMathMLFrame, "ItalicIdentifierMathMLFrame")
+MATHML_ATOM(uprightIdentifierMathMLFrame, "UprightIdentifierMathMLFrame")
 
 
 MATHML_ATOM(abs_, "abs")

@@ -80,7 +80,19 @@ nsMathMLTokenFrame::~nsMathMLTokenFrame()
 nsIAtom*
 nsMathMLTokenFrame::GetType() const
 {
-  return nsMathMLAtoms::ordinaryMathMLFrame;
+  // treat everything other than <mi> as ordinary...
+  if (mContent->Tag() != nsMathMLAtoms::mi_) {
+    return nsMathMLAtoms::ordinaryMathMLFrame;
+  }
+
+  // for <mi>, distinguish between italic and upright...
+  nsAutoString value;
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, value);
+
+  // treat invariant the same as italic to inherit its inter-space properties
+  return value.EqualsLiteral("normal")
+    ? nsMathMLAtoms::uprightIdentifierMathMLFrame
+    : nsMathMLAtoms::italicIdentifierMathMLFrame;
 }
 
 static void
@@ -316,34 +328,23 @@ nsMathMLTokenFrame::SetTextStyle(nsPresContext* aPresContext)
     }
   }
 
-  // attributes may override the default behavior
   PRInt32 length = data.Length();
+  if (!length)
+    return;
+
+  // attributes may override the default behavior
   nsAutoString fontstyle;
-  PRBool restyle = PR_TRUE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::fontstyle_, fontstyle))
-    restyle = PR_FALSE;
-  if (1 == length) {
-    // our textual content consists of a single character
-    PRBool isStyleInvariant = nsMathMLOperators::LookupInvariantChar(data[0]);
-    if (isStyleInvariant) {
-      // bug 65951 - we always enforce the style to normal for a non-stylable char
-      // XXX also disable bold type? (makes sense to let the set IR be bold, no?)
-      fontstyle.AssignLiteral("normal");
-      restyle = PR_TRUE;
-    }
-    else {
-      fontstyle.AssignLiteral("italic");
-    }
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::fontstyle_, fontstyle);
+  if (1 == length && nsMathMLOperators::LookupInvariantChar(data[0])) {
+    // bug 65951 - a non-stylable character has its own intrinsic appearance
+    fontstyle.AssignLiteral("invariant");
   }
-  else {
-    // our textual content consists of multiple characters
-    fontstyle.AssignLiteral("normal");
+  if (fontstyle.IsEmpty()) {
+    fontstyle.AssignASCII((1 == length) ? "italic" : "normal"); 
   }
 
   // set the -moz-math-font-style attribute without notifying that we want a reflow
-  if (restyle)
-    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
+  mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontstyle, fontstyle, PR_FALSE);
 
   // then, re-resolve the style contexts in our subtree
   nsFrameManager *fm = aPresContext->FrameManager();

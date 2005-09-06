@@ -229,20 +229,20 @@ MapAttributesInto(nsPresContext* aPresContext,
     // set the special -moz-math-rowline without notifying that we want a reflow
     if (attr) {
       hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::rowline, nsDependentString(attr), PR_FALSE);
+      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZrowline, nsDependentString(attr), PR_FALSE);
     }
   }
   else {
     // set the special -moz-math-firstrow to annotate that we are on the first row
     hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstrow, trueStr, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfirstrow, trueStr, PR_FALSE);
   }
   // if we are on the last row, set the special -moz-math-lastrow
   PRInt32 rowSpan = ((nsTableFrame*)tableFrame)->GetEffectiveRowSpan(*cellFrame);
   sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex+rowSpan, colIndex);
   if (!sibling) {
     hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::lastrow, trueStr, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZlastrow, trueStr, PR_FALSE);
   }
 
   //////////////////////////////////////
@@ -274,20 +274,20 @@ MapAttributesInto(nsPresContext* aPresContext,
     // set the special -moz-math-columnline without notifying that we want a reflow
     if (attr) {
       hasChanged = PR_TRUE;
-      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::columnline, nsDependentString(attr), PR_FALSE);
+      aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZcolumnline, nsDependentString(attr), PR_FALSE);
     }
   }
   else {
     // set the special -moz-math-firstcolumn to annotate that we are on the first column
     hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::firstcolumn, trueStr, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfirstcolumn, trueStr, PR_FALSE);
   }
   // if we are on the last column, set the special -moz-math-lastcolumn
   PRInt32 colSpan = ((nsTableFrame*)tableFrame)->GetEffectiveColSpan(*cellFrame);
   sibling = ((nsTableFrame*)tableFrame)->GetCellFrameAt(rowIndex, colIndex+colSpan);
   if (!sibling) {
     hasChanged = PR_TRUE;
-    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::lastcolumn, trueStr, PR_FALSE);
+    aCellContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZlastcolumn, trueStr, PR_FALSE);
   }
 
   // now, re-resolve the style contexts in our subtree to pick up any changes

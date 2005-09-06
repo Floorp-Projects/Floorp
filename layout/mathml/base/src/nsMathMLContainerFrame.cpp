@@ -229,14 +229,16 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIRenderingContext& aRenderingC
       nsIMathMLFrame* mathMLFrame;
       childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       if (mathMLFrame) {
-      	nsEmbellishData childData;
-        mathMLFrame->GetEmbellishData(childData);
-        if (NS_MATHML_IS_EMBELLISH_OPERATOR(childData.flags) &&
-            childData.direction == aStretchDirection &&
-            childData.nextFrame) {
+        nsEmbellishData embellishData;
+        nsPresentationData presentationData;
+        mathMLFrame->GetEmbellishData(embellishData);
+        mathMLFrame->GetPresentationData(presentationData);
+        if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) &&
+            embellishData.direction == aStretchDirection &&
+            presentationData.baseFrame) {
           // embellishements are not included, only consider the inner first child itself
           nsIMathMLFrame* mathMLchildFrame;
-          childData.nextFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLchildFrame);
+          presentationData.baseFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLchildFrame);
           if (mathMLchildFrame) {
             mathMLFrame = mathMLchildFrame;
           }
@@ -298,9 +300,9 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
       return NS_OK;
     }
 
-    // Pass the stretch to the first non-empty child ...
+    // Pass the stretch to the base child ...
 
-    nsIFrame* childFrame = mEmbellishData.nextFrame;
+    nsIFrame* childFrame = mPresentationData.baseFrame;
     if (childFrame) {
       nsIMathMLFrame* mathMLFrame;
       childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -362,7 +364,7 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
 
           childFrame = mFrames.FirstChild();
           while (childFrame) {
-            if (childFrame != mEmbellishData.nextFrame) {
+            if (childFrame != mPresentationData.baseFrame) {
               childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
               if (mathMLFrame) {
                 // retrieve the metrics that was stored at the previous pass
@@ -449,7 +451,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
   // because it excludes the particular case of the core <mo>...</mo> itself.
   // (<mo> needs to fire stretch on its MathMLChar in any case to initialize it)
   PRBool placeOrigin = !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
-                       (mEmbellishData.coreFrame != this && !mEmbellishData.nextFrame &&
+                       (mEmbellishData.coreFrame != this && !mPresentationData.baseFrame &&
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
   Place(aRenderingContext, placeOrigin, aDesiredSize);
 
@@ -468,7 +470,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIRenderingContext& aRenderingContext,
       if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(presentationData.flags) ||
           NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(presentationData.flags) ||
           (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)
-            && embellishData.nextFrame == this))
+            && presentationData.baseFrame == this))
       {
         parentWillFireStretch = PR_TRUE;
       }
@@ -598,7 +600,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
     nsIContent* content = aFrame->GetContent();
     if (!gap) {
       // unset any -moz-math-font-size attribute without notifying that we want a reflow
-      content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize, PR_FALSE);
+      content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize, PR_FALSE);
     }
     else {
       // By default scriptminsize=8pt and scriptsizemultiplier=0.71
@@ -653,7 +655,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
       }
 
       // set the -moz-math-font-size attribute without notifying that we want a reflow
-      content->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize,
+      content->SetAttr(kNameSpaceID_None, nsMathMLAtoms::MOZfontsize,
                        fontsize, PR_FALSE);
     }
 
@@ -1150,36 +1152,48 @@ nsIAtom*
 nsMathMLContainerFrame::GetType() const
 {
   // see if this is an embellished operator (mapped to 'Op' in TeX)
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
-      mEmbellishData.coreFrame) {
+  if (mEmbellishData.coreFrame) {
     return mEmbellishData.coreFrame->GetType();
   }
 
-  // everything else is a schematta element (mapped to 'Inner' in TeX)
-  return nsMathMLAtoms::schemataMathMLFrame;
+  // if it has a prescribed base, just fetch the type from there
+  if (mPresentationData.baseFrame) {
+    return mPresentationData.baseFrame->GetType();
+  }
+
+  // everything else is treated as ordinary (mapped to 'Ord' in TeX)
+  return nsMathMLAtoms::ordinaryMathMLFrame;
 }
 
 enum eMathMLFrameType {
   eMathMLFrameType_UNKNOWN = -1,
   eMathMLFrameType_Ordinary,
-  eMathMLFrameType_OperatorVisible,
+  eMathMLFrameType_OperatorOrdinary,
   eMathMLFrameType_OperatorInvisible,
-  eMathMLFrameType_Inner
+  eMathMLFrameType_OperatorUserDefined,
+  eMathMLFrameType_Inner,
+  eMathMLFrameType_ItalicIdentifier,
+  eMathMLFrameType_UprightIdentifier,
+  eMathMLFrameType_COUNT
 };
 
 // see spacing table in Chapter 18, TeXBook (p.170)
 // Our table isn't quite identical to TeX because operators have 
 // built-in values for lspace & rspace in the Operator Dictionary.
-static PRInt32 kInterFrameSpacingTable[4][4] =
+static PRInt32 kInterFrameSpacingTable[eMathMLFrameType_COUNT][eMathMLFrameType_COUNT] =
 {
   // in units of muspace.
   // upper half of the byte is set if the
   // spacing is not to be used for scriptlevel > 0
-  /*          Ord   OpVis OpInv Inner */
-  /*Ord  */  {0x01, 0x00, 0x01, 0x01},
-  /*OpVis*/  {0x00, 0x00, 0x00, 0x00},
-  /*OpInv*/  {0x01, 0x00, 0x00, 0x01},
-  /*Inner*/  {0x01, 0x00, 0x01, 0x01}
+
+  /*           Ord  OpOrd OpInv OpUsr Inner Italic Upright */
+  /*Ord  */   {0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00},
+  /*OpOrd*/   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+  /*OpInv*/   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+  /*OpUsr*/   {0x01, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01},
+  /*Inner*/   {0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00},
+  /*Italic*/  {0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01},
+  /*Upright*/ {0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x01}
 };
 
 #define GET_INTERSPACE(scriptlevel_, frametype1_, frametype2_, space_)  \
@@ -1197,12 +1211,18 @@ static PRInt32 kInterFrameSpacingTable[4][4] =
 #define MAP_FRAMETYPE(atomtype_, enumtype_)                             \
   if (atomtype_ == nsMathMLAtoms::ordinaryMathMLFrame)                  \
     enumtype_ = eMathMLFrameType_Ordinary;                              \
-  else if (atomtype_ == nsMathMLAtoms::schemataMathMLFrame)             \
-    enumtype_ = eMathMLFrameType_Inner;                                 \
-  else if (atomtype_ == nsMathMLAtoms::operatorVisibleMathMLFrame)      \
-    enumtype_ = eMathMLFrameType_OperatorVisible;                       \
+  else if (atomtype_ == nsMathMLAtoms::operatorOrdinaryMathMLFrame)     \
+    enumtype_ = eMathMLFrameType_OperatorOrdinary;                      \
   else if (atomtype_ == nsMathMLAtoms::operatorInvisibleMathMLFrame)    \
     enumtype_ = eMathMLFrameType_OperatorInvisible;                     \
+  else if (atomtype_ == nsMathMLAtoms::operatorUserDefinedMathMLFrame)  \
+    enumtype_ = eMathMLFrameType_OperatorUserDefined;                   \
+  else if (atomtype_ == nsMathMLAtoms::innerMathMLFrame)                \
+    enumtype_ = eMathMLFrameType_Inner;                                 \
+  else if (atomtype_ == nsMathMLAtoms::italicIdentifierMathMLFrame)     \
+    enumtype_ = eMathMLFrameType_ItalicIdentifier;                      \
+  else if (atomtype_ == nsMathMLAtoms::uprightIdentifierMathMLFrame)    \
+    enumtype_ = eMathMLFrameType_UprightIdentifier;                     \
   else                                                                  \
     enumtype_ = eMathMLFrameType_UNKNOWN;
 
@@ -1244,14 +1264,33 @@ GetInterFrameSpacing(PRInt32           aScriptLevel,
   else if (*aFromFrameType != eMathMLFrameType_UNKNOWN) {
     // no carry-forward anymore, get the real inter-space between
     // the two frames of interest
-    GET_INTERSPACE(aScriptLevel, *aFromFrameType, secondType, space);
+
+    firstType = *aFromFrameType;
+
+    // But... the invisible operator that we encountered earlier could
+    // be sitting between italic and upright identifiers, e.g.,
+    //
+    // 1. <mi>sin</mi> <mo>&ApplyFunction;</mo> <mi>x</mi>
+    // 2. <mi>x</mi> <mo>&InvisibileTime;</mo> <mi>sin</mi>
+    //
+    // the trick to get the inter-space in either situation
+    // is to promote "<mi>sin</mi><mo>&ApplyFunction;</mo>" and
+    // "<mo>&InvisibileTime;</mo><mi>sin</mi>" to user-defined operators...
+    if (firstType == eMathMLFrameType_UprightIdentifier) {
+      firstType = eMathMLFrameType_OperatorUserDefined;
+    }
+    else if (secondType == eMathMLFrameType_UprightIdentifier) {
+      secondType = eMathMLFrameType_OperatorUserDefined;
+    }
+
+    GET_INTERSPACE(aScriptLevel, firstType, secondType, space);
 
     // Now, we have two values: the computed space and the space that
     // has been carried forward until now. Which value do we pick?
     // If the second type is an operator (e.g., fence), it already has
     // built-in lspace & rspace, so we let them win. Otherwise we pick
     // the max between the two values that we have.
-    if (secondType != eMathMLFrameType_OperatorVisible &&
+    if (secondType != eMathMLFrameType_OperatorOrdinary &&
         space < *aCarrySpace)
       space = *aCarrySpace;
 

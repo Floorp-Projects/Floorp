@@ -197,9 +197,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
   // if our base is an embellished operator, let its state bubble to us (in particular,
   // this is where we get the flag for NS_MATHML_EMBELLISH_MOVABLELIMITS). Our flags
   // are reset to the default values of false if the base frame isn't embellished.
+  mPresentationData.baseFrame = baseFrame;
   GetEmbellishDataFrom(baseFrame, mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
-    mEmbellishData.nextFrame = baseFrame;
 
   nsAutoString value;
 
