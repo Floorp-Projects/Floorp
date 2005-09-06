@@ -48,6 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
+#include "nsIDOMSVGPoint.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -253,19 +254,36 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     
     nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
     if (locatableElement) {
-      nsCOMPtr<nsIDOMSVGMatrix> ctm;
-      locatableElement->GetScreenCTM(getter_AddRefs(ctm));
-      if (!ctm) break;
-      
+      locatableElement->GetScreenCTM(getter_AddRefs(screenCTM));
+      if (!screenCTM) break;
+
       nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
       if (viewportElement) {
-        // It is a viewport element. we need to append the viewbox xform:
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(matrix));
-        ctm->Multiply(matrix, getter_AddRefs(screenCTM));
+        // it is a viewport element
+        nsCOMPtr<nsIDOMSVGMatrix> tmp;
+        nsCOMPtr<nsIDOMSVGMatrix> res;
+
+        nsCOMPtr<nsIContent> vpElement = do_QueryInterface(viewportElement);
+        if (ownerDoc && ownerDoc->GetRootContent() == vpElement) {
+          // it is also the document element
+          // first append its currentScale and currentTranslate values
+          float cs, ctx, cty;
+          nsCOMPtr<nsIDOMSVGPoint> currentTranslate;
+          viewportElement->GetCurrentScale(&cs);
+          viewportElement->GetCurrentTranslate(getter_AddRefs(currentTranslate));
+          currentTranslate->GetX(&ctx);
+          currentTranslate->GetY(&cty);
+          NS_NewSVGMatrix(getter_AddRefs(tmp), cs, 0, 0, cs, ctx, cty);
+          screenCTM->Multiply(tmp, getter_AddRefs(res));
+          screenCTM.swap(res);
+          if (!screenCTM) break; // out of memory
+        }
+
+        // append its viewbox transform
+        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(tmp));
+        screenCTM->Multiply(tmp, getter_AddRefs(res));
+        screenCTM.swap(res);
       }
-      else
-        screenCTM = ctm;
 
       break;
     }
