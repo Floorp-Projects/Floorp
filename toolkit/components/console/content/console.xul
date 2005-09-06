@@ -60,7 +60,8 @@
 
   <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 
-  <commandset commandupdater="true"
+  <commandset id="consoleCommands"
+              commandupdater="true"
               events="select"
               oncommandupdate="updateCopyMenu()">
     <command id="cmd_copy" oncommand="copyItemToClipboard()"/>
@@ -92,7 +93,7 @@
                  oncommand="changeMode('Messages');"/>
   </broadcasterset>
 
-  <keyset>
+  <keyset id="consoleKeys">
     <key id="key_copy"  key="&copyCmd.commandkey;"  modifiers="accel"
          command="cmd_copy"/>
     <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel"
