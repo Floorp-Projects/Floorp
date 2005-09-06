@@ -512,7 +512,10 @@ struct JSContext {
 
 #define JSVERSION_MASK                  0x0FFF  /* see JSVersion in jspubtd.h */
 #define JSVERSION_HAS_XML               0x1000  /* flag induced by XML option */
-#define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML)
+
+#define JSVERSION_NUMBER(cx)            ((cx)->version & JSVERSION_MASK)
+#define JS_HAS_XML_OPTION(cx)           ((cx)->version & JSVERSION_HAS_XML || \
+                                         JSVERSION_NUMBER(cx) >= JSVERSION_1_6)
 
 #define JS_HAS_NATIVE_BRANCH_CALLBACK_OPTION(cx)                              \
     JS_HAS_OPTION(cx, JSOPTION_NATIVE_BRANCH_CALLBACK)
@@ -521,10 +524,8 @@ struct JSContext {
  * Wrappers for the JSVERSION_IS_* macros from jspubtd.h taking JSContext *cx
  * and masking off the XML flag and any other high order bits.
  */
-#define JS_VERSION_IS_ECMA(cx)                                                \
-    JSVERSION_IS_ECMA((cx)->version & JSVERSION_MASK)
-#define JS_VERSION_IS_1_2(cx)                                                 \
-    (((cx)->version & JSVERSION_MASK) == JSVERSION_1_2)
+#define JS_VERSION_IS_ECMA(cx)          JSVERSION_IS_ECMA(JSVERSION_NUMBER(cx))
+#define JS_VERSION_IS_1_2(cx)           (JSVERSION_NUMBER(cx) == JSVERSION_1_2)
 
 /*
  * Common subroutine of JS_SetVersion and js_SetVersion, to update per-context
