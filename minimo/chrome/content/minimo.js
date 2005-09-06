@@ -48,7 +48,6 @@ var gSelectedTab=null;
 var gFullScreen=false;
 var gGlobalHistory = null;
 var gURIFixup = null;
-var gSSRSupport = null;
 
 function nsBrowserStatusHandler()
 {
@@ -382,6 +381,7 @@ function BrowserPopupShowing () {
 
 function DoPanelPreferences() {
   window.openDialog("chrome://minimo/content/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
+  BrowserReload(); 
 }
 
 /* 
@@ -493,30 +493,6 @@ function URLBarEntered()
 function URLBarFocusHandler()
 {
   gURLBar.showHistoryPopup();
-}
-
-function URLBarClickHandler()
-{
-}
-
-function BrowserToogleSSR()
-{
-  if(!gSSRSupport)
-    gSSRSupport = Components.classes["@mozilla.org/ssr;1"].getService(Components.interfaces.nsISSRSupport);
-
-  gSSRSupport.SSREnabled = !gSSRSupport.SSREnabled;
-
-  BrowserReload(); // hack until this is done by ssr itself
-}
-
-function BrowserToogleSiteSSR()
-{
-  if(!gSSRSupport)
-    gSSRSupport = Components.classes["@mozilla.org/ssr;1"].getService(Components.interfaces.nsISSRSupport);
-
-  gSSRSupport.siteSSREnabled = !gSSRSupport.siteSSREnabled;
-
-  BrowserReload(); // hack until this is done by ssr itself
 }
 
 var gRotationDirection = true;

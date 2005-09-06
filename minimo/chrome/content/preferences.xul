@@ -15,17 +15,8 @@
   <script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
      
-  <prefpane id="GeneralPane">
-    <preferences>
-      <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="wstring"/>
-      <preference id="permissions.default.image"  name="permissions.default.image" type="int"/>
-    </preferences>
- 
-    <groupbox>
-        <caption label="Home Page"/>
-        <textbox id="browserStartupHomepage" class="padded" flex="1" type="autocomplete" autocompletesearch="history"
-                 preference="browser.startup.homepage"/>
-    </groupbox>
+  <prefpane id="Privacy">
+    <button label="Sanitize All" oncommand="sanitizeAll();"/>
   </prefpane>
 
   <prefpane id="ConnectionsDialogPane">
@@ -34,6 +25,44 @@
       <preference id="network.proxy.http"           name="network.proxy.http"           type="string"/>
       <preference id="network.proxy.http_port"      name="network.proxy.http_port"      type="int"/>
     </preferences>
+
+    <groupbox>
+      <caption label="HTTP Proxy Settings"/>
+        <checkbox id="UseProxy" label="Use Proxy" preference="network.proxy.type" 
+                  onsyncfrompreference="return readProxyPref();"
+                  onsynctopreference="return writeProxyPref();"/>
+      <hbox>
+        <textbox id="networkProxyHTTP" preference="network.proxy.http"/>
+        <label value="Port"/>
+        <textbox id="networkProxyHTTP_Port" size="5" preference="network.proxy.http_port"/>
+      </hbox>
+    </groupbox>
   </prefpane>
-   
+
+  <prefpane id="GeneralPane">
+    <preferences>
+      <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="wstring"/>
+      <preference id="permissions.default.image"  name="permissions.default.image" type="int"/>
+      <preference id="ssr.enabled"                name="ssr.enabled" type="bool"/>
+      <preference id="ssr.site.enabled"           name="ssr.site.enabled" type="bool"/>
+    </preferences>
+ 
+    <groupbox>
+        <caption label="Home Page"/>
+        <textbox id="browserStartupHomepage" class="padded" flex="1" preference="browser.startup.homepage"/>
+    </groupbox>
+    
+    <groupbox>
+        <caption label="Small Screen Settings"/>
+
+        <checkbox id="enableImages" label="Display Images" preference="permissions.default.image"
+                  onsyncfrompreference="return readEnableImagesPref();"
+                  onsynctopreference="return writeEnableImagesPref();"/>
+
+        <checkbox id="ssr"     label="Use SSR" preference="ssr.enabled"/>
+        <checkbox id="sitessr" label="Use Site-Specific SSR" preference="ssr.site.enabled"/>
+
+    </groupbox>
+    
+  </prefpane>
 </prefwindow>

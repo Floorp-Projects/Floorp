@@ -70,8 +70,6 @@
 
 	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
 	<command id="cmd_BrowserScreenRotate" oncommand="BrowserScreenRotate()"/>
-	<command id="cmd_BrowserSSR" oncommand="BrowserToogleSSR()"/>
-	<command id="cmd_BrowserSiteSSR" oncommand="BrowserToogleSiteSSR()"/>
 	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
 	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
 	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
@@ -96,22 +94,6 @@
 		     <!-- separator for now in CSS - need to redesign -->
 		     <menuitem id="command_ViewOptions" style='border-top:1px solid black'  type="checkbox" command="cmd_ViewOptions" label="View Options"  /> 
 
-			<!--
-             <menu id="SSR" label="SSR">
-                <menupopup >
-        		     <menuitem id="command_BrowserSSR" type="checkbox" command="cmd_BrowserSSR" label="Toggle SSR"  /> 
-		             <menuitem id="command_BrowserSiteSSR" type="checkbox" command="cmd_BrowserSiteSSR" label="Toggle Site SSR"/> 
-                </menupopup>
-             </menu>
-
-             <menu id="menu-zoom" label="Text zoom">
-                <menupopup >
-                  <menuitem id="" oncommand="BrowserResetZoomPlus()" label="ZOOM + " />
-                  <menuitem id="" oncommand="BrowserResetZoomMinus()" label="ZOOM - " />
-                </menupopup>
-             </menu>
-            -->
-            
 		     <!--
 		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
 		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
@@ -142,10 +124,6 @@
 			<hbox flex="1" >
 				<vbox flex="1"  style="padding:4px ! important">
 
-					<hbox flex="1">	
-						<checkbox command="cmd_BrowserSSR" label="&toggleSSR.label;"/>
-						<checkbox command="cmd_BrowserSiteSSR" label="&toggleSiteSSR.label;"/>
-					</hbox>
 					<hbox flex="1" style="margin-top:4px ! important">
 						<label value="&zoomText.label;" />
 						<toolbarbutton class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
