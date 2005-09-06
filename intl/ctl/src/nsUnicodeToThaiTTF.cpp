@@ -148,10 +148,7 @@ nsUnicodeToThaiTTF::SetOutputErrorBehavior(PRInt32 aBehavior,
 {
   if (aBehavior == kOnError_CallBack && aEncoder == nsnull)
     return NS_ERROR_NULL_POINTER;
-  NS_IF_RELEASE(mErrEncoder);
   mErrEncoder = aEncoder;
-  NS_IF_ADDREF(mErrEncoder);
-  
   mErrBehavior = aBehavior;
   mErrChar = aChar;
   return NS_OK;

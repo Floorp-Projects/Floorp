@@ -87,6 +87,6 @@ private:
 
   PRInt32 mErrBehavior;
   PRUnichar mErrChar;
-  nsIUnicharEncoder* mErrEncoder;
+  nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
 };
 #endif /* !nsUnicodeToSunIndic_h___ */

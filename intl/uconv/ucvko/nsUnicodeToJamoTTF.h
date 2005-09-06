@@ -87,7 +87,7 @@ protected:
 
   PRInt32 mErrBehavior;
   PRUnichar mErrChar;
-  nsIUnicharEncoder* mErrEncoder;
+  nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
 
 private:
   NS_IMETHOD  composeHangul(char* output);
