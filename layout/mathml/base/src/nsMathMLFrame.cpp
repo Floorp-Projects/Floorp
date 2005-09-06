@@ -66,13 +66,13 @@ NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) 
 {
   mEmbellishData.flags = 0;
-  mEmbellishData.nextFrame = nsnull;
   mEmbellishData.coreFrame = nsnull;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mEmbellishData.leftSpace = 0;
   mEmbellishData.rightSpace = 0;
 
   mPresentationData.flags = 0;
+  mPresentationData.baseFrame = nsnull;
   mPresentationData.mstyle = nsnull;
   mPresentationData.scriptLevel = 0;
 
@@ -147,7 +147,6 @@ nsMathMLFrame::GetEmbellishDataFrom(nsIFrame*        aFrame,
 {
   // initialize OUT params
   aEmbellishData.flags = 0;
-  aEmbellishData.nextFrame = nsnull;
   aEmbellishData.coreFrame = nsnull;
   aEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   aEmbellishData.leftSpace = 0;
@@ -171,6 +170,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
 {
   // initialize OUT params
   aPresentationData.flags = 0;
+  aPresentationData.baseFrame = nsnull;
   aPresentationData.mstyle = nsnull;
   aPresentationData.scriptLevel = 0;
 

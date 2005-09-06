@@ -222,10 +222,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   // if the selected child is an embellished operator,
   // we become embellished as well
+  mPresentationData.baseFrame = mSelectedFrame;
   GetEmbellishDataFrom(mSelectedFrame, mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
-    mEmbellishData.nextFrame = mSelectedFrame; // yes!
-  }
 
   return mSelectedFrame;
 }

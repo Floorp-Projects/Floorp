@@ -80,10 +80,8 @@ NS_IMETHODIMP
 nsMathMLmsubFrame::TransmitAutomaticData()
 {
   // if our base is an embellished operator, let its state bubble to us
-  nsIFrame* baseFrame = mFrames.FirstChild();
-  GetEmbellishDataFrom(baseFrame, mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
-    mEmbellishData.nextFrame = baseFrame;
+  mPresentationData.baseFrame = mFrames.FirstChild();
+  GetEmbellishDataFrom(mPresentationData.baseFrame, mEmbellishData);
 
   // 1. The REC says:
   // The <msub> element increments scriptlevel by 1, and sets displaystyle to
@@ -101,7 +99,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  // extra spacing between base and sup/subscript
+  // extra spacing after sup/subscript
   nscoord scriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
 
   // check if the subscriptshift attribute is there
@@ -203,16 +201,12 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
     PR_MAX(bmBase.ascent, bmSubScript.ascent - actualSubScriptShift);
   boundingMetrics.descent = 
     PR_MAX(bmBase.descent, bmSubScript.descent + actualSubScriptShift);
-  // add aScriptSpace between base and supscript
-  boundingMetrics.width = 
-    bmBase.width 
-    + aScriptSpace 
-    + bmSubScript.width;
+
+  // add aScriptSpace to the subscript's width
+  boundingMetrics.width = bmBase.width + bmSubScript.width + aScriptSpace;
   boundingMetrics.leftBearing = bmBase.leftBearing;
-  boundingMetrics.rightBearing = 
-    bmBase.width 
-    + aScriptSpace 
-    + bmSubScript.rightBearing;
+  boundingMetrics.rightBearing = PR_MAX(bmBase.rightBearing, bmBase.width +
+    PR_MAX(bmSubScript.width + aScriptSpace, bmSubScript.rightBearing));
   mathMLFrame->SetBoundingMetrics (boundingMetrics);
 
   // reflow metrics
@@ -221,7 +215,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   aDesiredSize.descent = 
     PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = bmBase.width + aScriptSpace + subScriptSize.width;
+  aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
@@ -232,9 +226,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
     dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
     FinishReflowChild (baseFrame, aPresContext, nsnull, baseSize, dx, dy, 0);
     // ... and subscript
-    // XXX adding mScriptSpace seems to add more space than i like
-    // may want to remove later.
-    dx = bmBase.width + aScriptSpace; 
+    dx = bmBase.width; 
     dy = aDesiredSize.ascent - (subScriptSize.ascent - actualSubScriptShift);
     FinishReflowChild (subScriptFrame, aPresContext, nsnull, subScriptSize, dx, dy, 0);
   }

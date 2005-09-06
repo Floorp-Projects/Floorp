@@ -80,9 +80,8 @@ NS_IMETHODIMP
 nsMathMLmmultiscriptsFrame::TransmitAutomaticData()
 {
   // if our base is an embellished operator, let its state bubble to us
-  GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
-    mEmbellishData.nextFrame = mFrames.FirstChild();
+  mPresentationData.baseFrame = mFrames.FirstChild();
+  GetEmbellishDataFrom(mPresentationData.baseFrame, mEmbellishData);
 
   // The REC says:
   // The <mmultiscripts> element increments scriptlevel by 1, and sets
@@ -132,7 +131,6 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
 {
   mSubScriptShift = 0;
   mSupScriptShift = 0;
-  mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
 
   // check if the subscriptshift attribute is there
   nsAutoString value;
@@ -180,6 +178,11 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
   nscoord ruleSize;
   GetRuleThickness (aRenderingContext, fm, ruleSize);
+
+  // scriptspace from TeX for extra spacing after sup/subscript (0.5pt in plain TeX)
+  // forced to be at least 1 pixel here
+  nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
+  nscoord scriptSpace = PR_MAX(NSFloatPointsToTwips(0.5f), onePixel);
 
   /////////////////////////////////////
   // first the shift for the subscript
@@ -287,6 +290,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
         baseFrame = childFrame;
         GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
         GetItalicCorrection(bmBase, italicCorrection);
+        // for the superscript, we always add "a little to spare"
+        italicCorrection += onePixel;
 
         // we update mBoundingMetrics.{ascent,descent} with that
         // of the baseFrame only after processing all the sup/sub pairs
@@ -310,8 +315,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
             PR_MAX(mBoundingMetrics.descent,bmSubScript.descent);
           aDesiredSize.descent =
             PR_MAX(aDesiredSize.descent,subScriptSize.descent);
-          width = bmSubScript.width + mScriptSpace;
-          rightBearing = bmSubScript.rightBearing + mScriptSpace;          
+          width = bmSubScript.width + scriptSpace;
+          rightBearing = bmSubScript.rightBearing;
         }
         else {
           // supscript
@@ -331,8 +336,8 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
             PR_MAX(mBoundingMetrics.ascent,bmSupScript.ascent);
           aDesiredSize.ascent =
             PR_MAX(aDesiredSize.ascent,supScriptSize.ascent);
-          width = PR_MAX(width, bmSupScript.width + mScriptSpace);
-          rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing + mScriptSpace);
+          width = PR_MAX(width, bmSupScript.width + scriptSpace);
+          rightBearing = PR_MAX(rightBearing, bmSupScript.rightBearing);
 
           if (!mprescriptsFrame) { // we are still looping over base & postscripts
             mBoundingMetrics.rightBearing = mBoundingMetrics.width + rightBearing;
@@ -428,7 +433,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
         childFrame = baseFrame;
         dy = aDesiredSize.ascent - baseSize.ascent;
         FinishReflowChild (baseFrame, GetPresContext(), nsnull, baseSize, dx, dy, 0);
-        dx += bmBase.width + mScriptSpace + italicCorrection;
+        dx += bmBase.width + italicCorrection;
       }
       else if (mprescriptsFrame != childFrame) {
         // process each sup/sub pair
@@ -458,7 +463,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
           FinishReflowChild (supScriptFrame, GetPresContext(), nsnull, supScriptSize,
                              dx + (width-supScriptSize.width)/2, dy, 0);
 
-          dx += mScriptSpace + width;
+          dx += width + scriptSpace;
         }
       }
       childFrame = childFrame->GetNextSibling();

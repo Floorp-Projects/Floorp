@@ -80,10 +80,8 @@ NS_IMETHODIMP
 nsMathMLmsubsupFrame::TransmitAutomaticData()
 {
   // if our base is an embellished operator, let its state bubble to us
-  nsIFrame* baseFrame = mFrames.FirstChild();
-  GetEmbellishDataFrom(baseFrame, mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
-    mEmbellishData.nextFrame = baseFrame;
+  mPresentationData.baseFrame = mFrames.FirstChild();
+  GetEmbellishDataFrom(mPresentationData.baseFrame, mEmbellishData);
 
   // 1. The REC says:
   //    The <msubsup> element increments scriptlevel by 1, and sets displaystyle to
@@ -326,14 +324,17 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
   boundingMetrics.descent =
    PR_MAX(bmBase.descent, (bmSubScript.descent + subScriptShift));
 
-  // add aScriptSpace to both super/subscript
-  // add italicCorrection only to superscript
+  // leave aScriptSpace after both super/subscript
+  // add italicCorrection between base and superscript
+  // add "a little to spare" as well (see TeXbook Ch.11, p.64), as we
+  // estimate the italic creation ourselves and it isn't the same as TeX 
   nscoord italicCorrection;
   GetItalicCorrection(bmBase, italicCorrection);
+  italicCorrection += onePixel;
   boundingMetrics.width = bmBase.width + aScriptSpace +
     PR_MAX((italicCorrection + bmSupScript.width), bmSubScript.width);
   boundingMetrics.leftBearing = bmBase.leftBearing;
-  boundingMetrics.rightBearing = bmBase.width + aScriptSpace +
+  boundingMetrics.rightBearing = bmBase.width +
     PR_MAX((italicCorrection + bmSupScript.rightBearing), bmSubScript.rightBearing);
   mathMLFrame->SetBoundingMetrics(boundingMetrics);
 
@@ -347,8 +348,7 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
        PR_MAX(subScriptSize.descent + subScriptShift, 
               supScriptSize.descent - supScriptShift));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width = bmBase.width + aScriptSpace +
-    PR_MAX((italicCorrection + supScriptSize.width), subScriptSize.width);
+  aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
@@ -360,12 +360,12 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
     FinishReflowChild(baseFrame, aPresContext, nsnull,
                       baseSize, dx, dy, 0);
     // ... and subscript
-    dx = bmBase.width + aScriptSpace;
+    dx = bmBase.width;
     dy = aDesiredSize.ascent - (subScriptSize.ascent - subScriptShift);
     FinishReflowChild(subScriptFrame, aPresContext, nsnull,
                       subScriptSize, dx, dy, 0);
     // ... and the superscript
-    dx = bmBase.width + aScriptSpace + italicCorrection;
+    dx = bmBase.width + italicCorrection;
     dy = aDesiredSize.ascent - (supScriptSize.ascent + supScriptShift);
     FinishReflowChild(supScriptFrame, aPresContext, nsnull,
                       supScriptSize, dx, dy, 0);

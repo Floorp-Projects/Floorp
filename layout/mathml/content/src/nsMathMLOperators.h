@@ -50,13 +50,13 @@ typedef PRInt32 nsStretchDirection;
 
 // define the bits used to handle the operator
 
-#define NS_MATHML_OPERATOR_MUTABLE     0x80000000 // the very first bit
-#define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR     0x40000000 // the second bit
-#define NS_MATHML_OPERATOR_EMBELLISH_ISOLATED     0x20000000 // the third bit
-#define NS_MATHML_OPERATOR_CENTERED    0x10000000 // the fourth bit
+#define NS_MATHML_OPERATOR_MUTABLE            (1<<31)
+#define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR (1<<30)
+#define NS_MATHML_OPERATOR_EMBELLISH_ISOLATED (1<<29)
+#define NS_MATHML_OPERATOR_CENTERED           (1<<28)
+#define NS_MATHML_OPERATOR_INVISIBLE          (1<<27)
 
 // define the bits used in the Operator Dictionary
-// XXX replace with the PR_BIT(n) macro
 
 #define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
 #define     NS_MATHML_OPERATOR_FORM_INFIX      1
@@ -163,6 +163,9 @@ public:
 
 #define NS_MATHML_OPERATOR_IS_CENTERED(_flags) \
   (NS_MATHML_OPERATOR_CENTERED == ((_flags) & NS_MATHML_OPERATOR_CENTERED))
+
+#define NS_MATHML_OPERATOR_IS_INVISIBLE(_flags) \
+  (NS_MATHML_OPERATOR_INVISIBLE == ((_flags) & NS_MATHML_OPERATOR_INVISIBLE))
 
 #define NS_MATHML_OPERATOR_GET_FORM(_flags) \
   ((_flags) & NS_MATHML_OPERATOR_FORM)
