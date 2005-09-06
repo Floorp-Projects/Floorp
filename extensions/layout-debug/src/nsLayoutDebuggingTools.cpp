@@ -430,7 +430,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
             if (root) {
                 nsIFrameDebug* fdbg;
                 if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
-                    fdbg->List(shell->GetPresContext(), out, 0);
+                    fdbg->List(out, 0);
                 }
             }
         }
