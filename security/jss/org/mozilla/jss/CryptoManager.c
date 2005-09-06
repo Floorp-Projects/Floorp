@@ -879,7 +879,7 @@ Java_org_mozilla_jss_CryptoManager_enableFIPS
 {
     char *name=NULL;
     jboolean switched = JNI_FALSE;
-    SECStatus status;
+    SECStatus status = SECSuccess;
 
     if( ((fips==JNI_TRUE)  && !PK11_IsFIPS()) ||
         ((fips==JNI_FALSE) &&  PK11_IsFIPS())  )

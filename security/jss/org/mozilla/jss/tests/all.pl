@@ -325,6 +325,24 @@ $result and print "JSSE client returned $result\n";
 print_case_result ($result,"JSS server / JSSE client");
 
 #
+# Test Enable FIPSMODE 
+#
+print "============= Start enable FIPSMODE\n";
+$result = system("$java org.mozilla.jss.tests.FipsTest $testdir enable");
+$result >>=8;
+$result and print "Enable FIPSMODE returned $result\n";
+print_case_result ($result,"FIPSMODE enabled");
+
+#
+# Test Disable FIPSMODE 
+#
+print "============= Start disable FIPSMODE\n";
+$result = system("$java org.mozilla.jss.tests.FipsTest $testdir disable");
+$result >>=8;
+$result and print "Disable FIPSMODE returned $result\n";
+print_case_result ($result,"FIPSMODE disabled");
+
+#
 # Test for JSS jar and library revision
 #
 print "============= Check JSS jar version\n";
