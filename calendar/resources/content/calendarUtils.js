@@ -119,6 +119,13 @@ function createAttachment()
     return Components.classes["@mozilla.org/calendar/attachment;1"].createInstance(Components.interfaces.calIAttachment);
 }
 
+function now()
+{
+    var d = Components.classes['@mozilla.org/calendar/datetime;1'].createInstance(Components.interfaces.calIDateTime);
+    d.jsDate = new Date();
+    return d.getInTimezone(calendarDefaultTimezone());
+}
+
 function jsDateToDateTime(date)
 {
     var newDate = createDateTime();

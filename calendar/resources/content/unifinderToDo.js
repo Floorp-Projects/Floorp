@@ -499,9 +499,9 @@ function compareNumber(a, b) {
 // Takes two calDateTimes
 function compareDate(a, b) {
   if (!a)
-    return 1;
+    a = now();
   if (!b)
-    return -1;
+    b = now();
   return (a.compare(b)); 
 }
 
