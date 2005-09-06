@@ -894,18 +894,23 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
           URICString(svg->mMarkerMid).get(),
           URICString(svg->mMarkerStart).get());
 
-  for (PRUint32 i = 0; i < svg->mStrokeDasharrayLength; i++)
+  for (PRUint32 i = 0; i < svg->mStrokeDasharrayLength; i++) {
+    svg->mStrokeDasharray[i].ToString(str);
     fprintf(out,
-            "%f%c",
-            svg->mStrokeDasharray[i],
+            "%s%c",
+            NS_ConvertUCS2toUTF8(str).get(),
             (i == svg->mStrokeDasharrayLength) ? ' ' : ',');
+  }
 
-  fprintf(out, "%f %f %f %f %f %d %d %d %d %d %d %d %d %d\" />\n",
+  svg->mStrokeDashoffset.ToString(str);
+  fprintf(out, "%f %s %f %f ",
           svg->mFillOpacity,
-          svg->mStrokeDashoffset,
+          NS_ConvertUCS2toUTF8(str).get(),
           svg->mStrokeMiterlimit,
-          svg->mStrokeOpacity,
-          svg->mStrokeWidth,
+          svg->mStrokeOpacity);
+  svg->mStrokeWidth.ToString(str);
+  fprintf(out, "%s %d %d %d %d %d %d %d %d %d\" />\n",
+          NS_ConvertUCS2toUTF8(str).get(),
           (int)svg->mStrokeDasharrayLength,
           (int)svg->mClipRule,
           (int)svg->mFillRule,
