@@ -46,6 +46,7 @@
 #include "nsISVGRenderer.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsRect.h"
+#include "nsIContent.h"
 
 class nsSVGFilterInstance
 {
