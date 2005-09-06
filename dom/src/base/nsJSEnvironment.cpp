@@ -520,7 +520,8 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   PRTime duration;
   LL_SUB(duration, now, ctx->mBranchCallbackTime);
 
-  // Check the amount of time this script has been running
+  // Check the amount of time this script has been running, or if the
+  // dialog is disabled.
   if (LL_CMP(duration, <, sMaxScriptRunTime)) {
     return JS_TRUE;
   }
@@ -553,7 +554,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   if (!bundle)
     return JS_TRUE;
   
-  nsXPIDLString title, msg, stopButton, waitButton;
+  nsXPIDLString title, msg, stopButton, waitButton, neverShowDlg;
 
   nsresult rv;
 
@@ -565,14 +566,18 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
                                   getter_Copies(stopButton));
   rv |= bundle->GetStringFromName(NS_LITERAL_STRING("WaitForScriptButton").get(),
                                   getter_Copies(waitButton));
+  rv |= bundle->GetStringFromName(NS_LITERAL_STRING("NeverShowDialogAgain").get(),
+                                  getter_Copies(neverShowDlg));
 
   //GetStringFromName can return NS_OK and still give NULL string
-  if (NS_FAILED(rv) || !title || !msg || !stopButton || !waitButton) {
+  if (NS_FAILED(rv) || !title || !msg || !stopButton || !waitButton ||
+      !neverShowDlg) {
     NS_ERROR("Failed to get localized strings.");
     return JS_TRUE;
   }
 
   PRInt32 buttonPressed = 1; //In case user exits dialog by clicking X
+  PRBool neverShowDlgChk = PR_FALSE;
 
   // Open the dialog.
   rv = prompt->ConfirmEx(title, msg,
@@ -580,11 +585,21 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
                           nsIPrompt::BUTTON_POS_0) +
                          (nsIPrompt::BUTTON_TITLE_IS_STRING *
                           nsIPrompt::BUTTON_POS_1),
-                          stopButton, waitButton,
-                          nsnull, nsnull, nsnull, &buttonPressed);
+                         stopButton, waitButton,
+                         nsnull, neverShowDlg, &neverShowDlgChk,
+                         &buttonPressed);
 
   if (NS_FAILED(rv) || (buttonPressed == 1)) {
-    // Allow the script to run this long again
+    // Allow the script to continue running
+
+    if (neverShowDlgChk) {
+      nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
+
+      if (prefBranch) {
+        prefBranch->SetIntPref("dom.max_script_run_time", 0);
+      }
+    }
+
     ctx->mBranchCallbackTime = PR_Now();
     return JS_TRUE;
   }
@@ -801,10 +816,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
   nsIPrincipal *principal = aPrincipal;
-  if (aPrincipal) {
-    aPrincipal->GetJSPrincipals(mContext, &jsprin);
-  }
-  else {
+  if (!aPrincipal) {
     nsIScriptGlobalObject *global = GetGlobalObject();
     if (!global)
       return NS_ERROR_FAILURE;
@@ -815,8 +827,10 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     principal = objPrincipal->GetPrincipal();
     if (!principal)
       return NS_ERROR_FAILURE;
-    principal->GetJSPrincipals(mContext, &jsprin);
   }
+
+  principal->GetJSPrincipals(mContext, &jsprin);
+
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   PRBool ok = PR_FALSE;
@@ -2227,6 +2241,26 @@ nsJSEnvironment::Startup()
   gCollation = nsnull;
 }
 
+static int PR_CALLBACK
+MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
+{
+  // Default limit on script run time to 5 seconds. 0 means let
+  // scripts run forever.
+  PRInt32 time = nsContentUtils::GetIntPref(aPrefName, 5);
+
+  if (time <= 0) {
+    // Let scripts run for a really, really long time.
+    sMaxScriptRunTime = LL_INIT(0x40000000, 0);
+  } else {
+    PRTime usec_per_sec;
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_I2L(sMaxScriptRunTime, time);
+    LL_MUL(sMaxScriptRunTime, sMaxScriptRunTime, usec_per_sec);
+  }
+
+  return 0;
+}
+
 JS_STATIC_DLL_CALLBACK(JSPrincipals *)
 ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 {
@@ -2317,18 +2351,10 @@ nsJSEnvironment::Init()
   }
 #endif /* OJI */
 
-  // Initialize limit on script run time to 5 seconds
-  PRInt32 maxtime = 5;
-  PRInt32 time = nsContentUtils::GetIntPref("dom.max_script_run_time");
-
-  // Force the default for unreasonable values
-  if (time > 0)
-    maxtime = time;
-
-  PRTime usec_per_sec;
-  LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
-  LL_I2L(sMaxScriptRunTime, maxtime);
-  LL_MUL(sMaxScriptRunTime, sMaxScriptRunTime, usec_per_sec);
+  nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
+                                       MaxScriptRunTimePrefChangedCallback,
+                                       nsnull);
+  MaxScriptRunTimePrefChangedCallback("dom.max_script_run_time", nsnull);
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
