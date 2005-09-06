@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -8395,6 +8395,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
   parentFrame = insertionPoint;
 
+  if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+    // Just reframe the parent, since framesets are weird like that.
+    return RecreateFramesForContent(parentFrame->GetContent());
+  }
+  
   if (parentFrame->IsLeaf()) {
     // Nothing to do here; we shouldn't be constructing kids of leaves
     return NS_OK;
@@ -9040,6 +9045,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                            aContainer, aIndexInContainer);
   }
 
+  if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+    // Just reframe the parent, since framesets are weird like that.
+    return RecreateFramesForContent(parentFrame->GetContent());
+  }
+  
   // Don't construct kids of leaves
   if (parentFrame->IsLeaf()) {
     return NS_OK;
@@ -9601,6 +9611,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
       return NS_OK;
 
     parentFrame = insertionPoint;
+
+    if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
+      // Just reframe the parent, since framesets are weird like that.
+      return RecreateFramesForContent(parentFrame->GetContent());
+    }
 
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.

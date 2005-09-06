@@ -2131,7 +2131,14 @@ nsHTMLDocument::Close()
     // handler of the frameset fires before the frames get reflowed
     // and loaded.  That is the long explanation for why we need this
     // one line of code here!
-    FlushPendingNotifications(Flush_Layout);
+    // XXXbz as far as I can tell this may not be needed anymore; all
+    // the testcases in bug 57636 pass without this line...  Leaving
+    // it be for now, though.  In any case, there's no reason to do
+    // this if we have no presshell, since in that case none of the
+    // above about reusing frames applies.
+    if (GetNumberOfShells() != 0) {
+      FlushPendingNotifications(Flush_Layout);
+    }
 
     // Remove the wyciwyg channel request from the document load group
     // that we added in OpenCommon().  If all other requests between

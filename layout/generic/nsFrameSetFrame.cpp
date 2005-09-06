@@ -70,6 +70,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsLayoutAtoms.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -1261,6 +1262,12 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
+}
+
+nsIAtom*
+nsHTMLFramesetFrame::GetType() const
+{
+  return nsLayoutAtoms::frameSetFrame;
 }
 
 PRBool
