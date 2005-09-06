@@ -1241,6 +1241,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
                       case '3': jsVersion = JSVERSION_1_3; break;
                       case '4': jsVersion = JSVERSION_1_4; break;
                       case '5': jsVersion = JSVERSION_1_5; break;
+                      case '6': jsVersion = JSVERSION_1_6; break;
                       default:  jsVersion = JSVERSION_UNKNOWN;
                   }
               }
