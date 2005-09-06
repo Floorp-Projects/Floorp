@@ -2,7 +2,7 @@
 # 4/6/2005
 
 <SEARCH version="1.0"
-        name="Dictionary"
+        name="Answers.com"
         description="Dictionary Search on Answers.com"
         method="GET"
         action="http://www.answers.com/"
