@@ -1391,7 +1391,7 @@ var gFinishedPage = {
     // Do the restart
     LOG("UI:FinishedPage" , "onWizardFinish: Restarting Application...");
     
-    // This process is *extremely* retarded. There should be some nice 
+    // This process is *extremely* broken. There should be some nice 
     // integrated system for determining whether or not windows are allowed
     // to close or not, and what happens when that happens. We need to 
     // jump through all these hoops (duplicated from globalOverlay.js) to
@@ -1481,7 +1481,7 @@ var gInstalledPage = {
 /**
  * Called as the application shuts down due to being quit from the File->Quit 
  * menu item.
- * XXXben this API is retarded.
+ * XXXben this API is broken.
  */
 function tryToClose() {
   var cp = gUpdates.wiz.currentPage;
