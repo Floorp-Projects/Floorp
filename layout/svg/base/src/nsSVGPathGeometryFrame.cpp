@@ -61,13 +61,14 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIViewManager.h"
 #include "nsSVGUtils.h"
+#include "nsSVGFilterFrame.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
   : mUpdateFlags(0), mPropagateTransform(PR_TRUE),
-    mFillGradient(nsnull), mStrokeGradient(nsnull)
+    mFillGradient(nsnull), mStrokeGradient(nsnull), mFilter(nsnull)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -90,6 +91,9 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
   }
   if (mStrokeGradient) {
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
+  if (mFilter) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
   }
 }
 
@@ -163,6 +167,10 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
     mStrokeGradient = nsnull;
   }
+  if (mFilter) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
+    mFilter = nsnull;
+  }
 
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
@@ -208,15 +216,37 @@ nsSVGPathGeometryFrame::GetMarkerFrames(nsSVGMarkerFrame **markerStart,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas, 
+                                 const nsRect& dirtyRectTwips,
+                                 PRBool ignoreFilter)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
+  nsIURI *aURI;
+
+  /* check for filter */
+  
+  if (!ignoreFilter) {
+    if (!mFilter) {
+      aURI = GetStyleSVGReset()->mFilter;
+      if (aURI)
+        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
+      if (mFilter)
+        NS_ADD_SVGVALUE_OBSERVER(mFilter);
+    }
+
+    if (mFilter) {
+      if (!mFilterRegion)
+        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      mFilter->FilterPaint(canvas, this);
+      return NS_OK;
+    }
+  }
+
   /* check for a clip path */
 
-  nsIURI *aURI;
-  nsSVGClipPathFrame *clip = NULL;
+  nsSVGClipPathFrame *clip = nsnull;
   aURI = GetStyleSVGReset()->mClipPath;
   if (aURI) {
     NS_GetSVGClipPathFrame(&clip, aURI, mContent);
@@ -371,9 +401,10 @@ nsSVGPathGeometryFrame::InitialUpdate()
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::NotifyCanvasTMChanged()
+nsSVGPathGeometryFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
-  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM,
+                suppressInvalidation);
   
   return NS_OK;
 }
@@ -410,6 +441,13 @@ nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
 }
 
 NS_IMETHODIMP
+nsSVGPathGeometryFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
+{
+  mOverrideCTM = aCTM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   if (GetGeometry())
@@ -424,6 +462,21 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  // need to handle filters because we might be the topmost filtered frame and
+  // the filter region could be changing.
+  if (filter && mFilterRegion) {
+    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    if (!outerSVGFrame)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISVGRendererRegion> region;
+    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
+    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+  }
+
   return NS_OK;
 }
 
@@ -433,11 +486,15 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
   // Is this a gradient?
-  nsCOMPtr<nsISVGGradient>val = do_QueryInterface(observable);
-  if (val) {
+  nsCOMPtr<nsISVGGradient> gradient = do_QueryInterface(observable);
+
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  if (gradient) {
     // Yes, we need to handle this differently
     nsCOMPtr<nsISVGGradient>fill = do_QueryInterface(mFillGradient);
-    if (fill == val) {
+    if (fill == gradient) {
       if (aModType == nsISVGValue::mod_die) {
         mFillGradient = nsnull;
       }
@@ -449,6 +506,13 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
       }
       UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
+  } else if (filter) {
+    if (aModType == nsISVGValue::mod_die) {
+      mFilter = nsnull;
+      mFilterRegion = nsnull;
+    }
+    UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT |
+                  nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
   } else {
     // No, all of our other observables update the canvastm by default
     UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
@@ -475,8 +539,14 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   *aCTM = nsnull;
 
-  if (!mPropagateTransform)
+  if (!mPropagateTransform) {
+    if (mOverrideCTM) {
+      *aCTM = mOverrideCTM;
+      NS_ADDREF(*aCTM);
+      return NS_OK;
+    }
     return NS_NewSVGMatrix(aCTM);
+  }
 
   nsISVGContainerFrame *containerFrame;
   mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
@@ -822,7 +892,8 @@ nsSVGPathGeometryFrame::GetGeometry()
   return mGeometry;
 }
 
-void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags)
+void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
+                                           PRBool suppressInvalidation)
 {
   mUpdateFlags |= flags;
   
@@ -838,21 +909,22 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags)
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     if (GetGeometry())
       GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region) {
-      // if we're painting a marker, this will get called during paint
-      // when the region already be invalidated as needed
 
-      nsIView *view = GetClosestView();
-      if (!view) return;
-      nsIViewManager *vm = view->GetViewManager();
-      PRBool painting;
-      vm->IsPainting(painting);
+    mUpdateFlags = 0;
 
-      if (!painting)
+    if (suppressInvalidation)
+      return;
+
+    nsCOMPtr<nsISVGRendererRegion> filter_region;
+    nsSVGUtils::FindFilterInvalidation(this,
+                                       getter_AddRefs(filter_region));
+    if (filter_region) {
+      outerSVGFrame->InvalidateRegion(filter_region, PR_TRUE);
+    } else {
+      if (dirty_region)
         outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
     }
-    mUpdateFlags = 0;
-  }  
+  }
 }
 
 nsISVGOuterSVGFrame *

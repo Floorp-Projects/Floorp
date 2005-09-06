@@ -138,14 +138,17 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
@@ -169,6 +172,7 @@ protected:
   nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   PRBool mPropagateTransform;
+  nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
 };
 
 //----------------------------------------------------------------------
@@ -467,7 +471,9 @@ nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                                  const nsRect& dirtyRectTwips,
+                                  PRBool ignoreFilter)
 {
   if (mIsDirty) {
     nsCOMPtr<nsISVGRendererRegion> region = DoReflow();
@@ -588,10 +594,11 @@ nsSVGForeignObjectFrame::InitialUpdate()
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::NotifyCanvasTMChanged()
+nsSVGForeignObjectFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   mCanvasTM = nsnull;
-  Update();
+  if (!suppressInvalidation)
+    Update();
   return NS_OK;
 }
 
@@ -621,6 +628,14 @@ nsSVGForeignObjectFrame::SetMatrixPropagation(PRBool aPropagate)
   mPropagateTransform = aPropagate;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSVGForeignObjectFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
+{
+  mOverrideCTM = aCTM;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
@@ -685,7 +700,12 @@ nsSVGForeignObjectFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {
     nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
+    if (mOverrideCTM) {
+      retval = mOverrideCTM;
+      NS_ADDREF(retval);
+    } else {
+      NS_NewSVGMatrix(&retval);
+    }
     return retval;
   }
 

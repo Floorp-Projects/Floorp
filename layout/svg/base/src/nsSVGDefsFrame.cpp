@@ -228,7 +228,7 @@ nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
   }  
   return NS_OK;
 }
@@ -238,7 +238,9 @@ nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGDefsFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGDefsFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                         const nsRect& dirtyRectTwips,
+                         PRBool ignoreFilter)
 {
   // defs don't paint
 
@@ -277,7 +279,7 @@ nsSVGDefsFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGDefsFrame::NotifyCanvasTMChanged()
+nsSVGDefsFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
@@ -287,7 +289,7 @@ nsSVGDefsFrame::NotifyCanvasTMChanged()
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
     }
   }
   return NS_OK;

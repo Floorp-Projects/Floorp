@@ -102,7 +102,28 @@ nsresult
 NS_NewSVGClipPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGTextPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
-
+nsresult
+NS_NewSVGFilterElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEGaussianBlurElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEComponentTransferElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEFuncRElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEFuncGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEFuncBElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEFuncAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEMergeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEMergeNodeElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEOffsetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEUnimplementedMOZElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -175,6 +196,39 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGClipPathElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::textPath)
     return NS_NewSVGTextPathElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::filter)
+    return NS_NewSVGFilterElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feGaussianBlur)
+    return NS_NewSVGFEGaussianBlurElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feComponentTransfer)
+    return NS_NewSVGFEComponentTransferElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feFuncR)
+    return NS_NewSVGFEFuncRElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feFuncG)
+    return NS_NewSVGFEFuncGElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feFuncB)
+    return NS_NewSVGFEFuncBElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feFuncA)
+    return NS_NewSVGFEFuncAElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feMerge)
+    return NS_NewSVGFEMergeElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feMergeNode)
+    return NS_NewSVGFEMergeNodeElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feOffset)
+    return NS_NewSVGFEOffsetElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::feBlend            ||
+      name == nsSVGAtoms::feColorMatrix      ||
+      name == nsSVGAtoms::feComposite        ||
+      name == nsSVGAtoms::feConvolveMatrix   ||
+      name == nsSVGAtoms::feDiffuseLighting  ||
+      name == nsSVGAtoms::feDisplacementMap  ||
+      name == nsSVGAtoms::feFlood            ||
+      name == nsSVGAtoms::feImage            ||
+      name == nsSVGAtoms::feMorphology       ||
+      name == nsSVGAtoms::feSpecularLighting ||
+      name == nsSVGAtoms::feTile             ||
+      name == nsSVGAtoms::feTurbulence)
+    return NS_NewSVGFEUnimplementedMOZElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

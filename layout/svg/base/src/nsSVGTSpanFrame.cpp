@@ -278,7 +278,7 @@ nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(); // XXX
+      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); // XXX
     kid = kid->GetNextSibling();
   }  
   return NS_OK;
@@ -289,7 +289,9 @@ nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                          const nsRect& dirtyRectTwips,
+                          PRBool ignoreFilter)
 {
 #ifdef DEBUG
 //  printf("nsSVGTSpanFrame(%p)::Paint\n", this);
@@ -300,7 +302,7 @@ nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectT
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
     kid = kid->GetNextSibling();
   }
 
@@ -375,14 +377,14 @@ nsSVGTSpanFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::NotifyCanvasTMChanged()
+nsSVGTSpanFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
     }
     kid = kid->GetNextSibling();
   }
@@ -427,6 +429,13 @@ nsSVGTSpanFrame::SetMatrixPropagation(PRBool aPropagate)
 }
 
 NS_IMETHODIMP
+nsSVGTSpanFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
+{
+  mOverrideCTM = aCTM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGTSpanFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   return nsSVGUtils::GetBBox(&mFrames, _retval);
@@ -455,7 +464,12 @@ nsSVGTSpanFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {
     nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
+    if (mOverrideCTM) {
+      retval = mOverrideCTM;
+      NS_ADDREF(retval);
+    } else {
+      NS_NewSVGMatrix(&retval);
+    }
     return retval;
   }
 

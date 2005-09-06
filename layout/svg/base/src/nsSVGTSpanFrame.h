@@ -131,15 +131,22 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
+    *_retval = nsnull;
+    return NS_OK;
+  }
   
   // nsISVGContainerFrame interface:
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
@@ -171,6 +178,7 @@ protected:
   nsISVGGlyphFragmentNode *GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node);
   
 private:
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRUint32 mCharOffset; // index of first character of this node relative to the enclosing <text>-element
   PRBool mFragmentTreeDirty; 
   PRBool mPropagateTransform;

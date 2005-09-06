@@ -470,6 +470,7 @@ CSS_PROP_SVGRESET(dominant-baseline, dominant_baseline, DominantBaseline, SVG, m
 CSS_PROP_SVG(fill, fill, Fill, SVG, mFill, eCSSType_Value, nsnull)
 CSS_PROP_SVG(fill-opacity, fill_opacity, FillOpacity, SVG, mFillOpacity, eCSSType_Value, nsnull)
 CSS_PROP_SVG(fill-rule, fill_rule, FillRule, SVG, mFillRule, eCSSType_Value, kFillRuleKTable)
+CSS_PROP_SVGRESET(filter, filter, Filter, SVG, mFilter, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(marker, marker, Marker)
 CSS_PROP_SVG(marker-end, marker_end, MarkerEnd, SVG, mMarkerEnd, eCSSType_Value, nsnull)
 CSS_PROP_SVG(marker-mid, marker_mid, MarkerMid, SVG, mMarkerMid, eCSSType_Value, nsnull)

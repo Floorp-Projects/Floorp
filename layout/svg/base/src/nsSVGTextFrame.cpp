@@ -66,6 +66,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsISVGPathFlatten.h"
 #include "nsSVGUtils.h"
+#include "nsSVGFilterFrame.h"
+#include "nsSVGUtils.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -144,15 +146,23 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
+    *_retval = mFilterRegion;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+  }
   
   // nsISVGContainerFrame interface:
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
@@ -195,7 +205,11 @@ protected:
   PRBool mPositioningDirty;
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRBool mPropagateTransform;
+
+  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
+  nsISVGFilterFrame *mFilter;
 };
 
 //----------------------------------------------------------------------
@@ -228,7 +242,7 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 nsSVGTextFrame::nsSVGTextFrame()
     : mFragmentTreeState(suspended), mMetricsState(suspended),
       mFragmentTreeDirty(PR_FALSE), mPositioningDirty(PR_FALSE),
-      mPropagateTransform(PR_TRUE)
+      mPropagateTransform(PR_TRUE), mFilter(nsnull)
 {
 }
 
@@ -261,6 +275,10 @@ nsSVGTextFrame::~nsSVGTextFrame()
     nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
     transformable->GetTransform(getter_AddRefs(transforms));
     NS_REMOVE_SVGVALUE_OBSERVER(transforms);
+  }
+
+  if (mFilter) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
   }
 }
 
@@ -453,6 +471,20 @@ NS_IMETHODIMP
 nsSVGTextFrame::WillModifySVGObservable(nsISVGValue* observable,
                                         nsISVGValue::modificationType aModType)
 {
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  // need to handle filters because we might be the topmost filtered frame and
+  // the filter region could be changing.
+  if (filter && mFilterRegion) {
+    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    if (!outerSVGFrame)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISVGRendererRegion> region;
+    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
+    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -461,8 +493,29 @@ NS_IMETHODIMP
 nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
                                         nsISVGValue::modificationType aModType)
 {  
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms = GetTransform();
-  if (SameCOMIdentity(observable, transforms)) {
+
+  if (filter) {
+    if (aModType == nsISVGValue::mod_die) {
+      mFilter = nsnull;
+      mFilterRegion = nsnull;
+    }
+
+    nsISVGOuterSVGFrame *outerSVGFrame = GetOuterSVGFrame();
+    if (!outerSVGFrame)
+      return NS_ERROR_FAILURE;
+    
+    if (mFilter)
+      mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      
+    nsCOMPtr<nsISVGRendererRegion> region;
+    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
+    
+    if (region)
+      outerSVGFrame->InvalidateRegion(region, PR_TRUE);
+  } else if (SameCOMIdentity(observable, transforms)) {
     // transform has changed
 
     // make sure our cached transform matrix gets (lazily) updated
@@ -473,7 +526,7 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
       nsISVGChildFrame* SVGFrame=0;
       kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
       if (SVGFrame)
-        SVGFrame->NotifyCanvasTMChanged();
+        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
       kid = kid->GetNextSibling();
     }
   }
@@ -522,18 +575,39 @@ nsSVGTextFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGTextFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGTextFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                         const nsRect& dirtyRectTwips,
+                         PRBool ignoreFilter)
 {
 #ifdef DEBUG
 //  printf("nsSVGTextFrame(%p)::Paint\n", this);
 #endif
+
+  /* check for filter */
+  
+  if (!ignoreFilter) {
+    if (!mFilter) {
+      nsIURI *aURI = GetStyleSVGReset()->mFilter;
+      if (aURI)
+        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
+      if (mFilter)
+        NS_ADD_SVGVALUE_OBSERVER(mFilter);
+    }
+
+    if (mFilter) {
+      if (!mFilterRegion)
+        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
+      mFilter->FilterPaint(canvas, this);
+      return NS_OK;
+    }
+  }
 
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
     kid = kid->GetNextSibling();
   }
 
@@ -624,7 +698,7 @@ nsSVGTextFrame::InitialUpdate()
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::NotifyCanvasTMChanged()
+nsSVGTextFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
@@ -634,7 +708,7 @@ nsSVGTextFrame::NotifyCanvasTMChanged()
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
     }
     kid = kid->GetNextSibling();
   }
@@ -721,6 +795,13 @@ nsSVGTextFrame::SetMatrixPropagation(PRBool aPropagate)
 }
 
 NS_IMETHODIMP
+nsSVGTextFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
+{
+  mOverrideCTM = aCTM;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGTextFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   EnsureFragmentTreeUpToDate();
@@ -748,13 +829,18 @@ nsSVGTextFrame::GetOuterSVGFrame()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGTextFrame::GetCanvasTM()
 {
-  if (!mCanvasTM) {
-    if (!mPropagateTransform) {
-      nsIDOMSVGMatrix *retval;
+  if (!mPropagateTransform) {
+    nsIDOMSVGMatrix *retval;
+    if (mOverrideCTM) {
+      retval = mOverrideCTM;
+      NS_ADDREF(retval);
+    } else {
       NS_NewSVGMatrix(&retval);
-      return retval;
     }
+    return retval;
+  }
 
+  if (!mCanvasTM) {
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");
     nsISVGContainerFrame *containerFrame;

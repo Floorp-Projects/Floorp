@@ -197,7 +197,9 @@ nsSVGGenericContainerFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
+nsSVGGenericContainerFrame::PaintSVG(nsISVGRendererCanvas* canvas,
+                                     const nsRect& dirtyRectTwips,
+                                     PRBool ignoreFilter)
 {
 #ifdef DEBUG
 //  printf("nsSVGGenericContainer(%p)::Paint\n", this);
@@ -207,7 +209,7 @@ nsSVGGenericContainerFrame::PaintSVG(nsISVGRendererCanvas* canvas, const nsRect&
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips);
+      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
   }
 
   return NS_OK;
@@ -282,14 +284,14 @@ nsSVGGenericContainerFrame::InitialUpdate()
 }  
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::NotifyCanvasTMChanged()
+nsSVGGenericContainerFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(suppressInvalidation);
     }
   }
   return NS_OK;

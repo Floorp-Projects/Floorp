@@ -5001,6 +5001,15 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
     svgReset->mDominantBaseline = parentSVGReset->mDominantBaseline;
   }
 
+  // filter: url, none, inherit
+  if (eCSSUnit_URL == SVGData.mFilter.GetUnit()) {
+    svgReset->mFilter = SVGData.mFilter.GetURLValue();
+  } else if (eCSSUnit_None == SVGData.mFilter.GetUnit()) {
+    svgReset->mFilter = nsnull;
+  } else if (eCSSUnit_Inherit == SVGData.mFilter.GetUnit()) {
+    inherited = PR_TRUE;
+    svgReset->mFilter = parentSVGReset->mFilter;
+  }
   
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the

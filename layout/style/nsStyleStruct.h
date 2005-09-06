@@ -1338,7 +1338,10 @@ struct nsStyleSVGReset : public nsStyleStruct {
 
   nsStyleSVGPaint  mStopColor;        // [reset]
   nsCOMPtr<nsIURI> mClipPath;         // [reset]
+  nsCOMPtr<nsIURI> mFilter;           // [reset]
+
   float            mStopOpacity;      // [reset]
+
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
 #endif

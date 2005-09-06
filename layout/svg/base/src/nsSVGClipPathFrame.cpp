@@ -154,7 +154,7 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
   mClipParent = aParent,
   mClipParentMatrix = aMatrix;
 
-  NotifyCanvasTMChanged();
+  NotifyCanvasTMChanged(PR_TRUE);
 
   rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP);
   if (NS_FAILED(rv))
@@ -165,7 +165,7 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->PaintSVG(canvas, dirty);
+      SVGFrame->PaintSVG(canvas, dirty, PR_TRUE);
     }
   }
 

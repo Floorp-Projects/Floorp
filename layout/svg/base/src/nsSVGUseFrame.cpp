@@ -174,7 +174,12 @@ nsSVGUseFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {
     nsIDOMSVGMatrix *retval;
-    NS_NewSVGMatrix(&retval);
+    if (mOverrideCTM) {
+      retval = mOverrideCTM;
+      NS_ADDREF(retval);
+    } else {
+      NS_NewSVGMatrix(&retval);
+    }
     return retval;
   }
 

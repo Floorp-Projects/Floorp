@@ -54,6 +54,7 @@ class nsPresContext;
 class nsIDOMSVGMatrix;
 class nsISVGRendererRegion;
 class nsSVGMarkerFrame;
+class nsISVGFilterFrame;
 
 typedef nsFrame nsSVGPathGeometryFrameBase;
 
@@ -111,15 +112,23 @@ protected:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, 
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCanvasTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
+  NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
+    *_retval = mFilterRegion;
+    NS_IF_ADDREF(*_retval);
+    return NS_OK;
+  }
   
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -135,9 +144,12 @@ protected:
   
 protected:
   NS_IMETHOD InitSVG();
-  void UpdateGraphic(PRUint32 flags);
+  void UpdateGraphic(PRUint32 flags, PRBool suppressInvalidation = PR_FALSE);
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGRendererPathGeometry *GetGeometry();
+
+  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
+  nsISVGFilterFrame *mFilter;
 
 private:
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
@@ -145,6 +157,7 @@ private:
   PRBool mPropagateTransform;
   nsCOMPtr<nsISVGGradient>     mFillGradient;
   nsCOMPtr<nsISVGGradient>     mStrokeGradient;
+  nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
 
   void GetMarkerFrames(nsSVGMarkerFrame **markerStart,
                        nsSVGMarkerFrame **markerMid,

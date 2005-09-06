@@ -932,8 +932,9 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   else
     fprintf(out, "%ld ", (long)svgReset->mStopColor.mPaint.mColor);
 
-  fprintf(out, "%s %f %d\" />\n",
+  fprintf(out, "%s %s %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),
+          URICString(svgReset->mFilter).get(),
           svgReset->mStopOpacity,
           (int)svgReset->mDominantBaseline);
 #endif

@@ -355,8 +355,8 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
-      SVGFrame->PaintSVG(aCanvas, dirtyRectTwips);
+      SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
+      SVGFrame->PaintSVG(aCanvas, dirtyRectTwips, PR_FALSE);
     }
   }
 
@@ -385,7 +385,7 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->NotifyCanvasTMChanged();
+      SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
 
       nsCOMPtr<nsISVGRendererRegion> dirty_region = SVGFrame->GetCoveredRegion();
       if (dirty_region) {
