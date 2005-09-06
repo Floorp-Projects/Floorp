@@ -274,7 +274,7 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
     }                        
                         
     if (ch < 0x80)   // Plain ASCII character.
-      *dest++ = ch;                    
+      *dest++ = (char)ch;                    
     else if (IS_UNI_TAMIL(ch)) {                        
       PRUint8 t = UnicharToTSCII[ch - UNI_TAMIL_START];
                             
@@ -298,7 +298,7 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       }                      
     }                        
     else if (ch == 0x00A9)                  
-      *dest++ = ch;                    
+      *dest++ = (char)ch;                    
     else if (IS_UNI_SINGLE_QUOTE(ch))
       *dest++ = ch - UNI_LEFT_SINGLE_QUOTE + TSC_LEFT_SINGLE_QUOTE;
     else if (IS_UNI_DOUBLE_QUOTE(ch))
@@ -524,10 +524,7 @@ nsUnicodeToTamilTTF::SetOutputErrorBehavior(PRInt32 aBehavior,
 {
   if (aBehavior == kOnError_CallBack && aEncoder == nsnull)
     return NS_ERROR_NULL_POINTER;
-  NS_IF_RELEASE(mErrEncoder);
   mErrEncoder = aEncoder;
-  NS_IF_ADDREF(mErrEncoder);
-  
   mErrBehavior = aBehavior;
   mErrChar = aChar;
   return NS_OK;

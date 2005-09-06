@@ -382,7 +382,6 @@ nsEncoderSupport::nsEncoderSupport(PRUint32 aMaxLengthFactor) :
 
   mErrBehavior = kOnError_Signal;
   mErrChar = 0;
-  mErrEncoder = NULL;
 
   Reset();
 }
@@ -390,7 +389,6 @@ nsEncoderSupport::nsEncoderSupport(PRUint32 aMaxLengthFactor) :
 nsEncoderSupport::~nsEncoderSupport() 
 {
   delete [] mBuffer;
-  NS_IF_RELEASE(mErrEncoder);
 }
 
 NS_IMETHODIMP nsEncoderSupport::ConvertNoBuff(const PRUnichar * aSrc, 
@@ -574,10 +572,7 @@ NS_IMETHODIMP nsEncoderSupport::SetOutputErrorBehavior(
   if (aBehavior == kOnError_CallBack && aEncoder == nsnull) 
     return NS_ERROR_NULL_POINTER;
 
-  NS_IF_RELEASE(mErrEncoder);
   mErrEncoder = aEncoder;
-  NS_IF_ADDREF(mErrEncoder);
-
   mErrBehavior = aBehavior;
   mErrChar = aChar;
   return NS_OK;

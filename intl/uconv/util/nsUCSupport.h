@@ -38,6 +38,7 @@
 #ifndef nsUCvJaSupport_h___
 #define nsUCvJaSupport_h___
 
+#include "nsCOMPtr.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncodeHelper.h"
@@ -337,7 +338,7 @@ protected:
    * Error handling stuff
    */
   PRInt32   mErrBehavior;
-  nsIUnicharEncoder * mErrEncoder;
+  nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
   PRUnichar mErrChar;
   PRUint32  mMaxLengthFactor;
 

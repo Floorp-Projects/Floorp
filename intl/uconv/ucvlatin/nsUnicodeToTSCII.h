@@ -41,6 +41,7 @@
 #ifndef nsUnicodeToTSCII_h___
 #define nsUnicodeToTSCII_h___
 
+#include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharRepresentable.h"
@@ -105,7 +106,7 @@ private:
   char mStaticBuffer[CHAR_BUFFER_SIZE];
   PRInt32 mErrBehavior;
   PRUnichar mErrChar;
-  nsIUnicharEncoder* mErrEncoder;
+  nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
 };
 
 #endif /* nsUnicodeToTSCII_h___ */
