@@ -20,22 +20,15 @@
   #%]
 
 [%# INTERFACE:
-  # name: string; The name of the component.
-  #
-  # description: string; Component description, may be empty
-  #
-  # initialowner: string; default assignee, may be empty
-  #
-  # initialqacontact: string; default qa contact, may be empty
-  #
-  # product: string; The product the component belongs to
-  #
-  # bug_count: number; number of bugs belonging to the component
+  # comp: object; Bugzilla::Component object representing the component the
+  #               user wants to edit.
+  # prod: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% title = BLOCK %]Edit Component '[% name FILTER html %]'[% END %]
+[% title = BLOCK %]Edit Component '[% comp.name FILTER html %]'[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
 %]
@@ -46,12 +39,12 @@
     <tr>
       <td valign="top">Component:</td>
       <td><input size="64" maxlength="64" name="component" value="
-      [%- name FILTER html %]"></td>
+      [%- comp.name FILTER html %]"></td>
     </tr>
     <tr>
       <td valign="top">Component Description:</td>
       <td><textarea rows="4" cols="64" wrap="virtual"
-        name="description">[% description FILTER html %]</textarea>
+        name="description">[% comp.description FILTER html %]</textarea>
       </td>
     </tr>
     <tr>
@@ -60,7 +53,7 @@
         [% INCLUDE global/userselect.html.tmpl
            name => "initialowner"
            id => "initialowner"
-           value => initialowner
+           value => comp.default_assignee.login
            size => 64
            emptyok => 1
          %]
@@ -74,7 +67,7 @@
         [% INCLUDE global/userselect.html.tmpl
            name => "initialqacontact"
            id => "initialqacontact"
-           value => initialqacontact
+           value => comp.default_qa_contact.login
            size => 64
            emptyok => 1
          %]
@@ -85,11 +78,11 @@
     <tr>
       <td>[% terms.Bugs %]:</td>
       <td>
-[% IF bug_count > 0 %]
-        <a title="Bugs in component '[% name FILTER html %]'"
+[% IF comp.bug_count > 0 %]
+        <a title="Bugs in component '[% comp.name FILTER html %]'"
            href="buglist.cgi?component=
-                [%- name FILTER url_quote %]&amp;product=
-                [%- product FILTER url_quote %]">[% bug_count %]</a>
+                [%- comp.name FILTER url_quote %]&amp;product=
+                [%- prod.name FILTER url_quote %]">[% comp.bug_count %]</a>
 [% ELSE %]
         None
 [% END %]
@@ -98,26 +91,20 @@
 
   </table>
 
-
-   <input type="hidden" name="componentold" value="
-        [%- name FILTER html %]">
-   <input type="hidden" name="descriptionold" value="
-        [%- description FILTER html %]">
-   <input type="hidden" name="initialownerold" value="
-        [%- initialowner FILTER html %]">
-   <input type="hidden" name="initialqacontactold" value="
-        [%- initialqacontact FILTER html %]">
    <input type="hidden" name="action" value="update">
-   <input type="hidden" name="product" value="[% product FILTER html %]">
+   <input type="hidden" name="componentold" value="[% comp.name FILTER html %]">
+   <input type="hidden" name="product" value="[% prod.name FILTER html %]">
    <input type="submit" value="Update"> or <a 
         href="editcomponents.cgi?action=del&amp;product=
-        [%- product FILTER url_quote %]&amp;component=
-        [%- name FILTER url_quote %]">Delete</a> this component.
-
+        [%- prod.name FILTER url_quote %]&amp;component=
+        [%- comp.name FILTER url_quote %]">Delete</a> this component.
 
 </form>
 
 [% PROCESS admin/components/footer.html.tmpl
-  no_edit_component_link = 1 %]
+  no_edit_component_link = 1
+  name = comp.name
+  product = prod.name
+%]
 
 [% PROCESS global/footer.html.tmpl %]

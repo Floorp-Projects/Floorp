@@ -574,7 +574,7 @@
 
 
 'admin/components/confirm-delete.html.tmpl' => [
-  'bug_count'
+  'comp.bug_count'
 ],
 
 'admin/components/deleted.html.tmpl' => [
@@ -608,7 +608,7 @@
 ],
 
 'admin/components/edit.html.tmpl' => [
-  'bug_count'
+  'comp.bug_count'
 ],
 
 'admin/components/list.html.tmpl' => [

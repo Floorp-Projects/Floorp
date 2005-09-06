@@ -21,6 +21,7 @@ package Bugzilla::Component;
 
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::User;
 
 ###############################
 ####    Initialization     ####
@@ -87,16 +88,58 @@ sub _init {
     return $self;
 }
 
+sub bug_count {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'bug_count'}) {
+        $self->{'bug_count'} = $dbh->selectrow_array(q{
+            SELECT COUNT(*) FROM bugs
+            WHERE component_id = ?}, undef, $self->id) || 0;
+    }
+    return $self->{'bug_count'};
+}
+
+sub bug_ids {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'bugs_ids'}) {
+        $self->{'bugs_ids'} = $dbh->selectcol_arrayref(q{
+            SELECT bug_id FROM bugs
+            WHERE component_id = ?}, undef, $self->id);
+    }
+    return $self->{'bugs_ids'};
+}
+
+sub default_assignee {
+    my $self = shift;
+
+    if (!defined $self->{'default_assignee'}) {
+        $self->{'default_assignee'} =
+            new Bugzilla::User($self->{'initialowner'});
+    }
+    return $self->{'default_assignee'};
+}
+
+sub default_qa_contact {
+    my $self = shift;
+
+    if (!defined $self->{'default_qa_contact'}) {
+        $self->{'default_qa_contact'} =
+            new Bugzilla::User($self->{'initialqacontact'});
+    }
+    return $self->{'default_qa_contact'};
+}
+
 ###############################
 ####      Accessors        ####
 ###############################
 
-sub id                 { return $_[0]->{'id'};               }
-sub name               { return $_[0]->{'name'};             }
-sub description        { return $_[0]->{'description'};      }
-sub product_id         { return $_[0]->{'product_id'};       }
-sub default_assignee   { return $_[0]->{'initialowner'};     }
-sub default_qa_contact { return $_[0]->{'initialqacontact'}; }
+sub id          { return $_[0]->{'id'};          }
+sub name        { return $_[0]->{'name'};        }
+sub description { return $_[0]->{'description'}; }
+sub product_id  { return $_[0]->{'product_id'};  }
 
 ###############################
 ####      Subroutines      ####
@@ -128,6 +171,27 @@ sub get_components_by_product {
     return @components;
 }
 
+sub check_component {
+    my ($product, $comp_name) = @_;
+
+    $comp_name || ThrowUserError('component_blank_name');
+
+    if (length($comp_name) > 64) {
+        ThrowUserError('component_name_too_long',
+                       {'name' => $comp_name});
+    }
+
+    my $component =
+        new Bugzilla::Component({product_id => $product->id,
+                                 name       => $comp_name});
+    unless ($component) {
+        ThrowUserError('component_not_valid',
+                       {'product' => $product->name,
+                        'name' => $comp_name});
+    }
+    return $component;
+}
+
 1;
 
 __END__
@@ -144,6 +208,8 @@ Bugzilla::Component - Bugzilla product component class.
     my $component = new Bugzilla::Component({product_id => 1,
                                              name       => 'AcmeComp'});
 
+    my $bug_count          = $component->bug_count();
+    my $bug_ids            = $component->bug_ids();
     my $id                 = $component->id;
     my $name               = $component->name;
     my $description        = $component->description;
@@ -152,6 +218,7 @@ Bugzilla::Component - Bugzilla product component class.
     my $default_qa_contact = $component->default_qa_contact;
 
     my @components = Bugzilla::Component::get_components_by_product($id);
+    my $component  = Bugzilla::Component::check_component($product, 'AcmeComp');
 
 =head1 DESCRIPTION
 
@@ -175,6 +242,40 @@ Component.pm represents a Product Component object.
 
  Returns:     A Bugzilla::Component object.
 
+=item C<bug_count()>
+
+ Description: Returns the total of bugs that belong to the component.
+
+ Params:      none.
+
+ Returns:     Integer with the number of bugs.
+
+=item C<bugs_ids()>
+
+ Description: Returns all bug IDs that belong to the component.
+ 
+ Params:      none.
+
+ Returns:     A reference to an array of bug IDs.
+
+=item C<default_assignee()>
+
+ Description: Returns a user object that represents the default assignee for
+              the component.
+
+ Params:      none.
+
+ Returns:     A Bugzilla::User object.
+
+=item C<default_qa_contact()>
+
+ Description: Returns a user object that represents the default QA contact for
+              the component.
+
+ Params:      none.
+
+ Returns:     A Bugzilla::User object.
+
 =back
 
 =head1 SUBROUTINES
@@ -188,7 +289,18 @@ Component.pm represents a Product Component object.
  Params:      $product_id - Integer with a Bugzilla product id.
 
  Returns:     An array of Bugzilla::Component objects.
+ 
 
+=item C<check_component($product, $comp_name)>
+
+ Description: Checks if the component name was passed in and if it is a valid
+              component.
+
+ Params:      $product - A Bugzilla::Product object.
+              $comp_name - String with a component name.
+
+ Returns:     Bugzilla::Component object.
+             
 =back
 
 =cut

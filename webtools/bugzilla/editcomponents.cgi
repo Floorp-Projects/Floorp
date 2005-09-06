@@ -35,78 +35,14 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 use Bugzilla::Util;
 use Bugzilla::User;
+use Bugzilla::Product;
+use Bugzilla::Component;
 use Bugzilla::Bug;
 
 use vars qw($template $vars);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
-
-my $showbugcounts = (defined $cgi->param('showbugcounts'));
-
-# TestProduct:    just returns if the specified product does exists
-# CheckProduct:   same check, optionally  emit an error text
-# TestComponent:  just returns if the specified product/component combination exists
-# CheckComponent: same check, optionally emit an error text
-
-sub TestProduct
-{
-    my $prod = shift;
-
-    # does the product exist?
-    SendSQL("SELECT name
-             FROM products
-             WHERE name = " . SqlQuote($prod));
-    return FetchOneColumn();
-}
-
-sub CheckProduct
-{
-    my $prod = shift;
-
-    # do we have a product?
-    unless ($prod) {
-        ThrowUserError('product_not_specified');
-    }
-
-    unless (TestProduct $prod) {
-        ThrowUserError('product_doesnt_exist',
-                       {'product' => $prod});
-    }
-}
-
-sub TestComponent
-{
-    my ($prod, $comp) = @_;
-
-    # does the product/component combination exist?
-    SendSQL("SELECT components.name
-             FROM components
-             INNER JOIN products
-                ON products.id = components.product_id
-             WHERE products.name = " . SqlQuote($prod) . "
-             AND components.name = " . SqlQuote($comp));
-    return FetchOneColumn();
-}
-
-sub CheckComponent
-{
-    my ($prod, $comp) = @_;
-
-    # do we have the component?
-    unless ($comp) {
-        ThrowUserError('component_not_specified');
-    }
-
-    CheckProduct($prod);
-
-    unless (TestComponent $prod, $comp) {
-        ThrowUserError('component_not_valid',
-                       {'product' => $prod,
-                        'name' => $comp});
-    }
-}
-
 
 #
 # Preliminary checks:
@@ -115,7 +51,7 @@ sub CheckComponent
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
-print Bugzilla->cgi->header();
+print $cgi->header();
 
 UserInGroup("editcomponents")
   || ThrowUserError("auth_failure", {group  => "editcomponents",
@@ -125,44 +61,18 @@ UserInGroup("editcomponents")
 #
 # often used variables
 #
-my $product   = trim($cgi->param('product')   || '');
-my $component = trim($cgi->param('component') || '');
-my $action    = trim($cgi->param('action')    || '');
-
-
+my $product_name  = trim($cgi->param('product')     || '');
+my $comp_name     = trim($cgi->param('component')   || '');
+my $action        = trim($cgi->param('action')      || '');
+my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
 #
 # product = '' -> Show nice list of products
 #
 
-unless ($product) {
+unless ($product_name) {
 
-    my @products = ();
-
-    if ($showbugcounts){
-        SendSQL("SELECT products.name, products.description, COUNT(bug_id)
-                 FROM products LEFT JOIN bugs
-                   ON products.id = bugs.product_id " .
-                $dbh->sql_group_by('products.name', 'products.description') . "
-                 ORDER BY products.name");
-    } else {
-        SendSQL("SELECT products.name, products.description
-                 FROM products 
-                 ORDER BY products.name");
-    }
-
-    while ( MoreSQLData() ) {
-
-        my $prod = {};
-
-        my ($name, $description, $bug_count) = FetchSQLData();
-
-        $prod->{'name'} = $name;
-        $prod->{'description'} = $description;
-        $prod->{'bug_count'} = $bug_count;
-
-        push(@products, $prod);
-    }
+    my @products = Bugzilla::Product::get_all_products();
 
     $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'products'} = \@products;
@@ -174,7 +84,7 @@ unless ($product) {
     exit;
 }
 
-
+my $product = Bugzilla::Product::check_product($product_name);
 
 #
 # action='' -> Show nice list of components
@@ -182,51 +92,14 @@ unless ($product) {
 
 unless ($action) {
 
-    CheckProduct($product);
-    my $product_id = get_product_id($product);
-    my @components = ();
+    my @components =
+        Bugzilla::Component::get_components_by_product($product->id);
 
-    if ($showbugcounts) {
-        SendSQL("SELECT name, description, initialowner,
-                        initialqacontact, COUNT(bug_id)
-                 FROM components LEFT JOIN bugs
-                   ON components.id = bugs.component_id
-                 WHERE components.product_id = $product_id " .
-                $dbh->sql_group_by('name',
-                    'description, initialowner, initialqacontact'));
-    } else {
-        SendSQL("SELECT name, description, initialowner, initialqacontact
-                 FROM components 
-                 WHERE product_id = $product_id " .
-                $dbh->sql_group_by('name',
-                    'description, initialowner, initialqacontact'));
-    }        
-
-    while (MoreSQLData()) {
-
-        my $component = {};
-        my ($name, $desc, $initialownerid, $initialqacontactid, $bug_count)
-            = FetchSQLData();
-
-        $component->{'name'} = $name;
-        $component->{'description'} = $desc;
-        $component->{'initialowner'} = DBID_to_name($initialownerid)
-            if ($initialownerid);
-        $component->{'initialqacontact'} = DBID_to_name($initialqacontactid)
-            if ($initialqacontactid);
-        $component->{'bug_count'} = $bug_count;
-
-        push(@components, $component);
-
-    }
-
-    
     $vars->{'showbugcounts'} = $showbugcounts;
-    $vars->{'product'} = $product;
+    $vars->{'product'} = $product->name;
     $vars->{'components'} = \@components;
-    $template->process("admin/components/list.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
+    $template->process("admin/components/list.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
 
     exit;
 }
@@ -240,13 +113,9 @@ unless ($action) {
 
 if ($action eq 'add') {
 
-    CheckProduct($product);
-
-    $vars->{'product'} = $product;
-    $template->process("admin/components/create.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
-
+    $vars->{'product'} = $product->name;
+    $template->process("admin/components/create.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
 
     exit;
 }
@@ -258,74 +127,52 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-
-    CheckProduct($product);
-    my $product_id = get_product_id($product);
-
-
-    # Cleanups and valididy checks
-
-    unless ($component) {
-        ThrowUserError('component_blank_name',
-                       {'name' => $component});
-    }
-    if (TestComponent($product, $component)) {
-        ThrowUserError('component_already_exists',
-                       {'name' => $component});
-    }
-
-    if (length($component) > 64) {
-        ThrowUserError('component_name_too_long',
-                       {'name' => $component});
-    }
-
-    my $description = trim($cgi->param('description') || '');
-
-    if ($description eq '') {
-        ThrowUserError('component_blank_description',
-                       {'name' => $component});
-    }
-
+    
     # Do the user matching
     Bugzilla::User::match_field ($cgi, {
         'initialowner'     => { 'type' => 'single' },
         'initialqacontact' => { 'type' => 'single' },
     });
 
+    my $default_assignee   = trim($cgi->param('initialowner')     || '');
+    my $default_qa_contact = trim($cgi->param('initialqacontact') || '');
+    my $description        = trim($cgi->param('description')      || '');
 
-    my $initialowner = trim($cgi->param('initialowner') || '');
+    $comp_name || ThrowUserError('component_blank_name');
 
-    if ($initialowner eq '') {
-        ThrowUserError('component_need_initialowner',
-                       {'name' => $component});
+    if (length($comp_name) > 64) {
+        ThrowUserError('component_name_too_long',
+                       {'name' => $comp_name});
     }
 
-    my $initialownerid = login_to_id ($initialowner);
-    if (!$initialownerid) {
-        ThrowUserError('component_need_valid_initialowner',
-                       {'name' => $component});
+    my $component =
+        new Bugzilla::Component({product_id => $product->id,
+                                 name => $comp_name});
+
+    if ($component) {
+        ThrowUserError('component_already_exists',
+                       {'name' => $component->name});
     }
 
-    my $initialqacontact = trim($cgi->param('initialqacontact') || '');
-    my $initialqacontactid = login_to_id ($initialqacontact);
-    if (Param('useqacontact')) {
-        if (!$initialqacontactid && $initialqacontact ne '') {
-            ThrowUserError('component_need_valid_initialqacontact',
-                           {'name' => $component});
-        }
-    }
-    my $initialqacontactsql =
-              $initialqacontact ne '' ? SqlQuote($initialqacontactid) : 'NULL';
+    $description || ThrowUserError('component_blank_description',
+                                   {name => $comp_name});
 
-    # Add the new component
-    SendSQL("INSERT INTO components ( " .
-          "product_id, name, description, initialowner, initialqacontact " .
-          " ) VALUES ( " .
-          $product_id . "," .
-          SqlQuote($component) . "," .
-          SqlQuote($description) . "," .
-          SqlQuote($initialownerid) . "," .
-          $initialqacontactsql . ")");
+    $default_assignee || ThrowUserError('component_need_initialowner',
+                                        {name => $comp_name});
+
+    my $default_assignee_id   = login_to_id($default_assignee);
+    my $default_qa_contact_id = Param('useqacontact') ?
+        (login_to_id($default_qa_contact) || undef) : undef;
+
+    trick_taint($comp_name);
+    trick_taint($description);
+
+    $dbh->do("INSERT INTO components
+                (product_id, name, description, initialowner,
+                 initialqacontact)
+              VALUES (?, ?, ?, ?, ?)", undef,
+             ($product->id, $comp_name, $description,
+              $default_assignee_id, $default_qa_contact_id));
 
     # Insert default charting queries for this product.
     # If they aren't using charting, this won't do any harm.
@@ -333,8 +180,8 @@ if ($action eq 'new') {
 
     my @series;
 
-    my $prodcomp = "&product=" . url_quote($product) . 
-                   "&component=" . url_quote($component);
+    my $prodcomp = "&product="   . url_quote($product->name) .
+                   "&component=" . url_quote($comp_name);
 
     # For localisation reasons, we get the title of the queries from the
     # submitted form.
@@ -358,17 +205,17 @@ if ($action eq 'new') {
     push(@series, [$closed_name, $resolved]);
 
     foreach my $sdata (@series) {
-        my $series = new Bugzilla::Series(undef, $product, $component,
-                                          $sdata->[0], $::userid, 1,
-                                          $sdata->[1], 1);
+        my $series = new Bugzilla::Series(undef, $product->name,
+                                          $comp_name, $sdata->[0],
+                                          $::userid, 1, $sdata->[1], 1);
         $series->writeToDatabase();
     }
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $component;
-    $vars->{'product'} = $product;
+    $vars->{'name'} = $comp_name;
+    $vars->{'product'} = $product->name;
     $template->process("admin/components/created.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -385,54 +232,14 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-
-    CheckComponent($product, $component);
-    my $component_id = get_component_id(get_product_id($product), $component);
-
-    # display some data about the component
-    SendSQL("SELECT products.name, products.description,
-                    products.milestoneurl, products.disallownew,
-                    components.name, components.initialowner,
-                    components.initialqacontact, components.description
-             FROM products
-             LEFT JOIN components ON products.id = components.product_id
-             WHERE components.id = $component_id");
-
-
-    my ($product, $product_description, $milestoneurl, $disallownew,
-        $component, $initialownerid, $initialqacontactid, $description) =
-            FetchSQLData();
-
-
-    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
-    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
-    $milestoneurl        ||= '';
-    $product_description ||= '';
-    $disallownew         ||= 0;
-    $description         ||= '';
     
-    if (Param('useqacontact')) {
-        $vars->{'initialqacontact'} = $initialqacontact;
-    }
+    $vars->{'comp'} =
+        Bugzilla::Component::check_component($product, $comp_name);
 
-    if (Param('usetargetmilestone')) {
-        $vars->{'milestoneurl'} = $milestoneurl;
-    }
+    $vars->{'prod'} = $product;
 
-    SendSQL("SELECT count(bug_id)
-             FROM bugs
-             WHERE component_id = $component_id");
-    $vars->{'bug_count'} = FetchOneColumn() || 0;
-
-    $vars->{'name'} = $component;
-    $vars->{'description'} = $description;
-    $vars->{'initialowner'} = $initialowner;
-    $vars->{'product'} = $product;
-    $vars->{'product_description'} = $product_description;
-    $vars->{'disallownew'} = $disallownew;
-    $template->process("admin/components/confirm-delete.html.tmpl",
-                       $vars)
-      || ThrowTemplateError($template->error());
+    $template->process("admin/components/confirm-delete.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
 
     exit;
 }
@@ -444,43 +251,40 @@ if ($action eq 'del') {
 #
 
 if ($action eq 'delete') {
-    CheckComponent($product, $component);
-    my $component_id = get_component_id(get_product_id($product), $component);
 
-    my $bug_ids =
-      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs WHERE component_id = ?",
-                               undef, $component_id);
+    my $component =
+        Bugzilla::Component::check_component($product, $comp_name);
 
-    my $nb_bugs = scalar(@$bug_ids);
-    if ($nb_bugs) {
+    if ($component->bug_count) {
         if (Param("allowbugdeletion")) {
-            foreach my $bug_id (@$bug_ids) {
+            foreach my $bug_id (@{$component->bug_ids}) {
                 my $bug = new Bugzilla::Bug($bug_id, $whoid);
                 $bug->remove_from_db();
             }
-        }
-        else {
-            ThrowUserError("component_has_bugs", { nb => $nb_bugs });
+        } else {
+            ThrowUserError("component_has_bugs",
+                           {nb => $component->bug_count });
         }
     }
 
-    $vars->{'deleted_bug_count'} = $nb_bugs;
+    $vars->{'deleted_bug_count'} = $component->bug_count;
 
     $dbh->bz_lock_tables('components WRITE', 'flaginclusions WRITE',
                          'flagexclusions WRITE');
 
     $dbh->do("DELETE FROM flaginclusions WHERE component_id = ?",
-             undef, $component_id);
+             undef, $component->id);
     $dbh->do("DELETE FROM flagexclusions WHERE component_id = ?",
-             undef, $component_id);
-    $dbh->do("DELETE FROM components WHERE id = ?", undef, $component_id);
+             undef, $component->id);
+    $dbh->do("DELETE FROM components WHERE id = ?",
+             undef, $component->id);
 
     $dbh->bz_unlock_tables();
 
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $component;
-    $vars->{'product'} = $product;
+    $vars->{'name'} = $component->name;
+    $vars->{'product'} = $product->name;
     $template->process("admin/components/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -496,34 +300,10 @@ if ($action eq 'delete') {
 
 if ($action eq 'edit') {
 
-    CheckComponent($product, $component);
-    my $component_id = get_component_id(get_product_id($product), $component);
+    $vars->{'comp'} =
+        Bugzilla::Component::check_component($product, $comp_name);
 
-    # get data of component
-    SendSQL("SELECT products.name,
-                    components.name, components.initialowner,
-                    components.initialqacontact, components.description
-             FROM products LEFT JOIN components ON 
-                  products.id = components.product_id
-             WHERE components.id = $component_id");
-
-    my ($product, $component, $initialownerid, $initialqacontactid,
-        $description) = FetchSQLData();
-
-    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
-    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
-
-    SendSQL("SELECT count(*)
-             FROM bugs
-             WHERE component_id = $component_id");
-
-    $vars->{'bug_count'} = FetchOneColumn() || 0;
-
-    $vars->{'name'} = $component;
-    $vars->{'description'} = $description;
-    $vars->{'initialowner'} = $initialowner;
-    $vars->{'initialqacontact'} = $initialqacontact;
-    $vars->{'product'} = $product;
+    $vars->{'prod'} = $product;
 
     $template->process("admin/components/edit.html.tmpl",
                        $vars)
@@ -546,108 +326,94 @@ if ($action eq 'update') {
         'initialqacontact' => { 'type' => 'single' },
     });
 
+    my $comp_old_name         = trim($cgi->param('componentold')     || '');
+    my $default_assignee      = trim($cgi->param('initialowner')     || '');
+    my $default_qa_contact    = trim($cgi->param('initialqacontact') || '');
+    my $description           = trim($cgi->param('description')      || '');
 
-    my $componentold        = trim($cgi->param('componentold')        || '');
-    my $description         = trim($cgi->param('description')         || '');
-    my $descriptionold      = trim($cgi->param('descriptionold')      || '');
-    my $initialowner        = trim($cgi->param('initialowner')        || '');
-    my $initialownerold     = trim($cgi->param('initialownerold')     || '');
-    my $initialqacontact    = trim($cgi->param('initialqacontact')    || '');
-    my $initialqacontactold = trim($cgi->param('initialqacontactold') || '');
+    my $component_old =
+        Bugzilla::Component::check_component($product, $comp_old_name);
 
-    if (length($component) > 64) {
+    $comp_name || ThrowUserError('component_blank_name');
+
+    if (length($comp_name) > 64) {
         ThrowUserError('component_name_too_long',
-                       {'name' => $component});
+                       {'name' => $comp_name});
     }
 
-    # Note that the order of this tests is important. If you change
-    # them, be sure to test for WHERE='$component' or WHERE='$componentold'
+    if ($comp_name ne $component_old->name) {
+        my $component =
+            new Bugzilla::Component({product_id => $product->id,
+                                     name => $comp_name});
+        if ($component) {
+            ThrowUserError('component_already_exists',
+                           {'name' => $component->name});
+        }
+    }
+
+    $description || ThrowUserError('component_blank_description',
+                                   {'name' => $component_old->name});
+
+    $default_assignee || ThrowUserError('component_need_initialowner',
+                                        {name => $comp_name});
+
+    my $default_assignee_id   = login_to_id($default_assignee);
+    my $default_qa_contact_id = login_to_id($default_qa_contact) || undef;
 
     $dbh->bz_lock_tables('components WRITE', 'products READ',
                          'profiles READ');
-    CheckComponent($product, $componentold);
-    my $component_id = get_component_id(get_product_id($product),
-                                        $componentold);
 
-    if ($description ne $descriptionold) {
-        unless ($description) {
-            ThrowUserError('component_blank_description',
-                           {'name' => $componentold});
-        }
-        SendSQL("UPDATE components
-                 SET description=" . SqlQuote($description) . "
-                 WHERE id=$component_id");
+    if ($comp_name ne $component_old->name) {
 
-        $vars->{'updated_description'} = 1;
-        $vars->{'description'} = $description;
-    }
-
-
-    if ($initialowner ne $initialownerold) {
-
-        my $initialownerid = login_to_id($initialowner);
-        unless ($initialownerid) {
-            ThrowUserError('component_need_valid_initialowner',
-                           {'name' => $componentold});
-        }
-
-        SendSQL("UPDATE components
-                 SET initialowner=" . SqlQuote($initialownerid) . "
-                 WHERE id = $component_id");
-
-        $vars->{'updated_initialowner'} = 1;
-        $vars->{'initialowner'} = $initialowner;
-
-    }
-
-    if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
-        my $initialqacontactid = login_to_id($initialqacontact);
-        if (!$initialqacontactid && $initialqacontact ne '') {
-            ThrowUserError('component_need_valid_initialqacontact',
-                           {'name' => $componentold});
-        }
-        my $initialqacontactsql =
-              $initialqacontact ne '' ? SqlQuote($initialqacontactid) : 'NULL';
-
-        SendSQL("UPDATE components
-                 SET initialqacontact = $initialqacontactsql
-                 WHERE id = $component_id");
-
-        $vars->{'updated_initialqacontact'} = 1;
-        $vars->{'initialqacontact'} = $initialqacontact;
-    }
-
-
-    if ($component ne $componentold) {
-        unless ($component) {
-            ThrowUserError('component_must_have_a_name',
-                           {'name' => $componentold});
-        }
-        if (TestComponent($product, $component)) {
-            ThrowUserError('component_already_exists',
-                           {'name' => $component});
-        }
-
-        SendSQL("UPDATE components SET name=" . SqlQuote($component) . 
-                 "WHERE id=$component_id");
+        trick_taint($comp_name);
+        $dbh->do("UPDATE components SET name = ? WHERE id = ?",
+                 undef, ($comp_name, $component_old->id));
 
         unlink "$datadir/versioncache";
         $vars->{'updated_name'} = 1;
 
     }
 
+    if ($description ne $component_old->description) {
+    
+        trick_taint($description);
+        $dbh->do("UPDATE components SET description = ? WHERE id = ?",
+                 undef, ($description, $component_old->id));
+
+        $vars->{'updated_description'} = 1;
+        $vars->{'description'} = $description;
+    }
+
+    if ($default_assignee ne $component_old->default_assignee->login) {
+
+        $dbh->do("UPDATE components SET initialowner = ? WHERE id = ?",
+                 undef, ($default_assignee_id, $component_old->id));
+
+        $vars->{'updated_initialowner'} = 1;
+        $vars->{'initialowner'} = $default_assignee;
+
+    }
+
+    if (Param('useqacontact')
+        && $default_qa_contact ne $component_old->default_qa_contact->login) {
+        $dbh->do("UPDATE components SET initialqacontact = ?
+                  WHERE id = ?", undef,
+                 ($default_qa_contact_id, $component_old->id));
+
+        $vars->{'updated_initialqacontact'} = 1;
+        $vars->{'initialqacontact'} = $default_qa_contact;
+    }
+
     $dbh->bz_unlock_tables();
 
-    $vars->{'name'} = $component;
-    $vars->{'product'} = $product;
+    $vars->{'name'} = $comp_name;
+    $vars->{'product'} = $product->name;
     $template->process("admin/components/updated.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
 
     exit;
 }
-
-
 
 #
 # No valid action found

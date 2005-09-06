@@ -20,16 +20,8 @@
   #%]
 
 [%# INTERFACE:
-  # components: array of hashes having the properties:
-  #   - name: string; The name of the component.
-  #   - description: string; The description of the component.
-  #   - initialowner: string; The default assignee of the component.
-  #   - initialqacontact: string; The qa_contact of the component.
-  #   - bug_count: number; The number of bugs in the component
-  #                        (if showbugcounts defined).
-  #
+  # components: array of component objects
   # showbugcounts: if defined, then bug counts should be included in the table
-  #
   # product: string; the name of the product we are editing components for
   #%]
 
@@ -96,10 +88,31 @@
      contentlink => delete_contentlink
    }) %]
 
+[%# Overrides the initialowner and the initialqacontact with right values %]
+[% overrides.initialowner = [] %]
+[% overrides.initialqacontact = [] %]
+
+[% FOREACH component = components %]
+  [% overrides.initialowner.push({
+       match_value => component.name
+       match_field => 'name'
+       override_content => 1
+       content => component.default_assignee.login
+     })
+  %]
+  [% overrides.initialqacontact.push({
+       match_value => component.name
+       match_field => 'name'
+       override_content => 1
+       content => component.default_qa_contact.login
+     })
+  %]
+[% END %]
+
 [% PROCESS admin/table.html.tmpl
      columns = columns
      data = components
-     footer = footer_row
+     overrides = overrides
 %]
 
 <p><a href="editcomponents.cgi?action=add&amp;product=[% product FILTER url_quote %]">Add</a>

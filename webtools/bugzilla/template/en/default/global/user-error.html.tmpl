@@ -288,16 +288,6 @@
     [% title = "Component Requires Default Assignee" %]
     You must enter a default assignee for component '[% name FILTER html %]'.
 
-  [% ELSIF error == "component_need_valid_initialowner" %]
-    [% title = "Component Requires A Valid Default Assignee" %]
-    You must use an existing [% terms.Bugzilla %] account as the default assignee for
-    component '[% name FILTER html %]'.
-
-  [% ELSIF error == "component_need_valid_initialqacontact" %]
-    [% title = "Component Requires A Valid Default QA Contact" %]
-    You must use an existing [% terms.Bugzilla %] account as default QA contact for
-    component '[% name FILTER html %]'.
-     
   [% ELSIF error == "product_not_specified" %]
     [% title = "No Product Specified" %]
     No product specified when trying to edit components, milestones or
