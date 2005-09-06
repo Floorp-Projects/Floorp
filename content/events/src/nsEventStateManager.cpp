@@ -4129,18 +4129,21 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
           // Make sure we're not switching command dispatchers, if so,
           // surpress the blurred one
           if(gLastFocusedDocument && mDocument) {
-            nsIFocusController *newFocusController = nsnull;
-            nsIFocusController *oldFocusController = nsnull;
             nsCOMPtr<nsPIDOMWindow> newWindow =
               do_QueryInterface(GetDocumentOuterWindow(mDocument));
-            nsCOMPtr<nsPIDOMWindow> oldWindow =
-              do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
-            if(newWindow)
-              newFocusController = newWindow->GetRootFocusController();
-            if(oldWindow)
-              oldFocusController = oldWindow->GetRootFocusController();
-            if(oldFocusController && oldFocusController != newFocusController)
-              oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch");
+            if (newWindow) {
+              nsIFocusController *newFocusController =
+                newFocusController = newWindow->GetRootFocusController();
+              nsCOMPtr<nsPIDOMWindow> oldWindow =
+                do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+              if (oldWindow) {
+                nsIFocusController *oldFocusController =
+                  oldWindow->GetRootFocusController();
+                if (oldFocusController && oldFocusController != newFocusController) {
+                  oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch");
+                }
+              }
+            }
           }
 
           nsCOMPtr<nsIEventStateManager> esm;
@@ -4186,18 +4189,20 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       // Make sure we're not switching command dispatchers, if so,
       // surpress the blurred one
       if (mDocument) {
-        nsIFocusController *newFocusController = nsnull;
-        nsIFocusController *oldFocusController = nsnull;
         nsCOMPtr<nsPIDOMWindow> newWindow =
           do_QueryInterface(GetDocumentOuterWindow(mDocument));
-        nsCOMPtr<nsPIDOMWindow> oldWindow =
-          do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
 
-        if (newWindow)
-          newFocusController = newWindow->GetRootFocusController();
-        oldFocusController = oldWindow->GetRootFocusController();
-        if (oldFocusController && oldFocusController != newFocusController)
-          oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
+        if (newWindow) {
+          nsCOMPtr<nsPIDOMWindow> oldWindow =
+            do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+          nsIFocusController *newFocusController = newWindow->GetRootFocusController();
+          if (oldWindow) {
+            nsIFocusController *oldFocusController = oldWindow->GetRootFocusController();
+            if (oldFocusController && oldFocusController != newFocusController) {
+              oldFocusController->SetSuppressFocus(PR_TRUE, "SendFocusBlur Window Switch #2");
+            }
+          }
+        }
       }
 
       gLastFocusedPresContext->EventStateManager()->SetFocusedContent(nsnull);
