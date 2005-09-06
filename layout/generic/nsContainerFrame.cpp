@@ -1037,10 +1037,19 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
+  // Do this in a loop so we don't overflow the stack for frames
+  // with very many next-in-flows
   nsIFrame* nextNextInFlow = aNextInFlow->GetNextInFlow();
   if (nextNextInFlow) {
-    NS_STATIC_CAST(nsContainerFrame*, nextNextInFlow->GetParent())
-      ->DeleteNextInFlowChild(aPresContext, nextNextInFlow);
+    nsAutoVoidArray frames;
+    for (nsIFrame* f = nextNextInFlow; f; f = f->GetNextInFlow()) {
+      frames.AppendElement(f);
+    }
+    for (PRInt32 i = frames.Count() - 1; i >= 0; --i) {
+      nsIFrame* delFrame = NS_STATIC_CAST(nsIFrame*, frames.ElementAt(i));
+      NS_STATIC_CAST(nsContainerFrame*, delFrame->GetParent())
+        ->DeleteNextInFlowChild(aPresContext, delFrame);
+    }
   }
 
 #ifdef IBMBIDI
