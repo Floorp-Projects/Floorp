@@ -448,6 +448,16 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
       mInTitle = PR_TRUE; // The first title wins
     }
   }
+#ifdef MOZ_SVG
+  else if (aNodeInfo->Equals(nsSVGAtoms::title, kNameSpaceID_SVG)) {
+    nsIContent* parent = GetCurrentContent();
+    if (mDocument && mDocument->GetDocumentTitle().IsVoid() &&
+        parent && parent == mDocElement &&
+        parent->GetNodeInfo()->Equals(nsSVGAtoms::svg, kNameSpaceID_SVG)) {
+      mInTitle = PR_TRUE; // The first title wins
+    }
+  }
+#endif // MOZ_SVG
   else if (aNodeInfo->Equals(nsHTMLAtoms::link, kNameSpaceID_XHTML) ||
            aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_XHTML) ||
            aNodeInfo->Equals(nsHTMLAtoms::style, kNameSpaceID_SVG)) {
@@ -508,8 +518,11 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
     return rv;
   }
   
-  if (nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML) &&
-      mInTitle) {
+  if ((nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)
+#ifdef MOZ_SVG
+       || nodeInfo->Equals(nsSVGAtoms::title, kNameSpaceID_SVG)
+#endif // MOZ_SVG
+      ) && mInTitle) {
     NS_ASSERTION(mDocument, "How did mInTitle get to be true if mDocument is null?");
     // The first title wins
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
