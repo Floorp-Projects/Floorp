@@ -802,7 +802,7 @@ date_parseString(JSString *str, jsdouble *result)
                  ii. If m >= 70, the date is invalid.
     */
     if (seenmonthname) {
-        if (mday >= 70 && year >= 70 || mday < 70 && year < 70) {
+        if ((mday >= 70 && year >= 70) || (mday < 70 && year < 70)) {
             goto syntax;
         }
         if (mday > year) {
