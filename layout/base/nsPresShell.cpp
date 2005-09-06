@@ -1731,20 +1731,8 @@ PresShell::Init(nsIDocument* aDocument,
 
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
-//set up selection to be displayed in document
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
-    if (NS_SUCCEEDED(result) && docShell){
-      PRInt32 docShellType;
-      result = docShell->GetItemType(&docShellType);
-      if (NS_SUCCEEDED(result)){
-        if (nsIDocShellTreeItem::typeContent == docShellType){
-          SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
-        }
-      }      
-    }
-  }
+  //set up selection to be displayed in document
+  SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
   
   if (gMaxRCProcessingTime == -1) {
     gMaxRCProcessingTime =
