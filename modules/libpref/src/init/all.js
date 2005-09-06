@@ -601,11 +601,22 @@ pref("network.IDN.whitelist.museum", true);
 // If a domain includes any of the following characters, it may be a spoof 
 // attempt and so we always display the domain name as punycode. This would 
 // override the settings "network.IDN_show_punycode" and 
-// "netword.IDN.whitelist.*".
+// "network.IDN.whitelist.*".
 // The list currently contains the characters:
+// U+0337 COMBINING SHORT SOLIDUS OVERLAY
+// U+0338 COMBINING LONG SOLIDUS OVERLAY
 // U+2044 FRACTION SLASH
 // U+2215 DIVISION SLASH
-pref("network.IDN.blacklist_chars", "⁄∕");
+// U+23AE INTEGRAL EXTENSION
+// U+29F6 SOLIDUS WITH OVERBAR
+// U+29F8 BIG SOLIDUS
+// U+2AFB TRIPLE SOLIDUS BINARY RELATION
+// U+2AFD DOUBLE SOLIDUS OPERATOR
+// U+FF0F FULLWIDTH SOLIDUS
+// Note: Javascript 1.3 and higher are documented as 
+// accepting \u escapes for Unicode characters:
+// see http://developer.mozilla.org/en/docs/Core_JavaScript_1.5_Guide:Unicode
+pref("network.IDN.blacklist_chars", "\u0337\u0338\u2044\u2215\u23AE\u29F6\u29F8\u2AFB\u2AFD\uFF0F");
 
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
