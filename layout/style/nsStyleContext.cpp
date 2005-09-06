@@ -644,7 +644,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   IndentBy(out,aIndent);
   const nsStyleFont* font = GetStyleFont();
   fprintf(out, "<font %s %d %d %d />\n", 
-          NS_ConvertUCS2toUTF8(font->mFont.name).get(),
+          NS_ConvertUTF16toUTF8(font->mFont.name).get(),
           font->mFont.size,
           font->mSize,
           font->mFlags);
@@ -674,11 +674,11 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
 
   const nsStyleMargin* margin = GetStyleMargin();
   margin->mMargin.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   
   const nsStylePadding* padding = GetStylePadding();
   padding->mPadding.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   
   const nsStyleBorder* border = GetStyleBorder();
 #ifdef NS_COORD_IS_FLOAT
@@ -693,13 +693,13 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
                          border->GetBorderWidth(NS_SIDE_LEFT));
   fprintf(out, "%s ", output.get());
   border->mBorderRadius.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   
   const nsStyleOutline* outline = GetStyleOutline();
   outline->mOutlineRadius.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   outline->mOutlineWidth.ToString(str);
-  fprintf(out, "%s", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "%d", (int)border->mFloatEdge);
   fprintf(out, "\" />\n");
 
@@ -716,22 +716,22 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   const nsStylePosition* pos = GetStylePosition();
   fprintf(out, "<position data=\"");
   pos->mOffset.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mWidth.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mMinWidth.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mMaxWidth.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mHeight.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mMinHeight.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   pos->mMaxHeight.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "%d ", (int)pos->mBoxSizing);
   pos->mZIndex.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "\" />\n");
 
   // TEXT
@@ -742,13 +742,13 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     (int)text->mTextTransform,
     (int)text->mWhiteSpace);
   text->mLetterSpacing.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   text->mLineHeight.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   text->mTextIndent.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   text->mWordSpacing.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "\" />\n");
   
   // TEXT RESET
@@ -757,7 +757,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "<textreset data=\"%d ",
     (int)textReset->mTextDecoration);
   textReset->mVerticalAlign.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "\" />\n");
 
   // DISPLAY
@@ -807,9 +807,9 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "<tableborder data=\"%d ",
     (int)tableBorder->mBorderCollapse);
   tableBorder->mBorderSpacingX.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   tableBorder->mBorderSpacingY.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "%d %d ",
     (int)tableBorder->mCaptionSide,
     (int)tableBorder->mEmptyCells);
@@ -824,7 +824,7 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     (long)content->CounterResetCount());
   // XXX: iterate over the content and counters...
   content->mMarkerOffset.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "\" />\n");
 
   // QUOTES
@@ -856,9 +856,9 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "<column data=\"%d ",
     (int)column->mColumnCount);
   column->mColumnWidth.ToString(str);
-  fprintf(out, "%s ", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s ", NS_ConvertUTF16toUTF8(str).get());
   column->mColumnGap.ToString(str);
-  fprintf(out, "%s", NS_ConvertUCS2toUTF8(str).get());
+  fprintf(out, "%s", NS_ConvertUTF16toUTF8(str).get());
   fprintf(out, "\" />\n");
 
   // XUL
@@ -898,19 +898,19 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     svg->mStrokeDasharray[i].ToString(str);
     fprintf(out,
             "%s%c",
-            NS_ConvertUCS2toUTF8(str).get(),
+            NS_ConvertUTF16toUTF8(str).get(),
             (i == svg->mStrokeDasharrayLength) ? ' ' : ',');
   }
 
   svg->mStrokeDashoffset.ToString(str);
   fprintf(out, "%f %s %f %f ",
           svg->mFillOpacity,
-          NS_ConvertUCS2toUTF8(str).get(),
+          NS_ConvertUTF16toUTF8(str).get(),
           svg->mStrokeMiterlimit,
           svg->mStrokeOpacity);
   svg->mStrokeWidth.ToString(str);
   fprintf(out, "%s %d %d %d %d %d %d %d %d %d\" />\n",
-          NS_ConvertUCS2toUTF8(str).get(),
+          NS_ConvertUTF16toUTF8(str).get(),
           (int)svg->mStrokeDasharrayLength,
           (int)svg->mClipRule,
           (int)svg->mFillRule,
