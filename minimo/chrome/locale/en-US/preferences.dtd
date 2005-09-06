@@ -2,3 +2,23 @@
 <!-- Toolbar -->
 
 <!ENTITY closeWindow "C">
+
+<!-- Privacy pane -->
+
+<!ENTITY sanitizeButton.label        "Sanitize All">
+
+<!-- ConnectionsDialogPane --> 
+
+<!ENTITY proxyCaption.label          "HTTP Proxy Settings">
+<!ENTITY useproxyCheckbox.label      "Use Proxy">
+
+<!-- Home pane --> 
+
+<!ENTITY homeCaption.label           "Home Page">
+
+<!-- Small Screen Settings --> 
+
+<!ENTITY sssCaption.label            "Small Screen Settings">
+<!ENTITY imagesCheckbox.label        "Display Images">
+<!ENTITY useSSRCheckbox.label        "Use SSR">
+<!ENTITY usesiteSSRCheckbox.label    "Use Site-Specific SSR">
