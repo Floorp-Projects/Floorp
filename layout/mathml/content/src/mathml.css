@@ -179,8 +179,7 @@ math[display="inline"] {
 [mathsize="big"] {
   font-size: large;
 }
-/* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'; it
-   requires using the 'font' shorthand so as to reset everything first):
+/* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'):
      normal | bold | italic | bold-italic | double-struck | bold-fraktur | script |
      bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
      sans-serif-bold-italic | monospace
@@ -188,18 +187,17 @@ math[display="inline"] {
    Note1: These are handled with additional back-end code:
           double-struck, script, fraktur, bold-fraktur, bold-script
 
-   Note2: the 'font' shorthand must specify at least two properties, size & family
-   font: [ <font-style> || <font-variant> || <font-weight> ]? 
-         <font-size> [ / <line-height> ]?
-         <font-family>
+   Note2: Don't use the 'font' shorthand because it resets the font-size and this
+          breaks the propagation of the scriptlevel size.
 
    XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
 */
 [mathvariant] { /* shared and same as [mathvariant="normal"] */
-  font: medium serif;
-  font-size: inherit;
-  font-size-adjust: inherit;
-  font-stretch: inherit;
+  /* reset all font properties except those that affect the size */
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  font-family: serif;
 }
 [mathvariant="bold-fraktur"], 
 [mathvariant="bold-script"] {
