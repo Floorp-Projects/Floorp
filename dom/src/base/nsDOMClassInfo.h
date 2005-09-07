@@ -131,7 +131,10 @@ public:
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, const nsIID& aIID,
-                             jsval *vp);
+                             jsval *vp,
+                             // aHolder keeps the jsval alive while
+                             // there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder);
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
   static nsresult InitDOMJSClass(JSContext *cx, JSObject *obj);
