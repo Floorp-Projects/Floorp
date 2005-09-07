@@ -239,6 +239,18 @@ NPN_ForceRedraw(NPP instance)
     CallNPN_ForceRedrawProc(gNetscapeFuncs.forceredraw, instance);
 }
 
+void NPN_PushPopupsEnabledState(NPP instance, NPBool enabled)
+{
+    CallNPN_PushPopupsEnabledStateProc(gNetscapeFuncs.pushpopupsenabledstate,
+        instance, enabled);
+}
+
+void NPN_PopPopupsEnabledState(NPP instance)
+{
+    CallNPN_PopPopupsEnabledStateProc(gNetscapeFuncs.poppopupsenabledstate,
+        instance);
+}
+
 
 
 /***********************************************************************
@@ -461,6 +473,8 @@ NP_Initialize(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs)
         gNetscapeFuncs.getJavaPeer   = nsTable->getJavaPeer;
 #endif
         gNetscapeFuncs.getvalue      = nsTable->getvalue;
+        gNetscapeFuncs.pushpopupsenabledstate = nsTable->pushpopupsenabledstate;
+        gNetscapeFuncs.poppopupsenabledstate  = nsTable->poppopupsenabledstate;
 
         /*
          * Set up the plugin function table that Netscape will use to
