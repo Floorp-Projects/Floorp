@@ -205,12 +205,6 @@ pref("mailnews.headers.minNumHeaders", 0); // 0 means we ignore this pref
 
 pref("mail.compose.dontWarnMail2Newsgroup", false);
 
-pref("messenger.throbber.url","chrome://messenger-region/locale/region.properties");
-pref("mailnews.release_notes.url","chrome://messenger-region/locale/region.properties");
-pref("mailnews.hints_and_tips.url","chrome://messenger-region/locale/region.properties");
-pref("compose.throbber.url","chrome://messenger-region/locale/region.properties");
-pref("addressbook.throbber.url","chrome://messenger-region/locale/region.properties");
-
 pref("network.image.imageBehavior", 2);
 pref("network.cookie.cookieBehavior", 3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 

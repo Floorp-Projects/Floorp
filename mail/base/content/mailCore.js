@@ -265,3 +265,31 @@ function openAboutDialog()
   window.openDialog("chrome://messenger/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 #endif
 }
+
+/**
+ * Opens region specific web pages for the application like the release notes, the help site, etc. 
+ *   aResourceName --> the string resource ID in region.properties to load. 
+ */
+function openRegionURL(aResourceName)
+{
+  var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                          .getService(Components.interfaces.nsIXULAppInfo);
+  try {
+    var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+    var regionBundle = strBundleService.createBundle("chrome://messenger-region/locale/region.properties");
+    // the release notes are special and need to be formatted with the app version
+    var urlToOpen;
+    if (aResourceName == "releaseNotesURL")
+      urlToOpen = regionBundle.formatStringFromName(aResourceName, [appInfo.version], 1);
+    else
+      urlToOpen = regionBundle.GetStringFromName(aResourceName);
+      
+    var uri = Components.classes["@mozilla.org/network/io-service;1"]
+              .getService(Components.interfaces.nsIIOService)
+              .newURI(urlToOpen, null, null);
+
+    var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                      .getService(Components.interfaces.nsIExternalProtocolService);
+    protocolSvc.loadUrl(uri);
+  } catch (ex) {}
+}
