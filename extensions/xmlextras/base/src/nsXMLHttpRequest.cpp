@@ -1579,6 +1579,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     listener = this;
   }
 
+  // Since we expect XML data, set the type hint accordingly
+  // This means that we always try to parse local files as XML
+  // ignoring return value, as this is not critical
+  mChannel->SetContentType(NS_LITERAL_CSTRING("application/xml"));
+
   // Start reading from the channel
   ChangeState(XML_HTTP_REQUEST_SENT);
   rv = mChannel->AsyncOpen(listener, nsnull);

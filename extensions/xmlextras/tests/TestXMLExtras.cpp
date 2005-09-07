@@ -57,6 +57,7 @@
 #include <nsIDOMLoadListener.h>
 #include "nsContentCID.h"
 #include "nsReadableUtils.h"
+#include "nsNativeCharsetUtils.h"
 static NS_DEFINE_CID( kXMLDocumentCID, NS_XMLDOCUMENT_CID );
 
 #if 0
@@ -152,7 +153,8 @@ int main (int argc, char* argv[])
                                      &rv );
 
       if (NS_SUCCEEDED( rv )) {
-        nsString str; str.AssignWithConversion(argv[2]);
+        nsString str;
+        NS_CopyNativeToUnicode(nsDependentCString(argv[2]), str);
         rv = pDOMParser->ParseFromString(str.get(), "application/xml",
                                           getter_AddRefs( pDOMDocument ) );
 
