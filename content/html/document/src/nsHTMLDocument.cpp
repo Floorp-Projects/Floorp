@@ -2377,12 +2377,25 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
   }
 
   if (!e) {
-    NS_WARN_IF_FALSE(!aElementId.IsEmpty(),
-                     "getElementById(\"\") called, fix caller?");
+    // If IdTableIsLive(), no need to look for the element in the document,
+    // since we're fully maintaining our table's state as the DOM mutates.
+    if (!IdTableIsLive()) {
+      if (IdTableShouldBecomeLive()) {
+        // Just make sure our table is up to date and call this method again
+        // to look up in the hashtable.
+        if (mRootContent) {
+          RegisterNamedItems(mRootContent);
+        }
+        return GetElementById(aElementId, aReturn);
+      }
 
-    if (mRootContent && !aElementId.IsEmpty()) {
-      e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId),
-                         aElementId);
+      NS_WARN_IF_FALSE(!aElementId.IsEmpty(),
+                       "getElementById(\"\") called, fix caller?");
+
+      if (mRootContent && !aElementId.IsEmpty()) {
+        e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId),
+                           aElementId);
+      }
     }
 
     if (!e) {
@@ -3015,12 +3028,14 @@ nsHTMLDocument::AddToIdTable(const nsAString& aId, nsIContent *aContent)
 nsresult
 nsHTMLDocument::UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent)
 {
+  PRBool liveTable = IdTableIsLive();
+  PLDHashOperator op = liveTable ? PL_DHASH_ADD : PL_DHASH_LOOKUP;
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aId,
-                                        PL_DHASH_LOOKUP));
+                                        op));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+  if (entry && (liveTable || PL_DHASH_ENTRY_IS_BUSY(entry))) {
     entry->mIdContent = aContent;
   }
 
