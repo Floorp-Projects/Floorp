@@ -80,6 +80,8 @@ CPPSRCS		= \
 		nsURLProperties.cpp \
 		nsCharsetConverterManager.cpp \
 		nsUTF8ConverterService.cpp \
+		nsUTF8ToUnicode.cpp \
+		nsUnicodeToUTF8.cpp \
 		$(NULL)
 
 ifdef MOZ_USE_NATIVE_UCONV
@@ -93,11 +95,9 @@ CPPSRCS         += \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
 		nsMacRomanToUnicode.cpp \
-		nsUTF8ToUnicode.cpp \
 		nsUnicodeToISO88591.cpp \
 		nsUnicodeToCP1252.cpp \
 		nsUnicodeToMacRoman.cpp \
-		nsUnicodeToUTF8.cpp \
 		$(NULL)
 
 endif

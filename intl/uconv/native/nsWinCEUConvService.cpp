@@ -42,6 +42,11 @@
 #include "nsICharRepresentable.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
+#include "string.h"
+
+#include "nsUCSupport.h"
+#include "nsUTF8ToUnicode.h"
+#include "nsUnicodeToUTF8.h"
 
 class WinCEUConvAdapter : public nsIUnicodeDecoder,
                         public nsIUnicodeEncoder,
@@ -89,6 +94,9 @@ public:
                                       PRUnichar aChar);
     
     NS_IMETHOD FillInfo(PRUint32* aInfo);
+
+    nsCString mFrom;
+    nsCString mTo;
     
 };
 
@@ -108,6 +116,9 @@ WinCEUConvAdapter::~WinCEUConvAdapter()
 nsresult
 WinCEUConvAdapter::Init(const char* from, const char* to)
 {
+    mFrom = from;
+    mTo   = to;
+
     return NS_OK;
 }
 
@@ -117,7 +128,8 @@ WinCEUConvAdapter::Convert(const char * aSrc,
                          PRUnichar * aDest, 
                          PRInt32 * aDestLength)
 {
-    int count = MultiByteToWideChar(CP_ACP,
+    UINT codepage = CP_ACP;
+    int count = MultiByteToWideChar(codepage,
                                     0,
                                     aSrc,
                                     *aSrcLength,
@@ -133,7 +145,8 @@ WinCEUConvAdapter::GetMaxLength(const char * aSrc,
                               PRInt32 aSrcLength, 
                               PRInt32 * aDestLength)
 {
-    int count = MultiByteToWideChar(CP_ACP,
+    UINT codepage = CP_ACP;
+    int count = MultiByteToWideChar(codepage,
                                     0,
                                     aSrc,
                                     aSrcLength,
@@ -158,8 +171,10 @@ WinCEUConvAdapter::Convert(const PRUnichar * aSrc,
                          char * aDest, 
                          PRInt32 * aDestLength)
 {
+
     char * defaultChar = "?";
-    int count = WideCharToMultiByte(CP_ACP,
+    UINT codepage = CP_ACP;
+    int count = WideCharToMultiByte(codepage,
                                     WC_COMPOSITECHECK | WC_SEPCHARS | WC_DEFAULTCHAR,
                                     aSrc,
                                     *aSrcLength,
@@ -186,7 +201,8 @@ WinCEUConvAdapter::GetMaxLength(const PRUnichar * aSrc,
                             PRInt32 aSrcLength, 
                             PRInt32 * aDestLength)
 {
-    int count = WideCharToMultiByte(CP_ACP,
+    UINT codepage = CP_ACP;
+    int count = WideCharToMultiByte(codepage,
                                     0,
                                     aSrc,
                                     aSrcLength,
@@ -226,6 +242,22 @@ NativeUConvService::GetNativeConverter(const char* from,
                                        nsISupports** aResult) 
 {
     *aResult = nsnull;
+
+    if (!strcmp(from, "UCS-2") && !strcmp(to, "UTF-8"))
+    {
+      nsUnicodeToUTF8 * inst = new nsUnicodeToUTF8();
+      inst->AddRef();
+      *aResult = inst;
+      return NS_OK;
+    }
+
+    if (!strcmp(from, "UTF-8") && !strcmp(to, "UCS-2"))
+    {
+      nsUTF8ToUnicode * inst = new nsUTF8ToUnicode();
+      inst->AddRef();
+      *aResult = (nsIUnicodeDecoder*) inst;
+      return NS_OK;
+    }
 
     WinCEUConvAdapter* ucl = new WinCEUConvAdapter();
     if (!ucl)
