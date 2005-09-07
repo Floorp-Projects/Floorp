@@ -763,4 +763,7 @@ pref("network.autodial-helper.enabled", true);
 
 pref("config.wince.useOKBtn", true);
 
+pref("ssr.enabled", true);
+pref("ssr.site.enabled", true);
+
 
