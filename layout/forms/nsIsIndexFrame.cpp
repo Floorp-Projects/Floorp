@@ -320,8 +320,7 @@ nsIsIndexFrame::IsLeaf() const
 }
 
 NS_IMETHODIMP
-nsIsIndexFrame::AttributeChanged(nsIContent*     aChild,
-                                 PRInt32         aNameSpaceID,
+nsIsIndexFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
 {
@@ -329,7 +328,7 @@ nsIsIndexFrame::AttributeChanged(nsIContent*     aChild,
   if (nsHTMLAtoms::prompt == aAttribute) {
     rv = UpdatePromptLabel();
   } else {
-    rv = nsAreaFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsAreaFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
   return rv;
 }

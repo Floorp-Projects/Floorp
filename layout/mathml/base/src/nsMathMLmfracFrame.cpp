@@ -459,8 +459,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::AttributeChanged(nsIContent*     aContent,
-                                     PRInt32         aNameSpaceID,
+nsMathMLmfracFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
@@ -486,8 +485,7 @@ nsMathMLmfracFrame::AttributeChanged(nsIContent*     aContent,
     }
   }
   return nsMathMLContainerFrame::
-         AttributeChanged(aContent, aNameSpaceID,
-                          aAttribute, aModType);
+         AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 NS_IMETHODIMP

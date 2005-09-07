@@ -2979,12 +2979,11 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 }
 
 NS_IMETHODIMP 
-nsBlockFrame::AttributeChanged(nsIContent*     aChild,
-                               PRInt32         aNameSpaceID,
+nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType)
 {
-  nsresult rv = nsBlockFrameSuper::AttributeChanged(aChild, aNameSpaceID,
+  nsresult rv = nsBlockFrameSuper::AttributeChanged(aNameSpaceID,
                                                     aAttribute, aModType);
 
   if (NS_FAILED(rv)) {

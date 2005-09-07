@@ -999,8 +999,7 @@ nsMathMLContainerFrame::ReplaceFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::AttributeChanged(nsIContent*     aChild,
-                                         PRInt32         aNameSpaceID,
+nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)
 {

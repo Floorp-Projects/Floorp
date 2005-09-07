@@ -1237,13 +1237,12 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
 
 
 NS_IMETHODIMP
-nsBoxFrame::AttributeChanged(nsIContent* aChild,
-                             PRInt32 aNameSpaceID,
+nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
                              PRInt32 aModType)
 {
-  nsresult rv = nsContainerFrame::AttributeChanged(aChild, aNameSpaceID, 
-                                                   aAttribute, aModType);
+  nsresult rv = nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                                   aModType);
 
   // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
   // <window>.

@@ -224,13 +224,12 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
 
 
 NS_IMETHODIMP
-nsSliderFrame::AttributeChanged(nsIContent* aChild,
-                                PRInt32 aNameSpaceID,
+nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
-                                             aAttribute, aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      rv = CurrentPositionChanged(GetPresContext());

@@ -204,8 +204,7 @@ nsTableCellFrame::GetColIndex(PRInt32 &aColIndex) const
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::AttributeChanged(nsIContent*     aChild,
-                                   PRInt32         aNameSpaceID,
+nsTableCellFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                    nsIAtom*        aAttribute,
                                    PRInt32         aModType)
 {
@@ -213,7 +212,7 @@ nsTableCellFrame::AttributeChanged(nsIContent*     aChild,
   nsTableFrame* tableFrame = nsnull; 
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (tableFrame)) {
-    tableFrame->AttributeChangedFor(this, aChild, aAttribute); 
+    tableFrame->AttributeChangedFor(this, mContent, aAttribute); 
   }
   return NS_OK;
 }

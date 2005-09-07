@@ -80,8 +80,7 @@ nsMathMLmoverFrame::~nsMathMLmoverFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmoverFrame::AttributeChanged(nsIContent*     aContent,
-                                     PRInt32         aNameSpaceID,
+nsMathMLmoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
@@ -92,8 +91,7 @@ nsMathMLmoverFrame::AttributeChanged(nsIContent*     aContent,
   }
 
   return nsMathMLContainerFrame::
-         AttributeChanged(aContent, aNameSpaceID,
-                          aAttribute, aModType);
+         AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 NS_IMETHODIMP

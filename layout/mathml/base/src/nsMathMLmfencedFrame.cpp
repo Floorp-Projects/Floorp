@@ -104,8 +104,7 @@ nsMathMLmfencedFrame::SetInitialChildList(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::AttributeChanged(nsIContent*     aContent,
-                                       PRInt32         aNameSpaceID,
+nsMathMLmfencedFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aModType)
 {
@@ -113,8 +112,7 @@ nsMathMLmfencedFrame::AttributeChanged(nsIContent*     aContent,
   CreateFencesAndSeparators(GetPresContext());
 
   return nsMathMLContainerFrame::
-         AttributeChanged(aContent, aNameSpaceID,
-                          aAttribute, aModType);
+         AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 nsresult

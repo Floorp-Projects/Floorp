@@ -2783,8 +2783,7 @@ nsTextControlFrame::GetSelectionContr(nsISelectionController **aSelCon)
 
 ////NSIFRAME
 NS_IMETHODIMP
-nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
-                                     PRInt32         aNameSpaceID,
+nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
@@ -2862,7 +2861,7 @@ nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
   }
 
   return rv;

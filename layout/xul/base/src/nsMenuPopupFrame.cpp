@@ -1927,14 +1927,13 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
 }
 
 NS_IMETHODIMP 
-nsMenuPopupFrame::AttributeChanged(nsIContent* aChild,
-                                   PRInt32 aNameSpaceID,
+nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    PRInt32 aModType)
 
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
-                                             aAttribute, aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
   
   if (aAttribute == nsXULAtoms::left || aAttribute == nsXULAtoms::top)
     MoveToAttributePosition();

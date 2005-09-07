@@ -211,8 +211,7 @@ protected:
   // Called as a hook just after the menu goes away.
   PRBool OnDestroyed();
 
-  NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
   virtual ~nsMenuFrame();

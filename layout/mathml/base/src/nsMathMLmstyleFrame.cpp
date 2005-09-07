@@ -203,8 +203,7 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32         aFirstInd
 }
 
 NS_IMETHODIMP
-nsMathMLmstyleFrame::AttributeChanged(nsIContent*     aContent,
-                                      PRInt32         aNameSpaceID,
+nsMathMLmstyleFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
                                       PRInt32         aModType)
 {

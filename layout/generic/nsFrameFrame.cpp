@@ -126,8 +126,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
+  NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
@@ -447,12 +446,11 @@ nsSubDocumentFrame::VerifyTree() const
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::AttributeChanged(nsIContent* aChild,
-                                     PRInt32 aNameSpaceID,
+nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
 {
-  nsIAtom *type = aChild->Tag();
+  nsIAtom *type = mContent->Tag();
 
   if ((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
       (type == nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::data)) {
@@ -481,7 +479,7 @@ nsSubDocumentFrame::AttributeChanged(nsIContent* aChild,
       return NS_OK;
 
     nsAutoString value;
-    aChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
 
     // Notify our enclosing chrome that the primary content shell
     // has changed.

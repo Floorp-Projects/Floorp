@@ -98,8 +98,7 @@ public:
                   nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsIContent*    aChild,
-                               PRInt32        aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(PRInt32        aNameSpaceID,
                                nsIAtom*       aAttribute,
                                PRInt32        aModType);
   /**
@@ -346,8 +345,7 @@ nsSVGInnerSVGFrame::ReplaceFrame(nsIAtom*       aListName,
 }
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::AttributeChanged(nsIContent*    aChild,
-                                     PRInt32        aNameSpaceID,
+nsSVGInnerSVGFrame::AttributeChanged(PRInt32        aNameSpaceID,
                                      nsIAtom*       aAttribute,
                                      PRInt32        aModType)
 {
