@@ -626,9 +626,9 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 	return NULL;
      }
 
-     /* try loading the public key as a token object */
+     /* try loading the public key */
      if (pubKey) {
-	PK11_ImportPublicKey(slot, pubKey, PR_TRUE);
+	PK11_ImportPublicKey(slot, pubKey, token);
 	if (pubKey->pkcs11Slot) {
 	    PK11_FreeSlot(pubKey->pkcs11Slot);
 	    pubKey->pkcs11Slot = NULL;
@@ -637,7 +637,7 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
      }
 
      /* build new key structure */
-     return PK11_MakePrivKey(slot, privKey->keyType, (PRBool)!token, 
+     return PK11_MakePrivKey(slot, privKey->keyType, !token, 
 						objectID, privKey->wincx);
 }
 
@@ -649,7 +649,7 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
     if (token) {
 	attrFlags |= (PK11_ATTR_TOKEN | PK11_ATTR_PRIVATE);
     } else {
-	attrFlags |= PK11_ATTR_PUBLIC;
+	attrFlags |= (PK11_ATTR_SESSION | PK11_ATTR_PUBLIC);
     }
     if (sensitive) {
 	attrFlags |= PK11_ATTR_SENSITIVE;
@@ -769,7 +769,10 @@ PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     PRBool haslock = PR_FALSE;
     PRBool pubIsToken = PR_FALSE;
     PRBool token = ((attrFlags & PK11_ATTR_TOKEN) != 0);
-    PRBool readOnly = ((attrFlags & PK11_ATTR_READONLY) != 0);
+    /* subset of attrFlags applicable to the public key */
+    PK11AttrFlags pubKeyAttrFlags = attrFlags &
+	(PK11_ATTR_TOKEN | PK11_ATTR_SESSION
+	| PK11_ATTR_MODIFIABLE | PK11_ATTR_UNMODIFIABLE);
 
     if (pk11_BadAttrFlags(attrFlags)) {
 	PORT_SetError( SEC_ERROR_INVALID_ARGS );
@@ -935,8 +938,8 @@ PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	}
     }
     /* set the public key attributes */
-    PK11_SETATTRS(attrs, CKA_TOKEN, token ? &cktrue : &ckfalse,
-					 sizeof(CK_BBOOL)); attrs++;
+    attrs += pk11_AttrFlagsToAttributes(pubKeyAttrFlags, attrs,
+						&cktrue, &ckfalse);
     PK11_SETATTRS(attrs, CKA_DERIVE, 
 		mechanism_info.flags & CKF_DERIVE ? &cktrue : &ckfalse,
 					 sizeof(CK_BBOOL)); attrs++;
@@ -952,11 +955,6 @@ PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     PK11_SETATTRS(attrs, CKA_ENCRYPT, 
 		mechanism_info.flags & CKF_ENCRYPT? &cktrue : &ckfalse,
 					 sizeof(CK_BBOOL)); attrs++;
-    if (readOnly) {
-	/* the default value of the CKA_MODIFIABLE attribute is CK_TRUE */
-	PK11_SETATTRS(attrs, CKA_MODIFIABLE, &ckfalse,
-					 sizeof(CK_BBOOL)); attrs++;
-    }
     /* set the private key attributes */
     PK11_SETATTRS(privattrs, CKA_DERIVE, 
 		mechanism_info.flags & CKF_DERIVE ? &cktrue : &ckfalse,
@@ -1075,7 +1073,7 @@ PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	return NULL;
     }
 
-    privKey = PK11_MakePrivKey(slot,keyType,(PRBool)!token,privID,wincx);
+    privKey = PK11_MakePrivKey(slot,keyType,!token,privID,wincx);
     if (privKey == NULL) {
 	SECKEY_DestroyPublicKey(*pubKey);
 	PK11_DestroyObject(slot,privID);
@@ -1095,6 +1093,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 
     if (token) {
 	attrFlags |= PK11_ATTR_TOKEN;
+    } else {
+	attrFlags |= PK11_ATTR_SESSION;
     }
     if (sensitive) {
 	attrFlags |= (PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE);

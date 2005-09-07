@@ -919,7 +919,6 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 	keySize = 0;
     }
 
-    /* TNH: Isn't this redundant, since "handleKey" will set defaults? */
     opFlags |= weird ? CKF_DECRYPT : CKF_ENCRYPT;
 
     if (isToken) {
