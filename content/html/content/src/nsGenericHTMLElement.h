@@ -62,6 +62,7 @@ class nsIForm;
 class nsPresState;
 class nsIScrollableView;
 class nsILayoutHistoryState;
+class nsIEditor;
 struct nsRect;
 struct nsSize;
 struct nsRuleData;
@@ -797,6 +798,11 @@ protected:
    * are any.
    */
   void RecreateFrames();
+
+  /**
+   * Locate an nsIEditor rooted at this content node, if there is one.
+   */
+  NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
 };
 
 

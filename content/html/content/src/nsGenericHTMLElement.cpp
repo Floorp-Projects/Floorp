@@ -109,7 +109,7 @@
 #include "nsICSSOMFactory.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "nsIFormControlFrame.h"
+#include "nsITextControlFrame.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -4127,4 +4127,24 @@ nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr
 
   return mAttrsAndChildren.GetExistingAttrNameFromQName(
     NS_ConvertUTF16toUTF8(aStr));
+}
+
+nsresult
+nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
+{
+  *aEditor = nsnull;
+
+  if (!nsContentUtils::IsCallerChrome())
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
+  if (fcFrame) {
+    nsITextControlFrame *textFrame = nsnull;
+    CallQueryInterface(fcFrame, &textFrame);
+    if (textFrame) {
+      return textFrame->GetEditor(aEditor);
+    }
+  }
+
+  return NS_OK;
 }
