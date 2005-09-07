@@ -517,15 +517,21 @@ CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
 }
 
 CalendarWindow.prototype.compareDisplayEventStart = function calWin_compareDisplayEventStart(a, b) {
+   var startComparison = a.start.compare(b.start);
+   if (startComparison != 0)
+      return (startComparison);
+   else 
    // If the events have the same start time, return the longest item first
-   if (!(a.start.compare(b.start)))
       return (b.end.compare(a.end));
-
-   return (a.start.compare(b.start));
 }
 
 CalendarWindow.prototype.compareDisplayEventEnd = function calWin_compareDisplayEventEnd(a, b) {
-   return ( a.end.compare(b.end) );
+   var endComparison = a.end.compare(b.end);
+   if (endComparison != 0)
+      return (endComparison);
+   else
+      // if same end, return earlier start first (groups zero duration events)
+      return (a.start.compare(b.start));
 }
 
 CalendarWindow.prototype.onMouseUpCalendarSplitter = function calWinOnMouseUpCalendarSplitter()
@@ -827,7 +833,12 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
     while( eventStartListIndex < dayEventStartList.length ) {
       var nextEventStarting = dayEventStartList[eventStartListIndex];
       var nextEventEnding = dayEventEndList[eventEndListIndex];
-      if (nextEventStarting.start.compare(nextEventEnding.end) < 0) { 
+      if (nextEventStarting.start.compare(nextEventEnding.end) < 0 ||
+          // special: same time and zero length events are next in both lists:
+          //   ensures they are added as starts before they are removed as ends.
+          (nextEventStarting.start.compare(nextEventEnding.end) == 0 &&
+           nextEventStarting.start.compare(nextEventStarting.end) == 0 &&
+           nextEventEnding.start.compare(nextEventEnding.end) == 0)) {
         var event = nextEventStarting;
         //find a slot for the event
         for( i = 0; i <currEventSlots.length; i++ )
