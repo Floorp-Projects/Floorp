@@ -461,13 +461,14 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
     CGColorSpaceRef colorSpace;
     cairo_image_surface_t *destImageSurface;
     int i;
+    void *extra = NULL;
 
     cairo_rectangle_t rect = {dest_x, dest_y, width, height};
     _cairo_surface_acquire_dest_image(generic_surface,
 				      &rect,
 				      &destImageSurface,
 				      &rect,
-				      NULL);
+				      &extra);
 
     // Create a CGBitmapContext for the dest surface for drawing into
     colorSpace = CGColorSpaceCreateDeviceRGB();
@@ -531,7 +532,7 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
 				      &rect,
 				      destImageSurface,
 				      &rect,
-				      NULL);
+				      &extra);
 
     return CAIRO_STATUS_SUCCESS;
 }
