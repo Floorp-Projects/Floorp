@@ -15,13 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vidur Apparao <vidur@netscape.com> (original author)
- *   Johnny Stenback <jst@netscape.com>
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,22 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMNSEditableElement.idl"
+#include "nsISupports.idl"
 
-interface nsIControllers;
+interface nsIEditor;
 
+/**
+ * This interface is implemented by elements which have inner editable content,
+ * such as HTML input and textarea. 
+*/
 
-[scriptable, uuid(5e050532-1d12-4b98-ba20-6c883dc0d954)]
-interface nsIDOMNSHTMLInputElement : nsIDOMNSEditableElement
+[scriptable, uuid(c4a71f8e-82ba-49d7-94f9-beb359361072)]
+interface nsIDOMNSEditableElement : nsISupports
 {
-	readonly attribute nsIControllers   controllers;
-	
-	readonly attribute long             textLength;
-	
-           attribute long             selectionStart;
-           attribute long             selectionEnd;
-
-	/* convenience */
-  void                      setSelectionRange(in long selectionStart,
-                                              in long selectionEnd);
+  readonly attribute nsIEditor editor;
 };
