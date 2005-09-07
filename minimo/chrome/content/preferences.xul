@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://minimo/skin/minimo.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
 
 <!DOCTYPE prefwindow [
