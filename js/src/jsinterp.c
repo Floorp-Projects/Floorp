@@ -4821,6 +4821,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
           case JSOP_EXCEPTION:
             PUSH(cx->exception);
+            cx->throwing = JS_FALSE;
             break;
 
           case JSOP_THROW:
@@ -5286,8 +5287,8 @@ out:
              */
             SCRIPT_FIND_CATCH_START(script, pc, pc);
             if (pc) {
+                /* Don't clear cx->throwing to save cx->exception from GC. */
                 len = 0;
-                cx->throwing = JS_FALSE;    /* caught */
                 ok = JS_TRUE;
 #if JS_HAS_XML_SUPPORT
                 foreach = JS_FALSE;
