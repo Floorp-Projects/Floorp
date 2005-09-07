@@ -46,12 +46,12 @@
 
 menupopup,
 popup {
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  padding: 1px;
+  border: 1px solid ThreeDShadow;
+  -moz-border-top-colors: ThreeDShadow;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow;
+  padding: 2px;
   min-width: 1px;
   background-color: Menu;
 }
