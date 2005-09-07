@@ -612,22 +612,9 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();
 
-        /* Do the drag, but not if the window is disabled or if the command key
-           is not down. (DragWindow itself will activate the window if
-           the command key isn't down.) However, allow the drag on OSX.
-           On OSX we disable only the single parent of a window with a sheet,
-           so it's a safe-ish assumption that the disabled window can be
-           dragged and brought to the foreground. */
-        nsCOMPtr<nsIWidget> topWidget;
-        PRBool              enabled;
-        nsToolkit::GetTopWidget(whichWindow, getter_AddRefs(topWidget));
-        if (!topWidget || NS_FAILED(topWidget->IsEnabled(&enabled)) || enabled ||
-            (anEvent.modifiers & cmdKey)) {
-          Rect screenRect;
-          ::GetRegionBounds(::GetGrayRgn(), &screenRect);
-          ::DragWindow(whichWindow, anEvent.where, &screenRect);
-        } else
-          ::SysBeep(1);
+        Rect screenRect;
+        ::GetRegionBounds(::GetGrayRgn(), &screenRect);
+        ::DragWindow(whichWindow, anEvent.where, &screenRect);
 
         nsWatchTask::GetTask().Resume();
 
@@ -637,6 +624,9 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         // only activate if the command key is not down
         if (!(anEvent.modifiers & cmdKey))
         {
+          nsCOMPtr<nsIWidget> topWidget;
+          nsToolkit::GetTopWidget(whichWindow, getter_AddRefs(topWidget));
+          
           nsCOMPtr<nsPIWidgetMac> macWindow ( do_QueryInterface(topWidget) );
           if ( macWindow )
             macWindow->ComeToFront();
