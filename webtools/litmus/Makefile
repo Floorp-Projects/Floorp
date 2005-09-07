@@ -20,7 +20,7 @@ install: compile
 		\$$template->context()->template('$@'); \
 	"
 
-compile: 
+templates: 
 	$(PERL) -e " \
 		use File::Find; \
 		find({ wanted => sub { \
