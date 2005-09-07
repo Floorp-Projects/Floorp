@@ -1392,7 +1392,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
     /*parent,incl,exclgroups*/          (kFlowEntity|kHeadMisc), (kInlineEntity|kSelf), kNone,  // Treat userdefined as inline element - Ref bug 56245,66772
-    /*special props, prop-range*/       kNone, kBodyPropRange,
+    /*special props, prop-range*/       kPreferBody, kBodyPropRange,
     /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown,
     /*contain-func*/                    0
   }

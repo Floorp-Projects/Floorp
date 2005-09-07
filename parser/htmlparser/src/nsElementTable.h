@@ -257,7 +257,7 @@ struct nsHTMLElement {
 extern const nsHTMLElement gHTMLElements[];
 
 //special property bits...
-static const int kDiscardTag       = 0x0001; //tells us to toss this tag
+static const int kPreferBody       = 0x0001; //this kHeadMisc tag prefers to be in the body if there isn't an explicit <head>
 static const int kOmitEndTag       = 0x0002; //safely ignore end tag
 static const int kLegalOpen        = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
 static const int kNoPropagate      = 0x0008; //If set, this tag won't propagate as a child
