@@ -262,10 +262,20 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
       }
-      else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
+      else if (!strcmp(aProperty, NS_LOCALSTORE_UNSAFE_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
         rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-        EnsureProfileFileExists(file);
+      }
+      else if (!strcmp(aProperty, NS_APP_LOCALSTORE_50_FILE)) {
+        rv = mProfileDir->Clone(getter_AddRefs(file));
+        if (gSafeMode) {
+          rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore-safe.rdf"));
+          file->Remove(PR_FALSE);
+        }
+        else {
+          rv |= file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
+          EnsureProfileFileExists(file);
+        }
       }
       else if (!strcmp(aProperty, NS_APP_HISTORY_50_FILE)) {
         rv = mProfileDir->Clone(getter_AddRefs(file));
