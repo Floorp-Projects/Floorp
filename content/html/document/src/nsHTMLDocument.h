@@ -310,6 +310,27 @@ protected:
 
   PRPackedBool mIsFrameset;
 
+  PRBool IdTableIsLive() const {
+    // live if we've had over 63 misses
+    return (mIdMissCount & 0x40) != 0;
+  }
+
+  PRBool IdTableShouldBecomeLive() {
+    NS_ASSERTION(!IdTableIsLive(),
+                 "Shouldn't be called if table is already live!");
+    ++mIdMissCount;
+    return IdTableIsLive();
+  }
+
+  PRUint8 mIdMissCount;
+
+  /* mIdAndNameHashTable works as follows for IDs:
+   * 1) Attribute changes affect the table immediately (removing and adding
+   *    entries as needed).
+   * 2) Removals from the DOM affect the table immediately
+   * 3) Additions to the DOM always update existing entries, but only add new
+   *    ones if IdTableIsLive() is true.
+   */
   PLDHashTable mIdAndNameHashTable;
 
   nsCOMPtr<nsIWyciwygChannel> mWyciwygChannel;
