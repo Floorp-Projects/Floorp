@@ -140,6 +140,14 @@
           <input type="hidden" name="format" value="multiple">
           <input type="submit" value="&nbsp;&nbsp;Long Format&nbsp;">
         </form>
+        <form method="post" action="show_bug.cgi">
+            <input type="hidden" name="ctype" value="xml">
+          [% FOREACH id = buglist %]
+            <input type="hidden" name="id" value="[% id FILTER html %]">
+          [% END %]
+            <input type="hidden" name="excludefield" value="attachmentdata">
+            <input type="submit" value="XML">
+        </form>
 
         [% IF UserInGroup(Param('timetrackinggroup')) %]
           <form method="post" action="summarize_time.cgi">

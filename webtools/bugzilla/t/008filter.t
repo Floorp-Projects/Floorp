@@ -218,7 +218,7 @@ sub directive_ok {
     # Things which are already filtered
     # Note: If a single directive prints two things, and only one is 
     # filtered, we may not catch that case.
-    return 1 if $directive =~ /FILTER\ (html|csv|js|url_quote|css_class_quote|
+    return 1 if $directive =~ /FILTER\ (html|csv|js|base64|url_quote|css_class_quote|
                                         ics|quoteUrls|time|uri|xml|lower|
                                         obsolete|inactive|closed|unitconvert|
                                         none)/x;

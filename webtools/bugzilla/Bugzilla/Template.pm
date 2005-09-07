@@ -26,6 +26,7 @@
 #                 Myk Melez <myk@mozilla.org>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Greg Hendricks <ghendricks@novell.com>
 
 
 package Bugzilla::Template;
@@ -37,6 +38,7 @@ use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Error;
+use MIME::Base64;
 
 # for time2str - replace by TT Date plugin??
 use Date::Format ();
@@ -319,7 +321,13 @@ sub create {
                 $var =~ s/\@/\\x40/g; # anti-spam for email addresses
                 return $var;
             },
-
+            
+            # Converts data to base64
+            base64 => sub {
+                my ($data) = @_;
+                return encode_base64($data);
+            },
+            
             # HTML collapses newlines in element attributes to a single space,
             # so form elements which may have whitespace (ie comments) need
             # to be encoded using &#013;

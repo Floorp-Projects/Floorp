@@ -96,6 +96,7 @@ foreach my $include_path (@include_paths) {
             html_linebreak => sub { return $_; },
             no_break => sub { return $_; } ,
             js        => sub { return $_ } ,
+            base64   => sub { return $_ } ,
             inactive => [ sub { return sub { return $_; } }, 1] ,
             closed => [ sub { return sub { return $_; } }, 1] ,
             obsolete => [ sub { return sub { return $_; } }, 1] ,

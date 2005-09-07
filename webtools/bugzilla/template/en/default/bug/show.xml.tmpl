@@ -77,6 +77,9 @@
             <date>[% a.attached FILTER time FILTER xml %]</date>
             <desc>[% a.description FILTER xml %]</desc>
             <ctype>[% a.contenttype FILTER xml %]</ctype>
+        [% IF displayfields.attachmentdata %]
+            <data>[% a.data FILTER base64 %]</data>
+        [% END %]        
             [% FOREACH flag = a.flags %]
               <flag name="[% flag.type.name FILTER xml %]"
                     status="[% flag.status FILTER xml %]"
