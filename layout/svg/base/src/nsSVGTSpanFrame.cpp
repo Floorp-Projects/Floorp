@@ -347,8 +347,10 @@ nsSVGTSpanFrame::GetCoveredRegion()
     if (SVGFrame) {
       nsCOMPtr<nsISVGRendererRegion> dirty_region = SVGFrame->GetCoveredRegion();
       if (accu_region) {
-        nsCOMPtr<nsISVGRendererRegion> temp = dont_AddRef(accu_region);
-        dirty_region->Combine(temp, &accu_region);
+        if (dirty_region) {
+          nsCOMPtr<nsISVGRendererRegion> temp = dont_AddRef(accu_region);
+          dirty_region->Combine(temp, &accu_region);
+        }
       }
       else {
         accu_region = dirty_region;
