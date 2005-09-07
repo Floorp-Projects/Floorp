@@ -211,11 +211,19 @@ function askUser(message)
   var ps = getPromptService();
   if (!ps)
     return false;
-  
-  return ps.confirm(
+
+  var button = ps.confirmEx(
     window,
     gBrandBundle.getString("brandShortName"), 
-    message);
+    message,
+    ps.STD_YES_NO_BUTTONS,
+    null,
+    null,
+    null,
+    null,
+    {});
+  // confirmEx returns button index:
+  return (button == 0);
 }
 
 function checkOtherCert(nickname, pref, usage, msgNeedCertWantSame, msgWantSame, msgNeedCertWantToSelect, enabler)
