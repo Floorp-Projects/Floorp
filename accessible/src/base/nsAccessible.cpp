@@ -1281,6 +1281,15 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
   nsAutoString textEquivalent;
   if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     if (aContent->IsContentOfType(nsIContent::eXUL)) {
+      nsCOMPtr<nsIPresShell> shell = GetPresShell();
+      if (!shell) {
+        return NS_ERROR_FAILURE;  
+      }
+      nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
+      if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
+        return NS_OK;
+      }
+ 
       if (aContent->Tag() == nsAccessibilityAtoms::label) {
         aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
                          textEquivalent);
