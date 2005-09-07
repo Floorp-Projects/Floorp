@@ -1346,30 +1346,6 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
   window->clipRect.right = 0;
 #endif
 
-  // Check to see if content-policy wants to veto this
-  if (aURI) {
-    nsIDocument *document = aPresContext->PresShell()->GetDocument();
-    if (! document)
-      return NS_ERROR_FAILURE;
-
-    nsIURI *docURI = document->GetDocumentURI();
-    //don't care if we can't get the originating URL
-
-    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
-    nsresult rv =
-      NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
-                                aURI,
-                                docURI,
-                                mContent,
-                                nsDependentCString(aMimeType ? aMimeType : ""),
-                                nsnull, //extra
-                                &shouldLoad,
-                                nsContentUtils::GetContentPolicy());
-    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
-    }
-  }
-
 #ifdef DEBUG
   mInstantiating = PR_TRUE;
 #endif
