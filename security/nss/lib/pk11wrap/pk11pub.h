@@ -353,8 +353,9 @@ PK11SlotInfo * PK11_GetSlotFromKey(PK11SymKey *symKey);
 void *PK11_GetWindow(PK11SymKey *symKey);
 /*
  * The attrFlags is the logical OR of the PK11_ATTR_XXX bitflags.
- * These flags apply to the private key.  The PK11_ATTR_TOKEN and
- * PK11_ATTR_READONLY flags also apply to the public key.
+ * These flags apply to the private key.  The PK11_ATTR_TOKEN,
+ * PK11_ATTR_SESSION, PK11_ATTR_MODIFIABLE, and PK11_ATTR_UNMODIFIABLE
+ * flags also apply to the public key.
  */
 SECKEYPrivateKey *PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,
    CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,

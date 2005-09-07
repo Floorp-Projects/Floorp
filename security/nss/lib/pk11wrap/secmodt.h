@@ -211,8 +211,7 @@ typedef PRUint32 PK11AttrFlags;
  * private keys or secret keys.  Some of these bitflags also apply
  * to the public keys associated with the private keys.
  *
- * Some of these PKCS #11 object attributes have a token-specific
- * default value.  For such attributes, we need two bitflags to
+ * For each PKCS #11 object attribute, we need two bitflags to
  * specify not only "true" and "false" but also "default".  For
  * example, PK11_ATTR_PRIVATE and PK11_ATTR_PUBLIC control the
  * CKA_PRIVATE attribute.  If PK11_ATTR_PRIVATE is set, we add
@@ -230,14 +229,22 @@ typedef PRUint32 PK11AttrFlags;
 
 /*
  * PK11_ATTR_TOKEN
+ * PK11_ATTR_SESSION
  *
- * If this flag is set, the object is a token object.  If this
- * flag is not set, the object is *by default* a session object.
- * This flag specifies the value of the PKCS #11 CKA_TOKEN
+ * These two flags determine whether the object is a token or
+ * session object.
+ *
+ * These two flags are related and cannot both be set.
+ * If the PK11_ATTR_TOKEN flag is set, the object is a token
+ * object.  If the PK11_ATTR_SESSION flag is set, the object is
+ * a session object.  If neither flag is set, the object is *by
+ * default* a session object.
+ *
+ * These two flags specify the value of the PKCS #11 CKA_TOKEN
  * attribute.
  */
 #define PK11_ATTR_TOKEN         0x00000001L
-/*      Reserved                0x00000002L */
+#define PK11_ATTR_SESSION       0x00000002L
 
 /*
  * PK11_ATTR_PRIVATE
@@ -262,18 +269,23 @@ typedef PRUint32 PK11AttrFlags;
 #define PK11_ATTR_PUBLIC        0x00000008L
 
 /*
- * PK11_ATTR_READONLY
+ * PK11_ATTR_MODIFIABLE
+ * PK11_ATTR_UNMODIFIABLE
  *
- * If this flag is set, the object is read-only.  If this flag is
- * not set, the object is *by default* modifiable.
+ * These two flags determine whether the object is modifiable or
+ * read-only.
  *
- * This flag specifies the value of the PKCS #11 CKA_MODIFIABLE
+ * These two flags are related and cannot both be set.
+ * If the PK11_ATTR_MODIFIABLE flag is set, the object can be
+ * modified.  If the PK11_ATTR_UNMODIFIABLE flag is set, the object
+ * is read-only.  If neither flag is set, the object is *by default*
+ * modifiable.
+ *
+ * These two flags specify the value of the PKCS #11 CKA_MODIFIABLE
  * attribute.
- *
- * XXX Should we name this flag PK11_ATTR_UNMODIFIABLE?
  */
-/*      Reserved                0x00000010L */
-#define PK11_ATTR_READONLY      0x00000020L
+#define PK11_ATTR_MODIFIABLE    0x00000010L
+#define PK11_ATTR_UNMODIFIABLE  0x00000020L
 
 /* Attributes for PKCS #11 key objects. */
 

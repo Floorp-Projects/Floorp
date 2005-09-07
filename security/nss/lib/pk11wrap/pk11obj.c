@@ -445,10 +445,9 @@ pk11_OpFlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
     for (; flags && test <= CKF_DERIVE; test <<= 1, ++pType) {
     	if (test & flags) {
 	    flags ^= test;
-	    if (*pType) {
-		PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
-		++attr;
-	    }
+	    PR_ASSERT(*pType);
+	    PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
+	    ++attr;
 	}
     }
     return (attr - attrs);
@@ -462,8 +461,8 @@ PRBool
 pk11_BadAttrFlags(PK11AttrFlags attrFlags)
 {
     PK11AttrFlags trueFlags = attrFlags & 0x55555555;
-    PK11AttrFlags falseFlags = attrFlags >> 1 & 0x55555555;
-    return (trueFlags & falseFlags) != 0 ? PR_TRUE : PR_FALSE;
+    PK11AttrFlags falseFlags = (attrFlags >> 1) & 0x55555555;
+    return ((trueFlags & falseFlags) != 0);
 }
 
 /*
@@ -474,64 +473,28 @@ unsigned int
 pk11_AttrFlagsToAttributes(PK11AttrFlags attrFlags, CK_ATTRIBUTE *attrs,
 				CK_BBOOL *ckTrue, CK_BBOOL *ckFalse)
 {
-    CK_ATTRIBUTE *attr = attrs;
+    const static CK_ATTRIBUTE_TYPE attrTypes[5] = {
+	CKA_TOKEN, CKA_PRIVATE, CKA_MODIFIABLE, CKA_SENSITIVE,
+	CKA_EXTRACTABLE
+    };
+
+    const CK_ATTRIBUTE_TYPE *pType	= attrTypes;
+          CK_ATTRIBUTE      *attr	= attrs;
+          PK11AttrFlags      test	= PK11_ATTR_TOKEN;
 
     PR_ASSERT(!pk11_BadAttrFlags(attrFlags));
 
-    /*
-     * The default value of the CKA_TOKEN attribute is CK_FALSE,
-     * so we only need to set this attribute for CK_TRUE.
-     */
-    if (attrFlags & PK11_ATTR_TOKEN) {
-	PK11_SETATTRS(attr, CKA_TOKEN, ckTrue, sizeof *ckTrue);
-	++attr;
-    }
-
-    /*
-     * The default value of the CKA_PRIVATE attribute is
-     * token-specific.
-     */
-    if (attrFlags & PK11_ATTR_PRIVATE) {
-	PK11_SETATTRS(attr, CKA_PRIVATE, ckTrue, sizeof *ckTrue);
-	++attr;
-    } else if (attrFlags & PK11_ATTR_PUBLIC) {
-	PK11_SETATTRS(attr, CKA_PRIVATE, ckFalse, sizeof *ckFalse);
-	++attr;
-    }
-
-    /*
-     * The default value of the CKA_MODIFIABLE attribute is CK_TRUE,
-     * so we only need to set this attribute for CK_FALSE.
-     */
-    if (attrFlags & PK11_ATTR_READONLY) {
-	PK11_SETATTRS(attr, CKA_MODIFIABLE, ckFalse, sizeof *ckFalse);
-	++attr;
-    }
-
-    /*
-     * For private keys, the default value of the CKA_SENSITIVE
-     * attribute is token-specific.  For secret keys, the default
-     * value of this attribute is CK_FALSE per PKCS #11 but in
-     * practice it is token-specific.
-     */
-    if (attrFlags & PK11_ATTR_SENSITIVE) {
-	PK11_SETATTRS(attr, CKA_SENSITIVE, ckTrue, sizeof *ckTrue);
-	++attr;
-    } else if (attrFlags & PK11_ATTR_INSENSITIVE) {
-	PK11_SETATTRS(attr, CKA_SENSITIVE, ckFalse, sizeof *ckFalse);
-	++attr;
-    }
-
-    /*
-     * The default value of the CKA_EXTRACTABLE attribute is
-     * token-specific.
-     */
-    if (attrFlags & PK11_ATTR_EXTRACTABLE) {
-	PK11_SETATTRS(attr, CKA_EXTRACTABLE, ckTrue, sizeof *ckTrue);
-	++attr;
-    } else if (attrFlags & PK11_ATTR_UNEXTRACTABLE) {
-	PK11_SETATTRS(attr, CKA_EXTRACTABLE, ckFalse, sizeof *ckFalse);
-	++attr;
+    /* we test two related bitflags in each iteration */
+    for (; attrFlags && test <= PK11_ATTR_EXTRACTABLE; test <<= 2, ++pType) {
+    	if (test & attrFlags) {
+	    attrFlags ^= test;
+	    PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
+	    ++attr;
+	} else if ((test << 1) & attrFlags) {
+	    attrFlags ^= (test << 1);
+	    PK11_SETATTRS(attr, *pType, ckFalse, sizeof *ckFalse); 
+	    ++attr;
+	}
     }
     return (attr - attrs);
 }
