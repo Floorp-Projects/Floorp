@@ -64,7 +64,7 @@
 #define WORD ARC4WORD
 #endif
 
-#if defined(NSS_USE_HYBRID) && !defined(SOLARIS) && !defined(NSS_USE_64) 
+#if defined(IS_64) && !defined(__sparc) && !defined(NSS_USE_64) 
 typedef unsigned long long WORD;
 #else
 typedef unsigned long WORD;
@@ -351,7 +351,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
 	ARCFOUR_NEXT_BYTE(); streamWord |= (WORD)cx->S[t] << (n     );
 #endif
 
-#if (defined(NSS_USE_HYBRID) && !defined(SOLARIS)) || defined(NSS_USE_64)
+#if (defined(IS_64) && !defined(__sparc)) || defined(NSS_USE_64)
 /* 64-bit wordsize */
 #ifdef IS_LITTLE_ENDIAN
 #define ARCFOUR_NEXT_WORD() \

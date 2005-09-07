@@ -50,8 +50,7 @@ endif
 # Sun's WorkShop defines v8, v8plus and v9 architectures.
 # gcc on Solaris defines v8 and v9 "cpus".  
 # gcc's v9 is equivalent to Workshop's v8plus.
-# gcc apparently has no equivalent to Workshop's v9
-# We always use Sun's assembler and linker, which use Sun's naming convention.
+# gcc's -m64 is equivalent to Workshop's v9
 
 ifeq ($(USE_64), 1)
   ifdef NS_USE_GCC
@@ -66,17 +65,9 @@ ifeq ($(USE_64), 1)
 else
   ifneq ($(OS_TEST),i86pc)
     ifdef NS_USE_GCC
-      ifdef USE_HYBRID
-        ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plus
-      else
-        ARCHFLAG=-mcpu=v8
-      endif
+      ARCHFLAG=-mcpu=v8
     else
-      ifdef USE_HYBRID
-        ARCHFLAG=-xarch=v8plus
-      else
-        ARCHFLAG=-xarch=v8
-      endif
+      ARCHFLAG=-xarch=v8
     endif
   endif
 endif

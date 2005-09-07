@@ -58,28 +58,11 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-#
-# we really should have this driven from a list file made during the normal
-# NSS build prodecure.
-#
-ifndef USE_64
-ifeq ($(OS_TARGET), HP-UX)
-   ifneq ($(OS_TEST), ia64)
-     LOADABLE_FREEBL= 1
-   endif
-endif
-ifeq ($(OS_TARGET), SunOS)
-   ifeq ($(CPU_ARCH), sparc)
-     LOADABLE_FREEBL = 1 
-   endif
-endif
-endif
+# sign any and all shared libraries that contain the word freebl
 
-ifdef LOADABLE_FREEBL
-    CHECKFILES += freebl_pure32_3.chk freebl_hybrid_3.chk
-endif
-
-CHECKLOC=$(addprefix $(DIST)/lib/$(DLL_PREFIX), $(CHECKFILES))
+CHECKLIBS = $(DIST)/lib/$(DLL_PREFIX)softokn3.$(DLL_SUFFIX)
+CHECKLIBS += $(wildcard $(DIST)/lib/$(DLL_PREFIX)freebl*3.$(DLL_SUFFIX))
+CHECKLOC = $(CHECKLIBS:.$(DLL_SUFFIX)=.chk)
 
 MD_LIB_RELEASE_FILES = $(CHECKLOC)
 ALL_TRASH += $(CHECKLOC)
@@ -105,9 +88,9 @@ include ../platrules.mk
 
 %.chk: %.$(DLL_SUFFIX) 
 ifeq ($(OS_TARGET), OS2)
-	@cmd.exe /c sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
+	cmd.exe /c sign.cmd $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 else
-	@sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
+	sh ./sign.sh $(DIST) $(OBJDIR) $(OS_TARGET) $(NSPR_LIB_DIR) $<
 endif
 
 libs install :: $(CHECKLOC)
