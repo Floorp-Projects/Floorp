@@ -70,7 +70,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 .menu-iconic-accel,
 .menu-text,
 .menu-iconic-text {
-  margin-top: 0px !important;
+  margin-top: 2px !important;
   margin-bottom: 2px !important;
   -moz-margin-start: 1px !important;
   -moz-margin-end: 2px !important;
@@ -91,8 +91,8 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 
 .menu-iconic-left {
   min-width: 12px;
-  margin-top: 1px;
-  margin-bottom: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   -moz-margin-start: 2px;
   -moz-margin-end: 2px;
 }
@@ -133,14 +133,18 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 1px solid transparent;
-  padding-top: 0px;
+  border: 1px solid transparent !important;
+  padding-top: 1px;
   -moz-padding-end: 3px;
   padding-bottom: 1px;
   -moz-padding-start: 2px;
-  margin-bottom: 1px;
+	margin-top: 0px !important;
+  margin-bottom: 1px !important;
 }
 menubar > menu[_moz-menuactive="true"] {
+  padding: 1px 3px 1px 2px !important;
+  background-color : Highlight !important;
+  color: HighlightText !important;
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
