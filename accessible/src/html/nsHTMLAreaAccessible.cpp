@@ -58,6 +58,11 @@ nsLinkableAccessible(aDomNode, aShell)
 /* wstring getName (); */
 NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
 {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+
   aName.Truncate();
   if (mRoleMapEntry) {
     nsresult rv = nsAccessible::GetName(aName);
@@ -65,13 +70,13 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
       return rv;
     }
   }
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString hrefString;
-    elt->GetAttribute(NS_LITERAL_STRING("title"), aName);
-    if (aName.IsEmpty())
-      return GetValue(aName);
+  if (NS_CONTENT_ATTR_NO_VALUE ==
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName) &&  
+      NS_CONTENT_ATTR_NO_VALUE ==
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName)) {
+    return GetValue(aName);
   }
+
   return NS_OK;
 }
 
