@@ -192,8 +192,7 @@ public:
   //        Therefore, there is an overhead here in that our siblings are re-laid
   //        too (e.g., this happens with <mstyle>, <munder>, <mover>, <munderover>). 
   NS_IMETHOD
-  AttributeChanged(nsIContent*     aChild,
-                   PRInt32         aNameSpaceID,
+  AttributeChanged(PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 

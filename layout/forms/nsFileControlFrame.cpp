@@ -555,8 +555,7 @@ nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::AttributeChanged(nsIContent*     aChild,
-                                     PRInt32         aNameSpaceID,
+nsFileControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)
 {
@@ -570,7 +569,7 @@ nsFileControlFrame::AttributeChanged(nsIContent*     aChild,
     SyncAttr(aNameSpaceID, aAttribute, SYNC_TEXT);
   }
 
-  return nsAreaFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
+  return nsAreaFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 PRBool

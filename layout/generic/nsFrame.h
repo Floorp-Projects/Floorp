@@ -223,8 +223,7 @@ public:
   NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
                                    nsIContent*     aChild,
                                    PRBool          aAppend);
-  NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
-                               PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;

@@ -329,13 +329,12 @@ nsResizerFrame::GetInitialDirection(eDirection& aDirection)
 
 
 NS_IMETHODIMP
-nsResizerFrame::AttributeChanged(nsIContent* aChild,
-                                 PRInt32 aNameSpaceID,
+nsResizerFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
-    nsresult rv = nsTitleBarFrame::AttributeChanged(aChild, aNameSpaceID,
-                                                    aAttribute, aModType);
+    nsresult rv = nsTitleBarFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                                    aModType);
 
     if (aAttribute == nsXULAtoms::dir ) 
 	 {

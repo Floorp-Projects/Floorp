@@ -172,8 +172,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   /** handler for attribute changes to mContent */
-  NS_IMETHOD AttributeChanged(nsIContent*     aChild,
-                              PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 

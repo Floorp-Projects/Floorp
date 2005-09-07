@@ -94,8 +94,7 @@ public:
 #endif
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
-  NS_IMETHOD AttributeChanged(nsIContent*     aChild,
-                              PRInt32         aNameSpaceID,
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
   virtual PRBool IsLeaf() const;

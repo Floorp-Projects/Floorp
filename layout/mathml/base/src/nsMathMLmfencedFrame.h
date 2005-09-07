@@ -78,8 +78,7 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  AttributeChanged(nsIContent*     aContent,
-                   PRInt32         aNameSpaceID,
+  AttributeChanged(PRInt32         aNameSpaceID,
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 

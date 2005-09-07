@@ -298,8 +298,7 @@ nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::AttributeChanged(nsIContent* aChild,
-                                     PRInt32 aNameSpaceID,
+nsListBoxBodyFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute, 
                                      PRInt32 aModType)
 {
@@ -326,7 +325,7 @@ nsListBoxBodyFrame::AttributeChanged(nsIContent* aChild,
     }
   }
   else
-    rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID, aAttribute, aModType);
+    rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 
   return rv;
  

@@ -844,14 +844,12 @@ public:
    * The first frame that maps that content is asked to deal
    * with the change by doing whatever is appropriate.
    *
-   * @param aChild the piece of content whose attribute changed
    * @param aNameSpaceID the namespace of the attribute
    * @param aAttribute the atom name of the attribute
    * @param aModType Whether or not the attribute was added, changed, or removed.
    *   The constants are defined in nsIDOMMutationEvent.h.
    */
-  NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
-                               PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType) = 0;
 

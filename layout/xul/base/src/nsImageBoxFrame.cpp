@@ -245,13 +245,12 @@ NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 } // NS_NewTitledButtonFrame
 
 NS_IMETHODIMP
-nsImageBoxFrame::AttributeChanged(nsIContent* aChild,
-                                  PRInt32 aNameSpaceID,
+nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
-  nsresult rv = nsLeafBoxFrame::AttributeChanged(aChild, aNameSpaceID,
-		                                 aAttribute, aModType);
+  nsresult rv = nsLeafBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                                 aModType);
 
   if (aAttribute == nsHTMLAtoms::src) {
     UpdateImage();

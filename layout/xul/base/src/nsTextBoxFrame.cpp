@@ -122,8 +122,7 @@ NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::AttributeChanged(nsIContent*     aChild,
-                                 PRInt32         aNameSpaceID,
+nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
 {

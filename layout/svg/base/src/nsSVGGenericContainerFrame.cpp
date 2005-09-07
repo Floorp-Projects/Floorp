@@ -171,8 +171,7 @@ nsSVGGenericContainerFrame::ReplaceFrame(nsIAtom*        aListName,
 }
 
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::AttributeChanged(nsIContent*     aChild,
-                                             PRInt32         aNameSpaceID,
+nsSVGGenericContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                              nsIAtom*        aAttribute,
                                              PRInt32         aModType)
 {

@@ -98,18 +98,17 @@ nsProgressMeterFrame::SetInitialChildList(nsPresContext* aPresContext,
 { 
   // Set up our initial flexes.
   nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::value, 0);
+  AttributeChanged(kNameSpaceID_None, nsHTMLAtoms::value, 0);
   return rv;
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::AttributeChanged(nsIContent* aChild,
-                                       PRInt32 aNameSpaceID,
+nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
-                                             aAttribute, aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
   if (NS_OK != rv) {
     return rv;
   }

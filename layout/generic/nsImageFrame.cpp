@@ -1754,12 +1754,11 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsImageFrame::AttributeChanged(nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
+nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType)
 {
-  nsresult rv = nsSplittableFrame::AttributeChanged(aChild, aNameSpaceID,
+  nsresult rv = nsSplittableFrame::AttributeChanged(aNameSpaceID,
                                                     aAttribute, aModType);
   if (NS_FAILED(rv)) {
     return rv;

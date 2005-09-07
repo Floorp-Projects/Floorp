@@ -696,8 +696,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
 }  
 
 NS_IMETHODIMP
-nsMenuFrame::AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
+nsMenuFrame::AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {

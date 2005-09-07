@@ -180,13 +180,12 @@ nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::AttributeChanged(nsIContent* aChild,
-                                 PRInt32 aNameSpaceID,
+nsTreeColFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aChild, aNameSpaceID,
-                                             aAttribute, aModType);
+  nsresult rv = nsBoxFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                             aModType);
 
   if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
     EnsureColumns();

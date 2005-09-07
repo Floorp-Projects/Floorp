@@ -131,13 +131,12 @@ nsLeafBoxFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::AttributeChanged(nsIContent* aChild,
-                                 PRInt32 aNameSpaceID,
+nsLeafBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  PRInt32 aModType)
 {
-  nsresult rv = nsLeafFrame::AttributeChanged(aChild, aNameSpaceID,
-                                              aAttribute, aModType);
+  nsresult rv = nsLeafFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                              aModType);
 
   if (aAttribute == nsXULAtoms::mousethrough) 
     UpdateMouseThrough();

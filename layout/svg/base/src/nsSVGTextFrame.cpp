@@ -112,8 +112,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  AttributeChanged(nsIContent*     aChild,
-                               PRInt32         aNameSpaceID,
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
@@ -346,8 +345,7 @@ nsSVGTextFrame::Init(nsPresContext*   aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::AttributeChanged(nsIContent*     aChild,
-                                 PRInt32         aNameSpaceID,
+nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
 {

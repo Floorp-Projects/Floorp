@@ -155,12 +155,11 @@ nsAreaFrame::Destroy(nsPresContext* aPresContext)
 } 
 
 NS_IMETHODIMP
-nsAreaFrame::AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
+nsAreaFrame::AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType)
 {
-  nsresult rv = nsBlockFrame::AttributeChanged(aChild, aNameSpaceID, 
+  nsresult rv = nsBlockFrame::AttributeChanged(aNameSpaceID, 
                                                aAttribute, aModType);
 
   // If the accesskey changed, register for the new value
