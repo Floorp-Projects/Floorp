@@ -1358,10 +1358,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
   START_TIMER()
 
   if(NS_SUCCEEDED(result)) {
-    if(NS_OK==result) {
-      result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
-    }
-    
     // This code is here to make sure the head is closed before we deal 
     // with any tags that don't belong in the head. If the tag is not exclusive
     // then we do not have enough information, and we have to trust the logic
@@ -1651,13 +1647,21 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       }//switch
 
       if(!isTokenHandled) {
-        if(theHeadIsParent &&
-            (isExclusive || !(mFlags & NS_DTD_FLAG_HAD_BODY))) {
+        PRBool prefersBody =
+          gHTMLElements[theChildTag].HasSpecialProperty(kPreferBody);
+
+        // If this tag prefers to be in the head (when neither the head nor the
+        // body have been explicitly opened) then check that we haven't seen the
+        // body (true until the <body> tag has really been seen). Otherwise,
+        // check if the head has been explicitly opened. See bug 307122.
+        theHeadIsParent = theHeadIsParent &&
+          (isExclusive ||
+           (prefersBody
+            ? (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)
+            : !(mFlags & NS_DTD_FLAG_HAD_BODY)));
+
+        if(theHeadIsParent) {
           // These tokens prefer to be in the head.
-          // Note: I changed the above test to be against NS_DTD_FLAG_HAD_BODY
-          // instead of NS_DTD_FLAG_HAS_OPEN_HEAD because if neither the body
-          // nor the head have been opened, we should assume the tag wants to
-          // be in the head.
           result = AddHeadLeaf(theNode);
         }
         else {
