@@ -532,7 +532,7 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
 				      &rect,
 				      destImageSurface,
 				      &rect,
-				      &extra);
+				      extra);
 
     return CAIRO_STATUS_SUCCESS;
 }
