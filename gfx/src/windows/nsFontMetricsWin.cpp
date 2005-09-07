@@ -630,13 +630,15 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   logFont->lfStrikeOut      =
     (mFont.decorations & NS_FONT_DECORATION_LINE_THROUGH)
     ? TRUE : FALSE;
-  logFont->lfCharSet        = mIsUserDefined ? ANSI_CHARSET : DEFAULT_CHARSET;
 #ifndef WINCE
+  logFont->lfCharSet        = mIsUserDefined ? ANSI_CHARSET : DEFAULT_CHARSET;
   logFont->lfOutPrecision   = OUT_TT_PRECIS;
-#else
-  logFont->lfOutPrecision   = OUT_DEFAULT_PRECIS;
-#endif
   logFont->lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
+#else
+  logFont->lfCharSet        = DEFAULT_CHARSET;
+  logFont->lfOutPrecision   = OUT_DEFAULT_PRECIS;
+  logFont->lfClipPrecision  = CLIP_DEFAULT_PRECIS;
+#endif
   logFont->lfQuality        = DEFAULT_QUALITY;
   logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
   logFont->lfWeight = aWeight;
@@ -1209,21 +1211,21 @@ static eCharset gCharsetToIndex[256] =
 
 static PRUint8 gCharsetToBit[eCharset_COUNT] =
 {
-	-1,  // DEFAULT
-	 0,  // ANSI_CHARSET,
-	 1,  // EASTEUROPE_CHARSET,
-	 2,  // RUSSIAN_CHARSET,
-	 3,  // GREEK_CHARSET,
-	 4,  // TURKISH_CHARSET,
-	 5,  // HEBREW_CHARSET,
-	 6,  // ARABIC_CHARSET,
-	 7,  // BALTIC_CHARSET,
-	16,  // THAI_CHARSET,
-	17,  // SHIFTJIS_CHARSET,
-	18,  // GB2312_CHARSET,
-	19,  // HANGEUL_CHARSET,
-	20,  // CHINESEBIG5_CHARSET,
-	21   // JOHAB_CHARSET,
+  -1,  // DEFAULT
+   0,  // ANSI_CHARSET,
+   1,  // EASTEUROPE_CHARSET,
+   2,  // RUSSIAN_CHARSET,
+   3,  // GREEK_CHARSET,
+   4,  // TURKISH_CHARSET,
+   5,  // HEBREW_CHARSET,
+   6,  // ARABIC_CHARSET,
+   7,  // BALTIC_CHARSET,
+  16,  // THAI_CHARSET,
+  17,  // SHIFTJIS_CHARSET,
+  18,  // GB2312_CHARSET,
+  19,  // HANGEUL_CHARSET,
+  20,  // CHINESEBIG5_CHARSET,
+  21   // JOHAB_CHARSET,
 };
 
 // the mapping from bitfield in fsUsb (of FONTSIGNATURE) to UnicodeRange
@@ -2106,7 +2108,7 @@ public:
     zero.fract = 0; one.fract = 0;
     zero.value = 0; one.value = 1; 
     mMat.eM12 = mMat.eM21 = zero;
-    mMat.eM11 = mMat.eM22 = one;  	
+    mMat.eM11 = mMat.eM22 = one;    
   }
 
   ~nsGlyphAgent()
@@ -2503,9 +2505,13 @@ nsFontMetricsWin::LoadFont(HDC aDC, const nsString& aName, PRBool aNameQuirks)
         !strcmpi(name, logFont.lfFaceName)) {
       nsFontWin* font = nsnull;
       if (mIsUserDefined) {
+#ifndef WINCE
         font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedCCMap,
                                        gUserDefinedConverter);
-      } else {
+#else
+        font = new nsFontWinUnicode(&logFont, hfont, gUserDefinedCCMap);
+#endif
+    } else {
         eFontType fontType = eFontType_Unicode;
         PRBool nameQuirks = aNameQuirks;
         // see if we should override the quirks -- not all fonts are treated as quirks
@@ -2528,7 +2534,11 @@ nsFontMetricsWin::LoadFont(HDC aDC, const nsString& aName, PRBool aNameQuirks)
             nsCOMPtr<nsIUnicodeEncoder> converter;
             if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, nameQuirks,
                   getter_AddRefs(converter), &isWide)))
-              font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter, isWide);
+#ifndef WINCE
+               font = new nsFontWinNonUnicode(&logFont, hfont, ccmap, converter, isWide);
+#else
+               font = new nsFontWinUnicode(&logFont, hfont, ccmap);
+#endif
           }
         }
       }
@@ -2563,7 +2573,11 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
       PRBool isWide;
       if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, PR_FALSE,
             getter_AddRefs(converter), &isWide))) {
+#ifndef WINCE
         font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFont->ccmap, converter, isWide);
+#else
+        font = new nsFontWinUnicode(&logFont, hfont, aGlobalFont->ccmap);
+#endif
       }
     }
     if (font) {
@@ -3596,7 +3610,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsWin.h
- *	@update 05/28/99 dwc
+ *  @update 05/28/99 dwc
  */
 
 nsresult
@@ -4478,6 +4492,20 @@ SubstituteChars(PRBool              aDisplayUnicode,
                 nsAutoChar16Buffer& aResult,
                 PRUint32*           aCount)
 {
+
+#ifdef WINCE
+// Unicode backend on WINCE... Substitute nothing.
+
+  if (!aResult.EnsureElemCapacity(aLength))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aCount = aLength;
+  memcpy(aResult.get(), aString, aLength * sizeof(PRUnichar));
+  return NS_OK;
+
+#else
+
+
   nsresult res;
   if (!gFontSubstituteConverter) {
     CallCreateInstance(NS_SAVEASCHARSET_CONTRACTID, &gFontSubstituteConverter);
@@ -4528,6 +4556,7 @@ SubstituteChars(PRBool              aDisplayUnicode,
   }
   *aCount = aLength;
   return NS_OK;
+#endif // WINCE
 }
 
 PRInt32
