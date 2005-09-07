@@ -23,6 +23,9 @@
 use strict;
 
 BEGIN {
+	unless (-e "data/") {
+    	system("mkdir data/");
+    }
     unless (-e "localconfig") {
          open(OUT, ">localconfig");
          print OUT <<EOT;
