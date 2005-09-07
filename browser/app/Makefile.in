@@ -301,11 +301,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-ifdef MOZ_USE_OFFICIAL_BRANDING
-APP_NAME = Firefox
-else
-APP_NAME = DeerPark
-endif
+APP_NAME = $(MOZ_APP_DISPLAYNAME)
 
 ifdef MOZ_DEBUG
 APP_NAME := $(APP_NAME)Debug
