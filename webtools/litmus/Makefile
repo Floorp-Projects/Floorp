@@ -2,7 +2,7 @@
 
 PERL=perl
 
-install: compile
+install: templates
 	$(PERL) populatedb.pl
 
 # precompile all templates with the Template Toolkit
