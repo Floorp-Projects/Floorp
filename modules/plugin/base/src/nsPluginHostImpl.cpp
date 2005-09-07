@@ -168,6 +168,8 @@
 #include "nsIDocShell.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
@@ -3331,6 +3333,43 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
   {
     return rv;
   }
+
+  // Security checks
+  // Can't do security checks without a URI - hopefully the plugin will take
+  // care of that
+  if (aURL) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+                    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv; // Better fail if we can't do security checks
+
+    nsCOMPtr<nsIDocument> doc;
+    if (aOwner)
+      aOwner->GetDocument(getter_AddRefs(doc));
+    if (!doc)
+      return NS_ERROR_NULL_POINTER;
+
+    rv = secMan->CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURL, 0);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCOMPtr<nsIDOMElement> elem;
+    pti2->GetDOMElement(getter_AddRefs(elem));
+
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT; // default permit
+    nsresult rv =
+      NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
+                                aURL,
+                                doc->GetDocumentURI(),
+                                elem,
+                                nsDependentCString(aMimeType ? aMimeType : ""),
+                                nsnull, //extra
+                                &shouldLoad);
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad))
+      return NS_ERROR_FAILURE;
+  }
+
+
 
   if (tagType == nsPluginTagType_Applet ||
       PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
