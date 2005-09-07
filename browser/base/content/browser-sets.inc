@@ -282,10 +282,10 @@
     <key id="goForwardKb2" key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
 #endif
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
-    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
     <key keycode="VK_F5" command="Browser:ReloadSkipCache" modifiers="accel"/>
+    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #endif
     <key key="&reloadCmd.commandkey;" command="Browser:Reload" modifiers="accel" id="key_reload"/>
     <key key="&reloadCmd.commandkey;" command="Browser:ReloadSkipCache" modifiers="accel,shift"/>

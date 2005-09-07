@@ -301,11 +301,13 @@
                 </menu>
                 <menuseparator/>
                 <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
+#ifndef XP_MACOSX
                 <menuitem accesskey="&fullScreenCmd.accesskey;"
                           label="&fullScreenCmd.label;" key="key_fullScreen"
                           id="fullScreenItem"
                           type="checkbox"
                           command="View:FullScreen"/>
+#endif
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem hidden="true" id="documentDirection-swap" 
                           label="&bidiSwitchPageDirectionItem.label;"
