@@ -20,7 +20,7 @@ install: templates
 		\$$template->context()->template('$@'); \
 	"
 
-templates: 
+templates: index.html.tmpl
 	$(PERL) -e " \
 		use File::Find; \
 		find({ wanted => sub { \
@@ -29,7 +29,8 @@ templates:
 			return if (\$$name =~ /\/CVS\//); \
 			return if (\$$name !~ /\.tmpl\$$/); \
 			\$$name =~ s/templates\/en\/default\///; \
-			if (-M 'templates/en/default/'.\$$name < -M 'data/templates/en/default/'.\$$name) { \
+			if (-M 'templates/en/default/'.\$$name < -M 'data/templates/en/default/'.\$$name \
+				|| ! -e 'data/templates/en/default/'.\$$name) { \
 				system("make", "\$$name"); \
 			} \
 		}, no_chdir => 1 }, 'templates/en/default'); \
