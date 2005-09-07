@@ -126,6 +126,8 @@ sub create {
         PRE_PROCESS => "variables.none.tmpl",
         POST_CHOMP => 1,
         
+        COMPILE_DIR => $Litmus::Config::datadir,
+        
         FILTERS => {
             # disallow all html in testcase data except for non-evil tags
             testdata => sub {

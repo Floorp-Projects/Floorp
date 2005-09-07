@@ -26,6 +26,7 @@ BEGIN {
 	unless (-e "data/") {
     	system("mkdir data/");
     }
+    system("chmod -R 777 data/");
     unless (-e "localconfig") {
          open(OUT, ">localconfig");
          print OUT <<EOT;
@@ -38,6 +39,8 @@ our \$user_cookiename = "litmus_login";
 our \$sysconfig_cookiename = "litmustestingconfiguration";
 EOT
         close(OUT);
+        print "Go edit 'localconfig' with your configuration and \n";
+        print "run this script again.";
         exit;
     }
 }
