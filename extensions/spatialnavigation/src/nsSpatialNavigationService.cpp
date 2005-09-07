@@ -105,7 +105,7 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     NS_ENSURE_SUCCESS(rv, rv);
     windowWatcher->RegisterNotification(this);
     
-    nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
 	prefBranch->AddObserver("snav.", this, PR_FALSE);
@@ -185,7 +185,6 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
 { 0x87, 0xf6, 0x40, 0x19, 0xc9, 0x85, 0x7b, 0x58} }
 
 #define SpatialNavigationService_ContractID "@mozilla.org/spatialnavigation/service"
-
 
 static NS_METHOD SpatialNavigationServiceRegistration(nsIComponentManager *aCompMgr,
                                                       nsIFile *aPath,
