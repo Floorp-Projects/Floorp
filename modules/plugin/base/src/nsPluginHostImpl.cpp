@@ -170,6 +170,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
@@ -3366,7 +3367,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
                                 nsnull, //extra
                                 &shouldLoad);
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad))
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
   }
 
 
