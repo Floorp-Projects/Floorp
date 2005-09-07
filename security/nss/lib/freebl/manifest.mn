@@ -1,4 +1,4 @@
-# 
+
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,25 +36,47 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
+
+# NOTE: any ifdefs in this file must be defined on the gmake command line
+# (if anywhere).  They cannot come from Makefile or config.mk 
+
 CORE_DEPTH = ../../..
 
 MODULE = nss
 
-ifndef FREEBL_RECURSIVE_BUILD
-  LIBRARY_NAME = freebl
-else
-  ifdef USE_PURE_32
-    CORE_DEPTH = ../../../..
-    LIBRARY_NAME = freebl_pure32
-  else
-    LIBRARY_NAME = freebl_hybrid
+ifdef FREEBL_CHILD_BUILD
+  ifdef USE_ABI32_INT32
+    LIBRARY_NAME = freebl_32int
+  endif
+  ifdef USE_ABI32_INT64
+    LIBRARY_NAME = freebl_32int64
+  endif
+  ifdef USE_ABI32_FPU
+    LIBRARY_NAME = freebl_32fpu
+  endif
+  ifdef USE_ABI64_INT
+    LIBRARY_NAME = freebl_64int
+  endif
+  ifdef USE_ABI64_FPU
+    LIBRARY_NAME = freebl_64fpu
   endif
 endif
+ifndef LIBRARY_NAME
+  LIBRARY_NAME = freebl
+endif
 
-# same version as rest of freebl
-LIBRARY_VERSION = _3
+$(LIBRARY_NAME).def: ../../freebl.def
+	cp ../../freebl.def $(LIBRARY_NAME).def
 
-DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\"
+MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
+
+SOFTOKEN_LIBRARY_VERSION = 3
+# same version as rest of NSS, but prefixed with _
+LIBRARY_VERSION = _$(SOFTOKEN_LIBRARY_VERSION)
+
+DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" \
+	-DSHLIB_VERSION=\"$(LIBRARY_VERSION)\" \
+	-DSOFTOKEN_SHLIB_VERSION=\"$(SOFTOKEN_LIBRARY_VERSION)\"
 
 REQUIRES = 
 
@@ -76,6 +98,8 @@ PRIVATE_EXPORTS = \
 
 MPI_HDRS = mpi-config.h mpi.h mpi-priv.h mplogic.h mpprime.h logtab.h mp_gf2m.h
 MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
+
+
 ECL_HDRS = ecl-exp.h ecl.h ec2.h ecp.h ecl-priv.h
 ifdef NSS_ENABLE_ECC
 ECL_SRCS = ecl.c ecl_curve.c ecl_mult.c ecl_gf.c \
@@ -133,6 +157,7 @@ ALL_HDRS =  \
 	shsign.h \
 	vis_proto.h \
 	$(NULL)
+
 
 ifdef NSS_ENABLE_ECC
 DEFINES += -DNSS_ENABLE_ECC

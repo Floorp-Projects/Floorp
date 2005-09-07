@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.22 2005/08/27 01:09:21 wtchang%redhat.com Exp $ */
+/* $Id: blapi.h,v 1.23 2005/09/07 02:47:16 saul.edwards%sun.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -982,6 +982,7 @@ extern SECStatus RNG_GenerateGlobalRandomBytes(void *dest, size_t len);
 */
 extern void  RNG_RNGShutdown(void);
 
+extern void RNG_SystemInfoForRNG(void);
 
 /* Generate PQGParams and PQGVerify structs.
  * Length of seed and length of h both equal length of P. 

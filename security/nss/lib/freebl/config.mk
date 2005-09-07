@@ -36,38 +36,21 @@
 # ***** END LICENSE BLOCK *****
 
 # only do this in the outermost freebl build.
-ifndef FREEBL_RECURSIVE_BUILD
-# we only do this stuff for some of the 32-bit builds, no 64-bit builds
-ifndef USE_64
+ifndef FREEBL_CHILD_BUILD
 
-ifeq ($(OS_TARGET), HP-UX)
-  ifneq ($(OS_TEST), ia64)
-    FREEBL_EXTENDED_BUILD = 1
-  endif
-endif
-
-ifeq ($(OS_TARGET),SunOS)
-  ifeq ($(CPU_ARCH),sparc)
-    FREEBL_EXTENDED_BUILD = 1
-  endif
-endif
-
-ifdef FREEBL_EXTENDED_BUILD
 # We're going to change this build so that it builds libfreebl.a with
 # just loader.c.  Then we have to build this directory twice again to 
 # build the two DSOs.
 # To build libfreebl.a with just loader.c, we must now override many
 # of the make variables setup by the prior inclusion of CORECONF's config.mk
 
-CSRCS		= loader.c sysrand.c
+CSRCS		= loader.c 
 SIMPLE_OBJS 	= $(CSRCS:.c=$(OBJ_SUFFIX))
 OBJS 		= $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
 ALL_TRASH :=    $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
                 $(NOSUCHFILE) so_locations 
-endif
 
-#end of 32-bit only stuff.
-endif
+# this is not a recursive child make.  We make a static lib. (archive)
 
 # Override the values defined in coreconf's ruleset.mk.
 #
@@ -83,25 +66,50 @@ endif
   PROGRAM        =
 
 else
-# This is a recursive build.  
+# This is a recursive child make. We build the shared lib.
 
-TARGETS	     = $(SHARED_LIBRARY)
+TARGETS      = $(SHARED_LIBRARY)
 LIBRARY      =
 PROGRAM      =
 
-#ifeq ($(OS_TARGET), HP-UX)
-  EXTRA_LIBS        += \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(NULL)
+EXTRA_LIBS   += $(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX)
 
-# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
-# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
-  EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
+ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(DLL_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
+#IMPORT_LIBRARY = $(OBJDIR)/$(IMPORT_LIB_PREFIX)$(LIBRARY_NAME)$(LIBRARY_VERSION)$(IMPORT_LIB_SUFFIX)
+IMPORT_LIBRARY =
+
+# do we need these?
+#RES = $(OBJDIR)/freebl.res
+#RESNAME = freebl.rc
+
+ifdef NS_USE_GCC
+EXTRA_SHARED_LIBS += \
+	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
-	-lc
-#endif
+	$(NULL)
+else # ! NS_USE_GCC
+EXTRA_SHARED_LIBS += \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+endif # NS_USE_GCC
+
+else
+
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-L$(NSPR_LIB_DIR) \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+
+endif
 
 endif
