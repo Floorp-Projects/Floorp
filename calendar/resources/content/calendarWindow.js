@@ -871,7 +871,7 @@ CalendarView.prototype.setDrawProperties = function calView_setDrawProperties( d
             for (i = groupStartIndex; i < eventStartListIndex; i++) {
               var prevEvent = dayEventStartList[i];
               if (prevEvent.startDrawSlot + prevEvent.drawSlotCount == oldTotal
-                  && prevEvent.end.compare(event.start) < 0)
+                  && prevEvent.end.compare(event.start) <= 0)
                 prevEvent.drawSlotCount += 1;
             }
           }
