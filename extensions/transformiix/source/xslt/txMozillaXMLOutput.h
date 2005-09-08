@@ -123,7 +123,7 @@ private:
 
     nsRefPtr<txTransformNotifier> mNotifier;
 
-    PRUint32 mBadChildLevel;
+    PRUint32 mTreeDepth, mBadChildLevel;
     nsCString mRefreshString;
 
     txStack mTableStateStack;
