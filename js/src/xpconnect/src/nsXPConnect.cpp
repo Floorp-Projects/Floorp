@@ -1049,6 +1049,12 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
             // entry for aClassInfo in the map we have to remove it to
             // be able to add the new one.
             map->Remove(aClassInfo);
+
+            // This code should do the right thing even if we're
+            // restoring the current proto, but warn in that case
+            // since doing that is pointless.
+            NS_WARN_IF_FALSE(proto != oldProto,
+                             "Restoring current prototype, fix caller!");
         }
 
         map->Add(aClassInfo, proto);
