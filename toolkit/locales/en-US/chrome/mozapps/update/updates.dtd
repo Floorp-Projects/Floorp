@@ -1,5 +1,8 @@
 <!ENTITY  updateWizard.title              "Software Update">
 
+<!ENTITY  window.width                    "36em">
+<!ENTITY  window.macWidth                 "39em">
+
 <!ENTITY  checking.title                  "Checking for Updates">
 <!ENTITY  checking.label                  "&brandShortName; is now checking for updates...">
 
