@@ -414,10 +414,6 @@ SecurityDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
                                        const nsACString& targetURL,
                                        nsIX509Cert *cert, PRBool *_retval)
 {
-
-// testing
-  ConfirmKeyEscrow(cert, _retval);
-  
   MismatchedCertDomainDialogController* certDialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] mismatchedCertDomainDialogController] retain];
   if (!certDialogController)
     return NS_ERROR_FAILURE;

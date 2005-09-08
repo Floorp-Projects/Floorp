@@ -86,10 +86,6 @@ const float kDisclosureButtonSize = 12.0f;
 
 const float kGeneralRightGap     = 4.0f;
 
-const float kHexViewExpandySize       = 12.0f;
-const float kHexViewExpandyLeftGap    = 4.0f;
-const float kHexViewExpandyRightGap   = 4.0f;
-
 const float kHeaderLeftOffset    = 16.0f;
 const float kGapUnderHeader      = 5.0f;
 const float kGapUnderGroup       = 5.0f;
@@ -299,8 +295,12 @@ const float kGapUnderLine       = 5.0f;
   [theTextField setDrawsBackground:NO];
   [theTextField setBezeled:NO];
   [theTextField setStringValue:inString];
-
-  [theTextField sizeToFit];
+  [[theTextField cell] setWraps:NO];
+  
+  NSSize theCellSize = [[theTextField cell] cellSizeForBounds:inFrame];
+  theCellSize.width = NSWidth(inFrame);   // keep the provided width
+  [theTextField setFrameSize:theCellSize];
+  //[theTextField sizeToFit];
 
   return theTextField;
 }
@@ -362,6 +362,7 @@ const float kGapUnderLine       = 5.0f;
   float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
   NSRect dataRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 100.0f);
   NSTextField* dataField = [self textFieldWithInitialFrame:dataRect stringValue:inData small:YES bold:NO];
+  [dataField setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
   [mContentView addSubview:dataField];
 
   float labelBottom = NSMaxY([labelField frame]);
@@ -383,21 +384,20 @@ const float kGapUnderLine       = 5.0f;
   NSTextField* labelField = [self textFieldWithInitialFrame:labelRect stringValue:theLabel small:YES bold:NO];
   [mContentView addSubview:labelField];
 
-  float leftPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
-  float rightPos = NSWidth([self frame]) - leftPos - kLabelLeftOffset - kHexViewExpandyLeftGap - kHexViewExpandySize - kHexViewExpandyRightGap;
-  float textWidth = rightPos - leftPos;
-  
-  NSRect dataRect = NSMakeRect(leftPos, *ioOffset, textWidth, 56.0f);
+  float xPos = kLabelLeftOffset + [self labelColumnWidth] + kLabelGutterWidth;
+  NSRect dataRect = NSMakeRect(xPos, *ioOffset, NSWidth([self frame]) - xPos - kLabelLeftOffset, 56.0f);
   
   NSScrollView* dataScrollView = [[[NSScrollView alloc] initWithFrame:dataRect] autorelease];
   NSTextView* scrolledTextView = [[[NSTextView alloc] initWithFrame:dataRect] autorelease];
   [dataScrollView setHasVerticalScroller:YES];
   [dataScrollView setBorderType:NSBezelBorder];
+  [dataScrollView setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
   [[dataScrollView verticalScroller] setControlSize:NSSmallControlSize];
 
   [[[scrolledTextView textStorage] mutableString] setString:[inData stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
   [scrolledTextView setFont:[NSFont fontWithName:@"Monaco" size:10.0f]];
   [scrolledTextView setEditable:NO];
+  [dataScrollView setAutoresizingMask:NSViewWidthSizable];
   [dataScrollView setDocumentView:scrolledTextView];
 
   [mContentView addSubview:dataScrollView];
@@ -458,6 +458,7 @@ const float kGapUnderLine       = 5.0f;
   [theButton setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
   [[theButton cell] setControlSize:NSSmallControlSize];
   [theButton sizeToFit];
+  [theButton setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
   
   [theButton setAction:inAction];
   [theButton setTarget:self];
@@ -563,7 +564,7 @@ const float kGapUnderLine       = 5.0f;
     return curOffset;
 
   // XXX do we need a more comprehensive check than this?
-  BOOL enableCheckboxes = [mCertItem isValid] || [mCertItem isUntrustedRootCACert];
+  BOOL enableCheckboxes = YES;  // [mCertItem isValid] || [mCertItem isUntrustedRootCACert];
   
   // XXX only show relevant checkboxes? (see nsNSSCertificateDB::SetCertTrust)
   // XXX only show checkboxes for allowed usages?
