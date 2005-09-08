@@ -52,7 +52,11 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&updateWizard.title;" 
         label="" description=""
-        windowtype="Update:Wizard" style="width: 36em;"
+#ifdef XP_MACOSX
+        windowtype="Update:Wizard" style="width: &window.macWidth;;"
+#else
+        windowtype="Update:Wizard" style="width: &window.width;;"
+#endif
         onwizardfinish="gUpdates.onWizardFinish();"
         onwizardcancel="gUpdates.onWizardCancel();"
         onwizardnext="gUpdates.onWizardNext();"        
