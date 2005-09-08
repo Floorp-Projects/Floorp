@@ -668,6 +668,19 @@ function newEvent(startDate, endDate, allDay)
 
    calendarEvent.endDate.jsDate = endDate
 
+   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
+   var alarmsBranch = prefService.getBranch("calendar.alarms.");
+
+   if (alarmsBranch.getIntPref("onforevents") == 1) {
+       // alarmTime doesn't matter, it just can't be null
+       calendarEvent.alarmTime = createDateTime();
+
+       calendarEvent.setProperty("alarmUnits", alarmsBranch.getCharPref("eventalarmunit"));
+       calendarEvent.setProperty("alarmLength", alarmsBranch.getIntPref("eventalarmlen"));
+       calendarEvent.setProperty("alarmRelation", "START");
+   }
+
    if (allDay)
        calendarEvent.startDate.isDate = true;
 
@@ -687,10 +700,28 @@ function newToDo ( startDate, dueDate )
    
     // created todo has no start or due date unless user wants one
     if (startDate) 
-        calendarToDo.entryTime.jsDate = startDate;
+        calendarToDo.entryDate = jsDateToDateTime(startDate);
 
     if (dueDate)
-        calendarToDo.dueDate.jsDate = dueDate;
+        calendarToDo.dueDate = jsDateToDateTime(startDate);
+
+   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService);
+   var alarmsBranch = prefService.getBranch("calendar.alarms.");
+
+   if (alarmsBranch.getIntPref("onfortodos") == 1) {
+       // alarmTime doesn't matter, it just can't be null
+       calendarToDo.alarmTime = createDateTime();
+
+       // You can't have an alarm if the entryDate doesn't exist.
+       if (!calendarToDo.entryDate)
+           calendarToDo.entryDate = jsDateToDateTime(
+                                    gCalendarWindow.currentView.getNewEventDate());
+
+       calendarToDo.setProperty("alarmUnits", alarmsBranch.getCharPref("todoalarmunit"));
+       calendarToDo.setProperty("alarmLength", alarmsBranch.getIntPref("todoalarmlen"));
+       calendarToDo.setProperty("alarmRelation", "START");
+   }
 
     var calendar = getSelectedCalendarOrNull();
     

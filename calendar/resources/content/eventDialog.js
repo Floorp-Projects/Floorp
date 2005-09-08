@@ -233,8 +233,10 @@ function loadCalendarEventDialog()
     } else {
         setElementValue("alarm-length-field", event.getProperty("alarmLength"));
         setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
+        var startPickerDisabled = getElementValue("start-datetime", "disabled");
+        var duePickerDisabled = getElementValue("start-datetime", "disabled");
         if (componentType == "event" ||
-           (componentType == "todo" && !(startPicker.disabled && duePicker.disabled) ) ) {
+           (componentType == "todo" && !(startPickerDisabled && duePickerDisabled) ) ) {
             // If the event has an alarm email address, assume email alarm type
             var alarmEmailAddress = event.getProperty("alarmEmailAddress");
             if (alarmEmailAddress && alarmEmailAddress != "") {
@@ -250,11 +252,11 @@ function loadCalendarEventDialog()
                 // if only one picker is enabled, check that the appropriate related
                 // parameter is chosen
                 if ( (componentType == "event") ||
-                     (componentType == "todo" && !startPicker.disabled &&
-                         duePicker.disabled && alarmRelated == "START") ||
+                     (componentType == "todo" && !startPickerDisabled &&
+                         duePickerDisabled && alarmRelated == "START") ||
                      (componentType == "todo" && startPicker.disabled &&
-                         !duePicker.disabled && alarmRelated == "END")  ||
-                     (componentType == "todo" && !startPicker.disabled && !duePicker.disabled) )
+                         !duePickerDisabled && alarmRelated == "END")  ||
+                     (componentType == "todo" && !startPickerDisabled && !duePicker.disabled) )
                 {
                      setElementValue("alarm-trigger-relation", alarmRelated);
                 } else {
