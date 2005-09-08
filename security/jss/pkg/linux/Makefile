@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.18 2005/07/22 15:32:49 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.19 2005/09/08 22:23:53 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -55,17 +55,21 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # Force i386 for non 64 bit build
 ifneq ($(USE_64),1)
 	RPMTARGET = "--target=i386"
+	RPMLIBDIR = lib
+else
+	RPMLIBDIR = lib64
 endif
+
 
 publish:
 	$(MAKE) clean
 	mkdir -p SOURCES SRPMS RPMS BUILD
-	mkdir -p opt/sun/private/lib
+	mkdir -p opt/sun/private/$(RPMLIBDIR)
 	find $(CORE_DEPTH)/../dist/$(OBJDIR)/lib -type l \
 		\( -name "*jss*.so" \) \
-	-exec cp {} opt/sun/private/lib \;
+	-exec cp {} opt/sun/private/$(RPMLIBDIR) \;
 ifdef JSS3_LOCATION
-	cp $(JSS3_LOCATION)/$(OBJDIR)/lib/libjss3.so opt/sun/private/lib
+	cp $(JSS3_LOCATION)/$(OBJDIR)/lib/libjss3.so opt/sun/private/$(RPMLIBDIR)
 endif
 	mkdir -p opt/sun/private/share/lib 
 ifeq ($(BUILD_OPT), 1)
@@ -94,7 +98,7 @@ endif
 	echo "%dir /opt" >>temp.spec
 	echo "%dir /opt/sun" >>temp.spec
 	echo "%dir /opt/sun/private" >>temp.spec
-	echo "%dir /opt/sun/private/lib" >>temp.spec
+	echo "%dir /opt/sun/private/$(RPMLIBDIR)" >>temp.spec
 	echo "%dir /opt/sun/private/share" >>temp.spec
 	echo "%dir /opt/sun/private/share/lib" >>temp.spec
 	find opt \( -name "*.so" -o -name "*.jar" \) \

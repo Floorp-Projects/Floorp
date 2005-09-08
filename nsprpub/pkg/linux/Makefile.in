@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile.in,v 1.6 2005/07/22 15:32:39 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.in,v 1.7 2005/09/08 22:23:52 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -59,13 +59,16 @@ include $(MOD_DEPTH)/config/autoconf.mk
 # Force i386 for non 64 bit build
 ifneq ($(USE_64),1)
 	RPMTARGET = "--target=i386"
+	RPMLIBDIR = lib
+else
+	RPMLIBDIR = lib64
 endif
 
 publish:
 	$(MAKE) clean
 	mkdir -p SOURCES SRPMS RPMS BUILD
 	(cd $(dist_libdir) && tar cphf - .) \
-	| (mkdir -p opt/sun/private/lib && cd opt/sun/private/lib && tar xvfBp -)
+	| (mkdir -p opt/sun/private/$(RPMLIBDIR) && cd opt/sun/private/$(RPMLIBDIR) && tar xvfBp -)
 	(cd $(dist_includedir) && tar cphf - .) \
 	| (mkdir -p opt/sun/private/include/nspr && cd opt/sun/private/include/nspr && tar xvfBp -)
 	tar czvf SOURCES/$(NAME)-$(VERSION).tar.gz opt
