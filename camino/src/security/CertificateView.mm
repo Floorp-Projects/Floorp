@@ -122,7 +122,6 @@ const float kGapUnderLine       = 5.0f;
 - (float)rebuildTrustSettings:(float)inOffset;
 - (BOOL)showTrustSettings;
 
-- (void)hexBlockExpandButtonClicked:(id)sender;
 - (void)certificateChanged:(NSNotification*)inNotification;
 
 @end
@@ -695,17 +694,11 @@ const float kGapUnderLine       = 5.0f;
   [self setFrameSize:curSize];
 }
 
-- (void)hexBlockExpandButtonClicked:(id)sender
-{
-  NSLog(@"sender: %@", sender);
-}
-
 - (void)certificateChanged:(NSNotification*)inNotification
 {
   CertificateItem* changedCert = [inNotification object];
   if ([mCertItem isEqualTo:changedCert])
   {
-    NSLog(@"refreshing view");
    [self refreshView];
   }
 }

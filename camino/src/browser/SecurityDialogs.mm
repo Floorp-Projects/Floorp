@@ -123,7 +123,7 @@ NS_IMETHODIMP SecurityDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   docLocation->GetHref(location);
 #endif
 
-  DownloadCACertDialogController* downloadCertDialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] downloadCACertDialogController];
+  DownloadCACertDialogController* downloadCertDialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] downloadCACertDialogController] retain];
   if (!downloadCertDialogController)
     return NS_ERROR_FAILURE;
 
@@ -145,6 +145,7 @@ NS_IMETHODIMP SecurityDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   else
     *_retval = PR_FALSE;
 
+  [downloadCertDialogController release];
   return NS_OK;
 }
 
@@ -189,7 +190,7 @@ NS_IMETHODIMP SecurityDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   
   password.Truncate();
 
-  CreatePasswordDialogController* pwDialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] createPasswordDialogController];
+  CreatePasswordDialogController* pwDialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] createPasswordDialogController] retain];
   if (!pwDialogController)
     return NS_ERROR_FAILURE;
 
@@ -216,6 +217,7 @@ NS_IMETHODIMP SecurityDialogs::SetPKCS12FilePassword(nsIInterfaceRequestor *ctx,
   if (confirmed)
     [thePassword assignTo_nsAString:password];
 
+  [pwDialogController release];
   return NS_OK;
 }
 
@@ -351,7 +353,7 @@ SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
   *_retval = PR_FALSE;
   *outAddType = UNINIT_ADD_FLAG;
 
-  UnknownCertIssuerDialogController* dialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] unknownCertIssuerDialogController];
+  UnknownCertIssuerDialogController* dialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] unknownCertIssuerDialogController] retain];
   if (!dialogController)
     return NS_ERROR_FAILURE;
 
@@ -387,6 +389,7 @@ SecurityDialogs::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo,
       break;
   }
 
+  [dialogController release];
   return NS_OK;
 }
 
@@ -415,7 +418,7 @@ SecurityDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
 // testing
   ConfirmKeyEscrow(cert, _retval);
   
-  MismatchedCertDomainDialogController* certDialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] mismatchedCertDomainDialogController];
+  MismatchedCertDomainDialogController* certDialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] mismatchedCertDomainDialogController] retain];
   if (!certDialogController)
     return NS_ERROR_FAILURE;
 
@@ -432,6 +435,7 @@ SecurityDialogs::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo,
   
   *_retval = (result == NSAlertDefaultReturn);
 
+  [certDialogController release];
   return NS_OK;
 }
 
@@ -454,7 +458,7 @@ NS_IMETHODIMP
 SecurityDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
                                     nsIX509Cert *cert, PRBool *_retval)
 {
-  ExpiredCertDialogController* expiredCertController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] expiredCertDialogController];
+  ExpiredCertDialogController* expiredCertController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] expiredCertDialogController] retain];
   if (!expiredCertController)
     return NS_ERROR_FAILURE;
 
@@ -468,6 +472,7 @@ SecurityDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
     result = [NSApp runModalForWindow:[expiredCertController window]];
   
   *_retval = (result == NSAlertDefaultReturn);
+  [expiredCertController release];
   return NS_OK;
 }
 
@@ -626,7 +631,7 @@ SecurityDialogs::SetPassword(nsIInterfaceRequestor *ctx, const PRUnichar *tokenN
                                              tokenNameString];
   }
   
-  CreatePasswordDialogController* pwDialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] createPasswordDialogController];
+  CreatePasswordDialogController* pwDialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] createPasswordDialogController] retain];
   if (!pwDialogController)
     return NS_ERROR_FAILURE;
 
@@ -668,6 +673,7 @@ SecurityDialogs::SetPassword(nsIInterfaceRequestor *ctx, const PRUnichar *tokenN
   else
     rv = theToken->ChangePassword(oldPassword.get(), newPassword.get());
 
+  [pwDialogController release];
   return rv;
 }
 
@@ -760,9 +766,7 @@ SecurityDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *
     return NS_ERROR_FAILURE;
   }
   
-  ChooseCertDialogController* dialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] chooseCertDialogController];
-  [dialogController retain];
-  
+  ChooseCertDialogController* dialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] chooseCertDialogController] retain];
   [dialogController setCommonName:[NSString stringWithPRUnichars:cn]
                      organization:[NSString stringWithPRUnichars:organization]
                            issuer:[NSString stringWithPRUnichars:issuer]];
@@ -860,7 +864,7 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
   // the thread is complete. Not sure if it goes away or not.
   nsCOMPtr<nsIKeygenThread> threadDeathGrip = runnable;
   
-  GenKeyPairDialogController* dialogController = [[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] genKeyPairDialogController];
+  GenKeyPairDialogController* dialogController = [[[BrowserSecurityUIProvider sharedBrowserSecurityUIProvider] genKeyPairDialogController] retain];
   if (!dialogController)
     return NS_ERROR_FAILURE;
 
@@ -877,6 +881,7 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
     return NS_ERROR_FAILURE;
   }
   
+  [dialogController release];
   return NS_OK;
 }
 

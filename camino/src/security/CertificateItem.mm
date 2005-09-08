@@ -735,8 +735,6 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
       mASN1InfoDict = [[self traverseSequence:objectAsSequence] retain];
     else
       mASN1InfoDict = [[NSDictionary alloc] init];    // avoid multiple lookups
-
-    NSLog(@"Info dict: %@", mASN1InfoDict);
   }
 }
 
@@ -777,7 +775,6 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
   CertificateItem* changedCert = [inNotification object];
   if ([self certificateIsInParentChain:changedCert])    // actually includes 'self', but that's OK
   {
-    NSLog(@"updating cert %@ because parent changed", self);
     mGotVerification = NO;
     PRUint32 oldValidity = mVerification;
     if (oldValidity != [self generalValidity])

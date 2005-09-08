@@ -516,7 +516,7 @@ static CertificatesWindowController* gCertificatesWindowController;
   NSString* cancelButton  = NSLocalizedStringFromTable(@"CancelButtonTitle", @"CertificateDialogs", @"");
 
 #warning fix for plurals
-  NSString* title = @"fix me"; // [NSString stringWithFormat:titleFormat, [selectedCert displayName]];
+  NSString* title = [NSString stringWithFormat:titleFormat, [[selectedCerts objectAtIndex:0] displayName]];
   
   NSBeginAlertSheet(title,
           deleteButton,
@@ -852,7 +852,7 @@ static CertificatesWindowController* gCertificatesWindowController;
 
   PRUint32 numCerts = [certsToSave count];
   
-  nsIX509Cert** certList = new (nsIX509Cert*)[numCerts];
+  nsIX509Cert** certList = new nsIX509Cert*[numCerts];
   for (PRUint32 i = 0; i < numCerts; i ++)
     certList[i] = [[certsToSave objectAtIndex:i] cert];
   

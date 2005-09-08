@@ -55,8 +55,7 @@ class nsIX509Cert;
 + (BrowserSecurityUIProvider*)sharedBrowserSecurityUIProvider;
 + (NSImage*)lockBadgedApplicationIcon;
 
-// these dialog controllers are autoreleased. If you want to run one non-modally,
-// you'll need to retain it.
+// these dialog controllers are autoreleased. You should retain them while running the dialog.
 - (DownloadCACertDialogController*)downloadCACertDialogController;
 - (MismatchedCertDomainDialogController*)mismatchedCertDomainDialogController;
 - (UnknownCertIssuerDialogController*)unknownCertIssuerDialogController;
