@@ -75,6 +75,7 @@ enum {
   BOOL            mUserCancelled;
   BOOL            mDownloadingError;
   BOOL            mDownloadDone;
+  BOOL            mRefreshIcon;
     
   NSTimeInterval  mDownloadTime; // only set when done
 
@@ -94,6 +95,7 @@ enum {
 +(NSString *)formatFuzzyTime:(int)aSeconds;
 +(NSString *)formatBytes:(float)aBytes;
 
+-(id)initWithDictionary:(NSDictionary*)aDict;
 -(ProgressView *)view;
 
 -(IBAction)cancel:(id)sender;
@@ -107,6 +109,8 @@ enum {
 -(BOOL)isCanceled;
 -(BOOL)isSelected;
 -(BOOL)isPaused;
+
+-(NSDictionary*)downloadInfoDictionary;
 
 -(NSMenu*)contextualMenu;
 

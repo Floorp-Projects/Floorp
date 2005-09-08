@@ -63,6 +63,7 @@ enum {
 -(void)viewDidLoad;
 -(void)refreshDownloadInfo;
 -(void)launchFileIfAppropriate;
+-(void)setProgressViewFromDictionary:(NSDictionary*)aDict;
 
 @end
 
@@ -155,6 +156,19 @@ enum {
   return self;
 }
 
+-(id)initWithDictionary:(NSDictionary*)aDict
+{
+  if ((self = [super init]))
+  {
+    [NSBundle loadNibNamed:@"ProgressView" owner:self];
+    [self viewDidLoad];
+    [self setProgressViewFromDictionary:aDict];
+  }
+  
+  return self;
+  
+}
+
 -(void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -198,6 +212,8 @@ enum {
   // give the views this controller as their controller
   [mCompletedView setController:self];
   [mProgressView setController:self];
+  
+  mRefreshIcon = YES; // refresh the icon at least once
   
   // we need to register for xpcom shutdown so that we can clear the
   // services before XPCOM is shut down. We can't rely on dealloc,
@@ -301,6 +317,8 @@ enum {
     // (I think it was fixed by 10.2.2 or so)
     [[NSWorkspace sharedWorkspace] noteFileSystemChanged:mDestPath];
     
+    mRefreshIcon = YES; // let the icon know to update
+    
     [self refreshDownloadInfo];
     [self launchFileIfAppropriate];
   }
@@ -326,13 +344,15 @@ enum {
   if (![[filenameLabel stringValue] isEqualToString:filename])
     [filenameLabel setStringValue:filename];
   
-  if (iconLabel) { // update the icon image
+  if (iconLabel && mRefreshIcon) { // update the icon image
     NSImage *iconImage = [[NSWorkspace sharedWorkspace] iconForFile:mDestPath];
     // sometimes the finder doesn't have an icon for us (rarely)
     // when that happens just leave it at what it was before
     if (iconImage != nil) {
       [iconLabel setImage:iconImage];
     }
+    
+    mRefreshIcon = NO; // dont change unless status changes
   }
   
   if (mDownloadDone) { // just update the status field
@@ -418,6 +438,35 @@ enum {
     return mDownloader->IsDownloadPaused();
   
   return NO;
+}
+
+-(void)setProgressViewFromDictionary:(NSDictionary*)aDict
+{
+  // assign values from the dict
+  mDestPath = [[aDict valueForKey:@"destPath"] retain];   
+  mSourceURL = [[aDict valueForKey:@"sourceURL"] retain]; 
+  mDownloadSize = [[aDict valueForKey:@"downloadSize"] longLongValue];
+  mCurrentProgress = [[aDict valueForKey:@"currentProgress"] longLongValue];
+  mDownloadTime = [[aDict valueForKey:@"downloadTime"] doubleValue];
+  mDownloadDone = YES; // always either completed of cancelled
+  
+  // set as cancel if sizes dont match up
+  if (mDownloadSize != mCurrentProgress)
+    mUserCancelled = YES; 
+  
+  [self refreshDownloadInfo];
+}
+
+-(NSDictionary*)downloadInfoDictionary
+{
+  NSMutableDictionary* dict = [[[NSMutableDictionary alloc] init] autorelease];
+  [dict setObject: mDestPath forKey:@"destPath"];
+  [dict setObject: mSourceURL forKey:@"sourceURL"];
+  [dict setObject:[NSNumber numberWithLongLong: mDownloadSize] forKey:@"downloadSize"];
+  [dict setObject:[NSNumber numberWithLongLong: mCurrentProgress] forKey:@"currentProgress"];
+  [dict setObject:[NSNumber numberWithDouble: mDownloadTime] forKey:@"downloadTime"];
+  
+  return dict;
 }
 
 -(NSMenu*)contextualMenu

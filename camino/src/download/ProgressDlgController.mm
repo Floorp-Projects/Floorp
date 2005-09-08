@@ -90,6 +90,7 @@ static id gSharedProgressController = nil;
                                                  name:@"DownloadInstanceSelected" object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceOpened:)
                                                  name:@"DownloadInstanceOpened" object:nil];
+    
   }
   return self;
 }
@@ -101,6 +102,9 @@ static id gSharedProgressController = nil;
   [toolbar setAllowsUserCustomization:YES];
   [toolbar setAutosavesConfiguration:YES];
   [[self window] setToolbar:toolbar];    
+  
+  // load the saved instances to mProgressViewControllers array
+  [self loadProgressViewControllers];
 }
 
 -(void)dealloc
@@ -172,6 +176,8 @@ static id gSharedProgressController = nil;
       [self removeDownload:[selected objectAtIndex:i]];
     }
   }
+  
+  [self saveProgressViewControllers];
 }
 
 -(IBAction)pause:(id)sender
@@ -208,6 +214,8 @@ static id gSharedProgressController = nil;
     }
   }
   mSelectionPivotIndex = -1;
+  
+  [self saveProgressViewControllers];
 }
 
 // remove all downloads, cancelling if necessary
@@ -221,6 +229,8 @@ static id gSharedProgressController = nil;
     [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
   }
   mSelectionPivotIndex = -1;
+  
+  [self saveProgressViewControllers];
 }
 
 //
@@ -478,6 +488,8 @@ static id gSharedProgressController = nil;
                       // for the option key and try to close all windows
     }
   }
+  
+  [self saveProgressViewControllers];
 }
 
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay
@@ -554,10 +566,10 @@ static id gSharedProgressController = nil;
     // make sure the window is visible
     [self showWindow:self];
     
-    NSString *alert     = NSLocalizedString(@"QuitWithDownloadsMsg", @"Really Quit?");
-    NSString *message   = NSLocalizedString(@"QuitWithDownloadsExpl", @"");
-    NSString *okButton  = NSLocalizedString(@"QuitWithdownloadsButtonDefault",@"Cancel");
-    NSString *altButton = NSLocalizedString(@"QuitWithdownloadsButtonAlt",@"Quit");
+    NSString *alert     = NSLocalizedString(@"QuitWithDownloadsMsg", nil);
+    NSString *message   = NSLocalizedString(@"QuitWithDownloadsExpl", nil);
+    NSString *okButton  = NSLocalizedString(@"QuitWithdownloadsButtonDefault", nil);
+    NSString *altButton = NSLocalizedString(@"QuitWithdownloadsButtonAlt", nil);
     
     // while the panel is up, download dialogs won't update (no timers firing) but
     // downloads continue (PLEvents being processed)
@@ -573,7 +585,16 @@ static id gSharedProgressController = nil;
     [panel orderOut: self];
     NSReleaseAlertPanel(panel);
     
-    return (sheetResult == NSAlertDefaultReturn) ? NSTerminateCancel : NSTerminateNow;
+    if (sheetResult == NSAlertDefaultReturn)
+      return NSTerminateCancel;
+    
+    else {
+      // need to save here because downloads that were downloading aren't 
+      // cancelled just terminated.
+      [self saveProgressViewControllers];
+      
+      return NSTerminateNow;
+    }
   }
   
   return NSTerminateNow;
@@ -582,6 +603,42 @@ static id gSharedProgressController = nil;
 -(void)sheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
   [NSApp stopModalWithCode:returnCode];
+}
+
+-(void)saveProgressViewControllers
+{
+  unsigned int arraySize = [mProgressViewControllers count];
+  NSMutableArray* downloadArray = [[[NSMutableArray alloc] initWithCapacity:arraySize] autorelease];
+  
+  NSEnumerator* downloadsEnum = [mProgressViewControllers objectEnumerator];
+  ProgressViewController* curController;
+  while ((curController = [downloadsEnum nextObject]))
+  {
+    [downloadArray addObject:[curController downloadInfoDictionary]]; 
+  }
+  
+  // now save
+  NSString *profileDir = [[PreferenceManager sharedInstance] newProfilePath];
+  [downloadArray writeToFile: [profileDir stringByAppendingPathComponent:@"downloads.plist"] atomically: YES];
+}
+
+-(void)loadProgressViewControllers
+{
+  NSString* downloadsPath = [[[PreferenceManager sharedInstance] newProfilePath] stringByAppendingPathComponent:@"downloads.plist"];
+  NSArray*  downloads     = [NSArray arrayWithContentsOfFile:downloadsPath];
+  
+  if (downloads)
+  {
+    NSEnumerator* downloadsEnum = [downloads objectEnumerator];
+    NSDictionary* downloadsDictionary;
+    while((downloadsDictionary = [downloadsEnum nextObject]))
+    {
+      ProgressViewController* curController = [[ProgressViewController alloc] initWithDictionary:downloadsDictionary];
+      [mProgressViewControllers addObject:curController];
+    }
+    
+    [self rebuildViews];
+  }
 }
 
 -(BOOL)shouldAllowCancelAction
