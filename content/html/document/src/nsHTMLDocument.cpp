@@ -3035,7 +3035,11 @@ nsHTMLDocument::UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent)
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aId,
                                         op));
 
-  if (entry && (liveTable || PL_DHASH_ENTRY_IS_BUSY(entry))) {
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     entry->mIdContent = aContent;
   }
 
