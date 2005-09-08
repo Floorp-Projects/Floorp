@@ -132,6 +132,7 @@ const PREFIX_THEME                    = "urn:mozilla:theme:";
 const RDFURI_INSTALL_MANIFEST_ROOT    = "urn:mozilla:install-manifest";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
 const RDFURI_DEFAULT_THEME            = "urn:mozilla:item:{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+const XMLURI_PARSE_ERROR              = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
 
 const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
 const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
@@ -5223,12 +5224,10 @@ RDFItemUpdater.prototype = {
     
     // escape() does not properly encode + symbols in any embedded FVF strings.
     dsURI = dsURI.replace(/\+/g, "%2B");
-    
-    LOG("RDFItemUpdater:checkForUpdates sending a request to server for: " + 
-        dsURI + ", item = " + aItem.objectSource);        
 
+    // Verify that the URI provided is valid
     try {
-      var ds = gRDF.GetDataSource(dsURI);
+      var uri = newURI(dsURI);
     }
     catch (e) {
       LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" + 
@@ -5237,6 +5236,27 @@ RDFItemUpdater.prototype = {
                                  nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
     }
+
+    LOG("RDFItemUpdater:checkForUpdates sending a request to server for: " + 
+        uri.spec + ", item = " + aItem.objectSource);        
+
+    // Only use xmlhttprequest if it is available - fallback to using only RDF
+    if ("@mozilla.org/xmlextras/xmlhttprequest;1" in Components.classes) {
+      var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+      request.open("GET", uri.spec, true);
+      request.overrideMimeType("text/xml");
+      request.setRequestHeader("Cache-Control", "no-cache");
+
+      var self = this;
+      request.onerror     = function(event) { self.onXMLError(event, aItem);    };
+      request.onload      = function(event) { self.onXMLLoad(event, aItem);     };
+      request.onprogress  = function(event) { self.onXMLProgress(event, aItem); };
+      request.send(null);
+      return;
+    }
+
+    var ds = gRDF.GetDataSource(uri.spec);
     var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
     if (rds.loaded)
       this.onDatasourceLoaded(ds, aItem);
@@ -5244,6 +5264,67 @@ RDFItemUpdater.prototype = {
       var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
       sink.addXMLSinkObserver(this);
     }
+  },
+
+  onXMLProgress: function(aItem, event) {
+  },
+
+  onXMLLoad: function(aEvent, aItem) {
+    var request = aEvent.target;
+    var responseXML = request.responseXML;
+    if (responseXML)
+      var parseError = (responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR);
+
+    // AMO does not return responseXML when the installed version is the same
+    // as the lastest version so it must be handled seperately to avoid
+    // displaying an error. If there is an XML parse error, responseXML is
+    // null, status does NOT equal 200 or 0 (e.g. 200 is HTTP OK and 0 is
+    // returned for a local file) then we don't have valid data.
+    if (!responseXML || parseError || (request.status != 200 && request.status != 0)) {
+      // If the item does not have an updateRDF then the error is from UMO.
+      if (!aItem.updateRDF) {
+        this._updater.checkForDone(aItem, 
+                                   nsIAddonUpdateCheckListener.STATUS_NONE);
+      }
+      else {
+        this._updater.checkForDone(aItem, 
+                                   nsIAddonUpdateCheckListener.STATUS_FAILURE);
+      }
+
+      return;
+    }
+
+    var rdfParser = Components.classes["@mozilla.org/rdf/xml-parser;1"]
+                              .createInstance(Components.interfaces.nsIRDFXMLParser)
+    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                       .createInstance(Components.interfaces.nsIRDFDataSource);
+    rdfParser.parseString(ds, request.channel.URI, request.responseText);
+
+    this.onDatasourceLoaded(ds, aItem);
+  },
+
+  /**
+   *
+   */
+  onXMLError: function(aEvent, aItem) {
+    try {
+      var request = aEvent.target;
+      var status = aEvent.target.status;
+    }
+    catch (e) {
+      request = aEvent.target.channel.QueryInterface(Components.interfaces.nsIRequest);
+      status = request.status;
+    }
+    var statusText = request.statusText;
+
+    // When status is 0 we don't have a valid channel.
+    if (status == 0)
+      statusText = "nsIXMLHttpRequest channel unavailable";
+
+    LOG("RDFItemUpdater:onError: There was an error loading the \r\n" + 
+        "the update datasource for item " + aItem.id + ", error: " + statusText);
+    this._updater.checkForDone(aItem, 
+                               nsIAddonUpdateCheckListener.STATUS_FAILURE);
   },
 
   onDatasourceLoaded: function(aDatasource, aLocalItem) {
