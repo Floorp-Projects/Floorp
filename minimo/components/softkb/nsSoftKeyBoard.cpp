@@ -191,12 +191,16 @@ void
 nsSoftKeyBoard::OpenSIP()
 {
 #ifdef WINCE
-    HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
-    if (hWndSIP)
-    {
-      ::ShowWindow( hWndSIP, SW_SHOW);
-    }
-    SHSipPreference(NULL, SIP_UP);
+#define KBDI_KEYBOARD_ENABLED 0x0002
+  //  if (KBDI_KEYBOARD_ENABLED & GetKeyboardStatus())
+  //    return;
+
+  HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
+  if (hWndSIP)
+  {
+    ::ShowWindow( hWndSIP, SW_SHOW);
+  }
+  SHSipPreference(NULL, SIP_UP);
 #endif
 }
 
@@ -204,12 +208,16 @@ void
 nsSoftKeyBoard::CloseSIP()
 {
 #ifdef WINCE
-    HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
-    if (hWndSIP)
-    {
-      ::ShowWindow( hWndSIP, SW_HIDE );
-    }
-    SHSipPreference(NULL, SIP_DOWN);
+#define KBDI_KEYBOARD_ENABLED 0x0002
+  //  if (KBDI_KEYBOARD_ENABLED & GetKeyboardStatus())
+  //    return;
+
+  HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
+  if (hWndSIP)
+  {
+    ::ShowWindow( hWndSIP, SW_HIDE );
+  }
+  SHSipPreference(NULL, SIP_DOWN);
 #endif
 }
 

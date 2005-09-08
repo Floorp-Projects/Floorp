@@ -153,8 +153,17 @@ export::
 GARBAGE += nsBrowserStatusFilter.cpp
 
 ifdef WINCE
+package::
+	bash $(srcdir)/../config/wince_package.sh         $(MOZ_BUILD_ROOT) $(srcdir)
+
+installer_only::
+	bash $(srcdir)/../config/wince_buildinstaller.sh  $(MOZ_BUILD_ROOT) $(srcdir)
+
 installer::
-	bash $(srcdir)/../config/wince_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
+	bash $(srcdir)/../config/wince_package.sh         $(MOZ_BUILD_ROOT) $(srcdir)
+	bash $(srcdir)/../config/wince_buildinstaller.sh  $(MOZ_BUILD_ROOT) $(srcdir)
+
+
 else
 installer::
 	bash $(srcdir)/../config/linux_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)

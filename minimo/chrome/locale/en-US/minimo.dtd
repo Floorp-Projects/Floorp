@@ -1,6 +1,6 @@
 <!-- Main menu --> 
 
-<!ENTITY prefs.label                  "Options">
+<!ENTITY prefs.label                  "Preferences">
 
 <!-- Toolbar -->
 
@@ -28,7 +28,5 @@
 <!ENTITY zoomText.label                "Text zoom:" >
 <!ENTITY zoomTextPlus.label            "+" >
 <!ENTITY zoomTextMinus.label           "-" >
-<!ENTITY toggleSSR.label               "Toggle SSR" >
-<!ENTITY toggleSiteSSR.label           "Toggle Site SSR" >
 
 <!-- context menu items -->

@@ -15,72 +15,66 @@ echo SRCDIR = $SRCDIR
 echo ---------------------------------------------------
 
 pushd $OBJDIR/dist
-rm -rf wince
-rm -f wince.zip
+rm -rf minimo
+rm -f minimo.zip
 
 echo Copying over files from OBJDIR
 
-mkdir wince
-cp -a bin/js3250.dll                                     wince
-cp -a bin/minimo.exe                                     wince
-cp -a bin/nspr4.dll                                      wince
-cp -a bin/plc4.dll                                       wince
-cp -a bin/plds4.dll                                      wince
-cp -a bin/xpcom.dll                                      wince
-cp -a bin/xpcom_core.dll                                 wince
+mkdir minimo
+cp -a bin/js3250.dll                                     minimo
+cp -a bin/minimo.exe                                     minimo
+cp -a bin/nspr4.dll                                      minimo
+cp -a bin/plc4.dll                                       minimo
+cp -a bin/plds4.dll                                      minimo
+cp -a bin/xpcom.dll                                      minimo
+cp -a bin/xpcom_core.dll                                 minimo
 
-cp -a bin/nss3.dll                                       wince
-cp -a bin/nssckbi.dll                                    wince
-cp -a bin/smime3.dll                                     wince
-cp -a bin/softokn3.dll                                   wince
-cp -a bin/ssl3.dll                                       wince
+cp -a bin/nss3.dll                                       minimo
+cp -a bin/nssckbi.dll                                    minimo
+cp -a bin/smime3.dll                                     minimo
+cp -a bin/softokn3.dll                                   minimo
+cp -a bin/ssl3.dll                                       minimo
 
 
-mkdir -p wince/chrome
+mkdir -p minimo/chrome
 
-cp -a bin/chrome/classic.jar                             wince/chrome
-cp -a bin/chrome/classic.manifest                        wince/chrome
+cp -a bin/chrome/classic.jar                             minimo/chrome
+cp -a bin/chrome/classic.manifest                        minimo/chrome
 
-cp -a bin/chrome/en-US.jar                               wince/chrome
-cp -a bin/chrome/en-US.manifest                          wince/chrome
+cp -a bin/chrome/en-US.jar                               minimo/chrome
+cp -a bin/chrome/en-US.manifest                          minimo/chrome
 
-cp -a bin/chrome/minimo.jar                              wince/chrome
-cp -a bin/chrome/minimo.manifest                         wince/chrome
+cp -a bin/chrome/minimo.jar                              minimo/chrome
+cp -a bin/chrome/minimo.manifest                         minimo/chrome
 
-cp -a bin/chrome/toolkit.jar                             wince/chrome
-cp -a bin/chrome/toolkit.manifest                        wince/chrome
+cp -a bin/chrome/toolkit.jar                             minimo/chrome
+cp -a bin/chrome/toolkit.manifest                        minimo/chrome
 
-cp -a bin/chrome/pippki.jar                              wince/chrome
-cp -a bin/chrome/pippki.manifest                         wince/chrome
+mkdir -p minimo/components
 
-mkdir -p wince/components
+cp -a bin/components/nsDictionary.js                     minimo/components
+cp -a bin/components/nsInterfaceInfoToIDL.js             minimo/components
+cp -a bin/components/nsXmlRpcClient.js                   minimo/components
 
-cp -a bin/components/nsHelperAppDlg.js                   wince/components
-cp -a bin/components/nsProgressDialog.js                 wince/components
+cp -a bin/extensions/spatial-navigation@extensions.mozilla.org/components/* minimo/components
 
-cp -a bin/components/nsDictionary.js                     wince/components
-cp -a bin/components/nsInterfaceInfoToIDL.js             wince/components
-cp -a bin/components/nsXmlRpcClient.js                   wince/components
+mkdir -p minimo/greprefs
+cp -a bin/greprefs/*                                     minimo/greprefs
 
-cp -a bin/extensions/spatial-navigation@extensions.mozilla.org/components/* wince/components
+mkdir -p minimo/res
+cp -a bin/res/*                                          minimo/res
+rm -rf minimo/res/samples
+rm -rf minimo/res/throbber
 
-mkdir -p wince/greprefs
-cp -a bin/greprefs/*                                     wince/greprefs
-
-mkdir -p wince/res
-cp -a bin/res/*                                          wince/res
-rm -rf wince/res/samples
-rm -rf wince/res/throbber
-
-mkdir -p wince/plugins
+mkdir -p minimo/plugins
 
 echo Linking XPT files.
 
-host/bin/host_xpt_link wince/components/all.xpt          bin/components/*.xpt
+host/bin/host_xpt_link minimo/components/all.xpt          bin/components/*.xpt
 
 echo Chewing on chrome
 
-cd wince/chrome
+cd minimo/chrome
 
 unzip classic.jar
 rm -rf classic.jar
@@ -104,23 +98,25 @@ popd
 
 pushd $SRCDIR
 
-cp -a ../customization/all.js                             $OBJDIR/dist/wince/greprefs
+cp -a ../customization/all.js                             $OBJDIR/dist/minimo/greprefs
 
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
-cp -a ../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/wince
+cp -a ../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/minimo
 
 popd
 
 echo Rebasing
 
-pushd $OBJDIR/dist/wince
+pushd $OBJDIR/dist/minimo
 
 rebase -b 0x0100000 -R . -v *.dll components/*.dll
 
-echo Zipping
-
-zip -r $OBJDIR/dist/wince.zip $OBJDIR/dist/wince
+#
+# echo Zipping
+#
+# zip -r $OBJDIR/dist/minimo.zip $OBJDIR/dist/minimo
+#
 
 popd
 
