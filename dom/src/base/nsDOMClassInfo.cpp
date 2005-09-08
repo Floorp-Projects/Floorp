@@ -4764,6 +4764,19 @@ GetSCCRootFor(nsIDOMNode *aDOMNode)
 #ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
   nsCOMArray<nsIDOMNode> stack;
 #endif
+  PRUint16 nodeType;
+  cur->GetNodeType(&nodeType);
+  if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+    nsCOMPtr<nsIDOMAttr> attr = do_QueryInterface(cur);
+    nsCOMPtr<nsIDOMElement> owner;
+    attr->GetOwnerElement(getter_AddRefs(owner));
+    if (owner) {
+#ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
+      stack.AppendObject(cur);
+#endif
+      cur = do_QueryInterface(owner);
+    }
+  }
   for (;;) {
 #ifdef DEBUG_NOISY_PRESERVE_WRAPPERS
     stack.AppendObject(cur);
@@ -4778,25 +4791,34 @@ GetSCCRootFor(nsIDOMNode *aDOMNode)
         nsAutoString nodeName;
         for (PRInt32 i = stack.Count() - 1; i >= 0; --i) {
           stack[i]->GetNodeName(nodeName);
-          printf(" > %s", NS_ConvertUTF16toUTF8(nodeName).get());
           stack[i]->GetNodeType(&nodeType);
-          if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-            nsCOMPtr<nsIContent> content = do_QueryInterface(stack[i]);
-            for (PRInt32 j = 0, j_end = content->GetAttrCount(); j < j_end; ++j) {
-              PRInt32 namespaceID;
-              nsCOMPtr<nsIAtom> name, prefix;
-              content->GetAttrNameAt(j, &namespaceID, getter_AddRefs(name),
-                                     getter_AddRefs(prefix));
-              nsAutoString val;
-              nsCAutoString atomStr;
-              content->GetAttr(namespaceID, name, val);
-              printf("[");
-              if (prefix) {
-                prefix->ToUTF8String(atomStr);
-                printf("%s:", atomStr.get());
+          if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+            nsAutoString nodeValue;
+            stack[i]->GetNodeValue(nodeValue);
+            printf(" > @%s=\"%s\"", NS_ConvertUTF16toUTF8(nodeName).get(),
+                   NS_ConvertUTF16toUTF8(nodeValue).get());
+          } else {
+            printf(" > %s", NS_ConvertUTF16toUTF8(nodeName).get());
+            if (nodeType == nsIDOMNode::ELEMENT_NODE) {
+              nsCOMPtr<nsIContent> content = do_QueryInterface(stack[i]);
+              PRInt32 j;
+              for (j = 0, j_end = content->GetAttrCount(); j < j_end; ++j) {
+                PRInt32 namespaceID;
+                nsCOMPtr<nsIAtom> name, prefix;
+                content->GetAttrNameAt(j, &namespaceID, getter_AddRefs(name),
+                                       getter_AddRefs(prefix));
+                nsAutoString val;
+                nsCAutoString atomStr;
+                content->GetAttr(namespaceID, name, val);
+                printf("[");
+                if (prefix) {
+                  prefix->ToUTF8String(atomStr);
+                  printf("%s:", atomStr.get());
+                }
+                name->ToUTF8String(atomStr);
+                printf("%s=\"%s\"]", atomStr.get(),
+                       NS_ConvertUTF16toUTF8(val).get());
               }
-              name->ToUTF8String(atomStr);
-              printf("%s=\"%s\"]", atomStr.get(), NS_ConvertUTF16toUTF8(val).get());
             }
           }
         }
