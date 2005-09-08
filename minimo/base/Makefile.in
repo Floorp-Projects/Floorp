@@ -165,6 +165,12 @@ installer::
 
 
 else
+package::
+	bash $(srcdir)/../config/linux_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
+
 installer::
 	bash $(srcdir)/../config/linux_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
 endif
+
+libs::
+	make package
