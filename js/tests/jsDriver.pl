@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# -*- Mode: Perl; tab-width: 4; indent-tabs-mode: nil; -*-
 # vim: set ts=4 sw=4 et tw=80:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,6 +44,7 @@
 
 use strict;
 use Getopt::Mixed "nextOption";
+use File::Temp qw/ tempfile tempdir /;
 
 my $os_type = &get_os_type;
 my $unixish = (($os_type ne "WIN") && ($os_type ne "MAC"));
@@ -210,12 +212,14 @@ sub execute_tests {
         my $command = &append_file_to_command($shell_command, $path);
         &dd ("executing: " . $command);
 
-        system "$command > js.out $redirect_command";
-        open (OUTPUT, "js.out") or
-           die "failed to open js.out: $!\n";
+        my $jsout;
+        (undef, $jsout) = tempfile();
+        system "$command > $jsout $redirect_command";
+        open (OUTPUT, "$jsout") or
+           die "failed to open temporary file $jsout: $!\n";
         @output = <OUTPUT>;
         close (OUTPUT);
-        unlink "js.out";
+        unlink "$jsout";
 
         @output = grep (!/js\>/, @output);
 
@@ -251,7 +255,7 @@ sub execute_tests {
             # XXX This only allows 1 bugnumber per testfile, should be
             # XXX modified to allow for multiple.
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
-		my $bugline = $1;
+                my $bugline = $1;
                 $bugline =~ /(\d+)/;
                 $bug_number = $1;
             }
@@ -362,7 +366,7 @@ sub write_results {
            "FAILURE: # $tests_completed of " . ($#test_list + 1) .
            " test(s) were completed, " .
            "$failures_reported failures reported.\n" .
-	   "FAILURE: Engine command line: $engine_command<br>\n" .
+           "FAILURE: Engine command line: $engine_command<br>\n" .
            join ("\n", map { "FAILURE: $_" } @failed_tests) .
            "\n</pre>\n" .
            "[ <a href='#tippy_top'>Top of Page</a> | " .
