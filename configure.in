@@ -4047,7 +4047,7 @@ suite)
 
 browser)
   MOZ_APP_NAME=firefox
-  MOZ_APP_DISPLAYNAME=Firefox
+  MOZ_APP_DISPLAYNAME=DeerPark
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
@@ -4252,6 +4252,7 @@ MOZ_ARG_ENABLE_BOOL(official-branding,
 [case "$MOZ_BUILD_APP" in
 browser)
     MOZ_BRANDING_DIRECTORY=other-licenses/branding/firefox
+    MOZ_APP_DISPLAYNAME=Firefox
     ;;
 
 mail)
@@ -4268,11 +4269,6 @@ MOZ_ARG_WITH_STRING(branding,
     MOZ_BRANDING_DIRECTORY=$withval)
 
 AC_SUBST(MOZ_BRANDING_DIRECTORY)
-
-# Rebrand Firefox as DeerPark for unofficial builds.
-if test -z "$MOZ_USE_OFFICIAL_BRANDING" && test "$MOZ_BUILD_APP" = "browser"; then
-    MOZ_APP_DISPLAYNAME="DeerPark"
-fi
 
 dnl ========================================================
 dnl = Distribution ID
