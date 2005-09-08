@@ -1,0 +1,220 @@
+[%# 1.0@bugzilla.org %]
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #%]
+
+[%# INTERFACE:
+  #
+  # updated_XXX : boolean; is true when the 'XXX' field has been updated.
+  # old_XXX : ... string; old value of the field 'XXX'.
+  # new_XXX : ... string; new value of the field 'XXX'.
+  #
+  # updated_product: boolean; the name of the product was updated
+  #
+  # updated_description: boolean; the product description was updated
+  #
+  # updated_milestoneurl: boolean; the product milestone URL was updated
+  #
+  # updated_votesperuser: boolean; the votes per user was updated
+  #
+  # updated_maxvotesperbug: boolean; the max votes per bug was updated
+  #
+  # updated_votestoconfirm: boolean; the votes to confirm a bug was updated
+  #
+  # updated_defaultmilestone: boolean; the default milestone was updated
+  #
+  # updated_bugsubmitstatus: boolean; the open/closed for new bugs status 
+  #                          was updated (no 'old_XXX' value)
+  #
+  # classification: string; The product classification (may be empty or missing)
+  #
+  # changer: string; user id of the user making the changes, used for mailing
+  #          bug changes if necessary
+  #
+  # name: string; the product name
+  #
+  # checkvotes: boolean; is true if vote related fields have changed. If so, 
+  #             then the following parameters will be specified:
+  #
+  # toomanyvotes: list of hashes, each one with an 'id' and a 'name' hash key
+  #               detailing the bug id and the username of users who had too
+  #               many votes for a bug
+  #
+  # toomanytotalvotes: list of hashes, each one with an 'id' and a 'name' hash key
+  #                    detailing the bug id and the username of users who had
+  #                    too many total votes
+  #
+  # confirmedbugs: list of bug ids, which were confirmed by votes
+  #
+  #%]
+
+[% IF classification %]
+  [% classification_url_part = BLOCK %]&amp;classification=
+     [%- classification FILTER url_quote %]
+  [% END %]
+  [% classification_text = BLOCK %] 
+    of classification '[% classification FILTER html %]'
+  [% END %]
+[% END %]
+
+[% title = BLOCK %]Updating Product '[% name FILTER html %]' 
+                   [% classification_text FILTER none %][% END %]
+[% PROCESS global/header.html.tmpl
+  title = title
+  style_urls = ['skins/standard/admin.css']
+%]
+
+[% IF updated_product %]
+  <p>
+  Updated product name from '[% old_product FILTER html %]' to 
+  <a href="editproducts.cgi?action=edit&amp;product=
+  [%- new_product FILTER url_quote %]
+  [%- classification_url_part FILTER none %]">[% new_product FILTER html %]</a>.
+[% END %]
+
+
+[% IF updated_description %]
+  <p>
+    Updated description to:</p>
+  </p>
+  <p style="margin: 1em 3em 1em 3em">[% new_description FILTER html %]</p>
+[% END %]
+
+[% IF updated_bugsubmitstatus %]
+  <p>
+  Product is now
+  [% IF new_bugsubmitstatus %]
+    closed to
+  [% ELSE %]
+    open for 
+  [% END %]
+  new [% terms.bugs %].
+[% END %]
+
+[% IF updated_milestoneurl %]
+  <p>
+  Updated milestone URL 
+  [% IF old_milestoneurl != '' %]
+    from<br> <a href="[%- old_milestoneurl FILTER html %]">'
+    [%- old_milestoneurl FILTER html %]'</a>
+  [% END %]
+  to
+  [% IF new_milestoneurl != '' %]
+     <br><a href="[%- new_milestoneurl FILTER html %]">'
+     [%- new_milestoneurl FILTER html %]'</a>.
+  [% ELSE %]
+    be empty.
+  [% END %]
+  </p>
+[% END %]
+
+[% IF updated_defaultmilestone %]
+  <p>
+  Updated default milestone from '[% old_defaultmilestone FILTER html %]' to
+  '[% new_defaultmilestone FILTER html %]'.
+  </p>
+[% END %]
+  
+[% IF updated_votesperuser %]
+  <p>
+  Updated votes per user from
+  [%+ old_votesperuser FILTER html %] to 
+  [%+ new_votesperuser FILTER html %].
+[% END %]
+
+[% IF updated_maxvotesperbug %]
+  <p>
+  Updated maximum votes per [% terms.bug %] from 
+  [%+ old_maxvotesperbug FILTER html %] to 
+  [%+ new_maxvotesperbug FILTER html %].
+[% END %]
+
+[% IF updated_votestoconfirm %]
+  <p>
+  Updated number of votes needed to confirm a [% terms.bug %] from
+  [%+ old_votestoconfirm FILTER html %] to 
+  [%+ new_votestoconfirm FILTER html %].
+[% END %]
+
+[% UNLESS updated_bugsubmitstatus ||
+          updated_description || 
+          updated_milestoneurl ||
+          updated_votesperuser ||
+          updated_maxvotesperbug ||
+          updated_votestoconfirm ||
+          updated_defaultmilestone ||
+          updated_product %]
+  <p>Nothing changed for product '[% name FILTER html %]'.
+[% END %]
+
+[%# Note that this display of changed votes and/or confirmed bugs is
+    not very scalable. We could have a _lot_, and we just list them all.
+    One day we should limit this perhaps, or have a more scalable display %]
+
+
+[% IF checkvotes %]
+  <hr>
+
+  <p>Checking existing votes in this product for anybody who now
+  has too many votes for [% terms.abug %]...<br>
+  [% IF toomanyvotes.size > 0 %]
+    [% FOREACH detail = toomanyvotes %]
+      &rarr;removed votes for [% terms.bug %] <a href="show_bug.cgi?id=
+     [%- detail.id FILTER url_quote %]">
+     [%- detail.id FILTER html %]</a> from [% detail.name FILTER html %]<br>
+    [% END %]
+  [% ELSE %]
+    &rarr;there were none.
+  [% END %]
+
+  <p>Checking existing votes in this product for anybody
+  who now has too many total votes...<br>
+  [% IF toomanytotalvotes.size > 0 %]
+    [% FOREACH detail = toomanytotalvotes %]
+      &rarr;removed votes for [% terms.bug %] <a href="show_bug.cgi?id=
+     [%- detail.id FILTER url_quote %]">
+     [%- detail.id FILTER html %]</a> from [% detail.name FILTER html %]<br>
+    [% END %]
+  [% ELSE %]
+    &rarr;there were none.
+  [% END %]
+
+  <p>Checking unconfirmed [% terms.bugs %] in this product for any which now have
+  sufficient votes...<br>
+  [% IF confirmedbugs.size > 0 %]
+    [% FOREACH id = confirmedbugs %]
+
+      [%# This is INCLUDED instead of PROCESSED to avoid variables getting
+          overwritten, which happens otherwise %]
+      [% INCLUDE bug/process/results.html.tmpl
+        type = 'votes'
+        mailrecipients = { 'changer' => changer }
+        header_done = 1
+        id = id
+      %]
+    [% END %]
+  [% ELSE %]
+    &rarr;there were none.
+  [% END %]
+
+[% END %]
+
+[% PROCESS admin/products/footer.html.tmpl %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -32,6 +32,9 @@
   [% classification_url_part = BLOCK %]&amp;classification=
      [%- classification FILTER url_quote %]
   [% END %]
+  [% classification_url_part_start = BLOCK %]classification=
+     [%- classification FILTER url_quote %]
+  [% END %]
   [% classification_text = BLOCK %] 
     of classification '[% classification FILTER html %]'
   [% END %]
@@ -61,16 +64,16 @@
          [% classification_text %]"
   href="editproducts.cgi?action=edit&amp;product=
         [%- name FILTER url_quote %][% classification_url_part %]">
-        '[% name FILTER html %]'</a>
+        '[% name FILTER html %]'</a>.
 [% END %]
 
 
+[%# Edit other products (in a classification if specified): %]
 [% UNLESS no_edit_other_products_link %]
-  Edit other products [% classification_text %]<a 
-  href="editproducts.cgi?product=
-        [%- name FILTER url_quote %]
-        [%- classification_url_part %]">'
-        [%- classification FILTER html %]'</a>
+  Edit <a 
+  href="editproducts.cgi?
+        [%- classification_url_part_start FILTER none %]">other products
+          [% classification_text %]</a>.
    
 [% END %]
 

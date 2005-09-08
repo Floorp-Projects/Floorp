@@ -288,11 +288,6 @@
     [% title = "Component Requires Default Assignee" %]
     You must enter a default assignee for component '[% name FILTER html %]'.
 
-  [% ELSIF error == "product_not_specified" %]
-    [% title = "No Product Specified" %]
-    No product specified when trying to edit components, milestones or
-    versions.
-
   [% ELSIF error == "component_not_specified" %]
     [% title = "No Component Specified" %]
     No component specified when trying to edit components.
@@ -951,6 +946,50 @@
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.
 
+  [% ELSIF error == "prod_votes_per_bug_must_be_nonnegative" %]
+    [% title = "Maximum Votes Must Be Non-negative" %]
+    '[% maxvotesperbug FILTER html %]' is an invalid value for the 
+    <em>'Maximum Votes Per [% terms.Bug %]'</em> field, which should
+    contain a non-negative number.
+
+  [% ELSIF error == "prod_votes_per_user_must_be_nonnegative" %]
+    [% title = "Votes Per User Must Be Non-negative" %]
+    '[% votesperuser FILTER html %]' is an invalid value for the 
+    <em>'Votes Per User'</em> field, which should contain a
+    non-negative number.
+
+  [% ELSIF error == "prod_votes_to_confirm_must_be_nonnegative" %]
+    [% title = "Votes To Confirm Must Be Non-negative" %]
+    '[% votestoconfirm FILTER html %]' is an invalid value for the 
+    <em>'Votes To Confirm'</em> field, which should contain a
+    non-negative number.
+
+  [% ELSIF error == "prod_cant_delete_description" %]
+    [% title = "Cannot delete product description" %]
+    Cannot delete the description for product
+    '[% product FILTER html %]'.
+
+  [% ELSIF error == "prod_cant_delete_name" %]
+    [% title = "Cannot delete product name" %]
+    Cannot delete the product name for product '[% product FILTER html %]'.
+
+  [% ELSIF error == "prod_name_already_in_use" %]
+    [% title = "Product name already in use" %]
+    The product name '[% product FILTER html %]' is already in use.
+
+  [% ELSIF error == "prod_must_define_defaultmilestone" %]
+    [% title = "Must define new default milestone" %]
+    [% IF classification %]
+      [% classification_url_part = BLOCK %]&amp;classification=
+        [%- classification FILTER url_quote %]
+      [% END %]
+    [% END %]
+    You must <a href="editmilestones.cgi?action=add&amp;product=
+    [%- product FILTER url_quote %]
+    [%- classification_url_part FILTER none %]">
+    create the milestone '[% defaultmilestone FILTER html %]'</a> before
+    it can be made the default milestone for product '[% product FILTER html %]'.
+
   [% ELSIF error == "product_disabled" %]
     [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
     Sorry, entering [% terms.bugs %] into the
@@ -966,6 +1005,11 @@
     There are [% nb FILTER html %] [%+ terms.bugs %] entered for this product!
     You must reassign those [% terms.bugs %] to another product before you
     can delete this one.
+
+  [% ELSIF error == "product_not_specified" %]
+    [% title = "No Product Specified" %]
+    No product specified when trying to edit components, milestones, versions
+    or product.
 
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Search Name Specified" %]

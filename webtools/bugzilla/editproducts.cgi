@@ -23,7 +23,7 @@
 #               Dawn Endico <endico@mozilla.org>
 #               Joe Robins <jmrobins@tgix.com>
 #               Gavin Shelley <bugzilla@chimpychompy.org>
-#               Frédéric Buclin <LpSolit@gmail.com>
+#               Frï¿½ï¿½ic Buclin <LpSolit@gmail.com>
 #               Greg Hendricks <ghendricks@novell.com>
 #
 # Direct any questions on this source code to
@@ -69,12 +69,32 @@ sub CheckProduct
         exit;
     }
 
-    unless (TestProduct $prod) {
+    unless (TestProduct($prod)) {
         print "Sorry, product '$prod' does not exist.";
         PutTrailer();
         exit;
     }
 }
+
+# For the transition period, as this file is templatised bit by bit,
+# we need this routine, which does things properly, and will
+# eventually be the only version. (The older versions assume a
+# $template->put_header() call has been made)
+sub CheckProductNew
+{
+    my $prod = shift;
+
+    # do we have a product?
+    unless ($prod) {
+        ThrowUserError('product_not_specified');
+    }
+
+    unless (TestProduct($prod)) {
+        ThrowUserError('product_doesnt_exist',
+                       {'product' => $prod});
+    }
+}
+
 
 # TestClassification:  just returns if the specified classification does exists
 # CheckClassification: same check, optionally  emit an error text
@@ -121,7 +141,7 @@ sub CheckClassificationNew
         ThrowUserError('classification_not_specified');    
     }
 
-    unless (TestClassification $cl) {
+    unless (TestClassification($cl)) {
         ThrowUserError('classification_doesnt_exist',
                        {'name' => $cl});
     }
@@ -342,7 +362,7 @@ if (!$action && !$product) {
 if ($action eq 'add') {
 
     if (Param('useclassification')) {
-        CheckClassification($classification);
+        CheckClassificationNew($classification);
     }
     $vars->{'classification'} = $classification;
     $template->process("admin/products/create.html.tmpl", $vars)
@@ -689,7 +709,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product)) {
-    CheckProduct($product);
+    CheckProductNew($product);
     trick_taint($product);
     my $product_id = get_product_id($product); 
     my $classification_id=1;
@@ -697,7 +717,7 @@ if ($action eq 'edit' || (!$action && $product)) {
         # If a product has been given with no classification associated
         # with it, take this information from the DB
         if ($classification) {
-            CheckClassificationProduct($classification, $product);
+            CheckClassificationProductNew($classification, $product);
         } else {
             $classification =
                 $dbh->selectrow_array("SELECT classifications.name
@@ -1012,9 +1032,9 @@ if ($action eq 'updategroupcontrols') {
 #
 # action='update' -> update the product
 #
-
 if ($action eq 'update') {
-    $template->put_header("Update product");
+
+    $vars->{'classification'} = $classification;
 
     my $productold          = trim($cgi->param('productold')          || '');
     my $description         = trim($cgi->param('description')         || '');
@@ -1034,25 +1054,25 @@ if ($action eq 'update') {
 
     my $checkvotes = 0;
 
-    CheckProduct($productold);
+    CheckProductNew($productold);
     my $product_id = get_product_id($productold);
 
+    my $stored_maxvotesperbug = $maxvotesperbug;
     if (!detaint_natural($maxvotesperbug)) {
-        print "Sorry, the max votes per bug must be an integer >= 0.";
-        PutTrailer($localtrailer);
-        exit;
+        ThrowUserError('prod_votes_per_bug_must_be_nonnegative',
+                       {maxvotesperbug => $stored_maxvotesperbug});
     }
 
+    my $stored_votesperuser = $votesperuser;
     if (!detaint_natural($votesperuser)) {
-        print "Sorry, the votes per user must be an integer >= 0.";
-        PutTrailer($localtrailer);
-        exit;
+        ThrowUserError('prod_votes_per_user_must_be_nonnegative',
+                       {votesperuser => $stored_votesperuser});
     }
 
+    my $stored_votestoconfirm = $votestoconfirm;
     if (!detaint_natural($votestoconfirm)) {
-        print "Sorry, the votes to confirm must be an integer >= 0.";
-        PutTrailer($localtrailer);
-        exit;
+        ThrowUserError('prod_votes_to_confirm_must_be_nonnegative',
+                       {votestoconfirm => $stored_votestoconfirm});
     }
 
     # Note that we got the $product_id using $productold above so it will
@@ -1070,27 +1090,31 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET disallownew=$disallownew
                  WHERE id=$product_id");
-        print "Updated bug submit status.<BR>\n";
+        $vars->{'updated_bugsubmitstatus'} = 1;
+        $vars->{'new_bugsubmitstatus'} = $disallownew;        
     }
 
     if ($description ne $descriptionold) {
         unless ($description) {
-            print "Sorry, I can't delete the description.";
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError('prod_cant_delete_description',
+                           {product => $productold});
         }
         SendSQL("UPDATE products
                  SET description=" . SqlQuote($description) . "
                  WHERE id=$product_id");
-        print "Updated description.<BR>\n";
+        $vars->{'updated_description'} = 1;
+        $vars->{'old_description'} = $descriptionold;        
+        $vars->{'new_description'} = $description;        
     }
 
-    if (Param('usetargetmilestone') && $milestoneurl ne $milestoneurlold) {
+    if (Param('usetargetmilestone')
+        && ($milestoneurl ne $milestoneurlold)) {
         SendSQL("UPDATE products
                  SET milestoneurl=" . SqlQuote($milestoneurl) . "
                  WHERE id=$product_id");
-        print "Updated mile stone URL.<BR>\n";
+        $vars->{'updated_milestoneurl'} = 1;
+        $vars->{'old_milestoneurl'} = $milestoneurlold;        
+        $vars->{'new_milestoneurl'} = $milestoneurl;        
     }
 
 
@@ -1098,7 +1122,10 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET votesperuser=$votesperuser
                  WHERE id=$product_id");
-        print "Updated votes per user.<BR>\n";
+        $vars->{'updated_votesperuser'} = 1;
+        $vars->{'old_votesperuser'} = $votesperuserold;        
+        $vars->{'new_votesperuser'} = $votesperuser;        
+
         $checkvotes = 1;
     }
 
@@ -1107,7 +1134,10 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET maxvotesperbug=$maxvotesperbug
                  WHERE id=$product_id");
-        print "Updated max votes per bug.<BR>\n";
+        $vars->{'updated_maxvotesperbug'} = 1;
+        $vars->{'old_maxvotesperbug'} = $maxvotesperbugold;        
+        $vars->{'new_maxvotesperbug'} = $maxvotesperbug;        
+
         $checkvotes = 1;
     }
 
@@ -1116,7 +1146,11 @@ if ($action eq 'update') {
         SendSQL("UPDATE products
                  SET votestoconfirm=$votestoconfirm
                  WHERE id=$product_id");
-        print "Updated votes to confirm.<BR>\n";
+
+        $vars->{'updated_votestoconfirm'} = 1;
+        $vars->{'old_votestoconfirm'} = $votestoconfirmold;
+        $vars->{'new_votestoconfirm'} = $votestoconfirm;
+
         $checkvotes = 1;
     }
 
@@ -1126,15 +1160,18 @@ if ($action eq 'update') {
                 "WHERE value = " . SqlQuote($defaultmilestone) .
                 "  AND product_id = $product_id");
         if (!FetchOneColumn()) {
-            print "Sorry, the milestone $defaultmilestone must be defined first.";
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError('prod_must_define_defaultmilestone',
+                           {product          => $productold,
+                            defaultmilestone => $defaultmilestone,
+                            classification   => $classification});
         }
         SendSQL("UPDATE products " .
                 "SET defaultmilestone = " . SqlQuote($defaultmilestone) .
                 "WHERE id=$product_id");
-        print "Updated default milestone.<BR>\n";
+
+        $vars->{'updated_defaultmilestone'} = 1;
+        $vars->{'old_defaultmilestone'} = $defaultmilestoneold;
+        $vars->{'new_defaultmilestone'} = $defaultmilestone;
     }
 
     my $qp = SqlQuote($product);
@@ -1142,30 +1179,33 @@ if ($action eq 'update') {
 
     if ($product ne $productold) {
         unless ($product) {
-            print "Sorry, I can't delete the product name.";
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError('prod_cant_delete_name',
+                           {product => $productold});
         }
 
         if (lc($product) ne lc($productold) &&
             TestProduct($product)) {
-            print "Sorry, product name '$product' is already in use.";
-            $dbh->bz_unlock_tables(UNLOCK_ABORT);
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError('prod_name_already_in_use',
+                           {product => $product});
         }
 
         SendSQL("UPDATE products SET name=$qp WHERE id=$product_id");
-        print "Updated product name.<BR>\n";
+
+        $vars->{'updated_product'} = 1;
+        $vars->{'old_product'} = $productold;
+        $vars->{'new_product'} = $product;
+
     }
     $dbh->bz_unlock_tables();
     unlink "$datadir/versioncache";
 
     if ($checkvotes) {
+        $vars->{'checkvotes'} = 1;
+
         # 1. too many votes for a single user on a single bug.
+        my @toomanyvotes_list = ();
         if ($maxvotesperbug < $votesperuser) {
-            print "<br>Checking existing votes in this product for anybody who now has too many votes for a single bug.";
+
             SendSQL("SELECT votes.who, votes.bug_id " .
                     "FROM votes, bugs " .
                     "WHERE bugs.bug_id = votes.bug_id " .
@@ -1176,19 +1216,27 @@ if ($action eq 'update') {
                 my ($who, $id) = (FetchSQLData());
                 push(@list, [$who, $id]);
             }
+
+
             foreach my $ref (@list) {
                 my ($who, $id) = (@$ref);
                 RemoveVotes($id, $who, "The rules for voting on this product has changed;\nyou had too many votes for a single bug.");
                 my $name = DBID_to_name($who);
-                print qq{<br>Removed votes for bug <A HREF="show_bug.cgi?id=$id">$id</A> from $name\n};
+
+                push(@toomanyvotes_list,
+                     {id => $id, name => $name});
             }
+
         }
+
+        $vars->{'toomanyvotes'} = \@toomanyvotes_list;
+
 
         # 2. too many total votes for a single user.
         # This part doesn't work in the general case because RemoveVotes
         # doesn't enforce votesperuser (except per-bug when it's less
         # than maxvotesperbug).  See RemoveVotes in globals.pl.
-        print "<br>Checking existing votes in this product for anybody who now has too many total votes.";
+
         SendSQL("SELECT votes.who, votes.vote_count FROM votes, bugs " .
                 "WHERE bugs.bug_id = votes.bug_id " .
                 " AND bugs.product_id = $product_id");
@@ -1201,6 +1249,7 @@ if ($action eq 'update') {
                 $counts{$who} += $count;
             }
         }
+        my @toomanytotalvotes_list = ();
         foreach my $who (keys(%counts)) {
             if ($counts{$who} > $votesperuser) {
                 SendSQL("SELECT votes.bug_id FROM votes, bugs " .
@@ -1212,37 +1261,36 @@ if ($action eq 'update') {
                     RemoveVotes($id, $who,
                                 "The rules for voting on this product has changed; you had too many\ntotal votes, so all votes have been removed.");
                     my $name = DBID_to_name($who);
-                    print qq{<br>Removed votes for bug <A HREF="show_bug.cgi?id=$id">$id</A> from $name\n};
+
+                    push(@toomanytotalvotes_list,
+                         {id => $id, name => $name});
                 }
             }
         }
+        $vars->{'toomanytotalvotes'} = \@toomanytotalvotes_list;
+
         # 3. enough votes to confirm
         my $bug_list = $dbh->selectcol_arrayref("SELECT bug_id FROM bugs
                                                  WHERE product_id = ?
                                                  AND bug_status = 'UNCONFIRMED'
                                                  AND votes >= ?",
                                                  undef, ($product_id, $votestoconfirm));
-        if (scalar(@$bug_list)) {
-            print "<br>Checking unconfirmed bugs in this product for any which now have sufficient votes.";
-        }
+
         my @updated_bugs = ();
         foreach my $bug_id (@$bug_list) {
             my $confirmed = CheckIfVotedConfirmed($bug_id, $whoid);
             push (@updated_bugs, $bug_id) if $confirmed;
         }
 
-        $vars->{'type'} = "votes";
-        $vars->{'mailrecipients'} = { 'changer' => $whoid };
-        $vars->{'header_done'} = 1;
+        $vars->{'confirmedbugs'} = \@updated_bugs;
+        $vars->{'changer'} = $whoid;
 
-        foreach my $bug_id (@updated_bugs) {
-            $vars->{'id'} = $bug_id;
-            $template->process("bug/process/results.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());
-        }
     }
 
-    PutTrailer($localtrailer);
+    $vars->{'name'} = $product;
+    $template->process("admin/products/updated.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
+
     exit;
 }
 
