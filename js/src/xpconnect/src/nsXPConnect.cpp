@@ -1032,9 +1032,38 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
 
     {   // scoped lock
         XPCAutoLock al(lock);
-        map->Remove(aClassInfo);
+
+        XPCWrappedNativeProtoMap* detachedMap =
+            GetRuntime()->GetDetachedWrappedNativeProtoMap();
+
+        // If we're replacing an old proto, make sure to put it on the
+        // map of detached wrapped native protos so that the old proto
+        // gets properly cleaned up, especially during shutdown.
+        XPCWrappedNativeProto *oldProto = map->Find(aClassInfo);
+        if(oldProto)
+        {
+            detachedMap->Add(oldProto);
+
+            // ClassInfo2WrappedNativeProtoMap doesn't ever replace
+            // entries in the map, so now since we know there's an
+            // entry for aClassInfo in the map we have to remove it to
+            // be able to add the new one.
+            map->Remove(aClassInfo);
+        }
+
         map->Add(aClassInfo, proto);
+
+        // Remove the prototype from the map of detached wrapped
+        // native prototypes now that the prototype is part of a scope
+        // again.
+        detachedMap->Remove(proto);
     }
+
+    // The global in this scope didn't change, but a prototype did
+    // (most likely the global object's prototype), which means the
+    // scope needs to get a chance to update its cached
+    // Object.prototype pointers etc.
+    scope->SetGlobal(ccx, aScope);
 
     return NS_OK;
 }
