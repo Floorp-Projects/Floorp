@@ -713,11 +713,10 @@ CreateErrorText(const PRUnichar* aDescription,
 }
 
 static nsresult
-CreateSourceText(const PRInt32 aColNumber,
-                 const PRUnichar *aSourceLine,
-                 nsString& aSourceString)
+AppendErrorPointer(const PRInt32 aColNumber,
+                   const PRUnichar *aSourceLine,
+                   nsString& aSourceString)
 {
-  aSourceString.Append(aSourceLine);
   aSourceString.Append(PRUnichar('\n'));
 
   // Last character will be '^'.
@@ -810,20 +809,20 @@ nsExpatDriver::HandleError()
   CreateErrorText(description.get(), XML_GetBase(mExpatParser), lineNumber,
                   colNumber, errorText);
 
-  nsAutoString sourceText;
-  CreateSourceText(colNumber, mLastLine.get(), sourceText);
-
   nsCOMPtr<nsIConsoleService> cs
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   nsCOMPtr<nsIScriptError> serr(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   if (serr && cs) {
     if (NS_SUCCEEDED(serr->Init(description.get(),
                                 mURISpec.get(),
-                                sourceText.get(),
+                                mLastLine.get(),
                                 lineNumber, colNumber,
                                 nsIScriptError::errorFlag, "malformed-xml")))
       cs->LogMessage(serr);
   }
+
+  nsAutoString sourceText(mLastLine);
+  AppendErrorPointer(colNumber, mLastLine.get(), sourceText);
 
   NS_ASSERTION(mSink, "no sink?");
   if (mSink) {
