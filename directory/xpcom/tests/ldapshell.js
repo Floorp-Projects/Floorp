@@ -42,7 +42,7 @@
  * mozilla/directory/xpcom/tests (or the equivalent objdir) will start a shell
  * with this code pre-loaded.
  */
- 
+
 const C = Components;
 const Ci = C.interfaces;
 const CC = C.classes;
@@ -56,6 +56,8 @@ var done = false;
 
 function runEventPump()
 {
+    dump("in runEventPump()\n");
+
     if (done) { // XXX needed?
         done = false;
         return;
@@ -130,12 +132,20 @@ ldapMsgListener.prototype =
 {
     mStatus: null,
 
+    QueryInterface: function QI(iid) {
+        if (iid.equals(Components.interfaces.nsISupports) ||
+            iid.equals(Components.interfaces.nsILDAPMessageListener))
+            return this;
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
+    },
+
     onLDAPInit: function onLDAPInit(aConn, aStatus) {
         stopEventPump();
 
         mStatus = aStatus;
         if (!C.isSuccessCode(aStatus)) {
-            throw new Exception(aStatus);
+            throw aStatus;
         }
 
         dump("connection initialized successfully!\n");
@@ -164,6 +174,25 @@ ldapMsgListener.prototype =
     }
 }
 
+function createProxiedLdapListener() {
+
+    var l = new ldapMsgListener();
+
+    /*
+    var uiQueue = evqSvc.getSpecialEventQueue(Components.interfaces.
+                                              nsIEventQueueService.
+                                              UI_THREAD_EVENT_QUEUE);
+    */
+    var proxyMgr = getService("@mozilla.org/xpcomproxy;1",
+                                  "nsIProxyObjectManager");
+
+    dump("about to get proxy\n");
+
+    return proxyMgr.getProxyForObject(evQ, Components.interfaces.
+                                      nsILDAPMessageListener, l, 5);
+    // 5 == PROXY_ALWAYS | PROXY_SYNC
+}
+
 const ioSvc = getService("@mozilla.org/network/io-service;1", "nsIIOService");
  
 function URLFromSpec(spec)
@@ -176,12 +205,22 @@ function URLFromSpec(spec)
  */
 var conn;
 function createConn(host, bindname) {
+    
+    dump("in createConn\n");
+
     conn = createInstance("@mozilla.org/network/ldap-connection;1", 
                           "nsILDAPConnection");
 
-    var listener = new ldapMsgListener();
-    conn.init(host, -1, 0, bindname, listener, null, 3);
+    try { 
+        var listener = createProxiedLdapListener();
+    } catch (ex) {
+        dump("exception " + ex + "caught\n");
+    }
 
+    dump("about to call conn.init\n");
+    conn.init(host, -1, false, bindname, listener, null, 3);
+
+    dump("about to call runEventPump\n");
     runEventPump();
 }
 
@@ -205,10 +244,11 @@ function simpleBind(passwd)
     var op = createInstance("@mozilla.org/network/ldap-operation;1",
                             "nsILDAPOperation");
 
-    var listener = new ldapMsgListener();
+    var listener = createProxiedLdapListener();
     op.init(conn, listener, null);
 
     op.simpleBind(passwd);
+    runEventPump();
 }
 
 function searchExt(basedn, scope, filter, serverControls, clientControls)
@@ -216,11 +256,14 @@ function searchExt(basedn, scope, filter, serverControls, clientControls)
     var op = createInstance("@mozilla.org/network/ldap-operation;1",
                             "nsILDAPOperation");
 
-    var listener = new ldapMsgListener();
+    var listener = createProxiedLdapListener();
     op.init(conn, listener, null);
 
     op.serverControls = jsArrayToMutableArray(serverControls);
     op.clientControls = jsArrayToMutableArray(clientControls);
     op.searchExt(basedn, scope, filter, null, null, 0, 0);
+    dump("searchExt sent\n");
+    runEventPump();
 }
 
+dump("ldapshell loaded\n");
