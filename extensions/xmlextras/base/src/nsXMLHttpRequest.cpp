@@ -1235,7 +1235,15 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsresult status;
   request->GetStatus(&status);
 
-  if (NS_SUCCEEDED(status)) {
+  PRBool parseBody = PR_TRUE;
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (httpChannel) {
+    nsCAutoString method;
+    httpChannel->GetRequestMethod(method);
+    parseBody = !method.EqualsLiteral("HEAD");
+  }
+
+  if (parseBody && NS_SUCCEEDED(status)) {
     if (!mOverrideMimeType.IsEmpty()) {
       channel->SetContentType(mOverrideMimeType);
     }
