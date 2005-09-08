@@ -64,6 +64,7 @@
 #include "txXSLTProcessor.h"
 #include "nsIPrincipal.h"
 #include "jsapi.h"
+#include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -322,6 +323,31 @@ txMozillaXSLTProcessor::SetSourceContentModel(nsIDOMNode* aSourceDOM)
     return NS_OK;
 }
 
+PR_BEGIN_EXTERN_C
+void* PR_CALLBACK
+HandleTransformBlockerEvent(PLEvent *aEvent)
+{
+    txMozillaXSLTProcessor *processor =
+         NS_STATIC_CAST(txMozillaXSLTProcessor*, aEvent->owner);
+    processor->TransformToDoc(nsnull, nsnull);
+
+    return nsnull;
+}
+
+void PR_CALLBACK
+DestroyTransformBlockerEvent(PLEvent *aEvent)
+{
+    txMozillaXSLTProcessor *processor =
+         NS_STATIC_CAST(txMozillaXSLTProcessor*, aEvent->owner);
+    nsCOMPtr<nsIDocument> document =
+        do_QueryInterface(processor->GetSourceContentModel());
+    document->UnblockOnload(PR_TRUE);
+
+    NS_RELEASE(processor);
+    delete aEvent;
+}
+PR_END_EXTERN_C
+
 nsresult
 txMozillaXSLTProcessor::DoTransform()
 {
@@ -329,7 +355,41 @@ txMozillaXSLTProcessor::DoTransform()
     NS_ENSURE_TRUE(mStylesheet, NS_ERROR_UNEXPECTED);
     NS_ASSERTION(mObserver, "no observer");
 
-    return TransformToDoc(nsnull, nsnull);
+    nsresult rv;
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(mSource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIEventQueueService> service =
+        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIEventQueue> eventQ;
+    rv = service->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                       getter_AddRefs(eventQ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PLEvent* event = new PLEvent();
+    if (!event) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    PL_InitEvent(event, this, HandleTransformBlockerEvent,
+                 DestroyTransformBlockerEvent);
+
+    document->BlockOnload();
+
+    // After this point, event destruction will release |this| (in
+    // DestroyTransformBlockerEvent)
+    NS_ADDREF_THIS();
+
+    rv = eventQ->PostEvent(event);
+    if (NS_FAILED(rv)) {
+        // XXX Maybe we should just display the source document in this case?
+        //     Also, set up context information, see bug 204655.
+        reportError(rv, nsnull, nsnull);
+        PL_DestroyEvent(event);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
