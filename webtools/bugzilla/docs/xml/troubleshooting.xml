@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.5 2005/02/05 04:31:46 travis%sedsystems.ca Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.6 2005/09/08 20:57:44 mozilla%colinogilvie.co.uk Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -28,6 +28,19 @@
     you see may be self-explanatory enough to enable you to diagnose and
     fix the problem. If not, see below for some commonly-encountered 
     errors. If that doesn't help, post the errors to the newsgroup.
+    </para>
+
+    <para>
+      Bugzilla can also log all user-based errors (and many code-based errors)
+      that occur, without polluting the web server error log.  To enable
+      Bugzilla error logging, create a file that Bugzilla can write to, named
+      <filename>errorlog</filename>, in the Bugzilla <filename>data</filename>
+      directory.  Errors will be logged as they occur, and will include the type
+      of the error, the IP address and username (if available) of the user who
+      triggered the error, and the values of all environment variables; if a
+      form was being submitted, the data in the form will also be included.
+      To disable error logging, delete or rename the
+      <filename>errorlog</filename> file.
     </para>
   </section>
         
