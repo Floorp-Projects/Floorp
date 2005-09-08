@@ -2,11 +2,11 @@
 # a Java .properties file and does *not* use \escapes
 
 Welcome_Title=$ProductName$ Setup
-Welcome_MessageWelcome=Welcome to %s!
-Welcome_Message0=You are about to install %s $Version$.
+Welcome_MessageWelcome=Welcome to %s
+Welcome_Message0=You are about to install %s.
 Welcome_Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
 Welcome_Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
-Welcome_Message3=Click Next to continue installing %s $Version$.
+Welcome_Message3=Click Next to continue installing %s.
 
 License_Title=Software License Agreement
 License_SubTitle=Terms and conditions for using this software.
@@ -66,9 +66,9 @@ Installing_Component=Currently Installing:
 
 Success_Title=Install Complete
 Success_Header=Install Complete
-Success_Message0=%s $Version$ was successfully installed.
+Success_Message0=%s was successfully installed.
 Success_Message1=Click Finish to complete Setup. 
-Success_Launch=Launch %s $Version$ now.
+Success_Launch=Launch %s now.
 
 Check_Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 Check_FullMessage=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
