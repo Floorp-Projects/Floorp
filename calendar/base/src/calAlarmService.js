@@ -54,6 +54,20 @@ function jsDateToDateTime(date)
     return newDate;
 }
 
+function jsDateToFloatingDateTime(date)
+{
+    var newDate = Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
+    newDate.timezone = "floating";
+    newDate.year = date.getFullYear();
+    newDate.month = date.getMonth();
+    newDate.day = date.getDate();
+    newDate.hour = date.getHours();
+    newDate.minute = date.getMinutes();
+    newDate.second = date.getSeconds();
+    newDate.normalize();
+    return newDate;
+}
+
 /*
 var testalarmnumber = 0;
 function testAlarm(name) {
@@ -298,7 +312,14 @@ calAlarmService.prototype = {
         if (!alarmTime)
             alarmTime = aItem.alarmTime.getInTimezone("UTC");
 
-        var now = jsDateToDateTime((new Date())).getInTimezone("UTC");
+        var now;
+        // XXX When the item is floating, should use the default timezone
+        // from the prefs, instead of the javascript timezone (which is what
+        // jsDateToFloatingDateTime uses)
+        if (aItem.alarmTime.timezone == "floating")
+            now = jsDateToFloatingDateTime((new Date()));
+        else
+            now = jsDateToDateTime((new Date())).getInTimezone("UTC");
 
         var callbackObj = {
             alarmService: this,
@@ -310,7 +331,7 @@ calAlarmService.prototype = {
         };
 
         if ((alarmTime.compare(now) >= 0 && alarmTime.compare(this.mRangeEnd) <= 0) || skipCheck) {
-            var timeout = alarmTime.jsDate - Date.now();
+            var timeout = alarmTime.subtractDate(now).inSeconds;
             this.mEvents[aItem.id] = newTimerWithCallback(callbackObj, timeout, false);
             dump("adding alarm timeout (" + timeout + ") for " + aItem + " at " + aItem.alarmTime + "\n");
         }
