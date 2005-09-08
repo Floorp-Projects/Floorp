@@ -447,7 +447,7 @@ perl runtests.pl 2 --verbose
             To use the RDF format of the buglist it is necessary to append a
             <computeroutput>&amp;ctype=rdf</computeroutput> to the URL. RDF
             is meant to be machine readable and thus it is assumed that the
-            URL would be generated programatically so there is no user visible
+            URL would be generated programmatically so there is no user visible
             link to this format.
           </para>
           <para>

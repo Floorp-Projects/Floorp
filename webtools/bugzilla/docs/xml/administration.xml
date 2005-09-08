@@ -902,7 +902,7 @@
        
         <para>
           When you click on the <quote>Create a Flag Type for...</quote>
-          link, you will be presented with a form. Here is what the felds in 
+          link, you will be presented with a form. Here is what the fields in 
           the form mean:
         </para>
 
@@ -919,7 +919,7 @@
           <title>Description</title>
           <para>
             This describes the flag in more detail. At present, this doesn't
-            whos up anywhere helpful; ideally, it would be nice to have
+            show up anywhere helpful; ideally, it would be nice to have
             it show up as a tooltip. This field 
             can be as long as you like, and can contain any character you want.
           </para>
