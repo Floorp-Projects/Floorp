@@ -44,6 +44,8 @@
  It's like NSTableView, except the data source returns views instead of strings/images etc.
  */
 
+#import "NSView+Utils.h"
+
 #import "CHStackView.h"
 
 NSString* StackViewReloadNotificationName  = @"ReloadStackView";
@@ -90,11 +92,7 @@ NSString* StackViewResizedNotificationName = @"StackViewResized";
   // maintain the width of the stack view, assuming that it's scaled by its superview.
   newFrame.size.height = 0.0;
   
-  // be really careful about this since we're changing the length of the array
-  // as we go through it
-  while ([[self subviews] count] > 0) {
-    [((NSView*)[[self subviews] objectAtIndex:0]) removeFromSuperview];
-  }
+  [self removeAllSubviews];
   
   for (i = 0; i < subviewCount; i++) {
     NSView *subview      = [mDataSource viewForStackView:self atIndex:i];

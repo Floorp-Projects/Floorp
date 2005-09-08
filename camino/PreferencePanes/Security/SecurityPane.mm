@@ -106,4 +106,14 @@
   [self setPref:LEAVE_SITE_PREF toBoolean:[sender state] == NSOnState];
 }
 
+-(IBAction)showCertificates:(id)sender
+{
+  // we'll just fire off a notification and let the application show the UI
+  NSDictionary* userInfoDict = [NSDictionary dictionaryWithObject:[mLeaveEncrypted window]  // any view's window
+                                                           forKey:@"parent_window"];
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"ShowCertificatesNotification"
+                                                      object:nil
+                                                    userInfo:userInfoDict];
+}
+
 @end

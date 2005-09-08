@@ -70,6 +70,8 @@
 
 - (NSArray*)selectedItems;
 
+- (void)expandAllItems;
+
 -(void)_editItem:(id)item;
 -(void)_cancelEditItem;
 

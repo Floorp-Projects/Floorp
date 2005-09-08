@@ -174,4 +174,20 @@ static void RedistributeSpace(int resizeMask, float newWidth, /* in out */ float
   return 0;
 }
 
+- (NSView*)lastSubview
+{
+  NSArray* subviews = [self subviews];
+  unsigned int numSubviews = [subviews count];
+  if (numSubviews > 0)
+    return [[self subviews] objectAtIndex:numSubviews - 1];
+  return 0;
+}
+
+- (void)removeAllSubviews
+{
+  // clone the array to avoid issues with the array changing during the enumeration
+  NSArray* subviewsArray = [[self subviews] copy];
+  [subviewsArray makeObjectsPerformSelector:@selector(removeFromSuperview)];
+}
+
 @end

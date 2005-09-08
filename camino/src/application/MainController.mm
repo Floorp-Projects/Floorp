@@ -63,6 +63,7 @@
 #import "JSConsole.h"
 #import "NetworkServices.h"
 #import "MVPreferencesController.h"
+#import "CertificatesWindowController.h"
 #import "FindDlgController.h"
 #import "PreferenceManager.h"
 #import "SharedMenusObj.h"
@@ -113,6 +114,7 @@ const int kReuseWindowOnAE = 2;
 - (void)bookmarkLoadingCompleted:(NSNotification*)inNotification;
 - (void)dockMenuBookmarkFolderChanged:(NSNotification*)inNotification;
 - (void)menuWillDisplay:(NSNotification*)inNotification;
+- (void)showCertificatesNotification:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
 @end
@@ -294,6 +296,9 @@ const int kReuseWindowOnAE = 2;
   [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"smallDocument"] forPageURI:@"about:blank"];
   [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"bm_favicon"]    forPageURI:@"about:bookmarks"];
   [[SiteIconProvider sharedFavoriteIconProvider] registerFaviconImage:[NSImage imageNamed:@"historyicon"]   forPageURI:@"about:history"];
+
+  // listen for the Show Certificates notification (which is send from the Security prefs panel)
+  [notificationCenter addObserver:self selector:@selector(showCertificatesNotification:) name:@"ShowCertificatesNotification" object:nil];
   
   [self setupStartpage];
 
@@ -1421,6 +1426,16 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 -(IBAction) aboutPlugins:(id)aSender
 {
   [self openNewWindowOrTabWithURL:@"about:plugins" andReferrer:nil alwaysInFront:YES];
+}
+
+- (IBAction)showCertificates:(id)aSender
+{
+  [[CertificatesWindowController sharedCertificatesWindowController] showWindow:nil];
+}
+
+- (void)showCertificatesNotification:(NSNotification*)inNotification
+{
+  [self showCertificates:nil];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle

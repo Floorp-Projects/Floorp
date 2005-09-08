@@ -1,0 +1,37 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {
+                backupAllCertificates = id; 
+                backupSelectedCertificates = id; 
+                changePassword = id; 
+                deleteSelectedCertificates = id; 
+                importCertificates = id; 
+                restoreCertificates = id; 
+                viewSelectedCertificates = id; 
+            }; 
+            CLASS = CertificatesWindowController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCategoriesTable = NSTableView; 
+                mCertsOutlineView = ExtendedOutlineView; 
+                mDetailsColumn = NSTableColumn; 
+                mOtherCertsContextMenu = NSMenu; 
+                mSplitter = ExtendedSplitView; 
+                mUserCertsContextMenu = NSMenu; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {copy = id; cut = id; delete = id; paste = id; }; 
+            CLASS = ExtendedOutlineView; 
+            LANGUAGE = ObjC; 
+            SUPERCLASS = NSOutlineView; 
+        }, 
+        {CLASS = ExtendedSplitView; LANGUAGE = ObjC; SUPERCLASS = NSSplitView; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = NSObject; LANGUAGE = ObjC; }, 
+        {CLASS = PopupMenuButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }
+    ); 
+    IBVersion = 1; 
+}

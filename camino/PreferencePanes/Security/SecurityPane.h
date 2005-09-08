@@ -53,4 +53,6 @@ class nsIPref;
 -(IBAction) clickEnableLoadLowGrade:(id)sender;
 -(IBAction) clickEnableViewMixed:(id)sender;
 
+-(IBAction)showCertificates:(id)sender;
+
 @end

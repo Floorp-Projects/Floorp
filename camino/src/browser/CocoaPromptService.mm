@@ -71,9 +71,6 @@ CocoaPromptService::Alert(nsIDOMWindow *parent,
   NSString* textStr = [NSString stringWithPRUnichars:text];
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
   [controller alert:[browserView getNativeWindow] title:titleStr text:textStr];
   [browserView doAfterPromptDismissal];
@@ -99,9 +96,6 @@ CocoaPromptService::AlertCheck(nsIDOMWindow *parent,
   NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
 
   if (checkValue) {
@@ -134,9 +128,6 @@ CocoaPromptService::Confirm(nsIDOMWindow *parent,
   NSString* textStr = [NSString stringWithPRUnichars:text];
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
   *_retval = (PRBool)[controller confirm:[browserView getNativeWindow] title:titleStr text:textStr];
   [browserView doAfterPromptDismissal];
@@ -162,9 +153,6 @@ CocoaPromptService::ConfirmCheck(nsIDOMWindow *parent,
   NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
 
   if (checkValue) {
@@ -214,9 +202,6 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
   NSString* btn3Str = GetButtonStringFromFlags(buttonFlags, kButton2, button2Title);
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
 
   if (checkValue) {
@@ -267,9 +252,6 @@ CocoaPromptService::Prompt(nsIDOMWindow *parent,
   }
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
   *_retval = (PRBool)[controller prompt:[browserView getNativeWindow] title:titleStr text:textStr promptText:valueStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
   [browserView doAfterPromptDismissal];
@@ -318,9 +300,6 @@ CocoaPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   }
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
   *_retval = (PRBool)[controller promptUserNameAndPassword:[browserView getNativeWindow] title:titleStr text:textStr userNameText:userNameStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
   [browserView doAfterPromptDismissal];
@@ -368,9 +347,6 @@ CocoaPromptService::PromptPassword(nsIDOMWindow *parent,
   }
 
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
-  if (!browserView)
-    return NS_ERROR_FAILURE;
-
   [browserView doBeforePromptDisplay];
   *_retval = (PRBool)[controller promptPassword:[browserView getNativeWindow] title:titleStr text:textStr passwordText:passwordStr checkMsg:msgStr checkValue:&valueBool doCheck:(checkValue != nsnull)];
   [browserView doAfterPromptDismissal];

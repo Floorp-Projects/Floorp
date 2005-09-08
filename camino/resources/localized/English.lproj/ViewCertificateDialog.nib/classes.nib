@@ -1,0 +1,14 @@
+{
+    IBClasses = (
+        {CLASS = CertificateView; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {alternateButtonHit = id; defaultButtonHit = id; showIssuerCert = id; }; 
+            CLASS = ViewCertificateDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mCertView = CertificateView; mOKButton = NSButton; }; 
+            SUPERCLASS = NSWindowController; 
+        }
+    ); 
+    IBVersion = 1; 
+}

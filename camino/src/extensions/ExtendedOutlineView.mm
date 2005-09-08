@@ -121,6 +121,19 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   return itemsArray;
 }
 
+- (void)expandAllItems
+{
+  unsigned int row = 0;
+  while (row < [self numberOfRows])
+  {
+    id curItem = [self itemAtRow:row];
+    if ([self isExpandable:curItem])
+      [self expandItem:curItem expandChildren:NO];
+
+    ++row;
+  }
+}
+
 -(void)keyDown:(NSEvent*)aEvent
 {
   const unichar kForwardDeleteChar = 0xf728;   // couldn't find this in any cocoa header

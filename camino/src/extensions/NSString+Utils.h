@@ -61,9 +61,11 @@ typedef enum
 + (id)stringWith_nsACString:(const nsACString&)inString;    // assumes nsACString is UTF-8
 - (void)assignTo_nsAString:(nsAString&)ioString;
 
+- (BOOL)isEqualToStringIgnoringCase:(NSString*)inString;
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet;
 - (NSString *)stringByReplacingCharactersInSet:(NSCharacterSet*)characterSet withString:(NSString*)string;
 - (NSString *)stringByTruncatingTo:(unsigned int)maxCharacters at:(ETruncationType)truncationType;
+- (NSString *)stringByTruncatingToWidth:(float)inWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes;
 - (NSString *)stringByTrimmingWhitespace;
 - (NSString *)stringByRemovingAmpEscapes;
 - (NSString *)stringByAddingAmpEscapes;

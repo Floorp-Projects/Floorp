@@ -53,7 +53,6 @@
 #define NS_GLOBALHISTORY2_CONTRACTID \
     "@mozilla.org/browser/global-history;2"
 
-
 // {0ffd3880-7a1a-11d6-a384-975d1d5f86fc}
 #define NS_SECURITYDIALOGS_CID \
   {0x0ffd3880, 0x7a1a, 0x11d6,{0xa3, 0x84, 0x97, 0x5d, 0x1d, 0x5f, 0x86, 0xfc}}
@@ -129,7 +128,6 @@ nsSimpleGlobalHistoryConstructor(nsISupports *aOuter, REFNSIID aIID, void **aRes
   return sGlobalHistorySingleton->QueryInterface(aIID, aResult);
 }
 
-
 // used by MainController to register the components in which we want to override
 // with the Gecko embed layer.
 
@@ -138,6 +136,42 @@ static const nsModuleComponentInfo gAppComponents[] = {
     "PSM Security Warnings",
     NS_SECURITYDIALOGS_CID,
     NS_SECURITYWARNINGDIALOGS_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "Certificate dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_CERTIFICATEDIALOGS_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "Token password dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_TOKENPASSWORDSDIALOG_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "Client Auth Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_CLIENTAUTHDIALOGS_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "Token Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_TOKENDIALOGS_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "DOM Crypto Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_DOMCRYPTODIALOGS_CONTRACTID,
+    SecurityDialogsConstructor
+  },
+  {
+    "GenKeyPair Dialogs",
+    NS_SECURITYDIALOGS_CID,
+    NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID,
     SecurityDialogsConstructor
   },
   {

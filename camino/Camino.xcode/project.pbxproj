@@ -919,6 +919,7 @@
 				F558B1F603107E4A0166970F,
 				F512F52D02D1287F01072C9F,
 				3FBDC7D608252CD600D7F8E0,
+				0FCD85C908C4D69100A1923B,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -954,6 +955,36 @@
 //0F2
 //0F3
 //0F4
+		0F0AD72C08CA3682002782ED = {
+			children = (
+				0F0AD72D08CA3682002782ED,
+			);
+			isa = PBXVariantGroup;
+			name = CreatePasswordDialog.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F0AD72D08CA3682002782ED = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/CreatePasswordDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F0AD72E08CA3682002782ED = {
+			fileRef = 0F0AD72C08CA3682002782ED;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F0AD72F08CA3682002782ED = {
+			fileRef = 0F0AD72C08CA3682002782ED;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F13A30D07D7F3930034B176 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -992,6 +1023,68 @@
 		};
 		0F13A31207D7F3930034B176 = {
 			fileRef = 0F13A30E07D7F3930034B176;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F222C6008C6102B00B34F14 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = ExtendedSplitView.h;
+			path = src/extensions/ExtendedSplitView.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F222C6108C6102B00B34F14 = {
+			fileRef = 0F222C6008C6102B00B34F14;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F222C6208C6102B00B34F14 = {
+			fileRef = 0F222C6008C6102B00B34F14;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F222C6308C6103300B34F14 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = ExtendedSplitView.m;
+			path = src/extensions/ExtendedSplitView.m;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F222C6408C6103300B34F14 = {
+			fileRef = 0F222C6308C6103300B34F14;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F222C6508C6103300B34F14 = {
+			fileRef = 0F222C6308C6103300B34F14;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F2453D508C96478001C264F = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = lock_badge.tif;
+			path = resources/images/chrome/lock_badge.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F2453D608C96478001C264F = {
+			fileRef = 0F2453D508C96478001C264F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F2453D708C96478001C264F = {
+			fileRef = 0F2453D508C96478001C264F;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1659,6 +1752,576 @@
 			settings = {
 			};
 		};
+		0FCD85C908C4D69100A1923B = {
+			children = (
+				F5D33CBE02EF61A901A967F3,
+				0FDEEA3A08CBD04200754D9B,
+				0FE7712A08C7C42F00AFB850,
+				0FCD85CA08C4D6D900A1923B,
+				0FCD85CB08C4D6D900A1923B,
+				0FCD86DF08C4E8AA00A1923B,
+			);
+			isa = PBXGroup;
+			name = Security;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FCD85CA08C4D6D900A1923B = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = ViewCertificateDialogController.mm;
+			path = src/security/ViewCertificateDialogController.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD85CB08C4D6D900A1923B = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = BrowserSecurityDialogs.mm;
+			path = src/security/BrowserSecurityDialogs.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FCD85CC08C4D6D900A1923B = {
+			fileRef = 0FCD85CA08C4D6D900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85CD08C4D6D900A1923B = {
+			fileRef = 0FCD85CB08C4D6D900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85CE08C4D6D900A1923B = {
+			fileRef = 0FCD85CA08C4D6D900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85CF08C4D6D900A1923B = {
+			fileRef = 0FCD85CB08C4D6D900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85D008C4D6EE00A1923B = {
+			children = (
+				0FCD85D108C4D6EE00A1923B,
+			);
+			isa = PBXVariantGroup;
+			name = CertificateDialogs.strings;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD85D108C4D6EE00A1923B = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = English;
+			path = resources/localized/English.lproj/CertificateDialogs.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FCD85D208C4D6EE00A1923B = {
+			fileRef = 0FCD85D008C4D6EE00A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85D308C4D6EE00A1923B = {
+			fileRef = 0FCD85D008C4D6EE00A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85DA08C4D7C000A1923B = {
+			children = (
+				0FCD85DB08C4D7C000A1923B,
+			);
+			isa = PBXVariantGroup;
+			name = ViewCertificateDialog.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD85DB08C4D7C000A1923B = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/ViewCertificateDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FCD85DC08C4D7C000A1923B = {
+			fileRef = 0FCD85DA08C4D7C000A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD85DD08C4D7C000A1923B = {
+			fileRef = 0FCD85DA08C4D7C000A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD868B08C4E83100A1923B = {
+			children = (
+				0FCD868C08C4E83100A1923B,
+			);
+			isa = PBXVariantGroup;
+			name = CertificatesWindow.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD868C08C4E83100A1923B = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/CertificatesWindow.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FCD868D08C4E83100A1923B = {
+			fileRef = 0FCD868B08C4E83100A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD868E08C4E83100A1923B = {
+			fileRef = 0FCD868B08C4E83100A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD86DF08C4E8AA00A1923B = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = CertificatesWindowController.mm;
+			path = src/security/CertificatesWindowController.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD86E008C4E8AA00A1923B = {
+			fileRef = 0FCD86DF08C4E8AA00A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD86E108C4E8AA00A1923B = {
+			fileRef = 0FCD86DF08C4E8AA00A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD888808C52A9900A1923B = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = certificate.tif;
+			path = resources/images/chrome/certificate.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD888908C52A9900A1923B = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = mini_cert_invalid.tif;
+			path = resources/images/chrome/mini_cert_invalid.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD888A08C52A9900A1923B = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = mini_cert_valid.tif;
+			path = resources/images/chrome/mini_cert_valid.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FCD888B08C52A9900A1923B = {
+			fileRef = 0FCD888808C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD888C08C52A9900A1923B = {
+			fileRef = 0FCD888908C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD888D08C52A9900A1923B = {
+			fileRef = 0FCD888A08C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD888E08C52A9900A1923B = {
+			fileRef = 0FCD888808C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD888F08C52A9900A1923B = {
+			fileRef = 0FCD888908C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FCD889008C52A9900A1923B = {
+			fileRef = 0FCD888A08C52A9900A1923B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FD8181E08CB8E8900D8F88C = {
+			children = (
+				0FD8181F08CB8E8900D8F88C,
+			);
+			isa = PBXVariantGroup;
+			name = GenerateKeyPairDialog.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FD8181F08CB8E8900D8F88C = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/GenerateKeyPairDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FD8182008CB8E8900D8F88C = {
+			fileRef = 0FD8181E08CB8E8900D8F88C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FD8182108CB8E8900D8F88C = {
+			fileRef = 0FD8181E08CB8E8900D8F88C;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FDEEA3A08CBD04200754D9B = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = CertificateItem.mm;
+			path = src/security/CertificateItem.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FDEEA3B08CBD04200754D9B = {
+			fileRef = 0FDEEA3A08CBD04200754D9B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FDEEA3C08CBD04200754D9B = {
+			fileRef = 0FDEEA3A08CBD04200754D9B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FDEEB5408CC06BC00754D9B = {
+			children = (
+				0FDEEB5508CC06BC00754D9B,
+			);
+			isa = PBXVariantGroup;
+			name = ChooseCertificateDialog.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FDEEB5508CC06BC00754D9B = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/ChooseCertificateDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FDEEB5608CC06BC00754D9B = {
+			fileRef = 0FDEEB5408CC06BC00754D9B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FDEEB5708CC06BD00754D9B = {
+			fileRef = 0FDEEB5408CC06BC00754D9B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703308C799BB00AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = triangle_down_pressed.tiff;
+			path = resources/images/chrome/triangle_down_pressed.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7703408C799BB00AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = triangle_right_normal.tiff;
+			path = resources/images/chrome/triangle_right_normal.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7703508C799BB00AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = triangle_right_pressed.tiff;
+			path = resources/images/chrome/triangle_right_pressed.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7703608C799BB00AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = triangle_right_down.tiff;
+			path = resources/images/chrome/triangle_right_down.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7703708C799BB00AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = triangle_down_normal.tiff;
+			path = resources/images/chrome/triangle_down_normal.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7703808C799BB00AFB850 = {
+			fileRef = 0FE7703308C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703908C799BB00AFB850 = {
+			fileRef = 0FE7703408C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703A08C799BB00AFB850 = {
+			fileRef = 0FE7703508C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703B08C799BB00AFB850 = {
+			fileRef = 0FE7703608C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703C08C799BB00AFB850 = {
+			fileRef = 0FE7703708C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703D08C799BB00AFB850 = {
+			fileRef = 0FE7703308C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703E08C799BB00AFB850 = {
+			fileRef = 0FE7703408C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7703F08C799BB00AFB850 = {
+			fileRef = 0FE7703508C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7704008C799BB00AFB850 = {
+			fileRef = 0FE7703608C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7704108C799BB00AFB850 = {
+			fileRef = 0FE7703708C799BB00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7712A08C7C42F00AFB850 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = CertificateView.mm;
+			path = src/security/CertificateView.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7712B08C7C42F00AFB850 = {
+			fileRef = 0FE7712A08C7C42F00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7712C08C7C42F00AFB850 = {
+			fileRef = 0FE7712A08C7C42F00AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7721808C7E6B700AFB850 = {
+			children = (
+				0FE7721908C7E6B700AFB850,
+			);
+			isa = PBXVariantGroup;
+			name = MismatchedCertDomainDialog.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7721908C7E6B700AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/MismatchedCertDomainDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FE7721A08C7E6B700AFB850 = {
+			children = (
+				0FE7721B08C7E6B700AFB850,
+			);
+			isa = PBXVariantGroup;
+			name = DownloadCACertDialog.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7721B08C7E6B700AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/DownloadCACertDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FE7721C08C7E6B700AFB850 = {
+			children = (
+				0FE7721D08C7E6B700AFB850,
+			);
+			isa = PBXVariantGroup;
+			name = UnknownCertIssuerDialog.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7721D08C7E6B700AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/UnknownCertIssuerDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FE7721E08C7E6B700AFB850 = {
+			children = (
+				0FE7721F08C7E6B700AFB850,
+			);
+			isa = PBXVariantGroup;
+			name = ExpiredCertDialog.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE7721F08C7E6B700AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/ExpiredCertDialog.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FE7722008C7E6B700AFB850 = {
+			fileRef = 0FE7721808C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722108C7E6B700AFB850 = {
+			fileRef = 0FE7721A08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722208C7E6B700AFB850 = {
+			fileRef = 0FE7721C08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722308C7E6B700AFB850 = {
+			fileRef = 0FE7721E08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722408C7E6B700AFB850 = {
+			fileRef = 0FE7721808C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722508C7E6B700AFB850 = {
+			fileRef = 0FE7721A08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722608C7E6B700AFB850 = {
+			fileRef = 0FE7721C08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE7722708C7E6B700AFB850 = {
+			fileRef = 0FE7721E08C7E6B700AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE772B908C7FF4100AFB850 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = mini_cert_untrusted.tif;
+			path = resources/images/chrome/mini_cert_untrusted.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FE772BA08C7FF4100AFB850 = {
+			fileRef = 0FE772B908C7FF4100AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FE772BB08C7FF4100AFB850 = {
+			fileRef = 0FE772B908C7FF4100AFB850;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FEBFCA1044F989900A96652 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -1899,6 +2562,7 @@
 				3F8C00930681262400658CBC,
 				089C165CFE840E0CC02AAC07,
 				F52CE65C02BFA8B701026D5D,
+				0FCD85D008C4D6EE00A1923B,
 				F51B70B4026EC8A601A80166,
 				F5CA1A1902D3956F01F34900,
 				F5F190BB02D1F81A01026D5D,
@@ -2551,7 +3215,7 @@
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin MOZILLA_INTERNAL_API=1";
-				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
+				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ ../dist/public/nss ../ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-Camino.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/Embed/components ../intl/unicharutil/util";
@@ -2672,6 +3336,7 @@
 				3FFFEC1E081C3F0B00843C07,
 				0F84BF1808862E4B00E23BC4,
 				0FC4B33E08941B4F009C5F41,
+				0F222C6108C6102B00B34F14,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3272,6 +3937,26 @@
 				3FEBB4E908A02F2900BD8373,
 				3FEBB4EA08A02F2900BD8373,
 				0FCD858808C4D45400A1923B,
+				0FCD85D208C4D6EE00A1923B,
+				0FCD85DC08C4D7C000A1923B,
+				0FCD868D08C4E83100A1923B,
+				0FCD888B08C52A9900A1923B,
+				0FCD888C08C52A9900A1923B,
+				0FCD888D08C52A9900A1923B,
+				0FE7703808C799BB00AFB850,
+				0FE7703908C799BB00AFB850,
+				0FE7703A08C799BB00AFB850,
+				0FE7703B08C799BB00AFB850,
+				0FE7703C08C799BB00AFB850,
+				0FE7722008C7E6B700AFB850,
+				0FE7722108C7E6B700AFB850,
+				0FE7722208C7E6B700AFB850,
+				0FE7722308C7E6B700AFB850,
+				0FE772BA08C7FF4100AFB850,
+				0F2453D608C96478001C264F,
+				0F0AD72E08CA3682002782ED,
+				0FD8182008CB8E8900D8F88C,
+				0FDEEB5608CC06BC00754D9B,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3787,6 +4472,12 @@
 				3FE4ECEA082C2D89003BF39E,
 				3F383A47087C6D3C00A2594D,
 				0F84BF1408862E3E00E23BC4,
+				0FCD85CC08C4D6D900A1923B,
+				0FCD85CD08C4D6D900A1923B,
+				0FCD86E008C4E8AA00A1923B,
+				0F222C6408C6103300B34F14,
+				0FE7712B08C7C42F00AFB850,
+				0FDEEA3B08CBD04200754D9B,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6402,7 +7093,7 @@
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin _BUILD_STATIC_BIN MOZILLA_INTERNAL_API=1";
-				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
+				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/uconv ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/mork ../dist/include/ ../dist/public/nss $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../js/src/liveconnect ../js/src/xpconnect/loader";
@@ -6522,6 +7213,7 @@
 				3FFFEC20081C3F0B00843C07,
 				0F84BF1708862E4B00E23BC4,
 				0FC4B33F08941B4F009C5F41,
+				0F222C6208C6102B00B34F14,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7128,6 +7820,26 @@
 				3FEBB4EB08A02F2900BD8373,
 				3FEBB4EC08A02F2900BD8373,
 				0FCD858908C4D45400A1923B,
+				0FCD85D308C4D6EE00A1923B,
+				0FCD85DD08C4D7C000A1923B,
+				0FCD868E08C4E83100A1923B,
+				0FCD888E08C52A9900A1923B,
+				0FCD888F08C52A9900A1923B,
+				0FCD889008C52A9900A1923B,
+				0FE7703D08C799BB00AFB850,
+				0FE7703E08C799BB00AFB850,
+				0FE7703F08C799BB00AFB850,
+				0FE7704008C799BB00AFB850,
+				0FE7704108C799BB00AFB850,
+				0FE7722408C7E6B700AFB850,
+				0FE7722508C7E6B700AFB850,
+				0FE7722608C7E6B700AFB850,
+				0FE7722708C7E6B700AFB850,
+				0FE772BB08C7FF4100AFB850,
+				0F2453D708C96478001C264F,
+				0F0AD72F08CA3682002782ED,
+				0FD8182108CB8E8900D8F88C,
+				0FDEEB5708CC06BD00754D9B,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7644,6 +8356,12 @@
 				3FE4ECEB082C2D89003BF39E,
 				3F383A49087C6D4600A2594D,
 				0F84BF1308862E3E00E23BC4,
+				0FCD85CE08C4D6D900A1923B,
+				0FCD85CF08C4D6D900A1923B,
+				0FCD86E108C4E8AA00A1923B,
+				0F222C6508C6103300B34F14,
+				0FE7712C08C7C42F00AFB850,
+				0FDEEA3C08CBD04200754D9B,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -12869,6 +13587,11 @@
 				E091C0D006225EA3007D9E8F,
 				F540BD1A029ED15301026D5D,
 				F540BD1C029ED17901026D5D,
+				0FCD888808C52A9900A1923B,
+				0FCD888908C52A9900A1923B,
+				0FCD888A08C52A9900A1923B,
+				0FE772B908C7FF4100AFB850,
+				0F2453D508C96478001C264F,
 				3FAD95540461E43700A80005,
 				F5A112C902DF270F01026D5D,
 				F55B6BF402EF1F7E01026D5D,
@@ -12889,6 +13612,11 @@
 				0FFE0A7F079B147F00966027,
 				0FFE0A80079B147F00966027,
 				0FB6D99A089B276100414498,
+				0FE7703308C799BB00AFB850,
+				0FE7703408C799BB00AFB850,
+				0FE7703508C799BB00AFB850,
+				0FE7703608C799BB00AFB850,
+				0FE7703708C799BB00AFB850,
 			);
 			isa = PBXGroup;
 			name = images;
@@ -13079,7 +13807,6 @@
 			children = (
 				F5DE10E90209DC0601A967DF,
 				F528E21A020FD9620168DE43,
-				F5D33CBE02EF61A901A967F3,
 				F566BD1302EFA9AD01A967F3,
 			);
 			isa = PBXGroup;
@@ -14925,6 +15652,15 @@
 				F507A85003116E7901026D5D,
 				3FB2BAE50545EBAB002B9691,
 				3FC7EBFA05AA1D1C00C557AA,
+				0FCD85DA08C4D7C000A1923B,
+				0FCD868B08C4E83100A1923B,
+				0FE7721808C7E6B700AFB850,
+				0FE7721A08C7E6B700AFB850,
+				0FE7721C08C7E6B700AFB850,
+				0FE7721E08C7E6B700AFB850,
+				0F0AD72C08CA3682002782ED,
+				0FD8181E08CB8E8900D8F88C,
+				0FDEEB5408CC06BC00754D9B,
 			);
 			isa = PBXGroup;
 			name = Nibs;
@@ -15319,25 +16055,26 @@
 		F5B950BA030C833301A96654 = {
 			children = (
 				3489ADC90753B717005ADF6C,
-				3F27D94A05DB2600007B543D,
-				3FB2BA960545EA80002B9691,
-				3FB2BA920545EA80002B9691,
-				3F2CF8CB042A88B7005FD42F,
-				F5FDF166031AF47301DE816D,
-				F5D98EBC031AC38601A96654,
-				0FBC0ED30798F96100E8E0E2,
-				0FBC0ED40798F96100E8E0E2,
-				F558099D02F22168015DF512,
-				F527C90203BCD43601A80166,
-				F549ACE40302DEBB01026D5D,
-				0F84BF1608862E4B00E23BC4,
-				F5B34B04034A50C901A80166,
-				0F5FD71B07F48CDC00E8EDBD,
-				F5648739023C3857010001CA,
-				F5C3AB810270072A01A80166,
+				F541495E02711B0001A80166,
 				F583E3C203B8228F01A80166,
 				F541495A02711A8301A80166,
-				F541495E02711B0001A80166,
+				F5FDF166031AF47301DE816D,
+				F5C3AB810270072A01A80166,
+				0F222C6008C6102B00B34F14,
+				3FB2BA920545EA80002B9691,
+				F5648739023C3857010001CA,
+				3F2CF8CB042A88B7005FD42F,
+				3FB2BA960545EA80002B9691,
+				F5D98EBC031AC38601A96654,
+				0FBC0ED40798F96100E8E0E2,
+				0FBC0ED30798F96100E8E0E2,
+				F5B34B04034A50C901A80166,
+				0F5FD71B07F48CDC00E8EDBD,
+				F549ACE40302DEBB01026D5D,
+				3F27D94A05DB2600007B543D,
+				F558099D02F22168015DF512,
+				0F84BF1608862E4B00E23BC4,
+				F527C90203BCD43601A80166,
 				0FBC0EE20798FA2700E8E0E2,
 				3FF08F0606E7CF9C001C9B19,
 				3FF08F0706E7CF9C001C9B19,
@@ -15351,30 +16088,31 @@
 		F5B950BB030C833301A96654 = {
 			children = (
 				3489ADCA0753B717005ADF6C,
-				3F27D94B05DB2600007B543D,
-				3FB2BA970545EA80002B9691,
-				3FB2BA930545EA80002B9691,
+				F541495F02711B0001A80166,
+				F583E3BF03B8228701A80166,
+				F541495B02711A8301A80166,
+				F5FDF167031AF47301DE816D,
 				F5C3AB820270072A01A80166,
+				0F222C6308C6103300B34F14,
+				3FB2BA930545EA80002B9691,
+				F564873A023C3857010001CA,
+				3F2CF8CC042A88B7005FD42F,
+				3FB2BA970545EA80002B9691,
 				F5D98EB9031AC37801A96654,
 				0FBC0ECD0798F94900E8E0E2,
 				0FBC0ED00798F95400E8E0E2,
-				F558099E02F22168015DF512,
-				F549ACDF0302DE6001026D5D,
-				0F84BF1208862E3E00E23BC4,
-				F527C90303BCD43601A80166,
 				F5B34B01034A505F01A80166,
 				0F5FD71E07F48CE500E8EDBD,
-				F564873A023C3857010001CA,
-				F583E3BF03B8228701A80166,
-				F541495B02711A8301A80166,
-				F541495F02711B0001A80166,
-				F5FDF167031AF47301DE816D,
-				3F2CF8CC042A88B7005FD42F,
+				F549ACDF0302DE6001026D5D,
+				3F27D94B05DB2600007B543D,
+				F558099E02F22168015DF512,
+				0F84BF1208862E3E00E23BC4,
+				3FE4ECE9082C2D89003BF39E,
+				F527C90303BCD43601A80166,
 				0FBC0EDF0798FA1900E8E0E2,
 				3FF08EFD06E7CF86001C9B19,
 				3FF08EFE06E7CF86001C9B19,
 				3FF08EFF06E7CF86001C9B19,
-				3FE4ECE9082C2D89003BF39E,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -15525,8 +16263,8 @@
 			lastKnownFileType = sourcecode.cpp.objcpp;
 			name = SecurityDialogs.mm;
 			path = src/browser/SecurityDialogs.mm;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
+			refType = 4;
+			sourceTree = "<group>";
 		};
 		F5D3F1CE0209235A014E447F = {
 			isa = PBXFileReference;

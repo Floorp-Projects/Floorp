@@ -1,0 +1,178 @@
+
+"IssuedByHeaderFormat" = "Issued by: %@";
+"ExpiresHeaderFormat" = "Expires: %@";
+
+"ShortExpireDateFormat" = "%Y-%m-%d"; /* Year-month-day */
+"ExpireDateFormat" = "%A, %B %d, %Y %H:%M:%S %Z"; /* Day, Month nn, Year h:m:s timezone */
+
+"CertDetailsGroupHeader" = "Details";
+"CertTrustGroupHeader" = "Trust Settings";
+
+"TrustSettingsLabel" = "Trust this certificate for:";
+"TrustWebSitesCheckboxLabel" = "Identifing web sites (for SSL)";
+"TrustEmailUsersCheckboxLabel" = "Identifing e-mail users (in a mail program)";
+"TrustObjectSignersCheckboxLabel" = "Identifing software developers (for plugins, applets etc.)";
+
+"IssuedTo" = "Issued To";
+"IssuedBy" = "Issued By";
+
+"OwnerCommonName" = "Name";
+"OwnerEmailAddress" = "E-Mail Address";
+"OwnerOrganization" = "Organization";
+"OwnerOrgUnit" = "Organizational Unit";
+"SerialNumber" = "Serial Number";
+"Version" = "Version";
+
+"SerialNumberColumnLabel" = "Serial Number";
+"EmailAddressColumnLabel" = "E-Mail Address";
+"OrgUnitColumnLabel" = "Organizational Unit";
+
+"IssuerCommonName" = "Name";
+"IssuerOrganization" = "Organization";
+"IssuerOrgUnit" = "Organizational Unit";
+"ShowIssuerCertLabel" = "Issuer Certificate";
+"ShowIssuerCertButton" = "Show Issuer Certificate";
+
+"SigAlgorithm" = "Signature Algorithm";
+"Signature" = "Signature";
+
+"Validity" = "Validity";
+"PublicKeyInfo" = "Public Key Info";
+"PublicKeySize" = "Public Key Size";
+
+"PublicKeyAlgorithm" = "Public Key Algorithm";
+"PublicKey" = "Public Key";
+
+"NotBeforeLocalTime" = "Not Valid Before";
+"NotAfterLocalTime" = "Not Valid After";
+"UsagesTitle" = "Certificate Usages";
+"Usages" = "Usages";
+"Verification" = "Verification";
+
+"Fingerprints" = "Fingerprints";
+"SHA1Fingerprint" = "SHA1 Fingerprint";
+"MD5Fingerprint" = "MD5 Fingerprint";
+
+/* validity states */
+"ValidStateOK" = "The certificate is valid";
+"InvalidStateVerifyFailed" = "The certificate could not be verified for unknown reasons";
+"InvalidStateRevoked" = "The certificate has been revoked"; /* explain revoked? */
+"InvalidStateExpired" = "The certificate has expired";
+"InvalidStateNotYetValid" = "The certificate is not yet valid";
+"InvalidStateCertNotTrusted" = "The certificate is not trusted";
+"InvalidStateIssuerNotTrusted" = "The certificate’s issuer is not trusted";
+"InvalidStateIsUntrustedRootCert" = "The certificate is not trusted";
+"InvalidStateIssuerNotKnown" = "The certificate’s issuer is not known";
+"InvalidStateInvalidIssuerCert" = "The issuer’s certificate has expired";
+"InvalidStateInvalidUsage" = "The certificate is not valid for this usage";
+
+"ShortValidStateOK" = "Valid";
+"ShortInvalidStateVerifyFailed" = "Unable to verify";
+"ShortInvalidStateRevoked" = "Revoked"; /* explain revoked? */
+"ShortInvalidStateExpired" = "Expired";
+"ShortInvalidStateNotYetValid" = "Not yet valid";
+"ShortInvalidStateCertNotTrusted" = "Not trusted";
+"ShortInvalidStateIssuerNotTrusted" = "Issuer not trusted";
+"ShortInvalidStateIsUntrustedRootCert" = "Not trusted";
+"ShortInvalidStateIssuerNotKnown" = "Issuer unknown";
+"ShortInvalidStateInvalidIssuerCert" = "Issuer’s certificate expired";
+"ShortInvalidStateInvalidUsage" = "Not valid for usage";
+
+"VerifySSLClient" = "SSL Client Certificate";
+"VerifySSLServer" = "SSL Server Certificate";
+"VerifySSLStepUp" = "SSL Server with Step-up";
+"VerifySSLCA" = "SSL Certificate Authority";
+"VerifyEmailSigner" = "Email Signer Certificate";
+"VerifyEmailRecip" = "Email Recipient Certificate";
+"VerifyProtectObjSign" = "Protected Object Signer";
+"VerifyObjSign" = "Object Signer";
+"VerifyUserImport" = "User Import Cert";
+"VerifyCAVerifier" = "CA Verifier";
+"VerifyStatusResponder"= "Status Responder Certificate";
+"VerifyAnyCA" = "Any Certificate Authority";
+ 
+/* confirm import CA cert dialog */
+
+"ConfirmCAMessageFormat" = "You have obtained a certificate for the Certificate Authority “%@”. In order to use this certificate to identify web sites, users or software developers, you will have to specify that you trust it for those uses:";
+"UnnamedCA" = "(unnamed)";
+
+/* CA cert exists */
+"CACertExistsMsg" = "Certificate Authority certificate has already been installed.";
+"CACertExistsDetail" = "You already have a certificate for this Certificate Authority, so there is no need to install it again.";
+
+/* Domain mismatch dialog */
+"DomainMistmatchMsgFormat" = "You have attempted to establish a connection with “%@”. However, the security certificate presented belongs to “%@”. It is possible, though unlikely, that someone may be trying to intercept your communication with this web site.";
+
+/* Unverifed cert dialog */
+"UnverifiedCertTitleFormat" = "Unable to verify the identify of “%@” as a trusted site";
+"UnverifiedCertMessageFormat" = "The certificate presented by this site could not be verified because its Certificate Authority is untrusted, the certificate is incomplete, or the site you are connecting is not %@.";
+
+/* Expired cert dialog */
+"ExpiredCertTitleFormat" = "The certificate for “%@” has expired";
+"ExpiredCertMessageFormat" = "The certificate for “%@” expired on “%@”, and is therefore invalid. Connecting to this site could put your personal information at risk.";
+
+/* Cert escrow dialog */
+"EscrowDialogTitleFormat" = "Allow Certificate Authority “%@” to store your private key?";
+"EscrowDialogMessage" = "This certificate authority has asked to make a backup of your encryption private key, which will allow you to request a copy if you lose yours. However, your encryption private key will be stored by the certificate authority, and could be used to read your encrypted email or documents without your permission.";
+"AllowEscrowButton" = "Allow";
+
+/* CRL import dialog */
+"CRLImportTitle" = "Certificate Revocation List imported successfully";
+"CRLImportMessageFormat" = "A Certificate Revocation List (CRL) is a list of certificates that have been revoked (withdrawn). You just imported a CRL issued by %@ (%@)";
+
+/* CRL expired dialog */
+"CRLExpiredTitleFormat" = "Unable to establish connection to %@";
+"CRLExpiredMessageFormat" = "The certificate revocation list (CRL) from %@ needs to be updated. Please contact your system administator for assistance.";
+
+/* Choose certificate dialog */
+"ChooseCertMessageFormat" = "The site %@ (%@) has asked you to identify yourself with a certificate. Choose which certificate you want to use.";
+"ChooserCertPopupFormat" = "%@ [%@]";
+
+/* Certificates window */
+
+"MyCertsCategoryLabel" = "My Certificates";
+"OthersCertsCategoryLabel" = "Other People’s";
+"WebSitesCertsCategoryLabel" = "Web Sites";
+"AuthoritiesCertsCategoryLabel" = "Authorities";
+
+/* Delete cert warning */
+"DeleteUserCertTitleFormat" = "Delete certificate “%@”?";
+"DeleteUserCertMsg" = "If you delete one of your own certificates, you can no longer use it to identify yourself.";
+
+"DeleteEmailCertTitleFormat" = "Delete e-mail certificate “%@”?";
+"DeleteEmailCertMsg" = "If you delete an e-mail certificate, your will no longer be able to send encrypted e-mail to those people.";
+
+"DeleteWebSiteCertTitleFormat" = "Delete web site certificate “%@”?";
+"DeleteWebSiteCertMsg" = "If you delete a web site certificate, you will be asked to accept it again the next time you visit the web site.";
+
+"DeleteCACertTitleFormat" = "Delete CA certificate “%@”?";
+"DeleteCACertMsg" = "If you delete a certificate authority (CA) certificate, your browser will no longer trust any certificates issued by that CA.";
+
+"DeleteCertButtonTitle" = "Delete";
+"CancelButtonTitle" = "Cancel";
+
+"ExportCertPrompt" = "";
+"ExportCertsPrompt" = "";
+
+"PKCS12BackupPasswordTitle" = "Enter a password to protect the certificate backup file";
+"PKCS12BackupPasswordMsg" = "This password prevents other people from reading this file. If you forget the password, you will not be able to later import the certificates in this file.";
+
+"PKCS12BackupRestoreTitle" = "Enter the password that was used when saving this file";
+"PKCS12BackupRestoreMsg" = "The backup file is protected by the password that you entered when doing the backup. If you have forgotten this password, the certificates cannot be restored.";
+
+"GetTokenPasswordTitleFormat" = "Enter the password for the %@";  /* improve me */
+"GetTokenPasswordMsg" = "More blurb here";
+
+"SetTokenPasswordTitleFormat" = "Create a password for the “%@”";
+"SetTokenPasswordMsgFormat" = "You are creating a place to securely store these certificates, known as the “%@”. This password will protect the file.";
+
+"ChangeTokenPasswordTitleFormat" = "Change the password for the “%@”";
+"ChangeTokenPasswordMsgFormat" = "Specify a new password to protect the “%@”, which is a storage location for certificates.";
+
+"OldPasswordWrongTitle" = "Incorrect password";
+"OldPasswordWrongMsg" = "The password that you entered is not the correct password for the %@.";
+
+/* Create password dialog */
+"IsDictionaryWord" = "This word is in the dictionary";
+"UnmatchedPasswords" = "Passwords do not match";
+

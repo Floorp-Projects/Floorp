@@ -54,6 +54,7 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIPref.h"
+#include "nsIObserverService.h"
 
 NSString* const InitEmbeddingNotificationName = @"InitEmebedding";    // this is actually broadcast from MainController
 NSString* const TermEmbeddingNotificationName = @"TermEmbedding";
@@ -151,6 +152,10 @@ CHBrowserService::TermEmbedding()
 void CHBrowserService::ShutDown()
 {
   NS_ASSERTION(sCanTerminate, "Should be able to terminate here!");
+
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService)
+    observerService->NotifyObservers(nsnull, "profile-change-net-teardown", nsnull);
   
   // phase 2 notifcation (we really are about to terminate)
   [[NSNotificationCenter defaultCenter] postNotificationName:XPCOMShutDownNotificationName object:nil];

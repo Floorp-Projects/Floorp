@@ -128,6 +128,11 @@
     free(buffer);
 }
 
+- (BOOL)isEqualToStringIgnoringCase:(NSString*)inString
+{
+  return ([self compare:inString options:NSCaseInsensitiveSearch] == NSOrderedSame);
+}
+
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet
 {
   NSScanner*       cleanerScanner = [NSScanner scannerWithString:self];
@@ -172,7 +177,19 @@
     return [mutableCopy autorelease];
   }
 
-  return [[self copy] autorelease];
+  return self;
+}
+
+- (NSString *)stringByTruncatingToWidth:(float)inWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes
+{
+  if ([self sizeWithAttributes:attributes].width > inWidth)
+  {
+    NSMutableString *mutableCopy = [self mutableCopy];
+    [mutableCopy truncateToWidth:inWidth at:truncationType withAttributes:attributes];
+    return [mutableCopy autorelease];
+  }
+
+  return self;
 }
 
 - (NSString *)stringByTrimmingWhitespace

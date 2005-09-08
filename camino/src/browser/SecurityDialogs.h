@@ -39,21 +39,40 @@
 #ifndef __SecurityDialogs_h__
 #define __SecurityDialogs_h__
 
+#include "nsIClientAuthDialogs.h"
 #include "nsIBadCertListener.h"
+#include "nsITokenPasswordDialogs.h"
+#include "nsICertificateDialogs.h"
 #include "nsISecurityWarningDialogs.h"
+#include "nsITokenDialogs.h"
+#include "nsIDOMCryptoDialogs.h"
+#include "nsIGenKeypairInfoDlg.h"
+
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 
-class SecurityDialogs : public nsIBadCertListener,
-                        public nsISecurityWarningDialogs
+class SecurityDialogs : public nsICertificateDialogs,
+                        public nsIBadCertListener,
+                        public nsITokenPasswordDialogs,
+                        public nsIClientAuthDialogs,
+                        public nsISecurityWarningDialogs,
+                        public nsITokenDialogs,
+                        public nsIDOMCryptoDialogs,
+                        public nsIGeneratingKeypairInfoDialogs
 {
 public:
   SecurityDialogs();
   virtual ~SecurityDialogs();
 
   NS_DECL_ISUPPORTS;
+  NS_DECL_NSICERTIFICATEDIALOGS;
   NS_DECL_NSIBADCERTLISTENER;
+  NS_DECL_NSITOKENPASSWORDDIALOGS;
+  NS_DECL_NSICLIENTAUTHDIALOGS;
   NS_DECL_NSISECURITYWARNINGDIALOGS;
+  NS_DECL_NSITOKENDIALOGS;
+  NS_DECL_NSIDOMCRYPTODIALOGS;
+  NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS;
 
 private:
   nsresult EnsureSecurityStringBundle();

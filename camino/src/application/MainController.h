@@ -166,6 +166,8 @@ typedef enum EBookmarkOpenBehavior
 
 -(IBAction) aboutPlugins:(id)aSender;
 
+-(IBAction) showCertificates:(id)aSender;
+
 - (void)ensureGeckoInitted;
 
 - (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups;

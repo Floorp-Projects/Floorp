@@ -63,5 +63,8 @@ BOOL CHCloseSizes(NSSize aSize, NSSize bSize, float slop);
 - (NSView*)swapFirstSubview:(NSView*)newSubview;
 
 - (NSView*)firstSubview;
+- (NSView*)lastSubview;
+
+- (void)removeAllSubviews;
 
 @end

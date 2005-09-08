@@ -1,0 +1,98 @@
+{
+    IBClasses = (
+        {CLASS = BrowserSecurityUIProvider; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = CertificateDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mCertificateView = CertificateView; mIcon = NSImageView; }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {toggleDetails = id; toggleTrustSettings = id; }; 
+            CLASS = CertificateView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCertDetailsView = NSView; 
+                mCertImageView = NSImageView; 
+                mDescriptionField = NSTextField; 
+                mDetailField = NSTextField; 
+                mExpiryField = NSTextField; 
+                mStatusField = NSTextField; 
+                mStatusImageView = NSImageView; 
+            }; 
+            SUPERCLASS = NSView; 
+        }, 
+        {
+            ACTIONS = {onCancel = id; onCertPopupChanged = id; onOK = id; }; 
+            CLASS = ChooseCertDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCertPopup = NSPopUpButton; 
+                mCertificateView = CertificateView; 
+                mIcon = NSImageView; 
+                mMessageText = NSTextField; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {onCancel = id; onOK = id; }; 
+            CLASS = CreatePasswordDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCancelButton = NSButton; 
+                mCurPasswordContainer = NSView; 
+                mCurPasswordField = NSTextField; 
+                mDelegate = id; 
+                mIcon = NSImageView; 
+                mMessageField = NSTextField; 
+                mNewPasswordContainer = NSView; 
+                mNewPasswordField = NSTextField; 
+                mNewPasswordNotesField = NSTextField; 
+                mOKButton = NSButton; 
+                mQualityIndicator = NSProgressIndicator; 
+                mTitleField = NSTextField; 
+                mVerifyPasswordField = NSTextField; 
+                mVerifyPasswordNotesField = NSTextField; 
+            }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {onCancel = id; onOK = id; }; 
+            CLASS = DownloadCACertDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mMessageField = NSTextField; }; 
+            SUPERCLASS = CertificateDialogController; 
+        }, 
+        {
+            ACTIONS = {onCancel = id; onOK = id; }; 
+            CLASS = ExpiredCertDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mMessageField = NSTextField; mTitleField = NSTextField; }; 
+            SUPERCLASS = CertificateDialogController; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {onCancel = id; }; 
+            CLASS = GenKeyPairDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mIcon = NSImageView; mProgressIndicator = NSProgressIndicator; }; 
+            SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            ACTIONS = {onCancel = id; onOK = id; viewCertificate = id; }; 
+            CLASS = MismatchedCertDomainDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mMessageField = NSTextField; }; 
+            SUPERCLASS = CertificateDialogController; 
+        }, 
+        {CLASS = NSObject; LANGUAGE = ObjC; }, 
+        {
+            ACTIONS = {onAcceptAlways = id; onAcceptOneTime = id; onStop = id; }; 
+            CLASS = UnknownCertIssuerDialogController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mMessageField = NSTextField; mTitleField = NSTextField; }; 
+            SUPERCLASS = CertificateDialogController; 
+        }
+    ); 
+    IBVersion = 1; 
+}

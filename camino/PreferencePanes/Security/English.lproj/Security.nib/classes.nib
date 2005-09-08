@@ -17,6 +17,7 @@
                 clickEnableLeaveEncrypted = id; 
                 clickEnableLoadLowGrade = id; 
                 clickEnableViewMixed = id; 
+                showCertificates = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferenceSecurity; 
             LANGUAGE = ObjC; 

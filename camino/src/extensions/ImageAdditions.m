@@ -59,18 +59,27 @@
     [self drawFlippedInRect:rect operation:op fraction:1.0];
 }
 
-- (void)applyBadge:(NSImage*)badge withAlpha:(float)alpha scale:(float)scale
+- (NSImage*)imageByApplyingBadge:(NSImage*)badge withAlpha:(float)alpha scale:(float)scale;
 {
-    if (!badge)
-        return;
-    
-    [badge setScalesWhenResized:YES];
-    [badge setSize:NSMakeSize([self size].width * scale,[self size].height * scale)];
-    
-    [self lockFocus];
-    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-    [badge dissolveToPoint:NSMakePoint([self size].width - [badge size].width, 0.0) fraction:alpha];
-    [self unlockFocus];
+  if (!badge)
+    return self;
+
+  // bad to actually change badge here  
+  [badge setScalesWhenResized:YES];
+  [badge setSize:NSMakeSize([self size].width * scale,[self size].height * scale)];
+
+  // make a new image, copy over our best rep into it
+  NSImage* newImage = [[[NSImage alloc] initWithSize:[self size]] autorelease];
+  NSImageRep* imageRep = [[self bestRepresentationForDevice:nil] copy];
+  [newImage addRepresentation:imageRep];
+  [imageRep release];
+  
+  [newImage lockFocus];
+  [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+  [badge dissolveToPoint:NSMakePoint([self size].width - [badge size].width, 0.0) fraction:alpha];
+  [newImage unlockFocus];
+
+  return newImage;
 }
 
 @end
