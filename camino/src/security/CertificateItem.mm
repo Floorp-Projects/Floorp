@@ -812,7 +812,7 @@ public:
       return NS_ERROR_FAILURE;
     }
     
-    bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, getter_AddRefs(mPIPNSSBundle));
+    return bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, getter_AddRefs(mPIPNSSBundle));
   }
   
   NSString* GetStringForBundleKey(NSString* inKey)
