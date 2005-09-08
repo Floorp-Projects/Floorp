@@ -72,6 +72,7 @@
 #include "nsIDocumentTransformer.h"
 #include "nsICSSLoader.h"
 #include "nsICharsetAlias.h"
+#include "nsIHTMLContentSink.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -91,7 +92,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
                                        nsIDOMDocument* aSourceDocument,
                                        nsIDOMDocument* aResultDocument,
                                        nsITransformObserver* aObserver)
-    : mBadChildLevel(0),
+    : mTreeDepth(0),
+      mBadChildLevel(0),
       mTableState(NORMAL),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
@@ -237,6 +239,8 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
         return;
     }
     
+    --mTreeDepth;
+
 #ifdef DEBUG
     if (mTableState != ADDED_TBODY) {
         nsAutoString nodeName;
@@ -394,13 +398,16 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
 
     closePrevious(eCloseElement | eFlushText);
 
-    if (mBadChildLevel) {
-        // eCloseElement couldn't add the parent, we fail as well
+    if (mBadChildLevel || mTreeDepth == MAX_REFLOW_DEPTH) {
+        // eCloseElement couldn't add the parent so we fail as well or we've
+        // reached the limit of the depth of the tree that we allow.
         ++mBadChildLevel;
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("startElement, mBadChildLevel = %d\n", mBadChildLevel));
         return;
     }
+
+    ++mTreeDepth;
 
     nsresult rv = mTableStateStack.push(NS_INT32_TO_PTR(mTableState));
     if (NS_FAILED(rv)) {
