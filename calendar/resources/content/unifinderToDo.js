@@ -386,7 +386,7 @@ var toDoTreeView =
       }
       element.setAttribute("sortActive", sortActive);
       element.setAttribute("sortDirection", this.sortDirection);
-      this.sortStartedTime = new Date().getTime(); // for null dates during sort
+      this.sortStartedTime = now(); // for null dates during sort
       gTaskArray.sort( compareTasks );
 
       document.getElementById( ToDoUnifinderTreeName ).view = this;
@@ -499,9 +499,9 @@ function compareNumber(a, b) {
 // Takes two calDateTimes
 function compareDate(a, b) {
   if (!a)
-    a = now();
+    a = toDoTreeView.sortStartedTime;
   if (!b)
-    b = now();
+    b = toDoTreeView.sortStartedTime;
   return (a.compare(b)); 
 }
 
@@ -547,7 +547,7 @@ function refreshToDoTree( taskArray )
       {
          toDoTreeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
          toDoTreeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
-         toDoTreeView.sortStartedTime = new Date().getTime(); //for null/0 dates
+         toDoTreeView.sortStartedTime = now(); //for null/0 dates
          gTaskArray.sort(compareTasks);
          break;
       }
