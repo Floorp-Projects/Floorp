@@ -850,6 +850,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSBool ok;
 #if JS_HAS_XML_SUPPORT
     JSBool inXML, quoteAttr;
+#else
+#define inXML JS_FALSE
 #endif
     jsval val;
     static const char catch_cookie[] = "/*CATCH*/";
@@ -2650,6 +2652,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 /*
  * Undefine local macros.
  */
+#undef inXML
 #undef DECOMPILE_CODE
 #undef POP_STR
 #undef LOCAL_ASSERT
