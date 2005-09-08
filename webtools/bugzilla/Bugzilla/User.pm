@@ -1102,7 +1102,18 @@ sub wants_mail {
                               
     return defined($wants_mail) ? 1 : 0;
 }
-  
+
+sub is_mover {
+    my $self = shift;
+
+    if (!defined $self->{'is_mover'}) {
+        my @movers = map { trim($_) } split(',', Param('movers'));
+        $self->{'is_mover'} = ($self->id
+                               && lsearch(\@movers, $self->login) != -1);
+    }
+    return $self->{'is_mover'};
+}
+
 sub get_userlist {
     my $self = shift;
 
@@ -1564,6 +1575,12 @@ Returns true if the user wants mail for a given bug change.
 Returns true if the user wants mail for a given set of events. This method is
 more general than C<wants_bug_mail>, allowing you to check e.g. permissions
 for flag mail.
+
+=item C<is_mover>
+
+Returns true if the user is in the list of users allowed to move bugs
+to another database. Note that this method doesn't check whether bug
+moving is enabled.
 
 =back
 

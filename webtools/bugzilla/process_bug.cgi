@@ -592,14 +592,8 @@ my $action = trim($cgi->param('action') || '');
 if ($action eq Param('move-button-text')) {
     Param('move-enabled') || ThrowUserError("move_bugs_disabled");
 
-    my $exporter = $user->login;
-    my $movers = Param('movers');
-    $movers =~ s/\s?,\s?/|/g;
-    $movers =~ s/@/\@/g;
-    if ($exporter !~ /($movers)/) {
-        ThrowUserError("auth_failure", {action => 'move',
-                                        object => 'bugs'});
-    }
+    $user->is_mover || ThrowUserError("auth_failure", {action => 'move',
+                                                       object => 'bugs'});
 
     # Moved bugs are marked as RESOLVED MOVED.
     my $sth = $dbh->prepare("UPDATE bugs
@@ -615,7 +609,7 @@ if ($action eq Param('move-button-text')) {
         $comment = $cgi->param('comment') . "\n\n";
     }
     $comment .= "Bug moved to " . Param('move-to-url') . ".\n\n";
-    $comment .= "If the move succeeded, $exporter will receive a mail\n";
+    $comment .= "If the move succeeded, " . $user->login . " will receive a mail\n";
     $comment .= "containing the number of the new bug in the other database.\n";
     $comment .= "If all went well,  please mark this bug verified, and paste\n";
     $comment .= "in a link to the new bug. Otherwise, reopen this bug.\n";
@@ -652,7 +646,7 @@ if ($action eq Param('move-button-text')) {
 
     # Now send emails.
     foreach my $id (@idlist) {
-        $vars->{'mailrecipients'} = { 'changer' => $exporter };
+        $vars->{'mailrecipients'} = { 'changer' => $user->login };
         $vars->{'id'} = $id;
         $vars->{'type'} = "move";
 

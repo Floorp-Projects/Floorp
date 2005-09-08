@@ -599,9 +599,8 @@ sub user {
     return $self->{'user'} if exists $self->{'user'};
     return {} if $self->{'error'};
 
-    my @movers = map { trim $_ } split(",", Param("movers"));
-    my $canmove = Param("move-enabled") && Bugzilla->user->id && 
-                  (lsearch(\@movers, Bugzilla->user->login) != -1);
+    my $user = Bugzilla->user;
+    my $canmove = Param('move-enabled') && $user->is_mover;
 
     # In the below, if the person hasn't logged in, then we treat them
     # as if they can do anything.  That's because we don't know why they
@@ -609,17 +608,17 @@ sub user {
     # Display everything as if they have all the permissions in the
     # world; their permissions will get checked when they log in and
     # actually try to make the change.
-    my $unknown_privileges = !Bugzilla->user->id
-                             || Bugzilla->user->in_group("editbugs");
+    my $unknown_privileges = !$user->id
+                             || $user->in_group("editbugs");
     my $canedit = $unknown_privileges
-                  || Bugzilla->user->id == $self->{assigned_to_id}
+                  || $user->id == $self->{assigned_to_id}
                   || (Param('useqacontact')
                       && $self->{'qa_contact_id'}
-                      && Bugzilla->user->id == $self->{qa_contact_id});
+                      && $user->id == $self->{qa_contact_id});
     my $canconfirm = $unknown_privileges
-                     || Bugzilla->user->in_group("canconfirm");
-    my $isreporter = Bugzilla->user->id
-                     && Bugzilla->user->id == $self->{reporter_id};
+                     || $user->in_group("canconfirm");
+    my $isreporter = $user->id
+                     && $user->id == $self->{reporter_id};
 
     $self->{'user'} = {canmove    => $canmove,
                        canconfirm => $canconfirm,

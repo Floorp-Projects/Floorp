@@ -945,17 +945,7 @@ $vars->{'urlquerypart'} = $params->canonicalise_query('order',
                                                       'cmdtype',
                                                       'query_based_on');
 $vars->{'order'} = $order;
-
-# The user's login account name (i.e. email address).
-my $login = Bugzilla->user->login;
-
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
-
-# Whether or not this user is authorized to move bugs to another installation.
-$vars->{'ismover'} = 1
-  if Param('move-enabled')
-    && defined($login)
-      && Param('movers') =~ /^(\Q$login\E[,\s])|([,\s]\Q$login\E[,\s]+)/;
 
 my @bugowners = keys %$bugowners;
 if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {

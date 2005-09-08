@@ -344,7 +344,7 @@
 
 <input type="submit" value="Commit">
 
-[% IF ismover %]
+[% IF Param('move-enabled') && user.is_mover %]
   <input type="submit" name="action" value="[% Param('move-button-text') %]">
 [% END %]
 
