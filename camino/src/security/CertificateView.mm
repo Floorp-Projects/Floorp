@@ -387,7 +387,7 @@ const float kGapUnderLine       = 5.0f;
   float rightPos = NSWidth([self frame]) - leftPos - kLabelLeftOffset - kHexViewExpandyLeftGap - kHexViewExpandySize - kHexViewExpandyRightGap;
   float textWidth = rightPos - leftPos;
   
-  NSRect dataRect = NSMakeRect(leftPos, *ioOffset, rightPos, 56.0f);
+  NSRect dataRect = NSMakeRect(leftPos, *ioOffset, textWidth, 56.0f);
   
   NSScrollView* dataScrollView = [[[NSScrollView alloc] initWithFrame:dataRect] autorelease];
   NSTextView* scrolledTextView = [[[NSTextView alloc] initWithFrame:dataRect] autorelease];
@@ -667,7 +667,9 @@ const float kGapUnderLine       = 5.0f;
   [statusField setAttributedStringValue:[mCertItem attributedLongValidityString]];
   [statusField sizeToFit];
   [self addSubview:statusField];
+
   headerFieldYOffset += NSHeight([statusField frame]) + kCertHeaderFieldVerticalGap;
+  return headerFieldYOffset;
 }
 
 - (void)rebuildCertContent

@@ -243,8 +243,6 @@ CertificateListData::GetCertificateAt(PRUint32 inIndex, nsIX509Cert** outCert)
 
 - (void)dealloc
 {
-  NSLog(@"dealloc %@", self);
-
   [mCertsArray release];
   [mOrganizationsArray release];
   
@@ -410,6 +408,7 @@ static CertificatesWindowController* gCertificatesWindowController;
   // this -init ref is balanced by the -autorelease in -windowWillClose
     gCertificatesWindowController = [[CertificatesWindowController alloc] initWithWindowNibName:@"CertificatesWindow"];
   }
+  return gCertificatesWindowController;
 }
 
 - (void)dealloc
@@ -418,8 +417,6 @@ static CertificatesWindowController* gCertificatesWindowController;
     gCertificatesWindowController = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-  NSLog(@"%@ dealloc", self);
 
   [mCertificatesData release];
   [mDetailsColumnKey release];
@@ -591,8 +588,6 @@ static CertificatesWindowController* gCertificatesWindowController;
 
 - (void)reloadCertData
 {
-  NSLog(@"reloadCertData");
-
   int curSelectedRow = [mCategoriesTable selectedRow];
   if (curSelectedRow == -1)
     curSelectedRow = 0;

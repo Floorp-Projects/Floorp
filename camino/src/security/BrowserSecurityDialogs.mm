@@ -140,7 +140,6 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
 
 - (void)dealloc
 {
-  NSLog(@"dealloc %@", self);
   [super dealloc];
 }
 
@@ -183,7 +182,6 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
 
 - (void)dealloc
 {
-  NSLog(@"dealloc %@", self);
   [super dealloc];
 }
 
@@ -449,7 +447,6 @@ static BrowserSecurityUIProvider* gBrowserSecurityUIProvider;
 
 - (void)dealloc
 {
-  NSLog(@"dealloc %@", self);
   [mCurPasswordContainer release];
   [super dealloc];
 }

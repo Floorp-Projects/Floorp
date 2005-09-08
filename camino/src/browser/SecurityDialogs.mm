@@ -741,13 +741,11 @@ SecurityDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *
     if (!thisCertNick) continue;
     
     NSString* nickWithSerialNumber = [NSString stringWithPRUnichars:thisCertNick];
-    NSLog(@"cert string: %@", nickWithSerialNumber);
     // look for " [" from the end of the string to find the start of the serial#
     NSRange serialStartRange = [nickWithSerialNumber rangeOfString:@" [" options:NSBackwardsSearch];
     if (serialStartRange.location != NSNotFound && serialStartRange.location > 0)
     {
       NSString* nickname = [nickWithSerialNumber substringToIndex:serialStartRange.location];
-      NSLog(@"cert nickname: %@", nickname);
 
       nsAutoString nicknameString;
       [nickname assignTo_nsAString:nicknameString];
@@ -800,7 +798,7 @@ SecurityDialogs::ChooseCertificate(nsIInterfaceRequestor *ctx, const PRUnichar *
 NS_IMETHODIMP
 SecurityDialogs::ChooseToken(nsIInterfaceRequestor *ctx, const PRUnichar **tokenNameList, PRUint32 count, PRUnichar **tokenName, PRBool *canceled)
 {
-  NSLog(@"ChooseToken");
+  NSLog(@"ChooseToken not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -850,6 +848,8 @@ GenKeyPairCompletionObserver::Observe(nsISupports *aSubject, const char *aTopic,
 {
   if (strcmp(aTopic, "keygen-finished") == 0)
     [mDialogController keyPairGenerationComplete];
+
+  return NS_OK;
 }
 
 // nsIGeneratingKeypairInfoDialogs
