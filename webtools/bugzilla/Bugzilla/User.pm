@@ -1170,6 +1170,13 @@ sub insert_new_user {
 
     foreach my $rel (RELATIONSHIPS) {
         foreach my $event (POS_EVENTS, NEG_EVENTS) {
+            # These "exceptions" define the default email preferences.
+            # 
+            # We enable mail unless the change was made by the user, or it's
+            # just a CC list addition and the user is not the reporter.
+            next if ($event == EVT_CHANGED_BY_ME);
+            next if (($event == EVT_CC) && ($rel != REL_REPORTER));
+
             $dbh->do("INSERT INTO email_setting " . 
                      "(user_id, relationship, event) " . 
                      "VALUES ($userid, $rel, $event)");
