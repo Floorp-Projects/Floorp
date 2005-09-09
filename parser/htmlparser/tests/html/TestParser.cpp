@@ -74,13 +74,14 @@ nsresult ParseData(char* anInputStream,char* anOutputStream) {
     return result;
   }
      
-  PRFileDesc* in = PR_Open(anInputStream, PR_RDONLY, 777);
+  PRFileDesc* in = PR_Open(anInputStream, PR_RDONLY, 0777);
   if (!in) {
     printf("\nUnable to open input file - %s\n", anInputStream);
     return result;
   }
   
-  PRFileDesc* out = PR_Open(anOutputStream, PR_CREATE_FILE|PR_WRONLY, 777);
+  PRFileDesc* out = PR_Open(anOutputStream,
+                            PR_CREATE_FILE|PR_TRUNCATE|PR_RDWR, 0777);
   if (!out) {
     printf("\nUnable to open output file - %s\n", anOutputStream);
     return result;

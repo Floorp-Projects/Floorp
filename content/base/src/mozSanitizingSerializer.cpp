@@ -304,41 +304,7 @@ mozSanitizingHTMLSerializer::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::CloseContainer(const nsHTMLTag aTag)
 {
-  // XXX Why do we need this?
-  // mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
   return DoCloseContainer(aTag);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AddHeadContent(const nsIParserNode& aNode)
-{
-  nsresult rv = NS_OK;
-  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  if (eHTMLTag_whitespace == type || 
-      eHTMLTag_newline == type    ||
-      eHTMLTag_text == type       ||
-      eHTMLTag_entity == type) {
-    rv = AddLeaf(aNode);
-  }
-  else if (eHTMLTag_title == type) {
-    NS_ASSERTION(mParser, "Only CNavDTD treats title this way.");
-
-    nsString skippedContent;
-    PRInt32 lineNo;
-
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_UNEXPECTED);
-
-    dtd->CollectSkippedContent(type, skippedContent, lineNo);
-    SetTitle(skippedContent);
-  }
-  else {
-    rv = OpenContainer(aNode);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = CloseContainer(type);
-  }
-  return rv;
 }
 
 NS_IMETHODIMP 
@@ -401,6 +367,14 @@ NS_IMETHODIMP
 mozSanitizingHTMLSerializer::OpenHead(const nsIParserNode& aNode)
 {
   return OpenContainer(aNode);
+}
+
+NS_IMETHODIMP 
+mozSanitizingHTMLSerializer::OpenHead()
+{
+  // XXX We don't have a parser node here, is it okay to ignore this?
+  // return OpenContainer(aNode);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -558,36 +532,6 @@ mozSanitizingHTMLSerializer::DoAddLeaf(PRInt32 aTag,
     Write(aText); // sure to be safe?
     // using + operator here might give an infinitive loop, see above.
     // not adding ";", because Gecko delivers that as part of |aText| (freaky)
-  }
-  else if (type == eHTMLTag_script ||
-           type == eHTMLTag_style ||
-           type == eHTMLTag_server)
-  {
-    // These special tags require some extra care. The parser gives them
-    // to us as leaves, but they're really containers. Their content is
-    // contained in the "skipped content" of the parser. This code is
-    // adapted from nsHTMLContentSink.cpp
-    nsString skippedContent;
-    PRInt32 lineNo;
-
-    NS_ASSERTION(mParser, "We are receiving containers as leaves with "
-                          "no skipped content.");
-
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_UNEXPECTED);
-
-    // Note: we want to collect the skipped content no matter what. We
-    // may end up throwing it away anyway, but the DTD doesn't care
-    // about that.
-    dtd->CollectSkippedContent(type, skippedContent, lineNo);
-
-    DoOpenContainer(type);
-    if (IsAllowedTag(type))
-    {
-      Write(skippedContent);
-    }
-    DoCloseContainer(type);
   }
   else
   {

@@ -38,9 +38,6 @@
 #define nsIHTMLContentSink_h___
 
 /**
- * MODULE NOTES:
- * @update  gess 4/1/98
- * 
  * This file declares the concrete HTMLContentSink class.
  * This class is used during the parsing process as the
  * primary interface between the parser and the content
@@ -86,7 +83,9 @@
 #include "nsHTMLTags.h"
 
 #define NS_IHTML_CONTENT_SINK_IID \
- { 0x59929de5, 0xe60b, 0x48b1,{0x81, 0x69, 0x48, 0x47, 0xb5, 0xc9, 0x44, 0x29}}
+{ 0x73b5a072, 0x0f87, 0x4d07, \
+  { 0xa8, 0x16, 0xe6, 0xac, 0x73, 0xa7, 0x04, 0x3c } }
+
 
 #if defined(XP_MAC) || defined(WINCE) 
 #define MAX_REFLOW_DEPTH  75    //setting to 75 to prevent layout from crashing on mac. Bug 55095.
@@ -101,15 +100,6 @@ class nsIHTMLContentSink : public nsIContentSink
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
-
-  /**
-   * This method gets called by the parser when it encounters
-   * a title tag and wants to set the document title in the sink.
-   *
-   * @update 4/1/98 gess
-   * @param  nsString reference to new title value
-   */     
-  NS_IMETHOD SetTitle(const nsString& aValue) = 0;
 
   /**
    * This method is used to open the outer HTML container.
@@ -132,6 +122,13 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD OpenHead(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This method is used to open the HEAD container. It is useful if a tag
+   * is forcing us to open the head (probably again), like if we find a <meta>
+   * tag in the body.
+   */
+  NS_IMETHOD OpenHead() = 0;
 
   /**
    * This method is used to close the only HEAD container.
@@ -263,13 +260,6 @@ public:
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag) = 0;
 
   /**
-   * This gets called by the parser to contents to 
-   * the head container
-   *
-   */     
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode) = 0;
-
-  /**
    * This gets called by the parser when you want to add
    * a leaf node to the current container in the content
    * model.
@@ -303,7 +293,7 @@ public:
    * This method is called by the parser when it encounters
    * a document type declaration.
    *
-   * XXX Should the parser also part the internal subset?
+   * XXX Should the parser also parse the internal subset?
    *
    * @param  nsIParserNode reference to parser node interface
    */

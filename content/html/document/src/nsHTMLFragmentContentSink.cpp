@@ -90,10 +90,10 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
-  NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead();
   NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
   NS_IMETHOD CloseBody();
@@ -115,7 +115,6 @@ public:
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -143,7 +142,6 @@ public:
   void AddBaseTagInfo(nsIContent* aContent);
 
   nsresult Init();
-  nsresult SetDocumentTitle(const nsAString& aString, const nsIParserNode* aNode);
 
   PRPackedBool mAllContent;
   PRPackedBool mProcessing;
@@ -300,12 +298,6 @@ nsHTMLFragmentContentSink::EndContext(PRInt32 aID)
 }
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
-{
-  return SetDocumentTitle(aValue, nsnull);
-}
-
-NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenHTML(const nsIParserNode& aNode)
 {
   return NS_OK;
@@ -324,6 +316,14 @@ nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
+nsHTMLFragmentContentSink::OpenHead()
+{
+  // The DTD uses this function when the head is being forced open by a tag in
+  // the body. We can safely ignore it, for now.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLFragmentContentSink::CloseHead()
 {
   return CloseContainer(eHTMLTag_head);
@@ -338,9 +338,8 @@ nsHTMLFragmentContentSink::OpenBody(const nsIParserNode& aNode)
     mSeenBody = PR_TRUE;
     return OpenContainer(aNode);
   }
-  else {
-    return NS_OK;
-  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -408,36 +407,6 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
       aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
     }
   }
-}
-
-nsresult
-nsHTMLFragmentContentSink::SetDocumentTitle(const nsAString& aString, const nsIParserNode* aNode)
-{
-  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
-                                              kNameSpaceID_None,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLTitleElement(nodeInfo);
-  NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
-
-  nsIContent *parent = GetCurrentContent();
-
-  if (!parent) {
-    parent = mRoot;
-  }
-
-  if (aNode) {
-    AddAttributes(*aNode, content);
-  }
-
-  rv = parent->AppendChildTo(content, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddTextToContent(content, aString);
 }
 
 NS_IMETHODIMP
@@ -521,27 +490,8 @@ nsHTMLFragmentContentSink::CloseContainer(const nsHTMLTag aTag)
 }
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::AddHeadContent(const nsIParserNode& aNode)
-{
-  return AddLeaf(aNode);
-}
-
-NS_IMETHODIMP
 nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  if (eHTMLTag_title == aNode.GetNodeType()) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-    nsAutoString skippedContent;
-    PRInt32 lineNo = 0;
-
-    dtd->CollectSkippedContent(eHTMLTag_title, skippedContent, lineNo);
-
-    return SetDocumentTitle(skippedContent, &aNode);
-  }
-
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
   nsresult result = NS_OK;
@@ -594,22 +544,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
             }
           }
 
-          if(nodeType == eHTMLTag_script    ||
-             nodeType == eHTMLTag_style     ||
-             nodeType == eHTMLTag_server) {
-
-            // Create a text node holding the content
-            nsCOMPtr<nsIDTD> dtd;
-            mParser->GetDTD(getter_AddRefs(dtd));
-            NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-            nsAutoString skippedContent;
-            PRInt32 lineNo = 0;
-
-            dtd->CollectSkippedContent(nodeType, skippedContent, lineNo);
-            result=AddTextToContent(content, skippedContent);
-          }
-          else if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
+          if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
               || nodeType == eHTMLTag_input)    // elements with 'SRC='
               AddBaseTagInfo(content);
           else if (nodeType == eHTMLTag_base)

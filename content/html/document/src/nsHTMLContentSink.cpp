@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -235,7 +236,6 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -247,10 +247,10 @@ public:
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode);
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
-  NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead();
   NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
   NS_IMETHOD CloseBody();
@@ -278,7 +278,7 @@ public:
 protected:
   PRBool IsTimeToNotify();
 
-  nsresult SetDocumentTitle(const nsAString& aTitle, const nsIParserNode* aNode);
+  nsresult UpdateDocumentTitle();
   // If aCheckIfPresent is true, will only set an attribute in cases
   // when it's not already set.
   nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
@@ -337,14 +337,14 @@ protected:
   nsGenericHTMLElement* mFrameset;
   nsGenericHTMLElement* mHead;
 
-  nsString mSkippedContent;
-
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
   PRPackedBool mLayoutStarted;
   PRPackedBool mScrolledToRefAlready;
+  PRPackedBool mInTitle;
 
+  nsString mTitleString;
   PRInt32 mInNotification;
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
   nsCOMPtr<nsIContent> mCurrentMap;
@@ -407,8 +407,11 @@ protected:
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
   nsresult ProcessMAPTag(nsIContent* aContent);
   nsresult ProcessMETATag(const nsIParserNode& aNode);
-  nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
-  nsresult ProcessSTYLETag(const nsIParserNode& aNode);
+
+  // Routines for tags that require special handling when we reach their end
+  // tag.
+  nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content);
+  nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
   nsresult OpenHeadContext();
   nsresult CloseHeadContext();
@@ -466,7 +469,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-	// nsIRequest
+  // nsIRequest
   NS_IMETHOD GetName(nsACString &result)
   {
     result.AssignLiteral("about:layout-dummy-request");
@@ -523,7 +526,7 @@ public:
     return NS_OK;
   }
 
- 	// nsIChannel
+  // nsIChannel
   NS_IMETHOD GetOriginalURI(nsIURI **aOriginalURI)
   {
     *aOriginalURI = gURI;
@@ -1167,6 +1170,25 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
 
+  // XXX Need to do this before we start adding attributes.
+  if (nodeType == eHTMLTag_style) {
+    nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(content);
+    NS_ASSERTION(ssle, "Style content isn't a style sheet?");
+    ssle->SetLineNumber(aNode.GetSourceLineNumber());
+
+    // Now disable updates so that every time we add an attribute or child
+    // text token, we don't try to update the style sheet.
+    if (!mSink->mInsideNoXXXTag) {
+      ssle->InitStyleLinkElement(mSink->mParser, PR_FALSE);
+    }
+    else {
+      // We're not going to be evaluating this style anyway.
+      ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+    }
+
+    ssle->SetEnableUpdates(PR_FALSE);
+  }
+
   // Make sure to add base tag info, if needed, before setting any other
   // attributes -- what URI attrs do will depend on the base URI.  Only do this
   // for elements that have useful URI attributes.
@@ -1175,6 +1197,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     // Containers with "href="
     case eHTMLTag_a:
     case eHTMLTag_map:
+
+    // Containers with "src="
+    case eHTMLTag_script:
     
     // Containers with "action="
     case eHTMLTag_form:
@@ -1228,16 +1253,31 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
       mSink->mInsideNoXXXTag++;
-
       break;
 
     case eHTMLTag_map:
       mSink->ProcessMAPTag(content);
       break;
+
     case eHTMLTag_iframe:
       mSink->mNumOpenIFRAMES++;
-
       break;
+
+    case eHTMLTag_script:
+      {
+        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
+        NS_ASSERTION(sele, "Script content isn't a script element?");
+        sele->SetScriptLineNumber(aNode.GetSourceLineNumber());
+      }
+      break;
+
+    case eHTMLTag_title:
+      if (mSink->mDocument->GetDocumentTitle().IsVoid()) {
+        // The first title wins.
+        mSink->mInTitle = PR_TRUE;
+      }
+      break;
+
     default:
       break;
   }
@@ -1340,8 +1380,23 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   case eHTMLTag_object:
   case eHTMLTag_applet:
     content->DoneAddingChildren();
-
     break;
+
+  case eHTMLTag_script:
+    result = mSink->ProcessSCRIPTEndTag(content);
+    break;
+
+  case eHTMLTag_style:
+    result = mSink->ProcessSTYLEEndTag(content);
+    break;
+
+  case eHTMLTag_title:
+    if (mSink->mInTitle) {
+      mSink->UpdateDocumentTitle();
+      mSink->mInTitle = PR_FALSE;
+    }
+    break;
+
   default:
     break;
   }
@@ -1585,6 +1640,11 @@ SinkContext::AddText(const nsAString& aText)
   PRInt32 addLen = aText.Length();
   if (addLen == 0) {
     return NS_OK;
+  }
+  
+  if (mSink->mInTitle) {
+    // Hang onto the title text specially.
+    mSink->mTitleString.Append(aText);
   }
 
   // Create buffer when we first need it
@@ -2458,25 +2518,6 @@ HTMLContentSink::EndContext(PRInt32 aPosition)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-HTMLContentSink::SetTitle(const nsString& aValue)
-{
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::SetTitle()\n"));
-  MOZ_TIMER_START(mWatch);
-
-  nsresult rv = OpenHeadContext();
-  if (NS_SUCCEEDED(rv)) {
-    rv = SetDocumentTitle(aValue, nsnull);
-  }
-  CloseHeadContext();
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetTitle()\n"));
-  MOZ_TIMER_STOP(mWatch);
-
-  return rv;
-}
-
 NS_IMETHODIMP
 HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
@@ -2532,7 +2573,7 @@ HTMLContentSink::CloseHTML()
 NS_IMETHODIMP
 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenHead()\n"));
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenHead(nsIParserNode)\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenHead", 
@@ -2540,7 +2581,7 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 
   nsresult rv = OpenHeadContext();
   if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead(nsIParserNode)\n"));
     MOZ_TIMER_STOP(mWatch);
     return rv;
   }
@@ -2548,6 +2589,20 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   if (mHead && aNode.GetNodeType() == eHTMLTag_head) {
     rv = AddAttributes(aNode, mHead, PR_FALSE, PR_TRUE);
   }
+
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
+  MOZ_TIMER_STOP(mWatch);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::OpenHead()
+{
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenHead()\n"));
+  MOZ_TIMER_START(mWatch);
+
+  nsresult rv = OpenHeadContext();
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenHead()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -2918,37 +2973,6 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::AddHeadContent(const nsIParserNode& aNode)
-{
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddHeadContent()\n"));
-  MOZ_TIMER_START(mWatch);
-
-  nsresult rv = OpenHeadContext();
-  if (NS_SUCCEEDED(rv)) {
-    nsHTMLTag type = nsHTMLTag(aNode.GetNodeType());
-    if (eHTMLTag_title == type) {
-      nsCOMPtr<nsIDTD> dtd;
-      mParser->GetDTD(getter_AddRefs(dtd));
-      if (dtd) {
-        nsAutoString title;
-        PRInt32 lineNo = 0;
-        dtd->CollectSkippedContent(eHTMLTag_title, title, lineNo);
-        rv = SetDocumentTitle(title, &aNode);
-      }
-    }
-    else {
-      rv = AddLeaf(aNode);
-    }
-    CloseHeadContext();
-  }
-   
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddHeadContent()\n"));
-  MOZ_TIMER_STOP(mWatch);
-  return rv;
-}
-
-
-NS_IMETHODIMP
 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::AddLeaf()\n"));
@@ -2977,16 +3001,6 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     rv = ProcessMETATag(aNode);
 
     break;
-  case eHTMLTag_style:
-    mCurrentContext->FlushTextAndRelease();
-    rv = ProcessSTYLETag(aNode);
-
-    break;
-  case eHTMLTag_script:
-    mCurrentContext->FlushTextAndRelease();
-    rv = ProcessSCRIPTTag(aNode);
-
-    break;
   default:
     rv = mCurrentContext->AddLeaf(aNode);
 
@@ -3000,53 +3014,27 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 }
 
 nsresult 
-HTMLContentSink::SetDocumentTitle(const nsAString& aTitle, const nsIParserNode* aNode)
+HTMLContentSink::UpdateDocumentTitle()
 {
-  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::SetDocumentTitle()\n"));
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::UpdateDocumentTitle()\n"));
   MOZ_TIMER_START(mWatch);
   NS_ASSERTION(mCurrentContext == mHeadContext, "title not in head");
 
   if (!mDocument->GetDocumentTitle().IsVoid()) {
-    // If the title was already set then don't try to overwrite it
-    // when a new title is encountered - For backwards compatiblity
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetDocumentTitle()\n"));
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::UpdateDocumentTitle()\n"));
     MOZ_TIMER_STOP(mWatch);
-
     return NS_OK;
   }
 
-  nsAutoString title(aTitle);
-  title.CompressWhitespace(PR_TRUE, PR_TRUE);
+  // Use mTitleString.
+  mTitleString.CompressWhitespace(PR_TRUE, PR_TRUE);
 
   nsCOMPtr<nsIDOMNSDocument> domDoc(do_QueryInterface(mDocument));
-  domDoc->SetTitle(title);
+  domDoc->SetTitle(mTitleString);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::title, nsnull,
-                                              kNameSpaceID_None,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTitleString.Truncate();
 
-  nsRefPtr<nsGenericHTMLElement> it = NS_NewHTMLTitleElement(nodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (aNode) {
-    AddAttributes(*aNode, it);
-  }
-
-  nsCOMPtr<nsITextContent> text;
-  rv = NS_NewTextNode(getter_AddRefs(text));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  text->SetText(title, PR_TRUE);
-
-  it->AppendChildTo(text, PR_FALSE);
-
-  mHead->AppendChildTo(it, PR_FALSE);
-
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::SetDocumentTitle()\n"));
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::UpdateDocumentTitle()\n"));
   MOZ_TIMER_STOP(mWatch);
 
   return NS_OK;
@@ -4010,67 +3998,13 @@ HTMLContentSink::PostEvaluateScript()
 }
 
 nsresult
-HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
+HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content)
 {
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
+  NS_ASSERTION(sele, "Not really closing a script tag?");
 
-  // Create content object
-  NS_ASSERTION(mCurrentContext->mStackPos > 0, "leaf w/o container");
-  if (mCurrentContext->mStackPos <= 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Inserting the element into the document may execute a script.
-  // This can potentially make the parent go away. So, hold
-  // on to it till we are done.
   nsRefPtr<nsGenericHTMLElement> parent =
     mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-  nsCOMPtr<nsIContent> element;
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
-                                getter_AddRefs(nodeInfo));
-
-  rv = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  element->SetContentID(mDocument->GetAndIncrementContentID());
-
-  // Add in the attributes and add the script content object to the
-  // head container.
-  AddBaseTagInfo(element);
-  rv = AddAttributes(aNode, element);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIDTD> dtd;
-  mParser->GetDTD(getter_AddRefs(dtd));
-  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(element));
-  nsAutoString script;
-  PRInt32 lineNo = 0;
-
-  dtd->CollectSkippedContent(eHTMLTag_script, script, lineNo);
-
-  if (sele) {
-    sele->SetScriptLineNumber((PRUint32)lineNo);
-  }
-
-  // Create a text node holding the content. First, get the text
-  // content of the script tag
-
-  if (!script.IsEmpty()) {
-    nsCOMPtr<nsITextContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    text->SetText(script, PR_TRUE);
-
-    element->AppendChildTo(text, PR_FALSE);
-  }
 
   nsCOMPtr<nsIScriptLoader> loader;
   if (mFrameset) {
@@ -4089,7 +4023,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     
     // Don't include script loading and evaluation in the stopwatch
     // that is measuring content creation time
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTTag()\n"));
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTEndTag()\n"));
     MOZ_TIMER_STOP(mWatch);
 
     // Assume that we're going to block the parser with a script load.
@@ -4100,23 +4034,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     mScriptElements.AppendObject(sele);
   }
 
-  // Now flush out tags so that the script will actually be bound to a
-  // document and will evaluate as soon as it's appended.
-  SINK_TRACE(SINK_TRACE_CALLS,
-             ("HTMLContentSink::ProcessSCRIPTTag: flushing tags before "
-              "appending script"));
-  mCurrentContext->FlushTags(PR_FALSE);
+  // Now tell the script that it's ready to go. This will execute the script
+  // and call our ScriptAvailable method.
+  content->DoneAddingChildren();
   
-  // Insert the child into the content tree. This will evaluate the
-  // script as well.
-  if (mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mInsertionPoint != -1) {
-    parent->InsertChildAt(element,
-                          mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mInsertionPoint++,
-                          PR_FALSE);
-  } else {
-    parent->AppendChildTo(element, PR_FALSE);
-  }
-
   // To prevent script evaluation in a frameset document, we suspended
   // the script loader. Now that the script content has been handled,
   // let's resume the script loader.
@@ -4137,81 +4058,18 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 // XXX What does nav do if we have SRC= and some style data inline?
 
 nsresult
-HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
+HTMLContentSink::ProcessSTYLEEndTag(nsGenericHTMLElement* content)
 {
-  nsresult rv = NS_OK;
-  nsGenericHTMLElement* parent = nsnull;
-
-  if (mCurrentContext) {
-    parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-  }
-
-  if (!parent) {
-    return NS_OK;
-  }
-
-  // Create content object
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::style, nsnull, kNameSpaceID_None,
-                                getter_AddRefs(nodeInfo));
-
-  nsCOMPtr<nsIContent> element;
-  rv = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  element->SetContentID(mDocument->GetAndIncrementContentID());
-
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(element);
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(content);
 
   NS_ASSERTION(ssle,
                "html:style doesn't implement nsIStyleSheetLinkingElement");
 
-  if (ssle) {
-    // XXX need prefs. check here.
-    if (!mInsideNoXXXTag) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
-    } else {
-      ssle->InitStyleLinkElement(nsnull, PR_TRUE);
-    }
-  }
-
-  // Add in the attributes and add the style content object to the
-  // head container.
-  AddBaseTagInfo(element);
-  rv = AddAttributes(aNode, element);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // The skipped content contains the inline style data
-  nsCOMPtr<nsIDTD> dtd;
-  mParser->GetDTD(getter_AddRefs(dtd));
-  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-
-  nsAutoString content;
-  PRInt32 lineNo = 0;
-
-  dtd->CollectSkippedContent(eHTMLTag_style, content, lineNo);
+  nsresult rv = NS_OK;
 
   if (ssle) {
-    ssle->SetLineNumber(lineNo);
-  }
-
-  if (!content.IsEmpty()) {
-    // Create a text node holding the content
-    nsCOMPtr<nsITextContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    text->SetText(content, PR_TRUE);
-
-    element->AppendChildTo(text, PR_FALSE);
-  }
-
-  parent->AppendChildTo(element, PR_FALSE);
-
-  if (ssle) {
+    // Note: if we are inside a noXXX tag, then we init'ed this style element
+    // with mDontLoadStyle = PR_TRUE, so these two calls will have no effect.
     ssle->SetEnableUpdates(PR_TRUE);
     rv = ssle->UpdateStyleSheet(nsnull, nsnull);
   }

@@ -309,7 +309,7 @@ class nsHTMLScriptElement : public nsGenericHTMLElement,
                             public nsIScriptElement
 {
 public:
-  nsHTMLScriptElement(nsINodeInfo *aNodeInfo);
+  nsHTMLScriptElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
   virtual ~nsHTMLScriptElement();
 
   // nsISupports
@@ -357,6 +357,8 @@ public:
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
+  virtual void DoneAddingChildren();
+  virtual PRBool IsDoneAddingChildren();
 
 protected:
   PRBool IsOnloadEventForWindow();
@@ -364,6 +366,7 @@ protected:
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
   PRPackedBool mEvaluating;
+  PRPackedBool mDoneAddingChildren;
 
   // Pointer to the script handler helper object (OWNING reference)
   nsHTMLScriptEventHandler *mScriptEventHandler;
@@ -385,11 +388,13 @@ protected:
 };
 
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Script)
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
 
 
-nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo,
+                                         PRBool aFromParser)
+  : nsGenericHTMLElement(aNodeInfo),
+    mDoneAddingChildren(!aFromParser)
 {
   mLineNumber = 0;
   mIsEvaluated = PR_FALSE;
@@ -484,7 +489,7 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   *aReturn = nsnull;
 
-  nsHTMLScriptElement* it = new nsHTMLScriptElement(mNodeInfo);
+  nsHTMLScriptElement* it = new nsHTMLScriptElement(mNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -536,6 +541,19 @@ nsresult
 nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
+}
+
+void
+nsHTMLScriptElement::DoneAddingChildren()
+{
+  mDoneAddingChildren = PR_TRUE;
+  MaybeProcessScript();
+}
+
+PRBool
+nsHTMLScriptElement::IsDoneAddingChildren()
+{
+  return mDoneAddingChildren;
 }
 
 // variation of this code in nsSVGScriptElement - check if changes
@@ -646,7 +664,7 @@ nsHTMLScriptElement::GetScriptLineNumber()
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !IsInDoc()) {
+  if (mIsEvaluated || mEvaluating || !mDoneAddingChildren || !IsInDoc()) {
     return;
   }
 

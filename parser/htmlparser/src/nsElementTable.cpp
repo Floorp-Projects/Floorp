@@ -194,12 +194,6 @@ const nsHTMLElement gHTMLElements[] = {
     /*contain-func*/                    0
   },
   {
-    /*************************************************
-      Note: I changed A to contain flow elements
-            since it's such a popular (but illegal) 
-            idiom.
-     *************************************************/
-
     /*tag*/                             eHTMLTag_a,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
@@ -905,7 +899,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kSpecial, (kFlowEntity|kInlineEntity|kSelf), kNone, // XXX should have a kHeadMisc parent too
+    /*parent,incl,exclgroups*/          kSpecial|kHeadMisc, (kFlowEntity|kSelf), kNone,
     /*special props, prop-range*/       kNoStyleLeaksOut,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown,
     /*contain-func*/                    0
@@ -1017,7 +1011,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          (kSpecial|kHeadContent), kCDATA, kNone,   // note: this is kHeadContent since shipping this breaks things.
     /*special props, prop-range*/       kNoStyleLeaksIn|kLegalOpen, kNoPropRange,
-    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_script,
+    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
   {
@@ -1037,7 +1031,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          (kSpecial|kHeadMisc), kCDATA, kNone,
     /*special props, prop-range*/       (kNoStyleLeaksIn|kLegalOpen), kNoPropRange,
-    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_server,
+    /*special parents,kids,skip*/       0,&gContainsText,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
   {
@@ -1115,8 +1109,8 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gInHead,&gInHead,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kHeadContent, kCDATA, kNone,
-    /*special props, prop-range*/       kNoStyleLeaksIn|kNonContainer, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_style,
+    /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
+    /*special parents,kids,skip*/       &gInHead,0,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
   {
@@ -1217,7 +1211,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kHeadContent,kPCDATA, kNone,
     /*special props, prop-range*/       kNoStyleLeaksIn, kNoPropRange,
-    /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_title,
+    /*special parents,kids,skip*/       &gInHead,&gContainsText,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
   {

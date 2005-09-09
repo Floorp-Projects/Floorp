@@ -67,7 +67,6 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -77,10 +76,10 @@ public:
   virtual nsISupports *GetTarget() { return nsnull; }
 
   // nsIHTMLContentSink
-  NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead();
   NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
   NS_IMETHOD CloseBody();
@@ -116,10 +115,10 @@ public:
 
 protected:
   PRFileDesc          *mOutput;
-	int				          mLevel;
+  int                  mLevel;
   nsIHTMLContentSink  *mSink;
-  PRBool              mAutoDeleteOutput;
-  nsIParser*          mParser;
+  PRBool               mAutoDeleteOutput;
+  nsIParser*           mParser;
 };
 
 #endif

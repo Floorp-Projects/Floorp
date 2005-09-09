@@ -1155,13 +1155,6 @@ nsExpatDriver::GetType()
 
 /*************************** Unused methods **********************************/
 
-NS_IMETHODIMP
-nsExpatDriver::CollectSkippedContent(PRInt32 aTag, nsAString& aContent,
-                                     PRInt32 &aLineNo)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(CToken*)
 nsExpatDriver::PushTokenFront(CToken* aToken)
 {

@@ -93,14 +93,12 @@ public:
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
-  NS_IMETHOD DidBuildModel(void)
-  { nsCOMPtr<nsIParser> temp(mParser); mParser = nsnull; return NS_OK; }
+  NS_IMETHOD DidBuildModel(void) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
-  NS_IMETHOD SetParser(nsIParser* aParser) { mParser = aParser; return NS_OK; }
+  NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode)
@@ -114,6 +112,7 @@ public:
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead();
   NS_IMETHOD CloseHead();
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
@@ -162,7 +161,6 @@ protected:
   nsAString*                   mOutputString;
   nsIParserNode*               mParserNode;
   nsCOMPtr<nsIParserService>   mParserService;
-  nsCOMPtr<nsIParser>          mParser;
 };
 
 nsresult

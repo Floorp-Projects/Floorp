@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -271,7 +272,6 @@ public:
     nsresult    HandleEntityToken(CToken* aToken);
     nsresult    HandleCommentToken(CToken* aToken);
     nsresult    HandleAttributeToken(CToken* aToken);
-    nsresult    HandleScriptToken(const nsIParserNode *aNode);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
     nsresult    BuildNeglectedTarget(eHTMLTags aTarget, eHTMLTokenTypes aType,
@@ -337,7 +337,7 @@ public:
      * @return  error code - 0 if all went well.
      */
     nsresult AddLeaf(const nsIParserNode *aNode);
-    nsresult AddHeadLeaf(nsIParserNode *aNode);
+    nsresult AddHeadContent(nsIParserNode *aNode);
 
     /**
      * This set of methods is used to create and manage the set of
@@ -365,7 +365,6 @@ public:
 protected:
 
     nsresult        CollectAttributes(nsIParserNode* aNode,eHTMLTags aTag,PRInt32 aCount);
-    nsresult        CollectSkippedContent(nsIParserNode& aNode,PRInt32& aCount);
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
     nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
     nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
@@ -376,7 +375,6 @@ protected:
     PRBool          IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const;
     
     nsDeque             mMisplacedContent;
-    nsDeque             mSkippedContent;
     
     nsIHTMLContentSink* mSink;
     nsTokenAllocator*   mTokenAllocator;
@@ -394,9 +392,9 @@ protected:
     eParserDocType      mDocType;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
 
-    eHTMLTags           mSkipTarget;
     PRInt32             mLineNumber;
     PRInt32             mOpenMapCount;
+    PRInt32             mHeadContainerPosition;
 
     PRUint16            mFlags;
 };
