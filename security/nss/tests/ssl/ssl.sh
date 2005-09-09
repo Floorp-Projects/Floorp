@@ -136,15 +136,17 @@ is_selfserv_alive()
 ########################################################################
 wait_for_selfserv()
 {
-  echo "tstclnt -p ${PORT} -h ${HOSTADDR} -q \\"
+  echo "tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \\"
   echo "        -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
   #echo "tstclnt -q started at `date`"
-  tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+  tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
+          -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   if [ $? -ne 0 ]; then
       html_failed "<TR><TD> Wait for Server "
-      echo "RETRY: tstclnt -p ${PORT} -h ${HOSTADDR} -q \\"
+      echo "RETRY: tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \\"
       echo "               -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
-      tstclnt -p ${PORT} -h ${HOSTADDR} -q -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
+      tstclnt -p ${PORT} -h ${HOSTADDR} ${CLIENT_OPTIONS} -q \
+              -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}
   elif [ sparam = "-c ABCDEFabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
@@ -187,15 +189,15 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \\"
+  echo "selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \\"
   echo "         -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
   echo "selfserv started at `date`"
   if [ ${fileout} -eq 1 ]; then
-      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose \
                > ${SERVEROUTFILE} 2>&1 &
   else
-      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${P_R_SERVERDIR} -n ${HOSTADDR} ${SERVER_OPTIONS} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose &
   fi
   # The PID $! returned by the MKS or Cygwin shell is not the PID of
@@ -219,7 +221,7 @@ start_selfserv()
 ########################################################################
 ssl_cov()
 {
-  html_head "SSL Cipher Coverage $NORM_EXT"
+  html_head "SSL Cipher Coverage $NORM_EXT - $BYPASS_STRING"
 
   testname=""
   sparam="-c ABCDEFabcdefghijklmnvyz"
@@ -231,7 +233,7 @@ ssl_cov()
   do
       p=`echo "$testname" | sed -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
       
-      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended test" ] ; then
+      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       elif [ "$tls" != "#" ] ; then
           echo "$SCRIPTNAME: running $testname ----------------------------"
@@ -241,11 +243,11 @@ ssl_cov()
           fi
 
           is_selfserv_alive
-          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} \\"
           echo "        -f -d ${P_R_CLIENTDIR} < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} -f \
+          tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} -f \
                   -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
@@ -264,7 +266,7 @@ ssl_cov()
 ########################################################################
 ssl_auth()
 {
-  html_head "SSL Client Authentication $NORM_EXT"
+  html_head "SSL Client Authentication $NORM_EXT - $BYPASS_STRING"
 
   while read value sparam cparam testname
   do
@@ -272,10 +274,10 @@ ssl_auth()
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
           start_selfserv
 
-          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} \\"
 	  echo "        ${cparam}  < ${REQUEST_FILE}"
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} \
+          tstclnt -p ${PORT} -h ${HOSTADDR} -f ${cparam} ${CLIENT_OPTIONS} \
                   -d ${P_R_CLIENTDIR} < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?
@@ -297,12 +299,12 @@ ssl_auth()
 ########################################################################
 ssl_stress()
 {
-  html_head "SSL Stress Test $NORM_EXT"
+  html_head "SSL Stress Test $NORM_EXT - $BYPASS_STRING"
 
   while read value sparam cparam testname
   do
       p=`echo "$testname" | sed -e "s/Stress //" -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
-      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended test" ] ; then
+      if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       elif [ $value != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g'`
@@ -312,10 +314,10 @@ ssl_stress()
               ps -ef | grep selfserv
           fi
 
-          echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} -w nss $cparam \\"
+          echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss $cparam \\"
           echo "         $verbose ${HOSTADDR}"
           echo "strsclnt started at `date`"
-          strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} -w nss $cparam \
+          strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} ${CLIENT_OPTIONS} -w nss $cparam \
                    $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
@@ -610,16 +612,16 @@ ssl_cleanup()
   . common/cleanup.sh
 }
 
-################## main #################################################
 
-#this script may be sourced from the distributed stress test - in this case do nothing...
-
-if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
+############################## ssl_run ### #############################
+# local shell function to run both standard and extended ssl tests
+########################################################################
+ssl_run()
+{
     ssl_init
+
     ssl_cov
     ssl_auth
-    ssl_crl_ssl
-    ssl_crl_cache
     ssl_stress
 
     SERVERDIR=$EXT_SERVERDIR
@@ -629,10 +631,53 @@ if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
     P_R_SERVERDIR=$P_R_EXT_SERVERDIR
     P_R_CLIENTDIR=$P_R_EXT_CLIENTDIR
     USER_NICKNAME=ExtendedSSLUser
-    NORM_EXT="Extended test"
+    NORM_EXT="Extended Test"
     cd ${CLIENTDIR}
     ssl_cov
     ssl_auth
     ssl_stress
+
+    # the next round off ssl tests will only run if these vars are reset
+    SERVERDIR=$ORIG_SERVERDIR
+    CLIENTDIR=$ORIG_CLIENTDIR
+    R_SERVERDIR=$ORIG_R_SERVERDIR
+    R_CLIENTDIR=$ORIG_R_CLIENTDIR
+    P_R_SERVERDIR=$ORIG_P_R_SERVERDIR
+    P_R_CLIENTDIR=$ORIG_P_R_CLIENTDIR
+    USER_NICKNAME=TestUser
+    NORM_EXT=
+    cd ${QADIR}/ssl
     ssl_cleanup
+}
+
+################## main #################################################
+
+#this script may be sourced from the distributed stress test - in this case do nothing...
+
+if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
+
+    ssl_init
+
+    # save the directories as setup by init.sh
+    ORIG_SERVERDIR=$SERVERDIR
+    ORIG_CLIENTDIR=$CLIENTDIR
+    ORIG_R_SERVERDIR=$R_SERVERDIR
+    ORIG_R_CLIENTDIR=$R_CLIENTDIR
+    ORIG_P_R_SERVERDIR=$P_R_SERVERDIR
+    ORIG_P_R_CLIENTDIR=$P_R_CLIENTDIR
+
+    ssl_crl_ssl
+    ssl_crl_cache
+    ssl_cleanup
+
+    # Test all combinations of server bypass and client bypass
+    CLIENT_OPTIONS="-B -s"
+    SERVER_OPTIONS=""
+    BYPASS_STRING="Client Bypass"
+    ssl_run
+    SERVER_OPTIONS="-B -s"
+    CLIENT_OPTIONS=""
+    BYPASS_STRING="Server Bypass"
+    ssl_run
+
 fi
