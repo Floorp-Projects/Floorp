@@ -283,6 +283,7 @@ bin\components\nsProxyAutoConfig.js
 ; extensions
 bin\components\nsExtensionManager.js
 bin\components\nsUpdateService.js 
+bin\components\nsPostUpdateWin.js 
 bin\components\extensions.xpt
 bin\components\update.xpt
 bin\components\websrvcs.xpt

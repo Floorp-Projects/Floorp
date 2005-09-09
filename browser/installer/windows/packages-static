@@ -192,6 +192,7 @@ bin\components\nsSidebar.js
 bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
 bin\components\nsUpdateService.js
+bin\components\nsPostUpdateWin.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 
