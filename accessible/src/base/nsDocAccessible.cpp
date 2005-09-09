@@ -229,10 +229,11 @@ NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
     return NS_OK;
   }
 
+  // Return an accessible for the current global focus, which does not have to
+  // be contained within the current document.
   nsCOMPtr<nsIAccessibilityService> accService =
     do_GetService("@mozilla.org/accessibilityService;1");
-  return accService->GetAccessibleInWeakShell(gLastFocusedNode, mWeakShell, 
-                                              aFocusedChild);
+  return accService->GetAccessibleFor(gLastFocusedNode, aFocusedChild);
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------

@@ -1813,6 +1813,15 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return NS_OK;
   }
 
+  NS_ASSERTION(content->GetDocument(), "Creating accessible for node with no document");
+  if (!content->GetDocument()) {
+    return NS_ERROR_FAILURE;
+  }
+  NS_ASSERTION(content->GetDocument() == aPresShell->GetDocument(), "Creating accessible for wrong pres shell");
+  if (content->GetDocument() != aPresShell->GetDocument()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // We have a content node
   nsIFrame *frame = *aFrameHint;
   if (content->IsContentOfType(nsIContent::eXUL)) {
