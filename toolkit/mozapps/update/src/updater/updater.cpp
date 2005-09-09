@@ -72,6 +72,7 @@
 # define R_OK 04
 # define access _access
 # define snprintf _snprintf
+# define putenv _putenv
 # define fchmod(a,b)
 #else
 # include <sys/wait.h>
@@ -955,6 +956,8 @@ PatchIfFile::Finish(int status)
 static void
 LaunchCallbackApp(int argc, char **argv)
 {
+  putenv("NO_EM_RESTART=");
+
 #if defined(USE_EXECV)
   execv(argv[0], argv);
 #elif defined(XP_MACOSX)
