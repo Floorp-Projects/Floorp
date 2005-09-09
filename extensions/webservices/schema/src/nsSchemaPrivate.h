@@ -336,7 +336,8 @@ class nsSchemaModelGroupRef : public nsSchemaParticleBase,
 {
 public:
   nsSchemaModelGroupRef(nsSchema* aSchema, 
-                        const nsAString& aRef);
+                        const nsAString& aRef,
+                        const nsAString& aRefNS);
   virtual ~nsSchemaModelGroupRef();
 
   NS_DECL_ISUPPORTS
@@ -345,7 +346,7 @@ public:
   NS_DECL_NSISCHEMAMODELGROUP
 
 protected:
-  nsString mRef;
+  nsString mRef, mRefNS;
   nsCOMPtr<nsISchemaModelGroup> mModelGroup;
 };
 
@@ -447,7 +448,8 @@ class nsSchemaAttributeRef : public nsSchemaComponentBase,
                              public nsISchemaAttribute 
 {
 public:
-  nsSchemaAttributeRef(nsSchema* aSchema, const nsAString& aRef);
+  nsSchemaAttributeRef(nsSchema* aSchema, const nsAString& aRef, 
+                       const nsAString& aRefNS);
   virtual ~nsSchemaAttributeRef();
   
   NS_DECL_ISUPPORTS
@@ -460,7 +462,7 @@ public:
   NS_IMETHOD SetUse(PRUint16 aUse);
 
 protected:
-  nsString mRef;
+  nsString mRef, mRefNS;
   nsCOMPtr<nsISchemaAttribute> mAttribute;
   nsString mDefaultValue;
   nsString mFixedValue;
@@ -496,7 +498,8 @@ class nsSchemaAttributeGroupRef : public nsSchemaComponentBase,
                                   public nsISchemaAttributeGroup
 {
 public:
-  nsSchemaAttributeGroupRef(nsSchema* aSchema, const nsAString& aRef);
+  nsSchemaAttributeGroupRef(nsSchema* aSchema, const nsAString& aRef, 
+                            const nsAString& aRefNS);
   virtual ~nsSchemaAttributeGroupRef();
   
   NS_DECL_ISUPPORTS
@@ -505,7 +508,7 @@ public:
   NS_DECL_NSISCHEMAATTRIBUTEGROUP
 
 protected:
-  nsString mRef;
+  nsString mRef, mRefNS;
   nsCOMPtr<nsISchemaAttributeGroup> mAttributeGroup;
 };
 

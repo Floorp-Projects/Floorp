@@ -286,8 +286,9 @@ nsSchemaModelGroup::AddParticle(nsISchemaParticle* aParticle)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaModelGroupRef::nsSchemaModelGroupRef(nsSchema* aSchema,
-                                             const nsAString& aRef)
-  : nsSchemaParticleBase(aSchema), mRef(aRef)
+                                             const nsAString& aRef,
+                                             const nsAString& aRefNS)
+  : nsSchemaParticleBase(aSchema), mRef(aRef), mRefNS(aRefNS)
 {
 }
 
@@ -312,7 +313,21 @@ nsSchemaModelGroupRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 
   mIsResolved = PR_TRUE;
   if (!mModelGroup && mSchema) {
-    mSchema->GetModelGroupByName(mRef, getter_AddRefs(mModelGroup));
+    if (mRefNS.IsEmpty()) {
+      mSchema->GetModelGroupByName(mRef, getter_AddRefs(mModelGroup));
+    } else {
+      // use the namespace and type
+      nsCOMPtr<nsISchemaCollection> schemaColl;
+      mSchema->GetCollection(getter_AddRefs(schemaColl));
+      NS_ENSURE_STATE(schemaColl);
+
+      // get the right schema
+      nsCOMPtr<nsISchema> schema;
+      schemaColl->GetSchema(mRefNS, getter_AddRefs(schema));
+      NS_ENSURE_STATE(schema);
+
+      schema->GetModelGroupByName(mRef, getter_AddRefs(mModelGroup));
+    }
   }
 
   if (mModelGroup) {

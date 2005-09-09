@@ -1015,31 +1015,8 @@ nsSchemaLoader::ProcessElement(nsIWebServiceErrorHandler* aErrorHandler,
     nsAutoString refNS;
 
     // need to handle ns:type
-    nsresult rv;
-    nsCOMPtr<nsIParserService> parserService =
-      do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+    rv = ParseNameAndNS(ref, aElement, ref, refNS);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    const nsAFlatString& qName = PromiseFlatString(ref);
-    const PRUnichar *colon;
-    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (colon) {
-      const PRUnichar* end;
-      qName.EndReading(end);
-
-      nsAutoString schemaTypePrefix;
-      schemaTypePrefix.Assign(Substring(qName.get(), colon));
-      ref.Assign(Substring(colon + 1, end));
-
-      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
-      NS_ENSURE_STATE(domNode3);
-
-      // get the namespace url from the prefix
-      rv = domNode3->LookupNamespaceURI(schemaTypePrefix, refNS);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
 
     elementRef = new nsSchemaElementRef(aSchema, ref, refNS);
     if (!elementRef) {
@@ -2584,13 +2561,18 @@ nsSchemaLoader::ProcessModelGroup(nsIWebServiceErrorHandler* aErrorHandler,
   GetMinAndMax(aElement, &minOccurs, &maxOccurs);
 
   // Check for a ref attribute
-  nsAutoString ref;
+  nsAutoString ref, refNS;
   aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
   
   if ((aTagName == nsSchemaAtoms::sModelGroup_atom) &&
       !ref.IsEmpty()) {
+
+    rv = ParseNameAndNS(ref, aElement, ref, refNS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsSchemaModelGroupRef* modelGroupRef = new nsSchemaModelGroupRef(aSchema, 
-                                                                     ref);
+                                                                     ref,
+                                                                     refNS);
     if (!modelGroupRef) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2816,11 +2798,14 @@ nsSchemaLoader::ProcessAttribute(nsIWebServiceErrorHandler* aErrorHandler,
   PRUint16 use;
   GetUse(aElement, &use);
 
-  nsAutoString ref;
+  nsAutoString ref, refNS;
   aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
   if (!ref.IsEmpty()) {
+    rv = ParseNameAndNS(ref, aElement, ref, refNS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsSchemaAttributeRef* attributeRef = new nsSchemaAttributeRef(aSchema,
-                                                                  ref);
+                                                                  ref, refNS);
     if (!attributeRef) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2918,12 +2903,17 @@ nsSchemaLoader::ProcessAttributeGroup(nsIWebServiceErrorHandler* aErrorHandler,
 
   nsCOMPtr<nsISchemaAttributeGroup> attributeGroup;
 
-  nsAutoString ref;
+  nsAutoString ref, refNS;
   aElement->GetAttribute(NS_LITERAL_STRING("ref"), ref);
 
   if (!ref.IsEmpty()) {
+    // need to handle ns:type
+    rv = ParseNameAndNS(ref, aElement, ref, refNS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsSchemaAttributeGroupRef* attrRef = new nsSchemaAttributeGroupRef(aSchema,
-                                                                       ref);
+                                                                       ref,
+                                                                       refNS);
     if (!attrRef) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3202,3 +3192,35 @@ nsSchemaLoader::GetMinAndMax(nsIDOMElement* aElement,
   }
 }
 
+nsresult
+nsSchemaLoader::ParseNameAndNS(const nsAString& aName, nsIDOMElement* aElement,
+                               nsAString& aTypeName, nsAString& aTypeNS)
+{
+  nsresult rv;
+  nsCOMPtr<nsIParserService> parserService =
+    do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const nsAFlatString& qName = PromiseFlatString(aName);
+  const PRUnichar *colon;
+  rv = parserService->CheckQName(qName, PR_TRUE, &colon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (colon) {
+    const PRUnichar* end;
+    qName.EndReading(end);
+
+    nsAutoString schemaTypePrefix;
+    schemaTypePrefix.Assign(Substring(qName.get(), colon));
+    aTypeName.Assign(Substring(colon + 1, end));
+
+    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
+    NS_ENSURE_STATE(domNode3);
+
+    // get the namespace url from the prefix
+    rv = domNode3->LookupNamespaceURI(schemaTypePrefix, aTypeNS);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return rv;
+}

@@ -221,6 +221,9 @@ protected:
   void ConstructArrayName(nsISchemaType* aType,
                           nsAString& aName);
 
+  nsresult ParseNameAndNS(const nsAString& aName, nsIDOMElement* aElement,
+                          nsAString& aTypeName, nsAString& aTypeNS);
+
 protected:
   nsInterfaceHashtable<nsStringHashKey, nsISchema> mSchemas;
   nsCOMPtr<nsISchemaCollection> mBuiltinCollection;

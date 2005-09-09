@@ -196,8 +196,9 @@ nsSchemaAttribute::SetUse(PRUint16 aUse)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttributeRef::nsSchemaAttributeRef(nsSchema* aSchema, 
-                                           const nsAString& aRef)
-  : nsSchemaComponentBase(aSchema), mRef(aRef)
+                                           const nsAString& aRef,
+                                           const nsAString& aRefNS)
+  : nsSchemaComponentBase(aSchema), mRef(aRef), mRefNS(aRefNS)
 {
 }
 
@@ -222,7 +223,16 @@ nsSchemaAttributeRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
   
   mIsResolved = PR_TRUE;
   if (!mAttribute && mSchema) {
+    if (mRefNS.IsEmpty()) {
     mSchema->GetAttributeByName(mRef, getter_AddRefs(mAttribute));
+    } else {
+      // use the namespace and type
+      nsCOMPtr<nsISchemaCollection> schemaColl;
+      mSchema->GetCollection(getter_AddRefs(schemaColl));
+      NS_ENSURE_STATE(schemaColl);
+
+      schemaColl->GetAttribute(mRef, mRefNS, getter_AddRefs(mAttribute));
+    }
   }
 
   if (mAttribute) {
@@ -474,8 +484,9 @@ nsSchemaAttributeGroup::AddAttribute(nsISchemaAttributeComponent* aAttribute)
 //
 ////////////////////////////////////////////////////////////
 nsSchemaAttributeGroupRef::nsSchemaAttributeGroupRef(nsSchema* aSchema,
-                                                     const nsAString& aRef)
-  : nsSchemaComponentBase(aSchema), mRef(aRef)
+                                                     const nsAString& aRef,
+                                                     const nsAString& aRefNS)
+  : nsSchemaComponentBase(aSchema), mRef(aRef), mRefNS(aRefNS)
 {
 }
 
@@ -499,7 +510,21 @@ nsSchemaAttributeGroupRef::Resolve(nsIWebServiceErrorHandler* aErrorHandler)
 
   mIsResolved = PR_TRUE;
   if (!mAttributeGroup && mSchema) {
+    if (mRefNS.IsEmpty()) {
     mSchema->GetAttributeGroupByName(mRef, getter_AddRefs(mAttributeGroup));
+    } else {
+      // use the namespace and type
+      nsCOMPtr<nsISchemaCollection> schemaColl;
+      mSchema->GetCollection(getter_AddRefs(schemaColl));
+      NS_ENSURE_STATE(schemaColl);
+
+      // get the right schema
+      nsCOMPtr<nsISchema> schema;
+      schemaColl->GetSchema(mRefNS, getter_AddRefs(schema));
+      NS_ENSURE_STATE(schema);
+
+      schema->GetAttributeGroupByName(mRef, getter_AddRefs(mAttributeGroup));
+    }
   }
 
   if (mAttributeGroup) {
