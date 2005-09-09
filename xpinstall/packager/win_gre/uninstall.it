@@ -61,7 +61,7 @@ Uninstall Filename=$UninstallFile$
 Defaults Info Filename=defaults_info.ini
 
 [Check Instance0]
-Class Name=SeaMonkeyMessageWindow
+Class Name=$ProductName$MessageWindow
 Window Name=
 Process Name=seamonkey.exe
 Pretty Name=SeaMonkey

@@ -385,7 +385,7 @@ exe=
 exe_param=
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=$ProductName$MessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
@@ -397,12 +397,30 @@ Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with ins
 Close All Process Windows=TRUE
 
 ; These keys are not normally necessary for checking instances.  They are
-; set here because Mozilla requires a way to shut down it's turbo mode.
+; set here because Mozilla requires a way to shut down its turbo mode.
 Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
 Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
 Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
 
+[Check Instance1]
+Class Name=MozillaMessageWindow
+Window Name=
+;*** LOCALIZE ME BABY ***
+Message=Download of $ProductName$ was successful. Mozilla must be closed to proceed with installation. Click OK to exit Mozilla automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message Full Installer=Mozilla must be closed to proceed with installation. Click OK to exit Mozilla automatically and to begin installation.
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Mozilla requires a way to shut down its turbo mode.
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Mozilla.exe
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
 
 [Component XPCOM]
 Description Short=Mozilla XPCOM
