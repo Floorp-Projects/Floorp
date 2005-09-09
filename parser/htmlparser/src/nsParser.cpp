@@ -619,127 +619,6 @@ NS_IMETHODIMP_(nsDTDMode) nsParser::GetParseMode(void)
   return eDTDMode_unknown;
 }
 
-
-template <class CharT>
-class CWordTokenizer {
-public:
-  CWordTokenizer(const CharT* aBuffer,PRInt32 aStartOffset,PRInt32 aMaxOffset) {
-    mLength=0;
-    mOffset=aStartOffset;
-    mMaxOffset=aMaxOffset;
-    mBuffer=aBuffer;
-    mEndBuffer=mBuffer+mMaxOffset;
-  }
-
-  //********************************************************************************
-  // Get offset of nth word in string.
-  // We define words as: 
-  //    1) sequence of alphanum; 
-  //    2) quoted substring
-  //    3) SGML comment -- ... -- 
-  // Returns offset of nth word, or -1 (if out of words).
-  //********************************************************************************
-  
-  PRInt32 GetNextWord(PRBool aSkipQuotes=PR_FALSE) {
-    
-    if(mOffset == kNotFound) {
-      return kNotFound; // Ref. bug 89732
-    }
-
-    if (mOffset >= 0) {
-      const CharT *cp=mBuffer+mOffset+mLength;  //skip last word
-
-      mLength=0;  //reset this
-      mOffset=-1; //reset this        
-
-      //now skip whitespace...
-
-      CharT target=0;
-      PRBool    done=PR_FALSE;
-
-      while((!done) && (cp++<mEndBuffer)) {
-        switch(*cp) {
-          case kSpace:  case kNewLine:
-          case kCR:     case kTab:
-          case kEqual:
-            continue;
-
-          case kQuote:
-            target=*cp;
-            if (aSkipQuotes) {
-              ++cp;
-            }
-            done=PR_TRUE;
-            break;
-
-          case kMinus:
-            target=*cp;
-            done=PR_TRUE;
-            break;
-
-          default:
-            done=PR_TRUE;
-            break;
-        }
-      }
-
-      if(cp<mEndBuffer) {  
-
-        const CharT *firstcp=cp; //hang onto this...      
-        PRInt32 theDashCount=2;
-
-        ++cp; //just skip first letter to simplify processing...
-
-        //ok, now find end of this word
-        while(cp++<mEndBuffer) {
-          if(kQuote==target) {
-            if(kQuote==*cp) {
-              ++cp;
-              break; //we found our end...
-            }
-          }
-          else if(kMinus==target) {
-            //then let's look for SGML comments
-            if(kMinus==*cp) {
-              if(4==++theDashCount) {
-                ++cp;
-                break;
-              }
-            }
-          }
-          else {
-            if((kSpace==*cp) ||
-               (kNewLine==*cp) ||
-               (kGreaterThan==*cp) ||
-               (kQuote==*cp) ||
-               (kCR==*cp) ||
-               (kTab==*cp) || 
-               (kEqual == *cp)) {
-              break;
-            }
-          }
-        }
-
-        mLength=cp-firstcp;
-        mOffset = (0<mLength) ? firstcp-mBuffer : -1;
-
-      }
-    }
-
-    return mOffset;
-  }
-
-  PRInt32 GetLength() const {
-    return mLength;
-  }
-
-  PRInt32     mOffset;
-  PRInt32     mMaxOffset;
-  PRInt32     mLength;
-  const CharT*  mBuffer;
-  const CharT*  mEndBuffer;
-};
-
 /**
  * Determine what DTD mode (and thus what layout nsCompatibility mode)
  * to use for this document based on the first chunk of data recieved
@@ -2291,8 +2170,6 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsC
        // 3C 3F 78 6D
        // ASCII characters are in their normal positions, so we can safely
        // deal with the XML declaration in the old C way
-       // XXX This part could be made simpler by using CWordTokenizer<char>,
-       //     but bug 104479 must be fixed first.
        // The shortest string so far (strlen==5):
        // <?xml
        PRInt32 i;
