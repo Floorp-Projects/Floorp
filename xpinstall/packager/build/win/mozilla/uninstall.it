@@ -58,18 +58,30 @@ Uninstall Filename=$UninstallFile$
 Defaults Info Filename=defaults_info.ini
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=$ProductName$MessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=$ProductName$ is detected to be currently running.  Please quit $ProductName$ before continuing.  Click Retry to perform the check again, or Cancel to exit the uninstaller.
 
 ; These keys are not normally necessary for checking instances.  They are
-; set here because Mozilla requires a way to shut down it's turbo mode.
+; set here because SeaMonkey requires a way to shut down its turbo mode.
 Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
 Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
 Extra Cmd Reg Name=
 Extra Cmd Parameter=-kill
 
+[Check Instance1]
+Class Name=MozillaMessageWindow
+Window Name=
+;*** LOCALIZE ME BABY ***
+Message=Mozilla is detected to be currently running.  Please quit Mozilla before continuing.  Click Retry to perform the check again, or Cancel to exit the uninstaller.
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Mozilla requires a way to shut down its turbo mode.
+Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\Mozilla.exe
+Extra Cmd Reg Name=
+Extra Cmd Parameter=-kill
 
 [Dialog Uninstall]
 FONTNAME=MS Sans Serif
@@ -101,7 +113,7 @@ YesToAll=Y&es to all
 ;[Check Instance0]
 ;Class Name=MozillaWindowClass
 ;Window Name=
-;Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
+;Message=Setup has detected that an instance of $ProductName$ (or Mozilla) is currently running.  Please quit $ProductName$ and Mozilla before continuing Setup.
 
 ;[Check Instance1]
 ;Process Name=psm.exe

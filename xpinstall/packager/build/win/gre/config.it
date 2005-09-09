@@ -284,12 +284,24 @@ exe=
 exe_param=
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=$ProductName$MessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
 Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+[Check Instance1]
+Class Name=MozillaMessageWindow
+Window Name=
+;*** LOCALIZE ME BABY ***
+Message=Download of $ProductName$ was successful. Mozilla must be closed to proceed with installation. Click OK to exit Mozilla automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message Full Installer=Mozilla must be closed to proceed with installation. Click OK to exit Mozilla automatically and to begin installation.
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
