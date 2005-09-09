@@ -51,7 +51,7 @@ static PRLogModuleInfo *gTestLog = nsnull;
 
 PR_STATIC_CALLBACK(void *) HandleEvent(PLEvent *event)
 {
-    LOG(("HandleEvent:%d\n", (int) event->owner));
+    LOG(("HandleEvent:%d\n", NS_PTR_TO_INT32(event->owner)));
     return nsnull;
 }
 
