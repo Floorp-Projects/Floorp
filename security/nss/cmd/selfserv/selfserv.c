@@ -200,16 +200,17 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
 
-"Usage: %s -n rsa_nickname -p port [-3DNRSTbmrvx] [-w password] [-t threads]\n"
+"Usage: %s -n rsa_nickname -p port [-3BDENRSTblmrsvx] [-w password] [-t threads]\n"
 #ifdef NSS_ENABLE_ECC
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-e ec_nickname] \n"
-"         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
+"         [-f fortezza_nickname] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
 #else
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
-"         [-L [seconds]] [-M maxProcs] [-l] [-P dbprefix]\n"
+"         [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
 #endif /* NSS_ENABLE_ECC */
 "-S means disable SSL v2\n"
 "-3 means disable SSL v3\n"
+"-B bypasses the PKCS11 layer for SSL encryption and MACing\n"
 "-D means disable Nagle delays in TCP\n"
 "-E means disable export ciphersuites and SSL step down key gen\n"
 "-T means disable TLS\n"
@@ -221,6 +222,7 @@ Usage(const char *progName)
 "    2 -r's mean request  and require, cert on initial handshake.\n"
 "    3 -r's mean request, not require, cert on second handshake.\n"
 "    4 -r's mean request  and require, cert on second handshake.\n"
+"-s means disable SSL socket locking for performance\n"
 "-v means verbose output\n"
 "-x means use export policy.\n"
 "-L seconds means log statistics every 'seconds' seconds (default=30).\n"
@@ -687,6 +689,8 @@ PRBool disableRollBack = PR_FALSE;
 PRBool NoReuse         = PR_FALSE;
 PRBool hasSidCache     = PR_FALSE;
 PRBool disableStepDown = PR_FALSE;
+PRBool bypassPKCS11    = PR_FALSE;
+PRBool disableLocking  = PR_FALSE;
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
@@ -1405,6 +1409,18 @@ server_main(
 	    errExit("error disabling SSL StepDown ");
 	}
     }
+    if (bypassPKCS11) {
+       rv = SSL_OptionSet(model_sock, SSL_BYPASS_PKCS11, PR_TRUE);
+	if (rv != SECSuccess) {
+	    errExit("error enabling PKCS11 bypass ");
+	}
+    }
+    if (disableLocking) {
+       rv = SSL_OptionSet(model_sock, SSL_NO_LOCKS, PR_TRUE);
+	if (rv != SECSuccess) {
+	    errExit("error disabling SSL socket locking ");
+	}
+    } 
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
 	if (cert[kea] != NULL) {
@@ -1647,13 +1663,15 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DEL:M:NP:RSTbc:d:e:f:hi:lmn:op:rt:vw:xy");
+    	"2:3BDEL:M:NP:RSTbc:d:e:f:hi:lmn:op:rst:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
 	case '2': fileName = optstate->value; break;
 
 	case '3': disableSSL3 = PR_TRUE; break;
+
+	case 'B': bypassPKCS11 = PR_TRUE; break;
 
 	case 'D': noDelay = PR_TRUE; break;
 	case 'E': disableStepDown = PR_TRUE; break;
@@ -1711,6 +1729,8 @@ main(int argc, char **argv)
 	case 'p': port = PORT_Atoi(optstate->value); break;
 
 	case 'r': ++requestCert; break;
+
+	case 's': disableLocking = PR_TRUE; break;
 
 	case 't':
 	    maxThreads = PORT_Atoi(optstate->value);

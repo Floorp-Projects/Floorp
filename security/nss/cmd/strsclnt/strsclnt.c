@@ -176,6 +176,8 @@ static SSL3Statistics * ssl3stats;
 static int failed_already = 0;
 static PRBool disableSSL3     = PR_FALSE;
 static PRBool disableTLS      = PR_FALSE;
+static PRBool bypassPKCS11    = PR_FALSE;
+static PRBool disableLocking  = PR_FALSE;
 
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
@@ -201,19 +203,21 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
- 	"          [-3DTovq] [-2 filename] [-P fullhandshakespercentage | -N]\n"
+ 	"          [-3BDNTovqs] [-2 filename] [-P fullhandshakespercentage | -N]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
         "       -o flag is interpreted as follows:\n"
         "          1 -o   means override the result of server certificate validation.\n"
         "          2 -o's mean skip server certificate validation altogether.\n"
-        "       -3 means disable SSL3\n"
 	"       -D means no TCP delays\n"
 	"       -q means quit when server gone (timeout rather than retry forever)\n"
+	"       -s means disable SSL socket locking\n"
 	"       -N means no session reuse\n"
- 	"       -P means do a specified percentage of full handshakes (0-100)\n"
+	"       -P means do a specified percentage of full handshakes (0-100)\n"
+        "       -3 means disable SSL3\n"
         "       -T means disable TLS\n"
-        "       -U means enable throttling up threads\n",
+        "       -U means enable throttling up threads\n"
+	"       -B bypasses the PKCS11 layer for SSL encryption and MACing\n",
 	progName);
     exit(1);
 }
@@ -1199,6 +1203,20 @@ client_main(
 	}
     }
 
+    if (bypassPKCS11) {
+	rv = SSL_OptionSet(model_sock, SSL_BYPASS_PKCS11, 1);
+	if (rv < 0) {
+	    errExit("SSL_OptionSet SSL_BYPASS_PKCS11");
+	}
+    }
+
+    if (disableLocking) {
+        rv = SSL_OptionSet(model_sock, SSL_NO_LOCKS, 1);
+	if (rv < 0) {
+	    errExit("SSL_OptionSet SSL_NO_LOCKS");
+	}
+    }
+
     SSL_SetURL(model_sock, hostName);
 
     SSL_AuthCertificateHook(model_sock, mySSLAuthCertificate, 
@@ -1305,13 +1323,15 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:3C:DNP:TUc:d:n:op:qt:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:3BC:DNP:TUc:d:n:op:qst:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
 	case '2': fileName = optstate->value; break;
 
 	case '3': disableSSL3 = PR_TRUE; break;
+
+	case 'B': bypassPKCS11 = PR_TRUE; break;
 
 	case 'C': cipherString = optstate->value; break;
 
@@ -1336,6 +1356,8 @@ main(int argc, char **argv)
 	case 'p': port = PORT_Atoi(optstate->value); break;
 
 	case 'q': QuitOnTimeout = PR_TRUE; break;
+
+	case 's': disableLocking = PR_TRUE; break;
 
 	case 't':
 	    tmpInt = PORT_Atoi(optstate->value);

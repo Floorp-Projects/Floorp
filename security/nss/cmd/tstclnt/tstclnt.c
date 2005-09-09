@@ -214,7 +214,7 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
 static void Usage(const char *progName)
 {
     fprintf(stderr, 
-"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23Tfovx] \n"
+"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23BTfosvx] \n"
 "                   [-c ciphers] [-w passwd] [-q]\n", progName);
     fprintf(stderr, "%-20s Hostname to connect with\n", "-h host");
     fprintf(stderr, "%-20s Port number for SSL server\n", "-p port");
@@ -223,11 +223,14 @@ static void Usage(const char *progName)
 	    "-d certdir");
     fprintf(stderr, "%-20s Nickname of key and cert for client auth\n", 
                     "-n nickname");
+    fprintf(stderr, 
+            "%-20s Bypass PKCS11 layer for SSL encryption and MACing.\n", "-B");
     fprintf(stderr, "%-20s Disable SSL v2.\n", "-2");
     fprintf(stderr, "%-20s Disable SSL v3.\n", "-3");
     fprintf(stderr, "%-20s Disable TLS (SSL v3.1).\n", "-T");
     fprintf(stderr, "%-20s Client speaks first. \n", "-f");
     fprintf(stderr, "%-20s Override bad server cert. Make it OK.\n", "-o");
+    fprintf(stderr, "%-20s Disable SSL socket locking.\n", "-s");
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
     fprintf(stderr, "%-20s Use export policy.\n", "-x");
     fprintf(stderr, "%-20s Ping the server and then exit.\n", "-q");
@@ -448,6 +451,8 @@ int main(int argc, char **argv)
     int                disableSSL2 = 0;
     int                disableSSL3 = 0;
     int                disableTLS  = 0;
+    int                bypassPKCS11 = 0;
+    int                disableLocking = 0;
     int                useExportPolicy = 0;
     PRSocketOptionData opt;
     PRNetAddr          addr;
@@ -466,7 +471,7 @@ int main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "23Tfc:h:p:d:m:n:oqvw:x");
+    optstate = PL_CreateOptState(argc, argv, "23BTfc:h:p:d:m:n:oqsvw:x");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -475,6 +480,8 @@ int main(int argc, char **argv)
           case '2': disableSSL2 = 1; 			break;
 
           case '3': disableSSL3 = 1; 			break;
+
+          case 'B': bypassPKCS11 = 1; 			break;
 
           case 'T': disableTLS  = 1; 			break;
 
@@ -502,6 +509,8 @@ int main(int argc, char **argv)
 	  case 'p': port = strdup(optstate->value);	break;
 
 	  case 'q': pingServerFirst = PR_TRUE;          break;
+
+	  case 's': disableLocking = 1;                 break;
 
 	  case 'v': verbose++;	 			break;
 
@@ -702,6 +711,21 @@ int main(int argc, char **argv)
 	SECU_PrintError(progName, "error disabling v2 compatibility");
 	return 1;
     }
+
+    /* enable PKCS11 bypass */
+    rv = SSL_OptionSet(s, SSL_BYPASS_PKCS11, bypassPKCS11);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling PKCS11 bypass");
+	return 1;
+    }
+
+    /* disable SSL socket locking */
+    rv = SSL_OptionSet(s, SSL_NO_LOCKS, disableLocking);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error disabling SSL socket locking");
+	return 1;
+    }
+
 
     if (useCommandLinePassword) {
 	SSL_SetPKCS11PinArg(s, password);
