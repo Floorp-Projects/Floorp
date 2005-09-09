@@ -232,6 +232,9 @@
         </getter>
         <setter>
           <![CDATA[
+            if (this._selectedItem == val)
+              return;
+
             this._setItemSelection(val);
 
             if (val)
