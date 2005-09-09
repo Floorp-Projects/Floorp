@@ -516,7 +516,7 @@ pk11_backupGetSignLength(SECKEYPrivateKey *key)
     unsigned char buf[20]; /* obviously to small */
     CK_ULONG smallLen = sizeof(buf);
 
-    mech.mechanism = pk11_mapSignKeyType(key->keyType);
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
@@ -630,7 +630,7 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
     CK_ULONG len;
     CK_RV crv;
 
-    mech.mechanism = pk11_mapSignKeyType(key->keyType);
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (slot == NULL) {
 	slot = PK11_GetBestSlot(mech.mechanism,wincx);
@@ -687,7 +687,7 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
     CK_SESSION_HANDLE session;
     CK_RV crv;
 
-    mech.mechanism = pk11_mapSignKeyType(key->keyType);
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (slot == NULL) {
 	slot = PK11_GetBestSlot(mech.mechanism,wincx);
@@ -743,7 +743,7 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
     CK_ULONG len;
     CK_RV crv;
 
-    mech.mechanism = pk11_mapSignKeyType(key->keyType);
+    mech.mechanism = PK11_MapSignKeyType(key->keyType);
 
     if (SECKEY_HAS_ATTRIBUTE_SET(key,CKA_PRIVATE)) {
 	PK11_HandlePasswordCheck(slot, key->wincx);
