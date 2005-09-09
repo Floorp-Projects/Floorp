@@ -1560,7 +1560,7 @@ enum BWCOpenDest {
 {
   [mLocationSheetWindow close];   // assumes it's not released on close
   [NSApp endSheet:mLocationSheetWindow returnCode:1];
-  [self loadURL:[mLocationSheetURLField stringValue] referrer:nil activate:YES allowPopups:NO];
+  [self goToLocationFromToolbarURLField:mLocationSheetURLField];
 }
 
 - (IBAction)cancelLocationSheet:(id)sender
