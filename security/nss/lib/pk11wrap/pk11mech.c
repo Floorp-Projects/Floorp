@@ -1741,7 +1741,7 @@ have_key_len:
 
 /* Make a Key type to an appropriate signing/verification mechanism */
 CK_MECHANISM_TYPE
-pk11_mapSignKeyType(KeyType keyType)
+PK11_MapSignKeyType(KeyType keyType)
 {
     switch (keyType) {
     case rsaKey:

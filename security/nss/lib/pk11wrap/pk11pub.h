@@ -209,6 +209,7 @@ CK_RV PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
 					    CK_MECHANISM_PTR pCryptoMechanism,
 					    SECItem *pbe_pwd, PRBool bad3DES);
 CK_MECHANISM_TYPE PK11_GetPadMechanism(CK_MECHANISM_TYPE);
+CK_MECHANISM_TYPE PK11_MapSignKeyType(KeyType keyType);
 
 /**********************************************************************
  *                   Symetric, Public, and Private Keys 
