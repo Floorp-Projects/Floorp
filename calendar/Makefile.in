@@ -42,7 +42,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE	= calendar
-DIRS = libical resources base providers xpi import-export
+DIRS = libical resources base providers import-export
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += xpi
+endif
 
 include $(topsrcdir)/config/rules.mk
 
