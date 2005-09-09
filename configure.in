@@ -4067,7 +4067,8 @@ minimo)
   MOZ_COMPOSER=
   MOZ_ENABLE_POSTSCRIPT=
   MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras transformiix webservices spatialnavigation"
-  MOZ_IMG_DECODERS="png,gif,jpeg"
+  MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
+  MOZ_IMG_ENCODERS_DEFAULT=
   MOZ_IMG_ENCODERS=
   MOZ_INSTALLER=
   MOZ_JSDEBUGGER=
