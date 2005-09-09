@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,13 +39,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-/**
- * MODULE NOTES:
- * @update  gess 4/8/98
- * 
- *         
- */
 
 /*
  * Set NS_VIEWSOURCE_TOKENS_PER_BLOCK to 0 to disable multi-block
@@ -538,15 +532,25 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
       nsCParserNode headNode(&headToken, 0/*stack token*/);
       mSink->OpenHead(headNode);
 
+      CStartToken titleToken(NS_LITERAL_STRING("TITLE"), eHTMLTag_title);
+      nsCParserNode titleNode(&titleToken, 0/*stack token*/);
+      mSink->OpenContainer(titleNode);
+
       // Note that XUL will automatically add the prefix "Source of: "
       if (StringBeginsWith(mFilename, NS_LITERAL_STRING("data:")) &&
           mFilename.Length() > 50) {
         nsAutoString dataFilename(Substring(mFilename, 0, 50));
         dataFilename.AppendLiteral("...");
-        mSink->SetTitle(dataFilename);
+        CTextToken titleText(dataFilename);
+        nsCParserNode titleTextNode(&titleText, 0/*stack token*/);
+        mSink->AddLeaf(titleTextNode);
       } else {
-        mSink->SetTitle(mFilename);
+        CTextToken titleText(mFilename);
+        nsCParserNode titleTextNode(&titleText, 0/*stack token*/);
+        mSink->AddLeaf(titleTextNode);
       }
+
+      mSink->CloseContainer(eHTMLTag_title);
 
       if (theAllocator) {
         CStartToken* theToken=
@@ -810,12 +814,6 @@ CViewSourceHTML::Terminate() {
 NS_IMETHODIMP_(PRInt32)  
 CViewSourceHTML::GetType() {
   return NS_IPARSER_FLAG_HTML;
-}
-
-NS_IMETHODIMP 
-CViewSourceHTML::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo)
-{
-  return NS_OK;
 }
 
 /**
