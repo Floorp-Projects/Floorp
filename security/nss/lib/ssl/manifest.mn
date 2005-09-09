@@ -55,6 +55,7 @@ MODULE = nss
 MAPFILE = $(OBJDIR)/ssl.def
 
 CSRCS = \
+	derive.c \
 	emulate.c \
 	prelib.c \
 	ssl3con.c \
@@ -77,10 +78,8 @@ CSRCS = \
 	cmpcert.c \
 	nsskea.c \
 	sslinfo.c \
+	ssl3ecc.c \
 	$(NULL)
-
-
-REQUIRES = dbm
 
 ifdef NSS_ENABLE_ECC
 DEFINES += -DNSS_ENABLE_ECC
@@ -88,3 +87,4 @@ endif
 
 LIBRARY_NAME = ssl
 LIBRARY_VERSION = 3
+

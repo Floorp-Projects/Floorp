@@ -66,7 +66,31 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif # NS_USE_GCC
 
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+CRYPTODIR=../freebl
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
+	CRYPTODIR=../crypto
+endif
+
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(NULL)
+
 else
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+CRYPTODIR=../freebl
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
+	CRYPTODIR=../crypto
+endif
+
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(NULL)
 
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
@@ -92,6 +116,7 @@ ifeq ($(OS_TARGET),SunOS)
 # The -R '$ORIGIN' linker option instructs this library to search for its
 # dependencies in the same directory where it resides.
 MKSHLIB += -R '$$ORIGIN'
+#EXTRA_SHARED_LIBS += -ldl -lrt -lc -z defs
 endif
 
 endif

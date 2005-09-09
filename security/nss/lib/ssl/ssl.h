@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.22 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
+/* $Id: ssl.h,v 1.23 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -110,6 +110,8 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
                                           /* if step-down keys are needed.  */
 					  /* default: off, generate         */
 					  /* step-down keys if needed.      */
+#define SSL_BYPASS_PKCS11              16 /* use PKCS#11 for pub key only   */
+#define SSL_NO_LOCKS                   17 /* Don't use locks for protection */
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */

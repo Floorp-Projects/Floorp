@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3gthr.c,v 1.6 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: ssl3gthr.c,v 1.7 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -72,7 +72,7 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
     int            err;
     int            rv		= 1;
 
-    PORT_Assert( ssl_HaveRecvBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     if (gs->state == GS_INIT) {
 	gs->state       = GS_HEADER;
 	gs->remainder   = 5;
@@ -189,7 +189,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
     SSL3Ciphertext cText;
     int            rv;
 
-    PORT_Assert( ssl_HaveRecvBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     do {
 	/* bring in the next sslv3 record. */
 	rv = ssl3_GatherData(ss, &ss->gs, flags);
@@ -207,7 +207,7 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	if (rv < 0) {
 	    return ss->recvdCloseNotify ? 0 : rv;
 	}
-    } while (ss->ssl3->hs.ws != idle_handshake && ss->gs.buf.len == 0);
+    } while (ss->ssl3.hs.ws != idle_handshake && ss->gs.buf.len == 0);
 
     ss->gs.readOffset = 0;
     ss->gs.writeOffset = ss->gs.buf.len;
@@ -230,7 +230,7 @@ ssl3_GatherAppDataRecord(sslSocket *ss, int flags)
 {
     int            rv;
 
-    PORT_Assert( ssl_HaveRecvBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     do {
 	rv = ssl3_GatherCompleteHandshake(ss, flags);
     } while (rv > 0 && ss->gs.buf.len == 0);
