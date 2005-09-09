@@ -1311,43 +1311,35 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     {
         if (targetScheme.LowerCaseEqualsASCII(protocolList[i].name))
         {
-            PRBool doCheck = PR_FALSE;
             switch (protocolList[i].action)
             {
             case AllowProtocol:
                 // everyone can access these schemes.
                 return NS_OK;
             case PrefControlled:
-                // Allow access if pref is false
                 {
-                    mSecurityPref->SecurityGetBoolPref("security.checkloaduri",
-                                                       &doCheck);
-                    if (doCheck)
+                    // resource: and chrome: are equivalent, securitywise
+                    if (sourceScheme.EqualsLiteral("chrome") ||
+                        sourceScheme.EqualsLiteral("resource"))
+                        return NS_OK;
+
+                    // Now check capability policies
+                    static const char loadURIPrefGroup[] = "checkloaduri";
+
+                    SecurityLevel secLevel;
+                    rv = LookupPolicy(aPrincipal,
+                                      (char*)loadURIPrefGroup,
+                                      sEnabledID,
+                                      nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
+                                      nsnull, &secLevel);
+                    if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
                     {
-                        // resource: and chrome: are equivalent, securitywise
-                        if (sourceScheme.EqualsLiteral("chrome") ||
-                            sourceScheme.EqualsLiteral("resource"))
-                            return NS_OK;
-
-                        // Now check capability policies
-                        static const char loadURIPrefGroup[] = "checkloaduri";
-
-                        SecurityLevel secLevel;
-                        rv = LookupPolicy(aPrincipal,
-                                          (char*)loadURIPrefGroup,
-                                          sEnabledID,
-                                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
-                                          nsnull, &secLevel);
-                        if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
-                        {
-                            // OK for this site!
-                            return NS_OK;
-                        }
-
-                        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
-                        return NS_ERROR_DOM_BAD_URI;
+                        // OK for this site!
+                        return NS_OK;
                     }
-                    return NS_OK;
+
+                    ReportError(nsnull, errorTag, sourceURI, aTargetURI);
+                    return NS_ERROR_DOM_BAD_URI;
                 }
             case ChromeProtocol:
                 if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
