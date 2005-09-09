@@ -2309,12 +2309,12 @@ NS_IMETHODIMP nsWindow::GetAttention(PRInt32 aCycleCount)
 		gNMRec.nmIcon = NULL;
 		
 	// Setup and install the notification manager rec
-	gNMRec.qType		= nmType;
-	gNMRec.nmMark		= 1;			// Flag the icon in the process menu
-	gNMRec.nmSound		= (Handle)-1L;	// Use the default alert sound
-	gNMRec.nmStr		= NULL;			// No alert/window so no text
-	gNMRec.nmResp		= NULL;			// No response proc, use the default behavior
-	gNMRec.nmRefCon	= NULL;
+	gNMRec.qType    = nmType;
+	gNMRec.nmMark   = 1;      // Make the dock icon bounce
+	gNMRec.nmSound  = NULL;   // No alert sound, see bug 307323
+	gNMRec.nmStr    = NULL;   // No alert/window so no text
+	gNMRec.nmResp   = NULL;   // No response proc, use the default behavior
+	gNMRec.nmRefCon = NULL;
 	if (::NMInstall(&gNMRec) == noErr)
 		gNotificationInstalled = true;
 

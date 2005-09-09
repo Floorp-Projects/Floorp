@@ -125,11 +125,6 @@
 nsIRollupListener * gRollupListener = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
-// Since we only want a single notification pending for the app we'll declare
-// these static
-static NMRec  gNMRec;
-static Boolean  gNotificationInstalled = false;
-
 #pragma mark -
 
 //#define PAINT_DEBUGGING         // flash areas as they are painted
@@ -1925,38 +1920,7 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
 
 NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 {
-  // Since the Mac doesn't consider each window a separate process this call functions
-  // slightly different than on other platforms.  We first check to see if we're the
-  // foreground process and, if so, ignore the call.  We also check to see if a notification
-  // is already pending and, if so, remove it since we only have one notification per process.
-  // After all that checking we install a notification manager request to mark the app's icon
-  // in the process menu and play the default alert sound
-  
-  OSErr err;
-    
-  if (WeAreFrontProcess())
-    return NS_OK;
-  
-  if (gNotificationInstalled)
-  {
-    (void)::NMRemove(&gNMRec);
-    gNotificationInstalled = false;
-  }
-  
-  err = GetIconSuite( &gNMRec.nmIcon, 128, svAllSmallData );
-  if ( err != noErr )
-    gNMRec.nmIcon = NULL;
-    
-  // Setup and install the notification manager rec
-  gNMRec.qType    = nmType;
-  gNMRec.nmMark   = 1;      // Flag the icon in the process menu
-  gNMRec.nmSound    = (Handle)-1L;  // Use the default alert sound
-  gNMRec.nmStr    = NULL;     // No alert/window so no text
-  gNMRec.nmResp   = NULL;     // No response proc, use the default behavior
-  gNMRec.nmRefCon = NULL;
-  if (::NMInstall(&gNMRec) == noErr)
-    gNotificationInstalled = true;
-
+  [NSApp requestUserAttention:NSCriticalRequest];
   return NS_OK;
 }
 
