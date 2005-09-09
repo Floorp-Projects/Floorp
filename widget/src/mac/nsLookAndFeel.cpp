@@ -306,8 +306,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 		res = GetMacAccentColor(eColorOffset_mac_accentlightesthighlight, aColor, NS_RGB(0xEE,0xEE,0xEE));
 	    break;    
     case eColor__moz_mac_accentregularhighlight:
-		//get this colour by querying variation table, ows. default to Platinum/Lavendar
-		res = GetMacAccentColor(eColorOffset_mac_accentregularhighlight, aColor, NS_RGB(0xCC,0xCC,0xFF));
+		//get this colour by querying variation table, ows. default to Aqua normal hilight color
+		res = GetMacAccentColor(eColorOffset_mac_accentregularhighlight, aColor, NS_RGB(0xB5,0xD5,0xFF));
 	    break;        
     case eColor__moz_mac_accentface:
 		//get this colour by querying variation table, ows. default to Platinum/Lavendar
@@ -319,8 +319,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 	    break; 
 	case eColor__moz_mac_menuselect:
 	case eColor__moz_mac_accentregularshadow:
-		//get this colour by querying variation table, ows. default to Platinum/Lavendar
-		res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x63,0x63,0xCE));
+		//get this colour by querying variation table, ows. default to Aqua's normal menu select color
+		res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x33,0x6F,0xCB));
 	    break;
     case eColor__moz_mac_accentdarkshadow:
     	//get this colour by querying variation table, ows. default to Platinum/Lavendar
