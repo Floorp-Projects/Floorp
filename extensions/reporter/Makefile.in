@@ -131,4 +131,11 @@ libs realchrome:: locales/Makefile
 	  $(MAKE) -C locales AB_CD=$$locale; \
 	done
 
+install::
+	@$(EXIT_ON_ERROR)                    \
+	for locale in $(ALL_LOCALES); do     \
+	  $(MAKE) -C locales AB_CD=$$locale install; \
+	done
+
+
 include $(topsrcdir)/config/rules.mk
