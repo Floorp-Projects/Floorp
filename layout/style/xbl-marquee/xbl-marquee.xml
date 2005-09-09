@@ -379,11 +379,11 @@
 
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
-        <xul:hbox style="margin: 0 100%;">
+        <html:div style="display:table; margin: 0 100%;">
           <html:div anonid="innerDiv">
             <children/>
           </html:div>
-        </xul:hbox>
+        </html:div>
       </html:div>
     </content>
 
