@@ -59,7 +59,9 @@
 #include "nsITokenizer.h"
 
 #define NS_IDTD_IID \
- { 0xa6cf9053, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+{ 0xab54d8ec, 0xc31c, 0x434b, \
+  { 0xa7, 0x64, 0xb4, 0xe9, 0xcd, 0x60, 0xc5, 0xc1 } }
+
 
 enum eAutoDetectResult {
     eUnknownDetect,
@@ -200,8 +202,6 @@ public:
     NS_IMETHOD_(void) Terminate() = 0;
 
     NS_IMETHOD_(PRInt32) GetType() = 0;
-
-    NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo) = 0;
 };
 
 #define NS_DECL_NSIDTD \
@@ -216,7 +216,6 @@ public:
     NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
-    NS_IMETHOD CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo);\
     NS_IMETHOD_(void)  Terminate();\
     NS_IMETHOD_(PRInt32) GetType();
 #endif /* nsIDTD_h___ */

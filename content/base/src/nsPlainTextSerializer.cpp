@@ -469,19 +469,6 @@ nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::AddHeadContent(const nsIParserNode& aNode)
-{
-  if (eHTMLTag_title == aNode.GetNodeType()) {
-    // XXX collect the skipped content
-    return NS_OK;
-  }
-  OpenHead(aNode);
-  nsresult rv = AddLeaf(aNode);
-  CloseHead();
-  return rv;
-}
-
-NS_IMETHODIMP 
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {
   if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
@@ -522,6 +509,13 @@ nsPlainTextSerializer::CloseHTML()
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::OpenHead(const nsIParserNode& aNode)
+{
+  mInHead = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPlainTextSerializer::OpenHead()
 {
   mInHead = PR_TRUE;
   return NS_OK;

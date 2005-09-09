@@ -291,6 +291,9 @@ nsCParserNode* nsEntryStack::Pop(void)
 
       // XXX If this NS_ENSURE_TRUE fails, it means that the style stack was
       //     empty before we were removed.
+#ifdef DEBUG_mrbkap
+      NS_ASSERTION(scount != 0, "preventing a potential crash.");
+#endif
       NS_ENSURE_TRUE(scount != 0, result);
 
       PRUint32 sindex = 0;

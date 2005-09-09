@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,16 +48,6 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-// list of tags that have skipped content
-static const char gSkippedContentTags[] = {
-  eHTMLTag_style,
-  eHTMLTag_script,
-  eHTMLTag_server,
-  eHTMLTag_title,
-  0
-};
-
-
 nsresult
 NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
 {
@@ -73,7 +64,7 @@ NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult)
 
 nsLoggingSink::nsLoggingSink() {
   mOutput = 0;
-	mLevel=-1;
+  mLevel=-1;
   mSink=0;
   mParser=0;
 }
@@ -245,36 +236,6 @@ nsLoggingSink::CloseContainer(const nsHTMLTag aTag) {
 }
 
 NS_IMETHODIMP
-nsLoggingSink::AddHeadContent(const nsIParserNode& aNode) {
-  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-
-  if (type == eHTMLTag_title) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-    
-    nsString theString;
-    PRInt32 lineNo = 0;
-
-    dtd->CollectSkippedContent(type, theString, lineNo);
-    SetTitle(theString);
-  }
-  else {
-    LeafNode(aNode);
-  }
-
-  nsresult theResult=NS_OK;
-
-  //then proxy the call to the real sink if you have one.
-  if(mSink) {
-    theResult=mSink->AddHeadContent(aNode);
-  }
-  
-  return theResult;
-
-}
-
-NS_IMETHODIMP
 nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
   LeafNode(aNode);
 
@@ -365,31 +326,6 @@ nsLoggingSink::AddComment(const nsIParserNode& aNode){
 
 }
 
-
-NS_IMETHODIMP
-nsLoggingSink::SetTitle(const nsString& aValue) {
-   
-  char* tmp = nsnull;
-  GetNewCString(aValue, &tmp);
-	WriteTabs(mOutput,++mLevel);
-  if(tmp) {
-    PR_fprintf(mOutput, "<title value=\"%s\"/>\n", tmp);
-    nsMemory::Free(tmp);
-  }
-  --mLevel;
-  
-  nsresult theResult=NS_OK;
-
-  //then proxy the call to the real sink if you have one.
-  if(mSink) {
-    theResult=mSink->SetTitle(aValue);
-  }
-  
-  return theResult;
-
-}
-
-
 NS_IMETHODIMP
 nsLoggingSink::OpenHTML(const nsIParserNode& aNode) {
   OpenNode("html", aNode);
@@ -429,6 +365,21 @@ nsLoggingSink::OpenHead(const nsIParserNode& aNode) {
   //then proxy the call to the real sink if you have one.
   if(mSink) {
     theResult=mSink->OpenHead(aNode);
+  }
+  
+  return theResult;
+}
+
+NS_IMETHODIMP
+nsLoggingSink::OpenHead() {
+  WriteTabs(mOutput,++mLevel);
+  PR_fprintf(mOutput,"<open container=head>\n");
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->OpenHead();
   }
   
   return theResult;
@@ -645,23 +596,6 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
     }
   }
 
-  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-    
-    nsString theString;
-    PRInt32 lineNo = 0;
-
-    dtd->CollectSkippedContent(aNode.GetNodeType(), theString, lineNo);
-    char* content = nsnull;
-    GetNewCString(theString, &content);
-    if(content) {
-      PR_fprintf(mOutput, " <content value=\"");
-      PR_fprintf(mOutput, "%s\"/>\n", content) ;
-      nsMemory::Free(content);
-    }
-  }
   WriteTabs(mOutput,1+mLevel);
   return NS_OK;
 }
@@ -673,43 +607,31 @@ nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
   if (0 != ac) {
     return PR_TRUE;
   }
-  if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
-    nsCOMPtr<nsIDTD> dtd;
-    mParser->GetDTD(getter_AddRefs(dtd));
-    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-    
-    nsString content;
-    PRInt32 lineNo = 0;
-
-    dtd->CollectSkippedContent(aNode.GetNodeType(), content, lineNo);
-    if (!content.IsEmpty()) {
-      return PR_TRUE;
-    }
-  }
   return PR_FALSE;
 }
 
 nsresult
 nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 {
- 	WriteTabs(mOutput,1+mLevel);
-	nsHTMLTag				nodeType  = nsHTMLTag(aNode.GetNodeType());
+  WriteTabs(mOutput,1+mLevel);
+  nsHTMLTag nodeType  = nsHTMLTag(aNode.GetNodeType());
 
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
     const PRUnichar* tag = nsHTMLTags::GetStringValue(nodeType);
 
-		if(tag)
+    if(tag)
       PR_fprintf(mOutput, "<leaf tag=\"%s\"", NS_ConvertUCS2toUTF8(tag).get());
-    else PR_fprintf(mOutput, "<leaf tag=\"???\"");
+    else
+      PR_fprintf(mOutput, "<leaf tag=\"???\"");
 
     if (WillWriteAttributes(aNode)) {
-			PR_fprintf(mOutput, ">\n");
+      PR_fprintf(mOutput, ">\n");
       WriteAttributes(aNode);
-			PR_fprintf(mOutput, "</leaf>\n");
+      PR_fprintf(mOutput, "</leaf>\n");
     }
     else {
-			PR_fprintf(mOutput, "/>\n");
+      PR_fprintf(mOutput, "/>\n");
     }
   }
   else {
@@ -717,32 +639,32 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
     nsAutoString tmp;
     char* str = nsnull;
     switch (nodeType) {
-			case eHTMLTag_whitespace:
-			case eHTMLTag_text:
-        GetNewCString(aNode.GetText(), &str);
-        if(str) {
-          PR_fprintf(mOutput, "<text value=\"%s\"/>\n", str);
-          nsMemory::Free(str);
-        }
-				break;
+    case eHTMLTag_whitespace:
+    case eHTMLTag_text:
+      GetNewCString(aNode.GetText(), &str);
+      if(str) {
+        PR_fprintf(mOutput, "<text value=\"%s\"/>\n", str);
+        nsMemory::Free(str);
+      }
+      break;
 
-			case eHTMLTag_newline:
-				PR_fprintf(mOutput, "<newline/>\n");
-				break;
+    case eHTMLTag_newline:
+      PR_fprintf(mOutput, "<newline/>\n");
+      break;
 
-			case eHTMLTag_entity:
-				tmp.Append(aNode.GetText());
-				tmp.Cut(0, 1);
-				pos = tmp.Length() - 1;
-				if (pos >= 0) {
-					tmp.Cut(pos, 1);
-				}
-				PR_fprintf(mOutput, "<entity value=\"%s\"/>\n", NS_LossyConvertUCS2toASCII(tmp).get());
-				break;
+    case eHTMLTag_entity:
+      tmp.Append(aNode.GetText());
+      tmp.Cut(0, 1);
+      pos = tmp.Length() - 1;
+      if (pos >= 0) {
+        tmp.Cut(pos, 1);
+      }
+      PR_fprintf(mOutput, "<entity value=\"%s\"/>\n", NS_LossyConvertUCS2toASCII(tmp).get());
+      break;
 
-			default:
-				NS_NOTREACHED("unsupported leaf node type");
-		}//switch
+    default:
+      NS_NOTREACHED("unsupported leaf node type");
+    }//switch
   }
   return NS_OK;
 }

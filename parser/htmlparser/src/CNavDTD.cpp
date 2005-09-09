@@ -113,11 +113,11 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #define NS_DTD_FLAG_HAS_OPEN_HEAD          0x00000001
 #define NS_DTD_FLAG_HAS_OPEN_BODY          0x00000002
 #define NS_DTD_FLAG_HAS_OPEN_FORM          0x00000004
-#define NS_DTD_FLAG_HAS_OPEN_SCRIPT        0x00000008
+#define NS_DTD_FLAG_HAS_EXPLICIT_HEAD      0x00000008
 #define NS_DTD_FLAG_HAD_BODY               0x00000010
 #define NS_DTD_FLAG_HAD_FRAMESET           0x00000020
 #define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000040
-#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000080 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000080 // NOFRAMES, NOSCRIPT
 #define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000100
 #define NS_DTD_FLAG_IN_MISPLACED_CONTENT   0x00000200
 #define NS_DTD_FLAG_STOP_PARSING           0x00000400
@@ -167,7 +167,6 @@ NS_IMPL_RELEASE(CNavDTD)
  */
 CNavDTD::CNavDTD() : nsIDTD(), 
     mMisplacedContent(0), 
-    mSkippedContent(0),
     mSink(0),
     mTokenAllocator(0),
     mTempContext(0),
@@ -176,9 +175,9 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mDTDMode(eDTDMode_quirks),
     mDocType(eHTML3_Quirks), // why not eHTML_Quirks?
     mParserCommand(eViewNormal),
-    mSkipTarget(eHTMLTag_unknown),
     mLineNumber(1),
     mOpenMapCount(0),
+    mHeadContainerPosition(-1),
     mFlags(NS_DTD_FLAG_NONE)
 {
   mBodyContext=new nsDTDContext();
@@ -341,7 +340,6 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
   mParserCommand = aParserContext.mParserCommand;
   mMimeType = aParserContext.mMimeType;
   mDocType = aParserContext.mDocType;
-  mSkipTarget = eHTMLTag_unknown;
   mTokenizer = aTokenizer;
   mBodyContext->SetNodeAllocator(&mNodeAllocator);
 
@@ -475,10 +473,9 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           // Script so we should not allow it to be interrupted.
           // We also need to make sure that an interruption does not override
           // a request to block the parser.
-          if ((mParser->CanInterrupt()) && 
-            (nsnull == mParser->PeekContext()->mPrevContext) && 
-            (eHTMLTag_unknown==mSkipTarget) &&
-            NS_SUCCEEDED(result)) {
+          if (mParser->CanInterrupt() && 
+              !mParser->PeekContext()->mPrevContext && 
+              NS_SUCCEEDED(result)) {
             result = NS_ERROR_HTMLPARSER_INTERRUPTED;
             break;
           }
@@ -532,12 +529,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
   nsresult result = NS_OK;
   if (aParser && aNotifySink) { 
     if (NS_OK == anErrorCode) {
-      if (eHTMLTag_unknown != mSkipTarget) {
-        // Looks like there is an open target ( ex. <title> ).
-        // Create a matching target to handle the unclosed target.
-        result = BuildNeglectedTarget(mSkipTarget, eToken_end, aParser, aSink);
-        NS_ENSURE_SUCCESS(result , result);
-      }
       if (!(mFlags & (NS_DTD_FLAG_HAD_FRAMESET | NS_DTD_FLAG_HAD_BODY))) {
         // This document is not a frameset document, however, it did not contain
         // a body tag either. So, make one!. Note: Body tag is optional per spec..
@@ -673,81 +664,6 @@ PRBool HasOpenTagOfType(PRInt32 aType, const nsDTDContext& aContext) {
   return PR_FALSE;
 }
 
-static void
-InPlaceConvertLineEndings( nsAString& aString )
-{
-    // go from '\r\n' or '\r' to '\n'
-  nsAString::iterator iter;
-  aString.BeginWriting(iter);
-
-  PRUnichar* S = iter.get();
-  size_t N = iter.size_forward();
-
-    // this fragment must be the entire string because
-    //  (a) no multi-fragment string is writable, so only an illegal cast could give us one, and
-    //  (b) else we would have to do more work (watching for |to| to fall off the end)
-  NS_ASSERTION(aString.Length() == N, "You cheated... multi-fragment strings are never writable!");
-
-    // we scan/convert in two phases (but only one pass over the string)
-    // until we have to skip a character, we only need to touch end-of-line chars
-    // after that, we'll have to start moving every character we want to keep
-
-    // use array indexing instead of pointers, because compilers optimize that better
-
-
-    // this first loop just converts line endings... no characters get moved
-  size_t i = 0;
-  PRBool just_saw_cr = PR_FALSE;
-  for ( ; i < N; ++i )
-    {
-        // if it's something we need to convert...
-      if ( S[i] == '\r' )
-        {
-          S[i] = '\n';
-          just_saw_cr = PR_TRUE;
-        }
-      else
-        {
-            // else, if it's something we need to skip...
-            //   i.e., a '\n' immediately following a '\r',
-            //   then we need to start moving any character we want to keep
-            //   and we have a second loop for that, so get out of this one
-          if ( S[i] == '\n' && just_saw_cr )
-            break;
-
-          just_saw_cr = PR_FALSE;
-        }
-    }
-
-
-    // this second loop handles the rest of the buffer, moving characters down
-    //  _and_ converting line-endings as it goes
-    //  start the loop at |from = i| so that that |just_saw_cr| gets cleared automatically
-  size_t to = i;
-  for ( size_t from = i; from < N; ++from )
-    {
-        // if it's something we need to convert...
-      if ( S[from] == '\r' )
-        {
-          S[to++] = '\n';
-          just_saw_cr = PR_TRUE;
-        }
-      else
-        {
-            // else, if it's something we need to copy...
-            //  i.e., NOT a '\n' immediately following a '\r'
-          if ( S[from] != '\n' || !just_saw_cr )
-            S[to++] = S[from];
-
-          just_saw_cr = PR_FALSE;
-        }
-    }
-
-    // if we chopped characters out of the string, we need to shorten it logically
-  if ( to < N )
-    aString.SetLength(to);
-}
-
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
@@ -765,37 +681,12 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     CHTMLToken*     theToken= NS_STATIC_CAST(CHTMLToken*, aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
-    PRBool          execSkipContent=PR_FALSE;
 
     aToken->SetLineNumber(mLineNumber);
     
     mLineNumber += aToken->GetNewlineCount();
    
-    /* ---------------------------------------------------------------------------------
-       To understand this little piece of code, you need to look below too.
-       In essence, this code caches "skipped content" until we find a given skiptarget.
-       Once we find the skiptarget, we take all skipped content up to that point and
-       coallate it. Then we push those tokens back onto the tokenizer deque.
-       ---------------------------------------------------------------------------------
-     */
-
-      // printf("token: %p\n",aToken);
-
-   if(mSkipTarget){  //handle a preexisting target...
-      if((theTag==mSkipTarget) && (eToken_end==theType)){
-        mSkipTarget=eHTMLTag_unknown; //stop skipping.  
-        //mTokenizer->PushTokenFront(aToken); //push the end token...
-        execSkipContent=PR_TRUE;
-        IF_FREE(aToken, mTokenAllocator);
-        theToken=(CHTMLToken*)mSkippedContent.PopFront();
-        theType=eToken_start;
-      }
-      else {
-        mSkippedContent.Push(theToken);
-        return result;
-      }
-    }
-    else if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
+    if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
       // Included TD & TH to fix Bug# 20797
       static eHTMLTags gLegalElements[]={eHTMLTag_table,eHTMLTag_thead,eHTMLTag_tbody,
                                          eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tfoot};
@@ -831,12 +722,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           NS_ENSURE_SUCCESS(result, result);
 
           mBodyContext->mContextTopIndex = -1; 
-
-          if (mSkipTarget) {
-            mSkippedContent.Push(theToken);
-            return result;
-          }
-          // Fall through if the skipped content collection is |not| in progress - bug 124788
         }
         else {
           PushIntoMisplacedStack(theToken);
@@ -853,145 +738,135 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
        deque until we can deal with it.
        ---------------------------------------------------------------------------------
      */
-    if(!execSkipContent) {
+    switch(theTag) {
+      case eHTMLTag_html:
+      case eHTMLTag_noframes:
+      case eHTMLTag_noscript:
+      case eHTMLTag_script:
+      case eHTMLTag_doctypeDecl:
+      case eHTMLTag_instruction:
+        break;
 
-      switch(theTag) {
-        case eHTMLTag_html:
-        case eHTMLTag_noframes:
-        case eHTMLTag_noscript:
-        case eHTMLTag_script:
-        case eHTMLTag_doctypeDecl:
-        case eHTMLTag_instruction:
-          break;
+      default:
+        if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
+          if(!(mFlags & (NS_DTD_FLAG_HAD_BODY |
+                         NS_DTD_FLAG_HAD_FRAMESET |
+                         NS_DTD_FLAG_ALTERNATE_CONTENT))) {
+
+            //For bug examples from this code, see bugs: 18928, 20989.
+            //At this point we know the body/frameset aren't open. 
+            //If the child belongs in the head, then handle it (which may open the head);
+            //otherwise, push it onto the misplaced stack.
+
+            PRBool isExclusive=PR_FALSE;
+            PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,isExclusive);
+            if(theChildBelongsInHead && !isExclusive) {
+              if (mMisplacedContent.GetSize() == 0) {
+                // This tag can either be in the body or the head. Since
+                // there is no indication that the body should be open,
+                // put this token in the head.
+                break;
+              }
+
+              // Otherwise, we have received some indication that the body is
+              // "open", so push this token onto the misplaced content stack.
+              theChildBelongsInHead = PR_FALSE;
+            }
+
+            if(!theChildBelongsInHead) {
+              eHTMLTags top = mBodyContext->Last();
+              NS_ASSERTION(top != eHTMLTag_userdefined,
+                           "Userdefined tags should act as leaves in the head");
+              if (top != eHTMLTag_head &&
+                  gHTMLElements[top].CanContain(theTag, mDTDMode)) {
+                // Some tags (such as <object> and <script>) are opened in the
+                // head and allow other non-head content to be children.
+                // Note: Userdefined tags in the head act like leaves.
+                break;
+              }
+
+              //If you're here then we found a child of the body that was out of place.
+              //We're going to move it to the body by storing it temporarily on the misplaced stack.
+              //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
+              PushIntoMisplacedStack(aToken);
+              
+              if (IsAlternateTag(theTag)) {
+                // These tags' contents are consumed as CDATA. If we simply
+                // pushed them on the misplaced content stack, the CDATA
+                // contents would force us to open a body, which could be
+                // wrong. So we collect the whole tag as misplaced in one
+                // gulp. Note that the tokenizer guarantees that there will
+                // be an end tag.
+                CToken *current = aToken;
+                while (current->GetTokenType() != eToken_end ||
+                       current->GetTypeID() != theTag) {
+                  current = NS_STATIC_CAST(CToken *, mTokenizer->PopToken());
+                  NS_ASSERTION(current, "The tokenizer is not creating good "
+                                        "alternate tags");
+                  PushIntoMisplacedStack(current);
+                }
+
+                // XXX Add code to also collect incorrect attributes on the
+                // end tag.
+              }
+
+              if(DoesRequireBody(aToken,mTokenizer)) {
+                CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
+                result=HandleToken(theBodyToken,aParser);
+              }
+              return result;
+            }
+          } //if
+        } //if
+    }//switch
+
+    if(theToken){
+      mParser=(nsParser*)aParser;
+
+      switch(theType) {
+        case eToken_text:
+        case eToken_start:
+        case eToken_whitespace: 
+        case eToken_newline:
+          result=HandleStartToken(theToken); break;
+
+        case eToken_end:
+          result=HandleEndToken(theToken); break;
+        
+        case eToken_cdatasection:
+        case eToken_comment:
+        case eToken_markupDecl:
+          result=HandleCommentToken(theToken); break;
+
+        case eToken_entity:
+          result=HandleEntityToken(theToken); break;
+
+        case eToken_attribute:
+          result=HandleAttributeToken(theToken); break;
+
+        case eToken_instruction:
+          result=HandleProcessingInstructionToken(theToken); break;
+
+        case eToken_doctypeDecl:
+          result=HandleDocTypeDeclToken(theToken); break;
 
         default:
-          if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-            if(!(mFlags & (NS_DTD_FLAG_HAD_BODY |
-                           NS_DTD_FLAG_HAD_FRAMESET |
-                           NS_DTD_FLAG_ALTERNATE_CONTENT))) {
-
-              //For bug examples from this code, see bugs: 18928, 20989.
-              //At this point we know the body/frameset aren't open. 
-              //If the child belongs in the head, then handle it (which may open the head);
-              //otherwise, push it onto the misplaced stack.
-
-              PRBool isExclusive=PR_FALSE;
-              PRBool theChildBelongsInHead=gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag,isExclusive);
-              if(theChildBelongsInHead && !isExclusive) {
-                if (mMisplacedContent.GetSize() == 0) {
-                  // This tag can either be in the body or the head. Since
-                  // there is no indication that the body should be open,
-                  // put this token in the head.
-                  break;
-                }
-
-                // Otherwise, we have received some indication that the body is
-                // "open", so push this token onto the misplaced content stack.
-                theChildBelongsInHead = PR_FALSE;
-              }
-
-              if(!theChildBelongsInHead) {
-
-                //If you're here then we found a child of the body that was out of place.
-                //We're going to move it to the body by storing it temporarily on the misplaced stack.
-                //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
-                PushIntoMisplacedStack(aToken);
-                
-                if (IsAlternateTag(theTag)) {
-                  // These tags' contents are consumed as CDATA. If we simply
-                  // pushed them on the misplaced content stack, the CDATA
-                  // contents would force us to open a body, which could be
-                  // wrong. So we collect the whole tag as misplaced in one
-                  // gulp. Note that the tokenizer guarantees that there will
-                  // be an end tag.
-                  CToken *current = aToken;
-                  while (current->GetTokenType() != eToken_end ||
-                         current->GetTypeID() != theTag) {
-                    current = NS_STATIC_CAST(CToken *, mTokenizer->PopToken());
-                    NS_ASSERTION(current, "The tokenizer is not creating good "
-                                          "alternate tags");
-                    PushIntoMisplacedStack(current);
-                  }
-
-                  // XXX Add code to also collect incorrect attributes on the
-                  // end tag.
-                }
-
-                if(DoesRequireBody(aToken,mTokenizer)) {
-                  CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
-                  result=HandleToken(theBodyToken,aParser);
-                }
-                return result;
-              }
-            } //if
-          } //if
+          break;
       }//switch
 
-    } //if
-    
-    if(theToken){
-      //Before dealing with the token normally, we need to deal with skip targets
-     CStartToken* theStartToken=NS_STATIC_CAST(CStartToken*,aToken);
-     if((!execSkipContent)                  && 
-        (theType!=eToken_end)               &&
-        (eHTMLTag_unknown==mSkipTarget)     && 
-        (gHTMLElements[theTag].mSkipTarget) && 
-        (!theStartToken->IsEmpty())) { // added empty token check for bug 44186
-        //create a new target
-        NS_ASSERTION(mSkippedContent.GetSize() == 0, "all the skipped content tokens did not get handled");
-        mSkippedContent.Empty();
-        mSkipTarget=gHTMLElements[theTag].mSkipTarget;
-        mSkippedContent.Push(theToken);
+
+      if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
+         IF_FREE(theToken, mTokenAllocator);
+      }
+      else if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
+        mFlags |= NS_DTD_FLAG_STOP_PARSING;
       }
       else {
-
-        mParser=(nsParser*)aParser;
-
-        switch(theType) {
-          case eToken_text:
-          case eToken_start:
-          case eToken_whitespace: 
-          case eToken_newline:
-            result=HandleStartToken(theToken); break;
-
-          case eToken_end:
-            result=HandleEndToken(theToken); break;
-          
-          case eToken_cdatasection:
-          case eToken_comment:
-          case eToken_markupDecl:
-            result=HandleCommentToken(theToken); break;
-
-          case eToken_entity:
-            result=HandleEntityToken(theToken); break;
-
-          case eToken_attribute:
-            result=HandleAttributeToken(theToken); break;
-
-          case eToken_instruction:
-            result=HandleProcessingInstructionToken(theToken); break;
-
-          case eToken_doctypeDecl:
-            result=HandleDocTypeDeclToken(theToken); break;
-
-          default:
-            break;
-        }//switch
-
-
-        if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-           IF_FREE(theToken, mTokenAllocator);
-        }
-        else if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
-          mFlags |= NS_DTD_FLAG_STOP_PARSING;
-        }
-        else {
-          return NS_OK;
-        }
+        return NS_OK;
       }
     }
+  }
 
-  }//if
   return result;
 }
  
@@ -1357,22 +1232,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
   START_TIMER()
 
-  if(NS_SUCCEEDED(result)) {
-    // This code is here to make sure the head is closed before we deal 
-    // with any tags that don't belong in the head. If the tag is not exclusive
-    // then we do not have enough information, and we have to trust the logic
-    // in HandleToken() to not hand us non-exclusive tokens  
-    PRBool isExclusive = PR_FALSE;
-    PRBool isChildOfHead = 
-      gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, isExclusive);
-
-    if (NS_SUCCEEDED(result) && ((mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) &&
-                                  isExclusive &&
-                                  !isChildOfHead)) {
-      result = CloseHead();
-    }
-  }
-
   return result;
 }
 
@@ -1439,17 +1298,6 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
         // If the token is attributed then save those attributes too.    
         if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
 
-        if(gHTMLElements[aChildTag].mSkipTarget) {
-          nsAutoString theString;
-          PRInt32 lineNo = 0;
-          
-          result = CollectSkippedContent(aChildTag, theString, lineNo);
-          NS_ENSURE_SUCCESS(result, result);
-
-          PushIntoMisplacedStack(mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          PushIntoMisplacedStack(mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag));      
-        }
-              
         mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT; // This state would help us in gathering all the misplaced elements
       }//if
     }//if
@@ -1597,6 +1445,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             }
             break;
           case eHTMLTag_head:
+            mFlags |= NS_DTD_FLAG_HAS_EXPLICIT_HEAD;
+
             if(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET)) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,theNode);
               isTokenHandled=PR_TRUE;
@@ -1610,7 +1460,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       PRBool isExclusive=PR_FALSE;
       theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag,isExclusive);
       
-      switch(theChildTag) { 
+      switch(theChildTag) {
         case eHTMLTag_area:
           if(!mOpenMapCount) isTokenHandled=PR_TRUE;
 
@@ -1640,10 +1490,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           // as such to make sure that we don't pull scripts outside the head
           // into the body.
           isExclusive = !(mFlags & NS_DTD_FLAG_HAD_BODY);
-          mFlags |= NS_DTD_FLAG_HAS_OPEN_SCRIPT;
+          break;
 
-        default:
-            break;
+        default:;
       }//switch
 
       if(!isTokenHandled) {
@@ -1657,12 +1506,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         theHeadIsParent = theHeadIsParent &&
           (isExclusive ||
            (prefersBody
-            ? (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)
+            ? (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD)
             : !(mFlags & NS_DTD_FLAG_HAD_BODY)));
 
         if(theHeadIsParent) {
           // These tokens prefer to be in the head.
-          result = AddHeadLeaf(theNode);
+          result = AddHeadContent(theNode);
         }
         else {
           result = HandleDefaultStartToken(aToken,theChildTag,theNode); 
@@ -1842,13 +1691,8 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   CollectAttributes(nsnull,theChildTag,attrCount);
 
   switch(theChildTag) {
-
-    case eHTMLTag_script:
-      mFlags &= ~NS_DTD_FLAG_HAS_OPEN_SCRIPT;
-    case eHTMLTag_style:
     case eHTMLTag_link:
     case eHTMLTag_meta:
-    case eHTMLTag_title:
       break;
 
     case eHTMLTag_head:
@@ -1875,6 +1719,23 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_body:
     case eHTMLTag_html:
       StripWSFollowingTag(theChildTag,mTokenizer,mTokenAllocator,mLineNumber);
+      break;
+
+    case eHTMLTag_script:
+      // Note: we don't fall through to the default case because
+      // CloseContainersTo() has the bad habit of closing tags that are opened
+      // by document.write(). Fortunately, the tokenizer guarantees that no
+      // actual tags appear between <script> and </script> so we won't be
+      // closing the wrong tag.
+      if (mBodyContext->Last() != eHTMLTag_script) {
+        // Except if we're here, then there's probably a stray script tag.
+        NS_ASSERTION(mBodyContext->LastOf(eHTMLTag_script) == kNotFound,
+                     "Mishandling scripts in CNavDTD");
+        break;
+      }
+
+      mBodyContext->Pop();
+      result = CloseContainer(eHTMLTag_script, theChildTag, PR_FALSE);
       break;
 
     default:
@@ -2012,7 +1873,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           theToken=(CToken*)mMisplacedContent.PopFront();
           if(theToken) {
             theTag       = (eHTMLTags)theToken->GetTypeID();
-            attrCount    = (gHTMLElements[theTag].mSkipTarget)? 0:theToken->GetAttributeCount();
+            attrCount    = theToken->GetAttributeCount();
             // Put back attributes, which once got popped out, into the tokenizer
             for(PRInt32 j=0;j<attrCount; ++j){
               CToken* theAttrToken = (CToken*)mMisplacedContent.PopFront();
@@ -2157,31 +2018,6 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
 }
 
 /**
- *  This method gets called when a script token has been 
- *  encountered in the parse process. n
- *  
- *  @update  gess 3/25/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult CNavDTD::HandleScriptToken(const nsIParserNode *aNode) {
-  // PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleScriptToken(), this=%p\n", this));
-
-  nsresult result=AddLeaf(aNode);
-
-  mParser->SetCanInterrupt(PR_FALSE);
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleScriptToken(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-
-/**
  *  This method gets called when an "instruction" token has been 
  *  encountered in the parse process. 
  *  
@@ -2266,15 +2102,11 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
   int attr=0;
 
   nsresult result=NS_OK;
-  int theAvailTokenCount=mTokenizer->GetCount() + mSkippedContent.GetSize();
+  int theAvailTokenCount=mTokenizer->GetCount();
   if(aCount<=theAvailTokenCount) {
     CToken* theToken=0;
-    eHTMLTags theSkipTarget=gHTMLElements[aTag].mSkipTarget;
     for(attr=0;attr<aCount;++attr){
-      if((eHTMLTag_unknown!=theSkipTarget) && mSkippedContent.GetSize())
-        theToken=NS_STATIC_CAST(CToken*,mSkippedContent.PopFront());
-      else 
-        theToken=mTokenizer->PopToken();
+      theToken=mTokenizer->PopToken();
       if(theToken)  {
         eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
         if(theType!=eToken_attribute) {
@@ -2313,55 +2145,6 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
   return result;
 }
 
-
-/**
- * Causes the next skipped-content token (if any) to
- * be consumed by this node.
- *
- * @update  gess 4Sep2000
- * @param   node to consume skipped-content
- * @param   holds the number of skipped content elements encountered
- * @return  Error condition.
- */
-NS_IMETHODIMP
-CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo) {
-
-  NS_ASSERTION(aTag >= eHTMLTag_unknown && aTag <= NS_HTML_TAG_MAX, "tag array out of bounds");
-
-  aContent.Truncate();
-
-  NS_ASSERTION(eHTMLTag_unknown != gHTMLElements[aTag].mSkipTarget, "cannot collect content for this tag");
-  if (eHTMLTag_unknown == gHTMLElements[aTag].mSkipTarget) {
-    // This tag doesn't support skipped content.
-    aLineNo = -1;
-    return NS_OK;
-  }
-  
-  aLineNo = mLineNumber;
-  mScratch.Truncate();
-  PRInt32 i = 0;
-  PRInt32 tagCount = mSkippedContent.GetSize();
-  for (i = 0; i< tagCount; ++i){
-    CHTMLToken* theNextToken = (CHTMLToken*)mSkippedContent.PopFront();
-    if (theNextToken) {
-      theNextToken->AppendSourceTo(aContent);
-    }
-
-    IF_FREE(theNextToken, mTokenAllocator);
-  }
-  
-  InPlaceConvertLineEndings(aContent);
-
-  // Note: TITLE content is PCDATA and hence the newlines are already accounted for.
-  mLineNumber += (aTag != eHTMLTag_title) ? aContent.CountChar(kNewLine) : 0;
-  
-  return NS_OK;
-}
-
- /***********************************************************************************
-   The preceeding tables determine the set of elements each tag can contain...
-  ***********************************************************************************/
-     
 /** 
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
@@ -2908,7 +2691,12 @@ nsresult CNavDTD::OpenHead(const nsIParserNode *aNode)
 
   if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
     mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
-    result = mSink ? mSink->OpenHead(*aNode) : NS_OK;
+    if (mSink && aNode) {
+      result = mSink->OpenHead(*aNode);
+    }
+    else if (mSink) {
+      result = mSink->OpenHead();
+    }
   }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
@@ -2965,6 +2753,10 @@ nsresult CNavDTD::OpenBody(const nsCParserNode *aNode)
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
 
+    // Make sure the head is closed by the time the body is opened.
+    CloseHead();
+
+    // Now we can open the body.
     result = (mSink) ? mSink->OpenBody(*aNode) : NS_OK; 
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
@@ -3205,10 +2997,6 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       }
       break;
 
-    case eHTMLTag_style:
-    case eHTMLTag_title:
-      break;
-
     case eHTMLTag_map:
       result = OpenMap(aNode);
       break;
@@ -3221,10 +3009,6 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       result = OpenFrameset(aNode); 
       break;
 
-    case eHTMLTag_script:
-      result = HandleScriptToken(aNode);
-      break;
-    
     case eHTMLTag_noembed:
       // <noembed> is unconditionally alternate content.
       done = PR_FALSE;
@@ -3292,9 +3076,6 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
     case eHTMLTag_html:
       result=CloseHTML(); break;
 
-    case eHTMLTag_style:
-      break;
-
     case eHTMLTag_head:
       result=CloseHead(); 
       break;
@@ -3322,12 +3103,22 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       // switch from alternate content state to regular state
       mFlags &= ~NS_DTD_FLAG_ALTERNATE_CONTENT;
       // falling thro' intentionally....
-    case eHTMLTag_title:
     default:
       STOP_TIMER();
       MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
 
-      result=(mSink) ? mSink->CloseContainer(aTag) : NS_OK; 
+      result = mSink
+               ? mSink->CloseContainer(aTag)
+               : NS_OK; // XXX Can this case really happen?
+
+      // If we were dealing with a head container in the body, make sure to
+      // close the head context now, so that body content doesn't get sucked
+      // into the head.
+      if ((mFlags & NS_DTD_FLAG_HAD_BODY) &&
+          mBodyContext->GetCount() == mHeadContainerPosition) {
+        result = CloseHead();
+        mHeadContainerPosition = -1;
+      }
 
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
       START_TIMER();
@@ -3586,7 +3377,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
  * @param   aNode -- next node to be added to model
  * @return  error code; 0 means OK
  */
-nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
+nsresult CNavDTD::AddHeadContent(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
   static eHTMLTags gNoXTags[] = {eHTMLTag_noembed,eHTMLTag_noframes};
@@ -3604,11 +3395,35 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   
   if (mSink) {
     STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-    
-    result = mSink->AddHeadContent(*aNode);
-          
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadContent(), this=%p\n", this));
+
+    // Make sure the head is opened. This might just be a no-op.
+    result = OpenHead(nsnull);
+
+    // Note: userdefined tags in the head are treated as leaves.
+    if (!nsHTMLElement::IsContainer(theTag) || theTag == eHTMLTag_userdefined) {
+      result = mSink->AddLeaf(*aNode);
+
+      if (mFlags & NS_DTD_FLAG_HAD_BODY) {
+        // Close the head now so that body content doesn't get sucked into it.
+        CloseHead();
+      }
+    }
+    else {
+      if ((mFlags & NS_DTD_FLAG_HAD_BODY) && mHeadContainerPosition == -1) {
+        // Keep track of this so that we know when to close the head, when
+        // this tag is done with.
+        mHeadContainerPosition = mBodyContext->GetCount();
+      }
+
+      mBodyContext->Push(NS_STATIC_CAST(nsCParserNode*, aNode), nsnull,
+                         PR_FALSE);
+
+      // Note: The head context is already opened.
+      result = mSink->OpenContainer(*aNode);
+    }
+
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadContent(), this=%p\n", this));
     START_TIMER();
   }
   return result;
