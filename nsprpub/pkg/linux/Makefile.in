@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile.in,v 1.7 2005/09/08 22:23:52 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.in,v 1.8 2005/09/09 17:16:35 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -67,10 +67,12 @@ endif
 publish:
 	$(MAKE) clean
 	mkdir -p SOURCES SRPMS RPMS BUILD
-	(cd $(dist_libdir) && tar cphf - .) \
+	(cd $(dist_libdir) && tar cphf - libnspr4.so libplds4.so libplc4.so) \
 	| (mkdir -p opt/sun/private/$(RPMLIBDIR) && cd opt/sun/private/$(RPMLIBDIR) && tar xvfBp -)
 	(cd $(dist_includedir) && tar cphf - .) \
 	| (mkdir -p opt/sun/private/include/nspr && cd opt/sun/private/include/nspr && tar xvfBp -)
+	(cd opt/sun/private/include/nspr && \
+		rm -rf md private obsolete/pralarm.h obsolete/probslet.h obsolete/prsem.h)
 	tar czvf SOURCES/$(NAME)-$(VERSION).tar.gz opt
 	echo "%define name $(NAME)" >$(SPECFILE)
 	echo "%define version $(VERSION)" >>$(SPECFILE)
@@ -79,6 +81,25 @@ publish:
 	echo "%define _topdir `pwd`" >>$(SPECFILE)
 	echo "%define _unpackaged_files_terminate_build 0" >>$(SPECFILE)
 	cat $(srcdir)/$(NAME).spec >>$(SPECFILE)
+	echo "" >>$(SPECFILE)
+	echo "%files" >>$(SPECFILE)
+	echo "%defattr(-,root,root)" >>$(SPECFILE)
+	echo "%dir /opt" >>$(SPECFILE)
+	echo "%dir /opt/sun" >>$(SPECFILE)
+	echo "%dir /opt/sun/private" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/$(RPMLIBDIR)" >>$(SPECFILE)
+	find opt \( -name "*.so" \) | sed -e "s-^-/-" >>$(SPECFILE)
+	echo "" >>$(SPECFILE)
+	echo "%files devel" >>$(SPECFILE)
+	echo "%defattr(-,root,root)" >>$(SPECFILE)
+	echo "%dir /opt" >>$(SPECFILE)
+	echo "%dir /opt/sun" >>$(SPECFILE)
+	echo "%dir /opt/sun/private" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr" >>$(SPECFILE)
+	echo "%dir /opt/sun/private/include/nspr/obsolete" >>$(SPECFILE)
+	find opt -type f \( -name "*.h" \) \
+		| sed -e "s-^-/-" >>$(SPECFILE)
 	rpmbuild $(RPMTARGET) -bb $(SPECFILE)
 
 clean:
