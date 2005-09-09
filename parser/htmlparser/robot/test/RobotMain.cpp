@@ -6,7 +6,13 @@ class nsIDocShell;
 //XXXbz is this even used?  There is no DebugRobot() with this
 //signature in the tree!
 
-extern "C" NS_EXPORT int DebugRobot(nsVoidArray * workList, nsIDocShell * ww);
+extern "C" NS_EXPORT int DebugRobot(
+   nsVoidArray * workList,
+   nsIDocShell * docShell,
+   int iMaxLoads,
+   char * verify_dir,
+   void (*yieldProc )(const char *)
+   );
 
 int main(int argc, char **argv)
 {
@@ -26,6 +32,6 @@ int main(int argc, char **argv)
     }
   }
 
-  return DebugRobot(gWorkList, nsnull);
+  return DebugRobot(gWorkList, nsnull, 50, nsnull, nsnull);
 }
 

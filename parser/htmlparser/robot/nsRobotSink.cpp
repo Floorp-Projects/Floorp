@@ -75,10 +75,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTMLContentSink
-  NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
+  NS_IMETHOD OpenHead();
   NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
   NS_IMETHOD CloseBody();
@@ -94,7 +94,6 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD CloseTopmostContainer();
-  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -177,11 +176,6 @@ NS_IMETHODIMP RobotSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP RobotSink::SetTitle(const nsString& aValue)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP RobotSink::OpenHTML(const nsIParserNode& aNode)
 {
   return NS_OK;
@@ -193,6 +187,11 @@ NS_IMETHODIMP RobotSink::CloseHTML()
 }
 
 NS_IMETHODIMP RobotSink::OpenHead(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::OpenHead()
 {
   return NS_OK;
 }
@@ -283,11 +282,6 @@ NS_IMETHODIMP RobotSink::CloseContainer(const nsHTMLTag aTag)
 }
 
 NS_IMETHODIMP RobotSink::CloseTopmostContainer()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::AddHeadContent(const nsIParserNode& aNode)
 {
   return NS_OK;
 }
