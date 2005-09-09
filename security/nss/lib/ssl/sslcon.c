@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.27 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
+/* $Id: sslcon.c,v 1.28 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -186,11 +186,11 @@ ssl2_ConstructCipherSpecs(sslSocket *ss)
     int 		i;
     SECStatus 		rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     count = 0;
     PORT_Assert(ss != 0);
-    allowed = !ss->enableSSL2 ? 0 :
+    allowed = !ss->opt.enableSSL2 ? 0 :
     	(ss->allowedByPolicy & ss->chosenPreference & SSL_CB_IMPLEMENTED);
     while (allowed) {
     	if (allowed & 1) 
@@ -226,7 +226,7 @@ ssl2_ConstructCipherSpecs(sslSocket *ss)
     ss->sizeCipherSpecs = count * 3;
 
     /* fill in cipher specs for SSL2 cipher suites */
-    allowed = !ss->enableSSL2 ? 0 :
+    allowed = !ss->opt.enableSSL2 ? 0 :
     	(ss->allowedByPolicy & ss->chosenPreference & SSL_CB_IMPLEMENTED);
     for (i = 0; i < ssl2_NUM_SUITES_IMPLEMENTED * 3; i += 3) {
 	const PRUint8 * hs = implementedCipherSuites + i;
@@ -271,17 +271,17 @@ ssl2_CheckConfigSanity(sslSocket *ss)
 
     allowed = ss->allowedByPolicy & ss->chosenPreference;
     if (! allowed)
-	ss->enableSSL2 = PR_FALSE;     /* not really enabled if no ciphers */
+	ss->opt.enableSSL2 = PR_FALSE; /* not really enabled if no ciphers */
 
     /* ssl3_config_match_init was called in ssl2_ConstructCipherSpecs(). */
     /* Ask how many ssl3 CipherSuites were enabled. */
     rv = ssl3_ConstructV2CipherSpecsHack(ss, NULL, &ssl3CipherCount);
     if (rv != SECSuccess || ssl3CipherCount <= 0) {
-	ss->enableSSL3 = PR_FALSE;     /* not really enabled if no ciphers */
-	ss->enableTLS  = PR_FALSE;
+	ss->opt.enableSSL3 = PR_FALSE; /* not really enabled if no ciphers */
+	ss->opt.enableTLS  = PR_FALSE;
     }
 
-    if (!ss->enableSSL2 && !ss->enableSSL3 && !ss->enableTLS) {
+    if (!ss->opt.enableSSL2 && !ss->opt.enableSSL3 && !ss->opt.enableTLS) {
 	SSL_DBG(("%d: SSL[%d]: Can't handshake! both v2 and v3 disabled.",
 		 SSL_GETPID(), ss->fd));
 disabled:
@@ -495,7 +495,7 @@ ssl2_GetSendBuffer(sslSocket *ss, unsigned int len)
 {
     SECStatus rv = SECSuccess;
 
-    PORT_Assert(ssl_HaveXmitBufLock(ss));
+    PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
     if (len < 128) {
 	len = 128;
@@ -530,7 +530,7 @@ ssl2_SendErrorMessage(sslSocket *ss, int error)
     int rv;
     PRUint8 msg[SSL_HL_ERROR_HBYTES];
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     msg[0] = SSL_MT_ERROR;
     msg[1] = MSB(error);
@@ -559,7 +559,7 @@ ssl2_SendClientFinishedMessage(sslSocket *ss)
     int              sent;
     PRUint8    msg[1 + SSL_CONNECTIONID_BYTES];
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -595,7 +595,7 @@ ssl2_SendServerVerifyMessage(sslSocket *ss)
     int              sent;
     SECStatus        rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -630,7 +630,7 @@ ssl2_SendServerFinishedMessage(sslSocket *ss)
     int              sendLen, sent;
     SECStatus        rv    = SECSuccess;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -660,7 +660,7 @@ ssl2_SendServerFinishedMessage(sslSocket *ss)
 	    /* If send failed, it is now a bogus  session-id */
 	    (*ss->sec.uncache)(sid);
 	    rv = (SECStatus)sent;
-	} else if (!ss->noCache) {
+	} else if (!ss->opt.noCache) {
 	    /* Put the sid in session-id cache, (may already be there) */
 	    (*ss->sec.cache)(sid);
 	    rv = SECSuccess;
@@ -689,7 +689,7 @@ ssl2_SendSessionKeyMessage(sslSocket *ss, int cipher, int keySize,
     int              sent;
     SECStatus        rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -735,7 +735,7 @@ ssl2_SendCertificateRequestMessage(sslSocket *ss)
     int              sendLen;
     SECStatus        rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -775,7 +775,7 @@ ssl2_SendCertificateResponseMessage(sslSocket *ss, SECItem *cert,
     PRUint8 *msg;
     int rv, sendLen;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetXmitBufLock(ss);    /***************************************/
 
@@ -887,7 +887,7 @@ ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
     int               amount;
     int               count	= 0;
 
-    PORT_Assert( ssl_HaveXmitBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
     SSL_TRC(10, ("%d: SSL[%d]: sending %d bytes in the clear",
 		 SSL_GETPID(), ss->fd, len));
@@ -962,7 +962,7 @@ ssl2_SendStream(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
     int              nout;
     int              buflen;
 
-    PORT_Assert( ssl_HaveXmitBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
     SSL_TRC(10, ("%d: SSL[%d]: sending %d bytes using stream cipher",
 		 SSL_GETPID(), ss->fd, len));
@@ -1067,7 +1067,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
     int              nout;		    /* ciphertext size after header. */
     int              buflen;		    /* size of generated record.     */
 
-    PORT_Assert( ssl_HaveXmitBufLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
     SSL_TRC(10, ("%d: SSL[%d]: sending %d bytes using block cipher",
 		 SSL_GETPID(), ss->fd, len));
@@ -1251,7 +1251,7 @@ ssl_GatherRecord1stHandshake(sslSocket *ss)
 {
     int rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetRecvBufLock(ss);
 
@@ -1369,7 +1369,7 @@ ssl2_ProduceKeys(sslSocket *    ss,
     readKey->data = 0;
     writeKey->data = 0;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     rv = SECSuccess;
     cx = PK11_CreateDigestContext(SEC_OID_MD5);
@@ -1441,7 +1441,7 @@ ssl2_CreateSessionCypher(sslSocket *ss, sslSessionID *sid, PRBool isClient)
     readKey.data = 0;
     writeKey.data = 0;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
     if((ss->sec.ci.sid == 0))
     	goto sec_loser;	/* don't crash if asserts are off */
 
@@ -1591,9 +1591,9 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     PRUint8           mkbuf[SSL_MAX_MASTER_KEY_BYTES];
     sslServerCerts  * sc = ss->serverCerts + kt_rsa;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
-    PORT_Assert( ssl_HaveRecvBufLock(ss)   );
-    PORT_Assert((sc->serverKey != 0));
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
+    PORT_Assert((sc->SERVERKEY != 0));
     PORT_Assert((ss->sec.ci.sid != 0));
     sid = ss->sec.ci.sid;
 
@@ -1651,11 +1651,11 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     ** NOTE: PK11_PubDecryptRaw will barf on a non-RSA key. This is
     ** desired behavior here.
     */
-    rv = PK11_PubDecryptRaw(sc->serverKey, kbuf, &el1, ekLen, ek, ekLen);
+    rv = PK11_PubDecryptRaw(sc->SERVERKEY, kbuf, &el1, ekLen, ek, ekLen);
     if (rv != SECSuccess) 
 	goto hide_loser;
 
-    modulusLen = PK11_GetPrivateModulusLen(sc->serverKey);
+    modulusLen = PK11_GetPrivateModulusLen(sc->SERVERKEY);
     if (modulusLen == -1) {
 	/* If the key was really bad, then PK11_pubDecryptRaw
 	 * would have failed, therefore the we must assume that the card
@@ -1679,7 +1679,7 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     }
 
     /* Make sure we're not subject to a version rollback attack. */
-    if (ss->enableSSL3 || ss->enableTLS) {
+    if (ss->opt.enableSSL3 || ss->opt.enableTLS) {
 	PRUint8 threes[8] = { 0x03, 0x03, 0x03, 0x03,
 			      0x03, 0x03, 0x03, 0x03 };
 	
@@ -1763,8 +1763,8 @@ ssl2_QualifyCypherSpecs(sslSocket *ss,
     int          hc;
     PRUint8      qualifiedSpecs[ssl2_NUM_SUITES_IMPLEMENTED * 3];
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
-    PORT_Assert( ssl_HaveRecvBufLock(ss)   );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
 
     if (!ss->cipherSpecs) {
 	ssl2_ConstructCipherSpecs(ss);
@@ -1824,8 +1824,8 @@ ssl2_ChooseSessionCypher(sslSocket *ss,
     int             realKeySize;
     PRUint8 *       ohs               = hs;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
-    PORT_Assert( ssl_HaveRecvBufLock(ss)   );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
 
     if (!ss->cipherSpecs) {
 	ssl2_ConstructCipherSpecs(ss);
@@ -2044,7 +2044,7 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
     PRUint8           keyData[SSL_MAX_MASTER_KEY_BYTES];
     PRUint8           iv     [8];
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     eblock = NULL;
 
@@ -2131,7 +2131,7 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
 
     /* Set up the padding for version 2 rollback detection. */
     /* XXX We should really use defines here */
-    if (ss->enableSSL3 || ss->enableTLS) {
+    if (ss->opt.enableSSL3 || ss->opt.enableTLS) {
 	PORT_Assert((modulusLen - rek.len) > 12);
 	PORT_Memset(eblock + modulusLen - rek.len - 8 - 1, 0x03, 8);
     }
@@ -2185,7 +2185,7 @@ ssl2_ClientRegSessionID(sslSocket *ss, PRUint8 *s)
 	sid->peerCert = CERT_DupCertificate(ss->sec.peerCert);
 
     }
-    if (!ss->noCache)
+    if (!ss->opt.noCache)
 	(*ss->sec.cache)(sid);
 }
 
@@ -2195,7 +2195,7 @@ ssl2_TriggerNextMessage(sslSocket *ss)
 {
     SECStatus        rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     if ((ss->sec.ci.requiredElements & CIS_HAVE_CERTIFICATE) &&
 	!(ss->sec.ci.sentElements & CIS_HAVE_CERTIFICATE)) {
@@ -2223,7 +2223,7 @@ ssl2_TryToFinish(sslSocket *ss)
     SECStatus        rv;
     char             e, ef;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     e = ss->sec.ci.elements;
     ef = e | CIS_HAVE_FINISHED;
@@ -2261,7 +2261,7 @@ ssl2_SignResponse(sslSocket *ss,
     unsigned int     len;
     SECStatus        rv		= SECFailure;
     
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     challenge = ss->sec.ci.serverChallenge;
     len = ss->sec.ci.serverChallengeLen;
@@ -2424,8 +2424,8 @@ ssl2_HandleClientCertificate(sslSocket *    ss,
     SECItem          certItem;
     SECItem          rep;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
-    PORT_Assert( ssl_HaveRecvBufLock(ss)   );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss)   );
 
     /* Extract the certificate */
     certItem.data = cd;
@@ -2512,7 +2512,7 @@ ssl2_HandleMessage(sslSocket *ss)
     int              rv;
     int              rv2;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ssl_GetRecvBufLock(ss);
 
@@ -2706,7 +2706,7 @@ ssl2_HandleVerifyMessage(sslSocket *ss)
     PRUint8 *        data;
     SECStatus        rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
     ssl_GetRecvBufLock(ss);
 
     data = ss->gs.buf.buf + ss->gs.recordOffset;
@@ -2758,9 +2758,9 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
     SECStatus        rv; 
     int              needed, sidHit, certLen, csLen, cidLen, certType, err;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
-    if (!ss->enableSSL2) {
+    if (!ss->opt.enableSSL2) {
 	PORT_SetError(SSL_ERROR_SSL2_DISABLED);
 	return SECFailure;
     }
@@ -2989,7 +2989,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     int               sendLen, sidLen = 0;
     SECStatus         rv;
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     ss->sec.isServer     = 0;
     ss->sec.sendSequence = 0;
@@ -3035,7 +3035,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     SSL_TRC(3, ("%d: SSL[%d]: sending client-hello", SSL_GETPID(), ss->fd));
 
     /* Try to find server in our session-id cache */
-    if (ss->noCache) {
+    if (ss->opt.noCache) {
 	sid = NULL;
     } else {
 	sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID, 
@@ -3043,15 +3043,15 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     }
     while (sid) {  /* this isn't really a loop */
 	/* if we're not doing this SID's protocol any more, drop it. */
-	if (((sid->version  < SSL_LIBRARY_VERSION_3_0) && !ss->enableSSL2) ||
-	    ((sid->version == SSL_LIBRARY_VERSION_3_0) && !ss->enableSSL3) ||
-	    ((sid->version >  SSL_LIBRARY_VERSION_3_0) && !ss->enableTLS)) {
+	if (((sid->version  < SSL_LIBRARY_VERSION_3_0) && !ss->opt.enableSSL2) ||
+	    ((sid->version == SSL_LIBRARY_VERSION_3_0) && !ss->opt.enableSSL3) ||
+	    ((sid->version >  SSL_LIBRARY_VERSION_3_0) && !ss->opt.enableTLS)) {
 	    ss->sec.uncache(sid);
 	    ssl_FreeSID(sid);
 	    sid = NULL;
 	    break;
 	}
-	if (ss->enableSSL2 && sid->version < SSL_LIBRARY_VERSION_3_0) {
+	if (ss->opt.enableSSL2 && sid->version < SSL_LIBRARY_VERSION_3_0) {
 	    /* If the cipher in this sid is not enabled, drop it. */
 	    for (i = 0; i < ss->sizeCipherSpecs; i += 3) {
 		if (ss->cipherSpecs[i] == sid->u.ssl2.cipherType)
@@ -3096,8 +3096,8 @@ ssl2_BeginClientHandshake(sslSocket *ss)
 
     PORT_Assert(sid != NULL);
 
-    if ((sid->version >= SSL_LIBRARY_VERSION_3_0 || !ss->v2CompatibleHello) &&
-        (ss->enableSSL3 || ss->enableTLS)) {
+    if ((sid->version >= SSL_LIBRARY_VERSION_3_0 || !ss->opt.v2CompatibleHello) &&
+        (ss->opt.enableSSL3 || ss->opt.enableTLS)) {
 
 	ss->gs.state      = GS_INIT;
 	ss->handshake     = ssl_GatherRecord1stHandshake;
@@ -3138,9 +3138,9 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     /* Construct client-hello message */
     cp = msg = ss->sec.ci.sendBuf.buf;
     msg[0] = SSL_MT_CLIENT_HELLO;
-    if ( ss->enableTLS ) {
+    if ( ss->opt.enableTLS ) {
 	ss->clientHelloVersion = SSL_LIBRARY_VERSION_3_1_TLS;
-    } else if ( ss->enableSSL3 ) {
+    } else if ( ss->opt.enableSSL3 ) {
 	ss->clientHelloVersion = SSL_LIBRARY_VERSION_3_0;
     } else {
 	ss->clientHelloVersion = SSL_LIBRARY_VERSION_2;
@@ -3441,7 +3441,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 #endif
     PRUint8         csImpl[sizeof implementedCipherSuites];
 
-    PORT_Assert( ssl_Have1stHandshakeLock(ss) );
+    PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
     sc = ss->serverCerts + kt_rsa;
     serverCert = sc->serverCert;
@@ -3470,7 +3470,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
      */
     if ((data[0] == SSL_MT_CLIENT_HELLO) && 
         (data[1] >= MSB(SSL_LIBRARY_VERSION_3_0)) && 
-	(ss->enableSSL3 || ss->enableTLS)) {
+	(ss->opt.enableSSL3 || ss->opt.enableTLS)) {
 	rv = ssl3_HandleV2ClientHello(ss, data, ss->gs.recordLen);
 	if (rv != SECFailure) { /* Success */
 	    ss->handshake             = NULL;
@@ -3558,7 +3558,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	  goto loser;
 	}
 	/* Since this handhsake is going to fail, don't cache it. */
-	ss->noCache = 1; 
+	ss->opt.noCache = 1; 
     }
 
     /* Squirrel away the challenge for later */
@@ -3566,7 +3566,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 
     /* Examine message and see if session-id is good */
     ss->sec.ci.elements = 0;
-    if (sdLen > 0 && !ss->noCache) {
+    if (sdLen > 0 && !ss->opt.noCache) {
 	SSL_TRC(7, ("%d: SSL[%d]: server, lookup client session-id for 0x%08x%08x%08x%08x",
 		    SSL_GETPID(), ss->fd, ss->sec.ci.peer.pr_s6_addr32[0],
 		    ss->sec.ci.peer.pr_s6_addr32[1], 
@@ -3648,7 +3648,7 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 
     /* Build up final list of required elements */
     ss->sec.ci.requiredElements = CIS_HAVE_MASTER_KEY | CIS_HAVE_FINISHED;
-    if (ss->requestCertificate) {
+    if (ss->opt.requestCertificate) {
 	ss->sec.ci.requiredElements |= CIS_HAVE_CERTIFICATE;
     }
     ss->sec.ci.sentElements = 0;
@@ -3742,8 +3742,8 @@ ssl2_BeginServerHandshake(sslSocket *ss)
     ss->sec.rcvSequence = 0;
 
     /* don't turn on SSL2 if we don't have an RSA key and cert */
-    if (!rsaAuth->serverKey || !rsaAuth->serverCert) {
-	ss->enableSSL2 = PR_FALSE;
+    if (!rsaAuth->SERVERKEY || !rsaAuth->serverCert) {
+	ss->opt.enableSSL2 = PR_FALSE;
     }
 
     if (!ss->cipherSpecs) {

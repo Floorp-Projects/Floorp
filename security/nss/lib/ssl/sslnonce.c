@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslnonce.c,v 1.16 2004/12/17 02:01:35 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslnonce.c,v 1.17 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -193,7 +193,7 @@ ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID,
 		     PORT_Strcmp(sid->peerID, peerID) == 0)) &&
 		   /* is cacheable */
 		   (sid->version < SSL_LIBRARY_VERSION_3_0 ||
-		    sid->u.ssl3.resumable) &&
+		    sid->u.ssl3.keys.resumable) &&
 		   /* server hostname matches. */
 	           (sid->urlSvrName != NULL) &&
 		   ((0 == PORT_Strcmp(urlSvrName, sid->urlSvrName)) ||

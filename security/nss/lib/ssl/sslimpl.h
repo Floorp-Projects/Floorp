@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.39 2005/08/16 03:42:26 nelsonb%netscape.com Exp $ */
+/* $Id: sslimpl.h,v 1.40 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -93,6 +93,10 @@ typedef SSLSignType     SSL3SignType;
 #define hmac_md5	ssl_hmac_md5
 #define hmac_sha	ssl_hmac_sha
 
+#define SET_ERROR_CODE		/* reminder */
+#define SEND_ALERT		/* reminder */
+#define TEST_FOR_FAILURE	/* reminder */
+#define DEAL_WITH_FAILURE	/* reminder */
 
 #if defined(DEBUG) || defined(TRACE)
 #ifdef __cplusplus
@@ -162,11 +166,16 @@ typedef enum { SSLAppOpRead = 0,
 
 #define SSL_MAX_MAC_BYTES		16
 
+#define SSL3_RSA_PMS_LENGTH 48
+#define SSL3_MASTER_SECRET_LENGTH 48
+
 /* number of wrap mechanisms potentially used to wrap master secrets. */
 #define SSL_NUM_WRAP_MECHS              13
 
 /* This makes the cert cache entry exactly 4k. */
 #define SSL_MAX_CACHED_CERT_LEN		4060
+
+#define NUM_MIXERS                      9
 
 #ifndef BPB
 #define BPB 8 /* Bits Per Byte */
@@ -281,6 +290,8 @@ typedef struct sslOptionsStr {
     unsigned int v2CompatibleHello	: 1;  /* 13 */
     unsigned int detectRollBack  	: 1;  /* 14 */
     unsigned int noStepDown             : 1;  /* 15 */
+    unsigned int bypassPKCS11           : 1;  /* 16 */
+    unsigned int noLocks                : 1;  /* 17 */
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -292,10 +303,11 @@ typedef struct sslServerCertsStr {
     /* Configuration state for server sockets */
     CERTCertificate *     serverCert;
     CERTCertificateList * serverCertChain;
-    SECKEYPrivateKey *    serverKey;
+    ssl3KeyPair *         serverKeyPair;
     unsigned int          serverKeyBits;
 } sslServerCerts;
 
+#define SERVERKEY serverKeyPair->privKey
 
 #define SSL_LOCK_RANK_SPEC 	255
 #define SSL_LOCK_RANK_GLOBAL 	NSS_RWLOCK_RANK_NONE
@@ -432,21 +444,31 @@ typedef struct {
     uint32         low;
 } SSL3SequenceNumber;
 
-typedef struct {
-    SSL3Opaque write_iv[MAX_IV_LENGTH];
-    PK11SymKey *write_key;
-    PK11SymKey *write_mac_key;
-    PK11Context *write_mac_context;
-} ssl3KeyMaterial;
+#define MAX_MAC_CONTEXT_BYTES 400
+#define MAX_MAC_CONTEXT_LLONGS (MAX_MAC_CONTEXT_BYTES / 8)
+
+#define MAX_CIPHER_CONTEXT_BYTES 2080
+#define MAX_CIPHER_CONTEXT_LLONGS (MAX_CIPHER_CONTEXT_BYTES / 8)
 
 typedef struct {
-    SSL3Opaque        wrapped_client_write_key[12]; /* wrapped with Ks */
-    SSL3Opaque        wrapped_server_write_key[12]; /* wrapped with Ks */
     SSL3Opaque        client_write_iv         [24];
     SSL3Opaque        server_write_iv         [24];
     SSL3Opaque        wrapped_master_secret   [48];
     PRUint16          wrapped_master_secret_len;
-} ssl3SidKeys;
+    PRUint8           msIsWrapped;
+    PRUint8           resumable;
+} ssl3SidKeys; /* 100 bytes */
+
+typedef struct {
+    PK11SymKey  *write_key;
+    PK11SymKey  *write_mac_key;
+    PK11Context *write_mac_context;
+    SECItem     write_key_item;
+    SECItem     write_iv_item;
+    SECItem     write_mac_key_item;
+    SSL3Opaque  write_iv[MAX_IV_LENGTH];
+    PRUint64    cipher_context[MAX_CIPHER_CONTEXT_LLONGS];
+} ssl3KeyMaterial;
 
 /*
 ** These are the "specs" in the "ssl3" struct.
@@ -458,16 +480,20 @@ typedef struct {
     const ssl3MACDef * mac_def;
     int                mac_size;
     SSLCipher          encode;
-    void *             encodeContext;
     SSLCipher          decode;
-    void *             decodeContext;
     SSLDestroy         destroy;
+    void *             encodeContext;
+    void *             decodeContext;
+    PRBool             bypassCiphers;	/* did double bypass (at least) */
     PK11SymKey *       master_secret;
-    ssl3KeyMaterial    client;
-    ssl3KeyMaterial    server;
     SSL3SequenceNumber write_seq_num;
     SSL3SequenceNumber read_seq_num;
     SSL3ProtocolVersion version;
+    ssl3KeyMaterial    client;
+    ssl3KeyMaterial    server;
+    SECItem            msItem;
+    unsigned char      key_block[NUM_MIXERS * MD5_LENGTH];
+    unsigned char      raw_master_secret[56];
 } ssl3CipherSpec;
 
 typedef enum {	never_cached, 
@@ -519,7 +545,6 @@ struct sslSessionIDStr {
 
 	    ssl3CipherSuite       cipherSuite;
 	    SSL3CompressionMethod compression;
-	    PRBool                resumable;
 	    int                   policy;
 	    ssl3SidKeys           keys;
 	    CK_MECHANISM_TYPE     masterWrapMech;
@@ -533,7 +558,6 @@ struct sslSessionIDStr {
 	     */
  	    PK11SymKey *      clientWriteKey;
 	    PK11SymKey *      serverWriteKey;
-	    PK11SymKey *      tek;
 
 	    /* The following values pertain to the slot that wrapped the 
 	    ** master secret. (used only in client)
@@ -631,6 +655,8 @@ typedef struct SSL3HandshakeStateStr {
     SSL3Random            server_random;
     SSL3Random            client_random;
     SSL3WaitState         ws;
+    PRUint64              md5_cx[MAX_MAC_CONTEXT_LLONGS];
+    PRUint64              sha_cx[MAX_MAC_CONTEXT_LLONGS];
     PK11Context *         md5;            /* handshake running hashes */
     PK11Context *         sha;
 const ssl3KEADef *        kea_def;
@@ -673,9 +699,6 @@ struct ssl3StateStr {
     ssl3CipherSpec *     prSpec; 	/* pending read spec. */
     ssl3CipherSpec *     cwSpec; 	/* current write spec. */
     ssl3CipherSpec *     pwSpec; 	/* pending write spec. */
-    ssl3CipherSpec       specs[2];	/* one is current, one is pending. */
-
-    SSL3HandshakeState   hs;
 
     CERTCertificate *    clientCertificate;  /* used by client */
     SECKEYPrivateKey *   clientPrivateKey;   /* used by client */
@@ -692,7 +715,9 @@ struct ssl3StateStr {
 			    /* chain while we are trying to validate it.   */
     CERTDistNames *      ca_list; 
 			    /* used by server.  trusted CAs for this socket. */
-
+    PRBool               initialized;
+    SSL3HandshakeState   hs;
+    ssl3CipherSpec       specs[2];	/* one is current, one is pending. */
 };
 
 typedef struct {
@@ -739,7 +764,7 @@ typedef struct SSLWrappedSymWrappingKeyStr {
  */
 
 /*
-** This is "ci", as in "ss->sec->ci".
+** This is "ci", as in "ss->sec.ci".
 **
 ** Protection:  All the variables in here are protected by 
 ** firstHandshakeLock AND (in ssl3) ssl3HandshakeLock 
@@ -861,30 +886,17 @@ struct sslSocketStr {
     /* Pointer to operations vector for this socket */
     const sslSocketOps * ops;
 
+    /* SSL socket options */
+    sslOptions       opt;
+
     /* State flags */
-    unsigned int     useSocks		: 1;
-    unsigned int     useSecurity	: 1;
-    unsigned int     requestCertificate	: 1;
-    unsigned int     requireCertificate	: 2;
-    unsigned int     handshakeAsClient	: 1;
-    unsigned int     handshakeAsServer	: 1;
-    unsigned int     enableSSL2		: 1;
-
-    unsigned int     enableSSL3		: 1;
-    unsigned int     enableTLS		: 1;
-    unsigned int     clientAuthRequested: 1;
-    unsigned int     noCache		: 1;
-    unsigned int     fdx		: 1; /* simultaneous R/W threads */
-    unsigned int     v2CompatibleHello	: 1; /* Send v3+ client hello in v2 format */
-    unsigned int     detectRollBack   	: 1; /* Detect rollback to SSL v3 */
-    unsigned int     firstHsDone	: 1; /* first handshake is complete. */
-
-    unsigned int     recvdCloseNotify	: 1; /* received SSL EOF. */
-    unsigned int     lastWriteBlocked   : 1;
-    unsigned int     TCPconnected       : 1;
-    unsigned int     handshakeBegun     : 1;
-    unsigned int     delayDisabled      : 1; /* Nagle delay disabled */
-    unsigned int     noStepDown         : 1;
+    unsigned long    clientAuthRequested;
+    unsigned long    delayDisabled;       /* Nagle delay disabled */
+    unsigned long    firstHsDone;         /* first handshake is complete. */
+    unsigned long    handshakeBegun;     
+    unsigned long    lastWriteBlocked;   
+    unsigned long    recvdCloseNotify;    /* received SSL EOF. */
+    unsigned long    TCPconnected;       
 
     /* version of the protocol to use */
     SSL3ProtocolVersion version;
@@ -895,27 +907,16 @@ struct sslSocketStr {
     /* protected by firstHandshakeLock AND (in ssl3) ssl3HandshakeLock. */
     const char      *url;				/* ssl 2 & 3 */
 
-    /* Gather object used for gathering data */
-    sslGather        gs;				/*recvBufLock*/
-
     sslHandshakeFunc handshake;				/*firstHandshakeLock*/
     sslHandshakeFunc nextHandshake;			/*firstHandshakeLock*/
     sslHandshakeFunc securityHandshake;			/*firstHandshakeLock*/
 
-    sslBuffer        saveBuf;				/*xmitBufLock*/
-    sslBuffer        pendingBuf;			/*xmitBufLock*/
-
     /* the following variable is only used with socks or other proxies. */
     char *           peerID;	/* String uniquely identifies target server. */
 
-    ssl3State *      ssl3;
     unsigned char *  cipherSpecs;
     unsigned int     sizeCipherSpecs;
 const unsigned char *  preferredCipher;
-
-    /* Configuration state for server sockets */
-    /* server cert and key for each KEA type */
-    sslServerCerts        serverCerts[kt_kea_size];
 
     ssl3KeyPair *         stepDownKeyPair;	/* RSA step down keys */
 
@@ -971,8 +972,21 @@ const unsigned char *  preferredCipher;
 
     sslHandshakingType handshaking;
 
+    /* Gather object used for gathering data */
+    sslGather        gs;				/*recvBufLock*/
+
+    sslBuffer        saveBuf;				/*xmitBufLock*/
+    sslBuffer        pendingBuf;			/*xmitBufLock*/
+
+    /* Configuration state for server sockets */
+    /* server cert and key for each KEA type */
+    sslServerCerts        serverCerts[kt_kea_size];
+
     ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED];
     ssl3KeyPair *         ephemeralECDHKeyPair; /* for ECDHE-* handshake */
+
+    /* SSL3 state info.  Formerly was a pointer */
+    ssl3State        ssl3;
 };
 
 
@@ -1062,7 +1076,7 @@ extern int         ssl2_StartGatherBytes(sslSocket *ss, sslGather *gs,
 
 extern SECStatus   ssl_CreateSecurityInfo(sslSocket *ss);
 extern SECStatus   ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os);
-extern void        ssl_ResetSecurityInfo(sslSecurityInfo *sec);
+extern void        ssl_ResetSecurityInfo(sslSecurityInfo *sec, PRBool doMemset);
 extern void        ssl_DestroySecurityInfo(sslSecurityInfo *sec);
 
 extern sslSocket * ssl_DupSocket(sslSocket *old);
@@ -1099,33 +1113,57 @@ extern void      ssl_SetAlwaysBlock(sslSocket *ss);
 extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
 
 #define SSL_LOCK_READER(ss)		if (ss->recvLock) PZ_Lock(ss->recvLock)
-#define SSL_UNLOCK_READER(ss)	if (ss->recvLock) PZ_Unlock(ss->recvLock)
+#define SSL_UNLOCK_READER(ss)		if (ss->recvLock) PZ_Unlock(ss->recvLock)
 #define SSL_LOCK_WRITER(ss)		if (ss->sendLock) PZ_Lock(ss->sendLock)
-#define SSL_UNLOCK_WRITER(ss)	if (ss->sendLock) PZ_Unlock(ss->sendLock)
+#define SSL_UNLOCK_WRITER(ss)		if (ss->sendLock) PZ_Unlock(ss->sendLock)
 
-#define ssl_Get1stHandshakeLock(ss)    PZ_EnterMonitor((ss)->firstHandshakeLock)
-#define ssl_Release1stHandshakeLock(ss) PZ_ExitMonitor((ss)->firstHandshakeLock)
-#define ssl_Have1stHandshakeLock(ss)	PZ_InMonitor(  (ss)->firstHandshakeLock)
+#define ssl_Get1stHandshakeLock(ss)     \
+    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->firstHandshakeLock); }
+#define ssl_Release1stHandshakeLock(ss) \
+    { if (!ss->opt.noLocks) PZ_ExitMonitor((ss)->firstHandshakeLock); }
+#define ssl_Have1stHandshakeLock(ss)    \
+    (PZ_InMonitor((ss)->firstHandshakeLock))
 
-#define ssl_GetSSL3HandshakeLock(ss)	PZ_EnterMonitor((ss)->ssl3HandshakeLock)
-#define ssl_ReleaseSSL3HandshakeLock(ss) PZ_ExitMonitor((ss)->ssl3HandshakeLock)
-#define ssl_HaveSSL3HandshakeLock(ss)	PZ_InMonitor(   (ss)->ssl3HandshakeLock)
+#define ssl_GetSSL3HandshakeLock(ss)	\
+    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->ssl3HandshakeLock); }
+#define ssl_ReleaseSSL3HandshakeLock(ss) \
+    { if (!ss->opt.noLocks) PZ_ExitMonitor((ss)->ssl3HandshakeLock); }
+#define ssl_HaveSSL3HandshakeLock(ss)	\
+    (PZ_InMonitor((ss)->ssl3HandshakeLock))
 
-#define ssl_GetSpecReadLock(ss)		NSSRWLock_LockRead(     (ss)->specLock)
-#define ssl_ReleaseSpecReadLock(ss)	NSSRWLock_UnlockRead(   (ss)->specLock)
+#define ssl_GetSpecReadLock(ss)		\
+    { if (!ss->opt.noLocks) NSSRWLock_LockRead((ss)->specLock); }
+#define ssl_ReleaseSpecReadLock(ss)	\
+    { if (!ss->opt.noLocks) NSSRWLock_UnlockRead((ss)->specLock); }
 
-#define ssl_GetSpecWriteLock(ss)	NSSRWLock_LockWrite(  (ss)->specLock)
-#define ssl_ReleaseSpecWriteLock(ss)	NSSRWLock_UnlockWrite((ss)->specLock)
-#define ssl_HaveSpecWriteLock(ss)	NSSRWLock_HaveWriteLock((ss)->specLock)
+#define ssl_GetSpecWriteLock(ss)	\
+    { if (!ss->opt.noLocks) NSSRWLock_LockWrite((ss)->specLock); }
+#define ssl_ReleaseSpecWriteLock(ss)	\
+    { if (!ss->opt.noLocks) NSSRWLock_UnlockWrite((ss)->specLock); }
+#define ssl_HaveSpecWriteLock(ss)	\
+    (NSSRWLock_HaveWriteLock((ss)->specLock))
 
-#define ssl_GetRecvBufLock(ss)		PZ_EnterMonitor((ss)->recvBufLock)
-#define ssl_ReleaseRecvBufLock(ss)	PZ_ExitMonitor( (ss)->recvBufLock)
-#define ssl_HaveRecvBufLock(ss)		PZ_InMonitor(   (ss)->recvBufLock)
+#define ssl_GetRecvBufLock(ss)		\
+    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->recvBufLock); }
+#define ssl_ReleaseRecvBufLock(ss)	\
+    { if (!ss->opt.noLocks) PZ_ExitMonitor( (ss)->recvBufLock); }
+#define ssl_HaveRecvBufLock(ss)		\
+    (PZ_InMonitor((ss)->recvBufLock))
 
-#define ssl_GetXmitBufLock(ss)		PZ_EnterMonitor((ss)->xmitBufLock)
-#define ssl_ReleaseXmitBufLock(ss)	PZ_ExitMonitor( (ss)->xmitBufLock)
-#define ssl_HaveXmitBufLock(ss)		PZ_InMonitor(   (ss)->xmitBufLock)
+#define ssl_GetXmitBufLock(ss)		\
+    { if (!ss->opt.noLocks) PZ_EnterMonitor((ss)->xmitBufLock); }
+#define ssl_ReleaseXmitBufLock(ss)	\
+    { if (!ss->opt.noLocks) PZ_ExitMonitor( (ss)->xmitBufLock); }
+#define ssl_HaveXmitBufLock(ss)		\
+    (PZ_InMonitor((ss)->xmitBufLock))
 
+
+extern SECStatus ssl3_KeyAndMacDeriveBypass(ssl3CipherSpec * pwSpec,
+		    const unsigned char * cr, const unsigned char * sr,
+		    PRBool isTLS, PRBool isExport);
+extern  SECStatus ssl3_MasterKeyDeriveBypass( ssl3CipherSpec * pwSpec,
+		    const unsigned char * cr, const unsigned char * sr,
+		    const SECItem * pms, PRBool isTLS, PRBool isRSA);
 
 /* These functions are called from secnav, even though they're "private". */
 
@@ -1208,12 +1246,45 @@ extern SECStatus ssl3_ConstructV2CipherSpecsHack(sslSocket *ss,
 
 extern SECStatus ssl3_RedoHandshake(sslSocket *ss, PRBool flushCache);
 
-extern void ssl3_DestroySSL3Info(ssl3State *ssl3);
+extern void ssl3_DestroySSL3Info(sslSocket *ss);
 
 extern SECStatus ssl3_NegotiateVersion(sslSocket *ss, 
                                        SSL3ProtocolVersion peerVersion);
 
 extern SECStatus ssl_GetPeerInfo(sslSocket *ss);
+
+#ifdef NSS_ENABLE_ECC
+/* ECDH functions */
+extern SECStatus ssl3_SendECDHClientKeyExchange(sslSocket * ss, 
+			     SECKEYPublicKey * svrPubKey);
+extern SECStatus ssl3_HandleECDHServerKeyExchange(sslSocket *ss, 
+					SSL3Opaque *b, PRUint32 length);
+extern SECStatus ssl3_HandleECDHClientKeyExchange(sslSocket *ss, 
+				     SSL3Opaque *b, PRUint32 length,
+                                     SECKEYPublicKey *srvrPubKey,
+                                     SECKEYPrivateKey *srvrPrivKey);
+extern SECStatus ssl3_SendECDHServerKeyExchange(sslSocket *ss);
+#endif
+
+extern SECStatus ssl3_ComputeCommonKeyHash(PRUint8 * hashBuf, 
+				unsigned int bufLen, SSL3Hashes *hashes, 
+				PRBool bypassPKCS11);
+extern SECStatus ssl3_InitPendingCipherSpec(sslSocket *ss, PK11SymKey *pms);
+extern SECStatus ssl3_AppendHandshake(sslSocket *ss, const void *void_src, 
+			PRInt32 bytes);
+extern SECStatus ssl3_AppendHandshakeHeader(sslSocket *ss, 
+			SSL3HandshakeType t, PRUint32 length);
+extern SECStatus ssl3_AppendHandshakeVariable( sslSocket *ss, 
+			const SSL3Opaque *src, PRInt32 bytes, PRInt32 lenSize);
+extern SECStatus ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRInt32 bytes, 
+			SSL3Opaque **b, PRUint32 *length);
+extern SECStatus ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i, 
+			PRInt32 bytes, SSL3Opaque **b, PRUint32 *length);
+extern SECStatus ssl3_SignHashes(SSL3Hashes *hash, SECKEYPrivateKey *key, 
+			SECItem *buf, PRBool isTLS);
+extern SECStatus ssl3_VerifySignedHashes(SSL3Hashes *hash, 
+			CERTCertificate *cert, SECItem *buf, PRBool isTLS, 
+			void *pwArg);
 
 /* Construct a new NSPR socket for the app to use */
 extern PRFileDesc *ssl_NewPRSocket(sslSocket *ss, PRFileDesc *fd);

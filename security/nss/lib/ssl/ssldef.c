@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssldef.c,v 1.9 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: ssldef.c,v 1.10 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -117,7 +117,7 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     /* Although this is overkill, we disable Nagle delays completely for 
     ** SSL sockets.
     */
-    if (ss->useSecurity && !ss->delayDisabled) {
+    if (ss->opt.useSecurity && !ss->delayDisabled) {
 	ssl_EnableNagleDelay(ss, PR_FALSE);   /* ignore error */
     	ss->delayDisabled = 1;
     }

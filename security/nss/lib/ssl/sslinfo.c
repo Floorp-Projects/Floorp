@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslinfo.c,v 1.13 2005/09/06 17:15:32 glen.beasley%sun.com Exp $ */
+/* $Id: sslinfo.c,v 1.14 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
@@ -60,17 +60,17 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
     memset(&inf, 0, sizeof inf);
     inf.length = PR_MIN(sizeof inf, len);
 
-    if (ss->useSecurity && ss->firstHsDone) {
+    if (ss->opt.useSecurity && ss->firstHsDone) {
         sid = ss->sec.ci.sid;
 	inf.protocolVersion  = ss->version;
 	inf.authKeyBits      = ss->sec.authKeyBits;
 	inf.keaKeyBits       = ss->sec.keaKeyBits;
 	if (ss->version < SSL_LIBRARY_VERSION_3_0) { /* SSL2 */
 	    inf.cipherSuite      = ss->sec.cipherType | 0xff00;
-	} else if (ss->ssl3) { 		/* SSL3 and TLS */
+	} else if (ss->ssl3.initialized) { 	/* SSL3 and TLS */
 
 	    /* XXX  These should come from crSpec */
-	    inf.cipherSuite      = ss->ssl3->hs.cipher_suite;
+	    inf.cipherSuite      = ss->ssl3.hs.cipher_suite;
 	}
 	if (sid) {
 	    inf.creationTime   = sid->creationTime;
@@ -78,7 +78,8 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
 	    inf.expirationTime = sid->expirationTime;
 	    if (ss->version < SSL_LIBRARY_VERSION_3_0) { /* SSL2 */
 	        inf.sessionIDLength = SSL2_SESSIONID_BYTES;
-		memcpy(inf.sessionID, sid->u.ssl2.sessionID, SSL2_SESSIONID_BYTES);
+		memcpy(inf.sessionID, sid->u.ssl2.sessionID, 
+		       SSL2_SESSIONID_BYTES);
 	    } else {
 		unsigned int sidLen = sid->u.ssl3.sessionIDLength;
 	        sidLen = PR_MIN(sidLen, sizeof inf.sessionID);
