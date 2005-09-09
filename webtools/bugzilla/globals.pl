@@ -669,7 +669,7 @@ sub quoteUrls {
               ~<a href=\"mailto:$2\">$1$2</a>~igx;
 
     # attachment links - handle both cases separately for simplicity
-    $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\))
+    $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\)(\s\[edit\])?)
               ~($things[$count++] = GetAttachmentLink($2, $1)) &&
                ("\0\0" . ($count-1) . "\0\0")
               ~egmx;
@@ -752,8 +752,13 @@ sub GetAttachmentLink {
     my ($title, $className) = @{$::attachlink{$attachid}};
     # $title will be undefined if the attachment didn't exist in the database.
     if (defined $title) {
-        my $linkval = "attachment.cgi?id=$attachid&amp;action=edit";
-        return qq{<a href="$linkval" class="$className" title="$title">$link_text</a>};
+        $link_text =~ s/ \[edit\]$//;
+        my $linkval = "attachment.cgi?id=$attachid&amp;action=";
+        # Whitespace matters here because these links are in <pre> tags.
+        return qq|<span class="$className">|
+               . qq|<a href="${linkval}view" title="$title">$link_text</a>|
+               . qq| <a href="${linkval}edit" title="$title">[edit]</a>|
+               . qq|</span>|;
     }
     else {
         return qq{$link_text};
