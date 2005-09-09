@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE	= calendar
 DIRS = libical resources base providers import-export
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq ($(OS_ARCH),Darwin)
 DIRS += xpi
 endif
 
