@@ -334,7 +334,10 @@ const int kReuseWindowOnAE = 2;
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-  return [[ProgressDlgController sharedDownloadController] allowTerminate];
+  ProgressDlgController* progressWindowController = [ProgressDlgController existingSharedDownloadController];
+  if (progressWindowController)
+    return [progressWindowController allowTerminate];
+  return NSTerminateNow;
 }
 
 -(void)applicationWillTerminate: (NSNotification*)aNotification

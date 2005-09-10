@@ -89,7 +89,8 @@
   int                   mSelectionPivotIndex;
 }
 
-+(ProgressDlgController *)sharedDownloadController;
++(ProgressDlgController *)sharedDownloadController;           // creates if necessary
++(ProgressDlgController *)existingSharedDownloadController;   // doesn't create
 
 -(IBAction)cancel:(id)sender;
 -(IBAction)remove:(id)sender;

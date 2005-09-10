@@ -74,6 +74,11 @@ static id gSharedProgressController = nil;
   return gSharedProgressController;
 }
 
++(ProgressDlgController *)existingSharedDownloadController
+{
+  return gSharedProgressController;
+}
+
 -(id)init
 {
   if ((self == [super initWithWindowNibName:@"ProgressDialog"])) {
