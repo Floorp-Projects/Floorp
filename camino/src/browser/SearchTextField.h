@@ -55,7 +55,6 @@
 - (BOOL)becomeFirstResponder;
 - (void)selectText:(id)sender;
 
-- (void)setIsSmall:(BOOL)small;
 - (BOOL)hasPopUpButton;
 - (void)setHasPopUpButton:(BOOL)aBoolean;
 

@@ -124,23 +124,6 @@
   [super selectText:sender];  
 }
 
-- (void)setIsSmall:(BOOL)small
-{
-  // XXX we need to provide smaller icons to make the small variant look better
-  if (small)
-  {
-    NSFont* smallFont = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-    [[self cell] setFont:smallFont];
-    [[[self cell] popUpButtonCell] setFont:smallFont];
-  }
-  else
-  {
-    NSFont* normalFont = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-    [[self cell] setFont:normalFont];
-    [[[self cell] popUpButtonCell] setFont:normalFont];
-  }
-}
-
 - (BOOL)hasPopUpButton
 {
   return [[self cell] hasPopUpButton];

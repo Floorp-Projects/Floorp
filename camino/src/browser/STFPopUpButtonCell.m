@@ -119,6 +119,20 @@
   [super selectItemWithTitle:title];
 }
 
+- (void)setControlSize:(NSControlSize)inSize
+{
+  [super setControlSize:inSize];
+
+  if (inSize == NSSmallControlSize)
+  {
+    [self setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
+  }
+  else
+  {
+    [self setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
+  }
+}
+
 @end
 
 

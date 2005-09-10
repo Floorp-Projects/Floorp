@@ -47,18 +47,18 @@
 
 @interface SearchTextFieldCell : NSTextFieldCell
 {
-  BOOL hasPopUpButton;
-  STFPopUpButtonCell *popUpButtonCell;
+  BOOL      mHasPopUpButton;
+  STFPopUpButtonCell *mPopUpButtonCell;
 
-  NSImage *_leftImage;
-  NSImage *_middleImage;
-  NSImage *_rightImage;
-  NSImage *_popUpImage;
-  NSImage *_noPopUpImage;
-  NSImage *_cancelImage;
+  NSImage*  mLeftImage;
+  NSImage*  mMiddleImage;
+  NSImage*  mRightImage;
+  NSImage*  mPopUpImage;
+  NSImage*  mNoPopUpImage;
+  NSImage*  mCancelImage;
 
-  BOOL _shouldShowCancelButton;
-  BOOL _shouldShowSelectedPopUpItem;
+  BOOL      mShouldShowCancelButton;
+  BOOL      mShouldShowSelectedPopUpItem;
 }
 
 - (id)initWithCoder:(NSCoder *)coder;

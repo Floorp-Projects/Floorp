@@ -44,6 +44,4 @@ extern NSString* const PopupMenuButtonWillDisplayMenu;
 {
 }
 
-- (void)setIsSmall:(BOOL)small;
-
 @end

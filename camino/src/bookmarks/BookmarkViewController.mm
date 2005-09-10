@@ -292,7 +292,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [mHistoryOutlineView setAutosaveTableColumns:YES];
   [mHistoryOutlineView setAutosaveTableSort:YES];
 
-  [mSearchField setIsSmall:YES];
+  [[mSearchField cell] setControlSize:NSSmallControlSize];
   
   mSetupComplete = YES;
 }

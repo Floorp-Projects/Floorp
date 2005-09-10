@@ -114,18 +114,4 @@ NSString* const PopupMenuButtonWillDisplayMenu = @"PopupMenuButtonWillDisplayMen
   [[self cell] setHighlighted:NO];
 }
 
-- (void)setIsSmall:(BOOL)small
-{
-  if (small)
-  {
-    NSFont* smallFont = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-    [[self cell] setFont:smallFont];
-  }
-  else
-  {
-    NSFont* normalFont = [NSFont systemFontOfSize:[NSFont systemFontSize]];
-    [[self cell] setFont:normalFont];
-  }
-}
-
 @end

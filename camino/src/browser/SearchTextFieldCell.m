@@ -43,36 +43,24 @@
 const float STFSymbolXOffset = 4.0;
 const float STFSymbolYOffset = 4.0;
 
-@interface SearchTextFieldCell(PrivateMethods)
-
-+ (NSImage *)cachedLeftImage;
-+ (NSImage *)cachedMiddleImage;
-+ (NSImage *)cachedRightImage;
-+ (NSImage *)cachedPopUpImage;
-+ (NSImage *)cachedNoPopUpImage;
-+ (NSImage *)cachedCancelImage;
-
-@end
-
-
 @implementation SearchTextFieldCell
 
 - (id)initWithCoder:(NSCoder *)coder
 {
-  [super initWithCoder:coder];
-
-  [coder decodeValueOfObjCType:@encode(BOOL) at:&hasPopUpButton];
-  popUpButtonCell = [[coder decodeObject] retain];
-  _leftImage = [[coder decodeObject] retain];
-  _middleImage = [[coder decodeObject] retain];
-  _rightImage = [[coder decodeObject] retain];
-  _popUpImage = [[coder decodeObject] retain];
-  _noPopUpImage = [[coder decodeObject] retain];
-  _cancelImage = [[coder decodeObject] retain];
-  [coder decodeValueOfObjCType:@encode(BOOL) at:&_shouldShowCancelButton];
-  [coder decodeValueOfObjCType:@encode(BOOL) at:&_shouldShowSelectedPopUpItem];
-  [self setStringValue:[coder decodeObject]];
-
+  if ((self = [super initWithCoder:coder]))
+  {
+    [coder decodeValueOfObjCType:@encode(BOOL) at:&mHasPopUpButton];
+    mPopUpButtonCell = [[coder decodeObject] retain];
+    mLeftImage    = [[coder decodeObject] retain];
+    mMiddleImage  = [[coder decodeObject] retain];
+    mRightImage   = [[coder decodeObject] retain];
+    mPopUpImage   = [[coder decodeObject] retain];
+    mNoPopUpImage = [[coder decodeObject] retain];
+    mCancelImage  = [[coder decodeObject] retain];
+    [coder decodeValueOfObjCType:@encode(BOOL) at:&mShouldShowCancelButton];
+    [coder decodeValueOfObjCType:@encode(BOOL) at:&mShouldShowSelectedPopUpItem];
+    [self setStringValue:[coder decodeObject]];
+  }
   return self;
 }
 
@@ -80,41 +68,41 @@ const float STFSymbolYOffset = 4.0;
 {
   [super encodeWithCoder:coder];
 
-  [coder encodeValueOfObjCType:@encode(BOOL) at:&hasPopUpButton];
-  [coder encodeObject:popUpButtonCell];
-  [coder encodeObject:_leftImage];
-  [coder encodeObject:_middleImage];
-  [coder encodeObject:_rightImage];
-  [coder encodeObject:_popUpImage];
-  [coder encodeObject:_noPopUpImage];
-  [coder encodeObject:_cancelImage];
-  [coder encodeValueOfObjCType:@encode(BOOL) at:&_shouldShowCancelButton];
-  [coder encodeValueOfObjCType:@encode(BOOL) at:&_shouldShowSelectedPopUpItem];
+  [coder encodeValueOfObjCType:@encode(BOOL) at:&mHasPopUpButton];
+  [coder encodeObject:mPopUpButtonCell];
+  [coder encodeObject:mLeftImage];
+  [coder encodeObject:mMiddleImage];
+  [coder encodeObject:mRightImage];
+  [coder encodeObject:mPopUpImage];
+  [coder encodeObject:mNoPopUpImage];
+  [coder encodeObject:mCancelImage];
+  [coder encodeValueOfObjCType:@encode(BOOL) at:&mShouldShowCancelButton];
+  [coder encodeValueOfObjCType:@encode(BOOL) at:&mShouldShowSelectedPopUpItem];
   [coder encodeObject:[self stringValue]];
 }
 
 - (id)initTextCell:(NSString *)aString
 {
-  [super initTextCell:aString];
+  if ((self = [super initTextCell:aString]))
+  {
+    mLeftImage    = [[NSImage imageNamed:@"SearchLeft"] retain];
+    mMiddleImage  = [[NSImage imageNamed:@"SearchMiddle"] retain];
+    mRightImage   = [[NSImage imageNamed:@"SearchRight"] retain];
+    mPopUpImage   = [[NSImage imageNamed:@"SearchPopUp"] retain];
+    mNoPopUpImage = [[NSImage imageNamed:@"SearchNoPopUp"] retain];
+    mCancelImage  = [[NSImage imageNamed:@"SearchCancel"] retain];
+  
+    mHasPopUpButton = YES;
+    mShouldShowCancelButton = NO;
+    mShouldShowSelectedPopUpItem = YES;
 
-  // why do expensive copies rather than just retaining?
-  _leftImage    = [[SearchTextFieldCell cachedLeftImage] copy];
-  _middleImage  = [[SearchTextFieldCell cachedMiddleImage] copy];
-  _rightImage   = [[SearchTextFieldCell cachedRightImage] copy];
-  _popUpImage   = [[SearchTextFieldCell cachedPopUpImage] copy];
-  _noPopUpImage   = [[SearchTextFieldCell cachedNoPopUpImage] copy];
-  _cancelImage  = [[SearchTextFieldCell cachedCancelImage] copy];
+    mPopUpButtonCell = [[STFPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
+    [mPopUpButtonCell addItemWithTitle:@""];
 
-  hasPopUpButton = YES;
-  _shouldShowCancelButton = NO;
-  _shouldShowSelectedPopUpItem = YES;
-
-  popUpButtonCell = [[STFPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
-  [popUpButtonCell addItemWithTitle:@""];
-
-  [self setEditable:YES];
-  [self setScrollable:YES];
-
+    [self setEditable:YES];
+    [self setScrollable:YES];
+  }
+  
   return self;
 }
 
@@ -123,14 +111,14 @@ const float STFSymbolYOffset = 4.0;
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
-  [popUpButtonCell release];
+  [mPopUpButtonCell release];
 
-  [_leftImage release];
-  [_rightImage release];
-  [_middleImage release];
-  [_popUpImage release];
-  [_noPopUpImage release];
-  [_cancelImage release];
+  [mLeftImage release];
+  [mRightImage release];
+  [mMiddleImage release];
+  [mPopUpImage release];
+  [mNoPopUpImage release];
+  [mCancelImage release];
 
   [super dealloc];
 }
@@ -139,88 +127,90 @@ const float STFSymbolYOffset = 4.0;
 - (void)setStringValue:(NSString *)aString
 {
   if ([aString length] == 0)
-    _shouldShowCancelButton = NO;
+    mShouldShowCancelButton = NO;
   [super setStringValue: aString];
 }
 
 
 - (BOOL)hasPopUpButton
 {
-  return hasPopUpButton;
+  return mHasPopUpButton;
 }
 
 
 - (void)setHasPopUpButton:(BOOL)aBoolean
 {
-  hasPopUpButton = aBoolean;
+  mHasPopUpButton = aBoolean;
 }
 
 
 - (STFPopUpButtonCell *)popUpButtonCell
 {
-  return popUpButtonCell;
+  return mPopUpButtonCell;
 }
 
 
 - (void)showSelectedPopUpItem:(BOOL)shouldShow
 {
-  NSString *newTitle = [[self  popUpButtonCell] titleOfSelectedItem];
+  NSString *newTitle = [mPopUpButtonCell titleOfSelectedItem];
 
-  if (shouldShow && _shouldShowSelectedPopUpItem) {
-    if (hasPopUpButton && newTitle && [[self stringValue] isEqualToString:@""]) {
+  if (shouldShow && mShouldShowSelectedPopUpItem) {
+    if (mHasPopUpButton && newTitle && [[self stringValue] isEqualToString:@""]) {
       [self setTextColor:[NSColor disabledControlTextColor]];
       [self setStringValue:newTitle];
     }
   } else
     [self setTextColor:[NSColor controlTextColor]];
 
-  _shouldShowSelectedPopUpItem = shouldShow;
+  mShouldShowSelectedPopUpItem = shouldShow;
 }
 
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-  NSPoint _leftImageOrigin, _middleImageOrigin, _rightImageOrigin;
-  NSPoint _popUpImageOrigin, _cancelImageOrigin;
-  float _middleImageWidth;
   BOOL wasShowingFirstResponder = [self showsFirstResponder];
 
   // Draw the left end of the widget
-  _leftImageOrigin = cellFrame.origin;
-  _leftImageOrigin.y += [_leftImage size].height;
-  [_leftImage compositeToPoint:_leftImageOrigin operation:NSCompositeSourceOver];
+  NSPoint leftImageOrigin = cellFrame.origin;
+  leftImageOrigin.y += [mLeftImage size].height;
+  [mLeftImage compositeToPoint:leftImageOrigin operation:NSCompositeSourceOver];
 
   // Draw the right end of the widget
-  _rightImageOrigin = cellFrame.origin;
-  _rightImageOrigin.x += cellFrame.size.width - [_rightImage size].width;
-  _rightImageOrigin.y += [_rightImage size].height;
-  [_rightImage compositeToPoint:_rightImageOrigin operation:NSCompositeSourceOver];
+  NSPoint rightImageOrigin = cellFrame.origin;
+  rightImageOrigin.x += cellFrame.size.width - [mRightImage size].width;
+  rightImageOrigin.y += [mRightImage size].height;
+  [mRightImage compositeToPoint:rightImageOrigin operation:NSCompositeSourceOver];
 
   // Draw the middle section
-  _middleImageOrigin = cellFrame.origin;
-  _middleImageOrigin.x += [_leftImage size].width;
-  _middleImageOrigin.y += [_middleImage size].height;
-  _middleImageWidth = cellFrame.size.width - ([_leftImage size].width + [_rightImage size].width);
-  [_middleImage setSize:NSMakeSize(_middleImageWidth, [_middleImage size].height)];
-  [_middleImage compositeToPoint:_middleImageOrigin operation:NSCompositeSourceOver];
+  NSRect middleImageRect = cellFrame;
+  NSSize middleImageSize = [mMiddleImage size];
+  
+  middleImageRect.origin.x += [mLeftImage size].width;
+  middleImageRect.size.width  = cellFrame.size.width - ([mLeftImage size].width + [mRightImage size].width);
+  middleImageRect.size.height = middleImageSize.height;
+  [mMiddleImage setFlipped:YES];
+
+  NSRect srcRect = NSMakeRect(0, 0, middleImageSize.width, middleImageSize.height);
+  [mMiddleImage drawInRect:middleImageRect fromRect:srcRect operation:NSCompositeSourceOver fraction:1.0f];
 
   // If we have a popUp button, draw it on the widget
-  _popUpImageOrigin = cellFrame.origin;
-  _popUpImageOrigin.x += STFSymbolXOffset;
-  _popUpImageOrigin.y += [_popUpImage size].height + STFSymbolXOffset;
+  NSPoint popUpImageOrigin = cellFrame.origin;
+  popUpImageOrigin.x += STFSymbolXOffset;
+  popUpImageOrigin.y += [mPopUpImage size].height + STFSymbolXOffset;
    
-  if (hasPopUpButton) 
-    [_popUpImage compositeToPoint:_popUpImageOrigin operation:NSCompositeSourceOver];
+  if (mHasPopUpButton) 
+    [mPopUpImage compositeToPoint:popUpImageOrigin operation:NSCompositeSourceOver];
   else
-    [_noPopUpImage compositeToPoint:_popUpImageOrigin operation:NSCompositeSourceOver];
+    [mNoPopUpImage compositeToPoint:popUpImageOrigin operation:NSCompositeSourceOver];
 
   // If we should show the cancel button, draw the button in the proper rect
-  if (_shouldShowCancelButton) {
-    _cancelImageOrigin = cellFrame.origin;
-    _cancelImageOrigin.x += cellFrame.size.width - [_cancelImage size].width -
+  if (mShouldShowCancelButton)
+  {
+    NSPoint cancelImageOrigin = cellFrame.origin;
+    cancelImageOrigin.x += cellFrame.size.width - [mCancelImage size].width -
       STFSymbolXOffset;
-    _cancelImageOrigin.y += [_cancelImage size].height + STFSymbolYOffset;
-    [_cancelImage compositeToPoint:_cancelImageOrigin operation:NSCompositeSourceOver];
+    cancelImageOrigin.y += [mCancelImage size].height + STFSymbolYOffset;
+    [mCancelImage compositeToPoint:cancelImageOrigin operation:NSCompositeSourceOver];
   }
 
   [self showSelectedPopUpItem:([self controlView] && ![[self controlView] isFirstResponder])];
@@ -276,7 +266,7 @@ const float STFSymbolYOffset = 4.0;
 - (void)cancelButtonClickedWithFrame:(NSRect)aFrame inView:(NSView *)aView
 {
   [self setStringValue:@""];            // clears the cancel button
-  _shouldShowSelectedPopUpItem = YES;
+  mShouldShowSelectedPopUpItem = YES;
 }
 
 
@@ -284,14 +274,14 @@ const float STFSymbolYOffset = 4.0;
 {
   aFrame.origin.y += 4.0;
 
-  _shouldShowSelectedPopUpItem = NO;
-  [popUpButtonCell performClickWithFrame:aFrame inView:aView];
+  mShouldShowSelectedPopUpItem = NO;
+  [mPopUpButtonCell performClickWithFrame:aFrame inView:aView];
 }
 
 
 - (void)searchSubmittedFromView:(NSView *)controlView
 {
-  _shouldShowCancelButton = [[self stringValue] isEqualToString:@""] ? NO : YES;
+  mShouldShowCancelButton = [[self stringValue] isEqualToString:@""] ? NO : YES;
 
   [controlView setNeedsDisplay:YES];
 }
@@ -304,12 +294,12 @@ const float STFSymbolYOffset = 4.0;
   NSPoint aPoint;
 
   // Start at the top left of the middle section
-  aPoint.x = aRect.origin.x + [_leftImage size].width;
+  aPoint.x = aRect.origin.x + [mLeftImage size].width;
   aPoint.y = NSMaxY(aRect) - 2.0;
   [fieldOutlinePath moveToPoint:aPoint];
 
   // Trace to the top right of the middle section
-  aPoint.x = NSMaxX(aRect) - [_rightImage size].width;
+  aPoint.x = NSMaxX(aRect) - [mRightImage size].width;
   [fieldOutlinePath lineToPoint:aPoint];
 
   // Trace around the right curve to the bottom right of the middle section
@@ -319,7 +309,7 @@ const float STFSymbolYOffset = 4.0;
                    controlPoint2:NSMakePoint(aPoint.x + 11.0, aPoint.y)];
 
   // Trace to the bottom left of the middle section
-  aPoint.x = aRect.origin.x + [_leftImage size].width;
+  aPoint.x = aRect.origin.x + [mLeftImage size].width;
   [fieldOutlinePath lineToPoint:aPoint];
 
   // Trace around the left curve to the top left of the middle section, i.e. the beginning
@@ -339,9 +329,9 @@ const float STFSymbolYOffset = 4.0;
 {
   // If we have a cancel button ready, return the rect for
   // where it should be. Else return an empty rect.
-  if (_shouldShowCancelButton) {
+  if (mShouldShowCancelButton) {
     NSRect cancelButtonRect, remainderRect;
-    float width = [_cancelImage size].width + STFSymbolXOffset*2;
+    float width = [mCancelImage size].width + STFSymbolXOffset*2;
 
     NSDivideRect(aRect, &cancelButtonRect, &remainderRect, width, NSMaxXEdge);
 
@@ -355,9 +345,9 @@ const float STFSymbolYOffset = 4.0;
 {
   // If we are supposed to show the popUp button, return the
   // rect for where it should be. Else return an empty rect.
-  if (hasPopUpButton) {
+  if (mHasPopUpButton) {
     NSRect popUpButtonRect, remainderRect;
-    float width = 2 * STFSymbolXOffset + [_popUpImage size].width;
+    float width = 2 * STFSymbolXOffset + [mPopUpImage size].width;
 
     NSDivideRect(aRect, &popUpButtonRect, &remainderRect, width, NSMinXEdge);
 
@@ -373,10 +363,10 @@ const float STFSymbolYOffset = 4.0;
 
   // If we have a popup, make a little room for its icon, else just make enough
   // room for the left end cap
-  float startWidth = [_popUpImage size].width + STFSymbolXOffset;
+  float startWidth = [mPopUpImage size].width + STFSymbolXOffset;
 
   // Make room for the cancel image and give it just a little extra padding (1.0)
-  float endWidth = [_cancelImage size].width + STFSymbolXOffset + 1.0;
+  float endWidth = [mCancelImage size].width + STFSymbolXOffset + 1.0;
   
 
   // Cut off the cancel button
@@ -391,74 +381,44 @@ const float STFSymbolYOffset = 4.0;
   return remainderRect;
 }
 
-@end
-
-@implementation SearchTextFieldCell(PrivateMethods)
-
-+ (NSImage *)cachedLeftImage
+- (void)setControlSize:(NSControlSize)inSize
 {
-  static NSImage *cachedLeftImage = nil;
+  NSControlSize oldSize = [self controlSize];
+  [super setControlSize:inSize];
+  [mPopUpButtonCell setControlSize:inSize];
+  
+  if (oldSize != inSize)
+  {
+    [mLeftImage autorelease];
+    [mMiddleImage autorelease];
+    [mRightImage autorelease];
+    [mPopUpImage autorelease];
+    [mNoPopUpImage autorelease];
+    [mCancelImage autorelease];
 
-  if (cachedLeftImage == nil)
-    cachedLeftImage = [[NSImage imageNamed:@"SearchLeft"] retain];
+    if (inSize == NSSmallControlSize)
+    {
+      [self setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];
 
-  return cachedLeftImage;
-}
+      mLeftImage    = [[NSImage imageNamed:@"SearchLeft_small"] retain];
+      mMiddleImage  = [[NSImage imageNamed:@"SearchMiddle_small"] retain];
+      mRightImage   = [[NSImage imageNamed:@"SearchRight_small"] retain];
+      mPopUpImage   = [[NSImage imageNamed:@"SearchPopUp_small"] retain];
+      mNoPopUpImage = [[NSImage imageNamed:@"SearchNoPopUp_small"] retain];
+      mCancelImage  = [[NSImage imageNamed:@"SearchCancel_small"] retain];
+    }
+    else
+    {
+      [self setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
 
-
-+ (NSImage *)cachedMiddleImage
-{
-  static NSImage *cachedMiddleImage = nil;
-
-  if (cachedMiddleImage == nil) {
-    cachedMiddleImage = [[NSImage imageNamed:@"SearchMiddle"] retain];
-    [cachedMiddleImage setScalesWhenResized:TRUE];
+      mLeftImage    = [[NSImage imageNamed:@"SearchLeft"] retain];
+      mMiddleImage  = [[NSImage imageNamed:@"SearchMiddle"] retain];
+      mRightImage   = [[NSImage imageNamed:@"SearchRight"] retain];
+      mPopUpImage   = [[NSImage imageNamed:@"SearchPopUp"] retain];
+      mNoPopUpImage = [[NSImage imageNamed:@"SearchNoPopUp"] retain];
+      mCancelImage  = [[NSImage imageNamed:@"SearchCancel"] retain];
+    }
   }
-
-  return cachedMiddleImage;
-}
-
-
-+ (NSImage *)cachedRightImage
-{
-  static NSImage *cachedRightImage = nil;
-
-  if (cachedRightImage == nil)
-    cachedRightImage = [[NSImage imageNamed:@"SearchRight"] retain];
-
-  return cachedRightImage;
-}
-
-
-+ (NSImage *)cachedPopUpImage
-{
-  static NSImage *cachedPopUpImage = nil;
-
-  if (cachedPopUpImage == nil)
-    cachedPopUpImage = [[NSImage imageNamed:@"SearchPopUp"] retain];
-
-  return cachedPopUpImage;
-}
-
-+ (NSImage *)cachedNoPopUpImage
-{
-  static NSImage *cachedNoPopUpImage = nil;
-  
-  if (cachedNoPopUpImage == nil)
-    cachedNoPopUpImage = [[NSImage imageNamed:@"SearchNoPopUp"] retain];
-  
-  return cachedNoPopUpImage;
-}
-
-
-+ (NSImage *)cachedCancelImage
-{
-  static NSImage *cachedCancelImage = nil;
-
-  if (cachedCancelImage == nil)
-    cachedCancelImage = [[NSImage imageNamed:@"SearchCancel"] retain];
-
-  return cachedCancelImage;
 }
 
 @end
