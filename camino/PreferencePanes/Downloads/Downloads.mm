@@ -169,7 +169,7 @@ private:
 
   // it would be nice to use PreferenceManager, but I don't want to drag
   // all that code into the plugin
-  StInternetConfigSession icSession('CHIM');
+  StInternetConfigSession icSession('MOZC');
   if (!icSession.Available())
     return;
   
