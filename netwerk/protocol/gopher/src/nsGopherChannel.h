@@ -81,7 +81,6 @@ public:
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIPrompt>                 mPrompter;
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIStreamListener>         mListener;

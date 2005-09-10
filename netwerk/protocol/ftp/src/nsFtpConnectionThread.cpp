@@ -564,8 +564,10 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
                 mState = mNextState;
             }
 
-            if (mFTPEventSink)
-                mFTPEventSink->OnFTPControlLog(PR_TRUE, mResponseMsg.get());
+            nsCOMPtr<nsIFTPEventSink> ftpSink;
+            mChannel->GetFTPEventSink(ftpSink);
+            if (ftpSink)
+                ftpSink->OnFTPControlLog(PR_TRUE, mResponseMsg.get());
             
             rv = Process();
             mResponseMsg.Truncate();
@@ -1026,7 +1028,11 @@ nsFtpState::S_user() {
         usernameStr.AppendLiteral("anonymous");
     } else {
         if (mUsername.IsEmpty()) {
-            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
+            nsCOMPtr<nsIAuthPrompt> prompter;
+            mChannel->GetCallback(prompter);
+            if (!prompter)
+                return NS_ERROR_NOT_INITIALIZED;
+
             nsXPIDLString user, passwd;
             PRBool retval;
             nsCAutoString prePath;
@@ -1046,13 +1052,13 @@ nsFtpState::S_user() {
             rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
                                               formatStrings, 1,
                                               getter_Copies(formatedString));                   
-            rv = mAuthPrompter->PromptUsernameAndPassword(nsnull,
-                                                          formatedString,
-                                                          prePathU.get(),
-                                                          nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                                          getter_Copies(user), 
-                                                          getter_Copies(passwd), 
-                                                          &retval);
+            rv = prompter->PromptUsernameAndPassword(nsnull,
+                                                     formatedString,
+                                                     prePathU.get(),
+                                                     nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                                     getter_Copies(user), 
+                                                     getter_Copies(passwd), 
+                                                     &retval);
 
             // if the user canceled or didn't supply a username we want to fail
             if (!retval || (user && !*user) )
@@ -1125,7 +1131,10 @@ nsFtpState::S_pass() {
         }
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
-            if (!mAuthPrompter) return NS_ERROR_NOT_INITIALIZED;
+            nsCOMPtr<nsIAuthPrompt> prompter;
+            mChannel->GetCallback(prompter);
+            if (!prompter)
+                return NS_ERROR_NOT_INITIALIZED;
 
             nsXPIDLString passwd;
             PRBool retval;
@@ -1148,11 +1157,11 @@ nsFtpState::S_pass() {
                                               getter_Copies(formatedString)); 
 
             if (NS_FAILED(rv)) return rv;
-            rv = mAuthPrompter->PromptPassword(nsnull,
-                                               formatedString,
-                                               prePathU.get(), 
-                                               nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                               getter_Copies(passwd), &retval);
+            rv = prompter->PromptPassword(nsnull,
+                                          formatedString,
+                                          prePathU.get(), 
+                                          nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                                          getter_Copies(passwd), &retval);
 
             // we want to fail if the user canceled. Note here that if they want
             // a blank password, we will pass it along.
@@ -1297,9 +1306,11 @@ nsFtpState::R_syst() {
             nsMemory::Free(ucs2Response);
             if (NS_FAILED(rv)) return FTP_ERROR;
 
-            NS_ASSERTION(mPrompter, "no prompter!");
-            if (mPrompter)
-                (void) mPrompter->Alert(nsnull, formatedString.get());
+            // XXX(darin): this code should not be dictating UI like this!
+            nsCOMPtr<nsIPrompt> prompter;
+            mChannel->GetCallback(prompter);
+            if (prompter)
+                prompter->Alert(nsnull, formatedString.get());
             
             // since we just alerted the user, clear mResponseMsg,
             // which is displayed to the user.
@@ -2164,27 +2175,12 @@ nsFtpState::CanReadEntry()
 
 nsresult
 nsFtpState::Init(nsFTPChannel* aChannel,
-                 nsIPrompt*  aPrompter,
-                 nsIAuthPrompt* aAuthPrompter,
-                 nsIFTPEventSink* sink,
                  nsICacheEntryDescriptor* cacheEntry,
                  nsIProxyInfo* proxyInfo,
                  PRUint64 startPos,
                  const nsACString& entity) 
 {
-    // Build a proxy for the FTP event sink since we may need to call
-    // it while we are deep inside some of our state logic, and we
-    // wouldn't want to worry about some wierd re-entrancy scenario.
-    if (sink)
-        NS_GetProxyForObject(NS_CURRENT_EVENTQ,
-                             NS_GET_IID(nsIFTPEventSink),
-                             sink,
-                             PROXY_ASYNC | PROXY_ALWAYS,
-                             getter_AddRefs(mFTPEventSink));
-
     mKeepRunning = PR_TRUE;
-    mPrompter = aPrompter;
-    mAuthPrompter = aAuthPrompter;
     mCacheEntry = cacheEntry;
     mProxyInfo = proxyInfo;
     mStartPos = startPos;
@@ -2396,14 +2392,16 @@ nsFtpState::StopProcessing()
     printf("FTP Stopped: [response code %d] [response msg follows:]\n%s\n", mResponseCode, mResponseMsg.get());
 #endif
 
-    if ( NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) 
+    if (NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) 
     {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:
-        
-        NS_ASSERTION(mPrompter, "no prompter!");
-        if (mPrompter)
-            (void) mPrompter->Alert(nsnull, NS_ConvertASCIItoUCS2(mResponseMsg).get());
+
+        // XXX(darin): this code should not be dictating UI like this!
+        nsCOMPtr<nsIPrompt> prompter;
+        mChannel->GetCallback(prompter);
+        if (prompter)
+            prompter->Alert(nsnull, NS_ConvertASCIItoUCS2(mResponseMsg).get());
     }
     
     nsresult broadcastErrorCode = mControlStatus;
@@ -2445,8 +2443,6 @@ nsFtpState::StopProcessing()
     // Release the Observers
     mWriteStream = 0;  // should this call close before setting to null?
 
-    mPrompter = 0;
-    mAuthPrompter = 0;
     mChannel = 0;
     mProxyInfo = 0;
 
@@ -2519,8 +2515,11 @@ nsFtpState::SendFTPCommand(nsCString& command)
         logcmd = "PASS xxxxx";
     
     LOG(("(%x)(dwait=%d) Writing \"%s\"\n", this, mWaitingForDConn, logcmd.get()));
-    if (mFTPEventSink)
-        mFTPEventSink->OnFTPControlLog(PR_FALSE, logcmd.get());
+
+    nsCOMPtr<nsIFTPEventSink> ftpSink;
+    mChannel->GetFTPEventSink(ftpSink);
+    if (ftpSink)
+        ftpSink->OnFTPControlLog(PR_FALSE, logcmd.get());
     
     if (mControlConnection) {
         return mControlConnection->Write(command, mWaitingForDConn);

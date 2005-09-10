@@ -111,6 +111,18 @@ public:
     nsresult AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
                          PRUint64 startPos, const nsACString& entityID);
 
+    // Helper function to simplify getting notification callbacks.
+    template <class T>
+    void GetCallback(nsCOMPtr<T> &aResult) {
+        GetInterface(NS_GET_IID(T), getter_AddRefs(aResult));
+    }
+
+    // Helper function for getting the nsIFTPEventSink.
+    void GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult);
+
+protected:
+    void InitProgressSink();
+
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
@@ -118,7 +130,8 @@ protected:
     nsCOMPtr<nsIInputStream>        mUploadStream;
 
     // various callback interfaces
-    nsCOMPtr<nsIProgressEventSink>  mEventSink;
+    nsCOMPtr<nsIProgressEventSink>  mProgressSink;
+    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mIsPending;

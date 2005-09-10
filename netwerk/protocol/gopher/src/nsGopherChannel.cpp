@@ -262,9 +262,6 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 
     // get callback interfaces...
 
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mPrompter);
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
-
     nsresult rv;
 
     PRInt32 port;
@@ -470,6 +467,7 @@ NS_IMETHODIMP
 nsGopherChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -499,6 +497,7 @@ NS_IMETHODIMP
 nsGopherChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
     mCallbacks = aCallbacks;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -550,7 +549,6 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 
     // Drop notification callbacks to prevent cycles.
     mCallbacks = 0;
-    mPrompter = 0;
     mProgressSink = 0;
 
     return NS_OK;
@@ -593,7 +591,9 @@ nsGopherChannel::SendRequest()
         if (pos == -1) {
             // We require a query string here - if we don't have one,
             // then we need to ask the user
-            if (!mPrompter) {
+            nsCOMPtr<nsIPrompt> prompter;
+            NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, prompter);
+            if (!prompter) {
                 NS_ERROR("We need a prompter!");
                 return NS_ERROR_FAILURE;
             }
@@ -630,7 +630,7 @@ nsGopherChannel::SendRequest()
 
             nsXPIDLString search;
             PRBool res;
-            mPrompter->Prompt(promptTitle.get(),
+            prompter->Prompt(promptTitle.get(),
                               promptText.get(),
                               getter_Copies(search),
                               NULL,
@@ -727,6 +727,9 @@ NS_IMETHODIMP
 nsGopherChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                    PRUint64 progress, PRUint64 progressMax)
 {
+    if (!mProgressSink)
+        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
+
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
         NS_ConvertUTF8toUTF16 host(mHost);

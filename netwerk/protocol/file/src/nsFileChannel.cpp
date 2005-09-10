@@ -214,6 +214,7 @@ NS_IMETHODIMP
 nsFileChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -271,6 +272,7 @@ NS_IMETHODIMP
 nsFileChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 {
     mCallbacks = aCallbacks;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -370,9 +372,6 @@ NS_IMETHODIMP
 nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
     NS_ENSURE_TRUE(!mRequest, NS_ERROR_IN_PROGRESS);
-
-    // Initialize mProgressSink
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
     nsCOMPtr<nsIStreamListener> grip;
     nsCOMPtr<nsIEventQueue> currentEventQ;
@@ -579,6 +578,9 @@ NS_IMETHODIMP
 nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                  PRUint64 progress, PRUint64 progressMax)
 {
+    if (!mProgressSink)
+        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
+
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mRequest && !(mLoadFlags & LOAD_BACKGROUND)) {
         // file channel does not send OnStatus events!
