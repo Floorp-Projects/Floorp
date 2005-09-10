@@ -1,7 +1,8 @@
-<!ENTITY Inspector.label "DOM Inspector">
-<!ENTITY Sidebar.label "Sidebar">
-<!ENTITY elementBlinking.label "Element Blinking">
+<!ENTITY pref.inspector.title "DOM Inspector">
+<!ENTITY Sidebar.caption "Sidebar">
+<!ENTITY elementBlinking.caption "Element Blinking">
 <!ENTITY blinkSelectedElement.label "Blink Selected Element">
+<!ENTITY blinkSelectedElement.accesskey "B">
 <!ENTITY borderColor.label "Border Color">
 <!ENTITY borderWidth.label "Border Width">
 <!ENTITY px.label "(px)">
@@ -9,6 +10,8 @@
 <!ENTITY ms.label "(ms)">
 <!ENTITY blinkSpeed.label "Blink Speed">
 <!ENTITY invertColors.label "Invert Colors">
+<!ENTITY invertColors.accesskey "C">
 <!ENTITY installHowTo.label "The DOM Inspector Sidebar is not currently installed.  Click the 'Install' button to add it to your Sidebar.">
 <!ENTITY install.label "Install">
+<!ENTITY install.accesskey "n">
 <!ENTITY addNavigatorHooks.label "Add contextual menus to Navigator">
