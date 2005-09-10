@@ -121,10 +121,11 @@ protected:
     nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn in (by DrawAtPosition()/DrawCaret()),
                                               // note that this can be different than where it was actually drawn (anon <BR> in text control)
     PRInt32               mLastContentOffset; // the offset for the last request
-    nsIFrameSelection::HINT mLastHint;        // the hint associated with the last request
+    nsIFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also mLastBidiLevel below
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret
     nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language
+    PRUint8               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
     PRPackedBool          mKeyboardRTL;       // is the keyboard language right-to-left
 #endif
 };

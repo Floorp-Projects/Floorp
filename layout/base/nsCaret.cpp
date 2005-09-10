@@ -100,6 +100,7 @@ nsCaret::nsCaret()
 , mLastContentOffset(0)
 , mLastHint(nsIFrameSelection::HINTLEFT)
 #ifdef IBMBIDI
+, mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
 #endif
 {
@@ -534,22 +535,27 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   nsPresContext *presContext = presShell->GetPresContext();
   if (presContext && presContext->BidiEnabled())
   {
-    presShell->GetCaretBidiLevel(&bidiLevel);
-    if (bidiLevel & BIDI_LEVEL_UNDEFINED)
-    {
-      PRUint8 newBidiLevel;
-      bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
-      // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
-      if (!presContext) // Use the style default or default to 0
+    if (mDrawn) {
+      bidiLevel = mLastBidiLevel;
+    } else {
+      presShell->GetCaretBidiLevel(&bidiLevel);
+      if (bidiLevel & BIDI_LEVEL_UNDEFINED)
       {
-        newBidiLevel = theFrame->GetStyleVisibility()->mDirection;
+        PRUint8 newBidiLevel;
+        bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
+        // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
+        if (!presContext) // Use the style default or default to 0
+        {
+          newBidiLevel = theFrame->GetStyleVisibility()->mDirection;
+        }
+        else
+        {
+          newBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
+          presShell->SetCaretBidiLevel(newBidiLevel);
+          bidiLevel = newBidiLevel;
+        }
       }
-      else
-      {
-        newBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
-        presShell->SetCaretBidiLevel(newBidiLevel);
-        bidiLevel = newBidiLevel;
-      }
+      mLastBidiLevel = bidiLevel;
     }
 
     PRInt32 start;
