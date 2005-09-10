@@ -1443,32 +1443,31 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
 {
-  NSImage* image;
-  NSSize titleSize, imageSize;
-  NSRect imageRect;
-  NSDictionary* stringAttrs;
+  const float kTitleOffset = 2.0f;
   
+  NSDictionary* stringAttrs = [NSDictionary dictionaryWithObjectsAndKeys:
+                                    [[NSColor textColor] colorWithAlphaComponent:0.8], NSForegroundColorAttributeName,
+                               [NSFont systemFontOfSize:[NSFont smallSystemFontSize]], NSFontAttributeName, 
+                                                                                       nil];
+
   // get the size of the new image we are creating
-  titleSize = [aTitle sizeWithAttributes:nil];
-  imageSize = NSMakeSize(titleSize.width + [aIcon size].width,
+  NSSize titleSize = [aTitle sizeWithAttributes:stringAttrs];
+  NSSize imageSize = NSMakeSize(titleSize.width + [aIcon size].width + kTitleOffset + 2,
                          titleSize.height > [aIcon size].height ? 
                             titleSize.height : [aIcon size].height);
-                        
+     
   // create the image and lock drawing focus on it
-  image = [[[NSImage alloc] initWithSize:imageSize] autorelease];
-  [image lockFocus];
+  NSImage* dragImage = [[[NSImage alloc] initWithSize:imageSize] autorelease];
+  [dragImage lockFocus];
   
   // draw the image and title in image with translucency
-  imageRect = NSMakeRect(0,0, [aIcon size].width, [aIcon size].height);
-  [aIcon drawAtPoint: NSMakePoint(0,0) fromRect: imageRect operation:NSCompositeCopy fraction:0.8];
+  NSRect imageRect = NSMakeRect(0, 0, [aIcon size].width, [aIcon size].height);
+  [aIcon drawAtPoint:NSMakePoint(0, 0) fromRect:imageRect operation:NSCompositeCopy fraction:0.8];
   
-  stringAttrs = [NSDictionary dictionaryWithObject: [[NSColor textColor] colorWithAlphaComponent:0.8]
-                  forKey: NSForegroundColorAttributeName];
-  [aTitle drawAtPoint: NSMakePoint([aIcon size].width, 0) withAttributes: stringAttrs];
+  [aTitle drawAtPoint:NSMakePoint([aIcon size].width + kTitleOffset, 0.0) withAttributes:stringAttrs];
   
-  [image unlockFocus]; 
-  
-  return image;
+  [dragImage unlockFocus]; 
+  return dragImage;
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApp hasVisibleWindows:(BOOL)flag
