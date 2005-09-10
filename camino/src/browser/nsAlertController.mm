@@ -38,7 +38,6 @@
 #import "nsAlertController.h"
 #import "CHBrowserService.h"
 
-enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
 
 const int kMinDialogWidth = 500;
 const int kMaxDialogHeight = 400;
@@ -117,17 +116,17 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
 - (IBAction)hitButton1:(id)sender
 {
-  [NSApp stopModalWithCode:kOKButton];
+  [NSApp stopModalWithCode:NSAlertDefaultReturn];
 }
 
 - (IBAction)hitButton2:(id)sender
 {
-  [NSApp stopModalWithCode:kCancelButton];
+  [NSApp stopModalWithCode:NSAlertAlternateReturn];
 }
 
 - (IBAction)hitButton3:(id)sender
 {
-  [NSApp stopModalWithCode:kOtherButton];
+  [NSApp stopModalWithCode:NSAlertOtherReturn];
 }
 
 - (void)alert:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
@@ -174,7 +173,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
 
   [panel close];
 
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 - (BOOL)confirmCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue
@@ -203,7 +202,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   *checkValue = ([checkBox state] == NSOnState);  
   [panel close];
 
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 - (int)confirmEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text button1:(NSString*)btn1 button2:(NSString*)btn2 button3:(NSString*)btn3
@@ -295,7 +294,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   if (doCheck)
     *checkValue = ([checkBox state] == NSOnState);  
  
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 
@@ -355,7 +354,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   if (doCheck)
     *checkValue = ([checkBox state] == NSOnState);  
  
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 - (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText
@@ -405,7 +404,7 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   if (doCheck)
     *checkValue = ([checkBox state] == NSOnState);  
  
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 

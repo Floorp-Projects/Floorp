@@ -334,7 +334,8 @@ const int kReuseWindowOnAE = 2;
   if (!browserWindow)
     [self newWindow:self];
 
-  [self checkDefaultBrowser];
+  // delay the default browser check to give the first page time to load
+  [self performSelector:@selector(checkDefaultBrowser) withObject:nil afterDelay:2.0f];
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
@@ -448,12 +449,16 @@ const int kReuseWindowOnAE = 2;
     {
       nsAlertController* controller = [[nsAlertController alloc] init];
       BOOL dontAskAgain = NO;
-      BOOL confirmed = [controller confirmCheck:nil
-                                          title:NSLocalizedString(@"DefaultBrowserTitle", nil)
-                                           text:NSLocalizedString(@"DefaultBrowserMessage", nil)
-                                       checkMsg:NSLocalizedString(@"DefaultBrowserChecboxTitle", nil)
-                                     checkValue:&dontAskAgain];
-      if (confirmed)
+      int result = [controller confirmCheckEx:nil // parent
+                                            title:NSLocalizedString(@"DefaultBrowserTitle", nil)
+                                             text:NSLocalizedString(@"DefaultBrowserMessage", nil)
+                                          button1:NSLocalizedString(@"DefaultBrowserAcceptButton", nil)
+                                          button2:NSLocalizedString(@"DefaultBrowserDenyButton", nil)
+                                          button3:nil
+                                         checkMsg:NSLocalizedString(@"DefaultBrowserChecboxTitle", nil)
+                                       checkValue:&dontAskAgain];
+
+      if (result == NSAlertDefaultReturn)
       {
         [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:myIdentifier];
       }

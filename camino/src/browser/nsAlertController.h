@@ -52,6 +52,7 @@
 - (BOOL)confirm:(NSWindow*)parent title:(NSString*)title text:(NSString*)text;
 - (BOOL)confirmCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
 
+// these return NSAlertDefaultReturn, NSAlertAlternateReturn or NSAlertOtherReturn
 - (int)confirmEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text
    button1:(NSString*)btn1 button2:(NSString*)btn2 button3:(NSString*)btn3;
 - (int)confirmCheckEx:(NSWindow*)parent title:(NSString*)title text:(NSString*)text 

@@ -204,18 +204,26 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
   CHBrowserView* browserView = [CHBrowserView browserViewFromDOMWindow:parent];
   [browserView doBeforePromptDisplay];
 
+  int result;
   if (checkValue) {
     BOOL valueBool = *checkValue ? YES : NO;
 
-    *buttonPressed = [controller confirmCheckEx:[browserView getNativeWindow] title:titleStr text:textStr
+    result = [controller confirmCheckEx:[browserView getNativeWindow] title:titleStr text:textStr
                                         button1: btn1Str button2: btn2Str button3: btn3Str
                                        checkMsg:msgStr checkValue:&valueBool];
-
     *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
   }
   else {
-    *buttonPressed = [controller confirmEx:[browserView getNativeWindow] title:titleStr text:textStr
+    result = [controller confirmEx:[browserView getNativeWindow] title:titleStr text:textStr
                                    button1: btn1Str button2: btn2Str button3: btn3Str];
+  }
+
+  switch (result)
+  {
+    case NSAlertDefaultReturn:    *buttonPressed = 0;    break;
+    default:
+    case NSAlertAlternateReturn:  *buttonPressed = 1;    break;
+    case NSAlertOtherReturn:      *buttonPressed = 2;    break;
   }
 
   [browserView doAfterPromptDismissal];

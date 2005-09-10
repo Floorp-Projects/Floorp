@@ -364,21 +364,19 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 // actions for the buttons of the keychain prompt dialogs.
 //
 
-enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
-
 - (IBAction)hitButtonOK:(id)sender
 {
-  [NSApp stopModalWithCode:kOKButton];
+  [NSApp stopModalWithCode:NSAlertDefaultReturn];
 }
 
 - (IBAction)hitButtonCancel:(id)sender
 {
-  [NSApp stopModalWithCode:kCancelButton];
+  [NSApp stopModalWithCode:NSAlertAlternateReturn];
 }
 
 - (IBAction)hitButtonOther:(id)sender
 {
-  [NSApp stopModalWithCode:kOtherButton];
+  [NSApp stopModalWithCode:NSAlertOtherReturn];
 }
 
 //
@@ -408,7 +406,7 @@ enum { kOKButton = 0, kCancelButton = 1, kOtherButton = 2 };
 {
   int result = [NSApp runModalForWindow:confirmChangePasswordPanel relativeToWindow:parent];
   [confirmChangePasswordPanel close];
-  return (result == kOKButton);
+  return (result == NSAlertDefaultReturn);
 }
 
 
