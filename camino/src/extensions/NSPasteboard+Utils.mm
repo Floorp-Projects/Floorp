@@ -113,10 +113,24 @@ NSString* const kWebURLsWithTitlesPboardType  = @"WebURLsWithTitlesPboardType"; 
     if (inTitles)
       tempCString = [title UTF8String];
     [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
-  } else {
+  }
+  else if ([inUrls count] > 1)
+  {
     // With multiple URLs there aren't many other formats we can use
     // Just write a string of each URL (ignoring titles) on a separate line
     [self setString:[inUrls componentsJoinedByString:@"\n"] forType:NSStringPboardType];
+
+    // but we have to put something in the carbon style flavors, otherwise apps will think
+    // there is data there, but get nothing
+
+    NSString* firstURL    = [inUrls objectAtIndex:0];
+    NSString* firstTitle  = ([inTitles count] > 0) ? [inTitles objectAtIndex:0] : @"";
+    
+    const char* tempCString = [firstURL UTF8String];
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_url];
+
+    tempCString = [firstTitle UTF8String];    // not i18n friendly
+    [self setData:[NSData dataWithBytes:tempCString length:strlen(tempCString)] forType: kCorePasteboardFlavorType_urln];
   }
 }
 

@@ -431,6 +431,11 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
   return contextMenu;
 }
 
+- (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag
+{
+  return NSDragOperationGeneric;
+}
+
 - (void)outlineViewItemDidExpand:(NSNotification *)notification
 {
   id item = [[notification userInfo] objectForKey:@"NSObject"];

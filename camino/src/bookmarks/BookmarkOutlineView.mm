@@ -103,7 +103,7 @@
   [super _editItem:dummy];
 }
 
-- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)localFlag
+- (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag
 {
   if (localFlag)
     return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);

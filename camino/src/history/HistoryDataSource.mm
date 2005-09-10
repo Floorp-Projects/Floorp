@@ -1112,32 +1112,30 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
 - (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
 {
   //Need to filter out folders from the list, only allow the urls to be dragged
-  NSMutableArray* toDrag = [[[NSMutableArray alloc] init] autorelease];
+  NSMutableArray* urlsArray   = [[[NSMutableArray alloc] init] autorelease];
+  NSMutableArray* titlesArray = [[[NSMutableArray alloc] init] autorelease];
+
   NSEnumerator *enumerator = [items objectEnumerator];
-  id obj;
-  while ((obj = [enumerator nextObject]))
+  id curItem;
+  while ((curItem = [enumerator nextObject]))
   {
-    if ([obj isSiteItem])
-      [toDrag addObject:obj];
-  }
-  
-  int count = [toDrag count];
-  if (count == 1)
-  {
-    id item = [toDrag objectAtIndex: 0];
-    // if we have just one item, we add some more flavours
-    NSString* title = [item title];
-    NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
-    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
-    [pboard setDataForURL:[item url] title:cleanedTitle];
-    return YES;
+    if ([curItem isSiteItem])
+    {
+      NSString* itemURL = [curItem url];
+      NSString* cleanedTitle = [[curItem title] stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
+
+      [urlsArray addObject:itemURL];
+      [titlesArray addObject:cleanedTitle];
+    }
   }
 
-  if ( count > 1 ) {
-    // not sure what to do for multiple drag. just cancel for now.
-    // add serialized NSArray?
-    return NO;
+  if ([urlsArray count] > 0)
+  {
+    [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
+    [pboard setURLs:urlsArray withTitles:titlesArray];
+    return YES;
   }
+  
   return NO;
 }
 

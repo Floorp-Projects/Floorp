@@ -609,6 +609,14 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
   oldFrameRect = frameRect;
 }
 
+- (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)localFlag
+{
+  if ([[self delegate] respondsToSelector:@selector(outlineView:draggingSourceOperationMaskForLocal:)])
+    return [[self delegate] outlineView:self draggingSourceOperationMaskForLocal:localFlag];
+
+  return NSDragOperationGeneric;
+}
+
 #pragma mark -
 
 // Support clipboard actions if our delegate implements them

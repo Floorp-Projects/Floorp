@@ -106,3 +106,7 @@
 - (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItems:(NSArray*)items;
 @end
 
+@interface NSObject (CHOutlineViewDragSource)
+- (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag;
+@end
+
