@@ -469,12 +469,12 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           // The mParser->CanInterrupt will return TRUE if BuildModel was called
           // from a place in the parser where it prepared to handle a return value of
           // NS_ERROR_HTMLPARSER_INTERRUPTED.
-          // If the parser has mPrevContext then it may be processing
-          // Script so we should not allow it to be interrupted.
+          // If the parser is processing a script's document.write we should not
+          // allow it to be interrupted.
           // We also need to make sure that an interruption does not override
           // a request to block the parser.
           if (mParser->CanInterrupt() && 
-              !mParser->PeekContext()->mPrevContext && 
+              !IsParserInDocWrite() && 
               NS_SUCCEEDED(result)) {
             result = NS_ERROR_HTMLPARSER_INTERRUPTED;
             break;
@@ -683,8 +683,10 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
 
     aToken->SetLineNumber(mLineNumber);
-    
-    mLineNumber += aToken->GetNewlineCount();
+
+    if (!IsParserInDocWrite()) {
+      mLineNumber += aToken->GetNewlineCount();
+    }
    
     if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
       // Included TD & TH to fix Bug# 20797
@@ -854,7 +856,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           break;
       }//switch
 
-
       if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
          IF_FREE(theToken, mTokenAllocator);
       }
@@ -889,7 +890,9 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         if(theNextToken)  {
           eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
           if(eToken_newline==theType){
-            mLineNumber += theNextToken->GetNewlineCount();
+            if (!IsParserInDocWrite()) {
+              mLineNumber += theNextToken->GetNewlineCount();
+            }
             theNextToken=mTokenizer->PopToken();  //skip 1st newline inside PRE and LISTING
             IF_FREE(theNextToken, mTokenAllocator); // fix for Bug 29379
           }//if
@@ -1506,7 +1509,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         theHeadIsParent = theHeadIsParent &&
           (isExclusive ||
            (prefersBody
-            ? (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD)
+            ? (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD) && (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)
             : !(mFlags & NS_DTD_FLAG_HAD_BODY)));
 
         if(theHeadIsParent) {
@@ -2062,7 +2065,9 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
 
   CDoctypeDeclToken* theToken = NS_STATIC_CAST(CDoctypeDeclToken*,aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
-  mLineNumber += docTypeStr.CountChar(kNewLine);
+  if (!IsParserInDocWrite()) {
+    mLineNumber += docTypeStr.CountChar(kNewLine);
+  }
   
   PRInt32 len=docTypeStr.Length();
   PRInt32 pos=docTypeStr.RFindChar(kGreaterThan);
@@ -2117,7 +2122,9 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
           break;
         }
 
-        mLineNumber += theToken->GetNewlineCount();
+        if (IsParserInDocWrite()) {
+          mLineNumber += theToken->GetNewlineCount();
+        }
 
         if(aNode) {
           // Sanitize the key for it might contain some non-alpha-non-digit characters

@@ -106,6 +106,7 @@
 #include "nsParserCIID.h"
 #include "nsTime.h"
 #include "nsDTDUtils.h"
+#include "nsParser.h"
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
@@ -114,7 +115,6 @@
 
 class nsIHTMLContentSink;
 class nsIParserNode;
-class nsParser;
 class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
@@ -373,6 +373,14 @@ protected:
     PRBool          IsAlternateTag(eHTMLTags aTag);
     PRBool          IsBlockElement(PRInt32 aTagID, PRInt32 aParentID) const;
     PRBool          IsInlineElement(PRInt32 aTagID, PRInt32 aParentID) const;
+
+    PRBool          IsParserInDocWrite() const
+    {
+      NS_ASSERTION(mParser && mParser->PeekContext(),
+                   "Parser must be parsing to use this function");
+
+      return mParser->PeekContext()->mPrevContext != nsnull;
+    }
     
     nsDeque             mMisplacedContent;
     

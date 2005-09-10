@@ -781,6 +781,10 @@ nsresult CTextToken::ConsumeCharacterData(PRBool aConservativeConsume,
     }
   }
 
+  if (result == NS_OK) {
+    mNewlineCount = mTextValue.CountChar(kNewLine);
+  }
+
   return result;
 }
 
