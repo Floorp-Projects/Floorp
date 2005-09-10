@@ -235,48 +235,46 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     // class of nsISupportsString. Also, since the data is in two byte chunks the 
     // length represents the length in 1-byte chars, so we need to divide by two.
     nsCOMPtr<nsISupportsString> dataWrapper0 ( do_QueryInterface(aFromData) );
-    if ( dataWrapper0 ) {
-      nsAutoString dataStr;
-      dataWrapper0->GetData ( dataStr );  //еее COPY #1
-      if ( !dataStr.IsEmpty() ) {
+    if (!dataWrapper0) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
-        // note: conversion to text/plain is done inside the clipboard. we do not need to worry 
-        // about it here.
-        if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
-          nsresult res;
-          if (toFlavor.Equals(kHTMLMime)) {
-            PRInt32 dataLen = dataStr.Length() * 2;
-            nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)dataStr.get(), dataLen, aToData );
-            if ( *aToData )
-              *aDataToLen = dataLen;
-          } else {
-            nsAutoString outStr;
-            res = ConvertFromHTMLToUnicode(dataStr, outStr);
-            if (NS_SUCCEEDED(res)) {
-              PRInt32 dataLen = outStr.Length() * 2;
-              nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
-              if ( *aToData ) 
-                *aDataToLen = dataLen;
-            }
-          }
-        } // else if HTML or Unicode
-        else if ( toFlavor.Equals(kAOLMailMime) ) {
-          nsAutoString outStr;
-          if ( NS_SUCCEEDED(ConvertFromHTMLToAOLMail(dataStr, outStr)) ) {
-            PRInt32 dataLen = outStr.Length() * 2;
-            nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
-            if ( *aToData ) 
-              *aDataToLen = dataLen;
-          }
-        } // else if AOL mail
-        else {
-          *aToData = nsnull;
-          *aDataToLen = 0;
-          rv = NS_ERROR_FAILURE;      
+    nsAutoString dataStr;
+    dataWrapper0->GetData ( dataStr );  //еее COPY #1
+    // note: conversion to text/plain is done inside the clipboard. we do not need to worry 
+    // about it here.
+    if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
+      nsresult res;
+      if (toFlavor.Equals(kHTMLMime)) {
+        PRInt32 dataLen = dataStr.Length() * 2;
+        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)dataStr.get(), dataLen, aToData );
+        if ( *aToData )
+          *aDataToLen = dataLen;
+      } else {
+        nsAutoString outStr;
+        res = ConvertFromHTMLToUnicode(dataStr, outStr);
+        if (NS_SUCCEEDED(res)) {
+          PRInt32 dataLen = outStr.Length() * 2;
+          nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
+          if ( *aToData ) 
+            *aDataToLen = dataLen;
         }
       }
+    } // else if HTML or Unicode
+    else if ( toFlavor.Equals(kAOLMailMime) ) {
+      nsAutoString outStr;
+      if ( NS_SUCCEEDED(ConvertFromHTMLToAOLMail(dataStr, outStr)) ) {
+        PRInt32 dataLen = outStr.Length() * 2;
+        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
+        if ( *aToData ) 
+          *aDataToLen = dataLen;
+      }
+    } // else if AOL mail
+    else {
+      *aToData = nsnull;
+      *aDataToLen = 0;
+      rv = NS_ERROR_FAILURE;
     }
-    
   } // if we got html mime
   else
     rv = NS_ERROR_FAILURE;      
