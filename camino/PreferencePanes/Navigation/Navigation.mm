@@ -42,45 +42,23 @@
 #import <Cocoa/Cocoa.h>
 #import <ApplicationServices/ApplicationServices.h>
 
-#import "Navigation.h"
 #import "NSString+Utils.h"
+#import "NSWorkspace+Utils.h"
+
+#import "Navigation.h"
 
 const int kDefaultExpireDays = 9;
 static NSString* const kUserChosenBrowserUserDefaultsKey = @"UserChosenBrowsers";
 
-// these functions are undocumented - even if we're not using them all
-// its best to leave them here since they are not documented anywhere else
-extern "C" {
-  /* Returns the NSURL for application currently set as the default for the given URL scheme.  The
-  NSURL must be released by the caller. */
-  extern OSStatus _LSCopyDefaultSchemeHandlerURL(NSString *scheme, NSURL **appURL);
-  extern OSStatus _LSSetDefaultSchemeHandlerURL(NSString *scheme, NSURL *appURL);
-  extern OSStatus _LSSaveAndRefresh(void); // inform the finder and others of changes
-  extern OSStatus _LSCopyAllApplicationURLs(CFArrayRef *apps);
-  extern OSStatus _LSSetWeakBindingForType(OSType inType,
-                                           OSType inCreator,
-                                           CFStringRef inExtension,
-                                           LSRolesMask inRoleMask,
-                                           const FSRef* inBindingRef);
-  /* Returns by reference the NSURLs of the applications regsistered to handle the given URL.  For the
-    "file" protocol, this will use the type/extension/etc info for the file (which must exist for
-    this to work), and for any other type of URLs this will return applications registered to handle
-    that URL scheme.  The resulting NSArray must be released by the caller. */
-  /* Panther has a public LSCopyApplicationURLsForURL() function that would be better to use */
-  extern OSStatus _LSCopyApplicationURLsForItemURL(NSURL *inURL, LSRolesMask inRoleMask, NSArray **outApps);
-}
-
 @interface OrgMozillaChimeraPreferenceNavigation(Private)
 
 - (NSString*)getCurrentHomePage;
-+ (NSArray*)getWebBrowserList;
-+ (NSString*)displayNameForURL:(NSURL*)url;
 -(void)updateDefaultBrowserMenu;
 
 @end
 
 // this is for sorting the web browser bundle ID list by display name
-int compareBundleIDAppDisplayNames(id a, id b, void *context)
+static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
 {
   NSURL* appURLa = nil;
   NSURL* appURLb = nil;
@@ -88,8 +66,8 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   if ((LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)a, NULL, NULL, (CFURLRef*)&appURLa) == noErr) &&
       (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)b, NULL, NULL, (CFURLRef*)&appURLb) == noErr))
   {
-    NSString *aName = [OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURLa];
-    NSString *bName = [OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURLb];
+    NSString *aName = [[NSWorkspace sharedWorkspace] displayNameForFile:appURLa];
+    NSString *bName = [[NSWorkspace sharedWorkspace] displayNameForFile:appURLb];
     return [aName compare:bName];
   }
   
@@ -99,25 +77,6 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
 }
 
 @implementation OrgMozillaChimeraPreferenceNavigation
-
-+ (NSString*)displayNameForURL:(NSURL*)url
-{
-  NSString *name;
-  LSCopyDisplayNameForURL((CFURLRef)url, (CFStringRef *)&name);
-  return [name autorelease];
-}
-
-+ (NSString*)bundleIDForURL:(NSURL*)url
-{
-    NSBundle *tmpBundle = [NSBundle bundleWithPath:[[url path] stringByStandardizingPath]];
-    if (tmpBundle) {
-      NSString *tmpBundleID = [tmpBundle bundleIdentifier];
-      if (tmpBundleID && ([tmpBundleID length] > 0)) {
-        return tmpBundleID;
-      }
-    }
-    return nil;
-}
 
 - (id)initWithBundle:(NSBundle *)bundle
 {
@@ -142,10 +101,13 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   // 0: blank page. 1: home page. 2: last page visited. Our behaviour here should
   // match what the browser does when the prefs don't exist.
   if (([self getIntPref:"browser.startup.page" withSuccess:&gotPref] == 1) || !gotPref)
-    [checkboxNewWindowBlank setState:YES];
+    [checkboxNewWindowBlank setState:NSOnState];
   
   if (([self getIntPref:"browser.tabs.startPage" withSuccess:&gotPref] == 1))
-    [checkboxNewTabBlank setState:YES];
+    [checkboxNewTabBlank setState:NSOnState];
+
+  if ([self getBooleanPref:"camino.check_default_browser" withSuccess:&gotPref] || !gotPref)
+    [checkboxCheckDefaultBrowserOnLaunch setState:NSOnState];
 
   [textFieldHomePage setStringValue:[self getCurrentHomePage]];
   
@@ -158,11 +120,13 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   if (!mPrefService)
     return;
   
-  [self setPref:"browser.startup.homepage" toString:[textFieldHomePage   stringValue]];
+  [self setPref:"browser.startup.homepage" toString:[textFieldHomePage stringValue]];
   
   // ensure that the prefs exist
   [self setPref:"browser.startup.page"   toInt:[checkboxNewWindowBlank state] ? 1 : 0];
   [self setPref:"browser.tabs.startPage" toInt:[checkboxNewTabBlank state] ? 1 : 0];
+
+  [self setPref:"camino.check_default_browser" toBoolean:([checkboxCheckDefaultBrowserOnLaunch state] == NSOnState)];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -180,29 +144,10 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
     [self setPref:prefName toInt: [sender state] ? 1 : 0];
 }
 
-- (NSString*) getCurrentHomePage
+- (NSString*)getCurrentHomePage
 {
   BOOL gotPref;
-  
   return [self getStringPref:"browser.startup.homepage" withSuccess:&gotPref];
-}
-
-- (void)setDefaultBrowser:(NSString*)bundleID
-{
-  NSURL *browserURL = nil;
-  if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID, NULL, NULL, (CFURLRef*)&browserURL) == noErr) {
-    FSRef browserFSRef;
-    CFURLGetFSRef((CFURLRef)browserURL, &browserFSRef);
-    
-    _LSSetDefaultSchemeHandlerURL(@"http", browserURL);
-    _LSSetDefaultSchemeHandlerURL(@"https", browserURL);
-    _LSSetDefaultSchemeHandlerURL(@"ftp", browserURL);
-    _LSSetDefaultSchemeHandlerURL(@"gopher", browserURL);
-    _LSSetWeakBindingForType(0, 0, (CFStringRef)@"htm", kLSRolesAll, &browserFSRef);
-    _LSSetWeakBindingForType(0, 0, (CFStringRef)@"html", kLSRolesAll, &browserFSRef);
-    _LSSetWeakBindingForType(0, 0, (CFStringRef)@"url", kLSRolesAll, &browserFSRef);
-    _LSSaveAndRefresh();
-  }
 }
 
 // called when the users changes the selection in the default browser menu
@@ -215,7 +160,7 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
     if (LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)repObject, NULL, NULL, (CFURLRef*)&appURL) == noErr) {
       if ([[NSFileManager defaultManager] isExecutableFileAtPath:[[appURL path] stringByStandardizingPath]]) {
         // set it as the default browser
-        [self setDefaultBrowser:repObject];
+        [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:repObject];
         return;
       }
     }
@@ -242,7 +187,7 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
 - (void)openPanelDidEnd:(NSOpenPanel *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
   if (returnCode == NSOKButton) {
-    NSString *chosenBundleID = [OrgMozillaChimeraPreferenceNavigation bundleIDForURL:[[sheet URLs] objectAtIndex:0]];
+    NSString *chosenBundleID = [[NSWorkspace sharedWorkspace] identifierForBundle:[[sheet URLs] objectAtIndex:0]];
     if (chosenBundleID) {
       // add this browser to a list of apps we should always consider as browsers
       NSMutableArray *userChosenBundleIDs = [NSMutableArray arrayWithCapacity:2];
@@ -252,77 +197,49 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
         [[NSUserDefaults standardUserDefaults] setObject:userChosenBundleIDs forKey:kUserChosenBrowserUserDefaultsKey];
       }
       // make it the default browser
-      [self setDefaultBrowser:chosenBundleID];
+      [[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:chosenBundleID];
     }
   }
   [self updateDefaultBrowserMenu];
 }
 
 // returns an array of web browser bundle IDs sorted by display name
-+ (NSArray*)getWebBrowserList
+- (NSArray*)getWebBrowserList
 {
-  // use a set for automatic duplicate elimination
-  NSMutableSet* browsersSet = [NSMutableSet setWithCapacity:10];
+  NSArray* installedBrowsers = [[NSWorkspace sharedWorkspace] installedBrowserIdentifiers];
+
+  // use a set to avoid duplicates
+  NSMutableSet* browsersSet = [NSMutableSet setWithArray:installedBrowsers];
   
-  // using LSCopyApplicationURLsForURL would be nice (its not hidden),
-  // but it only exists on Mac OS X >= 10.3
-  NSArray* apps;
-  _LSCopyApplicationURLsForItemURL([NSURL URLWithString:@"http:"], kLSRolesViewer, &apps);
-  [apps autorelease];
-
-  // Put all the browsers into a new array, but only if they also support https and have a bundle ID we can access
-  NSEnumerator *appEnumerator = [apps objectEnumerator];
-  NSURL* anApp;
-  while ((anApp = [appEnumerator nextObject])) {
-    Boolean canHandleHTTPS;
-    if ((LSCanURLAcceptURL((CFURLRef)[NSURL URLWithString:@"https:"], (CFURLRef)anApp, kLSRolesAll, kLSAcceptDefault, &canHandleHTTPS) == noErr) &&
-        canHandleHTTPS) {
-      NSString *tmpBundleID = [OrgMozillaChimeraPreferenceNavigation bundleIDForURL:anApp];
-      if (tmpBundleID)
-        [browsersSet addObject:tmpBundleID];
-    }
-  }
-
   // add user chosen browsers to list
   [browsersSet addObjectsFromArray:[[NSUserDefaults standardUserDefaults] objectForKey:kUserChosenBrowserUserDefaultsKey]];
 
-  // add default browser in case it hasn't been already
-  NSURL *currSetURL = nil;
-  if (_LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL) == noErr)
-    [browsersSet addObject:[OrgMozillaChimeraPreferenceNavigation bundleIDForURL:currSetURL]];
-  [currSetURL release];
-  
-  NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
-
   // sort by display name
-  [browsers sortUsingFunction:&compareBundleIDAppDisplayNames context:NULL];
-
-  return browsers;
+  NSMutableArray* browsers = [[browsersSet allObjects] mutableCopy];
+  [browsers sortUsingFunction:&CompareBundleIDAppDisplayNames context:NULL];
+  return [browsers autorelease];
 }
 
 -(void)updateDefaultBrowserMenu
 {
-  NSArray *browsers = [OrgMozillaChimeraPreferenceNavigation getWebBrowserList];
+  NSArray *browsers = [self getWebBrowserList];
   NSMenu *menu = [[[NSMenu alloc] initWithTitle:@"Browsers"] autorelease];
-  NSMenuItem *selectedBrowserMenuItem = nil;
-  NSString *caminoBundleID = [[NSBundle mainBundle] bundleIdentifier];
+  NSString* caminoBundleID = [[NSBundle mainBundle] bundleIdentifier];
   
   // get current default browser's bundle ID
-  NSURL *currSetURL = nil;
-  _LSCopyDefaultSchemeHandlerURL(@"http", &currSetURL);
-  NSString *currentDefaultBrowserBundleID = [OrgMozillaChimeraPreferenceNavigation bundleIDForURL:currSetURL];
-  [currSetURL release];
+  NSString* currentDefaultBrowserBundleID = [[NSWorkspace sharedWorkspace] defaultBrowserIdentifier];
   
   // add separator first, current instance of Camino will be inserted before it
   [menu addItem:[NSMenuItem separatorItem]];
 
   // Set up new menu
-  NSEnumerator *browserEnumerator = [browsers objectEnumerator];
-  while (NSString *bundleID = [browserEnumerator nextObject]) {
-    NSURL *appURL = nil;
-    OSErr e = LSFindApplicationForInfo(kLSUnknownCreator, (CFStringRef)bundleID,
-                                       NULL, NULL, (CFURLRef*)&appURL);
-    if (e != noErr) {
+  NSMenuItem* selectedBrowserMenuItem = nil;
+  NSEnumerator* browserEnumerator = [browsers objectEnumerator];
+  NSString* bundleID;
+  while ((bundleID = [browserEnumerator nextObject]))
+  {
+    NSURL* appURL = [[NSWorkspace sharedWorkspace] urlOfApplicationWithIdentifier:bundleID];
+    if (!appURL) {
       // see if it was supposed to find Camino and use our own path in that case,
       // otherwise skip this bundle ID
       if ([bundleID isEqualToString:caminoBundleID])
@@ -331,7 +248,7 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
         continue;
     }
     
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[OrgMozillaChimeraPreferenceNavigation displayNameForURL:appURL]
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:[[NSWorkspace sharedWorkspace] displayNameForFile:appURL]
                                                   action:@selector(defaultBrowserChange:) keyEquivalent:@""];
     NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:[[appURL path] stringByStandardizingPath]];
     [icon setSize:NSMakeSize(16.0, 16.0)];

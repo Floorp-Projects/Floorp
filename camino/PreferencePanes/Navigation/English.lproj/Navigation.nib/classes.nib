@@ -17,6 +17,7 @@
             CLASS = OrgMozillaChimeraPreferenceNavigation; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                checkboxCheckDefaultBrowserOnLaunch = NSButton; 
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
                 defaultBrowserPopUp = NSPopUpButton; 

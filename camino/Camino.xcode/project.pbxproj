@@ -955,6 +955,48 @@
 //0F2
 //0F3
 //0F4
+		0F08FB1408D37DA90022DD45 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "NSWorkspace+Utils.h";
+			path = "src/extensions/NSWorkspace+Utils.h";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F08FB1508D37DA90022DD45 = {
+			fileRef = 0F08FB1408D37DA90022DD45;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F08FB1608D37DA90022DD45 = {
+			fileRef = 0F08FB1408D37DA90022DD45;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F08FB1708D37DB30022DD45 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = "NSWorkspace+Utils.m";
+			path = "src/extensions/NSWorkspace+Utils.m";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F08FB1808D37DB30022DD45 = {
+			fileRef = 0F08FB1708D37DB30022DD45;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F08FB1908D37DB30022DD45 = {
+			fileRef = 0F08FB1708D37DB30022DD45;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F0AD72C08CA3682002782ED = {
 			children = (
 				0F0AD72D08CA3682002782ED,
@@ -3437,6 +3479,7 @@
 				0F84BF1808862E4B00E23BC4,
 				0FC4B33E08941B4F009C5F41,
 				0F222C6108C6102B00B34F14,
+				0F08FB1508D37DA90022DD45,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4583,6 +4626,7 @@
 				0F222C6408C6103300B34F14,
 				0FE7712B08C7C42F00AFB850,
 				0FDEEA3B08CBD04200754D9B,
+				0F08FB1808D37DB30022DD45,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7319,6 +7363,7 @@
 				0F84BF1708862E4B00E23BC4,
 				0FC4B33F08941B4F009C5F41,
 				0F222C6208C6102B00B34F14,
+				0F08FB1608D37DA90022DD45,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8472,6 +8517,7 @@
 				0F222C6508C6103300B34F14,
 				0FE7712C08C7C42F00AFB850,
 				0FDEEA3C08CBD04200754D9B,
+				0F08FB1908D37DB30022DD45,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -16190,6 +16236,7 @@
 				F558099D02F22168015DF512,
 				0F84BF1608862E4B00E23BC4,
 				F527C90203BCD43601A80166,
+				0F08FB1408D37DA90022DD45,
 				0FBC0EE20798FA2700E8E0E2,
 				3FF08F0606E7CF9C001C9B19,
 				3FF08F0706E7CF9C001C9B19,
@@ -16224,6 +16271,7 @@
 				0F84BF1208862E3E00E23BC4,
 				3FE4ECE9082C2D89003BF39E,
 				F527C90303BCD43601A80166,
+				0F08FB1708D37DB30022DD45,
 				0FBC0EDF0798FA1900E8E0E2,
 				3FF08EFD06E7CF86001C9B19,
 				3FF08EFE06E7CF86001C9B19,
