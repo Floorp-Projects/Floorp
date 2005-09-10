@@ -122,6 +122,9 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #define NS_DTD_FLAG_IN_MISPLACED_CONTENT   0x00000200
 #define NS_DTD_FLAG_STOP_PARSING           0x00000400
 
+#define NS_DTD_FLAG_HAS_MAIN_CONTAINER     (NS_DTD_FLAG_HAD_BODY |            \
+                                            NS_DTD_FLAG_HAD_FRAMESET)
+
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -529,7 +532,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
   nsresult result = NS_OK;
   if (aParser && aNotifySink) { 
     if (NS_OK == anErrorCode) {
-      if (!(mFlags & (NS_DTD_FLAG_HAD_FRAMESET | NS_DTD_FLAG_HAD_BODY))) {
+      if (!(mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER)) {
         // This document is not a frameset document, however, it did not contain
         // a body tag either. So, make one!. Note: Body tag is optional per spec..
         result = BuildNeglectedTarget(eHTMLTag_body, eToken_start, aParser, aSink);
@@ -751,8 +754,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
       default:
         if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-          if(!(mFlags & (NS_DTD_FLAG_HAD_BODY |
-                         NS_DTD_FLAG_HAD_FRAMESET |
+          if(!(mFlags & (NS_DTD_FLAG_HAS_MAIN_CONTAINER |
                          NS_DTD_FLAG_ALTERNATE_CONTENT))) {
 
             //For bug examples from this code, see bugs: 18928, 20989.
@@ -1450,7 +1452,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           case eHTMLTag_head:
             mFlags |= NS_DTD_FLAG_HAS_EXPLICIT_HEAD;
 
-            if(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET)) {
+            if (mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,theNode);
               isTokenHandled=PR_TRUE;
             }
@@ -1492,6 +1494,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           // Script isn't really exclusively in the head. However, we treat it
           // as such to make sure that we don't pull scripts outside the head
           // into the body.
+          // XXX Where does the script go in a frameset document?
           isExclusive = !(mFlags & NS_DTD_FLAG_HAD_BODY);
           break;
 
@@ -1509,8 +1512,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         theHeadIsParent = theHeadIsParent &&
           (isExclusive ||
            (prefersBody
-            ? (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD) && (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)
-            : !(mFlags & NS_DTD_FLAG_HAD_BODY)));
+            ? (mFlags & NS_DTD_FLAG_HAS_EXPLICIT_HEAD) &&
+              (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)
+            : !(mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER)));
 
         if(theHeadIsParent) {
           // These tokens prefer to be in the head.
@@ -2915,7 +2919,7 @@ nsresult CNavDTD::OpenFrameset(const nsCParserNode *aNode)
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
 
-  nsresult result =( mSink) ? mSink->OpenFrameset(*aNode) : NS_OK; 
+  nsresult result = (mSink) ? mSink->OpenFrameset(*aNode) : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
   START_TIMER();
@@ -3121,8 +3125,7 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       // If we were dealing with a head container in the body, make sure to
       // close the head context now, so that body content doesn't get sucked
       // into the head.
-      if ((mFlags & NS_DTD_FLAG_HAD_BODY) &&
-          mBodyContext->GetCount() == mHeadContainerPosition) {
+      if (mBodyContext->GetCount() == mHeadContainerPosition) {
         result = CloseHead();
         mHeadContainerPosition = -1;
       }
@@ -3411,13 +3414,14 @@ nsresult CNavDTD::AddHeadContent(nsIParserNode *aNode){
     if (!nsHTMLElement::IsContainer(theTag) || theTag == eHTMLTag_userdefined) {
       result = mSink->AddLeaf(*aNode);
 
-      if (mFlags & NS_DTD_FLAG_HAD_BODY) {
+      if (mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) {
         // Close the head now so that body content doesn't get sucked into it.
         CloseHead();
       }
     }
     else {
-      if ((mFlags & NS_DTD_FLAG_HAD_BODY) && mHeadContainerPosition == -1) {
+      if ((mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) &&
+          mHeadContainerPosition == -1) {
         // Keep track of this so that we know when to close the head, when
         // this tag is done with.
         mHeadContainerPosition = mBodyContext->GetCount();
