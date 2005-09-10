@@ -119,9 +119,6 @@ public:
     virtual ~nsFtpState();
 
     nsresult Init(nsFTPChannel *aChannel, 
-                  nsIPrompt *aPrompter, 
-                  nsIAuthPrompt *aAuthPrompter, 
-                  nsIFTPEventSink *sink, 
                   nsICacheEntryDescriptor* cacheEntry,
                   nsIProxyInfo* proxyInfo,
                   PRUint64 startPos,
@@ -229,9 +226,6 @@ private:
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32                 mWriteCount;
     PRPackedBool           mIPv6Checked;
-    nsCOMPtr<nsIPrompt>    mPrompter;
-    nsCOMPtr<nsIFTPEventSink>       mFTPEventSink;
-    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
     
     static PRUint32         mSessionStartTime;
 

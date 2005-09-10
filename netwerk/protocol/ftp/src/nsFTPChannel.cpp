@@ -304,20 +304,6 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::AsyncOpen() called\n"));
 
-    // Initialize mEventSink
-    //
-    // Build a proxy for the progress event sink since we may need to call it
-    // while we are deep inside some of our state logic, and we wouldn't want
-    // to worry about some weird re-entrancy scenario.
-    nsCOMPtr<nsIProgressEventSink> sink;
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, sink);
-    if (sink)
-        NS_GetProxyForObject(NS_CURRENT_EVENTQ,
-                             NS_GET_IID(nsIProgressEventSink),
-                             sink,
-                             PROXY_ASYNC | PROXY_ALWAYS,
-                             getter_AddRefs(mEventSink));
-
     mListener = listener;
     mUserContext = ctxt;
 
@@ -365,26 +351,47 @@ nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
     // XXX this function must not fail since we have already called AddRequest!
 }
 
+void
+nsFTPChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)
+{
+    if (!mFTPEventSink) {
+        nsCOMPtr<nsIFTPEventSink> ftpSink;
+        GetCallback(ftpSink);
+        if (ftpSink)
+            NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+                                 NS_GET_IID(nsIFTPEventSink),
+                                 ftpSink,
+                                 PROXY_ASYNC | PROXY_ALWAYS,
+                                 getter_AddRefs(mFTPEventSink));
+    }
+    aResult = mFTPEventSink;
+}
+
+void
+nsFTPChannel::InitProgressSink()
+{
+    // Build a proxy for the progress event sink since we may need to call it
+    // while we are deep inside some of our state logic, and we wouldn't want
+    // to worry about some weird re-entrancy scenario.
+    nsCOMPtr<nsIProgressEventSink> progressSink;
+    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, progressSink);
+    if (progressSink)
+        NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+                             NS_GET_IID(nsIProgressEventSink),
+                             progressSink,
+                             PROXY_ASYNC | PROXY_ALWAYS,
+                             getter_AddRefs(mProgressSink));
+}
+
 nsresult 
 nsFTPChannel::SetupState(PRUint64 startPos, const nsACString& entityID)
 {
-    nsCOMPtr<nsIPrompt> prompt;
-    nsCOMPtr<nsIAuthPrompt> authPrompt;
-    nsCOMPtr<nsIFTPEventSink> ftpEventSink;
-
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, ftpEventSink);
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, prompt);
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, authPrompt);
-
     if (!mFTPState) {
         NS_NEWXPCOM(mFTPState, nsFtpState);
         if (!mFTPState) return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(mFTPState);
     }
-    nsresult rv = mFTPState->Init(this, 
-                                  prompt, 
-                                  authPrompt, 
-                                  ftpEventSink, 
+    nsresult rv = mFTPState->Init(this,
                                   mCacheEntry,
                                   mProxyInfo,
                                   startPos,
@@ -478,6 +485,8 @@ NS_IMETHODIMP
 nsFTPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
+    mProgressSink = nsnull;
+    mFTPEventSink = nsnull;
     return NS_OK;
 }
 
@@ -507,6 +516,8 @@ NS_IMETHODIMP
 nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    mProgressSink = nsnull;
+    mFTPEventSink = nsnull;
     return NS_OK;
 }
 
@@ -519,7 +530,7 @@ nsFTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
 // nsIInterfaceRequestor method
 NS_IMETHODIMP
-nsFTPChannel::GetInterface(const nsIID &aIID, void **aResult )
+nsFTPChannel::GetInterface(const nsIID &aIID, void **aResult)
 {
     // capture the progress event sink stuff. pass the rest through.
     if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
@@ -536,6 +547,9 @@ NS_IMETHODIMP
 nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
                        nsresult aStatus, const PRUnichar* aStatusArg)
 {
+    if (!mProgressSink)
+        InitProgressSink();
+
     if (aStatus == NS_NET_STATUS_CONNECTED_TO)
     {
         // The state machine needs to know that the data connection
@@ -547,24 +561,27 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
             NS_ERROR("ftp state is null.");
     }
 
-    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending || NS_FAILED(mStatus))
+    if (!mProgressSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending || NS_FAILED(mStatus))
         return NS_OK;
 
     nsCAutoString host;
     mURL->GetHost(host);
-    return mEventSink->OnStatus(this, mUserContext, aStatus,
-                                NS_ConvertUTF8toUTF16(host).get());
+    return mProgressSink->OnStatus(this, mUserContext, aStatus,
+                                   NS_ConvertUTF8toUTF16(host).get());
 }
 
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
                          PRUint64 aProgress, PRUint64 aProgressMax)
 {
-    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
+    if (!mProgressSink)
+        InitProgressSink();
+
+    if (!mProgressSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
         return NS_OK;
 
-    return mEventSink->OnProgress(this, mUserContext, 
-                                  aProgress, aProgressMax);
+    return mProgressSink->OnProgress(this, mUserContext, 
+                                     aProgress, aProgressMax);
 }
 
 
@@ -612,8 +629,9 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     mIsPending = PR_FALSE;
 
     // Drop notification callbacks to prevent cycles.
-    mCallbacks = 0;
-    mEventSink = 0;
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
+    mFTPEventSink = nsnull;
 
     return rv;
 }

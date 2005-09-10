@@ -189,9 +189,6 @@ nsDateTimeChannel::Open(nsIInputStream **_retval)
 NS_IMETHODIMP
 nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-    // Initialize mProgressSink
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
-
     nsresult rv = NS_CheckPortSafety(mPort, "datetime");
     if (NS_FAILED(rv)) return rv;
 
@@ -327,6 +324,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -357,6 +355,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -419,6 +418,9 @@ NS_IMETHODIMP
 nsDateTimeChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                      PRUint64 progress, PRUint64 progressMax)
 {
+    if (!mProgressSink)
+        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
+
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
         NS_ConvertUTF8toUTF16 host(mHost);

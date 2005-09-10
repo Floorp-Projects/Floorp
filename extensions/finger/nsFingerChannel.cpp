@@ -208,9 +208,6 @@ nsFingerChannel::Open(nsIInputStream **_retval)
 NS_IMETHODIMP
 nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-    // Initialize mProgressSink
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
-
     nsresult rv = NS_CheckPortSafety(mPort, "finger");
     if (NS_FAILED(rv)) return rv;
 
@@ -349,6 +346,7 @@ NS_IMETHODIMP
 nsFingerChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     mLoadGroup = aLoadGroup;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -379,6 +377,7 @@ NS_IMETHODIMP
 nsFingerChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     mCallbacks = aNotificationCallbacks;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -441,6 +440,9 @@ NS_IMETHODIMP
 nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                    PRUint64 progress, PRUint64 progressMax)
 {
+    if (!mProgressSink)
+        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
+
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
         mProgressSink->OnStatus(this, nsnull, status,

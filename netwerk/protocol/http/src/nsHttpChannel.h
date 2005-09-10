@@ -218,8 +218,6 @@ private:
     nsCOMPtr<nsISupports>             mOwner;
     nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
     nsCOMPtr<nsIProgressEventSink>    mProgressSink;
-    nsCOMPtr<nsIHttpEventSink>        mHttpEventSink;
-    nsCOMPtr<nsIChannelEventSink>     mChannelEventSink;
     nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsIURI>                  mReferrer;
     nsCOMPtr<nsISupports>             mSecurityInfo;

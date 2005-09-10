@@ -90,19 +90,20 @@ interface nsIChannel : nsIRequest
      * The notification callbacks for the channel.  This is set by clients, who
      * wish to provide a means to receive progress, status and protocol-specific 
      * notifications.  If this value is NULL, the channel implementation may use
-     * the notification callbacks from its load group.
+     * the notification callbacks from its load group.  The channel may also
+     * query the notification callbacks from its load group if its notification
+     * callbacks do not supply the requested interface.
      * 
      * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
      * and nsIAuthPrompt.
      *
-     * NOTE: channels generally query this attribute when they are opened and
-     * retain references to the resulting interfaces until they are done.  A
-     * channel may ignore changes to the notificationCallbacks attribute after
-     * it has been opened.  This rule also applies to notificationCallbacks
-     * queried from the channel's loadgroup.
-     *
      * When the channel is done, it must not continue holding references to
      * this object.
+     *
+     * NOTE: A channel implementation should take care when "caching" an
+     * interface pointer queried from its notification callbacks.  If the
+     * notification callbacks are changed, then a cached interface pointer may
+     * become invalid and may therefore need to be re-queried.
      */
     attribute nsIInterfaceRequestor notificationCallbacks;
 
@@ -169,7 +170,9 @@ interface nsIChannel : nsIRequest
 
     /**
      * Asynchronously open this channel.  Data is fed to the specified stream
-     * listener as it becomes available.
+     * listener as it becomes available.  The stream listener's methods are
+     * called on the thread that calls asyncOpen and are not called until
+     * after asyncOpen returns.
      *
      * @param aListener the nsIStreamListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
