@@ -391,11 +391,12 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
       
     NSBundle* curBundle = [NSBundle bundleWithPath:bundlePath];
     
-    // require the bundle signature to be 'CHIM'
+    // require the bundle signature to be "MOZC" or "CHIM" (former creator code)
     NSString* bundleSig = [[curBundle infoDictionary] objectForKey:@"CFBundleSignature"];
-    if (![bundleSig isEqualToString:@"CHIM"])
+    if (![bundleSig isEqualToString:@"MOZC"] &&
+        ![bundleSig isEqualToString:@"CHIM"])
     {
-      NSLog(@"%@ not loaded as Camino pref pane: signature is not 'CHIM'", bundlePath);
+      NSLog(@"%@ not loaded as Camino pref pane: signature is not 'MOZC'", bundlePath);
       continue;
     }
     

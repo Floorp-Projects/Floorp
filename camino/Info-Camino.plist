@@ -92,7 +92,7 @@
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.navigator</string>
+	<string>org.mozilla.camino</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -102,7 +102,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0+</string>
 	<key>CFBundleSignature</key>
-	<string>CHIM</string>
+	<string>MOZC</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

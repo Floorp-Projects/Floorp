@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AppleEventCode</key>
-	<string>CHIM</string>
+	<string>MOZC</string>
 	<key>Classes</key>
 	<dict>
 		<key>BrowserWindow</key>
