@@ -6,7 +6,7 @@
 
 <page id="winPref"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      headertitle="&Inspector.label;">
+      headertitle="&pref.inspector.title;">
 
   <stringbundle id="inspector-bundle" src="chrome://inspector/locale/inspector.properties"/>
 
@@ -54,10 +54,10 @@
 
   <vbox id="bxGeneralPrefs">
     <groupbox id="tbxBlink" flex="1">
-      <caption label="&elementBlinking.label;"/>
+      <caption label="&elementBlinking.caption;"/>
       <vbox>
-        <checkbox id="cbElOn" label="&blinkSelectedElement.label;" oncommand="enableBlinkPrefs(this.checked)"
-            preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
+        <checkbox id="cbElOn" label="&blinkSelectedElement.label;" accesskey="&blinkSelectedElement.accesskey;"
+          oncommand="enableBlinkPrefs(this.checked)" preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
         <grid>
           <columns>
             <column/>
@@ -98,20 +98,20 @@
           </rows>
         </grid>
         <vbox align="start">
-          <checkbox id="cbElInvert" label="&invertColors.label;"
-                    preftype="bool" prefstring="inspector.blink.invert" prefattribute="checked"/>
+          <checkbox id="cbElInvert" label="&invertColors.label;" accesskey="&invertColors.accesskey;"
+            preftype="bool" prefstring="inspector.blink.invert" prefattribute="checked"/>
         </vbox>
       </vbox>
     </groupbox>
     
     <groupbox id="tbxSidebar" flex="1">
-      <caption label="&Sidebar.label;"/>
+      <caption label="&Sidebar.caption;"/>
       <vbox flex="1">
         <vbox id="bxSidebarInstall" flex="1">
           <hbox>
             <description id="txSidebarMsg" flex="1">&installHowTo.label;</description>
           </hbox>
-          <button id="btnSidebarInstall" label="&install.label;" oncommand="sidebarPref.installSidebar()"/>
+          <button id="btnSidebarInstall" label="&install.label;" accesskey="&install.accesskey;" oncommand="sidebarPref.installSidebar()"/>
         </vbox>
       </vbox>
     </groupbox>

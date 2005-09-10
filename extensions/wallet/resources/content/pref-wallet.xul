@@ -46,7 +46,7 @@
 ]>
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://wallet/content/pref-wallet.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.wallet.title;">
 
   <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
@@ -69,7 +69,7 @@
   </script>
         
   <groupbox>
-    <caption label="&walletHeader.label;"/>
+    <caption label="&walletHeader.caption;"/>
     <description>&walletDescription.label;</description>
     <hbox align="center">
       <checkbox id="walletCaptureForms"

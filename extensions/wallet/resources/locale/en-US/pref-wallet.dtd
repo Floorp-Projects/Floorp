@@ -1,7 +1,6 @@
-<!ENTITY  lHeader                     "Forms">
-<!ENTITY  rHeader                     "Manage personal information">
+<!ENTITY  pref.wallet.title           "Forms">
 
-<!ENTITY  walletHeader.label          "Form Manager">
+<!ENTITY  walletHeader.caption        "Form Manager">
 <!ENTITY  walletDescription.label     "Form Manager can remember information about you so that filling out forms on web pages is faster.">
 <!ENTITY  walletEnabled.label         "Save form data from web pages when completing forms.">
 <!ENTITY  walletEnabled.accesskey     "f">

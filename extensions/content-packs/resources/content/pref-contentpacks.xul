@@ -51,7 +51,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul'); "
-      headertitle="&lHeader;">
+      headertitle="&pref.contentpacks.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -186,7 +186,7 @@
   ]]>
   </script>
 
-  <hbox class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&pref.contentpacks.title;"/>
 
   <!-- Language pack listbox -->
   <description>&languageIntro.label;</description>
