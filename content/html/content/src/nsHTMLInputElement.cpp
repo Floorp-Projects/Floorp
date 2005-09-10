@@ -1283,12 +1283,10 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   
   // For some reason or another we also need to check if the style shows us
   // as disabled.
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-  if (formControlFrame) {
-    nsIFrame* formFrame = nsnull;
-    CallQueryInterface(formControlFrame, &formFrame);
-    if (formFrame) {
-      const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
+  {
+    nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
+    if (frame) {
+      const nsStyleUserInterface* uiStyle = frame->GetStyleUserInterface();
 
       if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
           uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
