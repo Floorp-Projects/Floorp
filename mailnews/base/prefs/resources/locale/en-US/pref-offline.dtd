@@ -1,28 +1,28 @@
 <!-- extracted from content/pref-offline.xul -->
 
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
-<!ENTITY boxHeader  "Offline &amp; Disk Space">
-<!ENTITY rHeader  "Offline">
-<!ENTITY textStartUp   "When starting up:">
-<!ENTITY radioRememberPrevState "Remember previous online state">
+<!ENTITY pref.offline.title               "Offline &amp; Disk Space">
+<!ENTITY pref.offline.caption             "Offline">
+<!ENTITY textStartUp                      "When starting up:">
+<!ENTITY radioRememberPrevState           "Remember previous online state">
 <!ENTITY radioRememberPrevState.accesskey "R">
-<!ENTITY radioAskMe "Ask me for online state at startup">
-<!ENTITY radioAskMe.accesskey "A">
-<!ENTITY textGoingOnline   "Send unsent messages when going online?">
-<!ENTITY radioAutoSend  "Yes">
-<!ENTITY radioAutoSend.accesskey  "Y">
-<!ENTITY radioNotSend  "No">
-<!ENTITY radioNotSend.accesskey  "N">
-<!ENTITY radioAskUnsent  "Ask me">
-<!ENTITY radioAskUnsent.accesskey  "s">
-<!ENTITY textGoingOffline   "Download messages for offline use when going offline?">
-<!ENTITY radioAutoDownload  "Yes">
-<!ENTITY radioAutoDownload.accesskey  "e">
-<!ENTITY radioNotDownload  "No">
-<!ENTITY radioNotDownload.accesskey  "o">
-<!ENTITY radioAskDownload  "Ask me">
-<!ENTITY radioAskDownload.accesskey  "k">
-<!ENTITY Diskspace "Disk Space">
-<!ENTITY offlineCompact.label "Compact folders when it will save over">
-<!ENTITY offlineCompact.accesskey "C">
-<!ENTITY kb.label "KB">
+<!ENTITY radioAskMe                       "Ask me for online state at startup">
+<!ENTITY radioAskMe.accesskey             "A">
+<!ENTITY textGoingOnline                  "Send unsent messages when going online?">
+<!ENTITY radioAutoSend                    "Yes">
+<!ENTITY radioAutoSend.accesskey          "Y">
+<!ENTITY radioNotSend                     "No">
+<!ENTITY radioNotSend.accesskey           "N">
+<!ENTITY radioAskUnsent                   "Ask me">
+<!ENTITY radioAskUnsent.accesskey         "s">
+<!ENTITY textGoingOffline                 "Download messages for offline use when going offline?">
+<!ENTITY radioAutoDownload                "Yes">
+<!ENTITY radioAutoDownload.accesskey      "e">
+<!ENTITY radioNotDownload                 "No">
+<!ENTITY radioNotDownload.accesskey       "o">
+<!ENTITY radioAskDownload                 "Ask me">
+<!ENTITY radioAskDownload.accesskey       "k">
+<!ENTITY Diskspace                        "Disk Space">
+<!ENTITY offlineCompact.label             "Compact folders when it will save over">
+<!ENTITY offlineCompact.accesskey         "C">
+<!ENTITY kb.label                         "KB">

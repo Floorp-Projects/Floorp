@@ -44,7 +44,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pref.receipts.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -56,7 +56,7 @@
 
 
   <groupbox>
-    <caption label="&pane.title;"/>
+    <caption label="&pref.receipts.caption;"/>
 
     <vbox id="returnReceiptSettings" align="start">
       <checkbox id="alwaysRequest" label="&requestReceipt.label;"

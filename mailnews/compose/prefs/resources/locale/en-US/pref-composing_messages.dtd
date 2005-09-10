@@ -36,7 +36,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                           "Composition">
+<!ENTITY pref.composing.messages.title        "Composition">
 <!ENTITY forwardReply.label                   "Forwarding Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY inline.label                         "Inline">

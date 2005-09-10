@@ -11,7 +11,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="populateFonts();parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pref.composing.messages.title;">
     
   <script type="application/x-javascript">
   <![CDATA[

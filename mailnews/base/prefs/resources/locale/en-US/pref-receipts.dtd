@@ -36,8 +36,8 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!-- LOCALIZATION NOTE pref-receipts.dtd: UI for Mail/News Return Receipts prefs -->
-<!ENTITY pane.title                   "Return Receipts">
-<!ENTITY pane.description             "Settings for requesting or returning receipts">
+<!ENTITY pref.receipts.title          "Return Receipts">
+<!ENTITY pref.receipts.caption        "Return Receipts">
 <!ENTITY requestReceipt.label         "When sending messages, always request a return receipt">
 <!ENTITY requestReceipt.accesskey     "W">
 <!-- LOCALIZATION NOTE dsn.label: don't translate "DSN"  -->

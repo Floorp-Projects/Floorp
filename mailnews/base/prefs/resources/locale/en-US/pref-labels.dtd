@@ -35,8 +35,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                 "Labels">
-<!ENTITY labelsSettings.label       "Customize Labels">
+<!ENTITY pref.labels.title          "Labels">
+<!ENTITY labelsSettings.caption     "Customize Labels">
 <!ENTITY displayText.label          "Labels can be used to categorize and prioritize your messages.  Modify the appearance of Labels using the settings below.">
 <!ENTITY restoreDefaults.label      "Restore Defaults">
 <!ENTITY restoreDefaults.accesskey  "R">

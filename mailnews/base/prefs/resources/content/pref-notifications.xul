@@ -46,7 +46,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-notifications.xul');"
-      headertitle="&pane.title;"
+      headertitle="&pref.notifications.title;"
       id="mailNotificationsPage">
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-notifications.js"/>

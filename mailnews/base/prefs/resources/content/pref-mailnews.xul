@@ -46,7 +46,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pref.mailnews.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnews.js"/>
 

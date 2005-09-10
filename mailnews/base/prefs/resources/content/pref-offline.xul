@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-offline.xul');"
-      headertitle="&boxHeader;">
+      headertitle="&pref.offline.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -71,7 +71,7 @@
   </script>
 
 <groupbox>
-  <caption label="&rHeader;"/>
+  <caption label="&pref.offline.caption;"/>
 
   <label value="&textStartUp;"/>
     <radiogroup id="whenStartingUp" class="indent"

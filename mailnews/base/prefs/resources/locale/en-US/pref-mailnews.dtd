@@ -35,7 +35,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                       "Mail &amp; Newsgroups">
+<!ENTITY pref.mailnews.title              "Mail &amp; Newsgroups">
 <!ENTITY generalSettings.label            "General Settings">
 <!ENTITY confirmMove.label                "Confirm when moving folders to the Trash">
 <!ENTITY confirmMove.accesskey            "C">

@@ -35,7 +35,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                       "Notifications">
+<!ENTITY pref.notifications.title         "Notifications">
 <!ENTITY newMessagesArrive.label          "When new messages arrive:">
 <!ENTITY playSound.label                  "Play a sound">
 <!ENTITY playSound.accesskey              "P">

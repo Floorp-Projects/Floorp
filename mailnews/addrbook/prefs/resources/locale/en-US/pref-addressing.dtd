@@ -35,7 +35,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                            "Addressing">
+<!ENTITY pref.addressing.title                 "Addressing">
 <!ENTITY emailCollectiontitle.label            "Email Address Collection">
 <!ENTITY emailCollectionPicker.label           "Add email addresses to my:">
 <!ENTITY emailCollectionPicker.accesskey       "m">

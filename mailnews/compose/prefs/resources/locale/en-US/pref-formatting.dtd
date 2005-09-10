@@ -35,8 +35,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                   "Send Format">
-<!ENTITY pane.description             "Message formatting">
+<!ENTITY pref.formatting.title        "Send Format">
 <!ENTITY sendMail.label               "Send Format">
 <!ENTITY sendMaildesc.label           "When sending formatted (HTML) messages and one or more recipients are not listed as being able to receive HTML:">
 <!ENTITY askMe.label                  "Ask me what to do (Mail prompts you to choose a format)">

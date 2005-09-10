@@ -7,7 +7,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pref.viewing.messages.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

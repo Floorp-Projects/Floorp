@@ -48,7 +48,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
-      headertitle="&pane.title;">
+      headertitle="&pref.labels.title;">
 
   <popupset id="aTooltipSet"/>
 
@@ -61,7 +61,7 @@
   <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
 
   <groupbox>
-    <caption label="&labelsSettings.label;"/>
+    <caption label="&labelsSettings.caption;"/>
 
   <description>&displayText.label;</description>
 

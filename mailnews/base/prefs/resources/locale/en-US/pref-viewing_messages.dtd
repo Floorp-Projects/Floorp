@@ -36,8 +36,7 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY pane.title                       "Message Display">
-<!ENTITY pane.description                 "Settings for message display">
+<!ENTITY pref.viewing.messages.title      "Message Display">
 <!ENTITY style.label                      "Style:">
 <!ENTITY style.accesskey                  "t">
 <!ENTITY regular.label                    "Regular">

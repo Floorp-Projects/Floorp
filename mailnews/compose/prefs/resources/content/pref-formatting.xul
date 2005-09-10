@@ -6,7 +6,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="Init()"
-      headertitle="&pane.title;">
+      headertitle="&pref.formatting.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
