@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.39 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: sslsock.c,v 1.40 2005/09/10 01:18:40 nelsonb%netscape.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -491,12 +491,14 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 {
     sslSocket *ss = ssl_FindSocket(fd);
     SECStatus  rv = SECSuccess;
+    PRBool     holdingLocks;
 
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in Enable", SSL_GETPID(), fd));
 	return SECFailure;
     }
 
+    holdingLocks = (!ss->opt.noLocks);
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
 
@@ -619,8 +621,15 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	rv = SECFailure;
     }
 
-    ssl_ReleaseSSL3HandshakeLock(ss);
-    ssl_Release1stHandshakeLock(ss);
+    /* We can't use the macros for releasing the locks here,
+     * because ss->opt.noLocks might have changed just above.
+     * We must release these locks (monitors) here, if we aquired them above,
+     * regardless of the current value of ss->opt.noLocks.
+     */
+    if (holdingLocks) {
+	PZ_ExitMonitor((ss)->ssl3HandshakeLock);
+	PZ_ExitMonitor((ss)->firstHandshakeLock);
+    }
 
     return rv;
 }
