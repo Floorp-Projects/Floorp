@@ -5565,6 +5565,14 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                   aExtraArgument, aReturn),
                    NS_ERROR_NOT_INITIALIZED);
 
+  nsCOMPtr<nsIWebBrowserChrome> chrome;
+  GetWebBrowserChrome(getter_AddRefs(chrome));
+  if (!chrome) {
+    // No chrome means we don't want to go through with this open call
+    // -- see nsIWindowWatcher.idl
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
   nsXPIDLCString url;
   nsresult rv = NS_OK;  
 

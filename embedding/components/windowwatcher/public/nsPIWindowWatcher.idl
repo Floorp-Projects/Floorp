@@ -74,7 +74,9 @@ interface nsPIWindowWatcher : nsISupports
 
   /** Like the public interface's open(), but can deal with openDialog
       style arguments.
-      @param aParent parent window, if any. null if not.
+      @param aParent parent window, if any. Null if no parent.  If it is
+             impossible to get to an nsIWebBrowserChrome from aParent, this
+             method will effectively act as if aParent were null.
       @param aURL url to which to open the new window. Must already be
              escaped, if applicable. can be null.
       @param aName window name from JS window.open. can be null.
