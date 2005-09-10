@@ -6,7 +6,8 @@ Checklist of things to do before releasing a new Chimera version:
 - Update version number in InfoPlist.strings
 - Flip switch on Talkback server to enable wizard UI
 - Check in new release notes
-- Update automation to pick up new release notes
+- Update mozilla/camino/installer/Makefile.in to pick up new release notes
+  (CAMINO_VERSION)
 - Run a new automated build
 - Tag the tree
 - Move the build to releases/
