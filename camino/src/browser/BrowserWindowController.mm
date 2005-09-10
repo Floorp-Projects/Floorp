@@ -722,7 +722,16 @@ enum BWCOpenDest {
     
     // Get our saved dimensions.
     NSRect oldFrame = [[self window] frame];
-    [[self window] setFrameUsingName: NavigatorWindowFrameSaveName];
+    BOOL haveSavedFrame = [[self window] setFrameUsingName: NavigatorWindowFrameSaveName];
+    if (!haveSavedFrame)
+    {
+      NSRect mainScreenBounds = [[NSScreen mainScreen] visibleFrame];
+      NSRect windowBounds = NSInsetRect(mainScreenBounds, 4.0f, 4.0f);
+      const float kDefaultWindowWidth = 800.0f;
+      if (NSWidth(windowBounds) > kDefaultWindowWidth)
+        windowBounds.size.width = kDefaultWindowWidth;
+      [[self window] setFrame:windowBounds display:YES];
+    }
     
     if (NSEqualSizes(oldFrame.size, [[self window] frame].size))
       mustResizeChrome = YES;
