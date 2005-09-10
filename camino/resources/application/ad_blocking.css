@@ -8,7 +8,6 @@
 
 a:link[href*="/ad."] img,
 a:link[href*="/ads."] img,
-a:link[href*="/a="] img,
 a:link[href*="/adclick/"] img,
 a:link[href*="?click"] img,
 a:link[href*="?banner"] img,
@@ -43,7 +42,6 @@ a:link[href*="print2webcorp.com"] img,
 a:link[href*="googlesyndication.com"] img,
 a:link[href*="adquest3d.com"] img,
 a:link[href*="/RealMedia/ads/"] img,
-a:link[href*=".rd.yahoo.com"] img,
 a:link[href*=".jdoqocy.com"] img,
 a:link[href*=".zedo.com"] img,
 a:link[href*="/banman.asp?"] img,
@@ -78,8 +76,8 @@ embed[type="application/x-shockwave-flash"][src*=".adbutler.de"],
 embed[type="application/x-shockwave-flash"][src*="ad.tomshardware.com"],
 embed[type="application/x-shockwave-flash"][src*="ad4.sina.com.cn"],
 embed[type="application/x-shockwave-flash"][src*=".specificmedia.com"],
+embed[type="application/x-shockwave-flash"][src*="/flash/promotions/"],
 
-object[value*="?clickTAG"],
 
 img[src*="googlesyndication.com"],
 img[src*="mediaplex.com"],
@@ -103,7 +101,6 @@ img[src*="ximages.offeroptimizer.com"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
-iframe[src*="/a="],
 iframe[src*="?click"],
 iframe[src*="?banner"],
 iframe[src*="_Banner"],
@@ -137,10 +134,13 @@ iframe[src*="trackoffer."],
 iframe[src*="tracksponsor."],
 iframe[src*="bridgetrack.com"],
 iframe[src*=".trafficmp.com"],
+iframe[src*=".yieldmanager.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
-div#omniture
+div#omniture,
+div#cnnPartners,
+div[id^="ads_"]
 
 { display: none ! important }
 
