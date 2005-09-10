@@ -139,9 +139,10 @@ UNMAKE_PACKAGE	= \
     { rsync -a "$${MOUNTPOINT}/.VolumeIcon.icns" "$(MOZ_PKG_MAC_ICON)" || cleanup 1; }; \
   cleanup 0; \
   if test -n "$(MOZ_PKG_MAC_RSRC)" ; then \
-    hdiutil unflatten $(UNPACKAGE) && \
-    { /Developer/Tools/DeRez -skip plst -skip blkx $(UNPACKAGE) > "$(MOZ_PKG_MAC_RSRC)" || { hdiutil flatten $(UNPACKAGE) && false; }; } && \
-    hdiutil flatten $(UNPACKAGE); \
+    cp $(UNPACKAGE) $(MOZ_PKG_APPNAME).tmp.dmg && \
+    hdiutil unflatten $(MOZ_PKG_APPNAME).tmp.dmg && \
+    { /Developer/Tools/DeRez -skip plst -skip blkx $(MOZ_PKG_APPNAME).tmp.dmg > "$(MOZ_PKG_MAC_RSRC)" || { rm -f $(MOZ_PKG_APPNAME).tmp.dmg && false; }; } && \
+    rm -f $(MOZ_PKG_APPNAME).tmp.dmg; \
   fi; \
   $(NULL)
 # The plst and blkx resources are skipped because they belong to each
