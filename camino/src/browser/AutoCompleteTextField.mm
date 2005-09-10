@@ -231,7 +231,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [mProxyIcon removeFromSuperviewWithoutNeedingDisplay];
     [self addSubview:mProxyIcon];
     [mProxyIcon release];
-    [mProxyIcon setFrameOrigin: NSMakePoint(3, 4)];
+    [mProxyIcon setFrameOrigin: NSMakePoint(3, 3)];
     // Create the icon column
     column = [[[NSTableColumn alloc] initWithIdentifier:@"icon"] autorelease];
     [column setWidth:[mProxyIcon frame].origin.x + [mProxyIcon frame].size.width];
