@@ -4540,7 +4540,7 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
     if (!trusted) {
       //Check security state to determine if dispatcher is trusted
       nsIScriptSecurityManager *securityManager =
-        nsContentUtils::GetSecurityManager();
+        nsContentUtils::SecurityManager();
 
       PRBool enabled;
       nsresult res =

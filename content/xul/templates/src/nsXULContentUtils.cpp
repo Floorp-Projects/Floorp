@@ -454,7 +454,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute
     PRUnichar buf[256];
     nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
-        rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(aNameSpaceID, uri);
+        rv = nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"
     }
 

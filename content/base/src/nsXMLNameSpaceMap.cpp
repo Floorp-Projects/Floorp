@@ -111,8 +111,8 @@ nsresult
 nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 {
   PRInt32 id;
-  nsresult rv = nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(aURI,
-                                                                         id);
+  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(aURI,
+                                                                      id);
 
   NS_ENSURE_SUCCESS(rv, rv);
 

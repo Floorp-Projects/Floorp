@@ -160,16 +160,14 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   }
 #endif
 
-  NS_ENSURE_TRUE(nsContentUtils::GetParserServiceWeakRef(),
-                 NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(nsContentUtils::GetParserService(), NS_ERROR_UNEXPECTED);
 
   mFlags = aFlags;
   mWrapColumn = aWrapColumn;
 
   // Only create a linebreaker if we will handle wrapping.
   if (MayWrap()) {
-    mLineBreaker = nsContentUtils::GetLineBreaker();
-    if (!mLineBreaker) return NS_ERROR_FAILURE;
+    mLineBreaker = nsContentUtils::LineBreaker();
   }
 
   // Set the line break character:
@@ -1144,8 +1142,7 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
     Write(aText);
   }
   else if (type == eHTMLTag_entity) {
-    nsIParserService* parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService* parserService = nsContentUtils::GetParserService();
     if (parserService) {
       nsAutoString str(aText);
       PRInt32 entity;
@@ -1877,7 +1874,7 @@ nsPlainTextSerializer::GetIdForContent(nsIContent* aContent)
     return eHTMLTag_unknown;
   }
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
 
   return parserService ? parserService->HTMLAtomTagToId(aContent->Tag()) :
                          eHTMLTag_unknown;
@@ -1892,7 +1889,7 @@ nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 {
   PRBool isBlock = PR_FALSE;
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
     parserService->IsBlock(aId, isBlock);
   }
@@ -1908,7 +1905,7 @@ nsPlainTextSerializer::IsContainer(PRInt32 aId)
 {
   PRBool isContainer = PR_FALSE;
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
     parserService->IsContainer(aId, isContainer);
   }

@@ -6270,8 +6270,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
       memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
       
       PRInt32 breakP=0;
-      PRBool needMore=PR_TRUE;
-      breakP = nsContentUtils::GetLineBreaker()->Next(aWordBuf, 
+      breakP = nsContentUtils::LineBreaker()->Next(aWordBuf, 
                                          aRunningWordLen+wordLen, 0);
       // when we look at two pieces text together, we might decide to break
       // eariler than if we only look at the 2nd pieces of text
@@ -6295,7 +6294,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     // Even if the previous text fragment is not breakable, the connected pieces 
     // can be breakable in between. This especially true for CJK.
     PRBool canBreak;
-    canBreak = nsContentUtils::GetLineBreaker()->BreakInBetween(aWordBuf, 
+    canBreak = nsContentUtils::LineBreaker()->BreakInBetween(aWordBuf, 
                                             aRunningWordLen, bp, wordLen);
     if (canBreak) {
       wordLen = 0;

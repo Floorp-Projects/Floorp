@@ -249,7 +249,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   PRInt32 nsid = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
-    nsresult rv = nsContentUtils::GetNSManagerWeakRef()->
+    nsresult rv = nsContentUtils::NameSpaceManager()->
       RegisterNameSpace(aNamespaceURI, nsid);
     NS_ENSURE_SUCCESS(rv, rv);
   }

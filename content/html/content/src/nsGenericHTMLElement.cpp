@@ -3909,7 +3909,7 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
 {
   aProtocol.Truncate();
 
-  nsIIOService* ioService = nsContentUtils::GetIOServiceWeakRef();
+  nsIIOService* ioService = nsContentUtils::GetIOService();
   NS_ENSURE_TRUE(ioService, NS_ERROR_FAILURE);
 
   nsCAutoString protocol;

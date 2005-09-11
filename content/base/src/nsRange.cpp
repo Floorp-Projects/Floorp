@@ -2432,7 +2432,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
         nsCOMPtr<nsIPrincipal> sysPrin;
         nsCOMPtr<nsIPrincipal> subjectPrin;
 
-        nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+        nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
 
         // Just to compare, not to use!
         result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));

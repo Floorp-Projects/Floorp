@@ -332,7 +332,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsIScriptSecurityManager *securityManager =
-            nsContentUtils::GetSecurityManager();
+            nsContentUtils::SecurityManager();
 
         rv = securityManager->CheckLoadURI(aLoaderURI, docURI,
                                            nsIScriptSecurityManager::STANDARD);
@@ -527,7 +527,7 @@ nsSyncLoader::OnChannelRedirect(nsIChannel *aOldChannel,
     rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(oldURI, newURI);
+    rv = nsContentUtils::SecurityManager()->CheckSameOriginURI(oldURI, newURI);
 
     NS_ENSURE_SUCCESS(rv, rv);
 

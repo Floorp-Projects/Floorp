@@ -668,7 +668,7 @@ nsXULPrototypeDocument::GetDocumentPrincipal()
     NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
     if (!mDocumentPrincipal) {
         nsIScriptSecurityManager *securityManager =
-            nsContentUtils::GetSecurityManager();
+            nsContentUtils::SecurityManager();
         nsresult rv = NS_OK;
 
         // XXX This should be handled by the security manager, see bug 160042

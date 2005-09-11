@@ -251,14 +251,14 @@ public:
   // element.
   static PRBool InProlog(nsIDOMNode *aNode);
 
-  static nsIParserService* GetParserServiceWeakRef();
+  static nsIParserService* GetParserService();
 
-  static nsINameSpaceManager* GetNSManagerWeakRef()
+  static nsINameSpaceManager* NameSpaceManager()
   {
     return sNameSpaceManager;
   }
 
-  static nsIIOService* GetIOServiceWeakRef()
+  static nsIIOService* GetIOService()
   {
     return sIOService;
   }
@@ -269,10 +269,10 @@ public:
   }
 
 #ifdef MOZ_XTF
-  static nsIXTFService* GetXTFServiceWeakRef();
+  static nsIXTFService* GetXTFService();
 #endif
 
-  static nsIScriptSecurityManager* GetSecurityManager()
+  static nsIScriptSecurityManager* SecurityManager()
   {
     return sSecurityManager;
   }
@@ -339,12 +339,12 @@ public:
     return sPrefBranch;
   }
 
-  static nsILineBreaker* GetLineBreaker()
+  static nsILineBreaker* LineBreaker()
   {
     return sLineBreaker;
   }
 
-  static nsIWordBreaker* GetWordBreaker()
+  static nsIWordBreaker* WordBreaker()
   {
     return sWordBreaker;
   }

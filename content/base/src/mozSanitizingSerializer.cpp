@@ -124,8 +124,7 @@ NS_IMETHODIMP
 mozSanitizingHTMLSerializer::Init(PRUint32 aFlags, PRUint32 dummy,
                                   const char* aCharSet, PRBool aIsCopying)
 {
-  NS_ENSURE_TRUE(nsContentUtils::GetParserServiceWeakRef(),
-                 NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(nsContentUtils::GetParserService(), NS_ERROR_UNEXPECTED);
 
   return NS_OK;
 }
@@ -190,7 +189,7 @@ mozSanitizingHTMLSerializer::IsContainer(PRInt32 aId)
 {
   PRBool isContainer = PR_FALSE;
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
   if (parserService) {
     parserService->IsContainer(aId, isContainer);
   }
@@ -214,7 +213,7 @@ mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent)
     return eHTMLTag_unknown;
   }
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
 
   return parserService ? parserService->HTMLAtomTagToId(aContent->Tag()) :
                          eHTMLTag_unknown;
@@ -441,8 +440,7 @@ mozSanitizingHTMLSerializer::DoOpenContainer(PRInt32 aTag)
 
   if (IsAllowedTag(type))
   {
-    nsIParserService* parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService* parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return NS_ERROR_OUT_OF_MEMORY;
     const PRUnichar* tag_name = parserService->HTMLIdToStringTag(aTag);
@@ -488,8 +486,7 @@ mozSanitizingHTMLSerializer::DoCloseContainer(PRInt32 aTag)
   eHTMLTags type = (eHTMLTags)aTag;
 
   if (IsAllowedTag(type)) {
-    nsIParserService* parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService* parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return NS_ERROR_OUT_OF_MEMORY;
     const PRUnichar* tag_name = parserService->HTMLIdToStringTag(aTag);
@@ -699,7 +696,7 @@ mozSanitizingHTMLSerializer::ParsePrefs(const nsAString& aPref)
 nsresult
 mozSanitizingHTMLSerializer::ParseTagPref(const nsCAutoString& tagpref)
 {
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -555,8 +555,7 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   nsresult rv;
   if (!aQualifiedName.IsEmpty()) {
-    nsIParserService *parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService *parserService = nsContentUtils::GetParserService();
     NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
 
     const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
@@ -1205,11 +1204,7 @@ nsDocument::GetPrincipal()
 {
   if (!mPrincipal) {
     nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
-
-    if (!securityManager) {
-      return nsnull;
-    }
+      nsContentUtils::SecurityManager();
 
     NS_WARN_IF_FALSE(mDocumentURI, "no URI!");
     nsresult rv =
@@ -1265,7 +1260,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
     NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
     
     nsIScriptSecurityManager* securityManager =
-      nsContentUtils::GetSecurityManager();
+      nsContentUtils::SecurityManager();
     rv = securityManager->
       CheckLoadURIWithPrincipal(principal, aURI,
                                 nsIScriptSecurityManager::STANDARD);
@@ -2731,8 +2726,8 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   nsContentList *list = nsnull;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
-                                                          &nameSpaceId);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       &nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...

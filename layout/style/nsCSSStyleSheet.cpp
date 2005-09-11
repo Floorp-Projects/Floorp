@@ -2173,8 +2173,8 @@ nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
     return NS_ERROR_FAILURE;
 
   // Get the security manager and do the same-origin check
-  rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(cx,
-                                                             mInner->mSheetURI);
+  rv = nsContentUtils::SecurityManager()->CheckSameOrigin(cx,
+                                                          mInner->mSheetURI);
   if (NS_FAILED(rv)) {
     return rv;
   }

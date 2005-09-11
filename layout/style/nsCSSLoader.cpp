@@ -842,7 +842,7 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
   LOG(("CSSLoaderImpl::CheckLoadAllowed"));
   
   // Check with the security manager
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
   nsresult rv = secMan->CheckLoadURI(aSourceURI, aTargetURI,
                                      nsIScriptSecurityManager::ALLOW_CHROME);
   if (NS_FAILED(rv)) { // failure is normal here; don't warn

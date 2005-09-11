@@ -430,8 +430,8 @@ nsXTFElementWrapper::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 {
   *aResult = nsnull;
   nsCOMPtr<nsIContent> it;
-  nsContentUtils::GetXTFServiceWeakRef()->CreateElement(getter_AddRefs(it),
-                                                        mNodeInfo);
+  nsContentUtils::GetXTFService()->CreateElement(getter_AddRefs(it),
+                                                 mNodeInfo);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 

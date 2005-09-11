@@ -156,8 +156,8 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
   nsresult rv = NS_OK;
 
   if (mInner.mNamespaceID > 0) {
-    rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(mInner.mNamespaceID,
-                                                                aNameSpaceURI);
+    rv = nsContentUtils::NameSpaceManager()->GetNameSpaceURI(mInner.mNamespaceID,
+                                                             aNameSpaceURI);
   } else {
     SetDOMStringToNull(aNameSpaceURI);
   }
@@ -213,7 +213,7 @@ PRBool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   PRInt32 nsid;
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
+  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   return nsINodeInfo::NamespaceEquals(nsid);
 }
