@@ -268,7 +268,7 @@ NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
   }
 #ifdef MOZ_XTF
   if (aElementType > kNameSpaceID_LastBuiltin) {
-    nsIXTFService* xtfService = nsContentUtils::GetXTFServiceWeakRef();
+    nsIXTFService* xtfService = nsContentUtils::GetXTFService();
     NS_ASSERTION(xtfService, "could not get xtf service");
     if (xtfService &&
         NS_SUCCEEDED(xtfService->CreateElement(aResult, aNodeInfo)))

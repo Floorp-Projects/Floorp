@@ -329,7 +329,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   nsCxPusher pusher(aBoundElement);
 
   // Check whether it's OK to call the method.
-  rv = nsContentUtils::GetSecurityManager()->CheckFunctionAccess(cx, method, thisObject);
+  rv = nsContentUtils::SecurityManager()->CheckFunctionAccess(cx, method, thisObject);
 
   JSBool ok = JS_TRUE;
   if (NS_SUCCEEDED(rv)) {

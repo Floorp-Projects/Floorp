@@ -145,7 +145,7 @@ NS_IMETHODIMP nsXMLContentBuilder::SetDocument(nsIDOMDocument *doc)
 /* void setElementNamespace (in AString ns); */
 NS_IMETHODIMP nsXMLContentBuilder::SetElementNamespace(const nsAString & ns)
 {
-  nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(ns, mNamespaceId);
+  nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns, mNamespaceId);
   return NS_OK;
 }
 

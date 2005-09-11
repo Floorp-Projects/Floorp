@@ -277,7 +277,7 @@ nsXMLDocument::OnChannelRedirect(nsIChannel *aOldChannel,
   if (NS_FAILED(rv)) 
     return rv;
 
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
 
   if (mScriptContext && !mCrossSiteAccessEnabled) {
     nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", & rv));

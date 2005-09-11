@@ -430,8 +430,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
                                       kNameSpaceID_None,
                                       getter_AddRefs(nodeInfo));
     } else {
-      nsIParserService* parserService =
-        nsContentUtils::GetParserServiceWeakRef();
+      nsIParserService* parserService = nsContentUtils::GetParserService();
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -505,8 +504,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         nsCOMPtr<nsIContent> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-        nsIParserService* parserService =
-          nsContentUtils::GetParserServiceWeakRef();
+        nsIParserService* parserService = nsContentUtils::GetParserService();
         if (!parserService)
           return NS_ERROR_OUT_OF_MEMORY;
 

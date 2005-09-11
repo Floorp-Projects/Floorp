@@ -760,8 +760,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
                                void* aThis)
 {
   if (SINK_LOG_TEST(gSinkLogModuleInfo, aBit)) {
-    nsIParserService *parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService *parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return;
 
@@ -871,8 +870,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
   } else {
-    nsIParserService *parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService *parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return nsnull;
 
@@ -902,7 +900,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
   *aResult = nsnull;
 
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1110,8 +1108,7 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 
 #ifdef NS_DEBUG
     // Tracing code
-    nsIParserService *parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService *parserService = nsContentUtils::GetParserService();
     if (parserService) {
       nsHTMLTag tag = nsHTMLTag(mStack[mStackPos - 1].mType);
       NS_ConvertUTF16toUTF8 str(parserService->HTMLIdToStringTag(tag));
@@ -1972,9 +1969,8 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
   NS_ENSURE_TRUE(cx, PR_TRUE);
 
   PRBool enabled = PR_TRUE;
-  nsContentUtils::GetSecurityManager()->CanExecuteScripts(cx,
-                                                          principal,
-                                                          &enabled);
+  nsContentUtils::SecurityManager()->CanExecuteScripts(cx, principal,
+                                                       &enabled);
   return enabled;
 }
 
@@ -2003,7 +1999,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   CallQueryInterface(aDoc, &mHTMLDocument);
 
   mObservers = nsnull;
-  nsIParserService* service = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* service = nsContentUtils::GetParserService();
   if (!service) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3589,7 +3585,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     // NAV compatibility quirk
 
     nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
+      nsContentUtils::SecurityManager();
 
     rv = securityManager->
       CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,

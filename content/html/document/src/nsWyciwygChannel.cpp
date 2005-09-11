@@ -208,7 +208,7 @@ nsWyciwygChannel::GetOwner(nsISupports **aOwner)
     NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPrincipal> principal;
-    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
     rv = secMan->GetCodebasePrincipal(mOriginalURI, getter_AddRefs(principal));
     if (NS_SUCCEEDED(rv)) {
       mOwner = principal;

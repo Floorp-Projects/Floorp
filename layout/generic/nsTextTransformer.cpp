@@ -182,9 +182,6 @@ nsTextTransformer::nsTextTransformer(nsPresContext* aPresContext)
 #ifdef IBMBIDI
   mPresContext = aPresContext;
 #endif
-  if (nsContentUtils::GetLineBreaker() == nsnull &&
-      nsContentUtils::GetWordBreaker() == nsnull )
-    NS_ASSERTION(0, "invalid creation of nsTextTransformer");
   
 #ifdef DEBUG
   static PRBool firstTime = PR_TRUE;
@@ -541,11 +538,11 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
-      breakBetween = nsContentUtils::GetLineBreaker()->BreakInBetween(
+      breakBetween = nsContentUtils::LineBreaker()->BreakInBetween(
           &firstChar, 1, cp, (fragLen-offset));
     }
     else {
-      breakBetween = nsContentUtils::GetWordBreaker()->BreakInBetween(
+      breakBetween = nsContentUtils::WordBreaker()->BreakInBetween(
           &firstChar, 1, cp, (fragLen-offset));
     }
 
@@ -568,10 +565,10 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
       // Find next position
       PRInt32 next;
       if (aForLineBreak) {
-        next = nsContentUtils::GetLineBreaker()->Next(cp0, fragLen, offset);
+        next = nsContentUtils::LineBreaker()->Next(cp0, fragLen, offset);
       }
       else {
-        next = nsContentUtils::GetWordBreaker()->NextWord(cp0, fragLen, offset);
+        next = nsContentUtils::WordBreaker()->NextWord(cp0, fragLen, offset);
       }
       if (aForLineBreak && next == NS_LINEBREAKER_NEED_MORE_TEXT ||
           next == NS_WORDBREAKER_NEED_MORE_TEXT)
@@ -1213,11 +1210,11 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
     const PRUnichar* cp = cp0 + offset;
     PRBool breakBetween = PR_FALSE;
     if (aForLineBreak) {
-      breakBetween = nsContentUtils::GetLineBreaker()->BreakInBetween(cp0, 
+      breakBetween = nsContentUtils::LineBreaker()->BreakInBetween(cp0, 
           offset + 1, mTransformBuf.GetBufferEnd()-1, 1);
     }
     else {
-      breakBetween = nsContentUtils::GetWordBreaker()->BreakInBetween(cp0,
+      breakBetween = nsContentUtils::WordBreaker()->BreakInBetween(cp0,
           offset + 1, mTransformBuf.GetBufferEnd()-1, 1);
     }
 
@@ -1225,10 +1222,10 @@ nsTextTransformer::ScanNormalUnicodeText_B(PRBool aForLineBreak,
       // Find next position
       PRInt32 prev;
       if (aForLineBreak) {
-        prev = nsContentUtils::GetLineBreaker()->Prev(cp0, offset, offset);
+        prev = nsContentUtils::LineBreaker()->Prev(cp0, offset, offset);
       }
       else {
-        prev = nsContentUtils::GetWordBreaker()->PrevWord(cp0, offset, offset);
+        prev = nsContentUtils::WordBreaker()->PrevWord(cp0, offset, offset);
       }
       if (aForLineBreak && prev == NS_LINEBREAKER_NEED_MORE_TEXT ||
           prev == NS_WORDBREAKER_NEED_MORE_TEXT)

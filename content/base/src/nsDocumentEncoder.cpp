@@ -1431,8 +1431,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
       rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
-      nsIParserService *parserService =
-        nsContentUtils::GetParserServiceWeakRef();
+      nsIParserService *parserService = nsContentUtils::GetParserService();
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
       while ((IsFirstNode(node)) && (!IsRoot(parent)) && (parent != common))
@@ -1514,8 +1513,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
       rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
-      nsIParserService *parserService =
-        nsContentUtils::GetParserServiceWeakRef();
+      nsIParserService *parserService = nsContentUtils::GetParserService();
       if (!parserService)
         return NS_ERROR_OUT_OF_MEMORY;
       while ((IsLastNode(node)) && (!IsRoot(parent)) && (parent != common))

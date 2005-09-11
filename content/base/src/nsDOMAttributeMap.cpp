@@ -389,8 +389,8 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
   PRInt32 nameSpaceID = kNameSpaceID_None;
 
   if (!aNamespaceURI.IsEmpty()) {
-    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
-                                                          &nameSpaceID);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       &nameSpaceID);
 
     if (nameSpaceID == kNameSpaceID_Unknown) {
       return NS_OK;

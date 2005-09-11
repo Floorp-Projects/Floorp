@@ -1374,7 +1374,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   // Get security manager, check to see if access to action URI is allowed.
   //
   nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
+      nsContentUtils::SecurityManager();
   rv = securityManager->
     CheckLoadURIWithPrincipal(document->GetPrincipal(), actionURL,
                               nsIScriptSecurityManager::STANDARD);

@@ -121,28 +121,28 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIConsoleService.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
-static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
-nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
-nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
-nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
+nsIXPConnect *nsContentUtils::sXPConnect;
+nsIScriptSecurityManager *nsContentUtils::sSecurityManager;
+nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack;
 nsIParserService *nsContentUtils::sParserService = nsnull;
-nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
-nsIIOService *nsContentUtils::sIOService = nsnull;
+nsINameSpaceManager *nsContentUtils::sNameSpaceManager;
+nsIIOService *nsContentUtils::sIOService;
 #ifdef MOZ_XTF
 nsIXTFService *nsContentUtils::sXTFService = nsnull;
 #endif
 nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
 nsIPref *nsContentUtils::sPref = nsnull;
-imgILoader *nsContentUtils::sImgLoader = nsnull;
+imgILoader *nsContentUtils::sImgLoader;
 nsIConsoleService *nsContentUtils::sConsoleService;
 nsIStringBundleService *nsContentUtils::sStringBundleService;
 nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
 nsIContentPolicy *nsContentUtils::sContentPolicyService;
 PRBool nsContentUtils::sTriedToGetContentPolicy = PR_FALSE;
-nsILineBreaker *nsContentUtils::sLineBreaker = nsnull;
-nsIWordBreaker *nsContentUtils::sWordBreaker = nsnull;
+nsILineBreaker *nsContentUtils::sLineBreaker;
+nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIEventQueueService *nsContentUtils::sEventQueueService;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
 
@@ -179,12 +179,7 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
-  if (NS_FAILED(rv) && sXPConnect) {
-    // However, if we can't get a context stack after getting
-    // an nsIXPConnect, things are broken, so let's fail here.
-
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
@@ -225,7 +220,7 @@ nsContentUtils::Init()
  */
 /* static */
 nsIParserService*
-nsContentUtils::GetParserServiceWeakRef()
+nsContentUtils::GetParserService()
 {
   // XXX: This isn't accessed from several threads, is it?
   if (!sParserService) {
@@ -242,7 +237,7 @@ nsContentUtils::GetParserServiceWeakRef()
 
 #ifdef MOZ_XTF
 nsIXTFService*
-nsContentUtils::GetXTFServiceWeakRef()
+nsContentUtils::GetXTFService()
 {
   if (!sXTFService) {
     nsresult rv = CallGetService(kXTFServiceCID, &sXTFService);
@@ -904,10 +899,6 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
 nsIDocShell *
 nsContentUtils::GetDocShellFromCaller()
 {
-  if (!sThreadJSContextStack) {
-    return nsnull;
-  }
-
   JSContext *cx = nsnull;
   sThreadJSContextStack->Peek(&cx);
 
@@ -925,10 +916,6 @@ nsContentUtils::GetDocShellFromCaller()
 nsIDOMDocument *
 nsContentUtils::GetDocumentFromCaller()
 {
-  if (!sThreadJSContextStack) {
-    return nsnull;
-  }
-
   JSContext *cx = nsnull;
   sThreadJSContextStack->Peek(&cx);
 
@@ -1647,7 +1634,7 @@ nsresult
 nsContentUtils::CheckQName(const nsAString& aQualifiedName,
                            PRBool aNamespaceAware)
 {
-  nsIParserService *parserService = GetParserServiceWeakRef();
+  nsIParserService *parserService = GetParserService();
   NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
 
   const PRUnichar *colon;
@@ -1661,7 +1648,7 @@ nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
                            const nsAFlatString& aQName,
                            PRInt32 *aNamespace, nsIAtom **aLocalName)
 {
-  nsIParserService* parserService = GetParserServiceWeakRef();
+  nsIParserService* parserService = GetParserService();
   NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
 
   const PRUnichar* colon;
@@ -1676,7 +1663,7 @@ nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
                             nameSpace);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    GetNSManagerWeakRef()->GetNameSpaceID(nameSpace, aNamespace);
+    NameSpaceManager()->GetNameSpaceID(nameSpace, aNamespace);
     if (*aNamespace == kNameSpaceID_Unknown)
       return NS_ERROR_FAILURE;
 
@@ -1722,7 +1709,7 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      nsNodeInfoManager* aNodeInfoManager,
                                      nsINodeInfo** aNodeInfo)
 {
-  nsIParserService* parserService = GetParserServiceWeakRef();
+  nsIParserService* parserService = GetParserService();
   NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
 
   const nsAFlatString& qName = PromiseFlatString(aQualifiedName);

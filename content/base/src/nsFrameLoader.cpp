@@ -122,7 +122,7 @@ nsFrameLoader::LoadFrame()
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
   // Check for security
-  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
 
   // Get referring URL
   nsCOMPtr<nsIURI> referrer;

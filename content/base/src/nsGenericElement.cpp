@@ -417,8 +417,8 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
 
   // Get the namespace id for the URI
   PRInt32 namespaceId;
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
-                                                        &namespaceId);
+  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                     &namespaceId);
   if (namespaceId == kNameSpaceID_Unknown) {
     return NS_OK;
   }
@@ -1520,7 +1520,7 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
                                  nsAString& aReturn)
 {
   PRInt32 nsid;
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
+  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
@@ -1559,7 +1559,7 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
   PRInt32 nsid;
 
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
+  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
@@ -1631,8 +1631,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   nsIDocument* document = GetCurrentDoc();
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
-                                                          &nameSpaceId);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
+                                                       &nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
@@ -1674,7 +1674,7 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
   NS_ENSURE_ARG_POINTER(aReturn);
 
   PRInt32 nsid;
-  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, &nsid);
+  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
@@ -2410,7 +2410,7 @@ nsGenericElement::GetBaseURI() const
                  doc->GetDocumentCharacterSet().get(), parentBase);
   if (NS_SUCCEEDED(rv)) {
     // do a security check, almost the same as nsDocument::SetBaseURL()
-    rv = nsContentUtils::GetSecurityManager()->
+    rv = nsContentUtils::SecurityManager()->
       CheckLoadURIWithPrincipal(doc->GetPrincipal(), ourBase,
                                 nsIScriptSecurityManager::STANDARD);
   }
@@ -3754,8 +3754,8 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(IsInDoc(), "bad content");
 
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  PRInt32 indent;
+  for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   nsAutoString buf;
   mNodeInfo->GetQualifiedName(buf);
@@ -3763,7 +3763,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "@%p", this);
 
-  PRUint32 attrcount = mAttrsAndChildren.AttrCount();
+  PRUint32 index, attrcount = mAttrsAndChildren.AttrCount();
   for (index = 0; index < attrcount; index++) {
     nsAutoString buffer;
 

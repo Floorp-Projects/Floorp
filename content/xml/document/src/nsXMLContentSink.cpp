@@ -432,7 +432,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
         mPrettyPrintXML) {
       mPrettyPrintHasFactoredElements =
-        nsContentUtils::GetNSManagerWeakRef()->
+        nsContentUtils::NameSpaceManager()->
           HasElementCreator(aNodeInfo->NamespaceID());
     }
 
@@ -639,7 +639,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Do security check
-    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
     rv = secMan->
       CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), url,
                                 nsIScriptSecurityManager::ALLOW_CHROME);

@@ -611,7 +611,7 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
                    aSpec,
                    charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
                    baseURL,
-                   nsContentUtils::GetIOServiceWeakRef());
+                   nsContentUtils::GetIOService());
 }
 
 

@@ -333,42 +333,39 @@ void nsHTMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
         // we must wrap
 
         PRBool foundWrapPosition = PR_FALSE;
-        nsCOMPtr<nsILineBreaker> aLineBreaker = nsContentUtils::GetLineBreaker();
+        nsILineBreaker *lineBreaker = nsContentUtils::LineBreaker();
 
-        if (aLineBreaker) { // we have a line breaker helper object
-          PRInt32 wrapPosition;
+        PRInt32 wrapPosition;
 
-          wrapPosition = aLineBreaker->Prev(aSequenceStart,
+        wrapPosition = lineBreaker->Prev(aSequenceStart,
+                                         (aEnd - aSequenceStart),
+                                         (aPos - aSequenceStart) + 1);
+        if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
+          foundWrapPosition = PR_TRUE;
+        }
+        else {
+          wrapPosition = lineBreaker->Next(aSequenceStart,
                                            (aEnd - aSequenceStart),
-                                           (aPos - aSequenceStart) + 1);
+                                           (aPos - aSequenceStart));
           if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
             foundWrapPosition = PR_TRUE;
           }
-          else {
-            wrapPosition = aLineBreaker->Next(aSequenceStart,
-                                             (aEnd - aSequenceStart),
-                                             (aPos - aSequenceStart));
-            if (wrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT) {
-              foundWrapPosition = PR_TRUE;
-            }
-          }
-
-          if (foundWrapPosition) {
-            if (mAddSpace) {
-              aOutputStr.Append(PRUnichar(' '));
-              mAddSpace = PR_FALSE;
-            }
-
-            aOutputStr.Append(aSequenceStart, wrapPosition);
-            aOutputStr.Append(mLineBreak);
-            aPos = aSequenceStart + wrapPosition;
-            mColPos = 0;
-            aMayIgnoreStartOfLineWhitespaceSequence = PR_TRUE;
-            mMayIgnoreLineBreakSequence = PR_TRUE;
-          }
         }
 
-        if (!aLineBreaker || !foundWrapPosition) {
+        if (foundWrapPosition) {
+          if (mAddSpace) {
+            aOutputStr.Append(PRUnichar(' '));
+            mAddSpace = PR_FALSE;
+          }
+
+          aOutputStr.Append(aSequenceStart, wrapPosition);
+          aOutputStr.Append(mLineBreak);
+          aPos = aSequenceStart + wrapPosition;
+          mColPos = 0;
+          aMayIgnoreStartOfLineWhitespaceSequence = PR_TRUE;
+          mMayIgnoreLineBreakSequence = PR_TRUE;
+        }
+        else {
           // try some simple fallback logic
           // go forward up to the next whitespace position,
           // in the worst case this will be all the rest of the data
@@ -777,7 +774,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     }
   }
   
-  nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
+  nsIParserService* parserService = nsContentUtils::GetParserService();
 
   if (parserService && (name != nsHTMLAtoms::style)) {
     PRBool isContainer;
@@ -893,8 +890,7 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
                   nsIDocumentEncoder::OutputEncodeLatin1Entities |
                   nsIDocumentEncoder::OutputEncodeHTMLEntities   |
                   nsIDocumentEncoder::OutputEncodeW3CEntities)) {
-      nsIParserService* parserService =
-        nsContentUtils::GetParserServiceWeakRef();
+      nsIParserService* parserService = nsContentUtils::GetParserService();
 
       if (!parserService) {
         NS_ERROR("Can't get parser service");
@@ -1040,8 +1036,7 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
     return PR_TRUE;
   }
   else {
-    nsIParserService* parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService* parserService = nsContentUtils::GetParserService();
     
     if (parserService) {
       PRBool res;
@@ -1138,8 +1133,7 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
     return PR_TRUE;
   }
   else {
-    nsIParserService* parserService =
-      nsContentUtils::GetParserServiceWeakRef();
+    nsIParserService* parserService = nsContentUtils::GetParserService();
     
     if (parserService) {
       PRBool res;

@@ -625,8 +625,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
     addNSAttr = PR_FALSE;
     if (kNameSpaceID_XMLNS != namespaceID) {
-      nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(namespaceID,
-                                                             uriStr);
+      nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, uriStr);
       addNSAttr = ConfirmPrefix(prefixStr, uriStr, aElement,
                                 namespaceID != kNameSpaceID_None);
     }
