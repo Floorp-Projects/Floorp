@@ -40,7 +40,6 @@
 #ifndef nsIAttribute_h___
 #define nsIAttribute_h___
 
-#include "nsIContent.h"
 #include "nsISupports.h"
 #include "nsINodeInfo.h"
 #include "nsIContent.h"
