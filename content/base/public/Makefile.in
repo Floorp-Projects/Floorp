@@ -68,6 +68,7 @@ nsIContentSerializer.h \
 nsIHTMLToTextSink.h \
 nsIXPathEvaluatorInternal.h \
 mozISanitizingSerializer.h \
+nsCaseTreatment.h \
 nsContentCID.h \
 nsCopySupport.h \
 nsContentCreatorFunctions.h \
