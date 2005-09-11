@@ -94,13 +94,6 @@ public:
   virtual void* UnsetProperty(nsIAtom  *aPropertyName,
                               nsresult *aStatus = nsnull) = 0;
 
-  nsIDocument *GetOwnerDoc()
-  {
-    nsIContent *content = GetContent();
-
-    return content ? content->GetOwnerDoc() : mNodeInfo->GetDocument();
-  }
-
 protected:
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
     : mAttrMap(aAttrMap), mNodeInfo(aNodeInfo)
