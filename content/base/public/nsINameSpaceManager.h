@@ -67,8 +67,8 @@ static const PRInt32 kNameSpaceID_None = 0;
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
 #define NS_INAMESPACEMANAGER_IID \
-  { 0x30977ca5, 0xc6af, 0x4687, \
-    { 0x88, 0x43, 0xa9, 0x7d, 0x0f, 0x95, 0x00, 0x17 } }
+  { 0xd74e83e6, 0xf932, 0x4289, \
+    { 0xac, 0x95, 0x9e, 0x10, 0x24, 0x30, 0x88, 0xd6 } }
 
 /**
  * The Name Space Manager tracks the associtation between a NameSpace
@@ -89,13 +89,11 @@ class nsINameSpaceManager : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
 
-  NS_IMETHOD RegisterNameSpace(const nsAString& aURI, 
-                               PRInt32& aNameSpaceID) = 0;
+  virtual nsresult RegisterNameSpace(const nsAString& aURI,
+                                     PRInt32& aNameSpaceID) = 0;
 
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID,
-                             nsAString& aURI) = 0;
-  NS_IMETHOD GetNameSpaceID(const nsAString& aURI,
-                            PRInt32* aNameSpaceID) = 0;
+  virtual nsresult GetNameSpaceURI(PRInt32 aNameSpaceID, nsAString& aURI) = 0;
+  virtual PRInt32 GetNameSpaceID(const nsAString& aURI) = 0;
 
   virtual PRBool HasElementCreator(PRInt32 aNameSpaceID) = 0;
 };

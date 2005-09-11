@@ -212,8 +212,8 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
 PRBool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
-  PRInt32 nsid;
-  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
+  PRInt32 nsid =
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   return nsINodeInfo::NamespaceEquals(nsid);
 }

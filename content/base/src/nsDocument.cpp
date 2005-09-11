@@ -2726,8 +2726,8 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   nsContentList *list = nsnull;
 
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
-                                                       &nameSpaceId);
+    nameSpaceId =
+      nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...

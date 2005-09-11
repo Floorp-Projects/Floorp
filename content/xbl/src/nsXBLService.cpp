@@ -963,10 +963,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
               //child->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::extends, PR_FALSE);
             }
 
-            PRInt32 nameSpaceID;
-
-            nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace,
-                                                               &nameSpaceID);
+            PRInt32 nameSpaceID =
+              nsContentUtils::NameSpaceManager()->GetNameSpaceID(nameSpace);
 
             nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
             protoBinding->SetBaseTag(nameSpaceID, tagName);

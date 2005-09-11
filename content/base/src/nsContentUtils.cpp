@@ -1663,7 +1663,7 @@ nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
                             nameSpace);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NameSpaceManager()->GetNameSpaceID(nameSpace, aNamespace);
+    *aNamespace = NameSpaceManager()->GetNameSpaceID(nameSpace);
     if (*aNamespace == kNameSpaceID_Unknown)
       return NS_ERROR_FAILURE;
 
