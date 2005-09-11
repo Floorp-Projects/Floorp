@@ -276,20 +276,6 @@ nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  *aResult = nsnull;
-
-  nsIDocument *document = GetOwnerDoc();
-
-  nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(document, aDeep, getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(newContent, aResult);
-}
-
-nsresult
 nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
                                    nsAString& aPrefix)
 {
@@ -1053,11 +1039,11 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
   }
 
   /*
-   * Use Clone for creating the new node so that the new node is of same class
-   * as this node!
+   * Use CloneContent() for creating the new node so that the new node is of
+   * same class as this node!
    */
 
-  nsCOMPtr<nsITextContent> newContent = Clone(nsnull, PR_FALSE);
+  nsCOMPtr<nsITextContent> newContent = CloneContent(PR_FALSE, nsnull);
   if (!newContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1328,18 +1314,11 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
   return NS_NewAtom(val);
 }
 
-nsresult
-nsGenericDOMDataNode::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                                   nsIContent **aResult) const
+already_AddRefed<nsITextContent> 
+nsGenericDOMDataNode::CloneContent(PRBool aCloneText,
+                                   nsIDocument *aOwnerDocument)
 {
-  // XXX We really want to pass the document to the constructor, but can't
-  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
-  *aResult = Clone(nsnull, PR_TRUE);
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  NS_ERROR("Huh, this shouldn't be called!");
 
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  return nsnull;
 }

@@ -485,19 +485,18 @@ nsHTMLScriptElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 }
 
 nsresult
-nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                           nsIContent **aResult) const
+nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  *aResult = nsnull;
+  *aReturn = nsnull;
 
-  nsHTMLScriptElement* it = new nsHTMLScriptElement(aNodeInfo, PR_FALSE);
+  nsHTMLScriptElement* it = new nsHTMLScriptElement(mNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIContent> kungFuDeathGrip = it;
-  nsresult rv = CopyInnerTo(it, aDeep);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
+
+  CopyInnerTo(it, aDeep);
 
   // The clone should be marked evaluated if we are.  It should also be marked
   // evaluated if we're evaluating, to handle the case when this script node's
@@ -505,15 +504,9 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
   it->mIsEvaluated = mIsEvaluated || mEvaluating;
   it->mLineNumber = mLineNumber;
 
-  kungFuDeathGrip.swap(*aResult);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  return nsGenericElement::CloneNode(aDeep, aResult);
 }
 
 NS_IMETHODIMP

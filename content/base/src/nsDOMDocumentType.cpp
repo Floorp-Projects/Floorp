@@ -192,10 +192,18 @@ nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-nsGenericDOMDataNode*
-nsDOMDocumentType::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+NS_IMETHODIMP
+nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  // XXX ownerDocument
-  return new nsDOMDocumentType(mName, mEntities, mNotations, mPublicId,
-                               mSystemId, mInternalSubset);
+  nsDOMDocumentType* it = new nsDOMDocumentType(mName,
+                                                mEntities,
+                                                mNotations,
+                                                mPublicId,
+                                                mSystemId,
+                                                mInternalSubset);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(it, aReturn);
 }

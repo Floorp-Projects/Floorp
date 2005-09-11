@@ -89,8 +89,8 @@ NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
 
 // Special Generated Content Frame
 nsresult
-NS_NewAttributeContent(nsIDocument* aOwnerDoc, PRInt32 aNameSpaceID,
-                       nsIAtom* aAttrName, nsIContent** aResult);
+NS_NewAttributeContent(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
+                       nsIContent** aResult);
 
 // Create a basic area frame but the GetFrameForPoint is overridden to always
 // return the option frame 

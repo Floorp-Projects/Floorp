@@ -40,7 +40,6 @@
 #ifndef nsIAttribute_h___
 #define nsIAttribute_h___
 
-#include "nsIContent.h"
 #include "nsISupports.h"
 #include "nsINodeInfo.h"
 #include "nsIContent.h"
@@ -93,13 +92,6 @@ public:
 
   virtual void* UnsetProperty(nsIAtom  *aPropertyName,
                               nsresult *aStatus = nsnull) = 0;
-
-  nsIDocument *GetOwnerDoc()
-  {
-    nsIContent *content = GetContent();
-
-    return content ? content->GetOwnerDoc() : mNodeInfo->GetDocument();
-  }
 
 protected:
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)

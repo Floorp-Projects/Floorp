@@ -365,9 +365,22 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   *aOwnerDocument = nsnull;
 
-  nsIDocument *document = GetOwnerDoc();
+  nsresult rv = NS_OK;
+  nsIContent* content = GetContentInternal();
+  if (content) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = node->GetOwnerDocument(aOwnerDocument);
+    }
+  }
+  else {
+    nsIDocument *document = mNodeInfo->GetDocument();
+    if (document) {
+      rv = CallQueryInterface(document, aOwnerDocument);
+    }
+  }
 
-  return document ? CallQueryInterface(document, aOwnerDocument) : NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -422,20 +422,22 @@ nsXTFElementWrapper::IntrinsicState() const
   return mIntrinsicState;
 }
 
-nsresult
-nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                           nsIContent **aResult) const
+//----------------------------------------------------------------------
+// nsIDOMNode methods:
+
+NS_IMETHODIMP
+nsXTFElementWrapper::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 {
   *aResult = nsnull;
   nsCOMPtr<nsIContent> it;
   nsContentUtils::GetXTFService()->CreateElement(getter_AddRefs(it),
-                                                 aNodeInfo);
+                                                 mNodeInfo);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(do_QueryInterface(it));
   nsXTFElementWrapper* wrapper =
-    NS_STATIC_CAST(nsXTFElementWrapper*,
-                   NS_STATIC_CAST(nsIContent*, it.get()));
+    NS_STATIC_CAST(nsXTFElementWrapper*, NS_STATIC_CAST(nsIContent*, it.get()));
   nsresult rv = CopyInnerTo(wrapper, aDeep);
 
   if (NS_SUCCEEDED(rv)) {
@@ -452,7 +454,7 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
         }
       }
     }
-    it.swap(*aResult);
+    kungFuDeathGrip.swap(*aResult);
   }
 
   wrapper->CloneState(this);
