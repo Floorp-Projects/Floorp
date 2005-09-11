@@ -416,9 +416,8 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
   // XXX Waiting for DOM spec to list error codes.
 
   // Get the namespace id for the URI
-  PRInt32 namespaceId;
-  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
-                                                     &namespaceId);
+  PRInt32 namespaceId =
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
   if (namespaceId == kNameSpaceID_Unknown) {
     return NS_OK;
   }
@@ -1519,8 +1518,8 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aLocalName,
                                  nsAString& aReturn)
 {
-  PRInt32 nsid;
-  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
+  PRInt32 nsid =
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
@@ -1557,9 +1556,8 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
                                     const nsAString& aLocalName)
 {
   nsCOMPtr<nsIAtom> name = do_GetAtom(aLocalName);
-  PRInt32 nsid;
-
-  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
+  PRInt32 nsid =
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
@@ -1631,8 +1629,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   nsIDocument* document = GetCurrentDoc();
   if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI,
-                                                       &nameSpaceId);
+    nameSpaceId =
+      nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
@@ -1673,8 +1671,8 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  PRInt32 nsid;
-  nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI, &nsid);
+  PRInt32 nsid =
+    nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unknown namespace means no attr...
