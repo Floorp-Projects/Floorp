@@ -414,6 +414,12 @@ public:
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             const nsAString& aValue,
+                             nsCaseTreatment aCaseSensitive) const;
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             nsIAtom* aValue,
+                             nsCaseTreatment aCaseSensitive) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
   virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,

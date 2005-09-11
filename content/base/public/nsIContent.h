@@ -44,6 +44,7 @@
 #include "nsAString.h"
 #include "nsContentErrors.h"
 #include "nsPropertyTable.h"
+#include "nsCaseTreatment.h"
 
 // Forward declarations
 class nsIAtom;
@@ -60,8 +61,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x3fecc374, 0x2839, 0x4db3, \
- { 0x8d, 0xe8, 0x6b, 0x76, 0xd1, 0xd8, 0xe6, 0xf6 } }
+{ 0x66b01442, 0x75ed, 0x4605, \
+ { 0x87, 0x06, 0x70, 0x22, 0x27, 0x9d, 0x19, 0x0b } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -326,6 +327,42 @@ public:
    * @return whether an attribute exists
    */
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
+
+  /**
+   * Test whether this content node's given attribute has the given value.  If
+   * the attribute is not set at all, this will return false.
+   *
+   * @param aNameSpaceID The namespace ID of the attribute.  Must not
+   *                     be kNameSpaceID_Unknown.
+   * @param aName The name atom of the attribute.  Must not be null.
+   * @param aValue The value to compare to.
+   * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
+   */
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID,
+                             nsIAtom* aName,
+                             const nsAString& aValue,
+                             nsCaseTreatment aCaseSensitive) const
+  {
+    return PR_FALSE;
+  }
+
+  /**
+   * Test whether this content node's given attribute has the given value.  If
+   * the attribute is not set at all, this will return false.
+   *
+   * @param aNameSpaceID The namespace ID of the attribute.  Must not
+   *                     be kNameSpaceID_Unknown.
+   * @param aName The name atom of the attribute.  Must not be null.
+   * @param aValue The value to compare to.  Must not be null.
+   * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
+   */
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID,
+                             nsIAtom* aName,
+                             nsIAtom* aValue,
+                             nsCaseTreatment aCaseSensitive) const
+  {
+    return PR_FALSE;
+  }
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.

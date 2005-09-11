@@ -608,6 +608,71 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
   }
 }
 
+PRBool
+nsAttrValue::Equals(const nsAString& aValue,
+                    nsCaseTreatment aCaseSensitive) const
+{
+  switch (BaseType()) {
+    case eStringBase:
+    {
+      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      if (str) {
+        nsDependentString dep(NS_STATIC_CAST(PRUnichar*, str->Data()),
+                              str->StorageSize()/sizeof(PRUnichar) - 1);
+        return aCaseSensitive == eCaseMatters ? aValue.Equals(dep) :
+          aValue.Equals(dep, nsCaseInsensitiveStringComparator());
+      }
+      return aValue.IsEmpty();
+    }
+    case eAtomBase:
+      // Need a way to just do case-insensitive compares on atoms..
+      if (aCaseSensitive == eCaseMatters) {
+        return NS_STATIC_CAST(nsIAtom*, GetPtr())->Equals(aValue);;
+      }
+    default:
+      break;
+  }
+
+  nsAutoString val;
+  ToString(val);
+  return aCaseSensitive == eCaseMatters ? val.Equals(aValue) :
+    val.Equals(aValue, nsCaseInsensitiveStringComparator());
+}
+
+PRBool
+nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
+{
+  if (aCaseSensitive != eCaseMatters) {
+    // Need a better way to handle this!
+    nsAutoString value;
+    aValue->ToString(value);
+    return Equals(value, aCaseSensitive);
+  }
+  
+  switch (BaseType()) {
+    case eStringBase:
+    {
+      nsStringBuffer* str = NS_STATIC_CAST(nsStringBuffer*, GetPtr());
+      if (str) {
+        nsDependentString dep(NS_STATIC_CAST(PRUnichar*, str->Data()),
+                              str->StorageSize()/sizeof(PRUnichar) - 1);
+        return aValue->Equals(dep);
+      }
+      return aValue->EqualsUTF8(EmptyCString());
+    }
+    case eAtomBase:
+    {
+      return NS_STATIC_CAST(nsIAtom*, GetPtr()) == aValue;
+    }
+    default:
+      break;
+  }
+
+  nsAutoString val;
+  ToString(val);
+  return aValue->Equals(val);
+}
+
 void
 nsAttrValue::ParseAtom(const nsAString& aValue)
 {
