@@ -113,7 +113,7 @@
                description="&custompage.shortdescription;"
                label="&wizard.label;"
                next="finishPage"
-               onpageshow="checkRequired();"
+               onpageshow="initNameFromURI(); checkRequired();"
                onpageadvanced="doCreateCalendar();">
         <description>&custompage.longdescription;</description>
         <grid>

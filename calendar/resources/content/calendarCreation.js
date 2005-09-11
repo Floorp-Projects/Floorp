@@ -112,6 +112,19 @@ function doCreateCalendar()
     return true;
 }
 
+function initNameFromURI() {
+    var path = document.getElementById("calendar-uri").value;
+    var nameField = document.getElementById("calendar-name");
+    if (!path || nameField.value)
+        return;
+
+    var fullPathRegex = new RegExp("([^/:]+)[.]ics$");
+    var captures = path.match(fullPathRegex);
+    if (captures && captures.length >= 1) {
+        nameField.value = captures[1];
+    }
+}
+
 //Don't let the wizard advance if the URL isn't valid, since the calendar
 //creation will fail.
 function checkURL() {
