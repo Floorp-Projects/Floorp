@@ -86,7 +86,7 @@ public:
                              PRBool aNotify);
 protected:
   // Dummy init method to make the NS_IMPL_NS_NEW_SVG_ELEMENT and
-  // NS_IMPL_SVG_DOM_CLONENODE usable with this class. This should be
+  // NS_IMPL_DOM_CLONENODE_WITH_INIT usable with this class. This should be
   // completely optimized away.
   inline nsresult Init()
   {

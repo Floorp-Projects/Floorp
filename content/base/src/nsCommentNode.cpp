@@ -74,9 +74,6 @@ public:
     return;
   }
 #endif
-
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
-                                                        nsIDocument *aOwnerDocument);
 };
 
 nsresult
@@ -161,27 +158,13 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsGenericDOMDataNode*
+nsCommentNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
 {
-  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE, GetOwnerDoc());
-  NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
-
-  return CallQueryInterface(textContent, aReturn);
-}
-
-already_AddRefed<nsITextContent>
-nsCommentNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
-{
-  nsCommentNode* it = new nsCommentNode(nsnull);
-  if (!it)
-    return nsnull;
-
-  if (aCloneText) {
+  nsCommentNode *it = new nsCommentNode(aOwnerDocument);
+  if (it && aCloneText) {
     it->mText = mText;
   }
-
-  NS_ADDREF(it);
 
   return it;
 }
