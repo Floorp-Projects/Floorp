@@ -445,6 +445,13 @@ public:
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
 
+  /**
+   * This calls Clone to do the actual cloning so that we end up with the
+   * right class for the clone.
+   */
+  nsresult CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
+                        nsIContent **aResult);
+
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -655,11 +662,28 @@ public:
 
 protected:
   /**
-   * Copy attributes and children from another content object
-   * @param aSrcContent the object to copy from
+   * Duplicate children by calling importNode and append them to another
+   * element.
+   *
+   * @param aDst the element to append the imported children to
+   * @param aImportDocument the document to use to call importNode
+   */
+  nsresult ImportChildrenTo(nsGenericElement *aDst,
+                            nsIDOMDocument *aImportDocument) const;
+
+  /**
+   * Clone children and append them to another element.
+   *
+   * @param aDst the element to append the imported children to
+   */
+  nsresult CloneChildrenTo(nsGenericElement *aDst) const;
+
+  /**
+   * Copy attributes and children to another content object
+   * @param aDest the object to copy to
    * @param aDeep whether to copy children
    */
-  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep);
+  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep) const;
 
   /**
    * Internal hook for converting an attribute name-string to an atomized name
@@ -770,6 +794,37 @@ protected:
    * @param aText the resulting text [OUT]
    */
   void GetContentsAsText(nsAString& aText);
+
+  /**
+   * Method to clone this element. This needs to be overriden by all element
+   * classes. aNodeInfo should be identical to this element's nodeInfo, except
+   * for the document which may be different. If aDeep is true all descendants
+   * will be cloned too (by calling the DOM method cloneNode on them if the
+   * ownerDocument of aNodeInfo is the same as the ownerDocument of this
+   * element or by calling the DOM method importNode if they differ).
+   *
+   * @param aNodeInfo the nodeinfo to use for the clone
+   * @param aDeep if true all descendants will be cloned too (attributes are
+   *              always cloned)
+   * @param aResult the clone
+   */
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                         nsIContent **aResult)
+  {
+    NS_ERROR("This shouldn't be called!");
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  /**
+   * A basic implementation of the DOM cloneNode method. Calls CloneContent to
+   * do the actual cloning of the element.
+   *
+   * @param aDeep if true all descendants will be cloned too (attributes on the
+   *              element are always cloned)
+   * @param aResult the clone
+   */
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult);
 
   /**
    * Information about this type of node
@@ -900,56 +955,65 @@ public:
   NS_IMETHOD HasAttributes(PRBool* aReturn) {                                 \
     return _to HasAttributes(aReturn);                                        \
   }                                                                           \
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);                   \
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                \
+                         nsIContent **aResult);
+
 
 /**
  * Macros to implement CloneNode().
  */
 #define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
-NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, nsIDOMNode)
-
-#define NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _implClass)           \
-NS_IMETHODIMP                                                               \
-_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
+nsresult                                                                    \
+_elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
+                    nsIContent **aResult)                                   \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
-  _elementName *it = new _elementName(mNodeInfo);                           \
+  _elementName *it = new _elementName(aNodeInfo);                           \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
                                                                             \
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip = NS_STATIC_CAST(_implClass*, it);   \
-                                                                            \
+  nsCOMPtr<nsIContent> kungFuDeathGrip = it;                                \
   nsresult rv = CopyInnerTo(it, aDeep);                                     \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
                                                                             \
   return rv;                                                                \
-}
-
-#define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
+}                                                                           \
 NS_IMETHODIMP                                                               \
 _elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
 {                                                                           \
+  return nsGenericElement::CloneNode(aDeep, aResult);                       \
+}
+
+#define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
+nsresult                                                                    \
+_elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
+                    nsIContent **aResult)                                   \
+{                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
-  _elementName *it = new _elementName(mNodeInfo);                           \
+  _elementName *it = new _elementName(aNodeInfo);                           \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
                                                                             \
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                 \
-                                                                            \
+  nsCOMPtr<nsIContent> kungFuDeathGrip = it;                                \
   nsresult rv = it->Init();                                                 \
-                                                                            \
   rv |= CopyInnerTo(it, aDeep);                                             \
   if (NS_SUCCEEDED(rv)) {                                                   \
     kungFuDeathGrip.swap(*aResult);                                         \
   }                                                                         \
                                                                             \
   return rv;                                                                \
+}                                                                           \
+NS_IMETHODIMP                                                               \
+_elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
+{                                                                           \
+  return nsGenericElement::CloneNode(aDeep, aResult);                       \
 }
 
 #endif /* nsGenericElement_h___ */

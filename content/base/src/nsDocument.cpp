@@ -2831,17 +2831,83 @@ nsDocument::GetCharacterSet(nsAString& aCharacterSet)
 NS_IMETHODIMP
 nsDocument::ImportNode(nsIDOMNode* aImportedNode,
                        PRBool aDeep,
-                       nsIDOMNode** aReturn)
+                       nsIDOMNode** aResult)
 {
   NS_ENSURE_ARG(aImportedNode);
-  NS_PRECONDITION(aReturn, "Null out param!");
+
+  *aResult = nsnull;
 
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aImportedNode);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return aImportedNode->CloneNode(aDeep, aReturn);
+  PRUint16 nodeType;
+  aImportedNode->GetNodeType(&nodeType);
+  switch (nodeType) {
+    case nsIDOMNode::ATTRIBUTE_NODE:
+    {
+      nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aImportedNode);
+      NS_ENSURE_TRUE(attr, NS_ERROR_FAILURE);
+
+      nsIDocument *document = attr->GetOwnerDoc();
+
+      nsCOMPtr<nsIDOMAttr> domAttr = do_QueryInterface(aImportedNode);
+      nsAutoString value;
+      rv = domAttr->GetValue(value);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsINodeInfo *nodeInfo = attr->NodeInfo();
+      nsCOMPtr<nsINodeInfo> newNodeInfo;
+      if (document != this) {
+        rv = mNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
+                                           nodeInfo->GetPrefixAtom(),
+                                           nodeInfo->NamespaceID(),
+                                           getter_AddRefs(newNodeInfo));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nodeInfo = newNodeInfo;
+      }
+
+      nsCOMPtr<nsIDOMNode> clone  = new nsDOMAttribute(nsnull, nodeInfo,
+                                                       value);
+      if (!clone) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      clone.swap(*aResult);
+
+      return NS_OK;
+    }
+    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsIDOMNode::ELEMENT_NODE:
+    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsIDOMNode::TEXT_NODE:
+    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsIDOMNode::COMMENT_NODE:
+    {
+      nsCOMPtr<nsIContent> imported = do_QueryInterface(aImportedNode);
+      NS_ENSURE_TRUE(imported, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIContent> clone;
+      rv = imported->CloneContent(this, aDeep, getter_AddRefs(clone));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      return CallQueryInterface(clone, aResult);
+    }
+    case nsIDOMNode::ENTITY_NODE:
+    case nsIDOMNode::ENTITY_REFERENCE_NODE:
+    case nsIDOMNode::NOTATION_NODE:
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    default:
+    {
+      NS_WARNING("Don't know how to clone this nodetype for importNode.");
+
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+  }
 }
 
 NS_IMETHODIMP

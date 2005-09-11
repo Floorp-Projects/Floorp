@@ -271,53 +271,47 @@ nsGenericHTMLElement::Shutdown()
 }
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
+nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
 {
   nsresult rv = NS_OK;
   PRInt32 i, count = GetAttrCount();
-  nsCOMPtr<nsIAtom> name, prefix;
-  PRInt32 namespace_id;
   nsAutoString value;
 
   for (i = 0; i < count; ++i) {
-    rv = GetAttrNameAt(i, &namespace_id, getter_AddRefs(name),
-                       getter_AddRefs(prefix));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (name == nsHTMLAtoms::style && namespace_id == kNameSpaceID_None) {
+    // XXX Once we have access to existing nsDOMAttributes for this element, we
+    //     should call CloneNode or ImportNode on them.
+    const nsAttrName *name = mAttrsAndChildren.GetSafeAttrNameAt(i);
+    const nsAttrValue *value = mAttrsAndChildren.AttrAt(i);
+    if (name->Equals(nsHTMLAtoms::style, kNameSpaceID_None) &&
+        value->Type() == nsAttrValue::eCSSStyleRule) {
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the HTMLValue instead.
-      const nsAttrValue* styleVal =
-        mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
-      if (styleVal && styleVal->Type() == nsAttrValue::eCSSStyleRule) {
-        nsCOMPtr<nsICSSRule> ruleClone;
-        rv = styleVal->GetCSSStyleRuleValue()->
-          Clone(*getter_AddRefs(ruleClone));
-        NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsICSSRule> ruleClone;
+      rv = value->GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
-        NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
+      nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+      NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
 
-        rv = aDst->SetInlineStyleRule(styleRule, PR_FALSE);
-        NS_ENSURE_SUCCESS(rv, rv);
+      rv = aDst->SetInlineStyleRule(styleRule, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        continue;
-      }
+      continue;
     }
 
-    rv = GetAttr(namespace_id, name, value);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aDst->SetAttr(namespace_id, name, prefix, value, PR_FALSE);
+    nsAutoString valStr;
+    value->ToString(valStr);
+    rv = aDst->SetAttr(name->NamespaceID(), name->LocalName(),
+                       name->GetPrefix(), valStr, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsIDocument *doc = nsContentUtils::GetDocument(mNodeInfo);
+  nsIDocument *newDoc = aDst->GetOwnerDoc();
 
   PRInt32 id;
-  if (doc) {
-    id = doc->GetAndIncrementContentID();
+  if (newDoc) {
+    id = newDoc->GetAndIncrementContentID();
   } else {
     id = PR_INT32_MAX;
   }
@@ -325,25 +319,17 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
   aDst->SetContentID(id);
 
   if (aDeep) {
-    PRInt32 i;
-    PRInt32 count = mAttrsAndChildren.ChildCount();
-    for (i = 0; i < count; ++i) {
-      nsCOMPtr<nsIDOMNode> node = 
-          do_QueryInterface(mAttrsAndChildren.ChildAt(i));
-      NS_ASSERTION(node, "child doesn't implement nsIDOMNode");
-
-      nsCOMPtr<nsIDOMNode> newNode;
-      rv = node->CloneNode(aDeep, getter_AddRefs(newNode));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIContent> newContent(do_QueryInterface(newNode));
-      NS_ASSERTION(newContent, "clone doesn't implement nsIContent");
-      rv = aDst->AppendChildTo(newContent, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
+    nsIDocument *doc = GetOwnerDoc();
+    if (doc == newDoc) {
+      rv = CloneChildrenTo(aDst);
+    }
+    else {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(newDoc);
+      rv = ImportChildrenTo(aDst, domDoc);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult

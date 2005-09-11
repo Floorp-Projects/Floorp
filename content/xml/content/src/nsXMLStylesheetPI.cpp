@@ -59,7 +59,6 @@ public:
 
   // nsIDOMNode
   NS_IMETHOD SetNodeValue(const nsAString& aData);
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -78,6 +77,8 @@ protected:
                          nsAString& aType,
                          nsAString& aMedia,
                          PRBool* aIsAlternate);
+  virtual nsGenericDOMDataNode* Clone(nsIDocument *aOwnerDocument,
+                                      PRBool aCloneText);
 };
 
 // nsISupports implementation
@@ -139,22 +140,6 @@ nsXMLStylesheetPI::SetNodeValue(const nsAString& aNodeValue)
     UpdateStyleSheet();
   }
   return rv;
-}
-
-NS_IMETHODIMP
-nsXMLStylesheetPI::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  nsAutoString data;
-  GetData(data);
-
-  nsXMLStylesheetPI *pi = new nsXMLStylesheetPI(data, nsnull);
-  if (!pi) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aReturn = pi);
-
-  return NS_OK;
 }
 
 // nsStyleLinkElement
@@ -247,6 +232,15 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
   aType.AssignLiteral("text/css");
 
   return;
+}
+
+nsGenericDOMDataNode*
+nsXMLStylesheetPI::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+{
+  nsAutoString data;
+  GetData(data);
+
+  return new nsXMLStylesheetPI(data, aOwnerDocument);
 }
 
 nsresult

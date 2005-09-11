@@ -114,8 +114,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedListElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_DOM_CLONENODE_AMBIGUOUS(nsHTMLSharedListElement,
-                                nsIDOMHTMLOListElement)
+NS_IMPL_DOM_CLONENODE(nsHTMLSharedListElement)
 
 
 NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Compact, compact)

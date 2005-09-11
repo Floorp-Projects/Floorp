@@ -686,6 +686,23 @@ public:
   { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
 
 
+  /**
+   * Clones this node, setting aOwnerDocument as the ownerDocument of the
+   * clone. When cloning an element, all attributes of the element will be
+   * cloned. If aDeep is set, all descendants will also be cloned (by calling
+   * the DOM method cloneNode on them if aOwnerDocument is the same as the
+   * ownerDocument of this content node or by calling the DOM method importNode
+   * if they differ).
+   *
+   * @param aOwnerDocument the document to use as the ownerDocument of the
+   *                       clone, it should not be null unless this element's
+   *                       ownerDocument is null and you don't want to set a
+   *                       different ownerDocument.
+   * @param aDeep whether to clone the descendants of this node
+   */
+  virtual nsresult CloneContent(nsIDocument *aOwnerDocument,
+                                PRBool aDeep, nsIContent **aResult) = 0;
+
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given

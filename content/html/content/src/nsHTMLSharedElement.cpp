@@ -198,7 +198,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_DOM_CLONENODE_AMBIGUOUS(nsHTMLSharedElement, nsIDOMHTMLEmbedElement)
+NS_IMPL_DOM_CLONENODE(nsHTMLSharedElement)
 
 
 /////////////////////////////////////////////
