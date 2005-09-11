@@ -289,12 +289,7 @@ protected:
    * @return the clone
    */
   virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
-                                      PRBool aCloneText)
-  {
-    NS_ERROR("This shouldn't be called!");
-
-    return nsnull;
-  }
+                                      PRBool aCloneText) = 0;
 
   nsTextFragment mText;
 
