@@ -14,6 +14,7 @@
 
 * {
   -moz-user-focus: ignore;
+  -moz-user-select: -moz-none;
   display: -moz-box;
 }
 
@@ -611,12 +612,10 @@ spacer {
 
 description {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
-  -moz-user-select: none;
 }
 
 label {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-label");
-  -moz-user-select: none;
 }
 
 label.text-link {
