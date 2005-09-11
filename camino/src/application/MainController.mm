@@ -435,6 +435,9 @@ const int kReuseWindowOnAE = 2;
   NSString* defaultBrowserIdentifier = [[NSWorkspace sharedWorkspace] defaultBrowserIdentifier];
   NSString* myIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 
+// temporarily just set us as the default browser, to fix tinderbox
+[[NSWorkspace sharedWorkspace] setDefaultBrowserWithIdentifier:myIdentifier];
+
   // silently update from our old to new bundle identifier
   if ([defaultBrowserIdentifier isEqualToString:@"org.mozilla.navigator"])
   {
