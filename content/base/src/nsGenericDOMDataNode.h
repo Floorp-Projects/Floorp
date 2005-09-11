@@ -147,16 +147,6 @@ public:
                        const nsAString& aVersion,
                        PRBool* aReturn);
   nsresult GetBaseURI(nsAString& aURI);
-
-  /**
-   * A basic implementation of the DOM cloneNode method. Calls CloneContent to
-   * do the actual cloning of the node.
-   *
-   * @param aDeep if true all descendants will be cloned too
-   * @param aResult the clone
-   */
-  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult);
-
   nsresult LookupPrefix(const nsAString& aNamespaceURI,
                         nsAString& aPrefix);
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
@@ -253,13 +243,6 @@ public:
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool MayHaveFrame() const;
 
-  /**
-   * This calls Clone to do the actual cloning so that we end up with the
-   * right class for the clone.
-   */
-  nsresult CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                        nsIContent **aResult) const;
-
   // nsITextContent
   virtual const nsTextFragment *Text();
   virtual PRUint32 TextLength();
@@ -273,28 +256,15 @@ public:
 
   //----------------------------------------
 
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
+                                                        nsIDocument *aOwnerDocument);
+
 #ifdef DEBUG
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
 
 protected:
   nsresult SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
-
-  /**
-   * Method to clone this node. This needs to be overriden by all derived
-   * classes. If aCloneText is true the text content will be cloned too.
-   *
-   * @param aOwnerDocument the ownerDocument of the clone
-   * @param aCloneText if true the text content will be cloned too
-   * @return the clone
-   */
-  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
-                                      PRBool aCloneText) const
-  {
-    NS_ERROR("This shouldn't be called!");
-
-    return nsnull;
-  }
 
   nsTextFragment mText;
 
@@ -346,8 +316,7 @@ private:
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);
- *       nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
- *                                   PRBool aCloneText) const;
+ *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA                           \
   NS_IMETHOD GetNodeName(nsAString& aNodeName);                             \
@@ -420,10 +389,6 @@ private:
                       PRBool* aReturn) {                                    \
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
   }                                                                         \
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn) {                \
-    return nsGenericDOMDataNode::CloneNode(aDeep, aReturn);                 \
-  }                                                                         \
-  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,          \
-                                      PRBool aCloneText) const;
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
 #endif /* nsGenericDOMDataNode_h___ */

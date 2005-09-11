@@ -3401,13 +3401,11 @@ nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) co
 }
 
 nsresult
-nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
+nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   PRUint32 i, count = mAttrsAndChildren.AttrCount();
   for (i = 0; i < count; ++i) {
-    // XXX Once we have access to existing nsDOMAttributes for this element, we
-    //     should call CloneNode or ImportNode on them.
     const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(i);
     const nsAttrValue* value = mAttrsAndChildren.AttrAt(i);
     nsAutoString valStr;
@@ -3417,63 +3415,21 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep) const
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aDeep) {
-    nsIDocument *doc = GetOwnerDoc();
-    nsIDocument *newDoc = aDst->GetOwnerDoc();
-    if (doc == newDoc) {
-      rv = CloneChildrenTo(aDst);
-    }
-    else {
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(newDoc);
-      rv = ImportChildrenTo(aDst, domDoc);
-    }
+  if (!aDeep) {
+    return NS_OK;
   }
 
-  return rv;
-}
-
-nsresult
-nsGenericElement::ImportChildrenTo(nsGenericElement *aDst,
-                                   nsIDOMDocument *aImportDocument) const
-{
-  PRUint32 i, count = mAttrsAndChildren.ChildCount();
+  count = mAttrsAndChildren.ChildCount();
   for (i = 0; i < count; ++i) {
-    nsresult rv;
     nsCOMPtr<nsIDOMNode> node =
-      do_QueryInterface(mAttrsAndChildren.ChildAt(i), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> newNode;
-    rv = aImportDocument->ImportNode(node, PR_TRUE, getter_AddRefs(newNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aDst->AppendChildTo(newContent, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericElement::CloneChildrenTo(nsGenericElement *aDst) const
-{
-  PRUint32 i, count = mAttrsAndChildren.ChildCount();
-  for (i = 0; i < count; ++i) {
-    nsresult rv;
-    nsCOMPtr<nsIDOMNode> node =
-      do_QueryInterface(mAttrsAndChildren.ChildAt(i), &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      do_QueryInterface(mAttrsAndChildren.ChildAt(i));
+    NS_ASSERTION(node, "child doesn't implement nsIDOMNode");
 
     nsCOMPtr<nsIDOMNode> newNode;
     rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<nsIContent> newContent = do_QueryInterface(newNode);
     rv = aDst->AppendChildTo(newContent, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -3984,38 +3940,4 @@ nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
     return nsnull;
 
   return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
-}
-
-nsresult
-nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
-{
-  *aResult = nsnull;
-
-  nsIDocument *document = GetOwnerDoc();
-
-  nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(document, aDeep, getter_AddRefs(newContent));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return CallQueryInterface(newContent, aResult);
-}
-
-nsresult
-nsGenericElement::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                               nsIContent **aResult) const
-{
-  if (GetOwnerDoc() == aOwnerDocument) {
-    return Clone(mNodeInfo, aDeep, aResult);
-  }
-
-  nsNodeInfoManager* nodeInfoManager = aOwnerDocument->NodeInfoManager();
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                             mNodeInfo->GetPrefixAtom(),
-                                             mNodeInfo->NamespaceID(),
-                                             getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return Clone(newNodeInfo, aDeep, aResult);
 }

@@ -71,6 +71,11 @@ public:
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
+
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
+                                                        nsIDocument *aOwnerDocument);
+
+protected:
 };
 
 nsresult
@@ -149,13 +154,27 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-nsGenericDOMDataNode*
-nsXMLCDATASection::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+NS_IMETHODIMP
+nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsXMLCDATASection* it = new nsXMLCDATASection(aOwnerDocument);
-  if (it && aCloneText) {
+  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE, GetOwnerDoc());
+  NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
+
+  return CallQueryInterface(textContent, aReturn);
+}
+
+already_AddRefed<nsITextContent> 
+nsXMLCDATASection::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
+{
+  nsXMLCDATASection* it = new nsXMLCDATASection(nsnull);
+  if (!it)
+    return nsnull;
+
+  if (aCloneText) {
     it->mText = mText;
   }
+
+  NS_ADDREF(it);
 
   return it;
 }
