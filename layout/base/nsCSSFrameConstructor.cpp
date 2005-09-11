@@ -2064,7 +2064,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         nsresult rv = NS_ERROR_FAILURE;
         if (attrName) {
           nsIFrame*   textFrame = nsnull;
-          rv = NS_NewAttributeContent(attrNameSpace, attrName,
+          rv = NS_NewAttributeContent(mDocument, attrNameSpace, attrName,
                                       getter_AddRefs(content));
           NS_ENSURE_SUCCESS(rv, rv);
 

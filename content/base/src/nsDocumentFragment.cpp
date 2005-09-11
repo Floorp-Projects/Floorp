@@ -55,7 +55,7 @@ class nsDocumentFragment : public nsGenericElement,
                            public nsIDOM3Node
 {
 public:
-  nsDocumentFragment(nsINodeInfo *aNodeInfo, nsIDocument* aOwnerDocument);
+  nsDocumentFragment(nsINodeInfo *aNodeInfo);
   virtual ~nsDocumentFragment();
 
   // nsISupports
@@ -91,7 +91,8 @@ public:
       *aAttributes = nsnull;
       return NS_OK;
     }
-  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
+  { return nsGenericElement::GetOwnerDocument(aOwnerDocument); }
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, 
                              nsIDOMNode** aReturn)
   { return nsGenericElement::InsertBefore(aNewChild, aRefChild, aReturn); }
@@ -165,7 +166,8 @@ public:
   }
 
 protected:
-  nsCOMPtr<nsIDocument> mOwnerDocument;
+  nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                 nsIContent **aResult);
 };
 
 nsresult
@@ -182,23 +184,19 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                                    getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDocumentFragment* it = new nsDocumentFragment(nodeInfo, aOwnerDocument);
+  nsDocumentFragment* it = new nsDocumentFragment(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  *aInstancePtrResult = NS_STATIC_CAST(nsIDOMDocumentFragment *, it);
-
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
 
   return NS_OK;
 }
 
-nsDocumentFragment::nsDocumentFragment(nsINodeInfo *aNodeInfo,
-                                       nsIDocument* aOwnerDocument)
+nsDocumentFragment::nsDocumentFragment(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo)
 {
-  mOwnerDocument = aOwnerDocument;
 }
 
 nsDocumentFragment::~nsDocumentFragment()
@@ -293,64 +291,13 @@ nsDocumentFragment::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  NS_ENSURE_ARG_POINTER(aOwnerDocument);
-
-  if (!mOwnerDocument) {
-    *aOwnerDocument = nsnull;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(mOwnerDocument, aOwnerDocument);
-}
-
 NS_IMETHODIMP
 nsDocumentFragment::SetPrefix(const nsAString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
-NS_IMETHODIMP    
-nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMDocumentFragment> newFragment;
-
-  rv = NS_NewDocumentFragment(getter_AddRefs(newFragment), mOwnerDocument);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDeep) {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-
-    GetChildNodes(getter_AddRefs(childNodes));
-    if (childNodes) {
-      PRUint32 index, count;
-      childNodes->GetLength(&count);
-
-      for (index = 0; index < count; ++index) {
-        nsCOMPtr<nsIDOMNode> child;
-        childNodes->Item(index, getter_AddRefs(child));
-        if (child) {
-          nsCOMPtr<nsIDOMNode> newChild;
-          rv = child->CloneNode(PR_TRUE, getter_AddRefs(newChild));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          nsCOMPtr<nsIDOMNode> dummyNode;
-          rv = newFragment->AppendChild(newChild,
-                                        getter_AddRefs(dummyNode));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      } // End of for loop
-    } // if (childNodes)
-  } // if (aDeep)
-
-  return CallQueryInterface(newFragment, aReturn);
-}
+NS_IMPL_DOM_CLONENODE(nsDocumentFragment)
 
 NS_IMETHODIMP
 nsDocumentFragment::GetBaseURI(nsAString& aURI)

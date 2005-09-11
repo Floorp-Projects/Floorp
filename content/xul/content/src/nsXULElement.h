@@ -588,7 +588,7 @@ protected:
 
 protected:
     // Required fields
-    nsXULPrototypeElement*              mPrototype;
+    nsRefPtr<nsXULPrototypeElement>     mPrototype;
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**
@@ -645,6 +645,10 @@ protected:
 
     friend nsresult
     NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+
+    static already_AddRefed<nsXULElement>
+    Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
+           PRBool aIsScriptable);
 };
 
 

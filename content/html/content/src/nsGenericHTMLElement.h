@@ -105,7 +105,7 @@ public:
                              void **aInstancePtr);
 
   // From nsGenericElement
-  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep);
+  nsresult CopyInnerTo(nsGenericElement* aDest, PRBool aDeep) const;
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);

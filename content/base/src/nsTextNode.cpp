@@ -74,9 +74,6 @@ public:
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
-
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
-                                                        nsIDocument *aOwnerDocument);
 };
 
 /**
@@ -112,7 +109,7 @@ public:
     nsITextContent* mContent;  // Weak ref; it owns us
   };
 
-  nsAttributeTextNode() : nsTextNode(nsnull) {
+  nsAttributeTextNode(nsIDocument *aDocument) : nsTextNode(aDocument) {
   }
   virtual ~nsAttributeTextNode() {
     DetachListener();
@@ -123,6 +120,17 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
+
+  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
+                                      PRBool aCloneText)
+  {
+    nsAttributeTextNode *it = new nsAttributeTextNode(aOwnerDocument);
+    if (it && aCloneText) {
+      it->mText = mText;
+    }
+
+    return it;
+  }
 
   nsRefPtr<nsAttrChangeListener> mListener;  // our listener
 private:
@@ -197,35 +205,21 @@ nsTextNode::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE, GetOwnerDoc());
-  NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
-
-  return CallQueryInterface(textContent, aReturn);
-}
-
-already_AddRefed<nsITextContent>
-nsTextNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
-{
-  nsTextNode* it = new nsTextNode(nsnull);
-  if (!it)
-    return nsnull;
-
-  if (aCloneText) {
-    it->mText = mText;
-  }
-
-  NS_ADDREF(it);
-
-  return it;
-}
-
 PRBool
 nsTextNode::IsContentOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~eTEXT);
+}
+
+nsGenericDOMDataNode*
+nsTextNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+{
+  nsTextNode *it = new nsTextNode(aOwnerDocument);
+  if (it && aCloneText) {
+    it->mText = mText;
+  }
+
+  return it;
 }
 
 #ifdef DEBUG
@@ -304,15 +298,15 @@ nsAttributeTextNode::nsAttrChangeListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-NS_NewAttributeContent(PRInt32 aNameSpaceID, nsIAtom* aAttrName,
-                       nsIContent** aResult)
+NS_NewAttributeContent(nsIDocument *aOwnerDoc, PRInt32 aNameSpaceID,
+                       nsIAtom* aAttrName, nsIContent** aResult)
 {
   NS_PRECONDITION(aAttrName, "Must have an attr name");
   NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
   
   *aResult = nsnull;
-  
-  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode();
+
+  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(aOwnerDoc);
   NS_ENSURE_TRUE(textNode, NS_ERROR_OUT_OF_MEMORY);
 
   textNode->mListener =
