@@ -449,20 +449,22 @@ nsContentList::NamedItem(const nsAString& aName, PRBool aDoFlush)
     
   PRInt32 i, count = mElements.Count();
 
+  // Typically IDs are atomized and names are not
+  // XXXbz this might change if we start atomizing more random attr
+  // values in HTML like we do in XUL!
+  nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+  NS_ENSURE_TRUE(name, nsnull);
+
   for (i = 0; i < count; i++) {
     nsIContent *content = NS_STATIC_CAST(nsIContent *,
                                          mElements.ElementAt(i));
-    if (content) {
-      nsAutoString name;
-      // XXX Should it be an EqualsIgnoreCase?
-      if (((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
-                             name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           aName.Equals(name)) ||
-          ((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id,
-                             name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           aName.Equals(name))) {
-        return content;
-      }
+    // XXX Should this pass eIgnoreCase?
+    if (content &&
+        (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+                              aName, eCaseMatters) ||
+         content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::id,
+                              name, eCaseMatters))) {
+      return content;
     }
   }
 

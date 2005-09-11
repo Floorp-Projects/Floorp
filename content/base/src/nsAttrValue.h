@@ -44,6 +44,7 @@
 #include "nsStringBuffer.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
+#include "nsCaseTreatment.h"
 
 typedef unsigned long PtrBits;
 class nsAString;
@@ -155,6 +156,8 @@ public:
 
   PRUint32 HashValue() const;
   PRBool Equals(const nsAttrValue& aOther) const;
+  PRBool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
+  PRBool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);
