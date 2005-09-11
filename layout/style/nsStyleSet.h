@@ -76,21 +76,20 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
-  // Get a style context for a non-element (which no rules will match).
-  // Eventually, this should go away and we shouldn't even create style
+  // Get a style context for a non-element (which no rules will match),
+  // such as text nodes, placeholder frames, and the nsFirstLetterFrame
+  // for everything after the first letter.
+  //
+  // Perhaps this should go away and we shouldn't even create style
   // contexts for such content nodes.  However, not doing any rule
   // matching for them is a first step.
-  //
-  // XXX This is temporary.  It should go away when we stop creating
-  // style contexts for text nodes and placeholder frames.  (We also use
-  // it once to create a style context for the nsFirstLetterFrame that
-  // represents everything except the first letter.)
-  //
   already_AddRefed<nsStyleContext>
   ResolveStyleForNonElement(nsStyleContext* aParentContext);
 
   // get a style context for a pseudo-element (i.e.,
-  // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|;
+  // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|, in
+  // which case aParentContent must be non-null, or an anonymous box, in
+  // which case it may be null or non-null.
   already_AddRefed<nsStyleContext>
   ResolvePseudoStyleFor(nsIContent* aParentContent,
                         nsIAtom* aPseudoTag,
@@ -99,7 +98,7 @@ class nsStyleSet
 
   // This funtions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
-  // pseudo element.
+  // pseudo element.  It should be used only for pseudo-elements.
   already_AddRefed<nsStyleContext>
   ProbePseudoStyleFor(nsIContent* aParentContent,
                       nsIAtom* aPseudoTag,
