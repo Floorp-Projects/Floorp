@@ -154,9 +154,6 @@
 
 #include "nsIControllers.h"
 
-// The XUL interfaces implemented by the RDF content node.
-#include "nsIDOMXULElement.h"
-
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
 
@@ -345,7 +342,6 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 
 nsXULElement::nsXULElement(nsINodeInfo* aNodeInfo)
     : nsGenericElement(aNodeInfo),
-      mPrototype(nsnull),
       mBindingParent(nsnull)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
@@ -364,11 +360,32 @@ nsXULElement::~nsXULElement()
     if (slots) {
       NS_IF_RELEASE(slots->mControllers); // Forces release
     }
-
-    if (mPrototype)
-        mPrototype->Release();
 }
 
+/* static */
+already_AddRefed<nsXULElement>
+nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
+                     PRBool aIsScriptable)
+{
+    nsXULElement *element = new nsXULElement(aNodeInfo);
+    if (element) {
+        NS_ADDREF(element);
+
+        element->mPrototype = aPrototype;
+
+        if (aIsScriptable) {
+            // Check each attribute on the prototype to see if we need to do
+            // any additional processing and hookup that would otherwise be
+            // done 'automagically' by SetAttr().
+            for (PRUint32 i = 0; i < aPrototype->mNumAttributes; ++i) {
+                element->AddListenerFor(aPrototype->mAttributes[i].mName,
+                                        PR_TRUE);
+            }
+        }
+    }
+
+    return element;
+}
 
 nsresult
 nsXULElement::Create(nsXULPrototypeElement* aPrototype,
@@ -396,27 +413,19 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      nodeInfo = aPrototype->mNodeInfo;
+        nodeInfo = aPrototype->mNodeInfo;
     }
 
-    nsRefPtr<nsXULElement> element = new nsXULElement(nodeInfo);
-
-    if (! element)
+    nsRefPtr<nsXULElement> element = Create(aPrototype, nodeInfo,
+                                            aIsScriptable);
+    if (!element) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     element->mPrototype = aPrototype;
 
-    aPrototype->AddRef();
-
-    if (aIsScriptable) {
-        // Check each attribute on the prototype to see if we need to do
-        // any additional processing and hookup that would otherwise be
-        // done 'automagically' by SetAttr().
-        for (PRUint32 i = 0; i < aPrototype->mNumAttributes; ++i)
-            element->AddListenerFor(aPrototype->mAttributes[i].mName, PR_TRUE);
-    }
-
     NS_ADDREF(*aResult = element.get());
+
     return NS_OK;
 }
 
@@ -431,10 +440,7 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     nsXULElement* element = new nsXULElement(aNodeInfo);
     NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
 
-    // Using kungFuDeathGrip so an early return will clean up properly.
-    nsCOMPtr<nsIContent> kungFuDeathGrip = element;
-
-    kungFuDeathGrip.swap(*aResult);
+    NS_ADDREF(*aResult = element);
 
 #ifdef DEBUG_ATTRIBUTE_STATS
     {
@@ -501,12 +507,11 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 //----------------------------------------------------------------------
 // nsIDOMNode interface
 
-NS_IMETHODIMP
-nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsresult
+nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                    nsIContent **aResult) const
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIContent> result;
+    *aResult = nsnull;
 
     // XXX setting document on some nodes not in a document so XBL will bind
     // and chrome won't break. Make XBL bind to document-less nodes!
@@ -522,26 +527,18 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     PRBool fakeBeingInDocument = PR_TRUE;
     
     // If we have a prototype, so will our clone.
+    nsRefPtr<nsXULElement> element;
     if (mPrototype) {
-        rv = nsXULElement::Create(mPrototype, GetOwnerDoc(), PR_TRUE,
-                                  getter_AddRefs(result));
-        NS_ENSURE_SUCCESS(rv, rv);
+        element = nsXULElement::Create(mPrototype, aNodeInfo, PR_TRUE);
 
         fakeBeingInDocument = IsInDoc();
-    } else {
-        rv = NS_NewXULElement(getter_AddRefs(result), mNodeInfo);
-        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+        element = new nsXULElement(aNodeInfo);
     }
 
-    // Copy attributes
-    PRInt32 count = mAttrsAndChildren.AttrCount();
-    for (PRInt32 i = 0; i < count; ++i) {
-        const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(i);
-        nsAutoString valStr;
-        mAttrsAndChildren.AttrAt(i)->ToString(valStr);
-        rv = result->SetAttr(name->NamespaceID(), name->LocalName(),
-                             name->GetPrefix(), valStr, PR_FALSE);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (!element) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     // XXX TODO: set up RDF generic builder n' stuff if there is a
@@ -551,44 +548,24 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
     // Note that we're _not_ copying mControllers.
 
-    if (aDeep) {
-        // Copy cloned children!
-        PRInt32 i, count = mAttrsAndChildren.ChildCount();
-        for (i = 0; i < count; ++i) {
-            nsIContent* child = mAttrsAndChildren.ChildAt(i);
-
-            NS_ASSERTION(child != nsnull, "null ptr");
-            if (! child)
-                return NS_ERROR_UNEXPECTED;
-
-            nsCOMPtr<nsIDOMNode> domchild = do_QueryInterface(child);
-            NS_ASSERTION(domchild != nsnull, "child is not a DOM node");
-            if (! domchild)
-                return NS_ERROR_UNEXPECTED;
-
-            nsCOMPtr<nsIDOMNode> newdomchild;
-            rv = domchild->CloneNode(PR_TRUE, getter_AddRefs(newdomchild));
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIContent> newchild = do_QueryInterface(newdomchild);
-            NS_ASSERTION(newchild != nsnull, "newdomchild is not an nsIContent");
-            if (! newchild)
-                return NS_ERROR_UNEXPECTED;
-
-            rv = result->AppendChildTo(newchild, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-        }
+    nsresult rv = CopyInnerTo(element, aDeep);
+    if (NS_SUCCEEDED(rv)) {
+        NS_ADDREF(*aResult = element);
     }
 
     if (fakeBeingInDocument) {
         // Don't use BindToTree here so we don't confuse the descendant
         // non-XUL nodes.
-        NS_STATIC_CAST(nsXULElement*,
-                       NS_STATIC_CAST(nsIContent*, result.get()))->
-            mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+        element->mParentPtrBits |= PARENT_BIT_INDOCUMENT;
     }
-    
-    return CallQueryInterface(result, aReturn);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+{
+    return nsGenericElement::CloneNode(aDeep, aResult);
 }
 
 //----------------------------------------------------------------------

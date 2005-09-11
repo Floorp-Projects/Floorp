@@ -386,18 +386,19 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 // nsIDOMNode
 
 nsresult
-nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                          nsIContent **aResult) const
 {
-  *aReturn = nsnull;
+  *aResult = nsnull;
 
-  nsHTMLInputElement* it = new nsHTMLInputElement(mNodeInfo, PR_FALSE);
+  nsHTMLInputElement *it = new nsHTMLInputElement(aNodeInfo, PR_FALSE);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  CopyInnerTo(it, aDeep);
+  nsCOMPtr<nsIContent> kungFuDeathGrip = it;
+  nsresult rv = CopyInnerTo(it, aDeep);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mType) {
     case NS_FORM_INPUT_TEXT:
@@ -425,12 +426,17 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     default:
       break;
   }
-          
-  kungFuDeathGrip.swap(*aReturn);
+
+  kungFuDeathGrip.swap(*aResult);
 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+{
+  return nsGenericElement::CloneNode(aDeep, aResult);
+}
 
 void
 nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,

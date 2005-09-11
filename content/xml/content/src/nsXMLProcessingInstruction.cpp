@@ -166,24 +166,14 @@ nsXMLProcessingInstruction::GetNodeType(PRUint16* aNodeType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsGenericDOMDataNode*
+nsXMLProcessingInstruction::Clone(nsIDocument *aOwnerDocument,
+                                  PRBool aCloneText) const
 {
   nsAutoString data;
   GetData(data);
 
-  nsIDocument *document = GetOwnerDoc();
-  // We really want to pass the document here, but can't yet.  Waiting
-  // on BindToTree.
-  nsXMLProcessingInstruction *pi =
-    new nsXMLProcessingInstruction(mTarget, data, nsnull);
-  if (!pi) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aReturn = pi);
-
-  return NS_OK;
+  return new nsXMLProcessingInstruction(mTarget, data, aOwnerDocument);
 }
 
 #ifdef DEBUG

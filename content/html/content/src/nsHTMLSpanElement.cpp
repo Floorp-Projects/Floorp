@@ -124,7 +124,9 @@ public:
   nsHTMLUnknownElement(nsINodeInfo *aNodeInfo);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
+  nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                 nsIContent **aResult) const;
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode **aResult);
 };
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
