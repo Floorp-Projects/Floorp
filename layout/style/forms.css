@@ -92,6 +92,7 @@ input {
   cursor: text;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
   text-indent: 0;
+  -moz-user-select: text;
 }
 
 input > .anonymous-div {
@@ -113,6 +114,7 @@ textarea {
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
   text-indent: 0;
+  -moz-user-select: text;
 }
 
 textarea > scrollbar {

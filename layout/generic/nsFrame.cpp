@@ -1187,6 +1187,9 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   else
   if (selectStyle == NS_STYLE_USER_SELECT_MOZ_ALL)
     selectStyle = NS_STYLE_USER_SELECT_ALL;
+  else
+  if (selectStyle == NS_STYLE_USER_SELECT_MOZ_NONE)
+    selectStyle = NS_STYLE_USER_SELECT_NONE;
 
   // return stuff
   if (aSelectable)

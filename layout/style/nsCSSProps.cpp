@@ -887,6 +887,7 @@ const PRInt32 nsCSSProps::kUserSelectKTable[] = {
   eCSSKeyword_toggle,     NS_STYLE_USER_SELECT_TOGGLE,
   eCSSKeyword_tri_state,  NS_STYLE_USER_SELECT_TRI_STATE,
   eCSSKeyword__moz_all,   NS_STYLE_USER_SELECT_MOZ_ALL,
+  eCSSKeyword__moz_none,  NS_STYLE_USER_SELECT_MOZ_NONE,
   eCSSKeyword_UNKNOWN,-1
 };
 
