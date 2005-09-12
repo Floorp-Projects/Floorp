@@ -1167,7 +1167,8 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
       break;
 
     for (i = 0; i < 256; i++) {
-      PRInt32 k = (i * (num - 1)) / 255;
+      PRInt32 k = (i * num) / 255;
+      k = PR_MIN(k, num - 1);
       float v;
       list->GetItem(k, getter_AddRefs(number));
       number->GetValue(&v);
