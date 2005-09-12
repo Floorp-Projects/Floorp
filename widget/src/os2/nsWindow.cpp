@@ -67,7 +67,8 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIRegion.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 //~~~ windowless plugin support
 #include "nsplugindefs.h"
@@ -254,7 +255,7 @@ nsWindow::nsWindow() : nsBaseWidget()
       // preference set, we put an invisible scroll bar on every child window so we can
       // scroll. Woohoo!
       nsresult rv;
-      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv) && prefs)
          prefs->GetBoolPref("os2.trackpoint", &gIsTrackPoint);
     }

@@ -66,7 +66,8 @@
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
@@ -305,8 +306,7 @@ nsWindow::nsWindow()
   if (!gGlobalsInitialized) {
     gGlobalsInitialized = PR_TRUE;
 
-    // check to see if we should set our raise pref
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
       PRBool val = PR_TRUE;
       nsresult rv;
