@@ -387,7 +387,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 nsresult
 nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                          nsIContent **aResult)
+                          nsIContent **aResult) const
 {
   *aResult = nsnull;
 
@@ -407,8 +407,9 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
       if (GET_BOOLBIT(mBitField, BF_VALUE_CHANGED)) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
+        // XXX GetValue should be const
         nsAutoString value;
-        GetValue(value);
+        NS_CONST_CAST(nsHTMLInputElement*, this)->GetValue(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
         it->SetValueInternal(value, nsnull);
       }
@@ -418,8 +419,9 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
       if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
         // We no longer have our original checked state.  Set our
         // checked state on the clone.
+        // XXX GetChecked should be const
         PRBool checked;
-        GetChecked(&checked);
+        NS_CONST_CAST(nsHTMLInputElement*, this)->GetChecked(&checked);
         it->DoSetChecked(checked, PR_FALSE);
       }
       break;

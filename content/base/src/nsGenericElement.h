@@ -456,7 +456,7 @@ public:
    * right class for the clone.
    */
   nsresult CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                        nsIContent **aResult);
+                        nsIContent **aResult) const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -815,12 +815,7 @@ protected:
    * @param aResult the clone
    */
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                         nsIContent **aResult)
-  {
-    NS_ERROR("This shouldn't be called!");
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+                         nsIContent **aResult) const = 0;
 
   /**
    * A basic implementation of the DOM cloneNode method. Calls CloneContent to
@@ -830,7 +825,7 @@ protected:
    *              element are always cloned)
    * @param aResult the clone
    */
-  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult);
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult) const;
 
   /**
    * Information about this type of node
@@ -963,7 +958,7 @@ public:
   }                                                                           \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);                   \
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                \
-                         nsIContent **aResult);
+                         nsIContent **aResult) const;
 
 
 /**
@@ -972,7 +967,7 @@ public:
 #define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
-                    nsIContent **aResult)                                   \
+                    nsIContent **aResult) const                             \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \
@@ -998,7 +993,7 @@ _elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
 #define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
-                    nsIContent **aResult)                                   \
+                    nsIContent **aResult) const                             \
 {                                                                           \
   *aResult = nsnull;                                                        \
                                                                             \

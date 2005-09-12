@@ -159,7 +159,7 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsCommentNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+nsCommentNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
 {
   nsCommentNode *it = new nsCommentNode(aOwnerDocument);
   if (it && aCloneText) {

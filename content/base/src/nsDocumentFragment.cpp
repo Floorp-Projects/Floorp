@@ -167,7 +167,7 @@ public:
 
 protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                 nsIContent **aResult);
+                 nsIContent **aResult) const;
 };
 
 nsresult

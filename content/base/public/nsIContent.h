@@ -738,7 +738,7 @@ public:
    * @param aDeep whether to clone the descendants of this node
    */
   virtual nsresult CloneContent(nsIDocument *aOwnerDocument,
-                                PRBool aDeep, nsIContent **aResult) = 0;
+                                PRBool aDeep, nsIContent **aResult) const = 0;
 
 #ifdef DEBUG
   /**

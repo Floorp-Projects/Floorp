@@ -276,7 +276,7 @@ nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
@@ -1329,7 +1329,7 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
 
 nsresult
 nsGenericDOMDataNode::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                                   nsIContent **aResult)
+                                   nsIContent **aResult) const
 {
   // XXX We really want to pass the document to the constructor, but can't
   //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382

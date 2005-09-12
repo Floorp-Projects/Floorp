@@ -424,7 +424,7 @@ nsXTFElementWrapper::IntrinsicState() const
 
 nsresult
 nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                           nsIContent **aResult)
+                           nsIContent **aResult) const
 {
   *aResult = nsnull;
   nsCOMPtr<nsIContent> it;
@@ -455,7 +455,8 @@ nsXTFElementWrapper::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
     it.swap(*aResult);
   }
 
-  wrapper->CloneState(this);
+  // XXX CloneState should take |const nIDOMElement*|
+  wrapper->CloneState(NS_CONST_CAST(nsXTFElementWrapper*, this));
   return rv;
 }
 
