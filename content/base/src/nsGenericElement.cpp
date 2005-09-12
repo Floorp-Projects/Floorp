@@ -4012,7 +4012,7 @@ nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
 }
 
 nsresult
-nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
@@ -4027,7 +4027,7 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 
 nsresult
 nsGenericElement::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                               nsIContent **aResult)
+                               nsIContent **aResult) const
 {
   if (GetOwnerDoc() == aOwnerDocument) {
     return Clone(mNodeInfo, aDeep, aResult);

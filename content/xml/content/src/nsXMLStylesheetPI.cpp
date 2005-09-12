@@ -78,7 +78,7 @@ protected:
                          nsAString& aMedia,
                          PRBool* aIsAlternate);
   virtual nsGenericDOMDataNode* Clone(nsIDocument *aOwnerDocument,
-                                      PRBool aCloneText);
+                                      PRBool aCloneText) const;
 };
 
 // nsISupports implementation
@@ -235,10 +235,10 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
 }
 
 nsGenericDOMDataNode*
-nsXMLStylesheetPI::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+nsXMLStylesheetPI::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
 {
   nsAutoString data;
-  GetData(data);
+  nsGenericDOMDataNode::GetData(data);
 
   return new nsXMLStylesheetPI(data, aOwnerDocument);
 }

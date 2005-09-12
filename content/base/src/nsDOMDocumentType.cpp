@@ -193,7 +193,7 @@ nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+nsDOMDocumentType::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
 {
   // XXX ownerDocument
   return new nsDOMDocumentType(mName, mEntities, mNotations, mPublicId,

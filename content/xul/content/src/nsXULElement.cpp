@@ -509,7 +509,7 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult
 nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                    nsIContent **aResult)
+                    nsIContent **aResult) const
 {
     *aResult = nsnull;
 

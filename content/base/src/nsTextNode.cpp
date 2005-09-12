@@ -122,7 +122,7 @@ public:
                               PRBool aNullParent = PR_TRUE);
 
   virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
-                                      PRBool aCloneText)
+                                      PRBool aCloneText) const
   {
     nsAttributeTextNode *it = new nsAttributeTextNode(aOwnerDocument);
     if (it && aCloneText) {
@@ -212,7 +212,7 @@ nsTextNode::IsContentOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsTextNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText)
+nsTextNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
 {
   nsTextNode *it = new nsTextNode(aOwnerDocument);
   if (it && aCloneText) {

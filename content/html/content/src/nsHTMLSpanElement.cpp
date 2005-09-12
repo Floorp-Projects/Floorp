@@ -125,7 +125,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
-                 nsIContent **aResult);
+                 nsIContent **aResult) const;
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode **aResult);
 };
 
