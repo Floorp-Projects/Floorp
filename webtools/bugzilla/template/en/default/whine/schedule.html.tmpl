@@ -68,6 +68,14 @@
   terms.bug %] that matches the search will be sent in its own email message.
 </p>
 
+<p>
+  [% IF Param("timezone") %]
+    All times are server local time ([% Param("timezone") FILTER upper %]).
+  [% ELSE %]
+    All times are server local time.
+  [% END %]
+</p>
+
 <form method="post" action="editwhines.cgi">
 [%# This hidden submit button must be here to set default behavior when
     the user presses return on a form input field #%]
