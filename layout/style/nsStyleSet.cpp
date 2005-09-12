@@ -682,8 +682,14 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
   NS_ASSERTION(aParentContent &&
                aParentContent->IsContentOfType(nsIContent::eELEMENT),
                "aParentContent must be element");
-  NS_ASSERTION(nsCSSPseudoElements::IsPseudoElement(aPseudoTag),
-               "aPseudoTag must be a pseudo-element");
+  //NS_ASSERTION(nsCSSPseudoElements::IsPseudoElement(aPseudoTag),
+  //             "aPseudoTag must be a pseudo-element");
+  NS_ASSERTION(aParentContent ||
+               nsCSSAnonBoxes::IsAnonBox(aPseudoTag),
+               "null content must correspond to anonymous box");
+  NS_ASSERTION(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) ||
+               nsCSSPseudoElements::IsPseudoElement(aPseudoTag),
+               "aPseudoTag must be pseudo-element or anonymous box");
 
   if (aPseudoTag && presContext) {
     if (mRuleProcessors[eAgentSheet]        ||
