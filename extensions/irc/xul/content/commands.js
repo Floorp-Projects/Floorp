@@ -93,6 +93,7 @@ function initCommands()
          ["ctcp",              cmdCTCP,             CMD_NEED_SRV | CMD_CONSOLE],
          ["default-charset",   cmdCharset,                         CMD_CONSOLE],
          ["delete-view",       cmdDeleteView,                      CMD_CONSOLE],
+         ["desc",              cmdDesc,                            CMD_CONSOLE],
          ["disable-plugin",    cmdAblePlugin,                      CMD_CONSOLE],
          ["disconnect",        cmdDisconnect,       CMD_NEED_SRV | CMD_CONSOLE],
          ["disconnect-all",    cmdDisconnectAll,                   CMD_CONSOLE],
@@ -129,6 +130,7 @@ function initCommands()
          ["motd",              cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
          ["motif",             cmdMotif,                           CMD_CONSOLE],
          ["msg",               cmdMsg,              CMD_NEED_SRV | CMD_CONSOLE],
+         ["name",              cmdName,                            CMD_CONSOLE],
          ["names",             cmdNames,            CMD_NEED_SRV | CMD_CONSOLE],
          ["network",           cmdNetwork,                         CMD_CONSOLE],
          ["network-motif",     cmdMotif,            CMD_NEED_NET | CMD_CONSOLE],
@@ -170,6 +172,7 @@ function initCommands()
          ["sync-window",       cmdSync,                                      0],
          ["testdisplay",       cmdTestDisplay,                     CMD_CONSOLE],
          ["text-direction",    cmdTextDirection,                             0],
+         ["time",              cmdTime,             CMD_NEED_SRV | CMD_CONSOLE],
          ["timestamps",        cmdTimestamps,                      CMD_CONSOLE],
          ["timestamp-format",  cmdTimestampFormat,                 CMD_CONSOLE],
          ["toggle-ui",         cmdToggleUI,                        CMD_CONSOLE],
@@ -179,10 +182,13 @@ function initCommands()
          ["unban",             cmdBan,             CMD_NEED_CHAN | CMD_CONSOLE],
          ["unstalk",           cmdUnstalk,                         CMD_CONSOLE],
          ["urls",              cmdURLs,                            CMD_CONSOLE],
+         ["user",              cmdUser,                            CMD_CONSOLE],
+         ["userhost",          cmdUserhost,         CMD_NEED_SRV | CMD_CONSOLE],
+         ["userip",            cmdUserip,           CMD_NEED_SRV | CMD_CONSOLE],
          ["usermode",          cmdUsermode,                        CMD_CONSOLE],
          ["user-motif",        cmdMotif,           CMD_NEED_USER | CMD_CONSOLE],
          ["user-pref",         cmdPref,            CMD_NEED_USER | CMD_CONSOLE],
-         ["version",           cmdVersion,                         CMD_CONSOLE],
+         ["version",           cmdVersion,          CMD_NEED_SRV | CMD_CONSOLE],
          ["who",               cmdWho,              CMD_NEED_SRV | CMD_CONSOLE],
          ["whois",             cmdWhoIs,            CMD_NEED_SRV | CMD_CONSOLE],
          ["whowas",            cmdWhoWas,           CMD_NEED_SRV | CMD_CONSOLE],
@@ -192,9 +198,7 @@ function initCommands()
          ["css",              "motif",                             CMD_CONSOLE],
          ["exit",             "quit",                              CMD_CONSOLE],
          ["exit-mozilla",     "quit-mozilla",                      CMD_CONSOLE],
-         ["desc",             "pref desc",                         CMD_CONSOLE],
          ["j",                "join",                              CMD_CONSOLE],
-         ["name",             "pref username",                     CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
          ["raw",              "quote",                             CMD_CONSOLE],
          // Used to display a nickname in the menu only.
@@ -246,7 +250,7 @@ function initCommands()
 
     var restList = ["reason", "action", "text", "message", "params", "font",
                     "expression", "ircCommand", "prefValue", "newTopic",
-                    "commandList", "file", "commands"];
+                    "commandList", "file", "commands", "description"];
     client.commandManager.argTypes.__aliasTypes__(restList, "rest");
     client.commandManager.argTypes["plugin"] = parsePlugin;
 }
@@ -1556,6 +1560,36 @@ function cmdClearView(e)
     syncOutputFrame(e.view);
 }
 
+function cmdDesc(e)
+{
+    if (e.network != null) // somewhere on a network
+    {
+        dispatch("network-pref", {prefValue: e.description, prefName: "desc",
+                                  network: e.network,
+                                  isInteractive: e.isInteractive});
+    }
+    else // no network, change the general pref
+    {
+        dispatch("pref", {prefName: "desc", prefValue: e.description, 
+                          isInteractive: e.isInteractive});
+    }
+}
+
+function cmdName(e)
+{
+    if (e.network != null) // somewhere on a network
+    {
+        dispatch("network-pref", {prefName: "username", prefValue: e.username,
+                                  network: e.network,
+                                  isInteractive: e.isInteractive});
+    }
+    else // no network, change the general pref
+    {
+        dispatch("pref", {prefName: "username", prefValue: e.username,
+                          isInteractive: e.isInteractive});
+    }
+}
+
 function cmdNames(e)
 {
     if (e.channelName)
@@ -2762,7 +2796,10 @@ function cmdPrint(e)
 
 function cmdVersion(e)
 {
-    e.network.dispatch("ctcp", { target: e.nickname, code: "VERSION"});
+    if (e.nickname)
+        e.network.dispatch("ctcp", { target: e.nickname, code: "VERSION"});
+    else
+        e.server.sendData(fromUnicode("VERSION") + "\n", e.sourceObject);
 }
 
 function cmdEcho(e)
@@ -2951,6 +2988,36 @@ function cmdUnstalk(e)
     }
 
     display(getMsg(MSG_ERR_UNKNOWN_STALK, e.text), MT_ERROR);
+}
+
+function cmdUser(e)
+{
+    dispatch("name", {username: e.username, network: e.network,
+                      isInteractive: e.isInteractive});
+    dispatch("desc", {description: e.description, network: e.network,
+                      isInteractive: e.isInteractive});
+}
+
+function cmdUserhost(e)
+{
+    var nickList = combineNicks(e.nicknameList, 5);
+    for (var i = 0; i < nickList.length; i++)
+    {
+        e.server.userhost(nickList[i]);
+    }
+}
+
+function cmdUserip(e)
+{
+    // Check if the server supports this
+    if (!e.server.servCmds.userip)
+    {
+        display(getMsg(MSG_ERR_UNSUPPORTED_COMMAND, "USERIP"), MT_ERROR);
+        return;
+    }
+    var nickList = combineNicks(e.nicknameList, 5);
+    for (var i = 0; i < nickList.length; i++)
+        e.server.userip(nickList[i]);
 }
 
 function cmdUsermode(e)
@@ -3311,6 +3378,14 @@ function cmdDoCommand(e)
     {
         doCommand(e.cmdName);
     }
+}
+
+function cmdTime(e)
+{
+    if (e.nickname)
+        e.network.dispatch("ctcp", { target: e.nickname, code: "TIME"});
+    else
+        e.server.sendData(fromUnicode("TIME") + "\n", e.sourceObject);
 }
 
 function cmdTimestamps(e)

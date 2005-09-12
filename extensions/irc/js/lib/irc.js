@@ -860,6 +860,18 @@ function serv_uptimer()
     this.lastPing = this.lastPingSent = new Date();
 }
 
+CIRCServer.prototype.userhost = 
+function serv_userhost(target)
+{
+    this.sendData("USERHOST " + fromUnicode(target, this) + "\n");
+}
+
+CIRCServer.prototype.userip = 
+function serv_userip(target)
+{
+    this.sendData("USERIP " + fromUnicode(target, this) + "\n");
+}
+
 CIRCServer.prototype.who =
 function serv_who(target)
 {
