@@ -915,7 +915,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
            specified = 0,  // number that were specified for this node
            inherited = 0;  // number that were 'inherit' (and not
                            //   eCSSUnit_Inherit) for this node
-  PRBool canHaveExplicitInherit = PR_FALSE;
 
   for (const PropertyCheckData *prop = structData->props,
                            *prop_end = prop + structData->nprops;
@@ -994,15 +993,10 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
     }
 
 #if 0
-  printf("CheckSpecifiedProperties: SID=%d total=%d spec=%d inh=%d chei=%s.\n",
-    aSID, total, specified, inherited, canHaveExplicitInherit?"true":"false");
+  printf("CheckSpecifiedProperties: SID=%d total=%d spec=%d inh=%d.\n",
+         aSID, total, specified, inherited);
 #endif
 
-  if (canHaveExplicitInherit) {
-    if (specified == total)
-      return eRuleFullMixed;
-    return eRulePartialMixed;
-  }
   if (inherited == total)
     return eRuleFullInherited;
   if (specified == total) {
@@ -3401,7 +3395,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     parentBorder = parentContext->GetStyleBorder();
   PRBool inherited = aInherited;
 
-  // border-size: length, enum, inherit
+  // border-width, border-*-width: length, enum, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
   { // scope for compilers with broken |for| loop scoping
@@ -3446,7 +3440,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     }
   }
 
-  // border-style: enum, none, inhert
+  // border-style, border-*-style: enum, none, inherit
   const nsCSSRect& ourStyle = marginData.mBorderStyle;
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
@@ -3465,7 +3459,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     }
   }
 
-  // border-colors: color, string, enum
+  // -moz-border-*-colors: color, string, enum
   nscolor borderColor;
   nscolor unused = NS_RGB(0,0,0);
   
@@ -3490,7 +3484,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     }
   }
 
-  // border-color: color, string, enum, inherit
+  // border-color, border-*-color: color, string, enum, inherit
   const nsCSSRect& ourBorderColor = marginData.mBorderColor;
   PRBool transparent;
   PRBool foreground;
