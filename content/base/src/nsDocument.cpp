@@ -1985,7 +1985,7 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
     NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
     if (uri) {
       nsCOMPtr<nsICSSStyleSheet> sheet;
-      cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+      cssLoader->LoadSheetSync(uri, getter_AddRefs(sheet));
       if (sheet) {
         BeginUpdate(UPDATE_STYLE);
         AddCatalogStyleSheet(sheet);

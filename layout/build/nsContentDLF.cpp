@@ -642,7 +642,7 @@ nsContentDLF::EnsureUAStyleSheet()
   NS_NewCSSLoader(getter_AddRefs(cssLoader));
   if (!cssLoader)
     return NS_ERROR_OUT_OF_MEMORY;
-  rv = cssLoader->LoadAgentSheet(uri, &gUAStyleSheet);
+  rv = cssLoader->LoadSheetSync(uri, &gUAStyleSheet);
 #ifdef DEBUG
   if (NS_FAILED(rv))
     printf("*** open of %s failed: error=%x\n", UA_CSS_URL, rv);

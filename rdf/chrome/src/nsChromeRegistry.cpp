@@ -2987,7 +2987,7 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
   nsCOMPtr<nsICSSLoader> cssLoader = do_GetService(kCSSLoaderCID);
   if (!cssLoader) return NS_ERROR_FAILURE;
 
-  return cssLoader->LoadAgentSheet(aURL, aSheet);
+  return cssLoader->LoadSheetSync(aURL, aSheet);
 }
 
 nsresult nsChromeRegistry::LoadInstallDataSource()

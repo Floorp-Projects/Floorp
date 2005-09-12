@@ -147,7 +147,8 @@ public:
   NS_IMETHOD DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+                              nsresult aStatus);
   
   nsresult EnsureUniqueInner();
 

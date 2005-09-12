@@ -232,7 +232,6 @@ protected:
     nsCOMPtr<nsIXULPrototypeDocument> mPrototype; // [OWNER]
     nsIParser*             mParser;               // [OWNER] We use regular pointer b/c of funky exports on nsIParser
     
-    nsString               mPreferredStyle;
     nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
     nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
     nsCOMPtr<nsIScriptSecurityManager> mSecMan;
@@ -469,33 +468,15 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
         // Add the style sheet reference to the prototype
         mPrototype->AddStyleSheetReference(url);
 
-        // Nope, we need to load it asynchronously
-        PRBool blockParser = PR_FALSE;
-        if (! aAlternate) {
-            if (!aTitle.IsEmpty()) {  // possibly preferred sheet
-                if (mPreferredStyle.IsEmpty()) {
-                    mPreferredStyle = aTitle;
-                    mCSSLoader->SetPreferredSheet(aTitle);
-                    nsCOMPtr<nsIAtom> defaultStyle = do_GetAtom("default-style");
-                    if (defaultStyle) {
-                        mPrototype->SetHeaderData(defaultStyle, aTitle);
-                    }
-                }
-            }
-            else {  // persistent sheet, block
-                blockParser = PR_TRUE;
-            }
-        }
-
         nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
         if (! doc)
             return NS_ERROR_FAILURE; // doc went away!
 
-        PRBool doneLoading;
+        PRBool isAlternate;
         rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                       ((blockParser) ? mParser : nsnull),
-                                       doneLoading, nsnull);
-        if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
+                                       aAlternate, mParser, nsnull,
+                                       &isAlternate);
+        if (NS_SUCCEEDED(rv) && !isAlternate) {
           rv = NS_ERROR_HTMLPARSER_BLOCK;
         }
     }
@@ -543,16 +524,21 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
 
     // XXX this presumes HTTP header info is already set in document
     // XXX if it isn't we need to set it here...
-    nsCOMPtr<nsIAtom> defaultStyle = do_GetAtom("default-style");
-    if (! defaultStyle)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mPrototype->GetHeaderData(defaultStyle, mPreferredStyle);
+    // XXXbz not like GetHeaderData on the proto doc _does_ anything....
+    nsAutoString preferredStyle;
+    rv = mPrototype->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                                   preferredStyle);
     if (NS_FAILED(rv)) return rv;
+
+    if (!preferredStyle.IsEmpty()) {
+        aDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle,
+                                 preferredStyle);
+    }
 
     // Get the CSS loader from the document so we can load
     // stylesheets
     mCSSLoader = aDocument->CSSLoader();
+    mCSSLoader->SetPreferredSheet(preferredStyle);
 
     mNodeInfoManager = aPrototype->GetNodeInfoManager();
     if (! mNodeInfoManager)

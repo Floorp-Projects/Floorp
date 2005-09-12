@@ -132,7 +132,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
     nsCOMPtr<nsICSSStyleSheet> newSheet;
     if (IsChromeURI(uri)) {
-      if (NS_FAILED(loader->LoadAgentSheet(uri, getter_AddRefs(newSheet))))
+      if (NS_FAILED(loader->LoadSheetSync(uri, getter_AddRefs(newSheet))))
         continue;
     }
     else {

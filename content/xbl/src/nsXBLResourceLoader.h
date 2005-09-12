@@ -77,7 +77,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+                              nsresult aStatus);
 
   void LoadResources(PRBool* aResult);
   void AddResource(nsIAtom* aResourceType, const nsAString& aSrc);
@@ -100,6 +101,8 @@ public:
   nsXBLResource* mLastResource;
 
   PRPackedBool mLoadingResources;
+  // We need mInLoadResourcesFunc because we do a mixture of sync and
+  // async loads.
   PRPackedBool mInLoadResourcesFunc;
   PRInt16 mPendingSheets; // The number of stylesheets that have yet to load.
   
