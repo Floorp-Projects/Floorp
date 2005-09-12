@@ -525,7 +525,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIFrame*       aFrame,
                                                      PRUint32        aFlagsValues,
                                                      PRUint32        aFlagsToUpdate)
 {
-  if (!aFlagsToUpdate && !aScriptLevelIncrement)
+  if (!aFrame || (!aFlagsToUpdate && !aScriptLevelIncrement))
     return;
   nsIMathMLFrame* mathMLFrame;
   aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -557,7 +557,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
                                                              PRUint32        aFlagsValues,
                                                              PRUint32        aFlagsToUpdate)
 {
-  if (!aFlagsToUpdate && !aScriptLevelIncrement)
+  if (!aParentFrame || (!aFlagsToUpdate && !aScriptLevelIncrement))
     return;
   PRInt32 index = 0;
   nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
@@ -582,6 +582,8 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIFrame*       aPa
 nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
                                                 PRInt32         aParentScriptLevel)
 {
+  if (!aFrame)
+    return;
   nsIMathMLFrame* mathMLFrame;
   aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
   if (mathMLFrame) {

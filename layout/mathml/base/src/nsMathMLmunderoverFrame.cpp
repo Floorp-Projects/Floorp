@@ -193,8 +193,6 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
     underscriptFrame = baseFrame->GetNextSibling();
   if (underscriptFrame)
     overscriptFrame = underscriptFrame->GetNextSibling();
-  if (!baseFrame || !underscriptFrame || !overscriptFrame)
-    return NS_OK; // a visual error indicator will be reported later during layout
 
   // if our base is an embellished operator, let its state bubble to us (in particular,
   // this is where we get the flag for NS_MATHML_EMBELLISH_MOVABLELIMITS). Our flags

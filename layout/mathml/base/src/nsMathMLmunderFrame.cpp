@@ -189,8 +189,6 @@ XXX The winner is the outermost setting in conflicting settings like these:
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)
     underscriptFrame = baseFrame->GetNextSibling();
-  if (!baseFrame || !underscriptFrame)
-    return NS_OK; // a visual error indicator will be reported later during layout
 
   // if our base is an embellished operator, let its state bubble to us (in particular,
   // this is where we get the flag for NS_MATHML_EMBELLISH_MOVABLELIMITS). Our flags
