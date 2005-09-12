@@ -346,10 +346,9 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));
     if (NS_FAILED(res)) return res;
 
-    nsAutoString empty;
     nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
     // Get the all the computed css styles attached to the element node
-    res = viewCSS->GetComputedStyle(aElement, empty, getter_AddRefs(cssDecl));
+    res = viewCSS->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
     if (NS_FAILED(res)) return res;
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));

@@ -692,9 +692,8 @@ nsXTFElementWrapper::HandleDOMEvent(nsPresContext* aPresContext,
     if (NS_FAILED(rv = GetListenerManager(getter_AddRefs(listenerManager))))
       return rv;
 
-    nsAutoString empty;
     if (NS_FAILED(rv = listenerManager->CreateEvent(aPresContext, aEvent,
-                                                    empty, aDOMEvent)))
+                                                    EmptyString(), aDOMEvent)))
       return rv;
   }
   if (!*aDOMEvent)

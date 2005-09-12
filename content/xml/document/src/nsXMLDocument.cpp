@@ -684,9 +684,7 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
 
   // Create an empty document
-  nsAutoString emptyStr;
-  emptyStr.Truncate();
-  rv = NS_NewDOMDocument(getter_AddRefs(newDoc), emptyStr, emptyStr,
+  rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(), EmptyString(),
                          newDocType, mDocumentURI);
   if (NS_FAILED(rv)) return rv;
 

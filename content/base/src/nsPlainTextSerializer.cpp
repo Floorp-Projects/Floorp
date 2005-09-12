@@ -393,8 +393,7 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
     rv = DoOpenContainer(nsnull, id);
   }
   else {
-    nsAutoString empty;
-    rv = DoAddLeaf(nsnull, id, empty);
+    rv = DoAddLeaf(nsnull, id, EmptyString());
   }
 
   mContent = 0;
@@ -1748,7 +1747,6 @@ nsPlainTextSerializer::Write(const nsAString& aString)
   // If needed, strip out all "end of lines"
   // and multiple whitespace between words
   PRInt32 nextpos;
-  nsAutoString tempstr;
   const PRUnichar * offsetIntoBuffer = nsnull;
   
   while (bol < totLen) {    // Loop over lines

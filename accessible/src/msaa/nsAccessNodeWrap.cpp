@@ -278,8 +278,7 @@ NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclar
     return NS_ERROR_FAILURE;   
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  nsAutoString empty;
-  viewCSS->GetComputedStyle(domElement, empty, getter_AddRefs(cssDecl));
+  viewCSS->GetComputedStyle(domElement, EmptyString(), getter_AddRefs(cssDecl));
   if (cssDecl) {
     *aCssDecl = cssDecl;
     NS_ADDREF(*aCssDecl);

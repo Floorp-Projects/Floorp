@@ -414,8 +414,7 @@ nsSVGLibartGlyphMetricsFT::InitializeFace()
 
   if (!font_data.font_entry) {
     // try to find *any* font
-    nsAutoString empty;
-    FindFont(empty, PR_FALSE, (void*)&font_data);
+    FindFont(EmptyString(), PR_FALSE, (void*)&font_data);
   }
   
   if (!font_data.font_entry) {

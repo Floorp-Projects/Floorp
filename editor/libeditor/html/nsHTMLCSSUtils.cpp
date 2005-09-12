@@ -565,11 +565,11 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
   switch (aStyleType) {
     case COMPUTED_STYLE_TYPE:
       if (element && aViewCSS) {
-        nsAutoString empty, value, propString;
+        nsAutoString value, propString;
         nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
         aProperty->ToString(propString);
         // Get the all the computed css styles attached to the element node
-        res = aViewCSS->GetComputedStyle(element, empty, getter_AddRefs(cssDecl));
+        res = aViewCSS->GetComputedStyle(element, EmptyString(), getter_AddRefs(cssDecl));
         if (NS_FAILED(res)) return res;
         // from these declarations, get the one we want and that one only
         res = cssDecl->GetPropertyValue(propString, value);

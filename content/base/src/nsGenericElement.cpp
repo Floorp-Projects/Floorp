@@ -234,7 +234,6 @@ nsNode3Tearoff::GetTextContent(nsIContent *aContent,
   NS_NewContentIterator(getter_AddRefs(iter));
   iter->Init(aContent);
 
-  nsString tempString;
   aTextContent.Truncate();
   while (!iter->IsDone()) {
     nsIContent *content = iter->GetCurrentNode();
@@ -2032,9 +2031,8 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
       if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
         return ret;
       }
-      nsAutoString empty;
       if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent,
-                                                       empty, aDOMEvent)))
+                                                       EmptyString(), aDOMEvent)))
         return ret;
     }
 

@@ -558,28 +558,26 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     }
   }
   else {
-    nsAutoString emptyStr;
-
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssPosition,
-                                     emptyStr, PR_FALSE);
+                                     EmptyString(), PR_FALSE);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssTop,
-                                     emptyStr, PR_FALSE);
+                                     EmptyString(), PR_FALSE);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssLeft,
-                                     emptyStr, PR_FALSE);
+                                     EmptyString(), PR_FALSE);
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssZIndex,
-                                     emptyStr, PR_FALSE);
+                                     EmptyString(), PR_FALSE);
 
     if (!nsHTMLEditUtils::IsImage(aElement)) {
       mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                        nsEditProperty::cssWidth,
-                                       emptyStr, PR_FALSE);
+                                       EmptyString(), PR_FALSE);
       mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                        nsEditProperty::cssHeight,
-                                       emptyStr, PR_FALSE);
+                                       EmptyString(), PR_FALSE);
     }
 
     PRBool hasStyleOrIdOrClass;

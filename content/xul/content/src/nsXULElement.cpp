@@ -2048,8 +2048,10 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                     NS_ERROR("Unable to instantiate a listener manager on this event.");
                     return ret;
                 }
-                nsAutoString empty;
-                if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
+                if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext,
+                                                                 aEvent,
+                                                                 EmptyString(),
+                                                                 aDOMEvent))) {
                     NS_ERROR("This event will fail without the ability to create the event early.");
                     return ret;
                 }
@@ -2118,8 +2120,10 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
                 return ret;
             }
-            nsAutoString empty;
-            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
+            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext,
+                                                             aEvent,
+                                                             EmptyString(),
+                                                             aDOMEvent)))
                 return ret;
 
             if (!*aDOMEvent) {

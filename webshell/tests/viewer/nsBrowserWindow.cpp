@@ -1565,8 +1565,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     widget->SetBackgroundColor(NS_RGB(255, 255, 255));
     PRUint32 size;
-    nsAutoString empty;
-    mLocation->SetText(empty, size);
+    mLocation->SetText(EmptyString(), size);
     mLocation->SetMaxTextLength(MAX_TEXT_LENGTH);
     NS_RELEASE(widget);
   }
