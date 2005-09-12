@@ -2483,8 +2483,13 @@ void
 nsFtpState::DataConnectionEstablished()
 {
     LOG(("(%x) Data Connection established.", this));
-    
     mWaitingForDConn = PR_FALSE;
+
+    // If we no longer have a channel, we don't need this connection
+    if (!mChannel) {
+        LOG(("    Ignoring data connection"));
+        return;
+    }
 
     // sending empty string with (mWaitingForDConn == PR_FALSE) will cause the 
     // control socket to write out its buffer.
