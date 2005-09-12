@@ -2012,13 +2012,30 @@ function cmdGotoURL(e)
     }
 
     if (client.prefs["link.focus"])
-        window.focus();
+    {
+        try
+        {
+            window.focus();
+        }
+        catch (ex)
+        {
+            dd(formatException(ex));
+        }
+        
+    }
+
     if (e.command.name == "goto-url-newtab")
     {
-        if (client.host == "Mozilla") {
-            window.openNewTabWith(e.url, false, false);
-        } else {
-            window.openNewTabWith(e.url, null, null, null, null, false);
+        try
+        {
+            if (client.host == "Mozilla")
+                window.openNewTabWith(e.url, false, false);
+            else
+                window.openNewTabWith(e.url, null, null, null, null, false);
+        }
+        catch (ex)
+        {
+            dd(formatException(ex));
         }
         dispatch("focus-input");
         return;
@@ -2032,8 +2049,14 @@ function cmdGotoURL(e)
         dispatch("focus-input");
         return;
     }
-
-    location.href = e.url;
+    try
+    {
+        location.href = e.url;
+    }
+    catch (ex)
+    {
+        dd(formatException(ex));
+    }
     dispatch("focus-input");
 }
 
