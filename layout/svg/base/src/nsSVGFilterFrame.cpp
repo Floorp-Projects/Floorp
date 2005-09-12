@@ -357,6 +357,9 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   aTarget->GetBBox(getter_AddRefs(bbox));
 
   if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+    if (!bbox)
+      return NS_OK;
+
     bbox->GetX(&x);
     x += nsSVGUtils::ObjectSpace(bbox, mX, nsSVGUtils::X);
     bbox->GetY(&y);
@@ -494,6 +497,8 @@ NS_IMETHODIMP
 nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
                                         nsISVGRendererRegion **aRegion)
 {
+  *aRegion = nsnull;
+
   nsIContent *targetContent = aTarget->GetContent();
   nsISVGChildFrame *svg;
 
@@ -523,6 +528,9 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
   svg->GetBBox(getter_AddRefs(bbox));
 
   if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+    if (!bbox)
+      return NS_OK;
+
     bbox->GetX(&x);
     x += nsSVGUtils::ObjectSpace(bbox, mX, nsSVGUtils::X);
     bbox->GetY(&y);

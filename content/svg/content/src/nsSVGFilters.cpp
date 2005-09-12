@@ -1470,6 +1470,8 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
   PRUint32 width, height, length;
   targetImage->Lock();
   targetImage->GetData(&targetData, &length, &stride);
+  targetImage->GetWidth(&width);
+  targetImage->GetHeight(&height);
    
   PRUint32 count = GetChildCount();
   for (PRUint32 i = 0; i < count; i++) {
@@ -1501,9 +1503,6 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
     sourceImage->Lock();
     sourceImage->GetData(&sourceData, &length, &stride);
     
-    sourceImage->GetWidth(&width);
-    sourceImage->GetHeight(&height);
-
 #define BLEND(target, source, alpha) \
     target = PR_MIN(255, (target * (255 - alpha))/255 + source)
 
