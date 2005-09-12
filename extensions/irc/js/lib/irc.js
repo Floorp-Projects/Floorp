@@ -2439,6 +2439,13 @@ function serv_cact (e)
     e.set = (e.replyTo == e.user) ? "user" : "channel";
 }
 
+CIRCServer.prototype.onCTCPFinger =
+function serv_cfinger (e)
+{
+    e.user.ctcp("FINGER", this.parent.prefs["desc"], "NOTICE");
+    return true;
+}
+
 CIRCServer.prototype.onCTCPTime =
 function serv_cping (e)
 {
