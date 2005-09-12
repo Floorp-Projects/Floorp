@@ -976,6 +976,11 @@
   [% ELSIF error == "prod_name_already_in_use" %]
     [% title = "Product name already in use" %]
     The product name '[% product FILTER html %]' is already in use.
+  
+  [% ELSIF error == "prod_name_diff_in_case" %]
+    [% title = "Product name differs only in case" %]
+    The product name '[% product FILTER html %]' differs from existing 
+    product '[% existing_product FILTER html %]' only in case.
 
   [% ELSIF error == "prod_must_define_defaultmilestone" %]
     [% title = "Must define new default milestone" %]
@@ -990,6 +995,10 @@
     create the milestone '[% defaultmilestone FILTER html %]'</a> before
     it can be made the default milestone for product '[% product FILTER html %]'.
 
+  [% ELSIF error == "product_blank_name" %]
+    [% title = "Blank Product Name Not Allowed" %]
+    You must enter a name for the new product.
+  
   [% ELSIF error == "product_disabled" %]
     [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
     Sorry, entering [% terms.bugs %] into the
@@ -1005,6 +1014,10 @@
     There are [% nb FILTER html %] [%+ terms.bugs %] entered for this product!
     You must reassign those [% terms.bugs %] to another product before you
     can delete this one.
+
+  [% ELSIF error == "product_must_have_version" %]
+    [% title = "Product needs version" %]
+    You must enter a version for product '[% product FILTER html %]'.
 
   [% ELSIF error == "product_not_specified" %]
     [% title = "No Product Specified" %]

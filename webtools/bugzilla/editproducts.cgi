@@ -377,21 +377,18 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    $template->put_header("Adding new product");
 
     # Cleanups and validity checks
 
     my $classification_id = 1;
     if (Param('useclassification')) {
-        CheckClassification($classification);
+        CheckClassificationNew($classification);
         $classification_id = get_classification_id($classification);
+        $vars->{'classification'} = $classification;
     }
 
     unless ($product) {
-        print "You must enter a name for the new product. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
+        ThrowUserError("product_blank_name");  
     }
 
     my $existing_product = TestProduct($product);
@@ -400,29 +397,23 @@ if ($action eq 'new') {
 
         # Check for exact case sensitive match:
         if ($existing_product eq $product) {
-            print "The product '$product' already exists. Please press\n";
-            print "<b>Back</b> and try again.\n";
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError("prod_name_already_in_use",
+                           {'product' => $product});
         }
 
         # Next check for a case-insensitive match:
         if (lc($existing_product) eq lc($product)) {
-            print "The new product '$product' differs from existing product ";
-            print "'$existing_product' only in case. Please press\n";
-            print "<b>Back</b> and try again.\n";
-            PutTrailer($localtrailer);
-            exit;
+            ThrowUserError("prod_name_diff_in_case",
+                           {'product' => $product,
+                            'existing_product' => $existing_product}); 
         }
     }
 
     my $version = trim($cgi->param('version') || '');
 
     if ($version eq '') {
-        print "You must enter a version for product '$product'. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
+        ThrowUserError("product_must_have_version",
+                       {'product' => $product});
     }
 
     my $description  = trim($cgi->param('description')  || '');
@@ -542,20 +533,11 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print "OK, done.<p>\n";
-    print "<div style='border: 1px red solid; padding: 1ex;'><b>You will need to    
-           <a href=\"editcomponents.cgi?action=add&product=" .
-           url_quote($product) . "\">add at least one 
-           component</a> before you can enter bugs against this product.</b></div>";
-    PutTrailer($localtrailer,
-        "<a href=\"editproducts.cgi?action=add\">add</a> a new product",
-        "<a href=\"editcomponents.cgi?action=add&product=" .
-        url_quote($product) . $classhtmlvar .
-        "\">add</a> components to this new product");
+    $vars->{'product'} = $product;
+    $template->process("admin/products/created.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
     exit;
 }
-
-
 
 #
 # action='del' -> ask if user really wants to delete
