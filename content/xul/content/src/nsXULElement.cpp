@@ -1602,6 +1602,34 @@ nsXULElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
            FindPrototypeAttribute(aNameSpaceID, aName);
 }
 
+PRBool
+nsXULElement::AttrValueIs(PRInt32 aNameSpaceID,
+                          nsIAtom* aName,
+                          const nsAString& aValue,
+                          nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+
+  const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
+  return val && val->Equals(aValue, aCaseSensitive);
+}
+
+PRBool
+nsXULElement::AttrValueIs(PRInt32 aNameSpaceID,
+                          nsIAtom* aName,
+                          nsIAtom* aValue,
+                          nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValue, "Null value atom");
+
+  const nsAttrValue* val = FindLocalOrProtoAttr(aNameSpaceID, aName);
+  return val && val->Equals(aValue, aCaseSensitive);
+}
+
+
 nsresult
 nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 {

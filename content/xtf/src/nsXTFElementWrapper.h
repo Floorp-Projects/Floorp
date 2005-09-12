@@ -93,6 +93,12 @@ public:
   nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                    nsAString& aResult) const;
   PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             const nsAString& aValue,
+                             nsCaseTreatment aCaseSensitive) const;
+  virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             nsIAtom* aValue,
+                             nsCaseTreatment aCaseSensitive) const;
   nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 
                      PRBool aNotify);
   nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
