@@ -46,7 +46,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIObserver.h"
 
-class nsToolkitBase : public nsIToolkit : public nsIObserver
+class nsToolkitBase : public nsIToolkit, public nsIObserver
 {
 public:
                     nsToolkitBase();
