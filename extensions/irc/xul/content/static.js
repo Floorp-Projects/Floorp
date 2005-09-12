@@ -617,6 +617,30 @@ function processStartupURLs()
             wentSomewhere = true;
         }
     }
+    /* check to see whether the URL has been passed via the command line
+       instead. */
+    else if ("arguments" in window &&
+        0 in window.arguments && typeof window.arguments[0] == "string")
+    {
+        var url = window.arguments[0]
+        var urlMatches = url.match(/^ircs?:\/\/\/?(.*)$/)
+        if (urlMatches)
+        {
+            if (urlMatches[1])
+            {
+                /* if the url is not "irc://", "irc:///" or an ircs equiv then
+                   go to it. */
+                gotoIRCURL(url);
+                wentSomewhere = true;
+            }
+        }
+        else if (url)
+        {
+            /* URL parameter is not blank, but does not not conform to the
+               irc[s] scheme. */
+            display(getMsg(MSG_ERR_INVALID_SCHEME, url), MT_ERROR);
+        }
+    }
 
     if (!wentSomewhere)
     {

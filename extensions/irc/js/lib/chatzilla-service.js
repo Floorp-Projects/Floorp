@@ -113,9 +113,9 @@ CLineService.prototype.commandLineArgument = "-chat";
 CLineService.prototype.prefNameForStartup = "general.startup.chat";
 CLineService.prototype.chromeUrlForTask = "chrome://chatzilla/content";
 CLineService.prototype.helpText = "Start with an IRC chat client";
-CLineService.prototype.handlesArgs = false;
+CLineService.prototype.handlesArgs = true;
 CLineService.prototype.defaultArgs = "";
-CLineService.prototype.openWindowWithArgs = false;
+CLineService.prototype.openWindowWithArgs = true;
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
