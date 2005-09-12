@@ -52,6 +52,7 @@
 #include "nsContentUtils.h"
 #include "nsIXTFService.h"
 #include "nsDOMAttributeMap.h"
+#include "nsUnicharUtils.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -317,6 +318,57 @@ nsXTFElementWrapper::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
   }
 }
 
+PRBool
+nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
+                                 nsIAtom* aName,
+                                 const nsAString& aValue,
+                                 nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+
+  if (aNameSpaceID == kNameSpaceID_None && HandledByInner(aName)) {
+    nsAutoString ourVal;
+    nsresult rv = GetAttr(aNameSpaceID, aName, ourVal);
+    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+      return PR_FALSE;
+    }
+    return aCaseSensitive == eCaseMatters ?
+      aValue.Equals(ourVal) :
+      aValue.Equals(ourVal, nsCaseInsensitiveStringComparator());
+  }
+
+  return nsXTFElementWrapperBase::AttrValueIs(aNameSpaceID, aName, aValue,
+                                              aCaseSensitive);
+}
+
+PRBool
+nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
+                                 nsIAtom* aName,
+                                 nsIAtom* aValue,
+                                 nsCaseTreatment aCaseSensitive) const
+{
+  NS_ASSERTION(aName, "Must have attr name");
+  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
+  NS_ASSERTION(aValue, "Null value atom");
+
+  if (aNameSpaceID == kNameSpaceID_None && HandledByInner(aName)) {
+    nsAutoString ourVal;
+    nsresult rv = GetAttr(aNameSpaceID, aName, ourVal);
+    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+      return PR_FALSE;
+    }
+    if (aCaseSensitive == eCaseMatters) {
+      return aValue->Equals(ourVal);
+    }
+    nsAutoString val;
+    aValue->ToString(val);
+    return val.Equals(ourVal, nsCaseInsensitiveStringComparator());
+  }
+
+  return nsXTFElementWrapperBase::AttrValueIs(aNameSpaceID, aName, aValue,
+                                              aCaseSensitive);
+}
 
 nsresult
 nsXTFElementWrapper::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr, 

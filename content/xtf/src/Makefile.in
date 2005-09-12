@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  xpconnect \
 		  webshell \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \
