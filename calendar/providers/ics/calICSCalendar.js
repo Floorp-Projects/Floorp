@@ -153,11 +153,19 @@ calICSCalendar.prototype = {
 
         this.mObserver.onStartBatch();
 
+        // This conversion is needed, because the stream only knows about
+        // byte arrays, not about strings or encodings. The array of bytes
+        // need to be interpreted as utf8 and put into a javascript string.
         var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                          .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
         // ics files are always utf8
         unicodeConverter.charset = "UTF-8";
-        var str = unicodeConverter.convertFromByteArray(result, result.length);
+        var str;
+        try {
+            str = unicodeConverter.convertFromByteArray(result, result.length);
+        } catch(e) {
+            this.mObserver.onError(e.result, e.toString());
+        }
 
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
         // for non-existing or empty files, but not good for invalid files.
@@ -235,10 +243,31 @@ calICSCalendar.prototype = {
                 var channel = ioService.newChannelFromURI(fixupUri(savedthis.mUri));
                 channel.notificationCallbacks = savedthis;
                 var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
-                var postStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
-                                           .createInstance(Components.interfaces.nsIStringInputStream);
-                postStream.setData(icsStr, icsStr.length);
-                uploadChannel.setUploadStream(postStream, "text/calendar", -1);
+
+                // Create a pipe stream to convert the outputstream of the
+                // unicode converter to the inputstream the uploadchannel
+                // wants.
+                var pipe = Components.classes["@mozilla.org/pipe;1"]
+                                              .createInstance(Components.interfaces.nsIPipe);
+                pipe.init(true, true, 0, 0, null)
+
+                // This converter is needed to convert the javascript unicode 
+                // string to an array of bytes. (The interface of nsIOutputStream
+                // uses |string|, but the comments talk about bytes, not
+                // chars.)
+                var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                                           .getService(Components.interfaces.nsIConverterOutputStream);
+                convStream.init(pipe.outputStream, 'UTF-8', 0, 0x0000);
+                try {
+                    convStream.writeString(icsStr);
+                } catch(e) {
+                    this.mObserver.onError(e.result, e.toString());
+                }
+                convStream.close();
+
+                uploadChannel.setUploadStream(pipe.inputStream,
+                                              "text/calendar", -1);
+
                 channel.asyncOpen(savedthis, savedthis);
             },
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
@@ -433,9 +462,9 @@ calICSObserver.prototype = {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onAlarm(aAlarmItem);
     },
-    onError: function(aMessage) {
+    onError: function(aErrNo, aMessage) {
         for (var i = 0; i < this.mObservers.length; i++)
-            this.mObservers[i].onError(aMessage);
+            this.mObservers[i].onError(aErrNo, aMessage);
     },
 
     // This observer functions as proxy for all the other observers

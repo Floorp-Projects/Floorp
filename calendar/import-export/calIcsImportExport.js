@@ -61,14 +61,18 @@ calIcsImporter.prototype.importFromStream =
 function ics_importFromStream(aStream, aCount) {
     var items = new Array();
 
-    var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-                                      .createInstance(Components.interfaces.nsIScriptableInputStream);
-    scriptableInputStream.init(aStream);
-    var str = scriptableInputStream.read(-1);
+    // Interpret the byte-array as an utf8 string, and convert into a
+    // javascript string.
+    var convStream = Components.classes["@mozilla.org/intl/converter-input-stream;1"]
+                               .getService(Components.interfaces.nsIConverterInputStream);
+    convStream.init(aStream, 'UTF-8', 0, 0x0000);
+
+    var str = {};
+    convStream.readString(-1, str);
 
     icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
                        .getService(Components.interfaces.calIICSService);
-    var calComp = icssrv.parseICS(str);
+    var calComp = icssrv.parseICS(str.value);
     var subComp = calComp.getFirstSubcomponent("ANY");
     while (subComp) {
         switch (subComp.componentType) {
@@ -130,6 +134,15 @@ function ics_exportToStream(aStream, aCount, aItems) {
         calComp.addSubcomponent(item.icalComponent);
     }
     var str = calComp.serializeToICS();
-    aStream.write(str, str.length);
+
+    // Convert the javascript string to an araay of bytes, using the
+    // utf8 encoder
+    var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                               .getService(Components.interfaces.nsIConverterOutputStream);
+    convStream.init(aStream, 'UTF-8', 0, 0x0000);
+
+    convStream.writeString(str);
+    convStream.close();
+
     return;
 };
