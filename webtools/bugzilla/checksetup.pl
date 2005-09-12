@@ -1439,18 +1439,17 @@ if ($^O !~ /MSWin32/i) {
 # This is done here, because some modules require params to be set up, which
 # won't have happened earlier.
 
-# It's never safe to directly "use" a module in checksetup. If a module
+# It's never safe to "use" a Bugzilla module in checksetup. If a module
 # prerequisite is missing, and you "use" a module that requires it,
 # then instead of our nice normal checksetup message the user would
 # get a cryptic perl error about the missing module.
-
-# So, we always wrap our "use" statements in checksetup in a string eval.
 
 # This is done so we can add new settings as developers need them.
 require Bugzilla::User::Setting;
 import Bugzilla::User::Setting qw(add_setting);
 
-eval("use Bugzilla:Util");
+require Bugzilla::Util;
+import Bugzilla::Util qw(bz_crypt trim html_quote);
 
 # globals.pl clears the PATH, but File::Find uses Cwd::cwd() instead of
 # Cwd::getcwd(), which we need to do because `pwd` isn't in the path - see
