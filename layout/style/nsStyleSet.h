@@ -96,7 +96,7 @@ class nsStyleSet
                         nsStyleContext* aParentContext,
                         nsICSSPseudoComparator* aComparator = nsnull);
 
-  // This funtions just like ResolvePseudoStyleFor except that it will
+  // This functions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
   // pseudo element.  It should be used only for pseudo-elements.
   already_AddRefed<nsStyleContext>
