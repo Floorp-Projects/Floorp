@@ -7508,7 +7508,7 @@ PRBool nsImapProtocol::TryToLogon()
           break;
         }
 
-        if (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled)
+        if (!m_useSecAuth && GetServerStateParser().GetCapabilityFlag() & kLoginDisabled)
         {
           AlertUserEventUsingId(IMAP_LOGIN_DISABLED);
           // force re-issue of Capability() to make sure login still disabled.
