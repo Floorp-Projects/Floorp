@@ -193,7 +193,9 @@ var gVersionInfoPage = {
     else {
       // VersionInfo compatibility updates resolved all compatibility problems,
       // close this window and continue starting the application...
-      close();
+      // We need to click the cancel button to wake up the ui due to the way the
+      // EM is using xmlHttpRequest when checking for updates.
+      document.documentElement.getButton("cancel").click();
     }
   },
   
