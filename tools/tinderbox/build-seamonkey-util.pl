@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.301 $ ';
+$::UtilsVersion = '$Revision: 1.302 $ ';
 
 package TinderUtils;
 
@@ -451,7 +451,7 @@ sub SetupPath {
         $Settings::DistBin = "dist/";
 
         # Deal with the most common case first.
-        if ($Settings::ProductName != 'XULRunner') {
+        if ($Settings::ProductName ne 'XULRunner') {
             $Settings::DistBin .= "$Settings::ProductName";
             if ($Settings::BuildDebug) {
                 $Settings::DistBin .= "Debug";
