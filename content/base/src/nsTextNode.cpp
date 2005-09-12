@@ -143,6 +143,8 @@ NS_NewTextNode(nsITextContent** aInstancePtrResult,
 {
   *aInstancePtrResult = nsnull;
 
+  // XXX We really want to pass the document to the constructor, but can't
+  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
   nsCOMPtr<nsITextContent> instance = new nsTextNode(nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
 
@@ -306,7 +308,9 @@ NS_NewAttributeContent(nsIDocument *aOwnerDoc, PRInt32 aNameSpaceID,
   
   *aResult = nsnull;
 
-  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(aOwnerDoc);
+  // XXX We really want to pass the document to the constructor, but can't
+  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
+  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(nsnull);
   NS_ENSURE_TRUE(textNode, NS_ERROR_OUT_OF_MEMORY);
 
   textNode->mListener =
