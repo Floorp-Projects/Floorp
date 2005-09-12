@@ -20,6 +20,7 @@
 # Contributor(s): Andrew Dunstan <andrew@dunslane.net>,
 #                 Edward J. Sabol <edwardjsabol@iname.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 package Bugzilla::DB::Schema;
 
@@ -1198,8 +1199,10 @@ sub get_type_ddl {
 
     my $fkref = $self->{enable_references} ? $finfo->{REFERENCES} : undef;
     my $type_ddl = $self->{db_specific}{$type} || $type;
-    $type_ddl .= " NOT NULL" if ($finfo->{NOTNULL});
+    # DEFAULT attribute must appear before any column constraints
+    # (e.g., NOT NULL), for Oracle
     $type_ddl .= " DEFAULT $default" if (defined($default));
+    $type_ddl .= " NOT NULL" if ($finfo->{NOTNULL});
     $type_ddl .= " PRIMARY KEY" if ($finfo->{PRIMARYKEY});
     $type_ddl .= "\n\t\t\t\tREFERENCES $fkref" if $fkref;
 
