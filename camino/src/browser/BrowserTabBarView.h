@@ -44,21 +44,25 @@
 {
 @private
   // this tab view should be tabless and borderless
-  IBOutlet BrowserTabView *mTabView;
+  IBOutlet BrowserTabView*  mTabView;
   
-  TabButtonCell *mActiveTabButton;     // active tab button, mainly useful for handling drags (STRONG)
-  NSButton *mOverflowButton;      // button for overflow menu if we've got more tabs than space (STRONG)
-  NSMenu *mOverflowMenu;          // menu for tab overflow (STRONG);
+  TabButtonCell*    mActiveTabButton;     // active tab button, mainly useful for handling drags (STRONG)
+  NSButton*         mOverflowButton;      // button for overflow menu if we've got more tabs than space (STRONG)
+  NSMenu*           mOverflowMenu;        // menu for tab overflow (STRONG);
   
   // drag tracking
-  NSPoint mLastClickPoint;
-  BOOL mDragStarted;
-  TabButtonCell *mDragDestButton;
+  NSPoint           mLastClickPoint;
+  BOOL              mDragStarted;
+  TabButtonCell*    mDragDestButton;
   
-  BOOL mVisible;  // whether tabs are visible or not; used to disable creation of tracking rects when they're not
-  BOOL mOverflowTabs; // track whether there are more tabs than we can fit onscreen
-  NSMutableArray *mTrackingCells; // cells which currently have tracking rects in this view
+  BOOL              mVisible;             // whether tabs are visible or not; used to disable creation of tracking rects when they're not
+  BOOL              mOverflowTabs;        // track whether there are more tabs than we can fit onscreen
+  NSMutableArray*   mTrackingCells;       // cells which currently have tracking rects in this view
+  
+  NSImage*          mBackgroundImage;
+  NSImage*          mButtonDividerImage;
 }
+
 // destroy the tab bar and recreate it from the tabview
 -(void)rebuildTabBar;
 // return the height the tab bar should be
@@ -71,8 +75,4 @@
 // unregister tracking rects as appropriate
 -(void)setVisible:(BOOL)show;
 
-@end
-
-@interface NSImage ( BrowserTabBarViewAdditions )
-- (void)paintTiledInRect:(NSRect)rect;
 @end

@@ -271,7 +271,7 @@ static const int kBMBarScanningStep = 5;
         curX += NSWidth(buttonRect) + kBookmarkButtonHorizPadding;
       }
 
-      [button setFrame: buttonRect];
+      [button setFrame:buttonRect];
     }
   }
 

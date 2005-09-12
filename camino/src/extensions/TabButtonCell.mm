@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "ImageAdditions.h"
 #import "TabButtonCell.h"
 #import "TruncatingTextAndImageCell.h"
 #import "BrowserTabBarView.h"
@@ -46,26 +47,32 @@ static const int kTabRightMargin = 4; //distance between label cell and right ed
 static const int kTabBottomPad = 4; // number of pixels to offset from the bottom
 static const int kTabSelectOffset =  1; //number of pixels to drop everything down when selected
 
-static NSImage * tabLeft = nil;
-static NSImage * tabRight = nil;
-static NSImage * activeTabBg = nil;
-static NSImage * tabMouseOverBg = nil;
-static NSImage * tabButtonDividerImage = nil;
+static NSImage* gTabLeft = nil;
+static NSImage* gTabRight = nil;
+static NSImage* gActiveTabBg = nil;
+static NSImage* gTabMouseOverBg = nil;
+static NSImage* gTabButtonDividerImage = nil;
 
 @interface TabButtonCell (PRIVATE)
--(void)loadImages;
+
++(void)loadImages;
+
 @end
 
 // these are the "tabs" for the tabless tab view
 // to keep them lighter weight, they are not responsible for creating/maintaining much of anything
 // the BrowserTabViewItem maintains the spinner, favicon, label and close button... this just positions
 // them and brings them in and out of view, as well as painting itself and (TODO) handles dnd.
+
 @implementation TabButtonCell
+
 -(id)initFromTabViewItem:(BrowserTabViewItem *)tabViewItem
 {
-  [super init];
-  mTabViewItem = tabViewItem;
-  mNeedsDivider = YES;
+  if ((self = [super init]))
+  {
+    mTabViewItem = tabViewItem;
+    mNeedsDivider = YES;
+  }
   return self;
 }
 
@@ -94,8 +101,8 @@ static NSImage * tabButtonDividerImage = nil;
 
 -(void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView
 {
-  if (!tabLeft || !tabRight || !activeTabBg || !tabMouseOverBg || !tabButtonDividerImage)
-    [self loadImages];
+  if (!gTabLeft || !gTabRight || !gActiveTabBg || !gTabMouseOverBg || !gTabButtonDividerImage)
+    [TabButtonCell loadImages];
   
   // XXX is it worth it to see if the load failed? I don't think so, as if it did, the bundle is trashed and
   // we have bigger problems
@@ -123,12 +130,15 @@ static NSImage * tabButtonDividerImage = nil;
   [labelCell setImagePadding:0.0];
   [labelCell setMaxImageHeight:buttonSize.height];
   
+
   if (mNeedsDivider) {
-	  rect.size.width -= [tabButtonDividerImage size].width;
-	  [tabButtonDividerImage compositeToPoint:NSMakePoint(NSMaxX(rect), rect.origin.y)
+	  rect.size.width -= [gTabButtonDividerImage size].width;
+	  [gTabButtonDividerImage compositeToPoint:NSMakePoint(NSMaxX(rect), rect.origin.y)
                            operation:NSCompositeSourceOver];
   }
   
+  NSPoint patternOrigin = [controlView convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
+
   if ([mTabViewItem tabState] == NSSelectedTab) {
     // move things down a little, to give the impression of being pulled forward
     labelRect.origin.y -= kTabSelectOffset;
@@ -137,13 +147,13 @@ static NSImage * tabButtonDividerImage = nil;
     // it sounds heavier, but I haven't tested to be sure. This looks just as nice so long as
     // the tabbar height is fixed.
     NSRect bgRect = NSMakeRect(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-    bgRect.origin.x += [tabLeft size].width;
-    bgRect.size.width -= ([tabRight size].width + [tabLeft size].width);
-    [activeTabBg paintTiledInRect:rect];
-    [tabLeft compositeToPoint:NSMakePoint(rect.origin.x, rect.origin.y) operation:NSCompositeSourceOver];
-    [tabRight compositeToPoint:NSMakePoint(NSMaxX(bgRect), bgRect.origin.y) operation:NSCompositeSourceOver];
+    bgRect.origin.x += [gTabLeft size].width;
+    bgRect.size.width -= ([gTabRight size].width + [gTabLeft size].width);
+    [gActiveTabBg drawTiledInRect:rect origin:patternOrigin operation: NSCompositeSourceOver];
+    [gTabLeft compositeToPoint:NSMakePoint(rect.origin.x, rect.origin.y) operation:NSCompositeSourceOver];
+    [gTabRight compositeToPoint:NSMakePoint(NSMaxX(bgRect), bgRect.origin.y) operation:NSCompositeSourceOver];
   } else if ([self mouseWithin] && ![self dragTarget]) {
-    [tabMouseOverBg paintTiledInRect:rect];
+    [gTabMouseOverBg drawTiledInRect:rect origin:patternOrigin operation:NSCompositeSourceOver];
   }
   // TODO: Make this look nicer
   if ([self dragTarget]) {
@@ -180,13 +190,13 @@ static NSImage * tabButtonDividerImage = nil;
 }
 
 
--(void)loadImages
++(void)loadImages
 {
-  if (!tabLeft) tabLeft = [[NSImage imageNamed:@"tab_left_side"] retain];
-  if (!tabRight) tabRight = [[NSImage imageNamed:@"tab_right_side"] retain];
-  if (!activeTabBg) activeTabBg = [[NSImage imageNamed:@"tab_active_bg"] retain];
-  if (!tabMouseOverBg) tabMouseOverBg = [[NSImage imageNamed:@"tab_hover"] retain];
-  if (!tabButtonDividerImage) tabButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
+  if (!gTabLeft) gTabLeft = [[NSImage imageNamed:@"tab_left_side"] retain];
+  if (!gTabRight) gTabRight = [[NSImage imageNamed:@"tab_right_side"] retain];
+  if (!gActiveTabBg) gActiveTabBg = [[NSImage imageNamed:@"tab_active_bg"] retain];
+  if (!gTabMouseOverBg) gTabMouseOverBg = [[NSImage imageNamed:@"tab_hover"] retain];
+  if (!gTabButtonDividerImage) gTabButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
 }
 
 

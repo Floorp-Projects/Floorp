@@ -39,11 +39,13 @@
 #import "BrowserTabBarView.h"
 #import "BrowserTabViewItem.h"
 #import "TabButtonCell.h"
+#import "ImageAdditions.h"
 
 #import "NSPasteboard+Utils.h"
 #import "NSMenu+Utils.h"
 
-@interface BrowserTabBarView (PRIVATE)
+@interface BrowserTabBarView(TabBarViewPrivate)
+
 -(void)layoutButtons;
 -(void)loadImages;
 -(void)drawTabBarBackgroundInRect:(NSRect)rect withActiveTabRect:(NSRect)tabRect;
@@ -52,11 +54,9 @@
 -(void)unregisterTabButtonsForTracking;
 -(void)initOverflowMenu;
 -(NSRect)tabsRect;
+
 @end
 
-static NSImage *gBackgroundImage = nil;
-static NSImage *gTabButtonDividerImage = nil;
-static NSImage *gTabOverflowImage = nil;
 static const float kTabBarDefaultHeight = 22.0;
 
 @implementation BrowserTabBarView
@@ -108,21 +108,24 @@ static const int kOverflowButtonMargin = 1;
   [mActiveTabButton release];
   [mOverflowButton release];
   [mOverflowMenu release];
+
+  [mBackgroundImage release];
+  [mButtonDividerImage release];
+
   [super dealloc];
 }
 
 -(void)drawRect:(NSRect)rect 
 {
-  // this should only occur the first time any instance of this view is drawn
-  if (!gBackgroundImage || !gTabButtonDividerImage)
-    [self loadImages];
-  
   // determine the frame of the active tab button and fill the rest of the bar in with the background
   NSRect activeTabButtonFrame = [mActiveTabButton frame];
   NSRect tabsRect = [self tabsRect];
   // if any of the active tab would be outside the drawable area, fill it in
-  if (NSMaxX(activeTabButtonFrame) > NSMaxX(tabsRect)) activeTabButtonFrame.size.width = 0.0;
+  if (NSMaxX(activeTabButtonFrame) > NSMaxX(tabsRect))
+    activeTabButtonFrame.size.width = 0.0;
+
   [self drawTabBarBackgroundInRect:rect withActiveTabRect:activeTabButtonFrame];
+
   NSArray *tabItems = [mTabView tabViewItems];
   NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
   BrowserTabViewItem *tab = [tabEnumerator nextObject];
@@ -134,10 +137,11 @@ static const int kOverflowButtonMargin = 1;
     NSRect tabButtonFrame = [tabButton frame];
     if (NSIntersectsRect(tabButtonFrame,rect) && NSMaxX(tabButtonFrame) <= NSMaxX(tabsRect))
       [tabButton drawWithFrame:tabButtonFrame inView:self];
+
     // draw the first divider.
     if ((prevButton == nil) && ([tab tabState] != NSSelectedTab))
-        [gTabButtonDividerImage compositeToPoint:NSMakePoint(tabButtonFrame.origin.x - [gTabButtonDividerImage size].width, tabButtonFrame.origin.y)
-                                      operation:NSCompositeSourceOver];
+        [mButtonDividerImage compositeToPoint:NSMakePoint(tabButtonFrame.origin.x - [mButtonDividerImage size].width, tabButtonFrame.origin.y)
+                                    operation:NSCompositeSourceOver];
     prevButton = tabButton;
     tab = nextTab;
   }
@@ -214,6 +218,7 @@ static const int kOverflowButtonMargin = 1;
 {
   // draw tab bar background, omitting the selected Tab
   NSRect barFrame = [self bounds];
+  NSPoint patternOrigin = [self convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
   NSRect fillRect;
   
   // first, fill to the left of the active tab
@@ -227,8 +232,9 @@ static const int kOverflowButtonMargin = 1;
     }
     if (NSMaxX(fillRect) > NSMaxX(rect))
       fillRect.size.width -= NSMaxX(fillRect) - NSMaxX(rect);
-    [gBackgroundImage paintTiledInRect:fillRect];
+    [mBackgroundImage drawTiledInRect:fillRect origin:patternOrigin operation:NSCompositeSourceOver];
   }
+
   // then fill to the right
   fillRect = NSMakeRect(NSMaxX(tabRect), barFrame.origin.y, 
                         (NSMaxX(barFrame) - NSMaxX(tabRect)), barFrame.size.height);
@@ -241,24 +247,24 @@ static const int kOverflowButtonMargin = 1;
       if (NSMaxX(fillRect) > NSMaxX(rect))
         fillRect.size.width -= NSMaxX(fillRect) - NSMaxX(rect);
         
-      [gBackgroundImage paintTiledInRect:fillRect];
+      [mBackgroundImage drawTiledInRect:fillRect origin:patternOrigin operation:NSCompositeSourceOver];
    }
 }
 
 -(void)loadImages
 {
-  if (!gBackgroundImage) 
-    gBackgroundImage = [[NSImage imageNamed:@"tab_bar_bg"] retain];
-  if (!gTabButtonDividerImage) 
-    gTabButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
-  if (!gTabOverflowImage)
-    gTabOverflowImage = [[NSImage imageNamed:@"tab_overflow"] retain];
+  if (mBackgroundImage) return;
+ 
+  mBackgroundImage    = [[NSImage imageNamed:@"tab_bar_bg"] retain];
+  mButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
 }
 
 // construct the tab bar based on the current state of mTabView;
 // should be called when tabs are first shown.
 -(void)rebuildTabBar
 {
+  [self loadImages];
+
   [self unregisterTabButtonsForTracking];
   [mActiveTabButton release];
   mActiveTabButton = [[(BrowserTabViewItem *)[mTabView selectedTabViewItem] tabButtonCell] retain];
@@ -398,16 +404,15 @@ static const int kOverflowButtonMargin = 1;
 {
   if (!mOverflowButton) {
     // if it hasn't been created yet, create an NSPopUpButton and retain a strong reference
-    mOverflowButton = [[NSButton alloc] initWithFrame:NSMakeRect(0,0,kOverflowButtonWidth,kOverflowButtonHeight)];
-    if (!gTabOverflowImage) [self loadImages];
-    [mOverflowButton setImage:gTabOverflowImage];
+    mOverflowButton = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, kOverflowButtonWidth, kOverflowButtonHeight)];
+    [mOverflowButton setImage:[NSImage imageNamed:@"tab_overflow"]];
     [mOverflowButton setImagePosition:NSImageOnly];
     [mOverflowButton setBezelStyle:NSShadowlessSquareBezelStyle];
     [mOverflowButton setBordered:NO];
     [[mOverflowButton cell] setHighlightsBy:NSNoCellMask];
     [mOverflowButton setTarget:self];
     [mOverflowButton setAction:@selector(overflowMenu:)];
-    [(NSButtonCell *)[mOverflowButton cell]sendActionOn:NSLeftMouseDownMask];
+    [(NSButtonCell *)[mOverflowButton cell] sendActionOn:NSLeftMouseDownMask];
   }
   if (!mOverflowMenu) {
     // create an empty NSMenu for later use and retain a strong reference
@@ -465,9 +470,6 @@ static const int kOverflowButtonMargin = 1;
   }
 }
     
-    
-    
-
 #pragma mark -
 
 // NSDraggingDestination destination methods
@@ -565,36 +567,6 @@ static const int kOverflowButtonMargin = 1;
   [self registerTabButtonsForTracking];
   mDragDestButton = nil;
   return [dragDest performDragOperation:sender];
-}
-
-@end
-
-#pragma mark -
-@implementation NSImage (BrowserTabBarViewAdditions)
-//an addition to NSImage used by both BrowserTabBarView and TabButtonCell
-
-//tiles an image in the specified rect... even though it should work vertically, these images
-//will only look right tiled horizontally.
--(void)paintTiledInRect:(NSRect)rect
-{
-  NSSize imageSize = [self size];
-  NSRect currTile = NSMakeRect(rect.origin.x, rect.origin.y, imageSize.width, imageSize.height);
-  
-  while (currTile.origin.y < NSMaxY(rect)) {
-    while (currTile.origin.x < NSMaxX(rect)) {
-      // clip the tile as needed
-      if (NSMaxX(currTile) > NSMaxX(rect)) {
-        currTile.size.width -= NSMaxX(currTile) - NSMaxX(rect);
-      }
-      if (NSMaxY(currTile) > NSMaxY(rect)) {
-        currTile.size.height -= NSMaxY(currTile) - NSMaxY(rect);
-      }
-      NSRect imageRect = NSMakeRect(0, 0, currTile.size.width, currTile.size.height);
-      [self compositeToPoint:currTile.origin fromRect:imageRect operation:NSCompositeSourceOver];
-      currTile.origin.x += currTile.size.width;
-    }
-    currTile.origin.y += currTile.size.height;
-  }
 }
 
 @end

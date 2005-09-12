@@ -59,6 +59,20 @@
     [self drawFlippedInRect:rect operation:op fraction:1.0];
 }
 
+- (void)drawTiledInRect:(NSRect)rect origin:(NSPoint)inOrigin operation:(NSCompositingOperation)inOperation
+{
+  NSGraphicsContext* gc = [NSGraphicsContext currentContext];
+  [gc saveGraphicsState];
+
+  [gc setPatternPhase:inOrigin];
+
+  NSColor* patternColor = [NSColor colorWithPatternImage:self];
+  [patternColor set];
+  NSRectFillUsingOperation(rect, inOperation);
+
+  [gc restoreGraphicsState];
+}
+
 - (NSImage*)imageByApplyingBadge:(NSImage*)badge withAlpha:(float)alpha scale:(float)scale;
 {
   if (!badge)

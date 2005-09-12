@@ -42,6 +42,9 @@
 - (void) drawFlippedInRect:(NSRect) rect operation:(NSCompositingOperation) op fraction:(float) delta;
 - (void) drawFlippedInRect:(NSRect) rect operation:(NSCompositingOperation) op;
 
+// the origin is relative to the bottom, left of the window.
+- (void)drawTiledInRect:(NSRect)rect origin:(NSPoint)inOrigin operation:(NSCompositingOperation)inOperation;
+
 - (NSImage*)imageByApplyingBadge:(NSImage*)badge withAlpha:(float)alpha scale:(float)scale;
 
 @end
