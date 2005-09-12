@@ -294,3 +294,10 @@ calDuration::GetIcalString(nsACString& aResult)
 
     return NS_ERROR_OUT_OF_MEMORY;
 }
+
+NS_IMETHODIMP
+calDuration::SetIcalString(const nsACString& aIcalString)
+{
+    mDuration = icaldurationtype_from_string(nsPromiseFlatCString(aIcalString).get());
+    return NS_OK;
+}

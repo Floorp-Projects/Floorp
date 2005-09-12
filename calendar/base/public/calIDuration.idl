@@ -124,5 +124,5 @@ interface calIDuration : nsISupports
   /**
    * This object as an iCalendar DURATION string
    */
-  readonly attribute ACString icalString;
+  attribute ACString icalString;
 };
