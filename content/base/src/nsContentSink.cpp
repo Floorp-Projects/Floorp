@@ -191,8 +191,9 @@ nsContentSink::Init(nsIDocument* aDoc,
 }
 
 NS_IMETHODIMP
-nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
-                                PRBool aDidNotify)
+nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                PRBool aWasAlternate,
+                                nsresult aStatus)
 {
   return NS_OK;
 }
@@ -646,42 +647,15 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
-  if (!aAlternate) {
-    // possibly preferred sheet
-
-    if (!aTitle.IsEmpty()) {
-      nsAutoString preferredStyle;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
-                               preferredStyle);
-      if (preferredStyle.IsEmpty()) {
-        mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-      }
-    }
-  }
-
-  PRBool blockParser = kBlockByDefault;
-  if (aAlternate) {
-    blockParser = PR_FALSE;
-  }
-
-  // NOTE: no longer honoring the important keyword to indicate
-  // blocking as it is proprietary and unnecessary since all
-  // non-alternate will block the parser now -mja
-#if 0
-  if (linkTypes.IndexOf("important") != -1) {
-    blockParser = PR_TRUE;
-  }
-#endif
-
-  PRBool doneLoading;
   nsIParser* parser = nsnull;
-  if (blockParser) {
+  if (kBlockByDefault) {
     parser = mParser;
   }
-  rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
-                                 parser, doneLoading, this);
-
-  if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {
+  
+  PRBool isAlternate;
+  rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
+                                 parser, this, &isAlternate);
+  if (NS_SUCCEEDED(rv) && parser && !isAlternate) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;
   }
 

@@ -229,7 +229,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI, nsCOMPtr<nsICSSStyleSheet> &aSh
   nsCOMPtr<nsICSSLoader> cssLoader = do_GetService(kCSSLoaderCID);
   if (!cssLoader) return;
 
-  cssLoader->LoadAgentSheet(aURI, getter_AddRefs(aSheet));
+  cssLoader->LoadSheetSync(aURI, getter_AddRefs(aSheet));
 }  
 
 nsLayoutStylesheetCache*

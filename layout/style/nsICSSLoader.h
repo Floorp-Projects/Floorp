@@ -55,9 +55,9 @@ class nsMediaList;
 class nsICSSImportRule;
 
 // IID for the nsICSSLoader interface
-// 6c50f676-c764-4f2f-b62b-99d1076b44e9
+// ff43802a-b355-41f2-919d-5c7ab3dbfb91
 #define NS_ICSS_LOADER_IID     \
-{0x6c50f676, 0xc764, 0x4f2f, {0xb6, 0x2b, 0x99, 0xd1, 0x07, 0x6b, 0x44, 0xe9}}
+{0xff43802a, 0xb355, 0x41f2, {0x91, 0x9d, 0x5c, 0x7a, 0xb3, 0xdb, 0xfb, 0x91}}
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -78,53 +78,135 @@ public:
                           nsICSSParser** aParser) = 0;
   NS_IMETHOD RecycleParser(nsICSSParser* aParser) = 0;
 
-  // XXX No one uses the aDefaultNameSpaceID params.... do we need them?
+  // XXXbz sort out what the deal is with events!  When should they fire?
   
-  // Load an inline style sheet
-  // - if aCompleted is PR_TRUE, the sheet is fully loaded, don't
-  //   block for it.
-  // - if aCompleted is PR_FALSE, the sheet is still loading and 
-  //   will be marked complete when complete
+  /**
+   * Load an inline style sheet.  If a successful result is returned and
+   * *aCompleted is false, then aObserver is guaranteed to be notified
+   * asynchronously once the sheet is marked complete.  If an error is
+   * returned, or if *aCompleted is true, aObserver will not be notified.  In
+   * addition to parsing the sheet, this method will insert it into the
+   * stylesheet list of this CSSLoader's document.
+   *
+   * @param aElement the element linking to the stylesheet.  This must not be
+   *                 null and must implement nsIStyleSheetLinkingElement.
+   * @param aStream the character stream that holds the stylesheet data.
+   * @param aLineNumber the line number at which the stylesheet data started.
+   * @param aTitle the title of the sheet.
+   * @param aMedia the media string for the sheet.
+   * @param aParserToUnblock the parser to unblock when the load completes.
+   *        Only loads that returned false for both aIsAlternate and
+   *        aCompleted will unblock the parser.
+   * @param aObserver the observer to notify when the load completes.
+   *        May be null.
+   * @param [out] aCompleted whether parsing of the sheet completed.
+   * @param [out] aIsAlternate whether the stylesheet ended up being an
+   *        alternate sheet.
+   */
   NS_IMETHOD LoadInlineStyle(nsIContent* aElement,
                              nsIUnicharInputStream* aStream, 
                              PRUint32 aLineNumber,
-                             const nsSubstring& aTitle, 
-                             const nsSubstring& aMedia, 
+                             const nsSubstring& aTitle,
+                             const nsSubstring& aMedia,
                              nsIParser* aParserToUnblock,
-                             PRBool& aCompleted,
-                             nsICSSLoaderObserver* aObserver) = 0;
+                             nsICSSLoaderObserver* aObserver,
+                             PRBool* aCompleted,
+                             PRBool* aIsAlternate) = 0;
 
-  // Load a linked style sheet
-  // - if aCompleted is PR_TRUE, the sheet is fully loaded, don't
-  //   block for it.
-  // - if aCompleted is PR_FALSE, the sheet is still loading and 
-  //   will be marked complete when complete
+  /**
+   * Load a linked (document) stylesheet.  If a successful result is returned,
+   * aObserver is guaranteed to be notified asynchronously once the sheet is
+   * loaded and marked complete.  If an error is returned, aObserver will not
+   * be notified.  In addition to loading the sheet, this method will insert it
+   * into the stylesheet list of this CSSLoader's document.
+   *
+   * @param aElement the element linking to the the stylesheet.  May be null.
+   * @param aURL the URL of the sheet.
+   * @param aTitle the title of the sheet.
+   * @param aMedia the media string for the sheet.
+   * @param aHasAlternateRel whether the rel for this link included
+   *        "alternate".
+   * @param aParserToUnblock the parser to unblock when the load completes.
+   *        Only loads that returned false for aIsAlternate will unblock
+   *        the parser.
+   * @param aObserver the observer to notify when the load completes.
+   *                  May be null.
+   * @param [out] aIsAlternate whether the stylesheet actually ended up beinga
+   *        an alternate sheet.  Note that this need not match
+   *        aHasAlternateRel.
+   */
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsSubstring& aTitle, 
-                           const nsSubstring& aMedia, 
+                           const nsSubstring& aTitle,
+                           const nsSubstring& aMedia,
+                           PRBool aHasAlternateRel,
                            nsIParser* aParserToUnblock,
-                           PRBool& aCompleted,
-                           nsICSSLoaderObserver* aObserver) = 0;
+                           nsICSSLoaderObserver* aObserver,
+                           PRBool* aIsAlternate) = 0;
 
-  // Load a child style sheet (@import)
+  /**
+   * Load a child (@import-ed) style sheet.  In addition to loading the sheet,
+   * this method will insert it into the child sheet list of aParentSheet.  If
+   * there is no sheet currently being parsed and the child sheet is not
+   * complete when this method returns, then when the child sheet becomes
+   * complete aParentSheet will be QIed to nsICSSLoaderObserver and
+   * asynchronously notified, just like for LoadStyleLink.  Note that if the
+   * child sheet is already complete when this method returns, no
+   * nsICSSLoaderObserver notification will be sent.
+   *
+   * @param aParentSheet the parent of this child sheet
+   * @param aURL the URL of the child sheet
+   * @param aMedia the already-parsed media list for the child sheet
+   * @param aRule the @import rule importing this child.  This is used to
+   *              properly order the child sheet list of aParentSheet.
+   */
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
                             nsMediaList* aMedia,
                             nsICSSImportRule* aRule) = 0;
 
-  // Load a user agent or user sheet.  The sheet is loaded
-  // synchronously, including @imports from it.
-  NS_IMETHOD LoadAgentSheet(nsIURI* aURL, nsICSSStyleSheet** aSheet) = 0;
+  /**
+   * Synchronously load and return the stylesheet at aURL.  Any child sheets
+   * will also be loaded synchronously.  Note that synchronous loads over some
+   * protocols may involve spinning up a new event loop, so use of this method
+   * does NOT guarantee not receiving any events before the sheet loads.  This
+   * method can be used to load sheets not associated with a document.
+   *
+   * @param aURL the URL of the sheet to load
+   * @param [out] aSheet the loaded, complete sheet.
+   *
+   * NOTE: At the moment, this method assumes the sheet will be UTF-8, but
+   * ideally it would allow arbitrary encodings.  Callers should NOT depend on
+   * non-UTF8 sheets being treated as UTF-8 by this method.
+   *
+   * NOTE: A successful return from this method doesn't indicate anything about
+   * whether the data could be parsed as CSS and doesn't indicate anything
+   * about the status of child sheets of the returned sheet.
+   */
+  NS_IMETHOD LoadSheetSync(nsIURI* aURL, nsICSSStyleSheet** aSheet) = 0;
 
-  // Load a user agent or user sheet.  The sheet is loaded
-  // asynchronously and the observer notified when the load finishes.
-  NS_IMETHOD LoadAgentSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver) = 0;
+  /**
+   * Asynchronously load the stylesheet at aURL.  If a successful result is
+   * returned, aObserver is guaranteed to be notified asynchronously once the
+   * sheet is loaded and marked complete.  This method can be used to load
+   * sheets not associated with a document.
+   *
+   * @param aURL the URL of the sheet to load
+   * @param aObserver the observer to notify when the load completes.
+   *                  Must not be null.
+   */
+  NS_IMETHOD LoadSheet(nsIURI* aURL, nsICSSLoaderObserver* aObserver) = 0;
 
-  // stop loading all sheets
+  /**
+   * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
+   * notified with NS_BINDING_ABORTED as the status, possibly synchronously.
+   */
   NS_IMETHOD Stop(void) = 0;
 
-  // stop loading one sheet
+  /**
+   * Stop loading one sheet.  The nsICSSLoaderObserver involved will be
+   * notified with NS_BINDING_ABORTED as the status, possibly synchronously.
+   */
   NS_IMETHOD StopLoadingSheet(nsIURI* aURL) = 0;
 
   /**

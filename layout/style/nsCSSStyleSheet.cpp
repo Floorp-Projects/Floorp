@@ -46,7 +46,6 @@
 
 #include "nsCRT.h"
 #include "nsIAtom.h"
-#include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "pldhash.h"
@@ -2566,7 +2565,9 @@ nsCSSStyleSheet::ReplaceRuleInGroup(nsICSSGroupRule* aGroup,
 
 // nsICSSLoaderObserver implementation
 NS_IMETHODIMP
-nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
+nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                  PRBool aWasAlternate,
+                                  nsresult aStatus)
 {
 #ifdef DEBUG
   nsCOMPtr<nsIStyleSheet> styleSheet(do_QueryInterface(aSheet));
@@ -2578,7 +2579,7 @@ nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
   NS_ASSERTION(thisSheet == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
 #endif
   
-  if (mDocument && aNotify) {
+  if (mDocument && NS_SUCCEEDED(aStatus)) {
     nsCOMPtr<nsICSSImportRule> ownerRule;
     aSheet->GetOwnerRule(getter_AddRefs(ownerRule));
     

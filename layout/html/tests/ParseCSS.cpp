@@ -76,7 +76,7 @@ ParseCSSFile(nsIURI *aSheetURI)
 {
     nsCOMPtr<nsICSSLoader> loader(do_CreateInstance(kCSSLoaderCID));
     nsCOMPtr<nsICSSStyleSheet> sheet;
-    loader->LoadAgentSheet(aSheetURI, getter_AddRefs(sheet));
+    loader->LoadSheetSync(aSheetURI, getter_AddRefs(sheet));
     NS_ASSERTION(sheet, "sheet load failed");
     /* This can happen if the file can't be found (e.g. you
      * ask for a relative path and xpcom/io rejects it)

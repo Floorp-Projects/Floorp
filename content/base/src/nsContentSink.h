@@ -68,7 +68,8 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_DECL_NSISCRIPTLOADEROBSERVER
   
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+                              nsresult aStatus);
 
 protected:
   nsContentSink();

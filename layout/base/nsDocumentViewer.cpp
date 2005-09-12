@@ -2042,7 +2042,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
                     baseURI);
           if (!uri) continue;
 
-          cssLoader->LoadAgentSheet(uri, getter_AddRefs(csssheet));
+          cssLoader->LoadSheetSync(uri, getter_AddRefs(csssheet));
           if (!sheet) continue;
 
           styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, csssheet);

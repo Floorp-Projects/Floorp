@@ -3534,8 +3534,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = cssLoader->LoadAgentSheet(uaURI, this);
+  rv = cssLoader->LoadSheet(uaURI, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -3585,8 +3584,10 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We MUST ONLY load synchronous local files (no @import)
+  // XXXbz Except this will actually try to load remote files
+  // synchronously, of course..
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = cssLoader->LoadAgentSheet(uaURI, getter_AddRefs(sheet));
+  rv = cssLoader->LoadSheetSync(uaURI, getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
   if (!sheet)
@@ -4179,7 +4180,8 @@ nsHTMLEditor::GetReconversionString(nsReconversionEventReply* aReply)
 
 
 NS_IMETHODIMP 
-nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
+nsHTMLEditor::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+                               nsresult aStatus)
 {
   nsresult rv = NS_OK;
   nsAutoEditBatch batchIt(this);

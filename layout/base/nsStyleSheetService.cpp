@@ -145,7 +145,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 
   nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID);
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = loader->LoadAgentSheet(aSheetURI, getter_AddRefs(sheet));
+  nsresult rv = loader->LoadSheetSync(aSheetURI, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSheets[aSheetType].AppendObject(sheet);

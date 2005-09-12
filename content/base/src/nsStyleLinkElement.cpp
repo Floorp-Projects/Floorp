@@ -261,26 +261,8 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     return NS_OK;
   }
 
-  PRBool blockParser = kBlockByDefault;
-  if (isAlternate) {
-    blockParser = PR_FALSE;
-  }
-
-  /* NOTE: no longer honoring the important keyword to indicate blocking
-           as it is proprietary and unnecessary since all non-alternate 
-           will block the parser now  -mja
-    if (-1 != linkTypes.IndexOf("important")) {
-      blockParser = PR_TRUE;
-    }
-  */
-
-  if (!isAlternate && !title.IsEmpty()) {  // possibly preferred sheet
-    nsAutoString prefStyle;
-    doc->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, prefStyle);
-
-    if (prefStyle.IsEmpty()) {
-      doc->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, title);
-    }
+  if (!kBlockByDefault) {
+    parser = nsnull;
   }
 
   PRBool doneLoading;
@@ -321,17 +303,17 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     // style sheet.
     rv = doc->CSSLoader()->
       LoadInlineStyle(thisContent, uin, mLineNumber, title, media,
-                      ((blockParser) ? parser.get() : nsnull),
-                      doneLoading, aObserver);
+                      parser, aObserver, &doneLoading, &isAlternate);
   }
   else {
+    doneLoading = PR_FALSE;  // If rv is success, we won't be done loading; if
+                             // it's not, this value doesn't matter.
     rv = doc->CSSLoader()->
-      LoadStyleLink(thisContent, uri, title, media,
-                    ((blockParser) ? parser.get() : nsnull),
-                    doneLoading, aObserver);
+      LoadStyleLink(thisContent, uri, title, media, isAlternate,
+                    parser, aObserver, &isAlternate);
   }
 
-  if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {
+  if (NS_SUCCEEDED(rv) && parser && !doneLoading && !isAlternate) {
     rv = NS_ERROR_HTMLPARSER_BLOCK;
   }
 

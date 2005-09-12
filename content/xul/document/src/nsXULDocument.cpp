@@ -717,7 +717,7 @@ nsXULDocument::EndLoad()
                     mCurrentPrototype->AddStyleSheetReference(sheetURI);
                 }
 
-                cssLoader->LoadAgentSheet(sheetURI, getter_AddRefs(sheet));
+                cssLoader->LoadSheetSync(sheetURI, getter_AddRefs(sheet));
                 if (!sheet) {
                     NS_WARNING("Couldn't load chrome style overlay.");
                     continue;
@@ -3786,10 +3786,10 @@ nsXULDocument::AddPrototypeSheets()
         // only system that partially invalidates the XUL cache).
         // - dwh
         //XXXbz we hit this code from fastload all the time.  Bug 183505.
-        rv = CSSLoader()->LoadAgentSheet(uri, getter_AddRefs(sheet));
+        rv = CSSLoader()->LoadSheetSync(uri, getter_AddRefs(sheet));
         // XXXldb We need to prevent bogus sheets from being held in the
         // prototype's list, but until then, don't propagate the failure
-        // from LoadAgentSheet (and thus exit the loop).
+        // from LoadSheetSync (and thus exit the loop).
         if (NS_SUCCEEDED(rv)) {
             AddStyleSheet(sheet);
         }
