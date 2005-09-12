@@ -2007,7 +2007,9 @@ enum BWCOpenDest {
   [mThrobberHandler stopThrobber];
   [mThrobberHandler release];
   mThrobberHandler = nil;
-  [[self throbberItem] setImage: [[self throbberImages] objectAtIndex: 0]];
+  NSToolbarItem* throbberItem = [self throbberItem];
+  if (throbberItem)
+    [throbberItem setImage: [[self throbberImages] objectAtIndex: 0]];
 }
 
 
