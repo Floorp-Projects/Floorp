@@ -1738,7 +1738,7 @@ function parseIRCURL (url)
         return rv;
 
     /* split url into <host>/<everything-else> pieces */
-    var ary = url.match (/^ircs?:\/\/([^\/\s]+)?(\/.*)?\s*$/i);
+    var ary = url.match (/^ircs?:\/\/([^\/\s]+)?(\/[^\s]*)?$/i);
     if (!ary || !ary[1])
     {
         dd ("parseIRCURL: initial split failed");
@@ -1748,7 +1748,7 @@ function parseIRCURL (url)
     var rest = arrayHasElementAt(ary, 2) ? ary[2] : "";
 
     /* split <host> into server (or network) / port */
-    ary = host.match (/^([^\s\:]+)?(\:\d+)?$/);
+    ary = host.match (/^([^\:]+)?(\:\d+)?$/);
     if (!ary)
     {
         dd ("parseIRCURL: host/port split failed");
@@ -1775,25 +1775,28 @@ function parseIRCURL (url)
 
     if (rest)
     {
-        ary = rest.match (/^\/([^\,\?\s\/]*)?\/?(,[^\?]*)?(\?.*)?$/);
+        ary = rest.match (/^\/([^\?\s\/,]*)?\/?(,[^\?]*)?(\?.*)?$/);
         if (!ary)
         {
             dd ("parseIRCURL: rest split failed ``" + rest + "''");
             return null;
         }
 
-        rv.target = arrayHasElementAt(ary, 1) ?
-            ecmaUnescape(ary[1]).replace("\n", "\\n") : "";
-        var i = rv.target.indexOf(" ");
-        if (i != -1)
-            rv.target = rv.target.substr(0, i);
+        rv.target = arrayHasElementAt(ary, 1) ? ecmaUnescape(ary[1]) : "";
+
+        if (rv.target.search(/[\x07,:\s]/) != -1)
+        {
+            dd ("parseIRCURL: invalid characters in channel name");
+            return null;
+        }
+
         var params = arrayHasElementAt(ary, 2) ? ary[2].toLowerCase() : "";
         var query = arrayHasElementAt(ary, 3) ? ary[3] : "";
 
         if (params)
         {
             rv.isnick =
-                (params.search (/,\s*isnick\s*,|,\s*isnick\s*$/) != -1);
+                (params.search (/,isnick(?:,|$)/) != -1);
             if (rv.isnick && !rv.target)
             {
                 dd ("parseIRCURL: isnick w/o target");
@@ -1804,7 +1807,7 @@ function parseIRCURL (url)
             if (!rv.isserver)
             {
                 rv.isserver =
-                    (params.search (/,\s*isserver\s*,|,\s*isserver\s*$/) != -1);
+                    (params.search (/,isserver(?:,|$)/) != -1);
             }
 
             if (rv.isserver && !specifiedHost)
@@ -1815,10 +1818,10 @@ function parseIRCURL (url)
             }
 
             rv.needpass =
-                (params.search (/,\s*needpass\s*,|,\s*needpass\s*$/) != -1);
+                (params.search (/,needpass(?:,|$)/) != -1);
 
             rv.needkey =
-                (params.search (/,\s*needkey\s*,|,\s*needkey\s*$/) != -1);
+                (params.search (/,needkey(?:,|$)/) != -1);
 
         }
 
