@@ -651,33 +651,8 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
     var startDate;
     var origEndDate;
 
-    if ("displayTimezone" in this) {
-        startDate = aItemOccurrence.startDate.getInTimezone(this.displayTimezone).clone();
-        origEndDate = aItemOccurrence.endDate.getInTimezone(this.displayTimezone).clone();
-    } else {
-        // Copy the values from jsDate. jsDate is in de users timezone
-        // It's a hack, but it kind of works. It doesn't set the right
-        // timezone info for the date, but that's not a real problem.
-        startDate = aItemOccurrence.startDate.clone();
-        var jsDate = startDate.jsDate;
-        startDate.year = jsDate.getFullYear();
-        startDate.month = jsDate.getMonth();
-        startDate.day = jsDate.getDate();
-        startDate.hour = jsDate.getHours();
-        startDate.minute = jsDate.getMinutes();
-        startDate.second = jsDate.getSeconds();
-        startDate.normalize();
-
-        origEndDate = aItemOccurrence.endDate.clone();
-        jsDate = origEndDate.jsDate;
-        origEndDate.year = jsDate.getFullYear();
-        origEndDate.month = jsDate.getMonth();
-        origEndDate.day = jsDate.getDate();
-        origEndDate.hour = jsDate.getHours();
-        origEndDate.minute = jsDate.getMinutes();
-        origEndDate.second = jsDate.getSeconds();
-        origEndDate.normalize();
-    }
+    startDate = aItemOccurrence.startDate.getInTimezone(calendarDefaultTimezone()).clone();
+    origEndDate = aItemOccurrence.endDate.getInTimezone(calendarDefaultTimezone()).clone();
 
     var displayStart = gCalendarWindow.currentView.displayStartDate;
     var displayEnd = gCalendarWindow.currentView.displayEndDate;
@@ -690,6 +665,7 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
     if(startDate.jsDate < displayStart) {
         startDate.jsDate = displayStart;
         startDate.normalize();
+        startDate = startDate.getInTimezone(calendarDefaultTimezone());
     }
 
     var endDate = startDate.clone();
