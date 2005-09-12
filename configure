@@ -6690,7 +6690,7 @@ echo "configure:6689: checking for -exported_symbols_list option to ld" >&5
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
-           if $LD -exported_symbols_list | grep "argument missing" >/dev/null; then
+           if $LD -exported_symbols_list 2>&1 | grep "argument missing" >/dev/null; then
              ac_cv_exported_symbols_list=true
            else
              ac_cv_exported_symbols_list=false
