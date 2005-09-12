@@ -55,7 +55,8 @@
 #include "nsGfxCIID.h"
 #include "nsIMenuBar.h"
 #include "nsToolkit.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
@@ -798,12 +799,12 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 	if( cbinfo->event && cbinfo->event->type == Ph_EV_INFO && cbinfo->event->subtype == Ph_OFFSCREEN_INVALID ) {
 		nsresult rv;
 		
-		nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+		nsCOMPtr<nsIPrefBranch> pPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			 PRBool displayInternalChange = PR_FALSE;
 			 pPrefs->GetBoolPref("browser.display.internaluse.graphics_changed", &displayInternalChange);
 			 pPrefs->SetBoolPref("browser.display.internaluse.graphics_changed", !displayInternalChange);
-		 }
+		}
 		nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
 		NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
 
