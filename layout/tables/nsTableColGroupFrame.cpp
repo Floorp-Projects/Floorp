@@ -199,8 +199,18 @@ NS_IMETHODIMP
 nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
+  nsTableColFrame* col = GetFirstColumn();
+  nsTableColFrame* nextCol;
+  while (col && col->GetColType() == eColAnonymousColGroup) {
+    // this colgroup spans one or more columns but now that there is a
+    // real column below, spanned anonymous columns should be removed
+    nextCol = col->GetNextCol();
+    RemoveFrame(nsnull, col);
+    col = nextCol;
+  }
+
   mFrames.AppendFrames(this, aFrameList);
-  InsertColsReflow(mColCount, aFrameList);
+  InsertColsReflow(GetStartColumnIndex() + mColCount, aFrameList);
   return NS_OK;
 }
 
@@ -212,11 +222,21 @@ nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
   nsFrameList frames(aFrameList); // convience for getting last frame
   nsIFrame* lastFrame = frames.LastChild();
 
+  nsTableColFrame* col = GetFirstColumn();
+  nsTableColFrame* nextCol;
+  while (col && col->GetColType() == eColAnonymousColGroup) {
+    // this colgroup spans one or more columns but now that there is 
+    // real column below, spanned anonymous columns should be removed
+    nextCol = col->GetNextCol();
+    RemoveFrame(nsnull, col);
+    col = nextCol;
+  }
+
   mFrames.InsertFrames(this, aPrevFrameIn, aFrameList);
   nsIFrame* prevFrame = nsTableFrame::GetFrameAtOrBefore(this, aPrevFrameIn,
                                                          nsLayoutAtoms::tableColFrame);
 
-  PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : 0;
+  PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : GetStartColumnIndex();
   InsertColsReflow(colIndex, aFrameList, lastFrame);
 
   return NS_OK;
@@ -630,6 +650,16 @@ void nsTableColGroupFrame::Dump(PRInt32 aIndent)
     printf(" anonymous-cell ");
     break;
   }
+  // verify the colindices
+  PRInt32 j = GetStartColumnIndex();
+  nsTableColFrame* col = GetFirstColumn();
+  while (col) {
+    NS_ASSERTION(j == col->GetColIndex(), "wrong colindex on col frame");
+    col = col->GetNextCol();
+    j++;
+  }
+  NS_ASSERTION((j - GetStartColumnIndex()) == GetColCount(),
+               "number of cols out of sync");
   printf("\n%s**END COLGROUP DUMP** ", indent);
   delete [] indent;
 }

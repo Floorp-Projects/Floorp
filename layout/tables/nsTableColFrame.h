@@ -192,7 +192,9 @@ protected:
   nsTableColFrame();
   ~nsTableColFrame();
 
-  // the starting index of the column (starting at 0) that this col object represents //
+  // the index of the column with respect to the whole tabble (starting at 0) 
+  // it should never be smaller then the start column index of the parent 
+  // colgroup
   PRUint32 mColIndex:        16;
   
   // border width in pixels of the inner half of the border only
