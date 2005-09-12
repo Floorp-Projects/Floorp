@@ -446,7 +446,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
     surface->Unlock();
     alpha->Unlock();
 
-    instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), surface);
+    instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha);
     instance.DefineRegion(NS_LITERAL_STRING("SourceAlpha"), 
                           nsRect(0, 0, filterResX, filterResY));
   }
