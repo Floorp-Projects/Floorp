@@ -81,6 +81,8 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult, nsIDocument *aOwnerDocument)
 {
   *aInstancePtrResult = nsnull;
 
+  // XXX We really want to pass the document to the constructor, but can't
+  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
   nsCOMPtr<nsIContent> instance = new nsCommentNode(nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
 
