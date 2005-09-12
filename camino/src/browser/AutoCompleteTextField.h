@@ -39,16 +39,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+
 #import "AutoCompleteDataSource.h"
-#include "nsIAutoCompleteSession.h"
-#include "nsIAutoCompleteResults.h"
-#include "nsIAutoCompleteListener.h"
+
+class nsIAutoCompleteSession;
+class nsIAutoCompleteResults;
+class nsIAutoCompleteListener;
 
 @class PageProxyIcon;
 
 @interface AutoCompleteTextField : NSTextField
 {
   IBOutlet PageProxyIcon*   mProxyIcon;
+
   NSWindow*                 mPopupWin;
   NSTableView*              mTableView;
   
@@ -72,44 +75,21 @@
   BOOL mCompleteWhileTyping;
 }
 
+// get/set the autcomplete session
 - (void) setSession:(NSString *)aSession;
 - (NSString *) session;
-- (void) setPageProxyIcon:(NSImage *)aImage;
 
-- (NSTableView *) tableView;
-- (int) visibleRows;
+- (void)setPageProxyIcon:(NSImage *)aImage;
+- (void)setURI:(NSString*)aURI;
 
-- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
-- (void) performSearch;
-- (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus;
-- (void) searchTimer:(NSTimer *)aTimer;
-- (void) clearResults;
+- (BOOL)userHasTyped;
+- (void)clearResults;
+- (void)revertText;
 
-- (void) completeDefaultResult;
-- (void) completeSelectedResult;
-- (void) completeResult:(int)aRow;
-- (void) enterResult:(int)aRow;
-- (void) revertText;
-
-- (void) selectRowAt:(int)aRow;
-- (void) selectRowBy:(int)aRows;
-
-- (void) openPopup;
-- (void) closePopup;
-- (void) resizePopup;
-- (BOOL) isOpen;
-- (BOOL) userHasTyped;
-
-- (void) onRowClicked:(NSNotification *)aNote;
-- (void) onBlur:(NSNotification *)aNote;
-- (void) onResize:(NSNotification *)aNote;
-- (void) onUndoOrRedo:(NSNotification *)aNote;
-
-- (void) setURI:(NSString*)aURI;
-- (id) fieldEditor;
+- (id)fieldEditor;
 
 // Changes the display of the text field to indicate whether the page
 // is secure or not.
-- (void) setSecureState:(unsigned char)inState;
+- (void)setSecureState:(unsigned char)inState;
 
 @end

@@ -45,6 +45,10 @@
 #import "PageProxyIcon.h"
 #import "CHBrowserService.h"
 
+#include "nsIAutoCompleteSession.h"
+#include "nsIAutoCompleteResults.h"
+#include "nsIAutoCompleteListener.h"
+
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
 #include "nsMemory.h"
@@ -61,6 +65,42 @@ const float kSecureIconSize = 16.0;
 
 // stole this from NSPasteboard+Utils.mm
 static NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+
+
+@interface AutoCompleteTextField(Private)
+
+- (NSTableView *) tableView;
+- (int) visibleRows;
+
+- (void) startSearch:(NSString*)aString complete:(BOOL)aComplete;
+- (void) performSearch;
+- (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus;
+- (void) searchTimer:(NSTimer *)aTimer;
+
+- (void) completeDefaultResult;
+- (void) completeSelectedResult;
+- (void) completeResult:(int)aRow;
+- (void) enterResult:(int)aRow;
+
+- (void) cleanup;
+- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
+
+- (void) openPopup;
+- (void) resizePopup:(BOOL)forceResize;
+- (void) closePopup;
+- (BOOL) isOpen;
+
+- (void) selectRowAt:(int)aRow;
+- (void) selectRowBy:(int)aRows;
+
+- (void) onRowClicked:(NSNotification *)aNote;
+- (void) onBlur:(NSNotification *)aNote;
+- (void) onResize:(NSNotification *)aNote;
+- (void) onUndoOrRedo:(NSNotification *)aNote;
+
+@end
+
+#pragma mark -
 
 @interface AutoCompleteWindow : NSWindow
 - (BOOL)isKeyWindow;
@@ -167,12 +207,6 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 #pragma mark -
 
-////////////////////////////////////////////////////////////////////////
-@interface AutoCompleteTextField(Private)
-- (void)cleanup;
-- (void) setStringUndoably:(NSString*)aString fromLocation:(unsigned int)aLocation;
-@end
-
 @implementation AutoCompleteTextField
 
 + (Class) cellClass
@@ -273,22 +307,27 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   [mPopupWin setContentView:scrollView];
 
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onResize:)
-                                        name:NSWindowDidResizeNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(onResize:)
+                                               name:NSWindowDidResizeNotification
+                                             object:nil];
 
   // listen for Undo/Redo to make sure autocomplete doesn't get horked.
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUndoOrRedo:)
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(onUndoOrRedo:)
                                                name:NSUndoManagerDidRedoChangeNotification
                                              object:[[self fieldEditor] undoManager]];
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onUndoOrRedo:)
+
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(onUndoOrRedo:)
                                                name:NSUndoManagerDidUndoChangeNotification
                                              object:[[self fieldEditor] undoManager]];
 
   // register for embedding shutting down, to clean up history stuff
-  [[NSNotificationCenter defaultCenter] addObserver:  self
-                                        selector:     @selector(shutdown:)
-                                        name:         TermEmbeddingNotificationName
-                                        object:       nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(shutdown:)
+                                               name:TermEmbeddingNotificationName
+                                             object:nil];
   
   // read the user default on if we should auto-complete the text field as the user
   // types or make them pick something from a list (a-la mozilla).
@@ -463,7 +502,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) openPopup
 {
-  [self resizePopup];
+  [self resizePopup:YES];
 
   // show the popup
   if ([mPopupWin isVisible] == NO)
@@ -473,12 +512,17 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   }
 }
 
-- (void) resizePopup
+- (void) resizePopup:(BOOL)forceResize
 {
   if ([self visibleRows] == 0) {
     [self closePopup];
     return;
   }
+  
+  // don't waste time resizing stuff that is not visible (unless we're about
+  // to show the popup)
+  if (![self isOpen] && !forceResize)
+    return;
 
   // get the origin of the location bar in coordinates of the root view
   NSRect locationFrame = [self bounds];
@@ -793,7 +837,8 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) onResize:(NSNotification *)aNote
 {
-  [self resizePopup];
+  if ([aNote object] == [self window])
+    [self resizePopup:NO];
 }
 
 - (void) onUndoOrRedo:(NSNotification *)aNote
