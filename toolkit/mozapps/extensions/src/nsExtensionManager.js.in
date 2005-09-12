@@ -5289,7 +5289,7 @@ RDFItemUpdater.prototype = {
    *
    */
   onXMLError: function(aEvent, aItem) {
-    var request = event.target;
+    var request = aEvent.target;
     try {
       var status = request.status;
     }
