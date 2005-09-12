@@ -129,7 +129,11 @@ function dcc_addhost(host, auth)
     };
 
     try {
-        var dnsRecord = this._dnsSvc.asyncResolve(host, false, listener, null);
+        const EQS = getService("@mozilla.org/event-queue-service;1",
+                               "nsIEventQueueService");
+        var th = EQS.getSpecialEventQueue(EQS.CURRENT_THREAD_EVENT_QUEUE);
+
+        var dnsRecord = this._dnsSvc.asyncResolve(host, false, listener, th);
     } catch (ex) {
         dd("Error resolving host to IP: " + ex);
     }
