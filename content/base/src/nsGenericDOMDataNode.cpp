@@ -451,8 +451,7 @@ nsGenericDOMDataNode::InsertData(PRUint32 aOffset,
 nsresult
 nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
 {
-  nsAutoString empty;
-  return ReplaceData(aOffset, aCount, empty);
+  return ReplaceData(aOffset, aCount, EmptyString());
 }
 
 nsresult

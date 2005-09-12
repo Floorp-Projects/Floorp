@@ -222,14 +222,13 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
     privImpl->Init(resourceURI);
 
     nsCOMPtr<nsIDOMDocument> doc;
-    nsAutoString emptyString;
-    rv = implementation->CreateDocument(mDAVNSString, emptyString, nsnull,
+    rv = implementation->CreateDocument(mDAVNSString, EmptyString(), nsnull,
                                         getter_AddRefs(doc));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocument> baseDoc = do_QueryInterface(doc);
     baseDoc->SetXMLDeclaration(NS_LITERAL_STRING("1.0").get(),
-                               emptyString.get(), -1);
+                               EmptyString().get(), -1);
     baseDoc->SetDocumentURI(resourceURI);
 
     nsCOMPtr<nsIDOMElement> elt;

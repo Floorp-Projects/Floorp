@@ -212,8 +212,7 @@ NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
   nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(mNewNode);
   if (nodeAsText)
   {
-    nsAutoString nullString;
-    nodeAsText->SetData(nullString);
+    nodeAsText->SetData(EmptyString());
   }
   
   // now, reinsert mNewNode

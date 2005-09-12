@@ -45,15 +45,15 @@
  * that was to overdo it a bit, when the code probably does not survive... (XXX)
  */
 void
-XPathCompilerException(const char *aMsg,
-                       nsAString  &aExpression,
-                       PRInt32     aOffset = -1,
-                       PRInt32     aLength = -1)
+XPathCompilerException(const char      *aMsg,
+                       const nsAString &aExpression,
+                       PRInt32         aOffset = -1,
+                       PRInt32         aLength = -1)
 {
   printf("XPathCompilerException: %s, %s [o: %d, l: %d]\n",
          aMsg,
          NS_ConvertUCS2toUTF8(aExpression).get(), aOffset, aLength);
-         
+
   printf("WARNING: Houston we have a problem, and unlike Apollo 13, we're not going to make it!\n");
   NS_ABORT();
 }
@@ -561,8 +561,7 @@ nsXFormsXPathParser::PathExpr()
       if (DoRelative()) {
         RelativeLocationPath();
       } else {
-        nsAutoString nullstr;
-        XPathCompilerException("After / in a filter expression it is required to have a reletive path expression", nullstr);
+        XPathCompilerException("After / in a filter expression it is required to have a reletive path expression", EmptyString());
       }
 
     }
