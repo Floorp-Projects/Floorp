@@ -5240,33 +5240,16 @@ RDFItemUpdater.prototype = {
     LOG("RDFItemUpdater:checkForUpdates sending a request to server for: " + 
         uri.spec + ", item = " + aItem.objectSource);        
 
-    // Only use xmlhttprequest if it is available - fallback to using only RDF
-    if ("@mozilla.org/xmlextras/xmlhttprequest;1" in Components.classes) {
-      var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
-      request.open("GET", uri.spec, true);
-      request.overrideMimeType("text/xml");
-      request.setRequestHeader("Cache-Control", "no-cache");
+    var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                            .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    request.open("GET", uri.spec, true);
+    request.overrideMimeType("text/xml");
+    request.setRequestHeader("Cache-Control", "no-cache");
 
-      var self = this;
-      request.onerror     = function(event) { self.onXMLError(event, aItem);    };
-      request.onload      = function(event) { self.onXMLLoad(event, aItem);     };
-      request.onprogress  = function(event) { self.onXMLProgress(event, aItem); };
-      request.send(null);
-      return;
-    }
-
-    var ds = gRDF.GetDataSource(uri.spec);
-    var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource)
-    if (rds.loaded)
-      this.onDatasourceLoaded(ds, aItem);
-    else {
-      var sink = ds.QueryInterface(Components.interfaces.nsIRDFXMLSink);
-      sink.addXMLSinkObserver(this);
-    }
-  },
-
-  onXMLProgress: function(aItem, event) {
+    var self = this;
+    request.onerror     = function(event) { self.onXMLError(event, aItem);    };
+    request.onload      = function(event) { self.onXMLLoad(event, aItem);     };
+    request.send(null);
   },
 
   onXMLLoad: function(aEvent, aItem) {
@@ -5275,11 +5258,10 @@ RDFItemUpdater.prototype = {
     if (responseXML)
       var parseError = (responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR);
 
-    // AMO does not return responseXML when the installed version is the same
-    // as the lastest version so it must be handled seperately to avoid
-    // displaying an error. If there is an XML parse error, responseXML is
-    // null, status does NOT equal 200 or 0 (e.g. 200 is HTTP OK and 0 is
-    // returned for a local file) then we don't have valid data.
+    // If AMO does not return responseXML it is not treated as a failure since
+    // items without an updateURL are checked on AMO. If there is an XML parse
+    // error, responseXML is null, status does NOT equal 200 or 0 (e.g. 200 is
+    // HTTP OK and 0 is returned for a local file) then we don't have valid data.
     if (!responseXML || parseError || (request.status != 200 && request.status != 0)) {
       // If the item does not have an updateRDF then the error is from UMO.
       if (!aItem.updateRDF) {
@@ -5307,14 +5289,15 @@ RDFItemUpdater.prototype = {
    *
    */
   onXMLError: function(aEvent, aItem) {
+    var request = event.target;
     try {
-      var request = aEvent.target;
-      var status = aEvent.target.status;
+      var status = request.status;
     }
     catch (e) {
-      request = aEvent.target.channel.QueryInterface(Components.interfaces.nsIRequest);
-      status = request.status;
+      var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
+      status = req.status;
     }
+
     var statusText = request.statusText;
 
     // When status is 0 we don't have a valid channel.
@@ -5570,41 +5553,6 @@ RDFItemUpdater.prototype = {
         aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
       }
     }
-  },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIRDFXMLSinkObserver
-  onBeginLoad: function(aSink) {
-  },
-  onInterrupt: function(aSink) {
-  },
-  onResume: function(aSink) {
-  },
-  
-  onEndLoad: function(aSink) {
-    try {
-      aSink.removeXMLSinkObserver(this);
-      
-      var ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
-      this.onDatasourceLoaded(ds, this._item);
-    }
-    catch (e) { 
-      LOG("RDFItemUpdater:onEndLoad sink did not QI to datasource?! \r\n" + 
-          "Exception: " + e);
-    }
-  },
-  
-  onError: function(aSink, aStatus, aErrorMsg) {
-    try {
-      aSink.removeXMLSinkObserver(this);
-      LOG("RDFItemUpdater:onError: There was an error loading the \r\n" + 
-          "the update datasource for item " + this._item.id + ", error: " + aErrorMsg);
-    }
-    catch (e) {
-      LOG("RDFItemUpdater:onError: Failure during removeXMLSinkObserver call");
-    }
-    this._updater.checkForDone(this._item,
-                               nsIAddonUpdateCheckListener.STATUS_FAILURE);
   }
 };
 
