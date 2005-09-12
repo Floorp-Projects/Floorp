@@ -28,7 +28,7 @@
   # no_add_product_link
   #%]
 
-[% IF classification %]
+[% IF Param('useclassification') && classification %]
   [% classification_url_part = BLOCK %]&amp;classification=
      [%- classification FILTER url_quote %]
   [% END %]

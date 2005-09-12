@@ -38,4 +38,8 @@
   Product [% product FILTER html %] deleted.
 </p>
 
+[% PROCESS admin/products/footer.html.tmpl
+           no_edit_product_link = 1
+%]
+
 [% PROCESS global/footer.html.tmpl %]
