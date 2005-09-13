@@ -193,14 +193,7 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
   nsCOMPtr<nsPIAccessibleDocument> docAccessible =
     do_QueryInterface(accessible);
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-  docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
   PRBool isFinished = !(aStateFlags & STATE_START);
-  if (sameTypeRoot != docShellTreeItem) {
-    // Frame and iframe handling done via DOMContentLoaded in nsRootAccessible::HandleEvent()
-    return NS_OK;
-  }
 
   docAccessible->FireDocLoadingEvent(isFinished);
 
