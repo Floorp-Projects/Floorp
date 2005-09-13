@@ -472,9 +472,6 @@ public:
     virtual PRUint32 GetChildCount() const;
     virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
     virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-    virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify);
-    virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
@@ -581,6 +578,10 @@ protected:
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
+
+    virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
+                                          PRUint32 aIndex,
+                                          PRBool aRemove);
 
     nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAString& attrName);
 

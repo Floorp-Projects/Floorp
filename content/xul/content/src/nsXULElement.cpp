@@ -1093,119 +1093,6 @@ nsXULElement::IndexOf(nsIContent* aPossibleChild) const
 }
 
 nsresult
-nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
-{
-    nsresult rv = EnsureContentsGenerated();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_PRECONDITION(nsnull != aKid, "null ptr");
-
-    // Make sure that we're not trying to insert the same child
-    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
-    // freak out.
-    NS_ASSERTION(mAttrsAndChildren.IndexOfChild(aKid) < 0,
-                 "element is already a child");
-
-    PRBool isAppend = aIndex == mAttrsAndChildren.ChildCount();
-    
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-    rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aKid->BindToTree(doc, this, nsnull, PR_TRUE);
-    if (NS_FAILED(rv)) {
-        mAttrsAndChildren.RemoveChildAt(aIndex);
-        aKid->UnbindFromTree();
-        return rv;
-    }
-
-    // XXXbz this screws up ranges, no?  Need to figure out why this is
-    // commented and uncomment....
-    //nsRange::OwnerChildInserted(this, aIndex);
-
-    // The kid may have removed us from the document, so recheck that we're
-    // still in the document before proceeding.  Also, the kid may have just
-    // removed itself, in which case we don't really want to fire
-    // ContentAppended or a mutation event.
-    // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
-    // really need to stop running them while we're in the middle of modifying
-    // the DOM....
-    if (doc && doc == GetCurrentDoc() && aKid->GetParent() == this) {
-        if (aNotify) {
-            if (isAppend) {
-                doc->ContentAppended(this, aIndex);
-            } else {
-                doc->ContentInserted(this, aKid, aIndex);
-            }
-        }
-
-        if (HasMutationListeners(this,
-                                 NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
-            mutation.mRelatedNode =
-                do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
-
-            nsEventStatus status = nsEventStatus_eIgnore;
-            aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT,
-                                 &status);
-        }
-
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-    nsresult rv = EnsureContentsGenerated();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_PRECONDITION((nsnull != aKid) && (aKid != NS_STATIC_CAST(nsIStyledContent*, this)), "null ptr");
-
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-    rv = mAttrsAndChildren.AppendChild(aKid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aKid->BindToTree(doc, this, nsnull, PR_TRUE);
-    if (NS_FAILED(rv)) {
-        mAttrsAndChildren.RemoveChildAt(GetChildCount() - 1);
-        aKid->UnbindFromTree();
-        return rv;
-    }
-    // ranges don't need adjustment since new child is at end of list
-
-    // The kid may have removed us from the document, so recheck that we're
-    // still in the document before proceeding.  Also, the kid may have just
-    // removed itself, in which case we don't really want to fire
-    // ContentAppended or a mutation event.
-    // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
-    // really need to stop running them while we're in the middle of modifying
-    // the DOM....
-    if (doc && doc == GetCurrentDoc() && aKid->GetParent() == this) {
-        if (aNotify) {
-            doc->ContentAppended(this, mAttrsAndChildren.ChildCount() - 1);
-        }
-
-        if (HasMutationListeners(this,
-                                 NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
-            mutation.mRelatedNode =
-                do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
-
-            nsEventStatus status = nsEventStatus_eIgnore;
-            aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
-        }
-    }
-
-    return NS_OK;
-}
-
-nsresult
 nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
     nsresult rv = EnsureContentsGenerated();
@@ -2408,6 +2295,16 @@ nsXULElement::EnsureContentsGenerated(void) const
     }
 
     return NS_OK;
+}
+
+nsresult 
+nsXULElement::WillAddOrRemoveChild(nsIContent* aKid,
+                                   PRUint32 aIndex,
+                                   PRBool aRemove)
+{
+  // nsXULElement has its own RemoveChildAt, so no need to do
+  // anything here when removing a child.
+  return aRemove ? NS_OK : EnsureContentsGenerated();
 }
 
 // nsIStyledContent Implementation

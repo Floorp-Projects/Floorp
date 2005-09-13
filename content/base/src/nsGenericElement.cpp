@@ -2675,10 +2675,13 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(aKid, "null ptr");
 
+  nsresult rv = WillAddOrRemoveChild(aKid, aIndex, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   
-  nsresult rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
+  rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aKid->BindToTree(document, this, nsnull, PR_TRUE);
@@ -2687,8 +2690,11 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
     aKid->UnbindFromTree();
     return rv;
   }
-  
-  nsRange::OwnerChildInserted(this, aIndex);
+
+    // XXX this screws up ranges in XUL, no?  Need to figure out...
+  if (!IsContentOfType(eXUL)) {
+    nsRange::OwnerChildInserted(this, aIndex);
+  }
   // The kid may have removed us from the document, so recheck that we're still
   // in the document before proceeding.  Also, the kid may have just removed
   // itself, in which case we don't really want to fire ContentAppended or a
@@ -2721,10 +2727,14 @@ nsresult
 nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION(aKid && this != aKid, "null ptr");
+
+  nsresult rv = WillAddOrRemoveChild(aKid, GetChildCount(), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIDocument *document = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   
-  nsresult rv = mAttrsAndChildren.AppendChild(aKid);
+  rv = mAttrsAndChildren.AppendChild(aKid);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = aKid->BindToTree(document, this, nsnull, PR_TRUE);
@@ -2764,6 +2774,9 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (oldKid) {
+    nsresult rv = WillAddOrRemoveChild(oldKid, aIndex, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsIDocument *document = GetCurrentDoc();
     mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
 
@@ -3396,6 +3409,14 @@ nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) co
 {
   return mAttrsAndChildren.GetExistingAttrNameFromQName(
     NS_ConvertUTF16toUTF8(aStr));
+}
+
+nsresult 
+nsGenericElement::WillAddOrRemoveChild(nsIContent* /*aKid*/,
+                                       PRUint32 /*aIndex*/,
+                                       PRBool /*aRemove*/)
+{
+  return NS_OK;
 }
 
 nsresult
