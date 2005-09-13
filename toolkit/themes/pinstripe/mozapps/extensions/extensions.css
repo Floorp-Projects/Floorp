@@ -21,6 +21,7 @@ richlistbox {
 /* Extension Manager Command Bar */
 #commandBar {
   padding: 5px 8px 6px 8px;
+  min-width: 1px;
 }
 
 #commandBar button {

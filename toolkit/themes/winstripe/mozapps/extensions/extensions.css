@@ -5,6 +5,7 @@
 /* Extension Manager Command Bar */
 #commandBar {
   padding: 0px 10px 5px 10px;
+  min-width: 1px;
 }
 
 #uninstallButton {
