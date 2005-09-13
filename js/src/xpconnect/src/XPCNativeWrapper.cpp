@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -340,8 +341,15 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                        jsval *rval)
 {
   JSObject *funObj = JSVAL_TO_OBJECT(argv[-2]);
-  if (!::JS_ObjectIsFunction(cx, funObj) ||
-      !XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+  if (!::JS_ObjectIsFunction(cx, funObj)) {
+    obj = nsnull;
+  }
+
+  while (obj && !XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    obj = ::JS_GetPrototype(cx, obj);
+  }
+
+  if (!obj) {
     return ThrowException(NS_ERROR_UNEXPECTED, cx);
   }
 
@@ -380,10 +388,11 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
-  // Be paranoid, don't let people use this as another object's
-  // prototype or anything like that.
-  if (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+  while (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    obj = ::JS_GetPrototype(cx, obj);
+    if (!obj) {
+      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    }
   }
 
   XPCWrappedNative *wrappedNative =
@@ -657,10 +666,11 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_TRUE;
   }
 
-  // Be paranoid, don't let people use this as another object's
-  // prototype or anything like that.
-  if (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+  while (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    obj = ::JS_GetPrototype(cx, obj);
+    if (!obj) {
+      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    }
   }
 
   XPCWrappedNative *wrappedNative =
@@ -1135,10 +1145,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
-  // Be paranoid, don't let people use this as another object's
-  // prototype or anything like that.
-  if (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+  while (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    obj = ::JS_GetPrototype(cx, obj);
+    if (!obj) {
+      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    }
   }
 
   // Check whether toString was overridden in any object along
