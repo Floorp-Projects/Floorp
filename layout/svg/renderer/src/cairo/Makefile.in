@@ -78,6 +78,7 @@ CPPSRCS = \
 	nsSVGCairoGlyphMetrics.cpp \
 	nsSVGCairoGlyphGeometry.cpp \
 	nsSVGCairoGradient.cpp \
+	nsSVGCairoPattern.cpp \
 	nsSVGCairoSurface.cpp \
 	$(NULL)
 

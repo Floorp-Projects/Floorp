@@ -68,7 +68,8 @@
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
   : mUpdateFlags(0), mPropagateTransform(PR_TRUE),
-    mFillGradient(nsnull), mStrokeGradient(nsnull), mFilter(nsnull)
+    mFillGradient(nsnull), mStrokeGradient(nsnull), mFilter(nsnull),
+    mFillPattern(nsnull), mStrokePattern(nsnull)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -94,6 +95,12 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
   }
   if (mFilter) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
+  }
+  if (mFillPattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+  }
+  if (mStrokePattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
   }
 }
 
@@ -169,6 +176,14 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
   if (mFilter) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
     mFilter = nsnull;
+  }
+  if (mFillPattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+    mFillPattern = nsnull;
+  }
+  if (mStrokePattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
+    mStrokePattern = nsnull;
   }
 
   // XXX: we'd like to use the style_hint mechanism and the
@@ -486,6 +501,7 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
 {
   // Is this a gradient?
   nsCOMPtr<nsISVGGradient> gradient = do_QueryInterface(observable);
+  nsCOMPtr<nsISVGPattern> pval = do_QueryInterface(observable);
 
   nsISVGFilterFrame *filter;
   CallQueryInterface(observable, &filter);
@@ -512,6 +528,21 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
     }
     UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT |
                   nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
+  } else if (pval) {
+    // Handle Patterns
+    nsCOMPtr<nsISVGPattern>fill = do_QueryInterface(mFillPattern);
+    if (fill == pval) {
+      if (aModType == nsISVGValue::mod_die) {
+        mFillPattern = nsnull;
+      }
+      UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
+    } else {
+      // Assume stroke pattern
+      if (aModType == nsISVGValue::mod_die) {
+        mStrokePattern = nsnull;
+      }
+      UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
+    }
   } else {
     // No, all of our other observables update the canvastm by default
     UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
@@ -710,6 +741,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
   nsresult rv = NS_OK;
+  *aGrad = nsnull;
   if (!mStrokeGradient) {
     nsIURI *aServer;
     aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
@@ -721,6 +753,26 @@ nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
     NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
   }
   *aGrad = mStrokeGradient;
+  return rv;
+}
+
+/* [noscript] void GetStrokePattern(nsISVGPattern **aPat); */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetStrokePattern(nsISVGPattern **aPat)
+{
+  nsresult rv = NS_OK;
+  *aPat = nsnull;
+  if (!mStrokePattern) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
+                          nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
+  }
+  *aPat = mStrokePattern;
   return rv;
 }
 
@@ -753,6 +805,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
   nsresult rv = NS_OK;
+  *aGrad = nsnull;
   if (!mFillGradient) {
     nsIURI *aServer;
     aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
@@ -764,6 +817,26 @@ nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
     NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
   }
   *aGrad = mFillGradient;
+  return rv;
+}
+
+/* [noscript] void GetFillPattern(nsISVGPattern **aPat); */
+NS_IMETHODIMP
+nsSVGPathGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
+{
+  nsresult rv = NS_OK;
+  *aPat = nsnull;
+  if (!mFillPattern) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the pattern 
+    rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
+                          nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
+  }
+  *aPat = mFillPattern;
   return rv;
 }
 
@@ -864,7 +937,7 @@ nsSVGPathGeometryFrame::InitSVG()
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
   transformable->GetTransform(getter_AddRefs(transforms));
   NS_ADD_SVGVALUE_OBSERVER(transforms);
-  
+
   // construct a pathgeometry object:
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   if (!outerSVGFrame) {

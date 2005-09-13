@@ -59,6 +59,7 @@ using namespace Gdiplus;
 #include "nsPresContext.h"
 #include "nsMemory.h"
 #include "nsSVGGDIPlusGradient.h"
+#include "nsSVGGDIPlusPattern.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMSVGRect.h"
@@ -94,7 +95,7 @@ public:
   NS_DECL_NSISVGRENDERERGLYPHGEOMETRY
 
 protected:
-  void DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad,
+  void DrawFill(Graphics* g, Brush* b, nsISVGGradient *aGrad,
                 const WCHAR* start, INT length, float x, float y);
   void GetGlobalTransform(Matrix *matrix);
   void UpdateStroke();
@@ -238,7 +239,7 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     hasFill = PR_TRUE;
 
   if (filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-    if(NS_FAILED(mSource->GetFillPaintServerType(&fillServerType)))
+    if (NS_FAILED(mSource->GetFillPaintServerType(&fillServerType)))
       hasFill = PR_FALSE;
   }
 
@@ -247,7 +248,7 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     hasStroke = PR_TRUE;
 
   if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-    if(NS_FAILED(mSource->GetStrokePaintServerType(&strokeServerType)))
+    if (NS_FAILED(mSource->GetStrokePaintServerType(&strokeServerType)))
       hasStroke = PR_FALSE;
   }
 
@@ -274,17 +275,24 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     SolidBrush brush(Color((BYTE)(opacity*255),NS_GET_R(color),NS_GET_G(color),NS_GET_B(color)));
   
     nsCOMPtr<nsISVGGradient> aGrad;
+    Brush *pattern = nsnull;
+ 
     if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
         mSource->GetFillGradient(getter_AddRefs(aGrad));
+      } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetFillPattern(getter_AddRefs(aPat));
+        pattern = GDIPlusPattern(canvas, aPat, mSource);
       }
     }
   
     nsAutoString text;
     mSource->GetCharacterData(text);
 
-    DrawFill(gdiplusCanvas->GetGraphics(), brush, aGrad,
+    DrawFill(gdiplusCanvas->GetGraphics(), pattern ? pattern : &brush, aGrad,
              PromiseFlatString(text).get(), text.Length(), x, y);
+    delete pattern;
   }
   
   if (hasStroke) {
@@ -294,14 +302,20 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     float opacity;
     mSource->GetStrokeOpacity(&opacity);
   
+    SolidBrush brush(Color((BYTE)(opacity*255), NS_GET_R(color), 
+                           NS_GET_G(color), NS_GET_B(color)));
     nsCOMPtr<nsISVGGradient> aGrad;
+    Brush *pattern = nsnull;
+
     if (stroketype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
         mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+      } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetStrokePattern(getter_AddRefs(aPat));
+        pattern = GDIPlusPattern(canvas, aPat, mSource);
       }
     }
-
-    SolidBrush brush(Color((BYTE)(opacity*255), NS_GET_R(color), NS_GET_G(color), NS_GET_B(color)));
 
     // this is the 'normal' case
     if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
@@ -316,6 +330,8 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       GDIPlusGradient(aRegion, aGrad, ctm,
                       gdiplusCanvas->GetGraphics(), mSource,
                       gradCBPath, this);
+    } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+      gdiplusCanvas->GetGraphics()->FillPath(pattern, mStroke);
     }
   }
   
@@ -437,7 +453,8 @@ static void gradCBString(Graphics *gfx, Brush *brush, void *cbStruct)
 }
 
 void
-nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad,
+nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush* b, 
+                                    nsISVGGradient *aGrad,
                                     const WCHAR* start, INT length,
                                     float x, float y)
 {
@@ -486,7 +503,7 @@ nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad
   else {
     if (!cp) {
       g->DrawString(start, length, metrics->GetFont(), PointF(x,y),
-                    &stringFormat, &b);
+                    &stringFormat, b);
     } else {
       for (PRUint32 i=0; i<length; i++) {
         if (cp[i].draw == PR_FALSE)
@@ -495,7 +512,7 @@ nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad
         g->TranslateTransform(cp[i].x, cp[i].y);
         g->RotateTransform(cp[i].angle * 180.0 / M_PI);
         g->DrawString(start + i, 1, metrics->GetFont(), PointF(0, 0),
-                      &stringFormat, &b);
+                      &stringFormat, b);
         g->Restore(state);
       }
     }

@@ -124,6 +124,8 @@ nsresult
 NS_NewSVGFEOffsetElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEUnimplementedMOZElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGPatternElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -229,6 +231,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
       name == nsSVGAtoms::feTile             ||
       name == nsSVGAtoms::feTurbulence)
     return NS_NewSVGFEUnimplementedMOZElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::pattern)
+    return NS_NewSVGPatternElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

@@ -50,6 +50,7 @@
 #include "nsISVGContainerFrame.h"
 #include "nsISVGTextContainerFrame.h"
 #include "nsSVGGradient.h"
+#include "nsSVGPattern.h"
 #include "nsISVGValueUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -202,6 +203,8 @@ protected:
   nsString mCharacterData;
   nsCOMPtr<nsISVGGradient> mFillGradient;
   nsCOMPtr<nsISVGGradient> mStrokeGradient;
+  nsCOMPtr<nsISVGPattern> mFillPattern;
+  nsCOMPtr<nsISVGPattern> mStrokePattern;
 };
 
 //----------------------------------------------------------------------
@@ -241,10 +244,16 @@ nsSVGGlyphFrame::nsSVGGlyphFrame()
 nsSVGGlyphFrame::~nsSVGGlyphFrame()
 {
   if (mFillGradient) {
-    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
   }
   if (mStrokeGradient) {
-    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
+  }
+  if (mFillPattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+  }
+  if (mStrokePattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
   }
 }
 
@@ -341,12 +350,20 @@ nsSVGGlyphFrame::DidSetStyleContext(nsPresContext* aPresContext)
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those
   if (mFillGradient) {
-    NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
     mFillGradient = nsnull;
   }
   if (mStrokeGradient) {
-    NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
     mStrokeGradient = nsnull;
+  }
+  if (mFillPattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
+    mFillPattern = nsnull;
+  }
+  if (mStrokePattern) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
+    mStrokePattern = nsnull;
   }
 
   return CharacterDataChanged(aPresContext, nsnull, PR_FALSE);
@@ -442,8 +459,26 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
       return Update(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
   } else {
-    // No, all of our other observables update the canvastm by default
-    return Update(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+    nsCOMPtr<nsISVGPattern>pval = do_QueryInterface(observable);
+    if (pval) {
+      // Handle Patterns
+      nsCOMPtr<nsISVGPattern>fill = do_QueryInterface(mFillPattern);
+      if (fill == pval) {
+        if (aModType == nsISVGValue::mod_die) {
+          mFillPattern = nsnull;
+        }
+        return Update(nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
+      } else {
+        // Assume stroke pattern
+        if (aModType == nsISVGValue::mod_die) {
+          mStrokePattern = nsnull;
+        }
+        return Update(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
+      }
+    } else {
+      // No, all of our other observables update the canvastm by default
+      return Update(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
+    }
   }
   return NS_OK;
 }
@@ -738,6 +773,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
   nsresult rv = NS_OK;
+  *aGrad = nsnull;
   if (!mStrokeGradient) {
     nsIURI *aServer;
     aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
@@ -749,6 +785,26 @@ nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
     NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
   }
   *aGrad = mStrokeGradient;
+  return rv;
+}
+
+/* [noscript] void GetStrokePattern(nsISVGPattern **aPat); */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetStrokePattern(nsISVGPattern **aPat)
+{
+  nsresult rv = NS_OK;
+  *aPat = nsnull;
+  if (!mStrokePattern) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
+                          nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
+  }
+  *aPat = mStrokePattern;
   return rv;
 }
 
@@ -781,6 +837,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
   nsresult rv = NS_OK;
+  *aGrad = nsnull;
   if (!mFillGradient) {
     nsIURI *aServer;
     aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
@@ -792,6 +849,26 @@ nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
     NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
   }
   *aGrad = mFillGradient;
+  return rv;
+}
+
+/* [noscript] void GetFillPattern(nsISVGPattern **aPat); */
+NS_IMETHODIMP
+nsSVGGlyphFrame::GetFillPattern(nsISVGPattern **aPat)
+{
+  nsresult rv = NS_OK;
+  *aPat = nsnull;
+  if (!mFillPattern) {
+    nsIURI *aServer;
+    aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
+    if (aServer == nsnull)
+      return NS_ERROR_FAILURE;
+    // Now have the URI.  Get the gradient 
+    rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
+                          nsSVGGlyphFrameBase::GetPresContext()->PresShell());
+    NS_ADD_SVGVALUE_OBSERVER(mFillPattern);
+  }
+  *aPat = mFillPattern;
   return rv;
 }
 

@@ -272,6 +272,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGMarkerElement_id,
   eDOMClassInfo_SVGMetadataElement_id,
   eDOMClassInfo_SVGPathElement_id,
+  eDOMClassInfo_SVGPatternElement_id,
   eDOMClassInfo_SVGPolygonElement_id,
   eDOMClassInfo_SVGPolylineElement_id,
   eDOMClassInfo_SVGRadialGradientElement_id,

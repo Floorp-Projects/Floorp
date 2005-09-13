@@ -111,6 +111,7 @@ CPPSRCS		= \
 		nsSVGPathElement.cpp \
 		nsSVGPathSeg.cpp \
 		nsSVGPathSegList.cpp \
+		nsSVGPatternElement.cpp \
 		nsSVGPoint.cpp \
 		nsSVGPointList.cpp \
 		nsSVGPolygonElement.cpp \
