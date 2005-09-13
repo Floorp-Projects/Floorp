@@ -179,9 +179,11 @@ var gLanguagesDialog = {
       this._acceptLanguages[languages[i]] = true;
     }
 
-    if (this._activeLanguages.childNodes.length > 0) 
+    if (this._activeLanguages.childNodes.length > 0) {
+      this._activeLanguages.ensureIndexIsVisible(selectedIndex);
       this._activeLanguages.selectedIndex = selectedIndex;
-    
+    }
+
     return undefined;
   },
   
