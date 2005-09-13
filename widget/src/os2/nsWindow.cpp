@@ -433,47 +433,32 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //-------------------------------------------------------------------------
 void nsWindow::InitEvent(nsGUIEvent& event, nsPoint* aPoint)
 {
-    NS_ADDREF(event.widget);
+  NS_ADDREF(event.widget);
 
-    if (nsnull == aPoint) {     // use the point from the event
-      // for most events, get the message position;  for drag events,
-      // msg position may be incorrect, so get the current position instead
-      POINTL ptl;
-      if (CheckDragStatus(ACTION_PTRPOS, 0))
-        WinQueryPointerPos( HWND_DESKTOP, &ptl);
-      else
-        WinQueryMsgPos( 0/*hab*/, &ptl);
-      WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
+  // if no point was supplied, calculate it
+  if (nsnull == aPoint) {
+    // for most events, get the message position;  for drag events,
+    // msg position may be incorrect, so get the current position instead
+    POINTL ptl;
+    if (CheckDragStatus(ACTION_PTRPOS, 0))
+      WinQueryPointerPos( HWND_DESKTOP, &ptl);
+    else
+      WinQueryMsgPos( 0/*hab*/, &ptl);
 
-#if 0
-      printf("++++++++++nsWindow::InitEvent (!pt) mapped point = %ld, %ld\n", ptl.x, ptl.y);
-#endif
+    WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
+    PM2NS( ptl);
+    event.refPoint.x = ptl.x;
+    event.refPoint.y = ptl.y;
+  }
+  else
+  // use the point override if provided
+  {
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
+  }
 
-      PM2NS( ptl);
-
-      event.refPoint.x = ptl.x;
-      event.refPoint.y = ptl.y;
-
-#if 0
-      printf("++++++++++nsWindow::InitEvent (!pt) converted point = %ld, %ld\n", ptl.x, ptl.y);
-#endif
-   }
-   else
-   {                     // use the point override if provided
-      event.refPoint.x = aPoint->x;
-      event.refPoint.y = aPoint->y;
-
-#if 0
-      printf("++++++++++nsWindow::InitEvent point = %ld, %ld\n", aPoint->x, aPoint->y);
-#endif
-   }
-
-   event.time = WinQueryMsgTime( 0/*hab*/);
-
-   /* OS2TODO
-   mLastPoint.x = event.refPoint.x;
-   mLastPoint.y = event.refPoint.y;
-   */
+  event.time = WinQueryMsgTime( 0/*hab*/);
+  return;
 }
 
 //-------------------------------------------------------------------------
@@ -550,10 +535,32 @@ PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
   InitEvent(event);
   event.appCommand = NS_APPCOMMAND_START + aEventCommand;
 
-  DispatchWindowEvent(&event);
+  PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
-  return NS_OK;
+  return result;
+}
+
+//-------------------------------------------------------------------------
+//
+// Dispatch DragDrop (target) event
+//
+//-------------------------------------------------------------------------
+
+PRBool nsWindow::DispatchDragDropEvent(PRUint32 aMsg)
+{
+  nsMouseEvent event(PR_TRUE, aMsg, this, nsMouseEvent::eReal);
+  InitEvent(event);
+
+  event.isShift   = WinIsKeyDown(VK_SHIFT);
+  event.isControl = WinIsKeyDown(VK_CTRL);
+  event.isAlt     = WinIsKeyDown(VK_ALT) || WinIsKeyDown(VK_ALTGRAF);
+  event.isMeta    = PR_FALSE;
+
+  PRBool result = DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+
+  return result;
 }
 
 //-------------------------------------------------------------------------
@@ -3924,10 +3931,10 @@ PRBool nsWindow::OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr)
         mDragStatus = gDragStatus = (dragFlags & DND_DragStatus);
 
         if (dragFlags & DND_DispatchEnterEvent)
-          DispatchStandardEvent(NS_DRAGDROP_ENTER);
+          DispatchDragDropEvent(NS_DRAGDROP_ENTER);
 
         if (dragFlags & DND_DispatchEvent)
-          DispatchStandardEvent(eventType);
+          DispatchDragDropEvent(eventType);
 
         if (dragFlags & DND_GetDragoverResult)
           dragSession->GetDragoverResult(mr);
