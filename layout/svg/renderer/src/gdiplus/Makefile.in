@@ -67,6 +67,7 @@ CPPSRCS = 	\
 			nsSVGGDIPlusGradient.cpp \
 			nsSVGGDIPlusPathBuilder.cpp \
 			nsSVGGDIPlusPathGeometry.cpp \
+			nsSVGGDIPlusPattern.cpp \
 			nsSVGGDIPlusRegion.cpp \
 			nsSVGGDIPlusSurface.cpp \
 			nsSVGRendererGDIPlus.cpp \

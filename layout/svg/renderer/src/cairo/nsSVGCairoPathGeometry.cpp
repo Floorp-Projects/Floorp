@@ -56,6 +56,8 @@
 #include "nsSVGCairoRegion.h"
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
+#include "nsISVGPattern.h"
+#include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
@@ -339,6 +341,17 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         cairo_set_source(ctx, gradient);
         cairo_fill_preserve(ctx);
         cairo_pattern_destroy(gradient);
+      } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetFillPattern(getter_AddRefs(aPat));
+        // Paint the pattern -- note that because we will call back into the
+        // layout layer to paint, we need to pass the canvas, not just the context
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource);
+        if (pattern) {
+          cairo_set_source(ctx, pattern);
+          cairo_fill_preserve(ctx);
+          cairo_pattern_destroy(pattern);
+        }
       } else {
         cairo_fill_preserve(ctx);
       }
@@ -362,9 +375,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_stroke(ctx);
     } else if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      PRUint16 serverType;
-      mSource->GetStrokePaintServerType(&serverType);
-      if (serverType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
+      if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
         nsCOMPtr<nsISVGGradient> aGrad;
         mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
@@ -372,6 +383,17 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         cairo_set_source(ctx, gradient);
         cairo_stroke(ctx);
         cairo_pattern_destroy(gradient);
+      } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetStrokePattern(getter_AddRefs(aPat));
+        // Paint the pattern -- note that because we will call back into the
+        // layout layer to paint, we need to pass the canvas, not just the context
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, mSource);
+        if (pattern) {
+          cairo_set_source(ctx, pattern);
+          cairo_stroke(ctx);
+          cairo_pattern_destroy(pattern);
+        }
       } else {
         cairo_stroke(ctx);
       }

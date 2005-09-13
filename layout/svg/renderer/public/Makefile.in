@@ -50,6 +50,7 @@ XPIDLSRCS =                                   \
 	nsISVGGlyphMetricsSource.idl              \
 	nsISVGGradient.idl                        \
 	nsISVGPathGeometrySource.idl              \
+	nsISVGPattern.idl                         \
 	nsISVGRectangleSink.idl                   \
 	nsISVGRenderer.idl                        \
 	nsISVGRendererCanvas.idl                  \

@@ -57,6 +57,8 @@
 
 #include "nsISVGGradient.h"
 #include "nsSVGCairoGradient.h"
+#include "nsISVGPattern.h"
+#include "nsSVGCairoPattern.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
@@ -298,8 +300,22 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
           cairo_set_source(ctx, gradient);
           LOOP_CHARS(cairo_show_text)
           cairo_pattern_destroy(gradient);
+        } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+          nsCOMPtr<nsISVGPattern> aPat;
+          mSource->GetFillPattern(getter_AddRefs(aPat));
+          // Paint the pattern -- note that because we will call back into the
+          // layout layer to paint, we need to pass the canvas, not just the context
+          nsCOMPtr<nsISVGGeometrySource> aGsource = do_QueryInterface(mSource);
+          cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource);
+          if (pattern) {
+            cairo_set_source(ctx, pattern);
+            LOOP_CHARS(cairo_show_text)
+            cairo_pattern_destroy(pattern);
+          } else {
+            LOOP_CHARS(cairo_show_text)
+          }
         }
-      }
+    }
   }
 
   cairo_move_to(ctx, x, y);
@@ -377,6 +393,18 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
         cairo_set_source(ctx, gradient);
         cairo_stroke(ctx);
         cairo_pattern_destroy(gradient);
+      } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetStrokePattern(getter_AddRefs(aPat));
+        // Paint the pattern -- note that because we will call back into the
+        // layout layer to paint, we need to pass the canvas, not just the context
+        nsCOMPtr<nsISVGGeometrySource> aGsource = do_QueryInterface(mSource);
+        cairo_pattern_t *pattern = CairoPattern(canvas, aPat, aGsource);
+        if (pattern) {
+          cairo_set_source(ctx, pattern);
+          cairo_stroke(ctx);
+          cairo_pattern_destroy(pattern);
+        }
       }
     }
   }

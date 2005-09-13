@@ -83,6 +83,7 @@ CPPSRCS		= \
 		nsSVGOuterSVGFrame.cpp \
 		nsSVGPathFrame.cpp \
 		nsSVGPathGeometryFrame.cpp \
+		nsSVGPatternFrame.cpp \
 		nsSVGPolygonFrame.cpp \
 		nsSVGPolylineFrame.cpp \
 		nsSVGRectFrame.cpp \

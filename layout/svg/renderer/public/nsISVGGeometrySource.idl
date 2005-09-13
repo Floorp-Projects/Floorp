@@ -49,6 +49,7 @@ interface nsIDOMSVGMatrix;
 interface nsPresContext;
 interface nsIURI;
 interface nsISVGGradient;
+interface nsISVGPattern;
 
 /**
  * \addtogroup rendering_backend_interfaces Rendering Backend Interfaces
@@ -213,6 +214,10 @@ interface nsISVGGeometrySource : nsISupports
    * strokePaintType == PAINT_TYPE_GRADIENT */
   void GetStrokeGradient(out nsISVGGradient aGrad);
   
+  /* GetStrokePattern will only return a valid result if
+   * strokePaintType == PAINT_TYPE_PATTERN */
+  void GetStrokePattern(out nsISVGPattern aPat);
+  
   /* signifies that either paint color or server have changed,
    * depending on current strokePaintType */
   const unsigned long UPDATEMASK_STROKE_PAINT        = 0x00001000;
@@ -237,6 +242,10 @@ interface nsISVGGeometrySource : nsISupports
   /* GetFillGradient will only return a valid result if
    * fillPaintType == PAINT_TYPE_GRADIENT */
   void GetFillGradient(out nsISVGGradient aGrad);
+  
+  /* GetFillPattern will only return a valid result if
+   * fillPaintType == PAINT_TYPE_PATTERN */
+  void GetFillPattern(out nsISVGPattern aPat);
   
   /* signifies that either paint color or server have changed,
    * depending on current fillPaintType */

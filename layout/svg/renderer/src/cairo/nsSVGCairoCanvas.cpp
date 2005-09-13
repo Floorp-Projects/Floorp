@@ -309,7 +309,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   cairo_translate(mCR, dx, dy);
   cairo_get_matrix(mCR, &mInitialTransform);
 
-#if defined(DEBUG_tor) || defined(DEBUG_roc)
+#if defined(DEBUG_tor) || defined(DEBUG_roc) || defined(DEBUG_scooter)
   fprintf(stderr, "cairo translate: %f %f\n", dx, dy);
 
   fprintf(stderr, "cairo dirty: %d %d %d %d\n",

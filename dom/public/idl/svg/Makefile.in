@@ -92,6 +92,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGPathElement.idl \
 		nsIDOMSVGPathSeg.idl \
 		nsIDOMSVGPathSegList.idl \
+		nsIDOMSVGPatternElement.idl \
 		nsIDOMSVGPoint.idl \
 		nsIDOMSVGPointList.idl \
 		nsIDOMSVGPolygonElement.idl \

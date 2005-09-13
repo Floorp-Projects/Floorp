@@ -60,6 +60,7 @@ using namespace Gdiplus;
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsISVGPathFlatten.h"
+#include "nsSVGGDIPlusPattern.h"
 
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
@@ -101,7 +102,7 @@ protected:
   
   void GetGlobalTransform(Matrix *matrix);
   void RenderPath(GraphicsPath *path, nscolor color, float opacity,
-                  nsISVGGDIPlusCanvas *canvas);
+                  nsISVGGDIPlusCanvas *canvas, Brush *aBrush = nsnull);
 private:
   nsCOMPtr<nsISVGPathGeometrySource> mSource;
   GraphicsPath *mPath; // untransformed path
@@ -362,11 +363,16 @@ nsSVGGDIPlusPathGeometry::GetGlobalTransform(Matrix *matrix)
 }
 
 void
-nsSVGGDIPlusPathGeometry::RenderPath(GraphicsPath *path, nscolor color, float opacity,
-                                     nsISVGGDIPlusCanvas *canvas)
+nsSVGGDIPlusPathGeometry::RenderPath(GraphicsPath *path,
+                                     nscolor color, float opacity,
+                                     nsISVGGDIPlusCanvas *canvas,
+                                     Brush *aBrush)
 {
-  SolidBrush brush(Color((BYTE)(opacity*255),NS_GET_R(color),NS_GET_G(color),NS_GET_B(color)));
-  canvas->GetGraphics()->FillPath(&brush, path);
+  SolidBrush brush(Color((BYTE)(opacity*255),
+                         NS_GET_R(color),
+                         NS_GET_G(color),
+                         NS_GET_B(color)));
+  canvas->GetGraphics()->FillPath(aBrush ? aBrush : &brush, path);
 }
 
 //----------------------------------------------------------------------
@@ -431,7 +437,7 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
   // paint fill:
   mSource->GetFillPaintType(&type);
   if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      if(NS_FAILED(mSource->GetFillPaintServerType(&serverType)))
+      if (NS_FAILED(mSource->GetFillPaintServerType(&serverType)))
         type = nsISVGGeometrySource::PAINT_TYPE_NONE;
   }
   if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetFill()) {
@@ -452,6 +458,18 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
         GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
                         mSource, gradCBFill, this);
+      } else if (serverType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetFillPattern(getter_AddRefs(aPat));
+        TextureBrush *pattern = GDIPlusPattern(canvas, aPat, mSource);
+
+        // fallback from the css cascade in case something is wrong
+        // with the pattern
+        mSource->GetStrokePaint(&color);
+        mSource->GetStrokeOpacity(&opacity);
+
+        RenderPath(GetFill(), color, opacity, gdiplusCanvas, pattern);
+        delete pattern;
       }
     }
   }
@@ -459,7 +477,7 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
   // paint stroke:
   mSource->GetStrokePaintType(&type);
   if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-      if(NS_FAILED(mSource->GetStrokePaintServerType(&serverType)))
+      if (NS_FAILED(mSource->GetStrokePaintServerType(&serverType)))
         type = nsISVGGeometrySource::PAINT_TYPE_NONE;
   }
   if (type != nsISVGGeometrySource::PAINT_TYPE_NONE && GetStroke()) {
@@ -480,6 +498,18 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
 
         GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
                         mSource, gradCBStroke, this);
+      } else if (serverType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
+        nsCOMPtr<nsISVGPattern> aPat;
+        mSource->GetStrokePattern(getter_AddRefs(aPat));
+        TextureBrush *pattern = GDIPlusPattern(canvas, aPat, mSource);
+
+        // fallback from the css cascade in case something is wrong
+        // with the pattern
+        mSource->GetStrokePaint(&color);
+        mSource->GetStrokeOpacity(&opacity);
+
+        RenderPath(GetStroke(), color, opacity, gdiplusCanvas, pattern);
+        delete pattern;
       }
     }
   }
