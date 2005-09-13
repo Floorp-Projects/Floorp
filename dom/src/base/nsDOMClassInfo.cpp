@@ -3077,9 +3077,28 @@ NS_IMETHODIMP
 nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
                           JSObject *globalObj, JSObject **parentObj)
 {
-  NS_ERROR("nsDOMClassInfo::PreCreate Don't call me!");
+  *parentObj = globalObj;
 
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(cx, globalObj,
+                                           getter_AddRefs(wrapper));
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryWrappedNative(wrapper);
+
+  if (!piwin) {
+    return NS_OK;
+  }
+
+  if (piwin->IsOuterWindow()) {
+    *parentObj = ((nsGlobalWindow *)piwin.get())->
+      GetCurrentInnerWindowInternal()->GetGlobalJSObject();
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
