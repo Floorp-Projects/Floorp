@@ -247,9 +247,8 @@ nsLocalFile::nsLocalFile() :
 }
 
 nsLocalFile::nsLocalFile(const nsLocalFile& other)
-  : mCachedStat(other.mCachedStat)
-  , mPath(other.mPath)
-  , mHaveCachedStat(other.mHaveCachedStat)
+  : mPath(other.mPath)
+  , mHaveCachedStat(PR_FALSE)
 {
 }
 

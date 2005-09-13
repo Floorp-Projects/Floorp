@@ -580,9 +580,8 @@ char *   TypeEaEnumerator::GetNext(PRUint32 *lth)
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile()
+  : mDirty(PR_TRUE)
 {
-    MakeDirty();
-    memset(&mFileInfo64, 0, sizeof(mFileInfo64));
 }
 
 NS_METHOD
@@ -617,9 +616,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFile, nsIFile, nsILocalFileOS
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile(const nsLocalFile& other)
-  : mDirty(other.mDirty)
+  : mDirty(PR_TRUE)
   , mWorkingPath(other.mWorkingPath)
-  , mFileInfo64(other.mFileInfo64)
 {
 }
 
