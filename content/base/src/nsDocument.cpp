@@ -4146,7 +4146,6 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
   // Make sure to tell the event that dispatch has started.
   NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
 
-  nsresult mRet = NS_OK;
   PRBool externalDOMEvent = PR_FALSE;
 
   nsIDOMEvent* domEvent = nsnull;
@@ -4166,14 +4165,14 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
   }
 
   // Capturing stage
-  if (NS_EVENT_FLAG_CAPTURE & aFlags && nsnull != mScriptGlobalObject) {
+  if (NS_EVENT_FLAG_CAPTURE & aFlags && mScriptGlobalObject) {
     mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                         aFlags & NS_EVENT_CAPTURE_MASK,
                                         aEventStatus);
   }
 
   // Local handling stage
-  // Check for null mDOMSlots or ELM, check if we're a non-bubbling
+  // Check for null ELM, check if we're a non-bubbling
   // event in the bubbling state (bubbling state is indicated by the
   // presence of the NS_EVENT_FLAG_BUBBLE flag and not the
   // NS_EVENT_FLAG_INIT).
@@ -4187,7 +4186,7 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
   }
 
   // Bubbling stage
-  if (NS_EVENT_FLAG_BUBBLE & aFlags && nsnull != mScriptGlobalObject) {
+  if (NS_EVENT_FLAG_BUBBLE & aFlags && mScriptGlobalObject) {
     mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                         aFlags & NS_EVENT_BUBBLE_MASK,
                                         aEventStatus);
@@ -4218,7 +4217,7 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     NS_MARK_EVENT_DISPATCH_DONE(aEvent);
   }
 
-  return mRet;
+  return NS_OK;
 }
 
 nsresult
