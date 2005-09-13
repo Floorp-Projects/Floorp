@@ -391,9 +391,16 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
   int result = [NSApp runModalForWindow:confirmStorePasswordPanel relativeToWindow:parent];
   [confirmStorePasswordPanel close];
   
-  // the results of hitButtonXX: map to the corresponding values in the
-  // |KeychainPromptResult| enum so we can just cast and return
-  return NS_STATIC_CAST(KeychainPromptResult, result);
+  KeychainPromptResult keychainAction = kDontRemember;
+  switch (result)
+  {
+    case NSAlertDefaultReturn:    keychainAction = kSave;          break;
+    default:
+    case NSAlertAlternateReturn:  keychainAction = kDontRemember;  break;
+    case NSAlertOtherReturn:      keychainAction = kNeverRemember; break;
+  }
+
+  return keychainAction;
 }
 
 //
