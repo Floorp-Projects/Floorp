@@ -3551,8 +3551,9 @@ nsBrowserStatusHandler.prototype =
 
     var securityUI = gBrowser.securityUI;
     this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    if (this.urlBar)
-      this.urlBar.setAttribute("infotext", securityUI.tooltipText);
+    var lockIcon = document.getElementById("lock-icon");
+    if (lockIcon)
+      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
   },
 
   startDocumentLoad : function(aRequest)
