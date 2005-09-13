@@ -45,6 +45,7 @@
 #include "xpcprivate.h"
 #include "nsReadableUtils.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIDOMWindow.h"
 
 /***************************************************************************/
 // stuff used by all
@@ -2141,8 +2142,9 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
 JS_STATIC_DLL_CALLBACK(void)
 sandbox_finalize(JSContext *cx, JSObject *obj)
 {
-    PrincipalHolder *ph = (PrincipalHolder *)JS_GetPrivate(cx, obj);
-    NS_IF_RELEASE(ph);
+    nsIScriptObjectPrincipal *sop =
+        (nsIScriptObjectPrincipal *)JS_GetPrivate(cx, obj);
+    NS_IF_RELEASE(sop);
 }
 
 static JSClass SandboxClass = {
@@ -2236,9 +2238,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (argc < 1)
         return ThrowAndFail(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx, _retval);
 
-    if (!JSVAL_IS_STRING(argv[0]))
-        return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
-
     // Create the sandbox global object
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -2257,40 +2256,61 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (NS_FAILED(rv))
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
-    nsCAutoString codebase(JS_GetStringBytes(codebasestr),
-                           JS_GetStringLength(codebasestr));
-    nsCOMPtr<nsIURL> iURL;
-    nsCOMPtr<nsIStandardURL> stdUrl =
-        do_CreateInstance(kStandardURLContractID, &rv);
-    if (!stdUrl ||
-        NS_FAILED(rv = stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
-                                    codebase, nsnull, nsnull)) ||
-       !(iURL = do_QueryInterface(stdUrl, &rv))) {
-        if (NS_SUCCEEDED(rv))
-            rv = NS_ERROR_FAILURE;
-        return ThrowAndFail(rv, cx, _retval);
+    nsIScriptObjectPrincipal *sop = nsnull;
+
+    if (JSVAL_IS_STRING(argv[0])) {
+        JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
+        nsCAutoString codebase(JS_GetStringBytes(codebasestr),
+                               JS_GetStringLength(codebasestr));
+        nsCOMPtr<nsIURL> iURL;
+        nsCOMPtr<nsIStandardURL> stdUrl =
+            do_CreateInstance(kStandardURLContractID, &rv);
+        if (!stdUrl ||
+            NS_FAILED(rv = stdUrl->Init(nsIStandardURL::URLTYPE_STANDARD, 80,
+                                        codebase, nsnull, nsnull)) ||
+           !(iURL = do_QueryInterface(stdUrl, &rv))) {
+            if (NS_SUCCEEDED(rv))
+                rv = NS_ERROR_FAILURE;
+            return ThrowAndFail(rv, cx, _retval);
+        }
+        
+        nsCOMPtr<nsIPrincipal> principal;
+        nsCOMPtr<nsIScriptSecurityManager> secman =
+            do_GetService(kScriptSecurityManagerContractID);
+        if (!secman ||
+            NS_FAILED(rv = secman->GetCodebasePrincipal(iURL, getter_AddRefs(principal))) ||
+            !principal) {
+            if (NS_SUCCEEDED(rv))
+                rv = NS_ERROR_FAILURE;
+            return ThrowAndFail(rv, cx, _retval);
+        }
+
+        sop = new PrincipalHolder(principal);
+        if (!sop)
+            return ThrowAndFail(NS_ERROR_OUT_OF_MEMORY, cx, _retval);
+
+        NS_ADDREF(sop);
+    } else {
+        if (JSVAL_IS_OBJECT(argv[0])) {
+            nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+            xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(argv[0]),
+                                            getter_AddRefs(wrapper));
+
+            if (wrapper) {
+                nsCOMPtr<nsIDOMWindow> win = do_QueryWrappedNative(wrapper);
+                if (win)
+                    CallQueryInterface(win, &sop);
+            }
+        }
+
+        if (!sop)
+            return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+
+        // Note: if we're here, then sop has been AddRef'd by CallQueryInterface
     }
-    
-    nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIScriptSecurityManager> secman =
-        do_GetService(kScriptSecurityManagerContractID);
-    if (!secman ||
-        NS_FAILED(rv = secman->GetCodebasePrincipal(iURL, getter_AddRefs(principal))) ||
-        !principal) {
-        if (NS_SUCCEEDED(rv))
-            rv = NS_ERROR_FAILURE;
-        return ThrowAndFail(rv, cx, _retval);
-    }
 
-    PrincipalHolder *ph = new PrincipalHolder(principal);
-    if (!ph)
-        return ThrowAndFail(NS_ERROR_OUT_OF_MEMORY, cx, _retval);
-
-    NS_ADDREF(ph);
-
-    if (!JS_SetPrivate(cx, sandbox, ph)) {
-        NS_RELEASE(ph);
+    if (!JS_SetPrivate(cx, sandbox, sop)) {
+        NS_RELEASE(sop);
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
     }
 
@@ -2367,8 +2387,9 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     if (JS_GetClass(cx, sandbox) != &SandboxClass)
         return NS_ERROR_INVALID_ARG;
 
-    PrincipalHolder *ph = (PrincipalHolder *)JS_GetPrivate(cx, sandbox);
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(ph);
+    nsIScriptObjectPrincipal *sop =
+        (nsIScriptObjectPrincipal*)JS_GetPrivate(cx, sandbox);
+    NS_ASSERTION(sop, "Invalid sandbox passed");
     nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
 
     JSPrincipals *jsPrincipals;
