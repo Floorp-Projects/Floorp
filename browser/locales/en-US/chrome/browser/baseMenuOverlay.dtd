@@ -27,8 +27,7 @@
 <!ENTITY openHelpMac2.frontendCommandkey   "?">
 <!ENTITY openHelpMac2.frontendModifiers    "accel">
 
-<!ENTITY helpReleaseNotes.accesskey     "N">
 <!ENTITY helpReleaseNotes.label         "Release Notes">
-<!ENTITY updateCmd.accesskey            "o">
+<!ENTITY helpReleaseNotes.accesskey     "N">
 <!ENTITY updateCmd.label                "Check for Updates...">
-
+<!ENTITY updateCmd.accesskey            "U">
