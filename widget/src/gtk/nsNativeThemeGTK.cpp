@@ -75,7 +75,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   // We have to call moz_gtk_shutdown before the event loop stops running.
   nsCOMPtr<nsIObserverService> obsServ =
     do_GetService("@mozilla.org/observer-service;1");
-  obsServ->AddObserver(this, "quit-application", PR_FALSE);
+  obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
 
   mInputCheckedAtom = do_GetAtom("_moz-input-checked");
   mInputAtom = do_GetAtom("input");
@@ -104,7 +104,7 @@ NS_IMETHODIMP
 nsNativeThemeGTK::Observe(nsISupports *aSubject, const char *aTopic,
                           const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aTopic, "quit-application")) {
+  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     moz_gtk_shutdown();
   } else {
     NS_NOTREACHED("unexpected topic");
