@@ -204,7 +204,7 @@ function URLFromSpec(spec)
  * convenience method for setting up the global connection "conn"
  */
 var conn;
-function createConn(host, bindname) {
+function createConn(host, port, bindname) {
     
     dump("in createConn\n");
 
@@ -218,7 +218,7 @@ function createConn(host, bindname) {
     }
 
     dump("about to call conn.init\n");
-    conn.init(host, -1, false, bindname, listener, null, 3);
+    conn.init(host, port, false, bindname, listener, null, 3);
 
     dump("about to call runEventPump\n");
     runEventPump();
