@@ -72,12 +72,12 @@ public:
   // nsIDOMHTMLOptGroupElement
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
-  // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  // nsGenericElement
+  virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
+                                        PRUint32 aIndex,
+                                        PRBool aRemove);
 
+  // nsIContent
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -164,43 +164,20 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
   }
 }
 
-// nsIContent
 nsresult
-nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
-{
-  // Since we're appending, the relevant option index to add after is found
-  // *after* this optgroup.
-  nsCOMPtr<nsISelectElement> sel;
-  GetSelect(getter_AddRefs(sel));
-  if (sel) {
-    sel->WillAddOptions(aKid, this, GetChildCount());
-  }
-
-  // Actually perform the append
-  return nsGenericHTMLElement::AppendChildTo(aKid, aNotify);
-}
-
-nsresult
-nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                     PRBool aNotify)
+nsHTMLOptGroupElement::WillAddOrRemoveChild(nsIContent* aKid,
+                                            PRUint32 aIndex,
+                                            PRBool aRemove)
 {
   nsCOMPtr<nsISelectElement> sel;
   GetSelect(getter_AddRefs(sel));
   if (sel) {
-    sel->WillAddOptions(aKid, this, aIndex);
+    if (aRemove) {
+      sel->WillRemoveOptions(this, aIndex);
+    } else {
+      sel->WillAddOptions(aKid, this, aIndex);
+    }
   }
 
-  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
-}
-
-nsresult
-nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  nsCOMPtr<nsISelectElement> sel;
-  GetSelect(getter_AddRefs(sel));
-  if (sel) {
-    sel->WillRemoveOptions(this, aIndex);
-  }
-
-  return nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+  return nsGenericHTMLElement::WillAddOrRemoveChild(aKid, aIndex, aRemove);
 }

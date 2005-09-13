@@ -219,11 +219,6 @@ public:
   NS_DECL_NSIDOMNSXBLFORMCONTROL
 
   // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -232,6 +227,11 @@ public:
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
+  // nsGenericElement
+  virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
+                                        PRUint32 aIndex,
+                                        PRBool aRemove);
+  
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
@@ -492,32 +492,18 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-
-// nsIContent
 nsresult
-nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+nsHTMLSelectElement::WillAddOrRemoveChild(nsIContent* aKid,
+                                          PRUint32 aIndex,
+                                          PRBool aRemove)
 {
-  WillAddOptions(aKid, this, GetChildCount());
+  if (aRemove) {
+    WillRemoveOptions(this, aIndex);
+  } else {
+    WillAddOptions(aKid, this, aIndex);
+  }
 
-  // Actually perform the append
-  return nsGenericHTMLFormElement::AppendChildTo(aKid, aNotify);
-}
-
-nsresult
-nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                   PRBool aNotify)
-{
-  WillAddOptions(aKid, this, aIndex);
-
-  return nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
-}
-
-nsresult
-nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
-{
-  WillRemoveOptions(this, aIndex);
-
-  return nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
+  return nsGenericHTMLFormElement::WillAddOrRemoveChild(aKid, aIndex, aRemove);
 }
 
 
