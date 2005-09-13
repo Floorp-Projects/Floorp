@@ -188,8 +188,8 @@ var BookmarksMenu = {
       return false;
     }
 
-    var bt = document.getElementById("bookmarks-ptf");
-    bt.focus(); // buttons in the bt have -moz-user-focus: ignore
+    var bm = document.getElementById("bookmarks-menu");
+    bm.focus();
 
     this._selection   = this.getBTSelection(target);
     this._orientation = this.getBTOrientation(aEvent, target);
