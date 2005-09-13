@@ -450,10 +450,9 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile()
- :  mFollowSymlinks(PR_FALSE)
+  : mDirty(PR_TRUE)
+  , mFollowSymlinks(PR_FALSE)
 {
-    MakeDirty();
-    memset(&mFileInfo64, 0, sizeof(mFileInfo64));
 }
 
 NS_METHOD
@@ -488,11 +487,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFile, nsIFile, nsILocalFileWi
 //-----------------------------------------------------------------------------
 
 nsLocalFile::nsLocalFile(const nsLocalFile& other)
-  : mDirty(other.mDirty)
+  : mDirty(PR_TRUE)
   , mFollowSymlinks(other.mFollowSymlinks)
   , mWorkingPath(other.mWorkingPath)
-  , mResolvedPath(other.mResolvedPath)
-  , mFileInfo64(other.mFileInfo64)
 {
 }
 
