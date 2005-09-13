@@ -2511,13 +2511,11 @@ PRBool nsWindow::OnScroll()
 
 NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
 {
-	const char *text = ToNewUTF8String(aTitle);
-	if(text && mView->LockLooper())
+	if(mView && mView->LockLooper())
 	{
-		mView->Window()->SetTitle(text);
+		mView->Window()->SetTitle(NS_ConvertUTF16toUTF8(aTitle).get());
 		mView->UnlockLooper();
 	}
-	delete [] text;
 	return NS_OK;
 }
 
