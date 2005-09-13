@@ -450,6 +450,16 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireDocLoadingEvent(PRBool aIsFinished)
 
   nsDocAccessible::FireDocLoadingEvent(aIsFinished);
 
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  if (!treeItem) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  if (sameTypeRoot != treeItem) {
+    return NS_OK; // We only fire MSAA doc loading events for root content frame
+  }
+
   if (aIsFinished) {
     // Use short timer before firing state change event for finished doc,
     // because the window is made visible asynchronously by Microsoft Windows
