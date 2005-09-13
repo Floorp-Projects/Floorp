@@ -127,12 +127,6 @@ public:
     virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute, PRInt32 aModType);
 
-    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus);
-
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);
     NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
