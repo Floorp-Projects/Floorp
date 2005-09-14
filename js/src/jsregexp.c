@@ -1093,10 +1093,7 @@ ParseTerm(CompilerState *state)
             if (state->flags & JSREG_FIND_PAREN_ERROR)
                 return JS_FALSE;
             if (num == OVERFLOW_VALUE) {
-                if (!JS_HAS_STRICT_OPTION(state->context)) {
-                    state->cp = termStart;
-                    goto doOctal;
-                }
+                /* Give a strict mode warning. */
                 if (!js_ReportCompileErrorNumber(state->context,
                                                  state->tokenStream,
                                                  JSREPORT_TS |
@@ -1107,7 +1104,22 @@ ParseTerm(CompilerState *state)
                                                  : JSMSG_BAD_BACKREF)) {
                     return JS_FALSE;
                 }
-                num = 0x10000;
+
+                /*
+                 * Note: ECMA 262, 15.10.2.9 says that we should throw a syntax
+                 * error here. However, for compatibility with IE, we treat the
+                 * whole backref as flat if the first character in it is not a
+                 * valid octal character, and as an octal escape otherwise.
+                 */
+                state->cp = termStart;
+                if (c >= '8') {
+                    /* Treat this as flat. termStart - 1 is the \. */
+                    c = '\\';
+                    goto asFlat;
+                }
+
+                /* Treat this as an octal escape. */
+                goto doOctal;
             }
             JS_ASSERT(1 <= num && num <= 0x10000);
             state->result = NewRENode(state, REOP_BACKREF);
