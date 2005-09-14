@@ -1370,6 +1370,20 @@ DocumentViewerImpl::Destroy()
 
     mSHEntry = nsnull;
 
+    // If we put ourselves into session history, make sure there aren't
+    // too many content viewers around.  Note: if max_viewers is set to 0,
+    // this can reenter Destroy() and dispose of this content viewer!
+
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryReferent(mContainer);
+    if (webNav) {
+      nsCOMPtr<nsISHistory> history;
+      webNav->GetSessionHistory(getter_AddRefs(history));
+      nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
+      if (historyInt) {
+        historyInt->EvictContentViewers();
+      }
+    }
+
     // Break the link from the document/presentation to the docshell, so that
     // link traversals cannot affect the currently-loaded document.
     // When the presentation is restored, Open() and InitInternal() will reset
@@ -1706,30 +1720,6 @@ DocumentViewerImpl::Show(void)
     nsCOMPtr<nsIContentViewer> prevViewer(mPreviousViewer);
     mPreviousViewer = nsnull;
     prevViewer->Destroy();
-
-    // Make sure we don't have too many cached ContentViewers
-    nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryReferent(mContainer);
-    if (treeItem) {
-      // We need to find the root DocShell since only that object has an
-      // SHistory and we need the SHistory to evict content viewers
-      nsCOMPtr<nsIDocShellTreeItem> root;
-      treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-      nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(root);
-      nsCOMPtr<nsISHistory> history;
-      webNav->GetSessionHistory(getter_AddRefs(history));
-      nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
-      if (historyInt) {
-        PRInt32 prevIndex,loadedIndex;
-        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
-        docShell->GetPreviousTransIndex(&prevIndex);
-        docShell->GetLoadedTransIndex(&loadedIndex);
-#ifdef DEBUG_PAGE_CACHE
-        printf("About to evict content viewers: prev=%d, loaded=%d\n",
-               prevIndex, loadedIndex);
-#endif
-        historyInt->EvictContentViewers(prevIndex, loadedIndex);
-      }
-    }
   }
 
   if (mWindow) {

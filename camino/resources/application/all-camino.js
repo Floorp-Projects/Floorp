@@ -127,3 +127,6 @@ pref("browser.tabs.loadInBackground", false);
 
 // use the html network errors rather than sheets
 pref("browser.xul.error_pages.enabled", true);
+
+// turn on bfcache optimizations
+pref("browser.sessionhistory.max_viewers", 3);

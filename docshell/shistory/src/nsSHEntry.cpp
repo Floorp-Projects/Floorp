@@ -200,38 +200,6 @@ nsSHEntry::GetContentViewer(nsIContentViewer **aResult)
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetAnyContentViewer(nsISHEntry **aOwnerEntry,
-                               nsIContentViewer **aResult)
-{
-  // Find a content viewer in the root node or any of its children,
-  // assuming that there is only one content viewer total in any one
-  // nsSHEntry tree
-  GetContentViewer(aResult);
-  if (*aResult) {
-#ifdef DEBUG_PAGE_CACHE 
-    printf("Found content viewer\n");
-#endif
-    *aOwnerEntry = this;
-    NS_ADDREF(*aOwnerEntry);
-    return NS_OK;
-  }
-  // The root SHEntry doesn't have a ContentViewer, so check child nodes
-  for (PRInt32 i = 0; i < mChildren.Count(); i++) {
-    nsISHEntry* child = mChildren[i];
-    if (child) {
-#ifdef DEBUG_PAGE_CACHE
-      printf("Evaluating SHEntry child %d\n", i);
-#endif
-      child->GetAnyContentViewer(aOwnerEntry, aResult);
-      if (*aResult) {
-        return NS_OK;
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSHEntry::SetSticky(PRBool aSticky)
 {
   mSticky = aSticky;
