@@ -590,6 +590,11 @@ protected:
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       mLSHE;
 
+    // Index into the SHTransaction list, indicating the previous and current
+    // transaction at the time that this DocShell begins to load
+    PRInt32                    mPreviousTransIndex;
+    PRInt32                    mLoadedTransIndex;
+
     // Editor stuff
     nsDocShellEditorData*      mEditorData;          // editor data, if any
 

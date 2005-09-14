@@ -214,7 +214,6 @@ pref("browser.search.update", true);
 
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
-pref("browser.sessionhistory.max_viewers", 3);
 
 // handle external links
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
