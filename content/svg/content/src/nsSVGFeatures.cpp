@@ -38,10 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
+#include "nsSVGUtils.h"
 
 // Test to see if a feature is implemented
 PRBool
 NS_SVG_TestFeature(const nsAString& fstr) {
+  if (!nsSVGUtils::SVGEnabled()) {
+    return PR_FALSE;
+  }
   nsAutoString lstr(fstr);
   lstr.StripWhitespace();
 

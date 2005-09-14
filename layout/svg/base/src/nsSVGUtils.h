@@ -37,6 +37,9 @@
 #ifndef NS_SVGUTILS_H
 #define NS_SVGUTILS_H
 
+// Need this to get nsPresContext
+#include "nsContentUtils.h"
+
 class nsPresContext;
 class nsIContent;
 class nsStyleCoord;
