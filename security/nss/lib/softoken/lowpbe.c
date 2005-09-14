@@ -249,7 +249,7 @@ nsspkcs5_PFXPBE(const SECHashObject *hashObj, NSSPKCS5PBEParameter *pbe_param,
 loser:
     if (state != NULL)
 	PORT_ZFree(state, state_len);
-    HMAC_Destroy(cx);
+    HMAC_Destroy(cx, PR_TRUE);
 
     if(rv != SECSuccess) {
 	SECITEM_ZfreeItem(ret_bits, PR_TRUE);
@@ -363,7 +363,7 @@ nsspkcs5_PBKFD2_F(const SECHashObject *hashobj, SECItem *pwitem, SECItem *salt,
     }
 loser:
     if (cx) {
-	HMAC_DestroyContext(cx);
+	HMAC_DestroyContext(cx, PR_TRUE);
     }
     if (last) {
 	PORT_ZFree(last,reaLastLength);

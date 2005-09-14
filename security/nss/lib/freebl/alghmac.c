@@ -44,19 +44,24 @@
 struct HMACContextStr {
     void *hash;
     const SECHashObject *hashobj;
+    PRBool        wasAllocated;
     unsigned char ipad[HMAC_PAD_SIZE];
     unsigned char opad[HMAC_PAD_SIZE];
 };
 
 void
-HMAC_Destroy(HMACContext *cx)
+HMAC_Destroy(HMACContext *cx, PRBool freeit)
 {
     if (cx == NULL)
 	return;
 
-    if (cx->hash != NULL)
+    PORT_Assert(!freeit == !cx->wasAllocated);
+    if (cx->hash != NULL) {
 	cx->hashobj->destroy(cx->hash, PR_TRUE);
-    PORT_ZFree(cx, sizeof(HMACContext));
+	PORT_Memset(cx, 0, sizeof *cx);
+    }
+    if (freeit)
+	PORT_Free(cx);
 }
 
 SECStatus
@@ -75,8 +80,8 @@ HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    cx->wasAllocated = PR_FALSE;
     cx->hashobj = hash_obj;
-
     cx->hash = cx->hashobj->create();
     if (cx->hash == NULL)
 	goto loser;
@@ -121,8 +126,9 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
     if (cx == NULL)
 	return NULL;
     rv = HMAC_Init(cx, hash_obj, secret, secret_len, isFIPS);
+    cx->wasAllocated = PR_TRUE;
     if (rv != SECSuccess) {
-	PORT_ZFree(cx, sizeof(HMACContext));
+	PORT_Free(cx); /* contains no secret info */
 	cx = NULL;
     }
     return cx;
@@ -171,6 +177,7 @@ HMAC_Clone(HMACContext *cx)
     if (newcx == NULL)
 	goto loser;
 
+    newcx->wasAllocated = PR_TRUE;
     newcx->hashobj = cx->hashobj;
     newcx->hash = cx->hashobj->clone(cx->hash);
     if (newcx->hash == NULL)
@@ -180,6 +187,6 @@ HMAC_Clone(HMACContext *cx)
     return newcx;
 
 loser:
-    HMAC_Destroy(newcx);
+    HMAC_Destroy(newcx, PR_TRUE);
     return NULL;
 }

@@ -122,12 +122,6 @@ sftk_FreePrivKey(NSSLOWKEYPrivateKey *key, PRBool freeit)
 }
 
 static void
-sftk_HMAC_Destroy(HMACContext *context, PRBool freeit)
-{
-    HMAC_Destroy(context);
-}
-
-static void
 sftk_Space(void *data, PRBool freeit)
 {
     PORT_Free(data);
@@ -1292,7 +1286,7 @@ sftk_doHMACInit(SFTKSessionContext *context,HASH_HashType hash,
     context->hashUpdate = (SFTKHash) HMAC_Update;
     context->end = (SFTKEnd) HMAC_Finish;
 
-    context->hashdestroy = (SFTKDestroy) sftk_HMAC_Destroy;
+    context->hashdestroy = (SFTKDestroy) HMAC_Destroy;
     intpointer = (CK_ULONG *) PORT_Alloc(sizeof(CK_ULONG));
     if (intpointer == NULL) {
 	return CKR_HOST_MEMORY;

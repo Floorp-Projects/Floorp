@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.22 2005/09/07 02:47:16 saul.edwards%sun.com Exp $ */
+/* $Id: loader.c,v 1.23 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -1487,11 +1487,11 @@ HASH_GetRawHashObject(HASH_HashType hashType)
 
 
 void
-HMAC_Destroy(HMACContext *cx)
+HMAC_Destroy(HMACContext *cx, PRBool freeit)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return;
-  (vector->p_HMAC_Destroy)(cx);
+  (vector->p_HMAC_Destroy)(cx, freeit);
 }
 
 HMACContext *

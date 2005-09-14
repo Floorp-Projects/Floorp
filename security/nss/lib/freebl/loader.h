@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.h,v 1.16 2005/09/07 02:47:16 saul.edwards%sun.com Exp $ */
+/* $Id: loader.h,v 1.17 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
 
 #ifndef _LOADER_H_
 #define _LOADER_H_ 1
@@ -444,7 +444,7 @@ struct FREEBLVectorStr {
  SECStatus (* p_HMAC_Finish)(HMACContext *cx, unsigned char *result, 
 			     unsigned int *result_len, 
 			     unsigned int max_result_len);
- void (* p_HMAC_Destroy)(HMACContext *cx);
+ void (* p_HMAC_Destroy)(HMACContext *cx, PRBool freeit);
 
  void (* p_RNG_SystemInfoForRNG)(void);
 
