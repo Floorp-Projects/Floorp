@@ -2685,7 +2685,6 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                   aRenderingContext.SetColor(currentBKColor);
                   aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
                 }
-                currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
              }
             }
             else {
@@ -3386,7 +3385,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
             if (isRightToLeftOnBidiPlatform)
               currentX -= newDimensions.width;
 #endif
-            if (isSelection)
+            if (isSelection && !isPaginated)
             {//DRAW RECT HERE!!!
               if (!isCurrentBKColorTransparent) {
                 aRenderingContext.SetColor(currentBKColor);
