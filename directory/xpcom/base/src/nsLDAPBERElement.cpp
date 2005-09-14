@@ -67,7 +67,7 @@ nsLDAPBERElement::Init(nsILDAPBERValue *aValue)
     return NS_ERROR_NOT_IMPLEMENTED;
   } 
 
-  mElement = ber_alloc();
+  mElement = ber_alloc_t(LBER_USE_DER);
   return mElement ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
