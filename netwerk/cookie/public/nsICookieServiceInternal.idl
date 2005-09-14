@@ -1,0 +1,79 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla networking engine (necko).
+ *
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <benjamin@smedbergs.us>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsICookieService.idl"
+
+/**
+ * Set and get cookie values using the security policy.
+ *
+ * @status INTERNAL  This interface is not frozen and is subject to change
+ *                   at any time.
+ */
+[scriptable, uuid(7cf4b3d9-bdc6-4763-b912-47c526aacc37)]
+interface nsICookieServiceInternal : nsICookieService
+{
+  /**
+   * Set a cookie name/value pair, performing privacy checks as appropriate.
+   *
+   * @see nsICookieService.setCookieString
+   * @see nsICookieManager2.add
+   */
+  void setCookieValue(in nsIURI aURI,
+                      in nsIChannel  aChannel,
+                      in AUTF8String aDomain,
+                      in AUTF8String aPath,
+                      in ACString    aName,
+                      in ACString    aValue,
+                      in boolean     aIsSession,
+                      in PRInt64     aExpiry);
+
+  /**
+   * Get a single cookie associated with the URI. This returns the first
+   * cookie which matches, if there are multiple cookies with the same name.
+   *
+   * @param aURI
+   *        the URI of the document for which cookies are being queried.
+   * @param aChannel
+   *        the channel used to load the document.  this parameter may be null,
+   *        but it is strongly recommended that a non-null value be provided to
+   *        ensure that the cookie privacy preferences are honored.
+   *
+   * @return the resulting cookie value
+   * @throws NS_ERROR_NOT_AVAILABLE if no cookie with this name has been set.
+   */
+  ACString getCookieValue(in nsIURI aURI, in nsIChannel aChannel, in ACString aCookieName);
+};
