@@ -98,7 +98,7 @@ var MigrationWizard = {
   // 1 - Import Source
   onImportSourcePageShow: function ()
   {
-    document.documentElement.getButton("back").disabled = true;
+    this._wiz.canRewind = false;
     
     // Figure out what source apps are are available to import from:
     var group = document.getElementById("importSourceGroup");
@@ -247,15 +247,15 @@ var MigrationWizard = {
       }
     }
 
-    this._wiz.getButton("next").disabled = !oneChecked;
+    this._wiz.canAdvance = oneChecked;
   },
   
   // 4 - Migrating
   onMigratingPageShow: function ()
   {
     this._wiz.getButton("cancel").disabled = true;
-    this._wiz.getButton("back").disabled = true;
-    this._wiz.getButton("next").disabled = true;
+    this._wiz.canRewind = false;
+    this._wiz.canAdvance = false;
     
     // When automigrating, show all of the data that can be received from this source.
     if (this._autoMigrate)
@@ -318,12 +318,13 @@ var MigrationWizard = {
       dump("*** done\n");
       if (this._autoMigrate) {
         // We're done now.
+        this._wiz.canAdvance = true;
         this._wiz.advance();
         setTimeout("close()", 5000);
       }
       else {
+        this._wiz.canAdvance = true;
         var nextButton = this._wiz.getButton("next");
-        nextButton.disabled = false;
         nextButton.click();
       }
       break;
@@ -336,8 +337,7 @@ var MigrationWizard = {
   onDonePageShow: function ()
   {
     this._wiz.getButton("cancel").disabled = true;
-    this._wiz.getButton("back").disabled = true;
-    this._wiz.getButton("finish").disabled = false;
+    this._wiz.canRewind = false;
     this._listItems("doneItems");
   }
 };
