@@ -231,11 +231,6 @@ void ns4xPluginStreamListener::CallURLNotify(NPReason reason)
     ("NPP URLNotify called: this=%p, npp=%p, notify=%p, reason=%d, url=%s\n",
     this, npp, mNotifyData, reason, mNotifyURL));
   }
-
-  // Let's not leak this stream listener. Release the reference to the stream listener 
-  // added for the notify callback in NewNotifyStream. 
-  // Note: This may destroy us if we are not being destroyed already.
-  NS_RELEASE_THIS();
 }
 
 
