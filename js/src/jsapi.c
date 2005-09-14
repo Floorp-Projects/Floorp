@@ -2029,13 +2029,15 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
     if (!atom)
         return NULL;
 
-    /* Create a prototype object for this class. */
-    proto = js_NewObject(cx, clasp, parent_proto, obj);
-    if (!proto)
+    if (!js_EnterLocalRootScope(cx))
         return NULL;
 
-    if (!js_EnterLocalRootScope(cx))
-        goto bad2;
+    /* Create a prototype object for this class. */
+    proto = js_NewObject(cx, clasp, parent_proto, obj);
+    if (!proto) {
+        named = JS_FALSE;
+        goto bad;
+    }
 
     if (!constructor) {
         /* Lacking a constructor, name the prototype (e.g., Math). */
@@ -2104,9 +2106,6 @@ bad:
     js_LeaveLocalRootScope(cx);
     if (named)
         (void) OBJ_DELETE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &rval);
-
-bad2:
-    cx->newborn[GCX_OBJECT] = NULL;
     return NULL;
 }
 
