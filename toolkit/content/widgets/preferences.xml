@@ -848,6 +848,7 @@
         <parameter name="aFeatures"/>
         <parameter name="aParams"/>
         <body>
+        <![CDATA[
           var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                              .getService(Components.interfaces.nsIWindowMediator);
           var win = aWindowType ? wm.getMostRecentWindow(aWindowType) : null;
@@ -858,10 +859,11 @@
           }
           else {
             var features = "resizable,dialog=no,centerscreen" + (aFeatures != "" ? ("," + aFeatures) : "");
-            var parentWindow = this.instantApply ? window : window.opener;
+            var parentWindow = (this.instantApply || !window.opener || window.opener.closed) ? window : window.opener;
             win = parentWindow.openDialog(aURL, "_blank", features, aParams);
           }
           return win;
+        ]]>
         </body>
       </method>
       
