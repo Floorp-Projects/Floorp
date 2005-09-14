@@ -238,6 +238,10 @@ nsresult nsRootAccessible::AddEventListeners()
     rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // capture NameChange events (fired whenever name changes, immediately after, whether focus moves or not)
+    rv = target->AddEventListener(NS_LITERAL_STRING("NameChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
     rv = target->AddEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -313,6 +317,7 @@ nsresult nsRootAccessible::RemoveEventListeners()
   if (target) { 
     target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
+    target->RemoveEventListener(NS_LITERAL_STRING("NameChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("AlertActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     target->RemoveEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
@@ -618,6 +623,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
       FireAccessibleFocusEvent(treeItemAccessible, targetNode, PR_TRUE);
     }
+    else if (eventType.LowerCaseEqualsLiteral("namechange")) {
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, 
+                                accessible, nsnull);
+    }
     else if (eventType.LowerCaseEqualsLiteral("select")) {
       // If multiselect tree, we should fire selectionadd or selection removed
       if (gLastFocusedNode == targetNode) {
@@ -692,6 +701,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
     }
     FireAccessibleFocusEvent(accessible, targetNode);
+  }
+  else if (eventType.LowerCaseEqualsLiteral("namechange")) {
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
+                              accessible, nsnull);
   }
   else if (eventType.EqualsLiteral("ValueChange")) {
     PRUint32 role;
