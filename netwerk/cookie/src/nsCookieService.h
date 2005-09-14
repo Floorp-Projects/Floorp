@@ -40,7 +40,7 @@
 #ifndef nsCookieService_h__
 #define nsCookieService_h__
 
-#include "nsICookieServiceInternal.h"
+#include "nsICookieService.h"
 #include "nsICookieManager.h"
 #include "nsICookieManager2.h"
 #include "nsIObserver.h"
@@ -55,9 +55,6 @@
 struct nsCookieAttributes;
 struct nsListIter;
 struct nsEnumerationData;
-
-class nsAutoVoidArray;
-
 class nsIPrefBranch;
 class nsICookieConsent;
 class nsICookiePermission;
@@ -152,7 +149,7 @@ class nsCookieEntry : public PLDHashEntryHdr
  * class declaration
  ******************************************************************************/
 
-class nsCookieService : public nsICookieServiceInternal
+class nsCookieService : public nsICookieService
                       , public nsICookieManager2
                       , public nsIObserver
                       , public nsSupportsWeakReference
@@ -162,7 +159,6 @@ class nsCookieService : public nsICookieServiceInternal
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICOOKIESERVICE
-    NS_DECL_NSICOOKIESERVICEINTERNAL
     NS_DECL_NSICOOKIEMANAGER
     NS_DECL_NSICOOKIEMANAGER2
 
@@ -175,9 +171,7 @@ class nsCookieService : public nsICookieServiceInternal
     void                          PrefChanged(nsIPrefBranch *aPrefBranch);
     nsresult                      Read();
     nsresult                      Write();
-    void                          GetCookieList(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const nsACString *aName, nsAutoVoidArray &aResult);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
-    void                          CheckAndAdd(nsIURI *aHostURI, nsIChannel *aChannel, nsCookieAttributes &aAttributes, nsCookieStatus aStatus, nsCookiePolicy aPolicy, const nsAFlatCString &aCookieHeader);
     void                          AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
     void                          RemoveCookieFromList(nsListIter &aIter);
     PRBool                        AddCookieToList(nsCookie *aCookie);
