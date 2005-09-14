@@ -1969,8 +1969,12 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
 
     if (m_fileSpec)
         rv = m_fileSpec->GetOutputStream(getter_AddRefs(m_outputStream));
-    if (NS_FAILED(rv) && m_messenger)
+    if (NS_FAILED(rv))
+    {
+      mCanceled = PR_TRUE;
+      if (m_messenger)
         m_messenger->Alert("saveAttachmentFailed");
+    }
     else if (!m_dataBuffer)
         m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
 
@@ -2025,7 +2029,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
   if (m_saveAllAttachmentsState)
   {
       m_saveAllAttachmentsState->m_curIndex++;
-      if (m_saveAllAttachmentsState->m_curIndex <
+      if (!mCanceled && m_saveAllAttachmentsState->m_curIndex <
           m_saveAllAttachmentsState->m_count)
       {
           nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
@@ -2061,7 +2065,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       else
       {
           // check if we're saving attachments prior to detaching them.
-        if (m_saveAllAttachmentsState->m_detachingAttachments)
+        if (m_saveAllAttachmentsState->m_detachingAttachments && !mCanceled)
         {
           nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
           m_messenger->DetachAttachments(state->m_count,
