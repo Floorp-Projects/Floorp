@@ -44,8 +44,8 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=6
-MOD_PATCH_VERSION=1
+MOD_MINOR_VERSION=7
+MOD_PATCH_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1797,6 +1797,13 @@ mips-sony-newsos*)
     AC_DEFINE(__svr4__)
     AC_DEFINE(SOLARIS)
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
+    # Define Solaris feature test macros.  (See the standards(5) man page.)
+    # We conform to SUS (XPG4v2).
+    AC_DEFINE(_XOPEN_SOURCE)
+    AC_DEFINE(_XOPEN_SOURCE_EXTENDED)
+    # But we also use interfaces and headers not defined by the standard.
+    AC_DEFINE(__EXTENSIONS__)
+    AC_DEFINE(HAVE_SOCKLEN_T)
     MDCPUCFG_H=_solaris.cfg
     PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
