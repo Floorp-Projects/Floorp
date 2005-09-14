@@ -429,8 +429,14 @@ nsIncrementalDownload::GetFinalURI(nsIURI **result)
 NS_IMETHODIMP
 nsIncrementalDownload::GetDestination(nsIFile **result)
 {
-  NS_IF_ADDREF(*result = mDest);
-  return NS_OK;
+  if (!mDest) {
+    *result = nsnull;
+    return NS_OK;
+  }
+  // Return a clone of mDest so that callers may modify the resulting nsIFile
+  // without corrupting our internal object.  This also works around the fact
+  // that some nsIFile impls may cache the result of stat'ing the filesystem.
+  return mDest->Clone(result);
 }
 
 NS_IMETHODIMP
