@@ -259,8 +259,6 @@ nsDocShell::nsDocShell():
     mMarginHeight(0),
     mItemType(typeContent),
     mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
-    mPreviousTransIndex(-1),
-    mLoadedTransIndex(-1),
     mEditorData(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
@@ -1709,20 +1707,6 @@ nsDocShell::SetUseErrorPages(PRBool aUseErrorPages)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetPreviousTransIndex(PRInt32 *aPreviousTransIndex)
-{
-    *aPreviousTransIndex = mPreviousTransIndex;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetLoadedTransIndex(PRInt32 *aLoadedTransIndex)
-{
-    *aLoadedTransIndex = mLoadedTransIndex;
-    return NS_OK;
-}
-
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeItem
 //*****************************************************************************   
@@ -2649,19 +2633,6 @@ nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
      * mOSHE. This mOSHE will be used as the identification
      * for this subframe in the  CloneAndReplace function.
      */
-
-    // In this case, we will end up calling AddEntry, which increases the
-    // current index by 1
-    nsCOMPtr<nsISHistory> rootSH;
-    GetRootSessionHistory(getter_AddRefs(rootSH));
-    if (rootSH) {
-        rootSH->GetIndex(&mPreviousTransIndex);
-        mLoadedTransIndex = mPreviousTransIndex + 1;
-#ifdef DEBUG_PAGE_CACHE
-        printf("Previous index: %d, Loaded index: %d\n\n", mPreviousTransIndex,
-               mLoadedTransIndex);
-#endif
-    }
 
     nsresult rv;
     nsCOMPtr<nsIDocShellHistory> parent =
@@ -4883,15 +4854,10 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
 
     // Avoid doing the work of saving the presentation state in the case where
     // the content viewer cache is disabled.
-    nsCOMPtr<nsISHistory> rootSH;
-    GetRootSessionHistory(getter_AddRefs(rootSH));
-    if (rootSH) {
-      nsCOMPtr<nsISHistoryInternal> shistInt(do_QueryInterface(rootSH));
-      PRInt32 maxViewers;
-      shistInt->GetHistoryMaxTotalViewers(&maxViewers);
-      if (maxViewers == 0)
+    PRInt32 maxViewers = 0;
+    mPrefs->GetIntPref("browser.sessionhistory.max_viewers", &maxViewers);
+    if (maxViewers == 0)
         return PR_FALSE;
-    }
 
     // Don't cache the content viewer if we're in a subframe and the subframe
     // pref is disabled.
@@ -5244,13 +5210,7 @@ nsDocShell::RestoreFromHistory()
     GetRootSessionHistory(getter_AddRefs(rootSH));
     if (rootSH) {
         nsCOMPtr<nsISHistoryInternal> hist = do_QueryInterface(rootSH);
-        rootSH->GetIndex(&mPreviousTransIndex);
         hist->UpdateIndex();
-        rootSH->GetIndex(&mLoadedTransIndex);
-#ifdef DEBUG_PAGE_CACHE
-        printf("Previous index: %d, Loaded index: %d\n\n", mPreviousTransIndex,
-                   mLoadedTransIndex);
-#endif
     }
 
     // Rather than call Embed(), we will retrieve the viewer from the session
@@ -5318,7 +5278,7 @@ nsDocShell::RestoreFromHistory()
 
     if (mContentViewer) {
         mContentViewer->Close(mSavingOldViewer ? mOSHE.get() : nsnull);
-        viewer->SetPreviousViewer(mContentViewer);
+        mContentViewer->Destroy();
     }
 
     mContentViewer.swap(viewer);
@@ -7253,15 +7213,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // SH. 
     if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
         nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
-        if (shInternal) {
-            rootSH->GetIndex(&mPreviousTransIndex);
+        if (shInternal)
             shInternal->UpdateIndex();
-            rootSH->GetIndex(&mLoadedTransIndex);
-#ifdef DEBUG_PAGE_CACHE
-            printf("Previous index: %d, Loaded index: %d\n\n",
-                   mPreviousTransIndex, mLoadedTransIndex);
-#endif
-        }
     }
     PRBool onLocationChangeNeeded = SetCurrentURI(aURI, aChannel,
                                                   aFireOnLocationChange);
@@ -7471,13 +7424,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
             nsCOMPtr<nsISHistoryInternal>
                 shPrivate(do_QueryInterface(mSessionHistory));
             NS_ENSURE_TRUE(shPrivate, NS_ERROR_FAILURE);
-            mSessionHistory->GetIndex(&mPreviousTransIndex);
             rv = shPrivate->AddEntry(entry, shouldPersist);
-            mSessionHistory->GetIndex(&mLoadedTransIndex);
-#ifdef DEBUG_PAGE_CACHE
-            printf("Previous index: %d, Loaded index: %d\n\n",
-                   mPreviousTransIndex, mLoadedTransIndex);
-#endif
         }
     }
     else {  

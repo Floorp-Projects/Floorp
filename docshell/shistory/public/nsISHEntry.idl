@@ -55,7 +55,7 @@ struct nsRect;
 %}
 [ref] native nsRect(nsRect);
 
-[scriptable, uuid(542a98b9-2889-4922-aaf4-02b6056f4136)]
+[scriptable, uuid(a19c4489-4a71-42e1-b150-61366547030d)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -177,11 +177,6 @@ interface nsISHEntry : nsIHistoryEntry
 
     /** Attribute that indicates if this entry is for a subframe navigation */
     void setIsSubFrame(in boolean aFlag);
-
-    /** Return any content viewer present in or below this node in the
-        nsSHEntry tree.  This will differ from contentViewer in the case
-        where a child nsSHEntry has the content viewer for this tree. */
-    nsIContentViewer getAnyContentViewer(out nsISHEntry ownerEntry);
 };
 
 
