@@ -142,7 +142,7 @@ calDavCalendar.prototype = {
 
     get mCalendarUri() { 
         calUri = this.mUri.clone();
-        calUri.spec += "calendar/";
+        calUri.spec += "/";
         return calUri;
     },
 
@@ -214,6 +214,10 @@ calDavCalendar.prototype = {
                       + " mean server malfunction/n");
                 retVal = Components.results.NS_ERROR_FAILURE;
             } else {
+                if (aStatusCode > 999) {
+                    aStatusCode = "0x" + aStatusCode.toString(16);
+                }
+
                 // XXX real error handling
                 debug("Error adding item: " + aStatusCode + "\n");
                 retVal = Components.results.NS_ERROR_FAILURE;
@@ -303,6 +307,9 @@ calDavCalendar.prototype = {
                 var retVal = Components.results.NS_OK;
 
             } else {
+                if (aStatusCode > 999) {
+                    aStatusCode = "0x " + aStatusCode.toString(16);
+                }
                 debug("Error modifying item: " + aStatusCode + "\n");
 
                 // XXX deal with non-existent item here, other
