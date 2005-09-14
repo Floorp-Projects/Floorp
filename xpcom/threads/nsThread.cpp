@@ -286,9 +286,17 @@ nsThread::Init(nsIRunnable* runnable,
     mDead = PR_FALSE;
     mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
                               priority, scope, state, stackSize);
+    /* As soon as we PR_Unlock(mStartLock), if mThread was successfully 
+     * created, it could run and exit very quickly. In which case, it 
+     * would null mThread and therefore if we check if (mThread) we could 
+     * confuse a successfully created, yet already exited thread with
+     * OOM - failure to create the thread. So instead we store a local thr 
+     * which we check to see if we really failed to create the thread.
+     */
+    PRThread *thr = mThread;
     PR_Unlock(mStartLock);
 
-    if (mThread == nsnull) {
+    if (thr == nsnull) {
         mDead = PR_TRUE;         // otherwise cleared in nsThread::Exit
         mRunnable = nsnull;      // otherwise cleared in nsThread::Main(when done)
         PR_DestroyLock(mStartLock);
