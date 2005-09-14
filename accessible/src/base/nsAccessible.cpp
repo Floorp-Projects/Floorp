@@ -1430,7 +1430,8 @@ nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
     if (tag == nsAccessibilityAtoms::label) {
       return walkUpContent;
     }
-    if (tag == nsAccessibilityAtoms::form) {
+    if (tag == nsAccessibilityAtoms::form ||
+        tag == nsAccessibilityAtoms::body) {
       // Reached top ancestor in form
       // There can be a label targeted at this control using the 
       // for="control_id" attribute. To save computing time, only 
