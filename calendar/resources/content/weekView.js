@@ -323,10 +323,12 @@ WeekView.prototype.drawEventBoxes = function()
     this.lowestStartHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
     this.highestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
     for each (event in this.eventList) {
-        if(event.end.hour > this.highestEndHour)
-            this.highestEndHour = event.end.hour;
-        if(event.start.hour < this.lowestStartHour)
-            this.lowestStartHour = event.start.hour;
+        if (!(event.start.isDate)) { 
+             if(event.end.hour > this.highestEndHour)
+                 this.highestEndHour = event.end.hour;
+             if(event.start.hour < this.lowestStartHour)
+                 this.lowestStartHour = event.start.hour;
+        }
     }
 
     //now hide those that aren't applicable

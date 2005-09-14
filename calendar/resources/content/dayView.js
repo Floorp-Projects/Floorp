@@ -370,10 +370,12 @@ DayView.prototype.drawEventBoxes = function()
     var sHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultstarthour", 8);
     var eHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
     for each (event in this.eventList) {        
-        if(event.end.hour > eHour)
-            eHour = event.end.hour;
-        if(event.start.hour < sHour)
-            sHour = event.start.hour;
+        if (!(event.start.isDate)) { 
+            if(event.end.hour > eHour)
+                eHour = event.end.hour;
+            if(event.start.hour < sHour)
+                sHour = event.start.hour;
+        }
     }
     var i;
     for (i = 0; i < 24; i++) {
