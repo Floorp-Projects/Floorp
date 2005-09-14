@@ -5511,6 +5511,15 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   return rv;
 }
 
+// Native code for window._content getter, this simply maps
+// window._content to window.content for backwards compatibility only.
+static JSBool JS_DLL_CALLBACK
+ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                    jsval *rval)
+{
+  return ::JS_GetProperty(cx, obj, "content", rval);
+}
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
@@ -5776,21 +5785,20 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // Map window._content to window.content for backwards
     // compatibility, this should spit out an message on the JS
     // console.
-    JSObject* getterObj;
-    rv = my_context->CompileFunction(obj,
-                                     nsCAutoString("_content"),
-                                     0,
-                                     nsnull,
-                                     NS_LITERAL_STRING("return this.content;"),
-                                     "javascript:this.content; // See " __FILE__,
-                                     1, // lineno
-                                     PR_FALSE,
-                                     (void **) &getterObj);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && getterObj, NS_ERROR_FAILURE);
 
-    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+    JSObject *windowObj = win->GetGlobalJSObject();
+
+    JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
+                                       windowObj, "_content");
+    if (!fun) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    JSObject *funObj = ::JS_GetFunctionObject(fun);
+
+    if (!::JS_DefineUCProperty(cx, windowObj, ::JS_GetStringChars(str),
                                ::JS_GetStringLength(str), JSVAL_VOID,
-                               (JSPropertyOp)getterObj, nsnull,
+                               (JSPropertyOp)funObj, nsnull,
                                JSPROP_ENUMERATE | JSPROP_GETTER |
                                JSPROP_SHARED)) {
       return NS_ERROR_FAILURE;
