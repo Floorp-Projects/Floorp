@@ -91,23 +91,22 @@ var gAdvancedPane = {
    * 
    * UI Components:                                     Preferences
    * 1 = Thunderbird checkbox                               i   = app.update.enabled
-   * 2 = Check Now button for Firefox                       ii  = app.update.auto
-   * 3 = When updates for Thunderbird are found label       iii = app.update.mode
-   * 4 = Automatic Radiogroup (Ask vs. Automatically)
-   * 5 = Warn before disabling extensions checkbox
+   * 2 = When updates for Thunderbird are found label       ii  = app.update.auto
+   * 3 = Automatic Radiogroup (Ask vs. Automatically)       iii = app.update.mode
+   * 4 = Warn before disabling extensions checkbox
    * 
    * States:
    * Element     p   val     locked    Disabled 
-   * 1,2         i   t/f     f         false 
+   * 1           i   t/f     f         false 
    *             i   t/f     t         true
    *             ii  t/f     t/f       false
    *             iii 0/1/2   t/f       false
-   * 3,4         i   t       t/f       false
+   * 2,3         i   t       t/f       false
    *             i   f       t/f       true
    *             ii  t/f     f         false
    *             ii  t/f     t         true
    *             iii 0/1/2   t/f       false
-   * 5           i   t       t/f       false
+   * 4           i   t       t/f       false
    *             i   f       t/f       true
    *             ii  t       t/f       false
    *             ii  f       t/f       true
@@ -122,10 +121,9 @@ var gAdvancedPane = {
         getService(Components.interfaces.nsIApplicationUpdateService);
 
     var enabledPref = document.getElementById("app.update.enabled");
-    
     var enableAppUpdate = document.getElementById("enableAppUpdate");
-    var appCheckNowButton = document.getElementById("appCheckNowButton");
-    appCheckNowButton.disabled = enableAppUpdate.disabled = !aus.canUpdate;
+
+    enableAppUpdate.disabled = !aus.canUpdate || enabledPref.locked;
   },
   
   updateAutoItems: function () 
@@ -136,7 +134,8 @@ var gAdvancedPane = {
     var updateModeLabel = document.getElementById("updateModeLabel");
     var updateMode = document.getElementById("updateMode");
     
-    var disable = !enabledPref.value || autoPref.locked;
+    var disable = enabledPref.locked || !enabledPref.value ||
+                  autoPref.locked;
     updateModeLabel.disabled = updateMode.disabled = disable;
   },
 
@@ -148,7 +147,8 @@ var gAdvancedPane = {
     
     var warnIncompatible = document.getElementById("warnIncompatible");
     
-    var disable = !enabledPref.value || !autoPref.value || modePref.locked;
+    var disable = enabledPref.locked || !enabledPref.value || autoPref.locked ||
+                  !autoPref.value || modePref.locked;
     warnIncompatible.disabled = disable;
   },
 
@@ -159,10 +159,9 @@ var gAdvancedPane = {
   updateAddonUpdateUI: function ()
   {
     var enabledPref = document.getElementById("extensions.update.enabled");
-    
     var enableAddonUpdate = document.getElementById("enableAddonUpdate");
-    var addonCheckNowButton = document.getElementById("addonCheckNowButton");
-    enableAddonUpdate.disabled = addonCheckNowButton.disabled = enabledPref.locked;
+
+    enableAddonUpdate.disabled = enabledPref.locked;
   },  
 
   /**

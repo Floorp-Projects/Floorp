@@ -198,20 +198,16 @@
         <tabpanel orient="vertical" align="start">
           <label>&autoCheck.label;</label>
           <vbox class="indent">
-            <hbox>
-              <checkbox id="enableAppUpdate"
-                        label="&enableAppUpdate.label;"
-                        accesskey="&enableAppUpdate.accesskey;"
-                        preference="app.update.enabled"
-                        xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
-            </hbox>
-            <hbox>
-              <checkbox id="enableAddonUpdate"
-                        label="&enableExtensionUpdate.label;"
-                        accesskey="&enableExtensionUpdate.accesskey;"
-                        preference="extensions.update.enabled"
-                        xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
-            </hbox>
+            <checkbox id="enableAppUpdate"
+                      label="&enableAppUpdate.label;"
+                      accesskey="&enableAppUpdate.accesskey;"
+                      preference="app.update.enabled"
+                      xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
+            <checkbox id="enableAddonUpdate"
+                      label="&enableExtensionUpdate.label;"
+                      accesskey="&enableExtensionUpdate.accesskey;"
+                      preference="extensions.update.enabled"
+                      xhtml2:role="wairole:checkbox" aaa:describedby="updateInfo"/>
           </vbox>
           <separator/>
           <label id="updateModeLabel">&whenUpdatesFound.label;</label>
