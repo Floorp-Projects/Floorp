@@ -30,4 +30,4 @@
 <!ENTITY helpReleaseNotes.label         "Release Notes">
 <!ENTITY helpReleaseNotes.accesskey     "N">
 <!ENTITY updateCmd.label                "Check for Updates...">
-<!ENTITY updateCmd.accesskey            "U">
+<!ENTITY updateCmd.accesskey            "o">
