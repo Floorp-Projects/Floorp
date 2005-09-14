@@ -176,11 +176,11 @@ nsDebugImpl::Assertion(const char *aStr, const char *aExpr, const char *aFile, P
      return NS_OK;
 
 #ifndef WINCE // we really just want to crash for now
-  static int ignoreDebugger;
-  if (!ignoreDebugger) {
-    const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
-    ignoreDebugger = 1 + !(shouldIgnoreDebugger && strcmp(shouldIgnoreDebugger, "1"));
-  }
+   static int ignoreDebugger;
+   if (!ignoreDebugger) {
+     const char *shouldIgnoreDebugger = getenv("XPCOM_DEBUG_DLG");
+     ignoreDebugger = 1 + (shouldIgnoreDebugger && !strcmp(shouldIgnoreDebugger, "1"));
+   }
    if((ignoreDebugger == 2) || !InDebugger())
       {
       DWORD code = IDRETRY;
