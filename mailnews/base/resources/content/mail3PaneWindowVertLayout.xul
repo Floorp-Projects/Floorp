@@ -154,6 +154,8 @@
 
   <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
+    <toolbar id="msgToolbar"/>
+    <toolbar id="msgLocationToolbar"/>
   </toolbox>
 
   <!-- The main mail three pane frame -->
@@ -168,7 +170,7 @@
       </splitter>
 
       <box id="messagesBox" orient="vertical" flex="1">
-        <hbox id="searchBox"/>
+        <hbox id="searchBoxHolder"/>
         <box id="threadPaneBox" orient="horizontal" flex="1" minheight="100" height="100" persist="height">
           <tree id="threadTree" flex="1" minwidth="100" width="100" persist="width" context="threadPaneContext" class="window-focusborder" focusring="false"/>
           <vbox id="accountCentralBox" flex="1" collapsed="true">

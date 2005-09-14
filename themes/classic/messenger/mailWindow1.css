@@ -91,14 +91,22 @@
 
 #threadTree,
 #accountCentralBox,
-#searchBox {
+#searchBoxHolder > #searchBox {
   border-left: 2px solid;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
-#searchBox {
+#searchBoxHolder > #searchBox {
   border-top: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDShadow;
+}
+
+#locationIcon {
+  list-style-image: none;
+}
+
+#locationFolders {
+  width: 20em;
 }
 
 /* ..... message pane adjustments ..... */

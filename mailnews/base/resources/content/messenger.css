@@ -138,10 +138,17 @@ searchterm {
   -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchpopup");
 }
 
+#locationPopup {
+  display: -moz-popup;
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#locationpopup");
+  visibility: visible;
+}
+
 .foldersTree
 {
   margin: 0px;
   border: none;
+  -moz-appearance: none;
   -moz-user-focus: ignore;
 }
 

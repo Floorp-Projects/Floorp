@@ -160,7 +160,7 @@
 <!ENTITY showSearchToolbarCmd.label		"Search Bar">
 <!ENTITY showSearchToolbarCmd.accesskey	"e">
 
-<!ENTITY showLocationToolbarCmd.label		".Location Toolbar">
+<!ENTITY showLocationToolbarCmd.label "Location Toolbar">
 <!ENTITY showLocationToolbarCmd.accesskey "L">
 
 <!ENTITY messagePaneLayoutStyle.label "Layout">
@@ -471,6 +471,7 @@
 <!--Tooltips-->
 <!ENTITY menuBar.tooltip "Menu Bar">
 <!ENTITY mailToolbar.tooltip "Mail Toolbar">
+<!ENTITY locationToolbar.tooltip "Location Toolbar">
 <!ENTITY advancedButton.tooltip "Advanced message search">
 <!ENTITY clearButton.tooltip "Clear the search criteria and show all messages">
 <!ENTITY getMsgButton.tooltip "Get new messages">

@@ -89,17 +89,25 @@
 
 #threadTree,
 #accountCentralBox,
-#searchBox,
+#searchBoxHolder > #searchBox,
 #messagepanebox {
   border-left: 2px solid;
   -moz-border-left-colors: #AAB4BF #3B414F;
 }
 
-#searchBox {
+#searchBoxHolder > #searchBox {
   border-top: 1px solid #EEF0F3;
   border-right: 1px solid #A5ABB0;
   border-bottom: 2px solid;
   -moz-border-bottom-colors: #5D616E #BEC3D3;
+}
+
+#locationIcon {
+  list-style-image: none;
+}
+
+#locationFolders {
+  width: 20em;
 }
 
 /* ..... message pane adjustments ..... */

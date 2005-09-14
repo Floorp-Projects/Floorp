@@ -22,6 +22,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+  Neil Rashbrook <neil@parkwaycc.co.uk>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1216,6 +1217,13 @@
            accesskey="&showMessengerToolbarCmd.accesskey;"
            oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
            checked="true"/>
+          <menuitem id="menu_showLocationToolbar"
+                    type="checkbox"
+                    label="&showLocationToolbarCmd.label;"
+                    accesskey="&showLocationToolbarCmd.accesskey;"
+                    oncommand="goToggleLocationToolbar('true');"
+                    observes="mailHideMenus"
+                    checked="false" persist="checked"/>
           <menuitem id="menu_showSearchToolbar"
            type="checkbox"
            label="&showSearchToolbarCmd.label;"
@@ -1355,8 +1363,10 @@
       <menuitem id="pageSourceMenuItem" label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" command="cmd_viewPageSource"/>
     </menupopup>
   </menu>
-  <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
-    <menupopup  onpopupshowing="InitGoMessagesMenu();">
+  <menu id="goMenu" label="&goMenu.label;" accesskey="&goMenu.accesskey;" datasources="rdf:null"
+        oncommand="SelectFolder(event.target.getAttribute('value'));"
+        sortResource="http://home.netscape.com/NC-rdf#FolderTreeName" sortDirection="ascending">
+    <menupopup onpopupshowing="InitGoMessagesMenu();">
       <menu id="goNextMenu" label="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
         <menupopup>
           <menuitem label="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" command="cmd_nextMsg"/>
@@ -1373,11 +1383,57 @@
           <menuitem label="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" command="cmd_previousFlaggedMsg"/>
         </menupopup>
       </menu>
-      <menuseparator id="goStartPageSeparator" observes="mailHideMenus"/>
+      <menuseparator observes="mailHideMenus"/>
       <menuitem id="goStartPage" label="&startPageCmd.label;"
                 accesskey="&startPageCmd.accesskey;" command="cmd_goStartPage"
                 observes="mailHideMenus"/>
+      <menuseparator observes="mailHideMenus"/>
     </menupopup>
+    <template>
+      <rule iscontainer="true" isempty="false">
+        <menupopup>
+          <menu uri="rdf:*" class="folderMenuItem menu-iconic"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+              HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+              NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
+              SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+              label="rdf:http://home.netscape.com/NC-rdf#Name">
+            <menupopup>
+              <menuitem value="rdf:*" 
+                  class="folderMenuItem menuitem-iconic"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                  HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                  NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
+                  SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <menuseparator/>
+            </menupopup>
+          </menu>
+        </menupopup>
+      </rule>
+      <rule>
+        <menupopup>
+          <menuitem uri="rdf:*" value="rdf:*" class="folderMenuItem menuitem-iconic"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+              HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+              NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
+              SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+        </menupopup>
+      </rule>
+    </template>
   </menu>
 
   <menu label="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
@@ -1845,7 +1901,17 @@
   </toolbar>
 </toolbox>
 
-<hbox id="searchBox" persist="collapsed" align="center">
+<toolbar id="msgLocationToolbar" collapsed="true" persist="collapsed" grippytooltiptext="&locationToolbar.tooltip;">
+  <hbox align="center" context="folderPaneContext">
+    <image id="locationIcon" class="folderMenuItem"/>
+    <menulist id="locationFolders" class="folderMenuItem"
+              label=" " crop="center">
+      <menupopup id="locationPopup" height="400"
+                 oncommand="OnLocationTreeSelect(this);"/>
+    </menulist>
+  </hbox>
+
+<hbox id="searchBox" persist="collapsed" align="center" flex="1">
   <label id="searchCriteria" value="&SearchSubjectOrSender.label;" control="searchInput" 
          accesskey="&SearchSubjectOrSender.accesskey;"/>
   <textbox id="searchInput" flex="5" onfocus="this.select();" onclick="this.select();" oninput="onSearchInput(false);" onkeypress="onSearchKeyPress(event);"/>
@@ -1854,6 +1920,7 @@
   <button id="advancedButton" label="&advancedButton.label;" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"
           accesskey="&advancedButton.accesskey;"/>
 </hbox>
+</toolbar>
 
 <!-- The msgNotificationBar appears on top of the message and displays 
      information like: junk, contains remote images, or is a suspected phishing URL 

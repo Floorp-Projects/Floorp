@@ -1765,6 +1765,7 @@
                 event.stopPropagation();
                 switch (event.keyCode) {
                   case event.DOM_VK_ESCAPE:
+                  case event.DOM_VK_F4:
                     this.self.hidePopup();
                     return;
                   case event.DOM_VK_ENTER:
@@ -1837,8 +1838,12 @@
                 }
               }
             }
-            var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-            var index = this.tree.builderView.getIndexOfResource(RDF.GetResource(this.parentNode.getAttribute("uri")));
+            var index = -1;
+            var uri = this.parentNode.getAttribute("uri");
+            if (uri) {
+              var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+              index = view.getIndexOfResource(RDF.GetResource(uri));
+            }
             view.selection.select(index);
             return index;
           ]]>

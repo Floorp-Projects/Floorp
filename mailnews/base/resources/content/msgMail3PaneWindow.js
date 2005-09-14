@@ -122,6 +122,7 @@ var folderListener = {
       if (item == msgWindow.openFolder) {
         if(property.toString() == "TotalMessages" || property.toString() == "TotalUnreadMessages") {
           UpdateStatusMessageCounts(msgWindow.openFolder);
+          UpdateLocationBar(item);
         }      
       }
     },
@@ -889,6 +890,7 @@ function AddToSession()
 function InitPanes()
 {
     OnLoadFolderPane();
+    OnLoadLocationTree();
     OnLoadThreadPane();
     SetupCommandUpdateHandlers();
 }
@@ -897,6 +899,8 @@ function InitializeDataSources()
 {
 	//Setup common mailwindow stuff.
 	AddDataSources();
+
+	SetupMoveCopyMenus('goMenu', accountManagerDataSource, folderDataSource);
 
 	//To threadpane move context menu
 	SetupMoveCopyMenus('threadPaneContext-moveMenu', accountManagerDataSource, folderDataSource);
@@ -1018,6 +1022,63 @@ function UpdateAttachmentCol(aFirstTimeFlag)
     attachmentCol.addEventListener("DOMAttrModified", OnAttachmentColAttrModified, false);
   else
     threadTree.treeBoxObject.clearStyleAndImageCaches();
+}
+
+function OnLocationToolbarAttrModified(event)
+{
+    if (!/collapsed/.test(event.attrName))
+        return;
+    var searchBox = document.getElementById("searchBox");
+    var desiredParent = document.getElementById("msgLocationToolbar");
+    if (desiredParent.getAttribute("collapsed") == "true" ||
+        desiredParent.getAttribute("moz-collapsed") == "true")
+        desiredParent = document.getElementById("searchBoxHolder");
+    if (searchBox.parentNode != desiredParent)
+        desiredParent.appendChild(searchBox);
+}
+
+function OnLoadLocationTree()
+{
+    var locationTree = document.getElementById('locationPopup').tree;
+    locationTree.database.AddDataSource(accountManagerDataSource);
+    locationTree.database.AddDataSource(folderDataSource);
+    locationTree.setAttribute("ref", "msgaccounts:/");
+    var toolbar = document.getElementById("msgLocationToolbar");
+    toolbar.addEventListener("DOMAttrModified", OnLocationToolbarAttrModified, false);
+    OnLocationToolbarAttrModified({attrName:"collapsed"});
+}
+
+function OnLocationTreeSelect(menulist)
+{
+    SelectFolder(menulist.getAttribute('uri'));
+}
+
+function UpdateLocationBar(resource)
+{
+    var tree = GetFolderTree();
+    var folders = document.getElementById('locationFolders');
+    var icon = document.getElementById('locationIcon');
+    var names = ['BiffState', 'NewMessages', 'HasUnreadMessages',
+        'SpecialFolder', 'IsServer', 'IsSecure', 'ServerType', 'NoSelect'];
+    var label = GetFolderAttribute(tree, resource, 'FolderTreeName');
+    folders.setAttribute("label", label);
+    for (var i in names) {
+        var name = names[i];
+        var value = GetFolderAttribute(tree, resource, name);
+        folders.setAttribute(name, value);
+        icon.setAttribute(name, value);
+    }
+    folders.setAttribute('uri', resource.Value);
+}
+
+function goToggleLocationToolbar(toggle)
+{
+    // XXX hidden doesn't work, use collapsed instead
+    var menu = document.getElementById("menu_showLocationToolbar");
+    var toolbar = document.getElementById("msgLocationToolbar");
+    var checked = toolbar.collapsed;
+    menu.setAttribute('checked', checked);
+    toolbar.setAttribute('collapsed', !checked);
 }
 
 function GetFolderDatasource()

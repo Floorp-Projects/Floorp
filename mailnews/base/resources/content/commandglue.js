@@ -176,6 +176,8 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   if (uri == gCurrentLoadingFolderURI)
     return;
 
+  SetUpToolbarButtons(uri);
+
   // hook for extra toolbar items
   var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   observerService.notifyObservers(window, "mail:setupToolbarItems", uri);
@@ -363,7 +365,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // that should have initialized gDBView, now re-root the thread pane
   RerootThreadPane();
 
-  SetUpToolbarButtons(uri);
+  UpdateLocationBar(newFolder);
 
   UpdateStatusMessageCounts(newFolder);
   
@@ -831,6 +833,7 @@ function FolderPaneSelectionChange()
 
         folderSelection.getRangeAt(0, startIndex, endIndex);
         var folderResource = GetFolderResource(folderTree, startIndex.value);
+        UpdateLocationBar(folderResource);
         var uriToLoad = folderResource.Value;
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgFolder == gMsgFolderSelected)
