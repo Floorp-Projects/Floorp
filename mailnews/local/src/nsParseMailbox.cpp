@@ -1561,6 +1561,7 @@ PRInt32 nsParseNewMailState::PublishMsgHeader(nsIMsgWindow *msgWindow)
       m_inboxFileStream->flush();
       PRUint32 msgOffset;
       (void) m_newMsgHdr->GetMessageOffset(&msgOffset);
+      m_curHdrOffset = msgOffset;
 
       nsCOMPtr<nsIMsgIncomingServer> server;
       nsresult rv = m_rootFolder->GetServer(getter_AddRefs(server));
@@ -1665,7 +1666,6 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, PRUint32 msgOffset)
 {
   m_msgMovedByFilter = PR_FALSE;
-  m_curHdrOffset = msgOffset;
 
   if (!m_disableFilters)
   {
