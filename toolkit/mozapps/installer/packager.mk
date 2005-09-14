@@ -55,7 +55,11 @@ else
 ifeq (,$(filter-out SunOS, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = BZ2
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+MOZ_PKG_FORMAT  = BZ2
+else
 MOZ_PKG_FORMAT  = TGZ
+endif
 endif
 INSTALLER_DIR   = unix
 endif
