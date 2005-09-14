@@ -2178,14 +2178,7 @@ function initLanguageMenu()
 
   // Load the language string bundle.
   var languageBundle = document.getElementById("languageBundle");
-  var regionBundle;
-  // If we have a language string bundle, load the region string bundle.
-  if (languageBundle)
-    regionBundle = document.getElementById("regionBundle");
-
-  var menuStr2;
   var isoStrArray;
-  var defaultItem = null;
   var langId;
   var i;
 
@@ -2201,15 +2194,14 @@ function initLanguageMenu()
       if (languageBundle && isoStrArray[0])
         dictList[i][0] = languageBundle.getString(isoStrArray[0].toLowerCase());
 
-      if (regionBundle && dictList[i][0] && isoStrArray.length > 1 && isoStrArray[1])
-      {
-        menuStr2 = regionBundle.getString(isoStrArray[1].toLowerCase());
-        if (menuStr2)
-          dictList[i][0] = dictList[i][0] + "/" + menuStr2;
-      }
-
+      // the user needs to be able to distinguish between the UK English dictionary
+      // and say the United States English Dictionary. If we have a isoStr value then
+      // wrap it in parentheses and append it to the menu item string. i.e.
+      // English (US) and English (UK)
       if (!dictList[i][0])
         dictList[i][0] = dictList[i][1];
+      else if (isoStrArray.length > 1 && isoStrArray[1]) // if we have a language ID like US or UK, append it to the menu item
+        dictList[i][0] += ' (' + isoStrArray[1] + ')';
     } catch (ex) {
       // GetString throws an exception when
       // a key is not found in the bundle. In that
