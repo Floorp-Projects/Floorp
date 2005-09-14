@@ -553,5 +553,11 @@ function ModifyPref(entry)
       gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
     }
   }
+
+  // Fire event for accessibility
+  var event = document.createEvent('Events');
+  event.initEvent('NameChange', false, true);
+  document.getElementById("configTree").dispatchEvent(event);
+
   return true;
 }
