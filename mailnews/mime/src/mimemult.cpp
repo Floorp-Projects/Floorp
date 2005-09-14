@@ -270,14 +270,6 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
               MimeWriteAString(obj, nsDependentCString(contentType));
               PR_Free(contentType);
             }
-            char *contentEncoding = MimeHeaders_get(mult->hdrs, "Content-Transfer-Encoding", PR_FALSE, PR_FALSE);
-            if (contentEncoding)
-            {
-              MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
-              MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Transfer-Encoding: "));
-              MimeWriteAString(obj, nsDependentCString(contentEncoding));
-              PR_Free(contentEncoding);
-            }
             MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
             MimeWriteAString(obj, NS_LITERAL_CSTRING("Content-Disposition: attachment; filename=\""));
             MimeWriteAString(obj, fileName);
