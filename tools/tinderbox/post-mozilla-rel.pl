@@ -298,10 +298,10 @@ sub packit {
     } elsif (is_linux()) {
       TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
       if ($Settings::stub_installer) {
-        TinderUtils::run_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
+        TinderUtils::run_shell_command "cp $package_location/stub/*.tar.* $stagedir/";
       }
       if ($Settings::sea_installer) {
-        TinderUtils::run_shell_command "cp $package_location/sea/*.tar.gz $stagedir/";
+        TinderUtils::run_shell_command "cp $package_location/sea/*.tar.* $stagedir/";
       }
       if ($push_raw_xpis) {
         my $xpi_loc = $package_location;
@@ -344,9 +344,9 @@ sub packit {
       # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
       # .../*.dmg if it exists.
       my @dmg;
-      @dmg = grep { -f $_ } <${package_location}/../*.dmg.gz>;
+      @dmg = grep { -f $_ } glob "${package_location}/../*.dmg.gz";
       if ( scalar(@dmg) eq 0 ) {
-        @dmg = grep { -f $_ } <${package_location}/../*.dmg>;
+        @dmg = grep { -f $_ } glob "${package_location}/../*.dmg";
       }
 
       if ( scalar(@dmg) gt 0 ) {
@@ -374,7 +374,7 @@ sub packit {
       if ($Settings::package_creation_path eq "/xpinstall/packager") {
         $archive_loc = "$archive_loc/dist";
       }
-      TinderUtils::run_shell_command "cp $archive_loc/*.tar.gz $stagedir/";
+      TinderUtils::run_shell_command "cp $archive_loc/*.tar.* $stagedir/";
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
         TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
@@ -384,6 +384,29 @@ sub packit {
   }
 
   if ($cachebuild and $Settings::update_package) {
+    update_create_package( builddir => $builddir,
+                           stagedir => $stagedir,
+                           url => $url,
+                         );
+  }
+
+  # need to reverse status, since it's a "unix" truth value, where 0 means 
+  # success
+  return ($status)?0:1;
+}
+
+sub update_create_package {
+    my %args = @_;
+
+    my $objdir = $args{'builddir'};
+    my $stagedir = $args{'stagedir'};
+    my $distdir = $args{'distdir'};
+    my $url = $args{'url'};
+
+    # $distdir refers to the directory containing the app we plan to package.
+    # Note: Other uses of $objdir/dist should not be changed to use $distdir.
+    $distdir = "$objdir/dist" if !defined($distdir);
+
     my($update_product, $update_version, $update_platform);
     my($update_appv, $update_extv);
 
@@ -424,7 +447,7 @@ sub packit {
 
     # We're making an update.
     TinderUtils::print_log "\nGenerating complete update...\n";
-    TinderUtils::run_shell_command "make -C $builddir/tools/update-packaging full-update STAGE_DIR=$stagedir";
+    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$stagedir DIST=$distdir";
 
     my $update_file = "update.mar";
     my @updatemar;
@@ -439,15 +462,15 @@ sub packit {
 
     if ( -f $update_path ) {
       # Make update dist directory.
-      TinderUtils::run_shell_command "mkdir -p $builddir/dist/update/";
-      my $buildid = `cd $builddir/config/ && cat build_number`;
+      TinderUtils::run_shell_command "mkdir -p $objdir/dist/update/";
+      my $buildid = `cd $objdir/config/ && cat build_number`;
       chomp($buildid);
       TinderUtils::print_log "\nGathering complete update info...\n";
       TinderUtils::print_log "Got build ID $buildid.\n";
       # Gather stats for update file.
       update_create_stats( update => $update_path,
                            type => "complete",
-                           output_file => "$builddir/dist/update/update.snippet",
+                           output_file => "$objdir/dist/update/update.snippet",
                            url => $update_fullurl,
                            buildid => $buildid,
                            appversion => $update_appv,
@@ -463,7 +486,7 @@ sub packit {
           $path = "$path/$update_product/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
       } else {
           TinderUtils::print_log "\nNot pushing first-gen update info...\n";
       }
@@ -475,7 +498,7 @@ sub packit {
           $path = "$path/$update_product/$update_version/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
       }
 
       # Push the build schema 2 data.
@@ -485,7 +508,7 @@ sub packit {
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/en-US";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $builddir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt";
       }
 
       TinderUtils::print_log "\nCompleted pushing update info...\n";
@@ -493,13 +516,8 @@ sub packit {
     } else {
       TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
-  } # end if $update_package
 
-  NOUPDATE:
-
-  # need to reverse status, since it's a "unix" truth value, where 0 means 
-  # success
-  return ($status)?0:1;
+    NOUPDATE:
 }
 
 sub update_create_stats {
@@ -667,10 +685,10 @@ sub packit_l10n {
         }
       } elsif (is_linux()) {
         if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
-          run_locale_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
+          run_locale_shell_command "cp $package_location/stub/*.tar.* $stagedir/";
         }
         if ($Settings::sea_installer && $tinderstatus ne 'busted' ) {
-          run_locale_shell_command "cp $package_location/sea/*.tar.gz $stagedir/";
+          run_locale_shell_command "cp $package_location/sea/*.tar.* $stagedir/";
         }
       }
     } # do_installer
@@ -711,7 +729,7 @@ sub packit_l10n {
         if ($Settings::package_creation_path eq "/xpinstall/packager") {
           $archive_loc = "$archive_loc/dist";
         }
-        run_locale_shell_command "cp $archive_loc/*$locale*.tar.gz $stagedir/";
+        run_locale_shell_command "cp $archive_loc/*$locale*.tar.* $stagedir/";
       }
     }
 
