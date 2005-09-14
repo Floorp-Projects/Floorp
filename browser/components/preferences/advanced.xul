@@ -144,24 +144,18 @@
         <tabpanel orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
           <vbox class="indent" id="autoUpdateGroup" xhtml2:role="wairole:groupbox">
-            <hbox>
-              <checkbox id="enableAppUpdate"
-                        label="&enableAppUpdate.label;"
-                        accesskey="&enableAppUpdate.accesskey;"
-                        preference="app.update.enabled"/>
-            </hbox>
-            <hbox>
-              <checkbox id="enableAddonUpdate"
-                        label="&enableExtensionUpdate.label;"
-                        accesskey="&enableExtensionUpdate.accesskey;"
-                        preference="extensions.update.enabled"/>
-            </hbox>
-            <hbox>
-              <checkbox id="enableSearchUpdate"
-                        label="&enableSearchUpdate.label;"
-                        accesskey="&enableSearchUpdate.accesskey;"
-                        preference="browser.search.update"/>
-            </hbox>
+            <checkbox id="enableAppUpdate"
+                      label="&enableAppUpdate.label;"
+                      accesskey="&enableAppUpdate.accesskey;"
+                      preference="app.update.enabled"/>
+            <checkbox id="enableAddonUpdate"
+                      label="&enableExtensionUpdate.label;"
+                      accesskey="&enableExtensionUpdate.accesskey;"
+                      preference="extensions.update.enabled"/>
+            <checkbox id="enableSearchUpdate"
+                      label="&enableSearchUpdate.label;"
+                      accesskey="&enableSearchUpdate.accesskey;"
+                      preference="browser.search.update"/>
           </vbox>
           <separator/>
           <label id="updateModeLabel" control="updateMode">&whenUpdatesFound.label;</label>
