@@ -1,5 +1,5 @@
 // vim:ts=2:sw=2:et:
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -371,9 +371,8 @@ nsCookieService::GetSingleton()
  * public methods
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS6(nsCookieService,
+NS_IMPL_ISUPPORTS5(nsCookieService,
                    nsICookieService,
-                   nsICookieServiceInternal,
                    nsICookieManager,
                    nsICookieManager2,
                    nsIObserver,
@@ -482,19 +481,36 @@ nsCookieService::Observe(nsISupports     *aSubject,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCookieService::GetCookieString(nsIURI     *aHostURI,
+                                 nsIChannel *aChannel,
+                                 char       **aCookie)
+{
+  // try to determine first party URI
+  nsCOMPtr<nsIURI> firstURI;
+  if (aChannel) {
+    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
+    if (httpInternal)
+      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
+  }
+
+  return GetCookieStringFromHttp(aHostURI, firstURI, aChannel, aCookie);
+}
+
 // helper function for GetCookieStringFromHttp
 static inline PRBool ispathdelimiter(char c) { return c == '/' || c == '?' || c == '#' || c == ';'; }
 
-void
-nsCookieService::GetCookieList(nsIURI           *aHostURI,
-                               nsIURI           *aFirstURI,
-                               nsIChannel       *aChannel,
-                               const nsACString *aName,
-                               nsAutoVoidArray  &aResult)
+NS_IMETHODIMP
+nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
+                                         nsIURI     *aFirstURI,
+                                         nsIChannel *aChannel,
+                                         char       **aCookie)
 {
+  *aCookie = nsnull;
+
   if (!aHostURI) {
     COOKIE_LOGFAILURE(GET_COOKIE, nsnull, nsnull, "host URI is null");
-    return;
+    return NS_OK;
   }
 
   // check default prefs
@@ -504,7 +520,7 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
   switch (cookieStatus) {
   case nsICookie::STATUS_REJECTED:
   case STATUS_REJECTED_WITH_ERROR:
-    return;
+    return NS_OK;
   }
 
   // get host and path from the nsIURI
@@ -514,7 +530,7 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
   if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI)) ||
       NS_FAILED(aHostURI->GetPath(pathFromURI))) {
     COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "couldn't get host/path from URI");
-    return;
+    return NS_OK;
   }
   // trim trailing dots
   hostFromURI.Trim(".");
@@ -532,6 +548,7 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
   }
 
   nsCookie *cookie;
+  nsAutoVoidArray foundCookieList;
   nsInt64 currentTime = NOW_IN_SECONDS;
   const char *currentDot = hostFromURI.get();
   const char *nextDot = currentDot + 1;
@@ -542,11 +559,6 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
     nsCookieEntry *entry = mHostTable.GetEntry(currentDot);
     cookie = entry ? entry->Head() : nsnull;
     for (; cookie; cookie = cookie->Next()) {
-      // check the cookie name, if appropriate
-      if (aName && !aName->Equals(cookie->Name())) {
-        continue;
-      }
-
       // if the cookie is secure and the host scheme isn't, we can't send it
       if (cookie->IsSecure() && !isSecure) {
         continue;
@@ -582,7 +594,7 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
       }
 
       // all checks passed - add to list and update lastAccessed stamp of cookie
-      aResult.AppendElement(cookie);
+      foundCookieList.AppendElement(cookie);
       cookie->SetLastAccessed(currentTime);
     }
 
@@ -595,70 +607,12 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
   // return cookies in order of path length; longest to shortest.
   // this is required per RFC2109.  if cookies match in length,
   // then sort by creation time (see bug 236772).
-  aResult.Sort(compareCookiesForSending, nsnull);
-}
-
-NS_IMETHODIMP
-nsCookieService::GetCookieValue(nsIURI *aHostURI,
-				nsIChannel *aChannel,
-                                const nsACString& aName,
-				nsACString& aResult)
-{
-  aResult.Truncate();
-
-  // try to determine first party URI
-  nsCOMPtr<nsIURI> firstURI;
-  if (aChannel) {
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
-    if (httpInternal)
-      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
-  }
-
-  nsAutoVoidArray foundCookieList;
-  GetCookieList(aHostURI, firstURI, aChannel, &aName,
-                foundCookieList);
-
-  if (!foundCookieList.Count())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCookie *cookie = NS_STATIC_CAST(nsCookie*, foundCookieList[0]);
-
-  aResult.Assign(cookie->Value());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::GetCookieString(nsIURI     *aHostURI,
-                                 nsIChannel *aChannel,
-                                 char       **aCookie)
-{
-  // try to determine first party URI
-  nsCOMPtr<nsIURI> firstURI;
-  if (aChannel) {
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
-    if (httpInternal)
-      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
-  }
-
-  return GetCookieStringFromHttp(aHostURI, firstURI, aChannel, aCookie);
-}
-
-NS_IMETHODIMP
-nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
-                                         nsIURI     *aFirstURI,
-                                         nsIChannel *aChannel,
-                                         char       **aCookie)
-{
-  *aCookie = nsnull;
-
-  nsAutoVoidArray foundCookieList;
-  GetCookieList(aHostURI, aFirstURI, aChannel, nsnull,
-                foundCookieList);
+  foundCookieList.Sort(compareCookiesForSending, nsnull);
 
   nsCAutoString cookieData;
   PRInt32 count = foundCookieList.Count();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsCookie *cookie = NS_STATIC_CAST(nsCookie*, foundCookieList.ElementAt(i));
+    cookie = NS_STATIC_CAST(nsCookie*, foundCookieList.ElementAt(i));
 
     // check if we have anything to write
     if (!cookie->Name().IsEmpty() || !cookie->Value().IsEmpty()) {
@@ -685,52 +639,6 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
     *aCookie = ToNewCString(cookieData);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCookieService::SetCookieValue(nsIURI *aHostURI,
-                                nsIChannel *aChannel,
-                                const nsACString& aDomain,
-                                const nsACString& aPath,
-                                const nsACString& aName,
-                                const nsACString& aValue,
-                                PRBool aIsSession,
-                                PRInt64 aExpiry)
-{
-  // try to determine first party URI
-  nsCOMPtr<nsIURI> firstURI;
-
-  if (aChannel) {
-    nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aChannel);
-    if (httpInternal)
-      httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
-  }
-
-  // check default prefs
-  nsCookiePolicy cookiePolicy = nsICookie::POLICY_UNKNOWN;
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, firstURI, aChannel, "", cookiePolicy);
-  // fire a notification if cookie was rejected (but not if there was an error)
-  switch (cookieStatus) {
-  case nsICookie::STATUS_REJECTED:
-    NotifyRejected(aHostURI);
-  case STATUS_REJECTED_WITH_ERROR:
-    return NS_OK;
-  }
-
-  nsCookieAttributes attributes;
-  attributes.name = aName;
-  attributes.value = aValue;
-  attributes.host = aDomain;
-  attributes.path = aPath;
-  attributes.expiryTime = aExpiry;
-  attributes.isSession = aIsSession;
-
-  attributes.isSecure = PR_FALSE;
-  aHostURI->SchemeIs("https", &attributes.isSecure);
-
-  CheckAndAdd(aHostURI, aChannel, attributes,
-              cookieStatus, cookiePolicy, EmptyCString());
   return NS_OK;
 }
 
@@ -1233,10 +1141,14 @@ PRBool
 nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsIChannel         *aChannel,
                                    nsDependentCString &aCookieHeader,
-                                   nsInt64             aServerTime,
-                                   nsCookieStatus      aStatus,
-                                   nsCookiePolicy      aPolicy)
+                                   nsInt64            aServerTime,
+                                   nsCookieStatus     aStatus,
+                                   nsCookiePolicy     aPolicy)
 {
+  // keep a |const char*| version of the unmodified aCookieHeader,
+  // for logging purposes
+  const char *cookieHeader = aCookieHeader.get();
+
   // create a stack-based nsCookieAttributes, to store all the
   // attributes parsed from the cookie
   nsCookieAttributes cookieAttributes;
@@ -1244,12 +1156,16 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   // init expiryTime such that session cookies won't prematurely expire
   cookieAttributes.expiryTime = LL_MAXINT;
 
-  // newCookie says whether there are multiple cookies in the header;
-  // so we can handle them separately.  This function uses
-  // "thisCookieHaeder" as an in/out param to point to the next
-  // cookie, if there is one.
-  nsDependentCString thisCookieHeader(aCookieHeader);
-  const PRBool newCookie = ParseAttributes(thisCookieHeader, cookieAttributes);
+  // newCookie says whether there are multiple cookies in the header; so we can handle them separately.
+  // after this function, we don't need the cookieHeader string for processing this cookie anymore;
+  // so this function uses it as an outparam to point to the next cookie, if there is one.
+  const PRBool newCookie = ParseAttributes(aCookieHeader, cookieAttributes);
+
+  // reject cookie if it's over the size limit, per RFC2109
+  if ((cookieAttributes.name.Length() + cookieAttributes.value.Length()) > kMaxBytesPerCookie) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie too big (> 4kb)");
+    return newCookie;
+  }
 
   // calculate expiry time of cookie. we need to pass in cookieStatus, since
   // the cookie may have been downgraded to a session cookie by p3p.
@@ -1257,52 +1173,30 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   cookieAttributes.isSession = GetExpiry(cookieAttributes, aServerTime,
                                          currentTime, aStatus);
 
-  CheckAndAdd(aHostURI, aChannel, cookieAttributes,
-              aStatus, aPolicy, aCookieHeader);
-
-  return newCookie;
-}
-
-void
-nsCookieService::CheckAndAdd(nsIURI               *aHostURI,
-                             nsIChannel           *aChannel,
-                             nsCookieAttributes   &aAttributes,
-                             nsCookieStatus        aStatus,
-                             const nsCookiePolicy  aPolicy,
-                             const nsAFlatCString &aCookieHeader)
-{
-  // reject cookie if it's over the size limit, per RFC2109
-  if ((aAttributes.name.Length() + aAttributes.value.Length()) > kMaxBytesPerCookie) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie too big (> 4kb)");
-    return;
-  }
-
   // domain & path checks
-  if (!CheckDomain(aAttributes, aHostURI)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "failed the domain tests");
-    return;
+  if (!CheckDomain(cookieAttributes, aHostURI)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "failed the domain tests");
+    return newCookie;
   }
-  if (!CheckPath(aAttributes, aHostURI)) {
-    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "failed the path tests");
-    return;
+  if (!CheckPath(cookieAttributes, aHostURI)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "failed the path tests");
+    return newCookie;
   }
-
-  const nsInt64 currentTime = NOW_IN_SECONDS;
 
   // create a new nsCookie and copy attributes
   nsRefPtr<nsCookie> cookie =
-    nsCookie::Create(aAttributes.name,
-                     aAttributes.value,
-                     aAttributes.host,
-                     aAttributes.path,
-                     aAttributes.expiryTime,
+    nsCookie::Create(cookieAttributes.name,
+                     cookieAttributes.value,
+                     cookieAttributes.host,
+                     cookieAttributes.path,
+                     cookieAttributes.expiryTime,
                      currentTime,
-                     aAttributes.isSession,
-                     aAttributes.isSecure,
+                     cookieAttributes.isSession,
+                     cookieAttributes.isSecure,
                      aStatus,
                      aPolicy);
   if (!cookie) {
-    return;
+    return newCookie;
   }
 
   // check permissions from site permission list, or ask the user,
@@ -1314,22 +1208,23 @@ nsCookieService::CheckAndAdd(nsIURI               *aHostURI,
     mPermissionService->CanSetCookie(aHostURI,
                                      aChannel,
                                      NS_STATIC_CAST(nsICookie2*, NS_STATIC_CAST(nsCookie*, cookie)),
-                                     &aAttributes.isSession,
-                                     &aAttributes.expiryTime.mValue,
+                                     &cookieAttributes.isSession,
+                                     &cookieAttributes.expiryTime.mValue,
                                      &permission);
     if (!permission) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "cookie rejected by permission manager");
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
       NotifyRejected(aHostURI);
-      return;
+      return newCookie;
     }
 
     // update isSession and expiry attributes, in case they changed
-    cookie->SetIsSession(aAttributes.isSession);
-    cookie->SetExpiry(aAttributes.expiryTime);
+    cookie->SetIsSession(cookieAttributes.isSession);
+    cookie->SetExpiry(cookieAttributes.expiryTime);
   }
 
   // add the cookie to the list. AddInternal() takes care of logging.
-  AddInternal(cookie, NOW_IN_SECONDS, aHostURI, aCookieHeader.get());
+  AddInternal(cookie, NOW_IN_SECONDS, aHostURI, cookieHeader);
+  return newCookie;
 }
 
 // this is a backend function for adding a cookie to the list, via SetCookie.
