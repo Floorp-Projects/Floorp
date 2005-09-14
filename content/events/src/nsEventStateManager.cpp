@@ -3406,19 +3406,26 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           nsCOMPtr<nsIPresShell> parentShell;
           parentDS->GetPresShell(getter_AddRefs(parentShell));
 
-          nsIDocument *parent_doc = parentShell->GetDocument();
-          nsIContent *docContent = parent_doc->FindContentForSubDocument(mDocument);
+          nsCOMPtr<nsIDocument> parent_doc = parentShell->GetDocument();
+          nsCOMPtr<nsIContent> docContent = parent_doc->FindContentForSubDocument(mDocument);
 
           nsCOMPtr<nsPresContext> parentPC = parentShell->GetPresContext();
           nsIEventStateManager *parentESM = parentPC->EventStateManager();
 
           SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
+          nsCOMPtr<nsISupports> parentContainer = parentPC->GetContainer();
+          if (parentContainer && docContent && docContent->GetCurrentDoc() == parent_doc) {
 #ifdef DEBUG_DOCSHELL_FOCUS
-          printf("popping out focus to parent docshell\n");
+            printf("popping out focus to parent docshell\n");
 #endif
-          parentESM->MoveCaretToFocus();
-          parentESM->ShiftFocus(aForward, docContent);
+            parentESM->MoveCaretToFocus();
+            parentESM->ShiftFocus(aForward, docContent);
+#ifdef DEBUG_DOCSHELL_FOCUS
+          } else {
+            printf("can't pop out focus to parent docshell\n"); // bug 308025
+#endif
+          }
         }
       } else {
         PRBool tookFocus = PR_FALSE;
