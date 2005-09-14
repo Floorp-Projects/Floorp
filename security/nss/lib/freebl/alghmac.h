@@ -43,7 +43,7 @@ SEC_BEGIN_PROTOS
 
 /* destroy HMAC context */
 extern void
-HMAC_Destroy(HMACContext *cx);
+HMAC_Destroy(HMACContext *cx, PRBool freeit);
 
 /* create HMAC context
  *  hash_obj    hash object from SECRawHashObjects[]

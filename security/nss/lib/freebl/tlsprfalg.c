@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: tlsprfalg.c,v 1.3 2005/08/09 02:54:54 nelsonb%netscape.com Exp $ */
+/* $Id: tlsprfalg.c,v 1.4 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
 
 #include "sechash.h"
 #include "alghmac.h"
@@ -109,7 +109,8 @@ sftk_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
 
 loser:
     /* clear out state so it's not left on the stack */
-    if (cx) HMAC_Destroy(cx);
+    if (cx) 
+    	HMAC_Destroy(cx, PR_TRUE);
     PORT_Memset(state, 0, sizeof(state));
     PORT_Memset(outbuf, 0, sizeof(outbuf));
     return rv;

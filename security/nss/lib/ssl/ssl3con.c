@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.73 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3con.c,v 1.74 2005/09/14 04:12:50 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1648,6 +1648,7 @@ ssl3_ComputeRecordMAC(
 		HMAC_Update(cx, temp, tempLen);
 		HMAC_Update(cx, input, inputLength);
 		rv = HMAC_Finish(cx, outbuf, outLength, spec->mac_size);
+		HMAC_Destroy(cx, PR_FALSE);
 	    }
 #undef cx
 	}
