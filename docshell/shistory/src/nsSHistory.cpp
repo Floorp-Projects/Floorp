@@ -624,7 +624,7 @@ nsSHistory::EvictContentViewers(PRInt32 aPreviousIndex, PRInt32 aIndex)
   // Check our per SHistory object limit in the currently navigated SHistory
   EvictWindowContentViewers(aPreviousIndex, aIndex);
   // Check our total limit across all SHistory objects
-  EvictGlobalContentViewer();
+  //EvictGlobalContentViewer();
   return NS_OK;
 }
 
