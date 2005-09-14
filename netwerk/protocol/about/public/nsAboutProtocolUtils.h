@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsAboutProtocolUtils.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +34,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAboutProtocolHandler_h___
-#define nsAboutProtocolHandler_h___
+#include "nsIURI.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
 
-#include "nsIProtocolHandler.h"
-
-class nsCString;
-
-#define NS_ABOUTPROTOCOLHANDLER_CID                  \
-{ /* 9e3b6c90-2f75-11d3-8cd0-0060b0fc14a3 */         \
-    0x9e3b6c90,                                      \
-    0x2f75,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-class nsAboutProtocolHandler : public nsIProtocolHandler
+inline nsresult
+NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)
 {
-public:
-    NS_DECL_ISUPPORTS
+#ifdef DEBUG
+    {
+        PRBool isAbout;
+        NS_ASSERTION(NS_SUCCEEDED(aAboutURI->SchemeIs("about", &isAbout)) &&
+                     isAbout,
+                     "should be used only on about: URIs");
+    }
+#endif
 
-    // nsIProtocolHandler methods:
-    NS_DECL_NSIPROTOCOLHANDLER
+    nsresult rv = aAboutURI->GetPath(aModule);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // nsAboutProtocolHandler methods:
-    nsAboutProtocolHandler();
-    virtual ~nsAboutProtocolHandler();
+    PRInt32 f = aModule.FindCharInSet(NS_LITERAL_CSTRING("#?"));
+    if (f != kNotFound) {
+        aModule.Truncate(f);
+    }
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-    nsresult Init();
-};
-
-#endif /* nsAboutProtocolHandler_h___ */
+    // convert to lowercase, as all about: modules are lowercase
+    ToLowerCase(aModule);
+    return NS_OK;
+}

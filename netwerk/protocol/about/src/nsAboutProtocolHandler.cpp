@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
+#include "nsAboutProtocolUtils.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 
@@ -131,28 +132,14 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     return rv;
 }
 
-void
-nsAboutProtocolHandler::StripQueryAndHash(nsCString& aPath)
-{
-    PRInt32 f = aPath.FindCharInSet(NS_LITERAL_CSTRING("#?"));
-    if (f != kNotFound) {
-        aPath.Truncate(f);
-    }
-
-    // convert to lowercase, as all about: modules are lowercase
-    ToLowerCase(aPath);
-}
-
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     // about:what you ask?
     nsresult rv;
     nsCAutoString contractID;
-    rv = uri->GetPath(contractID);
+    rv = NS_GetAboutModuleName(uri, contractID);
     if (NS_FAILED(rv)) return rv;
-
-    StripQueryAndHash(contractID);
 
     // look up a handler to deal with "what"
     contractID.Insert(NS_LITERAL_CSTRING(NS_ABOUT_MODULE_CONTRACTID_PREFIX), 0);

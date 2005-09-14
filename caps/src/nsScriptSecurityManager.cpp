@@ -80,6 +80,7 @@
 #include "nsIObserverService.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
+#include "nsAboutProtocolUtils.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -1152,9 +1153,9 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
     if (NS_FAILED(rv)) return rv;
 
     //-- If aURI is a view-source URI, drill down to the base URI
-    nsCAutoString path;
     if (aScheme.EqualsLiteral("view-source"))
     {
+        nsCAutoString path;
         rv = aURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIURI> innerURI;
@@ -1178,15 +1179,15 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI,
     if(aScheme.EqualsLiteral("about"))
     {
         nsCAutoString path;
-        if(NS_FAILED(aURI->GetPath(path)))
-            return NS_ERROR_FAILURE;
+        rv = NS_GetAboutModuleName(aURI, path);
+        NS_ENSURE_SUCCESS(rv, rv);
         if (path.EqualsLiteral("blank")   ||
             path.EqualsLiteral("mozilla") ||
             path.EqualsLiteral("logo")    ||
             path.EqualsLiteral("license") ||
             path.EqualsLiteral("licence") ||
             path.EqualsLiteral("credits") ||
-            Substring(path,0,9).EqualsLiteral("neterror?"))
+            path.EqualsLiteral("neterror"))
         {
             aScheme = NS_LITERAL_CSTRING("about safe");
             return NS_OK;
