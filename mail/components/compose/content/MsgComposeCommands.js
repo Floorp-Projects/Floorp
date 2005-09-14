@@ -3513,7 +3513,8 @@ function loadHTMLMsgPrefs()
 
 function AutoSave()
 {
-  if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified))
+  if (gMsgCompose.editor && (gContentChanged || gMsgCompose.bodyModified) 
+      && !gSendOrSaveOperationInProgress)
     GenericSendMessage(nsIMsgCompDeliverMode.AutoSaveAsDraft);
 
   gAutoSaveTimeout = setTimeout(AutoSave, gAutoSaveInterval);
