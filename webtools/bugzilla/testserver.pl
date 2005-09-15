@@ -38,7 +38,7 @@ if ((@ARGV != 1) || ($ARGV[0] !~ /^https?:/))
 
 
 # Try to determine the GID used by the webserver.
-my @pscmds = ('ps -eo comm,gid', 'ps -acxo command,gid');
+my @pscmds = ('ps -eo comm,gid', 'ps -acxo command,gid', 'ps -acxo command,rgid');
 my $sgid = 0;
 if ($^O !~ /MSWin32/i) {
     foreach my $pscmd (@pscmds) {
