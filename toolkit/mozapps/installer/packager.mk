@@ -209,6 +209,15 @@ ifndef PACKAGER_NO_LIBS
 libs:: $(PACKAGE)
 endif
 
+DEFINES += -DDLL_PREFIX=$(DLL_PREFIX) -DDLL_SUFFIX=$(DLL_SUFFIX)
+
+ifdef MOZ_PKG_REMOVALS
+MOZ_PKG_REMOVALS_GEN = removed-files
+
+$(MOZ_PKG_REMOVALS_GEN): $(MOZ_PKG_REMOVALS) Makefile Makefile.in
+	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) $(MOZ_PKG_REMOVALS) > $(MOZ_PKG_REMOVALS_GEN)
+endif
+
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
 ifdef USE_SHORT_LIBNAME
@@ -236,7 +245,7 @@ else
 PKGCP_OS = unix
 endif
 
-$(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST)
+$(PACKAGE): $(MOZILLA_BIN) $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
@@ -285,8 +294,10 @@ endif
 	@echo "Removing unpackaged files..."
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 	cd $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS; rm -rf $(NO_PKG_FILES)
+	$(SYSINSTALL) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
 else
 	cd $(DIST)/$(MOZ_PKG_APPNAME); rm -rf $(NO_PKG_FILES)
+	$(SYSINSTALL) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(MOZ_PKG_APPNAME)
 endif
 	@echo "Compressing..."
 	cd $(DIST); $(MAKE_PACKAGE)

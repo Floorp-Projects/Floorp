@@ -1,41 +1,3 @@
-function upgradeCleanup()
-{
-  // Remove Chrome directory cruft
-  deleteThisFile("Chrome",      "US.jar");
-  deleteThisFile("Chrome",      "en-win.jar");
-  deleteThisFile("Chrome",      "help.jar");
-  deleteThisFile("Chrome",      "chrome.rdf");
-  deleteThisFile("Chrome",      "installed-chrome.txt");
-  deleteThisFile("Chrome",      "app-chrome.manifest");
-  deleteThisFolder("Chrome",    "overlayinfo");
-
-  // Remove defunct components 
-  deleteThisFile("Components",  "compreg.dat");
-  deleteThisFile("Components",  "xpti.dat");
-  deleteThisFile("Components",  "nsBackgroundUpdateService.js");
-
-  // Remove defunct defaults files. 
-  deleteThisFile("Program",	    "defaults/pref/all.js");
-  deleteThisFile("Program",     "defaults/pref/security-prefs.js");
-  deleteThisFile("Program",     "defaults/pref/winpref.js");
-  deleteThisFile("Program",     "defaults/pref/xpinstall.js");
-  deleteThisFile("Program",     "defaults/pref/bug307259.js");
-  deleteThisFolder("Program",   "defaults/profile/US");
-
-  // Delete dictionary.com search plugin  
-  deleteThisFile("Program",     "searchplugins/dictionary.src");
-  deleteThisFile("Program",     "searchplugins/dictionary.png");
-
-  // These files are related to app patches and will interfere with the 
-  // UA/app version strings if we do not remove them. 
-  deleteThisFile("Program",	    "defaults/pref/bug259708.js");
-  
-  // Remove non-linked xpt files for rev'd interfaces; this prevents a
-  // conflict if you had previously installed a zip build in the app directory.
-  deleteThisFile("Components",  "autocomplete.xpt");
-
-}
-
 function copyFlashXPT()
 {
   /*
@@ -138,7 +100,7 @@ if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
 
-  upgradeCleanup();
+  removeOldFiles();
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 

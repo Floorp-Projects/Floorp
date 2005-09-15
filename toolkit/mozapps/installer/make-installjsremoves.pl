@@ -11,16 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is Mozilla Firefox installer build scripts.
 #
 # The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2004
-# the Initial Developer. All Rights Reserved.
+# Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Benjamin Smedberg <bsmedberg@covad.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,56 +35,25 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+# Read a removed-files manifest and create a set of
+# deleteThisFile/deleteThisFolder instructions suitable for an install.js
+# script. This simply processes <> to stdout.
 
-include $(DEPTH)/config/autoconf.mk
+print "function removeOldFiles() {\n";
 
-NO_PKG_FILES = \
-	firefox-config \
-	regchrome* \
-	regxpcom* \
-	xpcshell* \
-	xpidl* \
-	xpt_dump* \
-	xpt_link* \
-	$(NULL)
+while (<>) {
+    m|^\s*(\S+)\s*$|;
+    my $file = $1;
 
-include $(topsrcdir)/config/rules.mk
+    next if ($file eq "");
 
-MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
+    if ($file =~ m|/$|) {
+	chop $file;
+	print "  deleteThisFolder(\"Program\", \"$file\");\n";
+    }
+    else {
+	print "  deleteThisFile(\"Program\", \"$file\");\n";
+    }
+}
 
-ifdef BUILD_STATIC_LIBS
-ifeq (WINNT,$(OS_ARCH))
-MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
-else
-ifneq (,$(filter-out OS2 Darwin,$(OS_ARCH)))
-MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
-endif
-endif
-endif
-
-DEFINES += -DAB_CD=$(AB_CD)
-
-ifdef MOZ_PKG_MANIFEST_P
-MOZ_PKG_MANIFEST = packages-static
-
-$(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P)
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $< > $@
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-MOZ_PKG_MAC_DSSTORE=branding/dsstore
-MOZ_PKG_MAC_BACKGROUND=branding/background.png
-MOZ_PKG_MAC_ICON=branding/disk.icns
-MOZ_PKG_MAC_RSRC=branding/license.r
-endif
-
-include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
-
-installer: removed-files
-ifdef INSTALLER_DIR
-	$(MAKE) -C $(INSTALLER_DIR)
-endif
+print "}\n";
