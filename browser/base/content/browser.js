@@ -3067,6 +3067,11 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     BookmarksToolbar.resizeFunc(null);
   }
 
+  // fix bug 291781 - controller has been lost while removeChild and appendChild
+  var bm = document.getElementById("bookmarks-menu");
+  if (bm)
+    bm.controllers.appendController(BookmarksMenuController);
+
   // XXX Shouldn't have to do this, but I do
   window.focus();
 }
