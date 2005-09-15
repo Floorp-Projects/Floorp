@@ -27,26 +27,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Mozilla Includes
-#include "nsIGenericFactory.h"
-#include "nsIComponentManager.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-#include "nsIURI.h"
-#include "nsIWebProgress.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDOMWindow.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIRequest.h"
-#include "nsCWebBrowser.h"
-#include "nsIProfileChangeStatus.h"
-
 // Local includes
 #include "resource.h"
-
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 
+// OS headers
+#include <stdio.h>
+
+// Frozen APIs
+
+#include "nsStringAPI.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMWindow.h"
+#include "nsIGenericFactory.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIRequest.h"
+#include "nsIURI.h"
+#include "nsIWebProgress.h"
+#include "nsCWebBrowser.h"
+#include "nsIProfileChangeStatus.h"
+
+// Glue APIs (not frozen, but safe to use because they are statically linked)
+#include "nsComponentManagerUtils.h"
+
+// NON-FROZEN APIS!
+#include "nsIWebNavigation.h"
 
 WebBrowserChrome::WebBrowserChrome()
 {
@@ -72,9 +78,6 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
         return NS_ERROR_FAILURE;
 
     (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
-
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
-    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
     nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
 
@@ -364,28 +367,36 @@ WebBrowserChrome::OnHistoryPurge(PRInt32 aNumEntries, PRBool *aContinue)
     return SendHistoryStatusMessage(nsnull, "purge", aNumEntries);
 }
 
+static void
+AppendIntToCString(PRInt32 info1, nsCString& aResult)
+{
+  char intstr[10];
+  _snprintf(intstr, sizeof(intstr) - 1, "%i", info1);
+  intstr[sizeof(intstr) - 1] = '\0';
+  aResult.Append(intstr);
+}
+
 nsresult
 WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1, PRUint32 aReloadFlags)
 {
-    nsCAutoString uriCStr;
+    nsCString uriSpec;
     if (aURI)
     {
-        aURI->GetSpec(uriCStr);
+        aURI->GetSpec(uriSpec);
     }
 
-    nsString uriAStr;
+    nsCString status;
 
     if(!(strcmp(operation, "back")))
     {
-        // Going back. XXX Get string from a resource file
-        uriAStr.AppendLiteral("Going back to url:");
-        AppendUTF8toUTF16(uriCStr, uriAStr);
+        status.Assign("Going back to url: ");
+        status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "forward")))
     {
         // Going forward. XXX Get string from a resource file
-        uriAStr.AppendLiteral("Going forward to url:");
-        AppendUTF8toUTF16(uriCStr, uriAStr);
+        status.Assign("Going forward to url: ");
+        status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "reload")))
     {
@@ -393,44 +404,45 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
             aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            uriAStr.Append(NS_LITERAL_STRING("Reloading url,(bypassing proxy and cache) :"));
+            status.Assign("Reloading url, (bypassing proxy and cache): ");
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
         {
-            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (bypassing proxy):"));
+            status.Assign("Reloading url, (bypassing proxy): ");
         }
         else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
         {
-            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (bypassing cache):"));
+            status.Assign("Reloading url, (bypassing cache): ");
         }
         else
         {
-            uriAStr.Append(NS_LITERAL_STRING("Reloading url, (normal):"));
+            status.Assign("Reloading url, (normal): ");
         }
-        AppendUTF8toUTF16(uriCStr, uriAStr);
+        status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "add")))
     {
-        // Adding new entry. XXX Get string from a resource file
-        AppendUTF8toUTF16(uriCStr, uriAStr);
-        uriAStr.AppendLiteral(" added to session History");
+        status.Assign(uriSpec);
+        status.Append(" added to session History");
     }
     else if (!(strcmp(operation, "goto")))
     {
-        // Goto. XXX Get string from a resource file
-        uriAStr.AppendLiteral("Going to HistoryIndex:");
-        uriAStr.AppendInt(info1);
-        uriAStr.AppendLiteral(" Url:");
-        AppendUTF8toUTF16(uriCStr, uriAStr);
+        status.Assign("Going to HistoryIndex: ");
+
+	AppendIntToCString(info1, status);
+
+        status.Append(" Url: ");
+        status.Append(uriSpec);
     }
     else if (!(strcmp(operation, "purge")))
     {
-        // Purging old entries
-        uriAStr.AppendInt(info1);
-        uriAStr.AppendLiteral(" purged from Session History");
+        AppendIntToCString(info1, status);
+        status.Append(" purged from Session History");
     }
 
-    WebBrowserChromeUI::UpdateStatusBarText(this, uriAStr.get());
+    nsString wstatus;
+    NS_CStringToUTF16(status, NS_CSTRING_ENCODING_UTF8, wstatus);
+    WebBrowserChromeUI::UpdateStatusBarText(this, wstatus.get());
 
     return NS_OK;
 }

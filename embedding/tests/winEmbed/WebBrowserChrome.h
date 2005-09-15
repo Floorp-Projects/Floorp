@@ -30,28 +30,35 @@
 #ifndef __WebBrowserChrome__
 #define __WebBrowserChrome__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
+// OS headers
+
+#include <windows.h>
+
+// FROZEN APIs
+
+#include "nsStringAPI.h"
+
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChromeFocus.h"
 
-#include "nsIBaseWindow.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsIWebNavigation.h"
-#include "nsIWebProgressListener.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIWebBrowser.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsISHistoryListener.h"
 #include "nsIContextMenuListener.h"
+#include "nsIEmbeddingSiteWindow.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIObserver.h"
+#include "nsISHistoryListener.h"
 #include "nsITooltipListener.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebBrowser.h"
+
+// GLUE APIs (not frozen, but safe because we're statically linking them)
+#include "nsCOMPtr.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsWeakReference.h"
 
 class WebBrowserChromeUI
 {
 public:
-    static nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
+    static HWND CreateNativeWindow(nsIWebBrowserChrome* chrome);
     static void Destroy(nsIWebBrowserChrome* chrome);
     static void Destroyed(nsIWebBrowserChrome* chrome);
     static void SetFocus(nsIWebBrowserChrome *chrome);
@@ -105,7 +112,7 @@ protected:
 
     void ContentFinishedLoading();
 
-    nativeWindow mNativeWindow;
+    HWND         mNativeWindow;
     PRUint32     mChromeFlags;
     PRBool       mContinueModalLoop;
     PRBool       mSizeSet;

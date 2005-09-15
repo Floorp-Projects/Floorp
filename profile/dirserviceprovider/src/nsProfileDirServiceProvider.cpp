@@ -196,8 +196,8 @@ nsProfileDirServiceProvider::Shutdown()
 // nsProfileDirServiceProvider::nsISupports
 //*****************************************************************************
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsProfileDirServiceProvider,
-                              nsIDirectoryServiceProvider)
+NS_IMPL_ISUPPORTS1(nsProfileDirServiceProvider,
+                   nsIDirectoryServiceProvider)
 
 //*****************************************************************************
 // nsProfileDirServiceProvider::nsIDirectoryServiceProvider

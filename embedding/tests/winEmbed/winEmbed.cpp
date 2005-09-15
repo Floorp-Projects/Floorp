@@ -30,9 +30,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-
 // C RunTime Header Files
+#include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
@@ -43,43 +42,39 @@
 #include <commctrl.h>
 #include <commdlg.h>
 
-// Mozilla header files
+// Mozilla Frozen APIs
+#ifdef MOZ_ENABLE_LIBXUL
+#include "nsXULAppAPI.h"
+#else
+// This is not technically frozen, it is statically linked
 #include "nsEmbedAPI.h"
+#endif
+
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsProfileDirServiceProvider.h"
+#include "nsStringAPI.h"
+#include "nsXPCOMGlue.h"
+
 #include "nsIClipboardCommands.h"
-#include "nsXPIDLString.h"
-#include "nsIWebBrowserPersist.h"
-#include "nsIWebBrowserFocus.h"
-#include "nsIWindowWatcher.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"
-#include "plstr.h"
-#include "nsIInterfaceRequestor.h"
+#include "nsIWebBrowserFocus.h"
+#include "nsIWindowWatcher.h"
 
-#include "nsDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsProfileDirServiceProvider.h"
-#include "nsAppDirectoryServiceDefs.h"
+// NON-FROZEN APIs!
+#include "nsIBaseWindow.h"
+#include "nsIWebNavigation.h"
 
 // Local header files
 #include "winEmbed.h"
 #include "WebBrowserChrome.h"
 #include "WindowCreator.h"
 #include "resource.h"
-#include "nsStaticComponents.h"
-
-// Printing header files
-#include "nsIPrintSettings.h"
-#include "nsIWebBrowserPrint.h"
-
 
 #define MAX_LOADSTRING 100
-
-
-#ifndef _BUILD_STATIC_BIN
-nsStaticModuleInfo const *const kPStaticModules = nsnull;
-PRUint32 const kStaticModuleCount = 0;
-#endif
 
 const TCHAR *szWindowClass = _T("WINEMBED");
 
@@ -97,9 +92,26 @@ static nsresult StartupProfile();
 
 // Global variables
 static UINT gDialogCount = 0;
-static HINSTANCE ghInstanceResources = NULL;
 static HINSTANCE ghInstanceApp = NULL;
 static char gFirstURL[1024];
+
+// like strpbrk but finds the *last* char, not the first
+static char*
+ns_strrpbrk(char *string, const char *strCharSet)
+{
+    char *found = NULL;
+    for (; *string; ++string) {
+        for (const char *search = strCharSet; *search; ++search) {
+            if (*search == *string) {
+                found = string;
+                // Since we're looking for the last char, we save "found"
+                // until we're at the end of the string.
+            }
+        }
+    }
+
+    return found;
+}
 
 // A list of URLs to populate the URL drop down list with
 static const TCHAR *gDefaultURLs[] = 
@@ -121,8 +133,18 @@ static const TCHAR *gDefaultURLs[] =
     _T("http://www.cnn.com/"),
     _T("http://www.javasoft.com/")
 };
+
+typedef nsresult (*XRE_InitEmbeddingFunc)(nsILocalFile*,
+                                          nsILocalFile*,
+                                          nsIDirectoryServiceProvider*,
+                                          nsStaticModuleInfo const *,
+                                          PRUint32);
+typedef void (*XRE_TermEmbeddingFunc)();
+
 int main(int argc, char *argv[])
 {
+    nsresult rv;
+
     printf("You are embedded, man!\n\n");
     printf("******************************************************************\n");
     printf("*                                                                *\n");
@@ -138,11 +160,7 @@ int main(int argc, char *argv[])
     printf("\n\n");
     
     // Sophisticated command-line parsing in action
-#ifdef MINIMO
-    char *szFirstURL = "http://www.mozilla.org/projects/embedding";
-#else
-    char *szFirstURL = "http://www.mozilla.org/projects/minimo";
-#endif
+    char *szFirstURL = "http://www.mozilla.org/projects/embedding/";
 	int argn;
     for (argn = 1; argn < argc; argn++)
     {
@@ -151,38 +169,105 @@ int main(int argc, char *argv[])
     strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
     ghInstanceApp = GetModuleHandle(NULL);
-    ghInstanceResources = GetModuleHandle(NULL);
 
     // Initialize global strings
     TCHAR szTitle[MAX_LOADSTRING];
-    LoadString(ghInstanceResources, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(ghInstanceApp, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     MyRegisterClass(ghInstanceApp);
 
-    // Init Embedding APIs
-    NS_InitEmbedding(nsnull, nsnull, kPStaticModules, kStaticModuleCount);
+    // Find the GRE (libxul). We are only using frozen interfaces, so we
+    // should be compatible all the way up to (but not including) mozilla 2.0
+    static const GREVersionRange vr = {
+        "1.8a1",
+        PR_TRUE,
+        "2.0",
+        PR_FALSE
+    };
 
-    // Choose the new profile
-    if (NS_FAILED(StartupProfile()))
-    {
-        NS_TermEmbedding();
+    char xpcomPath[_MAX_PATH];
+    rv = GRE_GetGREPathWithProperties(&vr, 1, nsnull, 0,
+                                      xpcomPath, sizeof(xpcomPath));
+    if (NS_FAILED(rv))
         return 1;
+
+    char *lastslash = ns_strrpbrk(xpcomPath, "/\\");
+    if (!lastslash)
+        return 2;
+
+    rv = XPCOMGlueStartup(xpcomPath);
+    if (NS_FAILED(rv))
+        return 3;
+
+    *lastslash = '\0';
+
+    char xulPath[_MAX_PATH];
+    _snprintf(xulPath, sizeof(xulPath), "%s\\xul.dll", xpcomPath);
+    xulPath[sizeof(xulPath) - 1] = '\0';
+
+    HINSTANCE xulModule = LoadLibraryEx(xulPath, NULL, 0);
+    if (!xulModule)
+        return 4;
+
+    char temp[_MAX_PATH];
+    GetModuleFileName(xulModule, temp, sizeof(temp));
+
+    XRE_InitEmbeddingFunc initFunc =
+        (XRE_InitEmbeddingFunc) GetProcAddress(xulModule, "XRE_InitEmbedding");
+    if (!initFunc) {
+        fprintf(stderr, "Error: %i\n", GetLastError());
+        return 5;
     }
-    WPARAM rv;
-    {   
-		InitializeWindowCreator();
 
-        // Open the initial browser window
-        OpenWebPage(gFirstURL);
+    XRE_TermEmbeddingFunc termFunc =
+        (XRE_TermEmbeddingFunc) GetProcAddress(xulModule, "XRE_TermEmbedding");
+    if (!initFunc || !termFunc)
+        return 5;
 
-        // Main message loop.
-        // NOTE: We use a fake event and a timeout in order to process idle stuff for
-        //       Mozilla every 1/10th of a second.
-        PRBool runCondition = PR_TRUE;
+    // Scope all the XPCOM stuff
+    {
+        nsCOMPtr<nsILocalFile> xuldir;
+        rv = NS_NewNativeLocalFile(nsCString(xpcomPath), PR_FALSE,
+                                   getter_AddRefs(xuldir));
+        if (NS_FAILED(rv))
+            return 6;
 
-        rv = AppCallbacks::RunEventLoop(runCondition);
+        char self[_MAX_PATH];
+        GetModuleFileName(ghInstanceApp, self, sizeof(self));
+        lastslash = ns_strrpbrk(xpcomPath, "/\\");
+        if (!lastslash)
+            return 7;
+
+        *lastslash = '\0';
+
+        nsCOMPtr<nsILocalFile> appdir;
+        rv = NS_NewNativeLocalFile(nsCString(self), PR_FALSE,
+                                   getter_AddRefs(appdir));
+        if (NS_FAILED(rv))
+            return 8;
+
+        rv = initFunc(xuldir, appdir, nsnull, nsnull, 0);
+        if (NS_FAILED(rv))
+            return 9;
+
+        int result = 0;
+        if (NS_FAILED(StartupProfile())) {
+            result = 8;
+        }
+        else {
+            InitializeWindowCreator();
+
+            // Open the initial browser window
+            OpenWebPage(gFirstURL);
+
+            // Main message loop.
+            // NOTE: We use a fake event and a timeout in order to process idle stuff for
+            //       Mozilla every 1/10th of a second.
+            PRBool runCondition = PR_TRUE;
+
+            rv = AppCallbacks::RunEventLoop(runCondition);
+        }
     }
-    // Close down Embedding APIs
-    NS_TermEmbedding();
+    termFunc();
 
     return rv;
 }
@@ -190,24 +275,19 @@ int main(int argc, char *argv[])
 /* InitializeWindowCreator creates and hands off an object with a callback
    to a window creation function. This is how all new windows are opened,
    except any created directly by the embedding app. */
-nsresult InitializeWindowCreator()
+nsresult
+InitializeWindowCreator()
 {
     // create an nsWindowCreator and give it to the WindowWatcher service
-    WindowCreator *creatorCallback = new WindowCreator();
-    if (creatorCallback)
-    {
-        nsCOMPtr<nsIWindowCreator> windowCreator(NS_STATIC_CAST(nsIWindowCreator *, creatorCallback));
-        if (windowCreator)
-        {
-            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-            if (wwatch)
-            {
-                wwatch->SetWindowCreator(windowCreator);
-                return NS_OK;
-            }
-        }
-    }
-    return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIWindowCreator> creator(new WindowCreator());
+    if (!creator)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    if (!wwatch)
+        return NS_ERROR_UNEXPECTED;
+
+    return wwatch->SetWindowCreator(creator);
 }
 
 //-----------------------------------------------------------------------------
@@ -235,7 +315,8 @@ nsresult OpenWebPage(const char *url)
         nsCOMPtr<nsIWebBrowser> newBrowser;
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-        return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
+
+        return webNav->LoadURI(NS_ConvertASCIItoUTF16(url).get(),
                                nsIWebNavigation::LOAD_FLAGS_NONE,
                                nsnull,
                                nsnull,
@@ -273,95 +354,6 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
 HWND GetBrowserDlgFromChrome(nsIWebBrowserChrome *aChrome)
 {
     return GetParent(GetBrowserFromChrome(aChrome));
-}
-
-
-//
-//  FUNCTION: SaveWebPage()
-//
-//  PURPOSE: Saves the contents of the web page to a file
-//
-void SaveWebPage(nsIWebBrowser *aWebBrowser)
-{
-    // Use the browser window title as the initial file name
-    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(aWebBrowser);
-    nsXPIDLString windowTitle;
-    webBrowserAsWin->GetTitle(getter_Copies(windowTitle));
-    nsCString fileName; fileName.AssignWithConversion(windowTitle);
-
-    // Sanitize the title of all illegal characters
-    fileName.CompressWhitespace();     // Remove whitespace from the ends
-    fileName.StripChars("\\*|:\"><?"); // Strip illegal characters
-    fileName.ReplaceChar('.', L'_');   // Dots become underscores
-    fileName.ReplaceChar('/', L'-');   // Forward slashes become hyphens
-
-    // Copy filename to a character buffer
-    char szFile[_MAX_PATH];
-    memset(szFile, 0, sizeof(szFile));
-    PL_strncpyz(szFile, fileName.get(), sizeof(szFile) - 1); // XXXldb probably should be just sizeof(szfile)
-
-    // Initialize the file save as information structure
-    OPENFILENAME saveFileNameInfo;
-    memset(&saveFileNameInfo, 0, sizeof(saveFileNameInfo));
-    saveFileNameInfo.lStructSize = sizeof(saveFileNameInfo);
-    saveFileNameInfo.hwndOwner = NULL;
-    saveFileNameInfo.hInstance = NULL;
-    saveFileNameInfo.lpstrFilter =
-        "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0"
-        "Web Page, Complete (*.htm;*.html)\0*.htm;*.html\0"
-        "Text File (*.txt)\0*.txt\0"; 
-    saveFileNameInfo.lpstrCustomFilter = NULL; 
-    saveFileNameInfo.nMaxCustFilter = NULL; 
-    saveFileNameInfo.nFilterIndex = 1; 
-    saveFileNameInfo.lpstrFile = szFile; 
-    saveFileNameInfo.nMaxFile = sizeof(szFile); 
-    saveFileNameInfo.lpstrFileTitle = NULL;
-    saveFileNameInfo.nMaxFileTitle = 0; 
-    saveFileNameInfo.lpstrInitialDir = NULL; 
-    saveFileNameInfo.lpstrTitle = NULL; 
-    saveFileNameInfo.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
-    saveFileNameInfo.nFileOffset = NULL; 
-    saveFileNameInfo.nFileExtension = NULL; 
-    saveFileNameInfo.lpstrDefExt = "htm"; 
-    saveFileNameInfo.lCustData = NULL; 
-    saveFileNameInfo.lpfnHook = NULL; 
-    saveFileNameInfo.lpTemplateName = NULL; 
-
-    if (GetSaveFileName(&saveFileNameInfo))
-    {
-        // Does the user want to save the complete document including
-        // all frames, images, scripts, stylesheets etc. ?
-        char *pszDataPath = NULL;
-        if (saveFileNameInfo.nFilterIndex == 2) // 2nd choice means save everything
-        {
-            static char szDataFile[_MAX_PATH];
-            char szDataPath[_MAX_PATH];
-            char drive[_MAX_DRIVE];
-            char dir[_MAX_DIR];
-            char fname[_MAX_FNAME];
-            char ext[_MAX_EXT];
-
-            _splitpath(szFile, drive, dir, fname, ext);
-            sprintf(szDataFile, "%s_files", fname);
-            _makepath(szDataPath, drive, dir, szDataFile, "");
-
-            pszDataPath = szDataPath;
-       }
-
-        // Save away
-        nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(aWebBrowser));
-
-        nsCOMPtr<nsILocalFile> file;
-        NS_NewNativeLocalFile(nsDependentCString(szFile), TRUE, getter_AddRefs(file));
-
-        nsCOMPtr<nsILocalFile> dataPath;
-        if (pszDataPath)
-        {
-            NS_NewNativeLocalFile(nsDependentCString(pszDataPath), TRUE, getter_AddRefs(dataPath));
-        }
-
-        persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
-    }
 }
 
 
@@ -428,11 +420,11 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra        = 0;
     wcex.cbWndExtra        = 0;
     wcex.hInstance        = hInstance;
-    wcex.hIcon            = LoadIcon(ghInstanceResources, (LPCTSTR)IDI_WINEMBED);
+    wcex.hIcon            = LoadIcon(ghInstanceApp, (LPCTSTR)IDI_WINEMBED);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszClassName    = szWindowClass;
-    wcex.hIconSm        = LoadIcon(ghInstanceResources, (LPCTSTR)IDI_SMALL);
+    wcex.hIconSm        = LoadIcon(ghInstanceApp, (LPCTSTR)IDI_SMALL);
 
     return RegisterClassEx(&wcex);
 }
@@ -517,12 +509,10 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     }
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
-    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
     if (chrome)
     {
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
-        webBrowserPrint = do_GetInterface(webBrowser);
     }
 
     // Test the message
@@ -570,7 +560,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL,
                     sizeof(szURL) / sizeof(szURL[0]) - 1);
                 webNavigation->LoadURI(
-                    NS_ConvertASCIItoUCS2(szURL).get(),
+                    NS_ConvertASCIItoUTF16(szURL).get(),
                     nsIWebNavigation::LOAD_FLAGS_NONE,
                     nsnull,
                     nsnull,
@@ -595,30 +585,6 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case MOZ_NewBrowser:
             OpenWebPage(gFirstURL);
-            break;
-
-        case MOZ_Save:
-            SaveWebPage(webBrowser);
-            break;
-
-        case MOZ_Print:
-            {
-                // NOTE: Embedding code shouldn't need to get the docshell or
-                //       contentviewer AT ALL. This code below will break one
-                //       day but will have to do until the embedding API has
-                //       a cleaner way to do the same thing.
-              if (webBrowserPrint)
-              {
-                  nsCOMPtr<nsIPrintSettings> printSettings;
-                  webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
-                  NS_ASSERTION(printSettings, "You can't PrintPreview without a PrintSettings!");
-                  if (printSettings) 
-                  {
-                      printSettings->SetPrintSilent(PR_TRUE);
-                      webBrowserPrint->Print(printSettings, (nsIWebProgressListener*)nsnull);
-                  }
-              }
-            }
             break;
 
         // Edit menu commands
@@ -676,8 +642,8 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 TCHAR szAboutTitle[MAX_LOADSTRING];
                 TCHAR szAbout[MAX_LOADSTRING];
-                LoadString(ghInstanceResources, IDS_ABOUT_TITLE, szAboutTitle, MAX_LOADSTRING);
-                LoadString(ghInstanceResources, IDS_ABOUT, szAbout, MAX_LOADSTRING);
+                LoadString(ghInstanceApp, IDS_ABOUT_TITLE, szAboutTitle, MAX_LOADSTRING);
+                LoadString(ghInstanceApp, IDS_ABOUT, szAbout, MAX_LOADSTRING);
                 MessageBox(NULL, szAbout, szAboutTitle, MB_OK);
             }
             break;
@@ -807,8 +773,8 @@ nsresult StartupProfile()
 	nsresult rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_DIR, getter_AddRefs(appDataDir));
 	if (NS_FAILED(rv))
       return rv;
-    
-	appDataDir->Append(NS_LITERAL_STRING("winembed"));
+
+	appDataDir->AppendNative(nsCString("winembed"));
 	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
 
 	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
@@ -839,7 +805,7 @@ nsresult StartupProfile()
 //    and returns the HWND for the webbrowser container dialog item
 //    to the caller.
 //
-nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
+HWND WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
   // Load the browser dialog from resource
   HWND hwndDialog;
@@ -847,12 +813,12 @@ nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
   chrome->GetChromeFlags(&chromeFlags);
   if ((chromeFlags & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
-    hwndDialog = CreateDialog(ghInstanceResources,
+    hwndDialog = CreateDialog(ghInstanceApp,
                               MAKEINTRESOURCE(IDD_BROWSER),
                               NULL,
                               BrowserDlgProc);
   else
-    hwndDialog = CreateDialog(ghInstanceResources,
+    hwndDialog = CreateDialog(ghInstanceApp,
                               MAKEINTRESOURCE(IDD_BROWSER_NC),
                               NULL,
                               BrowserDlgProc);
@@ -861,7 +827,7 @@ nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
   // Stick a menu onto it
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR) {
-    HMENU hmenuDlg = LoadMenu(ghInstanceResources, MAKEINTRESOURCE(IDC_WINEMBED));
+    HMENU hmenuDlg = LoadMenu(ghInstanceApp, MAKEINTRESOURCE(IDC_WINEMBED));
     SetMenu(hwndDialog, hmenuDlg);
   } else
     SetMenu(hwndDialog, 0);
@@ -975,8 +941,12 @@ void WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
     nsCString status; 
-    if (aStatusText)
-        status.AssignWithConversion(aStatusText);
+    if (aStatusText) {
+        nsString wStatusText(aStatusText);
+        NS_UTF16ToCString(wStatusText, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
+                          status);
+    }
+
     SetDlgItemText(hwndDlg, IDC_STATUS, status.get());
 }
 
@@ -997,7 +967,7 @@ void WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
     webNavigation->GetCurrentURI(getter_AddRefs(currentURI));
     if (currentURI)
     {
-        nsCAutoString uriString;
+        nsCString uriString;
         currentURI->GetAsciiSpec(uriString);
         HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
         SetDlgItemText(hwndDlg, IDC_ADDRESS, uriString.get());
@@ -1111,13 +1081,13 @@ void WebBrowserChromeUI::SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PR
 void WebBrowserChromeUI::GetResourceStringById(PRInt32 aID, char ** aReturn)
 {
     char resBuf[MAX_LOADSTRING];
-    int retval = LoadString( ghInstanceResources, aID, (LPTSTR)resBuf, sizeof(resBuf) );
+    int retval = LoadString( ghInstanceApp, aID, (LPTSTR)resBuf, sizeof(resBuf) );
     if (retval != 0)
     {
         int resLen = strlen(resBuf);
         *aReturn = (char *)calloc(resLen+1, sizeof(char *));
         if (!*aReturn) return;
-            PL_strncpy(*aReturn, (char *) resBuf, resLen);
+            strncpy(*aReturn, resBuf, resLen);
     }
     return;
 }
@@ -1181,11 +1151,6 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
         aRunCondition = PR_FALSE;
         break;
       }
-
-      PRBool wasHandled = PR_FALSE;
-      ::NS_HandleEmbeddingEvent(msg, wasHandled);
-      if (wasHandled)
-        continue;
 
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);

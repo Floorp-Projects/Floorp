@@ -42,10 +42,8 @@
 #define IDC_RELOAD                      1011
 #define IDC_PROFILELIST                 1011
 #define MOZ_Open                        32771
-#define MOZ_Print                       32772
 #define MOZ_NewBrowser                  32773
 #define MOZ_NewEditor                   32774
-#define MOZ_Save                        32775
 #define MOZ_Cut                         32776
 #define MOZ_Copy                        32777
 #define MOZ_Paste                       32778
