@@ -63,15 +63,10 @@
 #include <Balloons.h>
 #include <Resources.h>
 #include <Appearance.h>
-#include <Gestalt.h>
 
 #include "nsMacResources.h"
 
 #include "nsGUIEvent.h"
-
-#if !XP_MACOSX
-#include "MenuSharing.h"
-#endif
 
 // CIDs
 #include "nsWidgetsCID.h"
@@ -344,20 +339,6 @@ nsMenuBarX :: CommandEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           break;
         }
 
-#if !XP_MACOSX
-        case 'SHMN':
-        { // Shared menu support
-          MenuItemIndex index = command.menu.menuItemIndex;
-          if (index)
-          {
-            (void)SharedMenuHit(GetMenuID(command.menu.menuRef), command.menu.menuItemIndex);
-            ::HiliteMenu(0);
-            handled = noErr;
-          }
-          break;
-        }
-#endif
-
         default:
         {
           // given the commandID, look it up in our hashtable and dispatch to
@@ -450,13 +431,10 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
     
   Create(aParentWindow);
   
-  // if we're on X (using aqua UI guidelines for menus), remove quit and prefs
-  // from our menubar.
-  SInt32 result = 0L;
-  OSStatus err = ::Gestalt ( gestaltMenuMgrAttr, &result );
-  if ( !err && (result & gestaltMenuMgrAquaLayoutMask) )
-    AquifyMenuBar();
-  err = InstallCommandEventHandler();
+  // since we're on OSX, remove quit and prefs from our menubar.
+  AquifyMenuBar();
+  
+  OSStatus err = InstallCommandEventHandler();
   if ( err )
     return nsEventStatus_eIgnore;
 
