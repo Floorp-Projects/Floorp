@@ -314,6 +314,70 @@
         </body>
       </method>
 
+      <method name="_isItemVisible">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (!aItem)
+              return false;
+
+            var y = {};
+            this.scrollBoxObject.getPosition({}, y);
+            y.value += this.scrollBoxObject.y;
+
+            // Partially visible items are also considered visible
+            return (aItem.boxObject.y + aItem.boxObject.height >= y.value) &&
+                   (aItem.boxObject.y < y.value + this.scrollBoxObject.height);
+          ]]>
+        </body>
+      </method>
+
+      <method name="scrollOnePage">
+        <parameter name="aDirection"/> <!-- Must be -1 or 1 -->
+        <body>
+          <![CDATA[
+            if (this.getRowCount() == 0)
+              return false;
+
+            var index = this.selectedIndex;
+
+            // If nothing is selected, we start at the extreme
+            // we're moving away from
+            if (index == -1)
+              index = aDirection == -1 ? this.getRowCount() - 1 : 0;
+
+            // If the selected item is visible, we scroll by one page so that
+            // the newly selected item is at approximately the same position as
+            // the currently selected one
+            var currentItem = this.getItemAtIndex(index);
+            if (this._isItemVisible(currentItem))
+              this.scrollBoxObject.scrollBy(0, this.scrollBoxObject.height * aDirection);
+
+            // Figure out, how many items fully fit into the view port
+            // (measuring from the top of the currently selected one), and
+            // determine the index of the first one lying (partially) outside
+            var height = this.scrollBoxObject.height;
+            while (height >= 0 && index >= 0 && index < this.getRowCount()) {
+              var actualIndex = (index && aDirection == -1) ? index - 1 : index;
+              height -= this.getItemAtIndex(actualIndex).boxObject.height;
+              index += aDirection;
+            }
+            index -= aDirection;
+
+            if (this.selectedItem != index) {
+              this.selectedItem = this.getItemAtIndex(index);
+              return true;
+            }
+
+            // Move by at least one item if the view port is too small
+            if (aDirection == -1)
+              return this.goUp();
+
+            return this.goDown();
+          ]]>
+        </body>
+      </method>
+
       <method name="getItemAtIndex">
         <parameter name="aIndex"/>
         <body>
@@ -394,6 +458,8 @@
     <handlers>
       <handler event="keypress" keycode="VK_UP" action="goUp(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_DOWN" action="goDown(); event.preventDefault();"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" action="scrollOnePage(-1); event.preventDefault();"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" action="scrollOnePage(1); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_HOME" action="clearSelection(); goDown(); event.preventDefault();"/>
       <handler event="keypress" keycode="VK_END" action="clearSelection(); goUp(); event.preventDefault();"/>
 
