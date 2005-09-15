@@ -452,9 +452,14 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
   nsPoint frameToView;
   nsIView* frameView = aFrame->GetClosestView(&frameToView);
 
-  return TranslateWidgetToView(aFrame->GetPresContext(),
+  nsPoint widgetToView = TranslateWidgetToView(aFrame->GetPresContext(),
                                GUIEvent->widget, GUIEvent->refPoint,
-                               frameView) - frameToView;
+                               frameView);
+
+  if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE))
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+
+  return widgetToView - frameToView;
 }
 
 nsPoint
@@ -487,6 +492,8 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
 {
   nsPoint widgetToView;
   nsIView* baseView = nsIView::GetViewFor(aWidget);
+  if (!baseView)
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsIWidget* wid = baseView->GetNearestWidget(&widgetToView);
   NS_ASSERTION(aWidget == wid, "Clashing widgets");
   float pixelsToTwips = aPresContext->PixelsToTwips();
