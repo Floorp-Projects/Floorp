@@ -4004,6 +4004,7 @@ MOZ_XTF=1
 MOZ_XUL=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
+NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 NECKO_SMALL_BUFFERS=
 SUNCTL=
 
@@ -4049,6 +4050,7 @@ browser)
   MOZ_APP_NAME=firefox
   MOZ_APP_DISPLAYNAME=DeerPark
   MOZ_XUL_APP=1
+  MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs auth permissions reporter"
@@ -4085,11 +4087,13 @@ minimo)
   MOZ_UPDATER=
   MOZ_USE_NATIVE_UCONV=1
   MOZ_V1_STRING_ABI=
+  MOZ_VIEW_SOURCE=
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
+  MOZ_XTF=
   MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS="about,data,http,file,res,jar"
+  NECKO_PROTOCOLS_DEFAULT=="about data http file res jar"
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   ;;
@@ -4098,6 +4102,7 @@ mail)
   MOZ_APP_NAME=thunderbird
   MOZ_APP_DISPLAYNAME=Thunderbird
   MOZ_XUL_APP=1
+  MOZ_UPDATER=1
   MOZ_THUNDERBIRD=1
   MOZ_MATHML=
   MOZ_NO_ACTIVEX_SUPPORT=1
@@ -4105,7 +4110,7 @@ mail)
   ENABLE_TESTS=
   MOZ_OJI=
   NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS="http,file,jar,viewsource,res,data"
+  NECKO_PROTOCOLS_DEFAULT="http file jar viewsource res data"
   MOZ_IMG_DECODERS_DEFAULT=`echo "$MOZ_IMG_DECODERS_DEFAULT" | sed "s/ xbm//"`
   MOZ_MAIL_NEWS=1
   MOZ_LDAP_XPCOM=1
@@ -4120,6 +4125,7 @@ composer)
   MOZ_APP_NAME=nvu
   MOZ_APP_DISPLAYNAME=NVU
   MOZ_XUL_APP=1
+  MOZ_UPDATER=1
   MOZ_STANDALONE_COMPOSER=1
   MOZ_COMPOSER=1
   MOZ_APP_VERSION=0.17+
@@ -4130,6 +4136,7 @@ calendar)
   MOZ_APP_NAME=sunbird
   MOZ_APP_DISPLAYNAME=Sunbird
   MOZ_XUL_APP=1
+  MOZ_UPDATER=1
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
@@ -4141,6 +4148,7 @@ xulrunner)
   MOZ_APP_NAME=xulrunner
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_XUL_APP=1
+  MOZ_UPDATER=1
   MOZ_XULRUNNER=1
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
@@ -5047,9 +5055,6 @@ AC_SUBST(MOZ_INSTALLER)
 dnl ========================================================
 dnl Updater
 dnl ========================================================
-if test "$MOZ_XUL_APP"; then
-    MOZ_UPDATER=1
-fi
 
 MOZ_ARG_DISABLE_BOOL(updater,
 [  --disable-updater       Disable building of updater],
@@ -6477,7 +6482,6 @@ dnl ========================================================
 dnl
 dnl option to disable various necko protocols
 dnl
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 MOZ_ARG_ENABLE_STRING(necko-protocols,
 [  --enable-necko-protocols[={http,ftp,default,all,none}]
                           Enable/disable specific protocol handlers],
