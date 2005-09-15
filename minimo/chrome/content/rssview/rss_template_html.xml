@@ -26,13 +26,8 @@ xmlns:rss="http://purl.org/rss/1.0/"
 	                  <xsl:value-of select="rss:title"/>
 			</a>
 		</div>
-			<!--		
-				<xsl:attribute name="label">
-	                         <xsl:value-of select="rss:title"/>
-				</xsl:attribute> 
-			-->
 		</xsl:for-each>
-<style type="text/css"> .loading { display:none} </style>
+
 </div>
 </xsl:template>
 
