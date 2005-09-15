@@ -3534,9 +3534,14 @@ nsGlobalWindow::Print()
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
       if (printSettingsAreGlobal && savePrintSettings) {
-        printSettingsService->SavePrintSettingsToPrefs(printSettings,
-                                                       PR_TRUE, 
-                                                       nsIPrintSettings::kInitSaveAll);
+        printSettingsService->
+          SavePrintSettingsToPrefs(printSettings,
+                                   PR_TRUE,
+                                   nsIPrintSettings::kInitSaveAll);
+        printSettingsService->
+          SavePrintSettingsToPrefs(printSettings,
+                                   PR_FALSE,
+                                   nsIPrintSettings::kInitSavePrinterName);
       }
     } else {
       webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
