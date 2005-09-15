@@ -1959,15 +1959,17 @@ if ($action eq 'next_bug') {
         }
     }
 } elsif ($action eq 'same_bug') {
-    my $bug = new Bugzilla::Bug($cgi->param('id'), $whoid);
-    ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
+    if (Bugzilla->user->can_see_bug($cgi->param('id'))) {
+        my $bug = new Bugzilla::Bug($cgi->param('id'), $whoid);
+        ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 
-    $vars->{'bugs'} = [$bug];
+        $vars->{'bugs'} = [$bug];
 
-    $template->process("bug/show.html.tmpl", $vars)
-      || ThrowTemplateError($template->error());
+        $template->process("bug/show.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
 
-    exit;
+        exit;
+    }
 } elsif ($action ne 'nothing') {
     ThrowCodeError("invalid_post_bug_submit_action");
 }
