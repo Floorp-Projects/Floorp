@@ -768,7 +768,7 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
                                             SubmissionAttachmentArray *attachments)
 {
   nsAutoString mediaType;
-  mElement->GetAttribute(NS_LITERAL_STRING("mediaType"), mediaType);
+  mElement->GetAttribute(NS_LITERAL_STRING("mediatype"), mediaType);
   if (mediaType.IsEmpty())
     contentType.AssignLiteral("application/xml");
   else
