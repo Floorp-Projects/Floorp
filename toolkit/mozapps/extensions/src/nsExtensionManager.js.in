@@ -6625,6 +6625,7 @@ ExtensionsDataSource.prototype = {
       switch (this._updateURLs[id]) {
       case id:
         return getLiteral("updatingMessage", [itemName]);
+      case nsIAddonUpdateCheckListener.STATUS_APP_MANAGED:
       case nsIAddonUpdateCheckListener.STATUS_NO_UPDATE:
         return getLiteral("updateNoUpdateMessage", [itemName]);
       case nsIAddonUpdateCheckListener.STATUS_VERSIONINFO:
@@ -6635,8 +6636,6 @@ ExtensionsDataSource.prototype = {
         return getLiteral("updateErrorMessage", [itemName]);
       case nsIAddonUpdateCheckListener.STATUS_DISABLED:
         return getLiteral("updateDisabledMessage", [itemName]);
-      case nsIAddonUpdateCheckListener.STATUS_APP_MANAGED:
-        return getLiteral("updateAppManagedMessage", [itemName, BundleManager.appName]);
       case nsIAddonUpdateCheckListener.STATUS_READ_ONLY:
         return getLiteral("updateReadOnlyMessage", []);
       case nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED:
