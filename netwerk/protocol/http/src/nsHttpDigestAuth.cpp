@@ -62,18 +62,7 @@
 //-----------------------------------------------------------------------------
 
 nsHttpDigestAuth::nsHttpDigestAuth()
-{
-  mVerifier = do_GetService("@mozilla.org/security/hash;1");
-  mGotVerifier = (mVerifier != nsnull);
-
-#if defined(PR_LOGGING)
-  if (mGotVerifier) {
-    LOG(("nsHttpDigestAuth: Got signature_verifier\n"));
-  } else {
-    LOG(("nsHttpDigestAuth: No signature_verifier available\n"));
-  }
-#endif
-}
+{}
 
 nsHttpDigestAuth::~nsHttpDigestAuth()
 {}
@@ -91,11 +80,17 @@ NS_IMPL_ISUPPORTS1(nsHttpDigestAuth, nsIHttpAuthenticator)
 nsresult
 nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 {
-  if (!mGotVerifier)
-    return NS_ERROR_NOT_INITIALIZED;
-
   nsresult rv;
 
+  // Cache a reference to the nsICryptoHash instance since we'll be calling
+  // this function frequently.
+  if (!mVerifier) {
+    mVerifier = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
+    if (NS_FAILED(rv)) {
+      LOG(("nsHttpDigestAuth: no crypto hash!\n"));
+      return rv;
+    }
+  }
 
   rv = mVerifier->Init(nsICryptoHash::MD5);
   if (NS_FAILED(rv)) return rv;
@@ -106,9 +101,10 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
   nsCAutoString hashString;
   rv = mVerifier->Finish(PR_FALSE, hashString);
   if (NS_FAILED(rv)) return rv;
-  
-  if (NS_SUCCEEDED(rv))
-    memcpy(mHashBuf, hashString.get(), hashString.Length());
+
+  NS_ENSURE_STATE(hashString.Length() == sizeof(mHashBuf));
+  memcpy(mHashBuf, hashString.get(), hashString.Length());
+
   return rv;
 }
 
