@@ -1795,17 +1795,26 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     }
 
     /*
-     * Allocate operand and pc stack slots for the script's worst-case depth.
+     * Allocate operand and pc stack slots for the script's worst-case depth,
+     * unless we're called to interpret a part of an already active script, a
+     * filtering predicate expression for example.
      */
     depth = (jsint) script->depth;
-    newsp = js_AllocRawStack(cx, (uintN)(2 * depth), &mark);
-    if (!newsp) {
-        ok = JS_FALSE;
-        goto out2;
+    if (JS_LIKELY(!fp->spbase)) {
+        newsp = js_AllocRawStack(cx, (uintN)(2 * depth), &mark);
+        if (!newsp) {
+            ok = JS_FALSE;
+            goto out2;
+        }
+        sp = newsp + depth;
+        fp->spbase = sp;
+        SAVE_SP(fp);
+    } else {
+        sp = fp->sp;
+        JS_ASSERT(JS_UPTRDIFF(sp, fp->spbase) <= depth);
+        newsp = fp->spbase - depth;
+        mark = NULL;
     }
-    sp = newsp + depth;
-    fp->spbase = sp;
-    SAVE_SP(fp);
 
     endpc = script->code + script->length;
     while (pc < endpc) {
@@ -5067,6 +5076,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ok = js_FilterXMLList(cx, obj, pc + cs->length, &rval);
             if (!ok)
                 goto out;
+            JS_ASSERT(fp->sp == sp);
             STORE_OPND(-1, rval);
             break;
 
@@ -5318,9 +5328,13 @@ out2:
      * Clear spbase to indicate that we've popped the 2 * depth operand slots.
      * Restore the previous frame's execution state.
      */
-    fp->sp = fp->spbase;
-    fp->spbase = NULL;
-    js_FreeRawStack(cx, mark);
+    if (JS_LIKELY(mark)) {
+        fp->sp = fp->spbase;
+        fp->spbase = NULL;
+        js_FreeRawStack(cx, mark);
+    } else {
+        SAVE_SP(fp);
+    }
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     cx->interpLevel--;

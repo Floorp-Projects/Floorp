@@ -392,7 +392,30 @@ typedef unsigned long JSUword;
 
 #include "jsotypes.h"
 
+/***********************************************************************
+** MACROS:      JS_LIKELY
+**              JS_UNLIKELY
+** DESCRIPTION:
+**      These macros allow you to give a hint to the compiler about branch
+**      probability so that it can better optimize.  Use them like this:
+**
+**      if (JS_LIKELY(v == 1)) {
+**          ... expected code path ...
+**      }
+**
+**      if (JS_UNLIKELY(v == 0)) {
+**          ... non-expected code path ...
+**      }
+**
+***********************************************************************/
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#define JS_LIKELY(x)    (__builtin_expect((x), 1))
+#define JS_UNLIKELY(x)  (__builtin_expect((x), 0))
+#else
+#define JS_LIKELY(x)    (x)
+#define JS_UNLIKELY(x)  (x)
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jstypes_h___ */
-

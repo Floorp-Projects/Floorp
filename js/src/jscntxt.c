@@ -648,19 +648,26 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
 
     mark = lrs->scopeMark;
     lrc = lrs->topChunk;
-    while (--n > mark) {
+    do {
+        while (--n > mark) {
 #ifdef GC_MARK_DEBUG
-        char name[22];
-        JS_snprintf(name, sizeof name, "<local root %u>", n);
+            char name[22];
+            JS_snprintf(name, sizeof name, "<local root %u>", n);
 #else
-        const char *name = NULL;
+            const char *name = NULL;
 #endif
+            m = n & JSLRS_CHUNK_MASK;
+            JS_ASSERT(JSVAL_IS_GCTHING(lrc->roots[m]));
+            JS_MarkGCThing(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name, NULL);
+            if (m == 0)
+                lrc = lrc->down;
+        }
         m = n & JSLRS_CHUNK_MASK;
-        JS_ASSERT(JSVAL_IS_GCTHING(lrc->roots[m]));
-        JS_MarkGCThing(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name, NULL);
+        mark = lrc->roots[m];
         if (m == 0)
             lrc = lrc->down;
-    }
+    } while (n != 0);
+    JS_ASSERT(!lrc);
 }
 
 static void
