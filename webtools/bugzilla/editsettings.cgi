@@ -21,7 +21,6 @@ use lib qw(.);
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::User;
 use Bugzilla::User::Setting;
 
 require "globals.pl";
@@ -69,12 +68,12 @@ sub SaveSettings{
 ###  Live code  ###
 ###################
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 print $cgi->header;
 
-UserInGroup("tweakparams")
+$user->in_group('tweakparams')
   || ThrowUserError("auth_failure", {group  => "tweakparams",
                                      action => "modify",
                                      object => "settings"});

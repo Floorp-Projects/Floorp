@@ -31,7 +31,6 @@ use lib ".";
 
 use Bugzilla;
 use Bugzilla::Constants;
-use Bugzilla::User;
 use Bugzilla::Group;
 require "globals.pl";
 
@@ -40,11 +39,11 @@ my $dbh = Bugzilla->dbh;
 
 use vars qw($template $vars);
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header();
 
-UserInGroup("creategroups")
+$user->in_group('creategroups')
   || ThrowUserError("auth_failure", {group  => "creategroups",
                                      action => "edit",
                                      object => "groups"});

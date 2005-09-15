@@ -37,14 +37,13 @@ use Bugzilla::Constants;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::Group;
-use Bugzilla::User;
 use Bugzilla::Util;
 
 use vars qw( $template $vars );
 
 # Make sure the user is logged in and is an administrator.
-Bugzilla->login(LOGIN_REQUIRED);
-UserInGroup("editcomponents")
+my $user = Bugzilla->login(LOGIN_REQUIRED);
+$user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "flagtypes"});

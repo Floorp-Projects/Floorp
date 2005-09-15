@@ -53,7 +53,7 @@ my $whoid = $user->id;
 
 print $cgi->header();
 
-UserInGroup("editcomponents")
+$user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "components"});

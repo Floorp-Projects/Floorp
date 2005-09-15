@@ -28,18 +28,17 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin $datadir);
-use Bugzilla::User;
 
 require "globals.pl";
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 
 print $cgi->header();
 
-UserInGroup("tweakparams")
+$user->in_group('tweakparams')
   || ThrowUserError("auth_failure", {group  => "tweakparams",
                                      action => "modify",
                                      object => "parameters"});

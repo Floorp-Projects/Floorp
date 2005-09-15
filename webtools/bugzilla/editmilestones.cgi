@@ -23,7 +23,6 @@ require "globals.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
-use Bugzilla::User;
 use Bugzilla::Product;
 use Bugzilla::Milestone;
 use Bugzilla::Bug;
@@ -42,7 +41,7 @@ my $whoid = $user->id;
 
 print $cgi->header();
 
-UserInGroup("editcomponents")
+$user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "milestones"});

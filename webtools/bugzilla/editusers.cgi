@@ -43,7 +43,7 @@ my $editusers = $user->in_group('editusers');
 
 # Reject access if there is no sense in continuing.
 $editusers
-    || Bugzilla->user->can_bless()
+    || $user->can_bless()
     || ThrowUserError("auth_failure", {group  => "editusers",
                                        reason => "cant_bless",
                                        action => "edit",

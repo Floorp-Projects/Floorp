@@ -37,7 +37,6 @@ use Bugzilla::Constants;
 require "globals.pl";
 use Bugzilla::Bug;
 use Bugzilla::Series;
-use Bugzilla::User;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
@@ -242,7 +241,7 @@ my $whoid = $user->id;
 my $cgi = Bugzilla->cgi;
 print $cgi->header();
 
-UserInGroup("editcomponents")
+$user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "products"});

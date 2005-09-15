@@ -28,7 +28,6 @@ require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
-use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -60,11 +59,11 @@ sub Validate {
 # Preliminary checks:
 #
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header();
 
-UserInGroup("editkeywords")
+$user->in_group('editkeywords')
   || ThrowUserError("auth_failure", {group  => "editkeywords",
                                      action => "edit",
                                      object => "keywords"});

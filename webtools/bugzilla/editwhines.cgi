@@ -36,7 +36,7 @@ use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Group;
 # require the user to have logged in
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 ###############################################################################
 # Main Body Execution
@@ -46,7 +46,6 @@ my $cgi      = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $dbh      = Bugzilla->dbh;
 
-my $user     = Bugzilla->user;
 my $userid   = $user->id;
 
 my $sth; # database statement handle
@@ -73,7 +72,7 @@ my $sth; # database statement handle
 my $events = get_events($userid);
 
 # First see if this user may use whines
-UserInGroup("bz_canusewhines")
+$user->in_group('bz_canusewhines')
   || ThrowUserError("auth_failure", {group  => "bz_canusewhines",
                                      action => "schedule",
                                      object => "reports"});

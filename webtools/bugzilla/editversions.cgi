@@ -35,7 +35,6 @@ require "globals.pl";
 
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
-use Bugzilla::User;
 use Bugzilla::Product;
 use Bugzilla::Version;
 
@@ -48,11 +47,11 @@ my $dbh = Bugzilla->dbh;
 # Preliminary checks:
 #
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header();
 
-UserInGroup("editcomponents")
+$user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "versions"});
