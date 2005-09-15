@@ -34,7 +34,7 @@ package Bugzilla::Template;
 use strict;
 
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT $templatedir $datadir);
+use Bugzilla::Config qw(:DEFAULT $templatedir $datadir $project);
 use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Error;
@@ -110,10 +110,21 @@ sub getTemplateIncludePath {
     }
     my $languages = trim(Param('languages'));
     if (not ($languages =~ /,/)) {
-        return $template_include_path =
-               ["$templatedir/$languages/custom",
-                "$templatedir/$languages/extension",
-                "$templatedir/$languages/default"];
+       if ($project) {
+           $template_include_path = [
+               "$templatedir/$languages/$project",
+               "$templatedir/$languages/custom",
+               "$templatedir/$languages/extension",
+               "$templatedir/$languages/default"
+           ];
+       } else {
+           $template_include_path = [
+               "$templatedir/$languages/custom",
+               "$templatedir/$languages/extension",
+               "$templatedir/$languages/default"
+           ];
+       }
+        return $template_include_path;
     }
     my @languages       = sortAcceptLanguage($languages);
     my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "" );
@@ -129,11 +140,27 @@ sub getTemplateIncludePath {
         }
     }
     push(@usedlanguages, Param('defaultlanguage'));
-    return $template_include_path =
-        [map(("$templatedir/$_/custom",
-              "$templatedir/$_/extension",
-              "$templatedir/$_/default"),
-             @usedlanguages)];
+    if ($project) {
+        $template_include_path = [
+           map((
+               "$templatedir/$_/$project",
+               "$templatedir/$_/custom",
+               "$templatedir/$_/extension",
+               "$templatedir/$_/default"
+               ), @usedlanguages
+            )
+        ];
+    } else {
+        $template_include_path = [
+           map((
+               "$templatedir/$_/custom",
+               "$templatedir/$_/extension",
+               "$templatedir/$_/default"
+               ), @usedlanguages
+            )
+        ];
+    }
+    return $template_include_path;
 }
 
 sub put_header {

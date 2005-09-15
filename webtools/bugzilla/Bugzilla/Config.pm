@@ -50,11 +50,23 @@ use base qw(Exporter);
 # graphs (since the path will be wrong in the HTML). This will be fixed at
 # some point.
 
+# constant paths
 our $libpath = '.';
-our $localconfig = "$libpath/localconfig";
-our $datadir = "$libpath/data";
-our $attachdir = "$datadir/attachments";
 our $templatedir = "$libpath/template";
+
+# variable paths
+our $project;
+our $localconfig;
+our $datadir;
+if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
+    $project = $1;
+    $localconfig = "$libpath/localconfig.$project";
+    $datadir = "$libpath/data/$project";
+} else {
+    $localconfig = "$libpath/localconfig";
+    $datadir = "$libpath/data";
+}
+our $attachdir = "$datadir/attachments";
 our $webdotdir = "$datadir/webdot";
 
 # Module stuff
@@ -71,8 +83,8 @@ our $webdotdir = "$datadir/webdot";
   (
    admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
-   locations => [qw($libpath $localconfig $attachdir
-                    $datadir $templatedir $webdotdir)],
+   locations => [qw($libpath $localconfig $attachdir $datadir $templatedir
+                    $webdotdir $project)],
   );
 Exporter::export_ok_tags('admin', 'db', 'locations');
 
