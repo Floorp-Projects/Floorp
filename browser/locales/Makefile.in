@@ -61,6 +61,7 @@ APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
+	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DLOCALE_SRCDIR=$(LOCALE_SRCDIR) \
 	-DPKG_BASENAME=$(PKG_BASENAME) \
