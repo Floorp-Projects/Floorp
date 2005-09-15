@@ -7821,7 +7821,6 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 {
     JSBool ok, match;
     JSStackFrame *fp;
-    jsval *spbase;
     JSObject *scobj, *listobj, *resobj, *withobj, *kidobj;
     JSXML *xml, *list, *result, *kid;
     uint32 i, n;
@@ -7832,7 +7831,6 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
 
     /* All control flow after this point must exit via label out or bad. */
     fp = cx->fp;
-    spbase = fp->spbase;
     scobj = fp->scopeChain;
     xml = GetPrivate(cx, obj, "filtering predicate operator");
     if (!xml)
@@ -7867,10 +7865,7 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
         if (!kidobj)
             goto bad;
         OBJ_SET_PROTO(cx, withobj, kidobj);
-        ok = js_Interpret(cx, pc, vp);
-        if (!ok)
-            goto out;
-        ok = js_ValueToBoolean(cx, *vp, &match);
+        ok = js_Interpret(cx, pc, vp) && js_ValueToBoolean(cx, *vp, &match);
         if (!ok)
             goto out;
         if (match) {
@@ -7883,7 +7878,6 @@ js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(resobj);
 
 out:
-    fp->spbase = spbase;
     fp->scopeChain = scobj;
     JS_LeaveLocalRootScope(cx);
     return ok;
