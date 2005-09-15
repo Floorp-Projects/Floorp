@@ -112,7 +112,6 @@ class nsHttpDigestAuth : public nsIHttpAuthenticator
   protected:
     nsCOMPtr<nsICryptoHash>        mVerifier;
     char                           mHashBuf[DIGEST_LENGTH];
-    PRBool                         mGotVerifier;
 };
 
 #endif // nsHttpDigestAuth_h__
