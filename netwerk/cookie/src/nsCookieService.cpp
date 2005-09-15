@@ -527,7 +527,7 @@ nsCookieService::GetCookieList(nsIURI           *aHostURI,
   // if it isn't, then we can't send a secure cookie over the connection.
   // if SchemeIs fails, assume an insecure connection, to be on the safe side
   PRBool isSecure;
-  if NS_FAILED(aHostURI->SchemeIs("https", &isSecure)) {
+  if (NS_FAILED(aHostURI->SchemeIs("https", &isSecure))) {
     isSecure = PR_FALSE;
   }
 
