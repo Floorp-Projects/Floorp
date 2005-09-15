@@ -257,11 +257,11 @@ NPP_NewStream(NPP instance,
 int32
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
-    /***** Insert NPP_WriteReady code here *****\
-    PluginInstance* This;
-    if (instance != NULL)
-        This = (PluginInstance*) instance->pdata;
-    \*******************************************/
+    if (instance == NULL)
+        return NPERR_INVALID_INSTANCE_ERROR;
+
+    /* We don't want any data, kill the stream */
+    NPN_DestroyStream(instance, stream, NPRES_DONE);
 
     /* Number of bytes ready to accept in NPP_Write() */
     return -1L;   /* don't accept any bytes in NPP_Write() */
@@ -271,14 +271,13 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 int32
 NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 {
-    /***** Insert NPP_Write code here *****\
-    PluginInstance* This;
+    if (instance == NULL)
+        return NPERR_INVALID_INSTANCE_ERROR;
 
-    if (instance != NULL)
-        This = (PluginInstance*) instance->pdata;
-    \**************************************/
+    /* We don't want any data, kill the stream */
+    NPN_DestroyStream(instance, stream, NPRES_DONE);
 
-    return -1;   /* tell the browser to abort the stream, don't need it */
+    return -1L;   /* don't accept any bytes in NPP_Write() */
 }
 
 
