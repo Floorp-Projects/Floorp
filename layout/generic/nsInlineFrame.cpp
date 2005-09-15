@@ -865,7 +865,7 @@ NS_IMETHODIMP nsInlineFrame::GetAccessible(nsIAccessible** aAccessible)
     if (!accService)
       return NS_ERROR_FAILURE;
     if (tagAtom == nsHTMLAtoms::input)  // Broken <input type=image ... />
-      return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+      return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
     else if (tagAtom == nsHTMLAtoms::img)  // Create accessible for broken <img>
       return accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
     else if (tagAtom == nsHTMLAtoms::label)  // Creat accessible for <label>
