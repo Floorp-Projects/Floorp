@@ -44,9 +44,6 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "New Browser...",              MOZ_NewBrowser
-        MENUITEM SEPARATOR
-        MENUITEM "&Save As...",                 MOZ_Save
-        MENUITEM "Print Page",                  MOZ_Print
         MENUITEM "E&xit",                       IDM_EXIT
     END
     POPUP "&Edit"

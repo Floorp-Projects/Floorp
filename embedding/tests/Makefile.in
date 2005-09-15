@@ -40,10 +40,10 @@ DIRS = os2Embed
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+# disable winembed+mfcembed in static builds
+ifndef BUILD_STATIC_LIBS
 DIRS = winEmbed
 
-# disable mfcembed in static builds
-ifndef BUILD_STATIC_LIBS
 ifndef GNU_CC
 ifndef NO_MFC
 DIRS += mfcembed/components mfcembed

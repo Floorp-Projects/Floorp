@@ -207,11 +207,7 @@ endif
 DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.pl --emversion --topsrcdir=$(topsrcdir))\"
 
 export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $^ $(srcdir)
-else
 	$(INSTALL) $^ .
-endif
 
 ifdef USE_PREBINDING
 libs::

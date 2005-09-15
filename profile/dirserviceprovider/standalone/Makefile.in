@@ -63,5 +63,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES = -I$(srcdir)/../src
 
+DEFINES += -DXPCOM_GLUE
+
 export:: $(MODULES_PROFILEDIRSERVICE_SRC_CSRCS)
 	$(INSTALL) $^ .
