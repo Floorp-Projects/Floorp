@@ -98,11 +98,6 @@ DoNothing(const Rect *bounds, UInt32 eraseData, SInt16 depth, Boolean isColorDev
   // be gentle, erase nothing.
 }
 
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
          
 NS_IMPL_ISUPPORTS1(nsNativeThemeMac, nsITheme)
 
@@ -127,10 +122,6 @@ nsNativeThemeMac::~nsNativeThemeMac()
   if ( mEraseProc )
     ::DisposeThemeEraseUPP(mEraseProc);
 }
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 
 void
@@ -523,11 +514,6 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
   
   return NS_OK;
 }
-
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 
 NS_IMETHODIMP
