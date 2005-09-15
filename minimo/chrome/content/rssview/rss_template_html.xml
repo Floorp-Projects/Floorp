@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE stylesheet [
+<!ATTLIST xsl:sort id ID #IMPLIED>
+<!ATTLIST xsl:variable id ID #IMPLIED>
+]>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:rss="http://purl.org/rss/1.0/"
+>
+
+<xsl:output method="html" indent="yes"/>
+
+<xsl:template match="/">
+
+<div>
+
+		<xsl:for-each select="/rdf:RDF/rss:item">
+
+
+		<div class='item'>
+			<a>
+				<xsl:attribute name="href">
+	                         <xsl:value-of select="rss:link"/>
+				</xsl:attribute> 	
+	                  <xsl:value-of select="rss:title"/>
+			</a>
+		</div>
+			<!--		
+				<xsl:attribute name="label">
+	                         <xsl:value-of select="rss:title"/>
+				</xsl:attribute> 
+			-->
+		</xsl:for-each>
+<style type="text/css"> .loading { display:none} </style>
+</div>
+</xsl:template>
+
+
+</xsl:stylesheet>
