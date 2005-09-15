@@ -71,7 +71,10 @@ var PrintUtils = {
       if (gPrintSettingsAreGlobal && gSavePrintSettings) {
         var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
                               .getService(Components.interfaces.nsIPrintSettingsService);
-        PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveAll);
+        PSSVC.savePrintSettingsToPrefs(printSettings, true,
+                                       printSettings.kInitSaveAll);
+        PSSVC.savePrintSettingsToPrefs(printSettings, false,
+                                       printSettings.kInitSavePrinterName);
       }
     } catch (e) {
       // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
