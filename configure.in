@@ -7133,10 +7133,12 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
     if test ! "$VACPP" && test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE"; then
-        $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --libdir=$v/lib --libs`; s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $v }' config/autoconf.mk
+       _libs=`./nsprpub/config/nspr-config --prefix=$\(DIST\) --exec-prefix=$\(DIST\) --libdir=$\(DIST\)/lib --libs`
+       $PERL -pi.bak -e "s '^NSPR_LIBS\\s*=.*'NSPR_LIBS = $_libs'" config/autoconf.mk
     fi
     if test "$OS_ARCH" != "WINNT" && test "$OS_ARCH" != "WINCE" ; then
-        $PERL -pi.bak -e '$v = q|$\\(DIST\\)|; $v = `./nsprpub/config/nspr-config --prefix=$v --exec-prefix=$v --includedir=$v/include/nspr --cflags`; s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $v }' config/autoconf.mk
+       _cflags=`./nsprpub/config/nspr-config --prefix=$\(DIST\) --exec-prefix=$\(DIST\) --includedir=$\(DIST\)/include/nspr --cflags`
+       $PERL -pi.bak -e "s '^NSPR_CFLAGS\\s*=.*'NSPR_CFLAGS = $_cflags'" config/autoconf.mk
     fi
     rm -f config/autoconf.mk.bak
 fi
