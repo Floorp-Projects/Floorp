@@ -41,7 +41,6 @@ const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
 var gPrefs = null;
 var gURLBar = null;
-var gBrowserStatusHandlerArray=new Array();
 var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
@@ -71,7 +70,6 @@ nsBrowserStatusHandler.prototype =
     this.urlBar           = document.getElementById("urlbar");
     this.stopreloadButton = document.getElementById("reload-stop-button");
     this.progressBGPosition = 0;  /* To be removed, fix in onProgressChange ... */ 
-    
   },
 
   destroy : function()
@@ -84,7 +82,9 @@ nsBrowserStatusHandler.prototype =
 
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
-
+    var refBrowser=null;
+    var tabItem=null;
+    
     if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK)
     {
 
@@ -92,12 +92,32 @@ nsBrowserStatusHandler.prototype =
       {
         this.stopreloadButton.className = "stop-button";
         this.stopreloadButton.onClick = "BrowserStop()";
-
+        
         return;
       }
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
+      
+        /* Find this Browser and this Tab */ 
+        
+        if (getBrowser().mTabbedMode) {
+          for (var i = 0; i < getBrowser().mPanelContainer.childNodes.length; i++) {
+            if(getBrowser().getBrowserAtIndex(i).contentDocument==aWebProgress.DOMWindow.document) {				
+              refBrowser=getBrowser().getBrowserAtIndex(i);
+              tabItem=getBrowser().mTabContainer.childNodes[i];
+			} 
+          }
+        }
+        
+        /* Apply RSS fetch if the request type is for rss view. 
+           Gotta fix this to use a better approach.  */
+        
+        const rsschromemask = "rssblank";
+        if(aRequest.name.indexOf(rsschromemask)>-1) {
+          rssfetch(tabItem,refBrowser.contentDocument,refBrowser.contentDocument.body);
+        }
+      
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
@@ -142,13 +162,21 @@ nsBrowserStatusHandler.prototype =
   },
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
-        domWindow = aWebProgress.DOMWindow;
-        // Update urlbar only if there was a load on the root docshell
-        if (domWindow == domWindow.top) {
-          this.urlBar.value = aLocation.spec;
-        }
-        this.refTab.setAttribute("lastLocation",aLocation.spec);
-  },
+     /* Ideally we dont want to check this here.
+     Better to have some other protocol view-rss in the chrome */
+
+     const rsschromemask = "chrome://minimo/content/rssview/rssblank.xhtml";
+
+     if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
+        this.urlBar.value=" rss view "; 
+     } else {
+      domWindow = aWebProgress.DOMWindow;
+      // Update urlbar only if there was a load on the root docshell
+      if (domWindow == domWindow.top) {
+        this.urlBar.value = aLocation.spec;
+      }
+    }
+},
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
@@ -187,7 +215,6 @@ nsBrowserStatusHandler.prototype =
 
 /* moved this as global */ 
 
-
 function MiniNavStartup()
 {
   gPrefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -200,7 +227,20 @@ function MiniNavStartup()
 
   var homepage = gPrefs.getCharPref("browser.startup.homepage");
 
+  var BrowserStatusHandler = new nsBrowserStatusHandler();
+  BrowserStatusHandler.init();
+  try {
+    var webNavigation=getBrowser().webNavigation;
+    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+
+    getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+    getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  } catch (e) {
+    alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
+  }
+
   loadURI(homepage);
+  
 }
 
 /** 
@@ -209,33 +249,14 @@ function MiniNavStartup()
   **/
 function browserInit(refTab)
 {
-
-    var BrowserStatusHandler = new nsBrowserStatusHandler();
-
-    BrowserStatusHandler.init();
-    BrowserStatusHandler.refTab=refTab; // WARNING (was refTab);
-
-    try {
-
-      getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-      gBrowserStatusHandlerArray.push(BrowserStatusHandler);
-
-      var refBrowser=getBrowser().getBrowserForTab(refTab);
-      var webNavigation=refBrowser.webNavigation;
-      webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
-
-      // enable global history
-      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-
-    } catch (e) {
-      alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
-    }
-
-    try {
-      refBrowser.markupDocumentViewer.textZoom = .90;
-    } catch (e) {}
-    gURLBar = document.getElementById("urlbar");
-
+  var refBrowser=getBrowser().getBrowserForTab(refTab);
+  try {
+    refBrowser.markupDocumentViewer.textZoom = .90;
+  } catch (e) {
+  
+  }
+  gURLBar = document.getElementById("urlbar");
+  
 }
 
 function MiniNavShutdown()
@@ -318,7 +339,6 @@ function BrowserViewOptions() {
 	document.getElementById("command_ViewOptions").setAttribute("checked","false");
   }
 }
-
 /** 
   * Work-in-progress, this handler is 100% generic and gets all the clicks for the entire tabbed 
   * content area. Need to fix with the approach where we handler only clicks for the actual tab. 
@@ -330,12 +350,11 @@ function tabbrowserAreaClick(e) {
     // updates the location bar with the lastLocation for the given selectedTab. 
     // Note that currently the lastLocation is stored in the DOM for the selectedTab. 
 
-    gSelectedTab=getBrowser().selectedTab; 
-    gURLBar.value=gSelectedTab.getAttribute("lastLocation");
-    document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
+   // gSelectedTab=getBrowser().selectedTab; 
+    //gURLBar.value=gSelectedTab.getAttribute("lastLocation");
+   // document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
 }
-
 
 /** 
   * urlbar indentity, style, progress indicator.
@@ -378,6 +397,14 @@ function BrowserPopupShowing () {
   }
 }
 
+function DoBrowserRSS() {
+  try { 
+    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
+    browserInit(getBrowser().selectedTab);
+  } catch (e) {
+    alert(e);
+  }  
+}
 
 function DoPanelPreferences() {
   window.openDialog("chrome://minimo/content/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
