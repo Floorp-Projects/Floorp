@@ -83,7 +83,7 @@ function startup()
       listitem.profile = profile;
       try {
         if (profile === gProfileService.selectedProfile) {
-          profilesElement.selectedItem = listitem;
+          setTimeout(function f(a) { profilesElement.selectedItem = a; }, 0, listitem);
         }
       }
       catch(e) { }
