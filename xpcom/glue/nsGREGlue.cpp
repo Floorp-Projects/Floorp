@@ -75,6 +75,30 @@
 
 #include <sys/stat.h>
 
+/**
+ * Like strncat, appends a buffer to another buffer. This is where the
+ * similarity ends. Firstly, the "count" here is the total size of the buffer
+ * (not the number of chars to append. Secondly, the function returns PR_FALSE
+ * if the buffer is not long enough to hold the concatenated string.
+ */
+static PRBool safe_strncat(char *dest, const char *append, PRUint32 count)
+{
+  char *end = dest + count - 1;
+
+  // skip to the end of dest
+  while (*dest)
+    ++dest;
+
+  while (*append && dest < end) {
+    *dest = *append;
+    ++dest, ++append;
+  }
+
+  *dest = '\0';
+
+  return *append == '\0';
+}
+
 static PRBool
 CheckVersion(const char* toCheck,
              const GREVersionRange *versions,
@@ -474,6 +498,10 @@ CheckINIHeader(const char *aHeader, void *aClosure)
   if (NS_FAILED(rv))
     return PR_TRUE;
 
+  if (!safe_strncat(c->pathBuffer, "/" XPCOM_DLL, c->buflen) ||
+      access(c->pathBuffer, R_OK))
+    return PR_TRUE;
+
   // We found a good GRE! Stop looking.
   c->found = PR_TRUE;
   return PR_FALSE;
@@ -600,8 +628,11 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
           (!::RegQueryValueEx(subKey, "GreHome", NULL, &pathtype,
                               (BYTE*) pathbuf, &pathlen) == ERROR_SUCCESS ||
            !*pathbuf ||
-           !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype) ||
-           access(aBuffer, R_OK))) {
+           !CopyWithEnvExpansion(aBuffer, pathbuf, aBufLen, pathtype))) {
+        ok = PR_FALSE;
+      }
+      else if (!safe_strncat(aBuffer, "\\" XPCOM_DLL, aBufLen) ||
+               access(aBuffer, R_OK)) {
         ok = PR_FALSE;
       }
     }
@@ -613,6 +644,8 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
 
     ++i;
   }
+
+  aBuffer[0] = '\0';
 
   return PR_FALSE;
 }
