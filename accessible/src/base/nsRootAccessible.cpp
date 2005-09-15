@@ -697,7 +697,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     if (accessible == this) {
       // Top level window focus events already automatically fired by MSAA
       // based on HWND activities. Don't fire the extra focus event.
+      NS_IF_RELEASE(gLastFocusedNode);
       gLastFocusedNode = mDOMNode;
+      NS_IF_ADDREF(gLastFocusedNode);
       return NS_OK;
     }
     FireAccessibleFocusEvent(accessible, targetNode);
