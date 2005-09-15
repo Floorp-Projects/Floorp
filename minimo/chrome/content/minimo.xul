@@ -61,6 +61,7 @@
   onunload="MiniNavShutdown()">
 
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
+  <script type="application/x-javascript" src="chrome://minimo/content/rssview/rssload.js"/>
 
   <popupset id="mainPopupSet">
     <popup type="autocomplete" id="PopupAutoComplete"/>
@@ -79,13 +80,15 @@
 	<command id="cmd_BrowserReload" oncommand="BrowserReload()" />
 	<command id="cmd_BrowserZoomPlus" oncommand="BrowserResetZoomPlus()" />
 	<command id="cmd_BrowserZoomMinus" oncommand="BrowserResetZoomMinus()" />
-    <command id="cmd_DoPanelPreferences" oncommand="DoPanelPreferences()" />
-		
+    <command id="cmd_DoPanelPreferences" oncommand="DoPanelPreferences()" /> 
+    <command id="cmd_DoBrowserRSS" oncommand="DoBrowserRSS()" />
+    
     <toolbar id="nav-bar">
        <menubar  class="chromeclass-menubar">
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+		     <menuitem id="command_DoBrowserRSS" command="cmd_DoBrowserRSS" label="RSS slashdot"  /> 
 
 <!--          not working just yet.
 		     <menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
@@ -149,7 +152,7 @@
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
-                    onclick="tabbrowserAreaClick(event)" 
+                    
                     onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>
