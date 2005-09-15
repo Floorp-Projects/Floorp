@@ -256,9 +256,9 @@
 
             this._selectedItem = aItem;
             this._selectedIndex = this.getIndexOf(aItem);
+            this.ensureSelectedElementIsVisible();
 
             if (aItem) {
-              this.ensureSelectedElementIsVisible();
               aItem.selected = true;
               aItem.focus();
             }
@@ -347,7 +347,8 @@
         <parameter name="aElement"/>
         <body>
           <![CDATA[
-            this.scrollBoxObject.ensureElementIsVisible(aElement);
+            if (aElement)
+              this.scrollBoxObject.ensureElementIsVisible(aElement);
           ]]>
         </body>
       </method>
