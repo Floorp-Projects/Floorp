@@ -87,6 +87,17 @@ nsNativeComponentLoader::nsNativeComponentLoader() :
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsNativeComponentLoader, 
                               nsIComponentLoader)
 
+
+static void BroadcastLoadFailure(nsDll *dll)
+{
+    nsCOMPtr<nsIFile> fs;
+    dll->GetDllSpec(getter_AddRefs(fs));
+
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+    if (observerService)
+        observerService->NotifyObservers(fs, "xpcom-loader", NS_LITERAL_STRING("Load Failed").get());
+}
+
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,
                                     const char *aLocation,
@@ -129,6 +140,8 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
                 PR_GetErrorText(errorMsg);
 
             DumpLoadError(dll, "GetFactory", errorMsg);
+
+            BroadcastLoadFailure(dll);
 
             return NS_ERROR_FAILURE;
         }
@@ -389,6 +402,8 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
             PR_GetErrorText(errorMsg);
 
         DumpLoadError(dll, "SelfRegisterDll", errorMsg);
+
+        BroadcastLoadFailure(dll);
 
         return NS_ERROR_FAILURE;
     }
