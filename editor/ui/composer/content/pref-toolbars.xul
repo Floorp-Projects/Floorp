@@ -41,7 +41,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-toolbars.xul');"
-      headertitle="&header.title;">
+      headertitle="&pref.toolbars.title;">
 
   <script type="application/x-javascript">
   <![CDATA[

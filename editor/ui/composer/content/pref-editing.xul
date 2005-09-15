@@ -43,7 +43,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-editing.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.editing.title;">
 
   <script lanugage="JavaScript">
   <![CDATA[

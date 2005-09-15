@@ -44,7 +44,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-composer.xul');"
-      headertitle="&lHeader;">
+      headertitle="&pref.composer.title;">
 
   <script type="application/x-javascript">
   <!-- Add "shouldAutoSave", "autoSaveAmount" to _elementIDs when implemented -->

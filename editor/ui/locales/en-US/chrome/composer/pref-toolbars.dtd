@@ -34,38 +34,38 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY header.title "Toolbars">
+<!ENTITY pref.toolbars.title    "Toolbars">
 
-<!ENTITY composition.caption "Show these buttons in the Composition Toolbar:">
+<!ENTITY composition.caption    "Show these buttons in the Composition Toolbar:">
 
-<!ENTITY new.label "New">
-<!ENTITY open.label "Open">
-<!ENTITY save.label "Save">
-<!ENTITY publish.label "Publish">
-<!ENTITY preview.label "Browse">
-<!ENTITY cut.label "Cut">
-<!ENTITY copy.label "Copy">
-<!ENTITY paste.label "Paste">
-<!ENTITY print.label "Print">
-<!ENTITY find.label "Find">
-<!ENTITY image.label "Image">
-<!ENTITY hline.label "H. Line">
-<!ENTITY table.label "Table">
-<!ENTITY link.label "Link">
-<!ENTITY anchor.label "Anchor">
+<!ENTITY new.label              "New">
+<!ENTITY open.label             "Open">
+<!ENTITY save.label             "Save">
+<!ENTITY publish.label          "Publish">
+<!ENTITY preview.label          "Browse">
+<!ENTITY cut.label              "Cut">
+<!ENTITY copy.label             "Copy">
+<!ENTITY paste.label            "Paste">
+<!ENTITY print.label            "Print">
+<!ENTITY find.label             "Find">
+<!ENTITY image.label            "Image">
+<!ENTITY hline.label            "H. Line">
+<!ENTITY table.label            "Table">
+<!ENTITY link.label             "Link">
+<!ENTITY anchor.label           "Anchor">
 
-<!ENTITY formatting.caption "Show these buttons in the Formatting Toolbar:">
+<!ENTITY formatting.caption     "Show these buttons in the Formatting Toolbar:">
 
-<!ENTITY smaller.label "Smaller">
-<!ENTITY larger.label "Larger">
-<!ENTITY bold.label "Bold">
-<!ENTITY bullets.label "Bullets">
-<!ENTITY numbers.label "Numbers">
-<!ENTITY italic.label "Italic">
-<!ENTITY outdent.label "Outdent">
-<!ENTITY indent.label "Indent">
-<!ENTITY underline.label "Underline">
+<!ENTITY smaller.label          "Smaller">
+<!ENTITY larger.label           "Larger">
+<!ENTITY bold.label             "Bold">
+<!ENTITY bullets.label          "Bullets">
+<!ENTITY numbers.label          "Numbers">
+<!ENTITY italic.label           "Italic">
+<!ENTITY outdent.label          "Outdent">
+<!ENTITY indent.label           "Indent">
+<!ENTITY underline.label        "Underline">
 
 <!ENTITY absolutePosition.label "Absolute positioning">
-<!ENTITY decreaseZIndex.label "Send to back">
-<!ENTITY increaseZIndex.label "Bring to front">
+<!ENTITY decreaseZIndex.label   "Send to back">
+<!ENTITY increaseZIndex.label   "Bring to front">

@@ -2,23 +2,21 @@
 
 <!--LOCALIZATION NOTE : FILE 'Composer' prefs dialog. Similar to Communcator 4.x Document Properties/Colors and Background -->
 
-<!--LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
-<!ENTITY  title.label               "Composer">
-<!ENTITY  lHeader                   "Composer">
-<!ENTITY  rHeader                   "Settings for authoring of new Web pages">
+<!--LOCALIZATION NOTE (pref.composer.title): DONT_TRANSLATE -->
+<!ENTITY  pref.composer.title           "Composer">
 
-<!ENTITY  saving                    "Saving">
-<!ENTITY  AutoSaveCheck             "Automatically save every">
-<!ENTITY  minText                   "minutes">
+<!ENTITY  saving                        "Saving">
+<!ENTITY  AutoSaveCheck                 "Automatically save every">
+<!ENTITY  minText                       "minutes">
 
-<!ENTITY  exterLegend.label         "External Editors">
-<!ENTITY  htmlSource                "HTML Source:">
-<!ENTITY  imageeditor               "Images:">
-<!ENTITY  chooseButton.label        "Choose">
+<!ENTITY  exterLegend.label             "External Editors">
+<!ENTITY  htmlSource                    "HTML Source:">
+<!ENTITY  imageeditor                   "Images:">
+<!ENTITY  chooseButton.label            "Choose">
 
-<!ENTITY  recentFiles.title         "Recent Pages Menu">
-<!ENTITY  documentsInMenu.label     "Maximum number of pages listed:">
-<!ENTITY  documentsInMenu.accesskey "n">
+<!ENTITY  recentFiles.title             "Recent Pages Menu">
+<!ENTITY  documentsInMenu.label         "Maximum number of pages listed:">
+<!ENTITY  documentsInMenu.accesskey     "n">
 
 <!ENTITY  savingFiles.title             "When Saving or Publishing Pages">
 <!ENTITY  preserveExisting.label        "Preserve original source formatting">

@@ -42,7 +42,7 @@
 <!DOCTYPE page SYSTEM "chrome://editor/locale/pref-publish.dtd" >
 <page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      title="&window.title;"
+      title="&pref.publish.title;"
       onload="if( parent.handle ) parent.handle.onpageload( 'pref-publish' ); else parent.queuedTag = 'pref-publish';">
 
 <html:div flex="100%">
