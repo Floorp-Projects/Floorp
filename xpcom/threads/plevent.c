@@ -73,8 +73,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #define MAC_USE_CFRUNLOOPSOURCE
 #elif defined(TARGET_CARBON)
-// #include <CarbonEvents.h>
-// #define MAC_USE_CARBON_EVENT
+/* #include <CarbonEvents.h> */
+/* #define MAC_USE_CARBON_EVENT */
 #include <CoreFoundation/CoreFoundation.h>
 #define MAC_USE_CFRUNLOOPSOURCE
 #endif
@@ -278,7 +278,7 @@ static PLEventQueue * _pl_CreateEventQueue(const char *name,
     return NULL;
 }
 
-PR_IMPLEMENT(PLEventQueue*)
+PLEventQueue*
 PL_CreateEventQueue(const char* name, PRThread* handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
@@ -296,7 +296,7 @@ PL_CreateMonitoredEventQueue(const char *name, PRThread *handlerThread)
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
 }
 
-PR_IMPLEMENT(PRMonitor*)
+PRMonitor*
 PL_GetEventQueueMonitor(PLEventQueue* self)
 {
     return self->monitor;
@@ -309,7 +309,7 @@ _pl_destroyEvent(PLEvent* event, void* data, PLEventQueue* queue)
     PL_DestroyEvent(event);
 }
 
-PR_IMPLEMENT(void)
+void
 PL_DestroyEventQueue(PLEventQueue* self)
 {
     PR_EnterMonitor(self->monitor);
@@ -327,7 +327,7 @@ PL_DestroyEventQueue(PLEventQueue* self)
 
 }
 
-PR_IMPLEMENT(PRStatus)
+PRStatus
 PL_PostEvent(PLEventQueue* self, PLEvent* event)
 {
     PRStatus err = PR_SUCCESS;
@@ -369,7 +369,7 @@ error:
     return err;
 }
 
-PR_IMPLEMENT(void*)
+void*
 PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 {
     void* result;
@@ -439,7 +439,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
     return result;
 }
 
-PR_IMPLEMENT(PLEvent*)
+PLEvent*
 PL_GetEvent(PLEventQueue* self)
 {
     PLEvent* event = NULL;
@@ -472,7 +472,7 @@ PL_GetEvent(PLEventQueue* self)
     return event;
 }
 
-PR_IMPLEMENT(PRBool)
+PRBool
 PL_EventAvailable(PLEventQueue* self)
 {
     PRBool result = PR_FALSE;
@@ -489,7 +489,7 @@ PL_EventAvailable(PLEventQueue* self)
     return result;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_MapEvents(PLEventQueue* self, PLEventFunProc fun, void* data)
 {
     PRCList* qp;
@@ -533,7 +533,7 @@ _pl_DestroyEventForOwner(PLEvent* event, void* owner, PLEventQueue* queue)
     }
 }
 
-PR_IMPLEMENT(void)
+void
 PL_RevokeEvents(PLEventQueue* self, void* owner)
 {
     if (self == NULL)
@@ -588,7 +588,7 @@ _pl_GetEventCount(PLEventQueue* self)
     return count;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_ProcessPendingEvents(PLEventQueue* self)
 {
     PRInt32 count;
@@ -648,7 +648,7 @@ PL_ProcessPendingEvents(PLEventQueue* self)
  * Event Operations
  ******************************************************************************/
 
-PR_IMPLEMENT(void)
+void
 PL_InitEvent(PLEvent* self, void* owner,
              PLHandleEventProc handler,
              PLDestroyEventProc destructor)
@@ -669,13 +669,13 @@ PL_InitEvent(PLEvent* self, void* owner,
 #endif
 }
 
-PR_IMPLEMENT(void*)
+void*
 PL_GetEventOwner(PLEvent* self)
 {
     return self->owner;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_HandleEvent(PLEvent* self)
 {
     void* result;
@@ -704,7 +704,7 @@ static long s_eventCount = 0;
 static long s_totalTime  = 0;
 #endif
 
-PR_IMPLEMENT(void)
+void
 PL_DestroyEvent(PLEvent* self)
 {
     if (self == NULL)
@@ -727,7 +727,7 @@ PL_DestroyEvent(PLEvent* self)
     self->destructor(self);
 }
 
-PR_IMPLEMENT(void)
+void
 PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
 {
     if (self == NULL)
@@ -758,7 +758,7 @@ PL_DequeueEvent(PLEvent* self, PLEventQueue* queue)
     PR_ExitMonitor(queue->monitor);
 }
 
-PR_IMPLEMENT(void)
+void
 PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation,
                         PRUint32 starvationDelay)
 {
@@ -790,7 +790,7 @@ PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation,
  * select, thread messages, or AppleEvents.
  ******************************************************************************/
 
-PR_IMPLEMENT(PLEvent*)
+PLEvent*
 PL_WaitForEvent(PLEventQueue* self)
 {
     PLEvent* event;
@@ -814,7 +814,7 @@ PL_WaitForEvent(PLEventQueue* self)
     return event;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_EventLoop(PLEventQueue* self)
 {
     if (self == NULL)
@@ -1364,7 +1364,7 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 #endif
 }
 
-PR_IMPLEMENT(PRInt32)
+PRInt32
 PL_GetEventQueueSelectFD(PLEventQueue* self)
 {
     if (self == NULL)
@@ -1379,7 +1379,7 @@ PL_GetEventQueueSelectFD(PLEventQueue* self)
 #endif
 }
 
-PR_IMPLEMENT(PRBool)
+PRBool
 PL_IsQueueOnCurrentThread( PLEventQueue *queue )
 {
     PRThread *me = PR_GetCurrentThread();
@@ -1642,7 +1642,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 
-PR_IMPLEMENT(PRInt32)
+PRInt32
 PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID)
 {
     PRInt32 count = 0;
@@ -1716,7 +1716,7 @@ PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID)
     return count;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_RegisterEventIDFunc(PLEventQueue *aSelf, PLGetEventIDFunc aFunc,
                        void *aClosure)
 {
@@ -1724,7 +1724,7 @@ PL_RegisterEventIDFunc(PLEventQueue *aSelf, PLGetEventIDFunc aFunc,
     aSelf->idFuncClosure = aClosure;
 }
 
-PR_IMPLEMENT(void)
+void
 PL_UnregisterEventIDFunc(PLEventQueue *aSelf)
 {
     aSelf->idFunc = 0;
