@@ -1,5 +1,4 @@
-<!ENTITY  lHeader                   "New Page Settings">
-<!ENTITY  rHeader                   "Defaults for new pages">
+<!ENTITY  pref.editing.title        "New Page Settings">
 
 <!ENTITY  authorName.label          "Author:">
 <!ENTITY  authorName.accesskey      "u">
