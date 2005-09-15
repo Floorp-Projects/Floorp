@@ -3148,6 +3148,7 @@ ExtensionManager.prototype = {
 
     // Always check for compatibility updates when upgrading
     this._showMismatchWindow();
+    this._finishOperations();
 
     // Now disable any remaining incompatible items so they won't hurt anything.
     var ds = this.datasource;
