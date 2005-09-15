@@ -339,22 +339,6 @@ function BrowserViewOptions() {
 	document.getElementById("command_ViewOptions").setAttribute("checked","false");
   }
 }
-/** 
-  * Work-in-progress, this handler is 100% generic and gets all the clicks for the entire tabbed 
-  * content area. Need to fix with the approach where we handler only clicks for the actual tab. 
-  * Need to fix to also handle the key action case. 
-  **/
-function tabbrowserAreaClick(e) {
-
-    // When the click happens, 
-    // updates the location bar with the lastLocation for the given selectedTab. 
-    // Note that currently the lastLocation is stored in the DOM for the selectedTab. 
-
-   // gSelectedTab=getBrowser().selectedTab; 
-    //gURLBar.value=gSelectedTab.getAttribute("lastLocation");
-   // document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
-
-}
 
 /** 
   * urlbar indentity, style, progress indicator.
