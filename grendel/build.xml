@@ -66,6 +66,7 @@
           <include name="**/*.tmpl"/>
           <include name="**/*.xml"/>
           <include name="**/*.dtd"/>
+          <include name="META-INF/*"/>
         </fileset>
       </copy>
       <copy todir="dist">
