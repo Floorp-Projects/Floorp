@@ -1199,7 +1199,7 @@ nsLDAPAutoCompleteSession::InitConnection()
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
                            : PR_FALSE, mLogin, selfProxy, nsnull, mVersion);
-    if NS_FAILED(rv) {
+    if (NS_FAILED(rv)) {
         switch (rv) {
 
         case NS_ERROR_OUT_OF_MEMORY:

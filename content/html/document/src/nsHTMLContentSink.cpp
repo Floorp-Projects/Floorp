@@ -1989,7 +1989,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   MOZ_TIMER_START(mWatch);
 
   nsresult rv = nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
-  if NS_FAILED(rv) {
+  if (NS_FAILED(rv)) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
     MOZ_TIMER_STOP(mWatch);
     return rv;

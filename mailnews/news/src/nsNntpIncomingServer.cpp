@@ -634,7 +634,7 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
   nsresult rv; 
   PRBool updateUnreadOnExpand = PR_TRUE;
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if NS_SUCCEEDED(rv)
+  if (NS_SUCCEEDED(rv))
     prefBranch->GetBoolPref("news.update_unread_on_expand", &updateUnreadOnExpand);
   
   // Only if news.update_unread_on_expand is true do we update the unread counts

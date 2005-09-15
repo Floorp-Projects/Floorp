@@ -4703,7 +4703,7 @@ nsBookmarksService::LoadBookmarks()
         // Sets the default bookmarks root name.
         nsXPIDLString brName;
         rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksRoot").get(), getter_Copies(brName));
-        if NS_SUCCEEDED(rv) {
+        if (NS_SUCCEEDED(rv)) {
             // remove any previous NC_Name assertion
             nsCOMPtr<nsIRDFNode> oldName;
             rv = mInner->GetTarget(kNC_BookmarksRoot, kNC_Name, PR_TRUE, getter_AddRefs(oldName));

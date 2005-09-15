@@ -3927,7 +3927,7 @@ PRBool nsWindow::OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr)
       }
 
         // handle all possible outcomes without regard to their source
-      if NS_SUCCEEDED(rv) {
+      if (NS_SUCCEEDED(rv)) {
         mDragStatus = gDragStatus = (dragFlags & DND_DragStatus);
 
         if (dragFlags & DND_DispatchEnterEvent)

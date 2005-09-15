@@ -498,7 +498,7 @@ GetEncoding(const nsCString& aFontName, nsACString& aValue)
     // init the property now
     rv = NS_LoadPersistentPropertiesFromURISpec(&gFontEncodingProperties,
          NS_LITERAL_CSTRING("resource:/res/fonts/fontEncoding.properties"));
-    if NS_FAILED(rv)
+    if (NS_FAILED(rv))
       return rv;
   }
 

@@ -656,7 +656,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
     PRBool dirCheck, isSymlink;
     PRUint32 oldPerms;
 
-    if NS_FAILED((rv = IsDirectory(&dirCheck)))
+    if (NS_FAILED(rv = IsDirectory(&dirCheck)))
         return rv;
     if (!dirCheck)
         return CopyToNative(newParent, EmptyCString());

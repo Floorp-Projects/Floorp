@@ -408,7 +408,7 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
   nsresult rv;
   PRBool getMessagesOnSelect = PR_TRUE;
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if NS_SUCCEEDED(rv)
+  if (NS_SUCCEEDED(rv))
     prefBranch->GetBoolPref("news.get_messages_on_select", &getMessagesOnSelect);
   
   // Only if news.get_messages_on_select is true do we get new messages automatically
