@@ -41,7 +41,9 @@
 #include "nsSVGMatrix.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGValue.h"
-#include "nsIWeakReference.h"
+#include "nsISVGValueUtils.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 #include "nsSVGMatrix.h"
 #include "nsTextFormatter.h"
 #include "nsContentUtils.h"
@@ -49,16 +51,19 @@
 
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGTransform 'letter' class
+// nsSVGTransform
 
 class nsSVGTransform : public nsIDOMSVGTransform,
-                             public nsSVGValue
+                       public nsSVGValue,
+                       public nsISVGValueObserver,
+                       public nsSupportsWeakReference
 {
 public:
   static nsresult Create(nsIDOMSVGTransform** aResult);
   
 protected:
   nsSVGTransform();
+  ~nsSVGTransform();
   nsresult Init();
 public:
   // nsISupports interface:
@@ -70,8 +75,13 @@ public:
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
-  
-  
+
+  // nsISVGValueObserver
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
+
 protected:
   nsCOMPtr<nsIDOMSVGMatrix> mMatrix;
   float mAngle, mOriginX, mOriginY;
@@ -106,10 +116,15 @@ nsSVGTransform::nsSVGTransform()
 {
 }
 
+nsSVGTransform::~nsSVGTransform()
+{
+  NS_REMOVE_SVGVALUE_OBSERVER(mMatrix);
+}
+
 nsresult nsSVGTransform::Init()
 {
   return NS_NewSVGMatrix(getter_AddRefs(mMatrix));
-  // XXX register as matrix observer 
+  NS_ADD_SVGVALUE_OBSERVER(mMatrix);
 }
 
 //----------------------------------------------------------------------
@@ -121,8 +136,8 @@ NS_IMPL_RELEASE(nsSVGTransform)
 NS_INTERFACE_MAP_BEGIN(nsSVGTransform)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransform)
-//  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-//  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGTransform)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
@@ -130,6 +145,7 @@ NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 // nsISVGValue methods:
+
 NS_IMETHODIMP
 nsSVGTransform::SetValueString(const nsAString& aValue)
 {
@@ -216,6 +232,25 @@ nsSVGTransform::GetValueString(nsAString& aValue)
   return NS_OK;
 }
 
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP nsSVGTransform::WillModifySVGObservable(nsISVGValue* observable,
+                                                      modificationType aModType)
+{
+  WillModify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSVGTransform::DidModifySVGObservable (nsISVGValue* observable,
+                                                      modificationType aModType)
+{
+  DidModify();
+  return NS_OK;
+}
+
+
 //----------------------------------------------------------------------
 // nsIDOMSVGTransform methods:
 
@@ -257,7 +292,9 @@ NS_IMETHODIMP nsSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
   mOriginY = 0.0f;
   
   // XXX should we copy the matrix instead of replacing?
+  NS_REMOVE_SVGVALUE_OBSERVER(mMatrix);
   mMatrix = matrix;
+  NS_ADD_SVGVALUE_OBSERVER(mMatrix);
 
   DidModify();
   return NS_OK;
@@ -313,6 +350,7 @@ NS_IMETHODIMP nsSVGTransform::SetRotate(float angle, float cx, float cy)
   mOriginX = cx;
   mOriginY = cy;
 
+  NS_REMOVE_SVGVALUE_OBSERVER(mMatrix);
   NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->Translate(cx, cy, getter_AddRefs(temp));
@@ -321,6 +359,7 @@ NS_IMETHODIMP nsSVGTransform::SetRotate(float angle, float cx, float cy)
   mMatrix = temp;
   mMatrix->Translate(-cx,-cy, getter_AddRefs(temp));
   mMatrix = temp;
+  NS_ADD_SVGVALUE_OBSERVER(mMatrix);
 
   DidModify();
   return NS_OK;
@@ -334,10 +373,12 @@ NS_IMETHODIMP nsSVGTransform::SetSkewX(float angle)
   mType = SVG_TRANSFORM_SKEWX;
   mAngle = angle;
 
+  NS_REMOVE_SVGVALUE_OBSERVER(mMatrix);
   NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->SkewX(angle, getter_AddRefs(temp));
   mMatrix = temp;
+  NS_ADD_SVGVALUE_OBSERVER(mMatrix);
 
   DidModify();
   return NS_OK;
@@ -351,10 +392,12 @@ NS_IMETHODIMP nsSVGTransform::SetSkewY(float angle)
   mType = SVG_TRANSFORM_SKEWY;
   mAngle = angle;
 
+  NS_REMOVE_SVGVALUE_OBSERVER(mMatrix);
   NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   nsCOMPtr<nsIDOMSVGMatrix> temp;
   mMatrix->SkewY(angle, getter_AddRefs(temp));
   mMatrix = temp;
+  NS_ADD_SVGVALUE_OBSERVER(mMatrix);
 
   DidModify();
   return NS_OK;
