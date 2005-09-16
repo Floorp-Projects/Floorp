@@ -114,16 +114,23 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
     bindingURI.Truncate(hash);
   
   // compile the literal string 
-  jsval result = nsnull;
+  jsval result = JSVAL_NULL;
+  
+  // EvaluateStringWithValue and JS_DefineUCProperty can both trigger GC, so
+  // protect |result| here.
+  nsresult rv;
+  nsAutoGCRoot root(&result, &rv);
+  if (NS_FAILED(rv))
+    return rv;
   PRBool undefined;
   // XXX Need a URI here!
   nsCOMPtr<nsIScriptContext> context = aContext;
-  nsresult rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
-                                                                   mFieldTextLength), 
-                                                 scriptObject,
-                                                 nsnull, bindingURI.get(),
-                                                 mLineNumber, nsnull,
-                                                 (void*) &result, &undefined);
+  rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
+                                                          mFieldTextLength), 
+                                        scriptObject,
+                                        nsnull, bindingURI.get(),
+                                        mLineNumber, nsnull,
+                                        (void*) &result, &undefined);
   if (NS_FAILED(rv))
     return rv;
 

@@ -1593,16 +1593,20 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   nsIPrincipal *principal = nsnull;
   // XXX: Get the principal from the security stack (TBD)
 
-  jsval rval;
+  jsval rval = JSVAL_NULL;
+  if (!::JS_AddNamedRoot(cx, &rval, "NPN_evaluate")) {
+    return false;
+  }
+    
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
                                              nsnull, 0, nsnull, &rval, nsnull);
-  NS_ENSURE_SUCCESS(rv, false);
 
-  if (result) {
-    return JSValToNPVariant(npp, cx, rval, result);
-  }
-
-  return true;
+  bool retval = NS_SUCCEEDED(rv) &&
+    (!result || JSValToNPVariant(npp, cx, rval, result));
+  
+  ::JS_RemoveRoot(cx, &rval);
+  
+  return retval;
 }
 
 bool NP_EXPORT

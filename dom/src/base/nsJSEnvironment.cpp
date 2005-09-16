@@ -797,8 +797,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
-  // Beware that the result is not rooted! Be very careful not to run
-  // the GC before rooting the result somehow!
   if (!mScriptsEnabled) {
     if (aIsUndefined) {
       *aIsUndefined = PR_TRUE;
@@ -852,9 +850,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     return NS_ERROR_FAILURE;
   }
 
-  // The result of evaluation, used only if there were no errors.  TODO: use
-  // JS_Begin/EndRequest to keep the GC from racing with JS execution on any
-  // thread.
   jsval val;
 
   nsJSContext::TerminationFuncHolder holder(this);
@@ -915,21 +910,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   if (NS_FAILED(stack->Pop(nsnull)))
     rv = NS_ERROR_FAILURE;
 
-  // Need to lock, since ScriptEvaluated can GC.
-  PRBool locked = PR_FALSE;
-  if (ok && JSVAL_IS_GCTHING(val)) {
-    locked = ::JS_LockGCThing(mContext, JSVAL_TO_GCTHING(val));
-    if (!locked) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   // ScriptEvaluated needs to come after we pop the stack
   ScriptEvaluated(PR_TRUE);
-
-  if (locked) {
-    ::JS_UnlockGCThing(mContext, JSVAL_TO_GCTHING(val));
-  }
 
   return rv;
 

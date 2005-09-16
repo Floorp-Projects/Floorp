@@ -79,7 +79,9 @@ public:
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number of the script for error messages
    * @param aVersion the script language version to use when executing
-   * @param aRetValue the result of executing the script, or null for no result
+   * @param aRetValue the result of executing the script, or null for no result.
+   *        If this is a JS context, it's the caller's responsibility to
+   *        preserve aRetValue from GC across this call
    * @param aIsUndefined true if the result of executing the script is the
    *                     undefined value
    *
