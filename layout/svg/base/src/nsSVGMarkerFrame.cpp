@@ -56,6 +56,7 @@
 #include "nsSVGPathGeometryFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsSVGUtils.h"
+#include "nsSVGMatrix.h"
 
 NS_IMETHODIMP_(nsrefcnt)
   nsSVGMarkerFrame::AddRef()
@@ -231,7 +232,7 @@ nsSVGMarkerFrame::InitSVG()
   marker->GetOrientType(getter_AddRefs(mOrientType));
 
   mMarkerParent = nsnull;
-  mInUse = PR_FALSE;
+  mInUse = mInUse2 = PR_FALSE;
 
   return NS_OK;
 }
@@ -251,6 +252,20 @@ nsSVGMarkerFrame::DidModifySVGObservable(nsISVGValue* observable,
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGMarkerFrame::GetCanvasTM()
 {
+  if (mInUse2) {
+    // really we should return null, but the rest of the SVG code
+    // isn't set up for that.  We're going to be bailing drawing the
+    // marker anyway, so return an identity.
+    nsCOMPtr<nsIDOMSVGMatrix> ident;
+    NS_NewSVGMatrix(getter_AddRefs(ident));
+
+    nsIDOMSVGMatrix *retval = ident.get();
+    NS_IF_ADDREF(retval);
+    return retval;
+  }
+
+  mInUse2 = PR_TRUE;
+
   // get our parent's tm and append local transform
   nsCOMPtr<nsIDOMSVGMatrix> parentTM;
   if (mMarkerParent) {
@@ -259,6 +274,7 @@ nsSVGMarkerFrame::GetCanvasTM()
                                   (void**)&geometrySource);
     if (!geometrySource) {
       NS_ERROR("invalid parent");
+      mInUse2 = PR_FALSE;
       return nsnull;
     }
     geometrySource->GetCanvasTM(getter_AddRefs(parentTM));
@@ -269,12 +285,12 @@ nsSVGMarkerFrame::GetCanvasTM()
                             (void**)&containerFrame);
     if (!containerFrame) {
       NS_ERROR("invalid parent");
+      mInUse2 = PR_FALSE;
       return nsnull;
     }
     parentTM = containerFrame->GetCanvasTM();
   }
   NS_ASSERTION(parentTM, "null TM");
-
 
   // get element
   nsCOMPtr<nsIDOMSVGMarkerElement> element = do_QueryInterface(mContent);
@@ -295,6 +311,9 @@ nsSVGMarkerFrame::GetCanvasTM()
 
   nsIDOMSVGMatrix *retval = resultTM.get();
   NS_IF_ADDREF(retval);
+
+  mInUse2 = PR_FALSE;
+
   return retval;
 }
 
@@ -372,6 +391,14 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
   nsSVGMarkerFrame::RegionMark(nsSVGPathGeometryFrame *aParent,
                                nsSVGMark *aMark, float aStrokeWidth)
 {
+  // If the flag is set when we get here, it means this marker frame
+  // has already been used in calculating the current mark region, and
+  // the document has a marker reference loop.
+  if (mInUse)
+    return nsnull;
+
+  mInUse = PR_TRUE;
+
   mStrokeWidth = aStrokeWidth;
   mX = aMark->x;
   mY = aMark->y;
@@ -402,6 +429,8 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
     kid = kid->GetNextSibling();
   }
   mMarkerParent = nsnull;
+
+  mInUse = PR_FALSE;
 
   return accu_region;
 }
