@@ -103,7 +103,6 @@ endif # NS_USE_GCC
 else
 
 EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
