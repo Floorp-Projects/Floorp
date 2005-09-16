@@ -342,7 +342,7 @@ nsSafariProfileMigrator::PrefTransform gTransforms[] = {
   { CFSTR("WebKitFixedFont"),             _SPM(STRING),   "font.name.fixed.",               _SPM(SetFontName), PR_FALSE, -1 },
   { CFSTR("WebKitDefaultFixedFontSize"),  _SPM(INT),      "font.size.fixed.",               _SPM(SetFontSize), PR_FALSE, -1 },
   { CFSTR("WebKitMinimumFontSize"),       _SPM(INT),      "font.minimum-size.",             _SPM(SetFontSize), PR_FALSE, -1 },
-  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),     "network.image.imageBehavior",    _SPM(SetDisplayImages), PR_FALSE, -1 },
+  { CFSTR("WebKitDisplayImagesKey"),      _SPM(BOOL),     "permissions.default.image",      _SPM(SetDisplayImages), PR_FALSE, -1 },
   { CFSTR("WebKitJavaEnabled"),           _SPM(BOOL),     "security.enable_java",           _SPM(SetBool), PR_FALSE, -1 },
   { CFSTR("WebKitJavaScriptEnabled"),     _SPM(BOOL),     "javascript.enabled",             _SPM(SetBool), PR_FALSE, -1 },
   { CFSTR("WebKitJavaScriptCanOpenWindowsAutomatically"),
@@ -614,10 +614,10 @@ nsSafariProfileMigrator::SetDisplayImages(void* aTransform, nsIPrefBranch* aBran
   // Firefox has an elaborate set of Image preferences. The correlation is:
   // Mode:                            Safari    Firefox
   // Blocked                          FALSE     2
-  // Allowed                          TRUE      0
-  // Allowed, originating site only   --        1
+  // Allowed                          TRUE      1
+  // Allowed, originating site only   --        3
   PrefTransform* xform = (PrefTransform*)aTransform;
-  aBranch->SetIntPref(xform->targetPrefName, xform->boolValue ? 0 : 2);
+  aBranch->SetIntPref(xform->targetPrefName, xform->boolValue ? 1 : 2);
   return NS_OK;
 }
 
