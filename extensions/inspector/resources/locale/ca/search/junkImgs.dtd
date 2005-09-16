@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Cerca les imatges que no s'utilitzen en el tema actual...">
+<!ENTITY junkImgsDescription "Per fer que aquesta cerca funcioni de forma efectiva, heu d'inspeccionar un document que carregui tots els fitxers CSS en el tema actual. Llavors, apunteu a una ubicació del disc on pugui trobar-se l'arrel del tema actual.">
