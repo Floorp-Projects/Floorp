@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Desfés">
+<!ENTITY mnEditUndo.accesskey "D">
+<!ENTITY mnEditRedo.label "Refés">
+<!ENTITY mnEditRedo.accesskey "R">
+<!ENTITY mnEditCut.label "Retalla">
+<!ENTITY mnEditCut.accesskey "t">
+<!ENTITY mnEditCopy.label "Copia">
+<!ENTITY mnEditCopy.accesskey "C">
+<!ENTITY mnEditPaste.label "Enganxa">
+<!ENTITY mnEditPaste.accesskey "x">
+<!ENTITY mnEditInsert.label "Insereix">
+<!ENTITY mnEditInsert.accesskey "I">
+<!ENTITY mnEditEdit.label "Edita">
+<!ENTITY mnEditEdit.accesskey "E">
+<!ENTITY mnEditDelete.label "Suprimeix">
+<!ENTITY mnEditDelete.accesskey "S">

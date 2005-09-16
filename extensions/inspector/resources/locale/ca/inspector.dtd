@@ -1,0 +1,53 @@
+<!ENTITY Inspector.title "Inspector DOM">
+<!ENTITY thDOMNodes.label "Nodes DOM">
+<!ENTITY btnInspect.label "Inspecciona">
+<!ENTITY bxDocPanel.title "Document">
+<!ENTITY bxObjectPanel.title "Objecte">
+<!ENTITY btnSelecting.tooltip "Cerqueu un node per inspeccionar fent-li un clic">
+<!ENTITY btnFind.tooltip "Cerqueu un node per inspeccionar per identificador, etiqueta o atribut">
+<!-- MAIN MENU ITEMS -->
+<!ENTITY mnFile.label "Fitxer">
+<!ENTITY mnWindows.label "Inspecciona una finestra">
+<!ENTITY mnWindows.accesskey "n">
+<!ENTITY mnFile.accesskey "F">
+<!ENTITY cmdShowOpenURLDialog.label "Inspecciona un URL">
+<!ENTITY cmdShowOpenURLDialog.accesskey "U">
+<!ENTITY cmdClose.label "Tanca">
+<!ENTITY cmdClose.accesskey "c">
+<!ENTITY cmdExit.label "Surt">
+<!ENTITY cmdExit.accesskey "u">
+<!ENTITY mnEdit.label "Edita">
+<!ENTITY mnEdit.accesskey "E">
+<!ENTITY cmdUndo.label "Desfés">
+<!ENTITY cmdUndo.accesskey "D">
+<!ENTITY cmdRedo.label "Refés">
+<!ENTITY cmdRedo.accesskey "R">
+<!ENTITY cmdCut.label "Retalla">
+<!ENTITY cmdCut.accesskey "T">
+<!ENTITY cmdCopy.label "Copia">
+<!ENTITY cmdCopy.accesskey "C">
+<!ENTITY cmdPaste.label "Enganxa">
+<!ENTITY cmdPaste.accesskey "x">
+<!ENTITY cmdDelete.label "Suprimeix">
+<!ENTITY cmdDelete.accesskey "u">
+<!ENTITY mnSearch.label "Cerca">
+<!ENTITY mnSearch.accesskey "r">
+<!ENTITY mnSearchPlugins.label "Extensions">
+<!ENTITY mnSearchPlugins.accesskey "E">
+<!ENTITY cmdRunSearch.label "Executa...">
+<!ENTITY cmdRunSearch.accesskey "a">
+<!ENTITY mnView.label "Visualitza">
+<!ENTITY mnView.accesskey "V">
+<!ENTITY cmdToggleBrowser.label "Navegador">
+<!ENTITY cmdToggleSearch.label "Cerca els resultats">
+<!ENTITY cmdViewSearchItem.label "Visualitza...">
+<!ENTITY cmdEditSearchItem.label "Edita">
+<!ENTITY cmdCopySearchItemLine.label "Copia la línia">
+<!ENTITY cmdCopySearchItemAll.label "Copia-ho tot">
+<!ENTITY cmdSaveSearchItemText.label "Desa...">
+<!ENTITY cmdClearSearch.label "Neteja">
+<!ENTITY cmdHideSearchItems.label "Amaga">
+<!ENTITY browserPanel.label "Navegador">
+<!ENTITY inspectNewWindow.label "Inspecciona en una nova finestra">
+
+<!ENTITY closeCmd.key "W">
