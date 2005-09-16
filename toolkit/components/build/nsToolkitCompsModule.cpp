@@ -40,7 +40,7 @@
 #include "nsUserInfo.h"
 #include "nsXPFEComponentsCID.h"
 #include "nsToolkitCompsCID.h"
-#ifdef XP_WIN
+#ifdef ALERTS_SERVICE
 #include "nsAlertsService.h"
 #endif
 
@@ -65,7 +65,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 
-#ifdef XP_WIN
+#ifdef ALERTS_SERVICE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
@@ -108,7 +108,7 @@ static const nsModuleComponentInfo components[] =
     NS_USERINFO_CID,
     NS_USERINFO_CONTRACTID,
     nsUserInfoConstructor },
-#ifdef XP_WIN
+#ifdef ALERTS_SERVICE
   { "Alerts Service",
     NS_ALERTSSERVICE_CID, 
     NS_ALERTSERVICE_CONTRACTID,

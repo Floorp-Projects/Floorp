@@ -64,11 +64,8 @@ REQUIRES  = xpcom \
             dom \
             xpinstall \
             embed_base \
+            alerts \
             $(NULL)
-
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
-REQUIRES += alerts
-endif
 
 CPPSRCS   = \
     nsDownloadManager.cpp \

@@ -50,6 +50,11 @@ IS_COMPONENT = 1
 MODULE_NAME = nsToolkitCompsModule
 LIBXUL_LIBRARY = 1
 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
+ALERTS_SERVICE=1
+DEFINES += -DALERTS_SERVICE
+endif
+
 REQUIRES = 	\
 		xpcom \
 		string \
@@ -82,11 +87,8 @@ REQUIRES = 	\
 		locale \
 		unicharutil \
 		xuldoc \
+		alerts \
 		$(NULL)
-
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
-REQUIRES += alerts
-endif
 
 EXPORTS = nsToolkitCompsCID.h
 
@@ -100,11 +102,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../passwordmgr/base \
 	-I$(srcdir)/../startup/src \
 	-I$(srcdir)/../typeaheadfind/src \
+	-I$(srcdir)/../alerts/src \
 	$(NULL)
-
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
-LOCAL_INCLUDES += -I$(srcdir)/../alerts/src
-endif
 
 SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
@@ -114,7 +113,7 @@ ifdef MOZ_XPINSTALL
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
 endif
 
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
+ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 

@@ -2108,7 +2108,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         mDownloadManager->DownloadEnded(path.get(), nsnull);
       }
 
-#ifdef XP_WIN
       // Master pref to control this function. 
       PRBool showTaskbarAlert = PR_FALSE;
       nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
@@ -2148,7 +2147,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           }
         }
       }
-#endif
     }
 
     gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
