@@ -781,7 +781,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
               eHTMLTags top = mBodyContext->Last();
               NS_ASSERTION(top != eHTMLTag_userdefined,
                            "Userdefined tags should act as leaves in the head");
-              if (top != eHTMLTag_head &&
+              if (top != eHTMLTag_html &&
                   gHTMLElements[top].CanContain(theTag, mDTDMode)) {
                 // Some tags (such as <object> and <script>) are opened in the
                 // head and allow other non-head content to be children.
@@ -3085,7 +3085,8 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
   switch (aTag) {
 
     case eHTMLTag_html:
-      result=CloseHTML(); break;
+      result=CloseHTML();
+      break;
 
     case eHTMLTag_head:
       result=CloseHead(); 
