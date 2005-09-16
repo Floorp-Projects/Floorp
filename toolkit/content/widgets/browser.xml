@@ -726,31 +726,22 @@
        <parameter name="evt"/>
        <body>
          <![CDATA[
-           var scrollCursor  = new Array("move", "n-resize", "e-resize");
-           var docBox = this._clientFrameDoc.getBoxObjectFor(this._clientFrameDoc.documentElement);
+           var scrollCursor  = new Array("n-resize", "move",  "e-resize");
+           var scrollImages  = new Array("chrome://global/content/bindings/autoscroll_v.png",
+                                         "chrome://global/content/bindings/autoscroll_all.png",
+                                         "chrome://global/content/bindings/autoscroll_h.png");
            var left = evt.clientX;
            var top = evt.clientY;
+
+           var scrollType = 1;
+           if (this._clientFrameDoc.defaultView.scrollMaxY > 0) scrollType--;
+           if (this._clientFrameDoc.defaultView.scrollMaxX > 0) scrollType++;           
            
-           
-           var documentWidth = docBox.width;
-           var documentHeight = docBox.height;
-           var windowWidth = window.innerWidth;
-           var windowHeight = window.innerHeight;
-           var scrollType = 0;
-           if (windowHeight < documentHeight && windowWidth >= documentWidth)
-             scrollType = 1;
-           else if (windowHeight >= documentHeight && windowWidth < documentWidth)
-             scrollType = 2;
-     
            var imageWidth = 28;
            var imageHeight = 28;
            
            // marker
            var el = this._clientFrameDoc.createElementNS("http://www.w3.org/1999/xhtml", "img");
-           
-           var scrollImages  = new Array("chrome://global/content/bindings/autoscroll_all.png",
-                                         "chrome://global/content/bindings/autoscroll_v.png",
-                                         "chrome://global/content/bindings/autoscroll_h.png");
            
            el.src = scrollImages[scrollType];         
            el.style.position = "fixed";
