@@ -84,6 +84,10 @@ endif
 ifeq ($(OS_ARCH), CYGWIN32_NT)
 	OS_ARCH    := WINNT
 endif
+ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
+	OS_RELEASE := $(patsubst MINGW32_NT-%,%,$(OS_ARCH))
+	OS_ARCH    := WINNT
+endif
 
 # Virtually all Linux versions are identical.
 # Any distinctions are handled in linux.h

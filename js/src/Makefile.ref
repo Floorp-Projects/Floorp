@@ -90,7 +90,7 @@ endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH),WINNT)
-CFLAGS += /Op
+CFLAGS += -Op
 endif # WINNT
 
 #
