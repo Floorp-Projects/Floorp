@@ -48,13 +48,17 @@
 #include "nsControllerCommandTable.h"
 #include "nsCommandParams.h"
 #include "nsCommandGroup.h"
-#ifndef WINCE
-#include "nsPrintingPromptService.h"
-#endif
 #include "nsBaseCommandController.h"
 #include "nsPrompt.h"
 #include "nsNetCID.h"
 #include "nsEmbedCID.h"
+
+#ifdef NS_PRINTING
+#ifndef WINCE
+#include "nsPrintingPromptService.h"
+#endif
+#endif
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartupNotifier)
@@ -119,8 +123,10 @@ nsDefaultAuthPromptConstructor(nsISupports *outer, const nsIID &iid, void **resu
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSConsoleService)
+#ifdef NS_PRINTING
 #ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
+#endif
 #endif
 #endif
 
@@ -135,8 +141,10 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Dialog ParamBlock", NS_DIALOGPARAMBLOCK_CID, NS_DIALOGPARAMBLOCK_CONTRACTID, nsDialogParamBlockConstructor },
   { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },
   { "JS Console Service", NS_JSCONSOLESERVICE_CID, NS_JSCONSOLESERVICE_CONTRACTID, nsJSConsoleServiceConstructor },
+#ifdef NS_PRINTING
 #ifndef WINCE
   { "Printing Prompt Service", NS_PRINTINGPROMPTSERVICE_CID, NS_PRINTINGPROMPTSERVICE_CONTRACTID, nsPrintingPromptServiceConstructor },
+#endif
 #endif
 #endif
   { "Window Watcher", NS_WINDOWWATCHER_CID, NS_WINDOWWATCHER_CONTRACTID, nsWindowWatcherConstructor },

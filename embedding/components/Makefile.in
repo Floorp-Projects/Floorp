@@ -48,8 +48,10 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = windowwatcher appstartup find webbrowserpersist commandhandler ui jsconsole
 
 ifdef MOZ_XUL
+ifdef NS_PRINTING
 ifndef WINCE
 DIRS += printingui
+endif
 endif
 endif
 

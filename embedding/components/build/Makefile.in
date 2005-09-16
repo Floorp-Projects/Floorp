@@ -100,10 +100,12 @@ SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)jsconsole_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifdef NS_PRINTING
 ifndef WINCE
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
 endif
 
 endif

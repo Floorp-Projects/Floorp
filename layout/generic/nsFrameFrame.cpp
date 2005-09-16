@@ -76,7 +76,6 @@
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
 #include "nsIWidget.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
@@ -85,6 +84,9 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMNSHTMLDocument.h"
 
+#ifdef NS_PRINTING
+#include "nsIWebBrowserPrint.h"
+#endif
 // For Accessibility
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"

@@ -87,7 +87,6 @@ SDK_XPIDLSRCS   = \
 		nsIWebBrowserChrome.idl	    \
 		nsIWebBrowserChromeFocus.idl \
 		nsIWebBrowserFocus.idl	    \
-		nsIWebBrowserPrint.idl      \
 		nsIWebBrowserSetup.idl	    \
 		nsIWebBrowserStream.idl	    \
                 $(NULL)
@@ -97,18 +96,21 @@ XPIDLSRCS	= \
 		nsICommandHandler.idl			\
 		nsIEmbeddingSiteWindow2.idl \
 		nsIContextMenuListener2.idl \
-		nsIPrintingPrompt.idl       \
-		nsIPrintingPromptService.idl       \
 		$(NULL)
 
 CPPSRCS		= \
 		nsDocShellTreeOwner.cpp		\
 		nsWebBrowser.cpp		\
 		nsCommandHandler.cpp		\
-                nsWebBrowserContentPolicy.cpp   \
+        nsWebBrowserContentPolicy.cpp   \
 		nsContextMenuInfo.cpp		\
 		nsEmbedStream.cpp		\
 		$(NULL)
+
+ifdef NS_PRINTING
+SDK_XPIDLSRCS += nsIWebBrowserPrint.idl
+XPIDLSRCS     += nsIPrintingPrompt.idl nsIPrintingPromptService.idl
+endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

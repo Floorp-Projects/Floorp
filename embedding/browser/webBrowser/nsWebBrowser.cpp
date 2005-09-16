@@ -71,7 +71,6 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsCWebBrowserPersist.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsIServiceManager.h"
 
 // for painting the background window
@@ -80,7 +79,10 @@
 #include "nsILookAndFeel.h"
 
 // Printing Includes
+#ifdef NS_PRINTING
+#include "nsIWebBrowserPrint.h"
 #include "nsIContentViewer.h"
+#endif
 
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
@@ -208,20 +210,22 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 #endif
 
    if (mDocShell) {
+#ifdef NS_PRINTING
        if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
            nsCOMPtr<nsIContentViewer> viewer;
            mDocShell->GetContentViewer(getter_AddRefs(viewer));
-           if (viewer) {
-               nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
-               nsIWebBrowserPrint* print = (nsIWebBrowserPrint*)webBrowserPrint.get();
-               NS_ASSERTION(print, "This MUST support this interface!");
-               NS_ADDREF(print);
-               *aSink = print;
-               return NS_OK;
-           }
-       } else {
-           return mDocShellAsReq->GetInterface(aIID, aSink);
+           if (!viewer)
+               return NS_NOINTERFACE;
+
+           nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
+           nsIWebBrowserPrint* print = (nsIWebBrowserPrint*)webBrowserPrint.get();
+           NS_ASSERTION(print, "This MUST support this interface!");
+           NS_ADDREF(print);
+           *aSink = print;
+           return NS_OK;
        }
+#endif
+       return mDocShellAsReq->GetInterface(aIID, aSink);
    }
 
    return NS_NOINTERFACE;
