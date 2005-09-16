@@ -1273,8 +1273,9 @@ nsEventStateManager::FireContextClick()
   // when we're through because no one else is doing anything more with this
   // event and it will get reset on the very next event to the correct frame).
   mCurrentTarget = nsnull;
-  if ( mGestureDownContent ) {
-    mCurrentTarget = mPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner);
+  nsIPresShell *shell = mPresContext->GetPresShell();
+  if ( shell ) {
+    mCurrentTarget = shell->GetPrimaryFrameFor(mGestureDownFrameOwner);
 
     if ( mCurrentTarget ) {
       SetFrameExternalReference(mCurrentTarget);
