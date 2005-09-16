@@ -926,7 +926,7 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
   // cancel the load that was initiated by the location="..." in the
   // script that was written out by document.write().
 
-  if (!htmldoc->mIsWriting) {
+  if (!htmldoc->mWriteLevel && !htmldoc->mIsWriting) {
     // Release the documents parser so that the call to EndLoad()
     // doesn't just return early and set the termination function again.
 
