@@ -1,0 +1,63 @@
+
+<!ENTITY Inspector.title "DOM-inspeksjon">
+
+<!ENTITY thDOMNodes.label "DOM-noder">
+<!ENTITY btnInspect.label "Inspiser">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Finn en node ved å trykke på den.">
+<!ENTITY btnFind.tooltip "Finn en node basert på id, merkelapp eller egenskap.">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Fil">
+<!ENTITY mnWindows.label "Inspiser et vindu">
+<!ENTITY mnWindows.accesskey "v">
+<!ENTITY mnFile.accesskey "f">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspiser en adresse ...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "I">
+  <!ENTITY cmdClose.label "Lukk">
+  <!ENTITY cmdClose.accesskey "L">
+  <!ENTITY cmdExit.label "Avslutt">
+  <!ENTITY cmdExit.accesskey "v">
+
+<!ENTITY mnEdit.label "Rediger">
+<!ENTITY mnEdit.accesskey "R">
+  <!ENTITY cmdUndo.label "Angre">
+  <!ENTITY cmdUndo.accesskey "a">
+  <!ENTITY cmdRedo.label "Gjenta">
+  <!ENTITY cmdRedo.accesskey "g">
+  <!ENTITY cmdCut.label "Klipp ut">
+  <!ENTITY cmdCut.accesskey "u">
+  <!ENTITY cmdCopy.label "Kopier">
+  <!ENTITY cmdCopy.accesskey "k">
+  <!ENTITY cmdPaste.label "Lim inn">
+  <!ENTITY cmdPaste.accesskey "i">
+  <!ENTITY cmdDelete.label "Slett">
+  <!ENTITY cmdDelete.accesskey "S">
+
+<!ENTITY mnSearch.label "Søk">
+<!ENTITY mnSearch.accesskey "s">
+  <!ENTITY mnSearchPlugins.label "Utvidelser">
+  <!ENTITY mnSearchPlugins.accesskey "u">
+    <!ENTITY cmdRunSearch.label "Kjør ...">
+    <!ENTITY cmdRunSearch.accesskey "k">
+
+<!ENTITY mnView.label "Vis">
+<!ENTITY mnView.accesskey "v">
+  <!ENTITY cmdToggleBrowser.label "Nettleser">
+  <!ENTITY cmdToggleSearch.label "Søkeresultat">
+
+<!ENTITY cmdViewSearchItem.label "Vis ...">
+<!ENTITY cmdEditSearchItem.label "Rediger ...">
+<!ENTITY cmdCopySearchItemLine.label "Kopier linje">
+<!ENTITY cmdCopySearchItemAll.label "Kopier alt">
+<!ENTITY cmdSaveSearchItemText.label "Lagre ...">
+<!ENTITY cmdClearSearch.label "Tøm">
+<!ENTITY cmdHideSearchItems.label "Skjul">
+
+<!ENTITY browserPanel.label "Nettleser">
+
+<!ENTITY inspectNewWindow.label "Inspiser i nytt vindu">
+
+<!ENTITY closeCmd.key "W">
