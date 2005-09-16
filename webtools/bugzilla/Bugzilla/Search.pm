@@ -139,11 +139,11 @@ sub init {
     }
 
     if (lsearch($fieldsref, 'map_classifications.name') >= 0) {
+        push @supptables, "INNER JOIN products AS map_products " .
+                          "ON bugs.product_id = map_products.id";
         push @supptables,
                 "INNER JOIN classifications AS map_classifications " .
                 "ON map_products.classification_id = map_classifications.id";
-        push @supptables, "INNER JOIN products AS map_products " .
-                          "ON bugs.product_id = map_products.id";
     }
 
     if (lsearch($fieldsref, 'map_components.name') >= 0) {
