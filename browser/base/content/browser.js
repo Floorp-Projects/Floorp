@@ -2056,7 +2056,8 @@ function URLBarFocusHandler(aEvent, aElt)
 
 function URLBarMouseDownHandler(aEvent, aElt)
 {
-  if (aElt.hasAttribute("focused")) {
+  if (aElt.hasAttribute("focused") ||
+      aEvent.target.id == "lock-icon" || aEvent.target.id == "feed-button") {
     gIgnoreClick = true;
   } else {
     gIgnoreFocus = true;
