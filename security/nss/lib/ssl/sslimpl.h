@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.40 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: sslimpl.h,v 1.41 2005/09/16 20:31:31 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1105,6 +1105,10 @@ extern int       ssl3_SendApplicationData(sslSocket *ss, const PRUint8 *in,
 				          int len, int flags);
 
 extern PRBool    ssl_FdIsBlocking(PRFileDesc *fd);
+
+extern SECStatus ssl_SetTimeout(PRFileDesc *fd, PRIntervalTime timeout);
+
+extern SECStatus ssl_SetTimeout(PRFileDesc *fd, PRIntervalTime timeout);
 
 extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 
