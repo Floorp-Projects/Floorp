@@ -51,15 +51,14 @@ class nsJARProtocolHandler : public nsIJARProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
-	NS_DECL_NSIPROTOCOLHANDLER
-	NS_DECL_NSIJARPROTOCOLHANDLER
+    NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIJARPROTOCOLHANDLER
 
     // nsJARProtocolHandler methods:
     nsJARProtocolHandler();
     virtual ~nsJARProtocolHandler();
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    static nsJARProtocolHandler *GetSingleton();
 
     nsresult Init();
 
