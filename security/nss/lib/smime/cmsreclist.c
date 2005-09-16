@@ -37,7 +37,7 @@
 /*
  * CMS recipient list functions
  *
- * $Id: cmsreclist.c,v 1.3 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmsreclist.c,v 1.4 2005/09/16 17:54:31 wtchang%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -82,6 +82,9 @@ nss_cms_recipients_traverse(NSSCMSRecipientInfo **recipientinfos, NSSCMSRecipien
 		    rle->kind = RLSubjKeyID;
 		    rle->id.subjectKeyID = ri->ri.keyTransRecipientInfo.recipientIdentifier.id.subjectKeyID;
 		    break;
+		default:
+		    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		    return -1;
 		}
 		recipient_list[rlindex++] = rle;
 	    } else {
