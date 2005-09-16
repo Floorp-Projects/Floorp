@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.23 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
+/* $Id: loader.c,v 1.24 2005/09/16 16:59:22 wtchang%redhat.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -49,17 +49,12 @@ static const char* default_name =
 
 /* getLibName() returns the name of the library to load. */
 
-#if defined(SOLARIS)
+#if defined(SOLARIS) && defined(__sparc)
 #include <stddef.h>
 #include <strings.h>
 #include <sys/systeminfo.h>
 
 
-#if defined(__x86_64__) || defined(__x86_64) || defined(_X86_)
-
-static const char * getLibName(void) { return default_name; }
-
-#else
 #if defined(NSS_USE_64)
 
 const static char fast_hybrid_shared_lib[] = "libfreebl_64fpu_3.so";
@@ -103,7 +98,6 @@ getLibName(void)
     }
     return non_hybrid_shared_lib;
 }
-#endif /* x86_64 Solaris */
 
 #elif defined(HPUX) && !defined(NSS_USE_64) && !defined(__ia64)
 /* This code tests to see if we're running on a PA2.x CPU.
@@ -157,10 +151,9 @@ bl_LoadLibrary(const char *name)
 
     /* Get the pathname for the loaded libsoftokn, i.e. /usr/lib/libsoftokn3.so
      * PR_GetLibraryFilePathname works with either the base library name or a
-     * function pointer, depending on the platform. So call it even if fn_addr
-     * is NULL. We can't query an exported symbol such as NSC_GetFunctionList,
-     * because on some platforms we can't find symbols in loaded implicit 
-     * dependencies such as libsoftokn.  
+     * function pointer, depending on the platform. We can't query an exported
+     * symbol such as NSC_GetFunctionList, because on some platforms we can't
+     * find symbols in loaded implicit dependencies such as libsoftokn.
      * But we can just get the address of this function !
      */
     fn_addr = (PRFuncPtr) &bl_LoadLibrary;
@@ -171,11 +164,10 @@ bl_LoadLibrary(const char *name)
        char* c = strrchr(softokenPath, PR_GetDirectorySeparator());
        if (c) {
            size_t softoknPathSize = 1 + c - softokenPath;
-           fullName = (char*) PORT_Alloc(strlen(name) + softoknPathSize + 2);
+           fullName = (char*) PORT_Alloc(strlen(name) + softoknPathSize + 1);
            if (fullName) {
-               fullName[0] = NULL;
-               strncat(fullName, softokenPath, softoknPathSize);
-               strcat(fullName, name); 
+               memcpy(fullName, softokenPath, softoknPathSize);
+               strcpy(fullName + softoknPathSize, name); 
            }
        }
        PR_Free(softokenPath);
