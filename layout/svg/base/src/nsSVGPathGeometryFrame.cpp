@@ -381,8 +381,10 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
       nsCOMPtr<nsISVGRendererRegion> mark;
       mark = markerStart->RegionMark(this, (nsSVGMark *)marks[0], strokeWidth);
 
-      nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
-      mark->Combine(tmp, &region);
+      if (mark) {
+        nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+        mark->Combine(tmp, &region);
+      }
     }
 
     if (markerMid)
@@ -390,16 +392,20 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
         nsCOMPtr<nsISVGRendererRegion> mark;
         mark = markerMid->RegionMark(this, (nsSVGMark *)marks[i], strokeWidth);
 
-        nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
-        mark->Combine(tmp, &region);
+        if (mark) {
+          nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+          mark->Combine(tmp, &region);
+        }
       }
 
     if (markerEnd) {
       nsCOMPtr<nsISVGRendererRegion> mark;
       mark = markerEnd->RegionMark(this, (nsSVGMark *)marks[num-1], strokeWidth);
 
-      nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
-      mark->Combine(tmp, &region);
+      if (mark) {
+        nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+        mark->Combine(tmp, &region);
+      }
     }
   }
 

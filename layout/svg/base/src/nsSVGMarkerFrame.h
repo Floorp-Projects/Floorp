@@ -114,11 +114,14 @@ private:
   float mStrokeWidth, mX, mY, mAngle;
   nsSVGPathGeometryFrame *mMarkerParent;
 
-  // recursion prevention flag
-  PRBool mInUse;
-
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+
+  // recursion prevention flag
+  PRPackedBool mInUse;
+
+  // second recursion prevention flag, for GetCanvasTM()
+  PRPackedBool mInUse2;
 };
 
 nsresult
