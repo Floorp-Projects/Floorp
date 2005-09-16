@@ -23,6 +23,11 @@
               return;
             },
 
+            onLoad: function onLoad() 
+            {
+              return;
+            },
+
             onAddItem: function onAddItem(aItem)
             {
                 if (!(aItem instanceof Components.interfaces.calITodo))
