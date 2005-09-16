@@ -228,6 +228,15 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   mDocShell = do_CreateInstance("@mozilla.org/webshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
+  // Make sure to set the item type on the docshell _before_ calling
+  // Create() so it knows what type it is.
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
+
+  docShellAsItem->SetTreeOwner(mChromeTreeOwner);
+  docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
+
   r.x = r.y = 0;
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   NS_ENSURE_SUCCESS(docShellAsWin->InitWindow(nsnull, mWindow, 
@@ -239,13 +248,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   if (webProgress) {
     webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
   }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
-
-  docShellAsItem->SetTreeOwner(mChromeTreeOwner);
-  docShellAsItem->SetItemType(nsIDocShellTreeItem::typeChrome);
 
   if (nsnull != aUrl)  {
     nsCAutoString tmpStr;

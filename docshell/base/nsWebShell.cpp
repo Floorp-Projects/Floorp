@@ -1120,6 +1120,11 @@ nsWebShell::SelectNone(void)
 
 NS_IMETHODIMP nsWebShell::Create()
 {
+  if (mPrefs) {
+    // We've already been created
+    return NS_OK;
+  }
+  
   // Remember the current thread (in current and forseeable implementations,
   // it'll just be the unique UI thread)
   //

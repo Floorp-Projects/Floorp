@@ -86,6 +86,7 @@
 #include "nsAutoPtr.h"
 #include "nsIPrefService.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsObserverService.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -3360,6 +3361,9 @@ nsDocShell::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP
 nsDocShell::Create()
 {
+    NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
+                 "Unexpected item type in docshell");
+
     nsresult rv = NS_ERROR_FAILURE;
     mPrefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3385,12 +3389,32 @@ nsDocShell::Create()
     if (NS_SUCCEEDED(rv))
         mUseErrorPages = tmpbool;
 
+    nsCOMPtr<nsIObserverService> serv = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (serv) {
+        const char* msg = mItemType == typeContent ?
+            NS_WEBNAVIGATION_CREATE : NS_CHROME_WEBNAVIGATION_CREATE;
+        serv->NotifyObservers(GetAsSupports(this), msg, nsnull);
+    }    
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::Destroy()
 {
+    NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
+                 "Unexpected item type in docshell");
+
+    if (!mIsBeingDestroyed) {
+        nsCOMPtr<nsIObserverService> serv =
+            do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        if (serv) {
+            const char* msg = mItemType == typeContent ?
+                NS_WEBNAVIGATION_DESTROY : NS_CHROME_WEBNAVIGATION_DESTROY;
+            serv->NotifyObservers(GetAsSupports(this), msg, nsnull);
+        }
+    }
+    
     mIsBeingDestroyed = PR_TRUE;
 
     //Fire unload event before we blow anything away.
