@@ -81,6 +81,12 @@ static char manufacturerID_space[33];
 static char *libraryDescription  = "NSS Internal Crypto Services    ";
 static char libraryDescription_space[33];
 
+/*
+ * In FIPS mode, we disallow login attempts for 1 second after a login
+ * failure so that there are at most 60 login attempts per minute.
+ */
+static PRIntervalTime loginWaitTime;
+
 #define __PASTE(x,y)    x##y
 
 /*
@@ -523,7 +529,7 @@ sftk_configure(const char *man, const char *libdes)
 /*
  * see if the key DB password is enabled
  */
-PRBool
+static PRBool
 sftk_hasNullPassword(NSSLOWKEYDBHandle *keydb,SECItem **pwitem)
 {
     PRBool pwenabled;
@@ -2502,6 +2508,9 @@ SFTK_SlotInit(char *configdir,sftk_token_parameters *params, int moduleIndex)
     slot->objectLock = PZ_NewLock(nssILockObject);
     if (slot->objectLock == NULL) 
     	goto mem_loser;
+    slot->pwCheckLock = PR_NewLock();
+    if (slot->pwCheckLock == NULL) 
+    	goto mem_loser;
     slot->head = PORT_ZNewArray(SFTKSession *, slot->sessHashSize);
     if (slot->head == NULL) 
 	goto mem_loser;
@@ -2559,6 +2568,10 @@ SFTK_SlotInit(char *configdir,sftk_token_parameters *params, int moduleIndex)
 	if ((slot->minimumPinLen == 0) && (params->pwRequired)) {
 	    slot->minimumPinLen = 1;
 	}
+	if ((moduleIndex == NSC_FIPS_MODULE) &&
+		(slot->minimumPinLen < FIPS_MIN_PIN)) {
+	    slot->minimumPinLen = FIPS_MIN_PIN;
+	}
     }
     crv = sftk_RegisterSlot(slot, moduleIndex);
     if (crv != CKR_OK) {
@@ -2601,14 +2614,16 @@ sftk_DestroySlotData(SFTKSlot *slot)
 		slot->sessionLock[i] = NULL;
 	    }
 	}
+	PORT_Free(slot->sessionLock);
+	slot->sessionLock = NULL;
     }
     if (slot->objectLock) {
 	PZ_DestroyLock(slot->objectLock);
 	slot->objectLock = NULL;
     }
-    if (slot->sessionLock) {
-	PORT_Free(slot->sessionLock);
-	slot->sessionLock = NULL;
+    if (slot->pwCheckLock) {
+	PR_DestroyLock(slot->pwCheckLock);
+	slot->pwCheckLock = NULL;
     }
 
     if (slot->tokenHashTable) {
@@ -2758,6 +2773,8 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	    crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
 	    return crv;
 	}
+
+	loginWaitTime = PR_SecondsToInterval(1);
     }
 
     rv = secoid_Init();
@@ -3354,8 +3371,13 @@ CK_RV NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     PORT_Memset(newPinStr,0,sizeof(newPinStr));
     PORT_Memset(oldPinStr,0,sizeof(oldPinStr));
 
-    /* change the data base */
+    /* change the data base password */
+    PR_Lock(slot->pwCheckLock);
     rv = nsslowkey_ChangeKeyDBPassword(handle,oldPin,newPin);
+    if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
+	PR_Sleep(loginWaitTime);
+    }
+    PR_Unlock(slot->pwCheckLock);
 
     /* Now update our local copy of the pin */
     SECITEM_ZfreeItem(oldPin, PR_TRUE);
@@ -3545,6 +3567,7 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     CK_FLAGS sessionFlags;
     SECItem *pin;
     char pinStr[SFTK_MAX_PIN+1];
+    SECStatus rv;
 
 
     /* get the slot */
@@ -3612,7 +3635,13 @@ CK_RV NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     pin = nsslowkey_HashPassword(pinStr,handle->global_salt);
     if (pin == NULL) return CKR_HOST_MEMORY;
 
-    if (nsslowkey_CheckKeyDBPassword(handle,pin) == SECSuccess) {
+    PR_Lock(slot->pwCheckLock);
+    rv = nsslowkey_CheckKeyDBPassword(handle,pin);
+    if ((rv != SECSuccess) && (slot->slotID == FIPS_SLOT_ID)) {
+	PR_Sleep(loginWaitTime);
+    }
+    PR_Unlock(slot->pwCheckLock);
+    if (rv == SECSuccess) {
 	SECItem *tmp;
 	PZ_Lock(slot->slotLock);
 	tmp = slot->password;
