@@ -216,9 +216,12 @@
                 // loading a document. If the user types, this flag gets
                 // set to false, if the document load ends without an
                 // onLocationChange, this flag also gets set to false
-                // (so we keep it while switching tabs after failed load
+                // (so we keep it while switching tabs after a failed load).
+                // We need to add 2 because loadURIWithFlags may have
+                // cancelled a pending load which would have cleared
+                // its anchor scroll detection temporary increment.
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  this.mBrowser.userTypedClear++;
+                  this.mBrowser.userTypedClear += 2;
 
                 if (!this.mBlank) {
                   this.mTab.removeAttribute("progress");
@@ -235,7 +238,9 @@
                 // The document is done loading, it's okay to clear
                 // the value again.
                 if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
-                  if (this.mBrowser.userTypedClear > 0)
+                  if (this.mBrowser.userTypedClear > 1)
+                    this.mBrowser.userTypedClear -= 2;
+                  else if (this.mBrowser.userTypedClear > 0)
                     this.mBrowser.userTypedClear--;
 
                 if (this.mBlank)
