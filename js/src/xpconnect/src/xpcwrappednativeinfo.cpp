@@ -593,7 +593,7 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
         return set;
 
     nsIID** iidArray = nsnull;
-    XPCNativeInterface** interfaceArray = nsnull;
+    AutoMarkingNativeInterfacePtrArrayPtr interfaceArray(ccx);
     PRUint32 iidCount = 0;
 
     if(NS_FAILED(classInfo->GetInterfaces(&iidCount, &iidArray)))
@@ -613,9 +613,12 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
 
     if(iidCount)
     {
-        interfaceArray = new XPCNativeInterface*[iidCount];
-        if(!interfaceArray)
+        AutoMarkingNativeInterfacePtrArrayPtr
+            arr(ccx, new XPCNativeInterface*[iidCount], iidCount, PR_TRUE);
+        if (!arr)
             goto out;
+
+        interfaceArray = arr;
 
         XPCNativeInterface** currentInterface = interfaceArray;
         nsIID**              currentIID = iidArray;
@@ -629,8 +632,8 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
                 continue;
             }
 
-            AutoMarkingNativeInterfacePtr iface(ccx);
-            iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
+            XPCNativeInterface* iface =
+                XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
             if(!iface)
             {

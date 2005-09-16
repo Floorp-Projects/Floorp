@@ -3290,6 +3290,61 @@ DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeTearOffPtr, XPCWrappedNativ
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingWrappedNativeProtoPtr, XPCWrappedNativeProto)
 DEFINE_AUTO_MARKING_PTR_TYPE(AutoMarkingJSVal, XPCMarkableJSVal)
                                     
+#define DEFINE_AUTO_MARKING_ARRAY_PTR_TYPE(class_, type_)                    \
+class class_ : public AutoMarkingPtr                                         \
+{                                                                            \
+public:                                                                      \
+    class_ (XPCCallContext& ccx)                                             \
+        : AutoMarkingPtr(ccx), mPtr(nsnull), mCount(0) {}                    \
+    class_ (XPCCallContext& ccx, type_** aPtr, PRUint32 aCount,              \
+            PRBool aClear = PR_FALSE)                                        \
+        : AutoMarkingPtr(ccx), mPtr(aPtr), mCount(aCount)                    \
+    {                                                                        \
+        if(!mPtr) mCount = 0;                                                \
+        else if(aClear) memset(mPtr, 0, mCount*sizeof(type_*));              \
+    }                                                                        \
+    virtual ~ class_ () {}                                                   \
+                                                                             \
+    virtual void MarkBeforeJSFinalize(JSContext* cx)                         \
+    {                                                                        \
+        for(PRUint32 i = 0; i < mCount; ++i)                                 \
+        {                                                                    \
+            type_* cur = mPtr[i];                                            \
+            if(cur)                                                          \
+            {                                                                \
+                cur->MarkBeforeJSFinalize(cx);                               \
+                cur->AutoMark(cx);                                           \
+            }                                                                \
+        }                                                                    \
+        if(mNext) mNext->MarkBeforeJSFinalize(cx);                           \
+    }                                                                        \
+                                                                             \
+    virtual void MarkAfterJSFinalize()                                       \
+    {                                                                        \
+        for(PRUint32 i = 0; i < mCount; ++i)                                 \
+        {                                                                    \
+            type_* cur = mPtr[i];                                            \
+            if(cur)                                                          \
+                cur->Mark();                                                 \
+        }                                                                    \
+        if(mNext) mNext->MarkAfterJSFinalize();                              \
+    }                                                                        \
+                                                                             \
+    type_ ** get()       const  {return mPtr;}                               \
+    operator type_ **()  const  {return mPtr;}                               \
+    type_ ** operator->() const  {return mPtr;}                              \
+                                                                             \
+    class_ & operator =(const class_ & inst)                                 \
+        {mPtr = inst.mPtr; mCount = inst.mCount; return *this;}              \
+                                                                             \
+protected:                                                                   \
+    type_ ** mPtr;                                                           \
+    PRUint32 mCount;                                                         \
+};
+
+DEFINE_AUTO_MARKING_ARRAY_PTR_TYPE(AutoMarkingNativeInterfacePtrArrayPtr,
+                                   XPCNativeInterface)
+    
 // Note: It looked like I would need one of these AutoMarkingPtr types for
 // XPCNativeScriptableInfo in order to manage marking its 
 // XPCNativeScriptableShared member during construction. But AFAICT we build

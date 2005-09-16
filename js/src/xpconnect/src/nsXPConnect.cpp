@@ -498,13 +498,19 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
         JS_FlagSystemObject(aJSContext, tempGlobal);
 
-    if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    if(NS_FAILED(WrapNative(aJSContext, tempGlobal, aCOMObj, aIID,
-                            getter_AddRefs(holder))) || !holder)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
+    {
+        // Scope for our auto-marker; it just needs to keep tempGlobal alive
+        // long enough for InitClasses and WrapNative to do their work
+        AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(tempGlobal));
+
+        if(NS_FAILED(InitClasses(aJSContext, tempGlobal)))
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+
+        if(NS_FAILED(WrapNative(aJSContext, tempGlobal, aCOMObj, aIID,
+                                getter_AddRefs(holder))) || !holder)
+            return UnexpectedFailure(NS_ERROR_FAILURE);
+    }
 
     JSObject* globalJSObj;
     if(NS_FAILED(holder->GetJSObject(&globalJSObj)) || !globalJSObj)
