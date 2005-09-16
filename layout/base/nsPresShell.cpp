@@ -6189,57 +6189,58 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
                                  aStatus, aView);
 
     // 2. Give event to the DOM for third party and JS use.
-    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv) &&
-         // We want synthesized mouse moves to cause mouseover and mouseout
-         // DOM events (PreHandleEvent above), but not mousemove DOM events.
-         !IsSynthesizedMouseMove(aEvent)) {
-      if (mCurrentEventContent) {
-        rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
-                                                  aFlags, aStatus);
-      }
-      else {
-        nsCOMPtr<nsIContent> targetContent;
-        rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
-                                                    getter_AddRefs(targetContent));
-        if (NS_SUCCEEDED(rv) && targetContent) {
-          rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                             aFlags, aStatus);
+    if ((GetCurrentEventFrame()) && NS_SUCCEEDED(rv)) {
+      // We want synthesized mouse moves to cause mouseover and mouseout
+      // DOM events (PreHandleEvent above), but not mousemove DOM events.
+      if (!IsSynthesizedMouseMove(aEvent)) {
+        if (mCurrentEventContent) {
+          rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
+                                                    aFlags, aStatus);
         }
-      }
+        else {
+          nsCOMPtr<nsIContent> targetContent;
+          rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
+                                                      getter_AddRefs(targetContent));
+          if (NS_SUCCEEDED(rv) && targetContent) {
+            rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                               aFlags, aStatus);
+          }
+        }
 
-      // Stopping propagation in the default group does not affect
-      // propagation in the system event group.
-      // (see also section 1.2.2.6 of the DOM3 Events Working Draft)
+        // Stopping propagation in the default group does not affect
+        // propagation in the system event group.
+        // (see also section 1.2.2.6 of the DOM3 Events Working Draft)
 
-      aEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
+        aEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
 
-      // 3. Give event to the Frames for browser default processing.
-      // This is the nearest we can get to being an at target
-      // system event group handler. In particular we need to
-      // fire before bubbling system event group handlers.
-      if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
-          aEvent->eventStructType != NS_EVENT) {
-        rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
-                                             aStatus);
-      }
+        // 3. Give event to the Frames for browser default processing.
+        // This is the nearest we can get to being an at target
+        // system event group handler. In particular we need to
+        // fire before bubbling system event group handlers.
+        if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
+            aEvent->eventStructType != NS_EVENT) {
+          rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
+                                               aStatus);
+        }
 
-      // Continue with second dispatch to system event handlers.
+        // Continue with second dispatch to system event handlers.
 
-      // Need to null check mCurrentEventContent and mCurrentEventFrame
-      // since the previous dispatch could have nuked them.
-      if (mCurrentEventContent) {
-        rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
-                                                  aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
-                                                  aStatus);
-      }
-      else if (mCurrentEventFrame) {
-        nsCOMPtr<nsIContent> targetContent;
-        rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
-                                                    getter_AddRefs(targetContent));
-        if (NS_SUCCEEDED(rv) && targetContent) {
-          rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                             aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
-                                             aStatus);
+        // Need to null check mCurrentEventContent and mCurrentEventFrame
+        // since the previous dispatch could have nuked them.
+        if (mCurrentEventContent) {
+          rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
+                                                    aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
+                                                    aStatus);
+        }
+        else if (mCurrentEventFrame) {
+          nsCOMPtr<nsIContent> targetContent;
+          rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
+                                                      getter_AddRefs(targetContent));
+          if (NS_SUCCEEDED(rv) && targetContent) {
+            rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                               aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
+                                               aStatus);
+          }
         }
       }
 
