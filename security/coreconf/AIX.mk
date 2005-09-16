@@ -84,7 +84,7 @@ else
 DSO_LDOPTS	+= -bexpall
 endif
 
-PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
                 sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' > $@
 
 ifdef BUILD_OPT

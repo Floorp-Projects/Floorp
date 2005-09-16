@@ -157,7 +157,7 @@ DLLFLAGS += -DEF:$(MAPFILE)
 endif
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
+PROCESS_MAP_FILE = cp $< $@
 
 
 #

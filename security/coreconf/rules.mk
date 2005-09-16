@@ -373,7 +373,7 @@ endif
 	@echo $(RES) finished
 endif
 
-$(MAPFILE): $(LIBRARY_NAME).def
+$(MAPFILE): $(MAPFILE_SOURCE)
 	@$(MAKE_OBJDIR)
 	$(PROCESS_MAP_FILE)
 

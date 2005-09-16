@@ -101,7 +101,7 @@ PROCESS_MAP_FILE = \
 	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@; \
 	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@; \
 	echo EXPORTS >> $@; \
-	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+	grep -v ';+' $< | grep -v ';-' | \
 	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,\([\t ]*\),\1_,' | \
 	awk 'BEGIN {ord=1;} { print($$0 " @" ord " RESIDENTNAME"); ord++;}' >> $@
 
@@ -168,7 +168,7 @@ PROCESS_MAP_FILE = \
 	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@; \
 	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@; \
 	echo EXPORTS >> $@; \
-	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+	grep -v ';+' $< | grep -v ';-' | \
 	sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' >> $@
 endif   #NO_SHARED_LIB
 
