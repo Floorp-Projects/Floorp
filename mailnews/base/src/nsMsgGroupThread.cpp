@@ -187,9 +187,7 @@ nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child, nsMsgDBView 
       (sortType == nsMsgViewSortType::byDate
         && sortOrder == nsMsgViewSortOrder::descending) ? 
           nsMsgViewSortOrder::descending : nsMsgViewSortOrder::ascending;
-
-    // this actually sorts by the current grouping, so if we're grouped by
-    // subject, it tries to sort by subject. We don't want that...
+    // sort by date within group
     insertIndex = view->GetInsertIndexHelper(child, &m_keys, threadSortOrder, nsMsgViewSortType::byDate);
   }
   m_keys.InsertAt(insertIndex, newHdrKey);
