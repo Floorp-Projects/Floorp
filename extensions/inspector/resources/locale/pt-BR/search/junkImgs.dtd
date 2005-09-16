@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Localizar imagens não usadas no tema atual...">
+<!ENTITY junkImgsDescription "Para a pesquisa funcionar efetivamente, é necessário inspecionar um documento que carregue TODOS os arquivos CSS do tema atual. Depois aponte o local do disco onde a raiz do tema está localizada.">

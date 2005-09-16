@@ -51,6 +51,7 @@ ALL_LOCALES = \
 	en-US \
 	ga-IE \
 	pl \
+	pt-BR \
 	ru \
 	sv-SE \
 	zh-TW \

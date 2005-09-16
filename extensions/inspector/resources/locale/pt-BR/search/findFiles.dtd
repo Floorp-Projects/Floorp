@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Localizar arquivos...">
+<!ENTITY txSearchFor.label "Localizar:">
+<!ENTITY txSearchPath.label "Localizar em:">
+<!ENTITY cbRecurse.label "Incluir subpastas">

@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspector">
+<!ENTITY Sidebar.label "Painel">
+<!ENTITY elementBlinking.label "Piscamento">
+<!ENTITY blinkSelectedElement.label "Piscar elemento selecionado">
+<!ENTITY borderColor.label "Cor da borda">
+<!ENTITY borderWidth.label "Largura da borda">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Duração da piscada">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Velocidade da piscada">
+<!ENTITY invertColors.label "Inverter cores">
+<!ENTITY installHowTo.label "O painel do DOM Inspector não está instalado.  Clique em 'Instalar' para adicioná-lo ao painel.">
+<!ENTITY install.label "Instalar">
+<!ENTITY addNavigatorHooks.label "Adicionar menus de contexto ao browser">
