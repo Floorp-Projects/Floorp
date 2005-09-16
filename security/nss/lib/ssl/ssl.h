@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.23 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: ssl.h,v 1.24 2005/09/16 20:33:09 julien.pierre.bugs%sun.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -171,6 +171,12 @@ SSL_IMPORT SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
 ** the complete SSL handshake protocol is finished.
 */
 SSL_IMPORT SECStatus SSL_ForceHandshake(PRFileDesc *fd);
+
+/*
+** Same as above, but with an I/O timeout.
+ */
+SSL_IMPORT SECStatus SSL_ForceHandshakeWithTimeout(PRFileDesc *fd,
+                                                   PRIntervalTime timeout);
 
 /*
 ** Query security status of socket. *on is set to one if security is
@@ -336,6 +342,14 @@ SSL_IMPORT SECStatus SSL_HandshakeCallback(PRFileDesc *fd,
 ** session keys without doing another private key operation.
 */
 SSL_IMPORT SECStatus SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
+
+/*
+** Same as above, but with an I/O timeout.
+ */
+SSL_IMPORT SECStatus SSL_ReHandshakeWithTimeout(PRFileDesc *fd,
+                                                PRBool flushCache,
+                                                PRIntervalTime timeout);
+
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* deprecated!
