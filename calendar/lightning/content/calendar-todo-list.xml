@@ -12,7 +12,17 @@
         <field name="mOperationListener"><![CDATA[
         ({
             todoList: this,
-            
+
+            onStartBatch: function onStartBatch()
+            {
+              return;
+            },
+
+            onEndBatch: function onEndBatch()
+            {
+              return;
+            },
+
             onAddItem: function onAddItem(aItem)
             {
                 if (!(aItem instanceof Components.interfaces.calITodo))
@@ -43,7 +53,12 @@
             {
                 this.todoList.rebuildDisplay();
             },
-            
+
+            onDefaultCalendarChanged: function onDefaultCalendarChanged(aCalendar)
+            {
+                return;
+            },
+
             onGetResult: function onGetResult(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
                 if (!Components.isSuccessCode(aStatus)) {
