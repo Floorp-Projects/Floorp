@@ -129,13 +129,15 @@
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
 
-// Printing
-#include "nsIWebBrowserPrint.h"
+#include "nsIPrompt.h"
+#include "imgIContainer.h" // image animation mode constants
 
 //--------------------------
 // Printing Include
 //---------------------------
 #ifdef NS_PRINTING
+
+#include "nsIWebBrowserPrint.h"
 
 #include "nsPrintEngine.h"
 
@@ -162,15 +164,11 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIPluginDocument.h"
 
-// Print Preview
-#include "imgIContainer.h" // image animation mode constants
-
 // Print Progress
 #include "nsIPrintProgress.h"
 #include "nsIPrintProgressParams.h"
 
 // Print error dialog
-#include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 
 // Printing 
@@ -303,8 +301,12 @@ class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
-                           public nsIWebBrowserPrint,
                            public nsIDocumentViewerPrint
+
+#ifdef NS_PRINTING
+                           , public nsIWebBrowserPrint
+#endif
+
 {
   friend class nsDocViewerSelectionListener;
   friend class nsPagePrintTimer;
@@ -338,8 +340,10 @@ public:
   // nsIMarkupDocumentViewer
   NS_DECL_NSIMARKUPDOCUMENTVIEWER
 
+#ifdef NS_PRINTING
   // nsIWebBrowserPrint
   NS_DECL_NSIWEBBROWSERPRINT
+#endif
 
   typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
                                 void* aClosure);
@@ -430,10 +434,10 @@ protected:
   unsigned                         mPrintDocIsFullyLoaded : 1;
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
-#endif // NS_PRINT_PREVIEW
 
   nsPrintEngine*        mPrintEngine;
   nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
+#endif // NS_PRINT_PREVIEW
 
 #ifdef NS_DEBUG
   FILE* mDebugFile;
@@ -509,14 +513,20 @@ DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   PrepareToStartLoad();
 }
 
-NS_IMPL_ISUPPORTS7(DocumentViewerImpl,
-                   nsIContentViewer,
-                   nsIDocumentViewer,
-                   nsIMarkupDocumentViewer,
-                   nsIContentViewerFile,
-                   nsIContentViewerEdit,
-                   nsIWebBrowserPrint,
-                   nsIDocumentViewerPrint)
+NS_IMPL_ADDREF(DocumentViewerImpl)
+NS_IMPL_RELEASE(DocumentViewerImpl)
+
+NS_INTERFACE_MAP_BEGIN(DocumentViewerImpl)
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
+    NS_INTERFACE_MAP_ENTRY(nsIDocumentViewer)
+    NS_INTERFACE_MAP_ENTRY(nsIMarkupDocumentViewer)
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewerFile)
+    NS_INTERFACE_MAP_ENTRY(nsIContentViewerEdit)
+    NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerPrint)
+#ifdef NS_PRINTING
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
+#endif
+NS_INTERFACE_MAP_END
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
@@ -1799,6 +1809,7 @@ DocumentViewerImpl::Hide(void)
 {
   PRBool is_in_print_mode = PR_FALSE;
 
+#ifdef NS_PRINTING
   GetDoingPrint(&is_in_print_mode);
 
   if (is_in_print_mode) {
@@ -1822,6 +1833,7 @@ DocumentViewerImpl::Hide(void)
     // in fact it always returns false for subdocuments.
     return NS_OK;
   }
+#endif
 
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
@@ -2448,8 +2460,12 @@ DocumentViewerImpl::Print(PRBool            aSilent,
 NS_IMETHODIMP 
 DocumentViewerImpl::PrintWithParent(nsIDOMWindowInternal *aParentWin, nsIPrintSettings *aThePrintSettings, nsIWebProgressListener *aWPListener)
 {
+#ifdef NS_PRINTING
   mDialogParentWin = aParentWin;
   return Print(aThePrintSettings, aWPListener);
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 // nsIContentViewerFile interface
@@ -3263,11 +3279,13 @@ nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
 /** ---------------------------------------------------
  *  From nsIWebBrowserPrint
  */
+
+#ifdef NS_PRINTING
+
 NS_IMETHODIMP
 DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-#ifdef NS_PRINTING
   INIT_RUNTIME_ERROR_CHECKING();
 
 #ifdef MOZ_XUL
@@ -3345,10 +3363,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     OnDonePrinting();
   }
   return rv;
-#else
-  PR_PL(("NS_PRINTING not defined - printing not implemented in this build!"));
-  return NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED;
-#endif /* NS_PRINTING */
 }
 
 /** ---------------------------------------------------
@@ -3412,7 +3426,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 {
-#if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (GetIsPrinting()) return NS_ERROR_FAILURE;
 
   if (!mPrintEngine) return NS_ERROR_FAILURE;
@@ -3511,9 +3524,6 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     scrollableView->ScrollTo(0, fndPageFrame->GetPosition().y-deadSpaceGap, PR_TRUE);
   }
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif // NS_PRINT_PREVIEW
 
 }
 
@@ -3521,14 +3531,10 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 NS_IMETHODIMP
 DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
 {
-#ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aGlobalPrintSettings);
 
   nsPrintEngine printEngine;
   return printEngine.GetGlobalPrintSettings(aGlobalPrintSettings);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 /* readonly attribute boolean doingPrint; */
@@ -3536,7 +3542,6 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
 NS_IMETHODIMP
 DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
 {
-#ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aDoingPrint);
   
   *aDoingPrint = PR_FALSE;
@@ -3545,9 +3550,6 @@ DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
     return mPrintEngine->GetDoingPrintPreview(aDoingPrint);
   } 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 /* readonly attribute boolean doingPrintPreview; */
@@ -3555,7 +3557,6 @@ DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
 NS_IMETHODIMP
 DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
 {
-#ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aDoingPrintPreview);
 
   *aDoingPrintPreview = PR_FALSE;
@@ -3563,26 +3564,20 @@ DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
     return mPrintEngine->GetDoingPrintPreview(aDoingPrintPreview);
   }
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 /* readonly attribute nsIPrintSettings currentPrintSettings; */
 NS_IMETHODIMP
 DocumentViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings)
 {
-#ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aCurrentPrintSettings);
 
   *aCurrentPrintSettings = nsnull;
   NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_FAILURE);
 
   return mPrintEngine->GetCurrentPrintSettings(aCurrentPrintSettings);
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
+
 
 /* readonly attribute nsIDOMWindow currentChildDOMWindow; */
 NS_IMETHODIMP 
@@ -3597,19 +3592,14 @@ DocumentViewerImpl::GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWin
 NS_IMETHODIMP
 DocumentViewerImpl::Cancel()
 {
-#ifdef NS_PRINTING
   NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_FAILURE);
   return mPrintEngine->Cancelled();
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 /* void exitPrintPreview (); */
 NS_IMETHODIMP
 DocumentViewerImpl::ExitPrintPreview()
 {
-#ifdef NS_PRINTING
   if (GetIsPrinting()) return NS_ERROR_FAILURE;
   NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_FAILURE);
 
@@ -3617,9 +3607,6 @@ DocumentViewerImpl::ExitPrintPreview()
     ReturnToGalleyPresentation();
   }
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 //----------------------------------------------------------------------------------
@@ -3709,8 +3696,6 @@ DocumentViewerImpl::GetIsRangeSelection(PRBool *aIsRangeSelection)
 #endif
 }
 
-
-#ifdef NS_PRINTING
 //----------------------------------------------------------------------------------
 // Printing/Print Preview Helpers
 //----------------------------------------------------------------------------------

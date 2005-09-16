@@ -4002,6 +4002,7 @@ MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
 MOZ_XTF=1
 MOZ_XUL=1
+NS_PRINTING=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
@@ -4096,6 +4097,7 @@ minimo)
   NECKO_PROTOCOLS_DEFAULT=="about data http file res jar"
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
+  NS_PRINTING=
   ;;
 
 mail)
@@ -4669,6 +4671,19 @@ MOZ_ARG_DISABLE_BOOL(jsloader,
     MOZ_JSLOADER=1 )
 if test "$MOZ_JSLOADER"; then
     AC_DEFINE(MOZ_JSLOADER)
+fi
+
+dnl ========================================================
+dnl Disable printing
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(printing,
+[  --disable-printing  Disable printing support],
+    NS_PRINTING=,
+    NS_PRINTING=1 )
+
+if test "$NS_PRINTING"; then
+    AC_DEFINE(NS_PRINTING)
+    AC_DEFINE(NS_PRINT_PREVIEW)
 fi
 
 dnl ========================================================
@@ -6675,6 +6690,7 @@ AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_STORAGE)
+AC_SUBST(NS_PRINTING)
 
 AC_SUBST(MOZ_ENABLE_JAVAXPCOM)
 AC_SUBST(JAVA_INCLUDE_PATH)
@@ -6916,8 +6932,6 @@ fi
 AC_SUBST(MOZ_MOVEMAIL)
 
 AC_DEFINE(JS_THREADSAFE)
-AC_DEFINE(NS_PRINT_PREVIEW)
-AC_DEFINE(NS_PRINTING)
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)

@@ -74,7 +74,6 @@
 #include "nsIBaseWindow.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIContent.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
@@ -144,8 +143,11 @@
 
 #include "plbase64.h"
 
+#ifdef NS_PRINTING
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
+#include "nsIWebBrowserPrint.h"
+#endif
 
 #include "nsWindowRoot.h"
 #include "nsNetCID.h"
@@ -3501,6 +3503,7 @@ nsGlobalWindow::Stop()
 NS_IMETHODIMP
 nsGlobalWindow::Print()
 {
+#ifdef NS_PRINTING
   FORWARD_TO_OUTER(Print, (), NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
@@ -3550,6 +3553,9 @@ nsGlobalWindow::Print()
   } 
 
   return NS_OK;
+#else
+  return NS_ERROR_NOT_AVAILABLE;
+#endif
 }
 
 NS_IMETHODIMP
@@ -5485,6 +5491,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       }
     }
   }
+#ifdef NS_PRINTING
   else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
 
@@ -5500,6 +5507,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       }
     }
   }
+#endif
   else if (aIID.Equals(NS_GET_IID(nsIScriptEventManager))) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     if (doc) {

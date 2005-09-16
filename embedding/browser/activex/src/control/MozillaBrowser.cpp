@@ -61,12 +61,15 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIClipboardCommands.h"
 #include "nsIProfile.h"
-#include "nsIPrintOptions.h"
-#include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIComponentRegistrar.h"
+
+#ifdef NS_PRINTING
+#include "nsIPrintOptions.h"
+#include "nsIWebBrowserPrint.h"
+#endif
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -89,6 +92,7 @@ static HANDLE s_hHackedNonReentrancy = NULL;
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
 
+#ifdef NS_PRINTING
 class PrintListener : public nsIWebProgressListener
 {
     PRBool mComplete;
@@ -101,6 +105,7 @@ public:
 
     void WaitForComplete();
 };
+#endif
 
 class SimpleDirectoryProvider :
     public nsIDirectoryServiceProvider
@@ -566,6 +571,7 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     NG_TRACE_METHOD(CMozillaBrowser::OnPageSetup);
 
 
+#ifdef NS_PRINTING
     nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
     nsCOMPtr<nsIPrintSettings> printSettings;
     if(!print ||
@@ -577,6 +583,7 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
     // show the page setup dialog
     CPageSetupDlg dlg(printSettings);
     dlg.DoModal();
+#endif
 
     return 0;
 }
@@ -1482,6 +1489,7 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 // Print document
 HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
 {
+#ifdef NS_PRINTING
     // Print the contents
     nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_GetInterface(mWebBrowser);
     NS_ASSERTION(browserAsPrint, "No nsIWebBrowserPrint!");
@@ -1516,7 +1524,7 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
         printSettings->SetPrintSilent(oldPrintSilent);
     }
     mPrefBranch->SetBoolPref(kShowPrintProgressPref, oldShowPrintProgress);
-
+#endif
     return S_OK;
 }
 
@@ -2057,6 +2065,8 @@ NS_IMETHODIMP SimpleDirectoryProvider::GetFile(const char *prop, PRBool *persist
 // PrintListener implementation
 
 
+#ifdef NS_PRINTING
+
 NS_IMPL_ISUPPORTS1(PrintListener, nsIWebProgressListener)
 
 PrintListener::PrintListener() : mComplete(PR_FALSE)
@@ -2138,3 +2148,4 @@ NS_IMETHODIMP PrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIR
 {
     return NS_OK;
 }
+#endif

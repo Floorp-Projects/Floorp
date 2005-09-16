@@ -49,10 +49,13 @@ DIRS		= \
 		base \
 		generic \
 		forms \
-		printing \
 		tables \
 		xul \
 		$(NULL)
+
+ifdef NS_PRINTING
+DIRS           += printing
+endif
 
 ifdef MOZ_MATHML
 DIRS           += mathml
