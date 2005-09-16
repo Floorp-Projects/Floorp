@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Visszavonás">
+<!ENTITY mnEditUndo.accesskey "V">
+<!ENTITY mnEditRedo.label "Újra">
+<!ENTITY mnEditRedo.accesskey "r">
+<!ENTITY mnEditCut.label "Kivágás">
+<!ENTITY mnEditCut.accesskey "K">
+<!ENTITY mnEditCopy.label "Másolás">
+<!ENTITY mnEditCopy.accesskey "M">
+<!ENTITY mnEditPaste.label "Beillesztés">
+<!ENTITY mnEditPaste.accesskey "B">
+<!ENTITY mnEditInsert.label "Beszúrás">
+<!ENTITY mnEditInsert.accesskey "B">
+<!ENTITY mnEditEdit.label "Szerkesztés">
+<!ENTITY mnEditEdit.accesskey "z">
+<!ENTITY mnEditDelete.label "Törlés">
+<!ENTITY mnEditDelete.accesskey "T">
