@@ -68,7 +68,7 @@ MKSHLIB    += ld -shared -expect_unresolved "*" -soname $(notdir $@)
 ifdef MAPFILE
 MKSHLIB += -hidden -input $(MAPFILE)
 endif
-PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
  sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,-exported_symbol ,' > $@
 
 DSO_LDOPTS += -shared

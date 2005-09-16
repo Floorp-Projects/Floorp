@@ -150,7 +150,7 @@ else
     MKSHLIB += -M $(MAPFILE)
 endif
 endif
-PROCESS_MAP_FILE = grep -v ';-' $(LIBRARY_NAME).def | \
+PROCESS_MAP_FILE = grep -v ';-' $< | \
          sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
 
 

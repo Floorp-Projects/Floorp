@@ -71,7 +71,7 @@ MKSHLIB			= $(LD) $(DSO_LDOPTS)
 ifdef MAPFILE
 MKSHLIB += -c $(MAPFILE)
 endif
-PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
          sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,+e ,' > $@
 
 DSO_LDOPTS		= -b +h $(notdir $@)
