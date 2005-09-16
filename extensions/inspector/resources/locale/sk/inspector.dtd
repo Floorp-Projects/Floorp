@@ -1,0 +1,64 @@
+
+<!ENTITY Inspector.title "DOM Inspektor">
+
+<!ENTITY thDOMNodes.label "Uzly DOM">
+<!ENTITY btnInspect.label "Preskúmať">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Vybrať uzol pomocou kliknutia">
+<!ENTITY btnFind.tooltip "Vyhľadať uzol pomocou id, tagu alebo atribútu">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Súbor">
+<!ENTITY mnWindows.label "Preskúmať okno">
+<!ENTITY mnWindows.accesskey "o">
+<!ENTITY mnFile.accesskey "s">
+  <!ENTITY cmdShowOpenURLDialog.label "Preskúmať URL">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "U">
+  <!ENTITY cmdClose.label "Zavrieť">
+  <!ENTITY cmdClose.accesskey "z">
+  <!ENTITY cmdExit.label "Koniec">
+  <!ENTITY cmdExit.accesskey "k">
+  
+<!ENTITY mnEdit.label "Úpravy">
+<!ENTITY mnEdit.accesskey "p">
+  <!ENTITY cmdUndo.label "Späť">
+  <!ENTITY cmdUndo.accesskey "z">
+  <!ENTITY cmdRedo.label "Znovu">
+  <!ENTITY cmdRedo.accesskey "n">
+  <!ENTITY cmdCut.label "Vystrihnúť">
+  <!ENTITY cmdCut.accesskey "t">
+  <!ENTITY cmdCopy.label "Kopírovať">
+  <!ENTITY cmdCopy.accesskey "K">
+  <!ENTITY cmdPaste.label "Prilepiť">
+  <!ENTITY cmdPaste.accesskey "l">
+  <!ENTITY cmdDelete.label "Odstrániť">
+  <!ENTITY cmdDelete.accesskey "S">
+  
+<!ENTITY mnSearch.label "Hľadať">  
+<!ENTITY mnSearch.accesskey "H">
+  <!ENTITY mnSearchPlugins.label "Rozšírenia">
+  <!ENTITY mnSearchPlugins.accesskey "e">
+    <!ENTITY cmdRunSearch.label "Spustiť">
+    <!ENTITY cmdRunSearch.accesskey "S">
+      
+<!ENTITY mnView.label "Zobraziť">
+<!ENTITY mnView.accesskey "Z">
+  <!ENTITY cmdToggleBrowser.label "Prehliadač">
+  <!ENTITY cmdToggleSearch.label "Výsledky hľadania">
+  
+<!ENTITY cmdViewSearchItem.label "Zobraziť...">  
+<!ENTITY cmdEditSearchItem.label "Úpravy">  
+<!ENTITY cmdCopySearchItemLine.label "Kopírovať riadok">
+<!ENTITY cmdCopySearchItemAll.label "Kopírovať všetko">
+<!ENTITY cmdSaveSearchItemText.label "Uložiť">
+<!ENTITY cmdClearSearch.label "Vyčistiť">
+<!ENTITY cmdHideSearchItems.label "Skryť">
+
+<!ENTITY browserPanel.label "Prehliadač">
+  
+<!ENTITY inspectNewWindow.label "Preskúmať v novom okne">
+
+<!ENTITY closeCmd.key "W">
+

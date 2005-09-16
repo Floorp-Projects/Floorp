@@ -53,6 +53,7 @@ ALL_LOCALES = \
 	pl \
 	pt-BR \
 	ru \
+	sk \
 	sv-SE \
 	zh-TW \
 	$(NULL)
