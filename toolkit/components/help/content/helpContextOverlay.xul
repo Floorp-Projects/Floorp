@@ -44,7 +44,8 @@
 
 # Help Window's right-click menu
   <popupset id="contentAreaContextSet">
-    <popup id="contentAreaContextMenu">
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="goUpdateCommand('cmd_copy')">
       <menuitem id="context-back"
                 label="&backButton.label;"
                 accesskey="&backButton.accesskey;"
@@ -59,6 +60,16 @@
                 label="&reloadCmd.label;"
                 accesskey="&reloadCmd.accesskey;"
                 oncommand="reload();"/>
+      <menuseparator/>
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"
+                disabled="true"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="zoom-in"
       		label="&textZoomEnlargeBtn.label;"
