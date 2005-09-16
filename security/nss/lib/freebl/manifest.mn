@@ -1,4 +1,4 @@
-
+# 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -50,24 +50,24 @@ LIBRARY_VERSION = 3
 ifdef FREEBL_CHILD_BUILD
   ifdef USE_ABI32_INT32
     LIBRARY_NAME = freebl_32int
-    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI32_INT64
     LIBRARY_NAME = freebl_32int64
-    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI32_FPU
     LIBRARY_NAME = freebl_32fpu
-    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI64_INT
     LIBRARY_NAME = freebl_64int
-    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI64_FPU
     LIBRARY_NAME = freebl_64fpu
-    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
+endif
+
+# if the library name contains _, we prefix the version with _
+ifneq (,$(findstring _,$(LIBRARY_NAME)))
+  LIBRARY_VERSION := _$(LIBRARY_VERSION)
 endif
 
 MAPFILE_SOURCE = freebl.def
