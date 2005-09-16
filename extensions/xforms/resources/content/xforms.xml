@@ -135,7 +135,7 @@
     <content>
       <html:span anonid="content"></html:span>
       <html:span anonid="anoncontent">
-      <children/>
+        <children/>
       </html:span>
     </content>
     <implementation implements="nsIXFormsUIWidget">
@@ -162,13 +162,14 @@
   <binding id="xformswidget-input"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <children/>
+      <children includes="label"/>
       <html:input anonid="control"
                   onblur="this.parentNode.delegate.value = this.value;"
                   onclick="this.parentNode._change();"
                   onkeyup="this.parentNode._change();"
                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
                   xbl:inherits="accesskey"/>
+      <children/>
     </content>
 
     <implementation implements="nsIXFormsUIWidget">
@@ -276,11 +277,12 @@
   <binding id="xformswidget-textarea"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <children/>
+      <children includes="label"/>
       <html:textarea anonid="control"
                      onblur="this.parentNode.delegate.value = this.value;"
                      onkeyup="this.parentNode._change();"
                      xbl:inherits="accesskey"/>
+      <children/>
     </content>
 
     <implementation implements="nsIXFormsUIWidget">
