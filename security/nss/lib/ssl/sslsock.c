@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.41 2005/09/16 20:31:31 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.42 2005/09/16 21:28:20 julien.pierre.bugs%sun.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1423,35 +1423,11 @@ ssl_SetTimeout(PRFileDesc *fd, PRIntervalTime timeout)
     }
     SSL_LOCK_READER(ss);
     ss->rTimeout = timeout;
-    if (ss->fdx) {
+    if (ss->opt.fdx) {
         SSL_LOCK_WRITER(ss);
     }
     ss->wTimeout = timeout;
-    if (ss->fdx) {
-        SSL_UNLOCK_WRITER(ss);
-    }
-    SSL_UNLOCK_READER(ss);
-    return SECSuccess;
-}
-
-SECStatus PR_CALLBACK
-ssl_SetTimeout(PRFileDesc *fd, PRIntervalTime timeout)
-{
-    sslSocket *ss;
-    int        rv;
-
-    ss = ssl_GetPrivate(fd);
-    if (!ss) {
-	SSL_DBG(("%d: SSL[%d]: bad socket in SetTimeout", SSL_GETPID(), fd));
-	return SECFailure;
-    }
-    SSL_LOCK_READER(ss);
-    ss->rTimeout = timeout;
-    if (ss->fdx) {
-        SSL_LOCK_WRITER(ss);
-    }
-    ss->wTimeout = timeout;
-    if (ss->fdx) {
+    if (ss->opt.fdx) {
         SSL_UNLOCK_WRITER(ss);
     }
     SSL_UNLOCK_READER(ss);
