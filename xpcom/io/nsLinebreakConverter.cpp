@@ -101,15 +101,24 @@ PRInt32 CountLinebreaks(const T* aSrc, PRInt32 inLen, const char* breakStr)
   {
     if (*src == *breakStr)
     {
-      src ++;
-      if (src < srcEnd && breakStr[1] && *src == breakStr[1])
-        src ++;
+      src++;
 
-      theCount ++;
+      if (breakStr[1])
+      {
+        if (src < srcEnd && *src == breakStr[1])
+        {
+          src++;
+          theCount++;
+        }
+      }
+      else
+      {
+        theCount++;
+      }
     }
     else
     {
-      src ++;
+      src++;
     }
   }
   
@@ -193,9 +202,9 @@ static T* ConvertBreaks(const T* inSrc, PRInt32& ioLen, const char* srcBreak, co
         if (destBreak[1])
           *dst++ = destBreak[1];
       
-        src ++;
+        src++;
         if (src < srcEnd && srcBreak[1] && *src == srcBreak[1])
-          src ++;
+          src++;
       }
       else
       {
@@ -227,7 +236,7 @@ static void ConvertBreaksInSitu(T* inSrc, PRInt32 inLen, char srcBreak, char des
     if (*src == srcBreak)
       *src = destBreak;
     
-    src ++;
+    src++;
   }
 }
 
@@ -256,7 +265,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
       {
         // CRLF
         finalLen += destBreakLen;
-        src ++;
+        src++;
       }
       else
       {
@@ -271,9 +280,9 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
     }
     else
     {
-      finalLen ++;
+      finalLen++;
     }
-    src ++;
+    src++;
   }
   
   T* resultString = (T *)nsMemory::Alloc(sizeof(T) * finalLen);
@@ -292,7 +301,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
       {
         // CRLF
         AppendLinebreak(dst, destBreak);
-        src ++;
+        src++;
       }
       else
       {
@@ -309,7 +318,7 @@ static T* ConvertUnknownBreaks(const T* inSrc, PRInt32& ioLen, const char* destB
     {
       *dst++ = *src;
     }
-    src ++;
+    src++;
   }
 
   ioLen = finalLen;
