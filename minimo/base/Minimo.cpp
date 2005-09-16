@@ -43,6 +43,8 @@
 #include "nsStaticComponents.h"
 #endif
 
+#define MINIMO_PROPERTIES_URL "chrome://minimo/locale/minimo.properties"
+
 // Global variables
 const static char* start_url = "chrome://minimo/content/minimo.xul";
 //const static char* start_url = "http://www.meer.net/~dougt/test.html";
@@ -64,6 +66,7 @@ public:
 
   nsCOMPtr<nsIAppShell> mAppShell;
   int mWindowCount;
+  int mSeenLoadLibraryFailure;
 };
 
 
@@ -71,7 +74,8 @@ ApplicationObserver::ApplicationObserver(nsIAppShell* aAppShell)
 {
     mAppShell = aAppShell;
     mWindowCount = 0;
-    
+    mSeenLoadLibraryFailure = 0;
+
     nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
 
 
@@ -81,6 +85,9 @@ ApplicationObserver::ApplicationObserver(nsIAppShell* aAppShell)
     os->AddObserver(this, "xul-window-registered", PR_FALSE);
     os->AddObserver(this, "xul-window-destroyed", PR_FALSE);
     os->AddObserver(this, "xul-window-visible", PR_FALSE);
+
+    os->AddObserver(this, "xpcom-loader", PR_FALSE);
+
 }
 
 ApplicationObserver::~ApplicationObserver()
@@ -131,7 +138,43 @@ ApplicationObserver::Observe(nsISupports *aSubject, const char *aTopic, const PR
         if (mWindowCount == 0)
             mAppShell->Exit();
     }
+    else if (!strcmp(aTopic, "xpcom-loader"))
+    {
+      if (mWindowCount == 0 || mSeenLoadLibraryFailure != 0)
+        return NS_OK;
 
+      mSeenLoadLibraryFailure++;
+
+      nsIFile* file = (nsIFile*) aSubject;
+      nsAutoString filePath;
+      file->GetPath(filePath);
+
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+      if (!bundleService)
+        return NS_ERROR_FAILURE;
+      
+      nsCOMPtr<nsIStringBundle> bundle;
+      bundleService->CreateBundle(MINIMO_PROPERTIES_URL, getter_AddRefs(bundle));
+      
+      if (!bundle)
+        return NS_ERROR_FAILURE;
+      
+      
+
+
+      const PRUnichar *formatStrings[] = { filePath.get() };
+      nsXPIDLString message;
+      bundle->FormatStringFromName(NS_LITERAL_STRING("loadFailed").get(),
+                                   formatStrings,
+                                   NS_ARRAY_LENGTH(formatStrings),
+                                   getter_Copies(message));
+      
+      nsXPIDLString title;
+      bundle->GetStringFromName(NS_LITERAL_STRING("loadFailedTitle").get(), getter_Copies(title));
+
+      nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
+      promptService->Alert(nsnull, title.get(), message.get());
+    }
     return NS_OK;
 }
 
@@ -221,8 +264,6 @@ public:
 };
 
 
-#include "nsIWindowWatcher.h"
-
 nsBadCertListener::nsBadCertListener()
 {
 }
@@ -233,7 +274,6 @@ nsBadCertListener::~nsBadCertListener()
 
 NS_IMPL_ISUPPORTS1(nsBadCertListener, nsIBadCertListener)
 
-#define MINIMO_PROPERTIES_URL "chrome://minimo/locale/minimo.properties"
 
 
 NS_IMETHODIMP 
@@ -515,7 +555,7 @@ PRBool DoesProcessAlreadyExist() {return PR_FALSE;}
  *
  * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
 #ifdef WINCE
-#define HACKY_PRE_LOAD_LIBRARY 1
+// #define HACKY_PRE_LOAD_LIBRARY 1
 #endif
 
 #ifdef HACKY_PRE_LOAD_LIBRARY
@@ -527,18 +567,10 @@ typedef struct _library
 
 _library Libraries[] =
 {
-  {  L"js3250.dll",     NULL },
-  {  L"nspr4.dll",      NULL },
-  {  L"nss3.dll",       NULL },
-  {  L"nssckbi.dll",    NULL },
-  {  L"plc4.dll",       NULL },
-  {  L"plds4.dll",      NULL },
-  {  L"shunt.dll",      NULL },
-  {  L"smime3.dll",     NULL },
-  {  L"softokn3.dll",   NULL },
-  {  L"ssl3.dll",       NULL },
-  {  L"xpcom.dll",      NULL },
-  {  L"xpcom_core.dll", NULL },
+    {  L"nss3.dll",       NULL },
+    {  L"softokn3.dll",   NULL },
+    {  L"nssckbi.dll",    NULL },
+    {  L"ssl3.dll",       NULL },
   {  NULL, NULL },
 };
 
@@ -577,6 +609,7 @@ int main(int argc, char *argv[])
 #else
   NS_InitEmbedding(nsnull, nsnull);
 #endif
+
     // Choose the new profile
   if (NS_FAILED(StartupProfile()))
     return 1;
@@ -586,6 +619,22 @@ int main(int argc, char *argv[])
   
   NS_TIMELINE_ENTER("appStartup");
   nsCOMPtr<nsIAppShell> appShell = do_CreateInstance(kAppShellCID);
+  if (!appShell)
+  {
+    // if we can't get the nsIAppShell, then we should auto reg.
+    nsCOMPtr<nsIComponentRegistrar> registrar;
+    NS_GetComponentRegistrar(getter_AddRefs(registrar));
+    if (!registrar)
+      return -1;
+
+    registrar->AutoRegister(nsnull);
+
+	appShell = do_CreateInstance(kAppShellCID);
+
+	if (!appShell)
+		return 1;
+  }
+
   appShell->Create(nsnull, nsnull);
   
   ApplicationObserver *appObserver = new ApplicationObserver(appShell);

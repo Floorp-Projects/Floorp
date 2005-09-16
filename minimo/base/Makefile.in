@@ -92,7 +92,7 @@ endif
 
 EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
 
-LIBS	  = $(EXTRA_DSO_LIBS)		\
+LIBS	  = $(EXTRA_DSO_LIBS)       \
 			$(MOZ_UNICHARUTIL_LIBS)	\
 			$(XPCOM_LIBS)			\
 			$(NSPR_LIBS)			\
@@ -118,8 +118,13 @@ ifdef BUILD_STATIC_LIBS
 ifdef WINCE
 FINAL_PLATFORM=wince
 else
+ifeq ($(OS_ARCH),WINNT)
+FINAL_PLATFORM=winnt
+else
 FINAL_PLATFORM=linux
 endif
+endif
+
 
 FINAL_LINK_COMPS=$(topsrcdir)/minimo/base/$(FINAL_PLATFORM)/minimo-link-comps
 FINAL_LINK_COMP_NAMES=$(topsrcdir)/minimo/base/$(FINAL_PLATFORM)/minimo-link-names
@@ -172,5 +177,3 @@ installer::
 	bash $(srcdir)/../config/linux_package.sh  $(MOZ_BUILD_ROOT) $(srcdir)
 endif
 
-libs::
-	make package

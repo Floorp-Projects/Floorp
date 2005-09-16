@@ -20,6 +20,7 @@ appshell
 nsChromeModule
 nsMorkModule
 nsToolkitCompsModule
+nsXMLExtrasModule
 TransformiixModule
 nsWebServicesModule
 SoftKeyBoardModule

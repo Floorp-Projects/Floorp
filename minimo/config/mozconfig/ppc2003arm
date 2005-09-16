@@ -26,7 +26,7 @@ mk_add_options TARGET_DEVICE=device
 # code generation options (optimize for size)
 ac_add_options --enable-strip
 ac_add_options --disable-debug
-ac_add_options --enable-optimize=-O1
+ac_add_options --enable-optimize="-Os -Og"
 
 # enable static build
 ac_add_options --disable-shared

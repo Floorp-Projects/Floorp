@@ -1,0 +1,11 @@
+mk_add_options MOZ_CO_PROJECT=minimo
+ac_add_options --enable-application=minimo
+
+ac_add_options --disable-native-uconv
+
+ac_add_options --enable-debug
+ac_add_options --disable-optimize
+
+# enable static build
+ac_add_options --disable-shared
+ac_add_options --enable-static

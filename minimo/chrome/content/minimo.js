@@ -225,7 +225,11 @@ function MiniNavStartup()
   browserInit(currentTab);
   gSelectedTab=currentTab;
 
-  var homepage = gPrefs.getCharPref("browser.startup.homepage");
+  var homepage = "www.mozilla.org";
+
+  try {
+    homepage = gPrefs.getCharPref("browser.startup.homepage");
+  } catch(ex) {}
 
   var BrowserStatusHandler = new nsBrowserStatusHandler();
   BrowserStatusHandler.init();
@@ -281,12 +285,16 @@ function loadURI(uri)
 
 function BrowserLoadURL()
 {
-  try {
-    loadURI(gURLBar.value);
-    content.focus();
-  }
-  catch(e) {
-  }
+  if (!gURLBar)
+    return;
+  
+  var url = gURLBar.value;
+
+  if (url.substring(0,7) == "http://")
+    url = "http://" + url;
+
+  loadURI(gURLBar.value);
+  content.focus();
 }
 
 function BrowserBack()

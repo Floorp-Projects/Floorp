@@ -10,7 +10,6 @@ nsRDFModule
 nsParserModule
 nsGfxGTKModule
 nsImageLib2Module
-nsPluginModule
 nsWidgetGtk2Module
 nsLayoutModule
 docshell_provider
@@ -22,9 +21,6 @@ appshell
 nsChromeModule
 nsMorkModule
 nsToolkitCompsModule
-BOOT
-NSS
-PKI
 nsXMLExtrasModule
 TransformiixModule
 nsWebServicesModule

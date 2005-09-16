@@ -10,7 +10,6 @@ rdf
 htmlpars
 gfx_gtk
 imglib2
-gkplugin
 widget_gtk2
 gklayout
 docshell
@@ -22,9 +21,6 @@ nsappshell
 chrome
 mork
 toolkitcomps
-pipboot
-pipnss
-pippki
 xmlextras
 transformiix
 websrvcs

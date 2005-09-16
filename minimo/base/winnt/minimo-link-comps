@@ -1,10 +1,10 @@
-xpconect
-mozuconv
+xpc3250
+uconv
 i18n
 necko
 jar50
 rdf
-pref
+xppref32
 caps
 gkparser
 gkgfxwin
@@ -12,7 +12,7 @@ imglib2
 gkwidget
 gklayout
 docshell
-embedcmp
+embedcomponents
 webbrwsr
 texteditor
 txmgr
@@ -20,7 +20,8 @@ appshell
 chrome
 mork
 tkitcmps
-t8iix
+xmlextras
+transformiix
 websrvcs
 softkey
 phone
