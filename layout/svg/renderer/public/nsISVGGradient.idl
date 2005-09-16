@@ -62,7 +62,7 @@ interface nsISVGGeometrySource;
  *
  * @nosubgrouping
  */
-[uuid(ba84ad21-3ffb-465d-9321-b080105f8608)]
+[uuid(62e79ab2-5bf9-4372-b397-7a942bc4c649)]
 interface nsISVGGradient : nsISupports
 {
   const unsigned long SVG_UNKNOWN_GRADIENT = 0;
@@ -75,7 +75,6 @@ interface nsISVGGradient : nsISupports
 
   void GetStopCount(out PRUint32 aStopCount);
   void GetStopOffset(in PRInt32 aIndex, out float aOffset);
-  void GetStopColorType(in PRInt32 aIndex, out PRUint16 aStopColorType);
   void GetStopColor(in PRInt32 aIndex, out nscolor aStopColor);
   void GetStopOpacity(in PRInt32 aIndex, out float aStopOpacity);
   void GetNextGradient(out nsISVGGradient aNextGrad, in PRUint32 aType);

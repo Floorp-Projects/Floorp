@@ -364,14 +364,7 @@ nsSVGGradientFrame::GetStopOffset(PRInt32 aIndex, float *aOffset)
   nsresult rv = NS_OK;
   PRInt32 stopCount = GetStopElement(aIndex, &stopElement, nsnull);
 
-  if (stopCount && !stopElement) {
-    *aOffset = 0.0f;
-    return NS_ERROR_FAILURE;
-  }
-
-  if (stopCount == 0 && !stopElement && checkURITarget()) {
-    rv = mNextGrad->GetStopOffset(aIndex, aOffset);
-  } else {
+  if (stopElement) {
     nsCOMPtr<nsIDOMSVGAnimatedNumber> aNum;
     stopElement->GetOffset(getter_AddRefs(aNum));
     aNum->GetAnimVal(aOffset);
@@ -379,26 +372,18 @@ nsSVGGradientFrame::GetStopOffset(PRInt32 aIndex, float *aOffset)
       *aOffset = 0.0f;
     if (*aOffset > 1.0f)
       *aOffset = 1.0f;
-  }
-  mLoopFlag = PR_FALSE;
-  return rv;
-}
 
-NS_IMETHODIMP
-nsSVGGradientFrame::GetStopColorType(PRInt32 aIndex, PRUint16 *aStopColorType) 
-{
-  nsIDOMSVGStopElement *stopElement = nsnull;
-  nsIFrame *stopFrame = nsnull;
-  nsresult rv = NS_OK;
-  PRInt32 stopCount = GetStopElement(aIndex, &stopElement, &stopFrame);
-  if (stopCount && !stopElement) {
-    *aStopColorType = 0;
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
-  if (stopCount == 0 && !stopElement && checkURITarget()) {
-    rv = mNextGrad->GetStopColorType(aIndex, aStopColorType);
-  } else {
-    *aStopColorType = stopFrame->GetStyleSVGReset()->mStopColor.mType;
+
+  // if our gradient doesn't have its own stops we must check if it references
+  // another gradient in which case we must attempt to "inherit" its stops
+  if (stopCount == 0 && checkURITarget()) {
+    rv = mNextGrad->GetStopOffset(aIndex, aOffset);
+  }
+  else {
+    *aOffset = 0.0f;
+    rv = NS_ERROR_FAILURE;
   }
   mLoopFlag = PR_FALSE;
   return rv;
@@ -411,20 +396,26 @@ nsSVGGradientFrame::GetStopColor(PRInt32 aIndex, nscolor *aStopColor)
   nsIFrame *stopFrame = nsnull;
   nsresult rv = NS_OK;
   PRInt32 stopCount = GetStopElement(aIndex, &stopElement, &stopFrame);
-  if (stopCount && !stopElement) {
-    *aStopColor = 0;
-    return NS_ERROR_FAILURE;
-  }
-  if (stopCount == 0 && !stopElement && checkURITarget()) {
-      rv = mNextGrad->GetStopColor(aIndex, aStopColor);
-  } else {
-    NS_ASSERTION(stopFrame, "No stop frame found!");
+
+  if (stopElement) {
     if (!stopFrame) {
+      NS_ERROR("No stop frame found!");
       *aStopColor = 0;
-      rv = NS_ERROR_FAILURE;
-    } else {
-      *aStopColor = stopFrame->GetStyleSVGReset()->mStopColor.mPaint.mColor;
+      return NS_ERROR_FAILURE;
     }
+    *aStopColor = stopFrame->GetStyleSVGReset()->mStopColor.mPaint.mColor;
+
+    return NS_OK;
+  }
+
+  // if our gradient doesn't have its own stops we must check if it references
+  // another gradient in which case we must attempt to "inherit" its stops
+  if (stopCount == 0 && checkURITarget()) {
+    rv = mNextGrad->GetStopColor(aIndex, aStopColor);
+  }
+  else {
+    *aStopColor = 0;
+    rv = NS_ERROR_FAILURE;
   }
   mLoopFlag = PR_FALSE;
   return rv;
@@ -437,20 +428,26 @@ nsSVGGradientFrame::GetStopOpacity(PRInt32 aIndex, float *aStopOpacity)
   nsIFrame *stopFrame = nsnull;
   nsresult rv = NS_OK;
   PRInt32 stopCount = GetStopElement(aIndex, &stopElement, &stopFrame);
-  if (stopCount && !stopElement) {
-    *aStopOpacity = 0;
-    return NS_ERROR_FAILURE;
-  }
-  if (stopCount == 0 && !stopElement && checkURITarget()) {
-      rv = mNextGrad->GetStopOpacity(aIndex, aStopOpacity);
-  } else {
-    NS_ASSERTION(stopFrame, "No stop frame found!");
+
+  if (stopElement) {
     if (!stopFrame) {
+      NS_ERROR("No stop frame found!");
       *aStopOpacity = 1.0f;
-      rv = NS_ERROR_FAILURE;
-    } else {
-      *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
+      return NS_ERROR_FAILURE;
     }
+    *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
+
+    return NS_OK;
+  }
+
+  // if our gradient doesn't have its own stops we must check if it references
+  // another gradient in which case we must attempt to "inherit" its stops
+  if (stopCount == 0 && checkURITarget()) {
+    rv = mNextGrad->GetStopOpacity(aIndex, aStopOpacity);
+  }
+  else {
+    *aStopOpacity = 0;
+    rv = NS_ERROR_FAILURE;
   }
   mLoopFlag = PR_FALSE;
   return rv;
@@ -539,10 +536,10 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
   } else {
     // Yes, get it from the target
     mNextGrad->GetGradientTransform(getter_AddRefs(gradientTransform), nsnull);
-    mLoopFlag = PR_FALSE;
   }
 
   bboxTransform->Multiply(gradientTransform, aGradientTransform);
+  mLoopFlag = PR_FALSE;
   return NS_OK;
 }
 
@@ -599,8 +596,8 @@ nsSVGGradientFrame::PrivateGetSpreadMethod(nsIDOMSVGAnimatedEnumeration * *aEnum
   } else {
     // Yes, get it from the target
     mNextGrad->PrivateGetSpreadMethod(aEnum);
-    mLoopFlag = PR_FALSE;
   }
+  mLoopFlag = PR_FALSE;
   return NS_OK;
 }
 
@@ -685,11 +682,10 @@ nsSVGGradientFrame::GetStopElement(PRInt32 aIndex, nsIDOMSVGStopElement * *aStop
     nsCOMPtr<nsIDOMSVGStopElement>stopElement = do_QueryInterface(stopFrame->GetContent());
     if (stopElement) {
       // Is this the one we're looking for?
-      if (stopCount == aIndex) {
+      if (stopCount++ == aIndex) {
         *aStopElement = stopElement;
         break; // Yes, break out of the loop
       }
-      stopCount++;
     }
   }
   if (aStopFrame)
