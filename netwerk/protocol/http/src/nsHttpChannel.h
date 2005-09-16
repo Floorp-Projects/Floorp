@@ -151,7 +151,7 @@ private:
     nsresult AsyncAbort(nsresult status);
     nsresult SetupTransaction();
     void     AddCookiesToRequest();
-    void     ApplyContentConversions();
+    nsresult ApplyContentConversions();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
     nsresult ProcessNormal();

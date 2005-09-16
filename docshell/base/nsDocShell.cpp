@@ -2945,6 +2945,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Proxy connection was refused.
             error.AssignLiteral("proxyConnectFailure");
             break;
+        case NS_ERROR_INVALID_CONTENT_ENCODING:
+            // Bad Content Encoding.
+            error.AssignLiteral("contentEncodingError");
+            break;
         }
     }
 

@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
+#include "nsNetError.h"
 
 static NS_METHOD
 DiscardSegments(nsIInputStream *input,
@@ -141,7 +142,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                                     PRUint32 aSourceOffset, 
                                     PRUint32 aCount)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
     PRUint32 streamLen = aCount;
 
     if (streamLen == 0)
@@ -272,7 +273,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                         // stop an endless loop caused by non-deflate data being labelled as deflate
                         if (mDummyStreamInitialised) {
                             NS_ERROR("endless loop detected");
-                            return NS_ERROR_FAILURE;
+                            return NS_ERROR_INVALID_CONTENT_ENCODING;
                         }
                         mDummyStreamInitialised = PR_TRUE;
                         // reset stream pointers to our original data
@@ -280,7 +281,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                         d_stream.avail_in = (uInt)streamLen;
                     }    
                     else
-                        return NS_ERROR_FAILURE;
+                        return NS_ERROR_INVALID_CONTENT_ENCODING;
                 } /* for */
             }
             else
@@ -339,7 +340,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
                         break;
                     }
                     else
-                        return NS_ERROR_FAILURE;
+                        return NS_ERROR_INVALID_CONTENT_ENCODING;
                 } /* for */
             } /* gzip */
             break;
@@ -421,19 +422,19 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsres
                 
                 if (mSkipCount == 0 && ((unsigned)c & 0377) != gz_magic[0])
                 {
-                    *rs = NS_ERROR_FAILURE;
+                    *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
                     return 0;
                 }
 
                 if (mSkipCount == 1 && ((unsigned)c & 0377) != gz_magic[1])
                 {
-                    *rs = NS_ERROR_FAILURE;
+                    *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
                     return 0;
                 }
 
                 if (mSkipCount == 2 && ((unsigned)c & 0377) != Z_DEFLATED)
                 {
-                    *rs = NS_ERROR_FAILURE;
+                    *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
                     return 0;
                 }
 
@@ -443,7 +444,7 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, PRUint32 streamLen, nsres
                     mFlags = (unsigned) c & 0377;
                     if (mFlags & RESERVED)
                     {
-                        *rs = NS_ERROR_FAILURE;
+                        *rs = NS_ERROR_INVALID_CONTENT_ENCODING;
                         return 0;
                     }
                     hMode = GZIP_OS;
