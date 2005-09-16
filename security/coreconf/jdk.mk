@@ -123,14 +123,14 @@ endif
 
 # set [Sun Solaris] platforms
 ifeq ($(OS_ARCH), SunOS)
-	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
+	JAVA_CLASSES = $(JAVA_HOME)/jre/lib/rt.jar
 
 	ifeq ($(JRE_HOME),)
 		JRE_HOME = $(JAVA_HOME)
 		JRE_CLASSES = $(JAVA_CLASSES)
 	else
 		ifeq ($(JRE_CLASSES),)
-			JRE_CLASSES = $(JRE_HOME)/lib/classes.zip
+			JRE_CLASSES = $(JRE_HOME)/lib/rt.jar
 		endif
 	endif
 
@@ -144,9 +144,13 @@ ifeq ($(OS_ARCH), SunOS)
 
 	# (3) specify "linker" information
 ifeq ($(USE_64), 1)
-	JAVA_CPU = $(shell uname -p)v9
+	ifeq ($(CPU_ARCH), x86_64)
+		JAVA_CPU = amd64
+	else
+		JAVA_CPU := $(shell uname -p)v9
+	endif
 else
-	JAVA_CPU = $(shell uname -p)
+	JAVA_CPU := $(shell uname -p)
 endif
 
 ifeq ($(JDK_VERSION), 1.1)
@@ -163,8 +167,6 @@ endif
 ifneq ($(JDK_VERSION), 1.1)
 ifeq ($(USE_64), 1)
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server
-else
-	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/classic
 endif
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)
 	JAVA_LIBS += -ljvm -ljava
@@ -220,14 +222,14 @@ endif
 
 # set [Redhat Linux] platforms
 ifeq ($(OS_ARCH), Linux)
-	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
+	JAVA_CLASSES = $(JAVA_HOME)/jre/lib/rt.jar
 
 	ifeq ($(JRE_HOME),)
 		JRE_HOME = $(JAVA_HOME)
 		JRE_CLASSES = $(JAVA_CLASSES)
 	else
 		ifeq ($(JRE_CLASSES),)
-			JRE_CLASSES = $(JRE_HOME)/lib/classes.zip
+			JRE_CLASSES = $(JRE_HOME)/jre/lib/rt.jar
 		endif
 	endif
 
@@ -241,16 +243,21 @@ ifeq ($(OS_ARCH), Linux)
 
 	# (3) specify "linker" information
 	JAVA_CPU = i386
-
+	ifeq ($(CPU_ARCH),x86_64)
+        	ifeq ($(USE_64), 1)
+        		JAVA_CPU = amd64
+        	else
+        		JAVA_CPU = i386
+        	endif
+	endif
 	JAVA_LIBDIR = jre/lib/$(JAVA_CPU)
 
 	JAVA_CLIBS =
 
         ifeq ($(JDK_VERSION), 1.4)
-	    JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server -ljvm
-        else
-	    JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/classic -ljvm
+		JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server -ljvm
 	endif
+
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR) -ljava
 	JAVA_LIBS += $(JAVA_CLIBS)
 

@@ -136,12 +136,26 @@ sub setup_vars {
         exit(1);
     }
 
+    #
+    # Use 64-bit Java on AMD64.
+    #
+
     $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
+    my $java_64bit = 0;
+    if ($osname eq "SunOS") {
+	if ($ENV{USE_64}) {
+	    my $cpu = `/usr/bin/isainfo -n`;
+	    if ($cpu == "amd64") {
+		$java = "$ENV{JAVA_HOME}/jre/bin/amd64/java$exe_suffix";
+		$java_64bit = 1;
+	    }
+	}
+    }
     (-f $java) or die "'$java' does not exist\n";
     $java = $java . $ENV{NATIVE_FLAG};
 
-    if ($ENV{USE_64}) {
-        $java = $java . " -d64";
+    if ($ENV{USE_64} && !$java_64bit) {
+	$java = $java . " -d64";
     }
 
     $pwfile = "passwords";
