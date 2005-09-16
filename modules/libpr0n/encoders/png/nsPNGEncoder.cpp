@@ -42,6 +42,12 @@
 #include "nsString.h"
 #include "nsDependentSubstring.h"
 
+// Bug 308126 - AIX defines jmpbuf in sys/context.h which conflicts with the
+// definition of jmpbuf in the png.h header file.
+#ifdef jmpbuf
+#undef jmpbuf
+#endif
+
 NS_IMPL_ISUPPORTS2(nsPNGEncoder, imgIEncoder, nsIInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mImageBuffer(nsnull), mImageBufferSize(0),
