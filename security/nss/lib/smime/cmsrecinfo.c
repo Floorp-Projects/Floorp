@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.14 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmsrecinfo.c,v 1.15 2005/09/16 17:52:37 wtchang%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -183,8 +183,8 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, NSSCMSRecipientIDSelector type,
     case SEC_OID_MISSI_KEA_DSS_OLD:
     case SEC_OID_MISSI_KEA_DSS:
     case SEC_OID_MISSI_KEA:
-        PORT_Assert(type != NSSCMSRecipientID_SubjectKeyID);
-	if (type == NSSCMSRecipientID_SubjectKeyID) {
+	PORT_Assert(type == NSSCMSRecipientID_IssuerSN);
+	if (type != NSSCMSRecipientID_IssuerSN) {
 	    rv = SECFailure;
 	    break;
 	}
@@ -199,8 +199,8 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, NSSCMSRecipientIDSelector type,
 	}
 	break;
     case SEC_OID_X942_DIFFIE_HELMAN_KEY: /* dh-public-number */
-        PORT_Assert(type != NSSCMSRecipientID_SubjectKeyID);
-	if (type == NSSCMSRecipientID_SubjectKeyID) {
+	PORT_Assert(type == NSSCMSRecipientID_IssuerSN);
+	if (type != NSSCMSRecipientID_IssuerSN) {
 	    rv = SECFailure;
 	    break;
 	}
