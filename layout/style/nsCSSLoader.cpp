@@ -1831,12 +1831,16 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   }
 
   NS_ADDREF(data);
+  PRBool syncLoad = data->mSyncLoad;
 
   // Load completion will release the data
   rv = LoadSheet(data, state);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  data->mMustNotify = PR_TRUE;
+  // If syncLoad is true, |data| will be deleted by now.
+  if (!syncLoad) {
+    data->mMustNotify = PR_TRUE;
+  }
   return rv;  
 }
 
