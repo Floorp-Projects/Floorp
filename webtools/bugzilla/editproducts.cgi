@@ -63,28 +63,6 @@ sub CheckProduct
 
     # do we have a product?
     unless ($prod) {
-        print "Sorry, you haven't specified a product.";
-        PutTrailer();
-        exit;
-    }
-
-    unless (TestProduct($prod)) {
-        print "Sorry, product '$prod' does not exist.";
-        PutTrailer();
-        exit;
-    }
-}
-
-# For the transition period, as this file is templatised bit by bit,
-# we need this routine, which does things properly, and will
-# eventually be the only version. (The older versions assume a
-# $template->put_header() call has been made)
-sub CheckProductNew
-{
-    my $prod = shift;
-
-    # do we have a product?
-    unless ($prod) {
         ThrowUserError('product_not_specified');
     }
 
@@ -115,28 +93,6 @@ sub CheckClassification
 
     # do we have a classification?
     unless ($cl) {
-        print "Sorry, you haven't specified a classification.";
-        PutTrailer();
-        exit;
-    }
-
-    unless (TestClassification $cl) {
-        print "Sorry, classification '$cl' does not exist.";
-        PutTrailer();
-        exit;
-    }
-}
-
-# For the transition period, as this file is templatised bit by bit,
-# we need this routine, which does things properly, and will
-# eventually be the only version. (The older versions assume a
-# $template->put_header() call has been made)
-sub CheckClassificationNew
-{
-    my $cl = shift;
-
-    # do we have a classification?
-    unless ($cl) {
         ThrowUserError('classification_not_specified');    
     }
 
@@ -146,40 +102,12 @@ sub CheckClassificationNew
     }
 }
 
-
 sub CheckClassificationProduct
-{
-    my $cl = shift;
-    my $prod = shift;
-    my $dbh = Bugzilla->dbh;
-
-    CheckClassification($cl);
-    CheckProduct($prod);
-
-    trick_taint($prod);
-    trick_taint($cl);
-
-    my $query = q{SELECT products.name
-                  FROM products
-                  INNER JOIN classifications
-                    ON products.classification_id = classifications.id
-                  WHERE products.name = ?
-                    AND classifications.name = ?};
-    my $res = $dbh->selectrow_array($query, undef, ($prod, $cl));
-
-    unless ($res) {
-        print "Sorry, classification->product '$cl'->'$prod' does not exist.";
-        PutTrailer();
-        exit;
-    }
-}
-
-sub CheckClassificationProductNew
 {
     my ($cl, $prod) = @_;
     my $dbh = Bugzilla->dbh;
     
-    CheckClassificationNew($cl);
+    CheckClassification($cl);
 
     trick_taint($prod);
     trick_taint($cl);
@@ -197,39 +125,6 @@ sub CheckClassificationProductNew
                        { product => $prod, classification => $cl });
     }
 }
-
-#
-# Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
-#
-
-sub PutTrailer
-{
-    my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
-
-    my $count = $#links;
-    my $num = 0;
-    print "<P>\n";
-    foreach (@links) {
-        print $_;
-        if ($num == $count) {
-            print ".\n";
-        }
-        elsif ($num == $count-1) {
-            print " or ";
-        }
-        else {
-            print ", ";
-        }
-        $num++;
-    }
-    $template->put_footer();
-}
-
-
-
-
-
-
 
 #
 # Preliminary checks:
@@ -252,10 +147,6 @@ $user->in_group('editcomponents')
 my $classification = trim($cgi->param('classification') || '');
 my $product = trim($cgi->param('product') || '');
 my $action  = trim($cgi->param('action')  || '');
-my $headerdone = 0;
-my $localtrailer = "<A HREF=\"editproducts.cgi\">edit</A> more products";
-my $classhtmlvarstart = "";
-my $classhtmlvar = "";
 my $dbh = Bugzilla->dbh;
 
 #
@@ -263,33 +154,29 @@ my $dbh = Bugzilla->dbh;
 # classifications enabled)
 #
 
-if (Param('useclassification')) {
-    if ($classification) {
-        $classhtmlvar = "&classification=" . url_quote($classification);
-        $classhtmlvarstart = "?classification=" . url_quote($classification);
-        $localtrailer .= ", <A HREF=\"editproducts.cgi" . $classhtmlvarstart . "\">edit</A> in this classification";    
-    }
-    elsif (!$product) {
-        my $query = 
-            "SELECT classifications.name, classifications.description,
-                    COUNT(classification_id) AS product_count
-             FROM classifications
-             LEFT JOIN products
-                  ON classifications.id = products.classification_id " .
-                  $dbh->sql_group_by('classifications.id',
-                                     'classifications.name,
-                                      classifications.description') . "
-             ORDER BY name";
+if (Param('useclassification') 
+    && !$classification
+    && !$product)
+{
+    my $query = 
+        "SELECT classifications.name, classifications.description,
+                COUNT(classification_id) AS product_count
+         FROM classifications
+         LEFT JOIN products
+              ON classifications.id = products.classification_id " .
+              $dbh->sql_group_by('classifications.id',
+                                 'classifications.name,
+                                  classifications.description') . "
+         ORDER BY name";
 
-        $vars->{'classifications'} = $dbh->selectall_arrayref($query,
-                                                              {'Slice' => {}});
+    $vars->{'classifications'} = $dbh->selectall_arrayref($query,
+                                                          {'Slice' => {}});
 
-        $template->process("admin/products/list-classifications.html.tmpl",
-                           $vars)
-            || ThrowTemplateError($template->error());
+    $template->process("admin/products/list-classifications.html.tmpl",
+                       $vars)
+        || ThrowTemplateError($template->error());
 
-        exit;
-    }
+    exit;
 }
 
 
@@ -301,7 +188,7 @@ if (Param('useclassification')) {
 if (!$action && !$product) {
 
     if (Param('useclassification')) {
-        CheckClassificationNew($classification);
+        CheckClassification($classification);
     }
 
     my @execute_params = ();
@@ -361,7 +248,7 @@ if (!$action && !$product) {
 if ($action eq 'add') {
 
     if (Param('useclassification')) {
-        CheckClassificationNew($classification);
+        CheckClassification($classification);
     }
     $vars->{'classification'} = $classification;
     $template->process("admin/products/create.html.tmpl", $vars)
@@ -381,7 +268,7 @@ if ($action eq 'new') {
 
     my $classification_id = 1;
     if (Param('useclassification')) {
-        CheckClassificationNew($classification);
+        CheckClassification($classification);
         $classification_id = get_classification_id($classification);
         $vars->{'classification'} = $classification;
     }
@@ -557,7 +444,7 @@ if ($action eq 'del') {
     my $classification_id = 1;
 
     if (Param('useclassification')) {
-        CheckClassificationProductNew($classification, $product);
+        CheckClassificationProduct($classification, $product);
         $classification_id = get_classification_id($classification);
         $vars->{'classification'} = $classification;
     }
@@ -691,7 +578,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit' || (!$action && $product)) {
-    CheckProductNew($product);
+    CheckProduct($product);
     trick_taint($product);
     my $product_id = get_product_id($product); 
     my $classification_id=1;
@@ -699,7 +586,7 @@ if ($action eq 'edit' || (!$action && $product)) {
         # If a product has been given with no classification associated
         # with it, take this information from the DB
         if ($classification) {
-            CheckClassificationProductNew($classification, $product);
+            CheckClassificationProduct($classification, $product);
         } else {
             $classification =
                 $dbh->selectrow_array("SELECT classifications.name
@@ -852,8 +739,6 @@ if ($action eq 'updategroupcontrols') {
             exit;                
         }
     }
-    $template->put_header("Update group access controls for product \"$product\"");
-    $headerdone = 1;
     SendSQL("SELECT id, name FROM groups " .
             "WHERE isbuggroup != 0 AND isactive != 0");
     while (MoreSQLData()){
@@ -872,8 +757,7 @@ if ($action eq 'updategroupcontrols') {
               || (($newmembercontrol == CONTROLMAPDEFAULT)
                && ($newothercontrol != CONTROLMAPSHOWN))) {
             ThrowUserError('illegal_group_control_combination',
-                            {groupname => $groupname,
-                             header_done => 1});
+                            {groupname => $groupname});
         }
     }
     $dbh->bz_lock_tables('groups READ',
@@ -938,9 +822,8 @@ if ($action eq 'updategroupcontrols') {
         }
     }
 
+    my @removed_na;
     foreach my $groupid (@now_na) {
-        print "Removing bugs from NA group " 
-             . html_quote(GroupIdToName($groupid)) . "<P>\n";
         my $count = 0;
         SendSQL("SELECT bugs.bug_id, 
                  (lastdiffed >= delta_ts)
@@ -967,12 +850,14 @@ if ($action eq 'updategroupcontrols') {
             PopGlobalSQLState();
             $count++;
         }
-        print "dropped $count bugs<p>\n";
+        my %group = (name => GroupIdToName($groupid),
+                     bug_count => $count);
+
+        push(@removed_na, \%group);
     }
 
+    my @added_mandatory;
     foreach my $groupid (@now_mandatory) {
-        print "Adding bugs to Mandatory group " 
-             . html_quote(GroupIdToName($groupid)) . "<P>\n";
         my $count = 0;
         SendSQL("SELECT bugs.bug_id,
                  (lastdiffed >= delta_ts)
@@ -1001,13 +886,23 @@ if ($action eq 'updategroupcontrols') {
             PopGlobalSQLState();
             $count++;
         }
-        print "added $count bugs<p>\n";
+        my %group = (name => GroupIdToName($groupid),
+                     bug_count => $count);
+
+        push(@added_mandatory, \%group);
     }
     $dbh->bz_unlock_tables();
 
-    print "Group control updates done<P>\n";
+    $vars->{'removed_na'} = \@removed_na;
 
-    PutTrailer($localtrailer);
+    $vars->{'added_mandatory'} = \@added_mandatory;
+
+    $vars->{'classification'} = $classification;
+
+    $vars->{'product'} = $product;
+
+    $template->process("admin/products/groupcontrol/updated.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -1036,7 +931,7 @@ if ($action eq 'update') {
 
     my $checkvotes = 0;
 
-    CheckProductNew($productold);
+    CheckProduct($productold);
     my $product_id = get_product_id($productold);
 
     my $stored_maxvotesperbug = $maxvotesperbug;
@@ -1316,7 +1211,6 @@ if ($action eq 'editgroupcontrols') {
         $group{'bugcount'} = $bugcount;
         push @groups,\%group;
     }
-    $vars->{'header_done'} = $headerdone;
     $vars->{'product'} = $product;
     $vars->{'classification'} = $classification;
     $vars->{'groups'} = \@groups;
@@ -1337,5 +1231,4 @@ if ($action eq 'editgroupcontrols') {
 # No valid action found
 #
 
-$template->put_header("Error");
-print "I don't have a clue what you want.<BR>\n";
+ThrowUserError('no_valid_action', {field => "product"});
