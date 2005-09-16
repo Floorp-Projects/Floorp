@@ -87,12 +87,7 @@ ifeq ($(OS_TARGET),OSF1)
     MPI_SRCS += mpvalpha.c
 endif
 
-ifeq (OS2,$(OS_TARGET))
-    LN_S     = cp
-endif
-
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))  #omits WIN16 and WINCE
-    LN_S     = cp
 ifdef NS_USE_GCC
 # Ideally, we want to use assembler
 #     ASFILES  = mpi_x86.s
@@ -113,7 +108,6 @@ endif
 endif
 
 ifeq ($(OS_TARGET),WINCE)
-    LN_S     = cp
     DEFINES += -DMP_ARGCHK=0	# no assert in WinCE
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
 endif
@@ -381,21 +375,12 @@ rijndael_tables:
 	         $(DEFINES) $(INCLUDES) $(OBJDIR)/libfreebl.a
 	$(OBJDIR)/make_rijndael_tab
 
-ifdef FREEBL_CHILD_BUILD
-vpath %.h $(FREEBL_PARENT)/ecl $(FREEBL_PARENT)/mpi $(FREEBL_PARENT)
-vpath %.c $(FREEBL_PARENT)/ecl $(FREEBL_PARENT)/mpi $(FREEBL_PARENT)
-vpath %.S $(FREEBL_PARENT)/ecl $(FREEBL_PARENT)/mpi $(FREEBL_PARENT)
-vpath %.s $(FREEBL_PARENT)/ecl $(FREEBL_PARENT)/mpi $(FREEBL_PARENT)
-vpath %.asm $(FREEBL_PARENT)/ecl $(FREEBL_PARENT)/mpi $(FREEBL_PARENT)
-INCLUDES += -I$(FREEBL_PARENT) -I$(FREEBL_PARENT)/mpi -I$(FREEBL_PARENT)/ecl
-else
 vpath %.h mpi ecl
 vpath %.c mpi ecl
 vpath %.S mpi ecl
 vpath %.s mpi ecl
 vpath %.asm mpi ecl
 INCLUDES += -Impi -Iecl
-endif
 
 
 DEFINES += -DMP_API_COMPATIBLE
@@ -434,33 +419,22 @@ $(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
 
 endif
 
-ifndef LN_S
-    LN_S = ln -s
-endif
-
 ifndef FREEBL_CHILD_BUILD
 
 # Parent build. This is where we decide which shared libraries to build
-
-CDDIR := $(shell pwd)
-FILES2LN = Makefile manifest.mn config.mk
 
 ifdef FREEBL_BUILD_SINGLE_SHLIB
 
 ################### Single shared lib stuff #########################
 SINGLE_SHLIB_DIR = $(OBJDIR)/$(OS_TARGET)_SINGLE_SHLIB
-SINGLE_SHLIB_FILES = $(addprefix $(SINGLE_SHLIB_DIR)/, $(FILES2LN))
 ALL_TRASH += $(SINGLE_SHLIB_DIR) 
 
 $(SINGLE_SHLIB_DIR):
 	-mkdir $(SINGLE_SHLIB_DIR)
 
-$(SINGLE_SHLIB_FILES) : $(SINGLE_SHLIB_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(SINGLE_SHLIB_DIR)
-
-release_md libs:: $(SINGLE_SHLIB_DIR) $(SINGLE_SHLIB_FILES)
-	cd $(SINGLE_SHLIB_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 \
- FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(SINGLE_SHLIB_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 \
+ OBJDIR=$(SINGLE_SHLIB_DIR) $@
 ######################## common stuff #########################
 
 endif
@@ -470,52 +444,40 @@ endif
 ######################## ABI32_FPU stuff #########################
 ifdef HAVE_ABI32_FPU
 ABI32_FPU_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_FPU
-ABI32_FPU_FILES = $(addprefix $(ABI32_FPU_DIR)/, $(FILES2LN))
 ALL_TRASH += $(ABI32_FPU_DIR) 
 
 $(ABI32_FPU_DIR):
 	-mkdir $(ABI32_FPU_DIR)
 
-$(ABI32_FPU_FILES) : $(ABI32_FPU_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(ABI32_FPU_DIR)
-
-release_md libs:: $(ABI32_FPU_DIR) $(ABI32_FPU_FILES)
-	cd $(ABI32_FPU_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI32_FPU=1 \
- FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(ABI32_FPU_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI32_FPU=1 \
+ OBJDIR=$(ABI32_FPU_DIR) $@
 endif
 
 ######################## ABI32_INT32 stuff #########################
 ifdef HAVE_ABI32_INT32
 ABI32_INT32_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_INT32
-ABI32_INT32_FILES = $(addprefix $(ABI32_INT32_DIR)/, $(FILES2LN))
 ALL_TRASH += $(ABI32_INT32_DIR) 
 
 $(ABI32_INT32_DIR):
 	-mkdir $(ABI32_INT32_DIR)
 
-$(ABI32_INT32_FILES) : $(ABI32_INT32_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(ABI32_INT32_DIR)
-
-release_md libs:: $(ABI32_INT32_DIR) $(ABI32_INT32_FILES)
-	cd $(ABI32_INT32_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 \
- USE_ABI32_INT32=1 FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(ABI32_INT32_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI32_INT32=1 \
+ OBJDIR=$(ABI32_INT32_DIR) $@
 endif
 
 ######################## ABI32_INT64 stuff #########################
 ifdef HAVE_ABI32_INT64
 ABI32_INT64_DIR = $(OBJDIR)/$(OS_TARGET)_ABI32_INT64
-ABI32_INT64_FILES = $(addprefix $(ABI32_INT64_DIR)/, $(FILES2LN))
 ALL_TRASH += $(ABI32_INT64_DIR) 
 
 $(ABI32_INT64_DIR):
 	-mkdir $(ABI32_INT64_DIR)
 
-$(ABI32_INT64_FILES) : $(ABI32_INT64_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(ABI32_INT64_DIR)
-
-release_md libs:: $(ABI32_INT64_DIR) $(ABI32_INT64_FILES)
-	cd $(ABI32_INT64_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 \
- USE_ABI32_INT64=1 FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(ABI32_INT64_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI32_INT64=1\
+ OBJDIR=$(ABI32_INT64_DIR) $@
 endif
 
 ######################## END of 32-bit stuff #########################
@@ -525,35 +487,27 @@ endif
 ######################## ABI64_FPU stuff #########################
 ifdef HAVE_ABI64_FPU
 ABI64_FPU_DIR = $(OBJDIR)/$(OS_TARGET)_ABI64_FPU
-ABI64_FPU_FILES = $(addprefix $(ABI64_FPU_DIR)/, $(FILES2LN))
 ALL_TRASH += $(ABI64_FPU_DIR) 
 
 $(ABI64_FPU_DIR):
 	-mkdir $(ABI64_FPU_DIR)
 
-$(ABI64_FPU_FILES) : $(ABI64_FPU_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(ABI64_FPU_DIR)
-
-release_md libs:: $(ABI64_FPU_DIR) $(ABI64_FPU_FILES)
-	cd $(ABI64_FPU_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI64_FPU=1 \
- FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(ABI64_FPU_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI64_FPU=1 \
+ OBJDIR=$(ABI64_FPU_DIR) $@
 endif
 
 ######################## ABI64_INT stuff #########################
 ifdef HAVE_ABI64_INT
 ABI64_INT_DIR = $(OBJDIR)/$(OS_TARGET)_ABI64_INT
-ABI64_INT_FILES = $(addprefix $(ABI64_INT_DIR)/, $(FILES2LN))
 ALL_TRASH += $(ABI64_INT_DIR) 
 
 $(ABI64_INT_DIR):
 	-mkdir $(ABI64_INT_DIR)
 
-$(ABI64_INT_FILES) : $(ABI64_INT_DIR)/% : % 
-	$(LN_S) $(CDDIR)/$* $(ABI64_INT_DIR)
-
-release_md libs:: $(ABI64_INT_DIR) $(ABI64_INT_FILES)
-	cd $(ABI64_INT_DIR) && $(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI64_INT=1 \
- FREEBL_PARENT=../.. CORE_DEPTH=../../$(CORE_DEPTH) $@
+release_md libs:: $(ABI64_INT_DIR)
+	$(MAKE) FREEBL_CHILD_BUILD=1 USE_ABI64_INT=1 \
+ OBJDIR=$(ABI64_INT_DIR) $@
 endif
 
 endif  # FREEBL_CHILD_BUILD

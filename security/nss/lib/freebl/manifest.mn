@@ -44,35 +44,36 @@ CORE_DEPTH = ../../..
 
 MODULE = nss
 
+LIBRARY_NAME = freebl
+LIBRARY_VERSION = 3
+
 ifdef FREEBL_CHILD_BUILD
   ifdef USE_ABI32_INT32
     LIBRARY_NAME = freebl_32int
+    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI32_INT64
     LIBRARY_NAME = freebl_32int64
+    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI32_FPU
     LIBRARY_NAME = freebl_32fpu
+    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI64_INT
     LIBRARY_NAME = freebl_64int
+    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
   ifdef USE_ABI64_FPU
     LIBRARY_NAME = freebl_64fpu
+    LIBRARY_VERSION := _$(LIBRARY_VERSION)
   endif
 endif
-ifndef LIBRARY_NAME
-  LIBRARY_NAME = freebl
-endif
 
-$(LIBRARY_NAME).def: ../../freebl.def
-	cp ../../freebl.def $(LIBRARY_NAME).def
-
+MAPFILE_SOURCE = freebl.def
 MAPFILE = $(OBJDIR)/$(LIBRARY_NAME).def
 
 SOFTOKEN_LIBRARY_VERSION = 3
-# same version as rest of NSS, but prefixed with _
-LIBRARY_VERSION = _$(SOFTOKEN_LIBRARY_VERSION)
 
 DEFINES += -DSHLIB_SUFFIX=\"$(DLL_SUFFIX)\" -DSHLIB_PREFIX=\"$(DLL_PREFIX)\" \
 	-DSHLIB_VERSION=\"$(LIBRARY_VERSION)\" \
