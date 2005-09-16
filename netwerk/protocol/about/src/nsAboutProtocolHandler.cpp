@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsNetCID.h"
 #include "nsAboutProtocolUtils.h"
+#include "nsNetError.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 
@@ -151,6 +152,12 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     }
 
     // mumble...
+
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
+        // This looks like an about: we don't know about.  Convert
+        // this to an invalid URI error.
+        rv = NS_ERROR_MALFORMED_URI;
+    }
 
     return rv;
 }
