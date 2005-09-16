@@ -241,7 +241,9 @@ CreateFromDER(unsigned char *data,
   return rv; 
 }
 
-nsNSSASN1Sequence::nsNSSASN1Sequence() : mIsValidContainer(PR_TRUE),
+nsNSSASN1Sequence::nsNSSASN1Sequence() : mType(0),
+                                         mTag(0),
+                                         mIsValidContainer(PR_TRUE),
                                          mIsExpanded(PR_TRUE)
 {
   /* member initializers and constructor code */
@@ -358,7 +360,9 @@ nsNSSASN1Sequence::SetIsExpanded(PRBool aIsExpanded)
 }
 
 
-nsNSSASN1PrintableItem::nsNSSASN1PrintableItem() : mData(nsnull),
+nsNSSASN1PrintableItem::nsNSSASN1PrintableItem() : mType(0),
+                                                   mTag(0),
+                                                   mData(nsnull),
                                                    mLen(0)
 {
   /* member initializers and constructor code */
