@@ -537,9 +537,19 @@ function ValidateImage()
     return false;
   }
 
-  //TODO: WE NEED TO DO SOME URL VALIDATION HERE, E.G.:
   // We must convert to "file:///" or "http://" format else image doesn't load!
   var src = TrimString(gDialog.srcInput.value);
+  var checkbox = document.getElementById("MakeRelativeCheckbox");
+  try
+  {
+    if (checkbox && !checkbox.checked)
+    {
+      var URIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                               .getService(Components.interfaces.nsIURIFixup);
+      src = URIFixup.createFixupURI(src, Components.interfaces.nsIURIFixup.FIXUP_FLAG_NONE).spec;
+    }
+  } catch (e) { }
+
   globalElement.setAttribute("src", src);
 
   var title = TrimString(gDialog.titleInput.value);
