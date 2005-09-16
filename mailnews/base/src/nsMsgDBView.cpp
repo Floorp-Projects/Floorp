@@ -4218,7 +4218,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 }
 
 nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyArray *keys, 
-                                                 nsMsgViewSortOrderValue sortOrder)
+                                                 nsMsgViewSortOrderValue sortOrder, nsMsgViewSortTypeValue sortType)
 {
   nsMsgViewIndex highIndex = keys->GetSize();
   nsMsgViewIndex lowIndex = 0;
@@ -4230,7 +4230,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyAr
   nsresult rv;
   PRUint16	maxLen;
   eFieldType fieldType;
-  rv = GetFieldTypeAndLenForSort(m_sortType, &maxLen, &fieldType);
+  rv = GetFieldTypeAndLenForSort(sortType, &maxLen, &fieldType);
   const void *pValue1 = &EntryInfo1, *pValue2 = &EntryInfo2;
   
   int (* PR_CALLBACK comparisonFun) (const void *pItem1, const void *pItem2, void *privateData)=nsnull;
@@ -4239,17 +4239,17 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyAr
   switch (fieldType)
   {
     case kCollationKey:
-      rv = GetCollationKey(msgHdr, m_sortType, &EntryInfo1.key, &EntryInfo1.dword);
+      rv = GetCollationKey(msgHdr, sortType, &EntryInfo1.key, &EntryInfo1.dword);
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
       comparisonFun = FnSortIdKeyPtr;
       comparisonContext = m_db.get();
       break;
     case kU32:
-      if (m_sortType == nsMsgViewSortType::byId) {
+      if (sortType == nsMsgViewSortType::byId) {
         EntryInfo1.dword = EntryInfo1.id;
       }
       else {
-        GetLongField(msgHdr, m_sortType, &EntryInfo1.dword);
+        GetLongField(msgHdr, sortType, &EntryInfo1.dword);
       }
       comparisonFun = FnSortIdDWord;
       break;
@@ -4267,16 +4267,16 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyAr
     if (fieldType == kCollationKey)
     {
       PR_FREEIF(EntryInfo2.key);
-      rv = GetCollationKey(tryHdr, m_sortType, &EntryInfo2.key, &EntryInfo2.dword);
+      rv = GetCollationKey(tryHdr, sortType, &EntryInfo2.key, &EntryInfo2.dword);
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create collation key");
     }
     else if (fieldType == kU32)
     {
-      if (m_sortType == nsMsgViewSortType::byId) {
+      if (sortType == nsMsgViewSortType::byId) {
         EntryInfo2.dword = EntryInfo2.id;
       }
       else {
-        GetLongField(tryHdr, m_sortType, &EntryInfo2.dword);
+        GetLongField(tryHdr, sortType, &EntryInfo2.dword);
       }
     }
     retStatus = (*comparisonFun)(&pValue1, &pValue2, comparisonContext);
@@ -4313,7 +4313,7 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
         && m_sortOrder != nsMsgViewSortType::byId)
     return GetIndexForThread(msgHdr);
 
-  return GetInsertIndexHelper(msgHdr, &m_keys, m_sortOrder);
+  return GetInsertIndexHelper(msgHdr, &m_keys, m_sortOrder, m_sortType);
 }
 
 nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)

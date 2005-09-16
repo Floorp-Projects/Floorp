@@ -105,7 +105,8 @@ public:
   NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
 
   nsMsgViewIndex GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyArray *keys,
-                                        nsMsgViewSortOrderValue sortOrder);
+                                        nsMsgViewSortOrderValue sortOrder,
+                                        nsMsgViewSortTypeValue sortType);
 protected:
   static nsrefcnt gInstanceCount;
   // atoms used for styling the view. we're going to have a lot of
