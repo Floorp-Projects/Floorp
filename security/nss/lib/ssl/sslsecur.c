@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.33 2005/09/16 20:31:31 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsecur.c,v 1.34 2005/09/16 21:28:20 julien.pierre.bugs%sun.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -297,19 +297,6 @@ SSL_IMPORT SECStatus SSL_ReHandshakeWithTimeout(PRFileDesc *fd,
     return SSL_ReHandshake(fd, flushCache);
 }
 
-/*
-** Same as above, but with an I/O timeout.
- */
-SSL_IMPORT SECStatus SSL_ReHandshakeWithTimeout(PRFileDesc *fd,
-                                                PRBool flushCache,
-                                                PRIntervalTime timeout)
-{
-    if (SECSuccess != ssl_SetTimeout(fd, timeout)) {
-        return SECFailure;
-    }
-    return SSL_ReHandshake(fd, flushCache);
-}
-
 SECStatus
 SSL_RedoHandshake(PRFileDesc *fd)
 {
@@ -391,19 +378,6 @@ SSL_ForceHandshake(PRFileDesc *fd)
 	} else if (gatherResult == SECWouldBlock) {
 	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
 	}
-/*
- ** Same as above, but with an I/O timeout.
- */
-SSL_IMPORT SECStatus SSL_ForceHandshakeWithTimeout(PRFileDesc *fd,
-                                                   PRIntervalTime timeout)
-{
-    if (SECSuccess != ssl_SetTimeout(fd, timeout)) {
-        return SECFailure;
-    }
-    return SSL_ForceHandshake(fd);
-}
-
-
     } else if (!ss->firstHsDone) {
 	rv = ssl_Do1stHandshake(ss);
     } else {
