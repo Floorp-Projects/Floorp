@@ -68,3 +68,7 @@ menubutton:not([disabled="true"]):hover:active {
 
 #help-print-button { -moz-image-region: rect(0px 96px 24px 72px); }
 #help-print-button:hover { -moz-image-region: rect(24px 96px 48px 72px); }
+
+#context-copy[disabled="true"] {
+  visibility: collapse;
+}
