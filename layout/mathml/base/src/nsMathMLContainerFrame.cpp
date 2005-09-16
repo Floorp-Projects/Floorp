@@ -1188,13 +1188,13 @@ static PRInt32 kInterFrameSpacingTable[eMathMLFrameType_COUNT][eMathMLFrameType_
   // spacing is not to be used for scriptlevel > 0
 
   /*           Ord  OpOrd OpInv OpUsr Inner Italic Upright */
-  /*Ord  */   {0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00},
+  /*Ord  */   {0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00},
   /*OpOrd*/   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
   /*OpInv*/   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
   /*OpUsr*/   {0x01, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01},
-  /*Inner*/   {0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00},
-  /*Italic*/  {0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01},
-  /*Upright*/ {0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x01}
+  /*Inner*/   {0x01, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01},
+  /*Italic*/  {0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x01},
+  /*Upright*/ {0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01}
 };
 
 #define GET_INTERSPACE(scriptlevel_, frametype1_, frametype2_, space_)  \
@@ -1454,15 +1454,15 @@ GetInterFrameSpacingFor(PRInt32         aScriptLevel,
   return 0;
 }
 
-nsresult
+nscoord
 nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 {
+  nscoord gap = 0;
   nsIContent* parentContent = mParent->GetContent();
   nsIAtom *parentTag = parentContent->Tag();
   if (parentTag == nsMathMLAtoms::math ||
       parentTag == nsMathMLAtoms::mtd_) {
-    nscoord gap = GetInterFrameSpacingFor(mPresentationData.scriptLevel,
-                                          mParent, this);
+    gap = GetInterFrameSpacingFor(mPresentationData.scriptLevel, mParent, this);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
     GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);
@@ -1482,7 +1482,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
     mBoundingMetrics.width += italicCorrection;
     aDesiredSize.width += italicCorrection;
   }
-  return NS_OK;
+  return gap;
 }
 
 

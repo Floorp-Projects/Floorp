@@ -140,6 +140,10 @@ public:
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate);
 
+  // override the base method so that we can deal with the fraction line
+  virtual nscoord
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
+
   // helper to translate the thickness attribute into a usable form
   static nscoord 
   CalcLineThickness(nsPresContext*  aPresContext,

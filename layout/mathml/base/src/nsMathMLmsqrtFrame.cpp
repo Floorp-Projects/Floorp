@@ -313,6 +313,20 @@ nsMathMLmsqrtFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
+nscoord
+nsMathMLmsqrtFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+{
+  nscoord gap = nsMathMLContainerFrame::FixInterFrameSpacing(aDesiredSize);
+  if (!gap) return 0;
+
+  nsRect rect;
+  mSqrChar.GetRect(rect);
+  rect.MoveBy(gap, 0);
+  mSqrChar.SetRect(rect);
+  mBarRect.MoveBy(gap, 0);
+  return gap;
+}
+
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
 nsStyleContext*
