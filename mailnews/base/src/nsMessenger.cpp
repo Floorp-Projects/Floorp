@@ -1385,15 +1385,39 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database,
 }
 
 NS_IMETHODIMP
-nsMessenger::MessageServiceFromURI(const char *uri, nsIMsgMessageService **msgService)
+nsMessenger::MessageServiceFromURI(const char *aUri, nsIMsgMessageService **aMsgService)
 {
-   nsresult rv;
-   NS_ENSURE_ARG_POINTER(uri);
-   NS_ENSURE_ARG_POINTER(msgService);
+   NS_ENSURE_ARG_POINTER(aUri);
+   NS_ENSURE_ARG_POINTER(aMsgService);
  
-   rv = GetMessageServiceFromURI(uri, msgService);
-   NS_ENSURE_SUCCESS(rv,rv);
-   return rv;
+   return GetMessageServiceFromURI(aUri, aMsgService);
+}
+
+NS_IMETHODIMP
+nsMessenger::MsgHdrFromURI(const char *aUri, nsIMsgDBHdr **aMsgHdr)
+{
+  NS_ENSURE_ARG_POINTER(aUri);
+  NS_ENSURE_ARG_POINTER(aMsgHdr);
+  nsCOMPtr <nsIMsgMessageService> msgService;
+  nsresult rv;
+ 
+  if (!strncmp(aUri, "file:", 5))
+  {
+    nsCOMPtr <nsIMsgHeaderSink> headerSink;
+    mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+    if (headerSink)
+    {
+      rv = headerSink->GetDummyMsgHeader(aMsgHdr);
+      // Is there a way to check if they're asking for the hdr currently 
+      // displayed in a stand-alone msg window from a .eml file?
+      // (pretty likely if this is a file: uri)
+      return rv;
+    }
+  }
+
+  rv = GetMessageServiceFromURI(aUri, getter_AddRefs(msgService));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return msgService->MessageURIToMsgHdr(aUri, aMsgHdr);
 }
 
 NS_IMETHODIMP

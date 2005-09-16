@@ -154,6 +154,7 @@ private:
 	MSG_ComposeType                           mType;		          // Message type
   nsCOMPtr<nsISupportsArray>                mStateListeners;		// contents are nsISupports
   PRBool                                    mCharsetOverride;
+  nsCOMPtr <nsIMsgDBHdr>                    mOrigMsgHdr;
 
   nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;
   nsCString                                 mSmtpPassword;
@@ -170,6 +171,7 @@ class QuotingOutputStreamListener : public nsIStreamListener
 {
 public:
     QuotingOutputStreamListener(const char *originalMsgURI,
+                                nsIMsgDBHdr *origMsgHdr,
                                 PRBool quoteHeaders,
                                 PRBool headersOnly,
                                 nsIMsgIdentity *identity,

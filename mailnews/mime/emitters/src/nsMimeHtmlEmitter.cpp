@@ -190,7 +190,7 @@ nsresult nsMimeHtmlDisplayEmitter::BroadcastHeaders(nsIMsgHeaderSink * aHeaderSi
           nsCRT::strcasecmp("organization", headerInfo->name) && nsCRT::strcasecmp("user-agent", headerInfo->name) &&
           nsCRT::strcasecmp("content-base", headerInfo->name) && nsCRT::strcasecmp("sender", headerInfo->name) &&
           nsCRT::strcasecmp("date", headerInfo->name) && nsCRT::strcasecmp("x-mailer", headerInfo->name) &&
-          nsCRT::strcasecmp("content-type", headerInfo->name)  &&
+          nsCRT::strcasecmp("content-type", headerInfo->name) && nsCRT::strcasecmp("message-id", headerInfo->name) &&
           nsCRT::strcasecmp("x-newsreader", headerInfo->name) && nsCRT::strcasecmp("x-mimeole", headerInfo->name))
             continue;
     }

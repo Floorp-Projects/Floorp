@@ -909,12 +909,17 @@ function MsgNewMessage(event)
 function MsgReplyMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
-  var server = loadedFolder.server;
+  if (loadedFolder)
+  {
+    var server = loadedFolder.server;
 
-  if(server && server.type == "nntp")
-    MsgReplyGroup(event);
-  else
-    MsgReplySender(event);
+    if(server && server.type == "nntp")
+    {
+      MsgReplyGroup(event);
+      return;
+    }
+  }
+  MsgReplySender(event);
 }
 
 function MsgReplySender(event)
@@ -944,10 +949,9 @@ function MsgReplyToAllMessage(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ReplyAll, 
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
 }
 
 function MsgForwardMessage(event)

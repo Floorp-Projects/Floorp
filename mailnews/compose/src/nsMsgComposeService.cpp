@@ -76,6 +76,7 @@
 #include "nsIPrefBranch2.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgAccountManager.h"
+#include "nsIMimeMiscStatus.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 
@@ -472,7 +473,20 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
           pMsgCompFields->SetNewshost(host.get());
         }
         else
+        {
           pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
+          nsCOMPtr <nsIMsgDBHdr> msgHdr;
+          if (strncmp(originalMsgURI, "file:", 5))
+            rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(msgHdr));
+          else if (aMsgWindow)
+          {
+            nsCOMPtr <nsIMsgHeaderSink> headerSink;
+            rv = aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+            if (headerSink)
+              rv = headerSink->GetDummyMsgHeader(getter_AddRefs(msgHdr));
+          }
+          pMsgComposeParams->SetOrigMsgHdr(msgHdr);
+        }
       }
 
       pMsgComposeParams->SetComposeFields(pMsgCompFields);

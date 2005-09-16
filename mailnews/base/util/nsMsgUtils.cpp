@@ -96,6 +96,8 @@ nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractI
   nsCAutoString protocol;
   uriStr.Left(protocol, pos);
 
+  if (protocol.Equals("file") && uriStr.Find("application/x-message-display") != kNotFound)
+    protocol.Assign("mailbox");
   //Build message service contractid
   contractID = "@mozilla.org/messenger/messageservice;1?type=";
   contractID += protocol.get();

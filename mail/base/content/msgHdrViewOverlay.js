@@ -382,6 +382,22 @@ var messageHeaderSink = {
           if (fromMailbox == header.headerValue)
             continue;
         }
+        if (this.mDummyMsgHeader)
+        {
+          if (lowerCaseHeaderName == "from")
+            this.mDummyMsgHeader.author = header.headerValue;
+          else if (lowerCaseHeaderName == "to")
+            this.mDummyMsgHeader.recipients = header.headerValue;
+          else if (lowerCaseHeaderName == "cc")
+            this.mDummyMsgHeader.ccList = header.headerValue;
+          else if (lowerCaseHeaderName == "subject")
+            this.mDummyMsgHeader.subject = header.headerValue;
+          else if (lowerCaseHeaderName == "reply-to")
+            this.mDummyMsgHeader.replyTo = header.headerValue;
+          else if (lowerCaseHeaderName == "message-id")
+            this.mDummyMsgHeader.messageId = header.headerValue;
+
+        }
         // according to RFC 2822, certain headers
         // can occur "unlimited" times
         if (lowerCaseHeaderName in currentHeaderData)
@@ -490,7 +506,7 @@ var messageHeaderSink = {
         var messageUrl = url.QueryInterface(Components.interfaces.nsIMsgMessageUrl);
         try
         {
-          this.mSaveHdr = messenger.messageServiceFromURI(messageUrl.uri).messageURIToMsgHdr(messageUrl.uri);
+          this.mSaveHdr = messenger.msgHdrFromURI(messageUrl.uri);
         }
         catch (ex) {}
 
@@ -1676,5 +1692,11 @@ function nsDummyMsgHeader()
 nsDummyMsgHeader.prototype =
 {
   messageSize : 0,
+  recipients : null,
+  from : null,
+  subject : null,
+  ccList : null,
+  messageId : null,
+  accountKey : "",
   folder : null
 };

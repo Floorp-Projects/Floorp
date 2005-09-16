@@ -59,6 +59,7 @@
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsIMsgHdr.h"
+#include "nsIFileURL.h"
 
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -180,39 +181,79 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   
   nsMailboxAction actionToUse = mailboxAction;
   
-  rv = PrepareMessageUrl(aMessageURI, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
-  
-  if (NS_SUCCEEDED(rv))
+  nsCOMPtr <nsIURI> url;
+  if (!strncmp(aMessageURI, "file:", 5))
   {
-    nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
-    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
-    msgUrl->SetMsgWindow(aMsgWindow);
-    nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
-    i18nurl->SetCharsetOverRide(aCharsetOverride);
-    
-    if (aFileName)
-      msgUrl->SetFileName(nsDependentCString(aFileName));
-    
-    // instead of running the mailbox url like we used to, let's try to run the url in the docshell...
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-    // if we were given a docShell, run the url in the docshell..otherwise just run it normally.
-    if (NS_SUCCEEDED(rv) && docShell)
+    PRInt64 fileSize;
+    nsCOMPtr<nsIURI> fileUri;
+    rv = NS_NewURI(getter_AddRefs(fileUri), aMessageURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIFileURL> fileUrl = do_QueryInterface(fileUri, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIFile> file;
+    rv = fileUrl->GetFile(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    file->GetFileSize(&fileSize);
+    nsCAutoString uriString(aMessageURI);
+    uriString.ReplaceSubstring(NS_LITERAL_CSTRING("file:"), NS_LITERAL_CSTRING("mailbox:"));
+    uriString.Append(NS_LITERAL_CSTRING("&number=0"));
+    rv = NS_NewURI(getter_AddRefs(url), uriString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIMsgMailNewsUrl> msgurl = do_QueryInterface(url);
+    if (msgurl)
     {
-      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-      // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
-      // treat this load as if it were a user click event. Then the dispatching stuff will be much
-      // happier.
-      if (mailboxAction == nsIMailboxUrl::ActionFetchPart)
+      msgurl->SetMsgWindow(aMsgWindow);
+      nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(msgurl, &rv);
+      mailboxUrl->SetMessageSize((PRUint32) fileSize);
+      nsCOMPtr <nsIMsgHeaderSink> headerSink;
+       // need to tell the header sink to capture some headers to create a fake db header
+       // so we can do reply to a .eml file or a rfc822 msg attachment.
+      aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (headerSink)
       {
-        docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+        nsCOMPtr <nsIMsgDBHdr> dummyHeader;
+        headerSink->GetDummyMsgHeader(getter_AddRefs(dummyHeader));
+        if (dummyHeader)
+          dummyHeader->SetMessageSize((PRUint32) fileSize);
       }
-      rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
     }
-    else
-      rv = RunMailboxUrl(url, aDisplayConsumer); 
   }
+  else
+  {
+    rv = PrepareMessageUrl(aMessageURI, aUrlListener, actionToUse , getter_AddRefs(mailboxurl), aMsgWindow);
   
+    if (NS_SUCCEEDED(rv))
+    {
+      url = do_QueryInterface(mailboxurl);
+      nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
+      msgUrl->SetMsgWindow(aMsgWindow);
+      nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
+      i18nurl->SetCharsetOverRide(aCharsetOverride);
+      if (aFileName)
+        msgUrl->SetFileName(nsDependentCString(aFileName));
+    }
+  }
+    
+  // instead of running the mailbox url like we used to, let's try to run the url in the docshell...
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+  // if we were given a docShell, run the url in the docshell..otherwise just run it normally.
+  if (NS_SUCCEEDED(rv) && docShell)
+  {
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    // DIRTY LITTLE HACK --> if we are opening an attachment we want the docshell to
+    // treat this load as if it were a user click event. Then the dispatching stuff will be much
+    // happier.
+    if (mailboxAction == nsIMailboxUrl::ActionFetchPart)
+    {
+      docShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadLink);
+    }
+    rv = docShell->LoadURI(url, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_FALSE);
+  }
+  else
+    rv = RunMailboxUrl(url, aDisplayConsumer); 
+ 
   if (aURL)
     mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   
@@ -348,6 +389,9 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
 
 NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow)
 {
+  if (!strncmp(aMessageURI, "file:", 5))
+    return NS_NewURI(aURL, aMessageURI);
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMailboxUrl> mailboxurl;
   rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionFetchMessage, getter_AddRefs(mailboxurl), aMsgWindow);

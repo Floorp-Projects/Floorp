@@ -167,80 +167,81 @@ function GetNextNMessages(folder)
 	}
 }
 
+
 // type is a nsIMsgCompType and format is a nsIMsgCompFormat
 function ComposeMessage(type, format, folder, messageArray) 
 {
-	var msgComposeType = Components.interfaces.nsIMsgCompType;
-	var identity = null;
-	var newsgroup = null;
-	var server;
+  var msgComposeType = Components.interfaces.nsIMsgCompType;
+  var identity = null;
+  var newsgroup = null;
+  var server;
 
-	//dump("ComposeMessage folder="+folder+"\n");
-	try 
-	{
-		if(folder)
-		{
-			// get the incoming server associated with this uri
-			server = folder.server;
+  //dump("ComposeMessage folder="+folder+"\n");
+  try 
+  {
+    if (folder)
+    {
+      // get the incoming server associated with this uri
+      server = folder.server;
 
-			// if they hit new or reply and they are reading a newsgroup
-			// turn this into a new post or a reply to group.
+      // if they hit new or reply and they are reading a newsgroup
+      // turn this into a new post or a reply to group.
       if (!folder.isServer && server.type == "nntp" && type == msgComposeType.New)
-			{
+      {
         type = msgComposeType.NewsPost;
         newsgroup = folder.folderURL;
-			}
+      }
 
       identity = getIdentityForServer(server);
       // dump("identity = " + identity + "\n");
-		}
-	}
-	catch (ex) 
-	{
-        	dump("failed to get an identity to pre-select: " + ex + "\n");
-	}
+    }
+  }
+  catch (ex) 
+  {
+    dump("failed to get an identity to pre-select: " + ex + "\n");
+  }
 
-	//dump("\nComposeMessage from XUL: " + identity + "\n");
-	var uri = null;
+  //dump("\nComposeMessage from XUL: " + identity + "\n");
+  var uri = null;
 
-	if (! msgComposeService)
-	{
-		dump("### msgComposeService is invalid\n");
-		return;
-	}
+  if (! msgComposeService)
+  {
+    dump("### msgComposeService is invalid\n");
+    return;
+  }
 	
-	if (type == msgComposeType.New) //new message
-	{
-		//dump("OpenComposeWindow with " + identity + "\n");
+  if (type == msgComposeType.New) //new message
+  {
+    //dump("OpenComposeWindow with " + identity + "\n");
 
     // if the addressbook sidebar panel is open and has focus, get
     // the selected addresses from it
     if (document.commandDispatcher.focusedWindow.document.documentElement.hasAttribute("selectedaddresses"))
       NewMessageToSelectedAddresses(type, format, identity);
-
     else
       msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
-		return;
-	}
+    return;
+  }
   else if (type == msgComposeType.NewsPost) 
-	{
-		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
-		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity, msgWindow);
-		return;
-	}
+  {
+    //dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
+    msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity, msgWindow);
+    return;
+  }
 		
-	messenger.SetWindow(window, msgWindow);
-			
-	var object = null;
-	
-	if (messageArray && messageArray.length > 0)
-	{
-		uri = "";
-		for (var i = 0; i < messageArray.length; i ++)
-		{	
-			var messageUri = messageArray[i];
+  messenger.SetWindow(window, msgWindow);
+		  
+  var object = null;
+  
+  if (messageArray && messageArray.length > 0)
+  {
+    uri = "";
+    for (var i = 0; i < messageArray.length; i ++)
+    {	
+      var messageUri = messageArray[i];
 
-      var hdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+      var hdr = messenger.msgHdrFromURI(messageUri);
+      // if we treat reply from sent specially, do we check for that folder flag here?
       var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
       var accountKey = hdr.accountKey;
       if (accountKey.length > 0)
@@ -257,28 +258,28 @@ function ComposeMessage(type, format, folder, messageArray)
       var messageIDScheme = messageID.split(":")[0];
       if ((messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
         openComposeWindowForRSSArticle(messageID, hdr, type); 
-      else	if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
-				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
-				type == msgComposeType.ReplyToSenderAndGroup ||
-				type == msgComposeType.Template || type == msgComposeType.Draft)
-			{
-				msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity, msgWindow);
+      else if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
+                type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
+                type == msgComposeType.ReplyToSenderAndGroup ||
+                type == msgComposeType.Template || type == msgComposeType.Draft)
+      {
+        msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity, msgWindow);
         //limit the number of new compose windows to 8. Why 8? I like that number :-)
         if (i == 7)
           break;
-			}
-			else
-			{
-				if (i) 
-					uri += ","
-				uri += messageUri;
-			}
-		}
-		if (type == msgComposeType.ForwardAsAttachment && uri)
-			msgComposeService.OpenComposeWindow(null, uri, type, format, identity, msgWindow);
-	}
-	else
-		dump("### nodeList is invalid\n");
+      }
+      else
+      {
+        if (i) 
+          uri += ","
+        uri += messageUri;
+      }
+    }
+    if (type == msgComposeType.ForwardAsAttachment && uri)
+      msgComposeService.OpenComposeWindow(null, uri, type, format, identity, msgWindow);
+  }
+  else
+    dump("### nodeList is invalid\n");
 }
 
 function NewMessageToSelectedAddresses(type, format, identity) {

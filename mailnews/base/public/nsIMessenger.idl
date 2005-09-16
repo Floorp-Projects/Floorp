@@ -43,11 +43,12 @@
 #include "nsIMsgThread.idl"
 #include "nsIMsgFolder.idl"
 
+interface nsIMsgDBHdr;
 interface nsIDOMWindowInternal;
 interface nsITransactionManager;
 interface nsIMsgMessageService;
 
-[scriptable, uuid(15AECD24-4687-43d6-84DC-0BA21F093244)]
+[scriptable, uuid(23d3e8c1-9fa9-4496-96a6-eb43cb1c4bb0)]
 interface nsIMessenger : nsISupports {
 
     const long eUnknown = 0;
@@ -118,6 +119,7 @@ interface nsIMessenger : nsISupports {
 
     readonly attribute string lastDisplayedMessageUri;
 
-    nsIMsgMessageService messageServiceFromURI(in string uri);
+    nsIMsgMessageService messageServiceFromURI(in string aUri);
+    nsIMsgDBHdr msgHdrFromURI(in string aUri);
 };
 

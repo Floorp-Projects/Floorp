@@ -167,23 +167,28 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
                          const char * aMsgCharSet, PRBool headersOnly)
 {
   nsresult  rv;
-
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
 
   mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
 
-  // first, convert the rdf msg uri into a url that represents the message...
-  nsCOMPtr <nsIMsgMessageService> msgService;
-  rv = GetMessageServiceFromURI(msgURI, getter_AddRefs(msgService));
-  if (NS_FAILED(rv)) return rv;
+  nsCAutoString msgUri(msgURI);
+  PRBool fileUrl = !strncmp(msgURI, "file:", 5);
 
   nsCOMPtr<nsIURI> aURL;
-  rv = msgService->GetUrlForUri(msgURI, getter_AddRefs(aURL), nsnull);
+  if (fileUrl)
+    rv = NS_NewURI(getter_AddRefs(aURL), msgURI);
+  else
+  {
+    nsCOMPtr <nsIMsgMessageService> msgService;
+    rv = GetMessageServiceFromURI(msgURI, getter_AddRefs(msgService));
+    if (NS_FAILED(rv)) return rv;
+    rv = msgService->GetUrlForUri(msgURI, getter_AddRefs(aURL), nsnull);
+  }
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
+  nsCOMPtr <nsIURL> mailNewsUrl = do_QueryInterface(aURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCAutoString queryPart;

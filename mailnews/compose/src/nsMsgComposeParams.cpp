@@ -99,19 +99,26 @@ NS_IMETHODIMP nsMsgComposeParams::SetOriginalMsgURI(const char * aOriginalMsgURI
 NS_IMETHODIMP nsMsgComposeParams::GetIdentity(nsIMsgIdentity * *aIdentity)
 {
   NS_ENSURE_ARG_POINTER(aIdentity);
-  
-  if (mIdentity)
-  {
-     *aIdentity = mIdentity;
-     NS_ADDREF(*aIdentity);
-  }
-  else
-    *aIdentity = nsnull;
+  NS_IF_ADDREF(*aIdentity = mIdentity);
   return NS_OK;
 }
+
 NS_IMETHODIMP nsMsgComposeParams::SetIdentity(nsIMsgIdentity * aIdentity)
 {
   mIdentity = aIdentity;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeParams::SetOrigMsgHdr(nsIMsgDBHdr *aMsgHdr)
+{
+  mOrigMsgHdr = aMsgHdr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeParams::GetOrigMsgHdr(nsIMsgDBHdr * *aMsgHdr)
+{
+  NS_ENSURE_ARG_POINTER(aMsgHdr);
+  NS_IF_ADDREF(*aMsgHdr = mOrigMsgHdr);
   return NS_OK;
 }
 

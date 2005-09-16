@@ -38,14 +38,14 @@
 
 #include "nsIMsgComposeParams.h"
 #include "nsString.h"
-
+#include "nsIMsgHdr.h"
 class nsMsgComposeParams : public nsIMsgComposeParams
 {
 public: 
-	nsMsgComposeParams();
-	virtual ~nsMsgComposeParams();
+  nsMsgComposeParams();
+  virtual ~nsMsgComposeParams();
 
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGCOMPOSEPARAMS
   
   MSG_ComposeType               mType;
@@ -56,4 +56,5 @@ public:
   PRBool                        mBodyIsLink;
   nsCOMPtr<nsIMsgSendListener>  mSendListener;
   nsCString                     mSMTPPassword;
+  nsCOMPtr<nsIMsgDBHdr>         mOrigMsgHdr;
 };

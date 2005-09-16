@@ -41,6 +41,7 @@
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"
 
+interface nsIMsgDBHdr;
 typedef long MSG_ComposeType;
 
 [scriptable, uuid(c7035852-7531-11d3-9a73-006008948010)]
@@ -72,7 +73,7 @@ interface nsIMsgCompFormat {
 };
 
 
-[scriptable, uuid(B8FE4400-BF05-11D4-9DAA-E1CD31C137FC)]
+[scriptable, uuid(f59cf090-98d4-43fa-bc53-db4922c8370e)]
 interface nsIMsgComposeParams : nsISupports {
   attribute MSG_ComposeType       type;
   attribute MSG_ComposeFormat     format;
@@ -84,4 +85,5 @@ interface nsIMsgComposeParams : nsISupports {
 
   attribute nsIMsgSendListener	  sendListener;
   attribute string                smtpPassword;
+  attribute nsIMsgDBHdr           origMsgHdr;
 };
