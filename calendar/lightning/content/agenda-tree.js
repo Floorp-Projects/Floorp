@@ -360,6 +360,10 @@ agendaTreeView.calendarObserver = {
     agendaTreeView: agendaTreeView
 };
 
+agendaTreeView.calendarObserver.onStartBatch = function() {};
+agendaTreeView.calendarObserver.onEndBatch = function() {};
+agendaTreeView.calendarObserver.onStartLoad = function() {};
+
 agendaTreeView.calendarObserver.onAddItem =
 function observer_onAddItem(item)
 {
