@@ -64,9 +64,7 @@
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
-#ifdef XP_WIN
 #include "nsIAlertsService.h"
-#endif
 
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;

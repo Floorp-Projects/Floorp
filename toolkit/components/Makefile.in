@@ -53,6 +53,7 @@ endif
 
 ifdef MOZ_XUL_APP
 DIRS += \
+	alerts \
 	console \
 	filepicker \
 	printing \
@@ -74,10 +75,6 @@ endif # MOZ_THUNDERBIRD
 
 ifdef MOZ_XPINSTALL
 DIRS +=	downloads
-endif
-
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
-DIRS += alerts
 endif
 
 DIRS += \
