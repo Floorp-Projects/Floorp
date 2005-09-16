@@ -50,7 +50,7 @@
 ;+
 ;+NSSprivate_3.11 {               # NSS 3.11 release
 ;+    global:
-LIBRARY freebl_3 ;-
+LIBRARY freebl3 ;-
 EXPORTS	;-
 FREEBL_GetVector;
 ;+    local:
