@@ -155,7 +155,7 @@ TranslateYNtoImageBehavior(unsigned char *aRegValue, DWORD aRegValueLength,
   if (aRegValueType == REG_SZ && aRegValue[0] != 0) {
     // strcmp is safe; it's bounded by its second parameter
     if (!strcmp(NS_REINTERPRET_CAST(char *, aRegValue), "yes"))
-      prefs->SetIntPref(aPrefKeyName, 0);
+      prefs->SetIntPref(aPrefKeyName, 1);
     else
       prefs->SetIntPref(aPrefKeyName, 2);
   }
@@ -361,7 +361,7 @@ struct regEntry gRegEntries[] = {
     TranslateYNtoTF },
   { 0,
     "Display Inline Images",
-    "network.image.imageBehavior",
+    "permissions.default.image",
     TranslateYNtoImageBehavior },
   { 0,
     "Enable AutoImageResize",

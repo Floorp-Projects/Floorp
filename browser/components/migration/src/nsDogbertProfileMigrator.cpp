@@ -417,7 +417,7 @@ nsDogbertProfileMigrator::PrefTransform gTransforms[] = {
   { "browser.use_document.fonts",           "browser.display.use_document_fonts", F(GetInt),      F(SetInt),     PR_FALSE, -1 },
   { "browser.link_expiration",              "browser.history_expire_days",        F(GetInt),      F(SetInt),     PR_FALSE, -1 },
   { "browser.startup.page",                 "browser.startup.homepage",           F(GetHomepage), F(SetWStringFromASCII), PR_FALSE, -1 },
-  { "general.always_load_images",           "network.image.imageBehavior",        F(GetImagePref),F(SetInt),     PR_FALSE, -1 },
+  { "general.always_load_images",           "permissions.default.image",          F(GetImagePref),F(SetInt),     PR_FALSE, -1 },
 };
 
 nsresult
@@ -493,7 +493,7 @@ nsDogbertProfileMigrator::GetImagePref(void* aTransform, nsIPrefBranch* aBranch)
   PRBool loadImages;
   nsresult rv = aBranch->GetBoolPref(xform->sourcePrefName, &loadImages);
   if (NS_SUCCEEDED(rv)) {
-    xform->intValue = loadImages ? 0 : 2;
+    xform->intValue = loadImages ? 1 : 2;
     xform->prefHasValue = PR_TRUE;
   }
   return rv;
