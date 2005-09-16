@@ -673,18 +673,22 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   //
   // If the page load failed, then deal with the error condition...
   // Errors are handled as follows:
-  //   1. Check to see if it a file not found error.
+  //   1. Check to see if it's a file not found error or bad content
+  //      encoding error.
   //   2. Send the URI to a keyword server (if enabled)
   //   3. If the error was DNS failure, then add www and .com to the URI
   //      (if appropriate).
   //   4. Throw an error dialog box...
   //
 
-  if(url && NS_FAILED(aStatus)) {
-    if (aStatus == NS_ERROR_FILE_NOT_FOUND) {
+  if (url && NS_FAILED(aStatus))
+  {
+    if (aStatus == NS_ERROR_FILE_NOT_FOUND ||
+        aStatus == NS_ERROR_INVALID_CONTENT_ENCODING)
+    {
       DisplayLoadError(aStatus, url, nsnull, channel);
       return NS_OK;
-    }  
+    }
 
     if (sURIFixup)
     {

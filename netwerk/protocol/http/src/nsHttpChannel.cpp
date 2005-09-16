@@ -674,17 +674,17 @@ nsHttpChannel::AddCookiesToRequest()
     mRequestHead.SetHeader(nsHttp::Cookie, cookie, PR_FALSE);
 }
 
-void
+nsresult
 nsHttpChannel::ApplyContentConversions()
 {
     if (!mResponseHead)
-        return;
+        return NS_OK;
 
     LOG(("nsHttpChannel::ApplyContentConversions [this=%x]\n", this));
 
     if (!mApplyConversion) {
         LOG(("not applying conversion per mApplyConversion\n"));
-        return;
+        return NS_OK;
     }
 
     const char *val = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
@@ -708,7 +708,11 @@ nsHttpChannel::ApplyContentConversions()
                 mListener = converter;
             }
         }
+    } else if (val != nsnull) {
+        return NS_ERROR_INVALID_CONTENT_ENCODING;
     }
+
+    return NS_OK;
 }
 
 nsresult
@@ -747,13 +751,13 @@ nsHttpChannel::CallOnStartRequest()
     if (mResponseHead)
         SetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
                            mResponseHead->ContentLength());
-    
+
     LOG(("  calling mListener->OnStartRequest\n"));
     nsresult rv = mListener->OnStartRequest(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
     // install stream converter if required
-    ApplyContentConversions();
+    rv = ApplyContentConversions();
 
     return rv;
 }

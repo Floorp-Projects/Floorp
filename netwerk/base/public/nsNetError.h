@@ -130,6 +130,12 @@
 #define NS_ERROR_IN_PROGRESS \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
 
+/**
+ * The content encoding of the source document was incorrect, for example
+ * returning a plain HTML document advertised as Content-Encoding: gzip
+ */
+#define NS_ERROR_INVALID_CONTENT_ENCODING \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 27)
 
 /******************************************************************************
  * Connectivity error codes:
