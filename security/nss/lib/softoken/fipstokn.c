@@ -56,12 +56,108 @@
 #include "pkcs11.h"
 #include "pkcs11i.h"
 
+#include <ctype.h>
+
 
 /*
  * ******************** Password Utilities *******************************
  */
 static PRBool isLoggedIn = PR_FALSE;
 static PRBool fatalError = PR_FALSE;
+
+/*
+ * This function returns
+ *   - CKR_PIN_INVALID if the password/PIN is not a legal UTF8 string
+ *   - CKR_PIN_LEN_RANGE if the password/PIN is too short or does not
+ *     consist of characters from three or more character classes.
+ *   - CKR_OK otherwise
+ *
+ * The minimum password/PIN length is FIPS_MIN_PIN Unicode characters.
+ * We define five character classes: digits (0-9), ASCII lowercase letters,
+ * ASCII uppercase letters, ASCII non-alphanumeric characters (such as
+ * space and punctuation marks), and non-ASCII characters.  If an ASCII
+ * uppercase letter is the first character of the password/PIN, the
+ * uppercase letter is not counted toward its character class.  Similarly,
+ * if a digit is the last character of the password/PIN, the digit is not
+ * counted toward its character class.
+ *
+ * Although NSC_SetPIN and NSC_InitPIN already do the maximum and minimum
+ * password/PIN length checks, they check the length in bytes as opposed
+ * to characters.  To meet the minimum password/PIN guessing probability
+ * requirements in FIPS 140-2, we need to check the length in characters.
+ */
+static CK_RV sftk_newPinCheck(CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
+    unsigned int i;
+    int nchar = 0;      /* number of characters */
+    int ntrail = 0;     /* number of trailing bytes to follow */
+    int ndigit = 0;     /* number of decimal digits */
+    int nlower = 0;     /* number of ASCII lowercase letters */
+    int nupper = 0;     /* number of ASCII uppercase letters */
+    int nnonalnum = 0;  /* number of ASCII non-alphanumeric characters */
+    int nnonascii = 0;  /* number of non-ASCII characters */
+    int nclass;         /* number of character classes */
+
+    for (i = 0; i < ulPinLen; i++) {
+	unsigned int byte = pPin[i];
+
+	if (ntrail) {
+	    if ((byte & 0xc0) != 0x80) {
+		/* illegal */
+		nchar = -1;
+		break;
+	    }
+	    if (--ntrail == 0) {
+		nchar++;
+		nnonascii++;
+	    }
+	    continue;
+	}
+	if ((byte & 0x80) == 0x00) {
+	    /* single-byte (ASCII) character */
+	    nchar++;
+	    if (isdigit(byte)) {
+		if (i < ulPinLen - 1) {
+		    ndigit++;
+		}
+	    } else if (islower(byte)) {
+		nlower++;
+	    } else if (isupper(byte)) {
+		if (i > 0) {
+		    nupper++;
+		}
+	    } else {
+		nnonalnum++;
+	    }
+	} else if ((byte & 0xe0) == 0xc0) {
+	    /* leading byte of two-byte character */
+	    ntrail = 1;
+	} else if ((byte & 0xf0) == 0xe0) {
+	    /* leading byte of three-byte character */
+	    ntrail = 2;
+	} else if ((byte & 0xf8) == 0xf0) {
+	    /* leading byte of four-byte character */
+	    ntrail = 3;
+	} else {
+	    /* illegal */
+	    nchar = -1;
+	    break;
+	}
+    }
+    if (nchar == -1) {
+	/* illegal UTF8 string */
+	return CKR_PIN_INVALID;
+    }
+    if (nchar < FIPS_MIN_PIN) {
+	return CKR_PIN_LEN_RANGE;
+    }
+    nclass = (ndigit != 0) + (nlower != 0) + (nupper != 0) +
+	     (nnonalnum != 0) + (nnonascii != 0);
+    if (nclass < 3) {
+	return CKR_PIN_LEN_RANGE;
+    }
+    return CKR_OK;
+}
+
 
 /* FIPS required checks before any useful cryptographic services */
 static CK_RV sftk_fipsCheck(void) {
@@ -273,13 +369,16 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 /* FC_InitToken initializes a token. */
  CK_RV FC_InitToken(CK_SLOT_ID slotID,CK_CHAR_PTR pPin,
  				CK_ULONG usPinLen,CK_CHAR_PTR pLabel) {
-    return CKR_HOST_MEMORY; /*is this the right function for not implemented*/
+    return NSC_InitToken(slotID,pPin,usPinLen,pLabel);
 }
 
 
 /* FC_InitPIN initializes the normal user's PIN. */
  CK_RV FC_InitPIN(CK_SESSION_HANDLE hSession,
     					CK_CHAR_PTR pPin, CK_ULONG ulPinLen) {
+    CK_RV rv;
+    SFTK_FIPSFATALCHECK();
+    if ((rv = sftk_newPinCheck(pPin,ulPinLen)) != CKR_OK) return rv;
     return NSC_InitPIN(hSession,pPin,ulPinLen);
 }
 
@@ -290,6 +389,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
     CK_ULONG usOldLen, CK_CHAR_PTR pNewPin, CK_ULONG usNewLen) {
     CK_RV rv;
     if ((rv = sftk_fipsCheck()) != CKR_OK) return rv;
+    if ((rv = sftk_newPinCheck(pNewPin,usNewLen)) != CKR_OK) return rv;
     return NSC_SetPIN(hSession,pOldPin,usOldLen,pNewPin,usNewLen);
 }
 
@@ -455,7 +555,7 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     			CK_ATTRIBUTE_PTR pTemplate,CK_ULONG usCount) {
     /* let publically readable object be found */
-    int i;
+    unsigned int i;
     CK_RV rv;
     PRBool needLogin = PR_FALSE;
 

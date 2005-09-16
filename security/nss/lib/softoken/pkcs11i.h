@@ -321,8 +321,10 @@ struct SFTKSessionStr {
  * as well as the reference count of session objects in that bucket
  * (head[]->refCount),  objectLock protects all elements of the token
  * object hash table (tokObjects[], tokenIDCount, and tokenHashTable),
- * and slotLock protects the remaining protected elements:
- * password, isLoggedIn, ssoLoggedIn, and sessionCount
+ * slotLock protects the remaining protected elements:
+ * password, isLoggedIn, ssoLoggedIn, and sessionCount,
+ * and pwCheckLock serializes the key database password checks in
+ * NSC_SetPIN and NSC_Login.
  */
 struct SFTKSlotStr {
     CK_SLOT_ID		slotID;
@@ -331,6 +333,7 @@ struct SFTKSlotStr {
     unsigned int	numSessionLocks;
     unsigned long	sessionLockMask;
     PZLock		*objectLock;
+    PRLock		*pwCheckLock;
     SECItem		*password;
     PRBool		hasTokens;
     PRBool		isLoggedIn;
@@ -404,8 +407,10 @@ struct SFTKSSLMACInfoStr {
 #define SFTK_TOKEN_TYPE_CERT	0x70000000L
 
 #define SFTK_TOKEN_KRL_HANDLE	(SFTK_TOKEN_MAGIC|SFTK_TOKEN_TYPE_CRL|1)
-/* how big a password/pin we can deal with */
+/* how big (in bytes) a password/pin we can deal with */
 #define SFTK_MAX_PIN	255
+/* minimum password/pin length (in Unicode characters) in FIPS mode */
+#define FIPS_MIN_PIN	7
 
 /* slot ID's */
 #define NETSCAPE_SLOT_ID 1
