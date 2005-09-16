@@ -74,6 +74,10 @@ GDIPlusGetStops(nsISVGGradient *aGrad, Color **aColors, REAL **aPositions,
   PRUint32 num;
   aGrad->GetStopCount(&num);
   *aStops = num;
+  // If we have no stops, we don't want to render anything
+  if (num == 0) {
+    return;
+  }
 
   float offset;
   aGrad->GetStopOffset(0, &offset);
@@ -168,6 +172,10 @@ GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix,
   Color *stopsCol;
   REAL *stopsPos;
   GDIPlusGetStops(aGrad, &stopsCol, &stopsPos, &nStops, PR_FALSE);
+  // If we have no stops, we don't want to render anything
+  if (nStops == 0) {
+    return;
+  }
   gradient.SetInterpolationColors(stopsCol, stopsPos, nStops);
   SolidBrush leftBrush(stopsCol[0]);
   SolidBrush rightBrush(stopsCol[nStops-1]);
@@ -272,6 +280,10 @@ GDIPlusRadialGradient(nsISVGGradient *aGrad, Matrix *aMatrix,
   Color *stopsCol;
   REAL *stopsPos;
   GDIPlusGetStops(aGrad, &stopsCol, &stopsPos, &nStops, PR_TRUE);
+  // If we have no stops, we don't want to render anything
+  if (nStops == 0) {
+    return;
+  }
   gradient.SetInterpolationColors(stopsCol, stopsPos, nStops);
   SolidBrush rimBrush(stopsCol[0]);
   delete [] stopsCol;
