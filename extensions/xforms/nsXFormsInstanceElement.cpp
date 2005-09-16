@@ -425,40 +425,53 @@ void
 nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  // Clear out our existing instance data
-  if (NS_SUCCEEDED(CreateInstanceDocument())) {
-    nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(mDocument);
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    if (doc) {
-      nsCOMPtr<nsIURI> uri;
-      NS_NewURI(getter_AddRefs(uri), aSrc, doc->GetDocumentCharacterSet().get(),
-                doc->GetDocumentURI());
-      if (uri) {
-        if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
-          nsCOMPtr<nsILoadGroup> loadGroup;
-          loadGroup = doc->GetDocumentLoadGroup();
-          NS_WARN_IF_FALSE(loadGroup, "No load group!");
+  // Check whether we are an instance document ourselves
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    if (doc->GetProperty(nsXFormsAtoms::isInstanceDocument)) {
+      /// Property exists, which means we are an instance document trying
+      /// to load an external instance document. We do not allow that.
+      const nsPromiseFlatString& flat = PromiseFlatString(aSrc);
+      const PRUnichar *strings[] = { flat.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceInstanceLoad"),
+                                 strings, 1, mElement, mElement);
+    } else {
+      // Clear out our existing instance data
+      if (NS_SUCCEEDED(CreateInstanceDocument())) {
+        nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(mDocument);
 
-          // Using the same load group as the main document and creating
-          // the channel with LOAD_NORMAL flag delays the dispatching of
-          // the 'load' event until all instance data documents have been loaded.
-          NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
-                        nsnull, nsIRequest::LOAD_NORMAL);
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), aSrc,
+                  doc->GetDocumentCharacterSet().get(), doc->GetDocumentURI());
+        if (uri) {
+          if (nsXFormsUtils::CheckSameOrigin(doc->GetDocumentURI(), uri)) {
+            nsCOMPtr<nsILoadGroup> loadGroup;
+            loadGroup = doc->GetDocumentLoadGroup();
+            NS_WARN_IF_FALSE(loadGroup, "No load group!");
 
-          if (mChannel) {
-            rv = newDoc->StartDocumentLoad(kLoadAsData, mChannel, loadGroup, nsnull,
-                                           getter_AddRefs(mListener), PR_TRUE);
-            if (NS_SUCCEEDED(rv)) {
-              mChannel->SetNotificationCallbacks(this);
-              rv = mChannel->AsyncOpen(this, nsnull);
+            // Using the same load group as the main document and creating
+            // the channel with LOAD_NORMAL flag delays the dispatching of
+            // the 'load' event until all instance data documents have been
+            // loaded.
+            NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
+                          nsnull, nsIRequest::LOAD_NORMAL);
+
+            if (mChannel) {
+              rv = newDoc->StartDocumentLoad(kLoadAsData, mChannel, loadGroup,
+                                             nsnull, getter_AddRefs(mListener),
+                                             PR_TRUE);
+              if (NS_SUCCEEDED(rv)) {
+                mChannel->SetNotificationCallbacks(this);
+                rv = mChannel->AsyncOpen(this, nsnull);
+              }
             }
+          } else {
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"),
+                                       domDoc);
           }
-        } else {
-          nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"),
-                                     domDoc);
         }
       }
     }
@@ -483,20 +496,19 @@ nsXFormsInstanceElement::CreateInstanceDocument()
   if (!doc) // could be we just aren't inserted yet, so don't warn
     return NS_ERROR_FAILURE;
 
-  // Do not try to load an instance document if the current document is not
-  // associated with a DOM window.  This could happen, for example, if some
-  // XForms document loaded itself as instance data (which is what the Forms
-  // 1.0 testsuite does).
-  nsCOMPtr<nsIDocument> d = do_QueryInterface(doc);
-  if (d && !d->GetScriptGlobalObject())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMDOMImplementation> domImpl;
   rv = doc->GetImplementation(getter_AddRefs(domImpl));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
                                getter_AddRefs(mDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set property to prevent an instance document loading an external instance
+  // document
+  nsCOMPtr<nsIDocument> idoc(do_QueryInterface(mDocument));
+  NS_ENSURE_STATE(idoc);
+  rv = idoc->SetProperty(nsXFormsAtoms::isInstanceDocument, idoc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // I don't know if not being able to create a backup document is worth
