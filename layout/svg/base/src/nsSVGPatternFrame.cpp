@@ -330,7 +330,13 @@ nsSVGPatternFrame::GetCanvasTM() {
     } else {
       // No, we'll use our content parent, then
       nsCOMPtr<nsISVGGeometrySource> aSource = do_QueryInterface(mParent); 
-      aSource->GetCanvasTM(&aCTM);
+      if (aSource) {
+        aSource->GetCanvasTM(&aCTM);
+      } else {
+        // OK, we have no content parent, which means that we're
+        // not part of the document tree. Return an identity matrix?
+        NS_NewSVGMatrix(&aCTM, 1.0f,0.0f,0.0f,1.0f,0.0f,0.0f);
+      }
     }
   }
   return aCTM;  
