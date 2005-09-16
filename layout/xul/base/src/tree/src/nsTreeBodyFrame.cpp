@@ -881,7 +881,7 @@ nsTreeBodyFrame::InvalidateScrollbars()
   float t2p = mPresContext->TwipsToPixels();
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
-  PRInt32 size = rowHeightAsPixels*(mRowCount-mPageLength);
+  PRInt32 size = rowHeightAsPixels * (mRowCount > mPageLength ? mRowCount - mPageLength : 0);
   maxposStr.AppendInt(size);
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
 
