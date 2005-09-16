@@ -1046,31 +1046,28 @@ ParseTerm(CompilerState *state)
             return JS_TRUE;
         /* Decimal escape */
         case '0':
-            if (JS_HAS_STRICT_OPTION(state->context)) {
-                if (!js_ReportCompileErrorNumber(state->context,
-                                                 state->tokenStream,
-                                                 JSREPORT_TS |
-                                                 JSREPORT_WARNING |
-                                                 JSREPORT_STRICT,
-                                                 JSMSG_INVALID_BACKREF)) {
-                    return JS_FALSE;
-                }
-                c = 0;
-            } else {
-     doOctal:
-                num = 0;
-                while (state->cp < state->cpend) {
-                    c = *state->cp;
-                    if (c < '0' || '7' < c)
-                        break;
-                    state->cp++;
-                    tmp = 8 * num + (uintN)JS7_UNDEC(c);
-                    if (tmp > 0377)
-                        break;
-                    num = tmp;
-                }
-                c = (jschar)num;
+            /* Give a strict warning. See also the note below. */
+            if (!js_ReportCompileErrorNumber(state->context,
+                                             state->tokenStream,
+                                             JSREPORT_TS |
+                                             JSREPORT_WARNING |
+                                             JSREPORT_STRICT,
+                                             JSMSG_INVALID_BACKREF)) {
+                return JS_FALSE;
             }
+     doOctal:
+            num = 0;
+            while (state->cp < state->cpend) {
+                c = *state->cp;
+                if (c < '0' || '7' < c)
+                    break;
+                state->cp++;
+                tmp = 8 * num + (uintN)JS7_UNDEC(c);
+                if (tmp > 0377)
+                    break;
+                num = tmp;
+            }
+            c = (jschar)num;
     doFlat:
             state->result = NewRENode(state, REOP_FLAT);
             if (!state->result)
