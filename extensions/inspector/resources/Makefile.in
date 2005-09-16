@@ -50,6 +50,7 @@ ALL_LOCALES = \
 	de \
 	en-US \
 	ga-IE \
+	hu \
 	pl \
 	pt-BR \
 	ru \

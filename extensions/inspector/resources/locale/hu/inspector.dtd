@@ -1,0 +1,63 @@
+
+<!ENTITY Inspector.title "DOM Inspector">
+
+<!ENTITY thDOMNodes.label "DOM csomópontok">
+<!ENTITY btnInspect.label "Vizsgálat">
+<!ENTITY bxDocPanel.title "Dokumentum">
+<!ENTITY bxObjectPanel.title "Objektum">
+<!ENTITY btnSelecting.tooltip "Csomópont vizsgálatra való keresése rákattintással">
+<!ENTITY btnFind.tooltip "Csomópont vizsgálatra való keresése id, tag, vagy attribútum alapján">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Fájl">
+<!ENTITY mnWindows.label "Ablak vizsgálata">
+<!ENTITY mnWindows.accesskey "A">
+<!ENTITY mnFile.accesskey "F">
+  <!ENTITY cmdShowOpenURLDialog.label "URL vizsgálata...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Bezárás">
+  <!ENTITY cmdClose.accesskey "B">
+  <!ENTITY cmdExit.label "Kilépés">
+  <!ENTITY cmdExit.accesskey "K">
+
+<!ENTITY mnEdit.label "Szerkesztés">
+<!ENTITY mnEdit.accesskey "z">
+  <!ENTITY cmdUndo.label "Visszavonás">
+  <!ENTITY cmdUndo.accesskey "v">
+  <!ENTITY cmdRedo.label "Újra">
+  <!ENTITY cmdRedo.accesskey "r">
+  <!ENTITY cmdCut.label "Kivágás">
+  <!ENTITY cmdCut.accesskey "K">
+  <!ENTITY cmdCopy.label "Másolás">
+  <!ENTITY cmdCopy.accesskey "M">
+  <!ENTITY cmdPaste.label "Beillesztés">
+  <!ENTITY cmdPaste.accesskey "B">
+  <!ENTITY cmdDelete.label "Törlés">
+  <!ENTITY cmdDelete.accesskey "T">
+
+<!ENTITY mnSearch.label "Keresés">
+<!ENTITY mnSearch.accesskey "K">
+  <!ENTITY mnSearchPlugins.label "Kiterjesztések">
+  <!ENTITY mnSearchPlugins.accesskey "i">
+    <!ENTITY cmdRunSearch.label "Futtatás...">
+    <!ENTITY cmdRunSearch.accesskey "F">
+
+<!ENTITY mnView.label "Nézet">
+<!ENTITY mnView.accesskey "N">
+  <!ENTITY cmdToggleBrowser.label "Böngésző">
+  <!ENTITY cmdToggleSearch.label "Találatok">
+
+<!ENTITY cmdViewSearchItem.label "Megtekintés...">
+<!ENTITY cmdEditSearchItem.label "Szerkesztés...">
+<!ENTITY cmdCopySearchItemLine.label "Sor másolása">
+<!ENTITY cmdCopySearchItemAll.label "Mindet másolja">
+<!ENTITY cmdSaveSearchItemText.label "Mentés...">
+<!ENTITY cmdClearSearch.label "Törlés">
+<!ENTITY cmdHideSearchItems.label "Elrejtés">
+
+<!ENTITY browserPanel.label "Böngésző">
+
+<!ENTITY inspectNewWindow.label "Vizsgálat új ablakban">
+
+<!ENTITY closeCmd.key "W">
