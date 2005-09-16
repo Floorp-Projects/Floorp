@@ -86,6 +86,10 @@ public:
   virtual nsresult
   ChildListChanged(PRInt32 aModType);
 
+  // override the base method so that we can deal with fences and separators
+  virtual nscoord
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
+
   // exported routine that both mfenced and mfrac share.
   // mfrac uses this when its bevelled attribute is set.
   static nsresult

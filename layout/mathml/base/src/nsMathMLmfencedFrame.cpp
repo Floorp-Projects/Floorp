@@ -477,6 +477,9 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
   mathMLFrame->SetBoundingMetrics(aDesiredSize.mBoundingMetrics);
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
+  // see if we should fix the spacing
+  mathMLFrame->FixInterFrameSpacing(aDesiredSize);
+
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -585,6 +588,31 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
   // return rect.width since it includes lspace and rspace
   bm.width = rect.width;
   dx += rect.width;
+}
+
+nscoord
+nsMathMLmfencedFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+{
+  nscoord gap = nsMathMLContainerFrame::FixInterFrameSpacing(aDesiredSize);
+  if (!gap) return 0;
+
+  nsRect rect;
+  if (mOpenChar) {
+    mOpenChar->GetRect(rect);
+    rect.MoveBy(gap, 0);
+    mOpenChar->SetRect(rect);
+  }
+  if (mCloseChar) {
+    mCloseChar->GetRect(rect);
+    rect.MoveBy(gap, 0);
+    mCloseChar->SetRect(rect);
+  }
+  for (PRInt32 i = 0; i < mSeparatorsCount; i++) {
+    mSeparatorsChar[i].GetRect(rect);
+    rect.MoveBy(gap, 0);
+    mSeparatorsChar[i].SetRect(rect);
+  }
+  return gap;
 }
 
 // ----------------------

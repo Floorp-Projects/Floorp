@@ -107,15 +107,12 @@ public:
   NS_IMETHOD
   TransmitAutomaticData();
 
-  virtual nsresult
-  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
-  {
-    // XXX the base method doesn't work properly with <msqrt> because it
-    // only slides child frames and has no idea that we have a sqrt glyph
-    // that is part of the flow without being a frame. We need to shift our
-    // sqrt glyph too, but since m0.9.9 is going out... do nothing for now 
-    return NS_OK;
-  }
+  // the base method doesn't deal fully with <msqrt> because it only
+  // slides child frames and has no idea that we have a sqrt glyph that
+  // is part of the flow without being a frame. We need to shift our
+  // sqrt glyph too. 
+  virtual nscoord
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
 
 protected:
   nsMathMLmsqrtFrame();

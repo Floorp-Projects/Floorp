@@ -273,6 +273,24 @@ nsMathMLmfracFrame::Reflow(nsPresContext*          aPresContext,
                                         aReflowState, aStatus);
 }
 
+nscoord
+nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+{
+  nscoord gap = nsMathMLContainerFrame::FixInterFrameSpacing(aDesiredSize);
+  if (!gap) return 0;
+
+  if (mSlashChar) {
+    nsRect rect;
+    mSlashChar->GetRect(rect);
+    rect.MoveBy(gap, 0);
+    mSlashChar->SetRect(rect);
+  }
+  else {
+    mLineRect.MoveBy(gap, 0);
+  }
+  return gap;
+}
+
 NS_IMETHODIMP
 nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,

@@ -248,7 +248,7 @@ public:
   // left to right on the childframes of <math>, and by so doing it will
   // emulate the spacing that would have been done by a <mrow> container.
   // e.g., it fixes <math> <mi>f</mi> <mo>q</mo> <mi>f</mi> <mo>I</mo> </math>
-  virtual nsresult
+  virtual nscoord
   FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
 
   // helper method to complete the post-reflow hook and ensure that embellished
