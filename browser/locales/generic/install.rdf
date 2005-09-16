@@ -45,43 +45,17 @@
                em:id="@MOZ_LANGPACK_EID@"
                em:name="@MOZ_LANG_TITLE@ Language Pack"
                em:version="@MOZ_APP_VERSION@"
+               em:type="8"
                em:creator="@MOZ_LANGPACK_CREATOR@">
 #ifdef MOZ_LANGPACK_CONTRIBUTORS
     @MOZ_LANGPACK_CONTRIBUTORS@
 #endif
-    <em:file>
-      <Description about="urn:mozilla:extension:file:@AB_CD@.jar">
-        <em:locale>locale/global/</em:locale>
-        <em:locale>locale/global-platform/</em:locale>
-        <em:locale>locale/global-region/</em:locale>
-
-        <em:locale>locale/browser/</em:locale>
-        <em:locale>locale/browser-region/</em:locale>
-        <em:locale>locale/passwordmgr/</em:locale>
-        <em:locale>locale/mozapps/</em:locale>
-
-        <em:locale>locale/necko/</em:locale>
-        <em:locale>locale/cookie/</em:locale>
-        <em:locale>locale/pippki/</em:locale>
-        <em:locale>locale/pipnss/</em:locale>
-
-#ifdef EXTENSION_PREF
-        <em:locale>locale/autoconfig/</em:locale>
-#endif
-#ifdef LOCALE_HAS_DOMI
-        <em:locale>locale/inspector/</em:locale>
-#endif
-#ifdef LOCALE_HAS_HELP
-        <em:locale>locale/help/</em:locale>
-#endif
-      </Description>
-    </em:file>
 
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>1.0</em:minVersion>
-        <em:maxVersion>1.0</em:maxVersion>
+        <em:minVersion>@MOZ_APP_VERSION@</em:minVersion>
+        <em:maxVersion>@MOZ_APP_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>
