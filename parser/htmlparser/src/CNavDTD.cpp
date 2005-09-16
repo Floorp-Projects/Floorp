@@ -3127,7 +3127,15 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       // close the head context now, so that body content doesn't get sucked
       // into the head.
       if (mBodyContext->GetCount() == mHeadContainerPosition) {
-        result = CloseHead();
+        nsresult headresult = CloseHead();
+
+        // Note: we could be assigning NS_OK into NS_OK here, but that's ok.
+        // This test is to avoid a successful CloseHead result stomping over a
+        // request to block the parser.
+        if (NS_SUCCEEDED(result)) {
+          result = headresult;
+        }
+
         mHeadContainerPosition = -1;
       }
 
