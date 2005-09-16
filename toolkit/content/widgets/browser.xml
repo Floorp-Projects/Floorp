@@ -645,7 +645,6 @@
       <field name="_isScrolling">false</field>
       <field name="_autoScrollMarkerImage">null</field>
       <field name="_snapOn">false</field>
-      <field name="_scrollCount">0</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
       <field name="_screenX">null</field>
@@ -671,17 +670,9 @@
            if (this._isScrolling) {
              var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
              var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
-         
-             if(Math.abs(x) > 0 && Math.abs(y) > 0)
-             {
-               if (this._scrollCount++ % 2)
-                 y = 0;
-               else
-                 x = 0;
-             }
-         
+
              this._clientFrameDoc.defaultView.scrollBy(x, y);
-             setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
+             setTimeout(function foo(a) { a.autoScrollLoop() }, 20, this);
            }
          ]]>
        </body>
@@ -896,7 +887,7 @@
             this._isScrolling = true;
             this._snapOn = true; 
             this.showAutoscrollMarker(event);
-            window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
+            window.setTimeout(function foo(a) { a.autoScrollLoop() }, 20, this);
           }
         ]]>
       </handler>
