@@ -45,6 +45,7 @@
 //
 // XXX Should do locks, so that external changes are not overwritten.
 
+const CI = Components.interfaces;
 const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
@@ -112,6 +113,7 @@ calICSCalendar.prototype = {
     set uri(aUri) {
         this.mMemoryCalendar.uri = this.mUri;
         this.mUri = aUri;
+
         this.refresh();
     },
 
@@ -136,6 +138,126 @@ calICSCalendar.prototype = {
     calendarPromotedProps: {
         "PRODID": true,
         "VERSION": true
+    },
+
+    /**
+     * Make a backup of the (remote) calendar
+     *
+     * This will download the remote file into the profile dir.
+     * It should be called before every upload, so every change can be
+     * restored. By default, it will keep 3 backups. It also keeps one
+     * file each day, for 3 days. That way, even if the user doesn't notice
+     * the remote calendar has become corrupted, he will still loose max 1
+     * day of work.
+     * After the back up is finished, will call doWriteICS.
+     */
+    makeBackup: function() {
+        function makeName(type, num) {
+            return 'calBackupData_'+psuedoID+'_'+type+num.toString()+'.ics';
+        }
+
+        function getIntPrefSafe(prefName, defaultValue)
+        {
+            try {
+                var prefValue = backupBranch.getIntPref(prefName);
+                return prefValue;
+            }
+            catch (ex) {
+                return defaultValue;
+            }
+        }
+        var backupDays = getIntPrefSafe("days", 1);
+        var numBackupFiles = getIntPrefSafe("filenum", 3);
+
+        try {
+            var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                                       .getService(CI.nsIProperties);
+            var backupDir = dirService.get("ProfD", CI.nsILocalFile);
+            backupDir.append("backupData");
+            if (!backupDir.exists()) {
+                backupDir.create(CI.nsIFile.DIRECTORY_TYPE, 0755);
+            }
+        } catch(e) {
+            // Backup dir wasn't found. Likely because we are running in
+            // xpcshell. Don't die, but continue the upload.
+            dump("Backup failed, no backupdir:"+e+"\n");
+            this.doWriteICS();
+        }
+
+        var psuedoID = getCalendarManager().getCalendarPref(this, "UNIQUENUM");
+        if (!psuedoID) {
+            psuedoID = new Date().getTime();
+            getCalendarManager().setCalendarPref(this, "UNIQUENUM", psuedoID);
+        }
+
+        var doInitialBackup = false;
+        var initialBackupFile = backupDir.clone();
+        initialBackupFile.append(makeName('initial',''));
+        if (!initialBackupFile.exists())
+            doInitialBackup = true;
+
+
+        var doDailyBackup = false;
+        var backupTime = getCalendarManager()
+                         .getCalendarPref(this, 'backup-time');
+        if (!backupTime ||
+            (new Date().getTime() > backupTime + backupDays*24*60*60*1000)) {
+            // It's time do to a daily backup
+            doDailyBackup = true;
+            getCalendarManager().setCalendarPref(this, 'backup-time', 
+                                                 new Date().getTime());
+        }
+
+        var backupFile = backupDir.clone();
+        backupFile.append(makeName('edit',1));
+
+        // Move the previous backup files up one index number, starting
+        // with the second-to-last one.  The last is overwritten.
+        for (var i = numBackupFiles-1; i > 0; i--) {
+            var oldFile = backupDir.clone();
+            oldFile.append(makeName('edit',i));
+            if (oldFile.exists())
+                oldFile.moveTo(backupDir, makeName('edit',i+1));
+            if (doDailyBackup) {
+                oldFile = backupDir.clone();
+                oldFile.append(makeName('day',i));
+                if (oldFile.exists())
+                    oldFile.moveTo(backupDir, makeName('day',i+1));
+            }
+        }
+
+
+        // Now go download the remote file, and store it somewhere local.
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(CI.nsIIOService);
+        var channel = ioService.newChannelFromURI(fixupUri(this.mUri));
+        channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+        channel.notificationCallbacks = this;
+
+        var downloader = Components.classes["@mozilla.org/network/downloader;1"]
+                                   .createInstance(CI.nsIDownloader);
+
+        var provider = this;
+        var listener = {
+            onDownloadComplete: function(downloader, request, ctxt, status, result) {
+                if (doDailyBackup)
+                    result.copyTo(backupDir, makeName('day',1));
+                if (doInitialBackup)
+                    result.copyTo(backupDir, makeName('initial',''));
+
+                provider.doWriteICS();
+            },
+        }
+
+        downloader.init(listener, backupFile);
+        try {
+            channel.asyncOpen(downloader, null);
+        } catch(e) {
+            // For local files, asyncOpen throws on new (calendar) files
+            // No problem, go and upload something
+            dump("Backup failed in asyncOpen:"+e+"\n");
+            this.doWriteICS();
+        }
     },
 
     // nsIStreamLoaderObserver impl
@@ -228,6 +350,11 @@ calICSCalendar.prototype = {
         if (!this.mUri)
             throw Components.results.NS_ERROR_FAILURE;
 
+        // makeBackup will call doWriteICS
+        this.makeBackup();
+    },
+
+    doWriteICS: function () {
         var savedthis = this;
         var listener =
         {
