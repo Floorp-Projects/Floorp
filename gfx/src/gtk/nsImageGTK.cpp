@@ -153,7 +153,7 @@ nsImageGTK::Startup()
 {
   Display *dpy = GDK_DISPLAY();
 
-  if (strstr(ServerVendor(dpy), "XFree86") && VendorRelease(dpy) <= 40300000)
+  if (strstr(ServerVendor(dpy), "XFree86") && VendorRelease(dpy) < 40400000)
     sNeedSlowTile = PR_TRUE;
 }
 
