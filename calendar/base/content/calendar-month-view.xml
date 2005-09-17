@@ -717,11 +717,12 @@
               lastWeekNo = weekno;
             }
 
-            var class = "calendar-month-day-box-" + (isEven ? "even" : "odd");
+            var boxClass = "calendar-month-day-box-" + 
+                           (isEven ? "even" : "odd");
             // XXX isWeekend?
             if (date.weekday == 0 || date.weekday == 6)
-              class = "calendar-month-day-box-weekend " + class;
-            box.setAttribute("class", class);
+              boxClass = "calendar-month-day-box-weekend " + boxClass;
+            box.setAttribute("class", boxClass);
             curRow.appendChild(box);
 
             box.setDate(date);
