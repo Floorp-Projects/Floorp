@@ -72,7 +72,6 @@
 #include "nsIPersistentProperties2.h"
 #include "nsCRT.h"
 #include "nsFontMetricsPS.h"
-#include "nsPaperPS.h"
 
 #ifndef NS_BUILD_ID
 #include "nsBuildID.h"
@@ -298,26 +297,30 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));
 
-    /* Find PS paper size record by name */
+    /* Get the paper name to write into the ps output */
     aSpec->GetPaperName(&(mPrintSetup->paper_name));
-    nsPaperSizePS paper;
-    if (!paper.Find(mPrintSetup->paper_name))
+
+    /* Get the paper size */
+    PRInt32 width = 0, height = 0;
+    rv = aSpec->GetPageSizeInTwips( &width, &height );
+    if ( NS_FAILED(rv) || width <= 0 || height <= 0 ) {
       return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+    }
 
     aSpec->GetLandscape( landscape );
-    mPrintSetup->width = NS_MILLIMETERS_TO_TWIPS(paper.Width_mm());
-    mPrintSetup->height = NS_MILLIMETERS_TO_TWIPS(paper.Height_mm());
 
     if (landscape) {
-      nscoord temp = mPrintSetup->width;
-      mPrintSetup->width = mPrintSetup->height;
-      mPrintSetup->height = temp;
+      mPrintSetup->width = height;
+      mPrintSetup->height = width;
+    } else {
+      mPrintSetup->width = width;
+      mPrintSetup->height = height;
     }
 
 #ifdef DEBUG
     printf("\nPaper Width = %d twips (%gmm) Height = %d twips (%gmm)\n",
-        mPrintSetup->width, paper.Width_mm(),
-        mPrintSetup->height, paper.Height_mm());
+        mPrintSetup->width, NS_TWIPS_TO_MILLIMETERS(mPrintSetup->width),
+        mPrintSetup->height, NS_TWIPS_TO_MILLIMETERS(mPrintSetup->height));
 #endif
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
