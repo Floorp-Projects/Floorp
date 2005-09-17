@@ -692,7 +692,7 @@ out:
     if(iidArray)
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(iidCount, iidArray);
     if(interfaceArray)
-        delete [] interfaceArray;
+        delete [] interfaceArray.get();
 
     return set;
 }
