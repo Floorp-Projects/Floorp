@@ -81,7 +81,7 @@ nsStatusBarBiffManager::~nsStatusBarBiffManager()
 #define PREF_NEW_MAIL_SOUND_TYPE         "mail.biff.play_sound.type"
 #define SYSTEM_SOUND_TYPE 0
 #define CUSTOM_SOUND_TYPE 1
-#define DEFAULT_SYSTEM_SOUND "_moz_mailbeep"
+#define DEFAULT_SYSTEM_SOUND NS_LITERAL_STRING("_moz_mailbeep")
 
 nsresult nsStatusBarBiffManager::Init()
 {
@@ -150,7 +150,8 @@ nsresult nsStatusBarBiffManager::PlayBiffSound()
       else {
         // todo, see if we can create a nsIFile using the string as a native path.
         // if that fails, try playing a system sound
-        rv = mSound->PlaySystemSound(soundURLSpec.get());
+        NS_ConvertUTF8toUTF16 utf16SoundURLSpec(soundURLSpec);
+        rv = mSound->PlaySystemSound(utf16SoundURLSpec);
         if (NS_SUCCEEDED(rv))
           customSoundPlayed = PR_TRUE;
       }
