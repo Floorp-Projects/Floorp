@@ -129,11 +129,10 @@
           this._value = aValue;
           if (this.instantApply && aUpdate)
             this.valueFromPreferences = aValue;
+          else if (aUpdate) {
+            this.preferences.fireChangedEvent(this);
+          }
           else {
-            // I wonder if we should synthesize a change event handler here. 
-            // As it stands we only fire onsyncfrompreference when UE calls 
-            // setElementValue. That's enough to reinit the UI element but
-            // may be counter intuitive.
             this.updateElements();
           }
           return aValue;
