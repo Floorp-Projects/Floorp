@@ -640,8 +640,7 @@ var BookmarksCommand = {
     for (var i=0; i<aSelection.length; ++i) {
       var type = aSelection.type[i];
       if (aTargetBrowser == "save") {
-        var item = aSelection.item[i];
-        saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
+        this.saveBookmark(aSelection.item[i].Value, aDS);
       }
       else if (type == "Bookmark" || type == "ImmutableBookmark") {
         var webPanel = BMDS.GetTarget(aSelection.item[i],
@@ -681,7 +680,19 @@ var BookmarksCommand = {
     }
     w.openWebPanel(BookmarksUtils.getProperty(aResource,  gNC_NS+"Name"), url);
   },
-  
+
+  // requires contentAreaUtils.js because it calls saveURL
+  saveBookmark: function(aResource, aDS)
+  {
+    var url = BookmarksUtils.getProperty(aResource, gNC_NS+"URL", aDS);
+    // Ignore "NC:" and empty urls.
+    if (url == "")
+      return;
+    var fileName = BookmarksUtils.getProperty(aResource, gNC_NS+"Name", aDS);
+
+    saveURL(url, fileName, null, true); 
+  },
+
   // requires utilityOverlay.js because it calls openUILinkIn
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {

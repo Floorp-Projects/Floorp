@@ -51,6 +51,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
 
