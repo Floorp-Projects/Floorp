@@ -116,12 +116,32 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
         break;
     case eColor_TextSelectBackground:
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
         // still used
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
         break;
     case eColor_TextSelectForeground:
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
         // still used
         aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
+        break;
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+        aColor = NS_TRANSPARENT;
+        break;
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+        aColor = NS_SAME_AS_FOREGROUND_COLOR;
+        break;
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+        aColor = NS_SAME_AS_FOREGROUND_COLOR;
+        break;
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+        aColor = NS_TRANSPARENT;
         break;
 
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
@@ -479,6 +499,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
         break;
     case eMetricFloat_ButtonHorizontalInsidePadding:
         aMetric = 0.25f;
+        break;
+    case eMetricFloat_IMEUnderlineRelativeSize:
+        aMetric = 1.0f;
         break;
     default:
         aMetric = -1.0;

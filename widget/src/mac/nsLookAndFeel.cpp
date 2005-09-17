@@ -140,6 +140,26 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     		else
     			aColor = NS_DONT_CHANGE_COLOR;
         break;
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+      aColor = NS_TRANSPARENT;
+      break;
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      break;
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+      aColor = NS_40PERCENT_FOREGROUND_COLOR;
+      break;
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      break;
 
     //
     // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
@@ -594,6 +614,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
         break;
     case eMetricFloat_ButtonHorizontalInsidePadding:
         aMetric = 0.5f;
+        break;
+    case eMetricFloat_IMEUnderlineRelativeSize:
+        aMetric = 2.0f;
         break;
     default:
         aMetric = -1.0;
