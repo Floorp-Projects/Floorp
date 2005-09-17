@@ -762,11 +762,11 @@
             if (!tabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
-            if (!event.target.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
+            if (!event.originalTarget.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
               return;
 
             // We have an icon.
-            var href = event.target.href;
+            var href = event.originalTarget.href;
             if (!href)
               return;
 
