@@ -462,6 +462,14 @@
         ]]></body>
       </method>
 
+      <method name="_focus"> <!-- doesn't reset this.mController -->
+        <body><![CDATA[
+          this._dontBlur = true;
+          this.focus();
+          this._dontBlur = false;
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -481,7 +489,7 @@
                action="this.attachController();"/>
 
       <handler event="blur" phase="capturing"
-               action="this.detachController();"/>
+               action="if (!this._dontBlur) this.detachController();"/>
                
     </handlers>
   </binding> 
@@ -582,12 +590,9 @@
         <body><![CDATA[
           try {
             var amount = aPage ? 5 : 1;
-            var selectedIndex = this.getNextIndex(aReverse, amount, this.selectedIndex, this.tree.view.rowCount-1);
-            if (selectedIndex != -1) {
-              this.selectedIndex = selectedIndex;
-            }
-            else {
-              this.input.focus();
+            this.selectedIndex = this.getNextIndex(aReverse, amount, this.selectedIndex, this.tree.view.rowCount-1);
+            if (this.selectedIndex == -1) {
+              this.input._focus();
             }
           } catch (ex) {
             // do nothing - occasionally timer-related js errors happen here
