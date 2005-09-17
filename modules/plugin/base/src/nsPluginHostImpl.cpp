@@ -108,8 +108,7 @@
 // for the dialog
 #include "nsIStringBundle.h"
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -2820,7 +2819,7 @@ nsresult nsPluginHostImpl:: GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt 
       nsCOMPtr<nsIDocument> document;
       aOwner->GetDocument(getter_AddRefs(document));
       if (document) {
-        domWindow = do_QueryInterface(document->GetScriptGlobalObject());
+        domWindow = document->GetWindow();
       }
     }
 
