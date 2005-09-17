@@ -294,10 +294,14 @@ endif
 	@echo "Removing unpackaged files..."
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 	cd $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS; rm -rf $(NO_PKG_FILES)
+ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
+endif # MOZ_PKG_REMOVALS
 else
 	cd $(DIST)/$(MOZ_PKG_APPNAME); rm -rf $(NO_PKG_FILES)
+ifdef MOZ_PKG_REMOVALS
 	$(SYSINSTALL) $(MOZ_PKG_REMOVALS_GEN) $(DIST)/$(MOZ_PKG_APPNAME)
+endif # MOZ_PKG_REMOVALS
 endif
 	@echo "Compressing..."
 	cd $(DIST); $(MAKE_PACKAGE)
