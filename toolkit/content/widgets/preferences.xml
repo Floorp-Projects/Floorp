@@ -353,6 +353,8 @@
             setValue(aElement, "checked", val);
           else if (aElement.localName == "colorpicker")
             setValue(aElement, "color", val);
+          else if (aElement.localName == "radiogroup")
+            setValue(aElement, "value", val);
           else if (this.getElementValue(aElement) != val) {
             // XXXmano Bug 303998: Avoid a caret placement issue if either the
             // preference observer or its setter calls updateElements as a result 
