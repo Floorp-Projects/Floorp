@@ -394,7 +394,7 @@ function DoBrowserRSS() {
     getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
     browserInit(getBrowser().selectedTab);
   } catch (e) {
-    alert(e);
+   
   }  
 }
 
