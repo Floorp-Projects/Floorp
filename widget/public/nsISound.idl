@@ -41,14 +41,14 @@
 
 interface nsIURL;
 
-[scriptable, uuid(B148EED1-236D-11d3-B35C-00A0CC3C1CDE)]
+[scriptable, uuid(B01ADAD7-D937-4738-8508-3BD5946BF9C8)]
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
   /**
    * for playing system sounds
    */
-  void playSystemSound(in string soundAlias);  
+  void playSystemSound(in AString soundAlias);  
   void beep();
 
   /**

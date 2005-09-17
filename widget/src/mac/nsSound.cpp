@@ -229,7 +229,7 @@ nsSound::Init()
 }
 
 NS_IMETHODIMP
-nsSound::PlaySystemSound(const char *aSoundName)
+nsSound::PlaySystemSound(const nsAString &aSoundName)
 {
   nsCOMPtr<nsISupports> requestSupports;
   
@@ -241,7 +241,8 @@ nsSound::PlaySystemSound(const char *aSoundName)
   requestSupports = NS_STATIC_CAST(nsITimerCallback*, soundRequest);
   
   Str255  soundResource;
-  nsresult rv = GetSoundResourceName(aSoundName, soundResource);
+  nsresult rv = GetSoundResourceName(NS_ConvertUTF16toUTF8(aSoundName).get(),
+                                     soundResource);
   if (NS_FAILED(rv))
     return Beep();
   

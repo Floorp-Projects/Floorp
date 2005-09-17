@@ -106,24 +106,30 @@ printf( "\n\n\nnsSound::OnStreamComplete stringData=%s\n\n", stringData );
 
 static void child_exit( void *data, int status ) { }
 
-NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
+  NS_ConvertUTF16toUTF8 utf8SoundAlias(aSoundAlias);
+
 #ifdef DEBUG
-printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n", aSoundAlias );
+printf( "\n\n\nnsSound::PlaySystemSound aSoundAlias=%s\n\n",
+        utf8SoundAlias.get() );
 #endif
 
-	const char *soundfile;
+  const char *soundfile;
 
-	if( !strcmp( "_moz_mailbeep", aSoundAlias ) )
-		soundfile = "/usr/share/mozilla/gotmail.wav";
-	else {
-		if( !access( aSoundAlias, F_OK ) ) /* the aSoundAlias is the fullpath to the soundfile */
-			soundfile = aSoundAlias;
-		else soundfile = "/usr/share/mozilla/rest.wav";
-		}
+  if( utf8SoundAlias.Equals("_moz_mailbeep") )
+    soundfile = "/usr/share/mozilla/gotmail.wav";
+  else {
+    /* the aSoundAlias is the fullpath to the soundfile */
+    if( !access( utf8SoundAlias.get(), F_OK ) )
+      soundfile = utf8SoundAlias.get();
+    else
+      soundfile = "/usr/share/mozilla/rest.wav";
+  }
 
-	const char* argv[] = { "/opt/Mozilla/mozilla/wave", soundfile, NULL };
-	PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv, NULL, NULL, child_exit, NULL, NULL );
+  const char* argv[] = { "/opt/Mozilla/mozilla/wave", soundfile, NULL };
+  PtSpawn( "/opt/Mozilla/mozilla/wave", ( const char ** ) argv,
+           NULL, NULL, child_exit, NULL, NULL );
 
-	return NS_OK;
+  return NS_OK;
 }

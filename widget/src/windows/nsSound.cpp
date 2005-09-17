@@ -51,6 +51,8 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 
+#include "nsNativeCharsetUtils.h"
+
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
@@ -209,17 +211,19 @@ NS_IMETHODIMP nsSound::Init()
 }
 
 
-NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
+NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
   PurgeLastSound();
 
   CWinMM& theMM = CWinMM::GetModule();
 
-  if (nsCRT::strcmp("_moz_mailbeep", aSoundAlias) == 0) {
+  if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) {
     theMM.PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
   }
   else {
-    theMM.PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
+    nsCAutoString nativeSoundAlias;
+    NS_CopyUnicodeToNative(aSoundAlias, nativeSoundAlias);
+    theMM.PlaySound(nativeSoundAlias.get(), nsnull, SND_ALIAS | SND_ASYNC);
   }
 
   return NS_OK;
