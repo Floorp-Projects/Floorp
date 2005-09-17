@@ -13,6 +13,7 @@
 <!ENTITY highlight.label "Highlight all">
 <!ENTITY highlight.accesskey "a">
 <!ENTITY highlight.tooltip "Highlight all occurrences of the phrase (Ctrl+Enter)">
+<!ENTITY highlight.macTooltip "Highlight all occurrences of the phrase (Cmd+Return)">
 <!ENTITY caseSensitiveCheckbox.label "Match case">
 <!ENTITY caseSensitiveCheckbox.accesskey "c">
 

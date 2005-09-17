@@ -13,10 +13,17 @@
                      command="cmd_findAgain" disabled="true" accesskey="&findNext.accesskey;"/>
       <toolbarbutton id="find-previous" label="&findPrevious.label;" tooltiptext="&findPrevious.tooltip;"
                      command="cmd_findPrevious" disabled="true" accesskey="&findPrevious.accesskey;"/>
-      <toolbarbutton id="highlight" label="&highlight.label;" tooltiptext="&highlight.tooltip;"
+      <toolbarbutton id="highlight"
+                     label="&highlight.label;"
+#ifdef XP_MACOSX
+                     tooltiptext="&highlight.macTooltip;"
+#else
+                     tooltiptext="&highlight.tooltip;"
+#endif
                      oncommand="toggleHighlight(!this.checked);
                                 if (gFindMode != FIND_NORMAL) setFindCloseTimeout();"
-                     type="checkbox" disabled="true" accesskey="&highlight.accesskey;"/>
+                     type="checkbox" disabled="true"
+                     accesskey="&highlight.accesskey;"/>
       <checkbox id="find-case-sensitive" oncommand="toggleCaseSensitivity(this.checked);"
                 label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
       <image id="find-status-icon"/>
