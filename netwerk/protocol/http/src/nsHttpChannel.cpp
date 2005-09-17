@@ -1131,7 +1131,7 @@ nsHttpChannel::ProcessPartialContent()
     if (PL_strcasecmp(mResponseHead->PeekHeader(nsHttp::Content_Encoding),
                       mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding))
                       != 0) {
-        Cancel(NS_ERROR_UNEXPECTED); // XXX need better error code
+        Cancel(NS_ERROR_INVALID_CONTENT_ENCODING);
         return CallOnStartRequest();
     }
 
