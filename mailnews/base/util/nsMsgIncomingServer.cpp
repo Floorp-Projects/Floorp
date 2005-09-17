@@ -1717,10 +1717,28 @@ nsMsgIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetIsSecure(PRBool* aIsSecure)
+{
+  return GetBoolValue("isSecure", aIsSecure);
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetIsSecure(PRBool aIsSecure)
+{
+  PRBool isSecure;
+  GetBoolValue("isSecure", &isSecure);
+  if (isSecure != aIsSecure) {
+    SetBoolValue("isSecure", aIsSecure);
+    if (m_rootFolder)
+      m_rootFolder->NotifyBoolPropertyChanged(NS_NewAtom("isSecure"), isSecure, aIsSecure);
+  }
+  return NS_OK;
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName")
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password")
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, IsSecure, "isSecure")
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, UseSecAuth, "useSecAuth")
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LogonFallback, "logon_fallback")
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time")

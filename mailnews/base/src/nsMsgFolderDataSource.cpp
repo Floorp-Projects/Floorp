@@ -136,6 +136,7 @@ nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kOpenAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kIsDeferredAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kIsSecureAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kCanFileMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kInVFEditSearchScopeAtom = nsnull;
 
@@ -217,6 +218,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kSynchronizeAtom             = NS_NewAtom("Synchronize");
     kOpenAtom                    = NS_NewAtom("open");
     kIsDeferredAtom              = NS_NewAtom("isDeferred");
+    kIsSecureAtom                = NS_NewAtom("isSecure");
     kCanFileMessagesAtom         = NS_NewAtom("canFileMessages");
     kInVFEditSearchScopeAtom     = NS_NewAtom("inVFEditSearchScope");
 
@@ -306,6 +308,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kSynchronizeAtom);
     NS_RELEASE(kOpenAtom);
     NS_RELEASE(kIsDeferredAtom);
+    NS_RELEASE(kIsSecureAtom);
     NS_RELEASE(kCanFileMessagesAtom);
     NS_RELEASE(kInVFEditSearchScopeAtom);
 
@@ -986,6 +989,8 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsIRDFResource *resource,
       NotifyPropertyChanged(resource, kNC_Open, literalNode);
     else if (kIsDeferredAtom == property) 
       NotifyPropertyChanged(resource, kNC_IsDeferred, literalNode, oldLiteralNode);
+    else if (kIsSecureAtom == property)
+      NotifyPropertyChanged(resource, kNC_IsSecure, literalNode, oldLiteralNode);
     else if (kCanFileMessagesAtom == property)
       NotifyPropertyChanged(resource, kNC_CanFileMessages, literalNode, oldLiteralNode);
     else if (kInVFEditSearchScopeAtom == property)

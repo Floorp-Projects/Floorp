@@ -284,6 +284,7 @@ protected:
   static nsIAtom* kSynchronizeAtom;
   static nsIAtom* kOpenAtom;
   static nsIAtom* kIsDeferredAtom;
+  static nsIAtom* kIsSecureAtom;
   static nsrefcnt gFolderResourceRefCnt;
   static nsIAtom* kCanFileMessagesAtom;
   static nsIAtom* kInVFEditSearchScopeAtom;
