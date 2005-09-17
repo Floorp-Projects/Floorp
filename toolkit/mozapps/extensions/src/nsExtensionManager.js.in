@@ -3145,21 +3145,23 @@ ExtensionManager.prototype = {
     var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
     if (!extensionsDS.exists())
       this._upgradeFromV10();
-
-    // Always check for compatibility updates when upgrading
-    this._showMismatchWindow();
-    this._finishOperations();
-
-    // Now disable any remaining incompatible items so they won't hurt anything.
+    
+    // Disable all incompatible items and let update enable them if appropriate.
     var ds = this.datasource;
     var currAppID = gApp.ID;
     var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
                                            nsIUpdateItem.TYPE_ADDON, true);
     for (var i = 0; i < items.length; ++i)
       this._appDisableItem(items[i].id);
-    // Now update the last app version so we don't do this checking again.
-    gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+    // Update the manifests to reflect the items that were disabled.
     this._updateManifests(true);
+
+    // Always check for compatibility updates when upgrading
+    this._showMismatchWindow();
+    
+    // Update the last app version so we don't do this again with this version.
+    gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+
     return true;
   },
 
@@ -4136,14 +4138,11 @@ ExtensionManager.prototype = {
    *          The nsIUpdateItem type of this item. 
    */
   _upgradeItem: function (installManifest, id, installLocation, type) {
-    // Clear any "appDisabled" flags that may have been set by the mismatch 
-    // checking code at startup.
+    // Don't change any props that would need to be reset if the install fails.
+    // They will be reset as appropriate by the upgrade/install process.
     var ds = this.datasource;
     ds.updateVisibleList(id, installLocation.name, false);
-    var props = { appDisabled     : null,
-                  name            : EM_L(getManifestProperty(installManifest, "name")),
-                  version         : EM_L(getManifestProperty(installManifest, "version")),
-                  installLocation : EM_L(installLocation.name),
+    var props = { installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
                   availableUpdateURL      : null,
                   availableUpdateVersion  : null };
@@ -5290,13 +5289,14 @@ RDFItemUpdater.prototype = {
    *
    */
   onXMLError: function(aEvent, aItem) {
-    var request = aEvent.target;
     try {
+      var request = aEvent.target;
+      // the following may throw (e.g. a local file or timeout)
       var status = request.status;
     }
     catch (e) {
-      var req = request.channel.QueryInterface(Components.interfaces.nsIRequest);
-      status = req.status;
+      request = aEvent.target.channel.QueryInterface(Components.interfaces.nsIRequest);
+      status = request.status;
     }
 
     var statusText = request.statusText;
