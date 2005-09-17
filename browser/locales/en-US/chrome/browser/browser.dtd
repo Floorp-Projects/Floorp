@@ -181,7 +181,6 @@
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
-<!ENTITY goHomeCmd.accesskey "h">
 <!ENTITY earlierHistory.label "Earlier History">
 
 <!ENTITY releaseCmd.accesskey "R">
