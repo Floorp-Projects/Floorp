@@ -322,7 +322,6 @@
 
               <menupopup id="goPopup" onpopupshowing="updateGoMenu(this);" onpopuphiding="onGoMenuHidden();">
                 <menuitem label="&backCmd.label;"
-                          accesskey="&backCmd.accesskey;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
 #else
@@ -333,7 +332,6 @@
                   <observes element="Browser:Back" attribute="disabled" />
                 </menuitem>
                 <menuitem label="&forwardCmd.label;" 
-                          accesskey="&forwardCmd.accesskey;"
 #ifdef XP_MACOSX
                           key="goForwardKb2"
 #else
@@ -344,12 +342,12 @@
                   <observes element="Browser:Forward" attribute="disabled" />
                 </menuitem>
 
-                          
-                          
-                <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
+                <menuitem label="&goHomeCmd.label;"
+                          command="Browser:Home"
+                          key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
-                <menuitem observes="viewHistorySidebar" accesskey="&historySidebarCmd.accesskey;" key="key_gotoHistory"/>
+                <menuitem observes="viewHistorySidebar" key="key_gotoHistory"/>
               </menupopup>
             </menu>
 
