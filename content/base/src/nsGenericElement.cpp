@@ -3877,7 +3877,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
     nsIContent *kid = GetChildAt(index);
     kid->List(out, aIndent + 1);
   }
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs(">\n", out);
 
@@ -3892,7 +3892,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
       PRUint32 length;
       anonymousChildren->GetLength(&length);
       if (length) {
-        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs("anonymous-children<\n", out);
 
         for (PRUint32 i = 0; i < length; ++i) {
@@ -3902,7 +3902,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
           child->List(out, aIndent + 1);
         }
 
-        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs(">\n", out);
       }
     }
@@ -3921,7 +3921,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
       PRUint32 length;
       contentList->GetLength(&length);
       if (length) {
-        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs("content-list<\n", out);
 
         for (PRUint32 i = 0; i < length; ++i) {
@@ -3931,7 +3931,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
           child->List(out, aIndent + 1);
         }
 
-        for (index = aIndent; --index >= 0; ) fputs("  ", out);
+        for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
         fputs(">\n", out);
       }
     }
