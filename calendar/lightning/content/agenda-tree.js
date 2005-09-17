@@ -362,7 +362,7 @@ agendaTreeView.calendarObserver = {
 
 agendaTreeView.calendarObserver.onStartBatch = function() {};
 agendaTreeView.calendarObserver.onEndBatch = function() {};
-agendaTreeView.calendarObserver.onStartLoad = function() {};
+agendaTreeView.calendarObserver.onLoad = function() {};
 
 agendaTreeView.calendarObserver.onAddItem =
 function observer_onAddItem(item)
