@@ -213,6 +213,9 @@ pref("browser.search.order.Yahoo",            "chrome://branding/content/searchc
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
 
+// search bar results always open in a new tab
+pref("browser.search.openintab", false);
+
 // send ping to the server to update
 pref("browser.search.update", true);
 
