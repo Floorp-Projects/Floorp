@@ -127,7 +127,7 @@ protected:
   /* this length must not be shorter than the length of the longest string in the array
    * see nsXPLookAndFeel.cpp
    */
-  static const char sColorPrefs[][36];
+  static const char sColorPrefs[][38];
   static PRInt32 sCachedColors[nsILookAndFeel::eColor_LAST_COLOR];
   static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
 };

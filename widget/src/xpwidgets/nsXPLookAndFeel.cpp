@@ -125,6 +125,8 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
   { "ui.buttonHorizontalInsidePadding", eMetricFloat_ButtonHorizontalInsidePadding,
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
+  { "ui.IMEUnderlineRelativeSize", eMetricFloat_IMEUnderlineRelativeSize,
+    PR_FALSE, nsLookAndFeelTypeFloat, 0 },
 };
 
 
@@ -134,7 +136,7 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
  * to the following array then you MUST update the
  * sizes of the sColorPrefs array in nsXPLookAndFeel.h
  */
-const char nsXPLookAndFeel::sColorPrefs[][36] =
+const char nsXPLookAndFeel::sColorPrefs[][38] =
 {
   "ui.windowBackground",
   "ui.windowForeground",
@@ -150,6 +152,18 @@ const char nsXPLookAndFeel::sColorPrefs[][36] =
   "ui.textSelectForeground",
   "ui.textSelectBackgroundDisabled",
   "ui.textSelectBackgroundAttention",
+  "ui.IMERawInputBackground",
+  "ui.IMERawInputForeground",
+  "ui.IMERawInputUnderline",
+  "ui.IMESelectedRawTextBackground",
+  "ui.IMESelectedRawTextForeground",
+  "ui.IMESelectedRawTextUnderline",
+  "ui.IMEConvertedTextBackground",
+  "ui.IMEConvertedTextForeground",
+  "ui.IMEConvertedTextUnderline",
+  "ui.IMESelectedConvertedTextBackground",
+  "ui.IMESelectedConvertedTextForeground",
+  "ui.IMESelectedConvertedTextUnderline",
   "ui.activeborder",
   "ui.activecaption",
   "ui.appworkspace",

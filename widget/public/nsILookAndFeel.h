@@ -44,10 +44,11 @@
 struct nsSize;
 
 
-// {ED0B4802-9F50-4f69-9509-6949C69999E4}
+// {CE295E90-FF53-4013-96AE-67B5762292A9}
 #define NS_ILOOKANDFEEL_IID \
-{ 0xed0b4802, 0x9f50, 0x4f69, \
-    { 0x95, 0x9, 0x69, 0x49, 0xc6, 0x99, 0x99, 0xe4 } }
+{ 0xce295e90, 0xff53, 0x4013, \
+    { 0x96, 0xae, 0x67, 0xb5, 0x76, 0x22, 0x92, 0xa9 } }
+
 
 class nsILookAndFeel: public nsISupports {
 public:
@@ -74,6 +75,19 @@ public:
     eColor_TextSelectForeground,
     eColor_TextSelectBackgroundDisabled,
     eColor_TextSelectBackgroundAttention,
+
+    eColor_IMERawInputBackground,
+    eColor_IMERawInputForeground,
+    eColor_IMERawInputUnderline,
+    eColor_IMESelectedRawTextBackground,
+    eColor_IMESelectedRawTextForeground,
+    eColor_IMESelectedRawTextUnderline,
+    eColor_IMEConvertedTextBackground,
+    eColor_IMEConvertedTextForeground,
+    eColor_IMEConvertedTextUnderline,
+    eColor_IMESelectedConvertedTextBackground,
+    eColor_IMESelectedConvertedTextForeground,
+    eColor_IMESelectedConvertedTextUnderline,
 
     // New CSS 2 color definitions
     eColor_activeborder,
@@ -207,7 +221,8 @@ public:
     eMetricFloat_ListVerticalInsidePadding,
     eMetricFloat_ListHorizontalInsidePadding,
     eMetricFloat_ButtonVerticalInsidePadding,
-    eMetricFloat_ButtonHorizontalInsidePadding
+    eMetricFloat_ButtonHorizontalInsidePadding,
+    eMetricFloat_IMEUnderlineRelativeSize
   } nsMetricFloatID;
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
@@ -250,5 +265,18 @@ public:
 	// Of course if other plaforms work like the Mac, they can use it too.
 #define NS_DONT_CHANGE_COLOR 	NS_RGB(0x01, 0x01, 0x01)
 
+// --------------------------------
+//  Special colors for eColor_IME*
+// --------------------------------
+
+// For background color only.
+#define NS_TRANSPARENT                NS_RGBA(0x01, 0x00, 0x00, 0x00)
+// For foreground color only.
+#define NS_SAME_AS_FOREGROUND_COLOR   NS_RGBA(0x02, 0x00, 0x00, 0x00)
+#define NS_40PERCENT_FOREGROUND_COLOR NS_RGBA(0x03, 0x00, 0x00, 0x00)
+
+#define NS_IS_IME_SPECIAL_COLOR(c) ((c) == NS_TRANSPARENT || \
+                                    (c) == NS_SAME_AS_FOREGROUND_COLOR || \
+                                    (c) == NS_40PERCENT_FOREGROUND_COLOR)
 
 #endif /* __nsILookAndFeel */

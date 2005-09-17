@@ -86,11 +86,32 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x00, 0x00, 0x00);
         break;
     case eColor_TextSelectBackground:
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
         aColor = NS_RGB(0x00, 0x00, 0x9c);
         break;
     case eColor_TextSelectForeground:
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
         aColor = NS_RGB(0xff, 0xff, 0xff);
         break;
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+        aColor = NS_TRANSPARENT;
+        break;
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+        aColor = NS_SAME_AS_FOREGROUND_COLOR;
+        break;
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+        aColor = NS_SAME_AS_FOREGROUND_COLOR;
+        break;
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+        aColor = NS_TRANSPARENT;
+        break;
+
 
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     case eColor_activeborder:
@@ -351,6 +372,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
         break;
     case eMetricFloat_ButtonHorizontalInsidePadding:
         aMetric = 0.25f;
+        break;
+    case eMetricFloat_IMEUnderlineRelativeSize:
+        aMetric = 1.0f;
         break;
     default:
         aMetric = -1.0;
