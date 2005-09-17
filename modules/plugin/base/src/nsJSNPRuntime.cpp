@@ -234,7 +234,8 @@ GetJSContext(NPP npp)
   owner->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+  nsCOMPtr<nsISupports> documentContainer = doc->GetContainer();
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(documentContainer));
   NS_ENSURE_TRUE(sgo, nsnull);
 
   nsIScriptContext *scx = sgo->GetContext();
