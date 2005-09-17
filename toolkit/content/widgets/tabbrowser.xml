@@ -185,6 +185,9 @@
         false
 #endif
       </field> 
+      <field name="mAddProgressListenerWasCalled">
+        false
+      </field>
 
       <method name="getBrowserAtIndex">
         <parameter name="aIndex"/>
@@ -1331,6 +1334,18 @@
         <parameter name="aMask"/>
         <body>
           <![CDATA[
+            if (!this.mAddProgressListenerWasCalled) {
+              this.mAddProgressListenerWasCalled = true;
+              var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
+              var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
+              var tabStripHide = !window.toolbar.visible;
+              if (!autoHide && !forceHide && !tabStripHide)
+                this.setStripVisibilityTo(true);
+
+              // Hook up a listener for <link>s.
+              this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
+            }
+
             if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
               // If we are adding a 2nd progress listener, we need to enter tabbed mode
               // because the browser status filter can only handle one progress listener.
@@ -2014,15 +2029,6 @@
           this.mTabContainer.childNodes[0].linkedPanel = uniqueId;
           this.mTabContainer.childNodes[0]._tPos = 0;
           this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild.nextSibling;
-
-          var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-          var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-          var tabStripHide = !window.toolbar.visible;
-          if (!autoHide && !forceHide && !tabStripHide)
-            this.setStripVisibilityTo(true);
-
-          // Hook up a listener for <link>s.
-          this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
       </constructor>
 
