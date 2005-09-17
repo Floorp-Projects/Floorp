@@ -519,7 +519,11 @@ function onFindBarKeyPress(evt)
       if (!findString.value)
         return;
 
+#ifdef XP_MACOSX
+      if (evt.metaKey) {
+#else
       if (evt.ctrlKey) {
+#endif
         document.getElementById("highlight").click();
         return;
       }
