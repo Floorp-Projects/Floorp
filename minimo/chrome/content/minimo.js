@@ -217,6 +217,7 @@ nsBrowserStatusHandler.prototype =
 
 function MiniNavStartup()
 {
+
   gPrefs = Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch);
 
@@ -225,7 +226,7 @@ function MiniNavStartup()
   browserInit(currentTab);
   gSelectedTab=currentTab;
 
-  var homepage = "www.mozilla.org";
+  var homepage = "http://www.mozilla.org";
 
   try {
     homepage = gPrefs.getCharPref("browser.startup.homepage");
@@ -234,11 +235,18 @@ function MiniNavStartup()
   var BrowserStatusHandler = new nsBrowserStatusHandler();
   BrowserStatusHandler.init();
   try {
-    var webNavigation=getBrowser().webNavigation;
+
+    getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  
+    // Current build was not able to get it. Taking it from the tab browser element. 
+    // var webNavigation=getBrowser().webNavigation;
+
+    var refBrowser=getBrowser().getBrowserForTab(currentTab);
+    var webNavigation=refBrowser.webNavigation;
+    
     webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
 
     getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-    getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
   } catch (e) {
     alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
   }
