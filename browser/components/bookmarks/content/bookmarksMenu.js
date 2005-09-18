@@ -188,8 +188,8 @@ var BookmarksMenu = {
       return false;
     }
 
-    var bm = document.getElementById("bookmarks-menu");
-    bm.focus();
+    // -moz-user-focus: ignore; is set on toolbars
+    document.getElementById("PersonalToolbar").focus();
 
     this._selection   = this.getBTSelection(target);
     this._orientation = this.getBTOrientation(aEvent, target);
