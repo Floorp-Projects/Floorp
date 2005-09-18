@@ -490,16 +490,16 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
                                      nsIWidget* aWidget, nsIntPoint aPt,
                                      nsIView* aView)
 {
-  nsPoint widgetToView;
   nsIView* baseView = nsIView::GetViewFor(aWidget);
   if (!baseView)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsIWidget* wid = baseView->GetNearestWidget(&widgetToView);
+  nsPoint viewToWidget;
+  nsIWidget* wid = baseView->GetNearestWidget(&viewToWidget);
   NS_ASSERTION(aWidget == wid, "Clashing widgets");
   float pixelsToTwips = aPresContext->PixelsToTwips();
   nsPoint refPointTwips(NSIntPixelsToTwips(aPt.x, pixelsToTwips),
                         NSIntPixelsToTwips(aPt.y, pixelsToTwips));
-  return refPointTwips + widgetToView - aView->GetOffsetTo(baseView);
+  return refPointTwips - viewToWidget - aView->GetOffsetTo(baseView);
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
