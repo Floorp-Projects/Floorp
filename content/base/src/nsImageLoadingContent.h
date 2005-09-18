@@ -83,16 +83,33 @@ protected:
    * @param aNewURI the URI spec to be loaded (may be a relative URI)
    * @param aForce If true, make sure to load the URI.  If false, only
    *        load if the URI is different from the currently loaded URI.
+   * @param aNotify If true, nsIDocumentObserver state change notifications
+   *                will be sent as needed.  Note that this is only here so
+   *                nsObjectFrame can avoid getting reframed inside reflow;
+   *                once objects load data from content we want to always
+   *                notify.
    */
   nsresult ImageURIChanged(const nsAString& aNewURI,
-                           PRBool aForce);
+                           PRBool aForce, PRBool aNotify = PR_TRUE);
+
+  /**
+   * ImageState is called by subclasses that are computing their content state.
+   * The return value will have the NS_EVENT_STATE_BROKEN,
+   * NS_EVENT_STATE_USERDISABLED, and NS_EVENT_STATE_SUPPRESSED bits set as
+   * needed.  Note that this state assumes that this node is "trying" to be an
+   * image (so for example complete lack of attempt to load an image will lead
+   * to NS_EVENT_STATE_BROKEN being set).  Subclasses that are not "trying" to
+   * be an image (eg an HTML <input> of type other than "image") should just
+   * not call this method when computing their intrinsic state.
+   */
+  PRInt32 ImageState() const;
 
   /**
    * CancelImageRequests is called by subclasses when they want to
    * cancel all image requests (for example when the subclass is
    * somehow not an image anymore).
    */
-  void CancelImageRequests();
+  void CancelImageRequests(PRBool aNotify);
 
 private:
   /**
@@ -116,6 +133,34 @@ private:
     nsCOMPtr<imgIDecoderObserver> mObserver;
     ImageObserver* mNext;
   };
+
+  /**
+   * Struct to report state changes
+   */
+  struct AutoStateChanger {
+    AutoStateChanger(nsImageLoadingContent* aImageContent,
+                     PRBool aNotify) :
+      mImageContent(aImageContent),
+      mNotify(aNotify)
+    {
+    }
+    ~AutoStateChanger()
+    {
+      mImageContent->UpdateImageState(mNotify);
+    }
+
+    nsImageLoadingContent* mImageContent;
+    PRBool mNotify;
+  };
+
+  friend struct AutoStateChanger;
+
+  /**
+   * UpdateImageState recomputes the current state of this image loading
+   * content and updates what ImageState() returns accordingly.  It will also
+   * fire a ContentStatesChanged() notification as needed if aNotify is true.
+   */
+  void UpdateImageState(PRBool aNotify);
 
   /**
    * CancelImageRequests can be called when we want to cancel the
@@ -179,7 +224,15 @@ private:
   ImageObserver mObserverList;
 
   PRInt16 mImageBlockingStatus;
-  PRPackedBool mLoadingEnabled;
+  PRPackedBool mLoadingEnabled : 1;
+
+  /**
+   * The state we had the last time we checked whether we needed to notify the
+   * document of a state change.  These are maintained by UpdateImageState.
+   */
+  PRPackedBool mBroken : 1;
+  PRPackedBool mUserDisabled : 1;
+  PRPackedBool mSuppressed : 1;
 };
 
 #endif // nsImageLoadingContent_h__

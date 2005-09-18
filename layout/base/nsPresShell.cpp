@@ -3916,9 +3916,10 @@ CantRenderReplacedElementEvent::HandleEvent()
   }
 
   // Make sure to prevent reflow while we're messing with frames
-  ++presShell->mChangeNestCount;
-  presShell->FrameConstructor()->CantRenderReplacedElement(mFrame);
-  --presShell->mChangeNestCount;
+  mozAutoDocUpdate(presShell->mDocument, UPDATE_CONTENT_STATE, PR_TRUE);
+  presShell->mDocument->ContentStatesChanged(mFrame->GetContent(),
+                                             nsnull,
+                                             NS_EVENT_STATE_BROKEN);
 }
 
 CantRenderReplacedElementEvent**

@@ -549,10 +549,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // We're no longer an image input.  Cancel our image requests, if we have
       // any.  Note that doing this when we already weren't an image is ok --
       // just does nothing.
-      CancelImageRequests();
-    }
-    
-    if (aNotify && mType == NS_FORM_INPUT_IMAGE && !mCurrentRequest) {
+      CancelImageRequests(aNotify);
+    } else if (aNotify) {
       // We just got switched to be an image input; we should see
       // whether we have an image to load;
       nsAutoString src;
@@ -2479,6 +2477,8 @@ nsHTMLInputElement::IntrinsicState() const
       (mType == NS_FORM_INPUT_CHECKBOX ||
        mType == NS_FORM_INPUT_RADIO)) {
     state |= NS_EVENT_STATE_CHECKED;
+  } else if (mType == NS_FORM_INPUT_IMAGE) {
+    state |= nsImageLoadingContent::ImageState();
   }
   return state;
 }

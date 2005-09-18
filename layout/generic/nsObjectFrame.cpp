@@ -127,6 +127,8 @@
 #include "nsIClassInfo.h"
 #include "jsapi.h"
 
+#include "nsCSSPseudoClasses.h"
+
 // XXX For temporary paint code
 #include "nsStyleContext.h"
 
@@ -662,6 +664,10 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
       rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
 
     imageLoader->ImageURIChanged(data);
+    // Let the content know that it's actually loading an image.
+    // XXXbz this is a bit of a hack, pending moving object data
+    // loading to content.
+    aContent->SetProperty(nsLayoutAtoms::imageFrame, NS_INT32_TO_PTR(1));
 
     nsIFrame * aNewFrame = nsnull;
     rv = NS_NewImageFrame(aPresContext->PresShell(), &aNewFrame);
@@ -707,6 +713,9 @@ NS_IMETHODIMP
 nsObjectFrame::Destroy(nsPresContext* aPresContext)
 {
   NS_ASSERTION(!mInstantiating, "about to crash due to bug 136927");
+
+  // Note: we don't want to unset the broken property here, since that would
+  // cause frame construction to just try constructing an object frame again...
 
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
@@ -1251,16 +1260,17 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   // finish up
   if (NS_FAILED(rv)) {
-    // if we got an error, we are probably going to be replaced
+    // XXXbz A bit of a hack with the property name, but that's ok.
+    // biesi's moving this stuff into content anyway.  ;)
+    mContent->SetProperty(nsCSSPseudoClasses::mozBroken,
+                          NS_INT32_TO_PTR(1));
 
-    // for a replaced object frame, clear our vertical alignment style info, see bug 36997
-    nsStyleTextReset* text = NS_STATIC_CAST(nsStyleTextReset*,
-      mStyleContext->GetUniqueStyleData(eStyleStruct_TextReset));
-    text->mVerticalAlign.SetNormalValue();
-
-    //check for alternative content with CantRenderReplacedElement()
+    // check for alternative content with CantRenderReplacedElement()
     rv = aPresContext->PresShell()->CantRenderReplacedElement(this);
   } else {
+    // XXXbz can't quite unset the property here, since that would
+    // actually clobber it on nodes that are supposed to have it!  Not
+    // sure why...
     NotifyContentObjectWrapper();
   }
 

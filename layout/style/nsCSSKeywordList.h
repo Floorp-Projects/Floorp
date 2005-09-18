@@ -68,6 +68,7 @@
 CSS_KEY(-moz-activehyperlinktext, _moz_activehyperlinktext)
 CSS_KEY(-moz-alias, _moz_alias)
 CSS_KEY(-moz-all, _moz_all)
+CSS_KEY(-moz-alt-content, _moz_alt_content)
 CSS_KEY(-moz-anchor-decoration, _moz_anchor_decoration)
 CSS_KEY(-moz-arabic-indic, _moz_arabic_indic)
 CSS_KEY(-moz-bengali, _moz_bengali)

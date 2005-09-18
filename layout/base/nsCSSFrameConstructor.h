@@ -144,9 +144,6 @@ public:
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
 
-  // Notification that we were unable to render a replaced element.
-  nsresult CantRenderReplacedElement(nsIFrame* aFrame);
-
   // Request to create a continuing frame
   nsresult CreateContinuingFrame(nsPresContext* aPresContext,
                                  nsIFrame*       aFrame,
@@ -232,6 +229,26 @@ private:
                                          nsIFrame**             aNewTableFrame,
                                          nsFrameConstructorState& aState);
 
+  /**
+   * CreateAttributeContent creates a single content/frame combination for an
+   * |attr(foo)| generated content.
+   *
+   * @param aParentContent the parent content for the generated content
+   * @param aParentFrame the parent frame for the generated frame
+   * @param aAttrNamespace the namespace of the attribute in question
+   * @param aAttrName the localname of the attribute
+   * @param aStyleContext the style context to use
+   * @param [out] aNewContent the content node we create
+   * @param [out] aNewFrame the new frame we create
+   */
+  nsresult CreateAttributeContent(nsIContent* aParentContent,
+                                  nsIFrame* aParentFrame,
+                                  PRInt32 aAttrNamespace,
+                                  nsIAtom* aAttrName,
+                                  nsStyleContext* aStyleContext,
+                                  nsIContent** aNewContent,
+                                  nsIFrame** aNewFrame);
+  
   nsresult CreateGeneratedFrameFor(nsIFrame*             aParentFrame,
                                    nsIContent*           aContent,
                                    nsStyleContext*       aStyleContext,
@@ -451,12 +468,6 @@ protected:
                                             nsIFrame**       aPlaceholderFrame);
 
 private:
-  nsresult ConstructAlternateFrame(nsIContent*      aContent,
-                                   nsStyleContext*  aStyleContext,
-                                   nsIFrame*        aGeometricParent,
-                                   nsIFrame*        aContentParent,
-                                   nsIFrame*&       aFrame);
-
   // @param OUT aNewFrame the new radio control frame
   nsresult ConstructRadioControlFrame(nsIFrame**         aNewFrame,
                                       nsIContent*        aContent,
@@ -631,6 +642,20 @@ private:
                             nsIFrame**       aFrame,
                             nsStyleContext*  aStyleContext);
 
+  // A function that can be invoked to create some sort of image frame.
+  typedef nsresult (* ImageFrameCreatorFunc)(nsIPresShell*, nsIFrame**);
+
+  /**
+   * CreateHTMLImageFrame will do some tests on aContent, and if it determines
+   * that the content should get an image frame it'll create one via aFunc and
+   * return it in *aFrame.  Note that if this content node isn't supposed to
+   * have an image frame this method will return NS_OK and set *aFrame to null.
+   */
+  nsresult CreateHTMLImageFrame(nsIContent*           aContent,
+                                nsStyleContext*       aStyleContext,
+                                ImageFrameCreatorFunc aFunc,
+                                nsIFrame**            aFrame);
+
   nsresult AddDummyFrameToSelect(nsFrameConstructorState& aState,
                                  nsIFrame*                aListFrame,
                                  nsIFrame*                aParentFrame,
@@ -787,13 +812,6 @@ private:
                                  PRInt32          aIndexInContainer,
                                  nsIFrame*&       aPrevSibling,
                                  nsIFrame*        aNextSibling);
-
-  nsresult SplitToContainingBlock(nsFrameConstructorState& aState,
-                                  nsIFrame*                aFrame,
-                                  nsIFrame*                aLeftInlineChildFrame,
-                                  nsIFrame*                aBlockChildFrame,
-                                  nsIFrame*                aRightInlineChildFrame,
-                                  PRBool                   aTransfer);
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 

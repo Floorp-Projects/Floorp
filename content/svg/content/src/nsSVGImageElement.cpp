@@ -87,6 +87,8 @@ public:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue *observable,
                                     nsISVGValue::modificationType aModType);
 
+  // nsIContent specializations
+  virtual PRInt32 IntrinsicState() const;
 protected:
   void GetSrc(nsAString& src);
   
@@ -391,3 +393,12 @@ nsSVGImageElement::DidModifySVGObservable(nsISVGValue* aObservable,
   return nsSVGImageElementBase::DidModifySVGObservable(aObservable, aModType);
 }
 
+//----------------------------------------------------------------------
+// nsIContent methods:
+
+PRInt32
+nsSVGImageElement::IntrinsicState() const
+{
+  return nsSVGImageElementBase::IntrinsicState() |
+    nsImageLoadingContent::ImageState();
+}

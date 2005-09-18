@@ -267,11 +267,12 @@
 #define NS_STYLE_CLEAR_PAGE                     7
 #define NS_STYLE_CLEAR_LAST_VALUE NS_STYLE_CLEAR_PAGE
 
-// See
+// See nsStyleContent
 #define NS_STYLE_CONTENT_OPEN_QUOTE             0
 #define NS_STYLE_CONTENT_CLOSE_QUOTE            1
 #define NS_STYLE_CONTENT_NO_OPEN_QUOTE          2
 #define NS_STYLE_CONTENT_NO_CLOSE_QUOTE         3
+#define NS_STYLE_CONTENT_ALT_CONTENT            4
 
 // See nsStyleColor
 #define NS_STYLE_CURSOR_AUTO                    1

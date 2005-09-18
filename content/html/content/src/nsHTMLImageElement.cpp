@@ -145,6 +145,8 @@ public:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
 
+  virtual PRInt32 IntrinsicState() const;
+
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
   nsPoint GetXY();
@@ -601,6 +603,13 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   return rv;
+}
+
+PRInt32
+nsHTMLImageElement::IntrinsicState() const
+{
+  return nsGenericHTMLElement::IntrinsicState() |
+    nsImageLoadingContent::ImageState();
 }
 
 NS_IMETHODIMP

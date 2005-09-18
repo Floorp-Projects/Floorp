@@ -52,6 +52,9 @@
 #include "nsMappedAttributes.h"
 #include "nsStyleContext.h"
 #include "nsIPluginElement.h"
+#include "nsCSSPseudoClasses.h"
+#include "nsIEventStateManager.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMGetSVGDocument.h"
@@ -141,6 +144,7 @@ public:
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual PRInt32 IntrinsicState() const;
 
 protected:
   nsCString mActualType;
@@ -507,4 +511,21 @@ nsHTMLSharedElement::GetAttributeMappingFunction() const
   }
 
   return nsGenericHTMLElement::GetAttributeMappingFunction();
+}
+
+PRInt32
+nsHTMLSharedElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    void* image = GetProperty(nsLayoutAtoms::imageFrame);
+    if (NS_PTR_TO_INT32(image)) {
+      state |= nsImageLoadingContent::ImageState();
+    }
+    void* broken = GetProperty(nsCSSPseudoClasses::mozBroken);
+    if (NS_PTR_TO_INT32(broken)) {
+      state |= NS_EVENT_STATE_BROKEN;
+    }
+  }
+  return state;
 }
