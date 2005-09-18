@@ -316,6 +316,8 @@ GtkPromptService::GetButtonLabel(PRUint32 aFlags, PRUint32 aPos,
 {
     PRUint32 posFlag = (aFlags & (255 * aPos)) / aPos;
     switch (posFlag) {
+    case 0:
+        break;
     case BUTTON_TITLE_OK:
         aLabel.AssignLiteral(GTK_STOCK_OK);
         break;
