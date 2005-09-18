@@ -205,7 +205,8 @@ void nsTreeBodyFrame::InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame*
   }
 
   // Check ourselves
-  nsCOMPtr<nsIScrollbarFrame> sf(do_QueryInterface(aCurrFrame));
+  nsIScrollbarFrame *sf = nsnull;
+  CallQueryInterface(aCurrFrame, &sf);
   if (sf) {
     PRBool isHorizontal = PR_FALSE;
     if (NS_FAILED(aCurrFrame->GetOrientation(isHorizontal)))
@@ -806,7 +807,7 @@ nsTreeBodyFrame::UpdateScrollbars()
 
   if (mHorzScrollbar) {
     curPos.Truncate();
-    curPos.AppendInt((PRInt32)((float)mHorzPosition * t2p));
+    curPos.AppendInt(mHorzPosition);
     mHorzScrollbar->GetContent()->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curPos, PR_TRUE);
   }
 }
@@ -898,19 +899,16 @@ nsTreeBodyFrame::InvalidateScrollbars()
   nsRect bounds = mColScrollView->View()->GetBounds();
   scrollbar = mHorzScrollbar->GetContent();
 
-  nscoord rowWidth = (float)mHorzWidth * t2p;
-  nscoord width = (float)(bounds.width) * t2p;
-  size = rowWidth > width ? rowWidth - width : 0;
   maxposStr.Truncate();
-  maxposStr.AppendInt(size);
+  maxposStr.AppendInt(mHorzWidth > bounds.width ? mHorzWidth - bounds.width : 0);
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::maxpos, maxposStr, PR_TRUE);
 
   pageStr.Truncate();
-  pageStr.AppendInt(width);
+  pageStr.AppendInt(bounds.width);
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::pageincrement, pageStr, PR_TRUE);
 
   pageStr.Truncate();
-  pageStr.AppendInt(16);
+  pageStr.AppendInt(NSIntPixelsToTwips(16, mPresContext->PixelsToTwips()));
   scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::increment, pageStr, PR_TRUE);
 }
 
@@ -3502,7 +3500,7 @@ nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
 
   // Reflect the change in the scrollbar 
   nsAutoString curPos;
-  curPos.AppendInt((PRInt32)((float)aPosition * t2p));
+  curPos.AppendInt(aPosition);
   mHorzScrollbar->GetContent()->SetAttr(kNameSpaceID_None,
                                         nsXULAtoms::curpos, curPos, PR_TRUE);
 
@@ -3533,14 +3531,7 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldInd
     else if (aNewIndex < aOldIndex)
       ScrollToRow(mTopRowIndex-1);
   } else {
-    float t2p = mPresContext->PixelsToTwips();
-    // Scroll by 10px horizontally for compat with the code in
-    // nsGfxScrollFrame::LayoutScrollbars which handles horizontal scrolling
-    // for scroll frames.
-    if (aNewIndex > aOldIndex)
-      ScrollHorzInternal(mHorzPosition + (t2p * 10));
-    else 
-      ScrollHorzInternal(mHorzPosition - (t2p * 10));
+    ScrollHorzInternal(aNewIndex);
   }
 
   UpdateScrollbars();
@@ -3580,9 +3571,7 @@ nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRI
 
   // Horizontal Scrollbar
   } else if (mHorzScrollbar && mHorzScrollbar == sf) {
-
-    float p2t = mPresContext->PixelsToTwips();
-    ScrollHorzInternal((float)aNewIndex * p2t);
+    ScrollHorzInternal(aNewIndex);
   }
 
   return NS_OK;
