@@ -103,6 +103,8 @@ static GtkFlagValue gtk_moz_embed_progress_flags_values[] = {
     "GTK_MOZ_EMBED_FLAG_IS_NETWORK", "is-network" },
   { GTK_MOZ_EMBED_FLAG_IS_WINDOW,
     "GTK_MOZ_EMBED_FLAG_IS_WINDOW", "is-window" },
+  { GTK_MOZ_EMBED_FLAG_RESTORING,
+    "GTK_MOZ_EMBED_FLAG_RESTORING", "restoring" },
   { 0,
     NULL, NULL }
 };
