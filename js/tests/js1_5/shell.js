@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Rob Ginda rginda@netscape.com
+ *   Bob Clary bob@bclary.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,6 +99,7 @@ function reportFailure (msg)
  */
 function printStatus (msg)
 {
+    msg = msg.toString();
     var lines = msg.split ("\n");
     var l;
 
@@ -196,5 +198,116 @@ function currentFunc()
     
     return callStack[callStack.length - 1];
     
+}
+
+/*
+  Calculate the "order" of a set of data points {X: [], Y: []}
+  by computing successive "derivatives" of the data until
+  the data is exhausted or the derivative is linear.
+*/
+function BigO(data)
+{
+  var order = 0;
+  var origLength = data.X.length;
+
+  while (data.X.length > 1)
+  {
+    var lr = new LinearRegression(data);
+    order++;
+    if (lr.SE < 0.01)
+    {
+      break;
+    }
+    data = dataDeriv(data);
+  }
+ 
+  if (order == origLength - 1)
+  {
+    order = Number.POSITIVE_INFINITY;
+  }
+  return order;
+
+  function LinearRegression(data)
+    {
+      // http://www.bearcave.com/misl/misl_tech/wavelets/stat/
+      /*
+        X0,X1...; Y0,Y1,...
+        b = sum( (Xi - Xavg)(Yi - Yavg) ) / sum ( (Xi - Xavg)*(Xi - Xavg) )
+        a = Yavg - b * Xavg
+        stddev*stddev = (sum( (Yi - Yavg) * (Yi - Yavg) ) - 
+        b * sum( (Xi - Xavg)*(Yi - Yavg) ) ) /
+        sum ( (Xi - Xavg) * (Xi - Xavg) )
+      */
+      var i;
+
+      if (data.X.length != data.Y.length)
+      {
+        throw 'LinearRegression: data point length mismatch';
+      }
+      if (data.X.length < 2)
+      {
+        throw 'LinearRegression: data point length < 2';
+      }
+      var length = data.X.length;
+      var X = data.X;
+      var Y = data.Y;
+
+      this.Xavg = 0;
+      this.Yavg = 0;
+
+      for (i = 0; i < length; i++)
+      {
+        this.Xavg += X[i];
+        this.Yavg += Y[i];
+      }
+
+      var sumXdiffYdiff = 0;
+      var sumXdiffsquared = 0;
+      var sumYdiffsquared = 0;
+
+      for (i = 0; i < length; i++)
+      {
+        var xDiff = (X[i] - this.Xavg);
+        var yDiff = (Y[i] - this.Yavg);
+
+        sumXdiffYdiff   += xDiff * yDiff;
+        sumXdiffsquared += xDiff * xDiff; 
+        sumYdiffsquared += yDiff * yDiff;
+      }
+
+      this.b = sumXdiffYdiff / sumXdiffsquared;
+      this.a = this.Yavg - this.b * this.Xavg;
+      // standard deviation of regression
+      this.sigma = Math.sqrt( (sumYdiffsquared - this.b * sumXdiffYdiff) / 
+                              (length - 2));
+      // standard error in b
+      this.SE = this.sigma / Math.sqrt(sumXdiffsquared);
+    }
+
+  function dataDeriv(data)
+    {
+      if (data.X.length != data.Y.length)
+      {
+        throw 'length mismatch';
+      }
+      var length = data.X.length;
+
+      if (length < 2)
+      {
+        throw 'length ' + length + ' must be >= 2';
+      }
+      var X = data.X;
+      var Y = data.Y;
+
+      var deriv = {X: [], Y: [] };
+
+      for (var i = 0; i < length - 1; i++)
+      {
+        deriv.X[i] = (X[i] + X[i+1])/2;
+        deriv.Y[i] = (Y[i+1] - Y[i])/(X[i+1] - X[i]);
+      }  
+      return deriv;
+    }
+
 }
 
