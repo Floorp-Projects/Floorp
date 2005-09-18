@@ -68,6 +68,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  locale \
 		  embed_base \
+		  view \
 		  $(NULL)
 
 ifdef MOZ_PHOENIX

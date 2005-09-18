@@ -240,7 +240,8 @@ private:
 
   nsCOMPtr<nsITimer> mTooltipTimer;
   static void sTooltipCallback ( nsITimer* aTimer, void* aListener ) ;
-  PRInt32 mMouseClientX, mMouseClientY;       // mouse coordinates for tooltip event
+  PRInt32 mMouseClientX, mMouseClientY;       // mouse coordinates for last mousemove event we saw
+  PRInt32 mMouseScreenX, mMouseScreenY;       // mouse coordinates for tooltip event
   PRBool mShowingTooltip;
 
     // a timer for auto-hiding the tooltip after a certain delay
