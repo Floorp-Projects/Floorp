@@ -524,7 +524,8 @@ function addImage(url, type, alt, elem, isBg)
 function grabAll(elem)
 {
   // check for background images, any node may have one
-  var url = elem.ownerDocument.defaultView.getComputedStyle(elem, "").getPropertyCSSValue("background-image");
+  var ComputedStyle = elem.ownerDocument.defaultView.getComputedStyle(elem, "");
+  var url = ComputedStyle && ComputedStyle.getPropertyCSSValue("background-image");
   if (url && url.primitiveType == CSSPrimitiveValue.CSS_URI)
     addImage(url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true);
 
