@@ -110,6 +110,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
+#include "nsTextFrame.h"
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -135,6 +136,12 @@ struct nsBoxLayoutMetrics
   PRPackedBool mIncludeOverflow;
   PRPackedBool mWasCollapsed;
   PRPackedBool mStyleChange;
+};
+
+struct nsContentAndOffset
+{
+  nsIContent* mContent;
+  PRInt32 mOffset;
 };
 
 // Some Misc #defines
@@ -1591,13 +1598,6 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   else
     return NS_OK;
 
-  // Hack: If this is a white-space:pre styled element, force line selection.
-  // Correct solution would be to treat newlines in preformatted text
-  // elements as if they were BRFrames when finding paragraph boundaries.
-  if (selectPara && 
-      NS_STYLE_WHITESPACE_PRE == mStyleContext->GetStyleText()->mWhiteSpace)
-    selectPara = PR_FALSE;
-  
   // Line or paragraph selection:
   PRInt32 startPos = 0;
   PRInt32 contentOffsetEnd = 0;
@@ -3455,37 +3455,53 @@ nsPeekOffsetStruct nsIFrame::GetExtremeCaretPosition(PRBool aStart)
 
 // Find the first (or last) descendant of the given frame
 // which is either a block frame or a BRFrame.
-static nsIFrame*
+static nsContentAndOffset
 FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 {
+  nsContentAndOffset result;
   // first check the frame itself
   nsBlockFrame* bf; // used only for QI
   nsresult rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
   // Fall through "special" block frames because their mContent is the content
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
-  if (NS_SUCCEEDED(rv) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL))
-    return aFrame;
-  if (aFrame->GetType() == nsLayoutAtoms::brFrame)
-    return aFrame;
-  
+  if (NS_SUCCEEDED(rv) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) ||
+      aFrame->GetType() == nsLayoutAtoms::brFrame) {
+    nsIContent* content = aFrame->GetContent();
+    result.mContent = content->GetParent();
+    result.mOffset = result.mContent->IndexOf(content) + 
+      (aDirection == eDirPrevious ? 1 : 0);
+    return result;
+  }
+
+  // If this is preformatted text frame, see if this frame ends with a newline
+  if (aFrame->GetType() == nsLayoutAtoms::textFrame &&
+      aFrame->GetStyleContext()->GetStyleText()->WhiteSpaceIsSignificant() &&
+      ((nsTextFrame*)aFrame)->HasTerminalNewline()) {
+    PRInt32 startOffset, endOffset;
+    aFrame->GetOffsets(startOffset, endOffset);
+    result.mContent = aFrame->GetContent();
+    result.mOffset = endOffset - (aDirection == eDirPrevious ? 0 : 1);
+    return result;
+  }
+
   // iterate over children and call ourselves recursively
-  nsIFrame* stopFrame = nsnull;
+  result.mContent =  nsnull;
   if (aDirection == eDirPrevious) {
     nsFrameList children(aFrame->GetFirstChild(nsnull));
     nsIFrame* child = children.LastChild();
-    while(child && !stopFrame) {
-      stopFrame = FindBlockFrameOrBR(child, aDirection);
+    while(child && !result.mContent) {
+      result = FindBlockFrameOrBR(child, aDirection);
       child = children.GetPrevSiblingFor(child);
     }
   } else { // eDirNext
     nsIFrame* child = aFrame->GetFirstChild(nsnull);
-    while(child && !stopFrame) {
-      stopFrame = FindBlockFrameOrBR(child, aDirection);
+    while(child && !result.mContent) {
+      result = FindBlockFrameOrBR(child, aDirection);
       child = child->GetNextSibling();
     }
   }
-  return stopFrame;
+  return result;
 }
 
 nsresult
@@ -3494,7 +3510,8 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
 {
   nsIFrame* frame = this;
   nsBlockFrame* bf;  // used only for QI
-  nsIFrame* stopFrame = nsnull;
+  nsContentAndOffset blockFrameOrBR;
+  blockFrameOrBR.mContent = nsnull;
   PRBool reachedBlockAncestor = PR_FALSE;
 
   // Go through containing frames until reaching a block frame.
@@ -3511,14 +3528,13 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
       }
       nsFrameList siblings(parent->GetFirstChild(nsnull));
       nsIFrame* sibling = siblings.GetPrevSiblingFor(frame);
-      while (sibling && !stopFrame) {
-        stopFrame = FindBlockFrameOrBR(sibling, eDirPrevious);
+      while (sibling && !blockFrameOrBR.mContent) {
+        blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirPrevious);
         sibling = siblings.GetPrevSiblingFor(sibling);
       }
-      if (stopFrame) {
-        nsIContent* startContent = stopFrame->GetContent();
-        aPos->mResultContent = startContent->GetParent();
-        aPos->mContentOffset = aPos->mResultContent->IndexOf(startContent) + 1;
+      if (blockFrameOrBR.mContent) {
+        aPos->mResultContent = blockFrameOrBR.mContent;
+        aPos->mContentOffset = blockFrameOrBR.mOffset;
         break;
       }
       frame = parent;
@@ -3535,15 +3551,14 @@ nsFrame::PeekOffsetParagraph(nsPresContext* aPresContext,
         reachedBlockAncestor = PR_TRUE;
         break;
       }
-      nsIFrame* sibling = frame->GetNextSibling();
-      while (sibling && !stopFrame) {
-        stopFrame = FindBlockFrameOrBR(sibling, eDirNext);
+      nsIFrame* sibling = frame;
+      while (sibling && !blockFrameOrBR.mContent) {
+        blockFrameOrBR = FindBlockFrameOrBR(sibling, eDirNext);
         sibling = sibling->GetNextSibling();
       }
-      if (stopFrame) {
-        nsIContent* endContent = stopFrame->GetContent();
-        aPos->mResultContent = endContent->GetParent();
-        aPos->mContentOffset = aPos->mResultContent->IndexOf(endContent);
+      if (blockFrameOrBR.mContent) {
+        aPos->mResultContent = blockFrameOrBR.mContent;
+        aPos->mContentOffset = blockFrameOrBR.mOffset;
         break;
       }
       frame = parent;
