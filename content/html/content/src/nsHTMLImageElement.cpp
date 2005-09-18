@@ -565,7 +565,7 @@ nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
     // Force image loading here, so that we'll try to load the image from
     // network if it's set to be not cacheable...
-    ImageURIChanged(aValue, PR_TRUE);
+    ImageURIChanged(aValue, PR_TRUE, aNotify);
 
     if (mCurrentRequest && !mPendingRequest &&
         oldCurrentRequest != mCurrentRequest) {
@@ -599,7 +599,9 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsAutoString uri;
   nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
   if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-    ImageURIChanged(uri, PR_FALSE);
+    // Note: no need to notify here; since we're just now being bound
+    // we don't have any frames or anything yet.
+    ImageURIChanged(uri, PR_FALSE, PR_FALSE);
   }
 
   return rv;
