@@ -91,6 +91,8 @@
 #include "imgIContainer.h"
 #include "nsContextMenuInfo.h"
 #include "nsPresContext.h"
+#include "nsIViewManager.h"
+#include "nsIView.h"
 
 //
 // GetEventReceiver
@@ -1306,6 +1308,8 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   if ( mMouseClientX == newMouseX && mMouseClientY == newMouseY )
     return NS_OK;
   mMouseClientX = newMouseX; mMouseClientY = newMouseY;
+  mouseEvent->GetScreenX(&mMouseScreenX);
+  mouseEvent->GetScreenY(&mMouseScreenY);
 
   // We want to close the tip if it is being displayed and the mouse moves. Recall 
   // that |mShowingTooltip| is set when the popup is showing. Furthermore, as the mouse
@@ -1415,8 +1419,40 @@ void
 ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
                                         void *aChromeTooltipListener)
 {
-  ChromeTooltipListener* self = NS_STATIC_CAST(ChromeTooltipListener*, aChromeTooltipListener);
-  if ( self && self->mPossibleTooltipNode ) {
+  ChromeTooltipListener* self = NS_STATIC_CAST(ChromeTooltipListener*,
+                                               aChromeTooltipListener);
+  if ( self && self->mPossibleTooltipNode ){
+    // The actual coordinates we want to put the tooltip at are relative to the
+    // toplevel docshell of our mWebBrowser.  We know what the screen
+    // coordinates of the mouse event were, which means we just need the screen
+    // coordinates of the docshell.  Unfortunately, there is no good way to
+    // find those short of groveling for the presentation in that docshell and
+    // finding the screen coords of its toplevel widget...
+    nsCOMPtr<nsIDocShell> docShell =
+      do_GetInterface(NS_STATIC_CAST(nsIWebBrowser*, self->mWebBrowser));
+    nsCOMPtr<nsIPresShell> shell;
+    if (docShell) {
+      docShell->GetPresShell(getter_AddRefs(shell));
+    }
+
+    nsIWidget* widget = nsnull;
+    if (shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsIView* view;
+        vm->GetRootView(view);
+        if (view) {
+          nsPoint offset;
+          widget = view->GetNearestWidget(&offset);
+        }
+      }
+    }
+
+    if (!widget) {
+      // release tooltip target if there is one, NO MATTER WHAT
+      self->mPossibleTooltipNode = nsnull;
+      return;
+    }
 
     // if there is text associated with the node, show the tip and fire
     // off a timer to auto-hide it.
@@ -1430,8 +1466,13 @@ ChromeTooltipListener::sTooltipCallback(nsITimer *aTimer,
       
       if (textFound) {
         nsString tipText(tooltipText);
-        self->CreateAutoHideTimer ( );  
-        self->ShowTooltip (self->mMouseClientX, self->mMouseClientY, tipText);
+        self->CreateAutoHideTimer();
+        nsRect widgetDot(0, 0, 1, 1);
+        nsRect screenDot;
+        widget->WidgetToScreen(widgetDot, screenDot);
+        self->ShowTooltip (self->mMouseScreenX - screenDot.x,
+                           self->mMouseScreenY - screenDot.y,
+                           tipText);
       }
     }
     
