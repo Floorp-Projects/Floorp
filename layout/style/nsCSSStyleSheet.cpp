@@ -3237,6 +3237,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // Now adjust for a possible negation
           result = localTrue == attrSelectorMatched;
         }
+        else if (attr->mFunction == NS_ATTR_FUNC_EQUALS) {
+          result =
+            localTrue == data.mContent->
+              AttrValueIs(attr->mNameSpace, attr->mAttr, attr->mValue,
+                          attr->mCaseSensitive ? eCaseMatters : eIgnoreCase);
+        }
         else if (!data.mContent->HasAttr(attr->mNameSpace, attr->mAttr)) {
           result = localFalse;
         }
