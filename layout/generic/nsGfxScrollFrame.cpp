@@ -1522,10 +1522,8 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
     PRInt32 cx, cy, x, y;
     scrollingView->GetScrollPosition(cx,cy);
 
-    x = (int)
-      (((float)childRect.width / mRestoreRect.width) * mRestoreRect.x);
-    y = (int)
-      (((float)childRect.height / mRestoreRect.height) * mRestoreRect.y);
+    x = (int)mRestoreRect.x;
+    y = (int)mRestoreRect.y;
 
     // if our position is greater than the scroll position, scroll.
     // remember that we could be incrementally loading so we may enter
