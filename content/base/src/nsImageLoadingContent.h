@@ -84,13 +84,10 @@ protected:
    * @param aForce If true, make sure to load the URI.  If false, only
    *        load if the URI is different from the currently loaded URI.
    * @param aNotify If true, nsIDocumentObserver state change notifications
-   *                will be sent as needed.  Note that this is only here so
-   *                nsObjectFrame can avoid getting reframed inside reflow;
-   *                once objects load data from content we want to always
-   *                notify.
+   *                will be sent as needed.
    */
-  nsresult ImageURIChanged(const nsAString& aNewURI,
-                           PRBool aForce, PRBool aNotify = PR_TRUE);
+  nsresult ImageURIChanged(const nsAString& aNewURI, PRBool aForce,
+                           PRBool aNotify);
 
   /**
    * ImageState is called by subclasses that are computing their content state.
