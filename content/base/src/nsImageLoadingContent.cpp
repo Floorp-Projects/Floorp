@@ -58,6 +58,7 @@
 
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 
 #include "nsIChannel.h"
@@ -95,7 +96,11 @@ static void PrintReqURL(imgIRequest* req) {
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
-    mLoadingEnabled(PR_TRUE)
+    mLoadingEnabled(PR_TRUE),
+    // mBroken starts out true, since an image without a URI is broken....
+    mBroken(PR_TRUE),
+    mUserDisabled(PR_FALSE),
+    mSuppressed(PR_FALSE)
 {
   if (!nsContentUtils::GetImgLoader())
     mLoadingEnabled = PR_FALSE;
@@ -211,6 +216,13 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
   } else {
     FireEvent(NS_LITERAL_STRING("error"));
   }
+
+  // Have to check for state changes here (for example, the new load could
+  // have resulted in a broken image).  Note that we don't want to do this
+  // async, unlike the event, because while this is waiting to happen our
+  // state could change yet again, and then we'll get confused about our
+  // state.
+  UpdateImageState(PR_TRUE);
 
   return NS_OK;
 }
@@ -383,21 +395,29 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
-  return nsContentUtils::GetImgLoader()->LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
+  nsresult rv = nsContentUtils::GetImgLoader()->
+    LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
+
+  // Make sure our state is up to date
+  UpdateImageState(PR_TRUE);
+
+  return rv;
 }
 
 // XXX This should be a protected method, not an interface method!!!
 NS_IMETHODIMP
 nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI) {
-  return ImageURIChanged(aNewURI, PR_TRUE);
+  return ImageURIChanged(aNewURI, PR_TRUE, PR_FALSE);
 }
 
 /*
  * Non-interface methods
  */
+
 nsresult
 nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
-                                       PRBool aForce)
+                                       PRBool aForce,
+                                       PRBool aNotify)
 {
   if (!mLoadingEnabled) {
     FireEvent(NS_LITERAL_STRING("error"));
@@ -431,11 +451,10 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
     }
   }
 
-  // Remember the URL of this request, in case someone asks us for it later
-  // But this only matters if we are affecting the current request
-  if (!mCurrentRequest)
-    mCurrentURI = imageURI;
-  
+  // From this point on, our state could change before return, so make
+  // sure to notify if it does.
+  AutoStateChanger changer(this, aNotify);
+
   // If we'll be loading a new image, we want to cancel our existing
   // requests; the question is what reason to pass in.  If everything
   // is going smoothly, that reason should be
@@ -455,6 +474,13 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
 
   CancelImageRequests(cancelResult, PR_FALSE, newImageStatus);
 
+  // Remember the URL of this request, in case someone asks us for it later.
+  // But this only matters if we are affecting the current request.  Need to do
+  // this after CancelImageRequests, since that affects the value of
+  // mCurrentRequest.
+  if (!mCurrentRequest)
+    mCurrentURI = imageURI;
+  
   if (!loadImage) {
     // Don't actually load anything!  This was blocked by CanLoadImage.
     FireEvent(NS_LITERAL_STRING("error"));
@@ -463,17 +489,6 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
-  NS_ENSURE_TRUE(thisContent, rv);
-
-  // It may be that one of our frames has replaced itself with alt text... This
-  // would only have happened if our mCurrentRequest had issues, and we would
-  // have set it to null by now in that case.  Have to save that information
-  // here, since LoadImage may clobber the value of mCurrentRequest.  On the
-  // other hand, if we've never had an observer, we know there aren't any frames
-  // that have changed to alt text on us yet.
-  PRBool mayNeedReframe = thisContent->MayHaveFrame() && !mCurrentRequest;
-  
   rv = nsContentUtils::LoadImage(imageURI, doc, doc->GetDocumentURI(),
                                  this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
@@ -488,52 +503,68 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
     mCurrentURI = nsnull;
   }
 
-  if (!mayNeedReframe) {
-    // We're all set
-    return NS_OK;
-  }
-
-  // Only continue if we're in a document -- that would mean we're a useful
-  // chunk of the content model and _may_ have a frame.  This should eliminate
-  // things like SetAttr calls during the parsing process, as well as things
-  // like setting src on |new Image()|-type things.
-  if (!thisContent->IsInDoc()) {
-    return NS_OK;
-  }
-
-  // OK, now for each PresShell, see whether we have a frame -- this tends to
-  // be expensive, which is why it's the last check....  If we have a frame
-  // and it's not of the right type, reframe it.
-  PRInt32 numShells = doc->GetNumberOfShells();
-  for (PRInt32 i = 0; i < numShells; ++i) {
-    nsIPresShell *shell = doc->GetShellAt(i);
-    if (shell) {
-      nsIFrame* frame = shell->GetPrimaryFrameFor(thisContent);
-      if (frame) {
-        // XXXbz I don't like this one bit... we really need a better way of
-        // doing the CantRenderReplacedElement stuff.. In particular, it needs
-        // to be easily detectable.  For example, I suspect that this code will
-        // fail for <object> in the current CantRenderReplacedElement
-        // implementation...
-        nsIAtom* frameType = frame->GetType();
-        if (frameType != nsLayoutAtoms::imageFrame &&
-            frameType != nsLayoutAtoms::imageControlFrame &&
-            frameType != nsLayoutAtoms::objectFrame) {
-          shell->RecreateFramesFor(thisContent);
-        }
-      }
-    }
-  }
-
   return NS_OK;
 }
 
+PRInt32
+nsImageLoadingContent::ImageState() const
+{
+  return
+    (mBroken * NS_EVENT_STATE_BROKEN) |
+    (mUserDisabled * NS_EVENT_STATE_USERDISABLED) |
+    (mSuppressed * NS_EVENT_STATE_SUPPRESSED);
+}
+
 void
-nsImageLoadingContent::CancelImageRequests()
+nsImageLoadingContent::UpdateImageState(PRBool aNotify)
+{
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
+  if (!thisContent) {
+    return;
+  }
+
+  PRInt32 oldState = ImageState();
+
+  mBroken = mUserDisabled = mSuppressed = PR_FALSE;
+  
+  // If we were blocked by server-based content policy, we claim to be
+  // suppressed.  If we were blocked by type-based content policy, we claim to
+  // be user-disabled.  Otherwise, claim to be broken.
+  if (mImageBlockingStatus == nsIContentPolicy::REJECT_SERVER) {
+    mSuppressed = PR_TRUE;
+  } else if (mImageBlockingStatus == nsIContentPolicy::REJECT_TYPE) {
+    mUserDisabled = PR_TRUE;
+  } else if (!mCurrentRequest) {
+    // No current request means error, since we weren't disabled or suppressed
+    mBroken = PR_TRUE;
+  } else {
+    PRUint32 currentLoadStatus;
+    nsresult rv = mCurrentRequest->GetImageStatus(&currentLoadStatus);
+    if (NS_FAILED(rv) || (currentLoadStatus & imgIRequest::STATUS_ERROR)) {
+      mBroken = PR_TRUE;
+    }
+  }
+
+  if (aNotify) {
+    nsIDocument* doc = thisContent->GetCurrentDoc();
+    if (doc) {
+      NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
+      PRInt32 changedBits = oldState ^ ImageState();
+      if (changedBits) {
+        mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        doc->ContentStatesChanged(thisContent, nsnull, changedBits);
+      }
+    }
+  }
+}
+
+void
+nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
 {
   // Make sure to null out mCurrentURI here, so we no longer look like an image
   mCurrentURI = nsnull;
   CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
+  UpdateImageState(aNotify);
 }
 
 void

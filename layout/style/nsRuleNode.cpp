@@ -4228,6 +4228,8 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
                   type = eStyleContentType_NoOpenQuote;   break;
                 case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
                   type = eStyleContentType_NoCloseQuote;  break;
+                case NS_STYLE_CONTENT_ALT_CONTENT:
+                  type = eStyleContentType_AltContent;    break;
                 default:
                   NS_ERROR("bad content value");
               }

@@ -5210,11 +5210,16 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
       }
       if (eCSSUnit_Inherit == value.GetUnit() ||
           eCSSUnit_Initial == value.GetUnit() ||
-          eCSSUnit_Normal == value.GetUnit()) {
+          eCSSUnit_Normal == value.GetUnit() ||
+          (eCSSUnit_Enumerated == value.GetUnit() &&
+           NS_STYLE_CONTENT_ALT_CONTENT == value.GetIntValue())) {
         // This only matters the first time through the loop.
         return PR_FALSE;
       }
-      if (ParseVariant(aErrorCode, value, VARIANT_CONTENT, nsCSSProps::kContentKTable)) {
+      if (ParseVariant(aErrorCode, value, VARIANT_CONTENT, nsCSSProps::kContentKTable) &&
+          // Make sure we didn't end up with NS_STYLE_CONTENT_ALT_CONTENT here
+          (value.GetUnit() != eCSSUnit_Enumerated ||
+           value.GetIntValue() != NS_STYLE_CONTENT_ALT_CONTENT)) {
         list->mNext = new nsCSSValueList();
         list = list->mNext;
         if (nsnull != list) {

@@ -392,6 +392,40 @@ hr[size="1"] {
   border: 2px solid;
 }
 
+img:-moz-broken::before, input:-moz-broken::before,
+img:-moz-user-disabled::before, input:-moz-user-disabled::before,
+/* Nonempty applets should just show their kids.
+   XXXbz do we need a selector that will ignore <param> elements? */
+applet:empty:-moz-broken::before,
+applet:empty:-moz-user-disabled::before {
+  content: -moz-alt-content !important;
+}
+
+object:-moz-broken, embed:-moz-broken, applet:-moz-broken
+object:-moz-user-disabled, embed:-moz-user-disabled,
+applet:-moz-user-disabled {
+  /*
+    Ideally, we wouldn't map in the align attribute in cases like this, but
+    that's hard....  So have to use !important to override the preshint.  This
+    can go away once object loading is in content, since then not mapping in
+    the preshint should be easy.
+   */
+  vertical-align: normal !important;
+}
+
+img:-moz-suppressed, input:-moz-suppressed, object:-moz-suppressed,
+embed:-moz-suppressed, applet:-moz-suppressed {
+  /*
+    Set visibility too in case the page changes display.  Note that we _may_
+    want to just set visibility and not display, in general, if we find that
+    display:none breaks too many layouts.  And if we decide we really do want
+    people to be able to right-click blocked images, etc, we need to set
+    neither one, and hack the painting code.... :(
+   */
+  display: none !important;
+  visibility: hidden !important;
+}
+
 img[usemap], object[usemap] {
   cursor: pointer;
   color: blue;

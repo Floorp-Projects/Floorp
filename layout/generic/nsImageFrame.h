@@ -141,6 +141,14 @@ public:
     NS_IF_RELEASE(sIOService);
   }
 
+  /**
+   * Function to test whether aContent, which has aStyleContext as its style,
+   * should get an image frame.  Note that this method is only used by the
+   * frame constructor; it's only here because it uses gIconLoad for now.
+   */
+  static PRBool ShouldCreateImageFrameFor(nsIContent* aContent,
+                                          nsStyleContext* aStyleContext);
+  
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -231,14 +239,6 @@ private:
    */
   nsRect SourceRectToDest(const nsRect & aRect);
 
-  /**
-   * Function to call when a load fails; this handles things like alt
-   * text, broken image icons, etc.  Returns NS_ERROR_FRAME_REPLACED
-   * if it called CantRenderReplacedElement, NS_OK otherwise.
-   * @param aImageStatus the status of the image (@see nsIContentPolicy)
-   */
-  nsresult HandleLoadError(PRInt16 aImageStatus);
-  
   nsImageMap*         mImageMap;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
@@ -267,7 +267,6 @@ private:
   // is, handle it and return TRUE otherwise, return FALSE (aCompleted
   // is an input arg telling the routine if the request has completed)
   PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
-  void InvalidateIcon();
 
   class IconLoad : public nsIObserver {
     // private class that wraps the data and logic needed for 

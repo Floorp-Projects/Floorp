@@ -102,7 +102,7 @@
 
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
-
+#include "nsIEventStateManager.h"
 #include "nsLayoutErrors.h"
 
 #ifdef DEBUG
@@ -296,24 +296,14 @@ nsImageFrame::Init(nsPresContext*  aPresContext,
   if (!gIconLoad)
     LoadIcons(aPresContext);
 
+  // Give image loads associated with an image frame a small priority boost!
   nsCOMPtr<imgIRequest> currentRequest;
   imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                           getter_AddRefs(currentRequest));
-  PRUint32 currentLoadStatus = imgIRequest::STATUS_ERROR;
-  if (currentRequest) {
-    currentRequest->GetImageStatus(&currentLoadStatus);
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
+  if (p)
+    p->AdjustPriority(-1);
 
-    // Give image loads associated with an image frame a small priority boost!
-    nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(currentRequest);
-    if (p)
-      p->AdjustPriority(-1);
-  }
-
-  if (currentLoadStatus & imgIRequest::STATUS_ERROR) {
-    PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
-    imageLoader->GetImageBlockingStatus(&imageStatus);
-    rv = HandleLoadError(imageStatus);
-  }
   // If we already have an image container, OnStartContainer won't be called
   // Set the animation mode here
   if (currentRequest) {
@@ -447,27 +437,26 @@ nsImageFrame::SourceRectToDest(const nsRect& aRect)
   return r;
 }
 
-nsresult
-nsImageFrame::HandleLoadError(PRInt16 aImageStatus)
+static PRBool
+ImageOK(nsIContent* aContent)
 {
-  if (!NS_CP_ACCEPTED(aImageStatus) &&
-      aImageStatus == nsIContentPolicy::REJECT_SERVER) {
-    // Don't display any alt feedback in this case; we're blocking images
-    // from that site and don't care to see anything from them
-    return NS_OK;
-  }
-  
-  // If we have an image map, don't do anything here
-  // XXXbz Why?  This is what the code used to do, but there's no good
-  // reason for it....
+  // Note that we treat NS_EVENT_STATE_SUPPRESSED images as "OK".  This means
+  // that we'll construct image frames for them as needed if their display is
+  // toggled from "none" (though we won't paint them, unless their visibility
+  // is changed too).
+  return !(aContent->IntrinsicState() &
+           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED));
+}
 
-  nsAutoString usemap;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::usemap, usemap);    
-  if (!usemap.IsEmpty()) {
-    return NS_OK;
+/* static */
+PRBool
+nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
+                                        nsStyleContext* aStyleContext)
+{
+  if (ImageOK(aContent)) {
+    // Image is fine; do the image frame thing
+    return PR_TRUE;
   }
-
-  nsPresContext* presContext = GetPresContext();
   
   // Check if we want to use a placeholder box with an icon or just
   // let the the presShell make us into inline text.  Decide as follows:
@@ -478,68 +467,43 @@ nsImageFrame::HandleLoadError(PRInt16 aImageStatus)
   //  - if QuirksMode, and there is no alt attribute, and this is not an
   //    <object> (which could not possibly have such an attribute), show an
   //    icon.
-  //  - if QuirksMode, and the IMG has a size, and the image is
-  //    broken, not blocked, show an icon.
+  //  - if QuirksMode, and the IMG has a size show an icon.
   //  - otherwise, skip the icon
-
   PRBool useSizedBox;
   
-  const nsStyleUIReset* uiResetData = GetStyleUIReset();
-  if (uiResetData->mForceBrokenImageIcon) {
+  if (aStyleContext->GetStyleUIReset()->mForceBrokenImageIcon) {
     useSizedBox = PR_TRUE;
   }
   else if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
     useSizedBox = PR_FALSE;
   }
   else {
-    if (presContext->CompatibilityMode() != eCompatibility_NavQuirks) {
+    if (aStyleContext->PresContext()->CompatibilityMode() !=
+        eCompatibility_NavQuirks) {
       useSizedBox = PR_FALSE;
     }
     else {
       // We are in quirks mode, so we can just check the tag name; no need to
       // check the namespace.
-      nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
+      nsINodeInfo *nodeInfo = aContent->GetNodeInfo();
 
-      if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
+      // Use a sized box if we have no alt text.  This means no alt attribute
+      // and the node is not an object or an input (since those always have alt
+      // text).
+      if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
           nodeInfo &&
-          !nodeInfo->Equals(nsHTMLAtoms::object)) {
+          !nodeInfo->Equals(nsHTMLAtoms::object) &&
+          !nodeInfo->Equals(nsHTMLAtoms::input)) {
         useSizedBox = PR_TRUE;
-      }
-      else if (!NS_CP_ACCEPTED(aImageStatus)) {
-        useSizedBox = PR_FALSE;
       }
       else {
         // check whether we have fixed size
-        useSizedBox = HaveFixedSize(GetStylePosition());
+        useSizedBox = HaveFixedSize(aStyleContext->GetStylePosition());
       }
     }
   }
   
-  if (!useSizedBox) {
-    // let the presShell handle converting this into the inline alt
-    // text frame
-    nsIFrame* primaryFrame = nsnull;
-    if (mContent->IsContentOfType(nsIContent::eHTML) &&
-        (mContent->Tag() == nsHTMLAtoms::object ||
-         mContent->Tag() == nsHTMLAtoms::embed)) {
-      // We have to try to get the primary frame for mContent, since for
-      // <object> the frame CantRenderReplacedElement wants is the
-      // ObjectFrame, not us (we're an anonymous frame then)....
-      primaryFrame = presContext->PresShell()->GetPrimaryFrameFor(mContent);
-    }
-
-    if (!primaryFrame) {
-      primaryFrame = this;
-    }     
-    
-    presContext->PresShell()->CantRenderReplacedElement(primaryFrame);
-    return NS_ERROR_FRAME_REPLACED;
-  }
-
-  // we are handling it
-  // invalidate the icon area (it may change states)   
-  InvalidateIcon();
-  return NS_OK;
+  return useSizedBox;
 }
 
 nsresult
@@ -689,15 +653,6 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
         Invalidate(r, PR_FALSE);
       }
     }
-  }
-
-  // if src failed to load, determine how to handle it: 
-  //  - either render the ALT text in this frame, or let the presShell
-  //  handle it
-  if (NS_FAILED(aStatus) && aStatus != NS_ERROR_IMAGE_SRC_CHANGED) {
-    PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
-    imageLoader->GetImageBlockingStatus(&imageStatus);
-    HandleLoadError(imageStatus);
   }
 
   return NS_OK;
@@ -1311,7 +1266,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
 
     if (mComputedSize.width != 0 && mComputedSize.height != 0) {
       nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
-      NS_ASSERTION(mContent, "Not an image loading content?");
+      NS_ASSERTION(imageLoader, "Not an image loading content?");
 
       nsCOMPtr<imgIRequest> currentRequest;
       if (imageLoader) {
@@ -1319,31 +1274,21 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
                                 getter_AddRefs(currentRequest));
       }
       
+      PRBool imageOK = ImageOK(mContent);
+
       nsCOMPtr<imgIContainer> imgCon;
-
-      PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
-
       if (currentRequest) {
         currentRequest->GetImage(getter_AddRefs(imgCon));
-        currentRequest->GetImageStatus(&loadStatus);
       }
 
-      if (loadStatus & imgIRequest::STATUS_ERROR || !imgCon) {
+      if (!imageOK || !imgCon) {
         // No image yet, or image load failed. Draw the alt-text and an icon
-        // indicating the status (unless image is blocked, in which case we show nothing)
+        // indicating the status
 
-        PRInt16 imageStatus = nsIContentPolicy::ACCEPT;
-        if (imageLoader) {
-          imageLoader->GetImageBlockingStatus(&imageStatus);
-        }
-      
-        if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
-            (NS_CP_ACCEPTED(imageStatus) ||
-             imageStatus != nsIContentPolicy::REJECT_SERVER)) {
+        if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
           DisplayAltFeedback(aPresContext, aRenderingContext, 
-                             (loadStatus & imgIRequest::STATUS_ERROR)
-                             ? gIconLoad->mBrokenImage
-                             : gIconLoad->mLoadingImage);
+                             imageOK ? gIconLoad->mLoadingImage
+                                     : gIconLoad->mBrokenImage);
         }
       }
       else {
@@ -1981,23 +1926,6 @@ PRBool nsImageFrame::HandleIconLoads(imgIRequest* aRequest, PRBool aLoaded)
 #endif
 
   return result;
-}
-
-void nsImageFrame::InvalidateIcon()
-{
-  // invalidate the inner area, where the icon lives
-
-  nsPresContext *presContext = GetPresContext();
-  float   p2t = presContext->ScaledPixelsToTwips();
-  nsRect inner = GetInnerArea();
-
-  nsRect rect(inner.x,
-              inner.y,
-              NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t),
-              NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t));
-  NS_ASSERTION(!rect.IsEmpty(), "icon rect cannot be empty!");
-  // update image area
-  Invalidate(rect, PR_FALSE);
 }
 
 NS_IMPL_ISUPPORTS1(nsImageFrame::IconLoad, nsIObserver)

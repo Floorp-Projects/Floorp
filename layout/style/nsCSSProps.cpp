@@ -447,6 +447,7 @@ const PRInt32 nsCSSProps::kContentKTable[] = {
   eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE,
   eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE,
   eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE,
+  eCSSKeyword__moz_alt_content, NS_STYLE_CONTENT_ALT_CONTENT,
   eCSSKeyword_UNKNOWN,-1
 };
 

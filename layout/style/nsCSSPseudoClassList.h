@@ -76,6 +76,11 @@ CSS_PSEUDO_CLASS(lastChild, ":last-child")
 CSS_PSEUDO_CLASS(lastNode, ":-moz-last-node")
 CSS_PSEUDO_CLASS(onlyChild, ":only-child")
 
+// Image, object, etc state pseudo-classes
+CSS_PSEUDO_CLASS(mozBroken, ":-moz-broken")
+CSS_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled")
+CSS_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed")
+
 // CSS 3 UI
 // http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes
 CSS_PSEUDO_CLASS(required, ":required")

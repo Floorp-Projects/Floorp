@@ -913,7 +913,8 @@ enum nsStyleContentType {
   eStyleContentType_OpenQuote     = 40,
   eStyleContentType_CloseQuote    = 41,
   eStyleContentType_NoOpenQuote   = 42,
-  eStyleContentType_NoCloseQuote  = 43
+  eStyleContentType_NoCloseQuote  = 43,
+  eStyleContentType_AltContent    = 50
 };
 
 struct nsStyleContentData {

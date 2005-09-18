@@ -50,6 +50,9 @@
 #include "nsIPluginInstance.h"
 #include "nsIPluginInstanceInternal.h"
 #include "nsIPluginElement.h"
+#include "nsIEventStateManager.h"
+#include "nsCSSPseudoClasses.h"
+#include "nsLayoutAtoms.h"
 
 class nsHTMLObjectElement : public nsGenericHTMLFormElement,
                             public nsImageLoadingContent,
@@ -97,6 +100,7 @@ public:
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual PRInt32 IntrinsicState() const;
 
 protected:
   PRPackedBool mIsDoneAddingChildren;
@@ -334,4 +338,22 @@ nsMapRuleToAttributesFunc
 nsHTMLObjectElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
+}
+
+PRInt32
+nsHTMLObjectElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLFormElement::IntrinsicState();
+
+  void* image = GetProperty(nsLayoutAtoms::imageFrame);
+  if (NS_PTR_TO_INT32(image)) {
+    state |= nsImageLoadingContent::ImageState();
+  }
+
+  void* broken = GetProperty(nsCSSPseudoClasses::mozBroken);
+  if (NS_PTR_TO_INT32(broken)) {
+    state |= NS_EVENT_STATE_BROKEN;
+  }
+
+  return state;
 }

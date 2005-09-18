@@ -43,6 +43,8 @@
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSPseudoClasses.h"
+#include "nsIEventStateManager.h"
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
@@ -87,6 +89,7 @@ public:
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual PRInt32 IntrinsicState() const;
 
 protected:
   PRPackedBool mReflectedApplet;
@@ -191,4 +194,17 @@ nsMapRuleToAttributesFunc
 nsHTMLAppletElement::GetAttributeMappingFunction() const
 {
   return &MapAttributesIntoRule;
+}
+
+PRInt32
+nsHTMLAppletElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+
+  void* broken = GetProperty(nsCSSPseudoClasses::mozBroken);
+  if (NS_PTR_TO_INT32(broken)) {
+    state |= NS_EVENT_STATE_BROKEN;
+  }
+
+  return state;
 }

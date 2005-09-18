@@ -38,6 +38,7 @@
 #include "nsXMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
+#include "nsIEventStateManager.h"
 
 /**
  * A fake content node class so that the image frame for
@@ -58,6 +59,10 @@ public:
   {
     return aImageRequest->Clone(this, getter_AddRefs(mCurrentRequest));
   }
+
+  // nsIContent overrides
+  virtual PRInt32 IntrinsicState() const;
+  
 private:
   ~nsGenConImageContent() {}
 
@@ -80,4 +85,19 @@ NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
   if (NS_FAILED(rv))
     NS_RELEASE(*aResult);
   return rv;
+}
+
+PRInt32
+nsGenConImageContent::IntrinsicState() const
+{
+  PRInt32 state = nsXMLElement::IntrinsicState();
+
+  PRInt32 imageState = nsImageLoadingContent::ImageState();
+  if (imageState & NS_EVENT_STATE_BROKEN) {
+    // We should never be in an error state; if the image fails to load, we
+    // just go to the suppressed state.
+    imageState |= NS_EVENT_STATE_SUPPRESSED;
+    imageState &= ~NS_EVENT_STATE_BROKEN;
+  }
+  return state | imageState;
 }
