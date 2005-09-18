@@ -1765,7 +1765,6 @@
                 event.stopPropagation();
                 switch (event.keyCode) {
                   case event.DOM_VK_ESCAPE:
-                  case event.DOM_VK_F4:
                     this.self.hidePopup();
                     return;
                   case event.DOM_VK_ENTER:
