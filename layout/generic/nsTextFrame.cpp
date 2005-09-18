@@ -4055,7 +4055,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }
     // undoing the RTL flipping of mPreferLeft for the delegation
     // to the next frame
-    aPos->mPreferLeft ^= isOddLevel;
+    if ((eSelectCharacter == aPos->mAmount)
+        || (eSelectWord == aPos->mAmount))
+      aPos->mPreferLeft ^= isOddLevel;
     return nextInFlow->PeekOffset(aPresContext, aPos);
   }
  
@@ -4266,10 +4268,12 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
-          // undoing the RTL flipping of mPreferLeft for the delegation
-          // to the next frame; note that there may have been another flip of mPreferLeft
+          // undoing the RTL flipping of mPreferLeft in the case where 
+          // the inner call will do it itself;
+          // note that mAmount, as well as mPreferLeft might have been modified
           // by the call to GetFrameFromDirection (if we are moving to another line)
-          aPos->mPreferLeft ^= isOddLevel;
+          if (eSelectCharacter == aPos->mAmount)
+            aPos->mPreferLeft ^= isOddLevel;
           result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
           if (NS_FAILED(result))
             return result;
@@ -4439,10 +4443,12 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
-          // undoing the RTL flipping of mPreferLeft for the delegation
-          // to the next frame; note that there may have been another flip of mPreferLeft
+          // undoing the RTL flipping of mPreferLeft in the case where
+          // the inner call will do it itself;
+          // note that mAmount, as well as mPreferLeft might have been modified
           // by the call to GetFrameFromDirection (if we are moving to another line)
-          aPos->mPreferLeft ^= isOddLevel;
+          if (eSelectWord == aPos->mAmount)
+            aPos->mPreferLeft ^= isOddLevel;
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
           else if (aPos->mDirection == eDirNext)
