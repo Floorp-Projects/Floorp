@@ -140,9 +140,13 @@ private:
       mImageContent(aImageContent),
       mNotify(aNotify)
     {
+      NS_ASSERTION(!mImageContent->mStartingLoad,
+                   "Nested AutoStateChangers somehow?");
+      mImageContent->mStartingLoad = PR_TRUE;
     }
     ~AutoStateChanger()
     {
+      mImageContent->mStartingLoad = PR_FALSE;
       mImageContent->UpdateImageState(mNotify);
     }
 
@@ -222,6 +226,7 @@ private:
 
   PRInt16 mImageBlockingStatus;
   PRPackedBool mLoadingEnabled : 1;
+  PRPackedBool mStartingLoad : 1;
 
   /**
    * The state we had the last time we checked whether we needed to notify the

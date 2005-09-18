@@ -97,6 +97,7 @@ nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
     mLoadingEnabled(PR_TRUE),
+    mStartingLoad(PR_FALSE),
     // mBroken starts out true, since an image without a URI is broken....
     mBroken(PR_TRUE),
     mUserDisabled(PR_FALSE),
@@ -518,6 +519,15 @@ nsImageLoadingContent::ImageState() const
 void
 nsImageLoadingContent::UpdateImageState(PRBool aNotify)
 {
+  if (mStartingLoad) {
+    // Ignore this call; we'll update our state when the state changer is
+    // destroyed.  Need this to work around the fact that some libpr0n stuff is
+    // actually sync and hence we can get OnStopDecode called while we're still
+    // under ImageURIChanged, and OnStopDecode doesn't know anything about
+    // aNotify
+    return;
+  }
+  
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
   if (!thisContent) {
     return;
@@ -564,6 +574,7 @@ nsImageLoadingContent::CancelImageRequests(PRBool aNotify)
   // Make sure to null out mCurrentURI here, so we no longer look like an image
   mCurrentURI = nsnull;
   CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
+  NS_ASSERTION(!mStartingLoad, "Whence a state changer here?");
   UpdateImageState(aNotify);
 }
 
