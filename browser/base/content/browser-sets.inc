@@ -141,12 +141,12 @@
              oncommand="goDoCommand('cmd_switchTextDirection');"
              disabled="true"/>
 
-    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);"/>
+    <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(content.document);" observes="isImage"/>
     <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
-    <command id="cmd_find" oncommand="onFindCmd();"/>
-    <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
-    <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
+    <command id="cmd_find" oncommand="onFindCmd();" observes="isImage"/>
+    <command id="cmd_findAgain" oncommand="onFindAgainCmd();" observes="isImage"/>
+    <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();" observes="isImage"/>    
     <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'), false);"/>
     <command id="Browser:BookmarkAllTabs" oncommand="addBookmarkAs(document.getElementById('content'), true);"/>
     <command id="Browser:Home"    oncommand="BrowserHome();"/>
@@ -199,7 +199,7 @@
                  type="checkbox"
                  oncommand="gPopupBlockerObserver.dontShowMessage();"/>
     <broadcaster id="blockedPopupsSeparator"/>
-
+    <broadcaster id="isImage"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
