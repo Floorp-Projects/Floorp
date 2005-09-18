@@ -52,6 +52,7 @@
 
 #include "plevent.h"
 #include "nsIEventQueueService.h"
+#include "nsGUIEvent.h"
 
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginInstanceInternal.h"
@@ -286,6 +287,25 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
       enablePopups = PR_TRUE;
 
       break;
+
+#ifndef WINCE
+    case WM_MOUSEACTIVATE: {
+      // This seems to be the only way we're
+      // notified when a child window that doesn't have this handler proc
+      // (read as: windows created by plugins like Adobe Acrobat)
+      // has been activated via clicking.
+      // should be handled here because some plugins won't forward
+      // messages to original WinProc.
+      nsCOMPtr<nsIWidget> widget;
+      win->GetPluginWidget(getter_AddRefs(widget));
+      if (widget) {
+        nsFocusEvent event(PR_TRUE, NS_PLUGIN_ACTIVATE, widget);
+        nsEventStatus status;
+        widget->DispatchEvent(&event, status);
+      }
+    }
+    break;
+#endif
   }
 
   // Macromedia Flash plugin may flood the message queue with some special messages
