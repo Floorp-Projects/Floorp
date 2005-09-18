@@ -165,7 +165,7 @@
 #endif
                 <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" command="Browser:Reload" key="key_reload"/>
                 <menuseparator/>
-                <menu id="viewTextZoomMenu" label="&textSize.label;" accesskey="&textSize.accesskey;">
+                <menu id="viewTextZoomMenu" label="&textSize.label;" accesskey="&textSize.accesskey;" observes="isImage">
                   <menupopup>                    
                     <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                               command="cmd_textZoomEnlarge"/>
@@ -176,7 +176,7 @@
                               command="cmd_textZoomReset"/>
                   </menupopup>
                 </menu>
-                <menu id="pageStyleMenu" label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;">
+                <menu id="pageStyleMenu" label="&pageStyleMenu.label;" accesskey="&pageStyleMenu.accesskey;" observes="isImage">
                   <menupopup onpopupshowing="stylesheetFillPopup(this);"
                              oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data')); setStyleDisabled(false);">
                     <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
@@ -192,7 +192,8 @@
                       ref="NC:BrowserCharsetMenuRoot"
                       oncommand="MultiplexHandler(event)"
                       onpopupshowing="CreateMenu('browser');UpdateMenus(event)"
-                      onpopupshown="CreateMenu('more-menu');">
+                      onpopupshown="CreateMenu('more-menu');"
+                      observes="isImage">
                     <template>
                         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                             <menupopup>

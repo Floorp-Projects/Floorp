@@ -3208,6 +3208,7 @@ nsBrowserStatusHandler.prototype =
     this.statusTextField        = document.getElementById("statusbar-display");
     this.securityButton         = document.getElementById("security-button");
     this.urlBar                 = document.getElementById("urlbar");
+    this.isImage                = document.getElementById("isImage");
 
     // Initialize the security button's state and tooltip text
     var securityUI = getBrowser().securityUI;
@@ -3263,6 +3264,14 @@ nsBrowserStatusHandler.prototype =
       this.statusTextField.label = text;
       this.statusText = text;
     }
+  },
+  
+  mimeTypeIsTextBased : function(contentType)
+  {
+    return /^text\/|\+xml$/.test(contentType) ||
+           contentType == "application/x-javascript" ||
+           contentType == "application/xml" ||
+           contentType == "mozilla.application/cached-xul";
   },
 
   onLinkIconAvailable : function(aBrowser)
@@ -3370,6 +3379,12 @@ nsBrowserStatusHandler.prototype =
           }
           this.status = "";
           this.setDefaultStatus(msg);
+
+          // Disable menu entries for images, enable otherwise
+          if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+            this.isImage.removeAttribute('disabled');
+          else
+            this.isImage.setAttribute('disabled', 'true');
         }
 
         // Turn the progress meter and throbber off.
@@ -3412,6 +3427,12 @@ nsBrowserStatusHandler.prototype =
       }
     }
     selectedBrowser.lastURI = aLocation;
+
+    // Disable menu entries for images, enable otherwise
+    if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+      this.isImage.removeAttribute('disabled');
+    else
+      this.isImage.setAttribute('disabled', 'true');
 
     this.setOverLink("", null);
 
