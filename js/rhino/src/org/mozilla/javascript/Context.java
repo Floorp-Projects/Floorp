@@ -2182,6 +2182,9 @@ public class Context
         }
 
         Parser p = new Parser(compilerEnv, compilationErrorReporter);
+        if (returnFunction) {
+            p.calledByCompileFunction = true;
+        }
         ScriptOrFnNode tree;
         if (sourceString != null) {
             tree = p.parse(sourceString, sourceName, lineno);

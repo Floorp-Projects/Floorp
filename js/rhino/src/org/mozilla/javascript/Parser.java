@@ -68,6 +68,7 @@ public class Parser
     CompilerEnvirons compilerEnv;
     private ErrorReporter errorReporter;
     private String sourceURI;
+    boolean calledByCompileFunction;
 
     private TokenStream ts;
     private int currentFlaggedToken;
@@ -340,7 +341,9 @@ public class Parser
                 if (tt == Token.FUNCTION) {
                     consumeToken();
                     try {
-                        n = function(FunctionNode.FUNCTION_STATEMENT);
+                        n = function(calledByCompileFunction
+                                     ? FunctionNode.FUNCTION_EXPRESSION
+                                     : FunctionNode.FUNCTION_STATEMENT);
                     } catch (ParserException e) {
                         break;
                     }
