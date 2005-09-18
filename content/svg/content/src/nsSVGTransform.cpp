@@ -123,8 +123,9 @@ nsSVGTransform::~nsSVGTransform()
 
 nsresult nsSVGTransform::Init()
 {
-  return NS_NewSVGMatrix(getter_AddRefs(mMatrix));
+  nsresult rv = NS_NewSVGMatrix(getter_AddRefs(mMatrix));
   NS_ADD_SVGVALUE_OBSERVER(mMatrix);
+  return rv;
 }
 
 //----------------------------------------------------------------------
