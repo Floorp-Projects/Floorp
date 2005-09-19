@@ -149,7 +149,8 @@ public:
    */
   NS_METHOD SuppressNotifications(PRBool aSuppress);
 
-  nsCategoryManager() { }
+  nsCategoryManager()
+    : mSuppressNotifications(PR_FALSE) { }
 private:
   friend class nsCategoryManagerFactory;
   static nsCategoryManager* Create();
