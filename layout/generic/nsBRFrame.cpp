@@ -44,6 +44,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
+#include "nsTextTransformer.h"
 
 //FOR SELECTION
 #include "nsIContent.h"
@@ -240,6 +241,13 @@ NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruc
 {
   if (!aPos)
     return NS_ERROR_NULL_POINTER;
+
+  //BR is also a whitespace, but sometimes GetNextWord() can't handle this
+  //See bug 304891
+  nsTextTransformer::Initialize();
+  if (nsTextTransformer::GetWordSelectEatSpaceAfter() &&
+      aPos->mDirection == eDirNext)
+    aPos->mEatingWS = PR_TRUE;
 
  //offset of this content in its parents child list. base 0
   PRInt32 offsetBegin = mContent->GetParent()->IndexOf(mContent);
