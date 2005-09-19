@@ -89,7 +89,7 @@
     </groupbox>
   </wizardpage>
   
-  <wizardpage description="Extension Information" onpageshow="initimage('iconURL','icon');">
+  <wizardpage description="Extension Information" onpageshow="initimage('iconURL','icon');" onpageadvanced="return ValidateFile('iconURL')">
     <groupbox>
       <caption label="Extension Information"/>
       <description>
@@ -127,9 +127,14 @@
       </hbox>
       <hbox align="center">
         <spacer flex="1"/>
+        <label>Update URL:</label>
+        <textbox id="updateURL" style="width: 350px;"/>
+      </hbox>
+      <hbox align="center">
+        <spacer flex="1"/>
         <label>Icon:</label>
         <hbox>
-        <textbox style="min-width: 226px;" flex="1" readonly="true" id="iconURL"/>
+        <textbox style="min-width: 226px;" flex="1" id="iconURL"/>
         </hbox>
         <hbox>
         <image id="icon" src='' width='32' height='32'/>
@@ -181,7 +186,7 @@
 
 
 
-  <wizardpage onpageshow="initimage('LargeStillPath','LargeStill');initimage('LargeAnimPath','LargeAnim');">
+  <wizardpage onpageshow="initimage('LargeStillPath','LargeStill');initimage('LargeAnimPath','LargeAnim');" onpageadvanced="return ValidateFile('LargeAnimPath','LargeStillPath');">
     <groupbox>
       <caption label="Animated Logo"/>
       <description>
@@ -202,7 +207,7 @@
         Path to Your Animated GIF File (16x16 pixels):
       </description>
       <hbox align="center">
-        <textbox readonly="true" id="LargeAnimPath" flex="1"/>
+        <textbox id="LargeAnimPath" flex="1"/>
         <image id="LargeAnim" src='' width='16' height='16'/>
         <button label="Choose File..." oncommand="chooseimage('LargeAnimPath','LargeAnim');"/>
       </hbox>
@@ -210,7 +215,7 @@
         Path to Your At Rest GIF or PNG File (16x16 pixels):
       </description>
       <hbox align="center">
-        <textbox readonly="true" id="LargeStillPath" flex="1"/>
+        <textbox id="LargeStillPath" flex="1"/>
         <image id="LargeStill" src='' width='16' height='16'/>
         <button label="Choose File..." oncommand="chooseimage('LargeStillPath','LargeStill');"/>
       </hbox>
@@ -253,36 +258,36 @@
   </wizardpage>
 
   
-  <wizardpage>
+  <wizardpage onpageadvanced="return ValidateFile('BrowserPluginPath1','BrowserPluginPath2','BrowserPluginPath3','BrowserPluginPath4','BrowserPluginPath5');">
     <groupbox>
       <caption label="Browser Plug-ins"/>
       <description>
         You may select up to five browser plug-ins to be preinstalled.
       </description>
       <hbox>
-        <textbox readonly="true" id="BrowserPluginPath1" flex="1"/>
+        <textbox id="BrowserPluginPath1" flex="1"/>
         <button label="Choose File..." oncommand="choosefile('BrowserPluginPath1');"/>
       </hbox>
       <hbox>
-        <textbox readonly="true" id="BrowserPluginPath2" flex="1"/>
+        <textbox id="BrowserPluginPath2" flex="1"/>
         <button label="Choose File..." oncommand="choosefile('BrowserPluginPath3');"/>
       </hbox>
       <hbox>
-        <textbox readonly="true" id="BrowserPluginPath3" flex="1"/>
+        <textbox id="BrowserPluginPath3" flex="1"/>
         <button label="Choose File..." oncommand="choosefile('BrowserPluginPath3');"/>
       </hbox>
       <hbox>
-        <textbox readonly="true" id="BrowserPluginPath4" flex="1"/>
+        <textbox id="BrowserPluginPath4" flex="1"/>
         <button label="Choose File..." oncommand="choosefile('BrowserPluginPath4');"/>
       </hbox>
       <hbox>
-        <textbox readonly="true" id="BrowserPluginPath5" flex="1"/>
+        <textbox id="BrowserPluginPath5" flex="1"/>
         <button label="Choose File..." oncommand="choosefile('BrowserPluginPath5');"/>
       </hbox>
     </groupbox>
   </wizardpage>
 
-  <wizardpage>
+  <wizardpage onpageadvanced="return ValidateFile('SearchPlugin1','SearchPluginIcon1','SearchPlugin2','SearchPluginIcon2','SearchPlugin3','SearchPluginIcon3','SearchPlugin4','SearchPluginIcon4','SearchPlugin5','SearchPluginIcon5');">
     <groupbox>
       <caption label="Search Plugins"/>
       <description>
@@ -292,65 +297,65 @@
       <hbox align="center">
         <spacer flex="1"/>
         <label>File:</label>
-        <textbox readonly="true" id="SearchPlugin1" style="min-width: 375px;" flex="1" />
+        <textbox id="SearchPlugin1" style="min-width: 375px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPlugin1');"/>
       </hbox>
         <hbox style="width: 350px;">
         <spacer flex="1"/>
         <label>Icon:</label>
-        <textbox readonly="true" id="SearchPluginIcon1" style="min-width: 380px;" flex="1" />
+        <textbox id="SearchPluginIcon1" style="min-width: 380px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPluginIcon1');"/>
       </hbox>
       <html:hr/>
       <hbox align="center">
         <spacer flex="1"/>
         <label>File:</label>
-        <textbox readonly="true" id="SearchPlugin2" style="min-width: 375px;" flex="1" />
+        <textbox id="SearchPlugin2" style="min-width: 375px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPlugin2');"/>
       </hbox>
         <hbox style="width: 350px;">
         <spacer flex="1"/>
         <label>Icon:</label>
-        <textbox readonly="true" id="SearchPluginIcon2" style="min-width: 380px;" flex="1" />
+        <textbox id="SearchPluginIcon2" style="min-width: 380px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPluginIcon2');"/>
       </hbox>
       <html:hr/>
       <hbox align="center">
         <spacer flex="1"/>
         <label>File:</label>
-        <textbox readonly="true" id="SearchPlugin3" style="min-width: 375px;" flex="1" />
+        <textbox id="SearchPlugin3" style="min-width: 375px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPlugin3');"/>
       </hbox>
         <hbox style="width: 350px;">
         <spacer flex="1"/>
         <label>Icon:</label>
-        <textbox readonly="true" id="SearchPluginIcon3" style="min-width: 380px;" flex="1" />
+        <textbox id="SearchPluginIcon3" style="min-width: 380px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPluginIcon3');"/>
       </hbox>
       <html:hr/>
       <hbox align="center">
         <spacer flex="1"/>
         <label>File:</label>
-        <textbox readonly="true" id="SearchPlugin4" style="min-width: 375px;" flex="1" />
+        <textbox id="SearchPlugin4" style="min-width: 375px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPlugin4');"/>
       </hbox>
         <hbox style="width: 350px;">
         <spacer flex="1"/>
         <label>Icon:</label>
-        <textbox readonly="true" id="SearchPluginIcon4" style="min-width: 380px;" flex="1" />
+        <textbox id="SearchPluginIcon4" style="min-width: 380px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPluginIcon4');"/>
       </hbox>
       <html:hr/>
       <hbox align="center">
         <spacer flex="1"/>
         <label>File:</label>
-        <textbox readonly="true" id="SearchPlugin5" style="min-width: 375px;" flex="1" />
+        <textbox id="SearchPlugin5" style="min-width: 375px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPlugin5');"/>
       </hbox>
         <hbox style="width: 350px;">
         <spacer flex="1"/>
         <label>Icon:</label>
-        <textbox readonly="true" id="SearchPluginIcon5" style="min-width: 380px;" flex="1" />
+        <textbox id="SearchPluginIcon5" style="min-width: 380px;" flex="1" />
         <button label="Choose File..." oncommand="choosefile('SearchPluginIcon5');"/>
       </hbox>
       <html:hr/>

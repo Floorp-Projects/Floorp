@@ -9,6 +9,7 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
         %descriptionline%
         %creatorline%
         %homepageURLline%
+        %updateURLline%
         %iconURLline%
 
         <em:targetApplication>

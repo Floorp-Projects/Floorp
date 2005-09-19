@@ -102,13 +102,17 @@ function chooseimage(labelname, imagename)
 
 function initimage(labelname, imagename)
 {
- var sourcefile = Components.classes["@mozilla.org/file/local;1"]
+  var sourcefile = Components.classes["@mozilla.org/file/local;1"]
                        .createInstance(Components.interfaces.nsILocalFile);
-  sourcefile.initWithPath(document.getElementById(labelname).value);
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                       .getService(Components.interfaces.nsIIOService);
-  var foo = ioServ.newFileURI(sourcefile);
-  document.getElementById(imagename).src = foo.spec;
+  try {
+    sourcefile.initWithPath(document.getElementById(labelname).value);
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var foo = ioServ.newFileURI(sourcefile);
+    document.getElementById(imagename).src = foo.spec;
+  } catch (e) {
+    document.getElementById(imagename).src = '';
+  }
 }
 
 
@@ -856,6 +860,7 @@ function CCKWriteInstallRDF(destdir)
   var descriptionline = "<em:description>%description%</em:description>";
   var creatorline =     "<em:creator>%creator%</em:creator>";
   var homepageURLline = "<em:homepageURL>%homepageURL%</em:homepageURL>";
+  var updateURLline =   "<em:updateURL>%updateURL%</em:updateURL>";  
   var iconURLline =     "<em:iconURL>chrome://cck/content/%iconURL%</em:iconURL>";
 
 
@@ -926,6 +931,14 @@ function CCKWriteInstallRDF(destdir)
     str = str.replace(/%homepageURL%/g, document.getElementById("homepageURL").value);
   } else {
     str = str.replace(/%homepageURLline%/g, "");
+  }
+
+  var updateURL = document.getElementById("updateURL").value;
+  if (updateURL && (updateURL.length > 0)) {
+    str = str.replace(/%updateURLline%/g, updateURLline);
+    str = str.replace(/%updateURL%/g, document.getElementById("updateURL").value);
+  } else {
+    str = str.replace(/%updateURLline%/g, "");
   }
 
   var iconURL = document.getElementById("iconURL").value;
@@ -1126,6 +1139,29 @@ function Validate(field, message)
   }
   return true;
 }
+
+function ValidateFile()
+{
+  for (var i=0; i < arguments.length; i++) {
+    var filename = document.getElementById(arguments[i]).value;
+    if (filename.length > 0) {
+      var file = Components.classes["@mozilla.org/file/local;1"]
+                           .createInstance(Components.interfaces.nsILocalFile);
+      try {
+        file.initWithPath(filename);
+      } catch (e) {
+        alert("File " + filename + " not found");
+        return false;
+      }
+      if (!file.exists() || file.isDirectory()) {
+        alert("File " + filename + " not found");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 
 function toggleProxySettings()
 {
