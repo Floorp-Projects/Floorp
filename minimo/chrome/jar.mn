@@ -9,7 +9,7 @@ minimo.jar:
 	content/minimo/preferences.xul   (content/preferences.xul)
 	content/minimo/rssview/rssblank.xhtml   (content/rssview/rssblank.xhtml)
 	content/minimo/rssview/rssload.js       (content/rssview/rssload.js)
-	content/minimo/rssview/rss_template_html.xhtml  (content/rssview/rss_template_html.xml)
+	content/minimo/rssview/rss_template_html.xml  (content/rssview/rss_template_html.xml)
 	locale/en-US/minimo/minimo.dtd	 (locale/en-US/minimo.dtd)
     locale/en-US/minimo/minimo.properties (locale/en-US/minimo.properties)
     locale/en-US/minimo/preferences.dtd (locale/en-US/preferences.dtd)
