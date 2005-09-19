@@ -97,7 +97,7 @@ numeric identifiers. Conceptually, all accessors are converted to strings
 in order to perform the lookup of the property in the object. However,
 this is not the implementation used in practice because a number to string
 conversion is too expensive to be performed on every array access.
-<p>Instead, every property accessor method in <a href="org/mozilla/javascript/Scriptable.html">Scriptable</a>
+<p>Instead, every property accessor method in <a href="apidocs/org/mozilla/javascript/Scriptable.html">Scriptable</a>
 (<tt>has</tt>, <tt>get</tt>, <tt>set</tt>, <tt>remove</tt>, <tt>getAttributes</tt>,
 and <tt>setAttributes</tt>) has overloaded forms that take either a <tt>String</tt>
 or an <tt>int</tt> argument. It is the responsibility of the caller to
@@ -113,14 +113,14 @@ Defining Host Objects</h3>
 Host objects are JavaScript objects that provide special access to the
 host environment. For example, in a browser environment, the Window and
 Document objects are host objects.
-<p>The easiest way to define new host objects is by using <a href="org/mozilla/javascript/ScriptableObject.html#defineClass(org.mozilla.javascript.Scriptable, java.lang.Class)">ScriptableObject.defineClass()</a>.
+<p>The easiest way to define new host objects is by using <a href="apidocs/org/mozilla/javascript/ScriptableObject.html#defineClass(org.mozilla.javascript.Scriptable, java.lang.Class)">ScriptableObject.defineClass()</a>.
 This method defines a set of JavaScript objects using a Java class. Several
 of the <a href="examples.html">examples</a> define host objects this way.
 <p>If the services provided by defineClass are insufficient, try other
 methods of
-<a href="org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
+<a href="apidocs/org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
 and
-<a href="org/mozilla/javascript/FunctionObject.html">FunctionObject</a>,
+<a href="apidocs/org/mozilla/javascript/FunctionObject.html">FunctionObject</a>,
 such as <tt>defineProperty</tt> and <tt>defineFunctionProperties</tt>.
 <br>&nbsp;
 <br>&nbsp;

@@ -33,7 +33,7 @@ so people can ask addition questions or comments there.
 Java classes visible to scripts</h3>
 One attendee raised the point that many embeddings may not want scripts
 to be able to access all Java classes. This is an excellent point, and
-I've implemented an addition to the <a href="../js/rhino/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+I've implemented an addition to the <a href="apidocs/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
 class that allows embedders to choose which classes are exposed to scripts.
 <h3>
 Easier "importing" of Java classes</h3>
@@ -42,7 +42,7 @@ classes (like <tt>java.lang.String</tt> or <tt>Packages.org.mozilla.javascript.C
 could be improved. I've implemented a set of changes that make importing
 easier, but I'm not convinced that adding them is the right thing to do
 due to some drawbacks.
-<p>To see what I've done, take a look at the javadoc for the <a href="../js/rhino/org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
+<p>To see what I've done, take a look at the javadoc for the <a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
 class. You'll see that it's now possible to make function calls to "import"
 Java classes so that they can be referred to without qualification. I didn't
 use the word "import" because that's a keyword in JavaScript.

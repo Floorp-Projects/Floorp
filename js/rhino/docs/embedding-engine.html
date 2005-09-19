@@ -52,7 +52,7 @@ JScript. Microsoft binaries of jscript engine can be downloaded from http://msdn
 language in detail but explains how these scripting engines can be used
 as host to expose business objects in the middle-tier and how the user
 of these applications can extend it if needed using JavaScript.</font></font>
-<p><font face="Arial"><font size=-1>The scripting engine Rhino (<a href="http://www.mozilla.org/js)">www.mozilla.org/rhino)</a>,
+<p><font face="Arial"><font size=-1>The scripting engine Rhino (<a href="./)">www.mozilla.org/rhino)</a>,
 a javascript engine purely written in Java is one that I am going to use
 for the testing the above.</font></font>
 <p><font face="Arial"><font size=-1>Let us set some simple goals,</font></font>
@@ -161,7 +161,7 @@ jsbuff){</font></font>
 <br><font face="Arial"><font size=-1>Object any=null;</font></font>
 <br><font face="Arial"><font size=-1>try{</font></font>
 <br><i><font face="Arial"><font size=-1>//Enter the Context</font></font></i>
-<br><font face="Arial"><font size=-1><i>// Refer </i><u><font color="#0000FF">http://www.mozilla.org/js/rhino/tutorial.html</font></u></font></font>
+<br><font face="Arial"><font size=-1><i>// Refer </i><u><font color="#0000FF">http://www.mozilla.org/rhino/tutorial.html</font></u></font></font>
 <br><font face="Arial"><font size=-1>Context context = Context.enter();</font></font>
 <br><i><font face="Arial"><font size=-1>// Get the execution scope</font></font></i>
 <br><font face="Arial"><font size=-1>Scriptable scope = context.initStandardObjects();</font></font>
@@ -183,7 +183,7 @@ to this create object instance</font></font></i>
 scope);</font></font>
 <br><font face="Arial"><font size=-1>scope.put("create",scope,create);</font></font>
 <br><i><font face="Arial"><font size=-1>//Evaluate (or execute js)</font></font></i>
-<br><font face="Arial"><font size=-1><i>//Refer </i><u><font color="#0000FF">http://www.mozilla.org/js/rhino/tutorial.html</font></u></font></font>
+<br><font face="Arial"><font size=-1><i>//Refer </i><u><font color="#0000FF">http://www.mozilla.org/rhino/tutorial.html</font></u></font></font>
 <br><font face="Arial"><font size=-1>any = context.evaluateString(scope,
 jsbuff, "", 1, null);</font></font>
 <br><i><font face="Arial"><font size=-1>//Exit the Context</font></font></i>
@@ -266,8 +266,8 @@ file - " + args[0]);</font></font>
 <br>&nbsp;
 <br>&nbsp;
 <p><font face="Arial"><font size=-1>For more explanations on the code execution,
-please refer embedding tutorial <a href="http://www.mozilla.org/js/rhino/tutorial.html">http://www.mozilla.org/js/rhino/tutorial.html</a>
-and for all documentation and examples on Rhino visit <a href="http://www.mozilla.org/rhino/doc.html">http://www.mozilla.org/rhino/doc.html</a>.</font></font>
+please refer embedding tutorial <a href="http://www.mozilla.org/rhino/tutorial.html">http://www.mozilla.org/rhino/tutorial.html</a>
+and for all documentation and examples on Rhino visit <a href="doc.html">http://www.mozilla.org/rhino/doc.html</a>.</font></font>
 <br>&nbsp;
 <br>&nbsp;
 <br>&nbsp;

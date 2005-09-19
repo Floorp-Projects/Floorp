@@ -73,33 +73,33 @@ for use by JavaScript.</li>
 The Host Object API</h4>
 These APIs provide support for adding objects specific to a particular
 embedding of JavaScript in a host environment. Note that if you just want
-to script existing Java classes, you should just use <a href="http://devedge.netscape.com/library/manuals/2000/javascript/1.5/guide/lc.html">LiveConnect</a>. See also <a href="http://www.mozilla.org/js/liveconnect/">LiveConnect 3.0 specs</a>.
+to script existing Java classes, you should just use <a href="http://developer.mozilla.org/en/docs/Core_JavaScript_1.5_Guide:LiveConnect_Overview">LiveConnect</a>. See also <a href="http://www.mozilla.org/js/liveconnect/">LiveConnect 3.0 specs</a>.
 It is also helpful to understand some of the implementation of the <a href="runtime.html">runtime</a>.
 <ul>
 <li>
-<a href="org/mozilla/javascript/Scriptable.html">Scriptable</a> - All JavaScript
+<a href="apidocs/org/mozilla/javascript/Scriptable.html">Scriptable</a> - All JavaScript
 objects must implement this interface. Provides methods to access properties
 and attributes of those properties, as well as other services required
 of JavaScript objects.</li>
 
 <li>
-<a href="org/mozilla/javascript/Function.html">Function</a> - All JavaScript
+<a href="apidocs/org/mozilla/javascript/Function.html">Function</a> - All JavaScript
 functions must implement this interface. Extends Scriptable, adding methods
 to support invocation.</li>
 
 <li>
-<a href="org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
+<a href="apidocs/org/mozilla/javascript/ScriptableObject.html">ScriptableObject</a>
 - A default implementation of Scriptable that may be extended. Implements
 property and attribute storage and lookup and other default JavaScript
 object behavior.</li>
 
 <li>
-<a href="org/mozilla/javascript/FunctionObject.html">FunctionObject</a>
+<a href="apidocs/org/mozilla/javascript/FunctionObject.html">FunctionObject</a>
 - An implementation of Function that allows Java methods and constructors
 to be used as JavaScript function objects.</li>
 
 <li>
-<a href="org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
+<a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html">ImporterTopLevel</a>
 - Allows embeddings to use the JavaImporter constructor.</li>
 </ul>
 
@@ -108,22 +108,22 @@ Exceptions</h4>
 These exceptions are thrown by JavaScript.
 <ul>
 <li>
-<a href="org/mozilla/javascript/RhinoException.html">RhinoException</a>
+<a href="apidocs/org/mozilla/javascript/RhinoException.html">RhinoException</a>
 - Common root for all exception explicitly thrown by Rhino engine.</li>
 
-<a href="org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
+<a href="apidocs/org/mozilla/javascript/JavaScriptException.html">JavaScriptException</a>
 - Thrown from within JavaScript by the JavaScript 'throw' statement. It wrapps the JavaScript value from 'throw' statement.</li>
 
 <li>
-<a href="org/mozilla/javascript/WrappedException.html">EcmaError</a>
+<a href="apidocs/org/mozilla/javascript/WrappedException.html">EcmaError</a>
 - Thrown by Rhino runtime when particular runtime operation a scripts tries to execute is not allowed. The exception is thrown, for example, when a script attempts to check properties of <tt>undefined</tt>or <tt>null</tt> or refer to a name that can not be found in the current scope chain.</li>
 
 <li>
-<a href="org/mozilla/javascript/WrappedException.html">WrappedException</a>
+<a href="apidocs/org/mozilla/javascript/WrappedException.html">WrappedException</a>
 - Thrown by LiveConnect implementation from JavaScript when called Java method exits with an exception. It wraps the original Java exception.</li>
 
 <li>
-<a href="org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
+<a href="apidocs/org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
 - An exception thrown when an error is detected during the compilation or execution of
 a script. The default error reporter will throw EvaluatorExceptions when
 an error is encountered.</li>

@@ -80,7 +80,7 @@ command line. This is <tt>jsc</tt>, the JavaScript compiler. This tool
 can be used to create Java classes from JavaScript. Options exist to allow
 creation of Java classes that implement arbitrary interfaces and extend
 arbitrary base classes, allowing JavaScript scripts to implement important
-protocols like applets and servlets. See <a href="http://www.mozilla.org/rhino/jsc.html">http://www.mozilla.org/rhino/jsc.html</a>.
+protocols like applets and servlets. See <a href="jsc.html">http://www.mozilla.org/rhino/jsc.html</a>.
 <br>&nbsp;
 <h3>
 LiveConnect 3</h3>
@@ -102,7 +102,7 @@ useful for multithreaded environments like server embeddings.
 New semantics for <tt>ScriptableObject.defineClass</tt></h3>
 The old rules for defining JavaScript objects using a Java class were getting
 baroque. Those rules are still supported, but a cleaner definition is now
-supported. See the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/ScriptableObject.html#defineClass(org.mozilla.javascript.Scriptable, java.lang.Class)">javadoc</a>
+supported. See the <a href="apidocs/org/mozilla/javascript/ScriptableObject.html#defineClass(org.mozilla.javascript.Scriptable, java.lang.Class)">javadoc</a>
 for details.
 <br>&nbsp;
 <h3>
@@ -119,7 +119,7 @@ variables.
 Java classes visible to scripts</h3>
 An attendee at JavaOne raised the point that many embeddings may not want
 scripts to be able to access all Java classes. This is an excellent point,
-and I've implemented an addition to the <a href="../js/rhino/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+and I've implemented an addition to the <a href="apidocs/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
 interface that allows embedders to choose which classes are exposed to
 scripts.
 <br>&nbsp;
@@ -127,7 +127,7 @@ scripts.
 SecuritySupport and JavaAdapter</h3>
 Andrew Wason pointed a problem with the new JavaAdapter feature (which
 allows JavaScript objects to implement arbitrary Java interfaces by generating
-class files). It didn't support the <a href="../js/rhino/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
+class files). It didn't support the <a href="apidocs/org/mozilla/javascript/SecuritySupport.html">SecuritySupport</a>
 interface, which allows Rhino to delegate the creation of classes from
 byte arrays to a routine provided by the embedding. This ability is important
 from a security standpoint because class creation is considered a privileged
@@ -140,14 +140,14 @@ will delegate class creation to the SecuritySupport class.
 Context.exit()</h3>
 Context.exit() has been changed from an instance method to a static method.
 This makes it match the Context.enter() method, which is also static. See
-the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/Context.html#exit()">javadoc</a>
+the <a href="apidocs/org/mozilla/javascript/Context.html#exit()">javadoc</a>
 for more information on its operation.
 <br>&nbsp;
 <h3>
 Context.enter(Context)</h3>
 A new overloaded form of Context.enter has been added. Without the addition
 of this method it was not possible to attach an existing context to a thread.
-See the <a href="http://www.mozilla.org/js/rhino/org/mozilla/javascript/Context.html#enter(org.mozilla.javascript.Context)">javadoc</a>
+See the <a href="apidocs/org/mozilla/javascript/Context.html#enter(org.mozilla.javascript.Context)">javadoc</a>
 for more information on its operation.
 <br>&nbsp;
 <h3>
