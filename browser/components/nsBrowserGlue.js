@@ -57,7 +57,7 @@ BrowserGlue.prototype = {
       case "xpcom-shutdown":
         this._dispose();
         break;
-      case "profile-before-change": 
+      case "profile-change-teardown": 
         this._onProfileShutdown();
         break;
       case "profile-after-change":
@@ -72,7 +72,7 @@ BrowserGlue.prototype = {
     // observer registration
     const osvr = Components.classes['@mozilla.org/observer-service;1']
                            .getService(Components.interfaces.nsIObserverService);
-    osvr.addObserver(this, "profile-before-change", false);
+    osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
     osvr.addObserver(this, "profile-after-change", false);
   },
@@ -83,7 +83,7 @@ BrowserGlue.prototype = {
     // observer removal 
     const osvr = Components.classes['@mozilla.org/observer-service;1']
                            .getService(Components.interfaces.nsIObserverService);
-    osvr.removeObserver(this, "profile-before-change");
+    osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
     osvr.removeObserver(this, "profile-after-change");
   },
