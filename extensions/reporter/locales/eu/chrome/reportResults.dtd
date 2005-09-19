@@ -3,12 +3,12 @@
 <!ENTITY reportDecsription "Azalpena">
 <!ENTITY reportPlatform "Plataforma">
 <!ENTITY reportProduct "Produktua">
-<!ENTITY reportoscpu "SG">
+<!ENTITY reportoscpu "SE">
 <!ENTITY reportGecko "Gecko">
 <!ENTITY reportBuildConfig "Konfigurazioa Sortu">
 <!ENTITY reportUseragent "Erabiltzaile-bezeroa">
 <!ENTITY reportLanguage "Hizkuntza">
 <!ENTITY reportEmail "ePosta">
-<!ENTITY error "Errore Xehetasunak">
+<!ENTITY error "Errorearen Xehetasunak">
 <!ENTITY faultCode "Kodea">
 <!ENTITY faultMessage "Mezua">
