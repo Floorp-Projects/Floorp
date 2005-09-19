@@ -24,6 +24,7 @@
  *   Boris Zbarsky <bzbarsky@mit.edu>
  *   Christopher A. Aillon <christopher@aillon.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1402,7 +1403,7 @@ nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
       case eStyleUnit_Auto:
         val->SetIdent(nsLayoutAtoms::autoAtom);
         break;
-      case eStyleUnit_Null:
+      case eStyleUnit_Null: // XXX doesn't seem like a valid unit per CSS2?
         val->SetIdent(nsLayoutAtoms::none);
         break;
       default:
@@ -1795,9 +1796,11 @@ nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
       case eStyleUnit_Factor:
         val->SetNumber(text->mLineHeight.GetFactorValue());
         break;
+      case eStyleUnit_Normal:
+        val->SetIdent(nsLayoutAtoms::normal);
+        break;
       default:
         NS_ERROR("Unexpected line-height unit");
-        val->SetIdent(nsLayoutAtoms::normal);
         break;
     }
   }
