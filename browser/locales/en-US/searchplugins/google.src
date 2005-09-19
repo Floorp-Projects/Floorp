@@ -10,7 +10,7 @@
 
 <input name="q" user>
 <inputnext name="start" factor="10">
-<inputprev name="start" factor="10">
+<inputprev>
 <input name="ie" value="utf-8">
 <input name="oe" value="utf-8">
 
