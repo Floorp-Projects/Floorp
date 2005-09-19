@@ -2,7 +2,7 @@
 <!ENTITY dontShowPrivacyStatement.label "Ho letto e accettato l'informativa sulla privacy">
 <!ENTITY finish.label "Invio segnalazione">
 <!ENTITY privacyNotice.label "Informazioni sulla privacy">
-<!ENTITY reportForm.behind_login.accesskey "p">
+<!ENTITY reportForm.behind_login.accesskey "w">
 <!ENTITY reportForm.behind_login.title "Il sito è protetto da password">
 <!ENTITY reportForm.describe.accesskey "D">
 <!ENTITY reportForm.describe.title "Descrizione del problema:">
