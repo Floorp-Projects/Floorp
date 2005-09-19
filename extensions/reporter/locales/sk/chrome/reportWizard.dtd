@@ -1,0 +1,40 @@
+<!-- Entities for the Sample Extension Options Dialog go here -->
+<!ENTITY reportWizard.title "Upozornenie na chybnú stránku">
+<!ENTITY privacyNotice.label "Ochrana osobných údajov">
+<!ENTITY reportWizardPrivacy.description "Tento nástroj umožňuje upozorniť Technický tým na stránky, ktoré sa vo Firefoxe nezobrazujú korektne alebo odmietnu zobraziť obsah. Týmto spôsobom nám môžete pomôcť zaistiť do budúcnosti lepší dojem z používania Firefoxu. Prosím, venujte svoj čas prečítaniu nasledovného textu, z ktorého sa dozviete, ako môžete prispieť.">
+<!ENTITY reportWizardMustAgree.description "Pre pokračovanie musíte súhlasiť s hore uvedenou ochranou osobných údajov.">
+<!ENTITY dontShowPrivacyStatement.label "Prečítal som a súhlasím s ujednaním o ochrane osobných údajov">
+<!ENTITY dontShowPrivacyStatement.accesskey         "P">
+<!ENTITY reportForm.label "Vyplnenie správy">
+<!ENTITY reportForm.description "Stručne popíšte zistený problém:">
+<!ENTITY reportForm.url.title "Adresa stránok (URL):">
+<!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.title "Stránka je chránená autorizáciou">
+<!ENTITY reportForm.behind_login.accesskey "c">
+<!ENTITY reportForm.problem_type.title "Typ problému:">
+<!ENTITY reportForm.problem_type.accesskey "T">
+<!ENTITY reportForm.problem_type.chooseOne.title "Vyberte...">
+<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server admin first! -->
+<!ENTITY reportForm.problem_type.item1.title "Prehliadač nie je podporovaný">
+<!ENTITY reportForm.problem_type.item2.title "Nemožno sa prihlásiť">
+<!ENTITY reportForm.problem_type.item3.title "Nie je zobrazený zásuvný modul">
+<!ENTITY reportForm.problem_type.item4.title "Chýba časť obsahu stránky">
+<!ENTITY reportForm.problem_type.item5.title "Chybné chovanie">
+<!ENTITY reportForm.problem_type.item6.title "Chybný vzhľad">
+<!ENTITY reportForm.problem_type.item7.title "Iný problém">
+<!ENTITY reportForm.describe.title "Popis problému">
+<!ENTITY reportForm.describe.accesskey  "P">
+<!ENTITY reportForm.platform.title "Platforma:">
+<!ENTITY reportForm.product.title "Prehliadač:">
+<!ENTITY reportForm.gecko.title "Gecko:">
+<!ENTITY reportForm.useragent.title "Useragent:">
+<!ENTITY reportForm.language.title "Jazyk:">
+<!ENTITY reportForm.email.title "E-mail:">
+<!ENTITY reportForm.email.accesskey "E">
+<!ENTITY reportForm.privacyPolicy.title "Zásady súkromia">
+<!ENTITY reportForm.privacyPolicy.tooltip "Zobrazí zásady súkromia">
+<!ENTITY reportResults.showDetail.title "Zobrazit detaily">
+<!ENTITY reportResults.showDetail.accesskey "Z">
+<!ENTITY sendReport.label "Odoslať upozornenie">
+<!ENTITY sendReport.description "Odosielam upozornenie na server...">
+<!ENTITY finish.label "Upozornenie odoslané ako">

@@ -1,0 +1,4 @@
+<!-- Entities for the Sample Extension Options Dialog go here -->
+<!ENTITY reporterMenu.title "Upozorniť na chybnú stránku">
+<!ENTITY reporterMenu.tooltip "Odošle upozornenie na chybnú stránku">
+<!ENTITY reporterMenu.accesskey "U">
