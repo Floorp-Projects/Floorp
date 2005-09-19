@@ -68,7 +68,7 @@
   </description>
 
   <vbox flex="1" id="palette-box"
-        ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
+        ondraggesture="nsDragAndDrop.startDrag(event, dragStartObserver);"
         ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
         ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
 
