@@ -5788,8 +5788,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
                                          nsFrameItems&            aFrameItems,
                                          PRBool                   aXBLBaseTag,
                                          PRBool                   aHasPseudoParent,
-                                         PRBool&                  aHaltProcessing)
+                                         PRBool*                  aHaltProcessing)
 {
+  *aHaltProcessing = PR_FALSE;
+
   PRBool    primaryFrameSet = PR_FALSE;
   nsresult  rv = NS_OK;
   PRBool    isPopup = PR_FALSE;
@@ -5922,7 +5924,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
         }
 
         if (isRootChromeShell) {
-          aHaltProcessing = PR_TRUE;
+          *aHaltProcessing = PR_TRUE;
           return NS_OK;
         }
   #endif
@@ -7280,9 +7282,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
                                          PRInt32                  aNameSpaceID,
                                          nsStyleContext*          aStyleContext,
                                          nsFrameItems&            aFrameItems,
-                                         PRBool                   aHasPseudoParent)
+                                         PRBool                   aHasPseudoParent,
+                                         PRBool*                  aHaltProcessing)
 {
   NS_ASSERTION(aNameSpaceID == kNameSpaceID_SVG, "SVG frame constructed in wrong namespace");
+  *aHaltProcessing = PR_FALSE;
 
   nsresult  rv = NS_OK;
   PRBool forceView = PR_FALSE;
@@ -7297,15 +7301,44 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
-  //nsSVGTableCreator svgTableCreator(mPresShell); // Used to make table views.
  
   // Default to aParentFrame for the geometricParent; it's adjusted in
   // cases when we allow anything else.
   nsIFrame* geometricParent = aParentFrame;
-  
+
+  PRBool parentIsSVG = PR_FALSE;
+  if (aParentFrame && aParentFrame->GetContent()) {
+    nsCOMPtr<nsIAtom> parentTag;
+    PRInt32 parentNSID;
+    mDocument->BindingManager()->ResolveTag(aParentFrame->GetContent(),
+                                            &parentNSID, getter_AddRefs(parentTag));
+
+    parentIsSVG = parentNSID == kNameSpaceID_SVG
+#ifdef MOZ_SVG_FOREIGNOBJECT
+                  // It's not clear whether the SVG spec intends to allow any SVG
+                  // content within svg:foreignObject at all (SVG 1.1, section
+                  // 23.2), but if it does, it better be svg:svg.  So given that
+                  // we're allowing it, treat it as a non-SVG parent.
+                  && parentTag != nsSVGAtoms::foreignObject
+#endif
+                  ;
+  }
+
+  if (aTag != nsSVGAtoms::svg && !parentIsSVG) {
+    // Sections 5.1 and G.4 of SVG 1.1 say that SVG elements other than
+    // svg:svg not contained within svg:svg are incorrect, although they
+    // don't seem to specify error handling.  Ignore them, since many of
+    // our frame classes can't deal.  It *may* be that the document
+    // should at that point be considered in error according to F.2, but
+    // it's hard to tell.
+    // Style mutation can't change this situation, so don't bother
+    // adding to the undisplayed content map.
+    *aHaltProcessing = PR_TRUE;
+    return NS_OK;
+  }
+
   if (aTag == nsSVGAtoms::svg) {
-    nsCOMPtr<nsISVGContainerFrame> container = do_QueryInterface(aParentFrame);
-    if (!container) {
+    if (!parentIsSVG) {
       // This is the outermost <svg> element.
       isOuterSVGNode = PR_TRUE;
 
@@ -7391,6 +7424,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // element. In that case, the bound content element will always be
     // a standard xml element, and not be of the right type.
     // The best we can do here is to create a generic svg container frame.
+    // XXXldb This really isn't what the SVG spec says to do.
 #ifdef DEBUG
     // printf("Warning: Creating SVGGenericContainerFrame for tag <");
     // nsAutoString str;
@@ -7644,11 +7678,11 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   // whole process into separate, pluggable steps.
   if (NS_SUCCEEDED(rv) &&
       (!frameItems->childList || lastChild == frameItems->lastChild)) {
-    PRBool haltProcessing = PR_FALSE;
+    PRBool haltProcessing;
     rv = ConstructXULFrame(aState, aContent, adjParentFrame, aTag,
                            aNameSpaceID, styleContext,
                            *frameItems, aXBLBaseTag, pseudoParent,
-                           haltProcessing);
+                           &haltProcessing);
     if (haltProcessing) {
       return rv;
     }
@@ -7670,9 +7704,13 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
       (!frameItems->childList || lastChild == frameItems->lastChild) &&
       aNameSpaceID == kNameSpaceID_SVG &&
       nsSVGUtils::SVGEnabled()) {
+    PRBool haltProcessing;
     rv = ConstructSVGFrame(aState, aContent, adjParentFrame, aTag,
                            aNameSpaceID, styleContext,
-                           *frameItems, pseudoParent);
+                           *frameItems, pseudoParent, &haltProcessing);
+    if (haltProcessing) {
+      return rv;
+    }
   }
 #endif
 
