@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Find filer...">
+<!ENTITY txSearchFor.label "Søg efter:">
+<!ENTITY txSearchPath.label "Søg i:">
+<!ENTITY cbRecurse.label "Søg undermapper">

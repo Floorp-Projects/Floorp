@@ -1,0 +1,63 @@
+
+<!ENTITY Inspector.title "DOM Inspektør">
+
+<!ENTITY thDOMNodes.label "DOM Nodes">
+<!ENTITY btnInspect.label "Inspicer">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Inspicer en node ved at klikke på den">
+<!ENTITY btnFind.tooltip "Find en node at inspicere ved id, tag eller attribut">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Filer">
+<!ENTITY mnWindows.label "Inspicer et vindue">
+<!ENTITY mnWindows.accesskey "v">
+<!ENTITY mnFile.accesskey "f">
+  <!ENTITY cmdShowOpenURLDialog.label "Inspicer en URL...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Luk">
+  <!ENTITY cmdClose.accesskey "l">
+  <!ENTITY cmdExit.label "Afslut">
+  <!ENTITY cmdExit.accesskey "a">
+
+<!ENTITY mnEdit.label "Rediger">
+<!ENTITY mnEdit.accesskey "R">
+  <!ENTITY cmdUndo.label "Fortryd">
+  <!ENTITY cmdUndo.accesskey "F">
+  <!ENTITY cmdRedo.label "Gentag">
+  <!ENTITY cmdRedo.accesskey "G">
+  <!ENTITY cmdCut.label "Klip">
+  <!ENTITY cmdCut.accesskey "K">
+  <!ENTITY cmdCopy.label "Kopier">
+  <!ENTITY cmdCopy.accesskey "o">
+  <!ENTITY cmdPaste.label "Indsæt">
+  <!ENTITY cmdPaste.accesskey "I">
+  <!ENTITY cmdDelete.label "Slet">
+  <!ENTITY cmdDelete.accesskey "S">
+
+<!ENTITY mnSearch.label "Søg">
+<!ENTITY mnSearch.accesskey "s">
+  <!ENTITY mnSearchPlugins.label "Udvidelsemoduler">
+  <!ENTITY mnSearchPlugins.accesskey "U">
+    <!ENTITY cmdRunSearch.label "Kør...">
+    <!ENTITY cmdRunSearch.accesskey "K">
+
+<!ENTITY mnView.label "Vis">
+<!ENTITY mnView.accesskey "v">
+  <!ENTITY cmdToggleBrowser.label "Browser">
+  <!ENTITY cmdToggleSearch.label "Søgeresultater">
+
+<!ENTITY cmdViewSearchItem.label "Vis...">
+<!ENTITY cmdEditSearchItem.label "Rediger...">
+<!ENTITY cmdCopySearchItemLine.label "Kopier linje">
+<!ENTITY cmdCopySearchItemAll.label "Kopier alt">
+<!ENTITY cmdSaveSearchItemText.label "Gem...">
+<!ENTITY cmdClearSearch.label "Ryd">
+<!ENTITY cmdHideSearchItems.label "Skjul">
+
+<!ENTITY browserPanel.label "Browser">
+
+<!ENTITY inspectNewWindow.label "Inspicer i nyt vindue">
+
+<!ENTITY closeCmd.key "L">
