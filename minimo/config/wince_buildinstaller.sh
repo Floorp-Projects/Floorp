@@ -33,12 +33,12 @@ popd
 
 pushd $INSTALL_DIST
 
-rm -f minimo.*.DAT minimo.*.cab minimo.log minimo_setup.exe
+rm -f minimo.*.DAT minimo.*.cab minimo.log minimo_wince_setup.exe
 
 ./cabwiz minimo.inf /err minimo.log /cpu 2577
 
 cat minimo.log
 
-./ezsetup -l english -i minimo_installer.ini -r readme.txt -e eula.txt -o minimo_setup.exe
+./ezsetup -l english -i minimo_installer.ini -r readme.txt -e eula.txt -o minimo_wince_setup.exe
 
-cp -a minimo_setup.exe $OBJDIR/dist/
+cp -a minimo_wince_setup.exe $OBJDIR/dist/

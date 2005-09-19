@@ -16,7 +16,7 @@ echo ---------------------------------------------------
 
 pushd $OBJDIR/dist
 rm -rf minimo
-rm -f minimo.zip
+rm -f minimo.tar.gz
 
 echo Copying over files from OBJDIR
 
@@ -112,6 +112,6 @@ popd
 
 echo Zipping
 
-tar cvzhf $OBJDIR/dist/minimo.tar.gz $OBJDIR/dist/minimo
+tar cvzhf $OBJDIR/dist/minimo_x86_linux.tar.gz $OBJDIR/dist/minimo
 
 echo Done.
