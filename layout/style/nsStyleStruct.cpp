@@ -429,11 +429,10 @@ nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
     mBorder.side(side) = medium;
     mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
     mBorderColor[side] = NS_RGB(0, 0, 0);
+    mBorderRadius.Set(side, nsStyleCoord(0));
   }
 
   mBorderColors = nsnull;
-
-  mBorderRadius.Reset();
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
 }
@@ -520,7 +519,11 @@ nsChangeHint nsStyleBorder::MaxDifference()
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
   // spacing values not inherited
-  mOutlineRadius.Reset();
+  nsStyleCoord zero(0);
+  NS_FOR_CSS_SIDES(side) {
+    mOutlineRadius.Set(side, zero);
+  }
+
   mOutlineOffset.SetCoordValue(0);
 
   mOutlineWidth = nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
