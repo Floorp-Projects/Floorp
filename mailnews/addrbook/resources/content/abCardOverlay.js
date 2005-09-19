@@ -36,8 +36,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const kNonVcardFields =
+        ["nickNameContainer", "secondaryEmailContainer", "screenNameContainer",
+         "homeAddressGroup", "customFields"];
+
+const kPhoneticFields =
+        ["PhoneticLastName", "PhoneticLabel1", "PhoneticSpacer1",
+         "PhoneticFirstName", "PhoneticLabel2", "PhoneticSpacer2"];
+
+// Item is |[dialogField, cardProperty]|.
+const kVcardFields =
+        [ // Contact > Name
+         ["FirstName", "firstName"],
+         ["LastName", "lastName"],
+         ["DisplayName", "displayName"],
+         ["NickName", "nickName"],
+          // Contact > Internet
+         ["PrimaryEmail", "primaryEmail"],
+         ["SecondEmail", "secondEmail"],
+         ["ScreenName", "aimScreenName"], // NB: AIM.
+          // Contact > Phones
+         ["WorkPhone", "workPhone"],
+         ["HomePhone", "homePhone"],
+         ["FaxNumber", "faxNumber"],
+         ["PagerNumber", "pagerNumber"],
+         ["CellularNumber", "cellularNumber"],
+          // Address > Home
+         ["HomeAddress", "homeAddress"],
+         ["HomeAddress2", "homeAddress2"],
+         ["HomeCity", "homeCity"],
+         ["HomeState", "homeState"],
+         ["HomeZipCode", "homeZipCode"],
+         ["HomeCountry", "homeCountry"],
+         ["WebPage2", "webPage2"],
+          // Address > Work
+         ["JobTitle", "jobTitle"],
+         ["Department", "department"],
+         ["Company", "company"],
+         ["WorkAddress", "workAddress"],
+         ["WorkAddress2", "workAddress2"],
+         ["WorkCity", "workCity"],
+         ["WorkState", "workState"],
+         ["WorkZipCode", "workZipCode"],
+         ["WorkCountry", "workCountry"],
+         ["WebPage1", "webPage1"],
+          // Other > (custom)
+         ["Custom1", "custom1"],
+         ["Custom2", "custom2"],
+         ["Custom3", "custom3"],
+         ["Custom4", "custom4"],
+          // Other > Notes
+         ["Notes", "notes"]];
+
 var gEditCard;
-var gOnSaveListeners = new Array;
+var gOnSaveListeners = new Array();
 var gOkCallback = null;
 var gHideABPicker = false;
 
@@ -93,9 +145,10 @@ function OnLoadNewCard()
     if ("escapedVCardStr" in window.arguments[0]) {
       // hide non vcard values
       HideNonVcardFields();
-      var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
       gEditCard.card =
-        addressbook.escapedVCardToAbCard(window.arguments[0].escapedVCardStr);
+        Components.classes["@mozilla.org/addressbook;1"]
+                  .createInstance(Components.interfaces.nsIAddressBook)
+                  .escapedVCardToAbCard(window.arguments[0].escapedVCardStr);
     }
 
     if ("titleProperty" in window.arguments[0])
@@ -111,8 +164,7 @@ function OnLoadNewCard()
 
   if (gHideABPicker && abPopup) {
     abPopup.hidden = true;
-    var abPopupLabel = document.getElementById("abPopupLabel");
-    abPopupLabel.hidden = true;
+    document.getElementById("abPopupLabel").hidden = true;
   }
 
   SetCardDialogTitle(gEditCard.card.displayName);
@@ -132,23 +184,23 @@ function OnLoadNewCard()
   moveToAlertPosition();
 }
 
-// find the index in addressLists for the card that is being saved.
+// @Returns The index in addressLists for the card that is being saved;
+//          or |-1| if the card is not found.
 function findCardIndex(directory)
 {
-  var index = -1;
-  var listCardsCount = directory.addressLists.Count();
-  for ( var i = 0;  i < listCardsCount; i++ ) {
+  var i = directory.addressLists.Count();
+  while (i-- > 0) {
     var card = directory.addressLists.QueryElementAt(i, Components.interfaces.nsIAbCard);
-    if (gEditCard.card.equals(card)) {
-      index = i;
+    if (gEditCard.card.equals(card))
       break;
-    }
   }
-  return index;
+  return i;
 }
 
 function EditCardOKButton()
 {
+  if (!CheckCardRequiredDataPresence(document))
+    return false;  // don't close window
 
   // See if this card is in any mailing list
   // if so then we need to update the addresslists of those mailing lists
@@ -177,7 +229,7 @@ function EditCardOKButton()
     }
   }
   
-  SetCardValues(gEditCard.card, document);
+  CheckAndSetCardValues(gEditCard.card, document, false);
 
   gEditCard.card.editCardToDatabase(gEditCard.abURI);
   
@@ -236,8 +288,8 @@ function OnLoadEditCard()
       if (!(directory.operations & directory.opWrite)) 
       {
         var disableElements = document.getElementsByAttribute("disableforreadonly", "true");
-        for (var i=0; i<disableElements.length; i++)
-          disableElements[i].setAttribute('disabled', 'true');
+        for (var i = disableElements.length; i-- > 0; )
+          disableElements[i].disabled = 'true';
 
         document.documentElement.buttons = "accept";
         document.documentElement.removeAttribute("ondialogaccept");
@@ -251,22 +303,22 @@ function OnLoadEditCard()
 // like Netscape does for screenname
 function RegisterSaveListener(func)
 {
-  var length = gOnSaveListeners.length;
-  gOnSaveListeners[length] = func;
+  gOnSaveListeners[gOnSaveListeners.length] = func;
 }
 
 // this is used by people who extend the ab card dialog
 // like Netscape does for screenname
 function NotifySaveListeners()
 {
+  if (!gOnSaveListeners.length)
+    return;
+
   for ( var i = 0; i < gOnSaveListeners.length; i++ )
     gOnSaveListeners[i]();
 
-  if (gOnSaveListeners.length) {
-    // the save listeners might have tweaked the card
-    // in which case we need to commit it.
-    gEditCard.card.editCardToDatabase(gEditCard.abURI);
-  }
+  // the save listeners might have tweaked the card
+  // in which case we need to commit it.
+  gEditCard.card.editCardToDatabase(gEditCard.abURI);
 }
 
 function InitPhoneticFields()
@@ -278,19 +330,8 @@ function InitPhoneticFields()
   // hide phonetic fields if indicated by the pref
   if (showPhoneticFields == "true")
   {
-    var element = document.getElementById("PhoneticLastName");
-    element.setAttribute("hidden", "false");
-    element = document.getElementById("PhoneticLabel1");
-    element.setAttribute("hidden", "false");
-    element = document.getElementById("PhoneticSpacer1");
-    element.setAttribute("hidden", "false");
-
-    element = document.getElementById("PhoneticFirstName");
-    element.setAttribute("hidden", "false");
-    element = document.getElementById("PhoneticLabel2");
-    element.setAttribute("hidden", "false");
-    element = document.getElementById("PhoneticSpacer2");
-    element.setAttribute("hidden", "false");
+    for (var i = kPhoneticFields.length; i-- > 0; )
+      document.getElementById(kPhoneticFields[i]).hidden = false;
   }
 }
 
@@ -301,7 +342,7 @@ function InitEditCard()
   InitCommonJS();
   // Create gEditCard object that contains global variables for the current js
   //   file.
-  gEditCard = new Object;
+  gEditCard = new Object();
 
   gEditCard.prefs = gPrefs;
 
@@ -323,7 +364,9 @@ function NewCardOKButton()
 {
   if (gOkCallback)
   {
-    SetCardValues(gEditCard.card, document);
+    if (!CheckAndSetCardValues(gEditCard.card, document, true))
+      return false;  // don't close window
+
     var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
     gOkCallback(addressbook.abCardToEscapedVCard(gEditCard.card));
     return true;  // close the window
@@ -342,15 +385,13 @@ function NewCardOKButton()
 
     if (gEditCard.card)
     {
-      SetCardValues(gEditCard.card, document);
-
-      var directory = GetDirectoryFromURI(uri);
+      if (!CheckAndSetCardValues(gEditCard.card, document, true))
+        return false;  // don't close window
 
       // replace gEditCard.card with the card we added
       // so that save listeners can get / set attributes on
       // the card that got created.
-      var addedCard = directory.addCard(gEditCard.card);
-      gEditCard.card = addedCard;
+      gEditCard.card = GetDirectoryFromURI(uri).addCard(gEditCard.card);
       NotifySaveListeners();
     }
   }
@@ -361,59 +402,23 @@ function NewCardOKButton()
 // Move the data from the cardproperty to the dialog
 function GetCardValues(cardproperty, doc)
 {
-  if ( cardproperty )
-  {
-    doc.getElementById('FirstName').value = cardproperty.firstName;
-    doc.getElementById('LastName').value = cardproperty.lastName;
-    doc.getElementById('DisplayName').value = cardproperty.displayName;
-    doc.getElementById('NickName').value = cardproperty.nickName;
+  if (!cardproperty)
+    return;
 
-    doc.getElementById('PrimaryEmail').value = cardproperty.primaryEmail;
-    doc.getElementById('SecondEmail').value = cardproperty.secondEmail;
-    doc.getElementById('ScreenName').value = cardproperty.aimScreenName;
+  for (var i = kVcardFields.length; i-- > 0; )
+    doc.getElementById(kVcardFields[i][0]).value =
+      cardproperty[kVcardFields[i][1]];
 
-    var popup = document.getElementById('PreferMailFormatPopup');
-    if ( popup )
-      popup.value = cardproperty.preferMailFormat;
+  var popup = document.getElementById("PreferMailFormatPopup");
+  if (popup)
+    popup.value = cardproperty.preferMailFormat;
 
-    doc.getElementById('WorkPhone').value = cardproperty.workPhone;
-    doc.getElementById('HomePhone').value = cardproperty.homePhone;
-    doc.getElementById('FaxNumber').value = cardproperty.faxNumber;
-    doc.getElementById('PagerNumber').value = cardproperty.pagerNumber;
-    doc.getElementById('CellularNumber').value = cardproperty.cellularNumber;
-
-    doc.getElementById('HomeAddress').value = cardproperty.homeAddress;
-    doc.getElementById('HomeAddress2').value = cardproperty.homeAddress2;
-    doc.getElementById('HomeCity').value = cardproperty.homeCity;
-    doc.getElementById('HomeState').value = cardproperty.homeState;
-    doc.getElementById('HomeZipCode').value = cardproperty.homeZipCode;
-    doc.getElementById('HomeCountry').value = cardproperty.homeCountry;
-    doc.getElementById('WebPage2').value = cardproperty.webPage2;
-
-    doc.getElementById('JobTitle').value = cardproperty.jobTitle;
-    doc.getElementById('Department').value = cardproperty.department;
-    doc.getElementById('Company').value = cardproperty.company;
-    doc.getElementById('WorkAddress').value = cardproperty.workAddress;
-    doc.getElementById('WorkAddress2').value = cardproperty.workAddress2;
-    doc.getElementById('WorkCity').value = cardproperty.workCity;
-    doc.getElementById('WorkState').value = cardproperty.workState;
-    doc.getElementById('WorkZipCode').value = cardproperty.workZipCode;
-    doc.getElementById('WorkCountry').value = cardproperty.workCountry;
-    doc.getElementById('WebPage1').value = cardproperty.webPage1;
-
-    doc.getElementById('Custom1').value = cardproperty.custom1;
-    doc.getElementById('Custom2').value = cardproperty.custom2;
-    doc.getElementById('Custom3').value = cardproperty.custom3;
-    doc.getElementById('Custom4').value = cardproperty.custom4;
-    doc.getElementById('Notes').value = cardproperty.notes;
-
-    // get phonetic fields if exist
-    try {
-      doc.getElementById('PhoneticFirstName').value = cardproperty.phoneticFirstName;
-      doc.getElementById('PhoneticLastName').value = cardproperty.phoneticLastName;
-    }
-    catch (ex) {}
+  // get phonetic fields if exist
+  try {
+    doc.getElementById("PhoneticFirstName").value = cardproperty.phoneticFirstName;
+    doc.getElementById("PhoneticLastName").value = cardproperty.phoneticLastName;
   }
+  catch (ex) {}
 }
 
 // when the ab card dialog is being loaded to show a vCard,
@@ -421,70 +426,38 @@ function GetCardValues(cardproperty, doc)
 // by vCard so the user does not try to edit them.
 function HideNonVcardFields()
 {
-  document.getElementById('nickNameContainer').collapsed = true;
-  document.getElementById('secondaryEmailContainer').collapsed = true;
-  document.getElementById('screenNameContainer').collapsed = true;
-  document.getElementById('homeAddressGroup').collapsed = true;
-  document.getElementById('customFields').collapsed = true;
-
+  for (var i = kNonVcardFields.length; i-- > 0; )
+    document.getElementById(kNonVcardFields[i]).collapsed = true;
 }
 
 // Move the data from the dialog to the cardproperty to be stored in the database
-function SetCardValues(cardproperty, doc)
+// @Returns false - Some required data are missing (card values were not set);
+//          true - Card values were set, or there is no card to set values on.
+function CheckAndSetCardValues(cardproperty, doc, check)
 {
-  if (cardproperty)
-  {
-    cardproperty.firstName = doc.getElementById('FirstName').value;
-    cardproperty.lastName = doc.getElementById('LastName').value;
-    cardproperty.displayName = doc.getElementById('DisplayName').value;
-    cardproperty.nickName = doc.getElementById('NickName').value;
+  // If requested, check the required data presence.
+  if (check && !CheckCardRequiredDataPresence(document))
+    return false;
 
-    cardproperty.primaryEmail = doc.getElementById('PrimaryEmail').value;
-    cardproperty.secondEmail = doc.getElementById('SecondEmail').value;
-    cardproperty.aimScreenName = doc.getElementById('ScreenName').value;
+  if (!cardproperty)
+    return true;
 
-    var popup = document.getElementById('PreferMailFormatPopup');
-    if ( popup )
-      cardproperty.preferMailFormat = popup.value;
+  for (var i = kVcardFields.length; i-- > 0; )
+    cardproperty[kVcardFields[i][1]] =
+      doc.getElementById(kVcardFields[i][0]).value;
 
-    cardproperty.workPhone = doc.getElementById('WorkPhone').value;
-    cardproperty.homePhone = doc.getElementById('HomePhone').value;
-    cardproperty.faxNumber = doc.getElementById('FaxNumber').value;
-    cardproperty.pagerNumber = doc.getElementById('PagerNumber').value;
-    cardproperty.cellularNumber = doc.getElementById('CellularNumber').value;
+  var popup = document.getElementById("PreferMailFormatPopup");
+  if (popup)
+    cardproperty.preferMailFormat = popup.value;
 
-    cardproperty.homeAddress = doc.getElementById('HomeAddress').value;
-    cardproperty.homeAddress2 = doc.getElementById('HomeAddress2').value;
-    cardproperty.homeCity = doc.getElementById('HomeCity').value;
-    cardproperty.homeState = doc.getElementById('HomeState').value;
-    cardproperty.homeZipCode = doc.getElementById('HomeZipCode').value;
-    cardproperty.homeCountry = doc.getElementById('HomeCountry').value;
-    cardproperty.webPage2 = CleanUpWebPage(doc.getElementById('WebPage2').value);
-
-    cardproperty.jobTitle = doc.getElementById('JobTitle').value;
-    cardproperty.department = doc.getElementById('Department').value;
-    cardproperty.company = doc.getElementById('Company').value;
-    cardproperty.workAddress = doc.getElementById('WorkAddress').value;
-    cardproperty.workAddress2 = doc.getElementById('WorkAddress2').value;
-    cardproperty.workCity = doc.getElementById('WorkCity').value;
-    cardproperty.workState = doc.getElementById('WorkState').value;
-    cardproperty.workZipCode = doc.getElementById('WorkZipCode').value;
-    cardproperty.workCountry = doc.getElementById('WorkCountry').value;
-    cardproperty.webPage1 = CleanUpWebPage(doc.getElementById('WebPage1').value);
-
-    cardproperty.custom1 = doc.getElementById('Custom1').value;
-    cardproperty.custom2 = doc.getElementById('Custom2').value;
-    cardproperty.custom3 = doc.getElementById('Custom3').value;
-    cardproperty.custom4 = doc.getElementById('Custom4').value;
-    cardproperty.notes = doc.getElementById('Notes').value;
-
-    // set phonetic fields if exist
-    try {
-      cardproperty.phoneticFirstName = doc.getElementById('PhoneticFirstName').value;
-      cardproperty.phoneticLastName = doc.getElementById('PhoneticLastName').value;
-    }
-    catch (ex) {}
+  // set phonetic fields if exist
+  try {
+    cardproperty.phoneticFirstName = doc.getElementById("PhoneticFirstName").value;
+    cardproperty.phoneticLastName = doc.getElementById("PhoneticLastName").value;
   }
+  catch (ex) {}
+
+  return true;
 }
 
 function CleanUpWebPage(webPage)
@@ -502,30 +475,59 @@ function CleanUpWebPage(webPage)
     return(webPage);
 }
 
+// @Returns false - Some required data are missing;
+//          true - All required data are present.
+function CheckCardRequiredDataPresence(doc)
+{
+  // Simple checks that the primary email could be of the form |user@host|.
+  var primaryEmail = doc.getElementById("PrimaryEmail");
+  var primaryEmailValue = primaryEmail.value;
+  var primaryEmailValueLength = primaryEmailValue.length;
+  var primaryEmailValueAtLastIndex = primaryEmailValue.lastIndexOf("@");
+  if (!((primaryEmailValueLength >= 3) &&
+        (primaryEmailValueAtLastIndex > 0) &&
+        (primaryEmailValueAtLastIndex < primaryEmailValueLength - 1)))
+  {
+    Components
+      .classes["@mozilla.org/embedcomp/prompt-service;1"]
+      .getService(Components.interfaces.nsIPromptService)
+      .alert(
+        window,
+        gAddressBookBundle.getString("cardRequiredDataMissingTitle"),
+        gAddressBookBundle.getString("cardRequiredDataMissingMessage"));
+
+    // Focus the dialog field, to help the user.
+    document.getElementById("abTabs").selectedIndex = 0;
+    primaryEmail.focus();
+
+    return false;
+  }
+
+  return true;
+}
+
 function GenerateDisplayName()
 {
-  if (gEditCard.generateDisplayName)
-  {
-    var displayName;
+  if (!gEditCard.generateDisplayName)
+    return;
 
-    var firstNameField = document.getElementById('FirstName');
-    var lastNameField = document.getElementById('LastName');
-    var displayNameField = document.getElementById('DisplayName');
+  var displayName;
 
-    if (lastNameField.value && firstNameField.value) {
-      displayName = (gEditCard.displayLastNameFirst)
-        ? gAddressBookBundle.getFormattedString("lastFirstFormat", [lastNameField.value, firstNameField.value])
-        : gAddressBookBundle.getFormattedString("firstLastFormat", [firstNameField.value, lastNameField.value]);
-    }
-    else {
-      // one (or both) of these is empty, so this works.
-      displayName = firstNameField.value + lastNameField.value;
-    }
-
-    displayNameField.value = displayName;
-
-    SetCardDialogTitle(displayName);
+  var firstNameValue = document.getElementById("FirstName").value;
+  var lastNameValue = document.getElementById("LastName").value;
+  if (lastNameValue && firstNameValue) {
+    displayName = (gEditCard.displayLastNameFirst)
+      ? gAddressBookBundle.getFormattedString("lastFirstFormat", [lastNameValue, firstNameValue])
+      : gAddressBookBundle.getFormattedString("firstLastFormat", [firstNameValue, lastNameValue]);
   }
+  else {
+    // one (or both) of these is empty, so this works.
+    displayName = firstNameValue + lastNameValue;
+  }
+
+  document.getElementById("DisplayName").value = displayName;
+
+  SetCardDialogTitle(displayName);
 }
 
 function DisplayNameChanged()
