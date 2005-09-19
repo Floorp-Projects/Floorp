@@ -1,0 +1,14 @@
+<!ENTITY reportSite "Stránka">
+<!ENTITY reportProblemType "Druh problému">
+<!ENTITY reportDecsription "Popis">
+<!ENTITY reportPlatform "Hardwarová platforma">
+<!ENTITY reportProduct "Prehliadač">
+<!ENTITY reportoscpu "Operačný systém">
+<!ENTITY reportGecko "Gecko">
+<!ENTITY reportBuildConfig "Použitá konfigurácia">
+<!ENTITY reportUseragent "Useragent">
+<!ENTITY reportLanguage "Jazyk">
+<!ENTITY reportEmail "E-mail">
+<!ENTITY error "Chyba">
+<!ENTITY faultCode "Kód">
+<!ENTITY faultMessage "Správa">
