@@ -58,6 +58,7 @@
 #include "nsCRT.h"
 #include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
+#include "nsIProxyObjectManager.h"
 
 class nsIComponentLoaderManager;
 
@@ -530,7 +531,15 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
     (do_GetService("@mozilla.org/observer-service;1"));
   if (!observerService)
     return;
- 
+
+  nsCOMPtr<nsIObserverService> obsProxy;
+  NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                       NS_GET_IID(nsIObserverService),
+                       observerService,
+                       PROXY_ASYNC,
+                       getter_AddRefs(obsProxy));
+  if (!obsProxy) return;
+
   if (aEntryName) {
     nsCOMPtr<nsISupportsCString> entry
       (do_CreateInstance (NS_SUPPORTS_CSTRING_CONTRACTID));
@@ -541,13 +550,11 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
     if (NS_FAILED(rv))
       return;
 
-    observerService->NotifyObservers
-                       (entry, aTopic,
-                        NS_ConvertUTF8toUTF16(aCategoryName).get());
+    obsProxy->NotifyObservers(entry, aTopic,
+                              NS_ConvertUTF8toUTF16(aCategoryName).get());
   } else {
-    observerService->NotifyObservers
-                       (this, aTopic,
-                        NS_ConvertUTF8toUTF16(aCategoryName).get());
+    obsProxy->NotifyObservers(this, aTopic,
+                              NS_ConvertUTF8toUTF16(aCategoryName).get());
   }
 }
 

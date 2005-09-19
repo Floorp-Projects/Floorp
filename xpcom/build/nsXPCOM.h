@@ -384,7 +384,7 @@ NS_Free(void* ptr);
  * This topic is notified when an entry was added to a category in the
  * category manager. The subject of the notification will be the name of
  * the added entry as an nsISupportsCString, and the data will be the
- * name of the category.
+ * name of the category. The notification will occur on the main thread.
  *
  * @status FROZEN
  */
@@ -395,7 +395,7 @@ NS_Free(void* ptr);
  * This topic is notified when an entry was removed from a category in the
  * category manager. The subject of the notification will be the name of
  * the removed entry as an nsISupportsCString, and the data will be the
- * name of the category.
+ * name of the category. The notification will occur on the main thread.
  *
  * @status FROZEN
  */
@@ -406,6 +406,7 @@ NS_Free(void* ptr);
  * This topic is notified when an a category was cleared in the category
  * manager. The subject of the notification will be the category manager,
  * and the data will be the name of the cleared category.
+ * The notification will occur on the main thread.
  *
  * @status FROZEN
  */
