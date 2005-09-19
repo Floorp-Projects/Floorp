@@ -3078,7 +3078,9 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName, secuCommand *cmd)
 		cmd->options[i].activated = PR_TRUE;
 		if (optstate->value) {
 		    cmd->options[i].arg = (char *)optstate->value;
-		}
+		} else if (cmd->options[i].needsArg) {
+                    return SECFailure;
+                }
 		found = PR_TRUE;
 		break;
 	    }
