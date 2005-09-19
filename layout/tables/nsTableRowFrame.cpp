@@ -588,10 +588,9 @@ nsTableRowFrame::GetSkipSides() const
  * so the default "get the child rect, see if it contains the event point" action isn't
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
-NS_IMETHODIMP
+nsIFrame*
 nsTableRowFrame::GetFrameForPoint(const nsPoint&    aPoint,
-                                       nsFramePaintLayer aWhichLayer,
-                                       nsIFrame**        aFrame)
+                                  nsFramePaintLayer aWhichLayer)
 {
   // XXX This would not need to exist (except as a one-liner, to make this
   // frame work like a block frame) if rows with rowspan cells made the
@@ -606,26 +605,16 @@ nsTableRowFrame::GetFrameForPoint(const nsPoint&    aPoint,
   // This is basically copied from nsContainerFrame::GetFrameForPointUsing,
   // except for one bit removed
 
-  nsIFrame *hit;
-  nsPoint tmp;
-
   nsIFrame* kid = GetFirstChild(nsnull);
-  *aFrame = nsnull;
-  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
-  while (nsnull != kid) {
-    nsresult rv = kid->GetFrameForPoint(tmp, aWhichLayer, &hit);
-
-    if (NS_SUCCEEDED(rv) && hit) {
-      *aFrame = hit;
-    }
+  nsIFrame* frame = nsnull;
+  while (kid) {
+    nsIFrame* hit = kid->GetFrameForPoint(aPoint - kid->GetOffsetTo(this),
+                                          aWhichLayer);
+    if (hit)
+      frame = hit;
     kid = kid->GetNextSibling();
   }
-
-  if (*aFrame) {
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  return frame;
 }
 
 // Calculate the cell's actual size given its pass2 desired width and height.

@@ -1737,25 +1737,21 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 }
 #endif
 
-NS_IMETHODIMP  
-nsBoxFrame::GetFrameForPoint(const nsPoint&    aPoint, 
-                             nsFramePaintLayer aWhichLayer,    
-                             nsIFrame**        aFrame)
-{   
-  if (!mRect.Contains(aPoint))
-    return NS_ERROR_FAILURE;
+nsIFrame*
+nsBoxFrame::GetFrameForPoint(const nsPoint&    aPoint,
+                             nsFramePaintLayer aWhichLayer)
+{
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!thisRect.Contains(aPoint))
+    return nsnull;
 
   const nsStyleVisibility* vis = GetStyleVisibility();
   if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
-    return NS_ERROR_FAILURE;
-
-  nsIView* view = nsnull;
-  nsPoint originOffset;
-  GetOriginToViewOffset(originOffset, &view);
+    return nsnull;
 
 #ifdef DEBUG_LAYOUT
   // get the debug frame.
-  if (view || (mState & NS_STATE_IS_ROOT))
+  if (HasView() || (mState & NS_STATE_IS_ROOT))
   {
     nsIBox* box = nsnull;
     if (NS_SUCCEEDED(GetDebugBoxAt(aPoint, &box)) && box)
@@ -1763,79 +1759,56 @@ nsBoxFrame::GetFrameForPoint(const nsPoint&    aPoint,
       PRBool isDebug = PR_FALSE;
       box->GetDebug(isDebug);
       if (isDebug) {
-        *aFrame = box;
-        return NS_OK;
+        return box;
       }
     }
   }
 #endif
 
   nsIFrame *hit = nsnull;
-  nsPoint tmp;
-
-  *aFrame = nsnull;
-  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
-
-  if (view)
-    tmp += originOffset;
-
   nsIBox* kid = nsnull;
   GetChildBox(&kid);
-  while (nsnull != kid) {
-    GetFrameForPointChild(tmp, aWhichLayer, kid, hit != nsnull, &hit);
+  while (kid) {
+    nsIFrame* frame = GetFrameForPointChild(aPoint, aWhichLayer, kid,
+                                            hit != nsnull);
+    if (frame)
+      hit = frame;
     kid->GetNextBox(&kid);
   }
   if (hit)
-    *aFrame = hit;
-
-  if (*aFrame) {
-    return NS_OK;
-  }
+    return hit;
 
   // if no kids were hit then select us
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND && vis->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-  }
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND && vis->IsVisible())
+    return this;
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
-/* virtual */ nsresult
+/* virtual */ nsIFrame*
 nsBoxFrame::GetFrameForPointChild(const nsPoint&    aPoint,
                                   nsFramePaintLayer aWhichLayer,    
                                   nsIFrame*         aChild,
-                                  PRBool            aCheckMouseThrough,
-                                  nsIFrame**        aFrame)
+                                  PRBool            aCheckMouseThrough)
 {
-  nsIFrame *hit = nsnull;
-  nsresult rv =
-    aChild->GetFrameForPoint(aPoint, aWhichLayer, &hit);
-
-  if (NS_SUCCEEDED(rv) && hit) {
-    rv = NS_ERROR_FAILURE;
-    if (!aCheckMouseThrough) {
-      *aFrame = hit;
-      rv = NS_OK;
-    }
-    else
-    {
-      // If we had a lower frame for this point, check whether hit's box has
-      // mouse through.  If so, stick with the lower frame that we found.
-      PRBool isAdaptor = PR_FALSE;
-      nsIBox *box = GetBoxForFrame(hit, isAdaptor);
-      if (box) {
-        PRBool mouseThrough = PR_FALSE;
-        box->GetMouseThrough(mouseThrough);
-        // if the child says it can never mouse though ignore it. 
-        if (!mouseThrough) {
-          *aFrame = hit;
-          rv = NS_OK;
-        }
-      }
+  nsIFrame *hit = aChild->GetFrameForPoint(aPoint - aChild->GetOffsetTo(this),
+                                           aWhichLayer);
+  if (hit) {
+    if (!aCheckMouseThrough)
+      return hit;
+    // If we had a lower frame for this point, check whether hit's box has
+    // mouse through.  If so, stick with the lower frame that we found.
+    PRBool isAdaptor = PR_FALSE;
+    nsIBox *box = GetBoxForFrame(hit, isAdaptor);
+    if (box) {
+      PRBool mouseThrough = PR_FALSE;
+      box->GetMouseThrough(mouseThrough);
+      // if the child says it can never mouse though ignore it. 
+      if (!mouseThrough)
+        return hit;
     }
   }
-  return rv;
+  return nsnull;
 }
 
 nsIBox*

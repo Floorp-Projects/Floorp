@@ -54,9 +54,8 @@ public:
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,

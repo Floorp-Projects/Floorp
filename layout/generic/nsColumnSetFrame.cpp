@@ -69,9 +69,8 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
-                               nsFramePaintLayer aWhichLayer,
-                               nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint& aPoint, 
+                                     nsFramePaintLayer aWhichLayer);
 
   virtual nsIFrame* GetContentInsertionFrame() {
     return GetFirstChild(nsnull)->GetContentInsertionFrame();
@@ -168,14 +167,13 @@ nsColumnSetFrame::GetType() const
   return nsLayoutAtoms::columnSetFrame;
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsColumnSetFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+                                   nsFramePaintLayer aWhichLayer)
 {
   // This frame counts as part of the background.
   return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
-                               (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 NS_IMETHODIMP

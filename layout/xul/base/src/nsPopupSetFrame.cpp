@@ -583,11 +583,11 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_SHOWING, nsnull,
                      nsMouseEvent::eReal);
-  // XXX The client point storage was moved to the DOM event, so now this can't
-  // work.  A real fix would require fixing the mess that is popup coordinates
-  // in layout.  For now, don't bother setting the point.
-  //event.point.x = aX;
-  //event.point.y = aY;
+  // XXX This is messed up: it needs to account for widgets.
+  nsPoint dummy;
+  event.widget = GetClosestView()->GetNearestWidget(&dummy);
+  event.refPoint.x = aX;
+  event.refPoint.y = aY;
 
   if (aPopupContent) {
     nsIPresShell *shell = mPresContext->GetPresShell();

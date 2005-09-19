@@ -293,73 +293,60 @@ nsContainerFrame::PaintChild(nsPresContext*      aPresContext,
   }
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+                                   nsFramePaintLayer aWhichLayer)
 {
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
+                               aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND);
 }
 
-nsresult
+nsIFrame*
 nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
                                         nsIAtom*       aList,
                                         nsFramePaintLayer aWhichLayer,
-                                        PRBool         aConsiderSelf,
-                                        nsIFrame**     aFrame)
+                                        PRBool         aConsiderSelf)
 {
-  nsIFrame *hit;
-  nsPoint tmp;
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  PRBool inThisFrame = thisRect.Contains(aPoint);
 
-  PRBool inThisFrame = mRect.Contains(aPoint);
+  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame))
+    return nsnull;
 
-  if (! ((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame ) ) {
-    return NS_ERROR_FAILURE;
-  }
-
+  nsIFrame* frame = nsnull;
   nsIFrame* kid = GetFirstChild(aList);
-  *aFrame = nsnull;
-  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
-
-  nsPoint originOffset;
-  nsIView *view = nsnull;
-  nsresult rv = GetOriginToViewOffset(originOffset, &view);
-
-  if (NS_SUCCEEDED(rv) && view)
-    tmp += originOffset;
 
   while (kid) {
+    nsIFrame* hit;
+    nsPoint kidPoint = aPoint - kid->GetOffsetTo(this);
     if (aWhichLayer == NS_FRAME_PAINT_LAYER_ALL) {
       // Check all layers on this kid before moving on to the next one
-      rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_FOREGROUND, &hit);
-      if (NS_FAILED(rv) || !hit) {
-        rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_FLOATS, &hit);
-        if (NS_FAILED(rv) || !hit) {
-          rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_BACKGROUND, &hit);
+      hit = kid->GetFrameForPoint(kidPoint,
+                                  NS_FRAME_PAINT_LAYER_FOREGROUND);
+      if (!hit) {
+        hit = kid->GetFrameForPoint(kidPoint,
+                                    NS_FRAME_PAINT_LAYER_FLOATS);
+        if (!hit) {
+          hit = kid->GetFrameForPoint(kidPoint,
+                                      NS_FRAME_PAINT_LAYER_BACKGROUND);
         }
       }
     } else {
-      rv = kid->GetFrameForPoint(tmp, aWhichLayer, &hit);
+      hit = kid->GetFrameForPoint(kidPoint, aWhichLayer);
     }
 
-    if (NS_SUCCEEDED(rv) && hit) {
-      *aFrame = hit;
-    }
+    if (hit)
+      frame = hit;
     kid = kid->GetNextSibling();
   }
 
-  if (*aFrame) {
-    return NS_OK;
-  }
+  if (frame)
+    return frame;
 
-  if ( inThisFrame && aConsiderSelf ) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
-  }
+  if (inThisFrame && aConsiderSelf && GetStyleVisibility()->IsVisible())
+    return this;
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 NS_IMETHODIMP

@@ -449,13 +449,13 @@ nsTableCellFrame::Paint(nsPresContext*      aPresContext,
                         aWhichLayer);*/
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsTableCellFrame::GetFrameForPoint(const nsPoint&    aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**        aFrame)
+                                   nsFramePaintLayer aWhichLayer)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
+                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 //null range means the whole thing

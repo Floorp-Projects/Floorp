@@ -88,14 +88,13 @@ ViewportFrame::SetInitialChildList(nsPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-ViewportFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+nsIFrame*
+ViewportFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                nsFramePaintLayer aWhichLayer)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, 
-                               (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer,
+                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 NS_IMETHODIMP

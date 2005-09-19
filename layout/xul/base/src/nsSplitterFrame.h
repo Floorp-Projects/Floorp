@@ -102,9 +102,8 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
-                              nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
 

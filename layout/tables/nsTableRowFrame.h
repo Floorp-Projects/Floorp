@@ -103,9 +103,8 @@ public:
   // rows don't paint their own background -- the cells do
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint&    aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**        aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   nsTableCellFrame* GetFirstCell() ;
 

@@ -1975,12 +1975,11 @@ nsMenuPopupFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsMenuPopupFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                   nsFramePaintLayer aWhichLayer,    
-                                   nsIFrame** aFrame)
+                                   nsFramePaintLayer aWhichLayer)
 {
-  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
 

@@ -70,9 +70,8 @@ public:
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
+                                     nsFramePaintLayer aWhichLayer);
   NS_IMETHOD ReplaceFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
                           nsIFrame*       aNewFrame);
@@ -187,11 +186,10 @@ protected:
   nsContainerFrame();
   ~nsContainerFrame();
 
-  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
-                                 nsIAtom*       aList,
-                                 nsFramePaintLayer aWhichLayer,
-                                 PRBool         aConsiderSelf,
-                                 nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPointUsing(const nsPoint&    aPoint,
+                                          nsIAtom*          aList,
+                                          nsFramePaintLayer aWhichLayer,
+                                          PRBool            aConsiderSelf);
 
   virtual void PaintChildren(nsPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,

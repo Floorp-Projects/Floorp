@@ -134,9 +134,8 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
+                                     nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);

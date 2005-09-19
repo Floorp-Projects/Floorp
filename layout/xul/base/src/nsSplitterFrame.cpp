@@ -442,28 +442,25 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                             nsFramePaintLayer aWhichLayer,    
-                                             nsIFrame**     aFrame)
-{   
+nsIFrame* nsSplitterFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                            nsFramePaintLayer aWhichLayer)
+{
   // if the mouse is captured always return us as the frame.
   if (mInner->mDragging)
   {
     // XXX It's probably better not to check visibility here, right?
-    *aFrame = this;
-    return NS_OK;
+    return this;
   }
 
-  nsresult rv = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
 
-  if (NS_FAILED(rv) &&
-      aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
-      mRect.Contains(aPoint)) {
-    *aFrame = this;
-    rv = NS_OK;
-  } 
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!frame && aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
+      thisRect.Contains(aPoint)) {
+    return this;
+  }
 
-  return rv;
+  return frame;
 }
 
 NS_IMETHODIMP

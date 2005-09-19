@@ -248,14 +248,12 @@ nsTableRowGroupFrame::GetSkipSides() const
   return skip;
 }
 
-
-NS_IMETHODIMP
+nsIFrame*
 nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+                                       nsFramePaintLayer aWhichLayer)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE);
 }
 
 // Position and size aKidFrame and update our reflow state. The origin of

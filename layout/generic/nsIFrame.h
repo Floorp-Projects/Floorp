@@ -780,15 +780,13 @@ public:
 
   /**
    * Get the frame that should receive events for a given point in the
-   * coordinate space of this frame's parent, if the frame is painted in
+   * coordinate space of this frame, if the frame is painted in
    * the given paint layer.  A frame should return itself if it should
    * recieve the events.  A successful return value indicates that a
    * point was found.
    */
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
-                               nsFramePaintLayer aWhichLayer,
-                               nsIFrame**     aFrame) = 0;
-  
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer) = 0;
   
   /**
    * Get a point (in the frame's coordinate space) given an offset into

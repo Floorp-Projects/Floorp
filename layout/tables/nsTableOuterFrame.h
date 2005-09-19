@@ -134,9 +134,8 @@ public:
   // the outer table does not paint its entire background if it has margins and/or captions
   virtual PRBool CanPaintBackground() { return PR_FALSE; }
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.
