@@ -410,7 +410,7 @@ applet:-moz-user-disabled {
     can go away once object loading is in content, since then not mapping in
     the preshint should be easy.
    */
-  vertical-align: normal !important;
+  vertical-align: baseline !important;
 }
 
 img:-moz-suppressed, input:-moz-suppressed, object:-moz-suppressed,
