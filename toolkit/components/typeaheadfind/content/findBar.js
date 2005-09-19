@@ -397,8 +397,14 @@ function delayedCloseFindBar()
     var focusedElement = document.commandDispatcher.focusedElement;
     if (focusedElement && (focusedElement.parentNode == findToolbar ||
                            focusedElement.parentNode.parentNode == findField)) {
-      if (gFoundLink)
+      if (gFoundLink) {
+        // block scrolling on focus since find already scrolls, further
+        // scrolling is due to user action, so don't override this
+        var suppressedScroll = document.commandDispatcher.suppressFocusScroll;
+        document.commandDispatcher.suppressFocusScroll = true;
         gFoundLink.focus();
+        document.commandDispatcher.suppressFocusScroll = suppressedScroll;
+      }
       else
         window.content.focus();
     }
