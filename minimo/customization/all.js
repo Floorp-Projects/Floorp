@@ -4,7 +4,7 @@ pref("general.useragent.contentlocale", "chrome://minimo/locale/minimo.propertie
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         0);
 pref("browser.cache.memory.enable",         true);
-//pref("browser.cache.memory.capacity",     -1);
+pref("browser.cache.memory.capacity",       256);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
 pref("browser.cache.disk_cache_ssl",        false);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
@@ -767,3 +767,4 @@ pref("ssr.enabled", true);
 pref("ssr.site.enabled", true);
 
 
+pref("config.wince.dumpJSConsole", true);

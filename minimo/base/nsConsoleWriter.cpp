@@ -61,7 +61,7 @@ WriteConsoleLog()
   if (!file)
     return;
 
-  file->Append(NS_LITERAL_STRING("jsconsole.log"));
+  file->Append(NS_LITERAL_STRING("jsconsole.txt"));
 
   nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
                

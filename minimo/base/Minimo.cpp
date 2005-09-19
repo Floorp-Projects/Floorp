@@ -555,7 +555,7 @@ PRBool DoesProcessAlreadyExist() {return PR_FALSE;}
  *
  * * * * * * * * * * * * * * *  * * * * * * * * * * * * * * * * * * * */
 #ifdef WINCE
-// #define HACKY_PRE_LOAD_LIBRARY 1
+#define HACKY_PRE_LOAD_LIBRARY 1
 #endif
 
 #ifdef HACKY_PRE_LOAD_LIBRARY
