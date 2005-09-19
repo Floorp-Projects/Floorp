@@ -152,7 +152,6 @@
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
-                    
                     onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>

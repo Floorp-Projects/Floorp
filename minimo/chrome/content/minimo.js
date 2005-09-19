@@ -39,12 +39,12 @@
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
-var gPrefs = null;
 var gURLBar = null;
 var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
 var gFullScreen=false;
+
 var gGlobalHistory = null;
 var gURIFixup = null;
 
@@ -217,24 +217,17 @@ nsBrowserStatusHandler.prototype =
 
 function MiniNavStartup()
 {
-
-  gPrefs = Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
-
-  gURLBar = document.getElementById("urlbar");
-  var currentTab=getBrowser().selectedTab;
-  browserInit(currentTab);
-  gSelectedTab=currentTab;
-
   var homepage = "http://www.mozilla.org";
 
   try {
-    homepage = gPrefs.getCharPref("browser.startup.homepage");
-  } catch(ex) {}
 
-  var BrowserStatusHandler = new nsBrowserStatusHandler();
-  BrowserStatusHandler.init();
-  try {
+    gURLBar = document.getElementById("urlbar");
+    var currentTab=getBrowser().selectedTab;
+    browserInit(currentTab);
+    gSelectedTab=currentTab;
+    
+    var BrowserStatusHandler = new nsBrowserStatusHandler();
+    BrowserStatusHandler.init();
 
     getBrowser().addProgressListener(BrowserStatusHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
   
@@ -247,6 +240,24 @@ function MiniNavStartup()
     webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
 
     getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+
+    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                               .getService(Components.interfaces.nsIBrowserHistory);
+  
+    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                          .getService(Components.interfaces.nsIURIFixup);
+
+
+    try {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+      var page = pref.getCharPref("browser.startup.homepage");
+
+      if (page != null)
+        homepage = page;
+
+    } catch (ignore) {}
+      
   } catch (e) {
     alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
   }
@@ -291,20 +302,6 @@ function loadURI(uri)
   getWebNavigation().loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
 }
 
-function BrowserLoadURL()
-{
-  if (!gURLBar)
-    return;
-  
-  var url = gURLBar.value;
-
-  if (url.substring(0,7) == "http://")
-    url = "http://" + url;
-
-  loadURI(gURLBar.value);
-  content.focus();
-}
-
 function BrowserBack()
 {
   getWebNavigation().goBack();
@@ -323,12 +320,6 @@ function BrowserStop()
 function BrowserReload()
 {
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
-}
-
-function BrowserAddTab() 
-{
-    var thisTab=getBrowser().addTab("http://mozilla.org");
-    browserInit(thisTab);
 }
 
 function BrowserOpenTab()
@@ -481,38 +472,23 @@ function DoClipPaste()
   cont.doCommand("cmd_paste");
 }
 
-function addToUrlbarHistory()
-{
-  var urlToAdd = gURLBar.value;
-  
-  if (!urlToAdd)
-    return;
-  
-  if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
-    return;
-  
-  if (!gGlobalHistory)
-    gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                               .getService(Components.interfaces.nsIBrowserHistory);
-  
-  if (!gURIFixup)
-    gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
-                          .getService(Components.interfaces.nsIURIFixup);
-  try {
-    if (urlToAdd.indexOf(" ") == -1) {
-      var fixedUpURI = gURIFixup.createFixupURI(urlToAdd, 0);
-       gGlobalHistory.markPageAsTyped(fixedUpURI);
-    }
-  }
-  catch(ex) {
-  }
-}
-
 function URLBarEntered()
 {
+  try
+  {
+    var url = gURLBar.value;
+    
+    var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
+    gGlobalHistory.markPageAsTyped(fixedUpURI);
+    
+    gURLBar.value = fixedUpURI.spec;
+    
+    loadURI(fixedUpURI.spec);
+    
+    content.focus();
+  }
+  catch(ex) {alert(ex);}
 
-  try {  addToUrlbarHistory(); } catch(ex) {}
-  BrowserLoadURL();
 
   return true;
 }
