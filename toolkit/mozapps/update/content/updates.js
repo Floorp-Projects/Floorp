@@ -167,13 +167,14 @@ var gUpdates = {
     bf.label    = finishButtonLabel || this._buttonLabel_finish;
     bc.label    = cancelButtonLabel || this._buttonLabel_hide;
     be.label    = extraButtonLabel || this._buttonLabel_hide;
-    bb.disabled = backButtonDisabled;
-    bn.disabled = nextButtonDisabled;
+    
+    // update button state using the wizard commands
+    this.wiz.canRewind  = !backButtonDisabled;
+    this.wiz.canAdvance = !(nextButtonDisabled && finishButtonDisabled);
     bf.disabled = finishButtonDisabled;
     bc.disabled = cancelButtonDisabled;
     be.disabled = extraButtonDisabled;
-    
-      
+
     // Show or hide the cancel and back buttons, since the Extra 
     // button does this job.
     bc.hidden   = hideBackAndCancelButtons;  
@@ -515,6 +516,7 @@ var gCheckingPage = {
         var checking = document.getElementById("checking");
         checking.setAttribute("next", "noupdatesfound");
       }
+      gUpdates.wiz.canAdvance = true;
       gUpdates.wiz.advance();
     },
 
@@ -1284,6 +1286,7 @@ var gDownloadingPage = {
       return;
     case Components.results.NS_OK:
       LOG("UI:DownloadingPage", "onStopRequest: Patch Verification Succeeded");
+      gUpdates.wiz.canAdvance = true;
       gUpdates.wiz.advance();
       break;
     default:
