@@ -57,10 +57,20 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   : nsIJSEventListener(aContext, aScopeObject, aObject),
     mReturnResult(nsReturnResult_eNotSet)
 {
+  if (aScopeObject && aContext) {
+    JSContext *cx = (JSContext *)aContext->GetNativeContext();
+
+    ::JS_LockGCThing(cx, aScopeObject);
+  }
 }
 
 nsJSEventListener::~nsJSEventListener() 
 {
+  if (mScopeObject && mContext) {
+    JSContext *cx = (JSContext *)mContext->GetNativeContext();
+
+    ::JS_UnlockGCThing(cx, mScopeObject);
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(nsJSEventListener)
