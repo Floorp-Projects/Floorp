@@ -610,11 +610,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
 
 #ifdef PR_LOGGING
-  nsXPIDLCString reqname;
-  aRequest->GetName(reqname);
-  PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress, aRequest,
-            aProgressStateFlags, reqname.get()));
+  if (PR_LOG_TEST(gSecureDocLog, PR_LOG_DEBUG)) {
+    nsXPIDLCString reqname;
+    aRequest->GetName(reqname);
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
+           ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress,
+            aRequest, aProgressStateFlags, reqname.get()));
+  }
 #endif
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
