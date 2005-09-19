@@ -775,6 +775,15 @@
       <handler event="mouseout" action="this.parentNode.currentIndex = -1;"/>
       <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick(event);"/>
 
+      <handler event="mousedown"><![CDATA[
+        if (new Date() - this.mLastMoveTime > 30) {
+         var rc = this.getHoverCell(event);
+         if (rc && rc.row != this.parentNode.currentIndex)
+            this.parentNode.view.selection.select(rc.row);
+         this.mLastMoveTime = new Date();
+        }
+      ]]></handler>
+
       <handler event="mousemove"><![CDATA[
         if (new Date() - this.mLastMoveTime > 30) {
          var rc = this.getHoverCell(event);
