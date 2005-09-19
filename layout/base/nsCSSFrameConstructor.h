@@ -582,7 +582,7 @@ private:
                              nsFrameItems&            aFrameItems,
                              PRBool                   aXBLBaseTag,
                              PRBool                   aHasPseudoParent,
-                             PRBool&                  aHaltProcessing);
+                             PRBool*                  aHaltProcessing);
 
 
 // XTF
@@ -616,7 +616,8 @@ private:
                              PRInt32                  aNameSpaceID,
                              nsStyleContext*          aStyleContext,
                              nsFrameItems&            aFrameItems,
-                             PRBool                   aHasPseudoParent);
+                             PRBool                   aHasPseudoParent,
+                             PRBool*                  aHaltProcessing);
 #endif
 
   nsresult ConstructFrameByDisplayType(nsFrameConstructorState& aState,
