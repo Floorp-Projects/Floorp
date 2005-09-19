@@ -108,7 +108,25 @@ function initFindBar()
 
   var fastFind = getBrowser().fastFind;
   fastFind.focusLinks = true;
+  
+  var findField = document.getElementById("find-field");
+  findField.addEventListener("dragdrop", findBarOnDrop, true);
 }
+
+var findbarObserver = {
+  onDrop: function (aEvent, aXferData, aDragSession)
+    {
+      var findField = document.getElementById("find-field");
+      findField.value = aXferData.data;
+      find(aXferData.data);
+    },
+  getSupportedFlavours: function ()
+    {
+      var flavourSet = new FlavourSet();
+      flavourSet.appendFlavour("text/unicode");
+      return flavourSet;
+    }
+};
 
 function uninitFindBar()
 {
@@ -771,6 +789,11 @@ function setFindCloseTimeout()
   gQuickFindTimeout =
     setTimeout(function() { if (gFindMode != FIND_NORMAL) closeFindBar(); },
                gQuickFindTimeoutLength);
+}
+
+function findBarOnDrop(evt)
+{
+    nsDragAndDrop.drop(evt, findbarObserver);
 }
 
 function onFindBarCompositionStart(evt)
