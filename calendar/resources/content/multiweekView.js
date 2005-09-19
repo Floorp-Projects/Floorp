@@ -256,9 +256,11 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
     var ccalendar = getDisplayComposite();
 
+    var start = jsDateToDateTime(startDate).getInTimezone(calendarDefaultTimezone());
+    var end = jsDateToDateTime(endDate).getInTimezone(calendarDefaultTimezone());
+
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate),
-                       getListener);
+                       0, start, end, getListener);
 
 }
 

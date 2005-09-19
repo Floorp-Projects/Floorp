@@ -99,6 +99,8 @@ const CAL_ITEM_FLAG_EVENT_ALLDAY = 8;
 const CAL_ITEM_FLAG_HAS_RECURRENCE = 16;
 const CAL_ITEM_FLAG_HAS_EXCEPTIONS = 32;
 
+const USECS_PER_SECOND = 1000000;
+
 function initCalStorageCalendarComponent() {
     CalEvent = new Components.Constructor(kCalEventContractID, kCalIEvent);
     CalTodo = new Components.Constructor(kCalTodoContractID, kCalITodo);
@@ -634,8 +636,10 @@ calStorageCalendar.prototype = {
             // to fall within the range
             sp = this.mSelectEventsByRange.params;
             sp.cal_id = this.mCalId;
-            sp.event_start = startTime;
-            sp.event_end = endTime;
+            sp.range_start = startTime;
+            sp.range_end = endTime;
+            sp.start_offset = aRangeStart ? aRangeStart.timezoneOffset * USECS_PER_SECOND : 0;
+            sp.end_offset = aRangeEnd ? aRangeEnd.timezoneOffset * USECS_PER_SECOND : 0;
 
             while (this.mSelectEventsByRange.step()) {
                 var row = this.mSelectEventsByRange.row;
@@ -691,8 +695,9 @@ calStorageCalendar.prototype = {
             // to fall within the range
             sp = this.mSelectTodosByRange.params;
             sp.cal_id = this.mCalId;
-            sp.todo_start = startTime;
-            sp.todo_end = endTime;
+            sp.range_start = startTime;
+            sp.range_end = endTime;
+            sp.offset = aRangeStart ? aRangeStart.timezoneOffset * USECS_PER_SECOND : 0;
 
             while (this.mSelectTodosByRange.step()) {
                 var row = this.mSelectTodosByRange.row;
@@ -966,18 +971,39 @@ calStorageCalendar.prototype = {
             "LIMIT 1"
             );
 
+        // The more readable version of the next where-clause is:
+        //   WHERE event_end >= :range_start AND event_start < :event_end
+        // but that doesn't work with floating start or end times. The logic
+        // is the same though.
+        // For readability, a few helpers:
+        var floatingEventStart = "event_start_tz = 'floating' AND event_start - :start_offset"
+        var nonFloatingEventStart = "event_start_tz != 'floating' AND event_start"
+        var floatingEventEnd = "event_end_tz = 'floating' AND event_end - :end_offset"
+        var nonFloatingEventEnd = "event_end_tz != 'floating' AND event_end"
+        // The query needs to take both floating and non floating into account
         this.mSelectEventsByRange = createStatement(
             this.mDB,
             "SELECT * FROM cal_events " +
-            "WHERE event_end >= :event_start AND event_start < :event_end " +
+            "WHERE " +
+            " (("+floatingEventEnd+" >= :range_start) OR " +
+            "  ("+nonFloatingEventEnd+" >= :range_start)) AND " +
+            " (("+floatingEventStart+" < :range_end) OR " +
+            "  ("+nonFloatingEventStart+" < :range_end)) " +
             "  AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 
+        var floatingTodoEntry = "todo_entry_tz = 'floating' AND todo_entry - :offset"
+        var nonFloatingTodoEntry = "todo_entry_tz != 'floating' AND todo_entry"
         this.mSelectTodosByRange = createStatement(
             this.mDB,
             "SELECT * FROM cal_todos " +
-            "WHERE ((todo_entry >= :todo_start AND todo_entry < :todo_end) OR (todo_entry IS NULL)) " +
-            "  AND cal_id = :cal_id AND recurrence_id IS NULL"
+            "WHERE " +
+            " (((("+floatingTodoEntry+" >= :range_start) OR " +
+            "    ("+nonFloatingTodoEntry+" >= :range_start)) AND " +
+            "   (("+floatingTodoEntry+" < :range_end) OR " +
+            "    ("+nonFloatingTodoEntry+" < :range_end))) " +
+            "  OR (todo_entry IS NULL)) " +
+            " AND cal_id = :cal_id AND recurrence_id IS NULL"
             );
 
         this.mSelectEventsWithRecurrence = createStatement(

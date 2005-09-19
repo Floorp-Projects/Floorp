@@ -207,6 +207,19 @@ calDateTime::SetTimezone(const nsACString& aTimezone)
 }
 
 NS_IMETHODIMP
+calDateTime::GetTimezoneOffset(PRInt32 *aResult)
+{
+    struct icaltimetype icalt;
+    ToIcalTime(&icalt);
+
+    int dst;
+    *aResult = 
+        icaltimezone_get_utc_offset(NS_CONST_CAST(icaltimezone* ,icalt.zone),
+                                    &icalt, &dst);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 calDateTime::GetNativeTime(PRTime *aResult)
 {
     *aResult = mNativeTime;

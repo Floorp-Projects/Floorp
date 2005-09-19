@@ -75,6 +75,10 @@ interface calIDateTime : nsISupports
    * on this instance.  If nativeTime is set, the given UTC PRTime
    * value is exploded into year/month/etc, taking into account
    * the timezone setting.
+   *
+   * @warning: When the timezone is set to 'floating', this will return
+   * the nativeTime as-if the timezone was UTC. Take this into account
+   * when comparing values.
    */
   attribute PRTime nativeTime;
 
@@ -126,6 +130,12 @@ interface calIDateTime : nsISupports
    * @throws NS_ERROR_INVALID_ARG if an invalid timezone is passed in.
    */
   attribute AUTF8String timezone;
+
+  /**
+   * The offset of the timezone this datetime is in, relative to UTC, in
+   * seconds. A positive number means that the timezone is ahead of UTC.
+   */
+  readonly attribute long timezoneOffset;
 
   /**
    * isDate indicates that this calIDateTime instance represents a date

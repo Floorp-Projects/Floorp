@@ -43,6 +43,8 @@
 const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
 const calICalendarManager = Components.interfaces.calICalendarManager;
 
+const USECS_PER_SECOND = 1000000;
+
 var activeCalendarManager = null;
 function getCalendarManager()
 {
@@ -387,10 +389,10 @@ calMemoryCalendar.prototype = {
             var tmpitem = item;
             if (wantEvents && (item instanceof calIEvent)) {
                 tmpitem = item.QueryInterface(calIEvent);
-                itemStartTime = (item.startDate.isValid
+                itemStartTime = (item.startDate
                                  ? item.startDate.nativeTime
                                  : START_OF_TIME);
-                itemEndTime = (item.endDate.isValid
+                itemEndTime = (item.endDate
                                ? item.endDate.nativeTime
                                : END_OF_TIME);
             } else if (wantTodos && (item instanceof calITodo)) {
@@ -406,6 +408,12 @@ calMemoryCalendar.prototype = {
                 // XXX unknown item type, wth do we do?
                 continue;
             }
+
+            // Correct for floating
+            if (aRangeStart && item.startDate && item.startDate.timezone == 'floating')
+                itemStartTime -= aRangeStart.timezoneOffset * USECS_PER_SECOND;
+            if (aRangeEnd && item.endDate && item.endDate.timezone == 'floating')
+                itemEndTime -= aRangeEnd.timezoneOffset * USECS_PER_SECOND;
 
             if (itemStartTime < endTime) {
                 // figure out if there are recurrences here we care about

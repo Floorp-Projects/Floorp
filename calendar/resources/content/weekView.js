@@ -143,10 +143,13 @@ WeekView.prototype.refreshEvents = function()
 
     var ccalendar = getDisplayComposite();
 
-    debug("Fetching events from " + this.displayStartDate.toString() + " to " + this.displayEndDate.toString() + "\n");
+    var start = jsDateToDateTime(this.displayStartDate).getInTimezone(calendarDefaultTimezone());
+    var end = jsDateToDateTime(this.displayEndDate).getInTimezone(calendarDefaultTimezone());
+
+    dump("Fetching events from " + start + " to " + end + "\n");
 
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                       0, jsDateToDateTime(this.displayStartDate), jsDateToDateTime(this.displayEndDate), getListener);
+                       0, start, end, getListener);
 
     return;
 
