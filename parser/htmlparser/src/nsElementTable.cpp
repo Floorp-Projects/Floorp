@@ -929,7 +929,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*requiredAncestor*/                eHTMLTag_select,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents, 
     /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,
+    /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity|kHeadMisc,
     /*special props, prop-range*/       kNoStyleLeaksIn|kNoPropagate, kDefaultPropRange,
     /*special parents,kids,skip*/       &gOptgroupParents,&gContainedInOpt,eHTMLTag_unknown,
     /*contain-func*/                    0
