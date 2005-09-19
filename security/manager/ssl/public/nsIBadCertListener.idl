@@ -82,7 +82,7 @@ interface nsIBadCertListener : nsISupports {
    *      possibly to obtain your confidential information.
    *    Please notify the site's webmaster about this problem.
    *    Before accepting this certificate, you should examine this site's 
-   *      certificate carefully. Are you willing to to accept this certificate 
+   *      certificate carefully. Are you willing to accept this certificate 
    *      for the purpose of identifying the Web site %S?
    *    o Accept this certificate permanently
    *    x Accept this certificate temporarily for this session
