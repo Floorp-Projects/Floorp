@@ -73,6 +73,7 @@
         onunload="uninitFindBar(); window.XULBrowserWindow.destroy();">
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
