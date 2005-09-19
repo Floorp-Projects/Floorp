@@ -238,6 +238,9 @@ function OnLoadEditCard()
         var disableElements = document.getElementsByAttribute("disableforreadonly", "true");
         for (var i=0; i<disableElements.length; i++)
           disableElements[i].setAttribute('disabled', 'true');
+
+        document.documentElement.buttons = "accept";
+        document.documentElement.removeAttribute("ondialogaccept");
       }
     }
   }
