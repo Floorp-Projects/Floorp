@@ -56,25 +56,11 @@ static char *usageInfo[] = {
 	" -a                           signature file is ASCII",
 	" -d certdir                   directory containing cert database",
 	" -i dataFileName              input file name containing data,",
-	"                              leave filename blank to use stdin",
+	"                              use - for stdin",
 	" -s signatureFileName         input file name containing signature,",
-	"                              leave filename blank to use stdin",
+	"                              use - for stdin",
 	" -o outputFileName            output file name, default stdout",
 	" -A                           display all information from pkcs #7",
-	" -C                           display all information from all certs",
-	" -C -n                        display number of certificates",
-	" -C -n certNum                display all information from the certNum",
-	"                              certificate in pkcs #7 signed object",
-	" -C -n certNum f1 ... fN      display information about specified", 
-	"                              fields from the certNum certificate in",
-	"                              the pkcs #7 signed object",
-	" -S                           display signer information list",
-	" -S -n                        display number of signer information blocks",
-	" -S -n signerNum              display all information from the signerNum",
-	"                              signer information block in pkcs #7",
-	" -S -n signerNum f1 ... fN    display information about specified", 
-	"                              fields from the signerNum signer",
-	"                              information block in pkcs #7 object",
 	" -V                           verify the signed object and display result",
 	" -V -v                        verify the signed object and display",
 	"                              result and reason for failure",
@@ -159,8 +145,6 @@ enum {
 static secuCommandFlag signver_commands[] =
 {
 	{ /* cmd_DisplayAllPCKS7Info*/  'A', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DisplayCertInfo    */  'C', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DisplaySignerInfo  */  'S', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_VerifySignedObj    */  'V', PR_FALSE, 0, PR_FALSE }
 };
 
@@ -169,7 +153,6 @@ static secuCommandFlag signver_options[] =
 	{ /* opt_ASCII              */  'a', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_CertDir            */  'd', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_InputDataFile      */  'i', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_ItemNumber         */  'n', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_OutputFile         */  'o', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_InputSigFile       */  's', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_TypeTag            */  't', PR_TRUE,  0, PR_FALSE },
@@ -186,8 +169,6 @@ int main(int argc, char **argv)
 	PRFileDesc *signFile = 0;
 	FILE *outFile = stdout;
 	char *typeTag = 0;
-	PRBool displayAllCerts = PR_FALSE;
-	PRBool displayAllSigners = PR_FALSE;
 	SECStatus secstatus;
 
 	secuCommand signver;
@@ -226,15 +207,15 @@ int main(int argc, char **argv)
 	/*  -i and -s without filenames  */
 	if (signver.options[opt_InputDataFile].activated &&
 	    signver.options[opt_InputSigFile].activated &&
-	    !signver.options[opt_InputDataFile].arg &&
-	    !signver.options[opt_InputSigFile].arg)
+    	    !PL_strcmp("-", signver.options[opt_InputDataFile].arg) &&
+	    !PL_strcmp("-", signver.options[opt_InputSigFile].arg))
 		PR_fprintf(PR_STDERR, 
 	              "%s: Only data or signature file can use stdin (not both).\n",
 	              progName);
 
 	/*  Open the input data file (no arg == use stdin). */
 	if (signver.options[opt_InputDataFile].activated) {
-		if (signver.options[opt_InputDataFile].arg)
+		if (PL_strcmp("-", signver.options[opt_InputDataFile].arg))
 			dataFile = PR_Open(signver.options[opt_InputDataFile].arg, 
 			                   PR_RDONLY, 0);
 		else
@@ -248,7 +229,7 @@ int main(int argc, char **argv)
 
 	/*  Open the input signature file (no arg == use stdin).  */
 	if (signver.options[opt_InputSigFile].activated) {
-		if (signver.options[opt_InputSigFile].arg)
+		if (PL_strcmp("-", signver.options[opt_InputSigFile].arg))
 			signFile = PR_Open(signver.options[opt_InputSigFile].arg, 
 			                   PR_RDONLY, 0);
 		else
@@ -277,14 +258,6 @@ int main(int argc, char **argv)
 			return -1;
 		}
 	}
-
-	if (signver.commands[cmd_DisplayCertInfo].activated &&
-	    !signver.options[opt_ItemNumber].arg)
-		displayAllCerts = PR_TRUE;
-
-	if (signver.commands[cmd_DisplaySignerInfo].activated &&
-	    !signver.options[opt_ItemNumber].arg)
-		displayAllSigners = PR_TRUE;
 
 #if 0
 			case 'W':
@@ -412,12 +385,6 @@ int main(int argc, char **argv)
 
 		if (signver.commands[cmd_DisplayAllPCKS7Info].activated)
 			SV_PrintPKCS7ContentInfo(outFile, &data);
-
-		if (displayAllCerts)
-			PR_fprintf(PR_STDERR, "-C option is not implemented in this version\n");
-
-		if (displayAllSigners)
-			PR_fprintf(PR_STDERR, "-S option is not implemented in this version\n");
 
 	/* Pretty print it */
 	} else if (PL_strcmp(typeTag, SEC_CT_CERTIFICATE) == 0) {
