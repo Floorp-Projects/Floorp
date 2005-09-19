@@ -348,28 +348,25 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
 }
 
 // Called to prevent events from going to anything inside the menu.
-NS_IMETHODIMP
+nsIFrame*
 nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**     aFrame)
+                              nsFramePaintLayer aWhichLayer)
 {
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
-  if (NS_FAILED(result) || *aFrame == this) {
-    return result;
+  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  if (!frame || frame == this) {
+    return frame;
   }
-  nsIContent* content = (*aFrame)->GetContent();
+  nsIContent* content = frame->GetContent();
   if (content) {
     // This allows selective overriding for subcontent.
     nsAutoString value;
     content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
     if (value.EqualsLiteral("true"))
-      return result;
+      return frame;
   }
-  if (GetStyleVisibility()->IsVisible()) {
-    *aFrame = this; // Capture all events so that we can perform selection
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  if (GetStyleVisibility()->IsVisible())
+    return this; // Capture all events so that we can perform selection
+  return nsnull;
 }
 
 NS_IMETHODIMP 

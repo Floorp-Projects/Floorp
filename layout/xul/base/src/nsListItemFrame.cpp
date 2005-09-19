@@ -79,23 +79,20 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsListItemFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame**     aFrame)
+nsIFrame*
+nsListItemFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                  nsFramePaintLayer aWhichLayer)
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
   if (value.EqualsLiteral("true")) {
-    return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+    return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
   }
-  else if (mRect.Contains(aPoint)) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible())
+    // Capture all events so that we can perform selection and expand/collapse.
+    return this;
+  return nsnull;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

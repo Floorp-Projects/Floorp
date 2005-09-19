@@ -86,12 +86,12 @@ nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsButtonBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                    nsFramePaintLayer aWhichLayer,
-                                    nsIFrame**     aFrame)
+nsIFrame*
+nsButtonBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                   nsFramePaintLayer aWhichLayer)
 {
   // override, since we don't want children to get events
-  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
 NS_IMETHODIMP

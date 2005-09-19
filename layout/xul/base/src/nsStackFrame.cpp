@@ -88,35 +88,33 @@ nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManage
 }
 
 
-NS_IMETHODIMP  
-nsStackFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                               nsFramePaintLayer aWhichLayer,    
-                               nsIFrame** aFrame)
+nsIFrame*
+nsStackFrame::GetFrameForPoint(const nsPoint& aPoint,
+                               nsFramePaintLayer aWhichLayer)
 {
   if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
-/* virtual */ nsresult
+/* virtual */ nsIFrame*
 nsStackFrame::GetFrameForPointChild(const nsPoint&    aPoint,
                                     nsFramePaintLayer aWhichLayer,    
                                     nsIFrame*         aChild,
-                                    PRBool            aCheckMouseThrough,
-                                    nsIFrame**        aFrame)
+                                    PRBool            aCheckMouseThrough)
 {
   if (aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  nsresult rv = nsBoxFrame::GetFrameForPointChild(aPoint,
+  nsIFrame* frame = nsBoxFrame::GetFrameForPointChild(aPoint,
                                            NS_FRAME_PAINT_LAYER_FOREGROUND,
-                                           aChild, aCheckMouseThrough, aFrame);
-  if (NS_SUCCEEDED(rv))
-    return rv;
+                                           aChild, aCheckMouseThrough);
+  if (frame)
+    return frame;
   return nsBoxFrame::GetFrameForPointChild(aPoint,
                                            NS_FRAME_PAINT_LAYER_BACKGROUND,
-                                           aChild, aCheckMouseThrough, aFrame);
+                                           aChild, aCheckMouseThrough);
 }
 
 void

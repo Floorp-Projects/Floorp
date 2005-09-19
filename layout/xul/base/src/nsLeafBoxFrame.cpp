@@ -183,19 +183,18 @@ nsLeafBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP  
-nsLeafBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                             nsFramePaintLayer aWhichLayer,    
-                             nsIFrame**     aFrame)
+nsIFrame*
+nsLeafBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                 nsFramePaintLayer aWhichLayer)
 {   
   if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  if (!mRect.Contains(aPoint))
-    return NS_ERROR_FAILURE;
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!thisRect.Contains(aPoint))
+    return nsnull;
 
-  *aFrame = this;
-  return NS_OK;
+  return this;
 }
 
 NS_IMETHODIMP

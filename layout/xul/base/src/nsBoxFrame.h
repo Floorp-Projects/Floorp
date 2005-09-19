@@ -123,9 +123,8 @@ public:
 
   // ----- public methods -------
   
-  NS_IMETHOD GetFrameForPoint(const nsPoint&    aPoint,
-                              nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**        aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
+                                     nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
@@ -252,11 +251,10 @@ protected:
 protected:
     nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
-    virtual nsresult GetFrameForPointChild(const nsPoint&    aPoint,
-                                           nsFramePaintLayer aWhichLayer,    
+    virtual nsIFrame* GetFrameForPointChild(const nsPoint&    aPoint,
+                                           nsFramePaintLayer aWhichLayer,
                                            nsIFrame*         aChild,
-                                           PRBool            aCheckMouseThrough,
-                                           nsIFrame**        aFrame);
+                                           PRBool            aCheckMouseThrough);
 
   NS_HIDDEN_(void) CheckBoxOrder(nsBoxLayoutState& aState);
 

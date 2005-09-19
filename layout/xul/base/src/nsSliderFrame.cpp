@@ -725,29 +725,25 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 
 }
 
-NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                             nsFramePaintLayer aWhichLayer,
-                                             nsIFrame**     aFrame)
+nsIFrame* nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                          nsFramePaintLayer aWhichLayer)
 {
   // This is EVIL, we shouldn't be messing with GetFrameForPoint just to get
   // thumb mouse drag events to arrive at the slider!
   if (isDraggingThumb())
-  {
     // XXX I assume it's better not to test for visibility here.
-    *aFrame = this;
-    return NS_OK;
-  }
+    return this;
 
-  if (NS_SUCCEEDED(nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame)))
-    return NS_OK;
+  nsIFrame* frame;
+  if ((frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer)))
+    return frame;
 
   // always return us (if visible)
-  if (mRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
-    *aFrame = this;
-    return NS_OK;
-  }
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible())
+    return this;
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 

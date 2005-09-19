@@ -144,12 +144,11 @@ nsTableColFrame::Paint(nsPresContext*      aPresContext,
 }
 
 // override, since we want to act like a block
-NS_IMETHODIMP
+nsIFrame*
 nsTableColFrame::GetFrameForPoint(const nsPoint& aPoint,
-                          nsFramePaintLayer aWhichLayer,
-                          nsIFrame** aFrame)
+                                  nsFramePaintLayer aWhichLayer)
 {
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,

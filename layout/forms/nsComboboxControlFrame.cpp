@@ -1633,10 +1633,9 @@ nsComboboxControlFrame::GetName(nsAString* aResult)
   return nsFormControlHelper::GetName(mContent, aResult);
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsComboboxControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                         nsFramePaintLayer aWhichLayer,
-                                         nsIFrame** aFrame)
+                                         nsFramePaintLayer aWhichLayer)
 {
   // The button is getting the hover events so...
   // None of the children frames of the combobox get
@@ -1654,14 +1653,7 @@ nsComboboxControlFrame::GetFrameForPoint(const nsPoint& aPoint,
   // Now the functionality of the OPTIONs depends on the SELECT
   // being visible.  Oh well...
 
-  if ( mRect.Contains(aPoint) &&
-       (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) ) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
+  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
 

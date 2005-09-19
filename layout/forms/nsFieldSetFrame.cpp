@@ -98,9 +98,8 @@ public:
                           nsIFrame*      aOldFrame,
                           nsIFrame*      aNewFrame);
 
-  NS_IMETHOD  GetFrameForPoint(const nsPoint&    aPoint, 
-                               nsFramePaintLayer aWhichLayer,
-                               nsIFrame**        aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
@@ -666,13 +665,13 @@ nsFieldSetFrame::ReplaceFrame(nsIAtom*       aListName,
   return mContentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
 }
 
-NS_IMETHODIMP
-nsFieldSetFrame::GetFrameForPoint(const nsPoint&    aPoint, 
-                                  nsFramePaintLayer aWhichLayer,
-                                  nsIFrame**        aFrame)
+nsIFrame*
+nsFieldSetFrame::GetFrameForPoint(const nsPoint&    aPoint,
+                                  nsFramePaintLayer aWhichLayer)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, 
+                               aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND);
 }
 
 #ifdef ACCESSIBILITY

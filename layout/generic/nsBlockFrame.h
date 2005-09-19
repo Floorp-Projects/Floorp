@@ -200,12 +200,12 @@ public:
   // are non-decreasing.
   void SetupLineCursor();
 
-  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
-                                 nsIAtom*       aList,
-                                 nsFramePaintLayer aWhichLayer,
-                                 PRBool         aConsiderSelf,
-                                 nsIFrame**     aFrame);
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  virtual nsIFrame* GetFrameForPointUsing(const nsPoint&    aPoint,
+                                          nsIAtom*          aList,
+                                          nsFramePaintLayer aWhichLayer,
+                                          PRBool            aConsiderSelf);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);

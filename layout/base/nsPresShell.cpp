@@ -5960,31 +5960,19 @@ PresShell::HandleEvent(nsIView         *aView,
       aHandled = PR_FALSE;
       rv = NS_OK;
     } else {
+      rv = NS_OK;
       nsPoint eventPoint;
       eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-      // XXX Until GetFrameForPoint is cleaned up, we need to account for the
-      // weird input the function takes.  These adjustments counteract the
-      // adjustments GetFrameForPoint makes.
-      eventPoint += frame->GetPosition();
-      nsPoint originOffset;
-      nsIView *view = nsnull;
-      frame->GetOriginToViewOffset(originOffset, &view);
-      NS_ASSERTION(view == aView, "view != aView");
-      if (view == aView)
-        eventPoint -= originOffset;
 
-      rv = frame->GetFrameForPoint(eventPoint,
-                                   NS_FRAME_PAINT_LAYER_FOREGROUND,
-                                   &mCurrentEventFrame);
-      if (NS_FAILED(rv)) {
-        rv = frame->GetFrameForPoint(eventPoint,
-                                     NS_FRAME_PAINT_LAYER_FLOATS,
-                                     &mCurrentEventFrame);
-        if (NS_FAILED(rv)) {
-          rv = frame->GetFrameForPoint(eventPoint,
-                                       NS_FRAME_PAINT_LAYER_BACKGROUND,
-                                       &mCurrentEventFrame);
-          if (NS_FAILED (rv)) {
+      mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
+                             NS_FRAME_PAINT_LAYER_FOREGROUND);
+      if (!mCurrentEventFrame) {
+        mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
+                               NS_FRAME_PAINT_LAYER_FLOATS);
+        if (!mCurrentEventFrame) {
+          mCurrentEventFrame = frame->GetFrameForPoint(eventPoint,
+                                 NS_FRAME_PAINT_LAYER_BACKGROUND);
+          if (!mCurrentEventFrame) {
             if (aForceHandle) {
               mCurrentEventFrame = frame;
             }
@@ -5992,7 +5980,6 @@ PresShell::HandleEvent(nsIView         *aView,
               mCurrentEventFrame = nsnull;
             }
             aHandled = PR_FALSE;
-            rv = NS_OK;
           }
         }
       }

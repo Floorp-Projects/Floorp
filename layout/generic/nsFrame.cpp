@@ -2057,19 +2057,16 @@ nsFrame::GetCursor(const nsPoint& aPoint,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsFrame::GetFrameForPoint(const nsPoint& aPoint,
-                          nsFramePaintLayer aWhichLayer,
-                          nsIFrame** aFrame)
+                          nsFramePaintLayer aWhichLayer)
 {
-  if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) &&
-      (mRect.Contains(aPoint))) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
+      thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
+    return this;
   }
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 // Resize and incremental reflow

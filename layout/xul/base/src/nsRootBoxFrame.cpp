@@ -96,9 +96,8 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint& aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
   /**
    * Get the "type" of the frame
@@ -245,13 +244,12 @@ nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRootBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+nsIFrame*
+nsRootBoxFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                 nsFramePaintLayer aWhichLayer)
 {
   // this should act like a block, so we need to override
-  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
 nsIAtom*

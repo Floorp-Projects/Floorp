@@ -431,25 +431,24 @@ nsFormControlFrame::Paint(nsPresContext*      aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsFormControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame** aFrame)
+                                     nsFramePaintLayer aWhichLayer)
 {
-  nsresult rv = NS_ERROR_FAILURE;
+  nsIFrame* frame = nsnull;
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    rv = nsLeafFrame::GetFrameForPoint(aPoint,
-                                      NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
-    if (NS_SUCCEEDED(rv))
-      return NS_OK;
-    rv = nsLeafFrame::GetFrameForPoint(aPoint,
-                                       NS_FRAME_PAINT_LAYER_FLOATS, aFrame);
-    if (NS_SUCCEEDED(rv))
-      return NS_OK;
-    rv = nsLeafFrame::GetFrameForPoint(aPoint,
-                                      NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
+    frame = nsLeafFrame::GetFrameForPoint(aPoint,
+                                          NS_FRAME_PAINT_LAYER_FOREGROUND);
+    if (frame)
+      return frame;
+    frame = nsLeafFrame::GetFrameForPoint(aPoint,
+                                          NS_FRAME_PAINT_LAYER_FLOATS);
+    if (frame)
+      return frame;
+    frame = nsLeafFrame::GetFrameForPoint(aPoint,
+                                          NS_FRAME_PAINT_LAYER_BACKGROUND);
   }
-  return rv;
+  return frame;
 }
 
 void 

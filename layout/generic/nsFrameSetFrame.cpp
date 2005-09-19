@@ -135,9 +135,8 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
+  nsIFrame* GetFrameForPoint(const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
@@ -840,18 +839,14 @@ nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsIFrame*
 nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                      nsFramePaintLayer aWhichLayer,
-                                      nsIFrame**     aFrame)
+                                      nsFramePaintLayer aWhichLayer)
 {
   //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
-  if (mDragger) { 
-    *aFrame = this;
-    return NS_OK;
-  } else {
-    return nsContainerFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
-  }
+  if (mDragger)
+    return this;
+  return nsContainerFrame::GetFrameForPoint(aPoint, aWhichLayer);
 }
 
 NS_IMETHODIMP
@@ -1761,19 +1756,15 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsIFrame*
 nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                            nsFramePaintLayer aWhichLayer,
-                                            nsIFrame**     aFrame)
+                                            nsFramePaintLayer aWhichLayer)
 {
-  if ( (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND) ||
-       (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || mRect.Contains(aPoint) )))
-  {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aFrame = this;
-  return NS_OK;
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND ||
+       !((mState & NS_FRAME_OUTSIDE_CHILDREN) || thisRect.Contains(aPoint)))
+    return nsnull;
+  return this;
 }
 
 NS_IMETHODIMP

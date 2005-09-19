@@ -239,32 +239,30 @@ nsDeckFrame::Paint(nsPresContext*      aPresContext,
 }
 
 
-NS_IMETHODIMP
-nsDeckFrame::GetFrameForPoint(const nsPoint&    aPoint, 
-                              nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**        aFrame)
+nsIFrame*
+nsDeckFrame::GetFrameForPoint(const nsPoint&    aPoint,
+                              nsFramePaintLayer aWhichLayer)
 {
   // if it is not inside us fail
-  if (!mRect.Contains(aPoint)) {
-    return NS_ERROR_FAILURE;
-  }
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!thisRect.Contains(aPoint))
+    return nsnull;
 
   // get the selected frame and see if the point is in it.
   nsIBox* selectedBox = GetSelectedBox();
   if (selectedBox) {
-    nsPoint tmp(aPoint.x - mRect.x, aPoint.y - mRect.y);
-
-    if (NS_SUCCEEDED(selectedBox->GetFrameForPoint(tmp, aWhichLayer, aFrame)))
-      return NS_OK;
+    nsIFrame* frame;
+    if (frame = selectedBox->GetFrameForPoint(aPoint -
+                                                selectedBox->GetOffsetTo(this),
+                                              aWhichLayer))
+      return frame;
   }
-    
+
   // if its not in our child just return us.
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
-      *aFrame = this;
-      return NS_OK;
-  }
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND)
+    return this;
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 

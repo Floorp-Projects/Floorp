@@ -1297,7 +1297,8 @@ NS_IMETHODIMP
 nsBox::GetDebugBoxAt( const nsPoint& aPoint,
                       nsIBox**     aBox)
 {
-  if (!mRect.Contains(aPoint))
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!thisRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
   nsIBox* child = nsnull;
@@ -1305,10 +1306,8 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
   GetChildBox(&child);
 
   *aBox = nsnull;
-  nsPoint tmp;
-  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
   while (nsnull != child) {
-    nsresult rv = child->GetDebugBoxAt(tmp, &hit);
+    nsresult rv = child->GetDebugBoxAt(aPoint - child->GetOffsetTo(this), &hit);
 
     if (NS_SUCCEEDED(rv) && hit) {
       *aBox = hit;
@@ -1325,7 +1324,7 @@ nsBox::GetDebugBoxAt( const nsPoint& aPoint,
   nsMargin m;
   GetBorderAndPadding(m);
 
-  nsRect rect(mRect);
+  nsRect rect(thisRect);
   rect.Deflate(m);
   if (rect.Contains(aPoint)) {
     GetInset(m);

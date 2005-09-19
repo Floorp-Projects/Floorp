@@ -75,17 +75,15 @@ public:
                              nsFramePaintLayer    aWhichLayer,
                              PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
-                              nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint, 
+                                     nsFramePaintLayer aWhichLayer);
 
 protected:
 
-  virtual nsresult GetFrameForPointChild(const nsPoint&    aPoint,
-                                         nsFramePaintLayer aWhichLayer,    
-                                         nsIFrame*         aChild,
-                                         PRBool            aCheckMouseThrough,
-                                         nsIFrame**        aFrame);
+  virtual nsIFrame* GetFrameForPointChild(const nsPoint&    aPoint,
+                                          nsFramePaintLayer aWhichLayer,
+                                          nsIFrame*         aChild,
+                                          PRBool            aCheckMouseThrough);
 
   nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 

@@ -102,32 +102,31 @@ nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
 }
 
 //---------------------------------------------------------
-NS_IMETHODIMP
+nsIFrame*
 nsSelectsAreaFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame** aFrame)
+                                     nsFramePaintLayer aWhichLayer)
 {
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  PRBool inThisFrame = thisRect.Contains(aPoint);
 
-  PRBool inThisFrame = mRect.Contains(aPoint);
-
-  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame )) {
-    return NS_ERROR_FAILURE;
+  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame)) {
+    return nsnull;
   }
 
-  nsresult result = nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+  nsIFrame* frame = nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer);
 
-  if (result == NS_OK) {
-    nsIFrame* selectedFrame = *aFrame;
+  if (frame) {
+    nsIFrame* selectedFrame = frame;
     while (selectedFrame && !IsOptionElementFrame(selectedFrame)) {
       selectedFrame = selectedFrame->GetParent();
-    }  
+    }
     if (selectedFrame) {
-      *aFrame = selectedFrame;
+      return selectedFrame;
     }
     // else, keep the original result as *aFrame, which could be this frame
   }
 
-  return result;
+  return frame;
 }
 
 NS_IMETHODIMP

@@ -124,21 +124,21 @@ nsTreeColFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
-nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame**     aFrame)
+nsIFrame*
+nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
+                                 nsFramePaintLayer aWhichLayer)
 {
-  if (!(mRect.Contains(aPoint) || (mState & NS_FRAME_OUTSIDE_CHILDREN)))
-    return NS_ERROR_FAILURE;
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!(thisRect.Contains(aPoint) || (mState & NS_FRAME_OUTSIDE_CHILDREN)))
+    return nsnull;
 
   // If we are in either the first 2 pixels or the last 2 pixels, we're going to
   // do something really strange.  Check for an adjacent splitter.
   PRBool left = PR_FALSE;
   PRBool right = PR_FALSE;
-  if (mRect.x + mRect.width - 60 < aPoint.x)
+  if (mRect.width - 60 < aPoint.x)
     right = PR_TRUE;
-  else if (mRect.x + 60 > aPoint.x)
+  else if (60 > aPoint.x)
     left = PR_TRUE;
 
   if (left || right) {
@@ -153,30 +153,27 @@ nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
     if (child) {
       nsINodeInfo *ni = child->GetContent()->GetNodeInfo();
       if (ni && ni->Equals(nsXULAtoms::splitter, kNameSpaceID_XUL)) {
-        *aFrame = child;
-        return NS_OK;
+        return child;
       }
     }
   }
 
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
-  if (result == NS_OK) {
-    nsIContent* content = (*aFrame)->GetContent();
+  nsIFrame* frame = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer);
+  if (frame) {
+    nsIContent* content = frame->GetContent();
     if (content) {
       // This allows selective overriding for subcontent.
       nsAutoString value;
       content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
       if (value.EqualsLiteral("true"))
-        return result;
+        return frame;
     }
   }
-  if (mRect.Contains(aPoint)) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this; // Capture all events.
-      return NS_OK;
-    }
+
+  if (thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
+    return this; // Capture all events.
   }
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 NS_IMETHODIMP

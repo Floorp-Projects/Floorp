@@ -278,19 +278,16 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP
+nsIFrame*
 nsHTMLButtonControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                           nsFramePaintLayer aWhichLayer,
-                                           nsIFrame** aFrame)
+                                           nsFramePaintLayer aWhichLayer)
 {
+  nsRect thisRect(nsPoint(0,0), GetSize());
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
-      mRect.Contains(aPoint)) {
-    if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
+      thisRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
+    return this;
   }
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 NS_IMETHODIMP

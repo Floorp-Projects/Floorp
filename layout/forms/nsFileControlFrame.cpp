@@ -578,22 +578,21 @@ nsFileControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+nsIFrame*
 nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame** aFrame)
+                                     nsFramePaintLayer aWhichLayer)
 {
 #ifndef DEBUG_NEWFRAME
-  if ( nsFormControlHelper::GetDisabled(mContent) && mRect.Contains(aPoint) ) {
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (nsFormControlHelper::GetDisabled(mContent) && thisRect.Contains(aPoint)) {
     if (GetStyleVisibility()->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
+      return this;
     }
   } else {
-    return nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
+    return nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer);
   }
 #endif
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 #ifdef NS_DEBUG
