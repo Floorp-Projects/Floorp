@@ -136,9 +136,9 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
 // the wrapped native's flat JSObject, so the hook and args macro parameters
 // can be simply:
 //
-//      enumerate, (cx, obj)
+//      convert, (cx, obj, type, vp)
 //
-// in the call from XPC_NW_Enumerate, for example.
+// in the call from XPC_NW_Convert, for example.
 
 #define XPC_NW_CALL_HOOK(cx, obj, hook, args)                                 \
   return JS_GET_CLASS(cx, obj)->hook args;
@@ -598,9 +598,41 @@ XPC_NW_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Enumerate(JSContext *cx, JSObject *obj)
 {
-  XPC_NW_BYPASS(cx, obj, enumerate, (cx, obj));
+  // We are being notified of a for-in loop or similar operation on this
+  // XPCNativeWrapper, so forward to the correct high-level object hook,
+  // OBJ_ENUMERATE on the XPCWrappedNative's object, called via the
+  // JS_Enumerate API.  Then reflect properties named by the enumerated
+  // identifiers from the wrapped native to the native wrapper.
 
-  return JS_TRUE;
+  XPCWrappedNative *wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
+  if (!wn) {
+    return JS_TRUE;
+  }
+
+  JSIdArray *ida = JS_Enumerate(cx, wn->GetFlatJSObject());
+  if (!ida) {
+    return JS_FALSE;
+  }
+
+  JSBool ok = JS_TRUE;
+
+  for (jsint i = 0, n = ida->length; i < n; i++) {
+    JSObject *pobj;
+    JSProperty *prop;
+
+    // Let OBJ_LOOKUP_PROPERTY, in particular XPC_NW_NewResolve, figure
+    // out whether this id should be bypassed or reflected.
+    ok = OBJ_LOOKUP_PROPERTY(cx, obj, ida->vector[i], &pobj, &prop);
+    if (!ok) {
+      break;
+    }
+    if (prop) {
+      OBJ_DROP_PROPERTY(cx, pobj, prop);
+    }
+  }
+
+  JS_DestroyIdArray(cx, ida);
+  return ok;
 }
 
 static
@@ -702,7 +734,7 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       return JS_FALSE;
     }        
     
-    XPCWrappedNative* oldResolvingWrapper;
+    XPCWrappedNative* oldResolvingWrapper = nsnull;
     JSBool allowPropMods =
       NATIVE_HAS_FLAG(wrappedNative, AllowPropModsDuringResolve);
     if (allowPropMods) {
