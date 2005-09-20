@@ -16,7 +16,7 @@
   <script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
      
-  <prefpane id="Advanced">
+  <prefpane id="Advanced" label="Advanced">
     <preferences>
       <preference id="skey.enabled"                name="skey.enabled" type="bool"/>
       <preference id="config.wince.dumpJSConsole"  name="config.wince.dumpJSConsole" type="bool"/>
@@ -30,11 +30,11 @@
   </prefpane>
 
 
-  <prefpane id="Privacy">
+  <prefpane id="Privacy" label="Privacy" >
     <button label="&sanitizeButton.label;" oncommand="sanitizeAll();"/>
   </prefpane>
 
-  <prefpane id="ConnectionsDialogPane">
+  <prefpane id="ConnectionsDialogPane" label="Proxy">
     <preferences>
       <preference id="network.proxy.type"           name="network.proxy.type"           type="int"/>
       <preference id="network.proxy.http"           name="network.proxy.http"           type="string"/>
@@ -54,7 +54,7 @@
     </groupbox>
   </prefpane>
 
-  <prefpane id="GeneralPane">
+  <prefpane id="GeneralPane" label="General">
     <preferences>
       <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="wstring"/>
       <preference id="permissions.default.image"  name="permissions.default.image" type="int"/>
