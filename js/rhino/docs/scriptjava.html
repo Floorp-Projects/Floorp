@@ -8,21 +8,12 @@
    <title>Scripting Java</title>
 </head>
 <body bgcolor="#FFFFFF">
-<script src="owner.js"></script>
 
 <center>
 <h1>
-Scripting Java</h1></center>
-<script>document.write(owner());</script>
-
-<br><script>
-	var d = new Date(document.lastModified);
-	document.write((d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear());
-	document.write('<br>');
-</script>
-
-<center>
-<hr WIDTH="100%"></center>
+Scripting Java</h1>
+<p>Norris Boyd</p>
+</center>
 
 <p>It's possible to use Rhino just for scripting Java. You don't have to
 write any additional Java code; just use the existing Rhino shell and then
@@ -49,7 +40,7 @@ class path to start the shell</i>.
 to the shell class:
 <pre>&nbsp;&nbsp;&nbsp; java org.mozilla.javascript.tools.shell.Main myScript.js</pre>
 There are a number of options for evaluating scripts using the shell. See
-the <a href="shell.html">command description</a>
+the <a href="http://www.mozilla.org/rhino/shell.html">command description</a>
 for more information.
 <br>&nbsp;
 <h2>
@@ -79,7 +70,7 @@ If you wish to load classes from JavaScript that aren't in the <tt>java</tt>
 package, you'll need to prefix the package name with "<tt>Packages.</tt>".
 For example:
 <pre>$ java org.mozilla.javascript.tools.shell.Main
-js> cx = Packages.org.mozilla.javascript.Context.enter()
+js> cx = Packages.org.mozilla.javascript.Context.currentContext
 org.mozilla.javascript.Context@25980b44
 js> cx.evaluateString(this, "3+2", null, 0, null)
 5.0
