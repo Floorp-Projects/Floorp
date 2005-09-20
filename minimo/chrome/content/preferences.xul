@@ -16,6 +16,20 @@
   <script type="application/x-javascript" src="chrome://minimo/content/preferences.js"/>
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
      
+  <prefpane id="Advanced">
+    <preferences>
+      <preference id="skey.enabled"                name="skey.enabled" type="bool"/>
+      <preference id="config.wince.dumpJSConsole"  name="config.wince.dumpJSConsole" type="bool"/>
+    </preferences>
+
+    <groupbox>
+        <caption label="&miscCaption.label;"/>
+        <checkbox id="skey" label="&useSWKeyboard.label;" preference="skey.enabled"/>
+        <checkbox id="dumpJS" label="&dumpJSConsole.label;" preference="config.wince.dumpJSConsole"/>
+    </groupbox>
+  </prefpane>
+
+
   <prefpane id="Privacy">
     <button label="&sanitizeButton.label;" oncommand="sanitizeAll();"/>
   </prefpane>

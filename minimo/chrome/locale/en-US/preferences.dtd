@@ -22,3 +22,9 @@
 <!ENTITY imagesCheckbox.label        "Display Images">
 <!ENTITY useSSRCheckbox.label        "Use SSR">
 <!ENTITY usesiteSSRCheckbox.label    "Use Site-Specific SSR">
+
+<!-- Advanced Settings --> 
+
+<!ENTITY miscCaption.label           "Random Settings">
+<!ENTITY useSWKeyboard.label         "Use Software Keyboard">
+<!ENTITY dumpJSConsole.label         "Dump JS console at shutdown">
