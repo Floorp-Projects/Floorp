@@ -159,9 +159,6 @@ ApplicationObserver::Observe(nsISupports *aSubject, const char *aTopic, const PR
       if (!bundle)
         return NS_ERROR_FAILURE;
       
-      
-
-
       const PRUnichar *formatStrings[] = { filePath.get() };
       nsXPIDLString message;
       bundle->FormatStringFromName(NS_LITERAL_STRING("loadFailed").get(),
@@ -401,10 +398,6 @@ void DoPreferences()
         return;
 
     prefBranch->SetIntPref("snav.keyCode.modifier", 0);
-
-
-
-    prefBranch->GetBoolPref("config.wince.dumpJSConsole", &gDumpJSConsole);
 }
 
 #define NS_FULLSCREEN_CID                          \

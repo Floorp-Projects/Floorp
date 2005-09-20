@@ -96,7 +96,7 @@ nsSSRSupport::SetSSREnabled(PRBool aSsrEnabled)
 
   if (aSsrEnabled)
     return m_sss->LoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
-  
+
   return m_sss->UnregisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
 }
 
@@ -122,7 +122,7 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
 {
   nsresult rv;
   
-  if (!strcmp(aTopic,"xpcom-startup")) 
+  if (!strcmp(aTopic,"app-startup")) 
   {
     nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -142,7 +142,7 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     if (!strcmp(pref, "ssr.enabled"))
     {
       PRBool enabled;
-      prefBranch->GetIntPref(pref, &enabled);
+      prefBranch->GetBoolPref(pref, &enabled);
 
       SetSSREnabled(enabled);
       return NS_OK;
@@ -151,7 +151,7 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     if (!strcmp(pref, "ssr.site.enabled"))
     {
       PRBool enabled;
-      prefBranch->GetIntPref(pref, &enabled);
+      prefBranch->GetBoolPref(pref, &enabled);
 
       SetSiteSSREnabled(enabled);
       return NS_OK;
@@ -196,7 +196,7 @@ static NS_METHOD SSRRegistration(nsIComponentManager *aCompMgr,
     return rv;
   
   char* previous = nsnull;
-  rv = catman->AddCategoryEntry("xpcom-startup",
+  rv = catman->AddCategoryEntry("app-startup",
                                 "SSR", 
                                 SSRSupport_ContractID,
                                 PR_TRUE, 
@@ -227,7 +227,7 @@ static NS_METHOD SSRUnregistration(nsIComponentManager *aCompMgr,
   if (NS_FAILED(rv))
     return rv;
   
-  rv = catman->DeleteCategoryEntry("xpcom-startup",
+  rv = catman->DeleteCategoryEntry("app-startup",
                                    "SSR", 
                                    PR_TRUE);
   

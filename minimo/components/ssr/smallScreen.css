@@ -71,6 +71,8 @@ img[src*="spacer"] {
 } 
 
 
+
+
 *:focus
 {
   -moz-outline: 3px solid #FFFF00  !important;

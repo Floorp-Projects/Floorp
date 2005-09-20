@@ -766,5 +766,5 @@ pref("config.wince.useOKBtn", true);
 pref("ssr.enabled", true);
 pref("ssr.site.enabled", true);
 
+pref("skey.enabled", true);
 
-pref("config.wince.dumpJSConsole", true);

@@ -74,6 +74,9 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 
+#include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
+
 class nsSoftKeyBoard : public nsIDOMEventListener
 {
 public:
@@ -109,6 +112,8 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsCOMArray<nsSoftKeyBoard> mObjects;
+
+  PRBool mUseSoftwareKeyboard;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSoftKeyBoard)
@@ -190,11 +195,14 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
 void
 nsSoftKeyBoard::OpenSIP()
 {
-#ifdef WINCE
-#define KBDI_KEYBOARD_ENABLED 0x0002
-  //  if (KBDI_KEYBOARD_ENABLED & GetKeyboardStatus())
-  //    return;
+  // It is okay to CloseSip if there is a hardware keyboard
+  // present, but it isn't nice to use a software keyboard
+  // when a hardware one is present.
 
+  if (!mService->mUseSoftwareKeyboard)
+    return;
+
+#ifdef WINCE
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
   {
@@ -208,10 +216,6 @@ void
 nsSoftKeyBoard::CloseSIP()
 {
 #ifdef WINCE
-#define KBDI_KEYBOARD_ENABLED 0x0002
-  //  if (KBDI_KEYBOARD_ENABLED & GetKeyboardStatus())
-  //    return;
-
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
   {
@@ -302,6 +306,7 @@ nsSoftKeyBoard::GetAttachedWindow(nsIDOMWindow * *aAttachedWindow)
 
 nsSoftKeyBoardService::nsSoftKeyBoardService()  
 {
+  mUseSoftwareKeyboard = PR_TRUE;
 }  
 
 nsSoftKeyBoardService::~nsSoftKeyBoardService()  
@@ -358,6 +363,29 @@ nsSoftKeyBoardService::Observe(nsISupports *aSubject, const char *aTopic, const 
     nsCOMPtr<nsIWindowWatcher> windowWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     windowWatcher->RegisterNotification(this);
+
+    nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    prefBranch->AddObserver("skey.", this, PR_FALSE);
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) 
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+    nsXPIDLCString cstr;
+    
+    const char* pref = NS_ConvertUCS2toUTF8(aData).get();
+    
+    if (!strcmp(pref, "skey.enabled"))
+    {
+      PRBool enabled;
+      prefBranch->GetBoolPref(pref, &enabled);
+
+      mUseSoftwareKeyboard = enabled;
+    }
     return NS_OK;
   }
   return NS_OK;
