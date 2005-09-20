@@ -5,7 +5,9 @@ function rssfetch(refTab,targetDoc, targetElement) {
 
 
 	var testLoad=new blenderObject();
-	testLoad.xmlSet("http://rss.slashdot.org/Slashdot/slashdot");
+	//testLoad.xmlSet("http://rss.slashdot.org/Slashdot/slashdot");
+    testLoad.xmlSet("http://del.icio.us/rss/tag/"+gRSSTag);
+	
 	//testLoad.xslSet("chrome://minimo/content/rssview/rss_template.xml");
 
 	testLoad.xslSet("chrome://minimo/content/rssview/rss_template_html.xml");

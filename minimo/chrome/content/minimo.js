@@ -44,7 +44,7 @@ var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
 var gFullScreen=false;
-
+var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
 
@@ -347,6 +347,18 @@ function BrowserViewOptions() {
   }
 }
 
+/**
+  * Has to go through some other approach like a XML-based rule system. 
+  * Those are constraints conditions and action. 
+  **/
+  
+function BrowserViewRSS() {
+  document.getElementById("toolbar-rss").collapsed=!document.getElementById("toolbar-rss").collapsed;
+  if(document.getElementById("toolbar-rss").collapsed &&  document.getElementById("command_ViewOptions").getAttribute("checked")=="true") {
+	document.getElementById("command_ViewRSS").setAttribute("checked","false");
+  }
+}
+
 /** 
   * urlbar indentity, style, progress indicator.
   **/ 
@@ -390,6 +402,7 @@ function BrowserPopupShowing () {
 
 function DoBrowserRSS() {
   try { 
+    gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
     getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
     browserInit(getBrowser().selectedTab);
   } catch (e) {

@@ -75,6 +75,7 @@
 	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
 	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
 	<command id="cmd_ViewOptions" oncommand="BrowserViewOptions()"/>
+    <command id="cmd_ViewRSS" oncommand="BrowserViewRSS()"/>
     <command id="cmd_BrowserBack" oncommand="BrowserBack()" />
 	<command id="cmd_BrowserForward" oncommand="BrowserForward()" />
 	<command id="cmd_BrowserReload" oncommand="BrowserReload()" />
@@ -88,15 +89,13 @@
          <menu id="menu-button" > 
          	 <menupopup>
 		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
-		     <menuitem id="command_DoBrowserRSS" command="cmd_DoBrowserRSS" label="RSS slashdot"  /> 
-
 <!--          not working just yet.
 		     <menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
 -->
 		     <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
 		     <!-- separator for now in CSS - need to redesign -->
 		     <menuitem id="command_ViewOptions" style='border-top:1px solid black'  type="checkbox" command="cmd_ViewOptions" label="View Options"  /> 
-
+		     <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="View RSS"  /> 
 		     <!--
 		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
 		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
@@ -134,11 +133,30 @@
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button" onclick="document.getElementById('toolbar-view').collapsed=true"/>  
+				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
     </toolbar>
+    
+    <toolbar id="toolbar-rss" flex="1" collapsed="true" >
+        <groupbox flex="1" class="box-floatoptions">
+		    <caption label="RSS View"/>
+			<hbox flex="1" >
+				<vbox flex="1"  style="padding:4px ! important">
+
+					<hbox flex="1" style="margin-top:4px ! important">
+						 <label value="&zoomText.label;"  />
+						 <textbox id="toolbar-rss-rsstag"/> 
+						 <toolbarbutton class="button-border" command="cmd_DoBrowserRSS" label="Open RSS" />
+					</hbox>
+				</vbox>
+				<vbox>
+				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button"  command="cmd_ViewRSS"/>  
+				</vbox>
+			</hbox>
+		</groupbox>
+    </toolbar>   
     
   </toolbox>
 
