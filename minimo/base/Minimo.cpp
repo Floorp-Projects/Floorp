@@ -50,8 +50,6 @@ const static char* start_url = "chrome://minimo/content/minimo.xul";
 //const static char* start_url = "http://www.meer.net/~dougt/test.html";
 //const static char* start_url = "resource://gre/res/start.html";
 
-PRBool gDumpJSConsole = PR_FALSE;
-
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -654,9 +652,18 @@ int main(int argc, char *argv[])
   delete appObserver;
   delete creatorCallback;
   
-  if (gDumpJSConsole)
-    WriteConsoleLog();
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefBranch)
+    return -1;
   
+  PRBool dumpJSConsole = PR_FALSE;
+  
+  prefBranch->GetBoolPref("config.wince.dumpJSConsole", &dumpJSConsole);
+  prefBranch = 0;
+
+  if (dumpJSConsole)
+      WriteConsoleLog();
+
   // Close down Embedding APIs
   NS_TermEmbedding();
   
