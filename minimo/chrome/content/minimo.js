@@ -146,19 +146,8 @@ nsBrowserStatusHandler.prototype =
 
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
-  
-    /* This is the in-progress version of our background progress bar under urlbar */
-    this.progressBGPosition+=3;
-    document.styleSheets[1].cssRules[0].style.backgroundPosition=this.progressBGPosition+"px 0%";
-
-    /* This is to be the new version, when the aCurTotalProgress aMaxTotalProgres values 
-    are correct...
-    
     var percentage = parseInt((aCurTotalProgress * 100) / aMaxTotalProgress);
     document.styleSheets[1].cssRules[0].style.backgroundPosition=percentage+"px 100%";
-
-    */
-    
   },
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
