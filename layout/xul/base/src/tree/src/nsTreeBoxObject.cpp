@@ -292,11 +292,11 @@ nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
 }
 
 NS_IMETHODIMP 
-nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, const PRUnichar *aColID)
+nsTreeBoxObject::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 {
   nsITreeBoxObject* body = GetTreeBody();
   if (body)
-    return body->EnsureCellIsVisible(aRow, aColID);
+    return body->EnsureCellIsVisible(aRow, aCol);
   return NS_OK;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -329,20 +329,20 @@ nsTreeBoxObject::ScrollByPages(PRInt32 aNumPages)
 }
 
 NS_IMETHODIMP 
-nsTreeBoxObject::ScrollToCell(PRInt32 aRow, const PRUnichar *aColID)
+nsTreeBoxObject::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
   nsITreeBoxObject* body = GetTreeBody();
   if (body)
-    return body->ScrollToCell(aRow, aColID);
+    return body->ScrollToCell(aRow, aCol);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsTreeBoxObject::ScrollToColumn(const PRUnichar *aColID)
+nsTreeBoxObject::ScrollToColumn(nsITreeColumn* aCol)
 {
   nsITreeBoxObject* body = GetTreeBody();
   if (body)
-    return body->ScrollToColumn(aColID);
+    return body->ScrollToColumn(aCol);
   return NS_OK;
 }
 
