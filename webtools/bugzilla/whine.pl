@@ -275,8 +275,8 @@ sub get_next_event {
                         $groupname, $owner);
                     if ($group_id) {
                         my $glist = join(',',
-                            Bugzilla::User->flatten_group_membership(
-                            $group_id));
+                            @{Bugzilla::User->flatten_group_membership(
+                            $group_id)});
                         $sth = $dbh->prepare("SELECT user_id FROM " .
                                              "user_group_map " .
                                              "WHERE group_id IN ($glist)");
