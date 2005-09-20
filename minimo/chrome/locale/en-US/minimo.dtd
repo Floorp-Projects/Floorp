@@ -29,4 +29,7 @@
 <!ENTITY zoomTextPlus.label            "+" >
 <!ENTITY zoomTextMinus.label           "-" >
 
+<!-- toolbar view rss --> 
+<!ENTITY rssText.label                 "Tag:" >
+
 <!-- context menu items -->
