@@ -430,7 +430,7 @@ calRecurrenceRule::GetOccurrences(calIDateTime *aStartTime,
 
     nsCOMArray<calIDateTime> dates;
 
-#ifdef DEBUG
+#ifdef DEBUG_vlad
     {
         char* ss = icalrecurrencetype_as_string(mIcalRecur);
         nsCAutoString tst, tend;
