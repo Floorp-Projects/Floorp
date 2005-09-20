@@ -381,7 +381,8 @@
               if (this.mBrowser.userTypedClear > 0)
                 this.mBrowser.userTypedValue = null;
 
-              if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+              if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
+                  aWebProgress.isLoadingDocument)
                 this.mTabBrowser.setIcon(this.mTab, null);
 
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
