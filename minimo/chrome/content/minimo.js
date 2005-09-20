@@ -354,7 +354,7 @@ function BrowserViewOptions() {
   
 function BrowserViewRSS() {
   document.getElementById("toolbar-rss").collapsed=!document.getElementById("toolbar-rss").collapsed;
-  if(document.getElementById("toolbar-rss").collapsed &&  document.getElementById("command_ViewOptions").getAttribute("checked")=="true") {
+  if(document.getElementById("toolbar-rss").collapsed &&  document.getElementById("command_ViewRSS").getAttribute("checked")=="true") {
 	document.getElementById("command_ViewRSS").setAttribute("checked","false");
   }
 }
