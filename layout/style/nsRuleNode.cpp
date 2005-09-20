@@ -259,6 +259,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_IA     (SETCOORD_INTEGER | SETCOORD_AUTO)
 #define SETCOORD_LAE    (SETCOORD_LENGTH | SETCOORD_AUTO | SETCOORD_ENUMERATED)
 
+// changes aCoord iff it returns PR_TRUE
 static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
                        const nsStyleCoord& aParentCoord,
                        PRInt32 aMask, nsStyleContext* aStyleContext,
@@ -982,10 +983,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
         }
         break;
 
-      case eCSSType_Shadow:
-        NS_NOTYETIMPLEMENTED("nsCSSShadow not yet transferred to structs");
-        break;
-
       default:
         NS_NOTREACHED("unknown type");
         break;
@@ -1050,7 +1047,9 @@ nsRuleNode::GetTextResetData(nsStyleContext* aContext)
   nsRuleData ruleData(eStyleStruct_TextReset, mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  return WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
+  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
+  textData.mTextShadow = nsnull; // We are sharing with some style rule.  It really owns the data.
+  return res;
 }
 
 const nsStyleStruct*
@@ -1061,7 +1060,7 @@ nsRuleNode::GetUserInterfaceData(nsStyleContext* aContext)
   ruleData.mUserInterfaceData = &uiData;
 
   const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData);
-  uiData.mCursor = nsnull;
+  uiData.mCursor = nsnull; // We are sharing with some style rule.  It really owns the data.
   return res;
 }
 

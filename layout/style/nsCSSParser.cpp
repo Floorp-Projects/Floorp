@@ -25,6 +25,7 @@
  *   L. David Baron <dbaron@dbaron.org>
  *   Boris Zbarsky <bzbarsky@mit.edu>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -148,6 +149,29 @@ public:
   void AppendRule(nsICSSRule* aRule);
 
 protected:
+  class nsAutoParseCompoundProperty;
+  friend class nsAutoParseCompoundProperty;
+
+  /**
+   * This helper class automatically calls SetParsingCompoundProperty in its
+   * constructor and takes care of resetting it to false in its destructor.
+   */
+  class nsAutoParseCompoundProperty {
+    public:
+      nsAutoParseCompoundProperty(CSSParserImpl* aParser) : mParser(aParser)
+      {
+        NS_ASSERTION(aParser, "Null parser?");
+        aParser->SetParsingCompoundProperty(PR_TRUE);
+      }
+
+      ~nsAutoParseCompoundProperty()
+      {
+        mParser->SetParsingCompoundProperty(PR_FALSE);
+      }
+    private:
+      CSSParserImpl* mParser;
+  };
+
   nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
                        PRUint32 aLineNumber, nsIURI* aBaseURI);
   // the caller must hold on to aBuffer until parsing is done
@@ -354,11 +378,12 @@ protected:
     NS_ASSERTION(aBool == PR_TRUE || aBool == PR_FALSE, "bad PRBool value");
     mParsingCompoundProperty = aBool;
   }
-  PRBool IsParsingCompoundProperty(void) {
+  PRBool IsParsingCompoundProperty(void) const {
     return mParsingCompoundProperty;
   }
 
-  // Current token. The value is valid after calling GetToken
+  // Current token. The value is valid after calling GetToken and invalidated
+  // by UngetToken.
   nsCSSToken mToken;
 
   // Our scanner.
@@ -3379,16 +3404,6 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
       *dest = *source;
       *source = nsnull;
     } break;
-
-    case eCSSType_Shadow: {
-      nsCSSShadow **source = NS_STATIC_CAST(nsCSSShadow**, v_source);
-      nsCSSShadow **dest = NS_STATIC_CAST(nsCSSShadow**, v_dest);
-      if (!nsCSSShadow::Equal(*source, *dest))
-        *aChanged = PR_TRUE;
-      delete *dest;
-      *dest = *source;
-      *source = nsnull;
-    } break;
   }
 }
 
@@ -3396,7 +3411,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
 #define VARIANT_PERCENT         0x000004  // P
-#define VARIANT_COLOR           0x000008  // C
+#define VARIANT_COLOR           0x000008  // C eCSSUnit_Color, eCSSUnit_String (e.g.  "red")
 #define VARIANT_URL             0x000010  // U
 #define VARIANT_NUMBER          0x000020  // N
 #define VARIANT_INTEGER         0x000040  // I
@@ -3408,7 +3423,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_ATTR            0x001000  //
 #define VARIANT_IDENTIFIER      0x002000  // D
 #define VARIANT_AUTO            0x010000  // A
-#define VARIANT_INHERIT         0x020000  // H
+#define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit
 #define VARIANT_NONE            0x040000  // O
 #define VARIANT_NORMAL          0x080000  // M
 
@@ -3581,6 +3596,10 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
                                    PRInt32 aVariantMask,
                                    const PRInt32 aKeywordTable[])
 {
+  NS_ASSERTION(IsParsingCompoundProperty() || 
+               ((~aVariantMask) & (VARIANT_LENGTH|VARIANT_COLOR)),
+               "cannot distinguish lengths and colors in quirks mode");
+
   if (!GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
   }
@@ -3922,7 +3941,7 @@ PRInt32 CSSParserImpl::ParseChoice(nsresult& aErrorCode, nsCSSValue aValues[],
                                    const nsCSSProperty aPropIDs[], PRInt32 aNumIDs)
 {
   PRInt32 found = 0;
-  SetParsingCompoundProperty(PR_TRUE);
+  nsAutoParseCompoundProperty compound(this);
 
   PRInt32 loop;
   for (loop = 0; loop < aNumIDs; loop++) {
@@ -3969,7 +3988,6 @@ PRInt32 CSSParserImpl::ParseChoice(nsresult& aErrorCode, nsCSSValue aValues[],
       }
     }
   }
-  SetParsingCompoundProperty(PR_FALSE);
   return found;
 }
 
@@ -5852,78 +5870,134 @@ PRBool CSSParserImpl::ParseTextDecoration(nsresult& aErrorCode, nsCSSValue& aVal
 
 PRBool CSSParserImpl::ParseTextShadow(nsresult& aErrorCode)
 {
-  nsCSSValue  value;
-  if (ParseVariant(aErrorCode, value, VARIANT_HC | VARIANT_LENGTH | VARIANT_NONE, nsnull)) {
-    nsCSSUnit unit = value.GetUnit();
-    if ((eCSSUnit_Color == unit) || (eCSSUnit_String == unit) || value.IsLengthUnit()) {
-      nsCSSShadow*  shadowHead = new nsCSSShadow();
-      nsCSSShadow*  shadow = shadowHead;
-      if (nsnull == shadow) {
+  nsAutoParseCompoundProperty compound(this);
+
+  // Parses x, y, radius, color (in two possible orders)
+  // This parses the input into a list. Either it contains just a "none" or
+  // "inherit" value, or a list of arrays.
+  // The resulting arrays will always contain the above order, with color and
+  // radius as null values as needed
+  enum {
+    IndexX,
+    IndexY,
+    IndexRadius,
+    IndexColor
+  };
+
+  // This variable is set to true if we already parsed an "end of property"
+  // token. We can't unget it, as ExpectEndProperty already ungets the token in
+  // some cases, and we can't detect that.
+  PRBool atEOP = PR_FALSE;
+
+  nsCSSValueList *list = nsnull;
+  for (nsCSSValueList **curp = &list, *cur; ; curp = &cur->mNext) {
+    cur = *curp = new nsCSSValueList();
+    if (!cur) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+    if (!ParseVariant(aErrorCode, cur->mValue,
+                      (cur == list) ? VARIANT_HC | VARIANT_LENGTH | VARIANT_NONE
+                                    : VARIANT_COLOR | VARIANT_LENGTH,
+                      nsnull)) {
+      break;
+    }
+
+    nsCSSUnit unit = cur->mValue.GetUnit();
+    if (unit != eCSSUnit_None && unit != eCSSUnit_Inherit &&
+        unit != eCSSUnit_Initial) {
+      nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(4);
+      if (!val) {
         aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-        return PR_FALSE;
+        break;
       }
-      while (nsnull != shadow) {
-        PRBool  haveColor = PR_FALSE;
-        if (value.IsLengthUnit()) {
-          shadow->mXOffset = value;
-        }
-        else {
-          haveColor = PR_TRUE;
-          shadow->mColor = value;
-          if (ParseVariant(aErrorCode, value, VARIANT_LENGTH, nsnull)) {
-            shadow->mXOffset = value;
-          }
-          else {
-            break;
-          }
-        }
-        if (ParseVariant(aErrorCode, value, VARIANT_LENGTH, nsnull)) {
-          shadow->mYOffset = value;
-        }
-        else {
-          break;
-        }
-        if (ParseVariant(aErrorCode, value, VARIANT_LENGTH, nsnull)) {
-          shadow->mRadius = value;
-        } // optional
-        if (PR_FALSE == haveColor) {
-          if (ParseVariant(aErrorCode, value, VARIANT_COLOR, nsnull)) {
-            shadow->mColor = value;
-          }
-        }
-        if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
-          shadow->mNext = new nsCSSShadow();
-          shadow = shadow->mNext;
-          if (nsnull == shadow) {
-            aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-            break;
-          }
-          if (PR_FALSE == ParseVariant(aErrorCode, value, VARIANT_COLOR | VARIANT_LENGTH, nsnull)) {
-            break;
-          }
-        }
-        else {
-          if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-            mTempData.SetPropertyBit(eCSSProperty_text_shadow);
-            mTempData.mText.mTextShadow = shadowHead;
-            aErrorCode = NS_OK;
-            return PR_TRUE;
-          }
+      PRBool haveColor = PR_FALSE;
+      if (cur->mValue.IsLengthUnit()) {
+        val->Item(IndexX) = cur->mValue;
+      } else {
+        // Must be a color (as string or color value)
+        NS_ASSERTION(unit == eCSSUnit_String || unit == eCSSUnit_Color,
+                     "Must be a color value");
+        haveColor = PR_TRUE;
+        val->Item(IndexColor) = cur->mValue;
+
+        // Parse the x coordinate
+        if (!ParseVariant(aErrorCode, val->Item(IndexX), VARIANT_LENGTH,
+                          nsnull)) {
           break;
         }
       }
-      delete shadowHead;
-      return PR_FALSE;
+      cur->mValue.SetArrayValue(val, eCSSUnit_Array);
+
+      // Y coordinate; this one is not optional
+      if (!ParseVariant(aErrorCode, val->Item(IndexY), VARIANT_LENGTH, nsnull)) {
+        break;
+      }
+
+      // Peek the next token to determine whether it's the radius or the color
+      // EOF is fine too (properties can end in EOF)
+      PRBool haveRadius = PR_FALSE;
+      if (GetToken(aErrorCode, PR_TRUE)) {
+        // The radius is a length, and all lengths are dimensions
+        haveRadius = mToken.IsDimension();
+        // Now unget the token, we didn't consume it
+        UngetToken();
+      }
+
+      if (haveRadius) {
+        // Optional radius
+        if (!ParseVariant(aErrorCode, val->Item(IndexRadius), VARIANT_LENGTH,
+                          nsnull)) {
+          break;
+        }
+      }
+
+      // Might be at a comma now
+      if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+        // Go to next value
+        continue;
+      }
+
+      if (!haveColor) {
+        // Now, we are either at the end of the property, or have a color (or
+        // have an error)
+
+        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+          atEOP = PR_TRUE;
+        } else {
+          // Clear the error from ExpectEndProperty - not a real error (if we
+          // have a color here)
+          CLEAR_ERROR();
+
+          // Since we're not at the end of the property, we must have a color,
+          // or report an error.
+          if (!ParseVariant(aErrorCode, val->Item(IndexColor), VARIANT_COLOR,
+                            nsnull)) {
+            break;
+          }
+
+          if (ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+            // Parse next value
+            continue;
+          }
+        }
+      }
     }
-    // value is inherit or none
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      nsCSSShadow* shadowHead = new nsCSSShadow();
-      shadowHead->mXOffset = value;
-      mTempData.SetPropertyBit(eCSSProperty_text_shadow);
-      mTempData.mText.mTextShadow = shadowHead;
-      return PR_TRUE;
+
+    if (!atEOP && !ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      // Error
+      break;
     }
+
+    // Only success case here, since having the failure case at the
+    // end allows more sharing of code.
+    mTempData.SetPropertyBit(eCSSProperty_text_shadow);
+    mTempData.mText.mTextShadow = list;
+    aErrorCode = NS_OK;
+    return PR_TRUE;
   }
+  // Have failure case at the end so we can |break| to get to it.
+  delete list;
   return PR_FALSE;
 }
 

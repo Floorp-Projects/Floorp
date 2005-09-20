@@ -112,21 +112,6 @@ struct nsCSSColor : public nsCSSStruct  {
 struct nsRuleDataColor : public nsCSSColor {
 };
 
-// Should be replaced with nsCSSValueList and nsCSSValue::Array.
-struct nsCSSShadow {
-  nsCSSShadow(void);
-  nsCSSShadow(const nsCSSShadow& aCopy);
-  ~nsCSSShadow(void);
-
-  static PRBool Equal(nsCSSShadow* aList1, nsCSSShadow* aList2);
-
-  nsCSSValue mColor;
-  nsCSSValue mXOffset;
-  nsCSSValue mYOffset;
-  nsCSSValue mRadius;
-  nsCSSShadow*  mNext;
-};
-
 struct nsCSSText : public nsCSSStruct  {
   nsCSSText(void);
   nsCSSText(const nsCSSText& aCopy);
@@ -143,7 +128,7 @@ struct nsCSSText : public nsCSSStruct  {
   nsCSSValue mTextAlign;
   nsCSSValue mTextIndent;
   nsCSSValue mDecoration;
-  nsCSSShadow* mTextShadow; // NEW
+  nsCSSValueList* mTextShadow; // NEW
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
   nsCSSValue mWhiteSpace;
