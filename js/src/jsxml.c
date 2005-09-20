@@ -1944,7 +1944,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     }
 
     /* Toggle on XML support since the script has explicitly requested it. */
-    oldopts = JS_SetOptions(cx, oldopts | JSOPTION_XML);
+    oldopts = JS_SetOptions(cx, cx->options | JSOPTION_XML);
     JS_KEEP_ATOMS(cx->runtime);
     pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
     xml = NULL;
