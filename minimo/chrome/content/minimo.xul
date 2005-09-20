@@ -117,7 +117,10 @@
                  completeselectedindex="true"
                  autocompletepopup="PopupAutoComplete"
                  onfocus="URLBarFocusHandler();"
-                 ontextentered="return URLBarEntered();"/>
+                 ontextentered="return URLBarEntered();">
+            <hbox><image id="lock-icon" class="security-na" /></hbox>
+        </textbox>
+                 
 
     </toolbar>
 	<toolbar id="toolbar-view" flex="1" collapsed="true" >
