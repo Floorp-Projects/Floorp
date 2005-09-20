@@ -3064,6 +3064,11 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     BookmarksToolbar.resizeFunc(null);
   }
 
+  // fix bug 291781 - controller has been lost while removeChild and appendChild
+  var bm = document.getElementById("bookmarks-menu");
+  if (bm)
+    bm.controllers.appendController(BookmarksMenuController);
+
   // XXX Shouldn't have to do this, but I do
   window.focus();
 }
@@ -3460,7 +3465,7 @@ nsBrowserStatusHandler.prototype =
       if (browser.userTypedClear > 0)
         browser.userTypedValue = null;
 
-      if (!gBrowser.mTabbedMode)
+      if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
         gBrowser.setIcon(gBrowser.mCurrentTab, null);
 
       if (findField)
@@ -6048,16 +6053,35 @@ var FeedHandler = {
   updateFeeds: function() {
     if (!this._feedButton)
       this._feedButton = document.getElementById("feed-button");
+    if (!this._feedMenuitem)
+      this._feedMenuitem = document.getElementById("addLiveBookmarkMenuitem");
+    if (!this._feedMenupopup)
+      this._feedMenupopup = document.getElementById("addLiveBookmarkMenupopup");
 
     var feeds = gBrowser.mCurrentBrowser.feeds;
     if (!feeds || feeds.length == 0) {
       this._feedButton.removeAttribute("feeds");
       this._feedButton.setAttribute("tooltiptext", 
-        gNavigatorBundle.getString("feedNoFeeds"));
+                                    gNavigatorBundle.getString("feedNoFeeds"));
+      this._feedMenuitem.setAttribute("disabled", "true");
+      this._feedMenupopup.setAttribute("collapsed", "true");
+      this._feedMenuitem.removeAttribute("collapsed");
     } else {
       this._feedButton.setAttribute("feeds", "true");
       this._feedButton.setAttribute("tooltiptext", 
-        gNavigatorBundle.getString("feedHasFeeds"));
+                                    gNavigatorBundle.getString("feedHasFeeds"));
+
+      // check for dupes before we pick which UI to expose
+      feeds = this.harvestFeeds(feeds);
+      
+      if (feeds.length > 1) {
+        this._feedMenuitem.setAttribute("collapsed", "true");
+        this._feedMenupopup.removeAttribute("collapsed");
+      } else {
+        this._feedMenuitem.removeAttribute("disabled");
+        this._feedMenuitem.removeAttribute("collapsed");
+        this._feedMenupopup.setAttribute("collapsed", "true");
+      }
     }
   }, 
   
