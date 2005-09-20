@@ -104,15 +104,15 @@ FeedParser.prototype =
     if (!channel)
       return aFeed.onParseError(aFeed);
 
-    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagName("title")[0]);
-    aFeed.description = getNodeValue(channel.getElementsByTagName("description")[0]);
-    aFeed.link = getNodeValue(channel.getElementsByTagName("link")[0]);
+    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagNameNS("","title")[0]);
+    aFeed.description = getNodeValue(channel.getElementsByTagNameNS("","description")[0]);
+    aFeed.link = getNodeValue(channel.getElementsByTagNameNS("","link")[0]);
 
     if (!aFeed.parseItems)
       return parsedItems;
 
     aFeed.invalidateItems();
-    var itemNodes = aDOM.getElementsByTagName("item");
+    var itemNodes = aDOM.getElementsByTagNameNS("","item");
 
     for (var i=0; i < itemNodes.length; i++) 
     {
@@ -121,8 +121,8 @@ FeedParser.prototype =
       item.feed = aFeed;
       item.characterSet = "UTF-8";
 
-      var link = getNodeValue(itemNode.getElementsByTagName("link")[0]);
-      var guidNode = itemNode.getElementsByTagName("guid")[0];
+      var link = getNodeValue(itemNode.getElementsByTagNameNS("","link")[0]);
+      var guidNode = itemNode.getElementsByTagNameNS("","guid")[0];
       var guid;
       var isPermaLink;
       if (guidNode) 
@@ -137,17 +137,17 @@ FeedParser.prototype =
 
       item.url = link ? link : (guid && isPermaLink) ? guid : null;
       item.id = guid;
-      item.description = getNodeValue(itemNode.getElementsByTagName("description")[0]);
-      item.title = getNodeValue(itemNode.getElementsByTagName("title")[0])
+      item.description = getNodeValue(itemNode.getElementsByTagNameNS("","description")[0]);
+      item.title = getNodeValue(itemNode.getElementsByTagNameNS("","title")[0])
                    || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
                    || item.title;
 
-      item.author = getNodeValue(itemNode.getElementsByTagName("author")[0]
-                                 || itemNode.getElementsByTagName("creator")[0])
+      item.author = getNodeValue(itemNode.getElementsByTagNameNS("","author")[0]
+                                 || itemNode.getElementsByTagNameNS("","creator")[0])
                                  || aFeed.title
                                  || item.author;
-      item.date = getNodeValue(itemNode.getElementsByTagName("pubDate")[0]
-                               || itemNode.getElementsByTagName("date")[0])
+      item.date = getNodeValue(itemNode.getElementsByTagNameNS("","pubDate")[0]
+                               || itemNode.getElementsByTagNameNS("","date")[0])
                                || item.date;
     
       // If the date is invalid, users will see the beginning of the epoch
@@ -166,14 +166,13 @@ FeedParser.prototype =
       var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
 
       // Handle an enclosure (if present)
-      var enclosureNode = itemNode.getElementsByTagName("enclosure")[0];
+      var enclosureNode = itemNode.getElementsByTagNameNS("","enclosure")[0];
       if (enclosureNode)
         item.enclosure = new FeedEnclosure(enclosureNode.getAttribute("url"), 
                                           enclosureNode.getAttribute("type"),
                                           enclosureNode.getAttribute("length"));
       parsedItems[i] = item;
     }
-
     return parsedItems;
   },
 
