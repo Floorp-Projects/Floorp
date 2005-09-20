@@ -549,7 +549,6 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     nsRect rect = mDropdownFrame->GetRect();
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
-    nsIScrollableView* scrollingView = view->ToScrollableView();
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   } else {
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -2226,15 +2225,18 @@ nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
     }
   }
 
-   // Cleanup frames in popup child list
+  nsCSSFrameConstructor* fc = aPresContext->PresShell()->FrameConstructor();
+  // Cleanup frames in popup child list
+  for (nsIFrame* child = mPopupFrames.FirstChild(); child; child = child->GetNextSibling()) {
+    fc->RemoveMappingsForFrameSubtree(child, nsnull);
+  }
   mPopupFrames.DestroyFrames(aPresContext);
 
   if (!mGoodToGo) {
     if (mDisplayFrame) {
-      aPresContext->PresShell()->FrameConstructor()->
-        RemoveMappingsForFrameSubtree(mDisplayFrame, nsnull);
+      fc->RemoveMappingsForFrameSubtree(mDisplayFrame, nsnull);
       mDisplayFrame->Destroy(aPresContext);
-      mDisplayFrame=nsnull;
+      mDisplayFrame = nsnull;
     }
   }
 
