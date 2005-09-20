@@ -402,7 +402,7 @@ FeedItem.prototype =
       var boundaryID = source.length + this.enclosure.mLength;
       source += 'Content-Type: multipart/mixed;\n boundary="' + ENCLOSURE_HEADER_BOUNDARY_PREFIX + boundaryID + '"' + '\n\n' +
                 'This is a multi-part message in MIME format.\n' + ENCLOSURE_BOUNDARY_PREFIX + boundaryID + '\n' +
-                'Content-Type: text/html; charset=' + + this.characterSet + '\n' +
+                'Content-Type: text/html; charset=' + this.characterSet + '\n' +
                 'Content-Transfer-Encoding: 8bit\n' + 
                 this.content;
       source += this.enclosure.convertToAttachment(boundaryID);
