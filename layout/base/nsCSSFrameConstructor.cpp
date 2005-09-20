@@ -716,6 +716,8 @@ struct nsFrameItems {
 
   // Appends the frame to the end of the list
   void AddChild(nsIFrame* aChild);
+  // Remove the frame from the list, return PR_FALSE if not found.
+  PRBool RemoveChild(nsIFrame* aChild);
 };
 
 nsFrameItems::nsFrameItems(nsIFrame* aFrame)
@@ -746,6 +748,30 @@ nsFrameItems::AddChild(nsIFrame* aChild)
     NS_ASSERTION(oldLastChild != sib, "Loop in frame list");
     lastChild = sib;
   }
+}
+
+PRBool
+nsFrameItems::RemoveChild(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "null ptr");
+  nsIFrame* prev = nsnull;
+  nsIFrame* sib = childList;
+  for (; sib && sib != aFrame; sib = sib->GetNextSibling()) {
+    prev = sib;
+  }
+  if (!sib) {
+    return PR_FALSE;
+  }
+  if (sib == childList) {
+    childList = sib->GetNextSibling();
+  } else {
+    prev->SetNextSibling(sib->GetNextSibling());
+  }
+  if (sib == lastChild) {
+    lastChild = prev;
+  }
+  sib->SetNextSibling(nsnull);
+  return PR_TRUE;
 }
 
 // -----------------------------------------------------------
@@ -1574,32 +1600,40 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
  */
 static void
 AdjustFloatParentPtrs(nsIFrame*                aFrame,
-                      nsFrameConstructorState& aState)
+                      nsFrameConstructorState& aState,
+                      nsFrameConstructorState& aOuterState)
 {
+  NS_PRECONDITION(aFrame, "must have frame to work with");
+
   nsIFrame *outOfFlowFrame = nsPlaceholderFrame::GetRealFrameFor(aFrame);
-
-  if (outOfFlowFrame && outOfFlowFrame != aFrame) {
-
-    // Get the display data for the outOfFlowFrame so we can
-    // figure out if it is a float.
-
+  if (outOfFlowFrame != aFrame) {
     if (outOfFlowFrame->GetStyleDisplay()->IsFloating()) {
-      // Update the parent pointer for outOfFlowFrame if it's
-      // containing block has changed as the result of reparenting,
+      // Update the parent pointer for outOfFlowFrame since its
+      // containing block has changed as the result of reparenting
+      // and move it from the outer state to the inner, bug 307277.
       
       nsIFrame *parent = aState.mFloatedItems.containingBlock;
       NS_ASSERTION(parent, "Should have float containing block here!");
+      NS_ASSERTION(outOfFlowFrame->GetParent() == aOuterState.mFloatedItems.containingBlock,
+                   "expected the float to be a child of the outer CB");
+
+      if (aOuterState.mFloatedItems.RemoveChild(outOfFlowFrame)) {
+        aState.mFloatedItems.AddChild(outOfFlowFrame);
+      } else {
+        NS_NOTREACHED("float wasn't in the outer state float list");
+      }
+
       outOfFlowFrame->SetParent(parent);
       if (outOfFlowFrame->GetStateBits() &
           (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
         // We don't need to walk up the tree, since we're doing this
-        // recursively
+        // recursively.
         parent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
       }
     }
 
     // All out-of-flows are automatically float containing blocks, so we're
-    // done here
+    // done here.
     return;
   }
 
@@ -1611,14 +1645,11 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
 
   // Dive down into children to see if any of their
   // placeholders need adjusting.
-
   nsIFrame *childFrame = aFrame->GetFirstChild(nsnull);
-
-  while (childFrame)
-  {
+  while (childFrame) {
     // XXX_kin: Do we need to prevent descent into anonymous content here?
 
-    AdjustFloatParentPtrs(childFrame, aState);
+    AdjustFloatParentPtrs(childFrame, aState, aOuterState);
     childFrame = childFrame->GetNextSibling();
   }
 }
@@ -1635,7 +1666,8 @@ MoveChildrenTo(nsFrameManager*          aFrameManager,
                nsStyleContext*          aNewParentSC,
                nsIFrame*                aNewParent,
                nsIFrame*                aFrameList,
-               nsFrameConstructorState* aState)
+               nsFrameConstructorState* aState,
+               nsFrameConstructorState* aOuterState)
 {
   PRBool setHasChildWithView = PR_FALSE;
 
@@ -1650,8 +1682,10 @@ MoveChildrenTo(nsFrameManager*          aFrameManager,
     // If aState is not null, the caller expects us to make adjustments so that
     // floats whose placeholders are descendants of frames in aFrameList point
     // to the correct parent.
-    if (aState)
-      AdjustFloatParentPtrs(aFrameList, *aState);
+    if (aState) {
+      NS_ASSERTION(aOuterState, "need an outer state too");
+      AdjustFloatParentPtrs(aFrameList, *aState, *aOuterState);
+    }
 
 #if 0
     // XXX When this is used with {ib} frame hierarchies, it seems
@@ -12739,13 +12773,12 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
                                 GetAbsoluteContainingBlock(blockFrame),
                                 GetFloatContainingBlock(blockFrame));
 
-  // XXXbz MoveChildrenTo just sets parent pointers on the out-of-flows!
-  // Shouldn't it move the frames to the right child list too?  Right now, if
-  // we have an inline between two blocks all inside an inline and the inner
+  // If we have an inline between two blocks all inside an inline and the inner
   // inline contains a float, the float will end up in the float list of the
   // parent block of the inline, but its parent pointer will be the anonymous
-  // block we create....
-  MoveChildrenTo(state.mFrameManager, blockSC, blockFrame, list2, &state);
+  // block we create...  AdjustFloatParentPtrs() deals with this by moving the
+  // float from the outer state |aState| to the inner |state|.
+  MoveChildrenTo(state.mFrameManager, blockSC, blockFrame, list2, &state, &aState);
 
   // list3's frames belong to another inline frame
   nsIFrame* inlineFrame = nsnull;
@@ -12774,7 +12807,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     // Reparent (cheaply) the frames in list3 - we don't have to futz
     // with their style context because they already have the right one.
     inlineFrame->SetInitialChildList(aState.mPresContext, nsnull, list3);
-    MoveChildrenTo(aState.mFrameManager, nsnull, inlineFrame, list3, nsnull);
+    MoveChildrenTo(aState.mFrameManager, nsnull, inlineFrame, list3, nsnull, nsnull);
   }
 
   // Mark the 3 frames as special. That way if any of the
@@ -12981,7 +13014,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   }
   return PR_TRUE;
 }
-
 
 nsresult
 nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
