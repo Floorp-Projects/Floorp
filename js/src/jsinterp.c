@@ -5011,13 +5011,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
-            if (JSVAL_IS_VOID(rval)) {
-                const char *printable = js_ValueToPrintableString(cx, lval);
-                if (printable)
-                    js_ReportIsNotDefined(cx, printable);
-                ok = JS_FALSE;
-                goto out;
-            }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             PUSH_OPND(rval);
             break;
@@ -5040,11 +5033,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
-            if (!JSVAL_IS_VOID(rval)) {
-                ok = js_GetXMLProperty(cx, obj, rval, &rval);
-                if (!ok)
-                    goto out;
-            }
+            ok = js_GetXMLProperty(cx, obj, rval, &rval);
+            if (!ok)
+                goto out;
             STORE_OPND(-1, rval);
             break;
 

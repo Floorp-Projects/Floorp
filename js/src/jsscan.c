@@ -1305,9 +1305,6 @@ retry:
         goto out;
     }
 
-    if (c != '-' && c != '\n')
-        ts->flags |= TSF_DIRTYLINE;
-
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDSTART(c) ||
         (c == '\\' &&
@@ -1536,7 +1533,7 @@ retry:
     }
 
     switch (c) {
-      case '\n': tt = TOK_EOL; break;
+      case '\n': tt = TOK_EOL; goto eol_out;
       case ';':  tt = TOK_SEMI; break;
       case '[':  tt = TOK_LB; break;
       case ']':  tt = TOK_RB; break;
@@ -1558,7 +1555,7 @@ retry:
 
       case ':':
 #if JS_HAS_XML_SUPPORT
-        if (JS_HAS_XML_OPTION(cx) && MatchChar(ts, c)) {
+        if (MatchChar(ts, c)) {
             tt = TOK_DBLCOLON;
             break;
         }
@@ -1632,16 +1629,14 @@ retry:
 
 #if JS_HAS_XML_SUPPORT
       case '@':
-        if (JS_HAS_XML_OPTION(cx)) {
-            tt = TOK_AT;
-            break;
-        }
-        goto badchar;
+        tt = TOK_AT;
+        break;
 #endif
 
       case '<':
 #if JS_HAS_XML_SUPPORT
-        if (JS_HAS_XML_OPTION(cx) && (ts->flags & TSF_OPERAND)) {
+        if ((ts->flags & TSF_OPERAND) &&
+            (JS_HAS_XML_OPTION(cx) || (ts->flags & TSF_DIRTYINPUT))) {
             /* Check for XML comment or CDATA section. */
             if (MatchChar(ts, '!')) {
                 INIT_TOKENBUF();
@@ -1753,8 +1748,10 @@ retry:
         /* NB: treat HTML begin-comment as comment-till-end-of-line */
         if (MatchChar(ts, '!')) {
             if (MatchChar(ts, '-')) {
-                if (MatchChar(ts, '-'))
+                if (MatchChar(ts, '-')) {
+                    ts->flags |= TSF_INHTMLCOMMENT;
                     goto skipline;
+                }
                 UngetChar(ts, '-');
             }
             UngetChar(ts, '!');
@@ -1852,8 +1849,16 @@ retry:
             }
 
 skipline:
-            while ((c = GetChar(ts)) != EOF && c != '\n')
-                continue;
+            /* Optimize line skipping if we are not in an HTML comment. */
+            if (ts->flags & TSF_INHTMLCOMMENT) {
+                while ((c = GetChar(ts)) != EOF && c != '\n') {
+                    if (c == '-' && MatchChar(ts, '-') && MatchChar(ts, '>'))
+                        ts->flags &= ~(TSF_DIRTYINPUT | TSF_INHTMLCOMMENT);
+                }
+            } else {
+                while ((c = GetChar(ts)) != EOF && c != '\n')
+                    continue;
+            }
             UngetChar(ts, c);
             ts->cursor = (ts->cursor - 1) & NTOKENS_MASK;
             goto retry;
@@ -1972,14 +1977,21 @@ skipline:
             tp->t_op = JSOP_SUB;
             tt = TOK_ASSIGN;
         } else if (MatchChar(ts, c)) {
-            if (PeekChar(ts) == '>' && !(ts->flags & TSF_DIRTYLINE))
+            if (PeekChar(ts) == '>' && !(ts->flags & TSF_DIRTYLINE)) {
+                /*
+                 * Clear TSF_DIRTYINPUT as well as TSF_INHTMLCOMMENT, just
+                 * in case another HTML comment hiding hack follows this one.
+                 * It's unusual to have more than one per <script> content,
+                 * but possible.
+                 */
+                ts->flags &= ~(TSF_DIRTYINPUT | TSF_INHTMLCOMMENT);
                 goto skipline;
+            }
             tt = TOK_DEC;
         } else {
             tp->t_op = JSOP_NEG;
             tt = TOK_MINUS;
         }
-        ts->flags |= TSF_DIRTYLINE;
         break;
 
 #if JS_HAS_SHARP_VARS
@@ -2040,6 +2052,10 @@ skipline:
     }
 
 out:
+    JS_ASSERT(tt != TOK_EOL);
+    ts->flags |= TSF_DIRTYLINE | TSF_DIRTYINPUT;
+
+eol_out:
     if (!STRING_BUFFER_OK(&ts->tokenbuf))
         tt = TOK_ERROR;
     JS_ASSERT(tt < TOK_LIMIT);
