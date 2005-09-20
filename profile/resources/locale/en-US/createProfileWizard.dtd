@@ -1,7 +1,7 @@
 <!-- LOCALIZATION NOTE (window.title.label): Don't translate "&brandShortName" -->
 <!ENTITY window.title.label           "&brandShortName; Profile Manager">
 <!ENTITY newprofile.title             "Create Profile Wizard">
-<!ENTITY window.size                  "width: 45em; height: 32em;">
+<!ENTITY window.size                  "width: 47em; height: 32em;">
 
 <!-- First wizard page -->
 <!ENTITY profileCreationExplanation_1.text  "&brandShortName; stores information about your settings, preferences, bookmarks, and mail in your personal profile.">
