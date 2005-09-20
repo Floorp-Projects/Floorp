@@ -53,6 +53,21 @@
     list-style-image: url("chrome://minimo/skin/close.gif");
 }
 
+
+#lock-icon.security-na {
+}
+
+#lock-icon.security-broken {
+    margin-left:2px;
+    list-style-image: url("chrome://minimo/skin/security-broken.png");
+}
+
+#lock-icon.security-notbroken {
+    margin-left:2px;
+    list-style-image: url("chrome://minimo/skin/security-notbroken.png");
+}
+
+
 toolbar *, #appcontent * {
   font-size: 10px ! important;
   padding: 0px ! important;
