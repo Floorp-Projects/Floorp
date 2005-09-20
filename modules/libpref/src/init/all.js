@@ -593,6 +593,7 @@ pref("network.IDN.whitelist.sh", true);
 pref("network.IDN.whitelist.th", true);
 pref("network.IDN.whitelist.tm", true);
 pref("network.IDN.whitelist.tw", true);
+pref("network.IDN.whitelist.vn", true);
 
 // non-ccTLDs
 pref("network.IDN.whitelist.info", true);
