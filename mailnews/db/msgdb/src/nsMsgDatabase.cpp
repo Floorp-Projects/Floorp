@@ -934,6 +934,7 @@ nsMsgDatabase::~nsMsgDatabase()
   if (m_dbFolderInfo) 
     m_dbFolderInfo->ReleaseExternalReferences();
 
+  NotifyAnnouncerGoingAway();
   NS_IF_RELEASE(m_dbFolderInfo);
   if (m_HeaderParser)
   {
@@ -954,7 +955,6 @@ nsMsgDatabase::~nsMsgDatabase()
     m_mdbEnv->Release(); //??? is this right?
     m_mdbEnv = nsnull;
   }
-  NotifyAnnouncerGoingAway();
   if (m_ChangeListeners) 
   {
     //better not be any listeners, because we're going away.
@@ -2773,7 +2773,7 @@ public:
 protected:
     nsresult					GetTableCursor(void);
     nsresult					PrefetchNext();
-    nsMsgDatabase*              mDB;
+    nsMsgDatabase*              mDB; 
     nsIMdbPortTableCursor*       mTableCursor;
     nsIMsgThread*                 mResultThread;
     PRBool                      mDone;
@@ -2786,7 +2786,6 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
     : mDB(db), mTableCursor(nsnull), mResultThread(nsnull), mDone(PR_FALSE),
       mFilter(filter)
 {
-    NS_ADDREF(mDB);
     mDB->AddListener(this);
     mNextPrefetched = PR_FALSE;
 }
@@ -2795,7 +2794,8 @@ nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
 {
   mTableCursor->Release();
   NS_IF_RELEASE(mResultThread);
-  NS_IF_RELEASE(mDB);
+  if (mDB)
+    mDB->RemoveListener(this);
 }
 
 NS_IMPL_ISUPPORTS2(nsMsgDBThreadEnumerator, nsISimpleEnumerator, nsIDBChangeListener)
