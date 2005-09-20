@@ -33,7 +33,6 @@ nssckbi.dll=1
 plc4.dll=1
 plds4.dll=1
 shunt.dll=1
-smime3.dll=1
 softokn3.dll=1
 ssl3.dll=1
 xpcom.dll=1
@@ -104,7 +103,6 @@ nssckbi.dll,,,0
 plc4.dll,,,0
 plds4.dll,,,0
 shunt.dll,,,0
-smime3.dll,,,0
 softokn3.dll,,,0
 ssl3.dll,,,0
 xpcom.dll,,,0
