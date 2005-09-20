@@ -1339,6 +1339,8 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther)
   if (mType != aOther.mType)
     return PR_FALSE;
   if (mType == eStyleContentType_Image) {
+    if (!mContent.mImage || !aOther.mContent.mImage)
+      return mContent.mImage == aOther.mContent.mImage;
     PRBool eq;
     nsCOMPtr<nsIURI> thisURI, otherURI;
     mContent.mImage->GetURI(getter_AddRefs(thisURI));
