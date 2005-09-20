@@ -22,5 +22,6 @@ minimo.jar:
 	skin/classic/minimo/stop.gif     (skin/stop.gif)
 	skin/classic/minimo/close.gif    (skin/close.gif)
 	skin/classic/minimo/transfer.gif (skin/transfer.gif)
+	skin/classic/minimo/preferences/options.png (skin/preferences/transfer.gif)
     branding/locale/brand.dtd        (locale/en-US/brand.dtd)
     branding/locale/brand.properties (locale/en-US/brand.properties)
