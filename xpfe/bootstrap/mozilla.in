@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.8 2005/03/29 22:02:22 kairo%kairo.at Exp $
+## $Id: mozilla.in,v 1.9 2005/09/20 21:11:35 dbaron%dbaron.org Exp $
 ## 
 ## Usage:
 ##
@@ -140,7 +140,6 @@ else
 fi
 
 script_args=""
-moreargs=""
 debugging=0
 MOZILLA_BIN="%MOZILLA-BIN%"
 
@@ -148,7 +147,8 @@ if [ "$OSTYPE" = "beos" ]; then
   mimeset -F $MOZILLA_BIN
 fi
 
-while [ $# -gt 0 ]
+pass_arg_count=0
+while [ $# -gt $pass_arg_count ]
 do
   case "$1" in
     -p | -pure)
@@ -165,14 +165,16 @@ do
       shift 2
       ;;
     *)
-      moreargs="$moreargs \"$1\""
-      shift 1
+      # Move the unrecognized argument to the end of the list.
+      arg="$1"
+      shift
+      set -- "$@" "$arg"
+      pass_arg_count=`expr $pass_arg_count + 1`
       ;;
   esac
 done
 
 export MRE_HOME
-eval "set -- $moreargs"
 
 ## Start addon scripts
 moz_pis_startstop_scripts "start"
