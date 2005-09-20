@@ -398,7 +398,9 @@
       <method name="ensureSelectedElementIsVisible">
         <body>
           <![CDATA[
-            this.ensureElementIsVisible(this.selectedItem);
+	    if (this.selectedItem) {
+              this.ensureElementIsVisible(this.selectedItem);
+	    }
           ]]>
         </body>
       </method>
