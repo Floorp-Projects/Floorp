@@ -99,7 +99,7 @@ pref("intl.accept_languages", "en-us, en" );
 // enable horizontal scroll by shift+wheel
 pref("mousewheel.horizscroll.withshiftkey.action", 0);
 pref("mousewheel.horizscroll.withshiftkey.numlines", 1);
-pref("mousewheel.horizscroll.withshiftkey.sysnumline", true);
+pref("mousewheel.horizscroll.withshiftkey.sysnumlines", true);
 
 // enable horizontal scrolling with horizontal scroll wheels
 pref("mousewheel.horizscroll.withnokey.action",0);
