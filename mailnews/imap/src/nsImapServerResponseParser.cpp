@@ -2062,12 +2062,13 @@ void nsImapServerResponseParser::msg_fetch_content(PRBool chunk, PRInt32 origin,
     // complete the message download
     if (ContinueParse())
     {
-      if (fReceivedHeaderOrSizeForUID == CurrentResponseUID())
+      if (fReceivedHeaderOrSizeForUID == CurrentResponseUID() || !fDownloadingHeaders)
       {
         fServerConnection.NormalMessageEndDownload();
-        fReceivedHeaderOrSizeForUID = nsMsgKey_None;
+        if (fDownloadingHeaders)
+          fReceivedHeaderOrSizeForUID = nsMsgKey_None;
       }
-      else
+      else if (fDownloadingHeaders)
          fReceivedHeaderOrSizeForUID = CurrentResponseUID();
     }
     else
