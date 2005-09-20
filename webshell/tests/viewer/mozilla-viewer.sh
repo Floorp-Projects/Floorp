@@ -50,16 +50,19 @@
 
 dist_bin=`dirname $0`
 script_args=""
-moreargs=""
 MOZILLA_BIN="viewer"
 pass_all_args=0
 
-while [ $# -gt 0 ]
+pass_arg_count=0
+while [ $# -gt $pass_arg_count ]
 do
   if [ $pass_all_args -ne 0 ]
   then
-    moreargs="$moreargs \"$1\""
+    # Move the passed argument to the end of the list.
+    arg="$1"
     shift
+    set -- "$@" "$arg"
+    pass_arg_count=`expr $pass_arg_count + 1`
   else
     case $1 in
       -h | --help)
@@ -79,13 +82,15 @@ do
         pass_all_args=1
         ;;
       *)
-        moreargs="$moreargs \"$1\""
-        shift 1
+        # Move the unrecognized argument to the end of the list.
+        arg="$1"
+        shift
+        set -- "$@" "$arg"
+        pass_arg_count=`expr $pass_arg_count + 1`
         ;;
     esac
   fi
 done
 
-eval "set -- $moreargs"
 echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
 $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
