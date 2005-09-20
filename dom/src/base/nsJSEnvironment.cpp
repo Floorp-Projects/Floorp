@@ -512,13 +512,23 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
     return JS_TRUE;
   }
 
+  // XXX Save the branch callback time so we can restore it after the GC,
+  // because GCing can cause JS to run on our context, causing our
+  // ScriptEvaluated to be called, and clearing our branch callback time and
+  // count. See bug 302333.
+  PRTime callbackTime = ctx->mBranchCallbackTime;
+
   // Run the GC if we get this far.
   JS_MaybeGC(cx);
+
+  // Now restore the callback time and count, in case they got reset.
+  ctx->mBranchCallbackTime = callbackTime;
+  ctx->mBranchCallbackCount = callbackCount;
 
   PRTime now = PR_Now();
 
   PRTime duration;
-  LL_SUB(duration, now, ctx->mBranchCallbackTime);
+  LL_SUB(duration, now, callbackTime);
 
   // Check the amount of time this script has been running, or if the
   // dialog is disabled.
