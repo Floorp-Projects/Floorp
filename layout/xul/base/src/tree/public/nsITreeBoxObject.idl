@@ -110,7 +110,7 @@ interface nsITreeBoxObject : nsISupports
   /**
    * Ensures that a given cell in the tree is visible.
    */
-  void ensureCellIsVisible(in long row, in wstring colID);
+  void ensureCellIsVisible(in long row, in nsITreeColumn col);
 
   /**
    * Scrolls such that the row at index is at the top of the visible view.
@@ -136,13 +136,13 @@ interface nsITreeBoxObject : nsISupports
    * Scrolls such that a given cell is visible (if possible) 
    * at the top left corner of the visible view. 
    */
-  void scrollToCell(in long row, in wstring colID);
+  void scrollToCell(in long row, in nsITreeColumn col);
 
   /**
    * Scrolls horizontally so that the specified column is 
    * at the left of the view (if possible).
    */
-  void scrollToColumn(in wstring colID);
+  void scrollToColumn(in nsITreeColumn col);
 
   /**
    * Scroll to a specific horizontal pixel position.

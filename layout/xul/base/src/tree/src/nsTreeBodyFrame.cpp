@@ -3304,19 +3304,20 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureRowIsVisible(PRInt32 aRow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, const PRUnichar *aColID)
+NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* aCol)
 {
-  if (!aColID)
+  if (!aCol)
     return NS_ERROR_INVALID_POINTER;
 
   nsresult rv;
 
   if (EnsureScrollable(PR_TRUE)) {
     nscoord result = -1;
-    nscoord columnWidth;
-    nscoord columnPos = CalcColumnPosition(aColID, &columnWidth);
-    if (columnPos == -1)
-      return NS_ERROR_INVALID_ARG;
+
+    nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
+
+    nscoord columnPos = col->GetX();
+    nscoord columnWidth = col->GetWidth();
 
     // If the start of the column is before the
     // start of the horizontal view, then scroll
@@ -3334,30 +3335,25 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, const PRUnichar
     }
   }
 
-  rv = EnsureRowIsVisible(aRow);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
+  return EnsureRowIsVisible(aRow);
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::ScrollToCell(PRInt32 aRow, const PRUnichar *aColID)
+NS_IMETHODIMP nsTreeBodyFrame::ScrollToCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
   nsresult rv = ScrollToRow(aRow);
   if(NS_FAILED(rv)) return rv;
 
-  return ScrollToColumn(aColID);
+  return ScrollToColumn(aCol);
 }
 
-NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(const PRUnichar *aColID)
+NS_IMETHODIMP nsTreeBodyFrame::ScrollToColumn(nsITreeColumn* aCol)
 {
-  if(!aColID) 
+  if(!aCol) 
     return NS_ERROR_INVALID_POINTER;
 
-  nscoord position = CalcColumnPosition(aColID, nsnull);
-  if (position == -1)
-    return NS_ERROR_INVALID_ARG;
+  nsTreeColumn* col = NS_STATIC_CAST(nsTreeColumn*, aCol);
 
-  return ScrollHorzInternal(position);
+  return ScrollHorzInternal(col->GetX());
 }
 
 NS_IMETHODIMP nsTreeBodyFrame::ScrollToHorizontalPosition(PRInt32 aHorizontalPosition)
@@ -3611,29 +3607,6 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
     *aResult = PR_FALSE;
 
   return NS_OK;
-}
-
-// Calculate the horizontal position of a column in the tree
-nscoord 
-nsTreeBodyFrame::CalcColumnPosition(const PRUnichar* aColID, nscoord* aWidth)
-{
-  nscoord position = 0;
-  nsTreeColumn *col;
-
-  for (col = mColumns->GetFirstColumn(); col; col = col->GetNext()) {
-    if (col->GetId().Equals(aColID))
-      break;
-    position += col->GetWidth();
-  }
-
-  // Didn't find the column
-  if (!col)
-    position = -1;
-
-  else if (aWidth)
-    *aWidth = col->GetWidth();
-
-  return position;
 }
 
 nsIContent*

@@ -235,9 +235,6 @@ protected:
   // Calculate the total width of our scrollable portion
   nscoord CalcHorzWidth();
 
-  // Calculate the horizontal position of a column in the tree
-  nscoord CalcColumnPosition(const PRUnichar* aColID, nscoord* aWidth);
-
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
   nsStyleContext* GetPseudoStyleContext(nsIAtom* aPseudoElement);
