@@ -1889,6 +1889,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
     uintN lineno;
     JSStackFrame *fp;
     JSOp op;
+    uint32 oldopts;
     JSParseNode *pn;
     JSXML *xml;
     JSXMLArray nsarray;
@@ -1942,9 +1943,11 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    xml = NULL;
+    /* Toggle on XML support since the script has explicitly requested it. */
+    oldopts = JS_SetOptions(cx, oldopts | JSOPTION_XML);
     JS_KEEP_ATOMS(cx->runtime);
     pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
+    xml = NULL;
     if (pn && XMLArrayInit(cx, &nsarray, 1)) {
         if (GetXMLSettingFlags(cx, &flags))
             xml = ParseNodeToXML(cx, pn, &nsarray, flags);
@@ -1952,6 +1955,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
         XMLArrayFinish(cx, &nsarray);
     }
     JS_UNKEEP_ATOMS(cx->runtime);
+    JS_SetOptions(cx, oldopts);
 
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     JS_free(cx, chars);
@@ -6985,7 +6989,6 @@ static JSBool
 XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
-    uint32 oldopts;
     JSXML *xml, *copy;
     JSObject *xobj, *vobj;
     JSClass *clasp;
@@ -6993,13 +6996,8 @@ XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     v = argv[0];
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
         v = STRING_TO_JSVAL(cx->runtime->emptyString);
-    /* Toggle on XML support since the script has explicitly requested it. */
-    oldopts = cx->options;
-    JS_SetOptions(cx, oldopts | JSOPTION_XML);
 
     xobj = ToXML(cx, v);
-
-    JS_SetOptions(cx, oldopts);
     if (!xobj)
         return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(xobj);
@@ -7028,7 +7026,6 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
     JSObject *vobj, *listobj;
     JSXML *xml, *list;
-    uint32 oldopts;
 
     v = argv[0];
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
@@ -7053,10 +7050,7 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Toggle on XML support since the script has explicitly requested it. */
-    oldopts = cx->options;
-    JS_SetOptions(cx, oldopts | JSOPTION_XML);
     listobj = ToXMLList(cx, v);
-    JS_SetOptions(cx, oldopts);
     if (!listobj)
         return JS_FALSE;
 
@@ -7714,6 +7708,7 @@ js_FindXMLProperty(JSContext *cx, jsval name, JSObject **objp, jsval *namep)
     jsid funid, id;
     JSObject *obj, *pobj, *lastobj;
     JSProperty *prop;
+    const char *printable;
 
     qn = ToXMLName(cx, name, &funid);
     if (!qn)
@@ -7742,21 +7737,13 @@ js_FindXMLProperty(JSContext *cx, jsval name, JSObject **objp, jsval *namep)
         lastobj = obj;
     } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
 
-    if (JS_HAS_STRICT_OPTION(cx)) {
-        JSString *str = js_ValueToString(cx, name);
-        if (!str ||
-            !JS_ReportErrorFlagsAndNumber(cx,
-                                          JSREPORT_WARNING|JSREPORT_STRICT,
-                                          js_GetErrorMessage, NULL,
-                                          JSMSG_UNDEFINED_XML_NAME,
-                                          JS_GetStringBytes(str))) {
-            return JS_FALSE;
-        }
+    printable = js_ValueToPrintableString(cx, name);
+    if (printable) {
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                     js_GetErrorMessage, NULL,
+                                     JSMSG_UNDEFINED_XML_NAME, printable);
     }
-
-    *objp = lastobj;
-    *namep = JSVAL_VOID;
-    return JS_TRUE;
+    return JS_FALSE;
 }
 
 JSBool
