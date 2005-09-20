@@ -1,1492 +1,494 @@
 <html>
 
 <head>
-<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
-<meta name=Generator content="Microsoft Word 10 (filtered)">
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
 <title>Scripting Java</title>
-
-<style>
-<!--
- /* Font Definitions */
- @font-face
-	{font-family:Helvetica;
-	panose-1:2 11 6 4 2 2 2 2 2 4;}
-@font-face
-	{font-family:Courier;
-	panose-1:2 7 4 9 2 2 5 2 4 4;}
-@font-face
-	{font-family:Times;
-	panose-1:2 2 6 3 5 4 5 2 3 4;}
-@font-face
-	{font-family:Geneva;
-	panose-1:0 0 0 0 0 0 0 0 0 0;}
- /* Style Definitions */
- p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:6.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;}
-h1
-	{margin-top:16.0pt;
-	margin-right:0in;
-	margin-bottom:8.0pt;
-	margin-left:0in;
-	text-align:justify;
-	page-break-after:avoid;
-	font-size:18.0pt;
-	font-family:Times;
-	}
-h2
-	{margin-top:12.0pt;
-	margin-right:0in;
-	margin-bottom:6.0pt;
-	margin-left:0in;
-	text-align:justify;
-	page-break-after:avoid;
-	font-size:14.0pt;
-	font-family:Times;
-	}
-h3
-	{margin-top:8.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	font-size:10.0pt;
-	font-family:Times;
-	}
-h4
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	font-size:10.0pt;
-	font-family:Times;
-	}
-h5
-	{margin-top:3.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	text-align:justify;
-	page-break-after:avoid;
-	border:none;
-	padding:0in;
-	font-size:14.0pt;
-	font-family:Times;
-	color:fuchsia;}
-h6
-	{margin-top:3.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	font-size:10.0pt;
-	font-family:Times;
-	color:fuchsia;}
-p.MsoHeading7, li.MsoHeading7, div.MsoHeading7
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	font-size:10.0pt;
-	font-family:Times;
-	color:fuchsia;
-	font-weight:bold;}
-p.MsoHeading8, li.MsoHeading8, div.MsoHeading8
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:9.0pt;
-	font-family:Helvetica;
-	color:fuchsia;
-	font-weight:bold;}
-p.MsoHeading9, li.MsoHeading9, div.MsoHeading9
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:.75in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:9.0pt;
-	font-family:Helvetica;
-	color:fuchsia;
-	font-weight:bold;}
-p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText
-	{margin-top:3.0pt;
-	margin-right:0in;
-	margin-bottom:3.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:9.0pt;
-	font-family:Times;
-	color:black;}
-p.MsoHeader, li.MsoHeader, div.MsoHeader
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:6.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;}
-p.MsoFooter, li.MsoFooter, div.MsoFooter
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:6.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;}
-span.MsoFootnoteReference
-	{vertical-align:super;}
-a:link, span.MsoHyperlink
-	{color:red;
-	font-style:italic;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{color:purple;
-	text-decoration:underline;}
-p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:6.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	background:navy;
-	font-size:10.0pt;
-	font-family:Geneva;
-	color:black;}
-p.ListBullet, li.ListBullet, div.ListBullet
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;}
-p.ListBullet0, li.ListBullet0, div.ListBullet0
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;}
-p.ListBullet1, li.ListBullet1, div.ListBullet1
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;}
-p.ListBullet2, li.ListBullet2, div.ListBullet2
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;}
-p.ListNumber, li.ListNumber, div.ListNumber
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	text-indent:-.25in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;
-	layout-grid-mode:line;}
-p.ListNumber0, li.ListNumber0, div.ListNumber0
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	text-indent:-.25in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;
-	layout-grid-mode:line;}
-p.ListNumber1, li.ListNumber1, div.ListNumber1
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;}
-p.ListNumber2, li.ListNumber2, div.ListNumber2
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;}
-p.ListVariable, li.ListVariable, div.ListVariable
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:green;}
-p.ListVariable0, li.ListVariable0, div.ListVariable0
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:purple;}
-p.ListVariableTerm, li.ListVariableTerm, div.ListVariableTerm
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:purple;}
-span.bold
-	{font-family:Times;
-	color:red;
-	font-weight:bold;}
-p.CellBody, li.CellBody, div.CellBody
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:0in;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;}
-p.CellCode, li.CellCode, div.CellCode
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:0in;
-	font-size:9.0pt;
-	font-family:Courier;
-	color:navy;}
-p.CellHeading, li.CellHeading, div.CellHeading
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:0in;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;
-	font-weight:bold;}
-p.CellSubhead, li.CellSubhead, div.CellSubhead
-	{margin-top:2.0pt;
-	margin-right:0in;
-	margin-bottom:2.0pt;
-	margin-left:0in;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;
-	font-weight:bold;}
-p.ChapterTitle, li.ChapterTitle, div.ChapterTitle
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:1.5in;
-	margin-left:0in;
-	text-align:right;
-	font-size:24.0pt;
-	font-family:Times;
-	color:red;}
-p.ChapterLabel, li.ChapterLabel, div.ChapterLabel
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:24.0pt;
-	margin-left:0in;
-	text-align:right;
-	page-break-before:always;
-	font-size:48.0pt;
-	font-family:Times;
-	color:red;
-	font-weight:bold;}
-p.Code, li.Code, div.Code
-	{margin-top:0in;
-	margin-right:-67.7pt;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:"Courier New";
-	color:green;
-	letter-spacing:-.5pt;}
-p.CodeEmphasis, li.CodeEmphasis, div.CodeEmphasis
-	{margin-top:0in;
-	margin-right:-67.7pt;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:"Courier New";
-	color:green;
-	letter-spacing:-.5pt;
-	font-weight:bold;}
-p.CodeNum, li.CodeNum, div.CodeNum
-	{margin-top:0in;
-	margin-right:-67.7pt;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	text-indent:-.25in;
-	line-height:10.0pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:"Courier New";
-	color:green;
-	letter-spacing:-.5pt;}
-p.Comment, li.Comment, div.Comment
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:blue;
-	text-decoration:underline;}
-span.emphasis
-	{font-family:Times;
-	color:red;
-	font-style:italic;}
-p.Epigraph, li.Epigraph, div.Epigraph
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:0in;
-	text-align:right;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;
-	font-style:italic;}
-p.EpigraphAuthor, li.EpigraphAuthor, div.EpigraphAuthor
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:0in;
-	text-align:right;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;}
-p.EpigraphCitation, li.EpigraphCitation, div.EpigraphCitation
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:24.0pt;
-	margin-left:0in;
-	text-align:right;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:black;
-	font-style:italic;}
-p.ExampleTitle, li.ExampleTitle, div.ExampleTitle
-	{margin-top:4.0pt;
-	margin-right:-.2in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:center;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:green;
-	font-style:italic;}
-p.FigureHolder, li.FigureHolder, div.FigureHolder
-	{margin-top:6.0pt;
-	margin-right:0in;
-	margin-bottom:0in;
-	margin-left:0in;
-	margin-bottom:.0001pt;
-	text-align:center;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;}
-p.FigureTitle, li.FigureTitle, div.FigureTitle
-	{margin-top:4.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:center;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:maroon;
-	font-style:italic;}
-p.ListSimple, li.ListSimple, div.ListSimple
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:blue;}
-p.ListVariableTerm0, li.ListVariableTerm0, div.ListVariableTerm0
-	{margin:0in;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	font-size:10.0pt;
-	font-family:Times;
-	color:green;}
-span.literal
-	{font-family:Courier;
-	color:red;}
-p.Note, li.Note, div.Note
-	{margin-top:6.0pt;
-	margin-right:.5in;
-	margin-bottom:6.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;}
-p.NoteCode, li.NoteCode, div.NoteCode
-	{margin-top:0in;
-	margin-right:.5in;
-	margin-bottom:0in;
-	margin-left:.5in;
-	margin-bottom:.0001pt;
-	line-height:10.0pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:Courier;
-	color:teal;}
-p.NoteListBullet, li.NoteListBullet, div.NoteListBullet
-	{margin-top:4.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.75in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;}
-p.NoteListNumber, li.NoteListNumber, div.NoteListNumber
-	{margin-top:4.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.75in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;}
-p.NoteWarning, li.NoteWarning, div.NoteWarning
-	{margin-top:6.0pt;
-	margin-right:.5in;
-	margin-bottom:6.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:purple;}
-p.NoteWarningCode, li.NoteWarningCode, div.NoteWarningCode
-	{margin-top:0in;
-	margin-right:.5in;
-	margin-bottom:0in;
-	margin-left:.5in;
-	margin-bottom:.0001pt;
-	line-height:10.0pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:Courier;
-	color:purple;}
-p.NoteWarningListBullet, li.NoteWarningListBullet, div.NoteWarningListBullet
-	{margin-top:4.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.75in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:purple;}
-p.NoteWarningListNumber, li.NoteWarningListNumber, div.NoteWarningListNumber
-	{margin-top:4.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.75in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:purple;}
-span.onlineitem
-	{font-family:Times;
-	color:red;
-	font-style:italic;}
-p.Quote, li.Quote, div.Quote
-	{margin-top:4.0pt;
-	margin-right:.25in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	font-size:9.0pt;
-	font-family:Times;
-	color:teal;}
-p.RefSynopsis, li.RefSynopsis, div.RefSynopsis
-	{margin-top:4.0pt;
-	margin-right:0in;
-	margin-bottom:4.0pt;
-	margin-left:0in;
-	text-align:justify;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:fuchsia;}
-p.RefPurpose, li.RefPurpose, div.RefPurpose
-	{margin-top:0in;
-	margin-right:0in;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	text-indent:-.25in;
-	line-height:10.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:fuchsia;}
-span.replaceable
-	{font-family:Courier;
-	color:red;
-	font-style:italic;}
-p.SidebarBody, li.SidebarBody, div.SidebarBody
-	{margin-top:4.0pt;
-	margin-right:.25in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:justify;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;}
-p.SidebarCode, li.SidebarCode, div.SidebarCode
-	{margin-top:0in;
-	margin-right:.25in;
-	margin-bottom:0in;
-	margin-left:.25in;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	line-height:10.0pt;
-	border:none;
-	padding:0in;
-	font-size:9.0pt;
-	font-family:Courier;
-	color:teal;}
-p.SidebarListBullet, li.SidebarListBullet, div.SidebarListBullet
-	{margin-top:4.0pt;
-	margin-right:.25in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	page-break-after:avoid;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;}
-p.SidebarListNumber, li.SidebarListNumber, div.SidebarListNumber
-	{margin-top:4.0pt;
-	margin-right:.25in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:justify;
-	text-indent:-.25in;
-	line-height:12.0pt;
-	border:none;
-	padding:0in;
-	font-size:10.0pt;
-	font-family:Times;
-	color:teal;
-	layout-grid-mode:line;}
-p.SidebarTitle, li.SidebarTitle, div.SidebarTitle
-	{margin-top:4.0pt;
-	margin-right:.25in;
-	margin-bottom:4.0pt;
-	margin-left:.25in;
-	text-align:center;
-	border:none;
-	padding:0in;
-	font-size:18.0pt;
-	font-family:Times;
-	color:teal;}
-span.subscript
-	{font-family:Times;
-	color:red;
-	position:relative;
-	top:3.0pt;}
-span.superscript
-	{color:red;
-	position:relative;
-	top:-3.0pt;}
-span.Symbol
-	{font-family:Symbol;
-	color:red;
-	border:none;}
-p.TableTitle, li.TableTitle, div.TableTitle
-	{margin-top:12.0pt;
-	margin-right:.5in;
-	margin-bottom:4.0pt;
-	margin-left:.5in;
-	text-align:center;
-	line-height:12.0pt;
-	font-size:10.0pt;
-	font-family:Times;
-	color:navy;
-	font-style:italic;}
-span.technicalitalic
-	{font-family:Times;
-	color:red;
-	font-style:italic;}
-span.userinput
-	{font-family:Courier;
-	color:red;
-	font-weight:bold;}
-span.userinputreplaceable
-	{font-family:Courier;
-	color:red;
-	font-weight:bold;
-	font-style:italic;}
- /* Page Definitions */
- @page Section1
-	{size:8.5in 11.0in;
-	margin:1.5in 2.0in 1.5in 2.0in;}
-div.Section1
-	{page:Section1;}
- /* List Definitions */
- ol
-	{margin-bottom:0in;}
-ul
-	{margin-bottom:0in;}
--->
-</style>
-
 </head>
 
-<body lang=EN-US link=red vlink=purple>
+<body>
 
-<div class=Section1>
+<h1>Scripting Java</h1>
 
-<p class=ChapterTitle>Scripting Java</p>
+<p>This paper shows how to use Rhino to reach beyond JavaScript into
+Java <a href="#ref1">[1]</a>. Scripting Java has many uses. It allows
+us to write powerful scripts quickly by making use of the many Java
+libraries available. We can test Java classes by writing scripts. We
+can also aid our Java development by using scripting for <em>exploratory
+programming</em>. Exploratory programming is the process of
+learning about what a library or API can do by writing quick programs
+that use it. As we will see, scripting makes this process easier.</p>
 
-<p class=MsoNormal>This paper shows how to use Rhino to reach beyond JavaScript
-into Java.<a href="#_ftn1" name="_ftnref1" title=""><span
-class=MsoFootnoteReference><span class=MsoFootnoteReference><span
-style='font-size:10.0pt;font-family:Times;color:black'>[1]</span></span></span></a>
-Scripting Java has many uses. It allows us to write powerful scripts quickly by
-making use of the many Java libraries available. We can test Java classes by
-writing scripts. We can also aid our Java development by using scripting for <span
-class=emphasis><span style='color:red'>exploratory programming</span></span>.
-Exploratory programming is the process of learning about what a library or API
-can do by writing quick programs that use it. As we will see, scripting makes
-this process easier.</p>
-
-<p class=MsoNormal>Note that the ECMA standard doesn’t cover communication with
+<p>Note that the ECMA standard doesn't cover communication with
 Java (or with any external object system for that matter). All the
-functionality covered in this chapter should thus be considered an extension.</p>
+functionality covered in this chapter should thus be considered an 
+extension.</p>
 
-<h1>Accessing Java packages and classes</h1>
+<h2>Accessing Java packages and classes</h2>
 
-<p class=MsoNormal>Every piece of Java code is part of a class. Every Java
+<p>Every piece of Java code is part of a class. Every Java
 class is part of a package. In JavaScript, however, scripts exist outside of
 any package hierarchy. How then, do we access classes in Java packages?</p>
 
-<p class=MsoNormal>Rhino defines a top-level variable named <span
-class=technicalitalic><span style='color:red'>Packages</span></span>. The
-properties of the <span class=technicalitalic><span style='color:red'>Packages</span></span>
-variable are all the top-level Java packages, such as <span
-class=technicalitalic><span style='color:red'>java</span></span> and <span
-class=technicalitalic><span style='color:red'>com</span></span>.  For example,
-we can access the value of the <span class=technicalitalic><span
-style='color:red'>java</span></span> package:</p>
+<p>Rhino defines a top-level variable named <code>Packages</code>. The
+properties of the <code>Packages</code>
+variable are all the top-level Java packages, such as <code>java</code> and 
+<code>com</code>. For example,
+we can access the value of the <code>java</code>package:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; Packages.java
+[JavaPackage java]
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; Packages.java</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[JavaPackage java]</p>
-
-</div>
-
-<p class=MsoNormal>As a handy shortcut, Rhino defines a top-level variable <span
-class=technicalitalic><span style='color:red'>java</span></span> that is
-equivalent to <span class=technicalitalic><span style='color:red'>Packages.java</span></span>.
+<p>As a handy shortcut, Rhino defines a top-level variable <code>java</code>
+that is equivalent to <code>Packages.java</code>.
 So the previous example could be even shorter:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; java
+[JavaPackage java]
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; java</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[JavaPackage java]</p>
-
-</div>
-
-<p class=MsoNormal>We can access Java classes simply by stepping down the
+<p>We can access Java classes simply by stepping down the
 package hierarchy:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; java.io.File
+[JavaClass java.io.File]
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; java.io.File</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[JavaClass java.io.File]</p>
-
-</div>
-
-<p class=MsoNormal>If your scripts access a lot of different Java classes it
+<p>If your scripts access a lot of different Java classes it
 can get awkward to use the full package name of the class every time. Rhino
-provides a top-level function <span class=technicalitalic><span
-style='color:red'>importPackage</span></span> that serves the same purpose as
-Java’s <span class=technicalitalic><span style='color:red'>import</span></span>
-declaration. For example, we could import all of the classes in the <span
-class=technicalitalic><span style='color:red'>java.io </span></span>package and
-access class <span class=technicalitalic><span style='color:red'>java.io.File</span></span>
-using just the name <span class=technicalitalic><span style='color:red'>File</span></span>:</p>
+provides a top-level function <code>importPackage</code> that serves the same
+ purpose as Java's <code>import</code> declaration. For example, we could 
+import all of the classes in the <code>java.io</code>package and
+access class <code>java.io.File</code>
+using just the name <code>File</code>:</p>
+<pre>
+js&gt; importPackage(java.io)
+js&gt; File
+[JavaClass java.io.File]
+</pre>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<p>Here <code>importPackage(java.io)</code> makes all the classes in
+the <code>java.io</code> package (such as <code>File</code>)
+available at the top level. It's equivalent in effect to the Java
+declaration <code>import java.io.*;</code>.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt;
-importPackage(java.io)</p>
+<p>It's important to note that Java imports <code>java.lang.*</code>
+implicitly, while Rhino does not. The reason is that JavaScript has
+its own top-level objects <code>Boolean</code>, <code>Math</code>,
+<code>Number</code>, <code>Object</code>, and <code>String</code> that
+are different from the classes by those names defined in the
+<code>java.lang</code> package.  Because of this conflict, it's a good
+idea not to use <code>importPackage</code> on the
+<code>java.lang</code> package.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; File</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[JavaClass java.io.File]</p>
-
-</div>
-
-<p class=MsoNormal>Here <span class=technicalitalic><span style='color:red'>importPackage(java.io)</span></span>
-makes all the classes in the <span class=technicalitalic><span
-style='color:red'>java.io</span></span> package  (such as <span
-class=technicalitalic><span style='color:red'>File</span></span>) available at
-the top level. It’s equivalent in effect to the Java declaration <span
-class=technicalitalic><span style='color:red'>import java.io.*;</span></span>.</p>
-
-<p class=MsoNormal>It’s important to note that Java imports <span
-class=technicalitalic><span style='color:red'>java.lang.*</span></span>
-implicitly, while Rhino does not. The reason is that JavaScript has its own
-top-level objects <span class=technicalitalic><span style='color:red'>Boolean</span></span>,
-<span class=technicalitalic><span style='color:red'>Math</span></span>, <span
-class=technicalitalic><span style='color:red'>Number</span></span>, <span
-class=technicalitalic><span style='color:red'>Object</span></span>, and <span
-class=technicalitalic><span style='color:red'>String</span></span> that are
-different from the classes by those names defined in the <span
-class=technicalitalic><span style='color:red'>java.lang</span></span> package.
-Because of this conflict, it’s a good idea not to use <span
-class=technicalitalic><span style='color:red'>importPackage</span></span> on
-the <span class=technicalitalic><span style='color:red'>java.lang</span></span>
-package. </p>
-
-<p class=MsoNormal>One thing to be careful of is Rhino’s handling of errors in
-specifying Java package or class names. If <span class=technicalitalic><span
-style='color:red'>java.MyClass</span></span> is accessed, Rhino attempts to
-load a class named <span class=technicalitalic><span style='color:red'>java.MyClass</span></span>.
-If that load fails, it assumes that <span class=technicalitalic><span
-style='color:red'>java.MyClass</span></span> is a package name, and no error is
+<p>One thing to be careful of is Rhino's handling of errors in
+specifying Java package or class names. If <code>java.MyClass</code>
+is accessed, Rhino attempts to load a class named
+<code>java.MyClass</code>. If that load fails, it assumes that
+<code>java.MyClass</code> is a package name, and no error is
 reported:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; java.MyClass
+[JavaPackage java.MyClass]
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; java.MyClass</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[JavaPackage
-java.MyClass]</p>
-
-</div>
-
-<p class=MsoNormal>Only if you attempt to use this object as a class will an
+<p>Only if you attempt to use this object as a class will an
 error be reported.</p>
 
-<h1>Working with Java objects</h1>
+<h2>Working with Java objects</h2>
 
-<p class=MsoNormal>Now that we can access Java classes, the next logical step
-is to create an object. This works just as in Java, with the use of the <span
-class=technicalitalic><span style='color:red'>new</span></span> operator:</p>
+<p>Now that we can access Java classes, the next logical step is to
+create an object. This works just as in Java, with the use of the
+<code>new</code> operator:</p>
+<pre>
+js&gt; new java.util.Date()
+Thu Jan 24 16:18:17 EST 2002
+</pre>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<p>If we store the new object in a JavaScript variable, we can then
+call methods on it:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; new java.util.Date()</p>
+<pre>
+js&gt; f = new java.io.File("test.txt")
+test.txt
+js&gt; f.exists()
+true
+js&gt; f.getName()
+test.txt
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>Thu Jan 24 16:18:17 EST 2002</p>
+<p>Static methods and fields can be accessed from the class object
+itself:</p>
 
-</div>
+<pre>
+js&gt; java.lang.Math.PI
+3.141592653589793
+js&gt; java.lang.Math.cos(0)
+1
+</pre>
 
-<p class=MsoNormal>If we store the new object in a JavaScript variable, we can
-then call methods on it:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f = new
-java.io.File(&quot;test.txt&quot;)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>test.txt</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f.exists()</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>true</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f.getName()</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>test.txt</p>
-
-</div>
-
-<p class=MsoNormal>Static methods and fields can be accessed from the class
-object itself:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; java.lang.Math.PI</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>3.141592653589793</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt;
-java.lang.Math.cos(0)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>1</p>
-
-</div>
-
-<p class=MsoNormal>In JavaScript, unlike Java, the method by itself is an
+<p>In JavaScript, unlike Java, the method by itself is an
 object and can be evaluated as well as being called. If we just view the method
 object by itself we can see the various overloaded forms of the method:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; f.listFiles
+function listFiles() {/*
+java.io.File[] listFiles()
+java.io.File[] listFiles(java.io.FilenameFilter)
+java.io.File[] listFiles(java.io.FileFilter)
+*/}
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f.listFiles</p>
+<p>This output shows that the <code>File</code> class defines three
+overloaded methods <code>listFiles</code>: one that takes no
+arguments, another with a <code>FilenameFilter</code> argument, and a
+third with a <code>FileFilter</code> argument. All the methods return
+an array of <code>File</code> objects. Being able to view the
+parameters and return type of Java methods is particularly useful in
+exploratory programming where we might be investigating a method and
+are unsure of the parameter or return types. </p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>function listFiles() {/*</p>
+<p>Another useful feature for exploratory programming is the ability
+to see all the methods and fields defined for an object. Using the
+JavaScript <code>for..in</code> construct, we can print out all these
+values:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>java.io.File[]
-listFiles()</p>
+<pre>
+js&gt; for (i in f) { print(i) }
+exists
+parentFile
+mkdir
+toString
+wait
+<em>[44 others]</em>
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>java.io.File[]
-listFiles(java.io.FilenameFilter)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>java.io.File[]
-listFiles(java.io.FileFilter)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>*/}</p>
-
-</div>
-
-<p class=MsoNormal>This output shows that the <span class=technicalitalic><span
-style='color:red'>File</span></span> class defines three overloaded methods <span
-class=technicalitalic><span style='color:red'>listFiles</span></span>: one that
-takes no arguments, another with a <span class=technicalitalic><span
-style='color:red'>FilenameFilter</span></span> argument, and a third with a <span
-class=technicalitalic><span style='color:red'>FileFilter</span></span>
-argument. All the methods return an array of <span class=technicalitalic><span
-style='color:red'>File</span></span> objects. Being able to view the parameters
-and return type of Java methods is particularly useful in exploratory
-programming where we might be investigating a method and are unsure of the
-parameter or return types. </p>
-
-<p class=MsoNormal>Another useful feature for exploratory programming is the
-ability to see all the methods and fields defined for an object. Using the
-JavaScript <span class=technicalitalic><span style='color:red'>for..in</span></span>
-construct, we can print out all these values:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; for (i in f) {
-print(i) }</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>exists</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>parentFile</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>mkdir</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>toString</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>wait</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'><span class=replaceable><span
-style='color:red'>[44 others]</span></span></p>
-
-</div>
-
-<p class=MsoNormal>Note that not only the methods of the <span
-class=technicalitalic><span style='color:red'>File</span></span> class are
-listed, but also the methods inherited from the base class <span
-class=technicalitalic><span style='color:red'>java.lang.Object</span></span>
-(like <span class=technicalitalic><span style='color:red'>wait</span></span>).
-This makes it easier to work with objects in deeply nested inheritance
-hierarchies since you can see all the methods that are available for that
+<p>Note that not only the methods of the <code>File</code> class are
+listed, but also the methods inherited from the base class
+<code>java.lang.Object</code> (like <code>wait</code>).  This makes it
+easier to work with objects in deeply nested inheritance hierarchies
+since you can see all the methods that are available for that
 object.</p>
 
-<p class=MsoNormal>Rhino provides another convenience by allowing properties of
-JavaBeans to be accessed directly by their property names. A JavaBean property <span
-class=technicalitalic><span style='color:red'>foo</span></span> is defined by
-the methods <span class=technicalitalic><span style='color:red'>getFoo</span></span>
-and <span class=technicalitalic><span style='color:red'>setFoo</span></span>.
-Additionally, a boolean property of the same name can be defined by an <span
-class=technicalitalic><span style='color:red'>isFoo</span></span> method.<a
-href="#_ftn2" name="_ftnref2" title=""><span class=MsoFootnoteReference><span
-class=MsoFootnoteReference><span style='font-size:10.0pt;font-family:Times;
-color:black'>[2]</span></span></span></a> For example, the following code
-actually calls the <span class=technicalitalic><span style='color:red'>File</span></span>
-object’s <span class=technicalitalic><span style='color:red'>getName</span></span>
-and <span class=technicalitalic><span style='color:red'>isDirectory</span></span>
-methods.</p>
+<p>Rhino provides another convenience by allowing properties of
+JavaBeans to be accessed directly by their property names. A JavaBean
+property <code>foo</code> is defined by the methods
+<code>getFoo</code> and <code>setFoo</code>.  Additionally, a boolean
+property of the same name can be defined by an <code>isFoo</code>
+method <a href="#ref2">[2]</a>. For example, the following code
+actually calls the <code>File</code> object's <code>getName</code> and
+<code>isDirectory</code> methods.</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; f.name
+test.txt
+js&gt; f.directory
+false
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f.name</p>
+<h2>Calling overloaded methods</h2>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>test.txt</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; f.directory</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>false</p>
-
-</div>
-
-<h1>Calling overloaded methods</h1>
-
-<p class=MsoNormal>The process of choosing a method to call based upon the
-types of the arguments is called <span class=emphasis><span style='color:red'>overload
-resolution</span></span>. In Java, overload resolution is performed at compile
-time, while in Rhino it occurs at runtime. This difference is inevitable given
-JavaScript’s use of dynamic typing as was discussed in Chapter 2: since the
-type of a variable is not known until runtime, only then can overload
+<p>The process of choosing a method to call based upon the types of
+the arguments is called <em>overload resolution</em>. In Java,
+overload resolution is performed at compile time, while in Rhino it
+occurs at runtime. This difference is inevitable given JavaScript's
+use of dynamic typing as was discussed in Chapter 2: since the type of
+a variable is not known until runtime, only then can overload
 resolution occur.</p>
 
-<p class=MsoNormal>As an example, consider the following Java class that
-defines a number of overloaded methods and calls them.</p>
+<p>As an example, consider the following Java class that defines a
+number of overloaded methods and calls them.</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+public class Overload {
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>public class Overload {</p>
+    public String f(Object o) { return "f(Object)"; }
+    public String f(String s) { return "f(String)"; }
+    public String f(int i)    { return "f(int)"; }
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public String
-f(Object o) { return &quot;f(Object)&quot;; }</p>
+    public String g(String s, int i) { return "g(String,int)"; }
+    public String g(int i, String s) { return "g(int,String)"; }
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public String
-f(String s) { return &quot;f(String)&quot;; }</p>
+    public static void main(String[] args) {
+        Overload o = new Overload();
+        Object[] a = new Object[] { new Integer(3), "hi", Overload.class };
+        for (int i = 0; i != a.length; ++i)
+            System.out.println(o.f(a[i]));
+    }
+}
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public String f(int
-i)    { return &quot;f(int)&quot;; }</p>
+<p>When we compile and execute the program, it produces the output</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public String
-g(String s, int i) { </p>
+<pre>
+f(Object)
+f(Object)
+f(Object)
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>        return
-&quot;g(String,int)&quot;; </p>
+<p>However, if we write a similar script</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    }</p>
+<pre>
+var o = new Packages.Overload();
+var a = [ 3, "hi", Packages.Overload ];
+for (var i = 0; i != a.length; ++i)
+    print(o.f(a[i]));
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public String g(int
-i, String s) { </p>
+<p>and execute it, we get the output</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>        return
-&quot;g(int,String)&quot;; </p>
+<pre>
+f(int)
+f(String)
+f(Object)
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    }</p>
+<p>Because Rhino selects an overloaded method at runtime, it calls the
+more specific type that matches the argument. Meanwhile Java selects
+the overloaded method purely on the type of the argument at compile
+time. </p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    public static void
-main(String[] args) {</p>
+<p>Although this has the benefit of selecting a method that may be a
+better match for each call, it does have an impact on performance
+since more work is done at each call. In practice this performance
+cost hasn't been noticeable in real applications.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>        Overload o = new
-Overload();</p>
+<p>Because overload resolution occurs at runtime, it can fail at
+runtime. For example, if we call <code>Overload</code>'s method
+<code>g</code> with two integers we get an error because neither form
+of the method is closer to the argument types than the other:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>        Object[] a = new
-Object[] { new Integer(3), &quot;hi&quot;, Overload.class };</p>
+<pre>
+js&gt; o.g(3,4)
+js:"&lt;stdin&gt;", line 2: The choice of Java method Overload.g
+matching JavaScript argument types (number,number) is ambiguous;
+candidate methods are: 
+class java.lang.String g(java.lang.String,int)
+class java.lang.String g(int,java.lang.String)
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>        for (int i=0; i
-&lt; a.length; i++)</p>
+<p>A more precise definition of overloading semantics can be
+found at <a
+href="http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html">http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html</a>.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>           
-System.out.println(o.f(a[i]));</p>
+<h2>Implementing Java interfaces</h2>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    }</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>}</p>
-
-</div>
-
-<p class=MsoNormal>When we compile and execute the program, it produces the
-output</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(Object)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(Object)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(Object)</p>
-
-</div>
-
-<p class=MsoNormal>However, if we write a similar script </p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>var o = new
-Packages.Overload()</p>
-
-</div>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>var a = [ 3,
-&quot;hi&quot;, Packages.Overload ];</p>
-
-</div>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>for (var i=0; i &lt;
-a.length; i++) </p>
-
-</div>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>    print(o.f(a[i]));</p>
-
-</div>
-
-<p class=MsoNormal>and execute it, we get the output</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(int)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(String)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>f(Object)</p>
-
-</div>
-
-<p class=MsoNormal>Because Rhino selects an overloaded method at runtime, it
-calls the more specific type that matches the argument. Meanwhile Java selects
-the overloaded method purely on the type of the argument at compile time. </p>
-
-<p class=MsoNormal>Although this has the benefit of selecting a method that may
-be a better match for each call, it does have an impact on performance since
-more work is done at each call. In practice this performance cost hasn’t been
-noticeable in real applications.</p>
-
-<p class=MsoNormal>Because overload resolution occurs at runtime, it can fail
-at runtime. For example, if we call <span class=technicalitalic><span
-style='color:red'>Overload</span></span>’s method <span class=technicalitalic><span
-style='color:red'>g</span></span> with two integers we get an error because
-neither form of the method is closer to the argument types than the other:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; o.g(3,4)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js:
-&quot;&lt;stdin&gt;&quot;, line 2: The choice of Java method Overload.g
-matching JavaScript argument types (number,number) is ambiguous; candidate
-methods are: class java.lang.String g(java.lang.String,int), class
-java.lang.String g(int,java.lang.String)</p>
-
-</div>
-
-<p class=MsoNormal>A more precise definition of overloading semantics can be
-found at <span class=onlineitem><span style='color:red'><a
-href="http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html">http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html</a></span></span>.</p>
-
-<h1>Implementing Java interfaces</h1>
-
-<p class=MsoNormal>Now that we can access Java classes, create Java objects,
-and access fields, methods, and properties of those objects, we have a great
-deal of power at our fingertips. However, there are a few instances where that
-is not enough: many APIs in Java work by providing interfaces that clients must
-implement. One example of this is the <span class=technicalitalic><span
-style='color:red'>Thread</span></span> class: its constructor takes a <span
-class=technicalitalic><span style='color:red'>Runnable</span></span> that
-contains a single method <span class=technicalitalic><span style='color:red'>run</span></span>
+<p>Now that we can access Java classes, create Java objects, and
+access fields, methods, and properties of those objects, we have a
+great deal of power at our fingertips. However, there are a few
+instances where that is not enough: many APIs in Java work by
+providing interfaces that clients must implement. One example of this
+is the <code>Thread</code> class: its constructor takes a
+<code>Runnable</code> that contains a single method <code>run</code>
 that will be called when the new thread is started. </p>
 
-<p class=MsoNormal>To address this need, Rhino provides the ability to create
-new Java objects that implement interfaces. First we must define a JavaScript
-object with function properties whose names match the methods required by the
-Java interface. To implement a <span class=technicalitalic><span
-style='color:red'>Runnable</span></span>, we need only define a single method <span
-class=technicalitalic><span style='color:red'>run</span></span> with no
-parameters. If you remember from Chapter 3, it is possible to define a
-JavaScript object with the <span class=technicalitalic><span style='color:red'>{
-</span></span><span class=replaceable><span style='color:red'>propertyName</span></span><span
-class=technicalitalic><span style='color:red'>: </span></span><span
-class=replaceable><span style='color:red'>value</span></span><span
-class=technicalitalic><span style='color:red'> … }</span></span> notation. We
-can use that syntax here in combination with a function expression to define a
-JavaScript object with a <span class=technicalitalic><span style='color:red'>run</span></span>
-method:</p>
+<p>To address this need, Rhino provides the ability to create new Java
+objects that implement interfaces. First we must define a JavaScript
+object with function properties whose names match the methods required
+by the Java interface. To implement a <code>Runnable</code>, we need
+only define a single method <code>run</code> with no parameters. If
+you remember from Chapter 3, it is possible to define a JavaScript
+object with the <code>{propertyName: value}</code> notation. We can
+use that syntax here in combination with a function expression to
+define a JavaScript object with a <code>run</code> method:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; obj = { run: function () { print("\nrunning"); } }
+[object Object]
+js&gt; obj.run()
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; obj = { run:
-function () { print(&quot;\nrunning&quot;); } }</p>
+running
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[object Object]</p>
+<p>Now we can create an object implementing the <code>Runnable</code> interface
+by constructing a <code>Runnable</code>:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; obj.run()</p>
+<pre>
+js&gt; r = new java.lang.Runnable(obj);
+[object JavaObject]
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>&nbsp;</p>
+<p>In Java it is not possible to use the <code>new</code> operator on
+an interface because there is no implementation available. Here Rhino
+gets the implementation from the JavaScript object
+<code>obj</code>. Now that we have an object implementing
+<code>Runnable</code>, we can create a <code>Thread</code> and run
+it. The function we defined for <code>run </code>will be called on a
+new thread.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>running</p>
+<pre>
+js&gt; t = new java.lang.Thread(r)
+Thread[Thread-2,5,main]
+js&gt; t.start()
+js&gt;
 
-</div>
+running
+</pre>
 
-<p class=MsoNormal>Now we can create an object implementing the <span
-class=technicalitalic><span style='color:red'>Runnable</span></span> interface
-by “constructing” a <span class=technicalitalic><span style='color:red'>Runnable</span></span>:</p>
+<p>The final <code>js</code> prompt and the output from the new thread
+may appear in either order, depending on thread scheduling.</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; r = new
-java.lang.Runnable(obj);</p>
+<p>Behind the scenes, Rhino generates the bytecode for a new Java
+class that implements <code>Runnable</code> and forwards all calls to
+its <code>run</code> method over to an associated JavaScript
+object. The object that implements this class is called a <em>Java
+adapter</em>. Because the forwarding to JavaScript occurs at runtime,
+it is possible to delay defining the methods implementing an interface
+until they are called. While omitting a required method is bad
+practice for programming in the large, it's useful for small scripts
+and for exploratory programming.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[object JavaObject]</p>
+<h2>The <code>JavaAdapter</code> constructor</h2>
 
-</div>
+<p>In the previous section we created Java adapters using the
+<code>new</code> operator with Java interfaces. This approach has its
+limitations: it's not possible to implement multiple interfaces, nor
+can we extend non-abstract classes. For these reasons there is a
+<code>JavaAdapter</code> constructor. </p>
 
-<p class=MsoNormal>In Java it is not possible to use the <span
-class=technicalitalic><span style='color:red'>new</span></span> operator on an
-interface because there is no implementation available. Here Rhino gets the
-implementation from the JavaScript object <span class=technicalitalic><span
-style='color:red'>obj</span></span>. Now that we have an object implementing <span
-class=technicalitalic><span style='color:red'>Runnable</span></span>, we can
-create a <span class=technicalitalic><span style='color:red'>Thread</span></span>
-and run it. The function we defined for <span class=technicalitalic><span
-style='color:red'>run </span></span>will be called on a new thread.</p>
+<p>The syntax of the <code>JavaAdapter</code> constructor is</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+new JavaAdapter(javaIntfOrClass, [javaIntf, ..., javaIntf,] javascriptObject)
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; t = new
-java.lang.Thread(r)</p>
+<p>Here <code>javaIntfOrClass</code> is an interface to implement or a
+class to extend and <code>javaIntf</code> are aditional interfaces to
+implement. The <code>javascriptObject</code> is the JavaScript object
+containing the methods that will be called from the Java adapter. </p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>Thread[Thread-2,5,main]</p>
+<p>In practice there's little need to call the
+<code>JavaAdapter</code> constructor directly. Most of the time the
+previous syntaxes using the <code>new</code> operator will be
+sufficient.</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; t.start()</p>
+<h2>JavaScript functions as Java interfaces</h2>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt;</p>
+<p>Often we need to implement an interface with only one method, like in the
+previous <code>Runnable</code> example or when providing various event
+listener implementations. To facilitate this Rhino allows to pass
+JavaScript function when such interface is expected. The
+function is called as the implementation of interface method.</p> 
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>running</p>
+<p>Here is the simplified <code>Runnable</code> example:</p>
+<pre>
+js&gt; t = java.lang.Thread(function () { print("\nrunning"); });
+Thread[Thread-0,5,main]
+js&gt; t.start()
+js&gt; 
+running
+</pre>
 
-</div>
+Rhino also allows to use JavaScript function as implementation of Java
+interface with more then method if all the methods has the same
+signature. When calling the function, Rhino passes method's name as
+the additional argument. Function can
+use it to distinguish on behalf of which method it was called:
 
-<p class=MsoNormal>The final <span class=literal><span style='color:red'>js</span></span>
-prompt and the output from the new thread may appear in either order, depending
-on thread scheduling. Rhino also allows the JavaScript object literal and the
-interface creation expression to be combined for a more convenient syntax:</p>
+<pre>
+js&gt; var frame = new Packages.javax.swing.JFrame();
+js&gt; frame.addWindowListener(function(event, methodName) {
+	if (methodName == "windowClosing") {     
+            print("Calling System.exit()..."); java.lang.System.exit(0);
+	}
+    });
+js&gt; frame.setSize(100, 100);
+js&gt; frame.visible = true;
+true
+js&gt; Calling System.exit()...
+</pre>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<h2>Creating Java arrays</h2>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; r = new
-java.lang.Runnable(){run: function() { print(&quot;\nrunning&quot;); } };</p>
+<p>Rhino provides no special syntax for creating Java arrays.  You
+must use the <code>java.lang.reflect.Array</code> class for this
+purpose. To create an array of five Java strings you would make the
+following call:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[object JavaObject]</p>
+<pre>
+js&gt; a = java.lang.reflect.Array.newInstance(java.lang.String, 5);
+[Ljava.lang.String;@7ffe01
+</pre>
 
-</div>
+<p>To create an array of primitive types, we must use the special TYPE
+field defined in the associated object class in the
+<code>java.lang</code> package.  For example, to create an array of
+bytes, we must use the special field
+<code>java.lang.Byte.TYPE</code>:</p>
 
-<p class=MsoNormal>Behind the scenes, Rhino generates the bytecode for a new
-Java class that implements <span class=technicalitalic><span style='color:red'>Runnable</span></span>
-and forwards all calls to its <span class=technicalitalic><span
-style='color:red'>run</span></span> method over to an associated JavaScript
-object. The object that implements this class is called a <span class=emphasis><span
-style='color:red'>Java adapter</span></span>. Because the forwarding to
-JavaScript occurs at runtime, it is possible to delay defining the methods
-implementing an interface until they are called. While omitting a required
-method is bad practice for programming in the large, it’s useful for small
-scripts and for exploratory programming.</p>
+<pre>
+js&gt; a = java.lang.reflect.Array.newInstance(java.lang.Character.TYPE, 2);
+[C@7a84e4
+</pre>
 
-<h1>The <span class=technicalitalic>JavaAdapter</span> constructor</h1>
-
-<p class=MsoNormal>In the previous section we created Java adapters using the <span
-class=technicalitalic><span style='color:red'>new</span></span> operator with
-Java interfaces. This approach has its limitations: it’s not possible to
-implement multiple interfaces, nor can we extend non-abstract classes. For
-these reasons there is a <span class=technicalitalic><span style='color:red'>JavaAdapter</span></span>
-constructor. </p>
-
-<p class=MsoNormal>The syntax of the <span class=technicalitalic><span
-style='color:red'>JavaAdapter</span></span> constructor is</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>new JavaAdapter(<span
-class=replaceable><span style='color:red'>javaIntfOrClass</span></span>, <span
-class=replaceable><span style='color:red'>[javaIntfOrClass</span></span>,<span
-class=replaceable><span style='color:red'> ...]</span></span> <span
-class=replaceable><span style='color:red'>javascriptObject</span></span>)</p>
-
-</div>
-
-<p class=MsoNormal>Each <span class=replaceable><span style='color:red'>javaIntfOrClass</span></span>
-is an interface to implement or a class to extend. (Only one <span
-class=replaceable><span style='color:red'>javaIntfOrClass</span></span> may be
-a class, of course.) The <span class=replaceable><span style='color:red'>javascriptObject</span></span>
-is the JavaScript object containing the methods that will be called from the
-Java adapter. </p>
-
-<p class=MsoNormal>In practice there’s little need to call the <span
-class=technicalitalic><span style='color:red'>JavaAdapter</span></span>
-constructor directly. Most of the time the previous syntaxes using the <span
-class=technicalitalic><span style='color:red'>new</span></span> operator will
-be sufficient.</p>
-
-<h1>Creating Java arrays</h1>
-
-<p class=MsoNormal>Rhino provides no special syntax for creating Java arrays.
-You must use the <span class=technicalitalic><span style='color:red'>java.lang.reflect.Array</span></span>
-class for this purpose. To create an array of five Java strings you would make
-the following call:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; a =
-java.lang.reflect.Array.newInstance(java.lang.String, 5);</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[Ljava.lang.String;@7ffe01</p>
-
-</div>
-
-<p class=MsoNormal>To create an array of primitive types, we must use the
-special TYPE field defined in the associated object class in the <span
-class=technicalitalic><span style='color:red'>java.lang</span></span> package.
-For example, to create an array of bytes, we must use the special field <span
-class=technicalitalic><span style='color:red'>java.lang.Byte.TYPE</span></span>:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; a =
-java.lang.reflect.Array.newInstance(java.lang.Character.TYPE, 2);</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>[C@7a84e4</p>
-
-</div>
-
-<p class=MsoNormal>The resulting value can then be used anywhere a Java array
+<p>The resulting value can then be used anywhere a Java array
 of that type is allowed.</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
+<pre>
+js&gt; a[0] = 104
+104
+js&gt; a[1] = 105
+105
+js&gt; new java.lang.String(a)
+hi
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; a[0] = 104</p>
+<h2>Java strings and JavaScript strings</h2>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>104</p>
+<p>It's important to keep in mind that Java strings and JavaScript
+strings are <strong>not</strong> the same. Java strings are instances
+of the type <code>java.lang.String</code> and have all the methods
+defined by that class. JavaScript strings have methods defined by
+<code>String.prototype</code>.  The most common stumbling block is
+<code>length</code>, which is a method of Java strings and a dynamic
+property of JavaScript strings:</p>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; a[1] = 105</p>
+<pre>
+js&gt; javaString = new java.lang.String("Java")
+Java
+js&gt; jsString = "JavaScript"
+JavaScript
+js&gt; javaString.length()
+4
+js&gt; jsString.length
+10
+</pre>
 
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>105</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; new
-java.lang.String(a)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>hi</p>
-
-</div>
-
-<h1>Java strings and JavaScript strings</h1>
-
-<p class=MsoNormal>It’s important to keep in mind that Java strings and
-JavaScript strings are <span class=emphasis><span style='color:red'>not</span></span>
-the same. Java strings are instances of the type <span class=technicalitalic><span
-style='color:red'>java.lang.String</span></span> and have all the methods
-defined by that class. JavaScript strings have methods defined by <span
-class=technicalitalic><span style='color:red'>String.prototype</span></span>.
-The most common stumbling block is <span class=technicalitalic><span
-style='color:red'>length</span></span>, which is a method of Java strings and a
-dynamic property of JavaScript strings:</p>
-
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; javaString = new
-java.lang.String(&quot;Java&quot;)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>Java</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; jsString =
-&quot;JavaScript&quot;</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>JavaScript</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt;
-javaString.length()</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>4</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; jsString.length</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>10</p>
-
-</div>
-
-<p class=MsoNormal>Rhino provides some help in reducing the differences between
-the two types. First, you can pass a JavaScript string to a Java method that
-requires a Java string and Rhino will perform the conversion. We actually saw
-this feature in action on the call to the <span class=technicalitalic><span
-style='color:red'>java.lang.String</span></span> constructor in the preceding
+<p>Rhino provides some help in reducing the differences between the
+two types. First, you can pass a JavaScript string to a Java method
+that requires a Java string and Rhino will perform the conversion. We
+actually saw this feature in action on the call to the
+<code>java.lang.String</code> constructor in the preceding
 example.</p>
 
-<p class=MsoNormal>Rhino also makes the JavaScript methods available to Java
-strings if the java.lang.String class doesn’t already define them. For example:</p>
+<p>Rhino also makes the JavaScript methods available to Java strings
+if the java.lang.String class doesn't already define them. For
+example:</p>
 
-<div style='border:none;border-left:solid windowtext 1.0pt;padding:0in 0in 0in 2.0pt;
-margin-left:.25in;margin-right:-67.7pt'>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>js&gt; javaString.match(/a.*/)</p>
-
-<p class=Code style='margin:0in;margin-bottom:.0001pt'>ava</p>
-
-</div>
-
-</div>
-
-<div><br clear=all>
+<pre>
+js&gt; javaString.match(/a.*/)
+ava
+</pre>
 
 <hr align=left size=1 width="33%">
 
-<div id=ftn1>
+<p><a name="ref1">[1]</a>
+The ability to call Java from JavaScript was first implemented as part
+of a Netscape browser technology called 
+<em>LiveConnect</em>. However, since that technology also
+encompassed communication with browser plugins, and since the way of
+calling JavaScript from Java in Rhino is entirely different, that term
+won't be used in this paper.</p>
 
-<p class=MsoFootnoteText style='margin-top:3.0pt;margin-right:67.7pt;
-margin-bottom:3.0pt;margin-left:-.25in'><a href="#_ftnref1" name="_ftn1"
-title=""><span class=MsoFootnoteReference><span class=MsoFootnoteReference><span
-style='font-size:9.0pt;font-family:Times;color:black'>[1]</span></span></span></a>
-The ability to call Java from JavaScript was first implemented as part of a
-Netscape browser technology called <span class=emphasis><span style='color:
-red'>LiveConnect</span></span>. However, since that technology also encompassed
-communication with browser plugins, and since the way of calling JavaScript
-from Java in Rhino is entirely different, that term won’t be used in this paper.</p>
-
-</div>
-
-<div id=ftn2>
-
-<p class=MsoFootnoteText style='margin-top:3.0pt;margin-right:67.7pt;
-margin-bottom:3.0pt;margin-left:-.25in'><a href="#_ftnref2" name="_ftn2"
-title=""><span class=MsoFootnoteReference><span class=MsoFootnoteReference><span
-style='font-size:9.0pt;font-family:Times;color:black'>[2]</span></span></span></a>
-For more information on JavaBeans, see <span class=emphasis><span
-style='color:red'>Developing Java Beans</span></span> by Robert Englander.</p>
-
-</div>
-
-</div>
+<p><a name="ref2">[2]</a>
+For more information on JavaBeans, see <em>Developing Java Beans</em>
+by Robert Englander.</p>
 
 </body>
-
 </html>
