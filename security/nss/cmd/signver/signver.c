@@ -196,7 +196,11 @@ int main(int argc, char **argv)
 	}
 #endif
 
-	SECU_ParseCommandLine(argc, argv, progName, &signver);
+	rv = SECU_ParseCommandLine(argc, argv, progName, &signver);
+
+        if (SECSuccess != rv) {
+            Usage(progName, outFile);
+        }
 
 	/*  Set the certdb directory (default is ~/.{browser}) */
 	SECU_ConfigDirectory(signver.options[opt_CertDir].arg);
@@ -258,12 +262,6 @@ int main(int argc, char **argv)
 			return -1;
 		}
 	}
-
-#if 0
-			case 'W':
-				debugInfo = 1;
-				break;
-#endif
 
 	if (!signFile && !dataFile && !typeTag) 
 		Usage(progName, outFile);
