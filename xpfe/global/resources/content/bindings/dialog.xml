@@ -343,6 +343,11 @@
         if (!event.getPreventDefault())
           this.cancelDialog();
       </handler>
+      <handler event="focus" phase="capturing">
+        var btn = this.getButton(this.defaultButton);
+        if (btn && !/Mac/.test(navigator.platform))
+          btn.setAttribute("default", event.originalTarget == btn || !(event.originalTarget instanceof Components.interfaces.nsIDOMXULButtonElement));
+      </handler>
     </handlers>
 
   </binding>
