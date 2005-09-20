@@ -14,6 +14,7 @@ minimo.jar:
     locale/en-US/minimo/minimo.properties (locale/en-US/minimo.properties)
     locale/en-US/minimo/preferences.dtd (locale/en-US/preferences.dtd)
 	skin/classic/minimo/minimo.css   (skin/minimo.css)
+	skin/classic/minimo/preferences.css   (skin/preferences.css)	
 	skin/classic/minimo/m.jpg        (skin/m.jpg)
 	skin/classic/minimo/rssfavicon.png        (skin/rssfavicon.png)
 	skin/classic/minimo/back.gif     (skin/back.gif)
