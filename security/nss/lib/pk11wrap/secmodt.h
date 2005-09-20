@@ -40,6 +40,7 @@
 #include "nssilckt.h"
 #include "secoid.h"
 #include "secasn1.h"
+#include "pkcs11t.h"
 
 /* find a better home for these... */
 extern const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[];
@@ -97,6 +98,7 @@ struct SECMODModuleStr {
     int		cipherOrder;	/* order for cipher operations */
     unsigned long evControlMask; /* control the running and shutdown of slot
 				  * events (SECMOD_WaitForAnyTokenEvent) */
+    CK_VERSION  cryptokiVersion; /* version of this library */
 };
 
 /* evControlMask flags */
