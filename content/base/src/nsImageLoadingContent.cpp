@@ -623,6 +623,22 @@ nsImageLoadingContent::CancelImageRequests(nsresult aReason,
   // XXXbz there is an issue here if different ACCEPT statuses are used, but...
 }
 
+nsresult
+nsImageLoadingContent::UseAsPrimaryRequest(imgIRequest* aRequest,
+                                           PRBool aNotify)
+{
+  // Use an AutoStateChanger so that the clone call won't
+  // automatically notify from inside OnStopDecode.
+  NS_PRECONDITION(aRequest, "Must have a request here!");
+  AutoStateChanger changer(this, aNotify);
+  mCurrentURI = nsnull;
+  CancelImageRequests(NS_BINDING_ABORTED, PR_TRUE, nsIContentPolicy::ACCEPT);
+
+  NS_ASSERTION(!mCurrentRequest, "We should not have a current request now");
+
+  return aRequest->Clone(this, getter_AddRefs(mCurrentRequest));
+}
+
 nsIDocument*
 nsImageLoadingContent::GetOurDocument()
 {

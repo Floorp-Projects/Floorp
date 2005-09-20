@@ -57,7 +57,8 @@ public:
 
   nsresult Init(imgIRequest* aImageRequest)
   {
-    return aImageRequest->Clone(this, getter_AddRefs(mCurrentRequest));
+    // No need to notify, since we have no frame.
+    return UseAsPrimaryRequest(aImageRequest, PR_FALSE);
   }
 
   // nsIContent overrides
@@ -77,6 +78,7 @@ nsresult
 NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
                          imgIRequest* aImageRequest)
 {
+  NS_PRECONDITION(aImageRequest, "Must have request!");
   nsGenConImageContent *it = new nsGenConImageContent(aNodeInfo);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
