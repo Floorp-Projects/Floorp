@@ -402,7 +402,9 @@ function BrowserPopupShowing () {
 
 function DoBrowserRSS() {
   try { 
-    gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
+    if(document.getElementById("toolbar-rss-rsstag").value!="") {
+      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
+    }
     getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
     browserInit(getBrowser().selectedTab);
   } catch (e) {
