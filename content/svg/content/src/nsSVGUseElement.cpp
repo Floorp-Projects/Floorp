@@ -55,6 +55,9 @@
 #include "nsIPresShell.h"
 #include "nsIAnonymousContentCreator.h"
 
+#define NS_SVG_USE_ELEMENT_IMPL_CID \
+{ 0xa95c13d3, 0xc193, 0x465f, {0x81, 0xf0, 0x02, 0x6d, 0x67, 0x05, 0x54, 0x58 } }
+
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
@@ -74,6 +77,8 @@ protected:
   virtual nsresult Init();
   
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVG_USE_ELEMENT_IMPL_CID);
+
   // interfaces:
   
   NS_DECL_ISUPPORTS_INHERITED
@@ -123,7 +128,8 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
 
-  nsCOMPtr<nsIContent> mClone;
+  nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
+  nsCOMPtr<nsIContent> mClone;  // cloned tree
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -148,6 +154,9 @@ NS_INTERFACE_MAP_BEGIN(nsSVGUseElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGUseElement)
+  if (aIID.Equals(NS_GET_IID(nsSVGUseElement)))
+    foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+  else
 NS_INTERFACE_MAP_END_INHERITING(nsSVGUseElementBase)
 
 //----------------------------------------------------------------------
@@ -292,7 +301,36 @@ void nsSVGUseElement::ParentChainChanged()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGUseElement)
+NS_IMETHODIMP
+nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
+                       nsIContent **aResult) const
+{
+  *aResult = nsnull;
+
+  nsSVGUseElement *it = new nsSVGUseElement(aNodeInfo);
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsIContent> kungFuDeathGrip(it);
+  nsresult rv = it->Init();
+  rv |= CopyInnerTo(it, aDeep);
+
+  // nsSVGUseElement specific portion - record who we cloned from
+  it->mOriginal = NS_CONST_CAST(nsSVGUseElement*, this);
+
+  if (NS_SUCCEEDED(rv)) {
+    kungFuDeathGrip.swap(*aResult);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSVGUseElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+{
+  return nsGenericElement::CloneNode(aDeep, aResult);
+}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGURIReference methods
@@ -364,6 +402,9 @@ nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
   nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
 
   if (s && mHref == s) {
+    // we're changing our nature, clear out the clone information
+    mOriginal = nsnull;
+
     TriggerReclone();
     nsCOMPtr<nsIDOMSVGElement> element;
     LookupHref(getter_AddRefs(element));
@@ -497,8 +538,28 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     return NS_ERROR_FAILURE;
 
   // circular loop detection
+
+  // check 1 - check if we're a document descendent of the target
   if (nsContentUtils::ContentIsDescendantOf(this, targetContent))
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+
+  // check 2 - check if we're a clone, and if we already exist in the hierarchy
+  if (this->GetParent() && mOriginal) {
+    for (nsCOMPtr<nsIContent> content = this->GetParent();
+         content;
+         content = content->GetParent()) {
+      nsCOMPtr<nsIDOMSVGUseElement> useElement = do_QueryInterface(content);
+
+      if (useElement) {
+        nsRefPtr<nsSVGUseElement> useImpl;
+        useElement->QueryInterface(NS_GET_IID(nsSVGUseElement),
+                                   getter_AddRefs(useImpl));
+
+        if (useImpl && useImpl->mOriginal == mOriginal)
+          return NS_ERROR_FAILURE;
+      }
+    }
+  }
 
   nsCOMPtr<nsIDOMNode> newchild;
   element->CloneNode(PR_TRUE, getter_AddRefs(newchild));
