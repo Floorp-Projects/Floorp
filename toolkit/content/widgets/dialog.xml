@@ -401,6 +401,12 @@
       </handler>
 #ifdef XP_MACOSX
       <handler event="keypress" key="." modifiers="meta" phase="capturing" action="this.cancelDialog();"/>
+#else
+      <handler event="focus" phase="capturing">
+        var btn = this.getButton(this.defaultButton);
+        if (btn)
+          btn.setAttribute("default", event.originalTarget == btn || !(event.originalTarget instanceof Components.interfaces.nsIDOMXULButtonElement));
+      </handler>
 #endif
     </handlers>
 
