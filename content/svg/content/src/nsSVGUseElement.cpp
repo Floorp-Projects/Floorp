@@ -301,7 +301,7 @@ void nsSVGUseElement::ParentChainChanged()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
+nsresult
 nsSVGUseElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
                        nsIContent **aResult) const
 {
