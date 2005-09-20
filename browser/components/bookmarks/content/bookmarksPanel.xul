@@ -60,7 +60,6 @@
   <command id="cmd_bm_open"            oncommand="goDoCommand('cmd_bm_open');"/>
   <command id="cmd_bm_openinnewwindow" oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
   <command id="cmd_bm_openinnewtab"    oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
-  <command id="cmd_bm_expandfolder"    oncommand="goDoCommand('cmd_bm_expandfolder');"/>
   <command id="cmd_bm_openfolder"      oncommand="goDoCommand('cmd_bm_openfolder');"/>
   <command id="cmd_bm_managefolder"    oncommand="goDoCommand('cmd_bm_managefolder');"/>
   <command id="cmd_bm_newfolder"       oncommand="goDoCommand('cmd_bm_newfolder');"/>

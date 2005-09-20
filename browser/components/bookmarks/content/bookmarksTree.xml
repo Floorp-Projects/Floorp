@@ -641,9 +641,6 @@
           case "cmd_selectAll":
             this.mOuter.treeBoxObject.view.selection.selectAll();
             break;
-          case "cmd_bm_expandfolder":
-            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
-            break;
           default:
             this.mOuter.saveSelection();
             BookmarksController.doCommand(aCommand, selection, target);
