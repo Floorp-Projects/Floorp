@@ -81,8 +81,8 @@ prefpane {
   list-style-image: url("chrome://minimo/skin/preferences/options.png");
   padding: 0 5px;
   border-bottom: 1px solid #a3a3a3;
-   margin: 0;
- }
+  margin: 0;
+}
 
 .paneButtonIcon {
   width: 32px;
@@ -105,20 +105,19 @@ prefpane {
  border-left: 1px solid #b9b9b9;
  color: ButtonText !important;
  }
- 
-radio[pane=paneGeneral] {
-  -moz-image-region: rect(0px, 32px, 32px, 0px)
-}
+ radio[pane=GeneralPane] {
+ -moz-image-region: rect(0px, 32px, 32px, 0px)
+ }
 
-radio[pane=panePrivacy] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px)
-}
+radio[pane=ConnectionsDialogPane] {
+ -moz-image-region: rect(0px, 64px, 32px, 32px)
+ }
 
-radio[pane=paneAdvanced] {
-  -moz-image-region: rect(0px, 192px, 32px, 160px)
+radio[pane=Privacy] {
+-moz-image-region: rect(0px, 192px, 32px, 160px)
 } 
 
-radio[pane=paneContent] {
-  -moz-image-region: rect(0px, 192px, 32px, 160px)
+radio[pane=Advanced] {
+-moz-image-region: rect(0px, 192px, 32px, 160px)
 } 
 
