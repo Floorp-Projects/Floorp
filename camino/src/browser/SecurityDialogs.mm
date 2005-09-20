@@ -55,6 +55,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMLocation.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsServiceManagerUtils.h"
 
 #include "nsIX509Cert.h"
@@ -864,12 +866,28 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
   if (!dialogController)
     return NS_ERROR_FAILURE;
 
+  // We have to push a new event queue here. This is necessary because
+  // we might be getting called via the handling of a PLEvent, and the observer
+  // call that notifies us that keygen is complete is also called via a PLEvent
+  // (under the hood, it's a proxied XPCOM call). If we don't spin up a new event
+  // queue, that proxied "Observe" wouldn't get handled until the stack unwinds
+  // back to the PLEvent handling code, so we'd never see the event.
+  nsCOMPtr<nsIEventQueueService> eventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+  if (!eventQueueService) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEventQueue> newQueue;
+  eventQueueService->PushThreadEventQueue(getter_AddRefs(newQueue));
+
   nsCOMPtr<nsIObserver> completionObserver = new GenKeyPairCompletionObserver(dialogController);
   runnable->StartKeyGeneration(completionObserver);
-  
-  // does this guy have to be modal?
+
   int result = [NSApp runModalForWindow:[dialogController window]];
 
+  eventQueueService->PopThreadEventQueue(newQueue);
+
+  [dialogController release];
+  dialogController = nil;
+  
   if (result == NSAlertAlternateReturn) // cancelled
   {
     PRBool threadAlreadyClosedDialog;
@@ -877,7 +895,6 @@ SecurityDialogs::DisplayGeneratingKeypairInfo(nsIInterfaceRequestor *ctx, nsIKey
     return NS_ERROR_FAILURE;
   }
   
-  [dialogController release];
   return NS_OK;
 }
 
