@@ -35,3 +35,90 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla JSIRC Library.
+ *
+ * The Initial Developer of the Original Code is
+ * New Dimensions Consulting, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Marcio Galli mgalli@geckonnection.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+prefpane {
+ padding: 1px 1px 0 1px;
+}
+
+.paneSelector {
+  list-style-image: url("chrome://minimo/skin/preferences/options.png");
+  padding: 0 5px;
+  border-bottom: 1px solid #a3a3a3;
+   margin: 0;
+ }
+
+.paneButtonIcon {
+  width: 32px;
+  height: 32px;
+}
+
+ .paneSelector radio {
+ border-right: 1px solid transparent;
+ border-left: 1px solid transparent;
+ padding: 3px 0 3px 0;
+ margin: 0;
+ -moz-appearance: none !important;
+
+ }
+ 
+ radio[pane][selected="true"] {
+ background-color: #DDDDDD;
+ background-image: none;
+ border-right: 1px solid #b9b9b9;
+ border-left: 1px solid #b9b9b9;
+ color: ButtonText !important;
+ }
+ 
+radio[pane=paneGeneral] {
+  -moz-image-region: rect(0px, 32px, 32px, 0px)
+}
+
+radio[pane=panePrivacy] {
+  -moz-image-region: rect(0px, 64px, 32px, 32px)
+}
+
+radio[pane=paneAdvanced] {
+  -moz-image-region: rect(0px, 192px, 32px, 160px)
+} 
+
+radio[pane=paneContent] {
+  -moz-image-region: rect(0px, 192px, 32px, 160px)
+} 
+
