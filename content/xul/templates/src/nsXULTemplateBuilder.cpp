@@ -354,6 +354,10 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
 void
 nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
+    // The call to RemoveObserver could release the last reference to
+    // |this|, so hold another reference.
+    nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
+
     // Break circular references
     if (mDB) {
         mDB->RemoveObserver(this);
