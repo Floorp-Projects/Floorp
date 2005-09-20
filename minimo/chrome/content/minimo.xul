@@ -146,7 +146,7 @@
 				<vbox flex="1"  style="padding:4px ! important">
 
 					<hbox flex="1" style="margin-top:4px ! important">
-						 <label value="&zoomText.label;"  />
+						 <label value="&rssText.label;"  />
 						 <textbox id="toolbar-rss-rsstag"/> 
 						 <toolbarbutton class="button-border" command="cmd_DoBrowserRSS" label="Open RSS" />
 					</hbox>
