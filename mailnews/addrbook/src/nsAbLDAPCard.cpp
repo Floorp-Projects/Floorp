@@ -48,10 +48,7 @@ nsAbLDAPCard::~nsAbLDAPCard()
 
 NS_IMETHODIMP nsAbLDAPCard::EditCardToDatabase(const char *aURI)
 {
-  // do nothing, you can't edit LDAP cards.
-  // XXX we shouldn't be getting here, but we are because
-  // the UI doesn't disable in this case.  fix this later.
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
