@@ -66,9 +66,9 @@ var FeedCache =
 
   normalizeHost: function (aUrl)
   {
-    normalizedUrl = Components.classes["@mozilla.org/network/standard-url;1"].
-                    createInstance(Components.interfaces.nsIURI);
-    normalizedUrl.spec = aUrl;    
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                    createInstance(Components.interfaces.nsIIOService);
+    var normalizedUrl = ioService.newURI(aUrl, null, null);
     normalizedUrl.host = normalizedUrl.host.toLowerCase();
     return normalizedUrl.spec;
   }
