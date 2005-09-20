@@ -59,8 +59,8 @@
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
-        <xul:hbox id="tab-drop-indicator-bar">
-          <xul:hbox id="tab-drop-indicator"/>
+        <xul:hbox class="tab-drop-indicator-bar">
+          <xul:hbox class="tab-drop-indicator"/>
         </xul:hbox>          
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode); event.stopPropagation();"
@@ -132,6 +132,9 @@
       </field>
       <field name="mTabBox">
         document.getAnonymousNodes(this)[1]
+      </field>
+      <field name="mTabDropIndicatorBar">
+        this.mTabBox.childNodes[0]
       </field>
       <field name="mStrip">
         this.mTabBox.childNodes[1]
@@ -1470,8 +1473,8 @@
             if (aDragSession.canDrop && aDragSession.sourceNode.parentNode == this.mTabContainer) {
               var newIndex = this.getNewIndex(aEvent);
 
-              var ib = document.getElementById('tab-drop-indicator-bar');
-              var ind = document.getElementById('tab-drop-indicator');
+              var ib = this.mTabDropIndicatorBar;
+              var ind = ib.firstChild;
               ib.setAttribute('dragging','true');
               
               if (window.getComputedStyle(this.parentNode, null).direction == "ltr") {
@@ -1538,8 +1541,7 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            var ib = document.getElementById('tab-drop-indicator-bar');
-            ib.setAttribute('dragging','false');
+            this.mTabDropIndicatorBar.setAttribute('dragging','false');
           ]]>
         </body>
       </method>

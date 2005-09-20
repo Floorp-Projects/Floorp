@@ -163,14 +163,14 @@ tabbrowser > tabbox > tabpanels {
 	-moz-appearance: none !important;
 }
 
-#tab-drop-indicator-bar {
+.tab-drop-indicator-bar {
     display:none;
     height: 9px;
     margin-top: -9px;
     position: relative;
 }
 
-#tab-drop-indicator {
+.tab-drop-indicator {
     height: 9px;
     width: 9px;
     margin-bottom: -5px;
@@ -178,7 +178,7 @@ tabbrowser > tabbox > tabpanels {
     background: url('chrome://global/skin/tabDragDrop/tabDragIndicator.png') 50% 50% no-repeat;
 }
 
-#tab-drop-indicator-bar[dragging="true"] {
+.tab-drop-indicator-bar[dragging="true"] {
     display: -moz-box;
 }
 
