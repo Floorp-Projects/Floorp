@@ -180,18 +180,22 @@ nsBrowserStatusHandler.prototype =
       case nsIWebProgressListener.STATE_IS_SECURE | nsIWebProgressListener.STATE_SECURE_HIGH:
         //this.urlBar.value="level high";
         document.styleSheets[1].cssRules[0].style.backgroundColor="yellow";
+        document.getElementById("lock-icon").className="security-notbroken";
         break;	
       case nsIWebProgressListener.STATE_IS_SECURE | nsIWebProgressListener.STATE_SECURE_LOW:
         // this.urlBar.value="level low";
         document.styleSheets[1].cssRules[0].style.backgroundColor="lightyellow";
+        document.getElementById("lock-icon").className="security-notbroken";
         break;
       case nsIWebProgressListener.STATE_IS_BROKEN:
         //this.urlBar.value="level broken";
         document.styleSheets[1].cssRules[0].style.backgroundColor="lightred";
+        document.getElementById("lock-icon").className="security-broken";
         break;
       case nsIWebProgressListener.STATE_IS_INSECURE:
         default:
         document.styleSheets[1].cssRules[0].style.backgroundColor="white";
+        document.getElementById("lock-icon").className="security-na";
         break;
       }   
   }
