@@ -186,48 +186,6 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-// --- nsCSSText support -----------------
-
-nsCSSShadow::nsCSSShadow(void)
-  : mNext(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCSSShadow);
-}
-
-nsCSSShadow::nsCSSShadow(const nsCSSShadow& aCopy)
-  : mColor(aCopy.mColor),
-    mXOffset(aCopy.mXOffset),
-    mYOffset(aCopy.mYOffset),
-    mRadius(aCopy.mRadius),
-    mNext(nsnull)
-{
-  MOZ_COUNT_CTOR(nsCSSShadow);
-  CSS_IF_COPY(mNext, nsCSSShadow);
-}
-
-nsCSSShadow::~nsCSSShadow(void)
-{
-  MOZ_COUNT_DTOR(nsCSSShadow);
-  CSS_IF_DELETE(mNext);
-}
-
-/* static */ PRBool
-nsCSSShadow::Equal(nsCSSShadow* aList1, nsCSSShadow* aList2)
-{
-  if (aList1 == aList2)
-    return PR_TRUE;
-
-  nsCSSShadow *p1 = aList1, *p2 = aList2;
-  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
-    if (p1->mColor != p2->mColor ||
-        p1->mXOffset != p2->mXOffset ||
-        p1->mYOffset != p2->mYOffset ||
-        p1->mRadius != p2->mRadius)
-      return PR_FALSE;
-  }
-  return !p1 && !p2; // true if same length, false otherwise
-}
-
 // --- nsCSSText -----------------
 
 nsCSSText::nsCSSText(void)
@@ -250,6 +208,7 @@ nsCSSText::nsCSSText(const nsCSSText& aCopy)
     mWhiteSpace(aCopy.mWhiteSpace)
 {
   MOZ_COUNT_CTOR(nsCSSText);
+  CSS_IF_COPY(mTextShadow, nsCSSValueList);
 }
 
 nsCSSText::~nsCSSText(void)
@@ -272,22 +231,11 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mTextTransform.AppendToString(buffer, eCSSProperty_text_transform);
   mTextAlign.AppendToString(buffer, eCSSProperty_text_align);
   mTextIndent.AppendToString(buffer, eCSSProperty_text_indent);
-  if (nsnull != mTextShadow) {
-    if (mTextShadow->mXOffset.IsLengthUnit()) {
-      nsCSSShadow*  shadow = mTextShadow;
-      // XXX This prints the property name many times, but nobody cares.
-      while (nsnull != shadow) {
-        shadow->mColor.AppendToString(buffer, eCSSProperty_text_shadow);
-        shadow->mXOffset.AppendToString(buffer, eCSSProperty_text_shadow);
-        shadow->mYOffset.AppendToString(buffer, eCSSProperty_text_shadow);
-        shadow->mRadius.AppendToString(buffer, eCSSProperty_text_shadow);
-        shadow = shadow->mNext;
-      }
-    }
-    else {
-      mTextShadow->mXOffset.AppendToString(buffer, eCSSProperty_text_shadow);
-    }
+
+  for (nsCSSValueList* shadow = mTextShadow; shadow; shadow = shadow->mNext) {
+    shadow->mValue.AppendToString(buffer, eCSSProperty_text_shadow);
   }
+
   mUnicodeBidi.AppendToString(buffer, eCSSProperty_unicode_bidi);
   mLineHeight.AppendToString(buffer, eCSSProperty_line_height);
   mWhiteSpace.AppendToString(buffer, eCSSProperty_white_space);

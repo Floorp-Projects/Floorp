@@ -435,7 +435,7 @@ CSS_PROP_TABLE(table-layout, table_layout, TableLayout, Table, mLayout, eCSSType
 CSS_PROP_TEXT(text-align, text_align, TextAlign, Text, mTextAlign, eCSSType_Value, kTextAlignKTable)
 CSS_PROP_TEXTRESET(text-decoration, text_decoration, TextDecoration, Text, mDecoration, eCSSType_Value, kTextDecorationKTable)
 CSS_PROP_TEXT(text-indent, text_indent, TextIndent, Text, mTextIndent, eCSSType_Value, nsnull)
-CSS_PROP_BACKENDONLY(text-shadow, text_shadow, TextShadow, Text, mTextShadow, eCSSType_Shadow, nsnull)
+CSS_PROP_BACKENDONLY(text-shadow, text_shadow, TextShadow, Text, mTextShadow, eCSSType_ValueList, nsnull)
 CSS_PROP_TEXT(text-transform, text_transform, TextTransform, Text, mTextTransform, eCSSType_Value, kTextTransformKTable)
 CSS_PROP_POSITION(top, top, Top, Position, mOffset.mTop, eCSSType_Value, nsnull)
 CSS_PROP_TEXTRESET(unicode-bidi, unicode_bidi, UnicodeBidi, Text, mUnicodeBidi, eCSSType_Value, kUnicodeBidiKTable)
