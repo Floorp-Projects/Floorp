@@ -182,19 +182,6 @@ var BookmarksCommand = {
     xulElement.setAttribute("cmd", aCommandName);
     var cmd = "cmd_" + aCommandName.substring(gNC_NS_CMD.length);
     xulElement.setAttribute("command", cmd);
-    
-    if (aCommandName == gNC_NS_CMD + "bm_expandfolder") {
-      var shouldCollapse = true;
-      for (var i=0; i<aSelection.length; ++i)
-        if (!aSelection.isExpanded[i])
-          shouldCollapse = false;
-
-      if (shouldCollapse) {
-        aDisplayName = BookmarksUtils.getLocaleString("cmd_bm_collapsefolder");
-        aAccessKey   = BookmarksUtils.getLocaleString("cmd_bm_collapsefolder_accesskey");
-      }
-    }
-
     xulElement.setAttribute("label", aDisplayName);
     xulElement.setAttribute("accesskey", aAccessKey);
     return xulElement;
@@ -251,11 +238,8 @@ var BookmarksCommand = {
         popup.appendChild(element);
     }
 
-    switch (popup.firstChild.getAttribute("command")) {
-    case "cmd_bm_open":
-    case "cmd_bm_expandfolder":
+    if (popup.firstChild.getAttribute("command") == "cmd_bm_open")
       popup.firstChild.setAttribute("default", "true");
-    }
   },
   
   /////////////////////////////////////////////////////////////////////////////
@@ -307,7 +291,6 @@ var BookmarksCommand = {
     var commands = [];
     // menu order:
     // 
-    // bm_expandfolder
     // bm_open, bm_openfolder
     // bm_openinnewwindow
     // bm_openinnewtab
@@ -342,7 +325,7 @@ var BookmarksCommand = {
       break;
     case "Folder":
     case "PersonalToolbarFolder":
-      commands = ["bm_expandfolder", "bm_openfolder", "bm_managefolder", "bm_separator", 
+      commands = ["bm_openfolder", "bm_managefolder", "bm_separator", 
                   "bm_newbookmark", "bm_newfolder", "bm_newseparator", "bm_separator",
                   "cut", "copy", "paste", "bm_separator",
                   "delete", "bm_separator",
@@ -350,7 +333,7 @@ var BookmarksCommand = {
                   "bm_properties"];
       break;
     case "IEFavoriteFolder":
-      commands = ["bm_expandfolder", "bm_separator", "delete"];
+      commands = ["bm_separator", "delete"];
       break;
     case "IEFavorite":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
@@ -361,7 +344,7 @@ var BookmarksCommand = {
                   "copy"];
       break;
     case "Livemark":
-      commands = ["bm_expandfolder", "bm_openfolder", "bm_separator",
+      commands = ["bm_openfolder", "bm_separator",
                   "cut", "copy", "bm_separator",
                   "delete", "bm_separator",
                   "bm_refreshlivemark", "bm_sortbyname", "bm_separator",
@@ -1033,7 +1016,6 @@ var BookmarksController = {
     case "cmd_bm_open":
     case "cmd_bm_openinnewwindow":
     case "cmd_bm_openinnewtab":
-    case "cmd_bm_expandfolder":
     case "cmd_bm_openfolder":
     case "cmd_bm_managefolder":
     case "cmd_bm_newbookmark":
@@ -1108,7 +1090,6 @@ var BookmarksController = {
     case "cmd_selectAll":
       return true;
     case "cmd_bm_open":
-    case "cmd_bm_expandfolder":
     case "cmd_bm_managefolder":
       return length == 1;
     case "cmd_bm_openinnewwindow":
