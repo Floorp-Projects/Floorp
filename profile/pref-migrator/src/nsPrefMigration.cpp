@@ -155,7 +155,6 @@
 #endif /* XP_UNIX */
 
 #define PREMIGRATION_PREFIX "premigration."
-#define ADDRBOOK_FILE_EXTENSION_IN_4X  ".na2"
 
 // this is for the hidden preference setting in mozilla/modules/libpref/src/init/mailnews.js
 // pref("mail.migration.copyMailFiles", true);
@@ -1138,10 +1137,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_SECMODULE_DB);
   if (NS_FAILED(rv)) return rv;
 #endif /* XP_MAC */
-
-  // Copy the addrbook files.
-  rv = CopyFilesByPattern(oldProfilePath, newProfilePath, ADDRBOOK_FILE_EXTENSION_IN_4X);
-  NS_ENSURE_SUCCESS(rv,rv);
 
 #if defined(XP_MAX) || defined(XP_MACOSX)
   // Copy the Mac filter rule files which sits at the top level dir of a 4.x profile.

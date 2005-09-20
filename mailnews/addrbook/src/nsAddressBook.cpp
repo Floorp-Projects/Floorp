@@ -68,7 +68,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
-#include "nsIAbUpgrader.h"
 #include "nsIFilePicker.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -87,7 +86,6 @@
 #include "nsIDocShell.h"
 #include "nsAutoPtr.h"
 #include "nsIMsgVCardService.h"
-#include "nsIFileSpec.h"
 #include "nsCRT.h"
 
 #ifdef MOZ_XUL_APP
@@ -383,125 +381,6 @@ NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *e
     }
   }
   return NS_OK;
-}
-
-nsresult nsAddressBook::Migrate4xAb(nsIFileSpec *aFileSpec, PRBool aMigrating, PRBool aStoreLocAsHome)
-{
-  NS_ENSURE_ARG_POINTER(aFileSpec);
-
-  nsresult rv = NS_OK;
-
-  // We are migrating 4.x profile
-  /* Get database file name */
-  char *dbUri = nsnull;
-  char *leafName = nsnull;
-  if (aFileSpec) {
-    aFileSpec->GetLeafName(&leafName);
-
-    PRInt32 i = 0;
-    while (leafName[i] != '\0')
-    {
-      if (leafName[i] == '.')
-      {
-        leafName[i] = '\0';
-        break;
-      }
-      else
-       i++;
-    }
-    if (leafName)
-      dbUri = PR_smprintf("%s%s.mab", kMDBDirectoryRoot, leafName);
-  }
-
-  nsCOMPtr<nsILocalFile> dbPath;
-  nsCOMPtr<nsIAddrDatabase> newDatabase;
-  nsCAutoString fileName(leafName);
-  fileName.Append(NS_LITERAL_CSTRING(".mab"));
-
-  nsCOMPtr<nsIAddrBookSession> abSession = 
-           do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-  if(NS_SUCCEEDED(rv))
-    rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
-    
-  /* create address book database  */
-  if(NS_SUCCEEDED(rv))
-  {
-    dbPath->AppendNative(fileName);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-             do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && addrDBFactory)
-      rv = addrDBFactory->Open(dbPath, PR_TRUE, PR_TRUE, getter_AddRefs(newDatabase));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIRDFResource> parentResource;
-  rv = rdfService->GetResource(NS_LITERAL_CSTRING(kAllDirectoryRoot),
-                               getter_AddRefs(parentResource));
-  nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
-  if (!parentDir)
-    return NS_ERROR_NULL_POINTER;
-
-  // Get Pretty name from prefs.
-  nsCOMPtr<nsIPrefBranch> pPref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) 
-    return nsnull;
-
-  nsXPIDLString dirName;
-  nsCOMPtr<nsIPrefLocalizedString> locString;
-  nsCAutoString prefName;
-  if (strcmp(fileName.get(), kPersonalAddressbook) == 0)
-    prefName.AssignLiteral("ldap_2.servers.pab.description");
-  else
-    prefName = NS_LITERAL_CSTRING("ldap_2.servers.") + nsDependentCString(leafName) + NS_LITERAL_CSTRING(".description");
-
-  rv = pPref->GetComplexValue(prefName.get(), NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(locString));
-
-  if (NS_SUCCEEDED(rv))
-    rv = locString->ToString(getter_Copies(dirName));
-
-  // If a name is found then use it, otherwise use the filename as last resort.
-  if (NS_FAILED(rv) || dirName.IsEmpty())
-    dirName.AssignASCII(leafName);
-  parentDir->CreateDirectoryByURI(dirName, dbUri, aMigrating);
-        
-  nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = ldifService->ImportLDIFFile(newDatabase, aFileSpec, aStoreLocAsHome, nsnull);
-
-  if (leafName)
-    nsCRT::free(leafName);
-  if (dbUri)
-    nsCRT::free(dbUri);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec)
-{
-  nsresult rv = NS_OK;
-  if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!abUpgrader) return NS_ERROR_FAILURE;
-
-  rv = abUpgrader->StartUpgrade4xAddrBook(srcFileSpec, dstFileSpec);
-  if (NS_SUCCEEDED(rv)) {
-    PRBool done = PR_FALSE;
-    
-    do {
-      rv = abUpgrader->ContinueExport(&done);
-      // XXX todo 
-      // put this in the msg status
-      printf("converting na2 to ldif...\n");
-    } while (NS_SUCCEEDED(rv) && !done);
-  }
-  return rv;  
 }
 
 #define CSV_DELIM ","

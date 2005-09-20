@@ -52,7 +52,6 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIAbMDBDirectory.h"
-#include "nsIAbUpgrader.h"
 #include "nsIMessengerMigrator.h"
 #include "nsAbDirFactoryService.h"
 #include "nsAbMDBDirFactory.h"

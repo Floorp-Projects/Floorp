@@ -130,7 +130,6 @@ private:
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
   nsresult MigrateAddressBookPrefs();
-  nsresult MigrateAddressBooks();
   void migrateAddressBookPrefEnum(const char *aPref);
         
   nsresult ProceedWithMigration();

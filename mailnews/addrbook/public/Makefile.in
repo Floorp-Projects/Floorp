@@ -59,7 +59,6 @@ XPIDLSRCS	= \
 		nsIAddrBookSession.idl \
 		nsIAbAutoCompleteSession.idl \
 		nsIAbAddressCollecter.idl \
-		nsIAbUpgrader.idl \
 		nsIAddbookUrl.idl \
 		nsIAbDirFactory.idl	\
 		nsIAbDirFactoryService.idl	\

@@ -49,7 +49,6 @@
 #include "nsAbBaseCID.h"
 #include "nsIAddrBookSession.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIAbUpgrader.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -3211,14 +3210,8 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
     pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
     // see if we have the ab upgrader.  if so, skip this, since we
     // will be migrating.
-    nsresult rv;
-    nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
-    if (NS_FAILED(rv) || !abUpgrader) 
-    {
-      // if we can upgrade, don't touch the 4.x pab.
-      // if we can't, move the 4.x pab aside
-      dir_ConvertToMabFileName();
-    }
+    // we can't migrate 4.x therefore, move the 4.x pab aside
+    dir_ConvertToMabFileName();
   }
   /* Write the merged list so we get it next time we ask */
   if (savePrefs)

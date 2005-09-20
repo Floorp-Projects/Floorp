@@ -143,7 +143,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #endif /* XP_UNIX */
 
 #define PREMIGRATION_PREFIX "premigration."
-#define ADDRBOOK_FILE_EXTENSION_IN_4X  ".na2"
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 #define MAX_PREF_LEN 1024
 
@@ -1179,10 +1178,6 @@ nsDogbertProfileMigrator::ProcessPrefsCallback(const char* oldProfilePathStr, co
   rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_SECMODULE_DB);
   if (NS_FAILED(rv)) return rv;
 #endif /* XP_MAC */
-
-  // Copy the addrbook files.
-  rv = CopyFilesByPattern(oldProfilePath, newProfilePath, ADDRBOOK_FILE_EXTENSION_IN_4X);
-  NS_ENSURE_SUCCESS(rv,rv);
 
 #if defined(XP_MAX) || defined(XP_MACOSX)
   // Copy the Mac filter rule files which sits at the top level dir of a 4.x profile.
