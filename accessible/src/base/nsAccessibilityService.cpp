@@ -1817,51 +1817,41 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   // We have a content node
   nsIFrame *frame = *aFrameHint;
-  if (content->IsContentOfType(nsIContent::eXUL)) {
-    nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(aNode));
-    if (xulElt) {
-      xulElt->GetHidden(aIsHidden);
-      if (!*aIsHidden) {
-        xulElt->GetCollapsed(aIsHidden);
+#ifdef DEBUG_aleventhal
+  static int frameHintFailed, frameHintTried, frameHintNonexistant, frameHintFailedForText;
+  ++frameHintTried;
+#endif
+  if (!frame || content != frame->GetContent()) {
+    // Frame hint not correct, get true frame, we try to optimize away from this
+    frame = aPresShell->GetPrimaryFrameFor(content);
+    if (frame) {
+#ifdef DEBUG_aleventhal_
+      // Frame hint debugging
+      ++frameHintFailed;
+      if (content->IsContentOfType(nsIContent::eTEXT)) {
+        ++frameHintFailedForText;
       }
+      frameHintNonexistant += !*aFrameHint;
+      printf("Frame hint failures: %d / %d . Text fails = %d. No hint fails = %d \n", frameHintFailed, frameHintTried, frameHintFailedForText, frameHintNonexistant);
+      if (frameHintTried >= 354) {
+        printf("* "); // Aaron's break point
+      }
+#endif
+      if (frame->GetContent() != content) {
+        // Not the main content for this frame!
+        // For example, this happens because <area> elements return the
+        // image frame as their primary frame. The main content for the 
+        // image frame is the image content.
+        return NS_ERROR_FAILURE;
+      }
+      *aFrameHint = frame;
     }
   }
-  else { // Try frame hint
-#ifdef DEBUG_aleventhal
-    static int frameHintFailed, frameHintTried, frameHintNonexistant, frameHintFailedForText;
-    ++frameHintTried;
-#endif
-    if (!frame || content != frame->GetContent()) {
-      // Frame hint not correct, get true frame, we try to optimize away from this
-      frame = aPresShell->GetPrimaryFrameFor(content);
-      if (frame) {
-#ifdef DEBUG_aleventhal_
-        // Frame hint debugging
-        ++frameHintFailed;
-        if (content->IsContentOfType(nsIContent::eTEXT)) {
-          ++frameHintFailedForText;
-        }
-        frameHintNonexistant += !*aFrameHint;
-        printf("Frame hint failures: %d / %d . Text fails = %d. No hint fails = %d \n", frameHintFailed, frameHintTried, frameHintFailedForText, frameHintNonexistant);
-        if (frameHintTried >= 354) {
-          printf("* "); // Aaron's break point
-        }
-#endif
-        if (frame->GetContent() != content) {
-          // Not the main content for this frame!
-          // For example, this happens because <area> elements return the
-          // image frame as their primary frame. The main content for the 
-          // image frame is the image content.
-          return NS_ERROR_FAILURE;
-        }
-        *aFrameHint = frame;
-      }
-    }
 
-    // Check frame to see if it is hidden
-    if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
-      *aIsHidden = PR_TRUE;
-    }
+  // Check frame to see if it is hidden
+  if (!frame || !frame->GetStyleVisibility()->IsVisible() ||
+      !frame->AreAncestorViewsVisible()) {
+    *aIsHidden = PR_TRUE;
   }
 
   if (*aIsHidden) {
@@ -1874,7 +1864,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (content->IsContentOfType(nsIContent::eTEXT)) {
     // --- Create HTML for visible text frames ---
     if (frame->IsEmpty()) {
-      *aIsHidden = true;
+      *aIsHidden = PR_TRUE;
       return NS_ERROR_FAILURE;
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
