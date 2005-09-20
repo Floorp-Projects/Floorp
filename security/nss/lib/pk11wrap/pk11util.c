@@ -859,7 +859,7 @@ SECMOD_UpdateSlotList(SECMODModule *mod)
 {
     CK_RV crv;
     CK_ULONG count;
-    int i, oldCount;
+    CK_ULONG i, oldCount;
     PRBool freeRef = PR_FALSE;
     void *mark = NULL;
     CK_ULONG *slotIDs = NULL;
@@ -882,7 +882,7 @@ SECMOD_UpdateSlotList(SECMODModule *mod)
  	PZ_Unlock(mod->refLock);
 	return SECSuccess;
     }
-    if (count < mod->slotCount) {
+    if (count < (CK_ULONG)mod->slotCount) {
 	/* shouldn't happen with a properly functioning PKCS #11 module */
 	PORT_SetError( SEC_ERROR_INCOMPATIBLE_PKCS11 );
 	goto loser;
@@ -1060,9 +1060,13 @@ SECMOD_WaitForAnyTokenEvent(SECMODModule *mod, unsigned long flags,
     CK_RV crv;
     PK11SlotInfo *slot;
 
-    if (!pk11_getFinalizeModulesOption()) {
+    if (!pk11_getFinalizeModulesOption() ||
+        ((mod->cryptokiVersion.major == 2) &&
+         (mod->cryptokiVersion.minor < 1))) { 
         /* if we are sharing the module with other software in our
-         * address space, we can't reliably use C_WaitForSlotEvent() */
+         * address space, we can't reliably use C_WaitForSlotEvent(),
+         * and if the module is version 2.0, C_WaitForSlotEvent() doesn't
+         * exist */
 	return secmod_HandleWaitForSlotEvent(mod, flags, latency);
     }
     /* first the the PKCS #11 call */
