@@ -51,6 +51,8 @@ function MenuManager (commandManager, menuSpecs, contextFunction, commandStr)
         function mmgr_onshow (event) { return menuManager.showPopup (event); };
     this.onPopupHiding =
         function mmgr_onhide (event) { return menuManager.hidePopup (event); };
+    this.onMenuCommand =
+        function mmgr_oncmd (event) { return menuManager.menuCommand (event); };
 }
 
 MenuManager.prototype.appendMenuItems =
@@ -216,7 +218,7 @@ function mmgr_showpop (event)
 
         try
         {
-            return eval("(" + expr + ")");
+            return eval(expr);
         }
         catch (ex)
         {
@@ -384,6 +386,47 @@ function mmgr_hidepop (id)
     return true;
 }
 
+MenuManager.prototype.menuCommand =
+function mmgr_menucmd(event)
+{
+    /* evals the attribute named |attr| on the node |node|. */
+    function evalAttribute(node, attr)
+    {
+        var ex;
+        var expr = node.getAttribute(attr);
+        if (!expr)
+            return null;
+
+        try
+        {
+            return eval(expr);
+        }
+        catch (ex)
+        {
+            dd ("caught exception evaling '" + node.getAttribute("id") + "'.'" +
+                attr + "': '" + expr + "'\n" + ex);
+        }
+        return null;
+    };
+
+    var menuitem = event.originalTarget;
+    var cx = this.cx;
+    /* We need to re-run the repeat-map if the user has selected a special
+     * repeat-generated menu item, so that the context object is correct.
+     */
+    if (menuitem.hasAttribute("repeatgenerated") &&
+        menuitem.hasAttribute("repeatmap"))
+    {
+        cx.index = menuitem.getAttribute("repeatindex");
+        var ary = cx.repeatList[menuitem.getAttribute("repeatid")];
+        var item = ary[cx.index];
+        evalAttribute(menuitem, "repeatmap");
+    }
+
+    eval(this.commandStr);
+};
+
+
 /**
  * Appends a sub-menu to an existing menu.
  * @param parentNode  DOM Node to insert into
@@ -507,7 +550,6 @@ function mmgr_addmenu (parentNode, beforeNode, commandName, attribs)
         menuitem.setAttribute("format", command.format);
         menuitem.setAttribute("backupLabel", label);
     }
-    menuitem.setAttribute ("oncommand", this.commandStr);
 
     if ((typeof attribs == "object") && attribs)
     {
@@ -519,6 +561,10 @@ function mmgr_addmenu (parentNode, beforeNode, commandName, attribs)
 
     command.uiElements.push(menuitem);
     parentNode.insertBefore (menuitem, beforeNode);
+    /* It seems, bob only knows why, that this must be done AFTER the node is
+     * added to the document.
+     */
+    menuitem.addEventListener("command", this.onMenuCommand, false);
 
     return menuitem;
 }
