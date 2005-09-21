@@ -139,8 +139,6 @@
   <!-- context menu -->
   <popupset id="contentAreaContextSet"/>
 
-  <popup id="autoscroller" onpopuphidden="stopScrolling()"/>
-
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
     <menubar id="main-menubar" persist="collapsed" grippytooltiptext="&menuBar.tooltip;"/>

@@ -43,19 +43,12 @@
  * - [ Dependencies ] ---------------------------------------------------------
  *  utilityOverlay.js:
  *    - gatherTextUnder
+ *    - startScrolling
  */
 
   var pref = null;
   pref = Components.classes["@mozilla.org/preferences-service;1"]
                    .getService(Components.interfaces.nsIPrefBranch);
-
-  var startX;
-  var startY;
-  var currX;
-  var currY;
-  var scrollingView;
-  var autoScrollTimer;
-  var ignoreMouseEvents;
 
   // Prefill a single text field
   function prefillTextBox(target) {
@@ -213,65 +206,36 @@
   {
     if (event.button == 1 && (event.target != event.currentTarget)
         && !hrefAndLinkNodeForClickEvent(event)
-        && (!pref || !pref.getBoolPref("middlemouse.contentLoadURL"))) {
+        && !isAutoscrollBlocker(event.originalTarget)) {
       startScrolling(event);
-      ignoreMouseEvents = true;
       return false;
     }
     return true;
   }
 
-  function startScrolling(event)
+  function isAutoscrollBlocker(node)
   {
-    var scroller = document.getElementById("autoscroller");
-    if (scrollingView || !scroller)
-      return;
-    document.popupNode = null;
-    scroller.showPopup(scroller.parentNode, event.screenX, event.screenY,
-                       "popup", null, null);
-    startX = event.screenX;
-    startY = event.screenY;
-    currX = event.screenX;
-    currY = event.screenY;
-    addEventListener('mousemove', handleMouseMove, true);
-    addEventListener('mouseup', handleMouseUpDown, true);
-    addEventListener('mousedown', handleMouseUpDown, true);
-    autoScrollTimer = setInterval(autoScrollLoop, 10);
-    scrollingView = event.originalTarget.ownerDocument.defaultView;
-  }
-
-  function handleMouseMove(event)
-  {
-    currX = event.screenX;
-    currY = event.screenY;
-  }
-
-  function autoScrollLoop()
-  {
-    var x = currX - startX;
-    var y = currY - startY;
-    const speed = 4;
-    if (Math.abs(x) >= speed || Math.abs(y) >= speed)
-      ignoreMouseEvents = false;
-    scrollingView.scrollBy(x / speed, y / speed);
-  }
-
-  function handleMouseUpDown(event)
-  {
-    if (!ignoreMouseEvents)
-      document.getElementById("autoscroller").hidePopup();
-    ignoreMouseEvents = false;
-  }
-
-  function stopScrolling()
-  {
-    if (scrollingView) {
-      scrollingView = null;
-      removeEventListener('mousemove', handleMouseMove, true);
-      removeEventListener('mousedown', handleMouseUpDown, true);
-      removeEventListener('mouseup', handleMouseUpDown, true);
-      clearInterval(autoScrollTimer);
+    if (!pref)
+      return false;
+    
+    if (pref.getBoolPref("middlemouse.contentLoadURL"))
+      return true;
+    
+    if (!pref.getBoolPref("middlemouse.paste"))
+      return false;
+    
+    if (node.ownerDocument.designMode == "on")
+      return true;
+    
+    while (node) {
+      if (node instanceof HTMLTextAreaElement ||
+          (node instanceof HTMLInputElement &&
+           (node.type == "text" || node.type == "password")))
+        return true;
+      
+      node = node.parentNode;
     }
+    return false;
   }
 
   function openNewTabOrWindow(event, href, sendReferrer)
