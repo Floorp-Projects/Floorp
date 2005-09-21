@@ -157,7 +157,7 @@ nsBrowserStatusHandler.prototype =
      const rsschromemask = "chrome://minimo/content/rssview/rssblank.xhtml";
 
      if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
-        this.urlBar.value=" rss view "; 
+        this.urlBar.value="SB: "+gRSSTag; 
      } else {
       domWindow = aWebProgress.DOMWindow;
       // Update urlbar only if there was a load on the root docshell
