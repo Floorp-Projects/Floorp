@@ -905,6 +905,15 @@ PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     return symKey;
 }
 
+/*
+ * Use the token to generate a key. keySize must be 'zero' for fixed key
+ * length algorithms. A nonzero keySize causes the CKA_VALUE_LEN attribute
+ * to be added to the template for the key. PKCS #11 modules fail if you
+ * specify the CKA_VALUE_LEN attribute for keys with fixed length.
+ * NOTE: this means to generate a DES2 key from this interface you must
+ * specify CKM_DES2_KEY_GEN as the mechanism directly; specifying
+ * CKM_DES3_CBC as the mechanism and 16 as keySize currently doesn't work.
+ */
 PK11SymKey *
 PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     int keySize, SECItem *keyid, PRBool isToken, void *wincx)
