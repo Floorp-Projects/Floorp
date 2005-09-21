@@ -376,7 +376,8 @@ calICSCalendar.prototype = {
                 // wants.
                 var pipe = Components.classes["@mozilla.org/pipe;1"]
                                               .createInstance(Components.interfaces.nsIPipe);
-                pipe.init(true, true, 0, 0, null)
+                const PR_UINT32_MAX = 4294967295; // signals "infinite-length"
+                pipe.init(true, true, 0, PR_UINT32_MAX, null)
 
                 // This converter is needed to convert the javascript unicode 
                 // string to an array of bytes. (The interface of nsIOutputStream
@@ -386,7 +387,10 @@ calICSCalendar.prototype = {
                                            .getService(Components.interfaces.nsIConverterOutputStream);
                 convStream.init(pipe.outputStream, 'UTF-8', 0, 0x0000);
                 try {
-                    convStream.writeString(icsStr);
+                    if (!convStream.writeString(icsStr)) {
+                        this.mObserver.onError(NS_ERROR_FAILURE, 
+                                               "Error uploading ICS file");
+                    }
                 } catch(e) {
                     this.mObserver.onError(e.result, e.toString());
                 }
