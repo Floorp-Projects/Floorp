@@ -266,6 +266,12 @@ public:
   NS_IMETHOD
   GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin);
 
+
+  NS_IMETHOD
+  InstantiatePluginForChannel(nsIChannel* aChannel,
+                              nsIPluginInstanceOwner* aOwner,
+                              nsIStreamListener** aListener);
+
   NS_IMETHOD
   InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
@@ -416,6 +422,11 @@ private:
 
   nsresult
   LoadXPCOMPlugins(nsIComponentManager* aComponentManager);
+
+  nsresult
+  NewEmbeddedPluginStreamListener(nsIURI* aURL, nsIPluginInstanceOwner *aOwner,
+                                  nsIPluginInstance* aInstance,
+                                  nsIStreamListener** aListener);
 
   nsresult
   NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);

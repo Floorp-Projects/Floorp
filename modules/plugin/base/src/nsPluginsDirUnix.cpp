@@ -464,7 +464,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 #ifdef NS_DEBUG
         printf("GetMIMEDescription() returned \"%s\"\n", mimedescr);
 #endif
-	if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
+        if (NS_FAILED(rv = ParsePluginMimeDescription(mimedescr, info)))
             return rv;
         nsCAutoString filename;
         if (NS_FAILED(rv = mPlugin->GetNativePath(filename)))

@@ -26,6 +26,7 @@
  *   Leon Sha <leon.sha@sun.com>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -61,7 +62,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsINodeInfo.h"
-#include "nsIPluginElement.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
@@ -115,6 +115,7 @@
 #include "nsUnicharUtils.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIObjectLoadingContent.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsIStringBundle.h"
@@ -632,80 +633,9 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
 
   nsresult rv = nsObjectFrameSuper::Init(aPresContext, aContent, aParent,
                                          aContext, aPrevInFlow);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // Find our content type
-  nsCAutoString type;
-  rv = GetMIMEType(type);
-  // If that fails, just return and render nothing.
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  // Ideally this should move to Reflow when the stream starts to come
-  if (IsSupportedImage(type)) {
-    // kick off the image load in the content node
-    // XXX once this moves to somewhere where we have the data stream,
-    // we should have a way to load images with a channel....
-    nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
-    if (!imageLoader) {
-      NS_ERROR("Not an image loading content?");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    nsAutoString data;
-
-    // If this is an OBJECT tag, we should look for a DATA attribute.
-    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (aContent->Tag() == nsHTMLAtoms::object)
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-    else
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-
-    imageLoader->ImageURIChanged(data);
-    // Let the content know that it's actually loading an image.
-    // XXXbz this is a bit of a hack, pending moving object data
-    // loading to content.
-    aContent->SetProperty(nsLayoutAtoms::imageFrame, NS_INT32_TO_PTR(1));
-
-    nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewImageFrame(aPresContext->PresShell(), &aNewFrame);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // XXX we're using the same style context for ourselves and the
-    // image frame.  If this ever changes, please fix HandleChild() to deal.
-    rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
-    if (NS_SUCCEEDED(rv)) {
-      nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
-      mFrames.AppendFrame(this, aNewFrame);
-    }
-    else
-      aNewFrame->Destroy(aPresContext);
-
-    return rv; // bail at this point
-  }
-
-  // for now, we should try to do the same for "document" types and
-  // create an iframe-like sub-frame
-  if (IsSupportedDocument(aContent, type)) {
-    nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewSubDocumentFrame(aPresContext->PresShell(), &aNewFrame);
-    if (NS_FAILED(rv))
-      return rv;
-    
-    // XXX we're using the same style context for ourselves and the
-    // iframe.  If this ever changes, please fix HandleChild() to deal.
-    rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
-    if (NS_SUCCEEDED(rv)) {
-      nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, nsnull, PR_FALSE);
-      mFrames.AppendFrame(this, aNewFrame);
-    } else {
-      aNewFrame->Destroy(aPresContext);
-    }
-  }
-
+  nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
+  NS_ASSERTION(objContent, "Why not an object loading content?");
+  objContent->HasNewFrame(this);
   return rv;
 }
 
@@ -829,7 +759,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   }
 
   nsIViewManager* viewMan = view->GetViewManager();
-  // make the view as hidden since we don't know the (x,y) until Paint
+  // mark the view as hidden since we don't know the (x,y) until Paint
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
@@ -1001,12 +931,14 @@ SizeAnchor(nsIContent *aAnchor, PRInt32 aWidth, PRInt32 aHeight)
 
   nsAutoString tmp;
   tmp.AppendInt(aWidth);
-  AppendASCIItoUTF16("px", tmp);
+  tmp.AppendLiteral("px");
+
   css2props->SetWidth(tmp);
 
   tmp.Truncate();
   tmp.AppendInt(aHeight);
-  AppendASCIItoUTF16("px", tmp);
+  tmp.AppendLiteral("px");
+
   css2props->SetHeight(tmp);
 }
 
@@ -1084,195 +1016,8 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
     return rv;
   }
 
-  // if mInstance is null, we need to determine what kind of object we are and instantiate ourselves
-  if (!mInstanceOwner) {
-    // XXX - do we need to create this for widgets as well?
-    mInstanceOwner = new nsPluginInstanceOwner();
-    if (!mInstanceOwner)
-      return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(mInstanceOwner);
-    mInstanceOwner->Init(aPresContext, this);
-
-    // get the nsIPluginHost service
-    nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID));
-
-    nsCOMPtr<nsISupports> container;
-    nsCOMPtr<nsIURI> fullURL;
-
-    nsAutoString classid;
-
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    nsAutoString codeBase;
-    if ((NS_CONTENT_ATTR_HAS_VALUE ==
-         mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
-        !codeBase.IsEmpty()) {
-      nsCOMPtr<nsIURI> codeBaseURL;
-      rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURI);
-      if (NS_SUCCEEDED(rv)) {
-        baseURI = codeBaseURL;
-      }
-    }
-
-    // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
-    if (mContent->Tag() == nsHTMLAtoms::object &&
-        NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
-      PRBool bJavaObject;
-
-      bJavaObject = StringBeginsWith(classid, NS_LITERAL_STRING("java:"));
-
-      // if we find "java:" in the class id, we have a java applet
-      if (bJavaObject) {
-        if (!baseURI) {
-          rv = NS_ERROR_FAILURE;
-        }
-        else {
-          fullURL = baseURI;
-
-          if (pluginHost) {
-            mInstanceOwner->SetPluginHost(pluginHost);
-            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                   pluginHost, "application/x-java-vm",
-                                   fullURL);
-          }
-        }
-      }
-      else { // otherwise, we're either an ActiveX control or an internal widget
-        // These are some builtin types that we know about for now.
-        // (Eventually this will move somewhere else.)
-        if (classid.EqualsLiteral("browser")) {
-          rv = InstantiateWidget(aPresContext, aMetrics,
-                                 aReflowState, kCAppShellCID);
-        }
-        else {
-          // if we haven't matched to an internal type, check to see if
-          // we have an ActiveX handler
-          // if not, create the default plugin
-          if (!baseURI) {
-            rv = NS_ERROR_FAILURE;
-          }
-          else {
-            fullURL = baseURI;
-
-            if (pluginHost) {
-              mInstanceOwner->SetPluginHost(pluginHost);
-              if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {
-                rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                       pluginHost, "application/x-oleobject",
-                                       fullURL);
-              } else if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/oleobject"))) {
-                rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                       pluginHost, "application/oleobject",
-                                       fullURL);
-              } else {
-                rv = NS_ERROR_FAILURE;
-              }
-            }
-          }
-        }
-      }
-
-      // finish up
-      if (NS_SUCCEEDED(rv)) {
-        aStatus = NS_FRAME_COMPLETE;
-        return NS_OK;
-      }
-    }
-    else { // no clsid - the object is either an applet or a plugin
-      nsAutoString    src;
-      if (!baseURI) {
-        rv = NS_ERROR_FAILURE;
-      }
-      else {
-        if (pluginHost) {
-          mInstanceOwner->SetPluginHost(pluginHost);
-
-          nsIAtom *tag = mContent->Tag();
-          if (tag == nsHTMLAtoms::applet) {
-            if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
-              // Create an absolute URL
-              rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
-            }
-            else
-              fullURL = baseURI;
-
-            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                  pluginHost, "application/x-java-vm", fullURL);
-          } else { // traditional plugin
-            nsXPIDLCString mimeTypeStr;
-            nsAutoString type;
-            mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-
-            if (type.Length()) {
-              mimeTypeStr.Adopt(ToNewCString(type));
-            }
-            // Stream in the object source if there is one...
-            // If this is an OBJECT tag, we should look for a DATA attribute.
-            // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-            if (tag == nsHTMLAtoms::object)
-              rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src);
-            else
-              rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
-            
-            if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-              // Create an absolute URL
-              rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
-              if (NS_FAILED(rv)) {
-                // Failed to create URI, maybe because we didn't
-                // reconize the protocol handler ==> treat like
-                // no 'src'/'data' was specified in the embed/object tag
-                fullURL = baseURI;
-              }
-            }
-            else {
-              // we didn't find a src or data param, so just set the url
-              // to the base
-
-              fullURL = baseURI;
-            }
-
-            // now try to instantiate a plugin instance based on a mime type
-            const char* mimeType = mimeTypeStr.get();
-            if (mimeType || !src.IsEmpty()) {
-              if (!mimeType) {
-                // we don't have a mime type, try to figure it out
-                // from extension
-                PRInt32 offset = src.RFindChar(PRUnichar('.'));
-                if (offset != kNotFound)
-                  pluginHost->IsPluginEnabledForExtension(NS_ConvertUTF16toUTF8(Substring(src, offset + 1, src.Length())).get(), mimeType);
-              }
-              // if we fail to get a mime type from extension we can
-              // still try to instantiate plugin as it can be possible
-              // to determine it later
-              rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                     pluginHost, mimeType, fullURL);
-            }
-            else // if we have neither we should not bother
-              rv = NS_ERROR_FAILURE;
-          }
-        }
-      }
-    }
-  }
-  else { // if (!mInstanceOwner)
-    rv = ReinstantiatePlugin(aPresContext, aMetrics, aReflowState);
-  }
-
-  // finish up
-  if (NS_FAILED(rv)) {
-    // XXXbz A bit of a hack with the property name, but that's ok.
-    // biesi's moving this stuff into content anyway.  ;)
-    mContent->SetProperty(nsCSSPseudoClasses::mozBroken,
-                          NS_INT32_TO_PTR(1));
-
-    // check for alternative content with CantRenderReplacedElement()
-    rv = aPresContext->PresShell()->CantRenderReplacedElement(this);
-  } else {
-    // XXXbz can't quite unset the property here, since that would
-    // actually clobber it on nodes that are supposed to have it!  Not
-    // sure why...
-    NotifyContentObjectWrapper();
-  }
+  FixupWindow(nsSize(aMetrics.width, aMetrics.height));
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -1281,80 +1026,12 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 nsresult
-nsObjectFrame::InstantiateWidget(nsPresContext*           aPresContext,
-                                 nsHTMLReflowMetrics&     aMetrics,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsCID aWidgetCID)
-{
-  nsresult rv;
-
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  nsIView *parentWithView;
-  nsPoint origin;
-  GetOffsetFromView(origin, &parentWithView);
-  // Just make the frigging widget
-
-  float           t2p;
-  t2p = aPresContext->TwipsToPixels();
-  PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
-  PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
-  PRInt32 width = NSTwipsToIntPixels(aMetrics.width, t2p);
-  PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
-  nsRect r = nsRect(x, y, width, height);
-
-  mWidget = do_CreateInstance(aWidgetCID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  mWidget->Create(parentWithView->GetNearestWidget(nsnull), r, nsnull, nsnull);
-  mWidget->Show(PR_TRUE);
-  return rv;
-}
-
-nsresult
-nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
-                                 nsHTMLReflowMetrics& aMetrics,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsIPluginHost* aPluginHost, 
+nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost, 
                                  const char* aMimeType,
                                  nsIURI* aURI)
 {
-  nsIView *parentWithView;
-  nsPoint origin;
-  nsPluginWindow  *window;
-  float           t2p;
-  
-  t2p = aPresContext->TwipsToPixels();
 
   mFullURL = aURI;
-
-  // we need to recalculate this now that we have access to the nsPluginInstanceOwner
-  // and its size info (as set in the tag)
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
-
-  mInstanceOwner->GetWindow(window);
-
-  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
-
-  GetOffsetFromView(origin, &parentWithView);
-  window->x = NSTwipsToIntPixels(origin.x, t2p);
-  window->y = NSTwipsToIntPixels(origin.y, t2p);
-  window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
-  window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
-
-  // on the Mac we need to set the clipRect to { 0, 0, 0, 0 } for now. This will keep
-  // us from drawing on screen until the widget is properly positioned, which will not
-  // happen until we have finished the reflow process.
-  window->clipRect.top = 0;
-  window->clipRect.left = 0;
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
-  window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
-  window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
-#else
-  window->clipRect.bottom = 0;
-  window->clipRect.right = 0;
-#endif
 
 #ifdef DEBUG
   mInstantiating = PR_TRUE;
@@ -1379,45 +1056,48 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
   mInstantiating = PR_FALSE;
 #endif
 
+  // XXX having to do this sucks. it'd be better to move the code from DidReflow
+  // to FixupWindow or something.
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  shell->AppendReflowCommand(this, eReflowType_StyleChanged, nsnull);
   return rv;
 }
 
-// This is called when the page containing plugin is resized, and plugin has its dimensions
-// specified in percentage, so it needs to follow the page on the fly.
-nsresult
-nsObjectFrame::ReinstantiatePlugin(nsPresContext* aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
+void
+nsObjectFrame::FixupWindow(const nsSize& aSize)
 {
-  nsIView *parentWithView;
-  nsPoint origin;
+  nsPresContext* presContext = GetPresContext();
+
+  float t2p = presContext->TwipsToPixels();
+
+  if (!mInstanceOwner)
+    return;
+
   nsPluginWindow  *window;
-  float           t2p;
-  t2p = aPresContext->TwipsToPixels();
-
-  // we need to recalculate this now that we have access to the nsPluginInstanceOwner
-  // and its size info (as set in the tag)
-  GetDesiredSize(aPresContext, aReflowState, aMetrics);
-
   mInstanceOwner->GetWindow(window);
-  
-  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
+  NS_ENSURE_TRUE(window, /**/);
+
+  nsPoint origin;
+  nsIView *parentWithView;
   GetOffsetFromView(origin, &parentWithView);
-
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
-  window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
-  window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+  window->width = NSTwipsToIntPixels(aSize.width, t2p);
+  window->height = NSTwipsToIntPixels(aSize.height, t2p);
 
-  // ignore this for now on the Mac because the widget is not properly positioned
-  // yet and won't be until we have finished the reflow process.
-#if defined(XP_MAC) || defined(XP_MACOSX)
+  // on the Mac we need to set the clipRect to { 0, 0, 0, 0 } for now. This will keep
+  // us from drawing on screen until the widget is properly positioned, which will not
+  // happen until we have finished the reflow process.
   window->clipRect.top = 0;
   window->clipRect.left = 0;
-  window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
-  window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
+#if !(defined(XP_MAC) || defined(XP_MACOSX))
+  window->clipRect.bottom = NSTwipsToIntPixels(aSize.height, t2p);
+  window->clipRect.right = NSTwipsToIntPixels(aSize.width, t2p);
+#else
+  window->clipRect.bottom = 0;
+  window->clipRect.right = 0;
 #endif
-
-  return NS_OK;
 }
 
 nsresult
@@ -1484,9 +1164,6 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
-
-    // these |NS_ConvertASCIItoUCS2|s can't be |NS_LITERAL_STRING|s
-    // until |EqualsIgnoreCase| get's fixed
 
     // HIDDEN w/ no attributes gets translated as we are hidden for
     // compatibility w/ 4.x and IE so we don't create a non-painting
@@ -1620,7 +1297,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
 
   // Kick off the image load.
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(img);
-  imageLoader->ImageURIChanged(src);
+  // XXX imageLoader->ImageURIChanged(src);
 
   // get the localized text
   nsXPIDLString missingPluginLabel;
@@ -1640,7 +1317,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   }
 
   if (!stringBundleService || NS_FAILED(rv))
-    missingPluginLabel = NS_LITERAL_STRING("Click here to download plugin.");
+    missingPluginLabel.AssignLiteral("Click here to download plugin.");
 
   text->SetText(missingPluginLabel, PR_FALSE);
 
@@ -1882,30 +1559,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     window.clipRect.left = 0; window.clipRect.right = 0;
     
 // XXX platform specific printing code
-#if defined(XP_MAC) && !TARGET_CARBON
-    // Mac does things a little differently.
-    GrafPtr curPort;
-    ::GetPort(&curPort);  // get the current port
-
-    nsPluginPort port;
-    port.port = (CGrafPort*)curPort;
-    port.portx = window.x;
-    port.porty = window.y;
-
-    RgnHandle curClip = ::NewRgn();
-    NS_ENSURE_TRUE(curClip, NS_ERROR_NULL_POINTER);
-    ::GetClip(curClip); // save old clip
-    
-    ::SetOrigin(-window.x,-window.y); // port must be set correctly prior to telling plugin to print
-    Rect r = {0,0,window.height,window.width};
-    ::ClipRect(&r);  // also set the clip
-    
-    window.window = &port;
-    npprint.print.embedPrint.platformPrint = (void*)window.window;
-    npprint.print.embedPrint.window = window;
-    // send off print info to plugin
-    rv = pi->Print(&npprint);
-#elif defined(XP_UNIX) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     /* UNIX does things completely differently:
      * We call the plugin and it sends generated PostScript data into a
      * file handle we provide. If the plugin returns with success we embed
@@ -1958,13 +1612,6 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
     // send off print info to plugin
     rv = pi->Print(&npprint);
 
-#endif
-
-#if defined(XP_MAC) && !TARGET_CARBON
-    // Clean-up on Mac
-    ::SetOrigin(0,0);
-    ::SetClip(curClip);  // restore previous clip
-    ::DisposeRgn(curClip);
 #endif
 
     // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
@@ -2130,6 +1777,123 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
     return NS_ERROR_NULL_POINTER;
   
   return mInstanceOwner->GetInstance(aPluginInstance);
+}
+
+nsresult
+nsObjectFrame::PrepareInstanceOwner()
+{
+  if (!mInstanceOwner) {
+    mInstanceOwner = new nsPluginInstanceOwner();
+    if (!mInstanceOwner)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(mInstanceOwner);
+    mInstanceOwner->Init(GetPresContext(), this);
+  } else {
+    mInstanceOwner->SetInstance(nsnull);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener)
+{
+  nsresult rv = PrepareInstanceOwner();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  mInstanceOwner->SetPluginHost(pluginHost);
+
+  // This must be done before instantiating the plugin
+  FixupWindow(mRect.Size());
+
+  aChannel->GetURI(getter_AddRefs(mFullURL));
+
+  rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
+
+  // XXX having to do this sucks. it'd be better to move the code from DidReflow
+  // to FixupWindow.
+  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  shell->AppendReflowCommand(this, eReflowType_StyleChanged, nsnull);
+  return rv;
+}
+
+nsresult
+nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
+{
+  nsresult rv = PrepareInstanceOwner();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // This must be done before instantiating the plugin
+  FixupWindow(mRect.Size());
+
+  // get the nsIPluginHost service
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  mInstanceOwner->SetPluginHost(pluginHost);
+
+  nsCOMPtr<nsISupports> container;
+
+  nsAutoString classid;
+
+  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+  nsAutoString codeBase;
+  if ((NS_CONTENT_ATTR_HAS_VALUE ==
+       mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
+      !codeBase.IsEmpty()) {
+    nsCOMPtr<nsIURI> codeBaseURL;
+    rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURI);
+    if (NS_SUCCEEDED(rv)) {
+      baseURI = codeBaseURL;
+    }
+  }
+  if (!baseURI)
+    return NS_ERROR_FAILURE;
+
+  // If we have no other URI, use the base URI of the node.
+  // XXX(biesi) I have no idea why that is the right thing, but it's what the
+  // code used to do...
+  if (!aURI)
+    aURI = baseURI; // Our baseURI nsCOMPtr will keep this alive
+
+  // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
+  if (mContent->Tag() == nsHTMLAtoms::object &&
+      NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
+    // Find a MIME type for the class ID
+    nsCOMPtr<nsIObjectLoadingContent> objContent =
+        do_QueryInterface(GetContent(), &rv);
+    nsCAutoString type;
+    if (objContent)
+      rv = objContent->TypeForClassID(classid, type);
+    // XXX why baseURI??
+    if (NS_SUCCEEDED(rv))
+      rv = InstantiatePlugin(pluginHost, type.get(), baseURI);
+  }
+  else { // no clsid - the object is either an applet or a plugin
+    if (!aMimeType || !*aMimeType) {
+      // we don't have a mime type, try to figure it out
+      // from extension
+      nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+      if (url) {
+        nsCAutoString ext;
+        rv = url->GetFileExtension(ext);
+        if (NS_SUCCEEDED(rv))
+          pluginHost->IsPluginEnabledForExtension(ext.get(), aMimeType);
+      }
+    }
+
+    rv = InstantiatePlugin(pluginHost, aMimeType, aURI);
+  }
+
+  // finish up
+  if (NS_SUCCEEDED(rv)) {
+    NotifyContentObjectWrapper();
+  }
+
+  return rv;
 }
 
 void
@@ -2470,7 +2234,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
   if (nsnull != mOwner) {
     nsIContent* cont = mOwner->GetContent();
     if (cont) {
-      rv = cont->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)result);
+      rv = CallQueryInterface(cont, result);
     }
   }
 
@@ -3079,14 +2843,6 @@ nsObjectFrame::PluginNotAvailable(const char *aMimeType)
   }
   
   nsDependentCString type(aMimeType);
-
-  // Tell mContent about the mime type
-
-  nsCOMPtr<nsIPluginElement> pluginElement(do_QueryInterface(mContent));
-
-  if (pluginElement) {
-    pluginElement->SetActualType(type);
-  }
 
   if (!sDefaultPluginDisabled) {
     // The default plugin is enabled, don't fire events etc.

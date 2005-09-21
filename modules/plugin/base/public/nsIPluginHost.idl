@@ -51,11 +51,12 @@
 interface nsIPlugin;
 interface nsIURI;
 interface nsIDOMPlugin;
+interface nsIChannel;
 
 [ptr] native PRLibraryPtr(PRLibrary);
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 
-[uuid(e740d8c4-fd94-456a-9506-9e044c5da27a)]
+[uuid(ABB36800-EA77-4172-AD14-603A02DB2B53)]
 interface nsIPluginHost : nsIFactory
 {
   void init();
@@ -69,6 +70,13 @@ interface nsIPluginHost : nsIFactory
   void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
   void instantiateFullPagePlugin(in string aMimeType, in nsIURI aURI, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
+
+  /**
+   * Instantiate an embedded plugin for an existing channel. The caller is
+   * responsible for opening the channel. It may or may not be already opened
+   * when this function is called.
+   */
+  nsIStreamListener instantiatePluginForChannel(in nsIChannel aChannel, in nsIPluginInstanceOwner aOwner);
 
   void setUpPluginInstance(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 

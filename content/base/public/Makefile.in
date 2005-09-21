@@ -93,6 +93,7 @@ XPIDLSRCS	= \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \
 		nsIImageLoadingContent.idl \
+		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \
 		$(NULL)
 

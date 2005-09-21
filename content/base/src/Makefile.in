@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  webbrowserpersist \
 		  imglib2 \
+		  plugin \
 		  prefetch \
 		  xuldoc \
 		  $(NULL)
@@ -115,6 +116,7 @@ CPPSRCS		= \
 		nsNameSpaceManager.cpp \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
+		nsObjectLoadingContent.cpp \
 		nsParserUtils.cpp \
 		nsPlainTextSerializer.cpp \
 		nsPropertyTable.cpp \

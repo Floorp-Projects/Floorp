@@ -50,6 +50,23 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOBJECTFRAME_IID)
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance) = 0;
+
+  /**
+   * Instantiate a plugin for a channel, returning a stream listener for the
+   * data.
+   */
+  virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener) = 0;
+
+  /**
+   * Instantiate a plugin that loads the data itself.
+   * @param aMimeType Type of the plugin to instantiate. May be null.
+   *                  This argument is ignored if a classid is present on the
+   *                  plugin.
+   * @param aURI      URI of the plugin data. May be null.
+   * @note XXX this method is here only temporarily, until plugins are loaded
+   *       from content.
+   */
+  virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI) = 0;
 };
 
 

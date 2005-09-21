@@ -91,14 +91,6 @@ nsFrameLoader::LoadFrame()
 {
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = EnsureDocShell();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIDocument* doc = mOwnerContent->GetDocument();
-  if (!doc) {
-    return NS_OK;
-  }
-
   nsAutoString src;
   GetURL(src);
 
@@ -108,13 +100,35 @@ nsFrameLoader::LoadFrame()
     src.AssignLiteral("about:blank");
   }
 
+  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  if (!doc) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
   const nsAFlatCString &doc_charset = doc->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), src,
-                 doc_charset.IsEmpty() ? nsnull : doc_charset.get(),
-                 base_uri);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), src,
+                          doc_charset.IsEmpty() ? nsnull : doc_charset.get(),
+                          base_uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return LoadURI(uri);
+}
+
+NS_IMETHODIMP
+nsFrameLoader::LoadURI(nsIURI* aURI)
+{
+  NS_PRECONDITION(aURI, "Null URI?");
+  if (!aURI)
+    return NS_ERROR_INVALID_POINTER;
+
+  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  if (!doc) {
+    return NS_OK;
+  }
+
+  nsresult rv = EnsureDocShell();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
@@ -137,7 +151,7 @@ nsFrameLoader::LoadFrame()
 
     loadInfo->SetOwner(principal);
   } else {
-    // We're not being called form script, tell the docshell
+    // We're not being called from script, tell the docshell
     // to inherit an owner from the current document.
 
     loadInfo->SetInheritOwner(PR_TRUE);
@@ -149,7 +163,7 @@ nsFrameLoader::LoadFrame()
   }
   
   // Check if we are allowed to load absURL
-  rv = secMan->CheckLoadURIWithPrincipal(principal, uri,
+  rv = secMan->CheckLoadURIWithPrincipal(principal, aURI,
                                          nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv)) {
     return rv; // We're not
@@ -161,11 +175,11 @@ nsFrameLoader::LoadFrame()
   loadInfo->SetReferrer(referrer);
 
   // Bail out if this is an infinite recursion scenario
-  rv = CheckForRecursiveLoad(uri);
+  rv = CheckForRecursiveLoad(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   
   // Kick off the load...
-  rv = mDocShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
+  rv = mDocShell->LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
                           PR_FALSE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 

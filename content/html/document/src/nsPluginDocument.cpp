@@ -65,6 +65,9 @@ public:
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
   virtual PRBool CanSavePresentation(nsIRequest *aNewRequest);
 
+  const nsCString& GetType() const { return mMimeType; }
+  nsIContent*      GetPluginContent() { return mPluginContent; }
+
 protected:
   nsresult CreateSyntheticPluginDocument();
 
@@ -72,6 +75,49 @@ protected:
   nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
   nsCString                                mMimeType;
 };
+
+class nsPluginStreamListener : public nsMediaDocumentStreamListener
+{
+  public:
+    nsPluginStreamListener(nsPluginDocument* doc) :
+       nsMediaDocumentStreamListener(doc),  mPluginDoc(doc) {}
+    NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt);
+  private:
+    nsRefPtr<nsPluginDocument> mPluginDoc;
+};
+
+
+NS_IMETHODIMP
+nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+{
+  nsresult rv = nsMediaDocumentStreamListener::OnStartRequest(request, ctxt);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsIContent* embed = mPluginDoc->GetPluginContent();
+
+  // Now we have a frame for our <embed>, start the load
+  nsIFrame* frame = mDocument->GetShellAt(0)->GetPrimaryFrameFor(embed);
+  if (!frame) {
+    return rv;
+  }
+
+  nsIObjectFrame* objFrame;
+  CallQueryInterface(frame, &objFrame);
+  if (!objFrame) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  rv = objFrame->Instantiate(mPluginDoc->GetType().get(),
+                             mDocument->nsIDocument::GetDocumentURI());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_ASSERTION(mNextStream, "We should have a listener by now");
+  return mNextStream->OnStartRequest(request, ctxt);
+}
 
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -141,9 +187,10 @@ nsPluginDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mStreamListener = new nsMediaDocumentStreamListener(this);
-  if (!mStreamListener)
+  mStreamListener = new nsPluginStreamListener(this);
+  if (!mStreamListener) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
   NS_ASSERTION(aDocListener, "null aDocListener");
   NS_ADDREF(*aDocListener = mStreamListener);
 
@@ -159,8 +206,9 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   if (dsti) {
     PRBool isMsgPane = PR_FALSE;
     dsti->NameEquals(NS_LITERAL_STRING("messagepane").get(), &isMsgPane);
-    if (isMsgPane)
+    if (isMsgPane) {
       return NS_ERROR_FAILURE;
+    }
   }
 
   // make our generic document
@@ -212,6 +260,8 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   mPluginContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
                           NS_ConvertUTF8toUTF16(mMimeType), PR_FALSE);
 
+  // This will not start the load because nsObjectLoadingContent checks whether
+  // its document is an nsIPluginDocument
   body->AppendChildTo(mPluginContent, PR_FALSE);
 
   return NS_OK;
@@ -222,8 +272,9 @@ nsPluginDocument::CreateSyntheticPluginDocument()
 NS_IMETHODIMP
 nsPluginDocument::SetStreamListener(nsIStreamListener *aListener)
 {
-  if (mStreamListener)
+  if (mStreamListener) {
     mStreamListener->SetStreamListener(aListener);
+  }
 
   nsMediaDocument::UpdateTitleAndCharset(mMimeType);
 
