@@ -51,14 +51,13 @@
 #include "nsIXFormsControlBase.h"
 #include "nsIXFormsControl.h"
 #include "nsIXFormsItemSetUIElement.h"
+#include "nsXFormsDelegateStub.h"
+#include "nsXFormsModelElement.h"
 
-class nsXFormsItemSetElement : public nsXFormsBindableStub,
-                               public nsIXFormsSelectChild,
-                               public nsIXFormsControlBase
+class nsXFormsItemSetElement : public nsXFormsDelegateStub,
+                               public nsIXFormsSelectChild
 {
 public:
-  nsXFormsItemSetElement() : mElement(nsnull) {}
-
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
@@ -77,21 +76,16 @@ public:
 
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
-
-private:
-  nsIDOMElement *mElement;
-  nsCOMArray<nsIXFormsSelectChild> mItems;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemSetElement,
-                             nsXFormsBindableStub,
-                             nsIXFormsSelectChild,
-                             nsIXFormsControlBase)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsItemSetElement,
+                             nsXFormsDelegateStub,
+                             nsIXFormsSelectChild)
 
 NS_IMETHODIMP
 nsXFormsItemSetElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
 {
-  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsDelegateStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
@@ -99,16 +93,6 @@ nsXFormsItemSetElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN);
-
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-
-  // It's ok to keep a pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as we null out mElement in
-  // OnDestroyed, it will always be valid.
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
   return NS_OK;
 }
@@ -206,8 +190,6 @@ nsXFormsItemSetElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **
   return NS_OK;
 }
 
-// internal methods
-
 NS_IMETHODIMP
 nsXFormsItemSetElement::Bind()
 {
@@ -217,7 +199,6 @@ nsXFormsItemSetElement::Bind()
 NS_IMETHODIMP
 nsXFormsItemSetElement::Refresh()
 {
-  mItems.Clear();
   // We need to create item elements for each element referenced by the
   // nodeset.  Each of these items will create an anonymous HTML option element
   // which will return from GetAnonymousNodes.  We then clone our template
@@ -234,16 +215,13 @@ nsXFormsItemSetElement::Refresh()
 
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> result;
-  nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                     nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                     NS_LITERAL_STRING("nodeset"),
-                                     EmptyString(),
-                                     nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                                     getter_AddRefs(model),
-                                     getter_AddRefs(result));
+  nsresult rv = ProcessNodeBinding(NS_LITERAL_STRING("nodeset"),
+                                   nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                                   getter_AddRefs(result),
+                                   getter_AddRefs(model));
 
-  if (!result)
-    return NS_OK;
+  if (NS_FAILED(rv) | !result | !model)
+    return rv;
 
   nsCOMPtr<nsIDOMNode> node, templateNode, cloneNode, tmpNode;
   nsCOMPtr<nsIDOMElement> itemNode, itemWrapperNode, contextContainer;
@@ -289,9 +267,9 @@ nsXFormsItemSetElement::Refresh()
     result->SnapshotItem(i, getter_AddRefs(node));
     NS_ASSERTION(node, "incorrect snapshot length");
 
-    nsresult rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                          NS_LITERAL_STRING("item"),
-                                          getter_AddRefs(itemNode));
+    rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                 NS_LITERAL_STRING("item"),
+                                 getter_AddRefs(itemNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // XXX Could we get rid of the <contextcontainer>?

@@ -679,7 +679,11 @@
       <method name="scrollIntoView">
         <parameter name="aTop"/>
         <body>
-          this.content.scrollIntoView(aTop);
+          // this.content is null if anonymous content hasn't been created yet.
+          var content = this.content;
+          if (content) {
+            content.scrollIntoView(aTop);
+          }
         </body>
       </method>
     </implementation>
