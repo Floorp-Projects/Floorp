@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.24 2005/09/16 16:59:22 wtchang%redhat.com Exp $ */
+/* $Id: loader.c,v 1.25 2005/09/21 02:53:25 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -57,44 +57,51 @@ static const char* default_name =
 
 #if defined(NSS_USE_64)
 
-const static char fast_hybrid_shared_lib[] = "libfreebl_64fpu_3.so";
-const static char slow_hybrid_shared_lib[] = "libfreebl_64int_3.so";
-const static char  non_hybrid_shared_lib[] = "libfreebl_64fpu_3.so";
+const static char fpu_hybrid_shared_lib[] = "libfreebl_64fpu_3.so";
+const static char int_hybrid_shared_lib[] = "libfreebl_64int_3.so";
+const static char non_hybrid_shared_lib[] = "libfreebl_64fpu_3.so";
 
-const static char slow_hybrid_isa[] = "sparcv9";
-const static char fast_hybrid_isa[] = "sparcv9+vis";
+const static char int_hybrid_isa[] = "sparcv9";
+const static char fpu_hybrid_isa[] = "sparcv9+vis";
 
 #else
 
-const static char fast_hybrid_shared_lib[] = "libfreebl_32fpu_3.so";
-const static char slow_hybrid_shared_lib[] = "libfreebl_32int64_3.so";
-const static char  non_hybrid_shared_lib[] = "libfreebl_32int_3.so";
+const static char fpu_hybrid_shared_lib[] = "libfreebl_32fpu_3.so";
+const static char int_hybrid_shared_lib[] = "libfreebl_32int64_3.so";
+const static char non_hybrid_shared_lib[] = "libfreebl_32int_3.so";
 
-const static char slow_hybrid_isa[] = "sparcv8plus";
-const static char fast_hybrid_isa[] = "sparcv8plus+vis";
+const static char int_hybrid_isa[] = "sparcv8plus";
+const static char fpu_hybrid_isa[] = "sparcv8plus+vis";
 
 #endif
 
 static const char *
 getLibName(void)
 {
-    char * found_slow_hybrid;
-    char * found_fast_hybrid;
+    char * found_int_hybrid;
+    char * found_fpu_hybrid;
     long buflen;
     char buf[256];
 
     buflen = sysinfo(SI_ISALIST, buf, sizeof buf);
     if (buflen <= 0) 
 	return NULL;
-    found_slow_hybrid = strstr(buf, slow_hybrid_isa);
-    found_fast_hybrid = strstr(buf, fast_hybrid_isa);
-    if (found_fast_hybrid && 
-	(!found_slow_hybrid ||
-	 (found_slow_hybrid - found_fast_hybrid) >= 0)) {
-	return fast_hybrid_shared_lib;
+    /* The ISA list is a space separated string of names of ISAs and
+     * ISA extensions, in order of decreasing performance.
+     * There are two different ISAs with which NSS's crypto code can be
+     * accelerated. If both are in the list, we take the first one.
+     * If one is in the list, we use it, and if neither then we use
+     * the base unaccelerated code.
+     */
+    found_int_hybrid = strstr(buf, int_hybrid_isa);
+    found_fpu_hybrid = strstr(buf, fpu_hybrid_isa);
+    if (found_fpu_hybrid && 
+	(!found_int_hybrid ||
+	 (found_int_hybrid - found_fpu_hybrid) >= 0)) {
+	return fpu_hybrid_shared_lib;
     }
-    if (found_slow_hybrid) {
-	return slow_hybrid_shared_lib;
+    if (found_int_hybrid) {
+	return int_hybrid_shared_lib;
     }
     return non_hybrid_shared_lib;
 }
