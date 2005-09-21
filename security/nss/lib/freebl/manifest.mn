@@ -115,6 +115,7 @@ endif
 SHA_SRCS = sha_fast.c
 
 CSRCS = \
+	freeblver.c \
 	ldvector.c \
 	prng_fips1861.c \
 	sysrand.c \
