@@ -39,10 +39,65 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #include "nsAccessibleWrap.h"
 
-nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd):
+
+nsHTMLWin32ObjectOwnerAccessible::nsHTMLWin32ObjectOwnerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd):
 nsAccessibleWrap(aNode, aShell)
 {
-  mHwnd = aHwnd ? ::GetWindow((HWND)aHwnd, GW_CHILD) : 0;
+  mHwnd = aHwnd;
+}
+
+NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::Shutdown()
+{
+  nsAccessibleWrap::Shutdown();
+  mNativeAccessible = nsnull;
+  return NS_OK;
+}
+
+/** 
+  * Our only child is a nsHTMLWin32ObjectAccessible 
+  */
+NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::GetFirstChild(nsIAccessible **aFirstChild)
+{
+  *aFirstChild = mNativeAccessible;
+  if (!mNativeAccessible) {
+    if (!mHwnd) {
+      return NS_OK;
+    }
+    mNativeAccessible = new nsHTMLWin32ObjectAccessible(mHwnd) ;
+    SetFirstChild(mNativeAccessible);
+    *aFirstChild = mNativeAccessible;
+  }
+  NS_IF_ADDREF(*aFirstChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::GetLastChild(nsIAccessible **aLastChild)
+{
+  return GetFirstChild(aLastChild);
+}
+
+NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::GetChildCount(PRInt32 *aChildCount)
+{
+  nsCOMPtr<nsIAccessible> onlyChild;
+  GetFirstChild(getter_AddRefs(onlyChild));
+  *aChildCount = onlyChild ? 1 : 0;
+  return NS_OK;
+}
+
+nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd):
+nsAccessibleWrap(nsnull, nsnull)
+{
+  mHwnd = aHwnd;
+  if (mHwnd) {
+    // The plugin is not windowless. In this situation we use 
+    // use its inner child owned by the plugin so that we don't get
+    // in an infinite loop, where the WM_GETOBJECT's get forwarded
+    // back to us and create another nsHTMLWin32ObjectAccessible
+    HWND childWnd = ::GetWindow((HWND)aHwnd, GW_CHILD);
+    if (childWnd) {
+      mHwnd = childWnd;
+    }
+  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLWin32ObjectAccessible, nsAccessible, nsIAccessibleWin32Object)
