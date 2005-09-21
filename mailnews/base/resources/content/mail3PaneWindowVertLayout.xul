@@ -194,6 +194,7 @@
       <browser id="messagepane" name="messagepane" height="0" flex="1"
                context="messagePaneContext" minwidth="1" minheight="1"
                disablesecurity="true" disablehistory="true" autofind="false"
+               onmousedown="return contentAreaMouseDown(event);"
                type="content-primary" onclick="return messagePaneOnClick(event);"/>
     </vbox>
   </box>

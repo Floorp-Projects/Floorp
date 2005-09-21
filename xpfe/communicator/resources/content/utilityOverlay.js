@@ -568,3 +568,82 @@ function validateFileName(aFileName)
   
   return aFileName.replace(re, "_");
 }
+
+// autoscroll
+var gStartX;
+var gStartY;
+var gCurrX;
+var gCurrY;
+var gScrollingView;
+var gAutoScrollTimer;
+var gIgnoreMouseEvents;
+var gAutoScrollPopup = null;
+
+function startScrolling(event)
+{
+  if (gScrollingView || event.button != 1)
+    return;
+
+  if (event.originalTarget instanceof XULElement &&
+      ((event.originalTarget.localName == "thumb")
+        || (event.originalTarget.localName == "slider")
+        || (event.originalTarget.localName == "scrollbarbutton")))
+    return;
+
+  if (!gAutoScrollPopup) {
+    const XUL_NS
+          = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    gAutoScrollPopup = document.createElementNS(XUL_NS, "popup");
+    gAutoScrollPopup.id = "autoscroller";
+    gAutoScrollPopup.addEventListener("popuphidden", stopScrolling, true);
+    document.documentElement.appendChild(gAutoScrollPopup);
+  }
+
+  document.popupNode = null;
+  gAutoScrollPopup.showPopup(document.documentElement, event.screenX, event.screenY,
+                     "popup", null, null);
+  gIgnoreMouseEvents = true;
+  gStartX = event.screenX;
+  gStartY = event.screenY;
+  gCurrX = event.screenX;
+  gCurrY = event.screenY;
+  addEventListener('mousemove', handleMouseMove, true);
+  addEventListener('mouseup', handleMouseUpDown, true);
+  addEventListener('mousedown', handleMouseUpDown, true);
+  gAutoScrollTimer = setInterval(autoScrollLoop, 10);
+  gScrollingView = event.originalTarget.ownerDocument.defaultView;
+}
+
+function handleMouseMove(event)
+{
+  gCurrX = event.screenX;
+  gCurrY = event.screenY;
+}
+
+function autoScrollLoop()
+{
+  var x = gCurrX - gStartX;
+  var y = gCurrY - gStartY;
+  const speed = 4;
+  if (Math.abs(x) >= speed || Math.abs(y) >= speed)
+    gIgnoreMouseEvents = false;
+  gScrollingView.scrollBy(x / speed, y / speed);
+}
+
+function handleMouseUpDown(event)
+{
+  if (!gIgnoreMouseEvents)
+    gAutoScrollPopup.hidePopup();
+  gIgnoreMouseEvents = false;
+}
+
+function stopScrolling()
+{
+  if (gScrollingView) {
+    gScrollingView = null;
+    removeEventListener('mousemove', handleMouseMove, true);
+    removeEventListener('mousedown', handleMouseUpDown, true);
+    removeEventListener('mouseup', handleMouseUpDown, true);
+    clearInterval(gAutoScrollTimer);
+  }
+}
