@@ -367,7 +367,7 @@ sub _get_local_filename {
     my $self = shift;
     my $hash = ($self->id % 100) + 100;
     $hash =~ s/.*(\d\d)$/group.$1/;
-    return "$attachdir/$hash/attachment.$self->id";
+    return "$attachdir/$hash/attachment." . $self->id;
 }
 
 =pod
