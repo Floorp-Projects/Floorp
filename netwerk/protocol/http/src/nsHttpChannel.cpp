@@ -997,6 +997,16 @@ nsHttpChannel::ReplaceWithProxy(nsIProxyInfo *pi)
     if (NS_FAILED(rv))
         return rv;
 
+    // Inform consumers about this fake redirect
+    nsCOMPtr<nsIChannelEventSink> channelEventSink;
+    GetCallback(channelEventSink);
+    if (channelEventSink) {
+        PRUint32 flags = nsIChannelEventSink::REDIRECT_INTERNAL;
+        rv = channelEventSink->OnChannelRedirect(this, newChannel, flags);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
     // open new channel
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
     if (NS_FAILED(rv))
