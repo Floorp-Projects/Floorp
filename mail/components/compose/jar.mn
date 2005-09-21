@@ -1,7 +1,6 @@
 messenger.jar:
 *   content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
 *   content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
-*   content/messenger/messengercompose/addressingWidgetOverlay.xul (content/addressingWidgetOverlay.xul)
 *   content/messenger/messengercompose/addressingWidgetOverlay.js  (content/addressingWidgetOverlay.js)
     content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
     content/messenger/messengercompose/askSendFormat.js            (/mailnews/compose/resources/content/askSendFormat.js)
