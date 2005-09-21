@@ -107,9 +107,13 @@ prefpane {
  }
 
 
+.paneSelector label {
+  display:none;
+}
 
  radio[pane=GeneralPane] {
--moz-image-region: rect(0px, 192px, 32px, 160px)
+-moz-image-region: rect(0px, 160px, 32px, 128px)
+
  }
 
 radio[pane=ConnectionsDialogPane] {
