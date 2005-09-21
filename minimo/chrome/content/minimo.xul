@@ -144,7 +144,7 @@
     
     <toolbar id="toolbar-rss" flex="1" collapsed="true" >
         <groupbox flex="1" class="box-floatoptions">
-		    <caption label="RSS View"/>
+		    <caption label="&rssBMtitle.label;"/>
 			<hbox flex="1" >
 				<vbox flex="1"  style="padding:4px ! important">
 
