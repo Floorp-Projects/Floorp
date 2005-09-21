@@ -786,6 +786,7 @@ pref("mousewheel.withnokey.sysnumlines",true);
 pref("mousewheel.withcontrolkey.action",0);
 pref("mousewheel.withcontrolkey.numlines",1);
 pref("mousewheel.withcontrolkey.sysnumlines",true);
+// mousewheel.withshiftkey, see the Mac note below.
 pref("mousewheel.withshiftkey.action",0);
 pref("mousewheel.withshiftkey.numlines",1);
 pref("mousewheel.withshiftkey.sysnumlines",true);
@@ -800,6 +801,13 @@ pref("mousewheel.withaltkey.sysnumlines",false);
 #endif
 #ifdef XP_MACOSX
 #define HORIZSCROLL_AVAILABLE
+// The Mac does interesting things with horizontal scrolling.  If a
+// scroll event comes from a pointing device with a scroll wheel for
+// the vertical axis, and the user is holding the shift key, the event
+// comes through as a horizontal scroll event with the shift key
+// (mousewheel.horizscroll.withshiftkey) and not mousewheel.withshiftkey.
+// These events should map to horizontal scroll to maintain platform
+// UI consistency.
 #endif
 #ifdef XP_OS2
 #define HORIZSCROLL_AVAILABLE

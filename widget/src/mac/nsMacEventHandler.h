@@ -138,7 +138,7 @@ public:
 		//
 		virtual PRBool UpdateEvent ( ) ;
 		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
-		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc );
+		virtual PRBool Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc, nsWindow* inWindow, PRUint32 inModifiers );
 		 
 protected:
 #if 1

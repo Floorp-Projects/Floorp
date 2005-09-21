@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -118,7 +119,7 @@ static void PrintPortState(WindowPtr inWindow, const char* label)
 #pragma mark -
 
 pascal OSErr
-nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
+nsMacWindow::DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
                     void *handlerRefCon, DragReference theDrag)
 {
   static nsCOMPtr<nsIDragHelperService> sDragHelper;
@@ -168,7 +169,7 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 
 
 pascal OSErr
-nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
+nsMacWindow::DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
                   DragReference theDragRef)
 {
   nsCOMPtr<nsIEventSink> windowEventSink;
@@ -609,38 +610,45 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 
 pascal OSStatus
-nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+nsMacWindow::ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
+  OSStatus retVal = eventNotHandledErr;
   EventMouseWheelAxis axis = kEventMouseWheelAxisY;
   SInt32 delta = 0;
   Point mouseLoc;
-  OSErr err1 = ::GetEventParameter ( inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis,
-                        NULL, sizeof(EventMouseWheelAxis), NULL, &axis ); 
-  OSErr err2 = ::GetEventParameter ( inEvent, kEventParamMouseWheelDelta, typeLongInteger,
-                        NULL, sizeof(SInt32), NULL, &delta ); 
-  OSErr err3 = ::GetEventParameter ( inEvent, kEventParamMouseLocation, typeQDPoint,
-                        NULL, sizeof(Point), NULL, &mouseLoc ); 
-
-  if ( err1 == noErr && err2 == noErr && err3 == noErr ) {
+  UInt32 modifiers = 0;
+  if (::GetEventParameter(inEvent, kEventParamMouseWheelAxis,
+                          typeMouseWheelAxis, NULL,
+                          sizeof(EventMouseWheelAxis), NULL, &axis) == noErr &&
+      ::GetEventParameter(inEvent, kEventParamMouseWheelDelta,
+                          typeLongInteger, NULL,
+                          sizeof(SInt32), NULL, &delta) == noErr &&
+      ::GetEventParameter(inEvent, kEventParamMouseLocation,
+                          typeQDPoint, NULL,
+                          sizeof(Point), NULL, &mouseLoc) == noErr &&
+      ::GetEventParameter(inEvent, kEventParamKeyModifiers,
+                          typeUInt32, NULL,
+                          sizeof(UInt32), NULL, &modifiers) == noErr) {
     nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
-    if ( self ) {
-      // convert mouse to local coordinates since that's how the event handler wants them
+    NS_ENSURE_TRUE(self->mMacEventHandler.get(), eventNotHandledErr);
+    if (self) {
+      // Convert mouse to local coordinates since that's how the event handler 
+      // wants them
       StPortSetter portSetter(self->mWindowPtr);
       StOriginSetter originSetter(self->mWindowPtr);
       ::GlobalToLocal(&mouseLoc);
-      self->mMacEventHandler->Scroll ( axis, delta, mouseLoc );
+      self->mMacEventHandler->Scroll(axis, delta, mouseLoc, self, modifiers);
+      retVal = noErr;
     }
   }
-  return noErr;
-  
+  return retVal;
 } // ScrollEventHandler
 
 
 pascal OSStatus
-nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
+nsMacWindow::WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
   OSStatus retVal = eventNotHandledErr;  // Presume we won't consume the event
-  
   WindowRef myWind = NULL;
   ::GetEventParameter ( inEvent, kEventParamDirectObject, typeWindowRef, NULL, sizeof(myWind), NULL, &myWind );
   if ( myWind ) {
@@ -658,6 +666,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
           
           // resize the window and repaint
           nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
+          NS_ENSURE_TRUE(self->mMacEventHandler.get(), eventNotHandledErr);
           if ( self && !self->mResizeIsFromUs ) {
             self->mMacEventHandler->ResizeEvent(myWind);
             self->mMacEventHandler->UpdateEvent();
@@ -736,7 +745,7 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,   // this is a w
 // our fake WDEF into this window which takes care of not-drawing the borders.
 //
 void 
-nsMacWindow :: InstallBorderlessDefProc ( WindowPtr inWindow )
+nsMacWindow::InstallBorderlessDefProc ( WindowPtr inWindow )
 {
 } // InstallBorderlessDefProc
 
@@ -749,7 +758,7 @@ nsMacWindow :: InstallBorderlessDefProc ( WindowPtr inWindow )
 // through with it.
 //
 void
-nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
+nsMacWindow::RemoveBorderlessDefProc ( WindowPtr inWindow )
 {
 }
 
@@ -1151,7 +1160,7 @@ NS_METHOD nsMacWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
 //-------------------------------------------------------------------------
 NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // resize during zoom may attempt to unzoom us. here's where we put a stop to that.
   if (mZooming)
@@ -1664,8 +1673,8 @@ NS_IMETHODIMP
 nsMacWindow::DispatchEvent ( void* anEvent, PRBool *_retval )
 {
   *_retval = PR_FALSE;
-  if (mMacEventHandler.get())
-    *_retval = mMacEventHandler->HandleOSEvent(*NS_REINTERPRET_CAST(EventRecord*,anEvent));
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  *_retval = mMacEventHandler->HandleOSEvent(*NS_REINTERPRET_CAST(EventRecord*,anEvent));
 
   return NS_OK;
 }
@@ -1681,8 +1690,8 @@ nsMacWindow::DispatchMenuEvent ( void* anEvent, PRInt32 aNativeResult, PRBool *_
 {
 #if USE_MENUSELECT
   *_retval = PR_FALSE;
-  if (mMacEventHandler.get())
-    *_retval = mMacEventHandler->HandleMenuCommand(*NS_REINTERPRET_CAST(EventRecord*,anEvent), aNativeResult);
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  *_retval = mMacEventHandler->HandleMenuCommand(*NS_REINTERPRET_CAST(EventRecord*,anEvent), aNativeResult);
 #endif
 
   return NS_OK;
@@ -1703,9 +1712,9 @@ nsMacWindow::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseG
                          PRUint16 aKeyModifiers, PRBool *_retval)
 {
   *_retval = PR_FALSE;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   Point globalPoint = {aMouseGlobalY, aMouseGlobalX};         // QD Point stored as v, h
-  if (mMacEventHandler.get())
-    *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
+  *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
   
   return NS_OK;
 }
@@ -1723,10 +1732,10 @@ nsMacWindow::Scroll ( PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX,
                         PRInt16 aMouseLocalY, PRBool *_retval )
 {
   *_retval = PR_FALSE;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   Point localPoint = {aMouseLocalY, aMouseLocalX};
-  if ( mMacEventHandler.get() )
-    *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
-                                          aNumLines, localPoint);
+  *_retval = mMacEventHandler->Scroll(aVertical ? kEventMouseWheelAxisY : kEventMouseWheelAxisX,
+                                      aNumLines, localPoint, this, 0);
   return NS_OK;
 }
 
@@ -1766,6 +1775,7 @@ nsMacWindow::ComeToFront()
 
 NS_IMETHODIMP nsMacWindow::ResetInputState()
 {
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   return mMacEventHandler->ResetInputState();
 }
 

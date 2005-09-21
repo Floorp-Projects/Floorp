@@ -89,54 +89,8 @@ PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
-static nsEventStatus HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
-                                          Point inMouseLoc, nsIWidget* inWidget ) ;
 static void ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent, nsMouseEvent* outCMEvent);
 static inline PRBool IsContextMenuKey(const nsKeyEvent& inKeyEvent);
-
-
-//
-// HandleScrollEvent
-//
-// Actually dispatch the mouseWheel scroll event to the appropriate widget. If |inByLine| is false,
-// then scroll by a full page. |inMouseLoc| is in OS local coordinates. We convert it to widget-relative
-// coordinates before sending it into Gecko.
-//
-static nsEventStatus
-HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
-                     Point inMouseLoc, nsIWidget* inWidget )
-{
-  NS_ASSERTION(inWidget, "HandleScrollEvent doesn't work with a null widget");
-  if (!inWidget)
-    return nsEventStatus_eIgnore;
-
-  nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, inWidget);
-  
-  scrollEvent.scrollFlags = 
-    (inAxis == kEventMouseWheelAxisX) ? nsMouseScrollEvent::kIsHorizontal : nsMouseScrollEvent::kIsVertical;
-  if ( !inByLine )
-    scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-  
-  // convert window-relative (local) mouse coordinates to widget-relative
-  // coords for Gecko.
-  nsPoint mouseLocRelativeToWidget(inMouseLoc.h, inMouseLoc.v);
-  nsRect bounds;
-  inWidget->GetBounds(bounds);
-  nsPoint widgetOrigin(bounds.x, bounds.y);
-  inWidget->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
-  mouseLocRelativeToWidget.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
-		
-  scrollEvent.delta = inDelta;
-	scrollEvent.refPoint.x = mouseLocRelativeToWidget.x;
-	scrollEvent.refPoint.y = mouseLocRelativeToWidget.y;
-	scrollEvent.time = PR_IntervalNow();
-
-  // dispatch scroll event
-  nsEventStatus rv;
-  scrollEvent.widget->DispatchEvent(&scrollEvent, rv);
-  return rv;
-  
-} // HandleScrollEvent
 
 
 //-------------------------------------------------------------------------
@@ -1083,7 +1037,7 @@ PRUint32 nsMacEventHandler::ConvertKeyEventToUnicode(EventRecord& aOSEvent)
 
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
-  nsresult result;
+  nsresult result = NS_ERROR_UNEXPECTED;
   nsWindow* checkFocusedWidget;
 
   // get the focused widget
@@ -1198,7 +1152,7 @@ IsContextMenuKey(const nsKeyEvent& inKeyEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent)
 {
-  nsresult result;
+  nsresult result = NS_ERROR_UNEXPECTED;
   // get the focused widget
   nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
   if (!focusedWidget)
@@ -1291,7 +1245,7 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 #endif
 
   OSErr err;
-  Boolean isActive;
+  Boolean isActive = true;
 
   switch (aOSEvent.what)
   {
@@ -1427,23 +1381,57 @@ PRBool nsMacEventHandler::ResizeEvent ( WindowRef inWindow )
 // Called from a mouseWheel carbon event, tell Gecko to scroll.
 // 
 PRBool
-nsMacEventHandler :: Scroll ( EventMouseWheelAxis inAxis, PRInt32 inDelta, const Point& inMouseLoc )
-{
-  // figure out which widget should be scrolled. First try the widget the mouse is under,
-  // then try the last focussed widget.
-  nsIWidget* widgetToScroll = gEventDispatchHandler.GetWidgetPointed();
-  if ( !widgetToScroll )
-    widgetToScroll = gEventDispatchHandler.GetActive();
-  
-  // the direction we get from the carbon event is opposite from the way mozilla looks at
-  // it. Reverse the direction. Also, scroll by 3 lines at a time. |inDelta| represents the
-  // number of groups of lines to scroll, not the exact number of lines to scroll.
-  inDelta *= -3;
-  
-  HandleScrollEvent ( inAxis, PR_TRUE, inDelta, inMouseLoc, widgetToScroll );
-  
-  return PR_TRUE;
-  
+nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
+                          const Point& inMouseLoc, nsWindow* inWindow,
+                          PRUint32 inModifiers) {
+  // Figure out which widget should be scrolled by traversing the widget
+  // hierarchy beginning at the root nsWindow.  inMouseLoc should be
+  // relative to the origin of this nsWindow.  If the scroll event came
+  // from an nsMacWindow, then inWindow should refer to that nsMacWindow.
+  nsIWidget* widgetToScroll = inWindow->FindWidgetHit(inMouseLoc);
+
+  nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, widgetToScroll);
+
+  // The direction we get from the carbon event is opposite from the way
+  // mozilla looks at it.  Reverse the direction.  Also, scroll by 3 lines
+  // at a time. |inDelta| represents the number of groups of lines to scroll,
+  // not the exact number of lines to scroll.
+  scrollEvent.delta = inDelta * -3;
+
+  // If the scroll event comes from a mouse that only has a scroll wheel for
+  // the vertical axis, and the shift key is held down, the system presents
+  // it as a horizontal scroll and doesn't clear the shift key bit from
+  // inModifiers.  The Mac is supposed to scroll horizontally in such a case.
+  //
+  // If the scroll event comes from a mouse that can scroll both axes, the
+  // system doesn't apply any of this shift-key fixery.
+  scrollEvent.scrollFlags =
+    (inAxis == kEventMouseWheelAxisX) ? nsMouseScrollEvent::kIsHorizontal :
+    nsMouseScrollEvent::kIsVertical;
+
+  // convert window-relative (local) mouse coordinates to widget-relative
+  // coords for Gecko.
+  nsPoint mouseLocRelativeToWidget(inMouseLoc.h, inMouseLoc.v);
+  nsRect bounds;
+  widgetToScroll->GetBounds(bounds);
+  nsPoint widgetOrigin(bounds.x, bounds.y);
+  widgetToScroll->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
+  mouseLocRelativeToWidget.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
+
+  scrollEvent.refPoint.x = mouseLocRelativeToWidget.x;
+  scrollEvent.refPoint.y = mouseLocRelativeToWidget.y;
+  scrollEvent.time = PR_IntervalNow();
+
+  // Translate OS event modifiers into Gecko event modifiers
+  scrollEvent.isShift   = ((inModifiers & shiftKey)   != 0);
+  scrollEvent.isControl = ((inModifiers & controlKey) != 0);
+  scrollEvent.isAlt     = ((inModifiers & optionKey)  != 0);
+  scrollEvent.isMeta    = ((inModifiers & cmdKey)     != 0);
+
+  nsEventStatus status;
+  widgetToScroll->DispatchEvent(&scrollEvent, status);
+
+  return nsWindow::ConvertStatus(status);
 } // Scroll
 
 
