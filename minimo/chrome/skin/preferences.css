@@ -105,8 +105,11 @@ prefpane {
  border-left: 1px solid #b9b9b9;
  color: ButtonText !important;
  }
+
+
+
  radio[pane=GeneralPane] {
- -moz-image-region: rect(0px, 32px, 32px, 0px)
+-moz-image-region: rect(0px, 192px, 32px, 160px)
  }
 
 radio[pane=ConnectionsDialogPane] {
@@ -118,6 +121,7 @@ radio[pane=Privacy] {
 } 
 
 radio[pane=Advanced] {
--moz-image-region: rect(0px, 192px, 32px, 160px)
+
+ -moz-image-region: rect(0px, 32px, 32px, 0px)
 } 
 
