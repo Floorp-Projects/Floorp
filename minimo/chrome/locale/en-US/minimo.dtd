@@ -1,6 +1,6 @@
 <!-- Main menu --> 
 
-<!ENTITY prefs.label                  "Preferences">
+<!ENTITY prefs.label                  "Preferences...">
 
 <!-- Toolbar -->
 
@@ -25,6 +25,7 @@
 
 <!-- toolbar view options --> 
 
+<!ENTITY zoom.label                    "Zoom" >
 <!ENTITY zoomText.label                "Text zoom:" >
 <!ENTITY zoomTextPlus.label            "+" >
 <!ENTITY zoomTextMinus.label           "-" >
