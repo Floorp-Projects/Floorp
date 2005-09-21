@@ -394,6 +394,7 @@ function BrowserPopupShowing () {
 }
 
 function DoBrowserRSS() {
+  BrowserViewRSS();
   try { 
     if(document.getElementById("toolbar-rss-rsstag").value!="") {
       gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
