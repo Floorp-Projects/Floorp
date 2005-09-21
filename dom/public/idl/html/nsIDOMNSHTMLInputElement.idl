@@ -37,13 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMNSEditableElement.idl"
+#include "domstubs.idl"
 
 interface nsIControllers;
 
 
-[scriptable, uuid(5e050532-1d12-4b98-ba20-6c883dc0d954)]
-interface nsIDOMNSHTMLInputElement : nsIDOMNSEditableElement
+[scriptable, uuid(993d2efc-a768-11d3-bccd-0060b0fc76bd)]
+interface nsIDOMNSHTMLInputElement : nsISupports
 {
 	readonly attribute nsIControllers   controllers;
 	

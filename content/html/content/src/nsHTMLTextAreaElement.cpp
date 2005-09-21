@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsITextControlElement.h"
+#include "nsIDOMNSEditableElement.h"
 #include "nsIControllers.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
@@ -75,7 +76,8 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLTextAreaElement,
                               public nsIDOMNSHTMLTextAreaElement,
-                              public nsITextControlElement
+                              public nsITextControlElement,
+                              public nsIDOMNSEditableElement
 {
 public:
   nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
