@@ -44,6 +44,27 @@
 
 struct IAccessible;
 
+class nsHTMLWin32ObjectOwnerAccessible : public nsAccessibleWrap
+{
+public:
+  // This will own the nsHTMLWin32ObjectAccessible. We create this where the
+  // <object> or <embed> exists in the tree, so that get_accNextSibling() etc.
+  // will still point to Gecko accessible sibling content. This is necessary
+  // because the native plugin accessible doesn't know where it exists in the
+  // Mozilla tree, and returns null for previous and next sibling. This would
+  // have the effect of cutting off all content after the plugin.
+  nsHTMLWin32ObjectOwnerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd);
+  virtual ~nsHTMLWin32ObjectOwnerAccessible() {}
+  NS_IMETHOD Shutdown();
+  NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
+  NS_IMETHOD GetLastChild(nsIAccessible **aLastChild);
+  NS_IMETHOD GetChildCount(PRInt32 *aChildCount);  // Zero or one child
+
+protected:
+  void* mHwnd;
+  nsCOMPtr<nsIAccessible> mNativeAccessible;
+};
+
 /**
   * This class is used only internally, we never! send out an IAccessible linked
   *   back to this object. This class is used to represent a plugin object when
@@ -58,18 +79,13 @@ class nsHTMLWin32ObjectAccessible : public nsAccessibleWrap,
 {
 public:
 
-  nsHTMLWin32ObjectAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, void* aHwnd);
+  nsHTMLWin32ObjectAccessible(void* aHwnd);
   virtual ~nsHTMLWin32ObjectAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEWIN32OBJECT
 
 protected:
-  // ---- Data Members ----
-  /** 
-    * A handle to the native plugin window (hopefully), given to 
-    *   Accessible::NewAccessible() so the actual IAccessible can be retrieved.
-    */
   void* mHwnd;
 };
 

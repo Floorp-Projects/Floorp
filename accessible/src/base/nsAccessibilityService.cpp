@@ -737,7 +737,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
     HWND pluginPort = nsnull;
     aFrame->GetPluginPort(&pluginPort);
     if (pluginPort) {
-      *aAccessible = new nsHTMLWin32ObjectAccessible(node, weakShell, pluginPort);
+      *aAccessible = new nsHTMLWin32ObjectOwnerAccessible(node, weakShell, pluginPort);
       if (*aAccessible) {
         NS_ADDREF(*aAccessible);
         return NS_OK;
