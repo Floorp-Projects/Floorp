@@ -94,7 +94,7 @@ blenderObject.prototype.apply = function () {
 /* has to be the actual browser */
 
 		this.refTab.setAttribute("image","chrome://minimo/skin/rssfavicon.png");
-
+		this.refTab.label="BM: "+gRSSTag;
 
 	}
 }
