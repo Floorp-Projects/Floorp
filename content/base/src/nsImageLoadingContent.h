@@ -112,7 +112,7 @@ protected:
    * UseAsPrimaryRequest is called by subclasses when they have an existing
    * imgIRequest that they want this nsImageLoadingContent to use.  This may
    * effectively be called instead of ImageURIChanged or LoadImageWithChannel.
-   * If aNotify is true, this method will try to notify on state changes.
+   * If aNotify is true, this method will notify on state changes.
    */
   nsresult UseAsPrimaryRequest(imgIRequest* aRequest, PRBool aNotify);
 
