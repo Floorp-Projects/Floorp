@@ -245,9 +245,11 @@ const XHTMLre = RegExp(XHTMLNSre + "|" + XHTML2NSre, "");
 var onLoadRegistry = [ ];
  
 /* Called when PageInfo window is loaded.  Arguments are:
- *  window.arguments[0] - document to use for source (null=Page Info, otherwise Frame Info)
- *  window.arguments[1] - tab name to display first (may be null)
-*/
+ *  window.arguments[0] - (optional) an object consisting of
+ *                         - doc: (optional) document to use for source. if not provided, 
+ *                                the calling window's document will be used
+ *                         - initialTab: (optional) id of the inital tab to display
+ */
 function onLoadPageInfo()
 {
   //dump("===============================================================================\n");
@@ -274,10 +276,11 @@ function onLoadPageInfo()
   gStrings.mediaInput = theBundle.getString("mediaInput");
 
   var docTitle = "";
-  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+  if ("arguments" in window && window.arguments.length >= 1 &&
+       window.arguments[0] && window.arguments[0].doc)
   {
     theWindow = null;
-    theDocument = window.arguments[0];
+    theDocument = window.arguments[0].doc;
     docTitle = theBundle.getString("frameInfo.title");
   } 
   else 
@@ -309,18 +312,13 @@ function onLoadPageInfo()
 
   /* Select the requested tab, if the name is specified */
   var tabControl = document.getElementById("tabbox");
-  if ("arguments" in window && window.arguments.length > 1)
+  if ("arguments" in window && window.arguments.length >= 1 &&
+       window.arguments[0] && window.arguments[0].initialTab)
   {
-    var tabName = window.arguments[1];
-
-    if (tabName)
+    var tab = document.getElementById(window.arguments[0].initialTab);
+    if (tab)
     {
-      var tab = document.getElementById(tabName);
-
-      if (tabControl && tab)
-      {
-        tabControl.selectedTab = tab;
-      }
+      tabControl.selectedTab = tab;
     }
   }
   tabControl.selectedTab.focus();
