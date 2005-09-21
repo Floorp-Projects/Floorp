@@ -1484,8 +1484,20 @@ function playSound(file)
 /* timer-based mainloop */
 function mainStep()
 {
-    client.eventPump.stepEvents();
-    setTimeout ("mainStep()", client.STEP_TIMEOUT);
+    try
+    {
+        var count = client.eventPump.stepEvents();
+        if (count > 0)
+            setTimeout("mainStep()", client.STEP_TIMEOUT);
+        else
+            setTimeout("mainStep()", client.STEP_TIMEOUT / 5);
+    }
+    catch(ex)
+    {
+        dd("Exception in mainStep!");
+        dd(formatException(ex));
+        setTimeout("mainStep()", client.STEP_TIMEOUT);
+    }
 }
 
 function openQueryTab(server, nick)
