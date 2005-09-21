@@ -920,15 +920,13 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aContainer; element; element = element->GetParent()) {
+  for (nsIContent* element = aContainer; element != mRoot; element = element->GetParent()) {
+    if (!element)
+      return; // this is not for us
     nsIAtom *parentTag = element->Tag();
     if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) ||
-        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select)) {
-      if (element == mRoot) // this is for us, stop looking
-        break;
-      else // this is not for us, we can bail out
-        return;
-    }
+        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
+      return; // this is not for us
   }
 
   if (childTag == nsXULAtoms::treechildren) {
@@ -1004,15 +1002,14 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
 
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
-  for (nsIContent* element = aContainer; element; element = element->GetParent()) {
+
+  for (nsIContent* element = aContainer; element != mRoot; element = element->GetParent()) {
+    if (!element)
+      return; // this is not for us
     nsIAtom *parentTag = element->Tag();
     if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) || 
-        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select)) {
-      if (element == mRoot) // this is for us, stop looking
-        break;
-      else // this is not for us, we can bail out
-        return;
-    }
+        (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
+      return; // this is not for us
   }
 
   if (tag == nsXULAtoms::treechildren) {
