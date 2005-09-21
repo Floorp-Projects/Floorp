@@ -2279,7 +2279,20 @@ function my_unick (e)
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
-    this.display(e.decodeParam(2), "NOTICE", this, e.server.me);
+    var msg = e.decodeParam(2);
+
+    var ary = msg.match(/^\[(\S+)\]\s+/);
+    if (ary)
+    {
+        var channel = e.server.getChannel(ary[1]);
+        if (channel)
+        {
+            channel.display(msg, "NOTICE", this, e.server.me);
+            return;
+        }
+    }
+
+    this.display(msg, "NOTICE", this, e.server.me);
 }
 
 CIRCUser.prototype.onCTCPAction =
