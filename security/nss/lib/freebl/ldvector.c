@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ldvector.c,v 1.12 2005/09/07 02:47:16 saul.edwards%sun.com Exp $ */
+/* $Id: ldvector.c,v 1.13 2005/09/21 03:01:49 nelsonb%netscape.com Exp $ */
 
 #include "loader.h"
 #include "alghmac.h"
@@ -224,10 +224,15 @@ static const struct FREEBLVectorStr vector =
     /* End of Version 3.008. */
 };
 
-
 const FREEBLVector * 
 FREEBL_GetVector(void)
 {
-  return &vector;
+    extern const char __nss_freebl_rcsid[];
+    extern const char __nss_freebl_sccsid[];
+
+    /* force a reference that won't get optimized away */
+    volatile char c = __nss_freebl_rcsid[0] + __nss_freebl_sccsid[0]; 
+
+    return &vector;
 }
 
