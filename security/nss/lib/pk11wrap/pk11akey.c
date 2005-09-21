@@ -671,9 +671,7 @@ PK11_LoadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 
 
 /*
- * Use the token to Generate a key. keySize must be 'zero' for fixed key
- * length algorithms. NOTE: this means we can never generate a DES2 key
- * from this interface!
+ * Use the token to generate a key pair.
  */
 SECKEYPrivateKey *
 PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
@@ -1084,6 +1082,9 @@ PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     return privKey;
 }
 
+/*
+ * Use the token to generate a key pair.
+ */
 SECKEYPrivateKey *
 PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type, 
    void *param, SECKEYPublicKey **pubKey, PRBool token, 
