@@ -1245,8 +1245,8 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * a
 
 NS_IMETHODIMP nsNNTPProtocol::Cancel(nsresult status)  // handle stop button
 {
-	m_nextState = NNTP_ERROR;
-	return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
+    m_nextState = NNTP_ERROR;
+    return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
 }
 
 /* 
@@ -4586,7 +4586,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
       */
       while (*s && !NET_IS_SPACE(*s))
         s++;
-      if (s)
+      if (*s)
       {
         char flags[32];	/* ought to be big enough */
         *s = 0;
