@@ -464,8 +464,29 @@
             // Calculating the size and position of the popup.
             var style = "";
             var containerBox = document.getBoxObjectFor(this.container);
-            var x = containerBox.x;
-            var y = containerBox.y;
+            var x;
+            var y;
+            var adjust = 0;
+            var absolute = false;
+            var absoluteOffsetY = 0;
+            var p = this.container.offsetParent;
+            var compStyle =
+              document.defaultView.getComputedStyle(p, null);
+            if (compStyle.getPropertyValue("position") != "absolute") {
+              adjust = document.documentElement.offsetTop;
+              x = containerBox.x;
+              y = containerBox.y;
+            } else {
+              absolute = true;
+              x = this.container.offsetLeft;
+              y = this.container.offsetTop;
+              absoluteOffsetY = y;
+              while (p) {
+                absoluteOffsetY += p.offsetTop;
+                p = p.offsetParent;
+              }
+            }
+
             var h = containerBox.height;
             var w = containerBox.width;
             var targetY = y + h;
@@ -474,13 +495,16 @@
             var popupHeight = popupBox.height;
             var pY = window.pageYOffset;
             var iH = window.innerHeight;
-            var belowSelect = iH - (y + h - pY) - h;
+            var belowSelect = absolute
+              ? (iH - (absoluteOffsetY + h) - h)
+              : (iH - (y - pY + h - adjust) - h);
+
             if (belowSelect < popupHeight) {
               if ((y - pY) > popupHeight) {
                 targetY = y - popupHeight;
               } else if (belowSelect < (y - pY)) {
-                style = style + "max-height:" + (y - pY) + "px;";
-                targetY = pY;
+                style = style + "max-height:" + (y - pY - adjust) + "px;";
+                targetY = pY + adjust;
               } else {
                 style = style + "max-height:" + belowSelect + "px;";
               }
