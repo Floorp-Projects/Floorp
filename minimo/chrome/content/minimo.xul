@@ -150,7 +150,7 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox id="toolbar-rss-rsstag"/> 
+						 <textbox id="toolbar-rss-rsstag"  onchange="return DoBrowserRSS();"/> 
 						 <toolbarbutton class="button-border" command="cmd_DoBrowserRSS" label="Open RSS" />
 					</hbox>
 				</vbox>
