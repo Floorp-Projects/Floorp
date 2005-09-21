@@ -40,8 +40,9 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
+interface nsIURI;
 
-[scriptable, uuid(88800e93-c6af-4d69-9ee0-29c1100ff431)]
+[scriptable, uuid(d675c531-6bdc-417c-b176-635060105f07)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -54,6 +55,12 @@ interface nsIFrameLoader : nsISupports
    * from the owner content in the frame loader.
    */
   void loadFrame();
+
+  /**
+   * Loads the specified URI in this frame. Behaves identically to loadFrame,
+   * except that this method allows specifying the URI to load.
+   */
+  void loadURI(in nsIURI aURI);
 
   /**
    * Destroy the frame loader and everything inside it. This will

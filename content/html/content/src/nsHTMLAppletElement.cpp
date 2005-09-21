@@ -42,9 +42,8 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
-#include "nsLayoutAtoms.h"
-#include "nsCSSPseudoClasses.h"
-#include "nsIEventStateManager.h"
+
+#include "nsObjectLoadingContent.h"
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
@@ -55,6 +54,7 @@
 
 
 class nsHTMLAppletElement : public nsGenericHTMLElement,
+                            public nsObjectLoadingContent,
                             public nsIDOMHTMLAppletElement
 {
 public:
@@ -84,6 +84,15 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
 
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -91,7 +100,15 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual PRInt32 IntrinsicState() const;
 
+  // nsObjectLoadingContent
+  virtual PRUint32 GetCapabilities() const;
 protected:
+  /**
+   * Calls ObjectURIChanged with the correct arguments to start the plugin
+   * load.
+   */
+  NS_HIDDEN_(void) StartAppletLoad(PRBool aNotify);
+
   PRPackedBool mReflectedApplet;
   PRPackedBool mIsDoneAddingChildren;
 };
@@ -101,8 +118,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Applet)
 
 
 nsHTMLAppletElement::nsHTMLAppletElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
-  : nsGenericHTMLElement(aNodeInfo), mReflectedApplet(PR_FALSE),
-    mIsDoneAddingChildren(!aFromParser)
+  : nsGenericHTMLElement(aNodeInfo), nsObjectLoadingContent(eType_Plugin),
+    mReflectedApplet(PR_FALSE), mIsDoneAddingChildren(!aFromParser)
 {
 }
 
@@ -116,11 +133,22 @@ nsHTMLAppletElement::IsDoneAddingChildren()
   return mIsDoneAddingChildren;
 }
 
+
+PRUint32
+nsHTMLAppletElement::GetCapabilities() const
+{
+  return eSupportPlugins;
+}
+
 void
 nsHTMLAppletElement::DoneAddingChildren()
 {
   mIsDoneAddingChildren = PR_TRUE;
-  RecreateFrames();  
+  // If we're already in the document, start the load, because BindToTree
+  // didn't.
+  if (IsInDoc()) {
+    StartAppletLoad(MayHaveFrame());
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAppletElement, nsGenericElement) 
@@ -130,6 +158,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAppletElement, nsGenericElement)
 // QueryInterface implementation for nsHTMLAppletElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAppletElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAppletElement)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
+  NS_INTERFACE_MAP_ENTRY(nsIObjectLoadingContent)
+  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAppletElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -196,15 +233,71 @@ nsHTMLAppletElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
+nsresult
+nsHTMLAppletElement::BindToTree(nsIDocument* aDocument,
+                                nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Must start loading stuff after being in the document, but only when we
+  // already have all our children.
+  if (mIsDoneAddingChildren) {
+    // Don't need to notify: We have no frames yet, since we weren't in a
+    // document
+    StartAppletLoad(PR_FALSE);
+  }
+  return rv;
+}
+
+
+void
+nsHTMLAppletElement::UnbindFromTree(PRBool aDeep,
+                                    PRBool aNullParent)
+{
+  RemovedFromDocument();
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+}
+
+nsresult
+nsHTMLAppletElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             nsIAtom* aPrefix, const nsAString& aValue,
+                             PRBool aNotify)
+{
+  // If we plan to call ObjectURIChanged, we want to do it first so that the
+  // object load kicks off _before_ the reflow triggered by the SetAttr.  But if
+  // aNotify is false, we are coming from the parser or some such place; we'll
+  // get bound after all the attributes have been set, so we'll do the
+  // object load from BindToTree/DoneAddingChildren.
+  // Skip the ObjectURIChanged call in that case.
+  if (aNotify &&
+      aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::code) {
+    ObjectURIChanged(aValue, aNotify,
+                     NS_LITERAL_CSTRING("application/x-java-vm"),
+                     PR_TRUE, PR_TRUE);
+  }
+
+
+  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                       aValue, aNotify);
+}
+
+void
+nsHTMLAppletElement::StartAppletLoad(PRBool aNotify)
+{
+  nsAutoString uri;
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri);
+  ObjectURIChanged(uri, aNotify, NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
+}
+
 PRInt32
 nsHTMLAppletElement::IntrinsicState() const
 {
-  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
-
-  void* broken = GetProperty(nsCSSPseudoClasses::mozBroken);
-  if (NS_PTR_TO_INT32(broken)) {
-    state |= NS_EVENT_STATE_BROKEN;
-  }
-
-  return state;
+  return nsGenericHTMLElement::IntrinsicState() | ObjectState();
 }

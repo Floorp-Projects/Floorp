@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -103,8 +104,9 @@ nsImageLoadingContent::nsImageLoadingContent()
     mUserDisabled(PR_FALSE),
     mSuppressed(PR_FALSE)
 {
-  if (!nsContentUtils::GetImgLoader())
+  if (!nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = PR_FALSE;
+  }
 }
 
 nsImageLoadingContent::~nsImageLoadingContent()
@@ -242,8 +244,9 @@ nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
 NS_IMETHODIMP
 nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
 {
-  if (nsContentUtils::GetImgLoader())
+  if (nsContentUtils::GetImgLoader()) {
     mLoadingEnabled = aLoadingEnabled;
+  }
   return NS_OK;
 }
 
@@ -361,8 +364,9 @@ nsImageLoadingContent::GetRequestType(imgIRequest* aRequest,
 NS_IMETHODIMP
 nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
 {
-  if (mCurrentRequest)
+  if (mCurrentRequest) {
     return mCurrentRequest->GetURI(aURI);
+  }
 
   NS_IF_ADDREF(*aURI = mCurrentURI);
   return NS_OK;
@@ -376,11 +380,13 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   
   NS_ENSURE_ARG_POINTER(aChannel);
 
-  if (!nsContentUtils::GetImgLoader())
+  if (!nsContentUtils::GetImgLoader()) {
     return NS_ERROR_NULL_POINTER;
+  }
 
   // XXX what should we do with content policies here, if anything?
   // Shouldn't that be done before the start of the load?
+  // XXX what about shouldProcess?
   
   nsCOMPtr<nsIDocument> doc = GetOurDocument();
   if (!doc) {
@@ -405,12 +411,6 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   return rv;
 }
 
-// XXX This should be a protected method, not an interface method!!!
-NS_IMETHODIMP
-nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI) {
-  return ImageURIChanged(aNewURI, PR_TRUE, PR_FALSE);
-}
-
 /*
  * Non-interface methods
  */
@@ -426,17 +426,43 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   }
 
   // First, get a document (needed for security checks and the like)
-  nsCOMPtr<nsIDocument> doc = GetOurDocument();
+  nsIDocument* doc = GetOurDocument();
   if (!doc) {
     // No reason to bother, I think...
     return NS_OK;
   }
 
-  nsresult rv;   // XXXbz Should failures in this method fire onerror?
-
   nsCOMPtr<nsIURI> imageURI;
-  rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
+  nsresult rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
   NS_ENSURE_SUCCESS(rv, rv);
+  // XXXbiesi fire onerror if that failed?
+
+  return ImageURIChanged(imageURI, aForce, aNotify, doc);
+}
+
+nsresult
+nsImageLoadingContent::ImageURIChanged(nsIURI* aNewURI,
+                                       PRBool aForce,
+                                       PRBool aNotify,
+                                       nsIDocument* aDocument)
+{
+  if (!mLoadingEnabled) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(!aDocument || aDocument == GetOurDocument(),
+               "Bogus document passed in");
+  // First, get a document (needed for security checks and the like)
+  if (!aDocument) {
+    aDocument = GetOurDocument();
+    if (!aDocument) {
+      // No reason to bother, I think...
+      return NS_OK;
+    }
+  }
+
+
+  nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
   // Skip the URI equality check if our current image was blocked.  If
   // that happened, we really do want to try loading again.
@@ -445,7 +471,7 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
     GetCurrentURI(getter_AddRefs(currentURI));
     PRBool equal;
     if (currentURI &&
-        NS_SUCCEEDED(currentURI->Equals(imageURI, &equal)) &&
+        NS_SUCCEEDED(currentURI->Equals(aNewURI, &equal)) &&
         equal) {
       // Nothing to do here.
       return NS_OK;
@@ -465,7 +491,7 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   // the error code from those.
 
   PRInt16 newImageStatus;
-  PRBool loadImage = nsContentUtils::CanLoadImage(imageURI, this, doc,
+  PRBool loadImage = nsContentUtils::CanLoadImage(aNewURI, this, aDocument,
                                                   &newImageStatus);
   NS_ASSERTION(loadImage || !NS_CP_ACCEPTED(newImageStatus),
                "CanLoadImage lied");
@@ -479,8 +505,9 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
   // But this only matters if we are affecting the current request.  Need to do
   // this after CancelImageRequests, since that affects the value of
   // mCurrentRequest.
-  if (!mCurrentRequest)
-    mCurrentURI = imageURI;
+  if (!mCurrentRequest) {
+    mCurrentURI = aNewURI;
+  }
   
   if (!loadImage) {
     // Don't actually load anything!  This was blocked by CanLoadImage.
@@ -490,7 +517,8 @@ nsImageLoadingContent::ImageURIChanged(const nsAString& aNewURI,
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
-  rv = nsContentUtils::LoadImage(imageURI, doc, doc->GetDocumentURI(),
+  rv = nsContentUtils::LoadImage(aNewURI, aDocument,
+                                 aDocument->GetDocumentURI(),
                                  this, nsIRequest::LOAD_NORMAL,
                                  getter_AddRefs(req));
   if (NS_FAILED(rv)) {
@@ -662,12 +690,12 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
   nsCOMPtr<nsIURI> baseURL = thisContent->GetBaseURI();
 
   // (2) Get the charset
-  const nsACString &charset = aDocument->GetDocumentCharacterSet();
+  const nsAFlatCString &charset = aDocument->GetDocumentCharacterSet();
 
   // (3) Construct the silly thing
   return NS_NewURI(aURI,
                    aSpec,
-                   charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
+                   charset.IsEmpty() ? nsnull : charset.get(),
                    baseURL,
                    nsContentUtils::GetIOService());
 }

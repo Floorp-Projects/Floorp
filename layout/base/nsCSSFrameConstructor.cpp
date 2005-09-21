@@ -114,6 +114,7 @@
 #include "nsBoxFrame.h"
 #include "nsIBoxLayout.h"
 #include "nsImageFrame.h"
+#include "nsIObjectLoadingContent.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
@@ -5441,7 +5442,29 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
         ProcessPseudoFrames(aState, aFrameItems); 
       }
       isReplaced = PR_TRUE;
-      rv = NS_NewObjectFrame(mPresShell, &newFrame);
+
+      nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(aContent));
+      NS_ASSERTION(objContent,
+                   "applet, embed and object must implement nsIObjectLoadingContent!");
+      if (!objContent) {
+        // XBL might trigger this... 
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      PRUint32 type;
+      objContent->GetDisplayedType(&type);
+      if (type == nsIObjectLoadingContent::TYPE_LOADING) {
+        // Ideally, this should show the standby attribute
+        rv = NS_NewEmptyFrame(mPresShell, &newFrame);
+      }
+      else if (type == nsIObjectLoadingContent::TYPE_PLUGIN)
+        rv = NS_NewObjectFrame(mPresShell, &newFrame);
+      else if (type == nsIObjectLoadingContent::TYPE_IMAGE)
+        rv = NS_NewImageFrame(mPresShell, &newFrame);
+      else if (type == nsIObjectLoadingContent::TYPE_DOCUMENT)
+        rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
+      // Otherwise, it's null - doing nothing here will fallback appropriately
+      // (i.e., render the children)
     }
   }
   else if (nsHTMLAtoms::fieldset == aTag) {

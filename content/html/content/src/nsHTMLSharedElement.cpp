@@ -44,17 +44,13 @@
 #include "nsIDOMHTMLBaseFontElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
-#include "nsImageLoadingContent.h"
+#include "nsObjectLoadingContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsStyleContext.h"
-#include "nsIPluginElement.h"
-#include "nsCSSPseudoClasses.h"
-#include "nsIEventStateManager.h"
-#include "nsLayoutAtoms.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMGetSVGDocument.h"
@@ -66,8 +62,7 @@
 extern nsAttrValue::EnumTable kListTypeTable[];
 
 class nsHTMLSharedElement : public nsGenericHTMLElement,
-                            public nsImageLoadingContent,
-                            public nsIPluginElement,
+                            public nsObjectLoadingContent,
                             public nsIDOMHTMLEmbedElement,
 #ifdef MOZ_SVG
                             public nsIDOMGetSVGDocument,
@@ -86,9 +81,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIPluginElement
-  NS_DECL_NSIPLUGINELEMENT
 
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
@@ -146,8 +138,17 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual PRInt32 IntrinsicState() const;
 
-protected:
-  nsCString mActualType;
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
+
+  // nsObjectLoadingContent
+  virtual PRUint32 GetCapabilities() const;
 };
 
 
@@ -155,7 +156,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 
 nsHTMLSharedElement::nsHTMLSharedElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo),
+    nsObjectLoadingContent(aNodeInfo->Equals(nsHTMLAtoms::embed) ? eType_Plugin
+                                                                 : eType_Null)
 {
 }
 
@@ -177,8 +180,14 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedElement,
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMGetSVGDocument, embed)
 #endif
   NS_INTERFACE_MAP_ENTRY_IF_TAG(imgIDecoderObserver, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIStreamListener, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIRequestObserver, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIFrameLoaderOwner, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIObjectLoadingContent, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIImageLoadingContent, embed)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIPluginElement, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIInterfaceRequestor, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIChannelEventSink, embed)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsISupportsWeakReference, embed)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLParamElement, param)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLIsIndexElement, isindex)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseElement, base)
@@ -214,22 +223,6 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Src, src)
 
-NS_IMETHODIMP
-nsHTMLSharedElement::SetActualType(const nsACString& aActualType)
-{
-  mActualType = aActualType;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLSharedElement::GetActualType(nsACString& aActualType)
-{
-  aActualType = mActualType;
-
-  return NS_OK;
-}
-
 #ifdef MOZ_SVG
 // nsIDOMGetSVGDocument
 NS_IMETHODIMP
@@ -239,12 +232,14 @@ nsHTMLSharedElement::GetSVGDocument(nsIDOMSVGDocument** aResult)
 
   *aResult = nsnull;
 
-  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || !IsInDoc())
+  if (!mNodeInfo->Equals(nsHTMLAtoms::embed) || !IsInDoc()) {
     return NS_OK;
+  }
 
   nsIDocument *sub_doc = GetOwnerDoc()->GetSubDocumentFor(this);
-  if (sub_doc)
+  if (sub_doc) {
     CallQueryInterface(sub_doc, aResult);
+  }
 
   return NS_OK;
 }
@@ -434,10 +429,11 @@ DirectoryMenuMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // type: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
       if (value) {
-        if (value->Type() == nsAttrValue::eEnum)
+        if (value->Type() == nsAttrValue::eEnum) {
           aData->mListData->mType.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
-        else
+        } else {
           aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
+        }
       }
     }
   }
@@ -513,19 +509,85 @@ nsHTMLSharedElement::GetAttributeMappingFunction() const
   return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
 
+
+nsresult
+nsHTMLSharedElement::BindToTree(nsIDocument* aDocument,
+                                nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  // Must start loading stuff after being in a document
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    nsAutoString uri;
+    nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
+    if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+      nsAutoString type;
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+      // Don't notify: We aren't in a document yet, so we have no frames
+      ObjectURIChanged(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
+    } else {
+      // The constructor set the type to eType_Plugin; but if we have no src
+      // attribute, then we aren't really a plugin
+      Fallback(PR_FALSE);
+    }
+  }
+  return rv;
+}
+
+void
+nsHTMLSharedElement::UnbindFromTree(PRBool aDeep,
+                                    PRBool aNullParent)
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    RemovedFromDocument();
+  }
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+}
+
+
+
+nsresult
+nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             nsIAtom* aPrefix, const nsAString& aValue,
+                             PRBool aNotify)
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    // If we plan to call ObjectURIChanged, we want to do it first so that the
+    // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
+    // aNotify is false, we are coming from the parser or some such place; we'll
+    // get bound after all the attributes have been set, so we'll do the
+    // object load from BindToTree.  Skip the ObjectURIChanged call in that case.
+    if (aNotify &&
+        aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
+      nsAutoString type;
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+      ObjectURIChanged(aValue, aNotify, NS_ConvertUTF16toUTF8(type), PR_TRUE, PR_TRUE);
+    }
+  }
+
+  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                       aValue, aNotify);
+}
+
+PRUint32
+nsHTMLSharedElement::GetCapabilities() const
+{
+  return eSupportImages | eSupportPlugins
+#ifdef MOZ_SVG
+    | eSupportSVG
+#endif
+    ;
+}
+
 PRInt32
 nsHTMLSharedElement::IntrinsicState() const
 {
   PRInt32 state = nsGenericHTMLElement::IntrinsicState();
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    void* image = GetProperty(nsLayoutAtoms::imageFrame);
-    if (NS_PTR_TO_INT32(image)) {
-      state |= nsImageLoadingContent::ImageState();
-    }
-    void* broken = GetProperty(nsCSSPseudoClasses::mozBroken);
-    if (NS_PTR_TO_INT32(broken)) {
-      state |= NS_EVENT_STATE_BROKEN;
-    }
+    state |= ObjectState();
   }
   return state;
 }

@@ -48,7 +48,6 @@ XPIDL_MODULE    = content_html
 XPIDLSRCS	= \
 		nsISelectElement.idl \
 		nsIPhonetic.idl \
-		nsIPluginElement.idl \
 		$(NULL)
 
 EXPORTS		= \

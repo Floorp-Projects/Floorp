@@ -2016,7 +2016,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 
   mPluginStreamInfo->SetRequest(request);
 
-  nsCAutoString aContentType;
+  nsCAutoString aContentType; // XXX but we already got the type above!
   rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv))
     return rv;
@@ -3294,6 +3294,35 @@ nsPluginHostImpl::GetPluginTempDir(nsIFile **aDir)
   return sPluginTempDir->Clone(aDir);
 }
 
+NS_IMETHODIMP nsPluginHostImpl::InstantiatePluginForChannel(nsIChannel* aChannel,
+                                                            nsIPluginInstanceOwner* aOwner,
+                                                            nsIStreamListener** aListener)
+{
+  NS_PRECONDITION(aChannel && aOwner,
+                  "Invalid arguments to InstantiatePluginForChannel");
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return rv;
+
+#ifdef PLUGIN_LOGGING
+  if (PR_LOG_TEST(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL)) {
+    nsCAutoString urlSpec;
+    uri->GetAsciiSpec(urlSpec);
+
+    PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
+           ("nsPluginHostImpl::InstantiatePluginForChannel Begin owner=%p, url=%s\n",
+           aOwner, urlSpec.get()));
+
+    PR_LogFlush();
+  }
+#endif
+
+  // XXX do we need to look for stopped plugins, like InstantiateEmbeddedPlugin
+  // does?
+
+  return NewEmbeddedPluginStreamListener(uri, aOwner, nsnull, aListener);
+}
 
 ////////////////////////////////////////////////////////////////////////
 /* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embedded case) */
@@ -5897,16 +5926,16 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-/* Called by InstantiateEmbeddedPlugin() */
-nsresult nsPluginHostImpl::NewEmbeddedPluginStream(nsIURI* aURL,
-                                                   nsIPluginInstanceOwner *aOwner,
-                                                   nsIPluginInstance* aInstance)
+nsresult nsPluginHostImpl::NewEmbeddedPluginStreamListener(nsIURI* aURL,
+                                                           nsIPluginInstanceOwner *aOwner,
+                                                           nsIPluginInstance* aInstance,
+                                                           nsIStreamListener** aListener)
 {
   if (!aURL)
     return NS_OK;
 
-  nsPluginStreamListenerPeer  *listener = new nsPluginStreamListenerPeer();
+  nsRefPtr<nsPluginStreamListenerPeer> listener =
+      new nsPluginStreamListenerPeer();
   if (listener == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -5922,7 +5951,22 @@ nsresult nsPluginHostImpl::NewEmbeddedPluginStream(nsIURI* aURL,
     rv = listener->InitializeEmbedded(aURL, nsnull, aOwner, this);
   else
     rv = NS_ERROR_ILLEGAL_VALUE;
+  if (NS_SUCCEEDED(rv))
+    NS_ADDREF(*aListener = listener);
 
+  return rv;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+/* Called by InstantiateEmbeddedPlugin() */
+nsresult nsPluginHostImpl::NewEmbeddedPluginStream(nsIURI* aURL,
+                                                   nsIPluginInstanceOwner *aOwner,
+                                                   nsIPluginInstance* aInstance)
+{
+  nsCOMPtr<nsIStreamListener> listener;
+  nsresult rv = NewEmbeddedPluginStreamListener(aURL, aOwner, aInstance,
+                                                getter_AddRefs(listener));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -5950,7 +5994,6 @@ nsresult nsPluginHostImpl::NewEmbeddedPluginStream(nsIURI* aURL,
     }
   }
 
-  delete listener;
   return rv;
 }
 

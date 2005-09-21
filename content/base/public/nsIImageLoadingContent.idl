@@ -63,11 +63,9 @@ interface nsIURI;
  * missed.  We should NOT freeze this interface without considering
  * this issue.  (It could be that the image status on imgIRequest is
  * sufficient, when combined with the imageBlockingStatus information.)
- *
- * XXXbz Do not freeze without removing imageURIChanged!
  */
 
-[scriptable, uuid(da19c86d-08aa-421c-8c37-12ec2ba5a2c3)]
+[scriptable, uuid(49b02654-5f96-48a0-bf99-0fe467a3fa52)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -163,15 +161,4 @@ interface nsIImageLoadingContent : imgIDecoderObserver
    * @throws NS_ERROR_NULL_POINTER if aChannel is null
    */
   nsIStreamListener loadImageWithChannel(in nsIChannel aChannel);
-
-  /**
-   * ImageURIChanged is called when the appropriate attributes (eg
-   * 'src' for <img> tags) change.  The string passed in is the new
-   * uri string.
-   */
-  // XXXbz The only reason this is not a protected method is that
-  // XXXbz <object> and <embed> do everything from frames, not content.
-  // XXXbz Once those are moved to content, this method should become
-  // XXXbz a protected method on nsImageLoadingContent!
-  [noscript] void imageURIChanged(in AString aNewURI);
 };

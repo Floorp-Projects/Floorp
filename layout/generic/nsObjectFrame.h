@@ -98,6 +98,9 @@ public:
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
+  virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener);
+  virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI);
+
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
   NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) 
@@ -128,8 +131,6 @@ public:
    * This may get the type via the URL's extension.
    */
   NS_HIDDEN_(nsresult) GetMIMEType(nsACString& aType);
-
-
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
@@ -168,21 +169,15 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  nsresult InstantiateWidget(nsPresContext* aPresContext,
-                             nsHTMLReflowMetrics& aMetrics,
-                             const nsHTMLReflowState& aReflowState,
-                             nsCID aWidgetCID);
-
-  nsresult InstantiatePlugin(nsPresContext* aPresContext,
-                             nsHTMLReflowMetrics& aMetrics,
-                             const nsHTMLReflowState& aReflowState,
-                             nsIPluginHost* aPluginHost, 
+  nsresult InstantiatePlugin(nsIPluginHost* aPluginHost, 
                              const char* aMimetype,
                              nsIURI* aURL);
 
-  nsresult ReinstantiatePlugin(nsPresContext* aPresContext, 
-                               nsHTMLReflowMetrics& aMetrics, 
-                               const nsHTMLReflowState& aReflowState);
+  /**
+   * Adjust the plugin's idea of its size, using aSize as its new size.
+   * (aSize must be in twips)
+   */
+  void FixupWindow(const nsSize& aSize);
 
   nsresult HandleChild(nsPresContext* aPresContext,
                        nsHTMLReflowMetrics& aMetrics,
@@ -202,6 +197,12 @@ protected:
   void CreateDefaultFrames(nsPresContext *aPresContext,
                            nsHTMLReflowMetrics& aMetrics,
                            const nsHTMLReflowState& aReflowState);
+
+  /**
+   * Makes sure that mInstanceOwner is valid and without a current plugin
+   * instance. Essentially, this prepares the frame to receive a new plugin.
+   */
+  NS_HIDDEN_(nsresult) PrepareInstanceOwner();
 
   friend class nsPluginInstanceOwner;
 private:

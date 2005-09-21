@@ -5801,7 +5801,8 @@ function getPluginInfo(pluginElement)
       pluginsPage = "";
     }
 
-    tagMimetype = pluginElement.QueryInterface(Components.interfaces.nsIPluginElement).actualType;
+    tagMimetype = pluginElement.QueryInterface(Components.interfaces.nsIObjectLoadingContent)
+                               .actualType;
 
     if (tagMimetype == "") {
       tagMimetype = pluginElement.type;

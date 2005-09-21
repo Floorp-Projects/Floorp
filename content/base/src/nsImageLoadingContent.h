@@ -46,17 +46,16 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-/**
- * This is an implementation of nsIImageLoadingContent.  This class
- * can be subclassed by various content nodes that want to provide
- * image-loading functionality (eg <img>, <object>, etc).
- */
-
 class nsIURI;
 class nsIDocument;
 class imgILoader;
 class nsIIOService;
 
+/**
+ * This is an implementation of nsIImageLoadingContent.  This class
+ * can be subclassed by various content nodes that want to provide
+ * image-loading functionality (eg <img>, <object>, etc).
+ */
 class nsImageLoadingContent : public nsIImageLoadingContent
 {
   /* METHODS */
@@ -75,10 +74,6 @@ protected:
    * in is the new uri string; this consolidates the code for getting
    * the charset, constructing URI objects, and any other incidentals
    * into this superclass.   
-   *
-   * Note that this is different from the ImageURIChanged(AString)
-   * declared in nsIImageLoadingContent.idl -- because it allows
-   * control over whether loading is to be forced.
    *
    * @param aNewURI the URI spec to be loaded (may be a relative URI)
    * @param aForce If true, make sure to load the URI.  If false, only
@@ -100,6 +95,31 @@ protected:
    * not call this method when computing their intrinsic state.
    */
   PRInt32 ImageState() const;
+
+  /**
+   * ImageURIChanged is called by subclasses when the appropriate
+   * attributes (eg 'src' for <img> tags) change. If callers have an
+   * URI object already available, they should use this method.
+   *
+   * @param aNewURI the URI to be loaded
+   * @param aForce If true, make sure to load the URI.  If false, only
+   *        load if the URI is different from the currently loaded URI.
+   * @param aNotify If true, nsIDocumentObserver state change notifications
+   *                will be sent as needed.
+   * @param aDocument Optional parameter giving the document this node is in.
+   *        This is purely a performance optimization.
+   */
+  nsresult ImageURIChanged(nsIURI* aNewURI, PRBool aForce, PRBool aNotify,
+                           nsIDocument* aDocument = nsnull);
+
+  /**
+   * helper to get the document for this content (from the nodeinfo
+   * and such).  Not named GetDocument to prevent ambiguous method
+   * names in subclasses
+   *
+   * @return the document we belong to
+   */
+  nsIDocument* GetOurDocument();
 
   /**
    * CancelImageRequests is called by subclasses when they want to
@@ -185,16 +205,6 @@ private:
    */
   void CancelImageRequests(nsresult aReason, PRBool aEvenIfSizeAvailable,
                            PRInt16 aNewImageStatus);
-
-  /**
-   * helper to get the document for this content (from the nodeinfo
-   * and such).  Not named GetDocument to prevent ambiguous method
-   * names in subclasses (though why this private method leads to
-   * ambiguity is not clear to me....).
-   *
-   * @return the document we belong to
-   */
-  nsIDocument* GetOurDocument();
 
   /**
    * Method to create an nsIURI object from the given string (will
