@@ -768,3 +768,5 @@ pref("ssr.site.enabled", true);
 
 pref("skey.enabled", true);
 
+pref("browser.startup.homepage", "http://www.google.com/xhtml");
+

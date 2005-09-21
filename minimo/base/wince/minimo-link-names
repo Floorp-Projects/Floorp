@@ -22,6 +22,8 @@ nsMorkModule
 nsToolkitCompsModule
 TransformiixModule
 nsWebServicesModule
+BOOT
+NSS
 SoftKeyBoardModule
 nsPhoneSupportModule
 SpatialNavigationModule
