@@ -102,6 +102,7 @@ nsIRDFResource      *kNC_BookmarksRoot;
 nsIRDFResource      *kNC_LastModifiedFoldersRoot;
 nsIRDFResource      *kNC_child;
 
+nsIRDFResource      *kNC_ID;
 nsIRDFResource      *kNC_Description;
 nsIRDFResource      *kNC_Folder;
 nsIRDFResource      *kNC_IEFavorite;
@@ -118,6 +119,7 @@ nsIRDFResource      *kNC_Livemark;
 nsIRDFResource      *kNC_LivemarkLock;
 nsIRDFResource      *kNC_LivemarkExpiration;
 nsIRDFResource      *kRDF_type;
+nsIRDFResource      *kRDF_instanceOf;
 nsIRDFResource      *kRDF_nextVal;
 nsIRDFResource      *kWEB_LastModifiedDate;
 nsIRDFResource      *kWEB_LastVisitDate;
@@ -244,6 +246,8 @@ bm_AddRefGlobals()
                           &kNC_BookmarkSeparator);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkAddDate"),
                           &kNC_BookmarkAddDate);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ID"),
+                          &kNC_ID);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Description"),
                           &kNC_Description);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Folder"),
@@ -274,6 +278,8 @@ bm_AddRefGlobals()
                           &kNC_LivemarkExpiration);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                           &kRDF_type);
+        gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "instanceOf"),
+                          &kRDF_instanceOf);
         gRDF->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
                           &kRDF_nextVal);
 
@@ -369,6 +375,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarksRoot);
         NS_IF_RELEASE(kNC_LastModifiedFoldersRoot);
         NS_IF_RELEASE(kNC_child);
+        NS_IF_RELEASE(kNC_ID);
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
         NS_IF_RELEASE(kNC_IEFavorite);
@@ -387,6 +394,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_LivemarkLock);
         NS_IF_RELEASE(kNC_LivemarkExpiration);
         NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
         NS_IF_RELEASE(kWEB_LastModifiedDate);
         NS_IF_RELEASE(kWEB_LastVisitDate);
@@ -5269,6 +5277,7 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
             canAcceptFlag = PR_TRUE;
         }
         else if ((aProperty == kNC_Description) ||
+             (aProperty == kNC_ID) ||
              (aProperty == kNC_Name) ||
              (aProperty == kNC_ShortcutURL) ||
              (aProperty == kNC_URL) ||
@@ -5283,6 +5292,8 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
              (aProperty == kNC_BookmarkAddDate) ||
              (aProperty == kRDF_nextVal) ||
              (aProperty == kRDF_type) ||
+             (aProperty == kRDF_instanceOf) ||
+             (aProperty == kForwardProxy) ||
              (aProperty == kWEB_Schedule))
         {
             canAcceptFlag = PR_TRUE;
