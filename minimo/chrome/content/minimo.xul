@@ -150,7 +150,7 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox id="toolbar-rss-rsstag"  onchange="return DoBrowserRSS();"/> 
+						 <textbox id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
