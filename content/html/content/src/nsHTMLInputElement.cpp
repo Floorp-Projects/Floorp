@@ -39,6 +39,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsITextControlElement.h"
+#include "nsIDOMNSEditableElement.h"
 #include "nsIRadioControlElement.h"
 #include "nsIRadioVisitor.h"
 #include "nsIPhonetic.h"
@@ -136,7 +137,8 @@ class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsIDOMNSHTMLInputElement,
                            public nsITextControlElement,
                            public nsIRadioControlElement,
-                           public nsIPhonetic
+                           public nsIPhonetic,
+                           public nsIDOMNSEditableElement
 {
 public:
   nsHTMLInputElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
