@@ -544,7 +544,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
       ::SetWindowGroup(mWindowPtr, ::GetWindowGroupOfClass(kHelpWindowClass));
       ::SetWindowActivationScope(mWindowPtr, kWindowActivationScopeNone);
     }
-    else if ( mWindowType == eWindowType_toplevel ) {
+
+    if ( mWindowType != eWindowType_invisible &&
+         mWindowType != eWindowType_plugin &&
+         mWindowType != eWindowType_java) {
       const EventTypeSpec scrollEventList[] = {
         { kEventClassMouse, kEventMouseWheelMoved }
       };
