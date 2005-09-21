@@ -1006,8 +1006,6 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
 // ----------------------------------------------------------------------------
 
-struct CantRenderReplacedElementEvent;
-
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
@@ -1109,7 +1107,6 @@ public:
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext);
-  NS_IMETHOD CantRenderReplacedElement(nsIFrame*       aFrame);
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
 
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
@@ -1288,11 +1285,6 @@ protected:
   // onload on the document, we'll unblock it.
   void DoneRemovingReflowCommands();
 
-  friend struct CantRenderReplacedElementEvent;
-  NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
-  NS_HIDDEN_(CantRenderReplacedElementEvent**)
-    FindPostedEventFor(nsIFrame* aFrame);
-
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
   void     DidDoReflow();
@@ -1380,8 +1372,6 @@ protected:
   nsCOMPtr<nsIDragService>      mDragService;
   PRInt32                       mRCCreatedDuringLoad; // Counter to keep track of reflow commands created during doc
 
-  CantRenderReplacedElementEvent* mPostedReplaces;
-  
   // used for list of posted events and attribute changes. To be done
   // after reflow.
   nsDOMEventRequest* mFirstDOMEventRequest;
@@ -1882,7 +1872,6 @@ PresShell::Destroy()
   }
 
   // Revoke pending events
-  mPostedReplaces = nsnull;
   mReflowEventQueue = nsnull;
   nsCOMPtr<nsIEventQueue> eventQueue;
   nsContentUtils::EventQueueService()->
@@ -3031,8 +3020,6 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
     // Cancel any pending reflow commands targeted at this frame
     CancelReflowCommandInternal(aFrame, nsnull);
 
-    DequeuePostedEventFor(aFrame);
-    
     // Notify the frame manager
     FrameManager()->NotifyDestroyingFrame(aFrame);
 
@@ -3809,167 +3796,6 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
     rv = deviceContext->CreateRenderingContext(result);
   }
   *aResult = result;
-
-  return rv;
-}
-
-// A CantRenderReplacedElementEvent has a weak pointer to the presshell and the
-// presshell has a weak pointer to the event.  The event queue owns the event
-// and the presshell will delete the event if it's going to go away.
-struct CantRenderReplacedElementEvent : public PLEvent {
-  CantRenderReplacedElementEvent(PresShell* aPresShell,
-                                 nsIFrame* aFrame) NS_HIDDEN;
-  ~CantRenderReplacedElementEvent() {
-    OurPresShell()->GetDocument()->UnblockOnload(PR_TRUE);
-  }
-  
-  NS_HIDDEN_(PresShell*) OurPresShell() {
-    return NS_STATIC_CAST(PresShell*, owner);
-  }
-
-  void HandleEvent();
-
-  nsIFrame*  mFrame;                     // the frame that can't be rendered
-  CantRenderReplacedElementEvent* mNext; // next event in the list
-};
-
-PR_STATIC_CALLBACK(void*)
-HandleCantRenderReplacedElementEvent(PLEvent* aEvent)
-{
-  CantRenderReplacedElementEvent* evt =
-    NS_STATIC_CAST(CantRenderReplacedElementEvent*, aEvent);
-  evt->HandleEvent();
-  return nsnull;
-}
-
-PR_STATIC_CALLBACK(void)
-DestroyCantRenderReplacedElementEvent(PLEvent* aEvent)
-{
-  CantRenderReplacedElementEvent* evt =
-    NS_STATIC_CAST(CantRenderReplacedElementEvent*, aEvent);
-
-  delete evt;
-}
-
-CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aPresShell,
-                                                               nsIFrame*  aFrame) :
-  mFrame(aFrame)
-{
-  PL_InitEvent(this, aPresShell,
-               ::HandleCantRenderReplacedElementEvent,
-               ::DestroyCantRenderReplacedElementEvent);
-
-  aPresShell->GetDocument()->BlockOnload();
-}
-
-void
-PresShell::DequeuePostedEventFor(nsIFrame* aFrame)
-{
-  // If there's a posted event for this frame, then remove it
-  CantRenderReplacedElementEvent** event = FindPostedEventFor(aFrame);
-  if (!*event) {
-    return;
-  }
-
-  CantRenderReplacedElementEvent* tmp = *event;
-
-  // Remove it from our linked list of posted events
-  *event = (*event)->mNext;
-    
-  // Dequeue it from the event queue
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                         getter_AddRefs(eventQueue));
-  
-  NS_ASSERTION(eventQueue,
-               "will crash soon due to event holding dangling pointer to "
-               "frame");
-  if (eventQueue) {
-    PLEventQueue* plqueue;
-
-    eventQueue->GetPLEventQueue(&plqueue);
-    NS_ASSERTION(plqueue,
-                 "will crash soon due to event holding dangling pointer to "
-                 "frame");
-    if (plqueue) {
-      // Remove the event and then destroy it
-      PL_DequeueEvent(tmp, plqueue);
-      PL_DestroyEvent(tmp);
-    }
-  }
-}
-
-void
-CantRenderReplacedElementEvent::HandleEvent()
-{
-  // Remove ourselves from the linked list
-  PresShell* presShell = OurPresShell();
-  CantRenderReplacedElementEvent** events = &presShell->mPostedReplaces;
-  while (*events) {
-    if (*events == this) {
-      *events = (*events)->mNext;
-      break;
-    }
-    events = &(*events)->mNext;
-    NS_ASSERTION(*events, "event not in queue");
-  }
-
-  // Make sure to prevent reflow while we're messing with frames
-  mozAutoDocUpdate(presShell->mDocument, UPDATE_CONTENT_STATE, PR_TRUE);
-  presShell->mDocument->ContentStatesChanged(mFrame->GetContent(),
-                                             nsnull,
-                                             NS_EVENT_STATE_BROKEN);
-}
-
-CantRenderReplacedElementEvent**
-PresShell::FindPostedEventFor(nsIFrame* aFrame)
-{
-  CantRenderReplacedElementEvent** event = &mPostedReplaces;
-
-  while (*event) {
-    if ((*event)->mFrame == aFrame) {
-      return event;
-    }
-    event = &(*event)->mNext;
-  }
-
-  return event;
-}
-
-NS_IMETHODIMP
-PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
-{
-  if (*FindPostedEventFor(aFrame))
-    return NS_OK;
-
-  // Handle this asynchronously
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsresult rv = nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                         getter_AddRefs(eventQueue));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  // Verify that there isn't already a posted event associated with
-  // this frame.
-  CantRenderReplacedElementEvent* ev;
-
-  // Create a new event
-  ev = new CantRenderReplacedElementEvent(this, aFrame);
-  if (!ev) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Post the event
-  rv = eventQueue->PostEvent(ev);
-  if (NS_FAILED(rv)) {
-    PL_DestroyEvent(ev);
-  }
-  else {
-    // Add the event to our linked list of posted events
-    ev->mNext = mPostedReplaces;
-    mPostedReplaces = ev;
-  }
 
   return rv;
 }

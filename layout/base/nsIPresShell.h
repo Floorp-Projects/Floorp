@@ -387,18 +387,6 @@ public:
                                     nsIRenderingContext** aContext) = 0;
 
   /**
-   * Notification that we were unable to render a replaced element.
-   * Called when the replaced element can not be rendered, and we should
-   * instead render the element's contents.
-   * The content object associated with aFrame should either be a IMG
-   * element, an OBJECT element, or an APPLET element
-   * XXXbz this should just go away once object loading moves to
-   * content, since nsObjectFrame is the only caller at this point.
-   */
-  NS_IMETHOD CantRenderReplacedElement(nsIFrame* aFrame) = 0;
-
-
-  /**
    * Informs the pres shell that the document is now at the anchor with
    * the given name.  If |aScroll| is true, scrolls the view of the
    * document so that the anchor with the specified name is displayed at
