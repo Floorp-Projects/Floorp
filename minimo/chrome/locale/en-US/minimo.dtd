@@ -31,5 +31,5 @@
 
 <!-- toolbar view rss --> 
 <!ENTITY rssText.label                 "Tag:" >
-
+<!ENTITY rssBMtitle.label              "Social Bookmarks" >
 <!-- context menu items -->
