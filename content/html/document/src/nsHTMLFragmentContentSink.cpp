@@ -147,6 +147,7 @@ public:
   PRPackedBool mProcessing;
   PRPackedBool mSeenBody;
   PRPackedBool mIgnoreContainer;
+  PRPackedBool mIgnoreNextCloseHead;
 
   nsCOMPtr<nsIContent> mRoot;
   nsCOMPtr<nsIParser> mParser;
@@ -199,6 +200,7 @@ nsHTMLFragmentContentSink::nsHTMLFragmentContentSink(PRBool aAllContent)
     mProcessing(aAllContent),
     mSeenBody(!aAllContent),
     mIgnoreContainer(PR_FALSE),
+    mIgnoreNextCloseHead(PR_FALSE),
     mContentStack(nsnull),
     mText(nsnull),
     mTextLength(0),
@@ -318,14 +320,18 @@ nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenHead()
 {
-  // The DTD uses this function when the head is being forced open by a tag in
-  // the body. We can safely ignore it, for now.
+  mIgnoreNextCloseHead = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::CloseHead()
 {
+  if (mIgnoreNextCloseHead) {
+    mIgnoreNextCloseHead = PR_FALSE;
+    return NS_OK;
+  }
+
   return CloseContainer(eHTMLTag_head);
 }
 
