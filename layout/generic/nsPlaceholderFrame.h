@@ -91,6 +91,15 @@ public:
   virtual PRBool IsEmpty() { return PR_TRUE; }
   virtual PRBool IsSelfEmpty() { return PR_TRUE; }
 
+#ifdef ACCESSIBILITY
+  NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible)
+  {
+    nsIFrame *realFrame = GetRealFrameForPlaceholder(this);
+    return realFrame ? realFrame->GetAccessible(aAccessible) :
+                       nsSplittableFrame::GetAccessible(aAccessible);
+  }
+#endif
+
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise
    * aFrame
