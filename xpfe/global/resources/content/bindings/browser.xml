@@ -335,6 +335,45 @@
                 onget="return this.docShell.securityUI;"
                 onset="this.docShell.securityUI = val;"/>
 
+      <!--
+        This field tracks the location bar state. The value that the user typed
+        in to the location bar may not be changed while this field is zero.
+        However invoking a load will temporarily increase this field to allow
+        the location bar to be updated to the new URL.
+
+        Case 1: Anchor scroll
+          The user appends the anchor to the URL. This sets the location bar
+          into typed state, and disables changes to the location bar. The user
+          then requests the scroll. loadURIWithFlags temporarily increases the
+          flag by 1 so that the anchor scroll's location change resets the
+          location bar state.
+
+        Case 2: Interrupted load
+          The user types in and submits the URL. This triggers an asynchronous
+          network load which increases the flag by 2. (The temporary increase
+          from loadURIWithFlags is not noticeable in this case.) When the load
+          is interrupted the flag returns to zero, and the location bar stays
+          in typed state.
+
+        Case 3: New load
+          This works like case 2, but as the load is not interrupted the
+          location changes while the flag is still 2 thus resetting the
+          location bar state.
+
+        Case 4: Corrected load
+          This is a combination of case 2 and case 3, except that the original
+          load is interrupted by the new load. Normally cancelling and starting
+          a new load would reset the flag to 0 and then increase it to 2 again.
+          However both actions occur as a consequence of the loadURIWithFlags
+          invocation, which adds its temporary increase in to the mix. Since
+          the new URL would have been typed in the flag would have been reset
+          before loadURIWithFlags incremented it. The interruption resets the
+          flag to 0 and increases it to 2. Although loadURIWithFlags will
+          decrement the flag it remains at 1 thus allowing the location bar
+          state to be reset when the new load changes the location.
+          This case also applies when loading into a new browser, as this
+          interrupts the default load of about:blank.
+      -->
       <field name="userTypedClear">
         1
       </field>
