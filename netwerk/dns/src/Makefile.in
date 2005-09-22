@@ -67,6 +67,10 @@ CSRCS		= race.c  \
 # static lib.
 FORCE_STATIC_LIB = 1
 
+LOCAL_INCLUDES =  \
+                 -I$(srcdir)/../../base/src   \
+                 $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
