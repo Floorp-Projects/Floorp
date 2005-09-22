@@ -102,6 +102,7 @@
 #include "nsDocShellTransferableHooks.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsISecureBrowserUI.h"
+#include "nsIObserver.h"
 
 /**
  * Load flag for error pages. This should be bigger than all flags on
@@ -218,7 +219,8 @@ class nsDocShell : public nsDocLoader,
                    public nsIWebProgressListener,
                    public nsIEditorDocShell,
                    public nsIWebPageDescriptor,
-                   public nsIAuthPromptProvider
+                   public nsIAuthPromptProvider,
+                   public nsIObserver
 {
 friend class nsDSURIContentListener;
 
@@ -246,6 +248,7 @@ public:
     NS_DECL_NSIEDITORDOCSHELL
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
+    NS_DECL_NSIOBSERVER
 
     NS_IMETHOD Stop() {
         // Need this here because otherwise nsIWebNavigation::Stop
@@ -524,6 +527,7 @@ protected:
     PRPackedBool               mHasFocus;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
     PRPackedBool               mUseErrorPages;
+    PRPackedBool               mObserveErrorPages;
     PRPackedBool               mAllowAuth;
 
     PRPackedBool               mFiredUnloadEvent;
