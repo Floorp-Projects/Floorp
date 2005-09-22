@@ -892,3 +892,10 @@ net_ParseContentType(const nsACString &aHeaderStr,
         curTypeStart = curTypeEnd + 1;
     } while (curTypeStart < flatStr.Length());
 }
+
+PRBool
+net_IsValidHostName(const nsCSubstring &host)
+{
+    const char *end = host.EndReading();
+    return net_FindCharInSet(host.BeginReading(), end, "%/\\") == end;
+}

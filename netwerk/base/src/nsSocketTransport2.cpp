@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com>
  *   Malcolm Smith <malsmith@cs.rmit.edu.au>
+ *   Andreas Otte <andreas.otte@debitel.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -789,6 +790,7 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
         }
 
         // note if socket type corresponds to a transparent proxy
+        // XXX don't hardcode SOCKS here (use proxy info's flags instead).
         if ((strcmp(mTypes[i], "socks") == 0) ||
             (strcmp(mTypes[i], "socks4") == 0)) {
             mProxyTransparent = PR_TRUE;
@@ -896,19 +898,26 @@ nsSocketTransport::ResolveHost()
 
     nsresult rv;
 
-    if (!mProxyHost.IsEmpty() && mProxyTransparentResolvesHost) {
-        // Name resolution is done on the server side.  Just pretend
-        // client resolution is complete, this will get picked up later.
-        // since we don't need to do DNS now, we bypass the resolving
-        // step by initializing mNetAddr to an empty address, but we
-        // must keep the port. The SOCKS IO layer will use the hostname
-        // we send it when it's created, rather than the empty address
-        // we send with the connect call.
-        mState = STATE_RESOLVING;
-        PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET, SocketPort(), &mNetAddr);
-        return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nsnull);
+    if (!mProxyHost.IsEmpty()) {
+        if (!mProxyTransparent || mProxyTransparentResolvesHost) {
+            // When not resolving mHost locally, we still want to ensure that
+            // it only contains valid characters.  See bug 304904 for details.
+            if (!net_IsValidHostName(mHost))
+                return NS_ERROR_UNKNOWN_HOST;
+        }
+        if (mProxyTransparentResolvesHost) {
+            // Name resolution is done on the server side.  Just pretend
+            // client resolution is complete, this will get picked up later.
+            // since we don't need to do DNS now, we bypass the resolving
+            // step by initializing mNetAddr to an empty address, but we
+            // must keep the port. The SOCKS IO layer will use the hostname
+            // we send it when it's created, rather than the empty address
+            // we send with the connect call.
+            mState = STATE_RESOLVING;
+            PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET, SocketPort(), &mNetAddr);
+            return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nsnull);
+        }
     }
-
 
     nsCOMPtr<nsIDNSService> dns = do_GetService(kDNSServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;

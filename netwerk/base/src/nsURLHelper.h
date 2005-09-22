@@ -229,4 +229,10 @@ inline char *net_RFindCharNotInSet(const char *str, const char *set)
     return net_RFindCharNotInSet(str, str + strlen(str), set);
 }
 
+/**
+ * This function returns true if the given hostname does not include any
+ * restricted characters.  Otherwise, false is returned.
+ */
+NS_HIDDEN_(PRBool) net_IsValidHostName(const nsCSubstring &host);
+
 #endif // !nsURLHelper_h__
