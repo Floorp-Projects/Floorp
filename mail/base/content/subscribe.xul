@@ -168,6 +168,7 @@
      <hbox id="searchview">
        <tree id="searchTree" flex="1" 
               disableKeyNavigation="true"
+              hidecolumnpicker="true"
               onkeypress="onSearchTreeKeyPress(event);"
               onclick="SearchOnClick(event);"> 
          <treecols>
