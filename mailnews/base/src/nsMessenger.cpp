@@ -565,15 +565,7 @@ nsMessenger::OpenURL(const char *aURL)
 
   // This is to setup the display DocShell as UTF-8 capable...
   SetDisplayCharset("UTF-8");
-  
-  char *unescapedUrl = PL_strdup(aURL);
-  if (!unescapedUrl)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  // I don't know why we're unescaping this url - I'll leave it unescaped
-  // for the web shell, but the message service doesn't need it unescaped.
-  nsUnescape(unescapedUrl);
-  
+
   nsCOMPtr <nsIMsgMessageService> messageService;
   nsresult rv = GetMessageServiceFromURI(aURL, getter_AddRefs(messageService));
   
@@ -581,19 +573,17 @@ nsMessenger::OpenURL(const char *aURL)
   {
     messageService->DisplayMessage(aURL, mDocShell, mMsgWindow, nsnull, nsnull, nsnull);
     mLastDisplayURI = aURL; // remember the last uri we displayed....
+    return NS_OK;
   }
-  //If it's not something we know about, then just load the url.
-  else
-  {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-    if(webNav)
-      rv = webNav->LoadURI(NS_ConvertASCIItoUCS2(unescapedUrl).get(), // URI string
-      nsIWebNavigation::LOAD_FLAGS_IS_LINK, // Load flags
-      nsnull,                               // Referring URI
-      nsnull,                               // Post stream
-      nsnull);                              // Extra headers
-  }
-  PL_strfree(unescapedUrl);
+
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+  if(!webNav)
+    return NS_ERROR_FAILURE;
+  rv = webNav->LoadURI(NS_ConvertASCIItoUTF16(aURL).get(),   // URI string
+                       nsIWebNavigation::LOAD_FLAGS_IS_LINK, // Load flags
+                       nsnull,                               // Referring URI
+                       nsnull,                               // Post stream
+                       nsnull);                              // Extra headers
   return rv;
 }
 
