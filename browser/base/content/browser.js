@@ -6060,7 +6060,6 @@ var FeedHandler = {
       this._feedButton.setAttribute("feeds", "true");
       this._feedButton.setAttribute("tooltiptext", 
                                     gNavigatorBundle.getString("feedHasFeeds"));
-      }
     }
   }, 
   
