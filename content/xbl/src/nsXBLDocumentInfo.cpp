@@ -240,7 +240,6 @@ nsXBLDocGlobalObject::SetDocShell(nsIDocShell *aDocShell)
 nsIDocShell *
 nsXBLDocGlobalObject::GetDocShell()
 {
-  NS_WARNING("waaah!");
   return nsnull;
 }
 

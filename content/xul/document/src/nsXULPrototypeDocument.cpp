@@ -866,8 +866,6 @@ nsXULPDGlobalObject::SetDocShell(nsIDocShell *aDocShell)
 nsIDocShell *
 nsXULPDGlobalObject::GetDocShell()
 {
-    NS_WARNING("waaah!");
-
     return nsnull;
 }
 
