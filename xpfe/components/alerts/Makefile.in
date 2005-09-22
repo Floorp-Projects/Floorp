@@ -44,8 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS    = public
 
-ifeq ($(OS_ARCH),WINNT)
-DIRS    += src 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
+DIRS += src
 endif
 
 include $(topsrcdir)/config/rules.mk
