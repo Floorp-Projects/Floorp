@@ -1691,6 +1691,9 @@ function nsDummyMsgHeader()
 
 nsDummyMsgHeader.prototype =
 {
+  mProperties : new Array,
+  getStringProperty : function(property) {return this.mProperties[property];},
+  setStringProperty : function(property, val) {this.mProperties[property] = val;},
   messageSize : 0,
   recipients : null,
   from : null,
