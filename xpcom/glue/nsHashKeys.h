@@ -76,7 +76,7 @@ NS_COM_GLUE PRUint32 HashCString(const char* aKey);
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsStringHashKey : public PLDHashEntryHdr
+class nsStringHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsAString& KeyType;
@@ -109,7 +109,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsCStringHashKey : public PLDHashEntryHdr
+class nsCStringHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsACString& KeyType;
@@ -140,7 +140,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsUint32HashKey : public PLDHashEntryHdr
+class nsUint32HashKey : public PLDHashEntryHdr
 {
 public:
   typedef const PRUint32& KeyType;
@@ -167,7 +167,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsISupportsHashKey : public PLDHashEntryHdr
+class nsISupportsHashKey : public PLDHashEntryHdr
 {
 public:
   typedef nsISupports* KeyType;
@@ -200,7 +200,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsVoidPtrHashKey : public PLDHashEntryHdr
+class nsVoidPtrHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const void* KeyType;
@@ -233,7 +233,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsIDHashKey : public PLDHashEntryHdr
+class nsIDHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const nsID& KeyType;
@@ -266,7 +266,7 @@ private:
  *
  * @see nsTHashtable::EntryType for specification
  */
-class NS_COM nsDepCharHashKey : public PLDHashEntryHdr
+class nsDepCharHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const char* KeyType;
@@ -296,7 +296,7 @@ private:
  * a string pointed to by the pointer so that it doesn't matter whether or not
  * the string lives longer than the hash table.
  */
-class NS_COM nsCharPtrHashKey : public PLDHashEntryHdr
+class nsCharPtrHashKey : public PLDHashEntryHdr
 {
 public:
   typedef const char* KeyType;
