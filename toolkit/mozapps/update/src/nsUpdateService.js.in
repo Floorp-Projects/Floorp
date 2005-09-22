@@ -1767,10 +1767,16 @@ Downloader.prototype = {
   _verifyDownload: function() {
     if (!this._request)
       return false;
-      
+
+    var destination = this._request.destination;
+
+    // Ensure that the file size matches the expected file size.
+    if (destination.fileSize != this._patch.size)
+      return false;
+
     var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"].
         createInstance(nsIFileInputStream);
-    fileStream.init(this._request.destination, MODE_RDONLY, PERMS_FILE, 0);
+    fileStream.init(destination, MODE_RDONLY, PERMS_FILE, 0);
 
     try {
       var hash = Components.classes["@mozilla.org/security/hash;1"].
