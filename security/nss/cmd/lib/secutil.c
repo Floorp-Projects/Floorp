@@ -1318,7 +1318,11 @@ secu_PrintUniversal(FILE *out, SECItem *i, char *m, int level)
 	    SECU_PrintUTCTime(out, i, m, level);
 	    break;
 	  case SEC_ASN1_NULL:
-	    SECU_Indent(out, level); fprintf(out, "%s: NULL\n", m);
+	    SECU_Indent(out, level); 
+	    if (m && m[0]) 
+	      fprintf(out, "%s: NULL\n", m);
+	    else
+	      fprintf(out, "NULL\n");
 	    break;
           case SEC_ASN1_SET:
           case SEC_ASN1_SEQUENCE:
