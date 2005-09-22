@@ -52,6 +52,11 @@ LIBXUL_LIBRARY	= 1
 PACKAGE_FILE = appcomps.pkg
 PACKAGE_VARS += MOZ_PHOENIX
 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
+ALERTS_SERVICE=1
+DEFINES += -DALERTS_SERVICE
+endif
+
 REQUIRES	= xpcom \
 		  string \
 		  content \
@@ -122,9 +127,14 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif # ALERTS_SERVICE
+
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
@@ -148,11 +158,11 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \
 	-I$(srcdir)/../startup/src \
+	-I$(srcdir)/../alerts/src \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../alerts/src \
 	-I$(srcdir)/../urlwidget \
   -I$(srcdir)/../winhooks \
   $(NULL)

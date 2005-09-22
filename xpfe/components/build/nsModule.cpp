@@ -66,13 +66,15 @@
 
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
-#if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-#include "nsWindowsHooks.h"
+#if defined(ALERTS_SERVICE)
 #include "nsAlertsService.h"
-#include "nsUrlWidget.h"
 #endif
+#if defined(XP_WIN)
+#include "nsWindowsHooks.h"
+#include "nsUrlWidget.h"
 #endif // Windows
+#endif
 
 #include "nsBrowserStatusFilter.h"
 #include "nsBrowserInstance.h"
@@ -116,13 +118,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif // defined(MOZ_LDAP_XPCOM)
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
-#if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
+#if defined(ALERTS_SERVICE)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 #endif
+#if defined(XP_WIN)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 #endif // Windows
+#endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
@@ -260,16 +264,18 @@ static const nsModuleComponentInfo components[] = {
     },
 #endif
 
-#if defined(XP_WIN)
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
-      NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },
+#if defined(ALERTS_SERVICE)
     { "nsAlertsService", NS_ALERTSSERVICE_CID,
       NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor },
+#endif
+#if defined(XP_WIN)
+    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
+      NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID,
       NS_IWINDOWSHOOKS_CONTRACTID, nsWindowsHooksConstructor },
-#endif
 #endif // defined(XP_WIN)
+#endif
 
 #if (!defined(MOZ_XUL_APP)) && !defined(MOZ_MACBROWSER)
   { "Browser Content Handler",

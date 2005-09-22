@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Jens Bannmann <jens.b@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gCurrentHeight = 0;
 var gFinalHeight = 50;
 var gSlideIncrement = 1;
 var gSlideTime = 10;
@@ -82,33 +82,38 @@ function onAlertLoad()
   } catch (ex) {}
 
   sizeToContent();
+
+  // work around a bug where sizeToContent() leaves a border outside of the content
+  var contentDim = document.getElementById("alertBox").boxObject;
+  window.resizeTo(contentDim.width, contentDim.height);
+
   gFinalHeight = window.outerHeight;
-  window.outerHeight = 0;
+
+  // start with a 1px height, because 0 causes trouble with gtk1/2
+  window.outerHeight = 1;
+
   // be sure to offset the alert by 10 pixels from the far right edge of the screen
   window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
+
   setTimeout(animateAlert, gSlideTime);
 }
 
 function animateAlert()
 {
-  if (gCurrentHeight < gFinalHeight)
+  if (window.outerHeight < gFinalHeight)
   {
-    gCurrentHeight += gSlideIncrement;
-
     window.screenY -= gSlideIncrement;
     window.outerHeight += gSlideIncrement;
     setTimeout(animateAlert, gSlideTime);
   }
   else
-   setTimeout(closeAlert, gOpenTime);  
+    setTimeout(closeAlert, gOpenTime);
 }
 
 function closeAlert()
 {
-  if (gCurrentHeight)
+  if (window.outerHeight > 1)
   {
-    gCurrentHeight -= gSlideIncrement;
-
     window.screenY += gSlideIncrement;
     window.outerHeight -= gSlideIncrement;
     setTimeout(closeAlert, gSlideTime);
@@ -117,7 +122,7 @@ function closeAlert()
   {
     if (gAlertListener)
       gAlertListener.observe(null, "alertfinished", gAlertCookie);
-    window.close(); 
+    window.close();
   }
 }
 
