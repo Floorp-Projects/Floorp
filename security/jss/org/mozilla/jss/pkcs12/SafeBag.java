@@ -120,7 +120,7 @@ public final class SafeBag implements ASN1Value {
     public static final OBJECT_IDENTIFIER KEY_BAG = PKCS12_BAG_IDS.subBranch(1);
 
     /**
-     * A bag containing a private key encrypted à la PKCS #8.  The bag
+     * A bag containing a private key encrypted a la PKCS #8.  The bag
      * content is a PKCS #8 <i>EncryptedPrivateKeyInfo</i>.
      */
     public static final OBJECT_IDENTIFIER PKCS8_SHROUDED_KEY_BAG =
