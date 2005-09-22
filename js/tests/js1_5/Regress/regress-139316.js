@@ -68,7 +68,7 @@ f = function ()
                        "hello world", str, new String ("newstring"),
                        true, new Boolean(0),
                        new Date());
-    print (e.stack);
+    printStatus (e.stack);
 }
 
 f();
