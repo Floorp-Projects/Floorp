@@ -266,6 +266,7 @@ function pasteFromClipboard()
                 date.hour = oldDate.hour;
                 date.minute = oldDate.minute;
                 date.second = oldDate.second;
+                date.timezone = oldDate.timezone;
                 date.normalize();
                 return date;
             }
