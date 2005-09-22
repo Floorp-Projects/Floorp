@@ -173,11 +173,16 @@ struct JSJumpTarget {
 #define JT_TO_BPDELTA(jt)       ((ptrdiff_t)((jsword)(jt) >> JT_UNTAG_SHIFT))
 
 #define SD_SET_TARGET(sd,jt)    ((sd)->target = JT_SET_TAG(jt))
+#define SD_GET_TARGET(sd)       (JS_ASSERT(JT_HAS_TAG((sd)->target)),         \
+                                 JT_CLR_TAG((sd)->target))
 #define SD_SET_BPDELTA(sd,bp)   ((sd)->target = BPDELTA_TO_JT(bp))
 #define SD_GET_BPDELTA(sd)      (JS_ASSERT(!JT_HAS_TAG((sd)->target)),        \
                                  JT_TO_BPDELTA((sd)->target))
-#define SD_TARGET_OFFSET(sd)    (JS_ASSERT(JT_HAS_TAG((sd)->target)),         \
-                                 JT_CLR_TAG((sd)->target)->offset)
+
+/* Avoid asserting twice by expanding SD_GET_TARGET in the "then" clause. */
+#define SD_SPAN(sd,pivot)       (SD_GET_TARGET(sd)                            \
+                                 ? JT_CLR_TAG((sd)->target)->offset - (pivot) \
+                                 : 0)
 
 struct JSCodeGenerator {
     JSTreeContext   treeContext;    /* base state: statement info stack, etc. */
