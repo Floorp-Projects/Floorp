@@ -4,16 +4,12 @@
 # Author: Darin Fisher
 #
 
-# -----------------------------------------------------------------------------
-# By default just assume that these tools exist on our path
-MAR=${MAR:-mar}
-BZIP2=${BZIP2:-bzip2}
-MBSDIFF=${MBSDIFF:-mbsdiff}
+. $(dirname "$0")/common.sh
 
 # -----------------------------------------------------------------------------
 
 print_usage() {
-  echo "Usage: $(basename $0) [OPTIONS] ARCHIVE FROMDIR TODIR"
+  notice "Usage: $(basename $0) [OPTIONS] ARCHIVE FROMDIR TODIR"
 }
 
 if [ $# = 0 ]; then
@@ -23,54 +19,16 @@ fi
 
 if [ $1 = -h ]; then
   print_usage
-  echo ""
-  echo "The differences between FROMDIR and TODIR will be stored in ARCHIVE."
-  echo ""
-  echo "Options:"
-  echo "  -h  show this help text"
-  echo ""
+  notice ""
+  notice "The differences between FROMDIR and TODIR will be stored in ARCHIVE."
+  notice ""
+  notice "Options:"
+  notice "  -h  show this help text"
+  notice ""
   exit 1
 fi
 
 # -----------------------------------------------------------------------------
-
-get_file_size() {
-  info=($(ls -l "$1"))
-  echo ${info[4]}
-}
-
-make_add_instruction() {
-  f="$1"
-  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
-  if [ $is_extension = "1" ]; then
-    # Use the subdirectory of the extensions folder as the file to test
-    # before performing this add instruction.
-    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
-    echo "add-if \"$testdir\" \"$f\""
-  else
-    echo "add \"$f\""
-  fi
-}
-
-make_patch_instruction() {
-  f="$1"
-  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
-  if [ $is_extension = "1" ]; then
-    # Use the subdirectory of the extensions folder as the file to test
-    # before performing this add instruction.
-    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
-    echo "patch-if \"$testdir\" \"$f.patch\" \"$f\""
-  else
-    echo "patch \"$f.patch\" \"$f\""
-  fi
-}
-
-# List all files in the current directory, stripping leading "./"
-# Skip the channel-prefs.js file as it should not be included in any
-# generated MAR files (see bug 306077).
-list_files() {
-  find . -type f ! -name "channel-prefs.js" | sed 's/\.\/\(.*\)/"\1"/'
-}
 
 archive="$1"
 olddir="$2"
@@ -143,6 +101,9 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   make_add_instruction "$f" >> "$manifest"
   archivefiles="$archivefiles \"$f\""
 done
+
+# Append remove instructions for any dead files.
+append_remove_instructions "$newdir/removed-files" >> $manifest
 
 $BZIP2 -z9 "$manifest" && mv -f "$manifest.bz2" "$manifest"
 

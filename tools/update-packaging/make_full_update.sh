@@ -4,15 +4,12 @@
 # Author: Darin Fisher
 #
 
-# -----------------------------------------------------------------------------
-# By default just assume that these tools exist on our path
-MAR=${MAR:-mar}
-BZIP2=${BZIP2:-bzip2}
+. $(dirname "$0")/common.sh
 
 # -----------------------------------------------------------------------------
 
 print_usage() {
-  echo "Usage: $(basename $0) [OPTIONS] ARCHIVE DIRECTORY"
+  notice "Usage: $(basename $0) [OPTIONS] ARCHIVE DIRECTORY"
 }
 
 if [ $# = 0 ]; then
@@ -22,47 +19,16 @@ fi
 
 if [ $1 = -h ]; then
   print_usage
-  echo ""
-  echo "The contents of DIRECTORY will be stored in ARCHIVE."
-  echo ""
-  echo "Options:"
-  echo "  -h  show this help text"
-  echo ""
+  notice ""
+  notice "The contents of DIRECTORY will be stored in ARCHIVE."
+  notice ""
+  notice "Options:"
+  notice "  -h  show this help text"
+  notice ""
   exit 1
 fi
 
 # -----------------------------------------------------------------------------
-
-copy_perm() {
-  reference="$1"
-  target="$2"
-
-  if [ -x "$reference" ]; then
-    chmod 0755 "$target"
-  else
-    chmod 0644 "$target"
-  fi
-}
-
-make_add_instruction() {
-  f="$1"
-  is_extension=$(echo "$f" | grep -c 'extensions/.*/')
-  if [ $is_extension = "1" ]; then
-    # Use the subdirectory of the extensions folder as the file to test
-    # before performing this add instruction.
-    testdir=$(echo "$f" | sed 's/\(extensions\/[^\/]*\)\/.*/\1/')
-    echo "add-if \"$testdir\" \"$f\""
-  else
-    echo "add \"$f\""
-  fi
-}
-
-# List all files in the current directory, stripping leading "./"
-# Skip the channel-prefs.js file as it should not be included in any
-# generated MAR files (see bug 306077).
-list_files() {
-  find . -type f ! -name "channel-prefs.js" | sed 's/\.\/\(.*\)/"\1"/'
-}
 
 archive="$1"
 targetdir="$2"
@@ -82,7 +48,7 @@ num_files=${#files[*]}
 for ((i=0; $i<$num_files; i=$i+1)); do
   f=${files[$i]}
 
-  echo "  processing $f"
+  notice "processing $f"
 
   make_add_instruction "$f" >> $manifest
 
@@ -93,6 +59,9 @@ for ((i=0; $i<$num_files; i=$i+1)); do
 
   targetfiles="$targetfiles \"$f\""
 done
+
+# Append remove instructions for any dead files.
+append_remove_instructions "$targetdir/removed-files" >> $manifest
 
 $BZIP2 -z9 "$manifest" && mv -f "$manifest.bz2" "$manifest"
 
