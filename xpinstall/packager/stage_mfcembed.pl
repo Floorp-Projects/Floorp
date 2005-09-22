@@ -41,29 +41,42 @@ return(1);
 
 sub StageProduct
 {
-  my($aDirSrcDist, $aDirStage, $aProductName, $aOsPkg) = @_;
+  my($aDirSrcDist, $aDirStage, $aProductName, $aInOs) = @_;
   my($dirDistPackagesProductName) = "$aDirSrcDist/packages/$aProductName";
   my($dirStageProductName)        = "$aDirStage/$aProductName";
   my($dirMozRoot)                 = StageUtils::GetAbsPath("moz_root");
   my($dirMozPackager)             = StageUtils::GetAbsPath("moz_packager");
 
+  my($osPkg);
+  my($osPkgFile);
+  if($aInOs =~ /^win$/i)
+  {
+    $osPkg = "dos";
+    $osPkgFile = "win";
+  }
+  else
+  {
+    $osPkg = $aInOs;
+    $osPkgFile = $aInOs;
+  }
+
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                     $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win",                 $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-win-supp",            $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-win-supp", $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-win-supp",         $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-$osPkgFile.pkg",                     $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-$osPkgFile",                 $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/pkgs-mfcembed-$osPkgFile-supp",            $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-$osPkgFile-supp", $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-$osPkgFile-supp",         $dirDistPackagesProductName);
 
   mkdir("$aDirStage", 0775)                        if (!(-e "$aDirStage"));
   mkdir("$aDirStage/$aProductName", 0775)          if (!(-e "$aDirStage/$aProductName"));
   mkdir("$aDirStage/$aProductName/mfcembed", 0775) if (!(-e "$aDirStage/$aProductName/mfcembed"));
 
   # Call pkgcp.pl on each of the package list
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"                 -d \"$dirStageProductName\"          -f \"$dirDistPackagesProductName/xpcom-win.pkg\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/gre_app_support\" -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-win-supp\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/basebrowser-win-supp\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/gre-win-supp\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"                 -d \"$dirStageProductName\"          -f \"$dirDistPackagesProductName/xpcom-$osPkgFile.pkg\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-$osPkgFile\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/gre_app_support\" -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/pkgs-mfcembed-$osPkgFile-supp\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/basebrowser-$osPkgFile-supp\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\"             -d \"$dirStageProductName/mfcembed\" -f \"$dirDistPackagesProductName/gre-$osPkgFile-supp\" -o $osPkg -v");
 }
 
