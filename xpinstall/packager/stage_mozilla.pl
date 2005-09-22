@@ -41,7 +41,7 @@ return(1);
 
 sub StageProduct
 {
-  my($aDirSrcDist, $aDirStage, $aProductName, $aOsPkg) = @_;
+  my($aDirSrcDist, $aDirStage, $aProductName, $aInOs) = @_;
   my($dirDistPackagesProductName) = "$aDirSrcDist/packages/$aProductName";
   my($dirStageProductName)        = "$aDirStage/$aProductName";
   my($dirMozRoot)                 = StageUtils::GetAbsPath("moz_root");
@@ -53,24 +53,42 @@ sub StageProduct
     print "   aDirSrcDist                 : $aDirSrcDist\n";
     print "   aDirStage                   : $aDirStage\n";
     print "   aProductName                : $aProductName\n";
-    print "   aOsPkg                      : $aOsPkg\n";
+    print "   aInOs                       : $aInOs\n";
     print "   dirDistPackagesProductName  : $dirDistPackagesProductName\n";
     print "   dirStageProductName         : $dirStageProductName\n";
     print "   dirMozRoot                  : $dirMozRoot\n";
     print "   dirMozPackager              : $dirMozPackager\n";
   }
 
+  my($osPkg);
+  my($osPkgFile);
+  if($aInOs =~ /^win$/i)
+  {
+    $osPkg = "dos";
+    $osPkgFile = "win";
+  }
+  elsif($aInOs =~ /^os2$/i)
+  {
+    $osPkg = "dos";
+    $osPkgFile = "os2";
+  }
+  else
+  {
+    $osPkg = $aInOs;
+    $osPkgFile = $aInOs;
+  }
+
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                   $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/packages-win",                    $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-$osPkgFile.pkg",                   $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/packages-$osPkgFile",                    $dirDistPackagesProductName);
 #  StageUtils::GeneratePackagesFromSinglePackage($inOs, "$dirMozPackager/packages-win", $dirDistPackagesProductName);
 
   # Call CreateStage() to create the aProductName stage dir using the packages
   # in dist/packages.
-  StageUtils::CreateStage($aDirSrcDist, $dirStageProductName, $dirDistPackagesProductName, $aOsPkg);
+  StageUtils::CreateStage($aDirSrcDist, $dirStageProductName, $dirDistPackagesProductName, $osPkg);
 
   # consolidate the .xpt files for each xpi into one file
-  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $aOsPkg --verbose");
+  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $osPkg --verbose");
 }
 

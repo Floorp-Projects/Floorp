@@ -41,28 +41,42 @@ return(1);
 
 sub StageProduct
 {
-  my($aDirSrcDist, $aDirStage, $aProductName, $aOsPkg) = @_;
+  my($aDirSrcDist, $aDirStage, $aProductName, $aInOs) = @_;
   my($dirDistPackagesProductName) = "$aDirSrcDist/packages/$aProductName";
   my($dirStageProductName)        = "$aDirStage/$aProductName";
   my($dirMozRoot)                 = StageUtils::GetAbsPath("moz_root");
   my($dirMozPackager)             = StageUtils::GetAbsPath("moz_packager");
 
+  my($osPkg);
+  my($osPkgFile);
+  if($aInOs =~ /^win$/i)
+  {
+    $osPkg = "dos";
+    $osPkgFile = "win";
+  }
+  else
+  {
+    $osPkg = $aInOs;
+    $osPkgFile = $aInOs;
+  }
+
+
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                              $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-installer-win.pkg", $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-installer-win.pkg",         $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-$osPkgFile.pkg",                              $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-installer-$osPkgFile.pkg", $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-installer-$osPkgFile.pkg",         $dirDistPackagesProductName);
 
   mkdir("$aDirStage", 0775) if (!(-e "$aDirStage"));
   mkdir("$aDirStage/$aProductName", 0775) if (!(-e "$aDirStage/$aProductName"));
   mkdir("$aDirStage/$aProductName/gre", 0775) if (!(-e "$aDirStage/$aProductName/gre"));
 
   # Call pkgcp.pl on each of the package list
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"     -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/xpcom-win.pkg\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/basebrowser-installer-win.pkg\" -o $aOsPkg -v");
-  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/gre-installer-win.pkg\" -o $aOsPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"     -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/xpcom-$osPkgFile.pkg\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/basebrowser-installer-$osPkgFile.pkg\" -o $osPkg -v");
+  system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/gre-installer-$osPkgFile.pkg\" -o $osPkg -v");
 
   # consolidate the .xpt files for each xpi into one file
-  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $aOsPkg --verbose");
+  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $osPkg --verbose");
 }
 
