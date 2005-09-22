@@ -85,6 +85,8 @@
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsObserverService.h"
 
@@ -116,6 +118,7 @@
 #include "nsIHistoryEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
+#include "nsIObserver.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -245,6 +248,7 @@ nsDocShell::nsDocShell():
     mHasFocus(PR_FALSE),
     mCreatingDocument(PR_FALSE),
     mUseErrorPages(PR_FALSE),
+    mObserveErrorPages(PR_TRUE),
     mAllowAuth(PR_TRUE),
     mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
@@ -366,6 +370,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
 ///*****************************************************************************
@@ -1704,6 +1709,14 @@ nsDocShell::GetUseErrorPages(PRBool *aUseErrorPages)
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(PRBool aUseErrorPages)
 {
+    // If mUseErrorPages is set explicitly, stop observing the pref.
+    if (mObserveErrorPages) {
+        nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs));
+        if (prefs) {
+            prefs->RemoveObserver("browser.xul.error_pages.enabled", this);
+            mObserveErrorPages = PR_FALSE;
+        }
+    }
     mUseErrorPages = aUseErrorPages;
     return NS_OK;
 }
@@ -3393,6 +3406,11 @@ nsDocShell::Create()
     if (NS_SUCCEEDED(rv))
         mUseErrorPages = tmpbool;
 
+    nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs, &rv));
+    if (NS_SUCCEEDED(rv) && mObserveErrorPages) {
+        prefs->AddObserver("browser.xul.error_pages.enabled", this, PR_FALSE);
+    }
+
     nsCOMPtr<nsIObserverService> serv = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (serv) {
         const char* msg = mItemType == typeContent ?
@@ -3421,7 +3439,16 @@ nsDocShell::Destroy()
     
     mIsBeingDestroyed = PR_TRUE;
 
-    //Fire unload event before we blow anything away.
+    // Remove our pref observers
+    if (mObserveErrorPages) {
+        nsCOMPtr<nsIPrefBranch2> prefs(do_QueryInterface(mPrefs));
+        if (prefs) {
+            prefs->RemoveObserver("browser.xul.error_pages.enabled", this);
+            mObserveErrorPages = PR_FALSE;
+        }
+    }
+
+    // Fire unload event before we blow anything away.
     (void) FirePageHideNotification(PR_TRUE);
 
     // Stop any URLs that are currently being loaded...
@@ -8327,7 +8354,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
 // nsRefreshTimer::nsITimerCallback
-//*****************************************************************************   
+//******************************************************************************
 NS_IMETHODIMP
 nsRefreshTimer::Notify(nsITimer * aTimer)
 {
@@ -8440,7 +8467,7 @@ nsDocShellFocusController::ClosingDown(nsIDocShell* aDocShell)
 
 //*****************************************************************************
 // nsDocShell::InterfaceRequestorProxy
-//*****************************************************************************  
+//*****************************************************************************
 nsDocShell::InterfaceRequestorProxy::InterfaceRequestorProxy(nsIInterfaceRequestor* p)
 {
     if (p) {
@@ -8495,7 +8522,7 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
 
 //*****************************************************************************
 // nsDocShell::nsIAuthPromptProvider
-//*****************************************************************************   
+//*****************************************************************************
 
 nsresult
 nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
@@ -8521,4 +8548,32 @@ nsDocShell::GetAuthPrompt(PRUint32 aPromptReason, nsIAuthPrompt **aResult)
     // of the dialogs works as it should when using tabs.
 
     return wwatch->GetNewAuthPrompter(window, aResult);
+}
+
+//*****************************************************************************
+// nsDocShell::nsIObserver
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
+                    const PRUnichar *aData)
+{
+    nsresult rv = NS_OK;
+    if (mObserveErrorPages &&
+        !nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
+        !nsCRT::strcmp(aData,
+          NS_LITERAL_STRING("browser.xul.error_pages.enabled").get())) {
+
+        nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        PRBool tmpbool;
+        rv = prefs->GetBoolPref("browser.xul.error_pages.enabled", &tmpbool);
+        if (NS_SUCCEEDED(rv))
+            mUseErrorPages = tmpbool;
+
+    } else {
+        rv = NS_ERROR_UNEXPECTED;
+    }
+    return rv;
 }
