@@ -201,6 +201,11 @@ nsAbLDAPAttributeMap.prototype = {
 
       for each (var attr in attrArray) {
 
+        // multiple attributes that mapped to the empty string are permitted
+        if (!attr.length) {
+          continue;
+        }
+
         // if we've seen this before, there's a problem
         if (attrsSeen.indexOf(attr) != -1) {
           throw Components.results.NS_ERROR_FAILURE;
