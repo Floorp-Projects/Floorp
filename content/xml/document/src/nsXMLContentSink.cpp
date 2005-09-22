@@ -498,7 +498,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
       || nodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin
 #endif
       ) {
-    aContent->DoneAddingChildren();
+    aContent->DoneAddingChildren(PR_FALSE);
   }
   
   if (!nodeInfo->NamespaceEquals(kNameSpaceID_XHTML) &&

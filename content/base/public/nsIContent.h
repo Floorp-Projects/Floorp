@@ -61,8 +61,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x66b01442, 0x75ed, 0x4605, \
- { 0x87, 0x06, 0x70, 0x22, 0x27, 0x9d, 0x19, 0x0b } }
+{ 0x89f20ce8, 0x08cd, 0x4066, \
+ { 0x8a, 0xd5, 0x9e, 0x11, 0x1e, 0x43, 0x52, 0x29 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -673,8 +673,12 @@ public:
    * boolean aFromParser to the NS_NewXXX() constructor for your element and
    * have the parser pass true.  See nsHTMLInputElement.cpp and
    * nsHTMLContentSink::MakeContentObject().
+   *
+   * @param aHaveNotified Whether there has been a
+   *        ContentInserted/ContentAppended notification for this content node
+   *        yet.
    */
-  virtual void DoneAddingChildren()
+  virtual void DoneAddingChildren(PRBool aHaveNotified)
   {
   }
 

@@ -447,7 +447,7 @@ nsXTFElementWrapper::BeginAddingChildren()
 }
 
 void
-nsXTFElementWrapper::DoneAddingChildren()
+nsXTFElementWrapper::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (mNotificationMask & nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN)
     GetXTFElement()->DoneAddingChildren();

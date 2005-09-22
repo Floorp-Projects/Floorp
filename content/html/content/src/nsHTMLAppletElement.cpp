@@ -76,7 +76,7 @@ public:
   // nsIDOMHTMLAppletElement
   NS_DECL_NSIDOMHTMLAPPLETELEMENT
 
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   // nsIContent
@@ -141,13 +141,13 @@ nsHTMLAppletElement::GetCapabilities() const
 }
 
 void
-nsHTMLAppletElement::DoneAddingChildren()
+nsHTMLAppletElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
   // If we're already in the document, start the load, because BindToTree
   // didn't.
   if (IsInDoc()) {
-    StartAppletLoad(MayHaveFrame());
+    StartAppletLoad(aHaveNotified);
   }
 }
 

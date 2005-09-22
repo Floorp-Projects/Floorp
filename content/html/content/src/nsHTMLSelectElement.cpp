@@ -243,7 +243,7 @@ public:
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
 
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
@@ -1636,7 +1636,7 @@ nsHTMLSelectElement::IsDoneAddingChildren()
 }
 
 void
-nsHTMLSelectElement::DoneAddingChildren()
+nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
 

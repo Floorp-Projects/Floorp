@@ -2787,7 +2787,7 @@ nsXULDocument::ResumeWalk()
 
 #ifdef MOZ_XTF
                     if (element->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
-                        element->DoneAddingChildren();
+                        element->DoneAddingChildren(PR_FALSE);
                     }
 #endif
                 }

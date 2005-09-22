@@ -109,7 +109,7 @@ public:
   virtual PRInt32 IntrinsicState() const;
 
   virtual void BeginAddingChildren();
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   
   // nsIDOMElement specializations:
   NS_IMETHOD GetAttribute(const nsAString& aName,
