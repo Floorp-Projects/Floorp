@@ -1332,8 +1332,8 @@ function ClearAttachmentList()
   var list = document.getElementById('attachmentList');
   list.clearSelection();
 
-  while (list.childNodes.length) 
-    list.removeItemAt(list.childNodes.length - 1);
+  while (list.hasChildNodes()) 
+    list.removeChild(list.lastChild);
 }
 
 function ShowEditMessageButton() 
