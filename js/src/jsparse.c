@@ -863,6 +863,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
 #endif
 
+    /*
+     * Set interpreted early so js_EmitTree can test it to decide whether to
+     * eliminate useless expressions.
+     */
+    fun->interpreted = JS_TRUE;
+
     /* Now parse formal argument list and compute fun->nargs. */
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
     if (!js_MatchToken(cx, ts, TOK_RP)) {

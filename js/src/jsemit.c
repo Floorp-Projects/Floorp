@@ -577,7 +577,7 @@ BuildSpanDepTable(JSContext *cx, JSCodeGenerator *cg)
             pc2 += JUMP_OFFSET_LEN;
             for (i = low; i <= high; i++) {
                 off = GET_JUMP_OFFSET(pc2);
-                if (off != 0 && !AddSpanDep(cx, cg, pc, pc2, off))
+                if (!AddSpanDep(cx, cg, pc, pc2, off))
                     return JS_FALSE;
                 pc2 += JUMP_OFFSET_LEN;
             }
@@ -788,7 +788,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             }
 
             if (!JOF_TYPE_IS_EXTENDED_JUMP(type)) {
-                span = SD_TARGET_OFFSET(sd) - pivot;
+                span = SD_SPAN(sd, pivot);
                 if (span < JUMP_OFFSET_MIN || JUMP_OFFSET_MAX < span) {
                     ptrdiff_t deltaFromTop = 0;
 
@@ -910,7 +910,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
         }
 
         oldpc = base + sd->before;
-        span = SD_TARGET_OFFSET(sd) - pivot;
+        span = SD_SPAN(sd, pivot);
 
         /*
          * If this jump didn't need to be extended, restore its span immediate
@@ -1112,7 +1112,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
         } else {
             span = GET_JUMP_OFFSET(pc);
         }
-        JS_ASSERT(SD_TARGET_OFFSET(sd) == pivot + span);
+        JS_ASSERT(SD_SPAN(sd, pivot) == span);
     }
     JS_ASSERT(!JOF_TYPE_IS_EXTENDED_JUMP(type) || bigspans != 0);
   }
@@ -2761,7 +2761,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
     fun->u.script = js_NewScriptFromCG(cx, cg, fun);
     if (!fun->u.script)
         return JS_FALSE;
-    fun->interpreted = JS_TRUE;
+    JS_ASSERT(fun->interpreted);
     if (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT)
         fun->flags |= JSFUN_HEAVYWEIGHT;
     return JS_TRUE;
