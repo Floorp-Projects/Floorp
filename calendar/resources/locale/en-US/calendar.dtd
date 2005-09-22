@@ -43,13 +43,13 @@
 <!ENTITY calendar.file.default.name  "My Calendar" >
 
 <!-- Alarm -->
-<!ENTITY alarm.units.minutes  "Minutes" >
-<!ENTITY alarm.units.hours    "Hours" >
-<!ENTITY alarm.units.days     "Days" >
+<!ENTITY alarm.units.minutes  "minutes" >
+<!ENTITY alarm.units.hours    "hours" >
+<!ENTITY alarm.units.days     "days" >
 
-<!ENTITY alarm.units.minutes.singular  "Minute" >
-<!ENTITY alarm.units.hours.singular    "Hour" >
-<!ENTITY alarm.units.days.singular     "Day" >
+<!ENTITY alarm.units.minutes.singular  "minute " >
+<!ENTITY alarm.units.hours.singular    "hour " >
+<!ENTITY alarm.units.days.singular     "day " >
 
 
 <!ENTITY repeat.units.days     "Days" >
@@ -62,7 +62,7 @@
 <!ENTITY repeat.units.months.singular   "Month" >
 <!ENTITY repeat.units.years.singular    "Year" >
 
-<!ENTITY priority.level.none              "None">
+<!ENTITY priority.level.none              "Not specified">
 <!ENTITY priority.level.none.accesskey    "N">
 <!ENTITY priority.level.low               "Low">
 <!ENTITY priority.level.low.accesskey     "L">
@@ -76,26 +76,38 @@
 <!ENTITY newevent.start.label        "Start" >
 <!ENTITY newevent.date.label         "Date" >
 <!ENTITY newevent.startdate.label    "Start" >
+<!ENTITY newevent.from.label         "From" >
+<!ENTITY newevent.to.label           "To" >
 <!ENTITY newevent.enddate.label      "End" >
 <!ENTITY newevent.end.label          "End" >
+<!ENTITY newevent.settings.label     "General Settings" >
 <!ENTITY newevent.alldayevent.label  "All Day" >
 <!ENTITY newevent.description.label  "Description" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "Visit URL" >
 <!ENTITY newevent.private.label      "Private" >
+<!ENTITY newevent.privacy.label      "Privacy" >
 <!ENTITY newevent.private.note       "This event is private." >
+<!ENTITY newevent.public.label       "Public" >
+<!ENTITY newevent.confidential.label "Confidential" >
 <!ENTITY newevent.alarm.label        "Alarm" >
 <!ENTITY newevent.server.label       "Calendar" >
 <!ENTITY newevent.invite.label       "Invite" >
+<!ENTITY newevent.details.label      "Details" >
 <!ENTITY newevent.email.label        "Email Alarm To:" >
-<!ENTITY newevent.beforealarm.label  "before the event starts" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarm.label  "before this event" >
+<!ENTITY newevent.begin.label        "begins" >
+<!ENTITY newevent.end.label          "ends" >
+<!ENTITY newevent.isdue.label        "is due" >
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
 <!ENTITY newevent.numberoftimes.label "Number of times" >
 <!ENTITY newevent.category.label      "Category" >
-<!ENTITY newevent.exceptions.caption "Exceptions">
+<!ENTITY newevent.popup.label         "Popup" >
+<!ENTITY newevent.popupsound.label    "Popup &amp; Play Sound" >
+<!ENTITY newevent.sendmail.label      "Send Email to:" >
+<!ENTITY newevent.exceptions.caption  "Exceptions">
 <!ENTITY newevent.addexceptions.label "Add Exception">
 <!ENTITY newevent.deleteexceptions.label "Delete Exception">
 <!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
@@ -116,7 +128,7 @@
 <!ENTITY newevent.status.longlabel "Event Status">
 <!ENTITY newevent.status.needsaction.label "Needs Action" >
 <!ENTITY newevent.status.inprogress.label  "In Process" >
-<!ENTITY newevent.status.completed.label   "Completed" >
+<!ENTITY newevent.status.completed.label   "Completed on" >
 <!ENTITY newevent.status.cancelled.label   "Cancelled" >
 <!ENTITY newevent.status.tentative.label   "Tentative" >
 <!ENTITY newevent.status.confirmed.label   "Confirmed" >
@@ -124,6 +136,8 @@
 <!ENTITY newevent.itemType.event.label      "Event" >
 <!ENTITY newevent.itemType.todo.label       "Task" >
 <!ENTITY newevent.itemType.journal.label    "Journal" >
+<!ENTITY newevent.add.contact.label         "Add" >
+<!ENTITY newevent.attach.file.label         "Attach File…" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "On the xth day of the month">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4th Tuesday of the month">
@@ -141,7 +155,6 @@
 <!ENTITY newevent.advanced.repeat.third.extension "rd">
 <!ENTITY newevent.advanced.repeat.nth.extension "th">
 
-<!ENTITY newevent.choosefile.label "Choose File">
 <!ENTITY newevent.removeselectedfile.label "Remove Selected File">
 
 <!ENTITY newtodo.completed.label "Completed">
@@ -153,7 +166,7 @@
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 <!ENTITY newtodo.cancelled.label "Cancelled">
 <!ENTITY newtodo.status.label "Status">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
+<!ENTITY newtodo.beforealarm.label  "before this task" >
 <!ENTITY newtodo.beforealarmends.label  "before the task is due" >
 <!ENTITY newtodo.newtodo.tab.label "Task" >
 <!ENTITY newtodo.status.longlabel "Task Status">
@@ -451,6 +464,9 @@
 <!ENTITY calendarproperties.format.label   "Format:">
 <!ENTITY calendarproperties.location.label "Location:">
 <!ENTITY calendarproperties.name.label     "Name:">
+
+<!-- Sunbird Help -->
+<!ENTITY calendar.help.label               "Help Contents">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publish Calendar">

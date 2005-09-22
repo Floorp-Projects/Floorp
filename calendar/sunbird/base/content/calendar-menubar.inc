@@ -410,7 +410,7 @@
              accesskey="&helpMenu.accesskey;">
          <menupopup id="menu_HelpPopup">
            <!-- XXX lilmatt: Finish/localize this!  oncommand="openTopWin('&helpURL;');" -->
-           <menuitem label="Help Contents"
+           <menuitem label="&calendar.help.label;"
                      disabled="true"/>
            <menuitem accesskey="&releaseCmd.accesskey;"
                      label="&releaseCmd.label;"

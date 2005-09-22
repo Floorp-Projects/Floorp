@@ -127,7 +127,7 @@
       <vbox flex="1">
         <hbox flex="1">
           <groupbox flex="1">
-            <caption label="General Settings"/>
+            <caption label="&newevent.settings.label;"/>
             <grid>
               <columns>
                 <column />
@@ -183,17 +183,16 @@
                 <row align="center" flex="1">
                   <!-- Privacy -->
                 <hbox class="field-label-box-class" pack="end">
-                    <!-- XXX Localise this: &newevent.private.label; -->
-                    <label for="privacy-menulist" value="Privacy"/>
+                    <label for="privacy-menulist" value="&newevent.privacy.label;"/>
                   </hbox>
                   <hbox flex="1">
                     <menulist id="privacy-menulist" crop="none">
                       <menupopup>
-                        <menuitem label="Public"
+                        <menuitem label="&newevent.public.label;"
                                   value="PUBLIC"/>
-                        <menuitem label="Private"
+                        <menuitem label="&newevent.private.label;"
                                   value="PRIVATE"/>
-                        <menuitem label="Confidential"
+                        <menuitem label="&newevent.confidential.label;"
                                   value="CONFIDENTIAL"/>
                       </menupopup>
                     </menulist>
@@ -205,8 +204,7 @@
                              value="&newtodo.priority.label;"/>
                       <menulist id="priority-levels">
                         <menupopup>
-                          <menuitem label="Not Specified"           value="0"/>
-                          <!-- XXX localize "&priority.level.none;" -->
+                          <menuitem label="&priority.level.none;"   value="0"/>
                           <menuitem label="&priority.level.low;"    value="9"/>
                           <menuitem label="&priority.level.medium;" value="5"/>
                           <menuitem label="&priority.level.high;"   value="1"/>
@@ -226,7 +224,7 @@
         <hbox flex="1">
           <!-- Schedule -->
           <groupbox flex="1">
-            <caption label="Details"/>
+            <caption label="&newevent.details.label;"/>
              <hbox>
               <grid>
                 <columns>
@@ -259,15 +257,14 @@
                     <hbox pack="end" align="center">
                       <label id="event-start-datetime-label"
                              class="field-label-box-class"
-                             value="From"
+                             value="&newevent.from.label;"
                              hidden-controller="event"
                              hidden="true"/>
                       <label id="task-start-datetime-label"
                              class="field-label-box-class"
-                             value="Date"
+                             value="&newevent.date.label;"
                              hidden-controller="todo"
                              hidden="true"/>
-                             <!-- XXX Localise: &newevent.startdate.label; -->
                     </hbox>
                     <hbox flex="1">
                       <checkbox id="start-checkbox"
@@ -291,7 +288,7 @@
                   <row>
                     <hbox pack="end" align="center">
                       <label id="event-end-datetime-label"
-                             value="To"
+                             value="&newevent.to.label;"
                              hidden-controller="event"
                              hidden="true"/>
                       <label id="task-due-datetime-label"
@@ -354,7 +351,7 @@
                                 hidden-controller="event"
                                 hidden="true">
                         <menupopup id="event-status-menulist-menupopup">
-                          <menuitem label="None"
+                          <menuitem label="&priority.level.none;"
                                     value="NONE"/>
                           <menuitem label="&newevent.status.tentative.label;"
                                     value="TENTATIVE"/>
@@ -369,15 +366,15 @@
                                 hidden-controller="todo"
                                 hidden="true">
                         <menupopup id="todo-status-menulist-menupopup">
-                          <menuitem label="None"
+                          <menuitem label="&priority.level.none;"
                                     value="NONE"/>
-                          <menuitem label="Needs Action"
+                          <menuitem label="&newevent.status.needsaction.label;"
                                     value="NEEDS-ACTION"/>
-                          <menuitem label="In Process"
+                          <menuitem label="&newevent.status.inprogress.label;"
                                     value="IN-PROCESS"/>
-                          <menuitem label="Completed on"
+                          <menuitem label="&newevent.status.completed.label;"
                                     value="COMPLETED"/>
-                          <menuitem label="Cancelled"
+                          <menuitem label="&newevent.status.cancelled.label;"
                                     value="CANCELLED"/>
                         </menupopup>
                       </menulist>
@@ -422,16 +419,16 @@
                     <hbox pack="end" align="center">
                       <label id="alarm-label"
                              for="alarm-type"
-                             value="Alarm"/>
+                             value="&newevent.alarm.label;"/>
                     </hbox>
                     <hbox flex="1" align="center">
                       <menulist id="alarm-type" crop="none" oncommand="processAlarmType()">
                         <menupopup>
-                          <menuitem label="None" value="none"/>
-                          <menuitem label="Popup" value="popup"/>
-                          <menuitem label="Popup &amp; Play Sound" value="popupAndSound"
+                          <menuitem label="&priority.level.none;" value="none"/>
+                          <menuitem label="&newevent.popup.label;" value="popup"/>
+                          <menuitem label="&newevent.popupsound.label;" value="popupAndSound"
                                     hidden="true" disabled="true"/>
-                          <menuitem label="Send Email" value="email"/>
+                          <menuitem label="&newevent.sendmail.label;" value="email"/>
                         </menupopup>
                       </menulist>
                       <textbox id="alarm-length-field" size="5" maxlength="3" 
@@ -440,40 +437,26 @@
                                 crop="none"
                                 labelnumber="label2">
                         <menupopup>
-                          <menuitem label="minutes"
-                                    label1="minute "
-                                    label2="minutes"
-                                    value="minutes"/>
-                          <menuitem label="hours"
-                                    label1="hour "
-                                    label2="hours"
-                                    value="hours"/>
-                          <menuitem label="days"
-                                    label1="day "
-                                    label2="days"
-                                    value="days"/>
-                          <!-- XXX original code for fixing localization 
                           <menuitem label="&alarm.units.minutes;"
-                                    label1="&alarm.units.minutes;"
-                                    label2="&alarm.units.minutes.singular;"
+                                    label1="&alarm.units.minutes.singular;"
+                                    label2="&alarm.units.minutes;"
                                     value="minutes"/>
                           <menuitem label="&alarm.units.hours;"
-                                    label1="&alarm.units.hours;"
-                                    label2="&alarm.units.hours.singular;"
-                                    value="hours" />
+                                    label1="&alarm.units.hours.singular;"
+                                    label2="&alarm.units.hours;"
+                                    value="hours"/>
                           <menuitem label="&alarm.units.days;"
-                                    label1="&alarm.units.days;"
-                                    label2="&alarm.units.days.singular;"
+                                    label1="&alarm.units.days.singular;"
+                                    label2="&alarm.units.days;"
                                     value="days"/>
-                          -->
                         </menupopup>
                       </menulist>
                       <label id="before-this-event-label"
-                             value="before this event"
+                             value="&newevent.beforealarm.label;"
                              hidden-controller="event"
                              hidden="true"/>
                       <label id="before-this-todo-label"
-                             value="before this task"
+                             value="&newtodo.beforealarm.label;"
                              hidden-controller="todo"
                              hidden="true"/>
                       <!-- Here we're reusing the plural/singular code to
@@ -485,19 +468,14 @@
                                 crop="none"
                                 labelnumber="label2">
                         <menupopup>
-                          <menuitem label="begins"
-                                    label1="begins"
-                                    label2="begins"
+                          <menuitem label="&newevent.begin.label;"
+                                    label1="&newevent.begin.label;"
+                                    label2="&newevent.begin.label;"
                                     value="START"/>
-                          <menuitem label="ends"
-                                    label1="is due"
-                                    label2="ends"
+                          <menuitem label="&newevent.end.label;"
+                                    label1="&newevent.isdue.label;"
+                                    label2="&newevent.end.label;"
                                     value="END"/>
-                          <!-- XXX original code for fixing localization 
-                          <menuitem label="&newevent.beforealarm.label;">
-                          <menuitem label="&newevent.beforealarmends.label;">
-                          <menuitem label="&newtodo.beforealarm.label;">
-                          <menuitem label="&newtodo.beforealarmends.label;">-->
                         </menupopup>
                       </menulist>
                     </hbox>
@@ -510,7 +488,7 @@
                       <label id="alarm-email-field-label"
                              class="field-label-box-class"
                              for="alarm-email-field"
-                             value="Send email to:"/>
+                             value="&newevent.sendmail.label;"/>
                       <!-- XXX oncommand="commandAlarmEmail()" -->
                       <textbox id="alarm-email-field"
 #ifndef MOZ_SUNBIRD
@@ -540,7 +518,7 @@
       <vbox flex="1">
         <hbox flex="1">
           <groupbox flex="1">
-          <caption label="Recurrence"/>
+          <caption label="&newevent.recurrence.tab.label;"/>
           <hbox id="repeat-box" align="center">
             <checkbox id="repeat-checkbox"
                       class="proper-align"
@@ -755,7 +733,7 @@
                               oninput="processTextboxWithButton( this.id, 'invite-email-button' );"
                               disabled="true"/>
                      <button id="invite-email-button"
-                             label="Add"
+                             label="&newevent.add.contact.label;"
                              onclick="onInviteeAdd();"
                              disabled="true"/>
                   </hbox>
@@ -870,8 +848,7 @@
                          label="&newevent.removeselectedfile.label;"/>
                  <button id="attachment-add-button"
                          onclick="AttachFile()"
-                         label="Attach File..."/>
-                         <!-- XXX Localize "&newevent.choosefile.label;" -->
+                         label="&newevent.attach.file.label;"/>
               </hbox>
             </groupbox>
          </tabpanel>

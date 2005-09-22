@@ -101,7 +101,7 @@
       
       <vbox id="inner-day-view-box" flex="1">
          <hbox id="all-day-collapsible-box" ondblclick="dayAllDayDoubleClick( event )">
-            <label id="all-day-content-title" value="All-day Events"/>
+            <label id="all-day-content-title" value="&allDayEvents.label;"/>
             <vbox id="all-day-content-box" flex="1">
             </vbox>
          </hbox>

@@ -78,23 +78,23 @@
 
  <!-- Thunderbid Toolbar Overlay -->  
    <toolbarpalette id="MailToolbarPalette">
-          <toolbarbutton id="calendar-button" tooltiptext="Calendar" 
+          <toolbarbutton id="calendar-button" tooltiptext="&calendarCmd.label;" 
                          oncommand="openCalendar();"
-                         class="toolbarbutton-1" label="Calendar"/>
+                         class="toolbarbutton-1" label="&calendarCmd.label;"/>
   </toolbarpalette>
 
    <toolbarpalette id="MsgComposeToolbarPalette">
-          <toolbarbutton id="calendar-button" tooltiptext="Calendar" 
+          <toolbarbutton id="calendar-button" tooltiptext="&calendarCmd.label;" 
                          class="toolbarbutton-1" 
-			 label="Calendar"
+			 label="&calendarCmd.label;"
 			 oncommand="openCalendar();"/>
   </toolbarpalette>
 
  <!-- Firebird Toolbar Overlay -->  
    <toolbarpalette id="BrowserToolbarPalette">
-          <toolbarbutton id="calendar-button" tooltiptext="Calendar" 
+          <toolbarbutton id="calendar-button" tooltiptext="&calendarCmd.label;" 
                          oncommand="openCalendar();"
-                         class="toolbarbutton-1" label="Calendar"/>
+                         class="toolbarbutton-1" label="&calendarCmd.label;"/>
   </toolbarpalette>
 
 </overlay>
