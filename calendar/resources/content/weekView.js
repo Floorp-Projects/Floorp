@@ -417,6 +417,13 @@ WeekView.prototype.createEventBoxInternal = function (event)
     debug("index is:" + index + "(" + startDate.weekday + " - " + dayIndex.getDay() + ")\n");
 
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
+    // All-day events won't find a good ElementOfRef normally,
+    if (!ElementOfRef.boxObject.width) {
+        var sHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref,
+                               "event.defaultstarthour", 8);
+        ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex 
+                                                + "-item-" + sHour);
+    }
     var hourHeight = ElementOfRef.boxObject.height;
     var ElementOfRefEnd = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + endDate.hour) ;
     var hourHeightEnd = ElementOfRefEnd.boxObject.height;
