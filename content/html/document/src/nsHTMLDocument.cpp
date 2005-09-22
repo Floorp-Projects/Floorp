@@ -3504,6 +3504,12 @@ nsHTMLDocument::RemoveWyciwygChannel(void)
 void *
 nsHTMLDocument::GenerateParserKey(void)
 {
+  if (!mScriptLoader) {
+    // If we don't have a script loader, then the parser probably isn't parsing
+    // anything anyway, so just return null.
+    return nsnull;
+  }
+
   // The script loader provides us with the currently executing script element,
   // which is guaranteed to be unique per script.
   nsCOMPtr<nsIScriptElement> key;
