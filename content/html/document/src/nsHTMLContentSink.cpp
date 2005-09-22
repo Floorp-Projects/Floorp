@@ -410,7 +410,8 @@ protected:
 
   // Routines for tags that require special handling when we reach their end
   // tag.
-  nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content);
+  nsresult ProcessSCRIPTEndTag(nsGenericHTMLElement* content,
+                               PRBool aHaveNotified);
   nsresult ProcessSTYLEEndTag(nsGenericHTMLElement* content);
 
   nsresult OpenHeadContext();
@@ -728,6 +729,13 @@ public:
   void DidAddContent(nsIContent* aContent, PRBool aDidNotify = PR_FALSE);
   void UpdateChildCounts();
 
+private:
+  // Function to check whether we've notified for the current content.
+  // What this actually does is check whether we've notified for all
+  // of the parent's kids.
+  PRBool HaveNotifiedForCurrentContent() const;
+  
+public:
   HTMLContentSink* mSink;
   PRInt32 mNotifyLevel;
   nsCOMPtr<nsITextContent> mLastTextNode;
@@ -1282,6 +1290,17 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+PRBool
+SinkContext::HaveNotifiedForCurrentContent() const
+{
+  if (0 < mStackPos) {
+    nsIContent* parent = mStack[mStackPos - 1].mContent;
+    return mStack[mStackPos-1].mNumFlushed == parent->GetChildCount();
+  }
+
+  return PR_TRUE;
+}
+
 nsresult
 SinkContext::CloseContainer(const nsHTMLTag aTag)
 {
@@ -1376,11 +1395,12 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   case eHTMLTag_textarea:
   case eHTMLTag_object:
   case eHTMLTag_applet:
-    content->DoneAddingChildren();
+    content->DoneAddingChildren(HaveNotifiedForCurrentContent());
     break;
 
   case eHTMLTag_script:
-    result = mSink->ProcessSCRIPTEndTag(content);
+    result = mSink->ProcessSCRIPTEndTag(content,
+                                        HaveNotifiedForCurrentContent());
     break;
 
   case eHTMLTag_style:
@@ -3994,7 +4014,8 @@ HTMLContentSink::PostEvaluateScript()
 }
 
 nsresult
-HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content)
+HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content,
+                                     PRBool aHaveNotified)
 {
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
   NS_ASSERTION(sele, "Not really closing a script tag?");
@@ -4032,7 +4053,7 @@ HTMLContentSink::ProcessSCRIPTEndTag(nsGenericHTMLElement *content)
 
   // Now tell the script that it's ready to go. This will execute the script
   // and call our ScriptAvailable method.
-  content->DoneAddingChildren();
+  content->DoneAddingChildren(aHaveNotified);
   
   // To prevent script evaluation in a frameset document, we suspended
   // the script loader. Now that the script content has been handled,

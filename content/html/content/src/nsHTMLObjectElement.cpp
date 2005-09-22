@@ -95,7 +95,7 @@ public:
   NS_IMETHOD SaveState();
   virtual PRBool RestoreState(nsPresState* aState);
 
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
@@ -139,14 +139,14 @@ nsHTMLObjectElement::IsDoneAddingChildren()
 }
 
 void
-nsHTMLObjectElement::DoneAddingChildren()
+nsHTMLObjectElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mIsDoneAddingChildren = PR_TRUE;
 
   // If we're already in a document, we need to trigger the load
   // Otherwise, BindToTree takes care of that.
   if (IsInDoc()) {
-    StartObjectLoad(MayHaveFrame());
+    StartObjectLoad(aHaveNotified);
   }
 }
 

@@ -134,7 +134,7 @@ public:
                                   nsEventStatus* aEventStatus);
   virtual void SetFocus(nsPresContext* aPresContext);
 
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
 protected:
@@ -612,7 +612,7 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
 }
 
 void
-nsHTMLTextAreaElement::DoneAddingChildren()
+nsHTMLTextAreaElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   if (!mValueChanged) {
     if (!mDoneAddingChildren) {

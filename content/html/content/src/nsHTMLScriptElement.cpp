@@ -357,7 +357,7 @@ public:
 
   virtual nsresult GetInnerHTML(nsAString& aInnerHTML);
   virtual nsresult SetInnerHTML(const nsAString& aInnerHTML);
-  virtual void DoneAddingChildren();
+  virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
 protected:
@@ -551,7 +551,7 @@ nsHTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML)
 }
 
 void
-nsHTMLScriptElement::DoneAddingChildren()
+nsHTMLScriptElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mDoneAddingChildren = PR_TRUE;
   MaybeProcessScript();
