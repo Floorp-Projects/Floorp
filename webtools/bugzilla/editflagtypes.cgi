@@ -112,6 +112,7 @@ sub list {
 
 sub edit {
     $action eq 'enter' ? validateTargetType() : (my $id = validateID());
+    my $dbh = Bugzilla->dbh;
     
     # Get this installation's products and components.
     GetVersionTable();
@@ -140,8 +141,9 @@ sub edit {
         foreach my $group ("grant_gid", "request_gid") {
             my $gid = $vars->{'type'}->{$group};
             next if (!$gid);
-            SendSQL("SELECT name FROM groups WHERE id = $gid");
-            $vars->{'type'}->{$group} = FetchOneColumn();
+            ($vars->{'type'}->{$group}) =
+                $dbh->selectrow_array('SELECT name FROM groups WHERE id = ?',
+                                       undef, $gid);
         }
     }
     # Otherwise set the target type (the minimal information about the type
@@ -238,9 +240,9 @@ sub clusion_array_to_hash {
 }
 
 sub insert {
-    validateName();
-    validateDescription();
-    validateCCList();
+    my $name = validateName();
+    my $description = validateDescription();
+    my $cc_list = validateCCList();
     validateTargetType();
     validateSortKey();
     validateIsActive();
@@ -251,9 +253,6 @@ sub insert {
 
     my $dbh = Bugzilla->dbh;
 
-    my $name = SqlQuote($cgi->param('name'));
-    my $description = SqlQuote($cgi->param('description'));
-    my $cc_list = SqlQuote($cgi->param('cc_list'));
     my $target_type = $cgi->param('target_type') eq "bug" ? "b" : "a";
 
     $dbh->bz_lock_tables('flagtypes WRITE', 'products READ',
@@ -261,23 +260,21 @@ sub insert {
                          'flagexclusions WRITE');
 
     # Determine the new flag type's unique identifier.
-    SendSQL("SELECT MAX(id) FROM flagtypes");
-    my $id = FetchSQLData() + 1;
-    
+    my $id = $dbh->selectrow_array('SELECT MAX(id) FROM flagtypes') + 1;
+
     # Insert a record for the new flag type into the database.
-    SendSQL("INSERT INTO flagtypes (id, name, description, cc_list, 
-                 target_type, sortkey, is_active, is_requestable, 
-                 is_requesteeble, is_multiplicable, 
-                 grant_group_id, request_group_id) 
-             VALUES ($id, $name, $description, $cc_list, '$target_type', " .
-                 $cgi->param('sortkey') . ", " .
-                 $cgi->param('is_active') . ", " .
-                 $cgi->param('is_requestable') . ", " .
-                 $cgi->param('is_requesteeble') . ", " .
-                 $cgi->param('is_multiplicable') . ", " .
-                 $cgi->param('grant_gid') . ", " .
-                 $cgi->param('request_gid') . ")");
-    
+    $dbh->do('INSERT INTO flagtypes
+                          (id, name, description, cc_list, target_type,
+                           sortkey, is_active, is_requestable, 
+                           is_requesteeble, is_multiplicable, 
+                           grant_group_id, request_group_id) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              undef, ($id, $name, $description, $cc_list, $target_type,
+                      $cgi->param('sortkey'), $cgi->param('is_active'),
+                      $cgi->param('is_requestable'), $cgi->param('is_requesteeble'),
+                      $cgi->param('is_multiplicable'), scalar($cgi->param('grant_gid')),
+                      scalar($cgi->param('request_gid'))));
+
     # Populate the list of inclusions/exclusions for this flag type.
     validateAndSubmit($id);
 
@@ -297,9 +294,9 @@ sub insert {
 
 sub update {
     my $id = validateID();
-    validateName();
-    validateDescription();
-    validateCCList();
+    my $name = validateName();
+    my $description = validateDescription();
+    my $cc_list = validateCCList();
     validateTargetType();
     validateSortKey();
     validateIsActive();
@@ -309,26 +306,20 @@ sub update {
     validateGroups();
 
     my $dbh = Bugzilla->dbh;
-
-    my $name = SqlQuote($cgi->param('name'));
-    my $description = SqlQuote($cgi->param('description'));
-    my $cc_list = SqlQuote($cgi->param('cc_list'));
-
     $dbh->bz_lock_tables('flagtypes WRITE', 'products READ',
                          'components READ', 'flaginclusions WRITE',
                          'flagexclusions WRITE');
-    SendSQL("UPDATE  flagtypes 
-                SET  name = $name , 
-                     description = $description , 
-                     cc_list = $cc_list , 
-                     sortkey = " . $cgi->param('sortkey') . ",
-                     is_active = " . $cgi->param('is_active') . ",
-                     is_requestable = " . $cgi->param('is_requestable') . ",
-                     is_requesteeble = " . $cgi->param('is_requesteeble') . ",
-                     is_multiplicable = " . $cgi->param('is_multiplicable') . ",
-                     grant_group_id = " . $cgi->param('grant_gid') . ",
-                     request_group_id = " . $cgi->param('request_gid') . "
-              WHERE  id = $id");
+    $dbh->do('UPDATE flagtypes
+                 SET name = ?, description = ?, cc_list = ?,
+                     sortkey = ?, is_active = ?, is_requestable = ?,
+                     is_requesteeble = ?, is_multiplicable = ?,
+                     grant_group_id = ?, request_group_id = ?
+               WHERE id = ?',
+              undef, ($name, $description, $cc_list, $cgi->param('sortkey'),
+                      $cgi->param('is_active'), $cgi->param('is_requestable'),
+                      $cgi->param('is_requesteeble'), $cgi->param('is_multiplicable'),
+                      scalar($cgi->param('grant_gid')), scalar($cgi->param('request_gid')),
+                      $id));
     
     # Update the list of inclusions/exclusions for this flag type.
     validateAndSubmit($id);
@@ -337,34 +328,40 @@ sub update {
     
     # Clear existing flags for bugs/attachments in categories no longer on 
     # the list of inclusions or that have been added to the list of exclusions.
-    SendSQL("
-        SELECT flags.id 
-        FROM flags
-        INNER JOIN bugs
-          ON flags.bug_id = bugs.bug_id
-        LEFT OUTER JOIN flaginclusions AS i
-          ON (flags.type_id = i.type_id 
-            AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
-            AND (bugs.component_id = i.component_id OR i.component_id IS NULL))
-        WHERE flags.type_id = $id
-        AND flags.is_active = 1
-        AND i.type_id IS NULL
-    ");
-    Bugzilla::Flag::clear(FetchOneColumn()) while MoreSQLData();
+    my $flag_ids = $dbh->selectcol_arrayref('SELECT flags.id
+                                               FROM flags
+                                         INNER JOIN bugs
+                                                 ON flags.bug_id = bugs.bug_id
+                                    LEFT OUTER JOIN flaginclusions AS i
+                                                 ON (flags.type_id = i.type_id 
+                                                     AND (bugs.product_id = i.product_id
+                                                          OR i.product_id IS NULL)
+                                                     AND (bugs.component_id = i.component_id
+                                                          OR i.component_id IS NULL))
+                                              WHERE flags.type_id = ?
+                                                AND flags.is_active = 1
+                                                AND i.type_id IS NULL',
+                                             undef, $id);
+    foreach my $flag_id (@$flag_ids) {
+        Bugzilla::Flag::clear($flag_id);
+    }
     
-    SendSQL("
-        SELECT flags.id 
-        FROM flags
-        INNER JOIN bugs 
-           ON flags.bug_id = bugs.bug_id
-        INNER JOIN flagexclusions AS e
-           ON flags.type_id = e.type_id
-        WHERE flags.type_id = $id
-        AND flags.is_active = 1
-        AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
-        AND (bugs.component_id = e.component_id OR e.component_id IS NULL)
-    ");
-    Bugzilla::Flag::clear(FetchOneColumn()) while MoreSQLData();
+    $flag_ids = $dbh->selectcol_arrayref('SELECT flags.id 
+                                            FROM flags
+                                      INNER JOIN bugs 
+                                              ON flags.bug_id = bugs.bug_id
+                                      INNER JOIN flagexclusions AS e
+                                              ON flags.type_id = e.type_id
+                                           WHERE flags.type_id = ?
+                                             AND flags.is_active = 1
+                                             AND (bugs.product_id = e.product_id
+                                                  OR e.product_id IS NULL)
+                                             AND (bugs.component_id = e.component_id
+                                                  OR e.component_id IS NULL)',
+                                          undef, $id);
+    foreach my $flag_id (@$flag_ids) {
+        Bugzilla::Flag::clear($flag_id);
+    }
     
     $vars->{'name'} = $cgi->param('name');
     $vars->{'message'} = "flag_type_changes_saved";
@@ -413,13 +410,13 @@ sub deleteType {
     
     # Get the name of the flag type so we can tell users
     # what was deleted.
-    SendSQL("SELECT name FROM flagtypes WHERE id = $id");
-    $vars->{'name'} = FetchOneColumn();
-    
-    SendSQL("DELETE FROM flags WHERE type_id = $id");
-    SendSQL("DELETE FROM flaginclusions WHERE type_id = $id");
-    SendSQL("DELETE FROM flagexclusions WHERE type_id = $id");
-    SendSQL("DELETE FROM flagtypes WHERE id = $id");
+    ($vars->{'name'}) = $dbh->selectrow_array('SELECT name FROM flagtypes
+                                               WHERE id = ?', undef, $id);
+
+    $dbh->do('DELETE FROM flags WHERE type_id = ?', undef, $id);
+    $dbh->do('DELETE FROM flaginclusions WHERE type_id = ?', undef, $id);
+    $dbh->do('DELETE FROM flagexclusions WHERE type_id = ?', undef, $id);
+    $dbh->do('DELETE FROM flagtypes WHERE id = ?', undef, $id);
     $dbh->bz_unlock_tables();
 
     $vars->{'message'} = "flag_type_deleted";
@@ -440,7 +437,7 @@ sub deactivate {
     my $dbh = Bugzilla->dbh;
 
     $dbh->bz_lock_tables('flagtypes WRITE');
-    SendSQL("UPDATE flagtypes SET is_active = 0 WHERE id = $id");
+    $dbh->do('UPDATE flagtypes SET is_active = 0 WHERE id = ?', undef, $id);
     $dbh->bz_unlock_tables();
     
     $vars->{'message'} = "flag_type_deactivated";
@@ -460,42 +457,52 @@ sub deactivate {
 ################################################################################
 
 sub validateID {
+    my $dbh = Bugzilla->dbh;
     # $flagtype_id is destroyed if detaint_natural fails.
     my $flagtype_id = $cgi->param('id');
     detaint_natural($flagtype_id)
       || ThrowCodeError("flag_type_id_invalid",
                         { id => scalar $cgi->param('id') });
 
-    SendSQL("SELECT 1 FROM flagtypes WHERE id = $flagtype_id");
-    FetchOneColumn()
+    my $flagtype_exists =
+        $dbh->selectrow_array('SELECT 1 FROM flagtypes WHERE id = ?',
+                               undef, $flagtype_id);
+    $flagtype_exists
       || ThrowCodeError("flag_type_nonexistent", { id => $flagtype_id });
 
     return $flagtype_id;
 }
 
 sub validateName {
-    $cgi->param('name')
-      && $cgi->param('name') !~ /[ ,]/
-      && length($cgi->param('name')) <= 50
+    my $name = $cgi->param('name');
+    ($name && $name !~ /[ ,]/ && length($name) <= 50)
       || ThrowUserError("flag_type_name_invalid",
-                        { name => scalar $cgi->param('name') });
+                        { name => $name });
+    trick_taint($name);
+    return $name;
 }
 
 sub validateDescription {
-    length($cgi->param('description')) < 2**16-1
+    my $description = $cgi->param('description');
+    length($description) < 2**16-1
       || ThrowUserError("flag_type_description_invalid");
+    trick_taint($description);
+    return $description;
 }
 
 sub validateCCList {
-    length($cgi->param('cc_list')) <= 200
+    my $cc_list = $cgi->param('cc_list');
+    length($cc_list) <= 200
       || ThrowUserError("flag_type_cc_list_invalid", 
-                        { cc_list => $cgi->param('cc_list') });
-    
-    my @addresses = split(/[, ]+/, $cgi->param('cc_list'));
+                        { cc_list => $cc_list });
+
+    my @addresses = split(/[, ]+/, $cc_list);
     foreach my $address (@addresses) {
         validate_email_syntax($address)
           || ThrowUserError('illegal_email_address', {addr => $address});
     }
+    trick_taint($cc_list);
+    return $cc_list;
 }
 
 sub validateProduct {
@@ -555,17 +562,20 @@ sub validateAllowMultiple {
 }
 
 sub validateGroups {
+    my $dbh = Bugzilla->dbh;
     # Convert group names to group IDs
     foreach my $col ("grant_gid", "request_gid") {
       my $name = $cgi->param($col);
-      $cgi->param($col, "NULL") unless $name;
-      next if (!$name);
-      SendSQL("SELECT id FROM groups WHERE name = " . SqlQuote($name));
-      my $gid = FetchOneColumn();
-      if (!$gid) {
-        ThrowUserError("group_unknown", { name => $name });
+      if ($name) {
+          trick_taint($name);
+          my $gid = $dbh->selectrow_array('SELECT id FROM groups
+                                           WHERE name = ?', undef, $name);
+          $gid || ThrowUserError("group_unknown", { name => $name });
+          $cgi->param($col, $gid);
       }
-      $cgi->param($col, $gid);
+      else {
+          $cgi->delete($col);
+      }
     }
 }
 
