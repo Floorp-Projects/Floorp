@@ -936,12 +936,18 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(getter_AddRefs(loadGroup));
 
-  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
-  // which in turn keeps STOP button from becoming active.
-  // If the consumer passed in a progress event handler we must load with nsIRequest::LOAD_NORMAL
-  // or necko won't generate any progress notifications
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
-    nsnull, mOnProgressListener ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_BACKGROUND);
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active, which
+  // in turn keeps STOP button from becoming active.  If the consumer passed in
+  // a progress event handler we must load with nsIRequest::LOAD_NORMAL or
+  // necko won't generate any progress notifications
+  nsLoadFlags loadFlags;
+  if (mOnProgressListener) {
+    loadFlags = nsIRequest::LOAD_NORMAL;
+  } else {
+    loadFlags = nsIRequest::LOAD_BACKGROUND;
+  }
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, nsnull,
+                     loadFlags);
   if (NS_FAILED(rv)) return rv;
 
   //mChannel->SetAuthTriedWithPrehost(authp);
@@ -1528,13 +1534,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       if (httpChannel) {
         httpChannel->SetRequestMethod(method);
       }
-
-      // Bypass the network cache since there is no way for us to ever reuse
-      // a POST response.  This avoids wasting space in the cache.
-      nsLoadFlags flags;
-      mChannel->GetLoadFlags(&flags);
-      flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
-      mChannel->SetLoadFlags(flags);
     }
   }
 
@@ -1570,21 +1569,26 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   mChannel->SetNotificationCallbacks(this);
 
   nsCOMPtr<nsIStreamListener> listener;
-
   if (mState & XML_HTTP_REQUEST_MULTIPART) {
     listener = new nsMultipartProxyListener(this);
     if (!listener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+  } else {
+    listener = this;
+  }
 
-    // Bypass the network cache since caching makes no sense with
-    // multipart mixed replace documents.
+  // Bypass the network cache in cases where it makes no sense:
+  // 1) Multipart responses are very large and would likely be doomed by the
+  //    cache once they grow too large, so they are not worth caching.
+  // 2) POST responses are always unique, and we provide no API that would
+  //    allow our consumers to specify a "cache key" to access old POST
+  //    responses, so they are not worth caching.
+  if ((mState & XML_HTTP_REQUEST_MULTIPART) || method.EqualsLiteral("POST")) {
     nsLoadFlags flags;
     mChannel->GetLoadFlags(&flags);
     flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
     mChannel->SetLoadFlags(flags);
-  } else {
-    listener = this;
   }
 
   // Since we expect XML data, set the type hint accordingly
