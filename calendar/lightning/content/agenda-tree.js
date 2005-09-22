@@ -199,7 +199,7 @@ function getParentIndex(row)
         if (this.events[i] instanceof Synthetic)
             return i;
         i--;
-    } while (i != 0);
+    } while (i != -1);
     throw "no parent for row " + row + "?";
 };
 
