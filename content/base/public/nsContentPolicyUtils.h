@@ -214,7 +214,7 @@ NS_CheckContentProcessPolicy(PRUint32          contentType,
  * @return a WEAK pointer to the docshell, or nsnull if it could
  *     not be obtained
  */
-static nsIDocShell*
+inline nsIDocShell*
 NS_CP_GetDocShellFromContext(nsISupports *aContext)
 {
     if (!aContext) {
