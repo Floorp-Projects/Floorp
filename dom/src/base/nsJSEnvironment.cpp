@@ -231,20 +231,17 @@ NS_ScriptErrorReporter(JSContext *cx,
         if (errorObject != nsnull) {
           nsresult rv;
 
-          const char *category = nsnull;
-          // Set category to XUL or content, if possible.
-          if (docShell) {
-            nsCOMPtr<nsIDocShellTreeItem> docShellTI(do_QueryInterface(docShell, &rv));
-            if (NS_SUCCEEDED(rv) && docShellTI) {
-              PRInt32 docShellType;
-              rv = docShellTI->GetItemType(&docShellType);
-              if (NS_SUCCEEDED(rv)) {
-                category = docShellType == nsIDocShellTreeItem::typeChrome
-                  ? "chrome javascript"
-                  : "content javascript";
-              }
-            }
-          }
+          // Set category to chrome or content
+          nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
+            do_QueryInterface(globalObject);
+          NS_ASSERTION(scriptPrincipal, "Global objects must implement "
+                       "nsIScriptObjectPrincipal");
+          nsCOMPtr<nsIPrincipal> systemPrincipal;
+          sSecurityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+          const char * category =
+            scriptPrincipal->GetPrincipal() == systemPrincipal
+            ? "chrome javascript"
+            : "content javascript";
 
           if (report) {
             PRUint32 column = report->uctokenptr - report->uclinebuf;
