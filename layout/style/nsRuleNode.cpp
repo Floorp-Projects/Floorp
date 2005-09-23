@@ -3148,6 +3148,12 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 
                     mPresContext, aContext, bg->mBackgroundColor, inherited)) {
     bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    // if not using document colors, we have to use the user's background color
+    // instead of any background color other than transparent
+    if (!mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors) &&
+        !IsChrome(mPresContext)) {
+      bg->mBackgroundColor = mPresContext->DefaultBackgroundColor();
+    }
   }
   else if (eCSSUnit_Enumerated == colorData.mBackColor.GetUnit()) {
     //bg->mBackgroundColor = parentBG->mBackgroundColor; XXXwdh crap crap crap!
