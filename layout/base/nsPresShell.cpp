@@ -5720,11 +5720,11 @@ PresShell::HandleEvent(nsIView         *aView,
 
       nsIEventStateManager *esm = mPresContext->EventStateManager();
 
-      esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));
-
       esm->GetFocusedFrame(&mCurrentEventFrame);
-
-      if (!mCurrentEventFrame) {
+      if (mCurrentEventFrame) {
+        esm->GetFocusedContent(getter_AddRefs(mCurrentEventContent));
+      }
+      else {
 #if defined(MOZ_X11) || defined(XP_WIN)
 #if defined(MOZ_X11)
         if (NS_IS_IME_EVENT(aEvent)) {
