@@ -348,7 +348,9 @@ nsAttributeTextNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsAutoString attrValue;
     aParent->GetAttr(mListener->mNameSpaceID, mListener->mAttrName,
                      attrValue);
-    SetData(attrValue);
+    // Note that there is no need to notify here, since we have no
+    // frame yet at this point.
+    SetText(attrValue, PR_FALSE);
   }
 
   return NS_OK;
