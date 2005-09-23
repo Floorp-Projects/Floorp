@@ -9,7 +9,7 @@
 <!ENTITY reportForm.description "Aurkitutako arazoaren inguruan zertxobait idatzi:">
 <!ENTITY reportForm.url.title "Web gunearen URL-a:">
 <!-- No ":" at the end -->
-<!ENTITY reportForm.behind_login.title "Webgunea pasahitzez babestuta dago">
+<!ENTITY reportForm.behind_login.title "Web gunea pasahitzez babestuta dago">
 <!ENTITY reportForm.behind_login.accesskey "P">
 <!ENTITY reportForm.problem_type.title "Arazo Mota:">
 <!ENTITY reportForm.problem_type.accesskey "M">
