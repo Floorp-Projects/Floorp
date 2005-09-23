@@ -2247,7 +2247,7 @@ nsresult PresShell::SetPrefColorRules(void)
           //                           background: #RRGGBB !important;}'
           ColorToString(textColor,strColor);
           ColorToString(bgColor,strBackgroundColor);
-          result = sheet->InsertRule(NS_LITERAL_STRING(":root {color:") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:root {color:") +
                                      strColor +
                                      NS_LITERAL_STRING(" !important; ") +
                                      NS_LITERAL_STRING("border-color: -moz-use-text-color !important; ") +
@@ -2258,8 +2258,10 @@ nsresult PresShell::SetPrefColorRules(void)
           NS_ENSURE_SUCCESS(result, result);
 
           ///////////////////////////////////////////////////////////////
-          // - everything else inherits the color, and has transparent background
-          result = sheet->InsertRule(NS_LITERAL_STRING("* {color: inherit !important; border-color: -moz-use-text-color !important; background: transparent !important;} "),
+          // - everything else inherits the color
+          // (the background color will be handled in 
+          //  nsRuleNode::ComputeBackgroundData)
+          result = sheet->InsertRule(NS_LITERAL_STRING("*|* {color: inherit !important; border-color: -moz-use-text-color !important; background-image: none !important; } "),
                                      sInsertPrefSheetRulesAt, &index);
         }
       }
