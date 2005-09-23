@@ -138,8 +138,13 @@ public:
   // ProcessRestyledFrames call in a view update batch.
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
 
+  // Note: It's the caller's responsibility to make sure to wrap a
+  // ProcessOneRestyle call in a view update batch.
   void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
+
+  // Note: It's the caller's responsibility to make sure to wrap a
+  // ProcessPendingRestyles call in a view update batch.
   void ProcessPendingRestyles();
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
