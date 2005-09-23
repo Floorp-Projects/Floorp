@@ -431,6 +431,10 @@ static const char kDOMStringBundleURL[] =
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
   (NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
+#define FRAME_ELEMENT_SCRIPTABLE_FLAGS                                        \
+  (ELEMENT_SCRIPTABLE_FLAGS |                                                 \
+   nsIXPCScriptable::WANT_DELPROPERTY)
+
 #define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
   (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
@@ -629,8 +633,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
-  NS_DEFINE_CLASSINFO_DATA(HTMLFrameElement, nsHTMLElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLFrameElement, nsHTMLFrameElementSH,
+                           FRAME_ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFrameSetElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLHRElement, nsHTMLElementSH,
@@ -641,8 +645,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLHtmlElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLIFrameElement, nsHTMLElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLIFrameElement, nsHTMLFrameElementSH,
+                           FRAME_ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLImageElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsHTMLElementSH,
@@ -7931,6 +7935,108 @@ nsHTMLElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+
+// HTML[I]FrameElement helper
+
+NS_IMETHODIMP
+nsHTMLFrameElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
+                                  JSContext *cx, JSObject *obj, jsval id,
+                                  jsval *vp, PRBool *_retval)
+{
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
+                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+  }
+
+  // None of our base classes "implement" GetProperty(), so simply
+  // return NS_OK;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                                  JSContext *cx, JSObject *obj, jsval id,
+                                  jsval *vp, PRBool *_retval)
+{
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
+                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+
+    return NS_OK;
+  }
+
+  return nsHTMLElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameElementSH::AddProperty(nsIXPConnectWrappedNative *wrapper,
+                                  JSContext *cx, JSObject *obj, jsval id,
+                                  jsval *vp, PRBool *_retval)
+{
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
+                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+
+    return NS_OK;
+  }
+
+  return nsHTMLElementSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameElementSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
+                                  JSContext *cx, JSObject *obj, jsval id,
+                                  jsval *vp, PRBool *_retval)
+{
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
+                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+  }
+
+  // None of our base classes "implement" GetProperty(), so simply
+  // return NS_OK;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                 JSContext *cx, JSObject *obj, jsval id,
+                                 PRUint32 flags, JSObject **objp,
+                                 PRBool *_retval)
+{
+  nsresult rv =
+    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
+                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+
+  if (NS_FAILED(rv)) {
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+
+    return NS_OK;
+  }
+
+  return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                     _retval);
 }
 
 

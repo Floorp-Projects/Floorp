@@ -921,6 +921,39 @@ public:
 };
 
 
+// HTML[I]FrameElement helper
+
+class nsHTMLFrameElementSH : public nsHTMLElementSH
+{
+protected:
+  nsHTMLFrameElementSH(nsDOMClassInfoData* aData) : nsHTMLElementSH(aData)
+  {
+  }
+
+  virtual ~nsHTMLFrameElementSH()
+  {
+  }
+
+public:
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsHTMLFrameElementSH(aData);
+  }
+};
+
+
 // HTMLSelectElement helper
 
 class nsHTMLSelectElementSH : public nsHTMLElementSH
