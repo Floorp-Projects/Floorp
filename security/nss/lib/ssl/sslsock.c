@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.42 2005/09/16 21:28:20 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsock.c,v 1.43 2005/09/23 01:04:32 nelsonb%netscape.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -173,10 +173,12 @@ static PRBool ssl_inited = PR_FALSE;
 static PRDescIdentity ssl_layer_id;
 
 PRBool                  locksEverDisabled; 	/* implicitly PR_FALSE */
+PRBool			ssl_force_locks;  	/* implicitly PR_FALSE */
 int                     ssl_lock_readers	= 1;	/* default true. */
 char                    ssl_debug;
 char                    ssl_trace;
-
+char lockStatus[] = "Locks are ENABLED.  ";
+#define LOCKSTATUS_OFFSET 10 /* offset of ENABLED */
 
 /* forward declarations. */
 static sslSocket *ssl_NewSocket(PRBool makeLocks);
@@ -581,6 +583,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	break;
 
       case SSL_ENABLE_FDX:
+	if (on && ss->opt.noLocks) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    rv = SECFailure;
+	}
       	ss->opt.fdx = on;
 	break;
 
@@ -611,9 +617,22 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	break;
 
       case SSL_NO_LOCKS:
+	if (on && ss->opt.fdx) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    rv = SECFailure;
+	}
+	if (on && ssl_force_locks) 
+	    on = PR_FALSE;	/* silent override */
 	ss->opt.noLocks   = on;
-	if (on)
+	if (on) {
 	    locksEverDisabled = PR_TRUE;
+	    strcpy(lockStatus + LOCKSTATUS_OFFSET, "DISABLED.");
+	} else if (!holdingLocks) {
+	    rv = ssl_MakeLocks(ss);
+	    if (rv != SECSuccess) {
+		ss->opt.noLocks   = PR_TRUE;
+	    }
+	}
 	break;
 
       default:
@@ -789,6 +808,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 	break;
 
       case SSL_ENABLE_FDX:
+	if (on && ssl_defaults.noLocks) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return SECFailure;
+	}
       	ssl_defaults.fdx = on;
 	break;
 
@@ -814,9 +837,17 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 	break;
 
       case SSL_NO_LOCKS:
+	if (on && ssl_defaults.fdx) {
+	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	    return SECFailure;
+	}
+	if (on && ssl_force_locks) 
+	    on = PR_FALSE;		/* silent override */
 	ssl_defaults.noLocks        = on;
-	if (on) 
-	    locksEverDisabled       = PR_TRUE;
+	if (on) {
+	    locksEverDisabled = PR_TRUE;
+	    strcpy(lockStatus + LOCKSTATUS_OFFSET, "DISABLED.");
+	}
 	break;
 
       default:
@@ -1923,6 +1954,7 @@ ssl_MakeLocks(sslSocket *ss)
     }
     return SECSuccess;
 loser:
+    ssl_DestroyLocks(ss);
     return SECFailure;
 }
 
@@ -1963,13 +1995,17 @@ ssl_NewSocket(PRBool makeLocks)
 	    SSL_TRACE(("SSL: bypass default set to %d", \
 		      ssl_defaults.bypassPKCS11));
 	}
-	ev = getenv("SSLNOLOCKS");
-	if (ev && ev[0]) {
-	    ssl_defaults.noLocks = (ev[0] == '1');
-	    SSL_TRACE(("SSL: noLocks default set to %d", ssl_defaults.noLocks));
+	ev = getenv("SSLFORCELOCKS");
+	if (ev && ev[0] == '1') {
+	    ssl_force_locks = PR_TRUE;
+	    ssl_defaults.noLocks = 0;
+	    strcpy(lockStatus + LOCKSTATUS_OFFSET, "FORCED.  ");
+	    SSL_TRACE(("SSL: force_locks set to %d", ssl_force_locks));
 	}
     }
 #endif /* NSS_HAVE_GETENV */
+    if (ssl_force_locks)
+	makeLocks = PR_TRUE;
 
     /* Make a new socket and get it ready */
     ss = (sslSocket*) PORT_ZAlloc(sizeof(sslSocket));
