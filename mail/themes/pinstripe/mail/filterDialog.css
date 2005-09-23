@@ -91,5 +91,9 @@ textbox {
 }
 
 .ruleactionitem {
-  min-width: 13em;
+  min-width: 20em;
+}
+
+.ruleaction-type {
+  min-width: 15em;
 }

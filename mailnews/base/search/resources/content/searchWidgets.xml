@@ -60,7 +60,7 @@
 
   <binding id="ruleactiontype-menulist">
     <content>
-      <xul:menulist class="ruleactionitem">
+      <xul:menulist class="ruleaction-type">
           <xul:menupopup>
             <xul:menuitem label="&moveMessage.label;" value="movemessage" enablefornews="false"/>
             <xul:menuitem label="&copyMessage.label;" value="copymessage"/>
