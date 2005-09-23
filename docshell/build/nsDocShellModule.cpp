@@ -62,6 +62,29 @@
 #include "nsGlobalHistoryAdapter.h"
 #include "nsGlobalHistory2Adapter.h"
 
+static PRBool gInitialized = PR_FALSE;
+
+// The one time initialization for this module
+// static
+PR_STATIC_CALLBACK(nsresult)
+Initialize(nsIModule* aSelf)
+{
+  NS_PRECONDITION(!gInitialized, "docshell module already initialized");
+  if (gInitialized) {
+    return NS_OK;
+  }
+  gInitialized = PR_TRUE;
+
+  nsresult rv = nsSHistory::Startup();
+  return rv;
+}
+
+PR_STATIC_CALLBACK(void)
+Shutdown(nsIModule* aSelf)
+{
+  gInitialized = PR_FALSE;
+}
+
 // docshell
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebShell, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup)
@@ -83,7 +106,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService)
 // session history
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSHistory, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHistory)
 
 // Currently no-one is instantiating docshell's directly because
 // nsWebShell is still our main "shell" class. nsWebShell is a subclass
@@ -154,5 +177,5 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
 
 // "docshell provider" to illustrate that this thing really *should*
 // be dispensing docshells rather than webshells.
-NS_IMPL_NSGETMODULE(docshell_provider, gDocShellModuleInfo)
-
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(docshell_provider, gDocShellModuleInfo,
+                                   Initialize, Shutdown)

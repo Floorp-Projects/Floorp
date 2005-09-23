@@ -902,8 +902,15 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
             if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
               nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
-              if (shInternal)
-               shInternal->UpdateIndex();
+              if (shInternal) {
+                rootSH->GetIndex(&mPreviousTransIndex);
+                shInternal->UpdateIndex();
+                rootSH->GetIndex(&mLoadedTransIndex);
+#ifdef DEBUG_PAGE_CACHE
+                printf("Previous index: %d, Loaded index: %d\n\n",
+                       mPreviousTransIndex, mLoadedTransIndex);
+#endif
+              }
             }
 
             // Make it look like we really did honestly finish loading the

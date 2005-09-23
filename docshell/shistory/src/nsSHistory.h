@@ -52,10 +52,16 @@
 #include "nsISimpleEnumerator.h"
 #include "nsISHistoryListener.h"
 #include "nsIHistoryEntry.h"
+#include "nsIObserver.h"
+
+// Needed to maintain global list of all SHistory objects
+#include "prclist.h"
 
 class nsIDocShell;
 class nsSHEnumerator;
-class nsSHistory: public nsISHistory,
+class nsSHistoryPrefObserver;
+class nsSHistory: public PRCList,
+                  public nsISHistory,
                   public nsISHistoryInternal,
                   public nsIWebNavigation
 {
@@ -67,11 +73,17 @@ public:
   NS_DECL_NSISHISTORYINTERNAL
   NS_DECL_NSIWEBNAVIGATION
 
-  NS_IMETHOD Init();
+  // One time initialization method called upon docshell module construction
+  static nsresult Startup();
+
+  // Calculates a max number of total
+  // content viewers to cache, based on amount of total memory
+  static PRUint32 GetMaxTotalViewers();
 
 protected:
   virtual ~nsSHistory();
   friend class nsSHEnumerator;
+  friend class nsSHistoryPrefObserver;
 
    // Could become part of nsIWebNavigation
    NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
@@ -85,7 +97,8 @@ protected:
    nsresult PrintHistory();
 #endif
 
-  void EvictContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
+  void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
+  static void EvictGlobalContentViewer();
 
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
@@ -96,6 +109,9 @@ protected:
   nsWeakPtr mListener;
   // Weak reference. Do not refcount this.
   nsIDocShell *  mRootDocShell;
+
+  // Max viewers allowed total, across all SHistory objects
+  static PRInt32  sHistoryMaxTotalViewers;
 };
 //*****************************************************************************
 //***    nsSHEnumerator: Object Management
@@ -116,7 +132,5 @@ private:
   PRInt32     mIndex;
   nsSHistory *  mSHistory;  
 };
-
-
 
 #endif   /* nsSHistory */
