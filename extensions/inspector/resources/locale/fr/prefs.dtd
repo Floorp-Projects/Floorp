@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "Inspecteur DOM">
+<!ENTITY Sidebar.label "Barre latérale">
+<!ENTITY elementBlinking.label "Clignotement de l'élément">
+<!ENTITY blinkSelectedElement.label "Faire clignoter l'élément sélectionné">
+<!ENTITY borderColor.label "Couleur de la bordure">
+<!ENTITY borderWidth.label "Largeur de la bordure">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Durée du clignotement">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Vitesse du clignotement">
+<!ENTITY invertColors.label "Inverser les couleurs">
+<!ENTITY installHowTo.label "Le panneau de l'inspecteur DOM n'est pas installé dans la barre latérale. Pour l'ajouter, cliquez sur le bouton « Installer ».">
+<!ENTITY install.label "Installer">
+<!ENTITY addNavigatorHooks.label "Ajouter des menus contextuels au navigateur">

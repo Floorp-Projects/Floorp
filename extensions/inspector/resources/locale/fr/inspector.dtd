@@ -1,0 +1,63 @@
+
+<!ENTITY Inspector.title "Inspecteur DOM">
+
+<!ENTITY thDOMNodes.label "Nœuds DOM">
+<!ENTITY btnInspect.label "Examiner">
+<!ENTITY bxDocPanel.title "Document">
+<!ENTITY bxObjectPanel.title "Objet">
+<!ENTITY btnSelecting.tooltip "Choisir un nœud à examiner en cliquant sur celui-ci ">
+<!ENTITY btnFind.tooltip "Chercher un nœud à examiner par id, balise, ou attribut">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Fichier">
+<!ENTITY mnWindows.label "Examiner une fenêtre">
+<!ENTITY mnWindows.accesskey "E">
+<!ENTITY mnFile.accesskey "F">
+  <!ENTITY cmdShowOpenURLDialog.label "Examiner une URL…">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Fermer">
+  <!ENTITY cmdClose.accesskey "m">
+  <!ENTITY cmdExit.label "Quitter">
+  <!ENTITY cmdExit.accesskey "Q">
+
+<!ENTITY mnEdit.label "Edition">
+<!ENTITY mnEdit.accesskey "E">
+  <!ENTITY cmdUndo.label "Annuler">
+  <!ENTITY cmdUndo.accesskey "n">
+  <!ENTITY cmdRedo.label "Refaire">
+  <!ENTITY cmdRedo.accesskey "b">
+  <!ENTITY cmdCut.label "Couper">
+  <!ENTITY cmdCut.accesskey "C">
+  <!ENTITY cmdCopy.label "Copier">
+  <!ENTITY cmdCopy.accesskey "p">
+  <!ENTITY cmdPaste.label "Coller">
+  <!ENTITY cmdPaste.accesskey "l">
+  <!ENTITY cmdDelete.label "Supprimer">
+  <!ENTITY cmdDelete.accesskey "e">
+
+<!ENTITY mnSearch.label "Rechercher">
+<!ENTITY mnSearch.accesskey "R">
+  <!ENTITY mnSearchPlugins.label "Extensions">
+  <!ENTITY mnSearchPlugins.accesskey "E">
+    <!ENTITY cmdRunSearch.label "Lancer…">
+    <!ENTITY cmdRunSearch.accesskey "a">
+
+<!ENTITY mnView.label "Afficher">
+<!ENTITY mnView.accesskey "A">
+  <!ENTITY cmdToggleBrowser.label "Navigateur">
+  <!ENTITY cmdToggleSearch.label "Résultats de la recherche">
+
+<!ENTITY cmdViewSearchItem.label "Vue…">
+<!ENTITY cmdEditSearchItem.label "Ouvrir…">
+<!ENTITY cmdCopySearchItemLine.label "Copier la ligne">
+<!ENTITY cmdCopySearchItemAll.label "Tout copier">
+<!ENTITY cmdSaveSearchItemText.label "Enregistrer…">
+<!ENTITY cmdClearSearch.label "Initialiser">
+<!ENTITY cmdHideSearchItems.label "Masquer">
+
+<!ENTITY browserPanel.label "Navigateur">
+
+<!ENTITY inspectNewWindow.label "Inspecter dans une nouvelle fenêtre">
+
+<!ENTITY closeCmd.key "W">
