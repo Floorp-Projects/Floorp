@@ -149,6 +149,13 @@ function selectedCalendarPane(event)
 function LtnObserveDisplayDeckChange(event)
 {
     var deck = event.target;
+
+    // Bug 309505: The 'select' event also fires when we change the selected
+    // panel of calendar-view-box.  Workaround with this check.
+    if (deck.id != "displayDeck") {
+        return;
+    }
+
     var id = null;
     try { id = deck.selectedPanel.id } catch (e) { }
     if (id == "calendar-view-box") {
