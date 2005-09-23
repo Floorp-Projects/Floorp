@@ -1,0 +1,62 @@
+
+<!ENTITY Inspector.title "DOM Inspector">
+
+<!ENTITY thDOMNodes.label "DOM Nodes">
+<!ENTITY btnInspect.label "Επιθεώρηση">
+<!ENTITY bxDocPanel.title "Έγγραφο">
+<!ENTITY bxObjectPanel.title "Αντικείμενο">
+<!ENTITY btnSelecting.tooltip "Εύρεση ενός node για επιθεώρηση με κλικ πάνω του">
+<!ENTITY btnFind.tooltip "Εύρεση ενός node για επιθεώρηση με id, tag, ή γνώρισμα">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Αρχείο">
+<!ENTITY mnWindows.label "Επιθεώρηση ενός παραθύρου">
+<!ENTITY mnWindows.accesskey "ι">
+<!ENTITY mnFile.accesskey "Α">
+  <!ENTITY cmdShowOpenURLDialog.label "Επιθεώρηση ενός URL...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+  <!ENTITY cmdClose.label "Κλείσιμο">
+  <!ENTITY cmdClose.accesskey "κ">
+  <!ENTITY cmdExit.label "Έξοδος">
+  <!ENTITY cmdExit.accesskey "ξ">
+
+<!ENTITY mnEdit.label "Επεξεργασία">
+<!ENTITY mnEdit.accesskey "Ε">
+  <!ENTITY cmdUndo.label "Αναίρεση">
+  <!ENTITY cmdUndo.accesskey "ν">
+  <!ENTITY cmdRedo.label "Ακύρωση αναίρεσης">
+  <!ENTITY cmdRedo.accesskey "ρ">
+  <!ENTITY cmdCut.label "Αποκοπή">
+  <!ENTITY cmdCut.accesskey "κ">
+  <!ENTITY cmdCopy.label "Αντιγραφή">
+  <!ENTITY cmdCopy.accesskey "γ">
+  <!ENTITY cmdPaste.label "Επικόλληση">
+  <!ENTITY cmdPaste.accesskey "π">
+  <!ENTITY cmdDelete.label "Διγραφή">
+  <!ENTITY cmdDelete.accesskey "δ">
+
+<!ENTITY mnSearch.label "Αναζήτηση">
+<!ENTITY mnSearch.accesskey "ζ">
+  <!ENTITY mnSearchPlugins.label "Επεκτάσεις">
+  <!ENTITY mnSearchPlugins.accesskey "ε">
+    <!ENTITY cmdRunSearch.label "Εκτέλεση...">
+    <!ENTITY cmdRunSearch.accesskey "τ">
+
+<!ENTITY mnView.label "Προβολή">
+<!ENTITY mnView.accesskey "β">
+  <!ENTITY cmdToggleBrowser.label "Φυλλομετρητής">
+  <!ENTITY cmdToggleSearch.label "Αναζήτηση αποτελεσμάτων">
+<!ENTITY cmdViewSearchItem.label "Προβολή...">
+<!ENTITY cmdEditSearchItem.label "Επεξεργασία...">
+<!ENTITY cmdCopySearchItemLine.label "Αντιγραφή γραμμής">
+<!ENTITY cmdCopySearchItemAll.label "Αντιγραφή όλων">
+<!ENTITY cmdSaveSearchItemText.label "Αποθήκευση...">
+<!ENTITY cmdClearSearch.label "Εκκαθάριση">
+<!ENTITY cmdHideSearchItems.label "Απόκρυψη">
+
+<!ENTITY browserPanel.label "Φυλλομετρητής">
+
+<!ENTITY inspectNewWindow.label "Επιθεώρηση σε νέο παράθυρο">
+
+<!ENTITY closeCmd.key "W">

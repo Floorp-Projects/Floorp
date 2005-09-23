@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Εύρεση αρχείων...">
+<!ENTITY txSearchFor.label "Αναζήτηση για:">
+<!ENTITY txSearchPath.label "Αναζήτηση σε:">
+<!ENTITY cbRecurse.label "Αναζήτηση υποφακέλων">

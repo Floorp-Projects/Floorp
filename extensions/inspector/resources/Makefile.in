@@ -49,7 +49,9 @@ ALL_LOCALES = \
 	cs-CZ \
 	da \
 	de \
+	el \
 	en-US \
+	fr \
 	ga-IE \
 	hu \
 	nb-NO \
@@ -58,6 +60,7 @@ ALL_LOCALES = \
 	ru \
 	sk \
 	sv-SE \
+	zh-CN \
 	zh-TW \
 	$(NULL)
 

@@ -1,0 +1,7 @@
+<!ENTITY jsCancel.label "取消">
+<!ENTITY jsCopyValue.label "复制值">
+<!ENTITY jsEval.desc "输入一个Javascript 表达式，变量 &quot;target&quot; 是当前选中的属性。任何返回值将会在Javascript 对象视图中显示。">
+<!ENTITY jsEval.label "运行 Javascript...">
+<!ENTITY jsExecute.label "执行">
+<!ENTITY jsProperty.label "属性">
+<!ENTITY jsValue.label "值">

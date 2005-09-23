@@ -1,0 +1,16 @@
+<!ENTITY mnEditCopy.accesskey "c">
+<!ENTITY mnEditCopy.label "复制">
+<!ENTITY mnEditCut.accesskey "t">
+<!ENTITY mnEditCut.label "剪切">
+<!ENTITY mnEditDelete.accesskey "d">
+<!ENTITY mnEditDelete.label "删除">
+<!ENTITY mnEditEdit.accesskey "e">
+<!ENTITY mnEditEdit.label "编辑">
+<!ENTITY mnEditInsert.accesskey "i">
+<!ENTITY mnEditInsert.label "插入">
+<!ENTITY mnEditPaste.accesskey "p">
+<!ENTITY mnEditPaste.label "粘贴">
+<!ENTITY mnEditRedo.accesskey "r">
+<!ENTITY mnEditRedo.label "重做">
+<!ENTITY mnEditUndo.accesskey "u">
+<!ENTITY mnEditUndo.label "撤销">
