@@ -23,8 +23,10 @@ package netscape.ldap.util;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.regex.PatternSyntaxException;
 import java.net.*;
-import com.oroinc.text.regex.*;
 import netscape.ldap.*;
 
 /**
@@ -179,17 +181,16 @@ public class LDAPFilterDescriptor {
     private void init ( Object inputObj)
             throws BadFilterException {
 
-        String strCommentPattern = "(?:^\\s*#|^\\s*$)";
-        String strDataPattern = "(?:\\s*\"([^\"]*)\"|([^\\s]*))\\s*";
-        Perl5Compiler compiler = new Perl5Compiler();
-        Perl5Pattern patComment;
-        Perl5Pattern patData;
+        String strCommentPattern = "^\\s*#|$";
+        String strDataPattern = "\\s*(?:\"([^\"]*)\")|([^\\s]*)\\s*";
+        Pattern patComment;
+        Pattern patData;
         Vector vStrings = new Vector ( 5 );
 
         try {
-            patComment = (Perl5Pattern)compiler.compile ( strCommentPattern );
-            patData = (Perl5Pattern)compiler.compile ( strDataPattern );
-        } catch ( MalformedPatternException e ) {
+            patComment = Pattern.compile ( strCommentPattern );
+            patData = Pattern.compile ( strDataPattern );
+        } catch ( PatternSyntaxException e ) {
             // This should NEVER happen...
             System.out.println ( "FATAL Error, couldn't compile pattern");
             System.out.println ( "  " + e.getMessage() );
@@ -229,23 +230,21 @@ public class LDAPFilterDescriptor {
         }
     }
 
-    private void setFilter(Perl5Pattern patComment, Perl5Pattern patData,
+    private void setFilter(Pattern patComment, Pattern patData,
       Vector vStrings) throws IOException, BadFilterException {
-        MatchResult result;
-        Perl5Matcher matcher = new Perl5Matcher();
-        PatternMatcherInput input;
+        Matcher dataMatcher;
         LDAPFilter tmpFilter = null;
 
-        input = new PatternMatcherInput ( m_strLine );
-
-        if ( ! ( matcher.contains ( input, patComment ) ) ) {
-            input.setCurrentOffset(input.getBeginOffset());
+        if ( ! patComment.matcher(m_strLine).lookingAt() ) {
+//        	System.out.println("comment pattern " + patComment.pattern() +
+//        					   " does not match " + m_strLine);
+        	dataMatcher = patData.matcher(m_strLine);
             // System.out.println ( "\nNEW LINE: " + m_strLine );
             if ( ! vStrings.isEmpty() ) {
                 vStrings.removeAllElements();
             }
 
-            while ( matcher.contains ( input, patData ) ) {
+            while ( dataMatcher.find() ) {
                 // Within this while loop, we're looking for
                 // all the data tokens.  Our regular
                 // expression is setup to look for words
@@ -254,13 +253,13 @@ public class LDAPFilterDescriptor {
                 // of the regexp is that we have two
                 // backreferences, only one will have data at
                 // any time.
-                result = matcher.getMatch();
-                for ( int i = 1; i <=2; i++ ) {
-                    if ( result.group(i) != null ) {
-                        if ( ! result.group(i).equals ( "" ) ) {
-                            //System.out.println ( "Match #" + i +
-                            //  ": \"" + result.group(i) + "\"" );
-                            vStrings.addElement ( result.group(i));
+            	int groupCount = dataMatcher.groupCount();
+                for ( int i = 1; i <= groupCount; i++ ) {
+                    if ( dataMatcher.group(i) != null ) {
+                        if ( ! dataMatcher.group(i).equals ( "" ) ) {
+//                            System.out.println ( "Match #" + i +
+//                            		": \"" + dataMatcher.group(i) + "\"" );
+                            vStrings.addElement ( dataMatcher.group(i));
                         }
                     }
                 }
@@ -437,20 +436,15 @@ public class LDAPFilterDescriptor {
 
         LDAPFilterList retList = new LDAPFilterList();
 
-        Perl5Compiler compiler = new Perl5Compiler();
-        Perl5Pattern patTag;    // The strTagPat that's compiled
-
-        // For efficiency, we're pre-allocating a patternMatcherInput
-        // here.
-        PatternMatcherInput matcherValue = new PatternMatcherInput ( strValue );
+        Pattern patTag;    // The strTagPat that's compiled
 
         // first we need to make a new regexp from the strTagPat
         // For efficiency, we're precompiling the strTagPat into
         // a pattern here.  That pattern doesn't change, the Tag string
         // changes per LDAPFIlterSet.
         try {
-            patTag = (Perl5Pattern)compiler.compile ( strTagPat );
-        } catch ( MalformedPatternException e ) {
+            patTag = Pattern.compile ( strTagPat );
+        } catch ( PatternSyntaxException e ) {
             throw new IllegalArgumentException
             ( "The parameter: " + strTagPat + " is not valid" );
         }
@@ -462,7 +456,7 @@ public class LDAPFilterDescriptor {
         while ( ! bMatched ) {
             Vector vMatchingFilters =
             ((LDAPIntFilterSet)m_vFilterSet.elementAt ( i )).getFilters
-                (patTag, matcherValue );
+                (patTag, strValue );
 
             if ( vMatchingFilters.size() > 0 ) {
                 for ( int j = 0; j < vMatchingFilters.size(); j++ ) {

@@ -85,10 +85,6 @@
    clean        : will remove all compiled files and packages
    clean-dists  : will remove all the jars and zips
    clean-builds : will remove all the compiled classes
-
-   NOTE: in order to compile the filter classes you will need to
-         edit the build.properties file and place the path to
-         your oro pattern matching jar in it.
         </echo>
       </target>
 
@@ -186,11 +182,9 @@
       </target>
 
     <target name="build-filter" depends="init,build-jdk">
-        <!-- filter requires the oro regular expression libraries -->
-          <fail unless="ororegexp.jar" message="place path to oro regular expression library in build.properties file."/>     
         <javac srcdir="${basedir}/ldapfilter" destdir="${filter.dist}"
             excludes="cvs/**"
-            classpath="${jdk.dist}:${jsselibs}:${ororegexp.jar}"
+            classpath="${jdk.dist}:${jsselibs}"
         />
       </target>
 

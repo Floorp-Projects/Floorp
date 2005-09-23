@@ -80,7 +80,7 @@ public class BadFilterException extends Exception {
      * this error occurred.
      */
     void setErrorLineNumber ( int nErrorLineNumber ) {
-        m_nLine = m_nLine;
+        m_nLine = nErrorLineNumber;
     }
 }
 

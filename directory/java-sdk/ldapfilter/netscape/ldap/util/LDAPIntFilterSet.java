@@ -22,7 +22,9 @@
 package netscape.ldap.util;
 
 import java.util.*;
-import com.oroinc.text.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  *  Represents an LDAPIntFilterSet object.  This is an internal object that
  *  should never be instantiated directly by the developer.
@@ -33,8 +35,7 @@ public class LDAPIntFilterSet {
     private Vector m_vLDAPIntFilterList;
     private String m_strTag;
 
-    private PatternMatcherInput m_matcherTag = null;
-    private Perl5Matcher m_matcher = null;
+    private Matcher m_matcher = null;
     /**
      * Return a Vector of filters that match botht the tag pattern
      * (in Perl5Pattern form), and the string strValue.  This method
@@ -43,21 +44,18 @@ public class LDAPIntFilterSet {
 
      // remember, we have the string (m_strTag), the pattern has
      // been precompiled by the LDAPFilterDescriptor (patTag)
-    Vector getFilters ( Perl5Pattern patTag,
-                PatternMatcherInput matcherValue ) {
+    Vector getFilters ( Pattern patTag,
+                String matcherValue ) {
         Vector vRet = new Vector();
 
-        if ( m_matcherTag == null ) {
-            m_matcher = new Perl5Matcher();
-            m_matcherTag = new PatternMatcherInput ( m_strTag );
-        }  else {
-            m_matcherTag.setCurrentOffset ( m_matcherTag.getBeginOffset() );
+        if ( m_matcher == null ) {
+            m_matcher = patTag.matcher(m_strTag);
         }
 
         // Check to see if the strTag (converted into patTag)
         // matches the tag string from the file (converted into
         // m_matcherTag)
-        if ( m_matcher.contains ( m_matcherTag, patTag ) ) {
+        if ( m_matcher.find() ) {
             LDAPIntFilterList tmpIntFilterList;
             LDAPFilter tmpFilter;
             for ( int i = 0; i < m_vLDAPIntFilterList.size(); i++ ) {
@@ -121,25 +119,7 @@ public class LDAPIntFilterSet {
      * string that is passed in.
      */
     boolean match ( String strTagPat ) {
-        Perl5Matcher matcher = new Perl5Matcher();
-        Perl5Compiler compiler = new Perl5Compiler();
-        PatternMatcherInput input;
-        Perl5Pattern patTag;
-        MatchResult result;
-
-        try {
-            patTag = (Perl5Pattern)compiler.compile ( strTagPat );
-        } catch ( MalformedPatternException e ) {
-            // Need to do something here.
-            return false;
-        }
-
-        input = new PatternMatcherInput ( m_strTag );
-        if ( matcher.contains ( input, patTag ) ) {
-            return true;
-        } else {
-            return false;
-        }
+    	return Pattern.matches(strTagPat, m_strTag);
     }
 
     /**

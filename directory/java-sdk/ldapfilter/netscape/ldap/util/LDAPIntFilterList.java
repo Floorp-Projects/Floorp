@@ -22,7 +22,8 @@
 package netscape.ldap.util;
 
 import java.util.*;
-import com.oroinc.text.regex.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  *  Represents an Internal LDAPFilterList object.  This is an internal object
@@ -34,24 +35,15 @@ public class LDAPIntFilterList {
     private Vector m_vFilter;
     private String m_strMatchPattern;
         // a regexp pattern of m_strMatchPattern
-    private Perl5Pattern m_patMatch = null;
-    private Perl5Matcher m_matcher;
-    private Perl5Compiler m_compiler;
+    private Pattern m_patMatch = null;
 
     LDAPIntFilterList ( LDAPFilter filter ) throws
             BadFilterException {
         m_strMatchPattern = filter.getMatchPattern();
 
-        // We're going to compile the pattern for strMatchPattern
-        // now, so that we can throw an exception if it is a bad
-        // pattern.
-        m_matcher = new Perl5Matcher();
-        m_compiler = new Perl5Compiler();
-
         try {
-            m_patMatch = (Perl5Pattern)m_compiler.compile
-                    ( m_strMatchPattern );
-        } catch ( MalformedPatternException e ) {
+            m_patMatch = Pattern.compile( m_strMatchPattern );
+        } catch ( PatternSyntaxException e ) {
 
             throw new BadFilterException (
             "The Regular Expression for this filter is bad. " +
@@ -109,9 +101,8 @@ public class LDAPIntFilterList {
      * m_strMatchPattern) to the value that the user typed in (the
      * parameter to this method).
      */
-    boolean MatchFilter ( PatternMatcherInput matcherValue ) {
-        matcherValue.setCurrentOffset ( matcherValue.getBeginOffset() );
-        return  m_matcher.contains ( matcherValue, m_patMatch );
+    boolean MatchFilter ( String matcherValue ) {
+    	return m_patMatch.matcher(matcherValue).matches();
     }
 }
 
