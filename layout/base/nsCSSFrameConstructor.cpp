@@ -9768,16 +9768,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // Get the childFrame's parent frame
     nsIFrame* parentFrame = childFrame->GetParent();
 
-    // See if we have an XBL insertion point. If so, then that's our
-    // real parent frame; if not, then the frame hasn't been built yet
-    // and we just bail.
-    nsIFrame* insertionPoint;
-    GetInsertionPoint(parentFrame, aChild, &insertionPoint);
-    if (! insertionPoint)
-      return NS_OK;
-
-    parentFrame = insertionPoint;
-
     if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
       // Just reframe the parent, since framesets are weird like that.
       return RecreateFramesForContent(parentFrame->GetContent());
@@ -9951,7 +9941,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
                                          childFrame);
         }
         else {
-          rv = frameManager->RemoveFrame(insertionPoint, nsnull, childFrame);
+          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
         }
       }
 
