@@ -51,7 +51,7 @@ interface nsIDocShell;
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 %}
 
-[scriptable, uuid(DD335421-B8B8-11d3-BDC8-0050040A9B44)]
+[scriptable, uuid(494fac3c-64f4-41b8-b209-b4ada899613b)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -91,10 +91,19 @@ interface nsISHistoryInternal: nsISupports
    readonly attribute nsISHistoryListener listener;
 
   /**
-   * Evict content viewers until the number of content viewers is no more than
-   * browser.sessionhistory.max_viewers.  This is done automatically by
-   * updateIndex(), but should be called explicitly if a new history entry
-   * is added and later has a content viewer set.
+   * Evict content viewers until the number of content viewers per tab
+   * is no more than gHistoryMaxViewers.  Also, count
+   * total number of content viewers globally and evict one if we are over
+   * our total max.  This is always called in Show(), after we destroy
+   * the previous viewer.
    */
-   void evictContentViewers();
+   void evictContentViewers(in long previousIndex, in long index);
+
+   /**
+    * Max number of total cached content viewers.  If the pref
+    * browser.sessionhistory.max_total_viewers is negative, then
+    * this value is calculated based on the total amount of memory.
+    * Otherwise, it comes straight from the pref.
+    */
+   readonly attribute long historyMaxTotalViewers;
 };
