@@ -926,6 +926,72 @@ MapTableFrameInto(const nsMappedAttributes* aAttributes,
   if (!aData->mMarginData)
     return;
 
+  // 0 out the sides that we want to hide based on the frame attribute
+  const nsAttrValue* frameValue = aAttributes->GetAttr(nsHTMLAtoms::frame);
+
+  if (frameValue && frameValue->Type() == nsAttrValue::eEnum) {
+    // adjust the border style based on the value of frame
+    switch (frameValue->GetEnumValue())
+    {
+    case NS_STYLE_TABLE_FRAME_NONE:
+      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_ABOVE:
+      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_BELOW: 
+      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_HSIDES:
+      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_LEFT:
+      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_RIGHT:
+      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    case NS_STYLE_TABLE_FRAME_VSIDES:
+      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
+        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+      break;
+    // BOX and BORDER are ignored, the caller has already set all the border sides
+    // any illegal value is also ignored
+    }
+  }
+
   // set up defaults
   if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
     aData->mMarginData->mBorderStyle.mLeft.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
@@ -936,53 +1002,11 @@ MapTableFrameInto(const nsMappedAttributes* aAttributes,
   if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
     aData->mMarginData->mBorderStyle.mBottom.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
 
-  // 0 out the sides that we want to hide based on the frame attribute
-  const nsAttrValue* frameValue = aAttributes->GetAttr(nsHTMLAtoms::frame);
-
-  if (frameValue && frameValue->Type() == nsAttrValue::eEnum) {
-    // adjust the border style based on the value of frame
-    switch (frameValue->GetEnumValue())
-    {
-    case NS_STYLE_TABLE_FRAME_NONE:
-      aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_ABOVE:
-      aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_BELOW: 
-      aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_HSIDES:
-      aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_LEFT:
-      aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_RIGHT:
-      aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_VSIDES:
-      aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    // BOX and BORDER are ignored, the caller has already set all the border sides
-    // any illegal value is also ignored
-    }
-  }
 }
 
+// XXX The two callsites care about the two different halves of this
+// function, so split it, probably by just putting it in inline at the
+// callsites.
 static void 
 MapTableBorderInto(const nsMappedAttributes* aAttributes,
                    nsRuleData* aData, PRUint8 aBorderStyle)
@@ -1201,7 +1225,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
   }
   else if (aData->mSID == eStyleStruct_Border) {
-    if (!aData->mStyleContext) return;
     const nsStyleTableBorder* tableStyle = aData->mStyleContext->GetStyleTableBorder();
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
