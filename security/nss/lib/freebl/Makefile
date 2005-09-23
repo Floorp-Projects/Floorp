@@ -250,30 +250,41 @@ ifeq ($(CPU_ARCH),sparc)
 	endif
 	ifdef USE_ABI32_INT64
 	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
-	    # 32-bit ABI, it uses 64-bit words, integer arithmetic, no FPU
-	    SOL_CFLAGS += -fast -xO5 -xrestrict=%all -xchip=ultra
-	    ARCHFLAG = -xarch=v8plusa
-	    SOLARIS_AS_FLAGS = -xarch=v8plusa -K PIC
+	    # 32-bit ABI, it uses 64-bit words, integer arithmetic,
+	    # no FPU (non-VIS cpus).
+	    # These flags were suggested by the compiler group for building
+	    # with SunStudio 10.
+ 	    SOL_CFLAGS += -xO4 -xtarget=generic
+	    ARCHFLAG = -xarch=v8plus
+	    SOLARIS_AS_FLAGS = -xarch=v8plus -K PIC
 	endif
 	ifdef USE_ABI32_FPU
 	    # this builds for Sparc v8+a ABI32_FPU architecture, 64-bit registers, 
-	    # 32-bit ABI, it uses FPU code, and 32-bit word size
-	    SOL_CFLAGS += -fast -xO5 -xrestrict=%all -xchip=ultra
+	    # 32-bit ABI, it uses FPU code, and 32-bit word size.
+	    # these flags were determined by running cc -### -fast and copying
+	    # the generated flag settings
+	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=2 -fsingle
+	    SOL_CFLAGS += -xalias_level=basic -xbuiltin=%all
+	    SOL_CFLAGS += -xcache=64/32/4:1024/64/4 -xchip=ultra3 -xdepend
+	    SOL_CFLAGS += -xlibmil -xmemalign=8s -xO5
 	    ARCHFLAG = -xarch=v8plusa
 	    SOLARIS_AS_FLAGS = -xarch=v8plusa -K PIC
 	endif
 	ifdef USE_ABI64_INT
-	    # this builds for Sparc v9a pure 64-bit architecture
-	    SOL_CFLAGS += -fast -xO5 -xrestrict=%all -xchip=ultra
-	    SOL_CFLAGS += -mt
-	    ARCHFLAG = -xarch=v9a
-	    SOLARIS_AS_FLAGS = -xarch=v9a -K PIC
+	    # this builds for Sparc v9a pure 64-bit architecture,
+	    # no FPU (non-VIS cpus). For building with SunStudio 10.
+ 	    SOL_CFLAGS += -xO4 -xtarget=generic
+	    ARCHFLAG = -xarch=v9
+	    SOLARIS_AS_FLAGS = -xarch=v9 -K PIC
 	endif
 	ifdef USE_ABI64_FPU
 	    # this builds for Sparc v9a pure 64-bit architecture
-	    # It uses floating point, and 32-bit word size
-	    SOL_CFLAGS += -fast -xO5 -xrestrict=%all -xchip=ultra
-	    SOL_CFLAGS += -mt
+	    # It uses floating point, and 32-bit word size.
+	    # See comment for USE_ABI32_FPU.
+	    SOL_CFLAGS += -D__MATHERR_ERRNO_DONTCARE -fns -fsimple=2 -fsingle
+	    SOL_CFLAGS += -xalias_level=basic -xbuiltin=%all
+	    SOL_CFLAGS += -xcache=64/32/4:1024/64/4 -xchip=ultra3 -xdepend
+	    SOL_CFLAGS += -xlibmil -xmemalign=8s -xO5
 	    ARCHFLAG = -xarch=v9a
 	    SOLARIS_AS_FLAGS = -xarch=v9a -K PIC
 	endif
