@@ -1635,8 +1635,13 @@ retry:
 
       case '<':
 #if JS_HAS_XML_SUPPORT
+        /*
+         * XXX Use TSF_DIRTYLINE for now rather than TSF_DIRTYINPUT, because
+         * believe it or not, some .js files included via <script src="...">
+         * actually contain HTML comment-hiding hacks.
+         */
         if ((ts->flags & TSF_OPERAND) &&
-            (JS_HAS_XML_OPTION(cx) || (ts->flags & TSF_DIRTYINPUT))) {
+            (JS_HAS_XML_OPTION(cx) || (ts->flags & TSF_DIRTYLINE))) {
             /* Check for XML comment or CDATA section. */
             if (MatchChar(ts, '!')) {
                 INIT_TOKENBUF();
