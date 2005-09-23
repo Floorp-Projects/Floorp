@@ -71,8 +71,8 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 void nsAbAutoCompleteSession::ResetMatchTypeConters()
 {
     PRInt32 i;
-    for (i = 0; i < LAST_MATCH_TYPE; mMatchTypeConters[i++] = 0)
-      mDefaultDomainMatchTypeCounters[i] = 0;
+    for (i = 0; i < LAST_MATCH_TYPE; i++)
+      mMatchTypeCounters[i] = 0;
 }
 
 PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results)
@@ -123,6 +123,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
                                      const PRUnichar* pEmailStr, 
                                      const PRUnichar* pNotesStr, 
                                      const PRUnichar* pDirName,
+                                     PRUint32 aPopularityIndex,
                                      PRBool bIsMailList, MatchType type,
                                      nsIAutoCompleteResults* results)
 {
@@ -195,7 +196,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
     nsCOMPtr<nsIAutoCompleteItem> newItem = do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, bIsMailList, type);
+      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, aPopularityIndex, bIsMailList, type);
       NS_IF_ADDREF(param);
       newItem->SetParam(param);
       NS_IF_RELEASE(param);
@@ -231,32 +232,44 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       rv = results->GetItems(getter_AddRefs(array));
       if (NS_SUCCEEDED(rv))
       {
-        PRInt32 index = 0;
-        PRInt32 i;
-        // break off at the first of our type....
-        for (i = 0; i < type; index += mMatchTypeConters[i++])
-          ;        
+        PRUint32 nbrOfItems;      
+        rv = array->Count(&nbrOfItems);
+
+        PRInt32 insertPosition = 0;
+        PRInt32 i = 0;
         
-        // use domain matches as the distinguisher amongst matches of the same type.
-        PRInt32 insertPosition = index + mMatchTypeConters[i];
-        
-        if (type != DEFAULT_MATCH && !bIsMailList)
+        // find the start fo the search results for our particular
+        // match type and then insert into that group of results 
+        // sorted by the popularity index
+        while (i < type)
+          insertPosition += mMatchTypeCounters[i++];
+
+        while (insertPosition < nbrOfItems)
         {
-          nsAutoString emailaddr(pEmailStr);
-          if (FindInReadable(mDefaultDomain, emailaddr,
-                             nsCaseInsensitiveStringComparator()))
-          {
-            // okay the match contains the default domain, we want to insert it
-            // AFTER any exisiting matches of the same type which also have a domain
-            // match....            
-            insertPosition = index + mDefaultDomainMatchTypeCounters[type];
-            mDefaultDomainMatchTypeCounters[type]++;           
-          }
+          nsCOMPtr<nsISupports> currentItemParams;
+          nsCOMPtr<nsIAutoCompleteItem> resultItem;
+          nsresult rv = array->QueryElementAt(insertPosition, NS_GET_IID(nsIAutoCompleteItem),
+                                           getter_AddRefs(resultItem));
+          if (NS_FAILED(rv))
+            continue;
+              
+          rv = resultItem->GetParam(getter_AddRefs(currentItemParams));
+          if (NS_FAILED(rv))
+            continue;
+
+          param = (nsAbAutoCompleteParam *)(void *)currentItemParams;
+            
+          // sort the search results by popularity index within each match sub group
+          if (aPopularityIndex > param->mPopularityIndex || type != param->mType)
+            break;
+          else
+            insertPosition++;
         }
 
         rv = array->InsertElementAt(newItem, insertPosition);
+        
         if (NS_SUCCEEDED(rv))
-          mMatchTypeConters[type] ++;
+          mMatchTypeCounters[type]++;
       }
     }
   }    
@@ -430,6 +443,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
           nsXPIDLString pLastNameStr;
           nsXPIDLString pNickNameStr;
           nsXPIDLString pNotesStr;
+          PRUint32 popularityIndex = 0;
           PRBool bIsMailList;
 
           rv = card->GetIsMailList(&bIsMailList);
@@ -480,6 +494,8 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
           if (NS_FAILED(rv))
               continue;
 
+          (void) card->GetPopularityIndex(&popularityIndex);
+
           // in the address book a mailing list does not have an email address field. However,
           // we do "fix up" mailing lists in the UI sometimes to look like "My List <My List>"
           // if we are looking up an address and we are comparing it to a mailing list to see if it is a match
@@ -511,7 +527,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
               AddToResult(pNickNameStr.get(), pDisplayNameStr.get(), 
                           pFirstNameStr.get(), pLastNameStr.get(), 
                           pEmailStr[i].get(), pNotesStr.get(), 
-                          pDirName.get(), bIsMailList, matchType, 
+                          pDirName.get(), popularityIndex, bIsMailList, matchType, 
                           results);
             }
           }
@@ -688,7 +704,7 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
                 AddToResult(param->mNickName, param->mDisplayName, 
                             param->mFirstName, param->mLastName, 
                             param->mEmailAddress, param->mNotes, 
-                            param->mDirName, param->mIsMailList, matchType,
+                            param->mDirName, param->mPopularityIndex, param->mIsMailList, matchType,
                             results);
         }
         return NS_OK;
@@ -785,7 +801,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         {
             PRUnichar emptyStr = 0;
             AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, 
-                        &emptyStr, &emptyStr, &emptyStr, PR_FALSE, 
+                        &emptyStr, &emptyStr, &emptyStr, 0 /* popularity index */, PR_FALSE, 
                         DEFAULT_MATCH, results);
             addedDefaultItem = PR_TRUE;
         }

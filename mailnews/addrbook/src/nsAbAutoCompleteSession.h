@@ -104,15 +104,15 @@ protected:
                      const PRUnichar* pFirstNameStr,
                      const PRUnichar* pLastNameStr, 
                      const PRUnichar* pEmailStr, const PRUnichar* pNotes,
-                     const PRUnichar* pDirName, PRBool bIsMailList, 
+                     const PRUnichar* pDirName, 
+                     PRUint32 aPopularityIndex, PRBool bIsMailList, 
                      MatchType type, nsIAutoCompleteResults* results);
     PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
       const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
         
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
-    PRUint32 mMatchTypeConters[LAST_MATCH_TYPE];
-    PRUint32 mDefaultDomainMatchTypeCounters[LAST_MATCH_TYPE];
+    PRUint32 mMatchTypeCounters[LAST_MATCH_TYPE];
 
     // how to process the comment column, if at all.  this value
     // comes from "mail.autoComplete.commentColumn", or, if that
@@ -152,6 +152,7 @@ public:
                           const PRUnichar* emailAddress,
                           const PRUnichar* notes,
                           const PRUnichar* dirName,
+                          PRUint32 aPopularityIndex,
                           PRBool isMailList, 
                           nsAbAutoCompleteSession::MatchType type)
   {
@@ -165,6 +166,7 @@ public:
     mNotes = nsCRT::strdup(notes ? notes : empty);
     mDirName = nsCRT::strdup(dirName ? dirName : empty);
     mIsMailList = isMailList;
+    mPopularityIndex = aPopularityIndex;
     mType = type;
   }
   
@@ -187,6 +189,7 @@ protected:
     PRUnichar* mEmailAddress;
     PRUnichar* mNotes;
     PRUnichar* mDirName;
+    PRUint32 mPopularityIndex;
     PRBool mIsMailList;
     nsAbAutoCompleteSession::MatchType  mType;
 

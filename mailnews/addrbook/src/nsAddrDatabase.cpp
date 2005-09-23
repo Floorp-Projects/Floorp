@@ -166,6 +166,7 @@ nsAddrDatabase::nsAddrDatabase()
       m_NotesColumnToken(0),
       m_LastModDateColumnToken(0),
       m_MailFormatColumnToken(0),
+      m_PopularityIndexColumnToken(0),
       m_AddressCharSetColumnToken(0),
       m_LastRecordKey(0),
       m_dbDirectory(nsnull)
@@ -1214,6 +1215,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
             GetStore()->StringToToken(GetEnv(),  kDefaultEmailColumn, &m_DefaultEmailColumnToken);
             GetStore()->StringToToken(GetEnv(),  kCardTypeColumn, &m_CardTypeColumnToken);
             GetStore()->StringToToken(GetEnv(),  kPreferMailFormatColumn, &m_MailFormatColumnToken);
+            GetStore()->StringToToken(GetEnv(),  kPopularityIndexColumn, &m_PopularityIndexColumnToken);
             GetStore()->StringToToken(GetEnv(),  kWorkPhoneColumn, &m_WorkPhoneColumnToken);
             GetStore()->StringToToken(GetEnv(),  kHomePhoneColumn, &m_HomePhoneColumnToken);
             GetStore()->StringToToken(GetEnv(),  kFaxColumn, &m_FaxColumnToken);
@@ -1347,6 +1349,10 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
     PRUint32 format = nsIAbPreferMailFormat::unknown;
     card->GetPreferMailFormat(&format);
     AddPreferMailFormat(cardRow, format);
+
+    PRUint32 popularityIndex = 0;
+    card->GetPopularityIndex(&popularityIndex);
+    AddPopularityIndex(cardRow, popularityIndex);
     
     card->GetWorkPhone(getter_Copies(unicodeStr));
     AddWorkPhone(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
@@ -2666,6 +2672,11 @@ NS_IMETHODIMP nsAddrDatabase::InitCardFromRow(nsIAbCard *newCard, nsIMdbRow* car
     err = GetIntColumn(cardRow, m_MailFormatColumnToken, &format, 0);
     if (NS_SUCCEEDED(err))
         newCard->SetPreferMailFormat(format);
+
+    PRUint32 popularityIndex = 0;
+    err = GetIntColumn(cardRow, m_PopularityIndexColumnToken, &popularityIndex, 0);
+    if (NS_SUCCEEDED(err))
+        newCard->SetPopularityIndex(popularityIndex);
 
     err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
     if (NS_SUCCEEDED(err) && !tempString.IsEmpty())

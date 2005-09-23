@@ -140,6 +140,9 @@ public:
 	NS_IMETHOD AddPreferMailFormat(nsIMdbRow * row, PRUint32 value)
 	{ return AddIntColumn(row, m_MailFormatColumnToken, value); }
 
+	NS_IMETHOD AddPopularityIndex(nsIMdbRow * row, PRUint32 value)
+	{ return AddIntColumn(row, m_PopularityIndexColumnToken, value); }
+
 	NS_IMETHOD AddWorkPhone(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_WorkPhoneColumnToken, value); }
 
@@ -454,6 +457,7 @@ protected:
 	mdb_token			m_LowerPriEmailColumnToken;
 
 	mdb_token			m_MailFormatColumnToken;
+	mdb_token     m_PopularityIndexColumnToken;
 						
 	mdb_token			m_AddressCharSetColumnToken;
 	mdb_token			m_LastRecordKeyColumnToken;

@@ -161,6 +161,10 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
   srcCard->GetPreferMailFormat(&format);
   SetPreferMailFormat(format);
 
+  PRUint32 popularityIndex = 0;
+  srcCard->GetPopularityIndex(&popularityIndex);
+  SetPopularityIndex(popularityIndex);
+
 	srcCard->GetWorkPhone(getter_Copies(str));
 	SetWorkPhone(str);
 	srcCard->GetHomePhone(getter_Copies(str));

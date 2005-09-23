@@ -3999,6 +3999,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     GetABDirectories(NS_LITERAL_CSTRING(kAllDirectoryRoot), addrbookDirArray, PR_TRUE);
     PRInt32 nbrRecipients;
 
+    PRBool dirtyABDatabase; 
     PRUint32 nbrAddressbook;
     addrbookDirArray->Count(&nbrAddressbook);
     for (k = 0; k < (PRInt32)nbrAddressbook && stillNeedToSearch; k ++)
@@ -4012,7 +4013,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       nsCOMPtr<nsIRDFResource> source(do_QueryInterface(abDirectory));
 
       nsXPIDLCString uri;
-      // rv = abDirectory->GetDirUri(getter_Copies(uri));
       rv = source->GetValue(getter_Copies(uri));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -4021,6 +4021,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       if (NS_FAILED(rv) || !supportsMailingLists)
         continue;
 
+      dirtyABDatabase = PR_FALSE; 
       rv = OpenAddressBook(uri.get(), getter_AddRefs(abDataBase));
       if (NS_FAILED(rv) || !abDataBase)
         continue;
@@ -4114,7 +4115,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     
                     if (bIsMailList)
                     {
-                      //TODO: we must to something to avoid recursivity
+                      //TODO: we must do something to avoid recursivity
                       stillNeedToSearch = PR_TRUE;
                     }
                     else
@@ -4149,6 +4150,14 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
               rv = existingCard->GetPreferMailFormat(&recipient->mPreferFormat);
               if (NS_SUCCEEDED(rv))
                 recipient->mProcessed = PR_TRUE;
+
+              // bump the popularity index for this card since we are about to send e-mail to it
+              PRUint32 popularityIndex = 0;
+              if (NS_SUCCEEDED(existingCard->GetPopularityIndex(&popularityIndex)))
+              {
+                existingCard->SetPopularityIndex(++popularityIndex);
+                dirtyABDatabase = PR_TRUE;
+              }
             }
             else
               stillNeedToSearch = PR_TRUE;
@@ -4157,7 +4166,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       }
 
       if (abDataBase)
-        abDataBase->Close(PR_FALSE);
+        abDataBase->Close(dirtyABDatabase); // commit the database changes if we updated the popularity count.
     }
   }
 

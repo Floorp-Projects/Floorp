@@ -127,6 +127,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_LastModDate = 0;
 
 	m_PreferMailFormat = nsIAbPreferMailFormat::unknown;
+	m_PopularityIndex = 0;
 	m_IsMailList = PR_FALSE;
 }
 
@@ -178,6 +179,18 @@ nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& ar
 {
   if (aName)
     arrtibute = aName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::GetPopularityIndex(PRUint32 *aPopularityIndex)
+{
+  *aPopularityIndex = m_PopularityIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbCardProperty::SetPopularityIndex(PRUint32 aPopularityIndex)
+{
+  m_PopularityIndex = aPopularityIndex;
   return NS_OK;
 }
 
@@ -1221,6 +1234,10 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 	PRUint32 format;
 	srcCard->GetPreferMailFormat(&format);
 	SetPreferMailFormat(format);
+
+	PRUint32 popularityIndex;
+	srcCard->GetPopularityIndex(&popularityIndex);
+	SetPopularityIndex(popularityIndex);
 
 	srcCard->GetWorkPhone(getter_Copies(str));
 	SetWorkPhone(str);

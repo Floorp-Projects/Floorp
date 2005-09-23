@@ -68,6 +68,7 @@ interface nsIMdbRow;
 #define kDefaultEmailColumn       "DefaultEmail"
 #define kCardTypeColumn           "CardType"
 #define kPreferMailFormatColumn   "PreferMailFormat"
+#define kPopularityIndexColumn    "PopularityIndex"
 #define kWorkPhoneColumn          "WorkPhone"
 #define kHomePhoneColumn          "HomePhone"
 #define kFaxColumn                "FaxNumber"
@@ -270,6 +271,7 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addCustom4(in nsIMdbRow row, in string value);
 	[noscript] void addNotes(in nsIMdbRow row, in string value);
 	[noscript] void addPreferMailFormat(in nsIMdbRow row, in unsigned long value);
+	[noscript] void addPopularityIndex(in nsIMdbRow row, in unsigned long value);
 
 	[noscript] void addListName(in nsIMdbRow row, in string value);
 	[noscript] void addListNickName(in nsIMdbRow row, in string value);

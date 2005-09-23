@@ -59,7 +59,7 @@ interface nsIAbPreferMailFormat {
     const unsigned long html      = 2; 
 }; 
 
-[scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
+[scriptable, uuid(182071F5-63E2-4456-A095-DEBC0380BC86)]
 interface nsIAbCard : nsISupports {
 	// Card properties
 	attribute wstring firstName;
@@ -122,7 +122,7 @@ interface nsIAbCard : nsISupports {
 	attribute wstring custom4;
 	attribute wstring notes;
 	attribute unsigned long lastModifiedDate;
-
+	attribute unsigned long popularityIndex; /* bumped every time e-mail is sent to this recipient */
 	attribute unsigned long preferMailFormat;
 	attribute boolean isMailList;
 	/**
