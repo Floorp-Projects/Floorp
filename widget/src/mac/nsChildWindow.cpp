@@ -92,40 +92,42 @@ nsresult nsChildWindow::StandardCreate(nsIWidget *aParent,
 
 void nsChildWindow::CalcWindowRegions()
 {
-	Inherited::CalcWindowRegions();
+  Inherited::CalcWindowRegions();
 
-	// clip the siblings out of the window region and visRegion 
-	if (mClipSiblings && mParent && !mIsTopWidgetWindow) {
-		// need to walk the siblings backwards, to get clipping right.
-		nsIWidget* sibling = mParent->GetLastChild();
-		if (!sibling)
-			return;
+  // clip the siblings out of the window region and visRegion 
+  if (mClipSiblings && mParent && !mIsTopWidgetWindow) {
+    // need to walk the siblings backwards, to get clipping right.
+    nsWindow* sibling = NS_STATIC_CAST(nsWindow*, mParent->GetLastChild());
+    if (!sibling)
+      return;
 
-		StRegionFromPool siblingRgn;
-		if (siblingRgn == nsnull)
-			return;
+    StRegionFromPool siblingRgn;
+    if (siblingRgn == nsnull)
+      return;
 
-		do {
-			if (sibling == NS_STATIC_CAST(nsIWidget*, this))
-				break;
+    do {
+      if (sibling == NS_STATIC_CAST(nsWindow*, this))
+        break;
 
-			PRBool visible;
-			sibling->IsVisible(visible);
-			if (visible) {	// don't clip if not visible.
-				// get sibling's bounds in parent's coordinate system.
-				nsRect siblingRect;
-				sibling->GetBounds(siblingRect);
-					
-				// transform from parent's coordinate system to widget coordinates.
-				siblingRect.MoveBy(-mBounds.x, -mBounds.y);
+      PRBool visible;
+      sibling->IsVisible(visible);
+      if (visible && !sibling->IsTopLevelWidgetWindow()) {
+        // don't clip if not visible or if a top-level window.
+        // get sibling's bounds in parent's coordinate system.
+        nsRect siblingRect;
+        sibling->GetBounds(siblingRect);
 
-				Rect macRect;
-				::SetRect(&macRect, siblingRect.x, siblingRect.y, siblingRect.XMost(), siblingRect.YMost());
-				::RectRgn(siblingRgn, &macRect);
-				::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
-				::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
-			}
-			sibling = sibling->GetPrevSibling();
-		} while (sibling);
-	}
+        // transform from parent's coordinate system to widget coordinates.
+        siblingRect.MoveBy(-mBounds.x, -mBounds.y);
+
+        Rect macRect;
+        ::SetRect(&macRect, siblingRect.x, siblingRect.y,
+                  siblingRect.XMost(), siblingRect.YMost());
+        ::RectRgn(siblingRgn, &macRect);
+        ::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
+        ::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
+      }
+      sibling = NS_STATIC_CAST(nsWindow*, sibling->GetPrevSibling());
+    } while (sibling);
+  }
 }
