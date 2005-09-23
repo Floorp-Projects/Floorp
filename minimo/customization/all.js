@@ -232,27 +232,27 @@ pref("network.http.use-cache", true);
 // HTTP traffic.  an empty value indicates the normal TCP/IP socket type.
 pref("network.http.default-socket-type", "");
 
-pref("network.http.keep-alive", true); // set it to false in case of problems
-pref("network.http.proxy.keep-alive", true);
+pref("network.http.keep-alive", false); // set it to false in case of problems
+pref("network.http.proxy.keep-alive", false);
 pref("network.http.keep-alive.timeout", 300);
 
 // limit the absolute number of http connections.
-pref("network.http.max-connections", 4);
+pref("network.http.max-connections", 2);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
 // server.  Otherwise, "server" is the http origin server.
-pref("network.http.max-connections-per-server", 4);
+pref("network.http.max-connections-per-server", 1);
 
 // if network.http.keep-alive is true, and if NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent
 // connections to the server is less then max-persistent-connections-per-server.
-pref("network.http.max-persistent-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-server", 0);
 
 // if network.http.keep-alive is true, and if connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
-pref("network.http.max-persistent-connections-per-proxy", 4);
+pref("network.http.max-persistent-connections-per-proxy", 0);
 
 // amount of time (in seconds) to suspend pending requests, before spawning a
 // new connection, once the limit on the number of persistent connections per
@@ -316,9 +316,6 @@ pref("network.standard-url.escape-utf8", true);
 // This preference controls whether or not URLs are always encoded and sent as
 // UTF-8.
 pref("network.standard-url.encode-utf8", true);
-
-// Idle timeout for ftp control connections - 5 minute default
-pref("network.ftp.idleConnectionTimeout", 300);
 
 // directory listing format
 // 2: HTML
