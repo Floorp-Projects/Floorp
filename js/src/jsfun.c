@@ -1104,7 +1104,9 @@ fun_finalize(JSContext *cx, JSObject *obj)
     JS_ATOMIC_DECREMENT(&fun->nrefs);
     if (fun->nrefs)
         return;
-    if (fun->interpreted)
+
+    /* Null-check required since the parser sets interpreted very early. */
+    if (fun->interpreted && fun->u.script)
         js_DestroyScript(cx, fun->u.script);
 }
 
