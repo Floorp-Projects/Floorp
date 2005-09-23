@@ -4031,6 +4031,14 @@ if ($dbh->bz_column_info("attachments", "thedata")) {
     $dbh->bz_drop_column("attachments", "thedata");    
 }
 
+# 2005-09-15 lance.larsh@oracle.com Bug 308717
+if ($dbh->bz_column_info("series", "public")) {
+    # PUBLIC is a reserved word in Oracle, so renaming the column
+    # PUBLIC in table SERIES avoids having to quote the column name
+    # in every query against that table
+    $dbh->bz_rename_column('series', 'public', 'is_public');
+}
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

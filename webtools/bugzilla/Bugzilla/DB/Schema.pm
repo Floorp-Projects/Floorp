@@ -873,7 +873,7 @@ use constant ABSTRACT_SCHEMA => {
             frequency   => {TYPE => 'INT2', NOTNULL => 1},
             last_viewed => {TYPE => 'DATETIME'},
             query       => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
-            public      => {TYPE => 'BOOLEAN', NOTNULL => 1,
+            is_public   => {TYPE => 'BOOLEAN', NOTNULL => 1,
                             DEFAULT => 'FALSE'},
         ],
         INDEXES => [
