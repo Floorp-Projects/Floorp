@@ -4156,6 +4156,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
               if (NS_SUCCEEDED(existingCard->GetPopularityIndex(&popularityIndex)))
               {
                 existingCard->SetPopularityIndex(++popularityIndex);
+                abDataBase->EditCard(existingCard, PR_FALSE);
                 dirtyABDatabase = PR_TRUE;
               }
             }
@@ -4165,8 +4166,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
         }
       }
 
-      if (abDataBase)
-        abDataBase->Close(dirtyABDatabase); // commit the database changes if we updated the popularity count.
+      abDataBase->Close(dirtyABDatabase); // commit the database changes if we updated the popularity count.
     }
   }
 
