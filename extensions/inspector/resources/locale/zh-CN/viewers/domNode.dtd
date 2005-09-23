@@ -1,0 +1,4 @@
+<!ENTITY namespaceURI.label "名字空间 URI：">
+<!ENTITY nodeName.label "节点名称：">
+<!ENTITY nodeType.label "节点类型：">
+<!ENTITY nodeValue.label "节点值：">

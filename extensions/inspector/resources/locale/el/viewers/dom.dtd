@@ -1,0 +1,85 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is DOM Inspector.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2003
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+  <!ENTITY cmdShowFindDialog.label "Εύρεση Nodes...">
+  <!ENTITY cmdShowFindDialog.accesskey "ρ">
+  <!ENTITY cmdShowFindDialog.accelkey "ρ">
+
+  <!ENTITY cmdFindNext.label "Εύρεση επομένου">
+  <!ENTITY cmdFindNext.accesskey "ν">
+
+  <!ENTITY cmdToggleAnonContent.label "Προβολή ανώνυμου περιεχομένου">
+  <!ENTITY cmdToggleAnonContent.accesskey "α">
+
+  <!ENTITY cmdToggleWhitespaceNodes.label "Προβολή Whitespace Nodes">
+  <!ENTITY cmdToggleWhitespaceNodes.accesskey "W">
+
+  <!ENTITY cmdFlashSelected.label "Αναβόσβημα επιλεγμένου στοιχείου">
+
+  <!ENTITY cmdToggleAttributes.label "Προβολή γνωρισμάτων">
+  <!ENTITY cmdToggleAttributes.accesskey "γ">
+
+  <!ENTITY cmdSelectByClick.label "Επιλογή στοιχείου με κλικ">
+  <!ENTITY cmdSelectByClick.accesskey "λ">
+
+  <!ENTITY ColumnsDialog.title "Στήλες">
+
+  <!ENTITY cmdShowColumnsDialog.label "Στήλες...">
+  <!ENTITY cmdShowColumnsDialog.accesskey "τ">
+  
+  <!ENTITY cmdInsertNode.label "Εισαγωγή...">
+  <!ENTITY cmdDeleteNode.label "Διαγραφή">
+  <!ENTITY cmdCopyXML.label "Αντιγραφή XML">
+  <!ENTITY cmdBlink.label "Αναβόσβημα στοιχείου">
+  <!ENTITY cmdInspectBrowser.label "Επιθεώρηση συμπεριλαμβανόμενου εγγραφου">
+  <!ENTITY cmdInspectInNewWindow.label "Επιθεώρηση σε νέο παράθυρο">
+  
+  <!ENTITY cmdShowPseudoClasses.label "Ορισμός Pseudo-classes...">
+  <!ENTITY cmdShowPseudoClasses.accesskey "p">
+  
+  <!ENTITY pseudoClasses.title "Pseudo-classes">
+
+  <!ENTITY findNodes.title "Εύρεση Nodes">
+  <!ENTITY findNodesById.label "Id">
+  <!ENTITY findNodesByTag.label "Tag">
+  <!ENTITY findNodesByAttr.label "Γνωρ">
+  <!ENTITY findNodesByAttrValue.label "Τιμή">
+  <!ENTITY findNodesSearchBy.label "Αναζήτηση με">
+  <!ENTITY findNodesDirection.label "Κατεύθυνση">
+  <!ENTITY findNodesDirectionUp.label "Πάνω">
+  <!ENTITY findNodesDirectionDown.label "Κάτω">
+  <!ENTITY findNodesFind.label "Εύρεση">
+  <!ENTITY findNodesCancel.label "Ακύρωση">

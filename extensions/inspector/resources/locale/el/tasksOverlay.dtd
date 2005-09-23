@@ -1,0 +1,6 @@
+<!ENTITY inspectorTaskCmd.label          "DOM Inspector">
+<!ENTITY inspectorTaskCmd.commandkey     "i">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.accesskey "n">
+<!ENTITY inspectPageTaskCmd.label "Επιθεώρηση σελίδας">
+<!ENTITY inspectPageTaskCmd.accesskey "θ">
