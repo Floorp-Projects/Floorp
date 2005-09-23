@@ -2171,8 +2171,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
   nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
 
   nsCOMPtr<nsIWidget> widget;

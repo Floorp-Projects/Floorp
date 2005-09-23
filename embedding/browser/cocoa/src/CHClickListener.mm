@@ -200,8 +200,7 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     // I'm going to assume that if we got a mousedown for a content node,
     // it's actually in a document.
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
     nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
     if (!window)
       return NS_OK;
