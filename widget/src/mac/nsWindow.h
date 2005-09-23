@@ -218,6 +218,7 @@ public:
     virtual void        AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
     PRBool              AcceptFocusOnClick() { return mAcceptFocusOnClick;};
     void                Flash(nsPaintEvent  &aEvent);
+    PRBool              IsTopLevelWidgetWindow() const { return mIsTopWidgetWindow; };
 
     // nsIPluginWidget interface
 
