@@ -13210,12 +13210,6 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
 
-  nsIViewManager* viewManager = mPresShell->GetViewManager();
-
-  // Put a view update batch around the whole thing so we only process
-  // view updates at the very end.  Note that this serves as the view
-  // update batch we need around our ProcessRestyledFrames calls too.
-  viewManager->BeginUpdateViewBatch();
   for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
          restylesToProcess;
        currentRestyle != lastRestyle;
@@ -13224,7 +13218,6 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
                       currentRestyle->mRestyleHint,
                       currentRestyle->mChangeHint);
   }
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   delete [] restylesToProcess;
 }
@@ -13269,7 +13262,7 @@ void nsCSSFrameConstructor::RestyleEvent::HandleEvent() {
   nsCSSFrameConstructor* constructor =
     NS_STATIC_CAST(nsCSSFrameConstructor*, owner);
   nsIViewManager* viewManager =
-    constructor->mDocument->GetShellAt(0)->GetPresContext()->GetViewManager();
+    constructor->mPresShell->GetViewManager();
   NS_ASSERTION(viewManager, "Must have view manager for update");
 
   viewManager->BeginUpdateViewBatch();
