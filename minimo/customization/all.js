@@ -1,5 +1,4 @@
-pref("general.useragent.locale", "chrome://minimo/locale/minimo.properties");
-pref("general.useragent.contentlocale", "chrome://minimo/locale/minimo.properties");
+pref("general.useragent.extra.minimo", "Minimo/0.009");
 
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         0);
@@ -86,8 +85,6 @@ pref("browser.fixup.hide_user_pass", true);
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
 
-pref("capability.policy.default_policynames", "mailnews");
-
 pref("capability.policy.default.DOMException.code", "allAccess");
 pref("capability.policy.default.DOMException.message", "allAccess");
 pref("capability.policy.default.DOMException.name", "allAccess");
@@ -131,115 +128,6 @@ pref("capability.policy.default.Window.self", "allAccess");
 pref("capability.policy.default.Window.top", "allAccess");
 pref("capability.policy.default.Window.window", "allAccess");
 
-// Restrictions on the DOM for mail/news - see bugs 66938 and 84545
-pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
-
-pref("capability.policy.mailnews.*.attributes.get", "noAccess");
-pref("capability.policy.mailnews.*.baseURI.get", "noAccess");
-pref("capability.policy.mailnews.*.data.get", "noAccess");
-pref("capability.policy.mailnews.*.getAttribute", "noAccess");
-pref("capability.policy.mailnews.*.getAttributeNS", "noAccess");
-pref("capability.policy.mailnews.*.getNamedItem", "noAccess");
-pref("capability.policy.mailnews.*.getNamedItemNS", "noAccess");
-pref("capability.policy.mailnews.*.host.get", "noAccess");
-pref("capability.policy.mailnews.*.hostname.get", "noAccess");
-pref("capability.policy.mailnews.*.href.get", "noAccess");
-pref("capability.policy.mailnews.*.innerHTML.get", "noAccess");
-pref("capability.policy.mailnews.*.lowSrc.get", "noAccess");
-pref("capability.policy.mailnews.*.nodeValue.get", "noAccess");
-pref("capability.policy.mailnews.*.pathname.get", "noAccess");
-pref("capability.policy.mailnews.*.protocol.get", "noAccess");
-pref("capability.policy.mailnews.*.src.get", "noAccess");
-pref("capability.policy.mailnews.*.substringData.get", "noAccess");
-pref("capability.policy.mailnews.*.text.get", "noAccess");
-pref("capability.policy.mailnews.*.title.get", "noAccess");
-pref("capability.policy.mailnews.DOMException.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
-pref("capability.policy.mailnews.Location.toString", "noAccess");
-pref("capability.policy.mailnews.Range.toString", "noAccess");
-pref("capability.policy.mailnews.Window.blur", "noAccess");
-pref("capability.policy.mailnews.Window.focus", "noAccess");
-pref("capability.policy.mailnews.Window.innerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.innerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.moveBy", "noAccess");
-pref("capability.policy.mailnews.Window.moveTo", "noAccess");
-pref("capability.policy.mailnews.Window.name.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.resizeBy", "noAccess");
-pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
-pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
-pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
-pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
-pref("capability.policy.mailnews.document.load", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.channel", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.responseXML", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.responseText", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.status", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.statusText", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.abort", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.getAllResponseHeaders", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.getResponseHeader", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.open", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.send", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.setRequestHeader", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.readyState", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.overrideMimeType", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onload", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onerror", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onreadystatechange", "noAccess");
-pref("capability.policy.mailnews.XMLSerializer.serializeToString", "noAccess");
-pref("capability.policy.mailnews.XMLSerializer.serializeToStream", "noAccess");
-pref("capability.policy.mailnews.DOMParser,parseFromString", "noAccess");
-pref("capability.policy.mailnews.DOMParser,parseFromStream", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.transportURI", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.verifySourceHeader", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.invoke", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.asyncInvoke", "noAccess");
-pref("capability.policy.mailnews.SOAPResponse.fault", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.styleURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getAssociatedEncoding", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.defaultEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.defaultDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.schemaCollection", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.encode", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.decode", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.mapSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.unmapSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getInternalSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getExternalSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.element", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultNamespaceURI", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultCode", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultString", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultActor", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.detail", "noAccess");
-pref("capability.policy.mailnews.SOAPHeaderBlock.actorURI", "noAccess");
-pref("capability.policy.mailnews.SOAPHeaderBlock.mustUnderstand", "noAccess");
-pref("capability.policy.mailnews.SOAPParameter", "noAccess");
-pref("capability.policy.mailnews.SOAPPropertyBagMutator.propertyBag", "noAccess");
-pref("capability.policy.mailnews.SOAPPropertyBagMutator.addProperty", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.load", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.loadAsync", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.processSchemaElement", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.onLoad", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.onError", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.load", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.loadAsync", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.onLoad", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.onError", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.createProxy", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.createProxyAsync", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.onLoad", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.onError", "noAccess");
-
 // XMLExtras
 pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
 pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
@@ -282,7 +170,6 @@ pref("privacy.popups.disable_from_plugins", 2);
 pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
-pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 
 
@@ -512,7 +399,6 @@ pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
-pref("network.cookie.disableCookieForMailNews", true); // disable all cookies for mail
 pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeAccepting, 2-acceptForSession,3-acceptForNDays
 pref("network.cookie.alwaysAcceptSessionCookies", false);
 pref("network.cookie.prefsMigrated",        false);
