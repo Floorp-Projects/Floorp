@@ -56,7 +56,7 @@
 
   <prefpane id="GeneralPane" >
     <preferences>
-      <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="wstring"/>
+      <preference id="browser.startup.homepage"   name="browser.startup.homepage"  type="string"/>
       <preference id="permissions.default.image"  name="permissions.default.image" type="int"/>
       <preference id="ssr.enabled"                name="ssr.enabled" type="bool"/>
       <preference id="ssr.site.enabled"           name="ssr.site.enabled" type="bool"/>

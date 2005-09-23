@@ -244,11 +244,14 @@ function MiniNavStartup()
     try {
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
+
       var page = pref.getCharPref("browser.startup.homepage");
 
       if (page != null)
-        homepage = page;
-
+      {
+        var fixedUpURI = gURIFixup.createFixupURI(page, 2 /*fixup url*/ );
+        homepage = fixedUpURI.spec;
+      }
     } catch (ignore) {}
       
   } catch (e) {
@@ -256,7 +259,6 @@ function MiniNavStartup()
   }
 
   loadURI(homepage);
-  
 }
 
 /** 
