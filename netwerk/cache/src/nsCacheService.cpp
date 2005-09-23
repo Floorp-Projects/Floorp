@@ -601,7 +601,8 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
     if (storagePolicy == nsICache::STORE_ANYWHERE ||
         storagePolicy == nsICache::STORE_IN_MEMORY) {
 
-        if (mEnableMemoryDevice) {
+        // If there is no memory device, there is no need to evict it...
+        if (mMemoryDevice) {
             rv = mMemoryDevice->EvictEntries(clientID);
             if (NS_FAILED(rv)) return rv;
         }
@@ -653,7 +654,8 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
     // XXX i.e. keep list of visitors in progress.
     
     nsresult rv = NS_OK;
-    if (mEnableMemoryDevice) {
+    // If there is no memory device, there are then also no entries to visit...
+    if (mMemoryDevice) {
         rv = mMemoryDevice->Visit(visitor);
         if (NS_FAILED(rv)) return rv;
     }
@@ -749,7 +751,7 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
                               nsICacheListener * listener,
                               nsCacheRequest **  request)
 {
-    NS_ASSERTION(request, "CreateRequest: request or entry is null");
+    NS_ASSERTION(request, "CreateRequest: request is null");
      
     nsCString * key = new nsCString(*session->ClientID());
     if (!key)
@@ -984,7 +986,8 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
     nsCacheEntry * entry = nsnull;
 
     if ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_IN_MEMORY)) {
-        if (mEnableMemoryDevice)
+        // If there is no memory device, then there is nothing to search...
+        if (mMemoryDevice)
             entry = mMemoryDevice->FindEntry(key);
     }
 
@@ -1013,18 +1016,17 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 {
     nsCacheDevice * device = entry->CacheDevice();
     if (device)  return device;
-    nsresult rv = NS_OK;
 
 #ifdef NECKO_DISK_CACHE
     if (entry->IsStreamData() && entry->IsAllowedOnDisk() && mEnableDiskDevice) {
         // this is the default
         if (!mDiskDevice) {
-            rv = CreateDiskDevice();  // ignore the error (check for mDiskDevice instead)
+            (void)CreateDiskDevice();  // ignore the error (check for mDiskDevice instead)
         }
 
         if (mDiskDevice) {
             entry->MarkBinding();  // enter state of binding
-            rv = mDiskDevice->BindEntry(entry);
+            nsresult rv = mDiskDevice->BindEntry(entry);
             entry->ClearBinding(); // exit state of binding
             if (NS_SUCCEEDED(rv))
                 device = mDiskDevice;
@@ -1034,16 +1036,20 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
      
     // if we can't use mDiskDevice, try mMemoryDevice
     if (!device && mEnableMemoryDevice && entry->IsAllowedInMemory()) {        
-        entry->MarkBinding();  // enter state of binding
-        rv = mMemoryDevice->BindEntry(entry);
-        entry->ClearBinding(); // exit state of binding
-        if (NS_SUCCEEDED(rv))
-            device = mMemoryDevice;
+        if (!mMemoryDevice) {
+            (void)CreateMemoryDevice();  // ignore the error (check for mMemoryDevice instead)
+        }
+        if (mMemoryDevice) {
+            entry->MarkBinding();  // enter state of binding
+            nsresult rv = mMemoryDevice->BindEntry(entry);
+            entry->ClearBinding(); // exit state of binding
+            if (NS_SUCCEEDED(rv))
+                device = mMemoryDevice;
+        }
     }
 
-    if (device == nsnull)  return nsnull;
-
-    entry->SetCacheDevice(device);
+    if (device) 
+        entry->SetCacheDevice(device);
     return device;
 }
 
@@ -1149,10 +1155,6 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
     if (gService->mMemoryDevice) {
         // clear memory cache
         gService->mMemoryDevice->EvictEntries(nsnull);
-#if 0
-        gService->mMemoryDevice->Shutdown();
-        gService->mEnableMemoryDevice = PR_FALSE;
-#endif
     }
 
 }
@@ -1231,11 +1233,17 @@ nsCacheService::SetMemoryCacheEnabled(PRBool  enabled)
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
     gService->mEnableMemoryDevice = enabled;
-    (void) gService->CreateMemoryDevice();    // allocate memory device, if necessary
-    
-    if (!enabled && gService->mMemoryDevice) {
-        // tell memory device to evict everything
-        gService->mMemoryDevice->SetCapacity(0);
+
+    if (enabled) {
+        if (!gService->mMemoryDevice) {
+            // allocate memory device, if necessary
+            (void) gService->CreateMemoryDevice();
+        }
+    } else {
+        if (gService->mMemoryDevice) {
+            // tell memory device to evict everything
+            gService->mMemoryDevice->SetCapacity(0);
+        }
     }
 }
 
