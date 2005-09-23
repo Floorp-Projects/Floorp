@@ -66,6 +66,12 @@
 #include "nsILocalFileOS2.h"
 #endif
 
+// URL file handling for freedesktop.org
+#ifdef XP_UNIX
+#include "nsINIParser.h"
+#define DESKTOP_ENTRY_SECTION "Desktop Entry"
+#endif
+
 //-----------------------------------------------------------------------------
 
 nsFileProtocolHandler::nsFileProtocolHandler()
@@ -180,6 +186,40 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     PR_Close(file);
 
     return rv;
+}
+
+#elif defined(XP_UNIX)
+NS_IMETHODIMP
+nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
+{
+    // We only support desktop files that end in ".desktop" like the spec says:
+    // http://standards.freedesktop.org/desktop-entry-spec/latest/ar01s02.html
+    nsCAutoString leafName;
+    nsresult rv = aFile->GetNativeLeafName(leafName);
+    if (NS_FAILED(rv) ||
+	!StringEndsWith(leafName, NS_LITERAL_CSTRING(".desktop")))
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsILocalFile> file(do_QueryInterface(aFile, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsINIParser parser;
+    rv = parser.Init(file);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString type;
+    parser.GetString(DESKTOP_ENTRY_SECTION, "Type", type);
+    if (!type.EqualsLiteral("Link"))
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCAutoString url;
+    rv = parser.GetString(DESKTOP_ENTRY_SECTION, "URL", url);
+    if (NS_FAILED(rv) || url.IsEmpty())
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_NewURI(aURI, url);
 }
 
 #else // other platforms
