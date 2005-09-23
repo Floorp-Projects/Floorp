@@ -138,7 +138,7 @@ interface nsAddrDBCommitType
   const long kCompressCommit = 3;
 };
 
-[scriptable, uuid(3c6e0a41-7f9d-4e46-a77e-cbeed22ed2be)]
+[scriptable, uuid(BEBB5B43-B81E-4cff-91ED-B8DAD6F7D9F5)]
 interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 
   /**
