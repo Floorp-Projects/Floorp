@@ -841,6 +841,8 @@ nsTreeBodyFrame::CheckOverflow()
     return;
 
   nsRect bounds = mColScrollView->View()->GetBounds();
+  if (bounds.width == 0)
+    return;
 
   /* Ignore overflows that are less than half a pixel. Yes these happen
      all over the place when flex boxes are compressed real small. 
