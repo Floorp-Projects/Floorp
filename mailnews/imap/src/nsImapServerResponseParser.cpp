@@ -208,7 +208,12 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
   int numberOfTaggedResponsesReceived = 0;
   
   char *copyCurrentCommand = PL_strdup(currentCommand);
-  if (copyCurrentCommand && !fServerConnection.DeathSignalReceived())
+  if (!copyCurrentCommand)
+  {
+    HandleMemoryFailure();
+    return;
+  }
+  if (!fServerConnection.DeathSignalReceived())
   {
     char *placeInTokenString = nsnull;
     char *tagToken = nsnull;
@@ -300,10 +305,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
       }
     }
   }
-  else if (!fServerConnection.DeathSignalReceived())
-    HandleMemoryFailure();
-  
-  PR_Free(copyCurrentCommand);
+  PL_strfree(copyCurrentCommand);
 }
 
 void nsImapServerResponseParser::HandleMemoryFailure()
@@ -367,9 +369,13 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
   }
   else if (!PL_strcasecmp(commandToken, "UID"))
   {
-    
     char *copyCurrentCommand = PL_strdup(currentCommand);
-    if (copyCurrentCommand && !fServerConnection.DeathSignalReceived())
+    if (!copyCurrentCommand)
+    {
+      HandleMemoryFailure();
+      return;
+    }
+    if (!fServerConnection.DeathSignalReceived())
     {
       char *placeInTokenString = nsnull;
       char *tagToken           = nsCRT::strtok(copyCurrentCommand, WHITESPACE,&placeInTokenString);
@@ -386,8 +392,8 @@ void nsImapServerResponseParser::PreProcessCommandToken(const char *commandToken
           fUidOfSingleMessageFetch = atoi(uidStringToken);
         }
       }
-      PR_Free(copyCurrentCommand);
     }
+    PL_strfree(copyCurrentCommand);
   }
 }
 
