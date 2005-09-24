@@ -1811,7 +1811,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         SAVE_SP(fp);
     } else {
         sp = fp->sp;
-        JS_ASSERT(JS_UPTRDIFF(sp, fp->spbase) <= depth);
+        JS_ASSERT(JS_UPTRDIFF(sp, fp->spbase) <= depth * sizeof(jsval));
         newsp = fp->spbase - depth;
         mark = NULL;
     }
