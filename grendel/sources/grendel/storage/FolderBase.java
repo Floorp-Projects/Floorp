@@ -20,6 +20,7 @@
  * Contributor(s): 
  *
  * Created: Terry Weissman <terry@netscape.com>, 22 Aug 1997.
+ * Kieran Maclean
  */
 
 package grendel.storage;
@@ -94,8 +95,9 @@ abstract class FolderBase extends Folder implements FolderExtra {
   void noticeInitialMessage(Message m) {
     fMessages.addElement(m);
 // #### How the hell are we supposed to do this?
-    BerkeleyMessage bm=(BerkeleyMessage)m;
-    bm.setMessageNumber(fMessages.size() - 1);
+    // XXX This is not a good idea, this a general class
+    //BerkeleyMessage bm=(BerkeleyMessage)m;
+    //bm.setMessageNumber(fMessages.size() - 1);
   }
 
   ByteStringTable getStringTable() {

@@ -41,8 +41,9 @@
       <mkdir dir="dist"/>
       <antcall target="unzipResources"/>
 
-      <echo message="-- Compiling WikiRadio"/>
+      <echo message="-- Compiling Grendel"/>
       <javac srcdir="." destdir="dist"
+            classpath="**/*.jar"
             optimize="false"
             debug="true"
             includes="**/*.java"/>

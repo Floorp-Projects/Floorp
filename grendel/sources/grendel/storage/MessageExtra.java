@@ -20,10 +20,12 @@
  * Contributor(s): 
  *
  * Created: Terry Weissman <terry@netscape.com>, 22 Oct 1997.
+ * Kieran Maclean
  */
 
 package grendel.storage;
 
+import java.io.IOException;
 import java.io.InputStream;
 import javax.mail.MessagingException;
 
@@ -68,7 +70,7 @@ public interface MessageExtra {
 
   /** Gets the input stream for the message, in RFC822 format: a bunch of
     headers, and then a blank line, and then the message itself. */
-  public InputStream getInputStreamWithHeaders() throws MessagingException;
+  public InputStream getInputStreamWithHeaders() throws MessagingException, IOException;
 
 };
 

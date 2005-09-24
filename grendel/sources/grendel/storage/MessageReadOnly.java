@@ -20,40 +20,44 @@
  * Contributor(s): 
  *
  * Created: Terry Weissman <terry@netscape.com>, 24 Nov 1997.
+ * Kieran Maclean
  */
 
 package grendel.storage;
 
 import calypso.util.NetworkDate;
-
-import calypso.util.Assert;
 import calypso.util.ByteBuf;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.SequenceInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 
 import javax.activation.DataHandler;
 
 import javax.mail.Address;
-import javax.mail.Flags;
 import javax.mail.Folder;
+import javax.mail.Header;
 import javax.mail.IllegalWriteException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.MethodNotSupportedException;
 import javax.mail.Multipart;
-import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
 
 /** This implements those methods on Message which are commonly used in all
-  of our read-only message implementations.  It also provides an
-  implementation for the header-reading routines, all of which assume that
-  the subclass implements getHeadersObj, a method to get an InternetHeaders
-  object for this message. */
+ * of our read-only message implementations.  It also provides an
+ * implementation for the header-reading routines, all of which assume that
+ * the subclass implements getHeadersObj, a method to get an InternetHeaders
+ * object for this message. */
 
 abstract class MessageReadOnly extends Message {
 
@@ -101,7 +105,7 @@ abstract class MessageReadOnly extends Message {
     readonly();
   }
 
-  public String getContentType() {
+  public String getContentType() throws MessagingException {
     return "message/rfc822";
   }
 
@@ -129,8 +133,8 @@ abstract class MessageReadOnly extends Message {
     readonly();
   }
 
-  public void setDataHandler(DataHandler d) {
-    Assert.NotYetImplemented("Can't set a datahandler on our readonly messages!");
+  public void setDataHandler(DataHandler d) throws MessagingException {
+    readonly();
   }
 
   public void setText(String s) throws MessagingException {
@@ -141,12 +145,12 @@ abstract class MessageReadOnly extends Message {
     readonly();
   }
 
-  public void setContent(Object o, String s) {
-    Assert.NotYetImplemented("Can't set content on our readonly messages!");
+  public void setContent(Object o, String s) throws MessagingException {
+    readonly();
   }
 
-  public void setContent(Multipart m) {
-    Assert.NotYetImplemented("Can't set content on our readonly messages!");
+  public void setContent(Multipart m) throws MessagingException {
+    readonly();
   }
 
   public void addHeader(String s1, String s2) throws MessagingException {
@@ -235,70 +239,67 @@ abstract class MessageReadOnly extends Message {
     return getOneHeader("Subject");
   }
 
-  public Enumeration getAllHeaders() {
-    Assert.NotYetImplemented("MessageBase.getAllHeaders -- don't know what it's really supposed to do!");
-    return null;
+  public Enumeration getAllHeaders() throws MessagingException {
+    return getHeadersObj().getAllHeaders();
   }
 
-  public Enumeration getMatchingHeaders(String s[]) {
-    Assert.NotYetImplemented("MessageBase.getMatchingHeaders -- don't know what it's really supposed to do!");
-    return null;
+  public Enumeration getMatchingHeaders(String s[]) throws MessagingException {
+    return getHeadersObj().getMatchingHeaders(s);
   }
 
-  public Enumeration getNonMatchingHeaders(String s[]) {
-    Assert.NotYetImplemented("MessageBase.getNonMatchingHeaders -- don't know what it's really supposed to do!");
-    return null;
+  public Enumeration getNonMatchingHeaders(String s[]) throws MessagingException {
+    return getHeadersObj().getNonMatchingHeaders(s);
   }
 
 
-  public Message reply(boolean replyToAll) {
-    Assert.NotYetImplemented("MessageReadOnly.reply");
-    return null;
-  }
-
-  public boolean isMimeType(String mimeType) {
-    Assert.NotYetImplemented("MessageReadOnly.isMimeType");
-    return false;
-  }
-
-  /** This default implementation of getInputStream() works in terms of
-    getInputStreamWithHeaders.  Subclasses are encouraged to define this
-    more directly if they have an easy way of doing so. */
-  public InputStream getInputStream() throws MessagingException {
-    InputStream in = getInputStreamWithHeaders();
-    if (in == null) return null;
-    // Now read until we hit a blank line.
-    int b1 = 0;
-    int b2 = 0;
-    try {
-      while ((b2 = in.read()) >= 0) {
-        if (b1 == '\r') {
-          if (b2 == '\r') {
-            // Two CR's in a row; done.
-            break;
-          }
-        } else if (b1 == '\n') {
-          if (b2 == '\n') {
-            // Two LF's in a row; done.
-            break;
-          } else if (b2 == '\r') {
-            // We have a LFCR.  It's gotta be the middle of a CRLFCRLF.  So,
-            // we need to read one more character and then we're done.
-            b1 = b2;
-            b2 = in.read();
-            if (b2 == '\n') break;
-          }
-        }
-        b1 = b2;
-      }
-    } catch (IOException e) {
-      throw new MessagingException("Can't skip headers in stream", e);
+  public Message reply(boolean replyToAll) throws MessagingException {
+    MimeMessage mm = new MimeMessage(this.session);
+    Address[] reply_to = this.getReplyTo();
+    if ((reply_to==null)||(reply_to.length==0)) {
+      reply_to = this.getFrom();
     }
-    return in;
+    if (replyToAll) {
+      Address[] recipitants = this.getRecipients(Message.RecipientType.TO);
+      List<Address> recipitants_list = new ArrayList<Address>();
+      if ((recipitants!=null)&&(recipitants.length>0)) {
+        recipitants_list.addAll(Arrays.asList(recipitants));
+      }
+      if ((reply_to!=null)&&(reply_to.length>0)) {
+        recipitants_list.addAll(Arrays.asList(reply_to));
   }
-
-  public InputStream getInputStreamWithHeaders() throws MessagingException {
-    throw new MethodNotSupportedException("MessageBase.getInputStreamWithHeaders");
-
+      mm.setRecipients(Message.RecipientType.TO,recipitants_list.toArray(new Address[0]));
+      
+      recipitants = this.getRecipients(Message.RecipientType.CC);
+      mm.setRecipients(Message.RecipientType.CC,recipitants);
+      
+      recipitants = this.getRecipients(Message.RecipientType.BCC);
+      mm.setRecipients(Message.RecipientType.BCC,recipitants);
+    } else {
+      if ((reply_to==null)||(reply_to.length==0)) {
+        throw new MessagingException("No Addresses to send reply to, failed!");
   }
+      
+      mm.setRecipients(Message.RecipientType.TO,new Address[]{reply_to[0]});
+    }
+    
+    StringBuffer subject = new StringBuffer(getSubject());
+    MessageExtraWrapper.stripRe(subject);
+    subject.insert(0,"Re: ");
+    mm.setSubject(subject.toString());
+    
+    return mm;
+  }
+  
+  public boolean isMimeType(String mimeType) throws MessagingException {
+    return getContentType().equalsIgnoreCase(mimeType);
+  }
+  
+  /** This default implementation of getInputStream() works in terms of
+   * getInputStreamWithHeaders.  Subclasses are encouraged to define this
+   * more directly if they have an easy way of doing so. */
+  public InputStream getInputStream() throws MessagingException, IOException {
+    return getDataHandler().getInputStream();
+  }
+  
+  public abstract InputStream getInputStreamWithHeaders() throws MessagingException, IOException;
 }

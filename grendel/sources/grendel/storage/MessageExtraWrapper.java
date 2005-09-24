@@ -309,7 +309,7 @@ class MessageExtraWrapper implements MessageExtra
 
   // Removes leading "Re:" or similar from the given StringBuffer.  Returns
   // true if it found such a string to remove; false otherwise.
-  protected boolean stripRe(StringBuffer buf)
+  protected static boolean stripRe(StringBuffer buf)
   {
     // Much of this code is duplicated in MessageBase.  Sigh. ###
     if (buf==null) {

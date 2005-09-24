@@ -20,6 +20,7 @@
  * Contributor(s): 
  *
  * Created: Jamie Zawinski <jwz@netscape.com>,  1 Dec 1997.
+ * Kieran Maclean
  */
 
 package grendel.storage;
@@ -29,18 +30,19 @@ import calypso.util.ByteBuf;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import javax.mail.Flags;
+import java.util.Enumeration;
 import javax.mail.Folder;
-import javax.mail.Message;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 
-
-class NewsMessage extends MessageBase {
+class NewsMessage extends MessageBase
+{
 
   int article_number = -1;
+
   int byte_length = -1;
+
   int line_length = -1;
 
   NewsMessage(NewsFolder f, InternetHeaders h) {
@@ -69,6 +71,18 @@ class NewsMessage extends MessageBase {
     super(f, date, flags, author, recipient, subj, id, refs);
   }
 
+  public String getContentType() throws MessagingException {
+    String[] content_types = getHeader("Content-Type");
+    if ((content_types == null) || (content_types.length == 0)) {
+      return getDataHandler().getContentType();
+    }
+    for (int i = content_types.length - 1; i > -1; i++) {
+      if (content_types[i].contains("/")) {
+        return content_types[i];
+      }
+    }
+    return content_types[0];
+  }
 
   void setSize(int l) {
     byte_length = l;
