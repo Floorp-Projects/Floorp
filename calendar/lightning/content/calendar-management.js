@@ -4,7 +4,7 @@
 
 var calendarPrefStyleSheet = null;
 for each(sheet in document.styleSheets) {
-    if (sheet.href.match(/chrome.*\/skin.*\/lightning.css$/ )) {
+    if (sheet.href == "chrome://lightning/skin/lightning.css") {
         calendarPrefStyleSheet = sheet;
         break;
     }
