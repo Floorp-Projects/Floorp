@@ -670,6 +670,8 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
     if(startDate.jsDate < displayStart) {
         startDate.jsDate = displayStart;
         startDate.normalize();
+        if (aItemOccurrence.startDate.isDate)
+            startDate.isDate = true;
         startDate = startDate.getInTimezone(calendarDefaultTimezone());
     }
 
