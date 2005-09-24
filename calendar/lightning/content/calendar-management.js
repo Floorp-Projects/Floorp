@@ -3,14 +3,14 @@
 //
 
 var calendarPrefStyleSheet = null;
-for (var i = 0; i < document.styleSheets.length; i++) {
-    if (document.styleSheets[i].title == "calendar-dynamic-style-sheet") {
-        calendarPrefStyleSheet = document.styleSheets[i];
+for each(sheet in document.styleSheets) {
+    if (sheet.href.match(/chrome.*\/skin.*\/lightning.css$/ )) {
+        calendarPrefStyleSheet = sheet;
         break;
     }
 }
 if (!calendarPrefStyleSheet)
-    Components.utils.reportError("Couldn't find our magic empty style sheet.")
+    Components.utils.reportError("Couldn't find the lightning style sheet.")
 
 function updateStyleSheetForCalendar(aCalendar)
 {

@@ -7,7 +7,6 @@
 <?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-month-view.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
-<?xml-stylesheet href="data:text/css," title="calendar-dynamic-style-sheet" type="text/css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
