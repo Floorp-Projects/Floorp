@@ -47,14 +47,21 @@ class nsRuleWalker;
 class nsAttrValue;
 
 // IID for the nsIStyledContent class
+// c59f05f5-6e39-4e98-a1ea-6c555cb7813c
 #define NS_ISTYLEDCONTENT_IID   \
-{ 0xa7b53093, 0x3516, 0x4392, { 0xb3, 0x3e, 0x12, 0xc0, 0x0d, 0xe7, 0x85, 0xaa } };
+{ 0xc59f05f5, 0x6e39, 0x4e98, \
+  { 0xa1, 0xea, 0x6c, 0x55, 0x5c, 0xb7, 0x81, 0x3c } }
 
 // Abstract interface for all styled content (that supports ID, CLASS, STYLE, and
 // the ability to specify style hints on an attribute change).
 class nsIStyledContent : public nsIContent {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLEDCONTENT_IID)
+
+  nsIStyledContent(nsINodeInfo *aNodeInfo)
+    : nsIContent(aNodeInfo)
+  {
+  }
 
   // XXX Currently callers (e.g., CSSStyleSheetImpl) assume that the ID
   // corresponds to the attribute nsHTMLAtoms::id and that the Class

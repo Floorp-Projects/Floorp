@@ -81,6 +81,12 @@ public:
                        nsINodeInfo** aNodeInfo);
 
   /**
+   * Returns the nodeinfo for text nodes. Can return null if OOM.
+   */
+  already_AddRefed<nsINodeInfo> GetTextNodeInfo();
+  already_AddRefed<nsINodeInfo> GetCommentNodeInfo();
+
+  /**
    * Retrieve a pointer to the document that owns this node info
    * manager.
    */
@@ -100,12 +106,6 @@ public:
    */
   void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
-  /**
-   * Populate the given nsCOMArray with all of the nsINodeInfos
-   * managed by this manager.
-   */
-  nsresult GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray);
-
   void RemoveNodeInfo(nsNodeInfo *aNodeInfo);
 
 private:
@@ -119,6 +119,8 @@ private:
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
+  nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
 
   static PRUint32 gNodeManagerCount;
 };

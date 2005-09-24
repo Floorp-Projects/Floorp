@@ -136,7 +136,7 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
   static const char kSVGStyleSheetURI[] = "resource://gre/res/svg.css";
 
   // this bit of code is to load svg.css on demand
-  nsIDocument* doc = nsContentUtils::GetDocument(aNodeInfo);
+  nsIDocument *doc = aNodeInfo->GetDocument();
   if (doc)
     doc->EnsureCatalogStyleSheet(kSVGStyleSheetURI);
 

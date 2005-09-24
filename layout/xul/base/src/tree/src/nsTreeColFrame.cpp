@@ -49,7 +49,6 @@
 #include "nsIDOMElement.h"
 #include "nsITreeBoxObject.h"
 #include "nsIDOMXULTreeElement.h"
-#include "nsINodeInfo.h"
 
 //
 // NS_NewTreeColFrame
@@ -150,11 +149,9 @@ nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint,
     else
       child = GetNextSibling();
 
-    if (child) {
-      nsINodeInfo *ni = child->GetContent()->GetNodeInfo();
-      if (ni && ni->Equals(nsXULAtoms::splitter, kNameSpaceID_XUL)) {
-        return child;
-      }
+    if (child && child->GetContent()->NodeInfo()->Equals(nsXULAtoms::splitter,
+                                                         kNameSpaceID_XUL)) {
+      return child;
     }
   }
 

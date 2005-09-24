@@ -46,6 +46,7 @@
 #include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
+#include "nsLayoutAtoms.h"
 
 PRUint32 nsNodeInfoManager::gNodeManagerCount;
 
@@ -78,7 +79,10 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 }
 
 
-nsNodeInfoManager::nsNodeInfoManager() : mDocument(nsnull)
+nsNodeInfoManager::nsNodeInfoManager()
+  : mDocument(nsnull),
+    mTextNodeInfo(nsnull),
+    mCommentNodeInfo(nsnull)
 {
   ++gNodeManagerCount;
 
@@ -257,6 +261,35 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   return GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
 }
 
+already_AddRefed<nsINodeInfo>
+nsNodeInfoManager::GetTextNodeInfo()
+{
+  if (!mTextNodeInfo) {
+    GetNodeInfo(nsLayoutAtoms::textTagName, nsnull, kNameSpaceID_None,
+                &mTextNodeInfo);
+  }
+  else {
+    NS_ADDREF(mTextNodeInfo);
+  }
+
+  return mTextNodeInfo;
+}
+
+already_AddRefed<nsINodeInfo>
+nsNodeInfoManager::GetCommentNodeInfo()
+{
+  if (!mCommentNodeInfo) {
+    GetNodeInfo(nsLayoutAtoms::commentTagName, nsnull, kNameSpaceID_None,
+                &mCommentNodeInfo);
+  }
+  else {
+    NS_ADDREF(mCommentNodeInfo);
+  }
+
+  return mCommentNodeInfo;
+}
+
+
 nsIPrincipal*
 nsNodeInfoManager::GetDocumentPrincipal()
 {
@@ -289,14 +322,20 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 void
 nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 {
-  NS_WARN_IF_FALSE(aNodeInfo, "Trying to remove null nodeinfo from manager!");
+  NS_PRECONDITION(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
-  if (aNodeInfo) {
-#ifdef DEBUG
-    PRBool ret =
-#endif
-    PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
-
-    NS_WARN_IF_FALSE(ret, "Can't find nsINodeInfo to remove!!!");
+  // Drop weak reference if needed
+  if (aNodeInfo == mTextNodeInfo) {
+    mTextNodeInfo = nsnull;
   }
+  else if (aNodeInfo == mCommentNodeInfo) {
+    mCommentNodeInfo = nsnull;
+  }
+
+#ifdef DEBUG
+  PRBool ret =
+#endif
+  PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
+
+  NS_POSTCONDITION(ret, "Can't find nsINodeInfo to remove!!!");
 }

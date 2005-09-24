@@ -41,7 +41,6 @@
 
 // content includes
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -149,12 +148,7 @@ public:
         return NS_ERROR_FAILURE;
       }
       
-      nsINodeInfo *nodeInfo = content->GetNodeInfo();
-      if (!nodeInfo) {
-        return NS_ERROR_FAILURE;
-      }
-
-      NS_ADDREF(*aElementName = nodeInfo->NameAtom());
+      NS_ADDREF(*aElementName = content->Tag());
 
       *aChildElement = childElement;
       NS_ADDREF(*aChildElement);

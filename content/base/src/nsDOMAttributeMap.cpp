@@ -231,12 +231,9 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       nsAutoString nsURI;
       attribute->GetNamespaceURI(nsURI);
 
-      nsINodeInfo *contentNi = mContent->GetNodeInfo();
-      NS_ENSURE_TRUE(contentNi, NS_ERROR_FAILURE);
-
-      contentNi->NodeInfoManager()->GetNodeInfo(name, nsURI,
-                                                getter_AddRefs(ni));
-      NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
+      rv = mContent->NodeInfo()->NodeInfoManager()->
+        GetNodeInfo(name, nsURI, getter_AddRefs(ni));
+      NS_ENSURE_SUCCESS(rv, rv);
 
       if (mContent->HasAttr(ni->NamespaceID(), ni->NameAtom())) {
         rv = GetAttribute(ni, getter_AddRefs(tmpReturn), PR_TRUE);
@@ -252,12 +249,8 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
         NS_ENSURE_SUCCESS(rv, rv);
       }
       else {
-        nsINodeInfo *contentNi = mContent->GetNodeInfo();
-        NS_ENSURE_TRUE(contentNi, NS_ERROR_FAILURE);
-
-        rv = contentNi->NodeInfoManager()->GetNodeInfo(name, nsnull,
-                                                       kNameSpaceID_None,
-                                                       getter_AddRefs(ni));
+        rv = mContent->NodeInfo()->NodeInfoManager()->
+          GetNodeInfo(name, nsnull, kNameSpaceID_None, getter_AddRefs(ni));
         NS_ENSURE_SUCCESS(rv, rv);
         // value is already empty
       }
@@ -332,12 +325,9 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
                                            &nameSpaceID,
                                            getter_AddRefs(nameAtom),
                                            getter_AddRefs(prefix)))) {
-    nsINodeInfo *contentNi = mContent->GetNodeInfo();
-    NS_ENSURE_TRUE(contentNi, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINodeInfo> ni;
-    contentNi->NodeInfoManager()->GetNodeInfo(nameAtom, prefix, nameSpaceID,
-                                              getter_AddRefs(ni));
+    mContent->NodeInfo()->NodeInfoManager()->
+      GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
     NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
     rv = GetAttribute(ni, aReturn);
@@ -406,7 +396,7 @@ nsDOMAttributeMap::GetNamedItemNSInternal(const nsAString& aNamespaceURI,
     if (nameSpaceID == attrNS &&
         nameAtom->EqualsUTF8(utf8Name)) {
       nsCOMPtr<nsINodeInfo> ni;
-      mContent->GetNodeInfo()->NodeInfoManager()->
+      mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, prefix, nameSpaceID, getter_AddRefs(ni));
       NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 

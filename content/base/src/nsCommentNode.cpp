@@ -46,7 +46,7 @@ class nsCommentNode : public nsGenericDOMDataNode,
                       public nsIDOMComment
 {
 public:
-  nsCommentNode(nsIDocument *aDocument);
+  nsCommentNode(nsINodeInfo *aNodeInfo);
   virtual ~nsCommentNode();
 
   // nsISupports
@@ -62,7 +62,6 @@ public:
   // Empty interface
 
   // nsIContent
-  virtual nsIAtom *Tag() const;
   virtual PRBool MayHaveFrame() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
@@ -77,22 +76,28 @@ public:
 };
 
 nsresult
-NS_NewCommentNode(nsIContent** aInstancePtrResult, nsIDocument *aOwnerDocument)
+NS_NewCommentNode(nsIContent** aInstancePtrResult,
+                  nsNodeInfoManager *aNodeInfoManager)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
+
   *aInstancePtrResult = nsnull;
 
-  // XXX We really want to pass the document to the constructor, but can't
-  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
-  nsCOMPtr<nsIContent> instance = new nsCommentNode(nsnull);
-  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetCommentNodeInfo();
+  NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-  instance.swap(*aInstancePtrResult);
+  nsCommentNode *instance = new nsCommentNode(ni);
+  if (!instance) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = instance);
 
   return NS_OK;
 }
 
-nsCommentNode::nsCommentNode(nsIDocument *aDocument)
-  : nsGenericDOMDataNode(aDocument)
+nsCommentNode::nsCommentNode(nsINodeInfo *aNodeInfo)
+  : nsGenericDOMDataNode(aNodeInfo)
 {
 }
 
@@ -114,12 +119,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 NS_IMPL_ADDREF_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsCommentNode, nsGenericDOMDataNode)
 
-
-nsIAtom *
-nsCommentNode::Tag() const
-{
-  return nsLayoutAtoms::commentTagName;
-}
 
 // virtual
 PRBool
@@ -161,9 +160,9 @@ nsCommentNode::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsCommentNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+nsCommentNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsCommentNode *it = new nsCommentNode(aOwnerDocument);
+  nsCommentNode *it = new nsCommentNode(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }

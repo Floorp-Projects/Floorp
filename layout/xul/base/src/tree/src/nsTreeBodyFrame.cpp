@@ -3617,11 +3617,11 @@ nsTreeBodyFrame::GetBaseElement()
   nsINodeInfo *ni;
   nsIContent* parent = mContent;
   while (parent) {
-    ni = parent->GetNodeInfo();
+    ni = parent->NodeInfo();
 
-    if (ni && (ni->Equals(nsXULAtoms::tree, kNameSpaceID_XUL) ||
-               (ni->Equals(nsHTMLAtoms::select) &&
-                parent->IsContentOfType(nsIContent::eHTML)))) {
+    if (ni->Equals(nsXULAtoms::tree, kNameSpaceID_XUL) ||
+        (ni->Equals(nsHTMLAtoms::select) &&
+         parent->IsContentOfType(nsIContent::eHTML))) {
       break;
     }
 

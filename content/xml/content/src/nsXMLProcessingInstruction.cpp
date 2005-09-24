@@ -44,31 +44,41 @@
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
+                               nsNodeInfoManager *aNodeInfoManager,
                                const nsAString& aTarget,
-                               const nsAString& aData,
-                               nsIDocument *aOwnerDocument)
+                               const nsAString& aData)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
+
   if (aTarget.EqualsLiteral("xml-stylesheet")) {
-    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult, aData,
-                                                    aOwnerDocument);
+    return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult,
+                                                    aNodeInfoManager, aData);
   }
 
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsIContent> instance;
-  instance = new nsXMLProcessingInstruction(aTarget, aData,
-                                            nsnull);
-  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> ni;
+  nsresult rv =
+    aNodeInfoManager->GetNodeInfo(nsLayoutAtoms::processingInstructionTagName,
+                                  nsnull, kNameSpaceID_None,
+                                  getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  instance.swap(*aInstancePtrResult);
+  nsXMLProcessingInstruction *instance =
+    new nsXMLProcessingInstruction(ni, aTarget, aData);
+  if (!instance) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = instance);
 
   return NS_OK;
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAString& aTarget,
-                                                       const nsAString& aData,
-                                                       nsIDocument *aDocument)
-  : nsGenericDOMDataNode(aDocument),
+nsXMLProcessingInstruction::nsXMLProcessingInstruction(nsINodeInfo *aNodeInfo,
+                                                       const nsAString& aTarget,
+                                                       const nsAString& aData)
+  : nsGenericDOMDataNode(aNodeInfo),
     mTarget(aTarget)
 {
   nsGenericDOMDataNode::SetData(aData);
@@ -121,12 +131,6 @@ nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr,
   return nsParserUtils::GetQuotedAttributeValue(data, aAttr, aValue);
 }
 
-nsIAtom *
-nsXMLProcessingInstruction::Tag() const
-{
-  return nsLayoutAtoms::processingInstructionTagName;
-}
-
 PRBool
 nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags) const
 {
@@ -167,13 +171,13 @@ nsXMLProcessingInstruction::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsXMLProcessingInstruction::Clone(nsIDocument *aOwnerDocument,
+nsXMLProcessingInstruction::Clone(nsINodeInfo *aNodeInfo,
                                   PRBool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
 
-  return new nsXMLProcessingInstruction(mTarget, data, aOwnerDocument);
+  return new nsXMLProcessingInstruction(aNodeInfo, mTarget, data);
 }
 
 #ifdef DEBUG

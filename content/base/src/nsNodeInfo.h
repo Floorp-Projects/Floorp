@@ -62,11 +62,6 @@ public:
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
   virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const;
 
-  nsIDocument* GetDocument() const
-  {
-    return mOwnerManager->GetDocument();
-  }
-
   nsIPrincipal *GetDocumentPrincipal() const
   {
     return mOwnerManager->GetDocumentPrincipal();

@@ -400,7 +400,7 @@ nsHTMLTableElement::GetSection(nsIAtom *aTag)
 
     section = do_QueryInterface(child);
 
-    if (section && child->GetNodeInfo()->Equals(aTag)) {
+    if (section && child->NodeInfo()->Equals(aTag)) {
       nsIDOMHTMLTableSectionElement *result = section;
       NS_ADDREF(result);
 
@@ -729,11 +729,12 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     PRUint32 childCount = GetChildCount();
     for (PRUint32 i = 0; i < childCount; ++i) {
       nsIContent* child = GetChildAt(i);
-      nsINodeInfo* childInfo = child->GetNodeInfo();
-      if (childInfo &&
-          (childInfo->Equals(nsHTMLAtoms::thead, namespaceID) ||
-           childInfo->Equals(nsHTMLAtoms::tbody, namespaceID) ||
-           childInfo->Equals(nsHTMLAtoms::tfoot, namespaceID))) {
+      nsINodeInfo *childInfo = child->NodeInfo();
+      nsIAtom *localName = childInfo->NameAtom();
+      if (childInfo->NamespaceID() == namespaceID &&
+          (localName == nsHTMLAtoms::thead ||
+           localName == nsHTMLAtoms::tbody ||
+           localName == nsHTMLAtoms::tfoot)) {
         rowGroup = do_QueryInterface(child);
         NS_ASSERTION(rowGroup, "HTML node did not QI to nsIDOMNode");
         break;

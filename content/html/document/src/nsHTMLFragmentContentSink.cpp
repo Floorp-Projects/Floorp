@@ -244,10 +244,10 @@ nsHTMLFragmentContentSink::WillBuildModel(void)
     return NS_OK;
   }
 
-  NS_ASSERTION(mTargetDocument, "Need a document!");
+  NS_ASSERTION(mNodeInfoManager, "Need a nodeinfo manager!");
 
   nsCOMPtr<nsIDOMDocumentFragment> frag;
-  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mTargetDocument);
+  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRoot = do_QueryInterface(frag, &rv);
@@ -588,7 +588,7 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
 
   FlushText();
 
-  result = NS_NewCommentNode(&comment);
+  result = NS_NewCommentNode(&comment, mNodeInfoManager);
   if (NS_SUCCEEDED(result)) {
     result = CallQueryInterface(comment, &domComment);
     if (NS_SUCCEEDED(result)) {
@@ -767,7 +767,7 @@ nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent, const nsAStrin
   if(aContent) {
     if (!aText.IsEmpty()) {
       nsCOMPtr<nsITextContent> text;
-      result = NS_NewTextNode(getter_AddRefs(text));
+      result = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
       if (NS_SUCCEEDED(result)) {
         text->SetText(aText, PR_TRUE);
 
@@ -786,7 +786,7 @@ nsHTMLFragmentContentSink::FlushText()
   }
 
   nsCOMPtr<nsITextContent> content;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(content));
+  nsresult rv = NS_NewTextNode(getter_AddRefs(content), mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the text in the text node

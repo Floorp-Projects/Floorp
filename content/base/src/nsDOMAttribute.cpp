@@ -270,8 +270,8 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
   if (!value.IsEmpty()) {
     if (!mChild) {
       nsCOMPtr<nsITextContent> content;
-
-      result = NS_NewTextNode(getter_AddRefs(content));
+      result = NS_NewTextNode(getter_AddRefs(content),
+                              mNodeInfo->NodeInfoManager());
       if (NS_FAILED(result)) {
         return result;
       }

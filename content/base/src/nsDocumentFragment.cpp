@@ -172,19 +172,18 @@ protected:
 
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
-                       nsIDocument* aOwnerDocument)
+                       nsNodeInfoManager *aNodeInfoManager)
 {
-  NS_ENSURE_ARG(aOwnerDocument);
-
-  nsNodeInfoManager *nimgr = aOwnerDocument->NodeInfoManager();
+  NS_ENSURE_ARG(aNodeInfoManager);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = nimgr->GetNodeInfo(nsLayoutAtoms::documentFragmentNodeName,
-                                   nsnull, kNameSpaceID_None,
-                                   getter_AddRefs(nodeInfo));
+  nsresult rv =
+    aNodeInfoManager->GetNodeInfo(nsLayoutAtoms::documentFragmentNodeName,
+                                  nsnull, kNameSpaceID_None,
+                                  getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDocumentFragment* it = new nsDocumentFragment(nodeInfo);
+  nsDocumentFragment *it = new nsDocumentFragment(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

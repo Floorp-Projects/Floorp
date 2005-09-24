@@ -710,8 +710,7 @@ nsContentList::Match(nsIContent *aContent)
       return PR_FALSE;
     }
 
-    nsINodeInfo *ni = aContent->GetNodeInfo();
-    NS_ASSERTION(ni, "Element without nodeinfo!");
+    nsINodeInfo *ni = aContent->NodeInfo();
 
     if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
       return (mMatchAll || ni->Equals(mMatchAtom));

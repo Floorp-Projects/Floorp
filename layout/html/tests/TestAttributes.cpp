@@ -251,7 +251,7 @@ int main(int argc, char** argv)
 
   // Create a new text content object.
   nsIContent *text;
-  rv = NS_NewTextNode(&text);
+  rv = NS_NewTextNode(&text, myDoc->NodeInfoManager());
   if (NS_OK != rv) {
     printf("Could not create text content.\n");
     return -1;

@@ -138,25 +138,21 @@ nsTreeUtils::UpdateSortIndicators(nsIContent* aColumn, const nsAString& aDirecti
 
   // Unset sort attribute(s) on the other columns
   nsIContent* parentContent = aColumn->GetParent();
-  if (parentContent) {
-    nsINodeInfo *ni = parentContent->GetNodeInfo();
+  if (parentContent &&
+      parentContent->NodeInfo()->Equals(nsXULAtoms::treecols,
+                                        kNameSpaceID_XUL)) {
+    PRUint32 i, numChildren = parentContent->GetChildCount();
+    for (i = 0; i < numChildren; ++i) {
+      nsIContent *childContent = parentContent->GetChildAt(i);
 
-    if (ni && ni->Equals(nsXULAtoms::treecols, kNameSpaceID_XUL)) {
-      PRUint32 numChildren = parentContent->GetChildCount();
-      for (PRUint32 i = 0; i < numChildren; ++i) {
-        nsIContent *childContent = parentContent->GetChildAt(i);
-
-        if (childContent) {
-          ni = childContent->GetNodeInfo();
-
-          if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL) &&
-              childContent != aColumn) {
-            childContent->UnsetAttr(kNameSpaceID_None,
-                                    nsXULAtoms::sortDirection, PR_TRUE);
-            childContent->UnsetAttr(kNameSpaceID_None,
-                                    nsXULAtoms::sortActive, PR_TRUE);
-          }
-        }
+      if (childContent &&
+          childContent != aColumn &&
+          childContent->NodeInfo()->Equals(nsXULAtoms::treecol,
+                                           kNameSpaceID_XUL)) {
+        childContent->UnsetAttr(kNameSpaceID_None,
+                                nsXULAtoms::sortDirection, PR_TRUE);
+        childContent->UnsetAttr(kNameSpaceID_None,
+                                nsXULAtoms::sortActive, PR_TRUE);
       }
     }
   }
@@ -168,27 +164,21 @@ nsresult
 nsTreeUtils::GetColumnIndex(nsIContent* aColumn, PRInt32* aResult)
 {
   nsIContent* parentContent = aColumn->GetParent();
-  if (parentContent) {
-    nsINodeInfo *ni = parentContent->GetNodeInfo();
-
-    if (ni && ni->Equals(nsXULAtoms::treecols, kNameSpaceID_XUL)) {
-      PRUint32 numChildren = parentContent->GetChildCount();
-      PRInt32 colIndex = 0;
-      for (PRUint32 i = 0; i < numChildren; ++i) {
-        nsIContent *childContent = parentContent->GetChildAt(i);
-
-        if (childContent) {
-          ni = childContent->GetNodeInfo();
-
-          if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
-
-            if (childContent == aColumn) {
-              *aResult = colIndex;
-	      return NS_OK;
-            }
-            colIndex++;
-          }
+  if (parentContent &&
+      parentContent->NodeInfo()->Equals(nsXULAtoms::treecols,
+                                        kNameSpaceID_XUL)) {
+    PRUint32 i, numChildren = parentContent->GetChildCount();
+    PRInt32 colIndex = 0;
+    for (i = 0; i < numChildren; ++i) {
+      nsIContent *childContent = parentContent->GetChildAt(i);
+      if (childContent &&
+          childContent->NodeInfo()->Equals(nsXULAtoms::treecol,
+                                           kNameSpaceID_XUL)) {
+        if (childContent == aColumn) {
+          *aResult = colIndex;
+          return NS_OK;
         }
+        ++colIndex;
       }
     }
   }

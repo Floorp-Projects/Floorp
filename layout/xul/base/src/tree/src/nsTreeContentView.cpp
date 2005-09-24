@@ -759,7 +759,7 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
   do {
     parent = parent->GetParent();
     if (parent)
-      ni = parent->GetNodeInfo();
+      ni = parent->NodeInfo();
   } while (parent && !ni->Equals(nsXULAtoms::tree, kNameSpaceID_XUL));
 
   if (parent != mRoot) {

@@ -268,16 +268,14 @@ nsFrameLoader::EnsureDocShell()
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   nsAutoString frameName;
 
-  // Don't use mOwnerContent->GetNameSpaceID() here since it returns
-  // kNameSpaceID_XHTML for both HTML and XHTML, see bug 183683.
-  nsINodeInfo* ni = mOwnerContent->GetNodeInfo();
-  if (ni && ni->NamespaceID() == kNameSpaceID_XHTML) {
+  PRInt32 namespaceID = mOwnerContent->GetNameSpaceID();
+  if (namespaceID == kNameSpaceID_XHTML) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
     // XXX if no NAME then use ID, after a transition period this will be
     // changed so that XUL only uses ID too (bug 254284).
-    if (frameName.IsEmpty() && ni && ni->NamespaceID() == kNameSpaceID_XUL) {
+    if (frameName.IsEmpty() && namespaceID == kNameSpaceID_XUL) {
       mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
     }
   }

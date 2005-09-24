@@ -112,8 +112,6 @@ typedef unsigned long PtrBits;
   ((PRUint32)((~PtrBits(0)) >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET))
 
 
-#define PARENT_BIT_INDOCUMENT ((PtrBits)0x1 << 0)
-
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
  * the content), by holding a reference to the content and delegating GetLength
@@ -372,28 +370,13 @@ public:
   static void Shutdown();
 
   // nsIContent interface methods
-  nsIDocument* GetDocument() const
-  {
-    return IsInDoc() ? GetOwnerDoc() : nsnull;
-  }
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  PRBool IsInDoc() const
-  {
-    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
-  }
-  nsIDocument *GetOwnerDoc() const
-  {
-    return nsContentUtils::GetDocument(mNodeInfo);
-  }
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
-  virtual PRInt32 GetNameSpaceID() const;
-  virtual nsIAtom *Tag() const;
-  virtual nsINodeInfo *GetNodeInfo() const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
@@ -455,7 +438,7 @@ public:
    * This calls Clone to do the actual cloning so that we end up with the
    * right class for the clone.
    */
-  nsresult CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
+  nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager, PRBool aDeep,
                         nsIContent **aResult) const;
 
 #ifdef DEBUG
@@ -842,11 +825,6 @@ protected:
    * @param aResult the clone
    */
   nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult) const;
-
-  /**
-   * Information about this type of node
-   */
-  nsCOMPtr<nsINodeInfo> mNodeInfo;          // OWNER
 
   /**
    * Used for either storing flags for this element or a pointer to

@@ -284,7 +284,8 @@ nsNode3Tearoff::SetTextContent(nsIContent* aContent,
 
   if (!aTextContent.IsEmpty()) {
     nsCOMPtr<nsITextContent> textContent;
-    nsresult rv = NS_NewTextNode(getter_AddRefs(textContent));
+    nsresult rv = NS_NewTextNode(getter_AddRefs(textContent),
+                                 aContent->NodeInfo()->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
     textContent->SetText(aTextContent, PR_TRUE);
@@ -807,11 +808,9 @@ nsGenericElement::Shutdown()
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : mNodeInfo(aNodeInfo),
+  : nsIXMLContent(aNodeInfo),
     mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
-  NS_ASSERTION(mNodeInfo, "No nsINodeInfo passed to nsGenericElement, "
-               "PREPARE TO CRASH!!!");
 }
 
 nsGenericElement::~nsGenericElement()
@@ -1945,24 +1944,6 @@ nsGenericElement::SetNativeAnonymous(PRBool aAnonymous)
   } else {
     UnsetFlags(GENERIC_ELEMENT_IS_ANONYMOUS);
   }
-}
-
-PRInt32
-nsGenericElement::GetNameSpaceID() const
-{
-  return mNodeInfo->NamespaceID();
-}
-
-nsIAtom *
-nsGenericElement::Tag() const
-{
-  return mNodeInfo->NameAtom();
-}
-
-nsINodeInfo *
-nsGenericElement::GetNodeInfo() const
-{
-  return mNodeInfo;
 }
 
 nsresult
@@ -4037,31 +4018,29 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
-  nsIDocument *document = GetOwnerDoc();
-
   nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(document, aDeep, getter_AddRefs(newContent));
+  nsresult rv = CloneContent(mNodeInfo->NodeInfoManager(), aDeep,
+                             getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(newContent, aResult);
 }
 
 nsresult
-nsGenericElement::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                               nsIContent **aResult) const
+nsGenericElement::CloneContent(nsNodeInfoManager *aNodeInfoManager,
+                               PRBool aDeep, nsIContent **aResult) const
 {
-  if (GetOwnerDoc() == aOwnerDocument) {
-    return Clone(mNodeInfo, aDeep, aResult);
+  nsINodeInfo *nodeInfo = NodeInfo();
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
+  if (aNodeInfoManager != nodeInfo->NodeInfoManager()) {
+    nsresult rv = aNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
+                                                nodeInfo->GetPrefixAtom(),
+                                                nodeInfo->NamespaceID(),
+                                                getter_AddRefs(newNodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nodeInfo = newNodeInfo;
   }
 
-  nsNodeInfoManager* nodeInfoManager = aOwnerDocument->NodeInfoManager();
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                             mNodeInfo->GetPrefixAtom(),
-                                             mNodeInfo->NamespaceID(),
-                                             getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return Clone(newNodeInfo, aDeep, aResult);
+  return Clone(nodeInfo, aDeep, aResult);
 }

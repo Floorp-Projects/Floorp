@@ -1354,7 +1354,7 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
     nsIContent *child = mContent->GetChildAt(childIndex);
 
     if (child->IsContentOfType(nsIContent::eHTML)) {
-      nsINodeInfo *ni = child->GetNodeInfo();
+      nsINodeInfo *ni = child->NodeInfo();
 
       if (ni->Equals(nsHTMLAtoms::frameset)) {
         childTypes[frameOrFramesetChildIndex++] = FRAMESET;

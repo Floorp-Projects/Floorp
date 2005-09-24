@@ -38,12 +38,15 @@
 #define nsITextContent_h___
 
 #include "nsIContent.h"
+#include "nsIDocument.h"
 class nsString;
 class nsTextFragment;
 
 // IID for the nsITextContent interface
+// e5334e75-ac53-4447-b7fa-830e55cf5ac6
 #define NS_ITEXT_CONTENT_IID \
- {0x3c4cfec2, 0x4438, 0x48df, {0xa2, 0x12, 0x30, 0x5e, 0x5a, 0xd8, 0xbb, 0xa0}}
+{ 0xe5334e75, 0xac53, 0x4447, \
+  { 0xb7, 0xfa, 0x83, 0x0e, 0x55, 0xcf, 0x5a, 0xc6 } }
 
 /**
  * Interface for textual content. This interface is used to provide
@@ -52,6 +55,11 @@ class nsTextFragment;
 class nsITextContent : public nsIContent {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXT_CONTENT_IID)
+
+  nsITextContent(nsINodeInfo *aNodeInfo)
+    : nsIContent(aNodeInfo)
+  {
+  }
 
   /**
    * Get direct access (but read only) to the text in the text content.
@@ -96,18 +104,16 @@ public:
 
 // XXX These belong elsewhere
 /**
- * There's no need to pass in aOwnerDocument if the node is going to be
- * inserted *immediately* after creation.
+ * aNodeInfoManager must not be null.
  */
 nsresult
-NS_NewTextNode(nsITextContent **aResult, nsIDocument *aOwnerDocument = nsnull);
+NS_NewTextNode(nsITextContent **aResult, nsNodeInfoManager *aNodeInfoManager);
 
 /**
- * There's no need to pass in aOwnerDocument if the node is going to be
- * inserted *immediately* after creation.
+ * aNodeInfoManager must not be null.
  */
 nsresult
-NS_NewCommentNode(nsIContent **aResult, nsIDocument *aOwnerDocument = nsnull);
+NS_NewCommentNode(nsIContent **aResult, nsNodeInfoManager *aNodeInfoManager);
 
 
 #endif /* nsITextContent_h___ */

@@ -319,10 +319,9 @@ isContentOfType(nsIContent* content, const char* type)
   if (!content)
 	return PR_FALSE;
 
-  nsINodeInfo *nodeInfo = content->GetNodeInfo();
-  if (nodeInfo)
+  if (content->IsContentOfType(nsIContent::eELEMENT))
   {
-    nsIAtom* atom =  nodeInfo->NameAtom();
+    nsIAtom* atom =  content->NodeInfo()->NameAtom();
     if (atom)
       return atom->EqualsUTF8(nsDependentCString(type));
   }

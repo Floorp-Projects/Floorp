@@ -514,19 +514,7 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
     if (!domDoc) {
       // if we can't get a doc then lets try to get principal through nodeinfo
       // manager
-      nsINodeInfo *ni;
-      if (content) {
-        ni = content->GetNodeInfo();
-      }
-      else {
-        ni = attr->NodeInfo();
-      }
-
-      if (!ni) {
-        // we can't get to the principal so we'll give up
-
-        return NS_OK;
-      }
+      nsINodeInfo *ni = content ? content->NodeInfo() : attr->NodeInfo();
 
       *aPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
       if (!*aPrincipal) {
@@ -601,10 +589,8 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
       NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
 
-      nsINodeInfo *ni = cont->GetNodeInfo();
-      NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
-
-      trustedPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
+      trustedPrincipal = cont->NodeInfo()->NodeInfoManager()->
+        GetDocumentPrincipal();
 
       if (!trustedPrincipal) {
         // Can't get principal of aTrustedNode so we can't check security
@@ -832,11 +818,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   nsIDocument* old_doc = aOldDocument;
 
   if (!old_doc) {
-    nsINodeInfo *ni = aContent->GetNodeInfo();
-
-    if (ni) {
-      old_doc = nsContentUtils::GetDocument(ni);
-    }
+    old_doc = aContent->GetOwnerDoc();
 
     if (!old_doc) {
       // If we can't find our old document we don't know what our old

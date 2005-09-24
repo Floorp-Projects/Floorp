@@ -171,10 +171,11 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
   }
 
   nsIContent* content = GetCurrentContent();
-  if (content && (content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XBL) || (
-      content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XUL) &&
-      content->Tag() != nsXULAtoms::label &&
-      content->Tag() != nsXULAtoms::description))) {
+  if (content &&
+      (content->NodeInfo()->NamespaceEquals(kNameSpaceID_XBL) ||
+       (content->NodeInfo()->NamespaceEquals(kNameSpaceID_XUL) &&
+        content->Tag() != nsXULAtoms::label &&
+        content->Tag() != nsXULAtoms::description))) {
 
     PRBool isWS = PR_TRUE;
     if (mTextLength > 0) {
@@ -307,8 +308,8 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
       if (mState == eXBL_Error) {
         // Check whether we've opened this tag before; we may not have if
         // it was a real XBL tag before the error occured.
-        if (!GetCurrentContent()->GetNodeInfo()->Equals(localName,
-                                                        nameSpaceID)) {
+        if (!GetCurrentContent()->NodeInfo()->Equals(localName,
+                                                     nameSpaceID)) {
           // OK, this tag was never opened as far as the XML sink is
           // concerned.  Just drop the HandleEndElement
           return NS_OK;

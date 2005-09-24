@@ -446,26 +446,24 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   accessNode->GetDOMNode(getter_AddRefs(domNode));  
   nsIContent *content = GetRoleContent(domNode);
   NS_ASSERTION(content, "No content for accessible");
-  if (content) {
+  if (content && content->IsContentOfType(nsIContent::eELEMENT)) {
     nsAutoString roleString;
     if (role != ROLE_CLIENT) {
       content->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, roleString);
     }
     if (roleString.IsEmpty()) {
-      nsINodeInfo *nodeInfo = content->GetNodeInfo();
-      if (nodeInfo) {
-        nodeInfo->GetName(roleString);
-        nsAutoString nameSpaceURI;
-        nodeInfo->GetNamespaceURI(nameSpaceURI);
-        if (!nameSpaceURI.IsEmpty()) {
-          // Only append name space if different from that of current document
-          roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
-        }
-        if (!roleString.IsEmpty()) {
-          pvarRole->vt = VT_BSTR;
-          pvarRole->bstrVal = ::SysAllocString(roleString.get());
-          return S_OK;
-        }
+      nsINodeInfo *nodeInfo = content->NodeInfo();
+      nodeInfo->GetName(roleString);
+      nsAutoString nameSpaceURI;
+      nodeInfo->GetNamespaceURI(nameSpaceURI);
+      if (!nameSpaceURI.IsEmpty()) {
+        // Only append name space if different from that of current document
+        roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
+      }
+      if (!roleString.IsEmpty()) {
+        pvarRole->vt = VT_BSTR;
+        pvarRole->bstrVal = ::SysAllocString(roleString.get());
+        return S_OK;
       }
     }
   }

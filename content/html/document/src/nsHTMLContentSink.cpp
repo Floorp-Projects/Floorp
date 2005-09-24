@@ -1566,7 +1566,8 @@ SinkContext::AddComment(const nsIParserNode& aNode)
   }
   
   nsCOMPtr<nsIContent> comment;
-  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
+  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment),
+                                  mSink->mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMComment> domComment(do_QueryInterface(comment));
@@ -1811,7 +1812,8 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
       }
     } else {
       nsCOMPtr<nsITextContent> textContent;
-      rv = NS_NewTextNode(getter_AddRefs(textContent));
+      rv = NS_NewTextNode(getter_AddRefs(textContent),
+                          mSink->mNodeInfoManager);
       NS_ENSURE_SUCCESS(rv, rv);
 
       mLastTextNode = textContent;

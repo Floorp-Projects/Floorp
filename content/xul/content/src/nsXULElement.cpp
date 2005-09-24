@@ -395,7 +395,7 @@ NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     {
         gFaults.Create++; gFaults.Total++;
         nsAutoString tagstr;
-        element->GetNodeInfo()->GetQualifiedName(tagstr);
+        element->NodeInfo()->GetQualifiedName(tagstr);
         char *tagcstr = ToNewCString(tagstr);
         fprintf(stderr, "XUL: Heavyweight create of <%s>: %d/%d\n",
                 tagcstr, gFaults.Create, gFaults.Total);
@@ -1076,8 +1076,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     // anything else = index to re-set as current
     PRInt32 newCurrentIndex = -1;
 
-    nsINodeInfo *ni = oldKid->GetNodeInfo();
-    if (ni && ni->Equals(nsXULAtoms::listitem, kNameSpaceID_XUL)) {
+    if (oldKid->NodeInfo()->Equals(nsXULAtoms::listitem, kNameSpaceID_XUL)) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
@@ -2535,8 +2534,8 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 {
     for (nsIContent* current = GetParent(); current;
          current = current->GetParent()) {
-        if (current->GetNodeInfo()->Equals(nsXULAtoms::listbox,
-                                           kNameSpaceID_XUL)) {
+        if (current->NodeInfo()->Equals(nsXULAtoms::listbox,
+                                        kNameSpaceID_XUL)) {
             CallQueryInterface(current, aTreeElement);
             // XXX returning NS_OK because that's what the code used to do;
             // is that the right thing, though?

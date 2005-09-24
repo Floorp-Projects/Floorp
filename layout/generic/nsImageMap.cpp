@@ -980,8 +980,8 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
   // and the attribute that's changing is "shape" or "coords" -- those
   // are the only cases we care about.
   if (aContent->IsContentOfType(nsIContent::eHTML) &&
-      (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::area) ||
-       aContent->GetNodeInfo()->Equals(nsHTMLAtoms::a)) &&
+      (aContent->NodeInfo()->Equals(nsHTMLAtoms::area) ||
+       aContent->NodeInfo()->Equals(nsHTMLAtoms::a)) &&
       aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsHTMLAtoms::shape ||
        aAttribute == nsHTMLAtoms::coords)) {

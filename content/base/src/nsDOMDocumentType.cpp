@@ -43,9 +43,14 @@
 #include "nsContentUtils.h"
 #include "nsDOMString.h"
 #include "nsIDOM3Node.h"
+#include "nsNodeInfoManager.h"
+#include "nsLayoutAtoms.h"
+#include "nsIDocument.h"
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
+                      nsNodeInfoManager *aNodeInfoManager,
+                      nsIPrincipal *aPrincipal,
                       nsIAtom *aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
@@ -53,11 +58,34 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset)
 {
+  NS_PRECONDITION(aNodeInfoManager || aPrincipal,
+                  "Must have a principal if no nodeinfo manager.");
   NS_ENSURE_ARG_POINTER(aDocType);
   NS_ENSURE_ARG_POINTER(aName);
 
-  *aDocType = new nsDOMDocumentType(aName, aEntities, aNotations, aPublicId,
-                                    aSystemId, aInternalSubset);
+  nsresult rv;
+
+  nsRefPtr<nsNodeInfoManager> nimgr;
+  if (aNodeInfoManager) {
+    nimgr = aNodeInfoManager;
+  }
+  else {
+    nimgr = new nsNodeInfoManager();
+    NS_ENSURE_TRUE(nimgr, NS_ERROR_OUT_OF_MEMORY);
+    
+    rv = nimgr->Init(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nimgr->SetDocumentPrincipal(aPrincipal);
+  }
+
+  nsCOMPtr<nsINodeInfo> ni;
+  rv = nimgr->GetNodeInfo(nsLayoutAtoms::documentTypeNodeName, nsnull,
+                          kNameSpaceID_None, getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aDocType = new nsDOMDocumentType(ni, aName, aEntities, aNotations,
+                                    aPublicId, aSystemId, aInternalSubset);
   if (!*aDocType) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -67,13 +95,14 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   return NS_OK;
 }
 
-nsDOMDocumentType::nsDOMDocumentType(nsIAtom *aName,
+nsDOMDocumentType::nsDOMDocumentType(nsINodeInfo *aNodeInfo,
+                                     nsIAtom *aName,
                                      nsIDOMNamedNodeMap *aEntities,
                                      nsIDOMNamedNodeMap *aNotations,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
-  nsGenericDOMDataNode(nsnull),
+  nsGenericDOMDataNode(aNodeInfo),
   mName(aName),
   mEntities(aEntities),
   mNotations(aNotations),
@@ -158,12 +187,6 @@ nsDOMDocumentType::GetInternalSubset(nsAString& aInternalSubset)
   return NS_OK;
 }
 
-nsIAtom *
-nsDOMDocumentType::Tag() const
-{
-  return mName;
-}
-
 NS_IMETHODIMP
 nsDOMDocumentType::GetNodeName(nsAString& aNodeName)
 {
@@ -193,9 +216,8 @@ nsDOMDocumentType::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsDOMDocumentType::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+nsDOMDocumentType::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  // XXX ownerDocument
-  return new nsDOMDocumentType(mName, mEntities, mNotations, mPublicId,
-                               mSystemId, mInternalSubset);
+  return new nsDOMDocumentType(aNodeInfo, mName, mEntities, mNotations,
+                               mPublicId, mSystemId, mInternalSubset);
 }

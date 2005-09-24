@@ -1243,10 +1243,11 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       for (childIndex = 0; childIndex < numChildren; childIndex++) {
         nsIContent *child = parentNode->GetChildAt(childIndex);
 
-        nsINodeInfo *ni = child->GetNodeInfo();
-
-        if (ni && (ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL) ||
-                   ni->Equals(nsXULAtoms::menupopup, kNameSpaceID_XUL))) {
+        nsINodeInfo *ni = child->NodeInfo();
+        nsIAtom *localName = ni->NameAtom();
+        if (ni->NamespaceID() == kNameSpaceID_XUL &&
+            (localName == nsXULAtoms::treechildren ||
+             localName == nsXULAtoms::menupopup)) {
           sortInfo->parentContainer = parentNode;
           SortContainer(child, sortInfo, merelyInvertFlag);
         }

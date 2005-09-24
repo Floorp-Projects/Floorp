@@ -883,7 +883,7 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
-                       nsIDocument* aOwnerDocument);
+                       nsNodeInfoManager *aNodeInfoManager);
 nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI, 

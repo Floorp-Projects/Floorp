@@ -556,9 +556,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
           list->Item(ctr, getter_AddRefs(node));
           nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
 
-          nsINodeInfo *ni = childContent->GetNodeInfo();
-
-          if (ni && ni->Equals(nsXULAtoms::menupopup, kNameSpaceID_XUL)) {
+          if (childContent->NodeInfo()->Equals(nsXULAtoms::menupopup,
+                                               kNameSpaceID_XUL)) {
             popupContent = do_QueryInterface(childContent);
             break;
           }

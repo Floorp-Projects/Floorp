@@ -44,9 +44,10 @@
 
 class nsIDocShell;
 
+// ded21e95-2484-4735-a29a-af778335ecfe
 #define NS_IXMLCONTENT_IID \
- { 0xb9df7adc, 0x3262, 0x4692, \
- { 0xbb, 0x97, 0xb7, 0xd5, 0xab, 0xdf, 0x85, 0x9c } }
+ { 0xded21e95, 0x2484, 0x4735, \
+ { 0xa2, 0x9a, 0xaf, 0x77, 0x83, 0x35, 0xec, 0xfe } }
 
 /**
  * XML content extensions to nsIContent
@@ -55,6 +56,11 @@ class nsIXMLContent : public nsIStyledContent {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
   
+  nsIXMLContent(nsINodeInfo *aNodeInfo)
+    : nsIStyledContent(aNodeInfo)
+  {
+  }
+
   /**
    * Give this element a chance to fire links that should be fired
    * automatically when loaded. If the element was an autoloading link

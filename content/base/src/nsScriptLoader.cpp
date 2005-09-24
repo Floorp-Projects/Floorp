@@ -48,7 +48,6 @@
 #include "nsNetUtil.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
-#include "nsINodeInfo.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsContentPolicyUtils.h"
@@ -257,22 +256,17 @@ nsScriptLoader::InNonScriptingContainer(nsIScriptElement* aScriptElement)
       break;
     }
 
-    nsINodeInfo *nodeInfo = content->GetNodeInfo();
-    NS_ASSERTION(nodeInfo, "element without node info");
+    nsIAtom *localName = content->Tag();
 
-    if (nodeInfo) {
-      nsIAtom *localName = nodeInfo->NameAtom();
-
-      // XXX noframes and noembed are currently unconditionally not
-      // displayed and processed. This might change if we support either
-      // prefs or per-document container settings for not allowing
-      // frames or plugins.
-      if (content->IsContentOfType(nsIContent::eHTML) &&
-          ((localName == nsHTMLAtoms::iframe) ||
-           (localName == nsHTMLAtoms::noframes) ||
-           (localName == nsHTMLAtoms::noembed))) {
-        return PR_TRUE;
-      }
+    // XXX noframes and noembed are currently unconditionally not
+    // displayed and processed. This might change if we support either
+    // prefs or per-document container settings for not allowing
+    // frames or plugins.
+    if (content->IsContentOfType(nsIContent::eHTML) &&
+        (localName == nsHTMLAtoms::iframe ||
+         localName == nsHTMLAtoms::noframes ||
+         localName == nsHTMLAtoms::noembed)) {
+      return PR_TRUE;
     }
 
     node = parent;

@@ -541,8 +541,13 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewDOMDocumentType(aReturn, name, nsnull, nsnull,
-                               aPublicId, aSystemId, EmptyString());
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = nsContentUtils::SecurityManager()->
+    GetCodebasePrincipal(mBaseURI, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  return NS_NewDOMDocumentType(aReturn, nsnull, principal, name, nsnull,
+                               nsnull, aPublicId, aSystemId, EmptyString());
 }
 
 NS_IMETHODIMP
@@ -2567,7 +2572,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
   *aReturn = nsnull;
 
   nsCOMPtr<nsITextContent> text;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(text), this);
+  nsresult rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(text, aReturn);
@@ -2580,7 +2585,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 NS_IMETHODIMP
 nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 {
-  return NS_NewDocumentFragment(aReturn, this);
+  return NS_NewDocumentFragment(aReturn, mNodeInfoManager);
 }
 
 NS_IMETHODIMP
@@ -2589,7 +2594,7 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
   *aReturn = nsnull;
 
   nsCOMPtr<nsIContent> comment;
-  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), this);
+  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(comment, aReturn);
@@ -2614,7 +2619,8 @@ nsDocument::CreateCDATASection(const nsAString& aData,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
 
   nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content), this);
+  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content),
+                                      mNodeInfoManager);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(content, aReturn);
@@ -2635,8 +2641,8 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData,
-                                      this);
+  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content),
+                                      mNodeInfoManager, aTarget, aData);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2890,7 +2896,8 @@ nsDocument::ImportNode(nsIDOMNode* aImportedNode,
       NS_ENSURE_TRUE(imported, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIContent> clone;
-      rv = imported->CloneContent(this, aDeep, getter_AddRefs(clone));
+      rv = imported->CloneContent(mNodeInfoManager, aDeep,
+                                  getter_AddRefs(clone));
       NS_ENSURE_SUCCESS(rv, rv);
 
       return CallQueryInterface(clone, aResult);

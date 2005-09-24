@@ -46,12 +46,13 @@
 #include "nsXMLProcessingInstruction.h"
 #include "nsUnicharUtils.h"
 #include "nsParserUtils.h"
+#include "nsLayoutAtoms.h"
 
 class nsXMLStylesheetPI : public nsXMLProcessingInstruction,
                           public nsStyleLinkElement
 {
 public:
-  nsXMLStylesheetPI(const nsAString& aData, nsIDocument *aDocument);
+  nsXMLStylesheetPI(nsINodeInfo *aNodeInfo, const nsAString& aData);
   virtual ~nsXMLStylesheetPI();
 
   // nsISupports
@@ -77,7 +78,7 @@ protected:
                          nsAString& aType,
                          nsAString& aMedia,
                          PRBool* aIsAlternate);
-  virtual nsGenericDOMDataNode* Clone(nsIDocument *aOwnerDocument,
+  virtual nsGenericDOMDataNode* Clone(nsINodeInfo *aNodeInfo,
                                       PRBool aCloneText) const;
 };
 
@@ -93,10 +94,10 @@ NS_IMPL_ADDREF_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
 NS_IMPL_RELEASE_INHERITED(nsXMLStylesheetPI, nsXMLProcessingInstruction)
 
 
-nsXMLStylesheetPI::nsXMLStylesheetPI(const nsAString& aData,
-                                     nsIDocument *aDocument) :
-  nsXMLProcessingInstruction(NS_LITERAL_STRING("xml-stylesheet"), aData,
-                             aDocument)
+nsXMLStylesheetPI::nsXMLStylesheetPI(nsINodeInfo *aNodeInfo,
+                                     const nsAString& aData)
+  : nsXMLProcessingInstruction(aNodeInfo, NS_LITERAL_STRING("xml-stylesheet"),
+                               aData)
 {
 }
 
@@ -235,27 +236,36 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
 }
 
 nsGenericDOMDataNode*
-nsXMLStylesheetPI::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+nsXMLStylesheetPI::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
 
-  return new nsXMLStylesheetPI(data, aOwnerDocument);
+  return new nsXMLStylesheetPI(aNodeInfo, data);
 }
 
 nsresult
 NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         const nsAString& aData,
-                                         nsIDocument *aOwnerDocument)
+                                         nsNodeInfoManager *aNodeInfoManager,
+                                         const nsAString& aData)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
+
   *aInstancePtrResult = nsnull;
   
-  nsCOMPtr<nsIContent> instance = new nsXMLStylesheetPI(aData, nsnull);
+  nsCOMPtr<nsINodeInfo> ni;
+  nsresult rv =
+    aNodeInfoManager->GetNodeInfo(nsLayoutAtoms::processingInstructionTagName,
+                                  nsnull, kNameSpaceID_None,
+                                  getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXMLStylesheetPI *instance = new nsXMLStylesheetPI(ni, aData);
   if (!instance) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  instance.swap(*aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = instance);
 
   return NS_OK;
 }

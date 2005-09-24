@@ -175,17 +175,11 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *kid = aElement->GetChildAt(i);
 
-        if (kid->GetNameSpaceID() != aNameSpaceID)
-            continue; // wrong namespace
+        if (kid->NodeInfo()->Equals(aTag, aNameSpaceID)) {
+            NS_ADDREF(*aResult = kid);
 
-        nsINodeInfo *ni = kid->GetNodeInfo();
-
-        if (!ni || !ni->Equals(aTag))
-            continue;
-
-        *aResult = kid;
-        NS_ADDREF(*aResult);
-        return NS_OK;
+            return NS_OK;
+        }
     }
 
     *aResult = nsnull;

@@ -196,7 +196,8 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   // Add a child text content node for the label
   nsCOMPtr<nsITextContent> labelContent;
-  NS_NewTextNode(getter_AddRefs(labelContent));
+  NS_NewTextNode(getter_AddRefs(labelContent),
+                 mContent->NodeInfo()->NodeInfoManager());
   if (labelContent) {
     // set the value of the text node and add it to the child list
     mTextContent.swap(labelContent);

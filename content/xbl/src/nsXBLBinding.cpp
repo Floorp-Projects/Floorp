@@ -493,10 +493,11 @@ nsXBLBinding::GenerateAnonymousContent()
         children->Item(i, getter_AddRefs(node));
         childContent = do_QueryInterface(node);
 
-        nsINodeInfo *ni = childContent->GetNodeInfo();
-
-        if (!ni || (!ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL) &&
-                    !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))) {
+        nsINodeInfo *ni = childContent->NodeInfo();
+        nsIAtom *localName = ni->NameAtom();
+        if (ni->NamespaceID() != kNameSpaceID_XUL ||
+            (localName != nsXULAtoms::observes &&
+             localName != nsXULAtoms::templateAtom)) {
           hasContent = PR_FALSE;
           break;
         }
@@ -568,11 +569,11 @@ nsXBLBinding::GenerateAnonymousContent()
                 // We were unable to place this child.  All anonymous content
                 // should be thrown out.  Special-case template and observes.
 
-                nsINodeInfo *ni = childContent->GetNodeInfo();
-
-                if (!ni ||
-                    (!ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL) &&
-                     !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))) {
+                nsINodeInfo *ni = childContent->NodeInfo();
+                nsIAtom *localName = ni->NameAtom();
+                if (ni->NamespaceID() != kNameSpaceID_XUL ||
+                    (localName != nsXULAtoms::observes &&
+                     localName != nsXULAtoms::templateAtom)) {
                   // Kill all anonymous content.
                   mContent = nsnull;
                   bindingManager->SetContentListFor(mBoundElement, nsnull);
