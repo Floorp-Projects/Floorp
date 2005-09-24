@@ -384,7 +384,7 @@ calICSCalendar.prototype = {
                 // uses |string|, but the comments talk about bytes, not
                 // chars.)
                 var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-                                           .getService(Components.interfaces.nsIConverterOutputStream);
+                                           .createInstance(Components.interfaces.nsIConverterOutputStream);
                 convStream.init(pipe.outputStream, 'UTF-8', 0, 0x0000);
                 try {
                     if (!convStream.writeString(icsStr)) {
