@@ -5257,9 +5257,32 @@ out:
 #if JS_HAS_EXCEPTIONS
     if (!ok) {
         /*
-         * Has an exception been raised?
+         * Has an exception been raised?  Also insist that we are in the
+         * interpreter activation that pushed fp's operand stack, to avoid
+         * catching exceptions within XML filtering predicate expressions,
+         * such as the one from tests/e4x/Regress/regress-301596.js:
+         *
+         *    try {
+         *        <xml/>.(@a == 1);
+         *        throw 5;
+         *    } catch (e) {
+         *    }
+         *
+         * The inner interpreter activation executing the predicate bytecode
+         * will throw "reference to undefined XML name @a" (or 5, in older
+         * versions that followed the first edition of ECMA-357 and evaluated
+         * unbound identifiers to undefined), and the exception must not be
+         * caught until control unwinds to the outer interpreter activation.
+         *
+         * Otherwise, the wrong stack depth will be restored by JSOP_SETSP,
+         * and the catch will move into the filtering predicate expression,
+         * leading to double catch execution if it rethrows.
+         *
+         * XXX This assumes the null mark case implies XML filtering predicate
+         * expression execution!
+         * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
          */
-        if (cx->throwing) {
+        if (cx->throwing && JS_LIKELY(mark)) {
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
