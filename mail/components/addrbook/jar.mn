@@ -19,7 +19,6 @@ messenger.jar:
     content/messenger/addressbook/replicationProgress.xul       (/mailnews/addrbook/prefs/resources/content/replicationProgress.xul)
     content/messenger/addressbook/replicationProgress.js        (/mailnews/addrbook/prefs/resources/content/replicationProgress.js)
     content/messenger/addressbook/abCardOverlay.xul             (/mailnews/addrbook/resources/content/abCardOverlay.xul)
-    content/messenger/addressbook/abCardViewOverlay.js          (/mailnews/addrbook/resources/content/abCardViewOverlay.js)
     content/messenger/addressbook/abCardViewOverlay.xul         (/mailnews/addrbook/resources/content/abCardViewOverlay.xul)
     content/messenger/addressbook/abDirTreeOverlay.xul          (/mailnews/addrbook/resources/content/abDirTreeOverlay.xul)
     content/messenger/addressbook/abResultsPaneOverlay.xul      (/mailnews/addrbook/resources/content/abResultsPaneOverlay.xul)
