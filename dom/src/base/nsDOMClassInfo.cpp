@@ -6691,9 +6691,11 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = WrapNative(cx, obj, array_item, NS_GET_IID(nsISupports), vp,
                       getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = NS_SUCCESS_I_DID_SOMETHING;
     }
+    else {
+      *vp = JSVAL_VOID;
+    }
+    rv = NS_SUCCESS_I_DID_SOMETHING;
   }
 
   return rv;
@@ -6731,11 +6733,13 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = WrapNative(cx, obj, item, NS_GET_IID(nsISupports), vp,
                       getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = NS_SUCCESS_I_DID_SOMETHING;
+    }
+    else {
+      *vp = JSVAL_VOID;
     }
 
-    return rv; // Don't fall through to nsArraySH::GetProperty() here
+    // Don't fall through to nsArraySH::GetProperty() here
+    return NS_SUCCESS_I_DID_SOMETHING;
   }
 
   return nsArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
