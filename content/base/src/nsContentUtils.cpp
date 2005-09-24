@@ -2311,6 +2311,10 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 PRUint32 aErrorFlags,
                                 const char *aCategory)
 {
+  NS_ASSERTION((aParams && aParamsLength) || (!aParams && !aParamsLength),
+               "Supply either both parameters and their number or no"
+               "parameters and 0.");
+
   nsresult rv;
   if (!sConsoleService) { // only need to bother null-checking here
     rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
@@ -2318,8 +2322,13 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
   }
 
   nsXPIDLString errorText;
-  rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
-                             errorText);
+  if (aParams) {
+    rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
+                               errorText);
+  }
+  else {
+    rv = GetLocalizedString(aFile, aMessageName, errorText);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
