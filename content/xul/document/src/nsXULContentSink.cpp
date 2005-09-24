@@ -1256,9 +1256,14 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
       nsXULPrototypeScript* script =
-          new nsXULPrototypeScript(aLineNumber, jsVersionString, hasE4XOption);
+          new nsXULPrototypeScript(aLineNumber, jsVersionString, hasE4XOption,
+                                   &rv);
       if (! script)
           return NS_ERROR_OUT_OF_MEMORY;
+      if (NS_FAILED(rv)) {
+          delete script;
+          return rv;
+      }      
 
       // If there is a SRC attribute...
       if (! src.IsEmpty()) {

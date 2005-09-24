@@ -81,6 +81,8 @@ class nsIContentPolicy;
 class nsILineBreaker;
 class nsIWordBreaker;
 class nsIEventQueueService;
+class nsIJSRuntimeService;
+struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -581,6 +583,42 @@ public:
   {
     return sEventQueueService;
   }
+
+  /**
+   * Make sure that whatever value *aPtr contains at any given moment is
+   * protected from JS GC until we remove the GC root.  A call to this that
+   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
+   */
+  static nsresult AddJSGCRoot(jsval* aPtr, const char* aName) {
+    return AddJSGCRoot((void*)aPtr, aName);
+  }
+
+  /**
+   * Make sure that whatever object *aPtr is pointing to at any given moment is
+   * protected from JS GC until we remove the GC root.  A call to this that
+   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
+   */
+  static nsresult AddJSGCRoot(JSObject** aPtr, const char* aName) {
+    return AddJSGCRoot((void*)aPtr, aName);
+  }
+
+  /**
+   * Make sure that whatever object *aPtr is pointing to at any given moment is
+   * protected from JS GC until we remove the GC root.  A call to this that
+   * succeeds MUST be matched by a call to RemoveJSGCRoot to avoid leaking.
+   */
+  static nsresult AddJSGCRoot(void* aPtr, const char* aName);  
+
+  /**
+   * Remove aPtr as a JS GC root
+   */
+  static nsresult RemoveJSGCRoot(jsval* aPtr) {
+    return RemoveJSGCRoot((void*)aPtr);
+  }
+  static nsresult RemoveJSGCRoot(JSObject** aPtr) {
+    return RemoveJSGCRoot((void*)aPtr);
+  }
+  static nsresult RemoveJSGCRoot(void* aPtr);
   
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
@@ -590,7 +628,6 @@ private:
                                            JSObject *parent_obj);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
-
 
   static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
 
@@ -631,6 +668,12 @@ private:
 
   // Holds pointers to nsISupports* that should be released at shutdown
   static nsVoidArray* sPtrsToPtrsToRelease;
+
+  // For now, we don't want to automatically clean this up in Shutdown(), since
+  // consumers might unfortunately end up wanting to use it after that
+  static nsIJSRuntimeService* sJSRuntimeService;
+  static JSRuntime* sScriptRuntime;
+  static PRInt32 sScriptRootCount;
   
   static PRBool sInitialized;
 };
@@ -661,6 +704,42 @@ private:
   PRBool mScriptIsRunning;
 };
 
+class nsAutoGCRoot {
+public:
+  // aPtr should be the pointer to the jsval we want to protect
+  nsAutoGCRoot(jsval* aPtr, nsresult* aResult) :
+    mPtr(aPtr)
+  {
+    mResult = *aResult =
+      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+  }
+
+  // aPtr should be the pointer to the JSObject* we want to protect
+  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult) :
+    mPtr(aPtr)
+  {
+    mResult = *aResult =
+      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+  }
+
+  // aPtr should be the pointer to the thing we want to protect
+  nsAutoGCRoot(void* aPtr, nsresult* aResult) :
+    mPtr(aPtr)
+  {
+    mResult = *aResult =
+      nsContentUtils::AddJSGCRoot(aPtr, "nsAutoGCRoot");
+  }
+
+  ~nsAutoGCRoot() {
+    if (NS_SUCCEEDED(mResult)) {
+      nsContentUtils::RemoveJSGCRoot(mPtr);
+    }
+  }
+
+private:
+  void* mPtr;
+  nsresult mResult;
+};
 
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                      \
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \

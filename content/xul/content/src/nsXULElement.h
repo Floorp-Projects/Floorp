@@ -312,8 +312,10 @@ class nsXULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
+    // Note: if *rv is failure after the script is constructed, delete
+    // it and return *rv.
     nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersion,
-                         PRBool aHasE4XOption);
+                         PRBool aHasE4XOption, nsresult* rv);
     virtual ~nsXULPrototypeScript();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -343,6 +345,7 @@ public:
     PRPackedBool             mSrcLoading;
     PRPackedBool             mOutOfLine;
     PRPackedBool             mHasE4XOption;
+    PRPackedBool             mAddedGCRoot;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     JSObject*                mJSObject;
     const char*              mLangVersion;

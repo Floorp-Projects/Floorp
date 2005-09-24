@@ -82,7 +82,6 @@ CPPSRCS		= \
     nsXBLResourceLoader.cpp \
     nsXBLDocumentInfo.cpp \
     nsXBLContentSink.cpp \
-    nsXBLProtoImplMember.cpp \
     nsXBLProtoImplProperty.cpp \
     nsXBLProtoImplMethod.cpp \
     nsXBLProtoImplField.cpp \
