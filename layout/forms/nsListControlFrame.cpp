@@ -616,16 +616,14 @@ GetMaxOptionHeight(nsIFrame* aContainer)
 static inline PRBool
 IsOptGroup(nsIContent *aContent)
 {
-  nsINodeInfo *ni = aContent->GetNodeInfo();
-  return (ni && ni->Equals(nsHTMLAtoms::optgroup) &&
+  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::optgroup) &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 static inline PRBool
 IsOption(nsIContent *aContent)
 {
-  nsINodeInfo *ni = aContent->GetNodeInfo();
-  return (ni && ni->Equals(nsHTMLAtoms::option) &&
+  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::option) &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 

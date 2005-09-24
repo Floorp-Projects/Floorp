@@ -1732,7 +1732,8 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
 
-  res = NS_NewDocumentFragment(getter_AddRefs(clonedFrag), doc);
+  res = NS_NewDocumentFragment(getter_AddRefs(clonedFrag),
+                               doc->NodeInfoManager());
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMNode> commonCloneAncestor(do_QueryInterface(clonedFrag));
@@ -2367,8 +2368,8 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
         }
       }
       if (!setDefaultNamespace) {
-        nsINodeInfo* info = content->GetNodeInfo();
-        if (info && !info->GetPrefixAtom() &&
+        nsINodeInfo* info = content->NodeInfo();
+        if (!info->GetPrefixAtom() &&
             info->NamespaceID() != kNameSpaceID_None) {
           // We have no namespace prefix, but have a namespace ID.  Push
           // default namespace attr in, so that our kids will be in our

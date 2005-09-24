@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  view \
 		  necko \
+		  dom \
 		  $(NULL)
 
 CPPSRCS	= \

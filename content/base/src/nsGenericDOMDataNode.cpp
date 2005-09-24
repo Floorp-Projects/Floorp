@@ -53,12 +53,13 @@
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
+#include "nsLayoutAtoms.h"
 
 #include "pldhash.h"
 #include "prprf.h"
 
-nsGenericDOMDataNode::nsGenericDOMDataNode(nsIDocument *aDocument)
-  : mDocument(aDocument)
+nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
+  : nsITextContent(aNodeInfo)
 {
 }
 
@@ -116,8 +117,8 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
   if (parent) {
     rv = CallQueryInterface(parent, aParentNode);
   }
-  else if (mDocument) {
-    rv = CallQueryInterface(mDocument, aParentNode);
+  else if (IsInDoc()) {
+    rv = CallQueryInterface(GetCurrentDoc(), aParentNode);
   }
   else {
     *aParentNode = nsnull;
@@ -141,10 +142,13 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
       sibling = parent->GetChildAt(pos - 1);
     }
   }
-  else if (mDocument) {
-    PRInt32 pos = mDocument->IndexOf(this);
-    if (pos > 0) {
-      sibling = mDocument->GetChildAt(pos - 1);
+  else {
+    nsIDocument *doc = GetCurrentDoc();
+    if (doc) {
+      PRInt32 pos = doc->IndexOf(this);
+      if (pos > 0) {
+        sibling = doc->GetChildAt(pos - 1);
+      }
     }
   }
 
@@ -171,10 +175,13 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
       sibling = parent->GetChildAt(pos + 1);
     }
   }
-  else if (mDocument) {
-    PRInt32 pos = mDocument->IndexOf(this);
-    if (pos > -1) {
-      sibling = mDocument->GetChildAt(pos + 1);
+  else {
+    nsIDocument *doc = GetCurrentDoc();
+    if (doc) {
+      PRInt32 pos = doc->IndexOf(this);
+      if (pos > -1) {
+        sibling = doc->GetChildAt(pos + 1);
+      }
     }
   }
 
@@ -280,10 +287,9 @@ nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
-  nsIDocument *document = GetOwnerDoc();
-
   nsCOMPtr<nsIContent> newContent;
-  nsresult rv = CloneContent(document, aDeep, getter_AddRefs(newContent));
+  nsresult rv = CloneContent(mNodeInfo->NodeInfoManager(), aDeep,
+                             getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(newContent, aResult);
@@ -604,12 +610,6 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 #endif
 
-nsIDocument*
-nsGenericDOMDataNode::GetDocument() const
-{
-  return GetCurrentDoc();
-}
-
 nsresult
 nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  nsIContent* aBindingParent,
@@ -640,15 +640,44 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // XXXbz we don't keep track of the binding parent yet.  We should.
   
+  nsresult rv;
+
   // Set parent
   PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
   new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
   mParentPtrBits = new_bits;
 
   // Set document
-  mDocument = aDocument;
-  if (mDocument && mText.IsBidi()) {
-    mDocument->SetBidiEnabled(PR_TRUE);
+  if (aDocument) {
+    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+    if (mText.IsBidi()) {
+      aDocument->SetBidiEnabled(PR_TRUE);
+    }
+
+    nsIDocument *ownerDocument = GetOwnerDoc();
+    if (aDocument != ownerDocument) {
+      // get a new nodeinfo
+      nsNodeInfoManager *nodeInfoManager = aDocument->NodeInfoManager();
+      nsCOMPtr<nsINodeInfo> newNodeInfo;
+      // optimize common cases
+      nsIAtom* name = mNodeInfo->NameAtom();
+      if (name == nsLayoutAtoms::textTagName) {
+        newNodeInfo = nodeInfoManager->GetTextNodeInfo();
+        NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+      }
+      else if (name == nsLayoutAtoms::commentTagName) {
+        newNodeInfo = nodeInfoManager->GetCommentNodeInfo();
+        NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+      }
+      else {
+        rv = nodeInfoManager->GetNodeInfo(name,
+                                          mNodeInfo->GetPrefixAtom(),
+                                          mNodeInfo->NamespaceID(),
+                                          getter_AddRefs(newNodeInfo));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      mNodeInfo.swap(newNodeInfo);
+    }
   }
 
   NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
@@ -664,7 +693,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  mDocument = nsnull;
+  mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
   if (aNullParent) {
     mParentPtrBits &= nsIContent::kParentBitMask;
   }
@@ -681,12 +710,6 @@ void
 nsGenericDOMDataNode::SetNativeAnonymous(PRBool aAnonymous)
 {
   // XXX Need to fix this to do something - bug 165110
-}
-
-PRInt32
-nsGenericDOMDataNode::GetNameSpaceID() const
-{
-  return kNameSpaceID_None;
 }
 
 nsIAtom *
@@ -851,12 +874,6 @@ nsGenericDOMDataNode::ContentID() const
   return 0;
 }
 
-nsINodeInfo *
-nsGenericDOMDataNode::GetNodeInfo() const
-{
-  return nsnull;
-}
-
 PRUint32
 nsGenericDOMDataNode::GetChildCount() const
 {
@@ -1016,8 +1033,9 @@ nsGenericDOMDataNode::GetBaseURI() const
   }
 
   nsIURI *uri;
-  if (mDocument) {
-    NS_IF_ADDREF(uri = mDocument->GetBaseURI());
+  nsIDocument *doc = GetOwnerDoc();
+  if (doc) {
+    NS_IF_ADDREF(uri = doc->GetBaseURI());
   }
   else {
     uri = nsnull;
@@ -1056,7 +1074,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
    * as this node!
    */
 
-  nsCOMPtr<nsITextContent> newContent = Clone(nsnull, PR_FALSE);
+  nsCOMPtr<nsITextContent> newContent = Clone(mNodeInfo, PR_FALSE);
   if (!newContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1073,7 +1091,8 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     parent->InsertChildAt(content, index+1, PR_TRUE);
   }
 
-  // XXX Shouldn't we handle the case where this is a child of the document?
+  // No need to handle the case of document being the parent since text
+  // isn't allowed as direct child of documents
 
   return CallQueryInterface(newContent, aReturn);
 }
@@ -1328,12 +1347,22 @@ nsGenericDOMDataNode::GetCurrentValueAtom()
 }
 
 nsresult
-nsGenericDOMDataNode::CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
-                                   nsIContent **aResult) const
+nsGenericDOMDataNode::CloneContent(nsNodeInfoManager *aNodeInfoManager,
+                                   PRBool aDeep, nsIContent **aResult) const
 {
-  // XXX We really want to pass the document to the constructor, but can't
-  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
-  *aResult = Clone(nsnull, PR_TRUE);
+  nsINodeInfo *nodeInfo = NodeInfo();
+  nsCOMPtr<nsINodeInfo> newNodeInfo;
+  if (aNodeInfoManager != nodeInfo->NodeInfoManager()) {
+    nsresult rv = aNodeInfoManager->GetNodeInfo(nodeInfo->NameAtom(),
+                                                nodeInfo->GetPrefixAtom(),
+                                                nodeInfo->NamespaceID(),
+                                                getter_AddRefs(newNodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nodeInfo = newNodeInfo;
+  }
+
+  *aResult = Clone(nodeInfo, PR_TRUE);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

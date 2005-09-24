@@ -275,8 +275,7 @@ nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
     nsIDocument *doc;
 
     if (content &&
-        content->GetNodeInfo()->Equals(nsXULAtoms::listbox,
-                                       kNameSpaceID_XUL) &&
+        content->NodeInfo()->Equals(nsXULAtoms::listbox, kNameSpaceID_XUL) &&
         (doc = content->GetDocument())) {
       nsCOMPtr<nsIDOMElement> e(do_QueryInterface(content));
       nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(doc));

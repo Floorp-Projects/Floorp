@@ -1249,8 +1249,8 @@ nsXULTreeBuilder::EnsureSortVariables()
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *child = treecols->GetChildAt(i);
 
-        nsINodeInfo *ni = child->GetNodeInfo();
-        if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
+        if (child->NodeInfo()->Equals(nsXULAtoms::treecol,
+                                      kNameSpaceID_XUL)) {
             nsAutoString sortActive;
             child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, sortActive);
             if (sortActive.EqualsLiteral("true")) {
@@ -1485,9 +1485,8 @@ nsXULTreeBuilder::GetTemplateActionCellFor(PRInt32 aRow,
         for (PRUint32 i = 0; i < count; ++i) {
             nsIContent *child = row->GetChildAt(i);
 
-            nsINodeInfo *ni = child->GetNodeInfo();
-
-            if (ni && ni->Equals(nsXULAtoms::treecell, kNameSpaceID_XUL)) {
+            if (child->NodeInfo()->Equals(nsXULAtoms::treecell,
+                                          kNameSpaceID_XUL)) {
                 nsAutoString ref;
                 child->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
                 if (!ref.IsEmpty() && ref.Equals(colID)) {

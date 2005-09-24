@@ -453,7 +453,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     nsIContent* parent = GetCurrentContent();
     if (mDocument && mDocument->GetDocumentTitle().IsVoid() &&
         parent && parent == mDocElement &&
-        parent->GetNodeInfo()->Equals(nsSVGAtoms::svg, kNameSpaceID_SVG)) {
+        parent->NodeInfo()->Equals(nsSVGAtoms::svg, kNameSpaceID_SVG)) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
@@ -485,7 +485,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, nsIContent* aParent,
 
   *aAppendContent = PR_FALSE;
 
-  nsINodeInfo* nodeInfo = aContent->GetNodeInfo();
+  nsINodeInfo *nodeInfo = aContent->NodeInfo();
 
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (eg form state restoration).
@@ -738,7 +738,7 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   if (0 != mTextLength) {
     if (aCreateTextNode) {
       nsCOMPtr<nsITextContent> textContent;
-      rv = NS_NewTextNode(getter_AddRefs(textContent));
+      rv = NS_NewTextNode(getter_AddRefs(textContent), mNodeInfoManager);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Set the text in the text node
@@ -828,7 +828,7 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
   aNodeInfo->SetIDAttributeAtom(nsHTMLAtoms::id);
   
   // this bit of code is to load mathml.css on demand
-  nsIDocument* doc = nsContentUtils::GetDocument(aNodeInfo);
+  nsIDocument *doc = aNodeInfo->GetDocument();
   if (doc)
     doc->EnsureCatalogStyleSheet(kMathMLStyleSheetURI);
 
@@ -992,7 +992,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
   nsContentUtils::SplitExpatName(aName, getter_AddRefs(debugNameSpacePrefix),
                                  getter_AddRefs(debugTagAtom),
                                  &debugNameSpaceID);
-  NS_ASSERTION(content->GetNodeInfo()->Equals(debugTagAtom, debugNameSpaceID),
+  NS_ASSERTION(content->NodeInfo()->Equals(debugTagAtom, debugNameSpaceID),
                "Wrong element being closed");
 #endif  
 
@@ -1038,16 +1038,16 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
   FlushText();
 
   nsCOMPtr<nsIContent> comment;
-  nsresult result = NS_NewCommentNode(getter_AddRefs(comment));
+  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
   if (comment) {
-    nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &result);
+    nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &rv);
     if (domComment) {
       domComment->AppendData(nsDependentString(aName));
-      result = AddContentAsLeaf(comment);
+      rv = AddContentAsLeaf(comment);
     }
   }
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1061,16 +1061,16 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
   }
   
   nsCOMPtr<nsIContent> cdata;
-  nsresult result = NS_NewXMLCDATASection(getter_AddRefs(cdata));
+  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(cdata), mNodeInfoManager);
   if (cdata) {
     nsCOMPtr<nsIDOMCDATASection> domCDATA = do_QueryInterface(cdata);
     if (domCDATA) {
       domCDATA->SetData(nsDependentString(aData, aLength));
-      result = AddContentAsLeaf(cdata);
+      rv = AddContentAsLeaf(cdata);
     }
   }
 
-  return result;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1093,8 +1093,9 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 
   // Create a new doctype node
   nsCOMPtr<nsIDOMDocumentType> docType;
-  rv = NS_NewDOMDocumentType(getter_AddRefs(docType), name, nsnull, nsnull,
-                             aPublicId, aSystemId, aSubset);
+  rv = NS_NewDOMDocumentType(getter_AddRefs(docType), mNodeInfoManager, nsnull,
+                             name, nsnull, nsnull, aPublicId, aSystemId,
+                             aSubset);
   if (NS_FAILED(rv) || !docType) {
     return rv;
   }
@@ -1148,7 +1149,8 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsCOMPtr<nsIContent> node;
 
-  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
+  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
+                                          mNodeInfoManager, target, data);
   if (NS_OK == result) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
 

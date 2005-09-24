@@ -2007,7 +2007,8 @@ nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
   *aNewFrame = nsnull;
   *aNewContent = nsnull;
   nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewAttributeContent(mDocument, aAttrNamespace, aAttrName,
+  nsresult rv = NS_NewAttributeContent(mDocument->NodeInfoManager(),
+                                       aAttrNamespace, aAttrName,
                                        getter_AddRefs(content));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2216,7 +2217,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
                                       aStyleContext, getter_AddRefs(content),
                                       aFrame);
         } else if (aContent->IsContentOfType(nsIContent::eHTML) &&
-                   aContent->GetNodeInfo()->Equals(nsHTMLAtoms::input)) {
+                   aContent->NodeInfo()->Equals(nsHTMLAtoms::input)) {
           if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
             rv = CreateAttributeContent(aContent, aParentFrame,
                                         kNameSpaceID_None, nsHTMLAtoms::value,
@@ -2242,7 +2243,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
       // Create a text content node
       nsIFrame* textFrame = nsnull;
       nsCOMPtr<nsITextContent> textContent;
-      NS_NewTextNode(getter_AddRefs(textContent));
+      NS_NewTextNode(getter_AddRefs(textContent),
+                     mDocument->NodeInfoManager());
       if (textContent) {
         // Set the text
         textContent->SetText(contentString, PR_TRUE);
@@ -3381,8 +3383,8 @@ nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
       // XXXbz evil hack for HTML forms.... see similar in
       // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
       (!aChildContent->IsContentOfType(nsIContent::eHTML) ||
-       !aChildContent->GetNodeInfo()->Equals(nsHTMLAtoms::form,
-                                             kNameSpaceID_None))) {
+       !aChildContent->NodeInfo()->Equals(nsHTMLAtoms::form,
+                                          kNameSpaceID_None))) {
     nsTableCreator tableCreator(aState.mPresShell);
     nsresult rv = GetPseudoCellFrame(tableCreator, aState, *aParentFrame);
     if (NS_FAILED(rv)) {
@@ -4147,18 +4149,13 @@ nsCSSFrameConstructor::TableProcessChild(nsFrameConstructorState& aState,
       // if <form>'s parent is <tr>/<table>/<tbody>/<thead>/<tfoot> in html,
       // NOT create pseudoframe for it.
       // see bug 159359
-      nsINodeInfo *childNodeInfo = aChildContent->GetNodeInfo();
-      // Sometimes aChildContent is a #text node.  In those cases it
-      // does not have a nodeinfo, and in those cases we want to
-      // construct a foreign frame for it in any case.  So we can just
-      // null-check the nodeinfo here.
-      NS_ASSERTION(childNodeInfo ||
-                   aChildContent->IsContentOfType(nsIContent::eTEXT),
-                   "Non-#text nodes should have a nodeinfo here!");
+      nsINodeInfo *childNodeInfo = aChildContent->NodeInfo();
+      // Sometimes aChildContent is a #text node.  In those cases we want to
+      // construct a foreign frame for it in any case.
       if (aChildContent->IsContentOfType(nsIContent::eHTML) &&
           childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
           aParentContent->IsContentOfType(nsIContent::eHTML)) {
-        nsINodeInfo *parentNodeInfo = aParentContent->GetNodeInfo();
+        nsINodeInfo *parentNodeInfo = aParentContent->NodeInfo();
 
         if (parentNodeInfo->Equals(nsHTMLAtoms::table) ||
             parentNodeInfo->Equals(nsHTMLAtoms::tr)    ||
@@ -4290,7 +4287,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   nsCOMPtr<nsIContent> bodyElement = do_QueryInterface(body);
   
   if (!bodyElement ||
-      !bodyElement->GetNodeInfo()->Equals(nsHTMLAtoms::body)) {
+      !bodyElement->NodeInfo()->Equals(nsHTMLAtoms::body)) {
     // The body is not a <body> tag, it's a <frameset>.
     return nsnull;
   }
@@ -5758,10 +5755,11 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       // Only cut XUL scrollbars off if they're not in a XUL document.
       // This allows scrollbars to be styled from XUL (although not
       // from XML or HTML).
-      nsINodeInfo *ni = content->GetNodeInfo();
-
-      if (ni && (ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
-                 ni->Equals(nsXULAtoms::scrollcorner, kNameSpaceID_XUL))) {
+      nsINodeInfo *ni = content->NodeInfo();
+      nsIAtom *localName = ni->NameAtom();
+      if (ni->NamespaceID() == kNameSpaceID_XUL &&
+          (localName == nsXULAtoms::scrollbar ||
+           localName == nsXULAtoms::scrollcorner)) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
           bindingParent = aParent;
@@ -5777,8 +5775,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       // least-surprise CSS binding until we do the SVG specified
       // cascading rules for <svg:use> - bug 265894
       if (aParent &&
-          aParent->GetNodeInfo() &&
-          aParent->GetNodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
+          aParent->NodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
         bindingParent = aParent;
       else
 #endif
@@ -6533,7 +6530,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
   // it might have dynamically changed from scrollable to not scrollable,
   // and that might need to be propagated.
   PRBool propagatedScrollToViewport = PR_FALSE;
-  if (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::body) &&
+  if (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
       aContent->IsContentOfType(nsIContent::eHTML)) {
     propagatedScrollToViewport =
       PropagateScrollToViewport() == aContent;

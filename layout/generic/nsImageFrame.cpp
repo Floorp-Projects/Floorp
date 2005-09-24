@@ -485,15 +485,14 @@ nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
     else {
       // We are in quirks mode, so we can just check the tag name; no need to
       // check the namespace.
-      nsINodeInfo *nodeInfo = aContent->GetNodeInfo();
+      nsIAtom *localName = aContent->NodeInfo()->NameAtom();
 
       // Use a sized box if we have no alt text.  This means no alt attribute
       // and the node is not an object or an input (since those always have alt
       // text).
       if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
-          nodeInfo &&
-          !nodeInfo->Equals(nsHTMLAtoms::object) &&
-          !nodeInfo->Equals(nsHTMLAtoms::input)) {
+          localName != nsHTMLAtoms::object &&
+          localName != nsHTMLAtoms::input) {
         useSizedBox = PR_TRUE;
       }
       else {

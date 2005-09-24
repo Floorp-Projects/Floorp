@@ -275,19 +275,7 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         nsCOMPtr<nsIDOMDocument> domDoc;
         aNode->GetOwnerDocument(getter_AddRefs(domDoc));
         if (!domDoc) {
-            nsINodeInfo *ni;
-            if (content) {
-                ni = content->GetNodeInfo();
-            }
-            else {
-                ni = attr->NodeInfo();
-            }
-
-            if (!ni) {
-                // aNode is not part of a document, let any caller access it.
-
-                return PR_TRUE;
-            }
+            nsINodeInfo *ni = content ? content->NodeInfo() : attr->NodeInfo();
 
             principal = ni->GetDocumentPrincipal();
             if (!principal) {

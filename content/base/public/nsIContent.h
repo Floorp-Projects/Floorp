@@ -45,6 +45,7 @@
 #include "nsContentErrors.h"
 #include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
+#include "nsINodeInfo.h"
 
 // Forward declarations
 class nsIAtom;
@@ -55,14 +56,13 @@ class nsIDOMEvent;
 class nsIContent;
 class nsISupportsArray;
 class nsIDOMRange;
-class nsINodeInfo;
 class nsIEventListenerManager;
 class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x89f20ce8, 0x08cd, 0x4066, \
- { 0x8a, 0xd5, 0x9e, 0x11, 0x1e, 0x43, 0x52, 0x29 } }
+{ 0x0b762446, 0x041f, 0x46cf, \
+ { 0xb4, 0x6e, 0x98, 0x65, 0x4a, 0x5a, 0x7c, 0x37 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -72,15 +72,23 @@ class nsIContent : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
-  nsIContent()
-    : mParentPtrBits(0) { }
+  nsIContent(nsINodeInfo *aNodeInfo)
+    : mParentPtrBits(0),
+      mNodeInfo(aNodeInfo)
+  {
+    NS_ASSERTION(aNodeInfo,
+                 "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
+  }
 
   /**
    * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
    * Get the document for this content.
    * @return the document
    */
-  virtual nsIDocument* GetDocument() const = 0;
+  nsIDocument *GetDocument() const
+  {
+    return GetCurrentDoc();
+  }
 
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
@@ -133,7 +141,10 @@ public:
    *
    * @return whether this content is in a document tree
    */
-  virtual PRBool IsInDoc() const = 0;
+  PRBool IsInDoc() const
+  {
+    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
+  }
 
   /**
    * Get the document that this content is currently in, if any. This will be
@@ -143,9 +154,7 @@ public:
    */
   nsIDocument *GetCurrentDoc() const
   {
-    // XXX This should become:
-    // return IsInDoc() ? GetOwnerDoc() : nsnull;
-    return GetDocument();
+    return IsInDoc() ? GetOwnerDoc() : nsnull;
   }
 
   /**
@@ -153,7 +162,10 @@ public:
    *
    * @return the ownerDocument
    */
-  virtual nsIDocument *GetOwnerDoc() const = 0;
+  nsIDocument *GetOwnerDoc() const
+  {
+    return mNodeInfo->GetDocument();
+  }
 
   /**
    * Get the parent content for this content.
@@ -182,19 +194,28 @@ public:
    * Get the namespace that this element's tag is defined in
    * @return the namespace
    */
-  virtual PRInt32 GetNameSpaceID() const = 0;
+  PRInt32 GetNameSpaceID() const
+  {
+    return mNodeInfo->NamespaceID();
+  }
 
   /**
    * Get the tag for this element. This will always return a non-null
    * atom pointer (as implied by the naming of the method).
    */
-  virtual nsIAtom *Tag() const = 0;
+  nsIAtom *Tag() const
+  {
+    return mNodeInfo->NameAtom();
+  }
 
   /**
    * Get the NodeInfo for this element
    * @return the nodes node info
    */
-  virtual nsINodeInfo * GetNodeInfo() const = 0;
+  nsINodeInfo *NodeInfo() const
+  {
+    return mNodeInfo;
+  }
 
   /**
    * Get the number of children
@@ -728,20 +749,18 @@ public:
 
 
   /**
-   * Clones this node, setting aOwnerDocument as the ownerDocument of the
+   * Clones this node, using aNodeInfoManager to get the nodeinfo for the
    * clone. When cloning an element, all attributes of the element will be
    * cloned. If aDeep is set, all descendants will also be cloned (by calling
-   * the DOM method cloneNode on them if aOwnerDocument is the same as the
-   * ownerDocument of this content node or by calling the DOM method importNode
-   * if they differ).
+   * the DOM method cloneNode on them if aNodeInfoManager is the same as
+   * the nodeinfo manager of the mNodeInfo of this content node or by calling
+   * the DOM method importNode if they differ).
    *
-   * @param aOwnerDocument the document to use as the ownerDocument of the
-   *                       clone, it should not be null unless this element's
-   *                       ownerDocument is null and you don't want to set a
-   *                       different ownerDocument.
+   * @param aNodeInfoManager the nodeinfo manager to get the nodeinfo for the
+   *                         clone, it should not be null
    * @param aDeep whether to clone the descendants of this node
    */
-  virtual nsresult CloneContent(nsIDocument *aOwnerDocument,
+  virtual nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager,
                                 PRBool aDeep, nsIContent **aResult) const = 0;
 
 #ifdef DEBUG
@@ -778,10 +797,13 @@ public:
 protected:
   typedef PRWord PtrBits;
 
-  // Subclasses may use the low two bits of mParentPtrBits to store other data
+  // Subclasses may use the 0x2 bit of mParentPtrBits to store other data
+  enum { PARENT_BIT_INDOCUMENT = 0x1 };
   enum { kParentBitMask = 0x3 };
 
   PtrBits      mParentPtrBits;
+  
+  nsCOMPtr<nsINodeInfo> mNodeInfo;
 };
 
 #endif /* nsIContent_h___ */

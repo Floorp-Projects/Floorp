@@ -127,13 +127,14 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   for (ChildIterator::Init(aParent, &iter, &last); iter != last; ++iter) {
     nsCOMPtr<nsIContent> content = *iter;
 
-    nsINodeInfo *ni = content->GetNodeInfo();
-    if (ni && ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL)) {
+    nsINodeInfo *ni = content->NodeInfo();
+    if (ni->Equals(nsXULAtoms::treechildren, kNameSpaceID_XUL)) {
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
     }
-    else if (ni && !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL)) {
+    else if (content->IsContentOfType(nsIContent::eELEMENT) &&
+             !ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL)) {
       FindBodyElement(content, aResult);
       if (*aResult)
         break;

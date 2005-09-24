@@ -52,7 +52,7 @@ class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
 public:
-  nsTextNode(nsIDocument *aDocument);
+  nsTextNode(nsINodeInfo *aNodeInfo);
   virtual ~nsTextNode();
 
   // nsISupports
@@ -68,7 +68,6 @@ public:
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
   // nsIContent
-  virtual nsIAtom *Tag() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -109,7 +108,8 @@ public:
     nsITextContent* mContent;  // Weak ref; it owns us
   };
 
-  nsAttributeTextNode(nsIDocument *aDocument) : nsTextNode(aDocument) {
+  nsAttributeTextNode(nsINodeInfo *aNodeInfo) : nsTextNode(aNodeInfo)
+  {
   }
   virtual ~nsAttributeTextNode() {
     DetachListener();
@@ -121,10 +121,10 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
+  virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
                                       PRBool aCloneText) const
   {
-    nsAttributeTextNode *it = new nsAttributeTextNode(aOwnerDocument);
+    nsAttributeTextNode *it = new nsAttributeTextNode(aNodeInfo);
     if (it && aCloneText) {
       it->mText = mText;
     }
@@ -139,22 +139,29 @@ private:
 
 nsresult
 NS_NewTextNode(nsITextContent** aInstancePtrResult,
-               nsIDocument *aOwnerDocument)
+               nsNodeInfoManager *aNodeInfoManager)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
+
   *aInstancePtrResult = nsnull;
 
-  // XXX We really want to pass the document to the constructor, but can't
-  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
-  nsCOMPtr<nsITextContent> instance = new nsTextNode(nsnull);
-  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
+  if (!ni) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  instance.swap(*aInstancePtrResult);
+  nsITextContent *instance = new nsTextNode(ni);
+  if (!instance) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = instance);
 
   return NS_OK;
 }
 
-nsTextNode::nsTextNode(nsIDocument *aDocument)
-  : nsGenericDOMDataNode(aDocument)
+nsTextNode::nsTextNode(nsINodeInfo *aNodeInfo)
+  : nsGenericDOMDataNode(aNodeInfo)
 {
 }
 
@@ -174,12 +181,6 @@ NS_INTERFACE_MAP_BEGIN(nsTextNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Text)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
-
-nsIAtom *
-nsTextNode::Tag() const
-{
-  return nsLayoutAtoms::textTagName;
-}
 
 NS_IMETHODIMP
 nsTextNode::GetNodeName(nsAString& aNodeName)
@@ -214,9 +215,9 @@ nsTextNode::IsContentOfType(PRUint32 aFlags) const
 }
 
 nsGenericDOMDataNode*
-nsTextNode::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+nsTextNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsTextNode *it = new nsTextNode(aOwnerDocument);
+  nsTextNode *it = new nsTextNode(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }
@@ -300,18 +301,25 @@ nsAttributeTextNode::nsAttrChangeListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-NS_NewAttributeContent(nsIDocument *aOwnerDoc, PRInt32 aNameSpaceID,
-                       nsIAtom* aAttrName, nsIContent** aResult)
+NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
+                       PRInt32 aNameSpaceID, nsIAtom* aAttrName,
+                       nsIContent** aResult)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeInfoManager");
   NS_PRECONDITION(aAttrName, "Must have an attr name");
   NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "Must know namespace");
   
   *aResult = nsnull;
 
-  // XXX We really want to pass the document to the constructor, but can't
-  //     yet. See https://bugzilla.mozilla.org/show_bug.cgi?id=27382
-  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(nsnull);
-  NS_ENSURE_TRUE(textNode, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfoManager->GetTextNodeInfo();
+  if (!ni) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsRefPtr<nsAttributeTextNode> textNode = new nsAttributeTextNode(ni);
+  if (!textNode) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   textNode->mListener =
     new nsAttributeTextNode::nsAttrChangeListener(aNameSpaceID,
@@ -320,6 +328,7 @@ NS_NewAttributeContent(nsIDocument *aOwnerDoc, PRInt32 aNameSpaceID,
   NS_ENSURE_TRUE(textNode->mListener, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aResult = textNode);
+
   return NS_OK;
 }
 

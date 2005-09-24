@@ -1393,9 +1393,8 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
 PRBool
 nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
 {
-    nsINodeInfo *ni = aContent->GetNodeInfo();
-
-    return ni && ni->Equals(nsXULAtoms::Template, kNameSpaceID_XUL);
+    return aContent->NodeInfo()->Equals(nsXULAtoms::Template,
+                                        kNameSpaceID_XUL);
 }
 
 nsresult
@@ -1546,9 +1545,8 @@ nsXULTemplateBuilder::CompileRules()
 
     for (PRUint32 i = 0; i < count; i++) {
         nsIContent *rule = tmpl->GetChildAt(i);
-        nsINodeInfo *ni = rule->GetNodeInfo();
 
-        if (ni && ni->Equals(nsXULAtoms::rule, kNameSpaceID_XUL)) {
+        if (rule->NodeInfo()->Equals(nsXULAtoms::rule, kNameSpaceID_XUL)) {
             ++nrules;
 
             // If the <rule> has a <conditions> element, then
@@ -1969,17 +1967,14 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *binding = aBindings->GetChildAt(i);
 
-        nsINodeInfo *ni = binding->GetNodeInfo();
-
-        if (ni && ni->Equals(nsXULAtoms::binding, kNameSpaceID_XUL)) {
+        if (binding->NodeInfo()->Equals(nsXULAtoms::binding,
+                                        kNameSpaceID_XUL)) {
             rv = CompileBinding(aRule, binding);
         }
         else {
 #ifdef PR_LOGGING
             nsAutoString tagstr;
-            if (ni) {
-                ni->GetQualifiedName(tagstr);
-            }
+            binding->NodeInfo()->GetQualifiedName(tagstr);
 
             nsCAutoString tagstrC;
             tagstrC.AssignWithConversion(tagstr);

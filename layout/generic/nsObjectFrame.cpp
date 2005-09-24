@@ -1250,7 +1250,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
                         getter_AddRefs(img));
 
   nsCOMPtr<nsITextContent> text;
-  rv |= NS_NewTextNode(getter_AddRefs(text));
+  rv |= NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
 
   if (NS_FAILED(rv))
     return;
@@ -2920,7 +2920,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
   nsCOMPtr<nsIDOMNodeList> allParams; 
 
-  nsINodeInfo *ni = content->GetNodeInfo();
+  nsINodeInfo *ni = content->NodeInfo();
 
   if (ni->NamespaceEquals(kNameSpaceID_XHTML)) {
     // For XHTML elements we need to take the namespace URI into
@@ -3026,7 +3026,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // (see the AddAttributes functions in the HTML and XML content sinks).
   PRInt16 start, end, increment;
   if (content->IsContentOfType(nsIContent::eHTML) &&
-      content->GetNodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
+      content->NodeInfo()->NamespaceEquals(kNameSpaceID_None)) {
     // HTML.  Walk attributes in reverse order.
     start = numRealAttrs - 1;
     end = -1;

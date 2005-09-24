@@ -46,7 +46,7 @@ class nsXMLCDATASection : public nsGenericDOMDataNode,
                           public nsIDOMCDATASection
 {
 public:
-  nsXMLCDATASection(nsIDocument *aDocument);
+  nsXMLCDATASection(nsINodeInfo *aNodeInfo);
   virtual ~nsXMLCDATASection();
 
   // nsISupports
@@ -65,7 +65,6 @@ public:
   // Empty interface
 
   // nsIContent
-  virtual nsIAtom *Tag() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
@@ -75,20 +74,30 @@ public:
 
 nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
-                      nsIDocument *aOwnerDocument)
+                      nsNodeInfoManager *aNodeInfoManager)
 {
+  NS_PRECONDITION(aNodeInfoManager, "Missing nodeinfo manager");
+
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsIContent> instance = new nsXMLCDATASection(nsnull);
-  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+  nsCOMPtr<nsINodeInfo> ni;
+  nsresult rv = aNodeInfoManager->GetNodeInfo(nsLayoutAtoms::cdataTagName,
+                                              nsnull, kNameSpaceID_None,
+                                              getter_AddRefs(ni));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  instance.swap(*aInstancePtrResult);
+  nsXMLCDATASection *instance = new nsXMLCDATASection(ni);
+  if (!instance) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aInstancePtrResult = instance);
 
   return NS_OK;
 }
 
-nsXMLCDATASection::nsXMLCDATASection(nsIDocument *aDocument)
-  : nsGenericDOMDataNode(aDocument)
+nsXMLCDATASection::nsXMLCDATASection(nsINodeInfo *aNodeInfo)
+  : nsGenericDOMDataNode(aNodeInfo)
 {
 }
 
@@ -110,12 +119,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 NS_IMPL_ADDREF_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsXMLCDATASection, nsGenericDOMDataNode)
 
-
-nsIAtom *
-nsXMLCDATASection::Tag() const
-{
-  return nsLayoutAtoms::cdataTagName;
-}
 
 PRBool
 nsXMLCDATASection::IsContentOfType(PRUint32 aFlags) const
@@ -150,9 +153,9 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 }
 
 nsGenericDOMDataNode*
-nsXMLCDATASection::Clone(nsIDocument *aOwnerDocument, PRBool aCloneText) const
+nsXMLCDATASection::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
-  nsXMLCDATASection* it = new nsXMLCDATASection(aOwnerDocument);
+  nsXMLCDATASection *it = new nsXMLCDATASection(aNodeInfo);
   if (it && aCloneText) {
     it->mText = mText;
   }

@@ -1061,7 +1061,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
     nsINodeInfo *ni = nsnull;
     if (aBoundElement)
-      ni = aBoundElement->GetNodeInfo();
+      ni = aBoundElement->NodeInfo();
 
     if (!info && bindingManager &&
         (!ni || !(ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
@@ -1153,7 +1153,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   nsINodeInfo *ni = nsnull;
   if (aBoundElement)
-    ni = aBoundElement->GetNodeInfo();
+    ni = aBoundElement->NodeInfo();
 
   if (ni && (ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
              ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) || 

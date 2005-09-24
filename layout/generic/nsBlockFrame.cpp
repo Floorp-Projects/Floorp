@@ -7161,11 +7161,12 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
   nsIContent* content = aFrame->GetContent();
   if (!content || !content->IsContentOfType(nsIContent::eHTML))
     return PR_FALSE;
-  nsINodeInfo *ni = content->GetNodeInfo();
-  return ni->Equals(nsHTMLAtoms::ol) ||
-         ni->Equals(nsHTMLAtoms::ul) ||
-         ni->Equals(nsHTMLAtoms::dir) ||
-         ni->Equals(nsHTMLAtoms::menu);
+
+  nsIAtom *localName = content->NodeInfo()->NameAtom();
+  return localName == nsHTMLAtoms::ol ||
+         localName == nsHTMLAtoms::ul ||
+         localName == nsHTMLAtoms::dir ||
+         localName == nsHTMLAtoms::menu;
 }
 
 void

@@ -469,14 +469,6 @@ public:
   }
 
   /**
-   * Retrieve a pointer to the document that owns aNodeInfo.
-   */
-  static nsIDocument *GetDocument(nsINodeInfo *aNodeInfo)
-  {
-    return aNodeInfo->NodeInfoManager()->GetDocument();
-  }
-
-  /**
    * Returns the appropriate event argument name for the specified
    * namespace.  Added because we need to switch between SVG's "evt"
    * and the rest of the world's "event".

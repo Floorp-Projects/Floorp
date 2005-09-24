@@ -171,7 +171,7 @@ nsXMLFragmentContentSink::WillBuildModel(void)
   NS_ASSERTION(mTargetDocument, "Need a document!");
 
   nsCOMPtr<nsIDOMDocumentFragment> frag;
-  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mTargetDocument);
+  nsresult rv = NS_NewDocumentFragment(getter_AddRefs(frag), mNodeInfoManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mRoot = do_QueryInterface(frag);
@@ -283,7 +283,8 @@ nsXMLFragmentContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsCOMPtr<nsIContent> node;
 
-  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
+  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
+                                          mNodeInfoManager, target, data);
   if (NS_SUCCEEDED(result)) {
     // no special processing here.  that should happen when the fragment moves into the document
     result = AddContentAsLeaf(node);

@@ -560,20 +560,18 @@ nsGenericHTMLElement::RecreateFrames()
 static PRBool
 IsBody(nsIContent *aContent)
 {
-  nsINodeInfo *ni = aContent->GetNodeInfo();
-
-  return (ni && ni->Equals(nsHTMLAtoms::body) &&
+  return (aContent->NodeInfo()->Equals(nsHTMLAtoms::body) &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
 static PRBool
 IsOffsetParent(nsIContent *aContent)
 {
-  nsINodeInfo *ni = aContent->GetNodeInfo();
+  nsINodeInfo *ni = aContent->NodeInfo();
 
-  return (ni && (ni->Equals(nsHTMLAtoms::td) ||
-                 ni->Equals(nsHTMLAtoms::table) ||
-                 ni->Equals(nsHTMLAtoms::th)) &&
+  return ((ni->Equals(nsHTMLAtoms::td) ||
+           ni->Equals(nsHTMLAtoms::table) ||
+           ni->Equals(nsHTMLAtoms::th)) &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
@@ -1337,8 +1335,8 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
   nsIContent* content = this;
   while (content) {
     // If the current ancestor is a form, return it as our form
-    if (content->IsContentOfType(nsIContent::eHTML) &&
-        content->GetNodeInfo()->Equals(nsHTMLAtoms::form)) {
+    if (content->Tag() == nsHTMLAtoms::form &&
+        content->IsContentOfType(nsIContent::eHTML)) {
       nsIDOMHTMLFormElement* form;
       CallQueryInterface(content, &form);
 
@@ -1390,9 +1388,7 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
 static PRBool
 IsArea(nsIContent *aContent)
 {
-  nsINodeInfo *ni = aContent->GetNodeInfo();
-
-  return (ni && ni->Equals(nsHTMLAtoms::area) &&
+  return (aContent->Tag() == nsHTMLAtoms::area &&
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
@@ -2596,8 +2592,6 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
                                           nsAttrValue& aResult)
 {
   nsresult result = NS_OK;
-  NS_ASSERTION(aContent->GetNodeInfo(), "If we don't have a nodeinfo, we are very screwed");
-
   nsIDocument* doc = aContent->GetOwnerDoc();
 
   if (doc) {
@@ -2990,7 +2984,7 @@ nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
     rv = textChild->SetData(aText);
   } else {
     nsCOMPtr<nsITextContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text));
+    rv = NS_NewTextNode(getter_AddRefs(text), mNodeInfo->NodeInfoManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
     text->SetText(aText, PR_TRUE);

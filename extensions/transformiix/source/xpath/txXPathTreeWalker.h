@@ -263,11 +263,9 @@ txXPathNodeUtils::localNameEquals(const txXPathNode& aNode,
 
     return localName == aLocalName;
 #else
-    if (aNode.isContent()) {
-        nsINodeInfo *ni = aNode.mContent->GetNodeInfo();
-        if (ni) {
-            return ni->Equals(aLocalName);
-        }
+    if (aNode.isContent() &&
+        aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+        return aNode.mContent->NodeInfo()->Equals(aLocalName);
     }
 
     nsCOMPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);

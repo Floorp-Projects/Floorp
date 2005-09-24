@@ -5193,7 +5193,7 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
         for (PRUint32 i = 0; i < childCount; ++i) {
           nsIContent *childContent = rootContent->GetChildAt(i);
 
-          nsINodeInfo *ni = childContent->GetNodeInfo();
+          nsINodeInfo *ni = childContent->NodeInfo();
 
           if (childContent->IsContentOfType(nsIContent::eHTML) &&
               ni->Equals(nsHTMLAtoms::frameset)) {

@@ -403,8 +403,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     }
 
     if (aNode.isContent()) {
-        nsINodeInfo* nodeInfo = aNode.mContent->GetNodeInfo();
-        if (nodeInfo) {
+        if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+            nsINodeInfo* nodeInfo = aNode.mContent->NodeInfo();
             nodeInfo->GetLocalName(aLocalName);
 
             // Check for html
@@ -437,7 +437,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     localName->ToString(aLocalName);
 
     // Check for html
-    if (aNode.mContent->GetNodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
+    if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
         aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
         ToUpperCase(aLocalName);
     }
@@ -454,8 +454,8 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     }
 
     if (aNode.isContent()) {
-        nsINodeInfo* nodeInfo = aNode.mContent->GetNodeInfo();
-        if (nodeInfo) {
+        if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
+            nsINodeInfo* nodeInfo = aNode.mContent->NodeInfo();
             nodeInfo->GetQualifiedName(aName);
 
             // Check for html
@@ -500,7 +500,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     AppendUTF8toUTF16(attrName, aName);
 
     // Check for html
-    if (aNode.mContent->GetNodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
+    if (aNode.mContent->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
         aNode.mContent->IsContentOfType(nsIContent::eHTML)) {
         ToUpperCase(aName);
     }
@@ -515,9 +515,7 @@ txXPathNodeUtils::getNamespaceID(const txXPathNode& aNode)
     }
 
     if (aNode.isContent()) {
-        nsINodeInfo* ni = aNode.mContent->GetNodeInfo();
-
-        return ni ? ni->NamespaceID() : kNameSpaceID_None;
+        return aNode.mContent->GetNameSpaceID();
     }
 
     nsCOMPtr<nsIAtom> name, prefix;
@@ -656,13 +654,7 @@ txXPathNodeUtils::getOwnerDocument(const txXPathNode& aNode)
         return new txXPathNode(aNode);
     }
 
-    nsIDocument* document = aNode.mContent->GetDocument();
-    if (!document) {
-        nsINodeInfo* ni = aNode.mContent->GetNodeInfo();
-        if (ni) {
-          document = ni->GetDocument();
-        }
-    }
+    nsIDocument* document = aNode.mContent->GetOwnerDoc();
 
     return document ? new txXPathNode(document) : nsnull;
 }

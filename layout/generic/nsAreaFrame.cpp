@@ -87,10 +87,8 @@ nsAreaFrame::RegUnregAccessKey(nsPresContext* aPresContext,
   if (!mContent)
     return NS_ERROR_FAILURE;
 
-  nsINodeInfo *ni = mContent->GetNodeInfo();
-
   // only support accesskeys for the following elements
-  if (!ni || !ni->Equals(nsXULAtoms::label, kNameSpaceID_XUL))
+  if (!mContent->NodeInfo()->Equals(nsXULAtoms::label, kNameSpaceID_XUL))
     return NS_OK;
 
   // To filter out <label>s without a control attribute.

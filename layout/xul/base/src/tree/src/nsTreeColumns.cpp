@@ -520,8 +520,8 @@ nsTreeColumns::EnsureColumns()
     while (colFrame) {
       nsIContent* colContent = colFrame->GetContent();
 
-      nsINodeInfo *ni = colContent->GetNodeInfo();
-      if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) { 
+      if (colContent->NodeInfo()->Equals(nsXULAtoms::treecol,
+                                         kNameSpaceID_XUL)) {
         // Create a new column structure.
         nsTreeColumn* col = new nsTreeColumn(this, colFrame);
         if (!col)

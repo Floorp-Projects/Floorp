@@ -653,7 +653,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
 
                 nsCOMPtr<nsITextContent> content;
-                rv = NS_NewTextNode(getter_AddRefs(content));
+                rv = NS_NewTextNode(getter_AddRefs(content),
+                                    mRoot->NodeInfo()->NodeInfoManager());
                 if (NS_FAILED(rv)) return rv;
 
                 content->SetText(value, PR_FALSE);
@@ -1019,7 +1020,7 @@ nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPare
         // The content within a template ends when we hit the
         // <template> or <rule> element in the simple syntax, or the
         // <action> element in the extended syntax.
-        ni = tmpl->GetNodeInfo();
+        ni = tmpl->NodeInfo();
     } while (!ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL) &&
              !ni->Equals(nsXULAtoms::rule, kNameSpaceID_XUL) &&
              !ni->Equals(nsXULAtoms::action, kNameSpaceID_XUL));
@@ -1381,8 +1382,11 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             // Optimize for the <template> element, because we *know*
             // it won't have any generated content: there's no reason
             // to even check this subtree.
-            nsINodeInfo *ni = element->GetNodeInfo();
-            if (!ni || ni->Equals(nsXULAtoms::templateAtom, kNameSpaceID_XUL))
+            // XXX should this check |child| rather than |element|? Otherwise
+            //     it should be moved outside the inner loop. Bug 297290.
+            if (element->NodeInfo()->Equals(nsXULAtoms::templateAtom,
+                                            kNameSpaceID_XUL) ||
+                !element->IsContentOfType(nsIContent::eELEMENT))
                 continue;
 
             // If the element is in the template map, then we

@@ -55,14 +55,12 @@ class nsIDOMText;
 class nsINodeInfo;
 class nsURI;
 
-#define PARENT_BIT_IS_IN_A_HASH ((PtrBits)0x1 << 0)
-
 class nsGenericDOMDataNode : public nsITextContent
 {
 public:
   NS_DECL_ISUPPORTS
 
-  nsGenericDOMDataNode(nsIDocument *aDocument);
+  nsGenericDOMDataNode(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericDOMDataNode();
 
   // Implementation for nsIDOMNode
@@ -175,37 +173,14 @@ public:
                        const nsAString& aArg);
 
   // Implementation for nsIContent
-  nsIDocument* GetDocument() const;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  PRBool IsInDoc() const
-  {
-    return !!mDocument;
-  }
-
-  nsIDocument *GetCurrentDoc() const
-  {
-    return mDocument;
-  }
-
-  nsIDocument *GetOwnerDoc() const
-  {
-    // XXXbz sXBL/XBL2 issue!
-    if (mDocument) {
-      return mDocument;
-    }
-
-    nsIContent *parent = GetParent();
-
-    return parent ? parent->GetOwnerDoc() : nsnull;
-  }
 
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
-  virtual PRInt32 GetNameSpaceID() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -243,7 +218,6 @@ public:
   virtual nsresult GetListenerManager(nsIEventListenerManager **aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
-  virtual nsINodeInfo *GetNodeInfo() const;
   virtual PRUint32 GetChildCount() const;
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
@@ -257,7 +231,7 @@ public:
    * This calls Clone to do the actual cloning so that we end up with the
    * right class for the clone.
    */
-  nsresult CloneContent(nsIDocument *aOwnerDocument, PRBool aDeep,
+  nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager, PRBool aDeep,
                         nsIContent **aResult) const;
 
   // nsITextContent
@@ -288,12 +262,14 @@ protected:
    * @param aCloneText if true the text content will be cloned too
    * @return the clone
    */
-  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
+  virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
                                       PRBool aCloneText) const = 0;
 
   nsTextFragment mText;
 
 private:
+  enum { PARENT_BIT_IS_IN_A_HASH = 0x2 };
+
   void LookupListenerManager(nsIEventListenerManager **aListenerManager) const;
   nsVoidArray *LookupRangeList() const;
 
@@ -329,8 +305,6 @@ private:
   {
     return GetIsInAHash() && nsGenericElement::sEventListenerManagersHash.ops;
   }
-
-  nsIDocument *mDocument;
 };
 
 //----------------------------------------------------------------------
@@ -341,7 +315,7 @@ private:
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);
- *       nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,
+ *       nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
  *                                   PRBool aCloneText) const;
  */
 #define NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA                           \
@@ -418,7 +392,7 @@ private:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn) {                \
     return nsGenericDOMDataNode::CloneNode(aDeep, aReturn);                 \
   }                                                                         \
-  virtual nsGenericDOMDataNode *Clone(nsIDocument *aOwnerDocument,          \
+  virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,               \
                                       PRBool aCloneText) const;
 
 #endif /* nsGenericDOMDataNode_h___ */

@@ -52,6 +52,7 @@ class nsIContent;
 class nsIDocument;
 class nsINodeInfo;
 class imgIRequest;
+class nsNodeInfoManager;
 
 nsresult
 NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
@@ -61,31 +62,28 @@ nsresult
 NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
 
 /**
- * There's no need to pass in aOwnerDocument if the node is going to be
- * inserted *immediately* after creation.
+ * aNodeInfoManager must not be null.
  */
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
+                               nsNodeInfoManager *aNodeInfoManager,
                                const nsAString& aTarget,
-                               const nsAString& aData,
-                               nsIDocument *aOwnerDocument = nsnull);
+                               const nsAString& aData);
 
 /**
- * There's no need to pass in aOwnerDocument if the node is going to be
- * inserted *immediately* after creation.
+ * aNodeInfoManager must not be null.
  */
 nsresult
 NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         const nsAString& aData,
-                                         nsIDocument *aOwnerDocument = nsnull);
+                                         nsNodeInfoManager *aNodeInfoManager,
+                                         const nsAString& aData);
 
 /**
- * There's no need to pass in aOwnerDocument if the node is going to be
- * inserted *immediately* after creation.
+ * aNodeInfoManager must not be null.
  */
 nsresult
 NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
-                      nsIDocument *aOwnerDocument = nsnull);
+                      nsNodeInfoManager *aNodeInfoManager);
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);

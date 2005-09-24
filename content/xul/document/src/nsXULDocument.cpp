@@ -1027,8 +1027,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // attriubtes we're listening for.
         nsIContent *child = listener->GetChildAt(i);
 
-        nsINodeInfo *ni = child->GetNodeInfo();
-        if (!ni || !ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL))
+        if (!child->NodeInfo()->Equals(nsXULAtoms::observes, kNameSpaceID_XUL))
             continue;
 
         // Is this the element that was listening to us?
@@ -1721,10 +1720,8 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
 nsresult
 nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 {
-    nsINodeInfo *ni = aElement->GetNodeInfo();
-
     // We need to pay special attention to the keyset tag to set up a listener
-    if (ni && ni->Equals(nsXULAtoms::keyset, kNameSpaceID_XUL)) {
+    if (aElement->NodeInfo()->Equals(nsXULAtoms::keyset, kNameSpaceID_XUL)) {
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
@@ -1762,10 +1759,13 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 NS_IMETHODIMP
 nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 {
-    nsresult rv;
+    // From here on we only care about elements.
+    if (!aElement->IsContentOfType(nsIContent::eELEMENT)) {
+        return NS_OK;
+    }
 
     // Do pre-order addition magic
-    rv = AddElementToDocumentPre(aElement);
+    nsresult rv = AddElementToDocumentPre(aElement);
     if (NS_FAILED(rv)) return rv;
 
     // Recurse to children
@@ -1787,6 +1787,11 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 NS_IMETHODIMP
 nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
 {
+    // From here on we only care about elements.
+    if (!aElement->IsContentOfType(nsIContent::eELEMENT)) {
+        return NS_OK;
+    }
+
     // Do a bunch of cleanup to remove an element from the XUL
     // document.
     nsresult rv;
@@ -2396,9 +2401,8 @@ nsXULDocument::ContextStack::IsInsideXULTemplate()
         for (nsIContent* element = mTop->mElement; element;
              element = element->GetParent()) {
 
-            nsINodeInfo *ni = element->GetNodeInfo();
-
-            if (ni && ni->Equals(nsXULAtoms::Template, kNameSpaceID_XUL)) {
+            if (element->NodeInfo()->Equals(nsXULAtoms::Template,
+                                            kNameSpaceID_XUL)) {
                 return PR_TRUE;
             }
         }
@@ -2894,7 +2898,8 @@ nsXULDocument::ResumeWalk()
                     NS_ASSERTION(element, "no element on context stack");
 
                     nsCOMPtr<nsITextContent> text;
-                    rv = NS_NewTextNode(getter_AddRefs(text));
+                    rv = NS_NewTextNode(getter_AddRefs(text),
+                                        mNodeInfoManager);
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     nsXULPrototypeText* textproto =
@@ -3587,7 +3592,7 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
     }
     else {
-        nsINodeInfo *ni = aElement->GetNodeInfo();
+        nsINodeInfo *ni = aElement->NodeInfo();
         nameSpaceID = ni->NamespaceID();
         baseTag = ni->NameAtom();
     }
@@ -4033,12 +4038,15 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
                                nsString& aAttribute,
                                nsIDOMElement** aBroadcaster)
 {
+    NS_ASSERTION(aElement->IsContentOfType(nsIContent::eELEMENT),
+                 "Only pass elements into FindBroadcaster!");
+
     nsresult rv;
-    nsINodeInfo *ni = aElement->GetNodeInfo();
+    nsINodeInfo *ni = aElement->NodeInfo();
     *aListener = nsnull;
     *aBroadcaster = nsnull;
 
-    if (ni && ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL)) {
+    if (ni->Equals(nsXULAtoms::observes, kNameSpaceID_XUL)) {
         // It's an <observes> element, which means that the actual
         // listener is the _parent_ node. This element should have an
         // 'element' attribute that specifies the ID of the
@@ -4048,7 +4056,8 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
 
         // If we're still parented by an 'overlay' tag, then we haven't
         // made it into the real document yet. Defer hookup.
-        if (parent->GetNodeInfo()->Equals(nsXULAtoms::overlay, kNameSpaceID_XUL)) {
+        if (parent->NodeInfo()->Equals(nsXULAtoms::overlay,
+                                       kNameSpaceID_XUL)) {
             return NS_FINDBROADCASTER_AWAIT_OVERLAYS;
         }
 

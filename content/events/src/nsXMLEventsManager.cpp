@@ -56,7 +56,8 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   PRInt32 nameSpaceID;
   if (aContent->GetDocument() != aDocument)
     return PR_FALSE;
-  if (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::listener, kNameSpaceID_XMLEvents))
+  if (aContent->NodeInfo()->Equals(nsHTMLAtoms::listener,
+                                   kNameSpaceID_XMLEvents))
     nameSpaceID = kNameSpaceID_None;
   else
     nameSpaceID = kNameSpaceID_XMLEvents;
@@ -375,7 +376,8 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
     nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aContent);
   }
   else {
-    if (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::listener, kNameSpaceID_XMLEvents)) {
+    if (aContent->NodeInfo()->Equals(nsHTMLAtoms::listener,
+                                     kNameSpaceID_XMLEvents)) {
       RemoveListener(aContent);
       AddXMLEventsContent(aContent);
       nsXMLEventsListener::InitXMLEventsListener(aDocument, this, aContent);

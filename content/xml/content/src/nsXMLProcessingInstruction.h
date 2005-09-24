@@ -49,9 +49,9 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
                                    public nsIDOMProcessingInstruction
 {
 public:
-  nsXMLProcessingInstruction(const nsAString& aTarget,
-                             const nsAString& aData,
-                             nsIDocument *aDocument);
+  nsXMLProcessingInstruction(nsINodeInfo *aNodeInfo,
+                             const nsAString& aTarget,
+                             const nsAString& aData);
   virtual ~nsXMLProcessingInstruction();
 
   // nsISupports
@@ -64,7 +64,6 @@ public:
   NS_DECL_NSIDOMPROCESSINGINSTRUCTION
 
   // nsIContent
-  virtual nsIAtom *Tag() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
   virtual PRBool MayHaveFrame() const;
 

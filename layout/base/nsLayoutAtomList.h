@@ -89,6 +89,7 @@ LAYOUT_ATOM(textTagName, "#text")
 LAYOUT_ATOM(cdataTagName, "#cdata-section")
 LAYOUT_ATOM(processingInstructionTagName, "#processing-instruction")
 LAYOUT_ATOM(documentFragmentNodeName, "#document-fragment")
+LAYOUT_ATOM(documentTypeNodeName, "#document-type")
 
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")

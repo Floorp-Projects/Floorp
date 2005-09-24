@@ -57,21 +57,21 @@
 
 #include "nsISupports.h"
 #include "nsIAtom.h"
-#include "nsAString.h"
 #include "nsDOMString.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
+#include "nsNodeInfoManager.h"
 
 // Forward declarations
 class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
-class nsNodeInfoManager;
 
 // IID for the nsINodeInfo interface
+// b24fd4ad-7d94-40ea-b09b-9262f58bc28a
 #define NS_INODEINFO_IID      \
-{ 0x290ecd20, 0xb3cb, 0x11d8, \
-  { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
+{ 0xb24fd4ad, 0x7d94, 0x40ea, \
+  { 0xb0, 0x9b, 0x92, 0x62, 0xf5, 0x8b, 0xc2, 0x8a } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -264,7 +264,10 @@ public:
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  virtual nsIDocument* GetDocument() const = 0;
+  nsIDocument* GetDocument() const
+  {
+    return mOwnerManager->GetDocument();
+  }
 
   /*
    * Retrieve a pointer to the principal for the document of this node info.
