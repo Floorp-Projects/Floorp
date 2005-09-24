@@ -74,7 +74,7 @@ nsXBLProtoImplMethod::Destroy(PRBool aIsCompiled)
                   "Incorrect aIsCompiled in nsXBLProtoImplMethod::Destroy");
   if (aIsCompiled) {
     if (mJSMethodObject)
-      RemoveJSGCRoot(&mJSMethodObject);
+      nsContentUtils::RemoveJSGCRoot(&mJSMethodObject);
     mJSMethodObject = nsnull;
   }
   else {
@@ -258,7 +258,8 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                         aContext->GetNativeContext());
     rv = cx ?
-      AddJSGCRoot(&mJSMethodObject, "nsXBLProtoImplMethod::mJSMethodObject") :
+      nsContentUtils::AddJSGCRoot(&mJSMethodObject,
+                                  "nsXBLProtoImplMethod::mJSMethodObject") :
       NS_ERROR_UNEXPECTED;
     if (NS_FAILED(rv)) {
       mJSMethodObject = nsnull;

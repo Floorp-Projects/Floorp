@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsContentUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplProperty)
 
@@ -88,14 +89,14 @@ nsXBLProtoImplProperty::Destroy(PRBool aIsCompiled)
                   "Incorrect aIsCompiled in nsXBLProtoImplProperty::Destroy");
 
   if ((mJSAttributes & JSPROP_GETTER) && mJSGetterObject) {
-    RemoveJSGCRoot(&mJSGetterObject);
+    nsContentUtils::RemoveJSGCRoot(&mJSGetterObject);
   }
   else {
     delete mGetterText;
   }
 
   if ((mJSAttributes & JSPROP_SETTER) && mJSSetterObject) {
-    RemoveJSGCRoot(&mJSSetterObject);
+    nsContentUtils::RemoveJSGCRoot(&mJSSetterObject);
   }
   else {
     delete mSetterText;
@@ -269,7 +270,8 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
         JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                             aContext->GetNativeContext());
         rv = (cx)
-          ? AddJSGCRoot(&mJSGetterObject, "nsXBLProtoImplProperty::mJSGetterObject")
+          ? nsContentUtils::AddJSGCRoot(&mJSGetterObject,
+                                        "nsXBLProtoImplProperty::mJSGetterObject")
           : NS_ERROR_UNEXPECTED;
       }
       if (NS_FAILED(rv)) {
@@ -324,7 +326,8 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
         JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                             aContext->GetNativeContext());
         rv = (cx)
-          ? AddJSGCRoot(&mJSSetterObject, "nsXBLProtoImplProperty::mJSSetterObject")
+          ? nsContentUtils::AddJSGCRoot(&mJSSetterObject,
+                                        "nsXBLProtoImplProperty::mJSSetterObject")
           : NS_ERROR_UNEXPECTED;
       }
       if (NS_FAILED(rv)) {

@@ -204,57 +204,6 @@ static struct {
 } gFaults;
 #endif
 
-#include "nsIJSRuntimeService.h"
-static nsIJSRuntimeService* gJSRuntimeService = nsnull;
-static JSRuntime* gScriptRuntime = nsnull;
-static PRInt32 gScriptRuntimeRefcnt = 0;
-
-static nsresult
-AddJSGCRoot(void* aScriptObjectRef, const char* aName)
-{
-    if (++gScriptRuntimeRefcnt == 1 || !gScriptRuntime) {
-        CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
-                       &gJSRuntimeService);
-        if (! gJSRuntimeService) {
-            NS_NOTREACHED("couldn't add GC root");
-            return NS_ERROR_FAILURE;
-        }
-
-        gJSRuntimeService->GetRuntime(&gScriptRuntime);
-        if (! gScriptRuntime) {
-            NS_NOTREACHED("couldn't add GC root");
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    PRBool ok;
-    ok = ::JS_AddNamedRootRT(gScriptRuntime, aScriptObjectRef, aName);
-    if (! ok) {
-        NS_NOTREACHED("couldn't add GC root");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return NS_OK;
-}
-
-static nsresult
-RemoveJSGCRoot(void* aScriptObjectRef)
-{
-    if (! gScriptRuntime) {
-        NS_NOTREACHED("couldn't remove GC root");
-        return NS_ERROR_FAILURE;
-    }
-
-    ::JS_RemoveRootRT(gScriptRuntime, aScriptObjectRef);
-
-    if (--gScriptRuntimeRefcnt == 0) {
-        NS_RELEASE(gJSRuntimeService);
-        gScriptRuntime = nsnull;
-    }
-
-    return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 
@@ -794,9 +743,12 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
             if (!cx)
                 return NS_ERROR_UNEXPECTED;
 
-            rv = AddJSGCRoot(&attr->mEventHandler,
-                             "nsXULPrototypeAttribute::mEventHandler");
-            if (NS_FAILED(rv)) return rv;
+            rv = nsContentUtils::AddJSGCRoot(&attr->mEventHandler,
+                                             "nsXULPrototypeAttribute::mEventHandler");
+            if (NS_FAILED(rv)) {
+                attr->mEventHandler = nsnull;
+                return rv;
+            }
         }
     }
 
@@ -2922,7 +2874,7 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 {
     MOZ_COUNT_DTOR(nsXULPrototypeAttribute);
     if (mEventHandler)
-        RemoveJSGCRoot(&mEventHandler);
+        nsContentUtils::RemoveJSGCRoot(&mEventHandler);
 }
 
 
@@ -3085,9 +3037,16 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Script: {
                 // language version/options obtained during deserialization.
-                nsXULPrototypeScript* script = new nsXULPrototypeScript(0, nsnull, PR_FALSE);
+                // Don't clobber rv here, since it might already be a failure!
+                nsresult result;
+                nsXULPrototypeScript* script =
+                    new nsXULPrototypeScript(0, nsnull, PR_FALSE, &result);
                 if (! script)
                     return NS_ERROR_OUT_OF_MEMORY;
+                if (NS_FAILED(result)) {
+                    delete script;
+                    return result;
+                }
                 child = script;
                 child->mType = childType;
 
@@ -3180,7 +3139,10 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 // nsXULPrototypeScript
 //
 
-nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersion, PRBool aHasE4XOption)
+nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLineNo,
+                                           const char *aVersion,
+                                           PRBool aHasE4XOption,
+                                           nsresult* rv)
     : nsXULPrototypeNode(eType_Script),
       mLineNo(aLineNo),
       mSrcLoading(PR_FALSE),
@@ -3191,13 +3153,17 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRUint32 aLineNo, const char *aVersio
       mLangVersion(aVersion)
 {
     NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
-    AddJSGCRoot(&mJSObject, "nsXULPrototypeScript::mJSObject");
+    *rv = nsContentUtils::AddJSGCRoot(&mJSObject,
+                                      "nsXULPrototypeScript::mJSObject");
+    mAddedGCRoot = NS_SUCCEEDED(*rv);
 }
 
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
-    RemoveJSGCRoot(&mJSObject);
+    if (mAddedGCRoot) {
+        nsContentUtils::RemoveJSGCRoot(&mJSObject);
+    }
 }
 
 

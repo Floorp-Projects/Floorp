@@ -486,6 +486,9 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoGCRoot root(&handler, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Temporarily bind it to the bound element
   boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
 

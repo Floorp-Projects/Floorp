@@ -96,8 +96,6 @@ struct nsXBLTextWithLineNumber
   }
 };
 
-struct nsAutoGCRoot;
-
 class nsXBLProtoImplMember
 {
 public:
@@ -122,40 +120,6 @@ protected:
   
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
   PRUnichar* mName;               // The name of the field, method, or property.
-  static nsIJSRuntimeService* gJSRuntimeService;
-  static JSRuntime* gScriptRuntime;
-  static PRInt32 gScriptRuntimeRefcnt;
-
-  static nsresult AddJSGCRoot(void* aScriptObjectRef, const char* aName);
-  static nsresult RemoveJSGCRoot(void* aScriptObjectRef);
-};
-
-// Struct to handle automatic rooting and unrooting
-struct nsAutoGCRoot {
-  // aPtr should be the pointer to the jsval we want to protect
-  nsAutoGCRoot(jsval* aPtr, nsresult* aResult) :
-    mPtr(aPtr)
-  {
-    mResult = *aResult =
-      nsXBLProtoImplMember::AddJSGCRoot(mPtr, "nsAutoGCRoot");
-  }
-
-  // aPtr should be the pointer to the JSObject* we want to protect
-  nsAutoGCRoot(JSObject** aPtr, nsresult* aResult) :
-    mPtr(aPtr)
-  {
-    mResult = *aResult =
-      nsXBLProtoImplMember::AddJSGCRoot(mPtr, "nsAutoGCRoot");
-  }
-
-  ~nsAutoGCRoot() {
-    if (NS_SUCCEEDED(mResult)) {
-      nsXBLProtoImplMember::RemoveJSGCRoot(mPtr);
-    }
-  }
-
-  void* mPtr;
-  nsresult mResult;
 };
 
 #endif // nsXBLProtoImplMember_h__

@@ -45,6 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsXBLProtoImplField.h"
 #include "nsIScriptContext.h"
+#include "nsContentUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplField)
 

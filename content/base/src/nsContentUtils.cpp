@@ -114,6 +114,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIWordBreaker.h"
 #include "nsIEventQueueService.h"
 #include "jsdbgapi.h"
+#include "nsIJSRuntimeService.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -145,6 +146,9 @@ nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIEventQueueService *nsContentUtils::sEventQueueService;
 nsVoidArray *nsContentUtils::sPtrsToPtrsToRelease;
+nsIJSRuntimeService *nsContentUtils::sJSRuntimeService;
+JSRuntime *nsContentUtils::sScriptRuntime;
+PRInt32 nsContentUtils::sScriptRootCount = 0;
 
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
@@ -2389,4 +2393,59 @@ nsContentUtils::GetContentPolicy()
   }
 
   return sContentPolicyService;
+}
+
+// static
+nsresult
+nsContentUtils::AddJSGCRoot(void* aPtr, const char* aName)
+{
+  if (!sScriptRuntime) {
+    nsresult rv = CallGetService("@mozilla.org/js/xpc/RuntimeService;1",
+                                 &sJSRuntimeService);
+    NS_ENSURE_TRUE(sJSRuntimeService, rv);
+
+    sJSRuntimeService->GetRuntime(&sScriptRuntime);
+    if (!sScriptRuntime) {
+      NS_RELEASE(sJSRuntimeService);
+      NS_WARNING("Unable to get JS runtime from JS runtime service");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  PRBool ok;
+  ok = ::JS_AddNamedRootRT(sScriptRuntime, aPtr, aName);
+  if (!ok) {
+    if (sScriptRootCount == 0) {
+      // We just got the runtime... Just null things out, since no
+      // one's expecting us to have a runtime yet
+      NS_RELEASE(sJSRuntimeService);
+      sScriptRuntime = nsnull;
+    }
+    NS_WARNING("JS_AddNamedRootRT failed");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // We now have one more root we added to the runtime
+  ++sScriptRootCount;
+
+  return NS_OK;
+}
+
+/* static */
+nsresult
+nsContentUtils::RemoveJSGCRoot(void* aPtr)
+{
+  if (!sScriptRuntime) {
+    NS_NOTREACHED("Trying to remove a JS GC root when none were added");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ::JS_RemoveRootRT(sScriptRuntime, aPtr);
+
+  if (--sScriptRootCount == 0) {
+    NS_RELEASE(sJSRuntimeService);
+    sScriptRuntime = nsnull;
+  }
+
+  return NS_OK;
 }
