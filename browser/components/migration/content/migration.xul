@@ -121,7 +121,7 @@
   <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
               next="migrating"
               onpageshow="return MigrationWizard.onImportItemsPageShow();"
-              onpagerewound="return MigrationWizard.onImportItemsPageAdvanced();"
+              onpagerewound="return MigrationWizard.onImportItemsPageRewound();"
               onpageadvanced="return MigrationWizard.onImportItemsPageAdvanced();"
               oncommand="MigrationWizard.onImportItemCommand();"> 
     <description control="dataSources">&importItems.label;</description>
