@@ -661,8 +661,8 @@ function refreshEventTree( eventArray )
          EndDate = StartDate;
          break;
    }
-   var s = StartDate ? jsDateToDateTime(StartDate) : null;
-   var e = EndDate ? jsDateToDateTime(EndDate) : null;
+   var s = StartDate ? jsDateToDateTime(StartDate).getInTimezone(calendarDefaultTimezone()) : null;
+   var e = EndDate ? jsDateToDateTime(EndDate).getInTimezone(calendarDefaultTimezone()) : null;
    if (StartDate && EndDate) {
        filter |= ccalendar.ITEM_FILTER_CLASS_OCCURRENCES;
    }
