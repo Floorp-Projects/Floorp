@@ -328,7 +328,7 @@ sub bless_groups {
     }
 
     # If visibilitygroups are used, restrict the set of groups.
-    if (Param('usevisibilitygroups')) {
+    if ((!$self->in_group('editusers')) && Param('usevisibilitygroups')) {
         # Users need to see a group in order to bless it.
         my $visibleGroups = join(', ', @{$self->visible_groups_direct()})
             || return $self->{'bless_groups'} = [];

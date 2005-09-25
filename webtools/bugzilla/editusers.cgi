@@ -85,7 +85,7 @@ if ($action eq 'search') {
     my $nextCondition;
     my $visibleGroups;
 
-    if (Param('usevisibilitygroups')) {
+    if (!$editusers && Param('usevisibilitygroups')) {
         # Show only users in visible groups.
         $visibleGroups = $user->visible_groups_as_string();
 
@@ -233,7 +233,7 @@ if ($action eq 'search') {
                          'group_group_map READ',
                          'group_group_map AS ggm READ');
  
-    $user->can_see_user($otherUser)
+    $editusers || $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});
@@ -409,11 +409,6 @@ if ($action eq 'search') {
     $editusers || ThrowUserError('auth_failure', {group  => "editusers",
                                                   action => "delete",
                                                   object => "users"});
-    $user->can_see_user($otherUser)
-        || ThrowUserError('auth_failure', {reason => "not_visible",
-                                           action => "delete",
-                                           object => "user"});
-
     $vars->{'otheruser'}      = $otherUser;
     $vars->{'editcomponents'} = UserInGroup('editcomponents');
 
@@ -519,10 +514,6 @@ if ($action eq 'search') {
                                  {group  => "editusers",
                                   action => "delete",
                                   object => "users"});
-    $user->can_see_user($otherUser)
-        || ThrowUserError('auth_failure', {reason => "not_visible",
-                                           action => "delete",
-                                           object => "user"});
     @{$otherUser->product_responsibilities()}
         && ThrowUserError('user_has_responsibility');
 
@@ -785,7 +776,7 @@ sub edit_processing
     $otherUser 
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
 
-    $user->can_see_user($otherUser)
+    $editusers || $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
                                            action => "modify",
                                            object => "user"});
