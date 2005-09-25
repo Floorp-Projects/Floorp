@@ -448,6 +448,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         FreeMemory(&szLicenseFilenameBuf);
       }
     }
+    SendDlgItemMessage(hDlg, IDC_EDIT_LICENSE, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
     break;
 
   case WM_COMMAND:
@@ -751,6 +752,7 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
     SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
 
     SendDlgItemMessage(hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_BUTTON_BROWSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
     break;
@@ -1448,6 +1450,7 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
     SendDlgItemMessage(hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_CONNECTION_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_INSTALL_FOLDER_LABEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+    SendDlgItemMessage(hDlg, IDC_INSTALL_FOLDER, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_PRIMARY_COMPONENT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
     SendDlgItemMessage(hDlg, IDC_OPTIONAL_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
