@@ -413,8 +413,9 @@ function delayedCloseFindBar()
 
   if (window == ww.activeWindow) { 
     var focusedElement = document.commandDispatcher.focusedElement;
-    if (focusedElement && (focusedElement.parentNode == findToolbar ||
-                           focusedElement.parentNode.parentNode == findField)) {
+    if (focusedElement && focusedElement.parentNode &&
+          (focusedElement.parentNode == findToolbar ||
+           focusedElement.parentNode.parentNode == findField)) {
       if (gFoundLink) {
         // block scrolling on focus since find already scrolls, further
         // scrolling is due to user action, so don't override this
