@@ -342,7 +342,9 @@
   <key id="key_nextMsg" key="&nextMsgCmd.key;"                       oncommand="goDoCommand('cmd_nextMsg')"/>
   <key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"           oncommand="goDoCommand('cmd_nextUnreadMsg')"/>
   <key id="key_expandAllThreads" key="&expandAllThreadsCmd.key;"     oncommand="goDoCommand('cmd_expandAllThreads')"/>
+  <key key="&expandAllThreadsCmd.key;" modifiers="shift" oncommand="goDoCommand('cmd_expandAllThreads')"/>
   <key id="key_collapseAllThreads" key="&collapseAllThreadsCmd.key;" oncommand="goDoCommand('cmd_collapseAllThreads')"/>
+  <key key="&collapseAllThreadsCmd.key;" modifiers="shift" oncommand="goDoCommand('cmd_collapseAllThreads')"/>
   <key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"     oncommand="goDoCommand('cmd_nextUnreadThread')"/>
   <key id="key_previousMsg" key="&previousMsgCmd.key;"               oncommand="goDoCommand('cmd_previousMsg')"/>
   <key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;"   oncommand="goDoCommand('cmd_previousUnreadMsg')"/>
