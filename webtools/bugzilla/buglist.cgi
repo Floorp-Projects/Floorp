@@ -388,6 +388,27 @@ if ($cgi->param('cmdtype') eq "dorem") {
         # the SQL, and the SQL is only a DELETE.
         my $qname = $cgi->param('namedcmd');
         trick_taint($qname);
+
+        # Do not forget the saved search if it is being used in a whine
+        my $whines_in_use = 
+            $dbh->selectcol_arrayref('SELECT DISTINCT whine_events.subject
+                                                 FROM whine_events
+                                           INNER JOIN whine_queries
+                                                   ON whine_queries.eventid
+                                                      = whine_events.id
+                                                WHERE whine_events.owner_userid
+                                                      = ?
+                                                  AND whine_queries.query_name
+                                                      = ?
+                                      ', undef, Bugzilla->user->id, $qname);
+        if (scalar(@$whines_in_use)) {
+            ThrowUserError('saved_search_used_by_whines', 
+                           { subjects    => join(',', @$whines_in_use),
+                             search_name => $qname                      }
+            );
+        }
+
+        # If we are here, then we can safely remove the saved search
         $dbh->do("DELETE FROM namedqueries"
             . " WHERE userid = ? AND name = ?"
             , undef, ($userid, $qname));

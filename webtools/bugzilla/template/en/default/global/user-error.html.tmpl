@@ -1055,6 +1055,12 @@
     [% title = "Summary Needed" %]
     You must enter a summary for this [% terms.bug %].
 
+  [% ELSIF error == "saved_search_used_by_whines" %]
+    [% title = "Saved Search In Use" %]
+    The saved search <em>[% search_name FILTER html %]</em> is being used 
+    by <a href="editwhines.cgi">Whining events</a> with the following subjects:
+    [%+ subjects FILTER html %]
+
   [% ELSIF error == "search_content_without_matches" %]
     [% title = "Illegal Search" %]
     The "content" field can only be used with "matches" search 
@@ -1238,7 +1244,8 @@
   
 [% USE Bugzilla %]
 [% namedcmd = Bugzilla.cgi.param("namedcmd") %]
-[% IF namedcmd AND error != "missing_query" %]
+[% IF namedcmd AND error != "missing_query" 
+               AND error != "saved_search_used_by_whines" %]
   <p>  
     Alternatively, you can    
     <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
