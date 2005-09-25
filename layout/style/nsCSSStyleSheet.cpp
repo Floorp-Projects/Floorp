@@ -2684,10 +2684,13 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mPresContext->EventStateManager()->GetContentState(aContent, mEventState);
 
     // get the styledcontent interface and the ID
-    if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&mStyledContent))) {
-      NS_ASSERTION(mStyledContent, "Succeeded but returned null");
+    if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
+      mStyledContent = NS_STATIC_CAST(nsIStyledContent*, aContent);
       mContentID = mStyledContent->GetID();
     }
+
+    NS_ASSERTION(nsCOMPtr<nsIStyledContent>(do_QueryInterface(aContent)) == mStyledContent,
+                 "nsIStyledContent must agree with IsContentOfType(eELEMENT)");
 
     // see if there are attributes for the content
     mHasAttributes = aContent->GetAttrCount() > 0;
@@ -2733,8 +2736,6 @@ RuleProcessorData::~RuleProcessorData()
     mPreviousSiblingData->Destroy(mPresContext);
   if (mParentData)
     mParentData->Destroy(mPresContext);
-
-  NS_IF_RELEASE(mStyledContent);
 
   delete mLanguage;
 }
