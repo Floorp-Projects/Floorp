@@ -1917,8 +1917,11 @@ nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
   }
 
   mRows.Clear();
-  mRowCount = 0;
+  // adjust mRowCount based on the function arguments as they are known to
+  // be real rows.
+  mRowCount -= aNumRowsToRemove;
   if (aRowsToInsert) { 
+    mRowCount += aRowsToInsert->Count();
     Grow(aMap, numOrigRows); 
   }
 
