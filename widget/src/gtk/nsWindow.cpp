@@ -2430,7 +2430,8 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
       nsCAutoString path;
       iconFile->GetNativePath(path);
 
-      w_pixmap = gdk_pixmap_colormap_create_from_xpm(mShell->window,
+      w_pixmap =
+        gdk_pixmap_colormap_create_from_xpm(mShell->window,
                                             gdk_colormap_get_system(),
                                             &w_mask,
                                             &w_style->bg[GTK_STATE_NORMAL],
@@ -2446,11 +2447,12 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
       nsCAutoString path;
       iconFile->GetNativePath(path);
 
-      w_minipixmap = gdk_pixmap_colormap_create_from_xpm(mShell->window,
-                                                gdk_colormap_get_system(),
-                                                &w_minimask,
-                                                &w_style->bg[GTK_STATE_NORMAL],
-                                                path.get());
+      w_minipixmap =
+        gdk_pixmap_colormap_create_from_xpm(mShell->window,
+                                            gdk_colormap_get_system(),
+                                            &w_minimask,
+                                            &w_style->bg[GTK_STATE_NORMAL],
+                                            path.get());
 #ifdef DEBUG_ICONS
       printf("Loaded small icon file: %s\n", path.get());
 #endif
