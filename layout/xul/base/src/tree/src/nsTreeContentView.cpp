@@ -1061,12 +1061,6 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
 void
 nsTreeContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
-  // Remove ourselves from mDocument's observers.
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
-
   ClearRows();
 }
 
@@ -1386,6 +1380,11 @@ nsTreeContentView::ClearRows()
     Row::Destroy(mAllocator, (Row*)mRows[i]);
   mRows.Clear();
   mRoot = nsnull;
+  // Remove ourselves from mDocument's observers.
+  if (mDocument) {
+    mDocument->RemoveObserver(this);
+    mDocument = nsnull;
+  }
 } 
 
 void
