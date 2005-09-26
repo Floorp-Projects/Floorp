@@ -378,6 +378,8 @@ protected:
   PRPackedBool mStopRequestIssued; 
   PRPackedBool mProgressListenerInitialized;
 
+  PRPackedBool mIsFileChannel;
+
   /**
    * One of the REASON_ constants from nsIHelperAppLauncherDialog. Indicates the
    * reason the dialog was shown (unknown content type, server requested it,

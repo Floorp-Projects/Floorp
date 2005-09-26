@@ -84,6 +84,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIMultiPartChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIObserverService.h" // so we can be a profile change observer
 #include "nsIPropertyBag2.h" // for the 64-bit content length
 
@@ -1604,9 +1605,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mRequest = request;
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+  
+  nsresult rv;
+  
+  nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
+  mIsFileChannel = fileChan != nsnull;
 
   // Get content length
-  nsresult rv;
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   if (props) {
     rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
@@ -2371,7 +2376,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   // Now check if the file is local, in which case we won't bother with saving
   // it to a temporary directory and just launch it from where it is
   nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
-  if (fileUrl)
+  if (fileUrl && mIsFileChannel)
   {
     Cancel(NS_BINDING_ABORTED);
     nsCOMPtr<nsIFile> file;
