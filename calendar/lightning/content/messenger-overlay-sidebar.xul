@@ -17,7 +17,7 @@
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 
-<vbox id="folderPaneBox">
+<window id="messengerWindow">
   <commandset id="calendar_commands">
     <command id="publish_calendar" oncommand="ltnPublishCalendar()"/>
   </commandset>
@@ -26,7 +26,9 @@
       <menuitem label="Publish" observes="publish_calendar"/>
     </popup>
   </popupset>
+</window>
 
+<vbox id="folderPaneBox">
   <splitter id="folderpaneCalendarSplitter" collapse="after" persist="state"/>
 
   <vbox flex="1">
