@@ -314,8 +314,18 @@ pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.proper
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
 // 0=lines, 1=pages, 2=history , 3=text size
+#ifdef XP_MACOSX
+pref("mousewheel.withmetakey.action", 3);
+// On OS X, if the wheel has one axis only, shift+wheel comes through as a
+// horizontal scroll event. Thus, we can't assign anything other than normal
+// scrolling to shift+wheel.
+pref("mousewheel.withshiftkey.action", 0);
+pref("mousewheel.withshiftkey.sysnumlines", false);
+pref("mousewheel.withcontrolkey.action", 2);
+#else
 pref("mousewheel.withcontrolkey.action",3);
 pref("mousewheel.withshiftkey.action",2);
+#endif
 pref("mousewheel.withaltkey.action",0);
 
 pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
@@ -401,6 +411,3 @@ pref("browser.download.hide_plugins_without_extensions", true);
 // Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
 // to be exposed. By default, only expose it for bidi-associated system locales.
 pref("bidi.browser.ui", false);
-
-pref("browser.feedview.showMenu", true);
-pref("browser.feedview.reloadInterval", 0);
