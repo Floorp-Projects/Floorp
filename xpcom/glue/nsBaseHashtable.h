@@ -69,7 +69,7 @@ private:
 /**
  * templated hashtable for simple data types
  * This class manages simple data types that do not need construction or
- * destruction. Thread-safety is optional, via a flag in Init()
+ * destruction.
  *
  * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
  *   for a complete specification.
@@ -92,7 +92,6 @@ public:
    * Initialize the object.
    * @param initSize the initial number of buckets in the hashtable,
    *        default 16
-   * @param threadSafe whether to provide read/write
    * locking on all class methods
    * @return    PR_TRUE if the object was initialized properly.
    */
@@ -175,8 +174,6 @@ public:
 
   /**
    * enumerate entries in the hashtable, without allowing changes
-   * this function read-locks the hashtable, so other threads may read keys
-   * at the same time in multi-thread environments.
    * @param enumFunc enumeration callback
    * @param userArg passed unchanged to the EnumReadFunction
    */
