@@ -907,32 +907,35 @@ function my_showtonet (e)
 
         case "001":
             // Code moved to lower down to speed this bit up. :)
+            var c, u;
+            // If we've switched servers, *first* we must rehome our objects.
+            if (this.lastServer && (this.lastServer != this.primServ))
+            {
+                for (c in this.lastServer.channels)
+                    this.lastServer.channels[c].rehome(this.primServ);
+                for (u in this.lastServer.users)
+                    this.lastServer.users[u].rehome(this.primServ);
 
+                // This makes sure we have the *right* me object.
+                this.primServ.me.rehome(this.primServ);
+            }
+
+            // After rehoming it is now safe for the user's commands.
             var cmdary = this.prefs["autoperform"];
             for (var i = 0; i < cmdary.length; ++i)
-                this.dispatch(cmdary[i])
+            {
+                if (cmdary[i][0] == "/")
+                    this.dispatch(cmdary[i].substr(1));
+                else
+                    this.dispatch(cmdary[i]);
+            }
 
             if (this.prefs["away"])
                 this.dispatch("away", { reason: this.prefs["away"] });
 
             if (this.lastServer)
             {
-                var c, u;
-
-                // Re-home channels and users only if nessessary.
-                if (this.lastServer != this.primServ)
-                {
-                    for (c in this.lastServer.channels)
-                        this.lastServer.channels[c].rehome(this.primServ);
-                    for (u in this.lastServer.users)
-                        this.lastServer.users[u].rehome(this.primServ);
-
-                    // This makes sure we have the *right* me object.
-                    this.primServ.me.rehome(this.primServ);
-                }
-
                 // Re-join channels from previous connection.
-                // (note they're all on .primServ now, not .lastServer)
                 for (c in this.primServ.channels)
                 {
                     var chan = this.primServ.channels[c];
