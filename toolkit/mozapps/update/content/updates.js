@@ -576,7 +576,7 @@ var gUpdatesAvailablePage = {
       [gUpdates.brandName, gUpdates.update.version]);
     var updateNameElement = document.getElementById("updateName");
     updateNameElement.value = updateName;
-    var severity = gUpdates.update.isSecurityUpdate ? "security" : "normal";
+    var severity = gUpdates.update.isSecurityUpdate ? "minor" : "major";
     var displayType = gUpdates.strings.getString("updateType_" + severity);
     var updateTypeElement = document.getElementById("updateType");
     updateTypeElement.setAttribute("severity", severity);
