@@ -12,4 +12,6 @@ END
 
 IDB_BITMAP1             BITMAP  DISCARDABLE     "splashscreen.bmp"
 
+IDI_APPLICATION ICON    "minimo.ico"
+
 HI_RES_AWARE CEUX {1} // To turn off the emulation layer

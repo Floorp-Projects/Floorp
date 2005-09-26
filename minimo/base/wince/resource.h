@@ -34,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #define IDD_SPLASHSCREEN                101
 #define IDB_BITMAP1                     104
 #define IDC_SPLASHBMP                   1001
