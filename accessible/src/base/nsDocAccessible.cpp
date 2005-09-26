@@ -994,11 +994,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
               event = nsIAccessibleEvent::EVENT_HIDE;
             }
             if (event) {
-              PRUint32 state;
-              accessible->GetFinalState(&state);
-              if (0 == (state & STATE_INVISIBLE)) {
-                FireToolkitEvent(event, accessible, nsnull);
-              }
+              FireToolkitEvent(event, accessible, nsnull);
             }
           }
         }
