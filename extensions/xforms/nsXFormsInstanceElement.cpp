@@ -102,9 +102,32 @@ nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
     return NS_OK;
 
   if (aName == nsXFormsAtoms::src) {
+    PRBool restart = PR_FALSE;
+    if (mChannel) {
+      // looks like we are trying to remove the src attribute while we are
+      // already trying to load the external instance document.  We'll stop
+      // the current load effort.
+      restart = PR_TRUE;
+      mChannel->Cancel(NS_BINDING_ABORTED);
+      mChannel = nsnull;
+      mListener = nsnull;
+    }
     // We no longer have an external instance to use.  Reset our instance
     // document to whatever inline content we have.
-    return CloneInlineInstance();
+    nsresult rv = CloneInlineInstance();
+
+    // if we had already started to load an external instance document, then
+    // as part of that we would have told the model to wait for that external
+    // document to load before it finishes the model construction.  Since we
+    // aren't loading from an external document any longer, tell the model that
+    // there is need to wait for us anymore.
+    if (restart) {
+      nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+      if (model) {
+        model->InstanceLoadFinished(PR_TRUE);
+      }
+    }
+    return rv;
   }
 
   return NS_OK;
@@ -229,10 +252,9 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
-  if (!mElement) {
+  if (!mElement || !mListener) {
     return NS_OK;
   }
-  NS_ASSERTION(mListener, "No stream listener for document!");
   return mListener->OnStartRequest(request, ctx);
 }
 
@@ -243,10 +265,9 @@ nsXFormsInstanceElement::OnDataAvailable(nsIRequest *aRequest,
                                          PRUint32 sourceOffset,
                                          PRUint32 count)
 {
-  if (!mElement) {
+  if (!mElement || !mListener) {
     return NS_OK;
   }
-  NS_ASSERTION(mListener, "No stream listener for document!");
   return mListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset, count);
 }
 
@@ -254,12 +275,12 @@ NS_IMETHODIMP
 nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
                                        nsresult status)
 {
-  mChannel = nsnull;
   if (status == NS_BINDING_ABORTED) {
     // looks like our element has already been destroyed.  No use continuing on.
     return NS_OK;
   }
 
+  mChannel = nsnull;
   NS_ASSERTION(mListener, "No stream listener for document!");
   mListener->OnStopRequest(request, ctx, status);
 
@@ -426,6 +447,18 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
+  PRBool restart = PR_FALSE;
+  if (mChannel) {
+    // probably hit this condition because someone changed the value of our
+    // src attribute while we are already trying to load the previously
+    // specified document.  We'll stop the current load effort and kick off the
+    // new attempt.
+    restart = PR_TRUE;
+    mChannel->Cancel(NS_BINDING_ABORTED);
+    mChannel = nsnull;
+    mListener = nsnull;
+  }
+
   // Check whether we are an instance document ourselves
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -479,7 +512,13 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
 
   nsCOMPtr<nsIModelElementPrivate> model = GetModel();
   if (model) {
-    model->InstanceLoadStarted();
+    // if this isn't the first time that this instance element has tried
+    // to load an external document, then we don't need to tell the model
+    // to wait again.  It would screw up the counter it uses.  But if this
+    // isn't a restart, then by golly, the model better wait for us!
+    if (!restart) {
+      model->InstanceLoadStarted();
+    }
     if (NS_FAILED(rv)) {
       model->InstanceLoadFinished(PR_FALSE);
     }
