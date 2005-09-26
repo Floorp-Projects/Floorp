@@ -3891,51 +3891,47 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 	PRInt32		updateCheckSecs = updateCheckDays * 60;
 #endif
 
-	// get the current date/time [from microseconds (PRTime) to seconds]
-	PRTime		now64 = PR_Now(), temp64, million;
-	LL_I2L(million, PR_USEC_PER_SEC);
-	LL_DIV(temp64, now64, million);
-	PRInt32		now32;
-	LL_L2I(now32, temp64);
-
 	nsCOMPtr<nsIRDFNode>	aNode;
 	rv = mLocalstore->GetTarget(engine, kWEB_LastPingDate, PR_TRUE, getter_AddRefs(aNode));
 	if (NS_FAILED(rv))	return(rv);
-	if (rv == NS_RDF_NO_VALUE)
-	{
-		// if we've never validated this engine before,
-		// then start its epoch as of now
-		validateEngineNow(engine);
 
+  // if aNode is a valid entry, we should check the durationSecs.
+  if (rv != NS_RDF_NO_VALUE) {
+    // get last validate date/time
+    nsCOMPtr<nsIRDFLiteral> lastCheckLiteral(do_QueryInterface(aNode));
+    if (!lastCheckLiteral)
+      return NS_ERROR_UNEXPECTED;
+
+    const PRUnichar *lastCheckUni = nsnull;
+    lastCheckLiteral->GetValueConst(&lastCheckUni);
+    if (!lastCheckUni)
+      return NS_ERROR_UNEXPECTED;
+
+    PRInt32 lastCheckInt = 0, err = 0;
+    lastCheckInt = nsDependentString(lastCheckUni).ToInteger(&err);
+    // signed int32 -> unsigned int32
+    rv = (nsresult) err;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // get the current date/time [from microseconds (PRTime) to seconds]
+    PRTime now64 = PR_Now(), temp64, million;
+    LL_I2L(million, PR_USEC_PER_SEC);
+    LL_DIV(temp64, now64, million);
+    PRInt32 now32;
+    LL_L2I(now32, temp64);
+
+    // calculate duration since last validation
+    // just return if it's too early to check again
+    PRInt32 durationSecs = now32 - lastCheckInt;
+
+    if (durationSecs < updateCheckSecs) {
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' marked valid as of now.\n", engineURI);
+      printf("    Search engine '%s' is valid for %d more seconds.\n",
+             engineURI, (updateCheckSecs-durationSecs));
 #endif
-
-		return(NS_OK);
-	}
-
-	// get last validate date/time
-	nsCOMPtr<nsIRDFLiteral>	lastCheckLiteral (do_QueryInterface(aNode));
-	if (!lastCheckLiteral)	return(NS_ERROR_UNEXPECTED);
-	const PRUnichar		*lastCheckUni = nsnull;
-	lastCheckLiteral->GetValueConst(&lastCheckUni);
-	if (!lastCheckUni)	return(NS_ERROR_UNEXPECTED);
-	nsAutoString		lastCheckStr(lastCheckUni);
-	PRInt32			lastCheckInt=0, err=0;
-	lastCheckInt = lastCheckStr.ToInteger(&err);
-	if (err)		return(NS_ERROR_UNEXPECTED);
-
-	// calculate duration since last validation and
-	// just return if its too early to check again
-	PRInt32			durationSecs = now32 - lastCheckInt;
-	if (durationSecs < updateCheckSecs)
-	{
-#ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' is valid for %d more seconds.\n",
-			engineURI, (updateCheckSecs-durationSecs));
-#endif
-		return(NS_OK);
-	}
+      return NS_OK;
+    }
+  }
 
 	// search engine needs to be checked again, so add it into the to-be-validated array
 	PRInt32		elementIndex = mUpdateArray->IndexOf(engine);
@@ -3944,8 +3940,9 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 		mUpdateArray->AppendElement(engine);
 
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' is now queued to be validated via HTTP HEAD method.\n",
-			engineURI, durationSecs);
+    printf("    Search engine '%s' is now queued to be validated"
+           " via HTTP HEAD method.\n",
+           engineURI);
 #endif
 	}
 	else
