@@ -755,6 +755,10 @@ var gExtensionsDNDObserver =
 
   onDragEnter: function (aEvent, aDragSession)
   {
+    // XXXrstrong - bug 269568, GTK2 drag and drop is returning invalid data for
+    // dragenter and dragover. To workaround this we always set canDrop to true
+    // and just use the xfer data returned in ondrop which is valid.
+#ifndef MOZ_WIDGET_GTK2
     this._ensureServices();
 
     var count = aDragSession.numDropItems;
@@ -765,6 +769,7 @@ var gExtensionsDNDObserver =
         return;
       }
     }
+#endif
     this._canDrop = true;
   },
 
@@ -783,7 +788,7 @@ var gExtensionsDNDObserver =
     for (var i = 0; i < count; ++i) {
       var fileData = this._getDataFromDragSession(aDragSession, i);
       if (!fileData)
-        return;
+        continue;
 
       if (fileData.type == nsIUpdateItem.TYPE_EXTENSION) {
         xpinstallObj[fileData.fileName] = fileData.fileURL;
