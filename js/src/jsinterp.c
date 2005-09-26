@@ -5282,7 +5282,7 @@ out:
          * expression execution!
          * FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=309894
          */
-        if (cx->throwing && JS_LIKELY(mark)) {
+        if (cx->throwing && JS_LIKELY(mark != NULL)) {
             /*
              * Call debugger throw hook if set (XXX thread safety?).
              */
@@ -5342,7 +5342,7 @@ out2:
      * Clear spbase to indicate that we've popped the 2 * depth operand slots.
      * Restore the previous frame's execution state.
      */
-    if (JS_LIKELY(mark)) {
+    if (JS_LIKELY(mark != NULL)) {
         fp->sp = fp->spbase;
         fp->spbase = NULL;
         js_FreeRawStack(cx, mark);
