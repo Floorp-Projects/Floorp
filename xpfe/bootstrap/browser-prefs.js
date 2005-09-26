@@ -73,6 +73,7 @@ pref("browser.urlbar.matchOnlyTyped", false);
 
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", false);
+pref("browser.chrome.image_icons.max_size", 1024);
 
 // 0 = never, 1 = when in cache, 2 = always
 pref("browser.chrome.load_toolbar_icons", 0);
