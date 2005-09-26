@@ -321,20 +321,25 @@
         <parameter name="aDirection"/> <!-- Must be -1 or 1 -->
         <body>
           <![CDATA[
-            if (this.getRowCount() == 0)
+            var children = this.children;
+
+            if (children.length == 0)
               return false;
 
-            var index = this.selectedIndex;
+            var index = children.indexOf(this.selectedItem);
 
-            // If nothing is selected, we start at the extreme
-            // we're moving away from
-            if (index == -1)
-              index = aDirection == -1 ? this.getRowCount() - 1 : 0;
+            // If nothing is selected, we just select the first element
+            // at the extreme we're moving away from
+            if (index == -1) {
+              index = aDirection == -1 ? children.length - 1 : 0;
+              this.selectedItem = children[index];
+              return true;
+            }
 
             // If the selected item is visible, we scroll by one page so that
             // the newly selected item is at approximately the same position as
             // the currently selected one
-            var currentItem = this.getItemAtIndex(index);
+            var currentItem = children[index];
             if (this._isItemVisible(currentItem))
               this.scrollBoxObject.scrollBy(0, this.scrollBoxObject.height * aDirection);
 
@@ -342,15 +347,15 @@
             // (measuring from the top of the currently selected one), and
             // determine the index of the first one lying (partially) outside
             var height = this.scrollBoxObject.height;
-            while (height >= 0 && index >= 0 && index < this.getRowCount()) {
-              var actualIndex = (index && aDirection == -1) ? index - 1 : index;
-              height -= this.getItemAtIndex(actualIndex).boxObject.height;
+            while (height >= 0 && index >= 0 && index < children.length) {
+              var actualIndex = (index > 0 && aDirection == -1) ? index - 1 : index;
+              height -= children[actualIndex].boxObject.height;
               index += aDirection;
             }
             index -= aDirection;
 
-            if (this.selectedItem != index) {
-              this.selectedItem = this.getItemAtIndex(index);
+            if (this.selectedItem != children[index]) {
+              this.selectedItem = children[index];
               return true;
             }
 
