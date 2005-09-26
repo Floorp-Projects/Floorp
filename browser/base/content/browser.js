@@ -3035,6 +3035,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   if (gURLBar) {
     gURLBar.value = url;
     SetPageProxyState("valid");
+    FeedHandler.updateFeeds();
   }
 
   // Re-enable parts of the UI we disabled during the dialog
@@ -5905,11 +5906,6 @@ function convertFromUnicode(charset, str)
  */
 var FeedHandler = {
   /**
-   * The Feed icon in the location bar
-   */
-  _feedButton: null,
-  
-  /**
    * Initialize the Feed Handler
    */
   init: function() {
@@ -6048,18 +6044,20 @@ var FeedHandler = {
    * a page is loaded or the user switches tabs to a page that has feeds. 
    */
   updateFeeds: function() {
-    if (!this._feedButton)
-      this._feedButton = document.getElementById("feed-button");
+    var feedButton = document.getElementById("feed-button");
+    if (!feedButton)
+      return;
 
     var feeds = gBrowser.mCurrentBrowser.feeds;
     if (!feeds || feeds.length == 0) {
-      this._feedButton.removeAttribute("feeds");
-      this._feedButton.setAttribute("tooltiptext", 
-                                    gNavigatorBundle.getString("feedNoFeeds"));
+      if (feedButton.hasAttribute("feeds"))
+        feedButton.removeAttribute("feeds");
+      feedButton.setAttribute("tooltiptext", 
+                              gNavigatorBundle.getString("feedNoFeeds"));
     } else {
-      this._feedButton.setAttribute("feeds", "true");
-      this._feedButton.setAttribute("tooltiptext", 
-                                    gNavigatorBundle.getString("feedHasFeeds"));
+      feedButton.setAttribute("feeds", "true");
+      feedButton.setAttribute("tooltiptext", 
+                              gNavigatorBundle.getString("feedHasFeeds"));
     }
   }, 
   
@@ -6074,8 +6072,6 @@ var FeedHandler = {
     // progress listener to have a generic onLinkAvailable and have tabbrowser pass
     // along all events.  It should give us the browser for the tab, as well as
     // the actual event.
-    if (!this._feedButton)
-      this._feedButton = document.getElementById("feed-button");
 
     var erel = event.target.rel;
     var etype = event.target.type;
@@ -6117,8 +6113,11 @@ var FeedHandler = {
                    type: wrapper.type,
                    title: wrapper.title});
       browserForLink.feeds = feeds;
-      if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
-        this._feedButton.setAttribute("feeds", "true");
+      if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser) {
+        var feedButton = document.getElementById("feed-button");
+        if (feedButton)
+          feedButton.setAttribute("feeds", "true");
+      }
     }
   }
 };
