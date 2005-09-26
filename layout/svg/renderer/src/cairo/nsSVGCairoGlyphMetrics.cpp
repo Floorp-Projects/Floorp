@@ -137,35 +137,29 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsSVGCairoGlyphMetrics::GetBaselineOffset(PRUint16 baselineIdentifier, float *_retval)
 {
+  cairo_font_extents_t extents;
+
+  SelectFont(mCT);
+  cairo_font_extents(mCT, &extents);
+
   switch (baselineIdentifier) {
+  case BASELINE_HANGING:
+    // not really right, but the best we can do with the information provided
+    // FALLTHROUGH
   case BASELINE_TEXT_BEFORE_EDGE:
-    *_retval = mExtents.y_bearing;
+    *_retval = -extents.ascent;
     break;
   case BASELINE_TEXT_AFTER_EDGE:
-    *_retval = (float)(PRUint16)(mExtents.y_bearing + mExtents.height + 0.5);
+    *_retval = extents.descent;
     break;
   case BASELINE_CENTRAL:
   case BASELINE_MIDDLE:
-    *_retval = (float)(PRUint16)(mExtents.y_bearing + mExtents.height/2.0 + 0.5);
+    *_retval = - (extents.ascent - extents.descent) / 2.0;
     break;
   case BASELINE_ALPHABETIC:
   default:
-  {
-    // xxxx
     *_retval = 0.0;
-#if 0
-    FontFamily family;
-    GetFont()->GetFamily(&family);
-    INT style = GetFont()->GetStyle();
-    // alternatively to rounding here, we could set the
-    // pixeloffsetmode to 'PixelOffsetModeHalf' on painting
-    *_retval = (float)(UINT16)(GetBoundingRect()->Y
-                               + GetFont()->GetSize()
-                               *family.GetCellAscent(style)/family.GetEmHeight(style)
-                               + 0.5);
-#endif
-  }
-  break;
+    break;
   }
   
   return NS_OK;
