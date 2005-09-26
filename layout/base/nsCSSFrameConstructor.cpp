@@ -10425,16 +10425,19 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
   NS_ASSERTION(styleSet, "couldn't get style set");
 
   if (aContent) {
-    nsChangeHint hint;
-    if (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-                      NS_EVENT_STATE_SUPPRESSED)) {
-      // Any change to a content state that affects which frames we
-      // construct must lead to a frame reconstruct here
-      hint = nsChangeHint_ReconstructFrame;
-    } else {
-      hint = NS_STYLE_HINT_NONE;
-      nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
-      if (primaryFrame) {
+    nsChangeHint hint = NS_STYLE_HINT_NONE;
+    // Any change to a content state that affects which frames we construct
+    // must lead to a frame reconstruct here if we already have a frame.
+    // Note that we never decide through non-CSS means to not create frames
+    // based on content states, so if we already don't have a frame we don't
+    // need to force a reframe -- if it's needed, the HasStateDependentStyle
+    // call will handle things.
+    nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
+    if (primaryFrame) {
+      if (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
+                        NS_EVENT_STATE_SUPPRESSED)) {
+        hint = nsChangeHint_ReconstructFrame;
+      } else {          
         PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
         if (app) {
           nsITheme *theme = presContext->GetTheme();
@@ -13253,7 +13256,16 @@ void nsCSSFrameConstructor::RestyleEvent::HandleEvent() {
   NS_ASSERTION(viewManager, "Must have view manager for update");
 
   viewManager->BeginUpdateViewBatch();
+  // Force flushing of any pending content notifications that might have queued
+  // up while our event was pending.  That will ensure that we don't construct
+  // frames for content right now that's still waiting to be notified on,
+  constructor->mPresShell->GetDocument()->
+    FlushPendingNotifications(Flush_ContentAndNotify);
+
+  // Make sure that any restyles that happen from now on will go into
+  // a new event.
   constructor->mRestyleEventQueue = nsnull;
+
   constructor->ProcessPendingRestyles();
   viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
