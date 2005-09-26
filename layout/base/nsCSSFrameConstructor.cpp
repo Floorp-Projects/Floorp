@@ -10587,16 +10587,26 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 void
 nsCSSFrameConstructor::EndUpdate()
 {
-  if (--mUpdateCount == 0) {
+  if (mUpdateCount == 1) {
+    // This is the end of our last update.  Before we decrement
+    // mUpdateCount, recalc quotes and counters as needed.
+
     if (mQuotesDirty) {
-      mQuoteList.RecalcAll();
       mQuotesDirty = PR_FALSE;
+      mQuoteList.RecalcAll();
     }
+
     if (mCountersDirty) {
-      mCounterManager.RecalcAll();
       mCountersDirty = PR_FALSE;
+      mCounterManager.RecalcAll();
     }
+
+    NS_ASSERTION(!mQuotesDirty, "Quotes updates will be lost");
+    NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");
+    NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
+
+  --mUpdateCount;
 }
 
 void
