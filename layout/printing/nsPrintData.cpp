@@ -46,7 +46,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
-#include "nsINodeInfo.h"
 
 //-----------------------------------------------------
 // PR LOGGING

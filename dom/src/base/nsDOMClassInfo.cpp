@@ -75,7 +75,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsINodeInfo.h"
 #include "nsContentUtils.h"
 
 // Window scriptable helper includes

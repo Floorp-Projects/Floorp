@@ -47,7 +47,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
-#include "nsINodeInfo.h"
 
 // Print Options
 #include "nsIPrintSettings.h"
@@ -101,7 +100,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsPagePrintTimer.h"
 
 // FrameSet
-#include "nsINodeInfo.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
 

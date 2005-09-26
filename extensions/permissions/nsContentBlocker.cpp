@@ -36,7 +36,6 @@
 #include "nsContentBlocker.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"

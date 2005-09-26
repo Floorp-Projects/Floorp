@@ -42,7 +42,6 @@
 #include "nsContentErrors.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsServiceManagerUtils.h"

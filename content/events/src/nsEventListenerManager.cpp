@@ -79,7 +79,6 @@
 #endif
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
