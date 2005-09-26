@@ -91,43 +91,49 @@ nsRenderingContextBeOS::~nsRenderingContextBeOS()
 
 NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsIWidget *aWindow)
 {	
-	mContext = aContext;
-	NS_IF_ADDREF(mContext);
+	if (!aContext || !aWindow)
+		return NS_ERROR_NULL_POINTER;
+
+	BView *view = (BView *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+	if (!view)
+		return NS_ERROR_FAILURE;
 	
 	mSurface = new nsDrawingSurfaceBeOS();
-	if (mSurface)
-	{
-		if (!aWindow)
-			return NS_ERROR_NULL_POINTER;
-		BView *view = (BView *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
-		mSurface->Init(view);
-		mOffscreenSurface = mSurface;
-		NS_ADDREF(mSurface);
-	}
+	if (!mSurface)
+		return NS_ERROR_OUT_OF_MEMORY;
 	
-	return (CommonInit());
+	mContext = aContext;
+	NS_IF_ADDREF(mContext);
+
+	mSurface->Init(view);
+	mOffscreenSurface = mSurface;
+	NS_ADDREF(mSurface);
+	return CommonInit();
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsIDrawingSurface* aSurface)
 {
+	if (!aContext || !aSurface)
+		return NS_ERROR_NULL_POINTER;
+		
 	mContext = aContext;
 	NS_IF_ADDREF(mContext);
-	mSurface = (nsDrawingSurfaceBeOS *)aSurface;
+	mSurface = (nsDrawingSurfaceBeOS *) aSurface;
 	mOffscreenSurface = mSurface;
 	NS_ADDREF(mSurface);
-	return (CommonInit());
+	return CommonInit();
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::CommonInit()
 {
-  if (!mTranMatrix)
-    return NS_ERROR_OUT_OF_MEMORY;
+	if (!mTranMatrix)
+		return NS_ERROR_OUT_OF_MEMORY;
 
-  mP2T = mContext->DevUnitsToAppUnits();
-  float app2dev;
-  app2dev = mContext->AppUnitsToDevUnits();
-  mTranMatrix->AddScale(app2dev, app2dev);
-  return NS_OK;
+	mP2T = mContext->DevUnitsToAppUnits();
+	float app2dev;
+	app2dev = mContext->AppUnitsToDevUnits();
+ 	mTranMatrix->AddScale(app2dev, app2dev);
+	return NS_OK;
 }
 
 // We like PRUnichar rendering, hopefully it's not slowing us too much
@@ -184,42 +190,42 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetDeviceContext(nsIDeviceContext *&aConte
 NS_IMETHODIMP nsRenderingContextBeOS::PushState()
 {
 #ifdef USE_GS_POOL
-  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
+	nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
 #else
-  nsGraphicsState *state = new nsGraphicsState;
+	nsGraphicsState *state = new nsGraphicsState;
 #endif
-  // Push into this state object, add to vector
-  if (!state)
-  	return NS_ERROR_OUT_OF_MEMORY;
+	// Push into this state object, add to vector
+	if (!state)
+		return NS_ERROR_OUT_OF_MEMORY;
 
-  nsTransform2D *tranMatrix;
-  if (nsnull == mTranMatrix)
-    tranMatrix = new nsTransform2D();
-  else
-    tranMatrix = new nsTransform2D(mTranMatrix);
+	nsTransform2D *tranMatrix;
+	if (nsnull == mTranMatrix)
+		tranMatrix = new nsTransform2D();
+	else
+		tranMatrix = new nsTransform2D(mTranMatrix);
 
-  if (!tranMatrix)
-  {
+	if (!tranMatrix)
+	{
 #ifdef USE_GS_POOL
-    nsGraphicsStatePool::ReleaseGS(state);
+		nsGraphicsStatePool::ReleaseGS(state);
 #else
-    delete state;
+		delete state;
 #endif
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  state->mMatrix = mTranMatrix;
-  mTranMatrix = tranMatrix;
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+	state->mMatrix = mTranMatrix;
+	mTranMatrix = tranMatrix;
 
-  // Set state to mClipRegion. SetClip{Rect,Region}() will do copy-on-write stuff
-  state->mClipRegion = mClipRegion;
+	// Set state to mClipRegion. SetClip{Rect,Region}() will do copy-on-write stuff
+	state->mClipRegion = mClipRegion;
 
-  NS_IF_ADDREF(mFontMetrics);
-  state->mFontMetrics = mFontMetrics;
-  state->mColor = mCurrentColor;
-  state->mLineStyle = mCurrentLineStyle;
+	NS_IF_ADDREF(mFontMetrics);
+	state->mFontMetrics = mFontMetrics;
+	state->mColor = mCurrentColor;
+	state->mLineStyle = mCurrentLineStyle;
 
-  mStateCache->AppendElement(state);
-  return NS_OK;
+	mStateCache->AppendElement(state);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::PopState(void)
@@ -291,17 +297,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRect(const nsRect& aRect, nsClipCom
 	if (cnt > 0)
 		state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
 	
-	if (state)
+	if (state && mClipRegion && state->mClipRegion == mClipRegion)
 	{
-		if (state->mClipRegion)
-		{
-			if (state->mClipRegion == mClipRegion)
-			{
-				nsCOMPtr<nsIRegion> region;
-				GetClipRegion(getter_AddRefs(region));
-				mClipRegion = region;
-			}
-		}
+		nsCOMPtr<nsIRegion> region;
+		GetClipRegion(getter_AddRefs(region));
+		mClipRegion = region;
 	}
 	
 	CreateClipRegion();
@@ -337,29 +337,27 @@ bool nsRenderingContextBeOS::LockAndUpdateView()
 	if (mView) 
 		mView = nsnull;
 	
+	mSurface->AcquireView(&mView);
+	// Intelligent lock
+	if (mView && mSurface->LockDrawable()) 
 	{
-		mSurface->AcquireView(&mView);
-		// Intelligent lock
-		if (mView && mSurface->LockDrawable()) 
-		{
-			if (mCurrentFont == nsnull) 
-				mCurrentFont = (BFont *)be_plain_font;
-		
+		if (mCurrentFont == nsnull) 
+			mCurrentFont = (BFont *)be_plain_font;
+	
 		mView->SetFont(mCurrentFont);
-			mView->SetHighColor(mRGB_color);
+		mView->SetHighColor(mRGB_color);
 
-			if (mClipRegion) 
-			{
-		BRegion *region = nsnull;
+		if (mClipRegion) 
+		{
+			BRegion *region = nsnull;
 			mClipRegion->GetNativeRegion((void *&)region);
 			mView->ConstrainClippingRegion(region);
 		}
-			else
-			{
-				mView->ConstrainClippingRegion(0);
-			}
+		else
+		{
+			mView->ConstrainClippingRegion(0);
+		}
 		rv = true;
-	}
 	}
 	return rv;
 }
@@ -378,24 +376,23 @@ void nsRenderingContextBeOS::CreateClipRegion()
 
 	if (mClipRegion)
 	{
-	PRUint32 cnt = mStateCache->Count();
+		PRUint32 cnt = mStateCache->Count();
 
-		if (cnt > 0)
-		{
-			nsGraphicsState *state;
+		if (cnt == 0) 
+			return;
+
+		nsGraphicsState *state;
 		state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
 
-			if (state->mClipRegion == mClipRegion)
-			{
-				mClipRegion = new nsRegionBeOS;
-				if (mClipRegion)
-				mClipRegion->SetTo(*state->mClipRegion);
-			}
-		}
+		if (state->mClipRegion != mClipRegion)
+			return;
+			
+		mClipRegion = new nsRegionBeOS;
+		if (mClipRegion)
+			mClipRegion->SetTo(*state->mClipRegion);
 	}
 	else
 	{
-
 		PRUint32 w, h;
 		mSurface->GetSize(&w, &h);
 
@@ -406,7 +403,7 @@ void nsRenderingContextBeOS::CreateClipRegion()
 			mClipRegion->SetTo(0, 0, w, h);
 		}
 	}
-	}
+}
 	
 NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion &aRegion, nsClipCombine aCombine)
 {
@@ -416,17 +413,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion &aRegion, ns
 	if (cnt > 0)
 		state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
 	
-	if (state)
+	if (state && mClipRegion && state->mClipRegion == mClipRegion)
 	{
-		if (state->mClipRegion)
-		{
-			if (state->mClipRegion == mClipRegion)
-			{
-				nsCOMPtr<nsIRegion> region;
-				GetClipRegion(getter_AddRefs(region));
-				mClipRegion = region;
-			}
-		}
+		nsCOMPtr<nsIRegion> region;
+		GetClipRegion(getter_AddRefs(region));
+		mClipRegion = region;
 	}
 	
 	CreateClipRegion();
@@ -459,41 +450,27 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyClipRegion(nsIRegion &aRegion)
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetClipRegion(nsIRegion **aRegion)
 {
-	nsresult rv = NS_ERROR_FAILURE;
 	if (!aRegion || !mClipRegion)
 		return NS_ERROR_NULL_POINTER;
 	
-	if (mClipRegion)
+	if (*aRegion) // copy it, they should be using CopyClipRegion
 	{
-		if (*aRegion) // copy it, they should be using CopyClipRegion
-		{
-			(*aRegion)->SetTo(*mClipRegion);
-			rv = NS_OK;
-		}
-		else
-		{
-			nsCOMPtr<nsIRegion> newRegion = new nsRegionBeOS;
-			if (NS_SUCCEEDED(rv))
-			{
-				newRegion->Init();
-				newRegion->SetTo(*mClipRegion);
-				NS_ADDREF(*aRegion = newRegion);
-			}
-		}
+		(*aRegion)->SetTo(*mClipRegion);
 	}
 	else
 	{
-#ifdef DEBUG
-		printf("null clip region, can't make a valid copy\n");
-#endif
-		rv = NS_ERROR_FAILURE;
+		nsCOMPtr<nsIRegion> newRegion = new nsRegionBeOS();
+		newRegion->Init();
+		newRegion->SetTo(*mClipRegion);
+		NS_ADDREF(*aRegion = newRegion);
 	}
-	return rv;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::SetColor(nscolor aColor) 
 {
-	if (nsnull == mContext) return NS_ERROR_FAILURE;
+	if (nsnull == mContext)
+		return NS_ERROR_FAILURE;
 	mCurrentColor = aColor;
 	mRGB_color.red = NS_GET_R(mCurrentColor);
 	mRGB_color.green = NS_GET_G(mCurrentColor);
@@ -512,7 +489,8 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetFont(const nsFont &aFont, nsIAtom* aLan
 {
 	nsCOMPtr<nsIFontMetrics> newMetrics;
 	nsresult rv = mContext->GetMetricsFor(aFont, aLangGroup, *getter_AddRefs(newMetrics));
-	if (NS_SUCCEEDED(rv)) rv = SetFont(newMetrics);
+	if (NS_SUCCEEDED(rv)) 
+		rv = SetFont(newMetrics);
 	return rv;
 }
 
@@ -585,19 +563,18 @@ NS_IMETHODIMP nsRenderingContextBeOS::CreateDrawingSurface(const nsRect& aBounds
 		return NS_ERROR_FAILURE;
 	
 	nsDrawingSurfaceBeOS *surf = new nsDrawingSurfaceBeOS();
-	if (surf)
-		{
-		NS_ADDREF(surf);
-		// Getting drawable and updating context
-		    if(LockAndUpdateView())
-	        UnlockView();
-		surf->Init(mView, aBounds.width, aBounds.height, aSurfFlags);
-	}
-	else
+	if (!surf)
 	{
 		aSurface = nsnull;
 		return NS_ERROR_FAILURE;
 	}
+
+	NS_ADDREF(surf);
+	// Getting drawable and updating context
+	if (LockAndUpdateView())
+		UnlockView();
+		
+	surf->Init(mView, aBounds.width, aBounds.height, aSurfFlags);
 	aSurface = surf;
 	return NS_OK;
 }
@@ -649,7 +626,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRIn
 	//allocating from stack if amount isn't big
 	BPoint bpointbuf[64];
 	pts = bpointbuf;
-	if(aNumPoints>64)
+	if (aNumPoints>64)
 		pts = new BPoint[aNumPoints];
 	for (int i = 0; i < aNumPoints; ++i)
 	{
@@ -666,7 +643,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRIn
 	w = r.IntegerWidth();
 	h = r.IntegerHeight();
 //	Don't draw empty polygon
-	if(w && h)
+	if (w && h)
 	{
 		if (LockAndUpdateView())
 		{
@@ -686,7 +663,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRIn
 			UnlockView();
 		}		
 	}	
-	if(pts!=bpointbuf)
+	if (pts!=bpointbuf)
 		delete [] pts;
 	return NS_OK;
 }
@@ -806,7 +783,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt
 	//allocating from stack if amount isn't big
 	BPoint bpointbuf[64];
 	pts = bpointbuf;
-	if(aNumPoints>64)
+	if (aNumPoints>64)
 		pts = new BPoint[aNumPoints];
 	for (int i = 0; i < aNumPoints; ++i)
 	{
@@ -820,7 +797,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt
 	w = r.IntegerWidth();
 	h = r.IntegerHeight();
 //	Don't draw empty polygon
-	if(w && h)
+	if (w && h)
 	{
 		if (LockAndUpdateView())
 		{
@@ -840,7 +817,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawPolygon(const nsPoint aPoints[], PRInt
 			UnlockView();
 		}		
 	}		
-	if(pts!=bpointbuf)
+	if (pts!=bpointbuf)
 		delete [] pts;
 	return NS_OK;
 }
@@ -856,7 +833,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillPolygon(const nsPoint aPoints[], PRInt
 	PRInt32 w, h;
 	BPoint bpointbuf[64];
 	pts = bpointbuf;
-	if(aNumPoints>64)
+	if (aNumPoints>64)
 		pts = new BPoint[aNumPoints];
 	for (int i = 0; i < aNumPoints; ++i)
 	{
@@ -870,7 +847,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillPolygon(const nsPoint aPoints[], PRInt
 	w = r.IntegerWidth();
 	h = r.IntegerHeight();
 //	Don't draw empty polygon
-	if(w && h)
+	if (w && h)
 	{
 		if (LockAndUpdateView())
 		{
@@ -890,7 +867,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::FillPolygon(const nsPoint aPoints[], PRInt
 			UnlockView();
 		}		
 	}
-	if(pts!=bpointbuf)
+	if (pts!=bpointbuf)
 		delete [] pts;
 	return NS_OK;
 }
@@ -1103,7 +1080,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const PRUnichar *aString, PRUint3
 NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char *aString, PRUint32 aLength,
 	nsTextDimensions &aDimensions)
 {
-	
 	if (mFontMetrics)
 	{
 		mFontMetrics->GetMaxAscent(aDimensions.ascent);
@@ -1115,7 +1091,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char *aString, PRU
 NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
 	nsTextDimensions &aDimensions, PRInt32 *aFontID)
 {
-	
 	if (mFontMetrics)
 	{
 		mFontMetrics->GetMaxAscent(aDimensions.ascent);
@@ -1132,15 +1107,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const PRUnichar *aString
 // other platforms, partly due to UTF-8 nature of BeOS, partly due unimplemented font fallbacks
 // and other tricks.
 
-NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const PRUnichar*  aString,
-														PRInt32           aLength,
-														PRInt32           aAvailWidth,
-														PRInt32*          aBreaks,
-														PRInt32           aNumBreaks,
-														nsTextDimensions& aDimensions,
-														PRInt32&          aNumCharsFit,
-														nsTextDimensions& aLastWordDimensions,
-														PRInt32*          aFontID = nsnull)
+NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const PRUnichar* aString,
+	PRInt32 aLength, PRInt32 aAvailWidth, PRInt32* aBreaks, PRInt32 aNumBreaks,
+	nsTextDimensions& aDimensions, PRInt32& aNumCharsFit, nsTextDimensions& aLastWordDimensions,
+	PRInt32* aFontID = nsnull)
 {
 	nsresult ret_code = NS_ERROR_FAILURE;	
 	uint8 utf8buf[1024];
@@ -1171,15 +1141,9 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const PRUnichar*  aStrin
 	return ret_code;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char*       aString,
-														PRInt32           aLength,
-														PRInt32           aAvailWidth,
-														PRInt32*          aBreaks,
-														PRInt32           aNumBreaks,
-														nsTextDimensions& aDimensions,
-														PRInt32&          aNumCharsFit,
-														nsTextDimensions& aLastWordDimensions,
-														PRInt32*          aFontID = nsnull)
+NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char* aString, PRInt32 aLength,
+	PRInt32 aAvailWidth,PRInt32* aBreaks, PRInt32 aNumBreaks, nsTextDimensions& aDimensions,
+	PRInt32& aNumCharsFit, nsTextDimensions& aLastWordDimensions, PRInt32* aFontID = nsnull)
 {
 	// Code is borrowed from win32 implementation including comments.
 	// Minor changes are introduced due multibyte/utf-8 nature of char* strings handling in BeOS.
@@ -1361,48 +1325,48 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawString(const char *aString, PRUint32 a
 	nscoord aX, nscoord aY, const nscoord *aSpacing)
 {
 	
-	if (0 != aLength) 
-	{
-		if (mTranMatrix == nsnull)
-			return NS_ERROR_FAILURE;
-		if (mSurface == nsnull)
-			return NS_ERROR_FAILURE;
-		if (aString == nsnull)
-			return NS_ERROR_FAILURE;
+	if (0 == aLength)
+		return NS_OK; 
+
+	if (mTranMatrix == nsnull)
+		return NS_ERROR_FAILURE;
+	if (mSurface == nsnull)
+		return NS_ERROR_FAILURE;
+	if (aString == nsnull)
+		return NS_ERROR_FAILURE;
+
+	nscoord xx = aX, yy = aY, y=aY;
 	
-		nscoord xx = aX, yy = aY, y=aY;
-		
-		// Subtract xFontStruct ascent since drawing specifies baseline
-		
-		if (LockAndUpdateView())  
+	// Subtract xFontStruct ascent since drawing specifies baseline
+	
+	if (LockAndUpdateView())  
+	{
+		// XXX: the following maybe isn't  most efficient for text rendering,
+		// but it's the easy way to render antialiased text correctly
+		mView->SetDrawingMode(B_OP_OVER);
+		if (nsnull == aSpacing || utf8_char_len((uchar)aString[0])==aLength) 
 		{
-			// XXX: the following maybe isn't  most efficient for text rendering,
-			// but it's the easy way to render antialiased text correctly
-			mView->SetDrawingMode(B_OP_OVER);
-			if (nsnull == aSpacing || utf8_char_len((uchar)aString[0])==aLength) 
-			{
-				mTranMatrix->TransformCoord(&xx, &yy);
-				mView->DrawString(aString, aLength, BPoint(xx, yy));
-				}
-			else 
-			{
-					char *wpoint =0;
-					int32 unichnum=0,  position=aX, ch_len=0;
-					for (PRUint32 i =0; i <= aLength; i += ch_len)
-					{
-						ch_len = utf8_char_len((uchar)aString[i]);
-						wpoint = (char *)(aString + i);
-						xx = position; 
-						yy = y;
-						mTranMatrix->TransformCoord(&xx, &yy);
-						// yy++; DrawString quirk!
-						mView->DrawString((char *)(wpoint), ch_len, BPoint(xx, yy)); 
-						position += aSpacing[unichnum++];
-					}
-			}
-			mView->SetDrawingMode(B_OP_COPY);
-			UnlockView();
+			mTranMatrix->TransformCoord(&xx, &yy);
+			mView->DrawString(aString, aLength, BPoint(xx, yy));
 		}
+		else 
+		{
+			char *wpoint =0;
+			int32 unichnum=0,  position=aX, ch_len=0;
+			for (PRUint32 i =0; i <= aLength; i += ch_len)
+			{
+				ch_len = utf8_char_len((uchar)aString[i]);
+				wpoint = (char *)(aString + i);
+				xx = position; 
+				yy = y;
+				mTranMatrix->TransformCoord(&xx, &yy);
+				// yy++; DrawString quirk!
+				mView->DrawString((char *)(wpoint), ch_len, BPoint(xx, yy)); 
+				position += aSpacing[unichnum++];
+			}
+		}
+		mView->SetDrawingMode(B_OP_COPY);
+		UnlockView();
 	}
 	return NS_OK;
 }
@@ -1454,33 +1418,33 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 			
 	if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) 
 	{
-				NS_ASSERTION(nsnull != mSurface, "no back buffer");
-				destsurf = mSurface;
+		NS_ASSERTION(nsnull != mSurface, "no back buffer");
+		destsurf = mSurface;
 	} 
 	else 
 	{
-				destsurf = mOffscreenSurface;
-			}
+		destsurf = mOffscreenSurface;
+	}
 			
 	if (!srcbitmap && srcsurf != mOffscreenSurface)
 	{
 #ifdef DEBUG
-    	printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: should render from surface without bitmap!?!?!\n");
+    		printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: should render from surface without bitmap!?!?!\n");
 #endif
-		if(srcview)
+		if (srcview)
 			srcsurf->ReleaseView();
 		return NS_OK;
 	}
 	
-			destsurf->AcquireView(&destview);
+	destsurf->AcquireView(&destview);
 
 	if (!destview)
 	{
 #ifdef DEBUG
-    	printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: no BView to draw!?!?!\n");
+    		printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: no BView to draw!?!?!\n");
 #endif
-    	return NS_OK;
-				}
+    		return NS_OK;
+	}
 
 	if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES) 
 		mTranMatrix->TransformCoord(&srcX, &srcY);
@@ -1491,10 +1455,10 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 	if (!LockAndUpdateView())
 	{
 #ifdef DEBUG
-    	printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: no mVviewView - LockAndUpdate failed!\n");
+		printf("nsRenderingContextBeOS::CopyOffScreenBits - FIXME: no mVviewView - LockAndUpdate failed!\n");
 #endif
-    	return NS_OK;
-				}
+    		return NS_OK;
+	}
 	// Locking for safety surface which wasn't locked above
 	if (srcsurf != mSurface)
 		srcsurf->LockDrawable();
@@ -1507,16 +1471,16 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
 
 	if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) 
 	{
-					BRegion r;
-					srcview->GetClippingRegion(&r);
-					destview->ConstrainClippingRegion(&r);
-				}
+		BRegion r;
+		srcview->GetClippingRegion(&r);
+		destview->ConstrainClippingRegion(&r);
+	}
 				
 				// Draw to destination synchronously to make sure srcbitmap doesn't change
 				// before the blit is finished.
 	// TODO: look if we can blit directly in case of rendering to BDirectWindow, another buffer or self
-				destview->DrawBitmap(srcbitmap, BRect(srcX, srcY, srcX + drect.width - 1, srcY + drect.height - 1),
-					BRect(drect.x, drect.y, drect.x + drect.width - 1, drect.y + drect.height - 1));
+	destview->DrawBitmap(srcbitmap, BRect(srcX, srcY, srcX + drect.width - 1, srcY + drect.height - 1),
+		BRect(drect.x, drect.y, drect.x + drect.width - 1, drect.y + drect.height - 1));
 	
 	if (destsurf != mSurface)
 		destsurf->UnlockDrawable();
@@ -1535,9 +1499,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::CopyOffScreenBits(nsIDrawingSurface* aSrcS
    * Returns metrics (in app units) of an 8-bit character string
    */
 NS_IMETHODIMP 
-nsRenderingContextBeOS::GetBoundingMetrics(const char*        aString,
-                                         PRUint32           aLength,
-                                         nsBoundingMetrics& aBoundingMetrics)
+nsRenderingContextBeOS::GetBoundingMetrics(const char* aString, PRUint32 aLength, nsBoundingMetrics& aBoundingMetrics)
 {
 	aBoundingMetrics.Clear();
 	if (0 >= aLength || !aString || !mCurrentFont)
@@ -1571,17 +1533,15 @@ nsRenderingContextBeOS::GetBoundingMetrics(const char*        aString,
    * Returns metrics (in app units) of a Unicode character string
    */
 NS_IMETHODIMP 
-nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar*   aString,
-                                         PRUint32           aLength,
-                                         nsBoundingMetrics& aBoundingMetrics,
-                                         PRInt32*           aFontID) 
+nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar* aString, PRUint32 aLength,
+	nsBoundingMetrics& aBoundingMetrics, PRInt32* aFontID) 
 {
-  aBoundingMetrics.Clear();
-  nsresult r = NS_OK;
-  if (0 < aLength)
-  {
-  	if (aString == NULL)
-  		return NS_ERROR_FAILURE;
+	aBoundingMetrics.Clear();
+	nsresult r = NS_OK;
+	if (0 < aLength)
+	{
+		if (aString == NULL)
+			return NS_ERROR_FAILURE;
 
 		// Since more often than not, single char strings are passed to this function
 		// we will try keep this on the stack, instead of the heap
