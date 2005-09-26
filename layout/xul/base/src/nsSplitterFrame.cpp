@@ -71,7 +71,6 @@
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsINodeInfo.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsContentCID.h"

@@ -44,7 +44,6 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMNodeList.h"
 #include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathResult.h"

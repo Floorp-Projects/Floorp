@@ -42,7 +42,6 @@
 
 // content includes
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOM3Node.h"
 

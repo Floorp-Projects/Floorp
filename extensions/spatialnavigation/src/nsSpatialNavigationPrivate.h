@@ -106,7 +106,6 @@
 #include "nsILineIterator.h"
 #include "nsILocalFile.h"
 #include "nsINameSpaceManager.h"
-#include "nsINodeInfo.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefService.h"

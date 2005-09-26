@@ -50,7 +50,6 @@
 #include "nsXFormsAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
-#include "nsINodeInfo.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMXMLDocument.h"
