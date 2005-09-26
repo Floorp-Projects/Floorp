@@ -428,7 +428,7 @@
   <binding id="tabs-closebutton" 
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:hbox flex="1" style="min-width: 1px;">
+      <xul:hbox flex="1" style="min-width: 1px; overflow: -moz-hidden-unscrollable;">
         <children/>
         <xul:spacer class="tabs-right" flex="1"/>
       </xul:hbox>
