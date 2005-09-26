@@ -1566,13 +1566,10 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
       }
     }
 
-    // Just mark this line dirty.  We never need to mark the
-    // previous line dirty since either:
-    //  * the line is a block, and there would never be a chance to pull
-    //    something up
-    //  * It's an incremental reflow to something within an inline, which
-    //    we know must be very limited.
-    line->MarkDirty();
+    // Mark this line dirty.  We need to mark the previous line dirty
+    // if it is an inline line so that it can maybe pull up something
+    // from the just affected line.
+    MarkLineDirty(line);
   }
   return NS_OK;
 }
