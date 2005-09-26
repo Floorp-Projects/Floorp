@@ -203,11 +203,9 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
-                               nsFramePaintLayer aWhichLayer,
-                               nsIFrame**     aFrame);
+  virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,
+                                     nsFramePaintLayer aWhichLayer);
 
-  
   NS_IMETHOD  Paint(nsPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
@@ -701,29 +699,26 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 
-nsresult
+nsIFrame*
 nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
-                                     nsFramePaintLayer aWhichLayer,
-                                     nsIFrame**     aFrame)
+                                     nsFramePaintLayer aWhichLayer)
 {
   // XXX This algorithm is really bad. Because we only have a
   // singly-linked list we have to test each and every SVG element for
   // a hit. What we really want is a double-linked list.
-  
 
-  *aFrame = nsnull;
-  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND) return NS_ERROR_FAILURE;
-  
-  float x = GetPxPerTwips() * ( aPoint.x - mRect.x);
-  float y = GetPxPerTwips() * ( aPoint.y - mRect.y);
-  
-  PRBool inThisFrame = mRect.Contains(aPoint);
-  
-  if (!inThisFrame || !mRenderer) {
-    return NS_ERROR_FAILURE;
+  if (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
+    return nsnull;
+
+  float x = GetPxPerTwips() * aPoint.x;
+  float y = GetPxPerTwips() * aPoint.y;
+
+  nsRect thisRect(nsPoint(0,0), GetSize());
+  if (!thisRect.Contains(aPoint) || !mRenderer) {
+    return nsnull;
   }
 
-  *aFrame = this;
+  nsIFrame* frame = this;
   nsIFrame* hit = nsnull;
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -732,14 +727,14 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
     if (SVGFrame) {
       nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &hit);
       if (NS_SUCCEEDED(rv) && hit) {
-        *aFrame = hit;
+        frame = hit;
         // return NS_OK; can't return. we need reverse order but only
         // have a singly linked list...
       }
     }
   }
-    
-  return NS_OK;
+
+  return frame;
 }
 
 
