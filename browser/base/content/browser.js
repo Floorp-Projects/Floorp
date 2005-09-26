@@ -3045,6 +3045,14 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
+  // XXXmano bug 287105: wallpaper to bug 309953,
+  // the reload button isn't in sync with the reload command.
+  var reloadButton = document.getElementById("reload-button");
+  if (reloadButton) {
+    reloadButton.disabled =
+      document.getElementById("Browser:Reload").getAttribute("disabled") == "true";
+  }
+
   // fix up the personal toolbar folder
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
