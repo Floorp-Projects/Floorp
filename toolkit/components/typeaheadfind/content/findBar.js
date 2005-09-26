@@ -49,6 +49,7 @@ const CHAR_CODE_APOSTROPHE = "'".charCodeAt(0);
 // Global find variables
 var gFindMode = FIND_NORMAL;
 var gFoundLink = null;
+var gCurrentWindow = null;
 var gTmpOutline = null;
 var gTmpOutlineOffset = "0";
 var gDrawOutline = false;
@@ -392,10 +393,20 @@ function setFoundLink(foundLink)
 
 function finishFAYT(aKeypressEvent)
 {
-  if (!gFoundLink)
+  try {
+    if (gFoundLink)
+      gFoundLink.focus();
+    else if (gCurrentWindow)
+      gCurrentWindow.focus();
+    else
+      return false;
+  }
+  catch(e) {
     return false;
+  }
 
-  gFoundLink.focus(); // In this function, gFoundLink is set null.
+  // NOTE: In this time, gFoundLink and gCurrentWindow are set null.
+  // Because find toolbar lost focus.
 
   if (aKeypressEvent)
     aKeypressEvent.preventDefault();
@@ -416,22 +427,34 @@ function delayedCloseFindBar()
     if (focusedElement && focusedElement.parentNode &&
           (focusedElement.parentNode == findToolbar ||
            focusedElement.parentNode.parentNode == findField)) {
-      if (gFoundLink) {
-        // block scrolling on focus since find already scrolls, further
-        // scrolling is due to user action, so don't override this
-        var suppressedScroll = document.commandDispatcher.suppressFocusScroll;
-        document.commandDispatcher.suppressFocusScroll = true;
-        gFoundLink.focus();
-        document.commandDispatcher.suppressFocusScroll = suppressedScroll;
+      // block scrolling on focus since find already scrolls, further
+      // scrolling is due to user action, so don't override this
+      var suppressedScroll = document.commandDispatcher.suppressFocusScroll;
+      document.commandDispatcher.suppressFocusScroll = true;
+      // We MUST reset suppressFocusScroll.
+      try {
+        if (gFoundLink)
+          gFoundLink.focus();
+        else if (gCurrentWindow)
+          gCurrentWindow.focus();
+        else
+          window.content.focus();
       }
-      else
-        window.content.focus();
+      catch(e) {
+        // Retry to set focus.
+        try {
+          window.content.focus();
+        }
+        catch(e) { /* We lose focused element! */ }
+      }
+      document.commandDispatcher.suppressFocusScroll = suppressedScroll;
     }
   }
 
   findToolbar.hidden = true;
   setFindMode(FIND_NORMAL);
   setFoundLink(null);
+  gCurrentWindow = null;
   changeSelectionColor(false);
   if (gQuickFindTimeout) {
     clearTimeout(gQuickFindTimeout);
@@ -479,6 +502,7 @@ function onFindBarBlur()
 {
   changeSelectionColor(false);
   setFoundLink(null);
+  gCurrentWindow = null;
 }
 
 function onBrowserMouseUp(evt)
@@ -568,8 +592,7 @@ function onFindBarKeyPress(evt)
   }
   else if (evt.keyCode == KeyEvent.DOM_VK_TAB) {
     var shouldHandle = !evt.altKey && !evt.ctrlKey && !evt.metaKey;
-    if (shouldHandle && gFindMode != FIND_NORMAL &&
-        gFoundLink && finishFAYT(evt)) {
+    if (shouldHandle && gFindMode != FIND_NORMAL && finishFAYT(evt)) {
       if (evt.shiftKey)
         document.commandDispatcher.rewindFocus();
       else
@@ -610,10 +633,13 @@ function enableFindButtons(aEnable)
 function updateFoundLink(res)
 {
   var val = document.getElementById("find-field").value;
-  if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND || !val)
+  if (res == Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND || !val) {
     setFoundLink(null);
-  else
+    gCurrentWindow = null;
+  } else {
     setFoundLink(getBrowser().fastFind.foundLink);
+    gCurrentWindow = getBrowser().fastFind.currentWindow;
+  }
 }
 
 function find(val)

@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author:  Blake Ross      (blake@cs.stanford.edu)
+ *   Blake Ross      <blake@cs.stanford.edu> (Original Author)
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@
 
 interface nsIDocShell;
 
-[scriptable, uuid(09ccaa1d-422c-48a8-93fe-9c6e03dc4746)]
+[scriptable, uuid(376da416-e6b3-4bac-98f3-6aa408742751)]
 interface nsITypeAheadFind : nsISupports
 {
   void init(in nsIDocShell aDocShell);
@@ -61,5 +62,6 @@ interface nsITypeAheadFind : nsISupports
   attribute boolean focusLinks;
   attribute boolean caseSensitive;
   readonly attribute nsIDOMElement foundLink;
+  readonly attribute nsIDOMWindow currentWindow;
 };
 
