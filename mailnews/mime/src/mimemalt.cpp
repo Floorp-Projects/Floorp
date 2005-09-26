@@ -132,7 +132,8 @@ MimeMultipartAlternative_parse_eof (MimeObject *obj, PRBool abort_p)
 
   /* If there's a cached part we haven't written out yet, do it now.
    */
-  if (malt->buffered_hdrs && !abort_p)
+  if (malt->buffered_hdrs && !abort_p && 
+      obj->options->format_out != nsMimeOutput::nsMimeMessageAttach)
   {
     status = MimeMultipartAlternative_display_cached_part(obj);
     if (status < 0) return status;
