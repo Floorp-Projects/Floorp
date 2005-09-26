@@ -2013,6 +2013,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       NS_NAMED_LITERAL_CSTRING(withshift,       ".withshiftkey");
       NS_NAMED_LITERAL_CSTRING(withalt,         ".withaltkey");
       NS_NAMED_LITERAL_CSTRING(withcontrol,     ".withcontrolkey");
+      NS_NAMED_LITERAL_CSTRING(withmetakey,     ".withmetakey");
       NS_NAMED_LITERAL_CSTRING(withno,          ".withnokey");
       NS_NAMED_LITERAL_CSTRING(actionslot,      ".action");
       NS_NAMED_LITERAL_CSTRING(numlinesslot,    ".numlines");
@@ -2028,6 +2029,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         baseKey.Append(withcontrol);
       } else if (msEvent->isAlt) {
         baseKey.Append(withalt);
+      } else if (msEvent->isMeta) {
+        baseKey.Append(withmetakey);
       } else {
         baseKey.Append(withno);
       }

@@ -796,6 +796,9 @@ pref("mousewheel.withshiftkey.sysnumlines",true);
 pref("mousewheel.withaltkey.action",2);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
+pref("mousewheel.withmetakey.action",0);
+pref("mousewheel.withmetakey.numlines",1);
+pref("mousewheel.withmetakey.sysnumlines",true);
 
 // on platforms where scroll messages differ between horizontal scroll
 // and back/forward button events we can activate them by default
@@ -829,6 +832,9 @@ pref("mousewheel.horizscroll.withshiftkey.sysnumlines",true);
 pref("mousewheel.horizscroll.withaltkey.action",2);
 pref("mousewheel.horizscroll.withaltkey.numlines",1);
 pref("mousewheel.horizscroll.withaltkey.sysnumlines",true);
+pref("mousewheel.horizscroll.withmetakey.action",0);
+pref("mousewheel.horizscroll.withmetakey.numlines",1);
+pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
 #endif
 #ifndef HORIZSCROLL_AVAILABLE
 // disable horizontal scrolling to be able to use back/forward buttons
@@ -844,6 +850,9 @@ pref("mousewheel.horizscroll.withshiftkey.sysnumlines",false);
 pref("mousewheel.horizscroll.withaltkey.action",2);
 pref("mousewheel.horizscroll.withaltkey.numlines",-1);
 pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
+pref("mousewheel.horizscroll.withmetakey.action",2);
+pref("mousewheel.horizscroll.withmetakey.numlines",-1);
+pref("mousewheel.horizscroll.withmetakey.sysnumlines",false);
 #endif
 
 pref("profile.confirm_automigration",true);
