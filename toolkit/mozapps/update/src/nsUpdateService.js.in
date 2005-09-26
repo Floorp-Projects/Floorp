@@ -696,6 +696,7 @@ Update.prototype = {
     update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("statusText", this.statusText);
+    update.setAttribute("buildID", this.buildID);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
     updates.documentElement.appendChild(update);
     
@@ -1361,7 +1362,7 @@ UpdateManager.prototype = {
     return this._activeUpdate;
   },
   set activeUpdate(activeUpdate) {
-    this._addUpdate(this._activeUpdate);
+    this._addUpdate(activeUpdate);
     this._activeUpdate = activeUpdate;
     if (!activeUpdate) {
       // If |activeUpdate| is null, we have updated both lists - the active list
@@ -1395,8 +1396,8 @@ UpdateManager.prototype = {
       }
     }
     // Otherwise add it to the front of the list.
-    if (this._activeUpdate) 
-      this._updates = [this._activeUpdate].concat(this._updates);
+    if (update) 
+      this._updates = [update].concat(this._updates);
   },
   
   /**
