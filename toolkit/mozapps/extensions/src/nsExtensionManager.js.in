@@ -715,6 +715,26 @@ function showMessage(titleKey, titleParams, messageKey, messageParams) {
 }
 
 /** 
+ * Gets a zip reader for the file specified.
+ * @param   zipFile
+ *          A ZIP archive to open with a nsIZipReader.
+ * @return  A nsIZipReader for the file specified.
+ */
+function getZipReaderForFile(zipFile) {
+  try {
+    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                              .createInstance(Components.interfaces.nsIZipReader);
+    zipReader.init(zipFile);
+    zipReader.open();
+  }
+  catch (e) {
+    zipReader.close();
+    throw e;
+  }
+  return zipReader;
+}
+
+/** 
  * Extract a RDF file from a ZIP archive to a random location in the system
  * temp directory.
  * @param   zipFile
@@ -728,10 +748,7 @@ function showMessage(titleKey, titleParams, messageKey, messageParams) {
 function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
   var file = null;
   try {
-    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                              .createInstance(Components.interfaces.nsIZipReader);
-    zipReader.init(zipFile);
-    zipReader.open();
+    var zipReader = getZipReaderForFile(zipFile);
     zipReader.getEntry(fileName);
     
     file = getFile(KEY_TEMPDIR, [getRandomFileName(fileName)]);
@@ -740,7 +757,6 @@ function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
   }
   catch (e) {
     // always close the zip reader even if we throw
-    zipReader.close();
     if (!suppressErrors) {
       showMessage("missingFileTitle", [], "missingFileMessage", 
                   [BundleManager.appName, fileName]);
@@ -1052,7 +1068,7 @@ DirectoryInstallLocation.prototype = {
     itemLocation.append(id);
     if (itemLocation.exists() && !itemLocation.isDirectory())
       return this._readDirectoryFromFile(itemLocation);
-    if (!itemLocation.exists())
+    if (!itemLocation.exists() && this.canAccess)
       itemLocation.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
     return itemLocation;
   },
@@ -1397,10 +1413,7 @@ Installer.prototype = {
       // created in the |safeInstallOperation| callback, since it creates a file
       // in the target directory. If we do this outside of the callback, we may
       // be clobbering a file we should not be.
-      var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                .createInstance(Components.interfaces.nsIZipReader);
-      zipReader.init(xpiFile);
-      zipReader.open();
+      var zipReader = getZipReaderForFile(xpiFile);
       
       // create directories first
       var entries = zipReader.findEntries("*/");
@@ -1450,18 +1463,7 @@ Installer.prototype = {
       */
     function extractThemeFiles(id, installLocation, jarFile) {
       var themeDirectory = installLocation.getItemLocation(id);
-      
-      try {      
-        var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                  .createInstance(Components.interfaces.nsIZipReader);
-        zipReader.init(jarFile);
-        zipReader.open();
-      }
-      catch (e) {
-        zipReader.close();
-        LOG("extractThemeFiles: failed to open Theme jar file: " + jarFile.path);
-        throw e; // let the safe-op clean up
-      }
+      var zipReader = getZipReaderForFile(jarFile);
 
       // The only critical file is the install.rdf and we would not have
       // gotten this far without one.
@@ -1501,6 +1503,7 @@ Installer.prototype = {
         try {
           var entry = zipReader.getEntry(FILE_CONTENTS_MANIFEST);
           var contentsManifestFile = installLocation.getItemFile(id, FILE_CONTENTS_MANIFEST);
+          contentsManifestFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           zipReader.extract(FILE_CONTENTS_MANIFEST, contentsManifestFile);
         }
         catch (e) {
@@ -1623,13 +1626,39 @@ Installer.prototype = {
         var fileName = file.Value.substr("urn:mozilla:extension:file:".length, file.Value.length);
         chromeFile.append(fileName);
 
+        var fileURLSpec = getURLSpecFromFile(chromeFile);
+        if (!chromeFile.isDirectory()) {
+          var zipReader = getZipReaderForFile(chromeFile);
+          fileURLSpec = "jar:" + fileURLSpec + "!/";
+          var contentsFile = this._installLocation.getItemFile(this._id, FILE_CONTENTS_MANIFEST);
+          contentsFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        }
+
         var providers = [EM_R("package"), EM_R("skin"), EM_R("locale")];
         for (var i = 0; i < providers.length; ++i) {
           var items = this.metadataDS.GetTargets(file, providers[i], true);
           while (items.hasMoreElements()) {
             var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral);
-            this._upgradeChromeForProvider(chromeFile, item.Value, manifestURI);
+            var fileURI = newURI(fileURLSpec + item.Value);
+            // Extract the contents.rdf files instead of opening them inside of
+            // the jar. This prevents the jar from being cached by the zip
+            // reader which will keep the jar in use and prevent deletion.
+            if (zipReader) {
+              zipReader.extract(item.Value + FILE_CONTENTS_MANIFEST, contentsFile);
+              var contentsFileURI = getURIFromFile(contentsFile.parent);
+            }
+            else
+              contentsFileURI = fileURI;
+
+            var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                               .getService(Components.interfaces.nsIToolkitChromeRegistry);
+            cr.processContentsManifest(contentsFileURI, manifestURI, fileURI, true, false);
           }
+        }
+        if (zipReader) {
+          zipReader.close();
+          zipReader = null;
+          contentsFile.remove(false);
         }
       }
     }
@@ -1652,31 +1681,6 @@ Installer.prototype = {
       StartupCache.put(this._installLocation, this._id, OP_NEEDS_UNINSTALL, true);
       StartupCache.write();
     }
-  },
-  
-  /**
-   * Upgrades the contents.rdf chrome manifest at a given location to the new
-   * style format for registration with Chrome Registry.
-   * @param   file
-   *          JAR file or directory (flat chrome) that contains the chrome.
-   * @param   path
-   *          A path relative to |file| parameter where contents.rdf chrome
-   *          manifest lives.
-   * @param   manifest
-   *          nsIURI representing location of the new-style chrome.manifest 
-   *          file which should be written by the upgrade.
-   */
-  _upgradeChromeForProvider: function(file, path, manifest) { 
-    var fileURLSpec = getURLSpecFromFile(file);
-    if (!file.isDirectory()) // .jar files
-      fileURLSpec = "jar:" + fileURLSpec + "!/" + path;
-    else                      // flat chrome hierarchies
-      fileURLSpec = fileURLSpec + path;
-
-    var fileURI = newURI(fileURLSpec);
-    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                        .getService(Components.interfaces.nsIToolkitChromeRegistry);
-    cr.processContentsManifest(fileURI, manifest, fileURI, true, false);
   }  
 };
 
@@ -3146,19 +3150,38 @@ ExtensionManager.prototype = {
     if (!extensionsDS.exists())
       this._upgradeFromV10();
     
+    // Make the extensions datasource consistent if it isn't already.
+    var isDirty = false;
+    if (this._ensureDatasetIntegrity())
+      isDirty = true;
+
+    if (this._checkForFileChanges())
+      isDirty = true;
+
+    if (PendingOperations.size != 0)
+      isDirty = true;
+
+    if (isDirty)
+      this._finishOperations();
+
     // Disable all incompatible items and let update enable them if appropriate.
     var ds = this.datasource;
     var currAppID = gApp.ID;
     var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
                                            nsIUpdateItem.TYPE_ADDON, true);
     for (var i = 0; i < items.length; ++i)
-      this._appDisableItem(items[i].id);
+      ds.setItemProperty(items[i].id, EM_R("appDisabled"), EM_L("true"));
     // Update the manifests to reflect the items that were disabled.
     this._updateManifests(true);
 
     // Always check for compatibility updates when upgrading
     this._showMismatchWindow();
     
+    // Finish any pending upgrades from the compatibility update to avoid an
+    // additional restart.
+    if (PendingOperations.size != 0)
+      this._finishOperations();
+
     // Update the last app version so we don't do this again with this version.
     gPref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
 
@@ -3238,11 +3261,7 @@ ExtensionManager.prototype = {
         var id = location.getIDForLocation(entry);
 
         try {
-          var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                    .createInstance(Components.interfaces.nsIZipReader);
-          zipReader.init(jarFile);
-          zipReader.open();
-
+          var zipReader = getZipReaderForFile(jarFile);
           zipReader.extract(FILE_INSTALL_MANIFEST, installRDF);
 
           var contentsManifestFile = location.getItemFile(id, FILE_CONTENTS_MANIFEST);
@@ -3728,13 +3747,9 @@ ExtensionManager.prototype = {
       }
 
       try {
-        var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                                  .createInstance(Components.interfaces.nsIZipReader);
-        zipReader.init(xpiFile);
-        zipReader.open();
+        var zipReader = getZipReaderForFile(xpiFile);
       }
       catch (e) {
-        zipReader.close();
         LOG("installMultiXPI: failed to open xpi file: " + xpiFile.path);
         throw e;
       }
@@ -5910,7 +5925,7 @@ ExtensionsDataSource.prototype = {
    * @param   id
    *          The GUID of the item to discover target application info for
    * @param   datasource
-   *          The datasource to loko up target application info in
+   *          The datasource to look up target application info in
    * @returns A JS Object with the following properties:
    *          "minVersion"    The minimum version of the target application
    *                          that this item can run in
