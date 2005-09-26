@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Aaron Leventhal (aaronl@netscape.com)
  *   Blake Ross      (blake@cs.stanford.edu)
+ *   Masayuki Nakano (masayuki@d-toybox.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -125,6 +126,7 @@ protected:
   PRBool mCaretBrowsingOn;
   PRBool mFocusLinks;
   nsCOMPtr<nsIDOMElement> mFoundLink;
+  nsCOMPtr<nsIDOMWindow> mCurrentWindow;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
   // mAllTheSame Char starts out PR_TRUE, becomes false when 

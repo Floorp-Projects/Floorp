@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Aaron Leventhal (aaronl@netscape.com)
  *   Blake Ross      (blake@cs.stanford.edu)
+ *   Masayuki Nakano (masayuki@d-toybox.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -83,7 +84,6 @@
 
 #include "nsICaret.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
@@ -278,6 +278,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
 {
   *aResult = FIND_NOTFOUND;
   mFoundLink = nsnull;
+  mCurrentWindow = nsnull;
   nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selectionController;
   nsCOMPtr<nsIPresShell> startingPresShell (GetPresShell());
@@ -439,6 +440,10 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
             lastFocusedElement(do_QueryInterface(lastFocusedContent));
           mFoundLink = lastFocusedElement;
         }
+        nsCOMPtr<nsIDocument> doc =
+          do_QueryInterface(presShell->GetDocument());
+        NS_ASSERTION(doc, "Wow, presShell doesn't have document!");
+        mCurrentWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       }
 
       if (hasWrapped)
@@ -528,6 +533,15 @@ nsTypeAheadFind::GetFoundLink(nsIDOMElement** aFoundLink)
   NS_ENSURE_ARG_POINTER(aFoundLink);
   *aFoundLink = mFoundLink;
   NS_IF_ADDREF(*aFoundLink);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTypeAheadFind::GetCurrentWindow(nsIDOMWindow** aCurrentWindow)
+{
+  NS_ENSURE_ARG_POINTER(aCurrentWindow);
+  *aCurrentWindow = mCurrentWindow;
+  NS_IF_ADDREF(*aCurrentWindow);
   return NS_OK;
 }
 
