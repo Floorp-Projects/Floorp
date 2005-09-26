@@ -77,6 +77,6 @@ sub StageProduct
   system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/gre-installer-$osPkgFile.pkg\" -o $osPkg -v");
 
   # consolidate the .xpt files for each xpi into one file
-  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $osPkg --verbose");
+  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" --verbose");
 }
 

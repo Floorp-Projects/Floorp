@@ -167,7 +167,7 @@ system("perl pkgcp.pl -o unix -s $topobjdir/dist -d $STAGE -f $topsrcdir/xpinsta
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
-system("perl xptlink.pl -o unix -s $topobjdir/dist -d $STAGE -v");
+system("perl xptlink.pl -s $topobjdir/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
 #// strip libs

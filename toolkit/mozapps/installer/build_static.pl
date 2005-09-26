@@ -131,7 +131,7 @@ system("perl pkgcp.pl -o $platform -s $DIST -d $STAGE -f $inConfigFiles/$ENV{WIZ
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
-system("perl xptlink.pl -o $platform -s $DIST -d $STAGE -v");
+system("perl xptlink.pl -s $DIST -d $STAGE -v");
 spew("Completed xptlinking"); 
 
 #// call makeall.pl tunneling args (delivers .xpis to $inObjDir/installer/stage)

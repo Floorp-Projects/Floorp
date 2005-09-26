@@ -145,7 +145,7 @@ system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/p
 spew("Completed copying build files for STATIC BUILD");
 
 #// call xptlink.pl to make big .xpt files/component
-system("perl xptlink.pl -o unix -s $TREETOP/dist -d $STAGE -v");
+system("perl xptlink.pl -s $TREETOP/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
 #// call makeall.pl tunneling args (delivers .xpis to mozilla/installer/stage)

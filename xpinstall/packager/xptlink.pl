@@ -51,7 +51,6 @@ use Getopt::Long;
 $srcdir           = "";		# root directory being copied from
 $destdir          = "";		# root directory being copied to
 $finaldir         = "";   # where to put the final linked XPT
-$os               = "";  	# os type (MSDOS, Unix)
 $verbose          = 0;		# shorthand for --debug 1
 $debug            = 0;		# controls amount of debug output
 $help             = 0;		# flag: if set, print usage
@@ -60,7 +59,6 @@ $help             = 0;		# flag: if set, print usage
 $return = GetOptions(	"source|s=s",           \$srcdir,
 			"destination|d=s",      \$destdir,
       "final|f=s",            \$finaldir,
-			"os|o=s",               \$os,
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
@@ -115,7 +113,7 @@ foreach my $component (@xptdirs) {
         if -f "$destdir/$component/$bindir"."components/$component.xpt";
 
 		# create list of .xpt files in cwd
-    my @xptfiles;
+   my @xptfiles;
 
 		($debug >= 4) && print "opendir: $destdir/$component/$bindir"."components\n";
 		opendir (COMPDIR, "$destdir/$component/$bindir"."components") ||
@@ -144,7 +142,7 @@ foreach my $component (@xptdirs) {
 
       my @realxptfiles;
       my $realmerged;
-      if ($os eq "MSDOS") {
+      if ($^O eq "cygwin") {
           @realxptfiles = map {my $file = `cygpath -t mixed $_`;
                                chomp $file;
                                $file} @xptfiles;
@@ -214,21 +212,6 @@ sub check_arguments
 	} elsif ((! -d $destdir) || (! -w $destdir)) {
 		print "Error: destination directory \"$destdir\" is not a directory or is not writeable.\n";
 		$exitval += 2;
-	}
-
-	# check OS == {unix|dos}
-	if ($os eq "") {
-		print "Error: OS type (--os) not specified.\n";
-		$exitval += 8;
-	} elsif ( $os =~ /dos/i ) {
-		$os = "MSDOS";
-		($debug >= 4) && print " OS: $os\n";
-	} elsif ( $os =~ /unix/i ) {
-		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
-		($debug >= 4) && print " OS: Unix\n";
-	} else {
-		print "Error: OS type \"$os\" unknown.\n";
-		$exitval += 16;
 	}
 
 	if ($exitval) {
