@@ -200,7 +200,7 @@ caption {
   padding: 4px 4px 0px 0px !important;
 }
 
-#paneGeneral description, #paneAdvanced description {
+#paneGeneral description, #paneAdvanced description, #paneDownloads description {
   font: -moz-dialog;
 }
 
