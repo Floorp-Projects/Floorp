@@ -411,14 +411,26 @@ function initIcons()
 
     /* when installing on Mozilla, the XPI has the power to put the icons where
      * they are needed - in Firefox, it doesn't. So we move them here, instead.
+     * In XULRunner, things are more fun, as we're not an extension.
      */
-    if (client.host != "Firefox")
+    var sourceDir;
+    if (client.host == "Firefox")
+    {
+        sourceDir = getSpecialDirectory("ProfD");
+        sourceDir.append("extensions");
+        sourceDir.append("{" + __cz_guid + "}");
+        sourceDir.append("defaults");
+    }
+    else if (client.host == "XULrunner")
+    {
+        sourceDir = getSpecialDirectory("resource:app");
+        sourceDir.append("chrome");
+        sourceDir.append("icons");
+    }
+    else
+    {
         return;
-
-    var sourceDir = getSpecialDirectory("ProfD");
-    sourceDir.append("extensions");
-    sourceDir.append("{" + __cz_guid + "}");
-    sourceDir.append("defaults");
+    }
 
     var destDir = getSpecialDirectory("AChrom");
     destDir.append("icons");
