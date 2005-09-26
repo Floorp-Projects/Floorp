@@ -75,7 +75,7 @@ NS_IMPL_THREADSAFE_ADDREF(nsWindow)
 NS_IMPL_THREADSAFE_RELEASE(nsWindow)
 
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
-
+static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 //-------------------------------------------------------------------------
 // Global Definitions
 //-------------------------------------------------------------------------
@@ -125,6 +125,13 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mEnabled            = PR_TRUE;
 	mJustGotActivate    = PR_FALSE;
 	mJustGotDeactivate  = PR_FALSE;
+	mHidden             = false;
+	mUpdateArea = do_CreateInstance(kRegionCID);
+	if (mUpdateArea)
+	{
+		mUpdateArea->Init();
+		mUpdateArea->SetTo(0, 0, 0, 0);
+	}
 }
 
 
@@ -163,24 +170,13 @@ PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
-	if(mView && mView->LockLooper())
-	{
-		//It appears that only effective method in Be API to avoid invalidation chain overhead
-		//while performing action on BView's children is to use B_DRAW_ON_CHILDREN flag
-		//together with implementation of BView::DrawAfterChildren() hook
-		mView->SetFlags(mView->Flags() | B_DRAW_ON_CHILDREN);
-		mView->UnlockLooper();
-	}
+	NS_NOTYETIMPLEMENTED("BeginResizingChildren not yet implemented"); // to be implemented
 	return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
-	if(mView && mView->LockLooper())
-	{
-		mView->SetFlags(mView->Flags() & ~B_DRAW_ON_CHILDREN);
-		mView->UnlockLooper();
-	}
+	NS_NOTYETIMPLEMENTED("EndResizingChildren not yet implemented"); // to be implemented
 	return NS_OK;
 }
 
@@ -338,10 +334,17 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
 	           aAppShell, aToolkit, aInitData);
 
+	if (nsnull != aInitData)
+	{
+		SetWindowType(aInitData->mWindowType);
+		SetBorderStyle(aInitData->mBorderStyle);
+	}
+	
+
 	// Switch to the "main gui thread" if necessary... This method must
 	// be executed on the "gui thread"...
 	//
-
+	
 	nsToolkit* toolkit = (nsToolkit *)mToolkit;
 	if (toolkit)
 	{
@@ -383,12 +386,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		parent = (BView *)aNativeParent;
 	}
 
-	if (nsnull != aInitData)
-	{
-		SetWindowType(aInitData->mWindowType);
-		SetBorderStyle(aInitData->mBorderStyle);
-	}
-
 	// Only popups have mBorderlessParents
 	mBorderlessParent = NULL;
 
@@ -410,7 +407,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			{
 				mustunlock = true;
 			}
-
+			mView->SetFlags(mView->Flags() | B_WILL_DRAW);
 			parent->AddChild(mView);
 			mView->MoveTo(aRect.x, aRect.y);
 			mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
@@ -443,6 +440,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 					mBorderlessParent = parent;
 					flags |= B_NOT_CLOSABLE | B_AVOID_FOCUS | B_NO_WORKSPACE_ACTIVATION;
 					look = B_NO_BORDER_WINDOW_LOOK;
+					mView->SetFlags(mView->Flags() | B_WILL_DRAW);
 					break;
 				}
 					
@@ -598,7 +596,7 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 
 BView *nsWindow::CreateBeOSView()
 {
-	return new nsViewBeOS(this, BRect(0,0,0,0), "", 0, B_WILL_DRAW | B_FRAME_EVENTS);
+	return new nsViewBeOS(this, BRect(0,0,0,0), "", 0, B_FRAME_EVENTS);
 }
 
 //-------------------------------------------------------------------------
@@ -1531,19 +1529,20 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	nsresult rv = ((nsIRegion *)aRegion)->GetRects(&rectSet);
 	if (NS_FAILED(rv))
 		return rv;
-
-	for (PRUint32 i=0; i< rectSet->mRectsLen; ++i)
+	if (aIsSynchronous)
 	{
-		r.x = rectSet->mRects[i].x;
-		r.y = rectSet->mRects[i].y;
-		r.width = rectSet->mRects[i].width;
-		r.height = rectSet->mRects[i].height;
-		if (aIsSynchronous)
+		
+		((nsIRegion *)aRegion)->GetBoundingBox(&r.x, &r.y, &r.width, &r.height);
+		rv = OnPaint(r, aRegion) ? NS_OK : NS_ERROR_FAILURE;
+	}
+	else
+	{
+		for (PRUint32 i=0; i< rectSet->mRectsLen; ++i)
 		{
-			rv = OnPaint(r) ? NS_OK : NS_ERROR_FAILURE;
-		}
-		else
-		{
+			r.x = rectSet->mRects[i].x;
+			r.y = rectSet->mRects[i].y;
+			r.width = rectSet->mRects[i].width;
+			r.height = rectSet->mRects[i].height;
 			if (mView && mView->LockLooper())
 			{
 				mView->Draw(BRect(r.x, r.y, r.x + r.width -1, r.y + r.height -1));
@@ -1563,13 +1562,23 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Update()
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	if( mView && mView->Window())
+
+	//Restoring children visibility
+	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
 	{
-		mView->Window()->UpdateIfNeeded();
-		rv = NS_OK;
+		nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+		if(childWidget->mHidden)
+		{	
+			childWidget->Show(PR_TRUE);
+			childWidget->mHidden = false;
+		}
 	}
-	return rv;
+	
+	//Flushing native pending updates
+	if (mView && mView->Window())
+		mView->Window()->UpdateIfNeeded();
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1615,9 +1624,29 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 	if(mView && mView->LockLooper())
 	{
+
 		BRect src;
 		BRect b = mView->Bounds();
-		if(aClipRect)
+		//Preventing main view invalidation loop-chain  when children are moving
+		//by by hiding children nsWidgets.
+		//Maybe this method must be used wider, in move and resize chains
+		// and implemented in BeginResizingChildren or in Reset*Visibility() methods
+
+		for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
+		{
+			nsRect bounds;
+			kid->GetBounds(bounds);
+			bounds.x += aDx;
+			bounds.y += aDy;
+			nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+			childWidget->Show(PR_FALSE);
+			//Now moving children
+			childWidget->Move(bounds.x, bounds.y);
+			childWidget->mHidden = true;	
+		}
+		//Children will be unhidden in ::Update() method with current implementation
+
+		if (aClipRect)
 		{
 			src.left = aClipRect->x;
 			src.top = aClipRect->y;
@@ -1628,55 +1657,75 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		{
 			src = b;
 		}
+		// Restricting source by on-screen part of BView
+		if (mView->Window())
+		{
+			BRect screenframe = mView->ConvertFromScreen(BScreen(mView->Window()).Frame());
+			src = src & screenframe;
+			if (mView->Parent())
+			{
+				BRect parentframe = mView->ConvertFromParent(mView->Parent()->Frame());
+				src = src & parentframe;
+			}
+		}
 
 		BRegion	invalid;
 		invalid.Include(src);
+		// Next source clipping check, for same level siblings
+		if ( BView *v = mView->Parent() )
+		{
+			for (BView *child = v->ChildAt(0); child; child = child->NextSibling() )
+			{
+				BRect siblingframe = mView->ConvertFromParent(child->Frame());
+				if (child != mView && child->Parent() != mView)
+					invalid.Exclude(siblingframe);
+			}
+			src = invalid.Frame();
+		}
+		
 
 		// make sure we only reference visible bits
 		// so we don't trigger a BView invalidate
-		if(src.left + aDx < 0)
+
+		if (src.left + aDx < 0)
 			src.left = -aDx;
-		if(src.right + aDx > b.right)
+		if (src.right + aDx > b.right)
 			src.right = b.right - aDx;
-		if(src.top + aDy < 0)
+		if (src.top + aDy < 0)
 			src.top = -aDy;
-		if(src.bottom + aDy > b.bottom)
+		if (src.bottom + aDy > b.bottom)
 			src.bottom = b.bottom - aDy;
+		
 		BRect dest = src.OffsetByCopy(aDx, aDy);
-
 		mView->ConstrainClippingRegion(&invalid);
-
-		if(src.IsValid() && dest.IsValid())
+		// Moving content
+		if (src.IsValid() && dest.IsValid())
 			mView->CopyBits(src, dest);
 
 		invalid.Exclude(dest);		
-		//Preventing main view invalidation loop-chain  when children are moving
-		//by forcing call of DrawAfterChildren() method instead Draw()
-		//We don't use BeginResizingChildren here in order to avoid extra locking
-		mView->SetFlags(mView->Flags() | B_DRAW_ON_CHILDREN);
-		//Now moving children
-		for(BView *child = mView->ChildAt(0); child; child = child->NextSibling())
-		{
-			child->MoveBy(aDx, aDy);
-		}
-		//Returning to normal Draw()
-		mView->SetFlags(mView->Flags() & ~B_DRAW_ON_CHILDREN);
+
 		mView->ConstrainClippingRegion(&invalid);
-		//We'll call OnPaint() without locking mView - OnPaint does it itself
+		
+		//OnPaint don't need Lock()
 		mView->UnlockLooper();
-		// scan through rects and paint them directly
+		// Drawing uncovered regions by direct OnPaint call,
 		// so we avoid going through the callback stuff
-		int32 rects = invalid.CountRects();
-		for(int32 i = 0; i < rects; i++)
+		BRect	curr = invalid.Frame();
+		nsRect r(nscoord(curr.left), nscoord(curr.top), 
+						nscoord(curr.IntegerWidth() + 1), nscoord(curr.IntegerHeight() + 1));
+		mUpdateArea->SetTo(0,0,0,0);
+		int numrects = invalid.CountRects();
+		for (int i = 0; i< numrects; i++)
 		{
-			BRect	curr = invalid.RectAt(i);
-			nsRect	r;
-			r.x = (nscoord)curr.left;
-			r.y = (nscoord)curr.top;
-			r.width = (nscoord)curr.Width() + 1;
-			r.height = (nscoord)curr.Height() + 1;
-			OnPaint(r);
+			b = invalid.RectAt(i);
+			mUpdateArea->Union(int(b.left), int(b.top), 
+								b.IntegerWidth() + 1, b.IntegerHeight() + 1);
 		}
+		OnPaint(r, mUpdateArea);
+
+		if (mView->Window())
+			mView->Window()->UpdateIfNeeded();
+
 	}
 	return NS_OK;
 }
@@ -1843,18 +1892,27 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONPAINT :
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		if(mView)
+		if (mView)
 		{
 			BRegion reg;
+			nsRegion nreg;
 			reg.MakeEmpty();
 			nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
-			if(bv && bv->GetPaintRegion(&reg) && reg.Frame().IsValid())
+			bool nonempty = bv->GetPaintRegion(&reg);
+			BRect br = reg.Frame();
+			if (nonempty && br.IsValid())
 			{
-				//TODO: provide region for OnPaint(). Not only rect.
-				BRect br = reg.Frame();
 				nsRect r(nscoord(br.left), nscoord(br.top), 
 						nscoord(br.IntegerWidth() + 1), nscoord(br.IntegerHeight() + 1));
-				OnPaint(r);
+				mUpdateArea->SetTo(0,0,0,0);
+				int numrects = reg.CountRects();
+				for (int i = 0; i< numrects; i++)
+				{
+					br = reg.RectAt(i);
+					mUpdateArea->Union(int(br.left), int(br.top), 
+										br.IntegerWidth() + 1, br.IntegerHeight() + 1);
+				}
+				OnPaint(r, mUpdateArea);
 			}
 		}
 		break;
@@ -2355,44 +2413,40 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 // Paint
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::OnPaint(nsRect &r)
+PRBool nsWindow::OnPaint(nsRect &r, const nsIRegion *nsr)
 {
 	PRBool result = PR_FALSE;
 
-	if((r.width || r.height) && mEventCallback)
+	if (r.IsEmpty() || !mEventCallback || !mView  || (eWindowType_child != mWindowType && eWindowType_popup != mWindowType))
+		return result;
+	
+	// Substracting update rect from pending drawing region
+	if (mView->LockLooper())
 	{
-		if(mView && mView->LockLooper())
-		{
-			// set clipping
-			BRegion invalid;
-			invalid.Include(BRect(r.x, r.y, r.x + r.width - 1, r.y + r.height - 1));
-			mView->ConstrainClippingRegion(&invalid);
-			mView->Flush();
-			mView->UnlockLooper();
-			nsPaintEvent event(PR_TRUE, NS_PAINT, this);
-
-			InitEvent(event);
-			event.region = nsnull;
-			event.rect = &r;
-
-			static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-			static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-			if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
-			{
-				event.renderingContext->Init(mContext, this);
-				result = DispatchWindowEvent(&event);
-
-				NS_RELEASE(event.renderingContext);
-				result = PR_TRUE;
-			}
-			else
-				result = PR_FALSE;
-
-			NS_RELEASE(event.widget);
-
-		}
+		BRect br(r.x, r.y, r.x + r.width - 1, r.y + r.height -1);
+		nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
+		bv->Validate(br);
+		mView->UnlockLooper();
 	}
+	
+	nsPaintEvent event(PR_TRUE, NS_PAINT, this);
+
+	InitEvent(event);
+	event.region = (nsIRegion *)nsr;
+	event.rect = &r;
+	event.renderingContext = GetRenderingContext();
+	if (event.renderingContext != nsnull)
+	{
+		result = DispatchWindowEvent(&event);
+		NS_RELEASE(event.renderingContext);
+	}
+	else
+	{
+		result = PR_FALSE;
+	}
+
+	NS_RELEASE(event.widget);
+
 	return result;
 }
 
@@ -2691,6 +2745,7 @@ nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName
 		: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow),
 		buttons(0), lastViewWidth(aFrame.Width()), lastViewHeight(aFrame.Height()), restoreMouseMask(false)
 {
+	paintregion.MakeEmpty();
 }
 
 void nsViewBeOS::AttachedToWindow()
@@ -2705,18 +2760,11 @@ void nsViewBeOS::Draw(BRect updateRect)
 	DoDraw(updateRect);
 }
 
-void nsViewBeOS::DrawAfterChildren(BRect updateRect)
-{
-//Stub for B_DRAW_ON_CHILDREN flags
-//If some problem appears, line below may be uncommented.
-
-	//DoDraw(updateRect);
-} 
-
 void nsViewBeOS::DoDraw(BRect updateRect)
 {
 	//Collecting update rects here in paintregion
 	paintregion.Include(updateRect);
+
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if(w && (t = w->GetToolkit()) != 0)
@@ -2735,8 +2783,12 @@ bool nsViewBeOS::GetPaintRegion(BRegion *r)
 	if(paintregion.CountRects() == 0)
 		return false;
 	r->Include(&paintregion);
-	paintregion.MakeEmpty();
 	return true;
+}
+// Method to remove painted rects from pending update region
+void nsViewBeOS::Validate(BRect r)
+{
+	paintregion.Exclude(r);
 }
 
 void nsViewBeOS::MouseDown(BPoint point)

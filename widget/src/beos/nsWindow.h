@@ -52,6 +52,7 @@
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsString.h"
+#include "nsRegion.h"
 
 #include <Window.h>
 #include <View.h>
@@ -177,7 +178,8 @@ public:
 
 	virtual PRBool          AutoErase();
 	void                   InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
-	
+	bool                   mHidden;
+
 protected:
 
 	static PRBool           EventIsInsideWindow(nsWindow* aWindow, nsPoint pos) ;
@@ -188,7 +190,7 @@ protected:
 	virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
 	virtual void             OnDestroy();
 	virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-	virtual PRBool          OnPaint(nsRect &r);
+	virtual PRBool          OnPaint(nsRect &r, const nsIRegion *nsreg = nsnull);
 	virtual PRBool          OnResize(nsRect &aWindowRect);
 	virtual PRBool          OnKeyDown(PRUint32 aEventType, 
 	                                  const char *bytes, 
@@ -216,7 +218,7 @@ protected:
 	BView           *mView;
 	PRBool           mIsTopWidgetWindow;
 	BView           *mBorderlessParent;
-
+	nsCOMPtr<nsIRegion> mUpdateArea;
 	// I would imagine this would be in nsBaseWidget, but alas, it is not
 	PRBool           mIsMetaDown;
 
@@ -316,13 +318,13 @@ public:
 
 	virtual void            AttachedToWindow();
 	virtual void            Draw(BRect updateRect);
-	virtual void            DrawAfterChildren(BRect updateRect);
 	virtual void            MouseDown(BPoint point);
 	virtual void            MouseMoved(BPoint point, 
 	                                   uint32 transit, 
 	                                   const BMessage *message);
 	virtual void            MouseUp(BPoint point);
 	bool                  GetPaintRegion(BRegion *breg);
+	void                  Validate(BRect r);
 	void                  KeyDown(const char *bytes, int32 numBytes);
 	void                  KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
@@ -331,12 +333,12 @@ public:
 	virtual void            FrameMoved(BPoint origin);
 
 private:
-	void                  DoDraw(BRect updateRect);
-	float                 lastViewWidth;
-	float                 lastViewHeight;
+	void                 DoDraw(BRect updateRect);
+	float                lastViewWidth;
+	float                lastViewHeight;
 	BPoint               lastViewPoint;
 	uint32               mouseMask;
-	bool                  restoreMouseMask;	
+	bool                 restoreMouseMask;	
 };
 
 //
