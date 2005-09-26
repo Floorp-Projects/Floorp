@@ -1524,7 +1524,16 @@
 
               if (aEvent.originalTarget.localName != "tab") {
                 // We're adding a new tab.
-                this.loadOneTab(getShortcutOrURI(url));
+                var bgLoad = true;
+                try {
+                  bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
+                }
+                catch (e) { }
+    
+                if (aEvent.shiftKey)
+                  bgLoad = !bgLoad;
+
+                this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad);
               }
               else {
                 // Load in an existing tab.
