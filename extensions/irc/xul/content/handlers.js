@@ -165,12 +165,12 @@ function onNotImplemented()
 }
 
 /* tab click */
-function onTabClick (e, id)
+function onTabClick(e, id)
 {
-    if ((e.which != 1) && (e.which != 2))
+    if (e.which != 2)
         return;
 
-    var tbi = document.getElementById (id);
+    var tbi = document.getElementById(id);
     var view = client.viewsArray[tbi.getAttribute("viewKey")];
 
     if (e.which == 2)
@@ -178,10 +178,14 @@ function onTabClick (e, id)
         dispatch("hide", { view: view.source });
         return;
     }
-    else if (e.which == 1)
-    {
-        dispatch("set-current-view", { view: view.source });
-    }
+}
+
+function onTabSelect(e)
+{
+    var tabs = e.target;
+    var key = tabs.selectedItem.getAttribute("viewKey");
+    var view = client.viewsArray[key];
+    dispatch("set-current-view", {view:view.source});
 }
 
 function onMessageViewClick(e)

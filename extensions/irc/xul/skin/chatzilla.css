@@ -84,6 +84,10 @@ window {
     background: darkslategrey !important;
 }
 
+#view-tabs {
+    overflow-x: hidden;
+}
+
 #views-tbar-spacer {
     -moz-box-flex: 10000;
 }
