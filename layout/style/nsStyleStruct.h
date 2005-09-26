@@ -232,7 +232,7 @@ struct nsStyleMargin: public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
 
-  nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
+  nsStyleSides  mMargin;          // [reset] length, percent, auto
 
   PRBool GetMargin(nsMargin& aMargin) const
   {
@@ -268,7 +268,7 @@ struct nsStylePadding: public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
   
-  nsStyleSides  mPadding;         // [reset] length, percent, inherit
+  nsStyleSides  mPadding;         // [reset] length, percent
 
   PRBool GetPadding(nsMargin& aPadding) const
   {
@@ -347,7 +347,7 @@ struct nsStyleBorder: public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
  
-  nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
+  nsStyleSides  mBorderRadius;    // [reset] length, percent
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
   nsBorderColors** mBorderColors; // [reset] multiple levels of color for a border.
 
@@ -552,7 +552,7 @@ struct nsStyleOutline: public nsStyleStruct {
   static nsChangeHint MaxDifference();
 #endif
  
-  nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
+  nsStyleSides  mOutlineRadius;    // [reset] length, percent
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
 
   nsStyleCoord  mOutlineOffset;   // [reset] length
@@ -673,12 +673,12 @@ struct nsStylePosition : public nsStyleStruct {
 #endif
   
   nsStyleSides  mOffset;                // [reset]
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, inherit
-  nsStyleCoord  mMinWidth;              // [reset] coord, percent, inherit
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, inherit
-  nsStyleCoord  mHeight;                // [reset] coord, percent, auto, inherit
-  nsStyleCoord  mMinHeight;             // [reset] coord, percent, inherit
-  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null, inherit
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto
+  nsStyleCoord  mMinWidth;              // [reset] coord, percent
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null
+  nsStyleCoord  mHeight;                // [reset] coord, percent, auto
+  nsStyleCoord  mMinHeight;             // [reset] coord, percent
+  nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null
   PRUint8       mBoxSizing;             // [reset] see nsStyleConsts.h
   nsStyleCoord  mZIndex;                // [reset] 
 };
