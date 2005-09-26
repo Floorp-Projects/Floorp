@@ -211,8 +211,6 @@ public:
 
     nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName,
                                                     aPrefix, aValue, aNotify);
-
-    AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
     return rv;
   }
 
@@ -223,8 +221,6 @@ public:
 
     nsresult rv = nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                       aNotify);
-
-    AfterSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
     return rv;
   }
 
