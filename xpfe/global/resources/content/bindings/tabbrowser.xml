@@ -253,7 +253,10 @@
                   this.mTab.setAttribute("image", this.mIcon);
                 }
                 else if (this.mBrowser.contentDocument instanceof ImageDocument) {
-                  this.mTab.setAttribute("image", this.mBrowser.currentURI.spec);
+                  var req = this.mBrowser.contentDocument.imageRequest;
+                  var sz = this.mTabBrowser.mPrefs.getIntPref("browser.chrome.image_icons.max_size");
+                  if (req && req.image.width <= sz && req.image.height <= sz)
+                    this.mTab.setAttribute("image", this.mBrowser.currentURI.spec);
                 }
                 else if (this.mTabBrowser.shouldLoadFavIcon(location))
                   this.mTabBrowser.loadFavIcon(location, "image", this.mTab);
