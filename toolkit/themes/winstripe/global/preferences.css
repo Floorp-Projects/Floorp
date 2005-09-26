@@ -67,6 +67,7 @@ prefwindow[type="child"] > prefpane {
 
 .prefWindow-dlgbuttons {
   padding-bottom: 10px;
+  -moz-padding-start: 8px;
   -moz-padding-end: 10px;
 }
 
