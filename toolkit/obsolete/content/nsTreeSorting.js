@@ -177,7 +177,10 @@ function fillViewMenu(popup)
       var column = columns[i];
       // Construct an entry for each cell in the row.
       var column_name = column.getAttribute("label");
+      var column_accesskey = column.getAttribute("accesskey");
       var item = document.createElement("menuitem");
+      if (column_accesskey)
+        item.setAttribute("accesskey", column_accesskey);
       item.setAttribute("type", "radio");
       item.setAttribute("name", "sort_column");
       if (column_name == "")

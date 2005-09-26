@@ -3,7 +3,7 @@
 <!ENTITY tree.header.url.label               "Location">
 <!ENTITY tree.header.url.akey                "L">
 <!ENTITY tree.header.date.label              "Last Visited">
-<!ENTITY tree.header.date.akey               "a">
+<!ENTITY tree.header.date.akey               "V">
 <!ENTITY tree.header.firstvisitdate.label    "First Visited">
 <!ENTITY tree.header.firstvisitdate.akey     "F">
 <!ENTITY tree.header.referrer.label          "Referrer">
@@ -11,6 +11,6 @@
 <!ENTITY tree.header.hostname.label          "Hostname">
 <!ENTITY tree.header.hostname.akey           "H">
 <!ENTITY tree.header.visitcount.label        "Visit Count">
-<!ENTITY tree.header.visitcount.akey         "V">
+<!ENTITY tree.header.visitcount.akey         "C">
 <!ENTITY bookmarkLinksCmd.label              "Bookmark These Links">
 <!ENTITY bookmarkLinksCmd.akey               "L">
