@@ -107,7 +107,7 @@ if(-d "$DEPTH/stage")
 
 mkdir("$DEPTH/stage", 0775);
 system("perl $cwdPackager/pkgcp.pl -s $cwdDist -d $DEPTH/stage -f $cwdPackager/packages-os2 -o unix -v");
-system("perl $cwdPackager/xptlink.pl -s $cwdDist -d $DEPTH/stage -o unix -v");
+system("perl $cwdPackager/xptlink.pl -s $cwdDist -d $DEPTH/stage -v");
 
 chdir("$cwdPackager/os2");
 if(system("perl makeall.pl $ver $DEPTH/stage $cwdDist/install -aurl $inXpiURL -rurl $inRedirIniURL"))
