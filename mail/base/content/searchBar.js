@@ -402,7 +402,8 @@ function getScopeToUse(aTermsArray, aFolderToSearch, aIsOffline)
   if (aIsOffline || aFolderToSearch.server.type != 'imap')
     return nsMsgSearchScope.offlineMail;
 
-  var scopeToUse = gSearchInput.searchMode == kQuickSearchBody ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail;
+  var scopeToUse = gSearchInput.searchMode == kQuickSearchBody && !gSearchInput.showingSearchCriteria
+                   ? nsMsgSearchScope.onlineMail : nsMsgSearchScope.offlineMail;
 
   // it's possible one of our search terms may require us to use an online mail scope (such as imap body searches)
   for (var i = 0; scopeToUse != nsMsgSearchScope.onlineMail && i < aTermsArray.Count(); i++)
