@@ -1759,6 +1759,8 @@
               return (l < f + p ? l : f + p) - 1;
             },
             handleEvent: function handleEvent(event) {
+              if (event.altKey)
+                return;
               var index;
               var box = this.tree.treeBoxObject;
               if (this.parentNode.hasAttribute("open")) {
