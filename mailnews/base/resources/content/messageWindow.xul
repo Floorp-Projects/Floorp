@@ -40,7 +40,6 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
 
@@ -113,20 +112,7 @@
   </keyset>
 
   <popupset>
-    <popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
-        <menuitem label="&AddToAddressBook.label;"
-                  accesskey="&AddToAddressBook.accesskey;"
-                  oncommand="AddNodeToAddressBook(document.popupNode)"/>
-        <menuitem label="&SendMailTo.label;"
-                  accesskey="&SendMailTo.accesskey;"
-                  oncommand="SendMailToNode(document.popupNode)"/>
-        <menuitem label="&CopyEmailAddress.label;"
-                  accesskey="&CopyEmailAddress.accesskey;"
-                  oncommand="CopyEmailAddress(document.popupNode)"/>  
-        <menuitem label="&CreateFilter.label;"
-                  accesskey="&CreateFilter.accesskey;"
-                  command="cmd_createFilterFromPopup"/>  
-    </popup>
+    <popup id="emailAddressPopup"/>
 
     <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
       <hbox id="allHeadersPopupContainer"/>

@@ -35,36 +35,14 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY toField.label "To: ">
-<!ENTITY fromField.label "From: ">
-<!ENTITY organizationField.label "Organization: ">
-<!ENTITY replyToField.label "Reply-To: ">
-
-<!ENTITY subjectField.label "Subject: ">
-<!--# LOCALIZATION NOTE (ccField.label): DONT_TRANSLATE -->
-<!ENTITY ccField.label "Cc: ">
-<!ENTITY bccField.label "Bcc: ">
-<!ENTITY newsgroupsField.label "Newsgroups: ">
-<!ENTITY followupToField.label "Followup-To: ">
-
-<!ENTITY dateField.label "Date: ">
-<!ENTITY userAgentField.label "User-Agent: ">
-<!ENTITY originalWebsite.label "Website: ">
-
-<!ENTITY editMessage.label "Edit Draft...">
-
-<!ENTITY attachmentsTree.label             "Attachments:">
-<!ENTITY openAttachmentCmd.label           "Open">
-<!ENTITY openAttachmentCmd.accesskey       "O">
-<!ENTITY saveAsAttachmentCmd.label         "Save As...">
-<!ENTITY saveAsAttachmentCmd.accesskey     "A">
-<!ENTITY printAttachmentCmd.label          ".Print">
-<!ENTITY printAttachmentCmd.accesskey      "P">
-<!ENTITY detachAttachmentCmd.label         "Detach ...">
-<!ENTITY deleteAttachmentCmd.label         "Delete">
-<!ENTITY saveAllAttachmentsCmd.label       "Save All...">
-<!ENTITY saveAllAttachmentsCmd.accesskey   "S">
-<!ENTITY detachAllAttachmentsCmd.label     "Detach All...">
-<!ENTITY detachAllAttachmentsCmd.accesskey "D">
-<!ENTITY deleteAllAttachmentsCmd.label     "Delete All...">
-<!ENTITY deleteAllAttachmentsCmd.accesskey "e">
+<!-- Message Header View Popup -->
+<!ENTITY AddToAddressBook.label            "Add To Address Book...">
+<!ENTITY AddToAddressBook.accesskey        "B">
+<!ENTITY SendMailTo.label                  "Compose Mail To...">
+<!ENTITY SendMailTo.accesskey              "s">
+<!ENTITY CopyEmailAddress.label            "Copy Email Address">
+<!ENTITY CopyEmailAddress.accesskey        "C">
+<!ENTITY CreateFilterFrom.label            "Create Filter From...">
+<!ENTITY CreateFilterFrom.accesskey        "F">
+<!ENTITY BlockAddress.label                "Block Address">
+<!ENTITY BlockAddress.accesskey            "A">

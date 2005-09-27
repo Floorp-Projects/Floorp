@@ -215,6 +215,7 @@ en-US.jar:
     locale/en-US/messenger/subscribe.properties                         (base/resources/locale/en-US/subscribe.properties)
     locale/en-US/messenger/msgFolderPickerOverlay.dtd                   (base/resources/locale/en-US/msgFolderPickerOverlay.dtd)
     locale/en-US/messenger/msgHdrViewOverlay.dtd                        (base/resources/locale/en-US/msgHdrViewOverlay.dtd)
+    locale/en-US/messenger/msgHdrViewPopup.dtd                          (base/resources/locale/en-US/msgHdrViewPopup.dtd)
     locale/en-US/messenger/mailTasksOverlay.dtd                         (base/resources/locale/en-US/mailTasksOverlay.dtd)
     locale/en-US/messenger/mailTurboMenu.properties                     (base/resources/locale/en-US/mailTurboMenu.properties)
     locale/en-US/messenger/mailEditorOverlay.dtd                        (base/resources/locale/en-US/mailEditorOverlay.dtd)

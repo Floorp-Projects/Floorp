@@ -856,66 +856,6 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
     AddExtraAddressProcessing(emailAddress, emailAddressNode);
 }
 
-function AddNodeToAddressBook (emailAddressNode)
-{
-  if (emailAddressNode)
-  {
-    var primaryEmail = emailAddressNode.getAttribute("emailAddress");
-    var displayName = emailAddressNode.getAttribute("displayName");
-    window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-                      "",
-                      "chrome,resizable=no,titlebar,modal,centerscreen", 
-                      {primaryEmail:primaryEmail, displayName:displayName });
-  }
-}
-
-// SendMailToNode takes the email address title button, extracts
-// the email address we stored in there and opens a compose window
-// with that address
-function SendMailToNode(emailAddressNode)
-{
-  var fields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
-  var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
-  if (emailAddressNode && fields && params)
-  {
-    fields.to = emailAddressNode.getAttribute("fullAddress");
-    params.type = Components.interfaces.nsIMsgCompType.New;
-    params.format = Components.interfaces.nsIMsgCompFormat.Default;
-    params.identity = accountManager.getFirstIdentityForServer(GetLoadedMsgFolder().server);
-    params.composeFields = fields;
-    msgComposeService.OpenComposeWindowWithParams(null, params);
-  }
-}
-
-// CopyEmailAddress takes the email address title button, extracts
-// the email address we stored in there and copies it to the clipboard
-function CopyEmailAddress(emailAddressNode)
-{
-  if (emailAddressNode)
-  {
-    var emailAddress = emailAddressNode.getAttribute("emailAddress");
-
-    var contractid = "@mozilla.org/widget/clipboardhelper;1";
-    var iid = Components.interfaces.nsIClipboardHelper;
-    var clipboard = Components.classes[contractid].getService(iid);
-    clipboard.copyString(emailAddress);
-  }
-}
-
-// CreateFilter opens the Message Filters and Filter Rules dialogs.
-//The Filter Rules dialog has focus. The window is prefilled with filtername <email address>
-//Sender condition is selected and the value is prefilled <email address>
-function CreateFilter(emailAddressNode)
-{
-  if (emailAddressNode)
-  {
-     var emailAddress = emailAddressNode.getAttribute("emailAddress");
-     if (emailAddress){
-         top.MsgFilters(emailAddress, GetFirstSelectedMsgFolder());
-     }
-  }
-}
-
 // createnewAttachmentInfo --> constructor method for creating new attachment object which goes into the
 // data attachment array.
 function createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment)

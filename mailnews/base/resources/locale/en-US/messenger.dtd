@@ -554,17 +554,6 @@
 <!ENTITY folderContextProperties.accesskey "P">
 <!ENTITY folderContextCopyLocation.label "Copy Folder Location">
 <!ENTITY folderContextCopyLocation.accesskey "C">
-<!-- Message Header View Popup -->
-<!ENTITY AddToAddressBook.label "Add to Address Book...">
-<!ENTITY AddToAddressBook.accesskey "B">
-<!ENTITY SendMailTo.label "Compose Mail To">
-<!ENTITY SendMailTo.accesskey "s">
-<!ENTITY CopyEmailAddress.label "Copy Email Address">
-<!ENTITY CopyEmailAddress.accesskey "C">
-<!ENTITY CreateFilter.label "Create Filter from Message...">
-<!ENTITY CreateFilter.accesskey "F">
-<!ENTITY BlockAddress.label "Block Address">
-<!ENTITY BlockAddress.accesskey "A">
 
 <!---SearchBar-->
 <!-- also used by addressbook -->

@@ -44,11 +44,14 @@
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 
 <!DOCTYPE overlay [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
 %messengerDTD;
+<!ENTITY % msgHdrViewPopupDTD SYSTEM "chrome://messenger/locale/msgHdrViewPopup.dtd" >
+%msgHdrViewPopupDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
@@ -1021,6 +1024,22 @@
                   accesskey="&viewImageCmd.accesskey;"
                   oncommand="gContextMenu.viewImage();"/>
         <menuseparator id="messagePaneContext-sep-image"/>
+        <menuitem id="context-composeemailto"
+                  label="&SendMailTo.label;"
+                  accesskey="&SendMailTo.accesskey;"
+                  oncommand="SendMailTo(gContextMenu.getEmail());"/>
+        <menuitem id="context-createfilterfrom"
+                  label="&CreateFilterFrom.label;"
+                  accesskey="&CreateFilterFrom.accesskey;"
+                  oncommand="CreateFilterFromMail(gContextMenu.getEmail());"/>
+        <menuitem id="context-addemail"
+                  label="&AddToAddressBook.label;"
+                  accesskey="&AddToAddressBook.accesskey;"
+                  oncommand="AddEmailToAddressBook(gContextMenu.getEmail(), gContextMenu.linkText());"/>
+        <menuitem id="context-copyemail"
+                  label="&copyEmailCmd.label;"
+                  accesskey="&copyEmailCmd.accesskey;"
+                  oncommand="gContextMenu.copyEmail();"/>
         <menuitem id="context-copylink"
                   label="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
@@ -1029,10 +1048,6 @@
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
                   command="cmd_copyImage"/>
-        <menuitem id="context-copyemail"
-                  label="&copyEmailCmd.label;"
-                  accesskey="&copyEmailCmd.accesskey;"
-                  oncommand="gContextMenu.copyEmail();"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
                   label="&saveLinkCmd.label;"

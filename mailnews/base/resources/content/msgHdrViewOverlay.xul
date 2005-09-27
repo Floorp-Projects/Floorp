@@ -36,7 +36,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
+<!DOCTYPE overlay [
+<!ENTITY % msgHdrViewPopupDTD SYSTEM "chrome://messenger/locale/msgHdrViewPopup.dtd" >
+%msgHdrViewPopupDTD;
+<!ENTITY % msgHdrViewOverlayDTD SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd" >
+%msgHdrViewOverlayDTD;
+]>
 
 <?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/messageKeywords.css" type="text/css"?>
@@ -55,6 +60,22 @@
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 </stringbundleset>
 
+<popup id="emailAddressPopup" popupanchor="bottomleft"
+       onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup');">
+  <menuitem label="&SendMailTo.label;"
+            accesskey="&SendMailTo.accesskey;"
+            oncommand="SendMailToNode(document.popupNode)"/>
+  <menuitem label="&CreateFilterFrom.label;"
+            accesskey="&CreateFilterFrom.accesskey;"
+            command="cmd_createFilterFromPopup"/>
+  <menuitem label="&AddToAddressBook.label;"
+            accesskey="&AddToAddressBook.accesskey;"
+            oncommand="AddNodeToAddressBook(document.popupNode)"/>
+  <menuitem label="&CopyEmailAddress.label;"
+            accesskey="&CopyEmailAddress.accesskey;"
+            oncommand="CopyEmailAddress(document.popupNode)"/>
+</popup>
+
 <popup id="attachmentListContext" onpopupshowing="return onShowAttachmentContextMenu();">
   <menuitem id="context-openAttachment" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('openAttachment');"/>
@@ -69,9 +90,9 @@
   <menuitem id="context-saveAllAttachments" oncommand="HandleMultipleAttachments('saveAttachment', currentAttachments);" 
     label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
   <menuitem id="context-detachAllAttachments" oncommand="HandleMultipleAttachments('detachAttachment', currentAttachments);" 
-    label="&detachAllAttachmentsCmd.label;"/>
+    label="&detachAllAttachmentsCmd.label;" accesskey="&detachAllAttachmentsCmd.accesskey;"/>
   <menuitem id="context-deleteAllAttachments" oncommand="HandleMultipleAttachments('deleteAttachment', currentAttachments);" 
-    label="&deleteAllAttachmentsCmd.label;"/>
+    label="&deleteAllAttachmentsCmd.label;" accesskey="&deleteAllAttachmentsCmd.accesskey;"/>
 </popup>
 
 <popup id="attachmentMenuList">
