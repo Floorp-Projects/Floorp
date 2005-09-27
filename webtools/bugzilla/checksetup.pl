@@ -3917,8 +3917,12 @@ if ( $dbh->isa('Bugzilla::DB::Mysql') ) {
     if ( $approved_col->{TYPE_NAME} eq 'TINYINT'
          and $approved_col->{COLUMN_SIZE} == 1 )
     {
-        $dbh->bz_alter_column_raw('series', 'public',
-            {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '0'});
+        # series.public could have been renamed to series.is_public,
+        # and so wouldn't need to be fixed manually.
+        if ($dbh->bz_column_info('series', 'public')) {
+            $dbh->bz_alter_column_raw('series', 'public',
+                {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '0'});
+        }
         $dbh->bz_alter_column_raw('bug_status', 'isactive',
             {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => '1'});
         $dbh->bz_alter_column_raw('rep_platform', 'isactive',
