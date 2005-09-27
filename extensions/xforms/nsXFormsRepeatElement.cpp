@@ -171,23 +171,22 @@
  * nsXFormsContextContainer::HandleDefault().
  *
  * If a \<repeat\> changes the repeat-index, any nested repeats have their
- * repeat-index reset to 1 (ResetInnerRepeats()).
+ * repeat-index reset to their starting index (ResetInnerRepeats()).
  *
  * <h2>Notes / todo</h2>
  *
- * @todo Support attribute based repeats (XXX), as in: (XXX)
+ * @todo Support attribute based repeats, as in: (XXX)
  *       \<html:table xforms:repeat-nodeset="..."\>
  *       @see http://www.w3.org/TR/xforms/index-all.html#ui.repeat.via.attrs
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=280368
  *
- * @todo There are some nasty bits with nested repeats (XXX)
- *   1) Should we delete or modify the @id on the cloned repeats?
- *   2) What happens if you set attributes on the parent repeat?
- *      Should they propagate to the cloned repeats?
+ * @todo What happens if you set attributes on the parent repeat?
+ *       Should they propagate to the cloned repeats? (XXX)
  *
  * @note Should we handle @number? The spec. says that it's a "Optional hint
- * to the XForms Processor as to how many elements from the collection to
- * display."
+ *       to the XForms Processor as to how many elements from the collection to
+ *       display."
+ *       @see https://bugzilla.mozilla.org/show_bug.cgi?id=302026
  */
 class nsXFormsRepeatElement : public nsXFormsControlStub,
                               public nsIXFormsRepeatElement
@@ -533,6 +532,26 @@ nsXFormsRepeatElement::Deselect(void)
 }
 
 NS_IMETHODIMP
+nsXFormsRepeatElement::GetStartingIndex(PRUint32 *aRes)
+{
+  NS_ENSURE_ARG(aRes);
+
+  nsresult rv = GetIntAttr(NS_LITERAL_STRING("startindex"),
+                           (PRInt32*) aRes,
+                           nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER);
+  if (NS_FAILED(rv)) {
+    *aRes = 1;
+  }
+  if (*aRes < 1) {
+    *aRes = 1;
+  } else if (*aRes > mMaxIndex) {
+    *aRes = mMaxIndex;
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXFormsRepeatElement::SetCurrentRepeat(nsIXFormsRepeatElement *aRepeat,
                                         PRUint32                aIndex)
 {
@@ -542,7 +561,13 @@ nsXFormsRepeatElement::SetCurrentRepeat(nsIXFormsRepeatElement *aRepeat,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   mCurrentRepeat = aRepeat;
+
+  // Check aIndex. If it is 0, we should intialize to the starting index
+  if (!aIndex) {
+    GetStartingIndex(&aIndex);
+  }
   mCurrentIndex = aIndex;
+
   return NS_OK;
 }
 
@@ -605,6 +630,7 @@ nsXFormsRepeatElement::IndexHasChanged()
 NS_IMETHODIMP
 nsXFormsRepeatElement::GetIsParent(PRBool *aIsParent)
 {
+  NS_ENSURE_ARG(aIsParent);
   *aIsParent = mIsParent;
   return NS_OK;
 }
@@ -779,26 +805,9 @@ nsXFormsRepeatElement::Refresh()
     // are appended in mHTMLElement.
   }
 
-  // XForms errata states that startindex is always '1' for nested repeats
-  // (http://www.w3.org/MarkUp/Forms/Group/Drafts/Sources/errata.html#E35a)
-  // so we'll not check it for those.
   if (!mParent && !mCurrentIndex && mMaxIndex) {
     // repeat-index has not been initialized, set it.
-    rv = GetIntAttr(NS_LITERAL_STRING("startindex"),
-                    (PRInt32*) &mCurrentIndex,
-                    nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER);
-    if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_NOT_AVAILABLE) {
-        mCurrentIndex = 1;
-      } else {
-        return rv;
-      }
-    }
-    if (mCurrentIndex < 1) {
-      mCurrentIndex = 1;
-    } else if (mCurrentIndex > mMaxIndex) {
-      mCurrentIndex = mMaxIndex;
-    }
+    GetStartingIndex(&mCurrentIndex);
   }
 
   // If we have the repeat-index, set it.
@@ -878,15 +887,17 @@ nsXFormsRepeatElement::ResetInnerRepeats(nsIDOMNode *aNode,
   nodeList->GetLength(&childCount);
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIXFormsRepeatElement> repeat;
-  PRUint32 index = 1;
   for (PRUint32 i = 0; i < childCount; ++i) {
     nodeList->Item(i, getter_AddRefs(node));
     repeat = do_QueryInterface(node);
     NS_ENSURE_STATE(repeat);
     PRUint32 level;
     repeat->GetLevel(&level);
-    if (level == mLevel + 1)
+    if (level == mLevel + 1) {
+      PRUint32 index;
+      repeat->GetStartingIndex(&index);
       repeat->SetIndex(&index, aIsRefresh);
+    }
   }
   
   return NS_OK;
@@ -933,7 +944,7 @@ nsXFormsRepeatElement::CloneNode(nsIDOMNode  *aSrc,
     PRBool isParent;
     parent->GetIsParent(&isParent);
     if (!isParent) {
-      rv = parent->SetCurrentRepeat(repClone, 1);
+      rv = parent->SetCurrentRepeat(repClone, 0);
       NS_ENSURE_SUCCESS(rv, rv);
       parent->SetIsParent(PR_TRUE);
     }

@@ -114,4 +114,6 @@ interface nsIXFormsRepeatElement : nsISupports
    * Informs repeat-index users of index change.
    */
   void indexHasChanged();
+
+  unsigned long getStartingIndex();
 };
