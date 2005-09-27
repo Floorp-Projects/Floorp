@@ -25,7 +25,6 @@
 #                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Gervase Markham <gerv@gerv.net>
-#                 Dennis Melentyev <dennis.melentyev@infopulse.com.ua>
 
 ################################################################################
 # Module Initialization
@@ -272,49 +271,21 @@ sub groups {
     my $sth;
     my @groupidstocheck = values(%groups);
     my %groupidschecked = ();
-    my $rows = $dbh->selectall_arrayref(
-                "SELECT DISTINCT groups.name, groups.id, member_id
+    $sth = $dbh->prepare("SELECT groups.name, groups.id
                             FROM group_group_map
                       INNER JOIN groups
                               ON groups.id = grantor_id
-                           WHERE grant_type = " . GROUP_MEMBERSHIP);
-    my %group_names = ();
-    my %group_membership = ();
-    foreach my $row (@$rows) {
-        my ($member_name, $grantor_id, $member_id) = @$row; 
-        # Just save the group names
-        $group_names{$grantor_id} = $member_name;
-        
-        # And group membership
-        push (@{$group_membership{$member_id}}, $grantor_id);
-    }
-    
-    # Let's walk the groups hierarhy tree (using FIFO)
-    # On the first iteration it's pre-filled with direct groups 
-    # membership. Later on, each group can add it's own members into the
-    # FIFO. Curcular dependencies are eliminated by checking
-    # $groupidschecked{$member_id} hash values.
-    # As a result, %groups will have all the groups we are the member of.
-    while ($#groupidstocheck >= 0) {
-        # Pop the head group from FIFO
-        my $member_id = shift @groupidstocheck;
-        
-        # Skip the group if we have it checked already
-        if (!$groupidschecked{$member_id}) {
-            # Mark group as checked
-            $groupidschecked{$member_id} = 1;
-            
-            # Add all it's members to check list FIFO
-            # %group_membership contains arrays of group members 
-            # for all groups. Accessible by group number.
-            foreach my $newgroupid (@{$group_membership{$member_id}}) {
-                push @groupidstocheck, $newgroupid 
-                    if (!$groupidschecked{$member_id});
+                           WHERE member_id = ? 
+                             AND grant_type = " . GROUP_MEMBERSHIP);
+    while (my $node = shift @groupidstocheck) {
+        $sth->execute($node);
+        my ($member_name, $member_id);
+        while (($member_name, $member_id) = $sth->fetchrow_array) {
+            if (!$groupidschecked{$member_id}) {
+                $groupidschecked{$member_id} = 1;
+                push @groupidstocheck, $member_id;
+                $groups{$member_name} = $member_id;
             }
-            # Note on if clause: we could have group in %groups from 1st
-            # query and do not have it in second one
-            $groups{$group_names{$member_id}} = $member_id 
-                if $group_names{$member_id} && $member_id;
         }
     }
     $self->{groups} = \%groups;
