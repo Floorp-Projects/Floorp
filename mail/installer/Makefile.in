@@ -87,6 +87,8 @@ NO_PKG_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
+MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
+
 ifdef BUILD_STATIC_LIBS
 ifeq (WINNT,$(OS_ARCH))
 MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
@@ -111,7 +113,7 @@ endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-installer:
+installer: removed-files
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
 endif

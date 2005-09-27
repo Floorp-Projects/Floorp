@@ -59,7 +59,6 @@ INSTALLER_FILES = \
 	config.it \
 	app.tag \
 	adt.jst \
-	mail.jst \
 	newsblog.jst \
 	offline.jst \
 	talkback.jst \
@@ -75,8 +74,12 @@ include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.m
 
 installer:
 	$(NSINSTALL) -D instgen
+	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/make-installjsremoves.pl ../removed-files > instgen/removed-files.js
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) instgen
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $(call EXPAND_LOCALE_SRCDIR,mail/locales)/installer/installer.inc > instgen/installer.inc
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	  -Iinstgen/removed-files.js \
+	  $(srcdir)/mail.jst > instgen/mail.jst
 	$(EXIT_ON_ERROR) \
 	for i in $(PP_LOCALIZED_FILES); do \
 	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) \
