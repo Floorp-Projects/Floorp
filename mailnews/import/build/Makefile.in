@@ -108,6 +108,24 @@ endif
 
 endif
 
+LOCAL_INCLUDES += -I$(srcdir)/../src \
+	-I$(srcdir)/../comm4x/src \
+	-I$(srcdir)/../text/src \
+	$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LOCAL_INCLUDES += -I$(srcdir)/../eudora/src
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += -I$(srcdir)/../eudora/src
+ifndef GNU_CC
+LOCAL_INCLUDES += -I$(srcdir)/../oexpress \
+	-I$(srcdir)/../outlook/src \
+  -I$(NULL)
+endif
+endif
+
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \

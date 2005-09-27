@@ -107,13 +107,6 @@ EXTRA_DSO_LDOPTS = \
 
 else
 
-EXPORTS     = \
-            nsComm4xProfile.h               \
-	    nsComm4xMailStringBundle.h      \
-	    nsComm4xMailImport.h	    \
-	    nsComm4xMail.h		    \
-            $(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

@@ -123,11 +123,6 @@ endif
 
 else
 
-EXPORTS     = \
-            nsEudoraImport.h               \
-	    nsEudoraStringBundle.h         \
-            $(NULL)
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
