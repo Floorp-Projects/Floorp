@@ -10,11 +10,11 @@
   <hbox>
     <spacer flex="1"/>
     <label value="View:"/>
-    <menulist label="View" oncommand="updateAgendaView(this);">
+    <menulist label="View" oncommand="agendaTreeView.updateFilter(this);">
       <menupopup>
-        <menuitem label="All"/>
-        <menuitem label="Events"/>
-        <menuitem label="Tasks"/>
+        <menuitem label="All" value="all"/>
+        <menuitem label="Events" value="events"/>
+        <menuitem label="Tasks" value="tasks"/>
         <!-- menuitem label="Reminders"/ -->
         <menuseparator id="calendar-list-start"/>
         <!--menuseparator id="calendar-list-end"/>

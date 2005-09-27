@@ -148,7 +148,7 @@ function getCellText(row, column)
 
     if (event instanceof Synthetic)
         return "";
-    var start = event.startDate || event.entryDate;
+    var start = event.startDate || event.dueDate;
     return start.toString();
 };
 
@@ -224,7 +224,9 @@ function hasNextSibling(row, afterIndex)
 agendaTreeView.findPeriodForItem =
 function findPeriodForItem(item)
 {
-    var start = item.startDate || item.entryDate;
+    var start = item.startDate || item.dueDate;
+    if (!start) 
+        return null;
     if (start.compare(this.today.end) <= 0)
         return this.today;
         
@@ -279,8 +281,8 @@ function calendarUpdateComplete()
 {
     [this.today, this.tomorrow, this.soon].forEach(function(when) {
         function compare(a, b) {
-            var ad = a.startDate || a.entryDate;
-            var bd = b.startDate || b.entryDate;
+            var ad = a.startDate || a.dueDate;
+            var bd = b.startDate || b.dueDate;
             return ad.compare(bd);
         }
         when.events.sort(compare);
@@ -312,14 +314,34 @@ function listener_onGetResult(calendar, status, itemtype, detail, count, items)
 agendaTreeView.refreshCalendarQuery =
 function refreshCalendarQuery()
 {
-    var filter = this.calendar.ITEM_FILTER_TYPE_EVENT |
-                 this.calendar.ITEM_FILTER_COMPLETED_ALL |
+    var filter = this.calendar.ITEM_FILTER_COMPLETED_ALL |
                  this.calendar.ITEM_FILTER_CLASS_OCCURRENCES;
+    if (!this.filterType)
+        this.filterType = 'all';
+    switch (this.filterType) {
+        case 'all': 
+            filter |= this.calendar.ITEM_FILTER_TYPE_EVENT |
+                      this.calendar.ITEM_FILTER_TYPE_TODO;
+            break;
+        case 'events':
+            filter |= this.calendar.ITEM_FILTER_TYPE_EVENT;
+            break;
+        case 'tasks':
+            filter |= this.calendar.ITEM_FILTER_TYPE_TODO;
+            break;
+    }
 
     this.periods.forEach(function (p) { p.events = []; });
     this.calendar.getItems(filter, 0, this.today.start, this.soon.end,
                            this.calendarOpListener);
     void("Calendar query started (" + this.today.start + " -> " + this.soon.end + ")\n");
+};
+
+agendaTreeView.updateFilter =
+function updateAgendaFilter(menulist) {
+    this.filterType = menulist.selectedItem.value;
+    this.refreshCalendarQuery();
+    return;
 };
 
 agendaTreeView.refreshPeriodDates =
@@ -367,9 +389,6 @@ agendaTreeView.calendarObserver.onLoad = function() {};
 agendaTreeView.calendarObserver.onAddItem =
 function observer_onAddItem(item)
 {
-    if (!(item instanceof Components.interfaces.calIEvent))
-        return;
-
     var occs = item.getOccurrencesBetween(this.agendaTreeView.today.start,
                                           this.agendaTreeView.soon.end, {});
     occs.forEach(this.agendaTreeView.addItem, this.agendaTreeView);
