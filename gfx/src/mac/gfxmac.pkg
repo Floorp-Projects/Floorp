@@ -4,3 +4,4 @@ dist/bin/components/@SHARED_LIBRARY@
 #else
 !staticcomp @LIBRARY@ @MODULE_NAME@#
 endif
+dist/bin/res/fonts/fontEncoding.properties
