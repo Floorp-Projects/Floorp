@@ -399,6 +399,9 @@ nsTextEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
 nsresult
 nsTextEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 {
+  // Attach to the frame now before the caret
+  nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(aSelection));
+  selPrivate->SetInterlinePosition(PR_FALSE);  
   return NS_OK;
 }
 
