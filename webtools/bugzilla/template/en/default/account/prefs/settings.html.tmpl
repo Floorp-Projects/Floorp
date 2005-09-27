@@ -29,7 +29,6 @@
 
 [% IF settings.size %]
   <table border="0" cellpadding="8">
-  <tr>
     [% FOREACH name = setting_names %]
         [% IF settings.${name}.is_enabled %]
             [% default_name = name _ '-isdefault' %]
