@@ -198,19 +198,17 @@ nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame,
                                                    nsPresContext *aPresContext,
                                                    nsIRenderingContext *aRendContext,
                                                    PRInt32 aOffset, 
+                                                   PRBool aPreferNext, 
                                                    nsPoint& aOutPoint)
 {
   nsIFrame *textFrame = nsnull;
   PRInt32 outOffset;
-  aContainingFrame->GetChildFrameContainingOffset(aOffset, PR_FALSE, &outOffset, &textFrame);
+  aContainingFrame->GetChildFrameContainingOffset(aOffset, aPreferNext, &outOffset, &textFrame);
   if (!textFrame) {
     return nsnull;
   }
 
   textFrame->GetPointFromOffset(aPresContext, aRendContext, aOffset, &aOutPoint);
-
-  // Add the position of this text frame
-  aOutPoint += textFrame->GetOffsetToExternal(aContainingFrame);
 
   return textFrame;
 }
@@ -244,9 +242,9 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
 
   nsPoint startPoint, endPoint;
   nsIFrame *startFrame = GetPointFromOffset(frame, presContext, rendContext, 
-                                            aStartOffset, startPoint);
+                                            aStartOffset, PR_TRUE, startPoint);
   nsIFrame *endFrame = GetPointFromOffset(frame, presContext, rendContext, 
-                                          aEndOffset, endPoint);
+                                          aEndOffset, PR_FALSE, endPoint);
   if (!startFrame || !endFrame) {
     return E_FAIL;
   }

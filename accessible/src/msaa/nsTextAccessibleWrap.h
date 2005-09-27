@@ -94,7 +94,7 @@ class nsTextAccessibleWrap : public nsTextAccessible,
     // Return child frame containing offset on success
     nsIFrame* GetPointFromOffset(nsIFrame *aContainingFrame, nsPresContext *aPresContext,
                                  nsIRenderingContext *aRenderingContext,
-                                 PRInt32 aOffset, nsPoint& aOutPoint);
+                                 PRInt32 aOffset, PRBool aPreferNext, nsPoint& aOutPoint);
 };
 
 #endif
