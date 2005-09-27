@@ -303,6 +303,12 @@ if ($action eq 'new') {
     }
 
     my $description  = trim($cgi->param('description')  || '');
+
+    if ($description eq '') {
+        ThrowUserError('product_must_have_description',
+                       {'product' => $product});
+    }
+
     my $milestoneurl = trim($cgi->param('milestoneurl') || '');
     my $disallownew = 0;
     $disallownew = 1 if $cgi->param('disallownew');

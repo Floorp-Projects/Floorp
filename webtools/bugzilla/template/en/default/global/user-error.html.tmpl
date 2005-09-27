@@ -1015,8 +1015,12 @@
     You must reassign those [% terms.bugs %] to another product before you
     can delete this one.
 
+  [% ELSIF error == "product_must_have_description" %]
+    [% title = "Product needs Description" %]
+    You must enter a description for product '[% product FILTER html %]'.
+
   [% ELSIF error == "product_must_have_version" %]
-    [% title = "Product needs version" %]
+    [% title = "Product needs Version" %]
     You must enter a version for product '[% product FILTER html %]'.
 
   [% ELSIF error == "product_not_specified" %]
