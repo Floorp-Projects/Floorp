@@ -622,6 +622,9 @@ NS_IMETHODIMP
 nsXFormsRepeatElement::SetParent(nsIXFormsRepeatElement *aParent)
 {
   mParent = aParent;
+  // We're an inner repeat owned by a parent, let it control whether we are
+  // selected or not.
+  Deselect();
   return NS_OK;
 }
 
