@@ -39,6 +39,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nscore.h"
+#include "nsStaticComponents.h"
 #include "prlink.h"
 #include "nsCOMPtr.h"
 #include "nsObserverList.h"
@@ -453,6 +454,13 @@ nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
                               PRUint32 componentCount)
 {
     nsresult rv = NS_OK;
+
+#ifdef MOZ_ENABLE_LIBXUL
+    if (!staticComponents) {
+        staticComponents = kPStaticModules;
+        componentCount = kStaticModuleCount;
+    }
+#endif
 
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
