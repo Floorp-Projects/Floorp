@@ -4019,19 +4019,8 @@ $dbh->bz_add_index('attachments', 'attachments_submitter_id_idx',
 if ($dbh->bz_column_info("attachments", "thedata")) {
     print "Migrating attachment data to its own table...\n";
     print "(This may take a very long time)\n";
-    my $sth_get1 = $dbh->prepare("SELECT attach_id 
-                                   FROM attachments");
-    my $sth_get2 = $dbh->prepare("SELECT thedata 
-                                   FROM attachments WHERE attach_id = ?");
-    $sth_get1->execute();
-    while (my ($id) = $sth_get1->fetchrow_array) {
-        $sth_get2->execute($id);
-        my ($thedata) = $sth_get2->fetchrow_array;
-        my $sth_put = $dbh->prepare("INSERT INTO attach_data
-                                     (id, thedata) VALUES ($id, ?)");
-        $sth_put->bind_param(1, $thedata, $dbh->BLOB_TYPE);
-        $sth_put->execute();
-    }
+    $dbh->do("INSERT INTO attach_data (id, thedata) 
+                   SELECT attach_id, thedata FROM attachments");
     $dbh->bz_drop_column("attachments", "thedata");    
 }
 

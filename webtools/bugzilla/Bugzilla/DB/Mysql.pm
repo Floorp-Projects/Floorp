@@ -490,6 +490,16 @@ sub bz_setup_database {
                                {TYPE => 'DATETIME', NOTNULL => 1});
     }
 
+    # 2005-09-24 - bugreport@peshkin.net, bug 307602
+    # Make sure that default 4G table limit is overridden
+    my $row = $self->selectrow_hashref("SHOW TABLE STATUS LIKE 'attach_data'");
+    if ($$row{'Create_options'} !~ /MAX_ROWS/i) {
+        print "Converting attach_data maximum size to 100G...\n";
+        $self->do("ALTER TABLE attach_data
+                   AVG_ROW_LENGTH=1000000,
+                   MAX_ROWS=100000");
+    }
+
 }
 
 
