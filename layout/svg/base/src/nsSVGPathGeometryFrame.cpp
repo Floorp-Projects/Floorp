@@ -67,8 +67,8 @@
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-  : mUpdateFlags(0), mPropagateTransform(PR_TRUE),
-    mFillGradient(nsnull), mStrokeGradient(nsnull), mFilter(nsnull),
+  : mFilter(nsnull), mUpdateFlags(0), mPropagateTransform(PR_TRUE),
+    mFillGradient(nsnull), mStrokeGradient(nsnull),
     mFillPattern(nsnull), mStrokePattern(nsnull)
 {
 #ifdef DEBUG
@@ -290,6 +290,10 @@ nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
 
     if (markerEnd || markerMid || markerStart) {
+      // need to set this up with the first draw
+      if (!mMarkerRegion)
+        mMarkerRegion = GetCoveredRegion();
+
       float strokeWidth;
       GetStrokeWidth(&strokeWidth);
       
@@ -999,8 +1003,27 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
     if (filter_region) {
       outerSVGFrame->InvalidateRegion(filter_region, PR_TRUE);
     } else {
-      if (dirty_region)
-        outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+      if (mMarkerRegion) {
+        outerSVGFrame->InvalidateRegion(mMarkerRegion, PR_TRUE);
+        mMarkerRegion = nsnull;
+      }
+
+      nsISVGMarkable *markable;
+      CallQueryInterface(this, &markable);
+      
+      if (markable) {
+        nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+        GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
+
+        if (markerEnd || markerMid || markerStart) {
+          mMarkerRegion = GetCoveredRegion();
+          if (mMarkerRegion)
+            outerSVGFrame->InvalidateRegion(mMarkerRegion, PR_TRUE);
+        } else {
+          if (dirty_region)
+            outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+        }
+      }
     }
   }
 }
