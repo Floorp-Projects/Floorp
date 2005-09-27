@@ -159,14 +159,15 @@ struct nsStaticModuleInfo {
  *                         registry preferences and so on; or use
  *                         <CODE>nsnull</CODE> for the default behaviour.
  *
- * @param staticComponents An array of static components. Passing null is
- *                         Equivalent to NS_InitXPCOM2. These static components
- *                         will be registered before any other components.
+ * @param staticComponents An array of static components. Passing null causes
+ *                         default (builtin) components to be registered, if
+ *                         present.
  * @param componentCount   Number of elements in staticComponents
  *
  * @see NS_NewLocalFile
  * @see nsILocalFile
  * @see nsIDirectoryServiceProvider
+ * @see XRE_GetStaticComponents
  *
  * @return NS_OK for success;
  *         NS_ERROR_NOT_INITIALIZED if static globals were not initialized,
