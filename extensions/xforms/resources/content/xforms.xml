@@ -114,8 +114,9 @@
   <binding id="xformswidget-output"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <children/>
+      <children includes="label"/>
       <html:span anonid="content"></html:span>
+      <children/>
     </content>
     
     <implementation implements="nsIXFormsUIWidget">
