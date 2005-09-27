@@ -209,12 +209,12 @@ nsresult nsMimeTypeArray::GetMimeTypes()
     if (rv == NS_OK) {
       PRUint32 i;
       for (i = 0; i < pluginCount; i++) {
-        nsIDOMPlugin* plugin = nsnull;
-        if (pluginArray->Item(i, &plugin) == NS_OK) {
+        nsCOMPtr<nsIDOMPlugin> plugin;
+        if (NS_SUCCEEDED(pluginArray->Item(i, getter_AddRefs(plugin))) &&
+            plugin) {
           PRUint32 mimeTypeCount = 0;
           if (plugin->GetLength(&mimeTypeCount) == NS_OK)
             mMimeTypeCount += mimeTypeCount;
-          NS_RELEASE(plugin);
         }
       }
       // now we know how many there are, start gathering them.
