@@ -1147,8 +1147,30 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char* aString, PRI
 {
 	// Code is borrowed from win32 implementation including comments.
 	// Minor changes are introduced due multibyte/utf-8 nature of char* strings handling in BeOS.
+	char * utf8ptr = (char *)aString;
+	PRInt32 *utf8pos =0;	
+	PRInt32 num_of_glyphs = 0; // Number of glyphs isn't equal to number of bytes in case of UTF-8
+	PRInt32 utf8posbuf[1025];
+	if (aLength < 1025) 
+		utf8pos = utf8posbuf;
+	else 
+		utf8pos = new PRInt32[aLength + 1];
 
-	NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+	// counting number of glyphs (not bytes) in utf-8 string 
+	//and recording positions of first byte for each utf-8 char
+	PRInt32 i = 0;
+	while (i < aLength)
+	{
+		if ( BEGINS_CHAR( utf8ptr[i] ) )
+		{
+			utf8pos[num_of_glyphs] = i;
+			++num_of_glyphs;
+		}
+		i++;
+	}	
+	utf8pos[num_of_glyphs] = i; // IMPORTANT for non-ascii strings for proper last-string-in-block.
+	NS_PRECONDITION(aBreaks[aNumBreaks - 1] == num_of_glyphs, "invalid break array");
+	
 	// If we need to back up this state represents the last place we could
 	// break. We can use this to avoid remeasuring text
 	PRInt32 prevBreakState_BreakIndex = -1; // not known (hasn't been computed)
@@ -1162,32 +1184,11 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char* aString, PRI
 	PRInt32 start = 0;
 	nscoord aveCharWidth;
 	PRInt32 numBytes = 0;
-	PRInt32 num_of_glyphs = 0; // Number of glyphs isn't equal to number of bytes in case of UTF-8
-	PRInt32 *utf8pos =0;
 	// allocating  array for positions of first bytes of utf-8 chars in utf-8 string
 	// from stack if possible
-	PRInt32 utf8posbuf[1025];
-	if (aLength < 1025) 
-		utf8pos = utf8posbuf;
-	else 
-		utf8pos = new PRInt32[aLength + 1];
 	
-	char * utf8ptr = (char *)aString;
-	// counting number of glyphs (not bytes) in utf-8 string 
-	//and recording positions of first byte for each utf-8 char
-	PRInt32 i = 0;
-	while (i < aLength)
-	{
-		if ( BEGINS_CHAR( utf8ptr[i] ) )
-		{
-			utf8pos[num_of_glyphs] = i;
-			++num_of_glyphs;
-		}
-		++i;
-	}
-
 	mFontMetrics->GetAveCharWidth(aveCharWidth);
-	utf8pos[num_of_glyphs] = i; // IMPORTANT for non-ascii strings for proper last-string-in-block.
+
 
 	while (start < num_of_glyphs) 
 	{
