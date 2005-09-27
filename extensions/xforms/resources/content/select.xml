@@ -165,6 +165,7 @@
 
       <field name="_controlArraySize">0</field>
       <field name="_controlArray">new Array()</field>
+      <field name="_defaultHash">null</field>
 
       <method name="_buildSelect">
         <body>
@@ -180,9 +181,9 @@
           // create a hash from the default values so we can store how often
           // we encountered them.  This allows us to figure out later if any were
           // not hit, which requires us to send an event.
-          var defaultHash = new Object();
+          this._defaultHash = new Object();
           for (var run = 0; run < selectedArray.length; run++) {
-            defaultHash[selectedArray[run]] = {hits: 0}
+            this._defaultHash[selectedArray[run]] = {hits: 0}
           }
 
           // clear the UI children
@@ -214,12 +215,7 @@
                 this._addSelectItem(label, value, child);
 
                 // check if we should pre-select this option
-                if (defaultHash[value] != null) {
-                  var control = this._controlArray[this._controlArraySize - 1]
-                  this._setItemSelection(control, true);
-
-                  defaultHash[value].hits++;
-                }
+                this.preselectItem(value);
               } else if (child.localName == "choices") {
                 var optGroup = this._handleChoices(child);
                 this.uiElement.appendChild(optGroup);
@@ -229,7 +225,10 @@
                 var containers = uiElement.anonymousItemSetContent.childNodes;
                 for (var y = 0; y < containers.length; y++) {
                   if (containers[y].nodeType == containers[y].ELEMENT_NODE) {
-                    this._addItemSetItem(containers[y]);
+                    var value = this._addItemSetItem(containers[y]);
+
+                    // check if we should pre-select this option
+                    this.preselectItem(value);
                   }
                 }
               }
@@ -237,8 +236,8 @@
           }
 
           // check if any default values were not found
-          for (var index in defaultHash) {
-            if (defaultHash[index].hits == 0) {
+          for (var index in this._defaultHash) {
+            if (this._defaultHash[index].hits == 0) {
               // XXX: some of default values not found, we need to throw an
               // xforms-out-of-range event, but only if the select is 'closed'.
               // If the select is open, the missing elements should be added
@@ -345,6 +344,9 @@
                 this._controlArray[this._controlArraySize] =
                   {control: child, option: option, type: "item"}
                 this._controlArraySize++;
+
+                // check if we should pre-select this option
+                this.preselectItem(itemValue);
               } else if (child.localName == "choices") {
                 optGroup.appendChild(this._handleChoices(child));
               }
@@ -375,6 +377,8 @@
           this._controlArraySize++;
 
           this.uiElement.appendChild(option);
+
+          return itemValue;
         ]]>
         </body>
       </method>
@@ -434,9 +438,9 @@
           var selectedArray = this.delegate.value.split(" ");
 
           // store the values in a hash for quick access
-          var defaultHash = new Object();
+          this._defaultHash = new Object();
           for (var run = 0; run < selectedArray.length; run++) {
-            defaultHash[selectedArray[run]] = {}
+            this._defaultHash[selectedArray[run]] = {}
           }
 
           // select if found, unselect if not
@@ -445,7 +449,7 @@
           for (var i = 0; i < options.length; i++) {
             var value =
               options[i].control.QueryInterface(Components.interfaces.nsIXFormsSelectChild).value;
-            var selectionValue = (defaultHash[value] != null);
+            var selectionValue = (this._defaultHash[value] != null);
 
             // either a checkbox or an option
             if (options[i].option) {
@@ -496,6 +500,20 @@
         </body>
       </method>
 
+      <method name="preselectItem">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          // check if we should pre-select this option
+          if (this._defaultHash[aValue] != null) {
+            var control = this._controlArray[this._controlArraySize - 1]
+            this._setItemSelection(control, true);
+
+            this._defaultHash[aValue].hits++;
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -639,6 +657,8 @@
                   {control: child, checkbox: item.firstChild, type: "item"}
                 this._controlArraySize++;
 
+                // check if we should pre-select this option
+                this.preselectItem(itemValue);
               } else if (child.localName == "choices") {
                 contentDiv.appendChild(this._handleChoices(child));
               }
@@ -667,6 +687,8 @@
           this._controlArraySize++;
 
           this.uiElement.appendChild(item);
+
+          return itemValue;
         ]]>
         </body>
       </method>
