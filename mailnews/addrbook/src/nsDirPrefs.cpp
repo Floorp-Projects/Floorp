@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1283,6 +1283,10 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 		{
 			rc = idCustomAttributes;
 		}
+    else if (PL_strstr(prefname, "attrmap.") == prefname)
+    {
+      rc = idAttributeMap;
+    }
 		break;
 
 	case 'b':
