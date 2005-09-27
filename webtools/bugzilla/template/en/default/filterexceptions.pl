@@ -611,14 +611,6 @@
   'comp.bug_count'
 ],
 
-'admin/components/list.html.tmpl' => [
-  'cgi.query_string'
-],
-
-'admin/components/select-product.html.tmpl' => [
-  'cgi.query_string'
-],
-
 'admin/milestones/confirm-delete.html.tmpl' => [
   'bug_count'
 ],

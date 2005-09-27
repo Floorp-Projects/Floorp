@@ -17,13 +17,12 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
-  # milestones: array of hashes having the following properties:
-  #   - name: string; The name of the milestone.
-  #   - sortkey: number; The sortkey used to order the milestone.
-  #
+  # milestones: array of milestone objects
+  # showbugcounts: if defined, then bug counts should be included in the table
   # product: string; the name of the product we are editing milestones for
   #%]
 
@@ -42,6 +41,8 @@
   [%- product FILTER url_quote %]&amp;milestone=%%name%%[% END %]
 [% delete_contentlink = BLOCK %]editmilestones.cgi?action=del&amp;product=
   [%- product FILTER url_quote %]&amp;milestone=%%name%%[% END %]
+[% bug_count_contentlink = BLOCK %]buglist.cgi?target_milestone=%%name%%&amp;product=
+  [%- product FILTER url_quote %][% END %]
 
 
 [% columns = [
@@ -53,14 +54,28 @@
      { 
        name => "sortkey"
        heading => "Sortkey"
-     },
-     {
+     }
+   ]
+%]
+
+[% IF showbugcounts %]
+
+  [% columns.push({
+       name => "bug_count"
+       heading => "$terms.Bugs"
+       align => "right"
+       contentlink => bug_count_contentlink
+     })
+  %]
+
+[% END %]
+
+[% columns.push({
        name => "action"
        heading => "Action"
        content => "Delete"
        contentlink => delete_contentlink
-     }
-   ]
+     })
 %]
 
 [%# We want to override the usual 'Delete' link for the default
@@ -82,6 +97,13 @@
 %]
 
 <p>
+
+[% IF ! showbugcounts %]
+
+  <p><a href="editmilestones.cgi?product=[% product FILTER url_quote %]&amp;showbugcounts=1">
+      Redisplay table with [% terms.bug %] counts (slower)</a></p>
+
+[% END %]
 
 [% PROCESS admin/milestones/footer.html.tmpl
   no_edit_other_milestones_link = 1

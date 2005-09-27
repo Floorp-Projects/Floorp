@@ -53,6 +53,7 @@ my $product_name   = trim($cgi->param('product')     || '');
 my $milestone_name = trim($cgi->param('milestone')   || '');
 my $sortkey        = trim($cgi->param('sortkey')     || 0);
 my $action         = trim($cgi->param('action')      || '');
+my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
 #
 # product = '' -> Show nice list of products
@@ -62,6 +63,7 @@ unless ($product_name) {
     
     my @products = Bugzilla::Product::get_all_products();
 
+    $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'products'} = \@products;
     $template->process("admin/milestones/select-product.html.tmpl",
                        $vars)
@@ -81,6 +83,7 @@ unless ($action) {
     my @milestones =
         Bugzilla::Milestone::get_milestones_by_product($product->id);
 
+    $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product->name;
     $vars->{'milestones'} = \@milestones;
     $vars->{'default_milestone'} = $product->default_milestone;

@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gavin Shelley <bugzilla@chimpychompy.org>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -24,9 +25,6 @@
   # showbugcounts: if defined, then bug counts should be included in the table
   # product: string; the name of the product we are editing components for
   #%]
-
-[% USE Bugzilla %]
-[% cgi = Bugzilla.cgi %]
 
 [% PROCESS global/variables.none.tmpl %]
 
@@ -120,8 +118,8 @@
 
 [% IF ! showbugcounts %]
 
-<p><a href="editcomponents.cgi?showbugcounts=1&amp;[% cgi.query_string %]">
-    Redisplay table with [% terms.bug %] counts (slower)</a></p>
+  <p><a href="editcomponents.cgi?product=[% product FILTER url_quote %]&amp;showbugcounts=1">
+      Redisplay table with [% terms.bug %] counts (slower)</a></p>
 
 [% END %]
 

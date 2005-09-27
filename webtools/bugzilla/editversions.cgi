@@ -62,6 +62,7 @@ $user->in_group('editcomponents')
 my $product_name = trim($cgi->param('product') || '');
 my $version_name = trim($cgi->param('version') || '');
 my $action       = trim($cgi->param('action')  || '');
+my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
 #
 # product = '' -> Show nice list of products
@@ -70,6 +71,8 @@ my $action       = trim($cgi->param('action')  || '');
 unless ($product_name) {
 
     my @products = Bugzilla::Product::get_all_products();
+
+    $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'products'} = \@products;
     $template->process("admin/versions/select-product.html.tmpl",
                        $vars)
@@ -88,6 +91,7 @@ unless ($action) {
     my @versions =
         Bugzilla::Version::get_versions_by_product($product->id);
 
+    $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product->name;
     $vars->{'versions'} = \@versions;
     $template->process("admin/versions/list.html.tmpl",
