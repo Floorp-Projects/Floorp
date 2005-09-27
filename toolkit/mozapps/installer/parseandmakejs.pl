@@ -55,5 +55,7 @@ push(@INC, $top_path);
 require CFGParser;
 CFGParser::ParseInstallerCfg($cfgFile);
 
+$ENV{WIZ_userAgent} = "$ENV{WIZ_userAgentShort} ($ENV{WIZ_versionLanguage})";
+
 system("perl $top_path/makejs.pl $jstFile $ENV{WIZ_versionProduct} $stageDir") == 0 ||
   die("Could not create ini file.");
