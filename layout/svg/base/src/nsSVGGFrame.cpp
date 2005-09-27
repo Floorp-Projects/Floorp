@@ -198,6 +198,24 @@ nsSVGGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
       }
     }
   }
+
+  if (*hit) {
+    PRBool clipHit = PR_TRUE;;
+
+    nsIURI *aURI;
+    nsSVGClipPathFrame *clip = NULL;
+    aURI = GetStyleSVGReset()->mClipPath;
+    if (aURI)
+      NS_GetSVGClipPathFrame(&clip, aURI, mContent);
+
+    if (clip) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
+      clip->ClipHitTest(this, matrix, x, y, &clipHit);
+    }
+
+    if (!clipHit)
+      *hit = nsnull;
+  }
   
   return *hit ? NS_OK : NS_ERROR_FAILURE;
 }
