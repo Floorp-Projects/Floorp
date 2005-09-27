@@ -97,7 +97,7 @@ pref("app.update.silent", false);
 pref("app.update.url", "https://aus2.mozilla.org/update/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml");
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.  TODO: Change this URL
-pref("app.update.url.manual", "http://www.mozilla.org/update");
+pref("app.update.url.manual", "http://www.mozilla.org/products/firefox/");
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
 
