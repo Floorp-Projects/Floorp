@@ -122,7 +122,7 @@ LOCAL_INCLUDES += -I$(srcdir)/../eudora/src
 ifndef GNU_CC
 LOCAL_INCLUDES += -I$(srcdir)/../oexpress \
 	-I$(srcdir)/../outlook/src \
-  -I$(NULL)
+	$(NULL)
 endif
 endif
 
