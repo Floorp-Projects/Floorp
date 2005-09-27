@@ -310,31 +310,3 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACS
 
   return mi;
 }
-
-nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar* platformAppPath, nsIFile ** aFile)
-{
-	LOG(("-- nsOSHelperAppService::GetFileTokenForPath: '%s'\n", NS_ConvertUCS2toUTF8(platformAppPath).get()));
-	nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-	nsresult rv = NS_OK;
-
-	if (!localFile) return NS_ERROR_NOT_INITIALIZED;
-
-	// A BPath will convert relative paths automagically
-	BPath path;
-	PRBool exists = PR_FALSE;
-	if (path.SetTo(NS_ConvertUCS2toUTF8(platformAppPath).get()) == B_OK) {
-		localFile->InitWithPath(NS_ConvertUTF8toUCS2(path.Path()));
-		localFile->Exists(&exists);
-	}
-
-	if (exists) {
-		rv = NS_OK;
-	} else {
-		rv = NS_ERROR_NOT_AVAILABLE;
-	}
-
-	*aFile = localFile;
-	NS_IF_ADDREF(*aFile);
-
-	return rv;
-}
