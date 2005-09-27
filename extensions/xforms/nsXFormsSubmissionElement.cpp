@@ -298,12 +298,7 @@ nsXFormsSubmissionElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   if (type.EqualsLiteral("xforms-submit")) {
     // If the submission is already active, do nothing.
     if (!mSubmissionActive && NS_FAILED(Submit())) {
-      mSubmissionActive = PR_FALSE;
-      if (mActivator) {
-        mActivator->SetDisabled(PR_FALSE);
-        mActivator = nsnull;
-      }
-      nsXFormsUtils::DispatchEvent(mElement, eEvent_SubmitError);
+      EndSubmit(PR_FALSE);
     }
 
     *aHandled = PR_TRUE;
@@ -439,17 +434,24 @@ nsXFormsSubmissionElement::OnStopRequest(nsIRequest *request, nsISupports *ctx, 
 
   mPipeIn = 0;
 
+  EndSubmit(succeeded);
+
+  return NS_OK;
+}
+
+// private methods
+
+void
+nsXFormsSubmissionElement::EndSubmit(PRBool aSucceeded)
+{
   mSubmissionActive = PR_FALSE;
   if (mActivator) {
     mActivator->SetDisabled(PR_FALSE);
     mActivator = nsnull;
   }
-  nsXFormsUtils::DispatchEvent(mElement, succeeded ?
+  nsXFormsUtils::DispatchEvent(mElement, aSucceeded ?
                                eEvent_SubmitDone : eEvent_SubmitError);
-  return NS_OK;
 }
-
-// private methods
 
 already_AddRefed<nsIModelElementPrivate>
 nsXFormsSubmissionElement::GetModel()
@@ -627,8 +629,13 @@ nsXFormsSubmissionElement::Submit()
   //    iterator)
   nsCOMPtr<nsIDOMNode> data;
   rv = GetBoundInstanceData(getter_AddRefs(data));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && data, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  // No data to submit
+  if (!data) {
+    EndSubmit(PR_FALSE);
+    return NS_OK;
+  }
 
   // 3. revalidate selected instance data (only for namespaces considered for
   //    serialization)

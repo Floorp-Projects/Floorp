@@ -133,6 +133,14 @@ private:
   nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource,
                          nsStringHashSet* aPrefixHash);
   nsresult GetIncludeNSPrefixesAttr(nsStringHashSet** aHash);
+
+  /**
+   * Send xforms-submit-done/-error, depending on |aSucceeded|
+   *
+   * @param aSucceeded        Did submit succeed?
+   *
+   */
+  void EndSubmit(PRBool aSucceeded);
 };
 
 NS_HIDDEN_(nsresult)
