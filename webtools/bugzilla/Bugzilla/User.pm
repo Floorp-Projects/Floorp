@@ -198,13 +198,19 @@ sub queries {
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare(q{ SELECT
                              DISTINCT name, query, linkinfooter,
-                                      CASE WHEN whine_queries.id 
-                                      IS NOT NULL THEN 1 ELSE 0 END,
+                                      CASE WHEN whine_queries.id IS NOT NULL
+                                      THEN 1 ELSE 0 END,
                                       UPPER(name) AS uppername 
                                  FROM namedqueries
+                            LEFT JOIN whine_events
+                                   ON whine_events.owner_userid =
+                                      namedqueries.userid
                             LEFT JOIN whine_queries
-                                   ON whine_queries.query_name = name
-                                WHERE userid=?
+                                   ON whine_queries.query_name =
+                                      namedqueries.name
+                                  AND whine_queries.eventid = 
+                                      whine_events.id
+                                WHERE namedqueries.userid=?
                              ORDER BY uppername});
     $sth->execute($self->{id});
 
