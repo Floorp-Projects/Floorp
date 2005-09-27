@@ -2772,8 +2772,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   // Show(TRUE) will be ignored until a larger resize has happened
   if (aWidth <= 1 || aHeight <= 1)
   {
-    aWidth = 1;
-    aHeight = 1;
     mIsTooSmall = PR_TRUE;
   }
   else
