@@ -93,10 +93,6 @@
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
                     setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
-                                event.stopPropagation();"
-                    ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
-                                event.stopPropagation();"
                     xbl:inherits="onnewtab"
                     ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
                     onclosetab="var node = this.parentNode;
@@ -1451,13 +1447,14 @@
         <![CDATA[
           if (aEvent.target.localName == "tab") {
             aXferData.data = new TransferData();
-            aXferData.data.addDataForFlavour("text/x-moz-tab", aEvent.target._tPos);
             
             var URI = this.getBrowserForTab(aEvent.target).currentURI;
             if (URI) {
               aXferData.data.addDataForFlavour("text/unicode", URI.spec);
               aXferData.data.addDataForFlavour("text/x-moz-url", URI.spec + "\n" + aEvent.target.label);
               aXferData.data.addDataForFlavour("text/html", '<a href="' + URI.spec + '">' + aEvent.target.label + '</a>');
+            } else {
+              aXferData.data.addDataForFlavour("text/unicode", "about:blank");
             }
           }
         ]]>
@@ -1507,10 +1504,12 @@
           <![CDATA[
             if (aDragSession.sourceNode && aDragSession.sourceNode.parentNode == this.mTabContainer) {
               var newIndex = this.getNewIndex(aEvent);
-              if (newIndex > aXferData.data) 
+              var oldIndex = aDragSession.sourceNode._tPos;
+
+              if (newIndex > oldIndex) 
                 newIndex--;
-              if (newIndex != aXferData.data) 
-                this.moveTabTo(this.mTabs[aXferData.data], newIndex);
+              if (newIndex != oldIndex) 
+                this.moveTabTo(this.mTabs[oldIndex], newIndex);
             } else {
               var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
 
@@ -1559,7 +1558,6 @@
         <body>
         <![CDATA[
           var flavourSet = new FlavourSet();
-          flavourSet.appendFlavour("text/x-moz-tab"); // this has to be first to support DnD reordering
           flavourSet.appendFlavour("text/x-moz-url");
           flavourSet.appendFlavour("text/unicode");
           flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
