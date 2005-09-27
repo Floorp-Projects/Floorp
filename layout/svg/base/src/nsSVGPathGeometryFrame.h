@@ -149,6 +149,7 @@ protected:
   nsISVGRendererPathGeometry *GetGeometry();
 
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
+  nsCOMPtr<nsISVGRendererRegion> mMarkerRegion;
   nsISVGFilterFrame *mFilter;
 
 private:
