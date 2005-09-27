@@ -332,6 +332,8 @@ var gDownloadActionsWindow = {
       catch (e) {
         customHandler = null;
       }      
+      if (customHandler && !customHandler.exists())
+        customHandler = null;
       var mimeType = this._getLiteralValue(type, "value");
       var typeInfo = this._mimeSvc.getFromTypeAndExtension(mimeType, null);
 
