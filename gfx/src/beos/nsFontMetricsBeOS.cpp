@@ -113,12 +113,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   mFont = aFont;
 
-  float       app2dev, app2twip;
-  app2dev = aContext->AppUnitsToDevUnits();
-  app2twip = aContext->DevUnitsToTwips();
-
-  app2twip *= app2dev;
-  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont.size * app2twip)))) / app2twip;
+  float app2twip = aContext->DevUnitsToTwips();
 
   // process specified fonts from first item of the array.
   // stop processing next when a real font found;
@@ -210,8 +205,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     && !(mFontHandle.Face() & B_ITALIC_FACE)) 
     mFontHandle.SetShear(105.0);
 
-  mFontHandle.SetSize( rounded * app2dev );
-  fflush(stdout);
+  mFontHandle.SetSize(mFont.size/app2twip);
 #ifdef NOISY_FONTS
 #ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / app2twip);
@@ -411,37 +405,9 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFontHandle(nsFontHandle &aHandle)
 nsresult 
 nsFontMetricsBeOS::FamilyExists(const nsString& aName) 
 { 
-  //Do we really need it here? BeOS supports UTF-8 overall natively,
-  //including UTF-8 fonts names with non-ascii chars inside
-  if (!IsASCII(aName)) 
-    return NS_ERROR_FAILURE; 
- 
-  nsCAutoString name; 
-  name.AssignWithConversion(aName.get()); 
-  ToLowerCase(name); 
-  PRBool  isthere = PR_FALSE; 
- 
-  int32 numFamilies = count_font_families(); 
-  for (int32 i = 0; i < numFamilies; i++) 
-  { 
-    font_family family; 
-    uint32 flags; 
-    if (get_font_family(i, &family, &flags) == B_OK) 
-    { 
-      if (name.Equals(family) == 0) 
-      {
-        isthere = PR_TRUE; 
-        break; 
-      } 
-    } 
-  } 
- 
-  //printf("%s there? %s\n", name.get(), isthere?"Yes":"No" ); 
- 
-  if (PR_TRUE == isthere) 
-    return NS_OK; 
-  else 
-    return NS_ERROR_FAILURE; 
+  NS_ConvertUTF16toUTF8 family(aName);
+  printf("exists? %s", (font_family)family.get()); 
+  return  (count_font_styles((font_family)family.get()) > 0) ? NS_OK : NS_ERROR_FAILURE;
 } 
  
 // The Font Enumerator 
