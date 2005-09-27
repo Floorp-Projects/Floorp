@@ -258,8 +258,12 @@ var ltnCalendarTreeView = {
     {
         if (col.id == "col-calendar-Checkbox") {
             var cal = getCalendars()[row];
+            // We key off this to set the images for the checkboxes
             if (getCompositeCalendar().getCalendar(cal.uri)) {
                 properties.AppendElement(ltnGetAtom("checked"));
+            }
+            else {
+                properties.AppendElement(ltnGetAtom("unchecked"));
             }
         }
     },

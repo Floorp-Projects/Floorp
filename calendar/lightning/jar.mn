@@ -64,6 +64,8 @@ classic.jar:
 #expand  skin/classic/calendar/calendar-toolbar.css	(/calendar/base/themes/__THEME__/calendar-toolbar.css)
 #expand  skin/classic/calendar/toolbar-large.png	(/calendar/base/themes/__THEME__/toolbar-large.png)
 #expand  skin/classic/calendar/toolbar-small.png	(/calendar/base/themes/__THEME__/toolbar-small.png)
+#expand  skin/classic/calendar/checkbox_checked.png	(/calendar/resources/skin/classic/unifinder/checkbox_checked.png)
+#expand  skin/classic/calendar/checkbox_unchecked.png	(/calendar/resources/skin/classic/unifinder/checkbox_unchecked.png)
 #expand  skin/classic/calendar/dot.png	(/calendar/resources/skin/classic/dot.png)
 #expand  skin/classic/calendar/dot_selected.png	(/calendar/resources/skin/classic/dot_selected.png)
 #expand  skin/classic/calendar/all_day_event.png	(/calendar/resources/skin/classic/all_day_event.png)

@@ -20,7 +20,10 @@ calendar-todo-item[selected="true"] {
   color: HighlightText;
 }
 
-#calendarTree > treechildren::-moz-tree-cell(checked) {
-  background: #ff0000;
-  list-style-image: url("chrome://calendar/skin/dot.png");
+treechildren::-moz-tree-image(col-calendar-Checkbox, checked) {
+   list-style-image: url("chrome://calendar/skin/checkbox_checked.png");
+}
+
+treechildren::-moz-tree-image(col-calendar-Checkbox, unchecked) {
+   list-style-image: url("chrome://calendar/skin/checkbox_unchecked.png");
 }

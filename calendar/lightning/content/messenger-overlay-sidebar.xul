@@ -56,7 +56,9 @@
           </hbox>
           <tree id="calendarTree" hidecolumnpicker="true" seltype="single" onfocus="selectedCalendarPane(event)" flex="1" onselect="ltnSidebarCalendarSelected(this);" context="calendartree-context-menu">
             <treecols>
-              <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" />
+              <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" width="18" >
+                <image />
+              </treecol>
               <treecol id="col-calendar-Calendar" label="Calendar" flex="1"/>
             </treecols>
             <treechildren>
