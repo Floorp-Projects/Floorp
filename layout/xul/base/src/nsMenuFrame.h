@@ -181,6 +181,8 @@ public:
 
   static PRBool IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways);
 
+  static nsIMenuParent *GetContextMenu();
+
 protected:
 
   virtual void RePositionPopup(nsBoxLayoutState& aState);

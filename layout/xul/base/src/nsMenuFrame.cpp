@@ -490,6 +490,14 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     // Let the menu parent know we're the new item.
     mMenuParent->SetCurrentMenuItem(this);
     
+    // we need to check if we really became the current menu
+    // item or not
+    nsIMenuFrame *realCurrentItem = mMenuParent->GetCurrentMenuItem();
+    if (realCurrentItem != this) {
+      // we didn't (presumably because a context menu was active)
+      return NS_OK;
+    }
+
     // If we're a menu (and not a menu item),
     // kick off the timer.
     if (!IsDisabled() && !isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
@@ -1282,13 +1290,17 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   // Our timer has fired.
   if (aTimer == mOpenTimer.get()) {
     if (!mMenuOpen && mMenuParent) {
-      nsAutoString active;
-      mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-      if (active.EqualsLiteral("true")) {
-        // We're still the active menu. Make sure all submenus/timers are closed
-        // before opening this one
-        mMenuParent->KillPendingTimers();
-        OpenMenu(PR_TRUE);
+      // make sure we didn't open a context menu in the meantime
+      // (i.e. the user right-clicked while hovering over a submenu)
+      if (nsMenuFrame::GetContextMenu() == nsnull) {
+        nsAutoString active;
+        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
+        if (active.Equals(NS_LITERAL_STRING("true"))) {
+          // We're still the active menu. Make sure all submenus/timers are closed
+          // before opening this one
+          mMenuParent->KillPendingTimers();
+          OpenMenu(PR_TRUE);
+        }
       }
     }
     mOpenTimer->Cancel();
@@ -2048,3 +2060,20 @@ nsMenuFrame::GetBoxInfo(nsPresContext* aPresContext, const nsHTMLReflowState& aR
 }
 */
 
+nsIMenuParent*
+nsMenuFrame::GetContextMenu()
+{
+  if (!nsMenuFrame::sDismissalListener)
+    return nsnull;
+
+  nsIMenuParent *menuParent = nsMenuFrame::sDismissalListener->GetCurrentMenuParent();
+  if (!menuParent)
+    return nsnull;
+
+  PRBool isContextMenu;
+  menuParent->GetIsContextMenu(isContextMenu);
+  if (isContextMenu)
+    return menuParent;
+
+  return nsnull;
+}

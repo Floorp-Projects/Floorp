@@ -1458,16 +1458,10 @@ nsMenuPopupFrame::Enter()
 nsIMenuParent*
 nsMenuPopupFrame::GetContextMenu()
 {
-  if (mIsContextMenu || !nsMenuFrame::sDismissalListener)
+  if (mIsContextMenu)
     return nsnull;
 
-  nsIMenuParent *menuParent = nsMenuFrame::sDismissalListener->GetCurrentMenuParent();
-  if (!menuParent)
-    return nsnull;
-
-  PRBool isContextMenu;
-  menuParent->GetIsContextMenu(isContextMenu);
-  return isContextMenu ? menuParent : nsnull;
+  return nsMenuFrame::GetContextMenu();
 }
 
 nsIMenuFrame*

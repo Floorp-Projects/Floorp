@@ -543,6 +543,10 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 
   PRBool wasOpen = PR_FALSE;
   
+  // check if there's an open context menu, we ignore this
+  if (nsMenuFrame::GetContextMenu())
+    return NS_OK;
+
   // Unset the current child.
   if (mCurrentMenu) {
     mCurrentMenu->MenuIsOpen(wasOpen);
@@ -652,6 +656,15 @@ nsMenuBarFrame::RecentlyRolledUp(nsIMenuFrame *aMenuFrame, PRBool *aJustRolledUp
 NS_IMETHODIMP
 nsMenuBarFrame::HideChain()
 {
+  // XXX hack if a context menu is active, do an Escape, which is
+  // currently bugged and destroys everything.  We need to close
+  // the context menu first, otherwise SetCurrentMenuItem above
+  // would get blocked.
+  if (nsMenuFrame::GetContextMenu()) {
+    PRBool dummy;
+    mCurrentMenu->Escape(dummy);
+  }
+
   // Stop capturing rollups
   // (must do this during Hide, which happens before the menu item is executed,
   // since this reinstates normal event handling.)
