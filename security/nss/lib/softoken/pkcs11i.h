@@ -325,39 +325,56 @@ struct SFTKSessionStr {
  * password, isLoggedIn, ssoLoggedIn, and sessionCount,
  * and pwCheckLock serializes the key database password checks in
  * NSC_SetPIN and NSC_Login.
+ *
+ * Each of the fields below has the following lifetime as commented
+ * next to the fields:
+ *   invariant  - This value is set when the slot is first created and
+ * never changed until it is destroyed.
+ *   per load   - This value is set when the slot is first created, or 
+ * when the slot is used to open another directory. Between open and close
+ * this field does not change.
+ *   variable - This value changes through the normal process of slot operation.
+ *      - reset. The value of this variable is cleared during an open/close 
+ *   cycles.
+ *      - preserved. The value of this variable is preserved over open/close
+ *   cycles.
  */
 struct SFTKSlotStr {
-    CK_SLOT_ID		slotID;
-    PZLock		*slotLock;
-    PZLock		**sessionLock;
-    unsigned int	numSessionLocks;
-    unsigned long	sessionLockMask;
-    PZLock		*objectLock;
-    PRLock		*pwCheckLock;
-    SECItem		*password;
-    PRBool		hasTokens;
-    PRBool		isLoggedIn;
-    PRBool		ssoLoggedIn;
-    PRBool		needLogin;
-    PRBool		DB_loaded;
-    PRBool		readOnly;
-    PRBool		optimizeSpace;
-    NSSLOWCERTCertDBHandle *certDB;
-    NSSLOWKEYDBHandle	*keyDB;
-    int			minimumPinLen;
-    PRInt32		sessionIDCount;  /* atomically incremented */
-    int			sessionIDConflict;  /* not protected by a lock */
-    int			sessionCount;
-    PRInt32             rwSessionCount; /* set by atomic operations */
-    int			tokenIDCount;
-    int			index;
-    PLHashTable		*tokenHashTable;
-    SFTKObject		**tokObjects;
-    unsigned int	tokObjHashSize;
-    SFTKSession		**head;
-    unsigned int	sessHashSize;
-    char		tokDescription[33];
-    char		slotDescription[64];
+    CK_SLOT_ID		slotID;			/* invariant */
+    PZLock		*slotLock;		/* invariant */
+    PZLock		**sessionLock;		/* invariant */
+    unsigned int	numSessionLocks;	/* invariant */
+    unsigned long	sessionLockMask;	/* invariant */
+    PZLock		*objectLock;		/* invariant */
+    PRLock		*pwCheckLock;		/* invariant */
+    SECItem		*password;		/* variable - reset */
+    PRBool		present;		/* variable -set */
+    PRBool		hasTokens;		/* per load */
+    PRBool		isLoggedIn;		/* variable - reset */
+    PRBool		ssoLoggedIn;		/* variable - reset */
+    PRBool		needLogin;		/* per load */
+    PRBool		DB_loaded;		/* per load */
+    PRBool		readOnly;		/* per load */
+    PRBool		optimizeSpace;		/* invariant */
+    NSSLOWCERTCertDBHandle *certDB;		/* per load */
+    NSSLOWKEYDBHandle	*keyDB;			/* per load */
+    int			minimumPinLen;		/* per load */
+    PRInt32		sessionIDCount;		/* atomically incremented */
+                                        	/* (preserved) */
+    int			sessionIDConflict; 	/* not protected by a lock */
+                                            	/* (preserved) */
+    int			sessionCount;           /* variable - reset */
+    PRInt32             rwSessionCount;    	/* set by atomic operations */
+                                          	/* (reset) */
+    int			tokenIDCount;      	/* variable - perserved */
+    int			index;			/* invariant */
+    PLHashTable		*tokenHashTable;	/* invariant */
+    SFTKObject		**tokObjects;		/* variable - reset */
+    unsigned int	tokObjHashSize;		/* invariant */
+    SFTKSession		**head;			/* variable -reset */
+    unsigned int	sessHashSize;		/* invariant */
+    char		tokDescription[33];	/* per load */
+    char		slotDescription[64];	/* invariant */
 };
 
 /*
@@ -538,14 +555,21 @@ typedef struct sftk_parametersStr {
 
 SEC_BEGIN_PROTOS
 
+/* shared functions between PKCS11.c and SFTKFIPS.c */
 extern int nsf_init;
 extern CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS);
 extern CK_RV nsc_CommonGetSlotList(CK_BBOOL tokPresent, 
 	CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount, int moduleIndex);
-/* shared functions between PKCS11.c and SFTKFIPS.c */
-extern CK_RV SFTK_SlotInit(char *configdir,sftk_token_parameters *params, 
-							int moduleIndex);
+
+/* slot initialization, reinit, shutdown and destruction */
+extern CK_RV SFTK_SlotInit(char *configdir,
+			sftk_token_parameters *params, int moduleIndex);
+extern CK_RV SFTK_SlotReInit(SFTKSlot *slot, char *configdir,
+			sftk_token_parameters *params, int moduleIndex);
+extern CK_RV SFTK_DestroySlotData(SFTKSlot *slot);
+extern CK_RV SFTK_ShutdownSlot(SFTKSlot *slot);
+
 
 /* internal utility functions used by pkcs11.c */
 extern SFTKAttribute *sftk_FindAttribute(SFTKObject *object,
@@ -591,6 +615,9 @@ extern SFTKObject *sftk_ObjectFromHandle(CK_OBJECT_HANDLE handle,
 					 SFTKSession *session);
 extern void sftk_AddSlotObject(SFTKSlot *slot, SFTKObject *object);
 extern void sftk_AddObject(SFTKSession *session, SFTKObject *object);
+/* clear out all the existing object ID to database key mappings.
+ * used to reinit a token */
+extern CK_RV SFTK_ClearTokenKeyHashTable(SFTKSlot *slot);
 
 extern CK_RV sftk_searchObjectList(SFTKSearchResults *search,
 				   SFTKObject **head, unsigned int size,
@@ -602,7 +629,7 @@ extern void sftk_FreeObjectList(SFTKObjectListElement *objectList);
 extern void sftk_FreeSearch(SFTKSearchResults *search);
 extern CK_RV sftk_handleObject(SFTKObject *object, SFTKSession *session);
 
-extern SFTKSlot *sftk_SlotFromID(CK_SLOT_ID slotID);
+extern SFTKSlot *sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all);
 extern SFTKSlot *sftk_SlotFromSessionHandle(CK_SESSION_HANDLE handle);
 extern SFTKSession *sftk_SessionFromHandle(CK_SESSION_HANDLE handle);
 extern void sftk_FreeSession(SFTKSession *session);
@@ -658,9 +685,14 @@ CK_RV sftk_DBInit(const char *configdir, const char *certPrefix,
 	 	const char *keyPrefix, PRBool readOnly, PRBool noCertDB, 
 		PRBool noKeyDB, PRBool forceOpen, 
 		NSSLOWCERTCertDBHandle **certDB, NSSLOWKEYDBHandle **keyDB);
+NSSLOWCERTCertDBHandle *sftk_getCertDB(SFTKSlot *slot);
+NSSLOWKEYDBHandle *sftk_getKeyDB(SFTKSlot *slot);
+void sftk_freeCertDB(NSSLOWCERTCertDBHandle *certHandle);
+void sftk_freeKeyDB(NSSLOWKEYDBHandle *keyHandle);
 
-void sftk_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
-		     NSSLOWKEYDBHandle *keyHandle);
+/* helper function which calls nsslowkey_FindKeyByPublicKey after safely
+ * acquiring a reference to the keydb from the slot */
+NSSLOWKEYPrivateKey *sftk_FindKeyByPublicKey(SFTKSlot *slot, SECItem *dbKey);
 
 const char *sftk_EvaluateConfigDir(const char *configdir, char **domain);
 

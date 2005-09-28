@@ -37,7 +37,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.9 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cdbhdl.h,v 1.10 2005/09/28 17:12:17 relyea%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -45,6 +45,7 @@
 #include "nspr.h"
 #include "mcom_db.h"
 #include "pcertt.h"
+#include "prtypes.h"
 
 /*
  * Handle structure for open certificate databases
@@ -53,7 +54,10 @@ struct NSSLOWCERTCertDBHandleStr {
     DB *permCertDB;
     PZMonitor *dbMon;
     PRBool dbVerify;
+    PRInt32  ref; /* reference count */
 };
+
+#define nsslowcert_reference(x) (PR_AtomicIncrement(&(x)->ref) , (x))
 
 #ifdef DBM_USING_NSPR
 #define NO_RDONLY	PR_RDONLY

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydbi.h,v 1.6 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: keydbi.h,v 1.7 2005/09/28 17:12:17 relyea%netscape.com Exp $ */
 
 #ifndef _KEYDBI_H_
 #define _KEYDBI_H_
@@ -56,6 +56,8 @@ struct NSSLOWKEYDBHandleStr {
     char *appname;		/* multiaccess app name */
     char *dbname;		/* name of the openned DB */
     PRBool readOnly;		/* is the DB read only */
+    PRLock *lock;
+    PRInt32 ref;		/* reference count */
 };
 
 /*

@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.52 2005/08/12 22:19:19 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.53 2005/09/28 17:12:17 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -60,6 +60,7 @@
 #include "plhash.h"
 
 #include "cdbhdl.h"
+#include "pkcs11i.h"
 
 /* forward declaration */
 NSSLOWCERTCertificate *
@@ -3394,12 +3395,15 @@ AddCertToPermDB(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTCertificate *cert,
     
     state = 2;
 
-    cert->dbhandle = handle;
+    /* "Change" handles if necessary */
+    if (cert->dbhandle) {
+	sftk_freeCertDB(cert->dbhandle);
+    }
+    cert->dbhandle = nsslowcert_reference(handle);
     
     /* add to or create new subject entry */
     if ( subjectEntry ) {
 	/* REWRITE BASED ON SUBJECT ENTRY */
-	cert->dbhandle = handle;
 	rv = AddPermSubjectNode(subjectEntry, cert, nickname);
 	if ( rv != SECSuccess ) {
 	    goto loser;
@@ -4321,7 +4325,7 @@ DecodeACert(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry)
 	goto loser;
     }
 
-    cert->dbhandle = handle;
+    cert->dbhandle = nsslowcert_reference(handle);
     cert->dbEntry = entry;
     cert->trust = &entry->trust;
 
@@ -4375,7 +4379,7 @@ DecodeTrustEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry,
     if (trust == NULL) {
 	return trust;
     }
-    trust->dbhandle = handle;
+    trust->dbhandle = nsslowcert_reference(handle);
     trust->dbEntry = entry;
     trust->dbKey.data = pkcs11_copyStaticData(dbKey->data,dbKey->len,
 				trust->dbKeySpace, sizeof(trust->dbKeySpace));
@@ -5009,6 +5013,9 @@ DestroyCertificate(NSSLOWCERTCertificate *cert, PRBool lockdb)
 	 */
 	if ( lockdb && handle ) {
 	    nsslowcert_LockDB(handle);
+	    /* keep a reference until we unlock, so handle won't disappear
+	     * before we are through with it */
+	    nsslowcert_reference(handle);
 	}
 
         nsslowcert_LockCertRefCount(cert);
@@ -5042,11 +5049,15 @@ DestroyCertificate(NSSLOWCERTCertificate *cert, PRBool lockdb)
 		certListHead = cert;
 	    }
 	    nsslowcert_UnlockFreeList();
+	    if (handle) {
+	        sftk_freeCertDB(handle);
+	    }
 		
 	    cert = NULL;
         }
 	if ( lockdb && handle ) {
 	    nsslowcert_UnlockDB(handle);
+	    sftk_freeCertDB(handle);
 	}
     }
 
