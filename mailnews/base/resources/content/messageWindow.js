@@ -316,6 +316,7 @@ function OnLoadMessageWindow()
 
 function OnLoadMessageWindowDelayed(loadCustomMessage)
 {
+  gDBView.suppressMsgDisplay = false;
   if (loadCustomMessage)
     gDBView.loadMessageByUrl(gCurrentMessageUri);
   else
@@ -366,6 +367,10 @@ function CreateView(originalView)
       msgDatabase = null;
       dbFolderInfo = null;
    }
+  }
+  else
+  {
+    viewType = nsMsgViewType.eShowSearch;
   }
 
   // create a db view

@@ -683,6 +683,9 @@ function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType
       case nsMsgViewType.eShowQuickSearchResults:
           dbviewContractId += "quicksearch";
           break;
+      case nsMsgViewType.eShowSearch:
+          dbviewContractId += "search";
+          break;
       case nsMsgViewType.eShowThreadsWithUnread:
           dbviewContractId += "threadswithunread";
           break;
