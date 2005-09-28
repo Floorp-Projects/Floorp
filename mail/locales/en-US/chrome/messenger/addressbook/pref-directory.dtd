@@ -36,8 +36,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!-- LOCALIZATION NOTE (window.title) : do not translate "LDAP" in below line -->
-<!ENTITY window.title              "LDAP Directory Servers">
-<!ENTITY pane.title                "Directory">
+<!ENTITY pref.ldap.window.title    "LDAP Directory Servers">
 <!ENTITY directory.label           "Add a directory">
 <!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
 <!ENTITY directories.label         "LDAP Directory Server:">
