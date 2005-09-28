@@ -67,14 +67,6 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {
 }
 
-
-void nsAbAutoCompleteSession::ResetMatchTypeConters()
-{
-    PRInt32 i;
-    for (i = 0; i < LAST_MATCH_TYPE; i++)
-      mMatchTypeCounters[i] = 0;
-}
-
 PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results)
 {
     nsresult rv;
@@ -124,13 +116,13 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
                                      const PRUnichar* pNotesStr, 
                                      const PRUnichar* pDirName,
                                      PRUint32 aPopularityIndex,
-                                     PRBool bIsMailList, MatchType type,
+                                     PRBool bIsMailList, PRBool pDefaultMatch,
                                      nsIAutoCompleteResults* results)
 {
   nsresult rv;
   PRUnichar* fullAddrStr = nsnull;
 
-  if (type == DEFAULT_MATCH)
+  if (pDefaultMatch)
   {
     if (mDefaultDomain[0] == 0)
       return;
@@ -196,7 +188,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
     nsCOMPtr<nsIAutoCompleteItem> newItem = do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, aPopularityIndex, bIsMailList, type);
+      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, aPopularityIndex, bIsMailList);
       NS_IF_ADDREF(param);
       newItem->SetParam(param);
       NS_IF_RELEASE(param);
@@ -220,7 +212,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
       // if this isn't a default match, set the class name so we can style 
       // this cell with the local addressbook icon (or whatever)
       //
-      rv = newItem->SetClassName(type == DEFAULT_MATCH ? "default-match" :
+      rv = newItem->SetClassName(pDefaultMatch ? "default-match" :
                                  "local-abook");
       if (NS_FAILED(rv)) {
         NS_WARNING("nsAbAutoCompleteSession::AddToResult():"
@@ -236,15 +228,8 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
         rv = array->Count(&nbrOfItems);
 
         PRInt32 insertPosition = 0;
-        PRInt32 i = 0;
-        
-        // find the start fo the search results for our particular
-        // match type and then insert into that group of results 
-        // sorted by the popularity index
-        while (i < type)
-          insertPosition += mMatchTypeCounters[i++];
 
-        while (insertPosition < nbrOfItems)
+        for (; insertPosition < nbrOfItems && !pDefaultMatch; insertPosition++)
         {
           nsCOMPtr<nsISupports> currentItemParams;
           nsCOMPtr<nsIAutoCompleteItem> resultItem;
@@ -252,24 +237,16 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
                                            getter_AddRefs(resultItem));
           if (NS_FAILED(rv))
             continue;
-              
           rv = resultItem->GetParam(getter_AddRefs(currentItemParams));
           if (NS_FAILED(rv))
             continue;
 
           param = (nsAbAutoCompleteParam *)(void *)currentItemParams;
-            
-          // sort the search results by popularity index within each match sub group
-          if (aPopularityIndex > param->mPopularityIndex || type != param->mType)
+          if (aPopularityIndex > param->mPopularityIndex) // sort the search results by popularity index 
             break;
-          else
-            insertPosition++;
         }
 
         rv = array->InsertElementAt(newItem, insertPosition);
-        
-        if (NS_SUCCEEDED(rv))
-          mMatchTypeCounters[type]++;
       }
     }
   }    
@@ -293,11 +270,11 @@ nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr,
                                     const PRUnichar* displayName,
                                     const PRUnichar* firstName,
                                     const PRUnichar* lastName,
-                                    const PRUnichar* emailAddress,
-                                    MatchType* matchType)
+                                    const PRUnichar* emailAddress)
 {
   const PRUnichar * fullString;
   PRUint32 fullStringLen;
+  PRBool isAMatch = PR_FALSE;
   
   if (searchStr->mFirstPartLen > 0 && searchStr->mSecondPartLen == 0)
   {
@@ -312,103 +289,34 @@ nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr,
 
   nsDependentString fullStringStr(fullString, fullStringLen);
   
-  // First check for a Nickname exact match
-  if (nickName &&
-      fullStringStr.Equals(nsDependentString(nickName),
-                           nsCaseInsensitiveStringComparator()))
-  {
-    *matchType = NICKNAME_EXACT_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a display Name exact match
-  if (displayName &&
-      fullStringStr.Equals(nsDependentString(displayName),
-                           nsCaseInsensitiveStringComparator()))
-  {
-    *matchType = NAME_EXACT_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a fisrt Name exact match
-  if (firstName &&
-      fullStringStr.Equals(nsDependentString(firstName),
-                           nsCaseInsensitiveStringComparator()))
-  {
-    *matchType = NAME_EXACT_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a last Name exact match
-  if (lastName &&
-      fullStringStr.Equals(nsDependentString(lastName),
-                           nsCaseInsensitiveStringComparator()))
-  {
-    *matchType = NAME_EXACT_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a Email exact match
-  if (emailAddress &&
-      fullStringStr.Equals(nsDependentString(emailAddress),
-                           nsCaseInsensitiveStringComparator()))
-  {
-    *matchType = EMAIL_EXACT_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a NickName partial match
-  if (nickName && CommonPrefix(nickName, fullString, fullStringLen))
-  {
-    *matchType = NICKNAME_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a display Name partial match
-  if (displayName && CommonPrefix(displayName, fullString, fullStringLen))
-  {
-    *matchType = NAME_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a first Name partial match
-  if (firstName && CommonPrefix(firstName, fullString, fullStringLen))
-  {
-    *matchType = NAME_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a last Name partial match
-  if (lastName && CommonPrefix(lastName, fullString, fullStringLen))
-  {
-    *matchType = NAME_MATCH;
-    return PR_TRUE;
-  }
-
-  // Then check for a Email partial match
-  if (emailAddress && CommonPrefix(emailAddress, fullString, fullStringLen))
-  {
-    *matchType = EMAIL_MATCH;
-    return PR_TRUE;
-  }
-  
+  // Compare various properties looking for a match (exact or partial)
+  if ( (nickName &&
+        fullStringStr.Equals(nsDependentString(nickName), nsCaseInsensitiveStringComparator())) || 
+       (displayName &&
+        fullStringStr.Equals(nsDependentString(displayName), nsCaseInsensitiveStringComparator())) ||
+       (firstName &&
+        fullStringStr.Equals(nsDependentString(firstName), nsCaseInsensitiveStringComparator())) ||
+       (lastName &&
+        fullStringStr.Equals(nsDependentString(lastName), nsCaseInsensitiveStringComparator())) || 
+       (emailAddress &&
+        fullStringStr.Equals(nsDependentString(emailAddress), nsCaseInsensitiveStringComparator())) ||
+       (nickName && CommonPrefix(nickName, fullString, fullStringLen)) ||
+       (displayName && CommonPrefix(displayName, fullString, fullStringLen)) || 
+       (firstName && CommonPrefix(firstName, fullString, fullStringLen)) ||
+       (lastName && CommonPrefix(lastName, fullString, fullStringLen)) ||
+       (emailAddress && CommonPrefix(emailAddress, fullString, fullStringLen)) )
+    isAMatch = PR_TRUE;
   //If we have a muti-part search string, look for a partial match with first name and last name or reverse
-  if (searchStr->mFirstPartLen && searchStr->mSecondPartLen)
+  else if (searchStr->mFirstPartLen && searchStr->mSecondPartLen)
   {
     if (((firstName && CommonPrefix(firstName, searchStr->mFirstPart, searchStr->mFirstPartLen)) &&
         (lastName && CommonPrefix(lastName, searchStr->mSecondPart, searchStr->mSecondPartLen))) ||
-        
-        
         ((lastName && CommonPrefix(lastName, searchStr->mFirstPart, searchStr->mFirstPartLen)) &&
-        (firstName && CommonPrefix(firstName, searchStr->mSecondPart, searchStr->mSecondPartLen)))
-        )
-    {
-      *matchType = NAME_MATCH;
-      return PR_TRUE;
-    }
+        (firstName && CommonPrefix(firstName, searchStr->mSecondPart, searchStr->mSecondPartLen))))
+      isAMatch = PR_TRUE;
   }
 
-  return PR_FALSE;
+  return isAMatch;
 }
 
 nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results)
@@ -509,12 +417,10 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
             if (!bIsMailList && pEmailStr[i].IsEmpty())
               continue;
 
-            MatchType matchType;
             if (CheckEntry(searchStr, pNickNameStr.get(), 
                                       pDisplayNameStr.get(), 
                                       pFirstNameStr.get(), 
-                                      pLastNameStr.get(), pEmailStr[i].get(), 
-                                      &matchType))
+                                      pLastNameStr.get(), pEmailStr[i].get()))
             {
               nsXPIDLString pDirName;
               if (mAutoCompleteCommentColumn == 1)
@@ -527,8 +433,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
               AddToResult(pNickNameStr.get(), pDisplayNameStr.get(), 
                           pFirstNameStr.get(), pLastNameStr.get(), 
                           pEmailStr[i].get(), pNotesStr.get(), 
-                          pDirName.get(), popularityIndex, bIsMailList, matchType, 
-                          results);
+                          pDirName.get(), popularityIndex, bIsMailList, PR_FALSE, results);
             }
           }
         }
@@ -699,12 +604,11 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
 
             param = (nsAbAutoCompleteParam *)(void *)item;
             
-            MatchType matchType;
-            if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress, &matchType))
+            if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress))
                 AddToResult(param->mNickName, param->mDisplayName, 
                             param->mFirstName, param->mLastName, 
                             param->mEmailAddress, param->mNotes, 
-                            param->mDirName, param->mPopularityIndex, param->mIsMailList, matchType,
+                            param->mDirName, param->mPopularityIndex, param->mIsMailList, PR_FALSE,
                             results);
         }
         return NS_OK;
@@ -761,7 +665,6 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         
     nsAbAutoCompleteSearchString searchStrings(uSearchString);
     
-    ResetMatchTypeConters();       
     nsCOMPtr<nsIAutoCompleteResults> results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
@@ -802,7 +705,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
             PRUnichar emptyStr = 0;
             AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, 
                         &emptyStr, &emptyStr, &emptyStr, 0 /* popularity index */, PR_FALSE, 
-                        DEFAULT_MATCH, results);
+                        PR_TRUE, results);
             addedDefaultItem = PR_TRUE;
         }
 
