@@ -120,9 +120,9 @@ secmod_parseTokens(char *tokenParams, sftk_parameters *parsed)
 	tokenIndex += next;
 
 	tokens[i].slotID = secmod_argDecodeNumber(name);
-        tokens[i].readOnly = PR_TRUE;
-	tokens[i].noCertDB = PR_TRUE;
-	tokens[i].noKeyDB = PR_TRUE;
+        tokens[i].readOnly = PR_FALSE;
+	tokens[i].noCertDB = PR_FALSE;
+	tokens[i].noKeyDB = PR_FALSE;
 	if (!secmod_argIsBlank(*tokenIndex)) {
 	    char *args = secmod_argFetchValue(tokenIndex,&next);
 	    tokenIndex += next;

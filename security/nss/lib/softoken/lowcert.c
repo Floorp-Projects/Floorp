@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.19 2005/08/01 18:23:55 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.20 2005/09/28 17:12:17 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -449,6 +449,7 @@ nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, char *nickname)
     cert->subjectKeyID.len = 0;
     cert->dbEntry = NULL;
     cert ->trust = NULL;
+    cert ->dbhandle = NULL;
 
     /* generate and save the database key for the cert */
     rv = nsslowcert_KeyFromIssuerAndSNStatic(cert->certKeySpace,

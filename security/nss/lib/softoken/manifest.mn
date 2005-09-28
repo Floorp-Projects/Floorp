@@ -58,6 +58,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
 	pk11pars.h \
+	pkcs11ni.h \
 	$(NULL)
 
 CSRCS = \
