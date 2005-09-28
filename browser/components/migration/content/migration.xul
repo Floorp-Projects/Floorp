@@ -41,6 +41,7 @@
  
 <wizard id="migrationWizard"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        windowtype="Browser:MigrationWizard"
         title="&migrationWizard.title;"
         onload="MigrationWizard.init()"
         onunload="MigrationWizard.uninit()"
