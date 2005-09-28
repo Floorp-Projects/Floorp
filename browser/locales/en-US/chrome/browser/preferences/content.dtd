@@ -9,8 +9,6 @@
 
 <!ENTITY  enableImages.label                "Load Images">
 <!ENTITY  enableImages.accesskey            "I">
-<!ENTITY  forOriginatingSiteOnly.label      "for the originating web site only">
-<!ENTITY  forOriginatingSiteOnly.accesskey  "w">
 <!ENTITY  popupReject.label                 "Block Popup Windows">
 <!ENTITY  popupReject.accesskey             "B">
 <!ENTITY  enableXPInstall.label             "Allow web sites to install software">
