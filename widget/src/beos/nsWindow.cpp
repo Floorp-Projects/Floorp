@@ -717,8 +717,14 @@ NS_METHOD nsWindow::Show(PRBool bState)
 				}
 				else
 				{
-					if (mView->Window() && mView->Window()->IsHidden())
-						mView->Window()->Show();
+						if (mView->Window())
+						{
+							// bring menu to current workspace - Bug 310293
+							mView->Window()->SetWorkspaces(B_CURRENT_WORKSPACE);
+							if (mView->Window()->IsHidden())
+								mView->Window()->Show();
+						}
+					}
 				}
 				break;
 			}
