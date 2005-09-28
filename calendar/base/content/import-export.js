@@ -102,14 +102,7 @@ function loadEventsFromFile()
         {
            inputStream.init( fp.file, MODE_RDONLY, 0444, {} );
 
-           var scriptableInputStream = 
-               Components.classes["@mozilla.org/scriptableinputstream;1"]
-                         .createInstance(nsIScriptableInputStream);
-           scriptableInputStream.init(inputStream);
-
-           // XXX Convert the stream to unicode. Or should the importer do that?
            items = importer.importFromStream(inputStream, {});
-           scriptableInputStream.close();
            inputStream.close();
         }
         catch(ex)

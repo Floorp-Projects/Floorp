@@ -67,12 +67,15 @@ function ics_importFromStream(aStream, aCount) {
                                .getService(Components.interfaces.nsIConverterInputStream);
     convStream.init(aStream, 'UTF-8', 0, 0x0000);
 
-    var str = {};
-    convStream.readString(-1, str);
+    var tmpStr = {};
+    var str = "";
+    while (convStream.readString(-1, tmpStr)) {
+        str += tmpStr.value;
+    }
 
     icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
                        .getService(Components.interfaces.calIICSService);
-    var calComp = icssrv.parseICS(str.value);
+    var calComp = icssrv.parseICS(str);
     var subComp = calComp.getFirstSubcomponent("ANY");
     while (subComp) {
         switch (subComp.componentType) {
