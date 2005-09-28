@@ -101,12 +101,6 @@
                         preference="permissions.default.image"
                         onsyncfrompreference="return gContentPane.readEnableImagesPref();"
                         onsynctopreference="return gContentPane.writeEnableImagesPref();"/>
-              <checkbox id="enableRestricted" class="indent"
-                        label="&forOriginatingSiteOnly.label;" 
-                        accesskey="&forOriginatingSiteOnly.accesskey;"
-                        preference="permissions.default.image"
-                        onsyncfrompreference="return gContentPane.readEnableRestrictedPref();"
-                        onsynctopreference="return gContentPane.writeEnableImagesPref();"/>
             </vbox>
             <vbox>
               <button id="manageImages" label="&exceptions.label;"

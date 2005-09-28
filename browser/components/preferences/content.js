@@ -124,26 +124,13 @@ var gContentPane = {
 
   writeEnableImagesPref: function ()
   { 
-    var enableImages = document.getElementById("enableImages");
-    if (enableImages.checked) {
-      var enableRestricted = document.getElementById("enableRestricted");
-      return enableRestricted.checked ? 3 : 1;
-    }
-    return 2;
+    return (document.getElementById("enableImages").checked) ? 1 : 2;
   },
   
   readEnableImagesPref: function ()
   {
     var pref = document.getElementById("permissions.default.image");
-    var enableRestricted = document.getElementById("enableRestricted");    
-    enableRestricted.disabled = pref.value == 2;
     return (pref.value == 1 || pref.value == 3);
-  },
-  
-  readEnableRestrictedPref: function ()
-  {
-    var pref = document.getElementById("permissions.default.image");
-    return (pref.value == 3);
   },
   
   _exceptionsParams: {
