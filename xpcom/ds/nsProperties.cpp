@@ -42,24 +42,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_AGGREGATED(nsProperties)
-
-NS_METHOD
-nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
-{
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-    if (aIID.Equals(NS_GET_IID(nsISupports)))
-        *aInstancePtr = GetInner();
-    else if (aIID.Equals(NS_GET_IID(nsIProperties)))
-        *aInstancePtr = NS_STATIC_CAST(nsIProperties*, this);
-    else {
-        *aInstancePtr = nsnull;
-        return NS_NOINTERFACE;
-    } 
-
-    NS_ADDREF((nsISupports*)*aInstancePtr);
-    return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsProperties)
+    NS_INTERFACE_MAP_ENTRY(nsIProperties)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
@@ -146,24 +131,6 @@ nsProperties::GetKeys(PRUint32 *count, char ***keys)
     *count = n;
     *keys = k;
     return NS_OK;
-}
-
-NS_METHOD
-nsProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
-
-    nsProperties* props = new nsProperties(aOuter);
-    if (props == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(props);
-    nsresult rv = props->Init();
-    if (NS_SUCCEEDED(rv))
-        rv = props->AggregatedQueryInterface(aIID, aResult);
-
-    NS_RELEASE(props);
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

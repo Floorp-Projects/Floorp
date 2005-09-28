@@ -40,8 +40,6 @@
 #include "nsJVMAuthTools.h"
 #include "nsIHttpAuthManager.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIJVMAUTHTOOLSIID, NS_IJVMAUTHTOOLS_IID);
 static NS_DEFINE_CID(kHttpAuthManagerCID, NS_HTTPAUTHMANAGER_CID);
 
 //---------------------------------------------------
@@ -94,46 +92,9 @@ nsJVMAuthTools::~nsJVMAuthTools(void)
 {
 }
 
-NS_METHOD
-nsJVMAuthTools::Create(nsISupports* outer,
-                       const nsIID& aIID,
-                       void* *aInstancePtr)
-{
-    if (!aInstancePtr)
-        return NS_ERROR_INVALID_POINTER;
-    *aInstancePtr = nsnull;
-
-    if (outer && !aIID.Equals(kISupportsIID))
-        return NS_ERROR_INVALID_ARG; 
-
-    nsJVMAuthTools* authtools = new nsJVMAuthTools(outer);
-    if (authtools == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = authtools->AggregatedQueryInterface(aIID, aInstancePtr);
-    if(NS_FAILED(rv))
-        delete authtools;
-
-    return rv;
-}
-
-NS_METHOD
-nsJVMAuthTools::AggregatedQueryInterface(const nsIID& aIID,
-                                         void** aInstancePtr)
-{
-    if (aIID.Equals(kIJVMAUTHTOOLSIID)) {
-        *aInstancePtr = this;
-        AddRef();
-        return NS_OK;
-    }
-    
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = GetInner();
-        NS_ADDREF((nsISupports*)*aInstancePtr);
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsJVMAuthTools)
+    NS_INTERFACE_MAP_ENTRY(nsIJVMAuthTools)
+NS_INTERFACE_MAP_END
 
 NS_METHOD
 nsJVMAuthTools::GetAuthenticationInfo(const char* protocol,

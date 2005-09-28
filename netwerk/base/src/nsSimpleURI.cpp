@@ -56,8 +56,6 @@ static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsSimpleURI methods:
 
@@ -72,13 +70,13 @@ nsSimpleURI::~nsSimpleURI()
 
 NS_IMPL_AGGREGATED(nsSimpleURI)
 
-NS_IMETHODIMP
+nsresult
 nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = GetInner();
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
+        *aInstancePtr = InnerObject();
     } else if (aIID.Equals(kThisSimpleURIImplementationCID) || // used by Equals
                aIID.Equals(NS_GET_IID(nsIURI))) {
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
@@ -362,28 +360,6 @@ nsSimpleURI::GetOriginCharset(nsACString &result)
     result.Truncate();
     return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-NS_METHOD
-nsSimpleURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-     NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
-
-    nsSimpleURI* url = new nsSimpleURI(aOuter);
-    if (url == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = url->AggregatedQueryInterface(aIID, aResult);
-
-     if (NS_FAILED(rv))
-         delete url;
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 
 //----------------------------------------------------------------------------
 // nsSimpleURI::nsIClassInfo

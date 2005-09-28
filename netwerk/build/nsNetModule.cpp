@@ -108,6 +108,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSyncStreamListener, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
+NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsLoadGroup, Init)
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern NS_METHOD
@@ -228,6 +230,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStdURLParser)
 
 #include "nsStandardURL.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
+
+NS_GENERIC_AGGREGATED_CONSTRUCTOR(nsSimpleURI)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -656,7 +660,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_SIMPLEURI_CLASSNAME,
       NS_SIMPLEURI_CID,
       NS_SIMPLEURI_CONTRACTID,
-      nsSimpleURI::Create },
+      nsSimpleURIConstructor },
     { NS_ASYNCSTREAMCOPIER_CLASSNAME,
       NS_ASYNCSTREAMCOPIER_CID,
       NS_ASYNCSTREAMCOPIER_CONTRACTID,
@@ -704,7 +708,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_LOADGROUP_CLASSNAME,
       NS_LOADGROUP_CID,
       NS_LOADGROUP_CONTRACTID,
-      nsLoadGroup::Create },
+      nsLoadGroupConstructor },
     { NS_LOCALFILEINPUTSTREAM_CLASSNAME, 
       NS_LOCALFILEINPUTSTREAM_CID,
       NS_LOCALFILEINPUTSTREAM_CONTRACTID,

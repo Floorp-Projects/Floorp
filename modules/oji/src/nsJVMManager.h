@@ -184,9 +184,6 @@ public:
     NS_IMETHOD
     GetClasspathAdditions(const char* *result);
 
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-
     nsIJVMPlugin* GetJVMPlugin(void) { return fJVM; }
 
     /* Unlike the nsIJVMPlugin::StartupJVM, this version handles putting

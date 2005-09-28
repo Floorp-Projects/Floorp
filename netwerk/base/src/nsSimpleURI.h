@@ -64,9 +64,6 @@ public:
     nsSimpleURI(nsISupports* outer);
     virtual ~nsSimpleURI();
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
 protected:
     nsCString mScheme;
     nsCString mPath;

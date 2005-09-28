@@ -63,9 +63,6 @@ public:
     NS_DECL_AGGREGATED
     NS_DECL_NSIJVMAUTHTOOLS
     
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-    
     nsJVMAuthTools(nsISupports* outer);
     virtual ~nsJVMAuthTools(void);
 };

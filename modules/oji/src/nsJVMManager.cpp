@@ -345,26 +345,6 @@ nsJVMManager::PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async)
     return rv;
 }
 
-NS_METHOD
-nsJVMManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
-{
-	 if (!aInstancePtr)
-		  return NS_ERROR_INVALID_POINTER;
-	 *aInstancePtr = nsnull;
-
-    if (outer && !aIID.Equals(kISupportsIID))
-        return NS_ERROR_INVALID_ARG; 
-    nsJVMManager* jvmmgr = new nsJVMManager(outer);
-    if (jvmmgr == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-	 nsresult rv = jvmmgr->AggregatedQueryInterface(aIID, aInstancePtr);
-	 if(NS_FAILED(rv))
-		  delete jvmmgr;
-
-	 return rv;
-}
-
 nsJVMManager::nsJVMManager(nsISupports* outer)
     : fJVM(NULL), fStatus(nsJVMStatus_Enabled),
       fDebugManager(NULL), fJSJavaVM(NULL),
@@ -399,7 +379,7 @@ nsJVMManager::~nsJVMManager()
     }
 }
 
-NS_METHOD
+nsresult
 nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (aIID.Equals(kIJVMManagerIID)) {
@@ -418,7 +398,7 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
     if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = GetInner();
+        *aInstancePtr = InnerObject();
         NS_ADDREF((nsISupports*)*aInstancePtr);
         return NS_OK;
     }

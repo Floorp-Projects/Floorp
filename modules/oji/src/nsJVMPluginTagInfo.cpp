@@ -43,7 +43,6 @@
 #undef Bool
 #endif
 
-static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,25 +65,9 @@ nsJVMPluginTagInfo::~nsJVMPluginTagInfo(void)
 }
 
 NS_IMPL_AGGREGATED(nsJVMPluginTagInfo)
-
-NS_METHOD
-nsJVMPluginTagInfo::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	 if(!aInstancePtr)
-	     return NS_ERROR_INVALID_POINTER;
-
-    if (aIID.Equals(kIJVMPluginTagInfoIID))
-	     *aInstancePtr = NS_STATIC_CAST(nsIJVMPluginTagInfo*, this);
-	 else if (aIID.Equals(NS_GET_IID(nsISupports)))
-	     *aInstancePtr = GetInner();
-	 else	{
-	     *aInstancePtr = nsnull;
-		  return NS_NOINTERFACE;
-	 }
-	 
-	 NS_ADDREF((nsISupports*)aInstancePtr);
-	 return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsJVMPluginTagInfo)
+    NS_INTERFACE_MAP_ENTRY(nsIJVMPluginTagInfo)
+NS_INTERFACE_MAP_END
 
 
 static void
