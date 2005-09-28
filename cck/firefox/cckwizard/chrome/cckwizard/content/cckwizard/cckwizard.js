@@ -835,7 +835,7 @@ function CCKWriteDefaultJS(destdir)
 
 
   // Preferences
-  for (var i=1; i <= 5; i++) {
+  for (var i=1; i <= 10; i++) {
     var prefname = document.getElementById("PreferenceName" + i).value;
     if (prefname && prefname.length) {
       var prefvalue = document.getElementById("PreferenceValue" + i).value;

@@ -564,6 +564,36 @@
         <label>Value:</label>
         <textbox id="PreferenceValue5"/>
       </hbox>
+      <hbox>
+        <label>Preference Name6:</label>
+        <textbox id="PreferenceName6"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue6"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name7:</label>
+        <textbox id="PreferenceName7"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue7"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name8:</label>
+        <textbox id="PreferenceName8"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue8"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name9:</label>
+        <textbox id="PreferenceName9"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue9"/>
+      </hbox>
+      <hbox>
+        <label>Preference Name10:</label>
+        <textbox id="PreferenceName10"/>
+        <label>Value:</label>
+        <textbox id="PreferenceValue10"/>
+      </hbox>
     </groupbox>
   </wizardpage>
 
