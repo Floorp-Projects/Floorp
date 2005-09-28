@@ -42,6 +42,8 @@
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
+#include "nsIEventStateManager.h"
+#include "nsIDocument.h"
 
 #include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
@@ -83,6 +85,34 @@ public:
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus);
 
+  virtual PRInt32 IntrinsicState() const;
+ 
+  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                   const nsAString& aValue, PRBool aNotify)
+  {
+    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
+  }
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify)
+  {
+    nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                                aValue, aNotify);
+      
+    AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
+    return rv;
+  }
+ 
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify)
+  {
+    nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                                  aNotify);
+      
+    AfterSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
+    return rv;
+  }
+
 protected:
 
   /**
@@ -90,6 +120,12 @@ protected:
    * @param aSelectElement the select element [OUT]
    */
   void GetSelect(nsISelectElement **aSelectElement);
+ 
+  /**
+   * Called when an attribute has just been changed
+   */
+  void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                    const nsAString* aValue, PRBool aNotify);
 };
 
 
@@ -164,6 +200,21 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
   }
 }
 
+void
+nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAString* aValue, PRBool aNotify)
+{
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsHTMLAtoms::disabled) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
+      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DISABLED |
+                                     NS_EVENT_STATE_ENABLED);
+    }
+  }
+}
+ 
 nsresult
 nsHTMLOptGroupElement::WillAddOrRemoveChild(nsIContent* aKid,
                                             PRUint32 aIndex,
@@ -180,4 +231,21 @@ nsHTMLOptGroupElement::WillAddOrRemoveChild(nsIContent* aKid,
   }
 
   return nsGenericHTMLElement::WillAddOrRemoveChild(aKid, aIndex, aRemove);
+}
+
+PRInt32
+nsHTMLOptGroupElement::IntrinsicState() const
+{
+  PRInt32 state = nsGenericHTMLElement::IntrinsicState();
+  PRBool disabled;
+  GetBoolAttr(nsHTMLAtoms::disabled, &disabled);
+  if (disabled) {
+    state |= NS_EVENT_STATE_DISABLED;
+    state &= ~NS_EVENT_STATE_ENABLED;
+  } else {
+    state &= ~NS_EVENT_STATE_DISABLED;
+    state |= NS_EVENT_STATE_ENABLED;
+  }
+
+  return state;
 }
