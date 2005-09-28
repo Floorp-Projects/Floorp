@@ -158,7 +158,7 @@ sub GetSpaceRequired()
   my($spaceRequired);
 
   print "   calculating size for $inPath\n";
-  $spaceRequired    = `\"$ENV{WIZ_distInstallPath}/../install/ds32.exe\" /D /L0 /A /S /C 32768 $inPath`;
+  $spaceRequired    = `\"$ENV{WIZ_distInstallPath}/../install/ds32.exe\" -D -L0 -A -S -C 32768 $inPath`;
   $spaceRequired    = int($spaceRequired / 1024);
   $spaceRequired   += 1;
   return($spaceRequired);
