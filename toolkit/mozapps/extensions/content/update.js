@@ -326,6 +326,7 @@ var gFoundPage = {
       checkbox.setAttribute("type", "update");
       checkbox.label        = item.name + " " + item.version;
       checkbox.setAttribute("URL", item.xpiURL);
+      checkbox.setAttribute("hash", item.xpiHash);
       checkbox.infoURL      = "";
       checkbox.internalName = "";
       uri.spec              = item.xpiURL;
@@ -407,6 +408,7 @@ var gInstallingPage = {
     // Get XPInstallManager and kick off download/install 
     // process, registering us as an observer. 
     var items = [];
+    var hashes = [];
     this._objs = [];
     
     this._restartRequired = false;
@@ -418,13 +420,14 @@ var gInstallingPage = {
     for (var i = 0; i < checkboxes.length; ++i) {
       if (checkboxes[i].type == "update" && checkboxes[i].checked) {
         items.push(checkboxes[i].URL);
+        hashes.push(checkboxes[i].hash);
         this._objs.push({ name: checkboxes[i].label });
       }
     }
     
     var xpimgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
                            .createInstance(Components.interfaces.nsIXPInstallManager);
-    xpimgr.initManagerFromChrome(items, items.length, this);
+    xpimgr.initManagerWithHashes(items, hashes, items.length, this);
   },
   
   /////////////////////////////////////////////////////////////////////////////

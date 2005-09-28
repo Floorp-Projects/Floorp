@@ -158,6 +158,9 @@
       <property name="URL" 
                 onget="return this.getAttribute('URL');"
                 onset="this.setAttribute('URL', val); return val;"/>
+      <property name="hash" 
+                onget="return this.getAttribute('hash');"
+                onset="this.setAttribute('hash', val); return val;"/>
       <property name="infoURL" 
                 onget="return this.getAttribute('infoURL');"
                 onset="this.setAttribute('infoURL', val); return val;"/>

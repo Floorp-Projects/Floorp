@@ -372,7 +372,7 @@ interface nsIExtensionManager : nsISupports
  * XXXben work in progress, the name of this interface will change after the
  *        update system is complete, probably to nsIAddon
  */
-[scriptable, uuid(415edb0a-4f2d-485c-9e10-f262b065ab33)]
+[scriptable, uuid(7f952767-427f-402b-8114-f80c95d1980d)]
 interface nsIUpdateItem : nsISupports
 {
   /**
@@ -413,6 +413,13 @@ interface nsIUpdateItem : nsISupports
   readonly attribute AString  xpiURL;
 
   /**
+   * The string Hash for the XPI file. Can be null and if supplied must be in
+   * the format of "type:hash" (see the types in nsICryptoHash and
+   * nsIXPInstallManager::initManagerWithHashes).
+   */
+  readonly attribute AString  xpiHash;
+
+  /**
    * The URL of the icon that can be shown for this item.
    */
   readonly attribute AString  iconURL;
@@ -442,7 +449,7 @@ interface nsIUpdateItem : nsISupports
   void init(in AString id, in AString version, 
             in AString installLocationKey, in AString minAppVersion, 
             in AString maxAppVersion, in AString name,
-            in AString downloadURL, in AString iconURL,
+            in AString downloadURL, in AString xpiHash, in AString iconURL,
             in AString updateURL, in long type);
 
   /**
