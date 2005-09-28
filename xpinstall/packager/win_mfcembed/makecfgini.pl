@@ -273,7 +273,7 @@ sub OutputInstallSize()
   my($installSize);
 
   print "   calculating size for $inPath\n";
-  $installSize    = `$ENV{WIZ_distInstallPath}/../install/ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+  $installSize    = `$ENV{WIZ_distInstallPath}/../install/ds32.exe -D -L0 -A -S -C 32768 $inPath`;
   $installSize   += 32768; # take into account install.js
   $installSize    = int($installSize / 1024);
   $installSize   += 1;
@@ -311,7 +311,7 @@ sub OutputInstallSizeSystem()
       {
         # calculate the size of component installed using ds32.exe in Kbytes
         print "   calculating size for $inPath/$_";
-        $installSizeSystem += `$ENV{WIZ_distInstallPath}/../install/ds32.exe /D /L0 /A /S /C 32768 $inPath/$_`;
+        $installSizeSystem += `$ENV{WIZ_distInstallPath}/../install/ds32.exe -D -L0 -A -S -C 32768 $inPath/$_`;
       }
     }
   }
