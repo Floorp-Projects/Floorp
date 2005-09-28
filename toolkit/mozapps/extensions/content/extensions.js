@@ -319,10 +319,9 @@ XPInstallDownloadManager.prototype = {
       }
       
       var type = isExtensions ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
-      // gExtensionManager.addDownload(displayName, url, iconURL, type);
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
-      item.init(url, " ", "app-profile", "", "", displayName, url, iconURL, "", type);
+      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", type);
       items.push(item);
 
       // Advance the enumerator

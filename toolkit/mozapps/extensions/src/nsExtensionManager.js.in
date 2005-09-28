@@ -287,11 +287,11 @@ function getResourceForID(id) {
  * ...
  */
 function makeItem(id, version, locationKey, minVersion, maxVersion, name, 
-                  updateURL, iconURL, updateRDF, type) {
+                  updateURL, updateHash, iconURL, updateRDF, type) {
   var item = Components.classes["@mozilla.org/updates/item;1"]
                        .createInstance(Components.interfaces.nsIUpdateItem);
   item.init(id, version, locationKey, minVersion, maxVersion, name,
-            updateURL, iconURL, updateRDF, type);
+            updateURL, updateHash, iconURL, updateRDF, type);
   return item;
 }
 
@@ -2501,6 +2501,7 @@ ExtensionManager.prototype = {
                         targetAppInfo ? targetAppInfo.maxVersion : "",
                         getManifestProperty(installManifest, "name"),
                         "", /* XPI Update URL */
+                        "", /* XPI Update Hash */
                         getManifestProperty(installManifest, "iconURL"),
                         getManifestProperty(installManifest, "updateURL"),
                         installData.type);
@@ -3849,7 +3850,10 @@ ExtensionManager.prototype = {
                             aInstallLocationKey, 
                             installData.currentApp.minVersion, 
                             installData.currentApp.maxVersion,
-                            installData.name, "", "", 
+                            installData.name,
+                            "", /* XPI Update URL */
+                            "", /* XPI Update Hash */
+                            "", /* Icon URL */
                             installData.updateURL || "", 
                             installData.type);
         em.update([item], 1, true, this);
@@ -4121,6 +4125,7 @@ ExtensionManager.prototype = {
                   installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
                   availableUpdateURL    : null,
+                  availableUpdateHash   : null,
                   availableUpdateVersion: null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
@@ -4160,6 +4165,7 @@ ExtensionManager.prototype = {
     var props = { installLocation : EM_L(installLocation.name),
                   type            : EM_I(type),
                   availableUpdateURL      : null,
+                  availableUpdateHash     : null,
                   availableUpdateVersion  : null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
@@ -4683,6 +4689,7 @@ ExtensionManager.prototype = {
     this._downloadCount += itemCount;
     
     var urls = [];
+    var hashes = [];
     var txn = new ItemDownloadTransaction(this);
     for (var i = 0; i < itemCount; ++i) {
       var currItem = items[i];
@@ -4690,6 +4697,7 @@ ExtensionManager.prototype = {
       txn.addDownload(currItem, txnID);
       this._transactions.push(txn);
       urls.push(currItem.xpiURL);
+      hashes.push(currItem.xpiHash);
     }
 
     // Kick off the download process for this transaction
@@ -4701,7 +4709,7 @@ ExtensionManager.prototype = {
       var xpimgr = 
           Components.classes["@mozilla.org/xpinstall/install-manager;1"].
           createInstance(Components.interfaces.nsIXPInstallManager);
-      xpimgr.initManagerFromChrome(urls, urls.length, txn);
+      xpimgr.initManagerWithHashes(urls, hashes, urls.length, txn);
     }
     else
       gOS.notifyObservers(txn, "xpinstall-progress", "open");
@@ -5386,7 +5394,7 @@ RDFItemUpdater.prototype = {
   
     // Parse the response RDF
     function UpdateData() {}; 
-    UpdateData.prototype = { version: "0.0", updateLink: null, 
+    UpdateData.prototype = { version: "0.0", updateLink: null, updateHash: null,
                              minVersion: "0.0", maxVersion: "0.0" };
     
     var versionUpdate = new UpdateData();
@@ -5414,7 +5422,10 @@ RDFItemUpdater.prototype = {
                            newestUpdate.minVersion, 
                            newestUpdate.maxVersion, 
                            aLocalItem.name, 
-                           newestUpdate.updateLink, "", "", 
+                           newestUpdate.updateLink,
+                           newestUpdate.updateHash,
+                           "", /* Icon URL */
+                           "", /* RDF Update URL */
                            aLocalItem.type);
       if (this._updater._isValidUpdate(aLocalItem, newerItem))
         ++this._updater._updateCount;
@@ -5436,8 +5447,11 @@ RDFItemUpdater.prototype = {
                           aLocalItem.installLocationKey,
                           versionUpdate.minVersion, 
                           versionUpdate.maxVersion, 
-                          aLocalItem.name, 
-                          "", "", "", 
+                          aLocalItem.name,
+                          "", /* XPI Update URL */
+                          "", /* XPI Update Hash */
+                          "", /* Icon URL */
+                          "", /* RDF Update URL */
                           aLocalItem.type);
       if (this._updater._isValidUpdate(aLocalItem, sameItem)) {
         // Install-time updates are not written to the DS because there is no
@@ -5565,6 +5579,7 @@ RDFItemUpdater.prototype = {
       if (aVersionUpdatesOnly ? result == 0 : result > 0) {
         aUpdateData.version = version;
         aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
+        aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
         aUpdateData.minVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
         aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
       }
@@ -5747,6 +5762,7 @@ ExtensionsDataSource.prototype = {
       return null;
     
     var targetAppInfo = this.getTargetApplicationInfo(id, this);
+    var updateHash = this.getItemProperty(id, "availableUpdateHash");
     return makeItem(id, 
                     this.getItemProperty(id, "version"), 
                     this.getItemProperty(id, "installLocation"),
@@ -5754,6 +5770,7 @@ ExtensionsDataSource.prototype = {
                     targetAppInfo ? targetAppInfo.maxVersion : "",
                     this.getItemProperty(id, "name"),
                     this.getItemProperty(id, "availableUpdateURL"),
+                    updateHash ? updateHash : "",
                     this.getItemProperty(id, "iconURL"), 
                     this.getItemProperty(id, "updateURL"), 
                     this.getItemProperty(id, "type"));
@@ -6483,15 +6500,18 @@ ExtensionsDataSource.prototype = {
   onAddonUpdateEnded: function(addon, status) {
     LOG("Datasource: Addon Update Ended: " + addon.id + ", status: " + status);
     this._updateURLs[addon.id] = status;
-    var url = null, version = null;
+    var url = null, hash = null, version = null;
     var updateAvailable = status == nsIAddonUpdateCheckListener.STATUS_UPDATE;
     if (updateAvailable) {
       url = EM_L(addon.xpiURL);
+      if (addon.xpiHash)
+        hash = EM_L(addon.xpiHash);
       version = EM_L(addon.version);
     }
     this.setItemProperty(addon.id, EM_R("availableUpdateURL"), url);
-    this.updateProperty(addon.id, "availableUpdateURL");
+    this.setItemProperty(addon.id, EM_R("availableUpdateHash"), hash);
     this.setItemProperty(addon.id, EM_R("availableUpdateVersion"), version);
+    this.updateProperty(addon.id, "availableUpdateURL");
     this.updateProperty(addon.id, "displayDescription");
   },
 
@@ -7015,7 +7035,7 @@ UpdateItem.prototype = {
    * See nsIUpdateService.idl
    */
   init: function(id, version, installLocationKey, minAppVersion, maxAppVersion,
-                 name, downloadURL, iconURL, updateURL, type) {
+                 name, downloadURL, xpiHash, iconURL, updateURL, type) {
     this._id                  = id;
     this._version             = version;
     this._installLocationKey  = installLocationKey;
@@ -7023,6 +7043,7 @@ UpdateItem.prototype = {
     this._maxAppVersion       = maxAppVersion;
     this._name                = name;
     this._downloadURL         = downloadURL;
+    this._xpiHash             = xpiHash;
     this._iconURL             = iconURL;
     this._updateURL           = updateURL;
     this._type                = type;
@@ -7038,6 +7059,7 @@ UpdateItem.prototype = {
   get maxAppVersion()     { return this._maxAppVersion;     },
   get name()              { return this._name;              },
   get xpiURL()            { return this._downloadURL;       },
+  get xpiHash()           { return this._xpiHash;           },
   get iconURL()           { return this._iconURL            },
   get updateRDF()         { return this._updateURL;         },
   get type()              { return this._type;              },
@@ -7053,6 +7075,7 @@ UpdateItem.prototype = {
              maxAppVersion      : this._maxAppVersion,
              name               : this._name, 
              xpiURL             : this._downloadURL, 
+             xpiHash            : this._xpiHash,
              iconURL            : this._iconURL, 
              updateRDF          : this._updateURL,
              type               : this._type 
