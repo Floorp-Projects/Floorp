@@ -35,7 +35,6 @@
             var preference = this.childNodes[i];
             if (preference.name == aData) {
               preference.value = preference.valueFromPreferences;
-              this.fireChangedEvent(preference);
             }
           }
         ]]>
@@ -138,13 +137,14 @@
         <parameter name="aUpdate"/>
         <body>
         <![CDATA[
-          this._value = aValue;
-          if (this.instantApply && aUpdate)
-            this.valueFromPreferences = aValue;
-          else if (aUpdate) {
+          if (aUpdate && this.value != aValue) {
+            this._value = aValue;
+            if (this.instantApply)
+              this.valueFromPreferences = aValue;
             this.preferences.fireChangedEvent(this);
           }
-          else {
+          else if (!aUpdate) {
+            this._value = aValue;
             this.updateElements();
           }
           return aValue;
