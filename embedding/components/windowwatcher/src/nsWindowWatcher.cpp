@@ -1744,25 +1744,11 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
   if (argc == 0)
     return NS_OK;
 
-  // copy the extra parameters into a JS Array and attach it
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(aWindow));
   NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
 
-  nsIScriptContext *scriptContext = scriptGlobal->GetContext();
-  nsresult rv = NS_OK;
-
-  if (scriptContext) {
-    JSContext *cx;
-    cx = (JSContext *)scriptContext->GetNativeContext();
-
-    JSObject *args;
-    args = ::JS_NewArrayObject(cx, argc, argv);
-    if (args) {
-      rv = scriptGlobal->SetNewArguments(args);
-    }
-  }
-
-  return rv;
+  // Just ask the global to attach the args for us
+  return scriptGlobal->SetNewArguments(argc, argv);
 }
 
 nsresult

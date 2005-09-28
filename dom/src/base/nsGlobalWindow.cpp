@@ -1639,19 +1639,43 @@ nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 }
 
 nsresult
-nsGlobalWindow::SetNewArguments(JSObject *aArguments)
+nsGlobalWindow::SetNewArguments(PRUint32 aArgc, jsval* aArgv)
 {
-  FORWARD_TO_OUTER(SetNewArguments, (aArguments), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_OUTER(SetNewArguments, (aArgc, aArgv), NS_ERROR_NOT_INITIALIZED);
 
   JSContext *cx;
-  NS_ENSURE_TRUE(aArguments && mContext &&
+  NS_ENSURE_TRUE(mContext &&
                  (cx = (JSContext *)mContext->GetNativeContext()),
                  NS_ERROR_NOT_INITIALIZED);
 
+  if (mArguments) {
+    ::JS_UnlockGCThing(cx, mArguments);
+    mArguments = nsnull;
+  }
+  
+  if (aArgc == 0) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(aArgv, "Must have argv!");
+
+  // Freeze the outer here so that we don't create a bogus new inner
+  // just because we're trying to resolve the Array class on cx.
+  // Resolving it for window.arguments on the outer window should be
+  // fine, I think.
+  Freeze();
+  JSObject *argArray = ::JS_NewArrayObject(cx, aArgc, aArgv);
+  Thaw();
+
+  NS_ENSURE_TRUE(argArray, NS_ERROR_OUT_OF_MEMORY);
+  
+  // Note that currentInner may be non-null if someone's doing a
+  // window.open with an existing window name.
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
+  
+  jsval args = OBJECT_TO_JSVAL(argArray);
 
-  jsval args = OBJECT_TO_JSVAL(aArguments);
-
+  // The object newborn keeps argArray alive across this set.
   if (currentInner && currentInner->mJSObject) {
     if (!::JS_SetProperty(cx, currentInner->mJSObject, "arguments", &args)) {
       return NS_ERROR_FAILURE;
@@ -1660,7 +1684,7 @@ nsGlobalWindow::SetNewArguments(JSObject *aArguments)
 
   // Hold on to the arguments so that we can re-set them once the next
   // document is loaded.
-  mArguments = aArguments;
+  mArguments = argArray;
   ::JS_LockGCThing(cx, mArguments);
 
   return NS_OK;
