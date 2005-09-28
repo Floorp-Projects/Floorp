@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.74 2005/09/14 04:12:50 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3con.c,v 1.75 2005/09/28 07:55:37 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -557,7 +557,8 @@ ssl3_config_match_init(sslSocket *ss)
 	    /* Mark the suites that are backed by real tokens, certs and keys */
 	    suite->isPresent = (PRBool)
 		(((exchKeyType == kt_null) ||
-		    ((!isServer || (svrAuth->SERVERKEY &&
+		   ((!isServer || (svrAuth->serverKeyPair &&
+		                   svrAuth->SERVERKEY &&
 				   svrAuth->serverCertChain)) &&
 		    PK11_TokenExists(kea_alg_defs[exchKeyType]))) &&
 		((cipher_alg == calg_null) || PK11_TokenExists(cipher_mech)));
