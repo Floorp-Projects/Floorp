@@ -1887,32 +1887,8 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow, nsIDOMWi
     // This will tell us whether the command line processing opened a window.
     PRBool windowOpened = PR_FALSE;
 
-    // If there are no command line arguments, then we want to open windows
-    // based on startup prefs (which say to open navigator and/or mailnews
-    // and/or composer), or, open just a Navigator window.  We do the former
-    // if there are no open windows (i.e., we're in turbo mode), the latter
-    // if there are open windows.  Note that we call DoCommandLines in the
-    // case where there are no command line args but there are windows open
-    // (i.e., with heedStartupPrefs==PR_FALSE) despite the fact that it may
-    // not actually do anything in that case.  That way we're covered if the
-    // logic in DoCommandLines changes.  Note that we cover this case below
-    // by opening a navigator window if DoCommandLines doesn't open one.  We
-    // have to cover that case anyway, because DoCommandLines won't open a
-    // window when given "seamonkey -foobar" or the like.
-    PRBool heedStartupPrefs = PR_FALSE;
-    PRInt32 argc = 0;
-    args->GetArgc( &argc );
-    if ( argc <= 1 ) {
-        // Use startup prefs iff there are no windows currently open.
-        nsCOMPtr<nsIDOMWindowInternal> win;
-        GetMostRecentWindow( 0, getter_AddRefs( win ) );
-        if ( !win ) {
-            heedStartupPrefs = PR_TRUE;
-        }
-    }
-
     // Process command line options.
-    rv = DoCommandLines( args, heedStartupPrefs, &windowOpened );
+    rv = DoCommandLines( args, &windowOpened );
 
     // If a window was opened, then we're done.
     // Note that we keep on trying in the unlikely event of an error.
