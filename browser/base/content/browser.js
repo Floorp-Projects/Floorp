@@ -5727,49 +5727,69 @@ function BrowserOpenExtensions(aOpenMode)
   }
 }
 
+function escapeNameValuePair(aName, aValue, aIsFormUrlEncoded)
+{
+  if (aIsFormUrlEncoded)
+    return escape(aName + "=" + aValue);
+  else
+    return escape(aName) + "=" + escape(aValue);
+}
+
 function AddKeywordForSearchField()
 {
   var node = document.popupNode;
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
-  var uri = ioService.newURI(node.ownerDocument.URL, node.ownerDocument.characterSet, null);
 
-  var keywordURL = ioService.newURI(node.form.getAttribute("action"), node.ownerDocument.characterSet, uri);
-  var spec = keywordURL.spec;
-  var postData = "";
-  var i, e;
+  var docURI = makeURI(node.ownerDocument.URL,
+                       node.ownerDocument.characterSet);
 
-  if (node.form.method.toUpperCase() == "POST" &&
-      (node.form.enctype == "application/x-www-form-urlencoded" || node.form.enctype == "")) {
-    for (i=0; i < node.form.elements.length; ++i) {
-      e = node.form.elements[i];
-      if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden" ||
-          e instanceof HTMLTextAreaElement)
-        postData += escape(e.name + "=" + (e == node ? "%s" : e.value)) + "&";
-      else if (e instanceof HTMLSelectElement && e.selectedIndex >= 0)
-        postData += escape(e.name + "=" + e.options[e.selectedIndex].value) + "&";
-      else if ((e.type.toLowerCase() == "checkbox" ||
-	  	e.type.toLowerCase() == "radio") && e.checked)
-	 postData += escape(e.name + "=" + e.value) + "&";
+  var formURI = makeURI(node.form.getAttribute("action"),
+                        node.ownerDocument.characterSet,
+                        docURI);
+
+  var spec = formURI.spec;
+
+  var isURLEncoded = 
+               (node.form.method.toUpperCase() == "POST"
+                && (node.form.enctype == "application/x-www-form-urlencoded" ||
+                    node.form.enctype == ""));
+
+  var el, type;
+  var formData = [];
+
+  for (var i=0; i < node.form.elements.length; i++) {
+    el = node.form.elements[i];
+
+    if (!el.type) // happens with fieldsets
+      continue;
+
+    if (el == node) {
+      formData.push((isURLEncoded) ? escapeNameValuePair(el.name, "%s", true) :
+                                     // Don't escape "%s", just append
+                                     escapeNameValuePair(el.name, "", false) + "%s");
+      continue;
+    }
+
+    type = el.type.toLowerCase();
+    
+    if ((type == "text" || type == "hidden" || type == "textarea") ||
+        ((type == "checkbox" || type == "radio") && el.checked)) {
+      formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
+    } else if (el instanceof HTMLSelectElement && el.selectedIndex >= 0) {
+      for (var j=0; j < el.options.length; j++) {
+        if (el.options[j].selected)
+          formData.push(escapeNameValuePair(el.name, el.options[j].value,
+                                            isURLEncoded));
+      }
     }
   }
-  else {
-    spec += "?" + escape(node.name) + "=%s";
-    for (i=0; i < node.form.elements.length; ++i) {
-      e = node.form.elements[i];
-      if (e == node) // avoid duplication of the target field value, which was populated above.
-        continue;
 
-      if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden" ||
-          e instanceof HTMLTextAreaElement)
-        spec += "&" + escape(e.name) + "=" + escape(e.value);
-      else if (e instanceof HTMLSelectElement && e.selectedIndex >= 0)
-        spec += "&" + escape(e.name) + "=" + escape(e.options[e.selectedIndex].value);
-      else if ((e.type.toLowerCase() == "checkbox" ||
-	  	e.type.toLowerCase() == "radio") && e.checked)
-	 spec += "&" + escape(e.name) + "=" + escape(e.value);
-    }
-  }
+  var postData;
+
+  if (isURLEncoded)
+    postData = formData.join("&");
+  else
+    spec += "?" + formData.join("&");
+
   var dialogArgs = {
     name: "",
     url: spec,
