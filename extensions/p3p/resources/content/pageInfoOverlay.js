@@ -136,7 +136,7 @@ function getLinksFor(aTagName, aAttrName, aWin, aDoc)
   length = elts.length;
   for (i = 0; i < length; ++i)
   {
-    var url = elts[i][aAttrName];
+    var url = elts[i].getAttribute(aAttrName);
     if (url) {
       try {
         // The user sees the links as absolute when mousing over.
