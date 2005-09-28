@@ -45,7 +45,8 @@
 #endif
 
 /* Specify explicitly a symbol for this function, don't try to guess the c++ mangled symbol.  */
-static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args) asm("_PrepareAndDispatch");
+static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args) asm("_PrepareAndDispatch")
+__attribute__((used));
 
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
