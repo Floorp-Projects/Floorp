@@ -49,7 +49,7 @@ foreach my $arg (@ARGV) {
 }
 my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
-getopts("d:s:t:c:j:f:avlD:o:p:xz:e:");
+getopts("d:s:t:c:j:f:avlD:o:p:xz:e");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
