@@ -1166,10 +1166,17 @@ UpdateService.prototype = {
    */
   get canUpdate() {
     try {
-      var file = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
-      if (!file.exists()) {
-        file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
-        file.remove(false);
+      var appDirFile = getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
+      if (!appDirFile.exists()) {
+        appDirFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        appDirFile.remove(false);
+      }
+      var updateDir = getUpdatesDir();
+      var upDirFile = updateDir.clone();
+      upDirFile.append(FILE_PERMS_TEST);
+      if (!upDirFile.exists()) {
+        upDirFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        upDirFile.remove(false);
       }
     }
     catch (e) {
