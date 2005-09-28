@@ -864,7 +864,9 @@ PK11_CopyTokenPrivKeyToSessionPrivKey;
 PK11_FreeSlotListElement;
 PK11_GenerateRandomOnSlot;
 PK11_MapSignKeyType;
+SECMOD_CloseUserDB;
 SECMOD_HasRootCerts;
+SECMOD_OpenUserDB;
 ;+    local:
 ;+       *;
 ;+};

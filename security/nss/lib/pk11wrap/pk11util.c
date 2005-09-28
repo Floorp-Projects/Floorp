@@ -45,6 +45,7 @@
 #include "pki3hack.h"
 #include "secerr.h"
 #include "dev.h"
+#include "pkcs11ni.h"
 
 /* these are for displaying error messages */
 
@@ -1195,4 +1196,245 @@ SECMOD_HasRemovableSlots(SECMODModule *mod)
     }
     SECMOD_ReleaseReadLock(moduleLock);
     return ret;
+}
+
+/*
+ * helper function to actually create and destroy user defined slots
+ */
+static SECStatus
+secmod_UserDBOp(CK_OBJECT_CLASS objClass, const char *sendSpec)
+{
+    PK11SlotInfo *slot = PK11_GetInternalSlot();
+    CK_OBJECT_HANDLE dummy;
+    CK_ATTRIBUTE template[2] ;
+    CK_ATTRIBUTE *attrs = template;
+    SECStatus rv;
+    CK_RV crv;
+
+    PK11_SETATTRS(attrs, CKA_CLASS, &objClass, sizeof(objClass)); attrs++;
+    PK11_SETATTRS(attrs, CKA_NETSCAPE_MODULE_SPEC , (unsigned char *)sendSpec,
+					 strlen(sendSpec)+1); attrs++;
+
+    PORT_Assert(attrs-template <= 2);
+
+
+    PK11_EnterSlotMonitor(slot);
+    crv = PK11_CreateNewObject(slot, slot->session,
+	template, attrs-template, PR_FALSE, &dummy);
+    PK11_ExitSlotMonitor(slot);
+
+    if (crv != CKR_OK) {
+	PK11_FreeSlot(slot);
+	PORT_SetError(PK11_MapError(crv));
+	return SECFailure;
+    }
+    rv = SECMOD_UpdateSlotList(slot->module);
+    PK11_FreeSlot(slot);
+    return rv;
+}
+
+/*
+ * add escapes to protect quote characters...
+ */
+static char *
+nss_addEscape(const char *string, char quote)
+{
+    char *newString = 0;
+    int escapes = 0, size = 0;
+    const char *src;
+    char *dest;
+
+    for (src=string; *src ; src++) {
+        if ((*src == quote) || (*src == '\\')) escapes++;
+        size++;
+    }
+
+    newString = PORT_ZAlloc(escapes+size+1);
+    if (newString == NULL) {
+        return NULL;
+    }
+
+    for (src=string, dest=newString; *src; src++,dest++) {
+        if ((*src == '\\') || (*src == quote)) {
+            *dest++ = '\\';
+        }
+        *dest = *src;
+    }
+
+    return newString;
+}
+
+static char *
+nss_doubleEscape(const char *string)
+{
+    char *round1 = NULL;
+    char *retValue = NULL;
+    if (string == NULL) {
+        goto done;
+    }
+    round1 = nss_addEscape(string,'>');
+    if (round1) {
+        retValue = nss_addEscape(round1,']');
+        PORT_Free(round1);
+    }
+
+done:
+    if (retValue == NULL) {
+        retValue = PORT_Strdup("");
+    }
+    return retValue;
+}
+
+/*
+ * Open a new database using the softoken. The caller is responsible for making
+ * sure the module spec is correct and usable. The caller should ask for one
+ * new database per call if the caller wants to get meaningful information 
+ * about the new database.
+ *
+ * moduleSpec is the same data that you would pass to softoken at 
+ * initialization time under the 'tokens' options. For example, if you were
+ * to specify tokens=<0x4=[configdir='./mybackup' tokenDescription='Backup']>
+ * You would specify "configdir='./mybackup' tokenDescription='Backup'" as your
+ * module spec here. The slot ID will be calculated for you by 
+ * SECMOD_OpenUserDB().
+ *
+ * Typical parameters here are configdir, tokenDescription and flags.
+ *
+ * a Full list is below:
+ *
+ *
+ *  configDir - The location of the databases for this token. If configDir is 
+ *         not specified, and noCertDB and noKeyDB is not specified, the load
+ *         will fail.
+ *   certPrefix - Cert prefix for this token.
+ *   keyPrefix - Prefix for the key database for this token. (if not specified,
+ *         certPrefix will be used).
+ *   tokenDescription - The label value for this token returned in the 
+ *         CK_TOKEN_INFO structure with an internationalize string (UTF8). 
+ *         This value will be truncated at 32 bytes (no NULL, partial UTF8 
+ *         characters dropped). You should specify a user friendly name here
+ *         as this is the value the token will be refered to in most 
+ *         application UI's. You should make sure tokenDescription is unique.
+ *   slotDescription - The slotDescription value for this token returned 
+ *         in the CK_SLOT_INFO structure with an internationalize string 
+ *         (UTF8). This value will be truncated at 64 bytes (no NULL, partial 
+ *         UTF8 characters dropped). This name will not change after the 
+ *         database is closed. It should have some number to make this unique.
+ *   minPWLen - minimum password length for this token.
+ *   flags - comma separated list of flag values, parsed case-insensitive.
+ *         Valid flags are:
+ *              readOnly - Databases should be opened read only.
+ *              noCertDB - Don't try to open a certificate database.
+ *              noKeyDB - Don't try to open a key database.
+ *              forceOpen - Don't fail to initialize the token if the 
+ *                databases could not be opened.
+ *              passwordRequired - zero length passwords are not acceptable 
+ *                (valid only if there is a keyDB).
+ *              optimizeSpace - allocate smaller hash tables and lock tables.
+ *                When this flag is not specified, Softoken will allocate 
+ *                large tables to prevent lock contention. 
+ */
+PK11SlotInfo *
+SECMOD_OpenUserDB(const char *moduleSpec)
+{
+    CK_SLOT_ID slotID = 0;
+    char *escSpec;
+    char *sendSpec;
+    SECStatus rv;
+    SECMODModule *mod;
+    CK_SLOT_ID i, minSlotID, maxSlotID;
+    PRBool found = PR_FALSE;
+
+    if (moduleSpec == NULL) {
+	return NULL;
+    }
+
+    /* NOTE: unlike most PK11 function, this does not return a reference
+     * to the module */
+    mod = SECMOD_GetInternalModule();
+    if (!mod) {
+	/* shouldn't happen */
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return NULL;
+    }
+
+    /* look for a free slot id on the internal module */
+    if (mod->isFIPS) {
+	minSlotID = SFTK_MIN_FIPS_USER_SLOT_ID;
+	maxSlotID = SFTK_MAX_FIPS_USER_SLOT_ID;
+    } else {
+	minSlotID = SFTK_MIN_USER_SLOT_ID;
+	maxSlotID = SFTK_MAX_USER_SLOT_ID;
+    }
+    for (i=minSlotID; i < maxSlotID; i++) {
+	PK11SlotInfo *slot = SECMOD_LookupSlot(mod->moduleID, i);
+	if (slot) {
+	    PRBool present = PK11_IsPresent(slot);
+	    PK11_FreeSlot(slot);
+	    if (present) {
+		continue;
+	    }
+	    /* not present means it's available */
+	}
+	/* it doesn't exist or isn't present, it's available */
+	slotID = i;
+	found = PR_TRUE;
+	break;
+    }
+
+    if (!found) {
+	/* this could happen if we try to open too many slots */
+	PORT_SetError(SEC_ERROR_NO_SLOT_SELECTED);
+	return NULL;
+    }
+
+    /* we've found the slot, now build the moduleSpec */
+
+    escSpec = nss_doubleEscape(moduleSpec);
+    if (escSpec == NULL) {
+	return NULL;
+    }
+    sendSpec = PR_smprintf("tokens=[0x%x=<%s>]", slotID, escSpec);
+    PORT_Free(escSpec);
+
+    if (sendSpec == NULL) {
+	/* PR_smprintf does not set no memory error */
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return NULL;
+    }
+    rv = secmod_UserDBOp(CKO_NETSCAPE_NEWSLOT, sendSpec);
+    PR_smprintf_free(sendSpec);
+    if (rv != SECSuccess) {
+	return NULL;
+    }
+
+    return SECMOD_FindSlotByID(mod, slotID);
+}
+
+/*
+ * close an already opened user database. NOTE: the database must be
+ * in the internal token, and must be one created with SECMOD_OpenUserDB().
+ * Once the database is closed, the slot will remain as an empty slot
+ * until it's used again with SECMOD_OpenUserDB().
+ */
+SECStatus
+SECMOD_CloseUserDB(PK11SlotInfo *slot)
+{
+    SECStatus rv;
+    char *sendSpec;
+
+    if (!slot->isInternal) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    
+    sendSpec = PR_smprintf("tokens=[0x%x=<>]", slot->slotID);
+    if (sendSpec == NULL) {
+	/* PR_smprintf does not set no memory error */
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return SECFailure;
+    }
+    rv = secmod_UserDBOp(CKO_NETSCAPE_DELSLOT, sendSpec);
+    PR_smprintf_free(sendSpec);
+    return rv;
 }

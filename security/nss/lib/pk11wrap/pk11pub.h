@@ -181,6 +181,57 @@ PK11SlotInfo *PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int count,
 PK11SlotInfo *PK11_GetBestSlot(CK_MECHANISM_TYPE type, void *wincx);
 CK_MECHANISM_TYPE PK11_GetBestWrapMechanism(PK11SlotInfo *slot);
 int PK11_GetBestKeyLength(PK11SlotInfo *slot, CK_MECHANISM_TYPE type);
+/*
+ * Open a new database using the softoken. The caller is responsible for making
+ * sure the module spec is correct and usable. The caller should ask for one
+ * new database per call if the caller wants to get meaningful information
+ * about the new database.
+ *
+ * moduleSpec is the same data that you would pass to softoken at
+ * initialization time under the 'tokens' options. For example, if you were
+ * to specify tokens=<0x4=[configdir='./mybackup' tokenDescription='Backup']>
+ * You would specify "configdir='./mybackup' tokenDescription='Backup'" as your
+ * module spec here. The slot ID will be calculated for you by
+ * SECMOD_OpenUserDB().
+ *
+ * Typical parameters here are configdir, tokenDescription and flags.
+ *
+ * a Full list is below:
+ *
+ *
+ *  configDir - The location of the databases for this token. If configDir is
+ *         not specified, and noCertDB and noKeyDB is not specified, the load
+ *         will fail.
+ *   certPrefix - Cert prefix for this token.
+ *   keyPrefix - Prefix for the key database for this token. (if not specified,
+ *         certPrefix will be used).
+ *   tokenDescription - The label value for this token returned in the
+ *         CK_TOKEN_INFO structure with an internationalize string (UTF8).
+ *         This value will be truncated at 32 bytes (no NULL, partial UTF8
+ *         characters dropped). You should specify a user friendly name here
+ *         as this is the value the token will be refered to in most
+ *         application UI's. You should make sure tokenDescription is unique.
+ *   slotDescription - The slotDescription value for this token returned
+ *         in the CK_SLOT_INFO structure with an internationalize string
+ *         (UTF8). This value will be truncated at 64 bytes (no NULL, partial
+ *         UTF8 characters dropped). This name will not change after the
+ *         database is closed. It should have some number to make this unique.
+ *   minPWLen - minimum password length for this token.
+ *   flags - comma separated list of flag values, parsed case-insensitive.
+ *         Valid flags are:
+ *              readOnly - Databases should be opened read only.
+ *              noCertDB - Don't try to open a certificate database.
+ *              noKeyDB - Don't try to open a key database.
+ *              forceOpen - Don't fail to initialize the token if the
+ *                databases could not be opened.
+ *              passwordRequired - zero length passwords are not acceptable
+ *                (valid only if there is a keyDB).
+ *              optimizeSpace - allocate smaller hash tables and lock tables.
+ *                When this flag is not specified, Softoken will allocate
+ *                large tables to prevent lock contention.
+ */
+PK11SlotInfo *SECMOD_OpenUserDB(const char *moduleSpec);
+SECStatus SECMOD_CloseUserDB(PK11SlotInfo *slot);
 
 /*********************************************************************
  *       Mechanism Mapping functions
