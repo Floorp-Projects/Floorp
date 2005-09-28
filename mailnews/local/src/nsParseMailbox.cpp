@@ -1666,6 +1666,7 @@ nsresult nsParseNewMailState::GetTrashFolder(nsIMsgFolder **pTrashFolder)
 void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, PRUint32 msgOffset)
 {
   m_msgMovedByFilter = PR_FALSE;
+  m_curHdrOffset = msgOffset;
 
   if (!m_disableFilters)
   {
