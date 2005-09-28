@@ -2309,11 +2309,19 @@ function updateToolbarStates(toolbarMenuElt)
 function BrowserImport()
 {
 #ifdef XP_MACOSX
-  var features = "centerscreen,chrome,resizable=no";
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var win = wm.getMostRecentWindow("Browser:MigrationWizard");
+  if (win)
+    win.focus();
+  else {
+    window.openDialog("chrome://browser/content/migration/migration.xul",
+                      "migration", "centerscreen,chrome,resizable=no");
+  }
 #else
-  var features = "modal,centerscreen,chrome,resizable=no";
+  window.openDialog("chrome://browser/content/migration/migration.xul",
+                    "migration", "modal,centerscreen,chrome,resizable=no");
 #endif
-  window.openDialog("chrome://browser/content/migration/migration.xul", "migration", features);
 }
 
 function BrowserFullScreen()
