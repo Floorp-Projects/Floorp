@@ -185,7 +185,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object)
 NS_IMPL_INT_ATTR(nsHTMLAppletElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAppletElement, TabIndex, tabindex, 0)
+NS_IMPL_INT_ATTR(nsHTMLAppletElement, TabIndex, tabindex)
   
 PRBool
 nsHTMLAppletElement::ParseAttribute(nsIAtom* aAttribute,

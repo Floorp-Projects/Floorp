@@ -267,8 +267,8 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Face, face)
 NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
 
 // TabIndex for embed
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLSharedElement, TabIndex, tabindex,
-                               mNodeInfo->Equals(nsHTMLAtoms::embed) ? 0 : -1)
+NS_IMPL_INT_ATTR(nsHTMLSharedElement, TabIndex, tabindex)
+
   
 NS_IMETHODIMP
 nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
