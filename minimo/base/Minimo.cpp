@@ -47,8 +47,10 @@
 
 // Global variables
 const static char* start_url = "chrome://minimo/content/minimo.xul";
+
 //const static char* start_url = "http://www.meer.net/~dougt/test.html";
 //const static char* start_url = "resource://gre/res/start.html";
+//const static char* start_url = "resource://gre/res/1.html";
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -85,7 +87,6 @@ ApplicationObserver::ApplicationObserver(nsIAppShell* aAppShell)
     os->AddObserver(this, "xul-window-visible", PR_FALSE);
 
     os->AddObserver(this, "xpcom-loader", PR_FALSE);
-
 }
 
 ApplicationObserver::~ApplicationObserver()

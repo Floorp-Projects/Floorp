@@ -205,9 +205,12 @@ nsSoftKeyBoard::OpenSIP()
 #ifdef WINCE
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
-  {
     ::ShowWindow( hWndSIP, SW_SHOW);
-  }
+
+  hWndSIP = ::FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+  if (hWndSIP)
+    ::ShowWindow( hWndSIP, SW_SHOW);
+
   SHSipPreference(NULL, SIP_UP);
 #endif
 }
@@ -218,9 +221,12 @@ nsSoftKeyBoard::CloseSIP()
 #ifdef WINCE
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
-  {
     ::ShowWindow( hWndSIP, SW_HIDE );
-  }
+
+  hWndSIP = ::FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+  if (hWndSIP)
+    ::ShowWindow( hWndSIP, SW_HIDE );
+
   SHSipPreference(NULL, SIP_DOWN);
 #endif
 }
