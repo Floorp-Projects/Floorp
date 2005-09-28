@@ -169,7 +169,7 @@ public:
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(JSObject *aJSObject);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
-  virtual nsresult SetNewArguments(JSObject *aArguments);
+  virtual nsresult SetNewArguments(PRUint32 aArgc, jsval* aArgv);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
@@ -398,6 +398,7 @@ protected:
 
   void Freeze()
   {
+    NS_ASSERTION(!IsFrozen(), "Double-freezing?");
     mIsFrozen = PR_TRUE;
   }
 

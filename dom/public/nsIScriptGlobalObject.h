@@ -50,10 +50,11 @@ class nsIDocShell;
 class nsIDOMWindowInternal;
 class nsIScriptGlobalObjectOwner;
 struct JSObject;
+typedef long jsval;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0xd4ddb2f8, 0x385f, 0x4baa, \
-  { 0xba, 0x69, 0x6c, 0x42, 0xb3, 0xc2, 0xd0, 0xd0 } }
+{ 0xd0db67fc, 0x50f7, 0x4573, \
+ { 0x87, 0x3e, 0x5b, 0x33, 0x0b, 0x13, 0x21, 0x81 } }
 
 /**
  * The JavaScript specific global object. This often used to store
@@ -110,12 +111,13 @@ public:
    */
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 
-  /** Set a new arguments object for this window. This will be set on
+  /**
+   * Set a new arguments array for this window. This will be set on
    * the window right away (if there's an existing document) and it
    * will also be installed on the window when the next document is
-   * loaded.
+   * loaded.  If argc is nonzero, argv must be non-null.
    */
-  virtual nsresult SetNewArguments(JSObject *aArguments) = 0;
+  virtual nsresult SetNewArguments(PRUint32 aArgc, jsval* aArgv) = 0;
 };
 
 #endif
