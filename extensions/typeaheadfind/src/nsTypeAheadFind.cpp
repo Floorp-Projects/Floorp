@@ -726,7 +726,8 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  aEvent->StopPropagation();  // We're using this key, no one else should
+  // We're using this key, no one else should
+  aEvent->PreventDefault();
 
   return HandleChar(charCode);
 }
