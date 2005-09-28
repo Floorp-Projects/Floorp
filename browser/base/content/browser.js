@@ -6101,6 +6101,7 @@ var FeedHandler = {
 
     etype = etype.replace(/^\s+/, "");
     etype = etype.replace(/\s+$/, "");
+    etype = etype.replace(/\s*;.*/, "");
     etype = etype.toLowerCase();
 
     if (etype == "application/rss+xml" ||
@@ -6126,7 +6127,7 @@ var FeedHandler = {
         feeds = browserForLink.feeds;
       var wrapper = event.target;
       feeds.push({ href: wrapper.href,
-                   type: wrapper.type,
+                   type: etype,
                    title: wrapper.title});
       browserForLink.feeds = feeds;
       if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser) {
