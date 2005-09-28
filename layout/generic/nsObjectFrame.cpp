@@ -1703,7 +1703,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
 
                     // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
                     nsPluginEvent pluginEvent;
-                    pluginEvent.event = 0x0047;
+                    pluginEvent.event = WM_WINDOWPOSCHANGED;
                     pluginEvent.wParam = 0;
                     pluginEvent.lParam = (uint32)&winpos;
                     PRBool eventHandled = PR_FALSE;
@@ -1752,21 +1752,21 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   return rv;
 #endif
 
-	switch (anEvent->message) {
-	case NS_DESTROY:
-		mInstanceOwner->CancelTimer();
-		break;
-	case NS_GOTFOCUS:
-	case NS_LOSTFOCUS:
-		*anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
-		break;
-		
-	default:
-		// instead of using an event listener, we can dispatch events to plugins directly.
-		rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
-	}
-	
-	return rv;
+  switch (anEvent->message) {
+  case NS_DESTROY:
+    mInstanceOwner->CancelTimer();
+    break;
+  case NS_GOTFOCUS:
+  case NS_LOSTFOCUS:
+    *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+    break;
+    
+  default:
+    // instead of using an event listener, we can dispatch events to plugins directly.
+    rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+  }
+
+  return rv;
 }
 
 nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
@@ -3632,6 +3632,23 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
   // we can get synthetic events from the nsEventStateManager... these
   // have no nativeMsg
+  if (!pPluginEvent) {
+    nsPluginEvent pluginEvent;
+    switch (anEvent.message) {
+      case NS_FOCUS_CONTENT:
+        pluginEvent.event = WM_SETFOCUS;
+        pluginEvent.wParam = 0;
+        pluginEvent.lParam = 0;
+        pPluginEvent = &pluginEvent;
+        break;
+      case NS_BLUR_CONTENT:
+        pluginEvent.event = WM_KILLFOCUS;
+        pluginEvent.wParam = 0;
+        pluginEvent.lParam = 0;
+        pPluginEvent = &pluginEvent;
+        break;
+    }
+  }
 
   if (pPluginEvent) {
     PRBool eventHandled = PR_FALSE;
@@ -3763,7 +3780,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   drc.bottom = drc.top + relDirtyRectInPixels.height;
 
   nsPluginEvent pluginEvent;
-  pluginEvent.event = 0x000F; //!!! This is bad, but is it better to include <windows.h> for WM_PAINT only?
+  pluginEvent.event = WM_PAINT;
   pluginEvent.wParam = (uint32)ndc;
   pluginEvent.lParam = (uint32)&drc;
   PRBool eventHandled = PR_FALSE;
