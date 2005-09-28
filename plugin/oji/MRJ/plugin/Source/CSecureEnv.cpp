@@ -54,12 +54,6 @@
 #include "NativeMonitor.h"
 #include "JavaMessageQueue.h"
 
-#if 0
-static NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
-static NS_DEFINE_IID(kIRunnableIID, NS_IRUNNABLE_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-#endif
-
 JavaMessageQueue::JavaMessageQueue(Monitor* monitor)
 	:	mFirst(NULL), mLast(NULL), mMonitor(monitor)
 {
@@ -318,27 +312,10 @@ void CSecureEnv::sendMessageFromJava(JNIEnv* javaEnv, JavaMessage* msg, Boolean 
 
 #if 0
 NS_IMPL_AGGREGATED(CSecureEnv)
-
-NS_METHOD
-CSecureEnv::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (aIID.Equals(kISupportsIID)) {
-      *aInstancePtr = GetInner();
-      AddRef();
-      return NS_OK;
-    }
-    if (aIID.Equals(kISecureEnvIID)) {
-        *aInstancePtr = (nsISecureEnv*) this;
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(kIRunnableIID)) {
-        *aInstancePtr = (nsIRunnable*) this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(CSecureEnv)
+    NS_INTERFACE_MAP_ENTRY(nsISecureEnv)
+    NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+NS_INTERFACE_MAP_END
 #endif
 
 const InterfaceInfo CSecureEnv::sInterfaces[] = {

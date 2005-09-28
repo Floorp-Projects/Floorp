@@ -75,13 +75,11 @@ public:
     // nsLoadGroup methods:
 
     nsLoadGroup(nsISupports* outer);
-    
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+    nsresult Init();
 
 protected:
     virtual ~nsLoadGroup();
-    nsresult Init();
 
     nsresult MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& flags);
 

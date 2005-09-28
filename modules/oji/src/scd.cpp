@@ -41,9 +41,6 @@
 
 #include "nsJVMManager.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
-
 NS_IMPL_AGGREGATED(nsSymantecDebugManager)
 
 nsSymantecDebugManager::nsSymantecDebugManager(nsISupports* outer, nsJVMManager* jvmMgr)
@@ -56,42 +53,27 @@ nsSymantecDebugManager::~nsSymantecDebugManager()
 {
 }
 
-NS_METHOD
-nsSymantecDebugManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-	 if (!aInstancePtr)
-	     return NS_ERROR_INVALID_POINTER;
-
-	 if (aIID.Equals(NS_GET_IID(nsISupports)))
-	     *aInstancePtr = GetInner();
-    else if (aIID.Equals(kISymantecDebugManagerIID))
-        *aInstancePtr = NS_STATIC_CAST(nsISymantecDebugManager*, this);
-	 else {
-	     *aInstancePtr = nsnull;
-		  return NS_NOINTERFACE;
-	 }
-
-	 NS_ADDREF((nsISupports*)*aInstancePtr);
-	 return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsSymantecDebugManager)
+    NS_INTERFACE_MAP_ENTRY(nsISymantecDebugManager)
+NS_INTERFACE_MAP_END
 
 NS_METHOD
 nsSymantecDebugManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr, 
                                nsJVMManager* jvmMgr)
 {
-	 if (!aInstancePtr)
-	     return NS_ERROR_INVALID_POINTER;
-    if (outer && !aIID.Equals(kISupportsIID))
-        return NS_ERROR_INVALID_ARG;
+    if (!aInstancePtr)
+        return NS_ERROR_INVALID_POINTER;
+    NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
+
     nsSymantecDebugManager* dbgr = new nsSymantecDebugManager(outer, jvmMgr);
     if (dbgr == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
 
-	 nsresult rv = dbgr->AggregatedQueryInterface(aIID, aInstancePtr);
-	 if (NS_FAILED(rv)) {
-	     delete dbgr;
-		  return rv;
-	 }
+    nsISupports* inner = dbgr->InnerObject();
+    nsresult rv = inner->QueryInterface(aIID, aInstancePtr);
+    if (NS_FAILED(rv)) {
+       delete dbgr;
+    }
     return rv;
 }
 

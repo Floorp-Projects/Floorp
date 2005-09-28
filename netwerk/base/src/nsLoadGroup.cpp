@@ -208,62 +208,16 @@ nsresult nsLoadGroup::Init()
     return NS_OK;
 }
 
-
-NS_METHOD
-nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
-
-    nsresult rv;
-    nsLoadGroup* group = new nsLoadGroup(aOuter);
-    if (group == nsnull) {
-        *aResult = nsnull;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    rv = group->Init();
-    if (NS_SUCCEEDED(rv)) {
-        rv = group->AggregatedQueryInterface(aIID, aResult);
-    }
-
-    if (NS_FAILED(rv))
-        delete group;
-
-    return rv;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
 NS_IMPL_AGGREGATED(nsLoadGroup)
-
-NS_IMETHODIMP
-nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-
-    if (aIID.Equals(NS_GET_IID(nsISupports)))
-        *aInstancePtr = GetInner();
-    else if (aIID.Equals(NS_GET_IID(nsILoadGroup)) ||
-        aIID.Equals(NS_GET_IID(nsIRequest)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
-    }
-    else if (aIID.Equals(NS_GET_IID(nsISupportsPriority))) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupportsPriority*,this);
-    }
-    else if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-        *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
-    }
-    else {
-        *aInstancePtr = nsnull;
-        return NS_NOINTERFACE;
-    }
-
-    NS_ADDREF((nsISupports*)*aInstancePtr);
-    return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsLoadGroup)
+    NS_INTERFACE_MAP_ENTRY(nsILoadGroup)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:

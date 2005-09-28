@@ -138,14 +138,14 @@ nsCLiveconnectFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void *
 
 	*aResult  = NULL;
 
-	if (aOuter && !aIID.Equals(kISupportsIID))
-		return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_PROPER_AGGREGATION(aOuter, kISupportsIID);
 
 	nsCLiveconnect* liveconnect = new nsCLiveconnect(aOuter);
 	if (liveconnect == NULL)
 		return NS_ERROR_OUT_OF_MEMORY;
 		
-	nsresult result = liveconnect->AggregatedQueryInterface(aIID, aResult);
+    nsISupports* inner = liveconnect->InnerObject();
+    nsresult result = inner->QueryInterface(aIID, aResult);
 	if (NS_FAILED(result))
 		delete liveconnect;
 

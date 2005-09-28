@@ -205,6 +205,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHashPropertyBag, Init)
 
+NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsProperties, Init)
+
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
                                        const nsIID& aIID,
@@ -320,7 +322,7 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(PIPE, nsPipeConstructor),
 
 #define NS_PROPERTIES_CLASSNAME  "Properties"
-    COMPONENT(PROPERTIES, nsProperties::Create),
+    COMPONENT(PROPERTIES, nsPropertiesConstructor),
 
 #define NS_PERSISTENTPROPERTIES_CID NS_IPERSISTENTPROPERTIES_CID /* sigh */
     COMPONENT(PERSISTENTPROPERTIES, nsPersistentProperties::Create),
