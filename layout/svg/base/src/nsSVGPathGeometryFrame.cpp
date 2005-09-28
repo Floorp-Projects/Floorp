@@ -1019,11 +1019,12 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags,
           mMarkerRegion = GetCoveredRegion();
           if (mMarkerRegion)
             outerSVGFrame->InvalidateRegion(mMarkerRegion, PR_TRUE);
-        } else {
-          if (dirty_region)
-            outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+          return;
         }
       }
+
+      if (dirty_region)
+        outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
     }
   }
 }
