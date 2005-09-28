@@ -111,8 +111,20 @@
       </property>
 
       <property name="preferences" onget="return this.parentNode"/>
-      <property name="name" onget="return this.getAttribute('name');"
-                            onset="this.setAttribute('name', val); return val;"/>
+      <property name="name" onget="return this.getAttribute('name');">
+        <setter>
+          if (val == this.name)
+            return val;
+            
+          this.preferences.rootBranchInternal
+              .removeObserver(this.name, this.preferences);
+          this.setAttribute('name', val);
+          this.preferences.rootBranchInternal
+              .addObserver(val, this.preferences, false);
+              
+          return val;
+        </setter>
+      </property>
       <property name="type" onget="return this.getAttribute('type');"
                             onset="this.setAttribute('type', val); return val;"/>
       <property name="inverted" onget="return this.getAttribute('inverted') == 'true';"
