@@ -3179,7 +3179,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 
 nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
     if (mInstance) {
       nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
       if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
@@ -3196,27 +3196,15 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
 
           PRBool eventHandled = PR_FALSE;
           mInstance->HandleEvent(&pluginEvent, &eventHandled);
-#if defined(XP_MACOSX)
-          // we have to call SetWindow here to get RealPlayer to
-          // correctly update its position
-          mInstance->SetWindow(mPluginWindow);
-#else
-          if (!eventHandled) {
-            nsRect bogus(0,0,0,0);
-            Paint(bogus, 0);     // send an update event to the plugin
-          }
-#endif
         }
         pluginWidget->EndDrawPlugin();
       }
 
-#if defined(XP_MACOSX)
       // FIXME - Only invalidate the newly revealed amount.
+      // XXX necessary?
       if (mWidget)
         mWidget->Invalidate(PR_TRUE);
-#endif
     }
-
 #endif
 
     StartTimer();
@@ -3726,7 +3714,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   if (!mInstance)
     return;
  
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
   nsPoint rel(aDirtyRect.x, aDirtyRect.y);
   nsPoint abs(0,0);
@@ -3746,9 +3734,6 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
     nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintEnable);
     if (pluginPort) {
-      // we have to call SetWindow here to get RealPlayer to correctly update
-      // its position
-      mInstance->SetWindow(mPluginWindow);
       WindowRef  nativeWindowRef = ::GetWindowFromPort(pluginPort->port);
       
       EventRecord updateEvent;
@@ -4076,46 +4061,45 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   nsPoint pluginOrigin;
   nsRect widgetClip;
   PRBool widgetVisible;
-  pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, widgetVisible);
-  if (!widgetVisible)
-    isVisible = FALSE;
+  pluginWidget->GetPluginClipRect(widgetClip, pluginOrigin, /* out */ widgetVisible);
+  
+  // printf("GetPluginClipRect returning visible %d\n", widgetVisible);
+
+  isVisible &= widgetVisible;
   if (!isVisible)
     widgetClip.Empty();
-
+  
   // set the port coordinates
   mPluginWindow->x = -pluginPort->portx;
   mPluginWindow->y = -pluginPort->porty;
 
+  nsPluginRect oldClipRect = mPluginWindow->clipRect;
+  
   // fix up the clipping region
   mPluginWindow->clipRect.top    = widgetClip.y;
   mPluginWindow->clipRect.left   = widgetClip.x;
 
-  if (inPaintState == ePluginPaintDisable) {
+  mWidgetVisible = isVisible;
+
+  if (!mWidgetVisible || inPaintState == ePluginPaintDisable) {
     mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
     mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left;
-  } else if (inPaintState == ePluginPaintEnable) {
-    mPluginWindow->clipRect.bottom =
-      mPluginWindow->clipRect.top + widgetClip.height;
-
-    mPluginWindow->clipRect.right =
-      mPluginWindow->clipRect.left + widgetClip.width; 
+    // pluginPort = nsnull; // don't uncomment this
+  }
+  else if (inPaintState == ePluginPaintEnable)
+  {
+    mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top + widgetClip.height;
+    mPluginWindow->clipRect.right  = mPluginWindow->clipRect.left + widgetClip.width; 
   }
 
-  if (mWidgetVisible != isVisible) {
-    mWidgetVisible = isVisible;
-    // must do this to disable async Java Applet drawing
-    if (isVisible) {
-      mInstance->SetWindow(mPluginWindow);
-    } else {
-      mInstance->SetWindow(nsnull);
-      // switching states, do not draw
-      pluginPort = nsnull;
-    }
-  }
-  
-  if (!mWidgetVisible) {
-    mPluginWindow->clipRect.right = mPluginWindow->clipRect.left;
-    mPluginWindow->clipRect.bottom = mPluginWindow->clipRect.top;
+  // if the clip rect changed, call SetWindow()
+  // (RealPlayer needs this to draw correctly)
+  if (mPluginWindow->clipRect.left    != oldClipRect.left   ||
+      mPluginWindow->clipRect.top     != oldClipRect.top    ||
+      mPluginWindow->clipRect.right   != oldClipRect.right  ||
+      mPluginWindow->clipRect.bottom  != oldClipRect.bottom)
+  {  
+    mInstance->SetWindow(mPluginWindow);
   }
 
   return pluginPort;
