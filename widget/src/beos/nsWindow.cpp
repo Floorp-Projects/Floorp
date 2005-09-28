@@ -724,7 +724,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
 							if (mView->Window()->IsHidden())
 								mView->Window()->Show();
 						}
-					}
 				}
 				break;
 			}
