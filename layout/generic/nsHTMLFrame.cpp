@@ -127,7 +127,7 @@ public:
 	NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
   // nsICanvasFrame
-  NS_IMETHOD SetHasFocus(PRBool aHasFocus) { mDoPaintFocus = aHasFocus; return NS_OK; }
+  NS_IMETHOD SetHasFocus(PRBool aHasFocus);
 
   /**
    * Get the "type" of the frame
@@ -260,6 +260,19 @@ CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX
 NS_IMETHODIMP
 CanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CanvasFrame::SetHasFocus(PRBool aHasFocus)
+{
+  if (mDoPaintFocus != aHasFocus) {
+    mDoPaintFocus = aHasFocus;
+    nsIViewManager* vm = GetPresContext()->PresShell()->GetViewManager();
+    if (vm) {
+      vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    }
+  }
   return NS_OK;
 }
 

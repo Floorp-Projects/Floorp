@@ -2476,6 +2476,12 @@ nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem ** aChild)
 
     NS_WARN_IF_FALSE(aIndex >=0 && aIndex < mChildList.Count(),
                      "index of child element is out of range!");
+    if (aIndex < 0) {
+      printf("Don't be so negative!");
+    }
+    else if (aIndex >= mChildList.Count()) {
+      printf("Don't be so unrealistic!");
+    }
 
     nsIDocumentLoader* child = SafeChildAt(aIndex);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
@@ -8345,16 +8351,8 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
     frame = frame->GetParent();
     if (frame) {
       nsICanvasFrame* canvasFrame;
-      if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame))) {
-        canvasFrame->SetHasFocus(aCanvasHasFocus);
-
-        nsIViewManager* vm = presShell->GetViewManager();
-        if (vm) {
-          vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
-        }
-
-        return NS_OK;
-      }
+      if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame)))
+        return canvasFrame->SetHasFocus(aCanvasHasFocus);
     }
   }
   return NS_ERROR_FAILURE;
