@@ -6722,7 +6722,7 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsval id, jsval *vp,
                             PRBool *_retval)
 {
-  if (JSVAL_IS_STRING(id)) {
+  if (JSVAL_IS_STRING(id) && !ObjectIsNativeWrapper(cx, obj)) {
     nsCOMPtr<nsISupports> item;
     nsresult rv = GetNamedItem(wrapper->Native(), nsDependentJSString(id),
                                getter_AddRefs(item));
