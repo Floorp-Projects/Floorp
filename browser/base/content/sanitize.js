@@ -138,8 +138,7 @@ Sanitizer.prototype = {
         }
         
         // The "nice" way
-        cacheService.evictEntries(ci.nsICache.STORE_ON_DISK);
-        cacheService.evictEntries(ci.nsICache.STORE_IN_MEMORY);
+        cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
         
       },
       

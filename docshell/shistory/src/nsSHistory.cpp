@@ -57,6 +57,8 @@
 #include "nsIURI.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
+#include "nsICacheService.h"
+#include "nsIObserverService.h"
 #include "prclist.h"
 
 // For calculating max history entries and max cachable contentviewers
@@ -83,27 +85,27 @@ enum HistCmd{
 } ;
 
 //*****************************************************************************
-//***      nsSHistoryPrefObserver
+//***      nsSHistoryObserver
 //*****************************************************************************
 
-class nsSHistoryPrefObserver : public nsIObserver
+class nsSHistoryObserver : public nsIObserver
 {
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsSHistoryPrefObserver() {}
+  nsSHistoryObserver() {}
 
 protected:
-  ~nsSHistoryPrefObserver() {}
+  ~nsSHistoryObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(nsSHistoryPrefObserver, nsIObserver)
+NS_IMPL_ISUPPORTS1(nsSHistoryObserver, nsIObserver)
 
 NS_IMETHODIMP
-nsSHistoryPrefObserver::Observe(nsISupports *aSubject, const char *aTopic,
-                                const PRUnichar *aData)
+nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
+                            const PRUnichar *aData)
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
@@ -114,6 +116,8 @@ nsSHistoryPrefObserver::Observe(nsISupports *aSubject, const char *aTopic,
     }
 
     nsSHistory::EvictGlobalContentViewer();
+  } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID)) {
+    nsSHistory::EvictAllContentViewers();
   }
 
   return NS_OK;
@@ -238,12 +242,21 @@ nsSHistory::Startup()
     if (branch) {
       branch->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                          &sHistoryMaxTotalViewers);
-      nsSHistoryPrefObserver* obs = new nsSHistoryPrefObserver();
+      nsSHistoryObserver* obs = new nsSHistoryObserver();
       if (!obs) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       branch->AddObserver(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                           obs, PR_FALSE);
+
+      // Observe empty-cache notifications so that clearing the disk/memory
+      // cache will also evict all content viewers.
+      nsCOMPtr<nsIObserverService> obsSvc =
+        do_GetService("@mozilla.org/observer-service;1");
+      if (obsSvc) {
+        obsSvc->AddObserver(obs,
+                            NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID, PR_FALSE);
+      }
     }
   }
   // If the pref is negative, that means we calculate how many viewers
@@ -914,6 +927,21 @@ nsSHistory::EvictGlobalContentViewer()
       shouldTryEviction = PR_FALSE;
     }
   }  // while shouldTryEviction
+}
+
+// Evicts all content viewers in all history objects.  This is very
+// inefficient, because it requires a linear search through all SHistory
+// objects for each viewer to be evicted.  However, this method is called
+// infrequently -- only when the disk or memory cache is cleared.
+
+//static
+void
+nsSHistory::EvictAllContentViewers()
+{
+  PRInt32 maxViewers = sHistoryMaxTotalViewers;
+  sHistoryMaxTotalViewers = 0;
+  EvictGlobalContentViewer();
+  sHistoryMaxTotalViewers = maxViewers;
 }
 
 NS_IMETHODIMP

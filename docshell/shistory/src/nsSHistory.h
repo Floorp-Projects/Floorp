@@ -59,7 +59,7 @@
 
 class nsIDocShell;
 class nsSHEnumerator;
-class nsSHistoryPrefObserver;
+class nsSHistoryObserver;
 class nsSHistory: public PRCList,
                   public nsISHistory,
                   public nsISHistoryInternal,
@@ -83,7 +83,7 @@ public:
 protected:
   virtual ~nsSHistory();
   friend class nsSHEnumerator;
-  friend class nsSHistoryPrefObserver;
+  friend class nsSHistoryObserver;
 
    // Could become part of nsIWebNavigation
    NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
@@ -99,6 +99,7 @@ protected:
 
   void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
   static void EvictGlobalContentViewer();
+  static void EvictAllContentViewers();
 
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;

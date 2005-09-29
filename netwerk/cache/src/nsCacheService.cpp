@@ -580,6 +580,26 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
                                       nsCacheStoragePolicy  storagePolicy)
 {
     if (this == nsnull) return NS_ERROR_NOT_AVAILABLE; // XXX eh?
+
+    nsCOMPtr<nsIObserverService> obsSvc =
+        do_GetService("@mozilla.org/observer-service;1");
+    if (obsSvc) {
+        // Proxy to the UI thread since the observer service isn't thredsafe.
+        // We use an async proxy, since this it's not important whether this
+        // notification happens before or after the actual eviction.
+
+        nsCOMPtr<nsIObserverService> obsProxy;
+        NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                             NS_GET_IID(nsIObserverService),
+                             obsSvc, PROXY_ASYNC, getter_AddRefs(obsProxy));
+
+        if (obsProxy) {
+            obsProxy->NotifyObservers(this,
+                                      NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
+                                      nsnull);
+        }
+    }
+
     nsAutoLock lock(mCacheServiceLock);
     nsresult rv = NS_OK;
 
