@@ -274,6 +274,11 @@ function eventHandlerMenu(e) {
     BrowserMenuPopupFalse();
     document.getElementById("back-button").focus();
   }
+  
+  if (e.keyCode == 112) {
+    document.getElementById("menu-button").focus();	
+  }
+  
 }
 
 /** 
