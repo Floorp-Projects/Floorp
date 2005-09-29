@@ -47,6 +47,19 @@ interface nsIInterfaceRequestor;
 [scriptable, uuid(359F7990-D4E9-11d3-A1A5-0050041CAF44)]
 interface nsIStreamLoaderObserver : nsISupports
 {
+    /**
+     * Called when the entire stream has been loaded.
+     *
+     * @param loader the stream loader that loaded the stream.
+     * @param context the aContext parameter passed to the loader's init method
+     * @param status the status of the underlying channel
+     * @param resultLength the length of the data loaded
+     * @param result the data
+     *
+     * This method will always be called asynchronously by the
+     * nsIStreamLoader involved, on the thread that called the
+     * loader's init() method.
+     */
     void onStreamComplete(in nsIStreamLoader loader,
                           in nsISupports ctxt,
                           in nsresult status,
@@ -72,8 +85,10 @@ interface nsIStreamLoader : nsISupports
      * @param aContext
      *        May be null. Will be passed to the observer.
      *
-     * @note Failure to open the channel will be indicated by an async callback
-     *       to the observer.
+     * @note Failure to open the channel will cause init() to throw.  A
+     *       successful call to init() means that onStreamComplete is
+     *       guaranteed to be called on aObserver asynchronously (i.e. after
+     *       init() returns).
      */
     void init(in nsIChannel aChannel,
               in nsIStreamLoaderObserver aObserver,

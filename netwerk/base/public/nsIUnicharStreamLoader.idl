@@ -68,6 +68,10 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
    * @param aStatus the status of the underlying channel
    * @param aUnicharData the unichar input stream containing the data.  This
    *        can be null in some failure conditions.
+   *
+   * This method will always be called asynchronously by the
+   * nsUnicharIStreamLoader involved, on the thread that called the
+   * loader's init() method.
    */
   void onStreamComplete(in nsIUnicharStreamLoader aLoader,
                         in nsISupports aContext,
@@ -89,6 +93,10 @@ interface nsIUnicharStreamLoader : nsISupports
    *        the load is complete
    * @param aContext an opaque context pointer
    * @param aSegmentSize the size of the segments to use for the data, in bytes
+   *
+   * @note Failure to open the channel will cause init() to throw.  A
+   *       successful call to init() means that onStreamComplete is guaranteed
+   *       to be called on aObserver asynchronously (i.e. after init() returns).
    */
   
   void init(in nsIChannel aChannel,

@@ -959,7 +959,11 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
    var myInstance = Components.classes["@mozilla.org/network/stream-loader;1"].createInstance(Components.interfaces.nsIStreamLoader);
    dump( "init channel, \nChannel is "+Channel+"\nURL is "+Channel.URI.spec+"\n" );
    window.setCursor( "wait" );
-   myInstance.init( Channel, Listener, null );
+   try {
+     myInstance.init( Channel, Listener, null );
+   } catch (e) {
+     window.setCursor( "auto" );
+   }
 }
 
 calendarManager.prototype.getProfileDirectory = function calMan_getProfileDirectory()

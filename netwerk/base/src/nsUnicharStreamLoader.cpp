@@ -66,29 +66,7 @@ nsUnicharStreamLoader::Init(nsIChannel *aChannel,
   }
   
   nsresult rv = aChannel->AsyncOpen(this, aContext);
-
-  if (NS_FAILED(rv)) {
-    // don't callback synchronously as it puts the caller
-    // in a recursive situation and breaks the asynchronous
-    // semantics of nsIStreamLoader
-    nsresult rv2 = NS_OK;
-    nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
-      do_GetService(kProxyObjectManagerCID, &rv2);
-    if (NS_FAILED(rv2))
-      return rv2;
-
-    nsCOMPtr<nsIUnicharStreamLoaderObserver> pObserver;
-    rv2 =
-      pIProxyObjectManager->GetProxyForObject(NS_CURRENT_EVENTQ, 
-                                              NS_GET_IID(nsIUnicharStreamLoaderObserver),
-                                              aObserver, 
-                                              PROXY_ASYNC | PROXY_ALWAYS,
-                                              getter_AddRefs(pObserver));
-    if (NS_FAILED(rv2))
-      return rv2;
-
-    rv = pObserver->OnStreamComplete(this, aContext, rv, nsnull);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mObserver = aObserver;
   mContext = aContext;
