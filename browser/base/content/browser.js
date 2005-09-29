@@ -2617,8 +2617,10 @@ var newTabButtonObserver = {
     {
       var xferData = aXferData.data.split("\n");
       var url = xferData[0] ? xferData[0] : xferData[1];
-      if (url)
+      if (url) {
+        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
         openNewTabWith(url, null, null, aEvent);
+      }
     },
   getSupportedFlavours: function ()
     {
@@ -2648,8 +2650,10 @@ var newWindowButtonObserver = {
     {
       var xferData = aXferData.data.split("\n");
       var url = xferData[0] ? xferData[0] : xferData[1];
-      if (url)
+      if (url) {
+        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
         openNewWindowWith(url, null, null);
+      }
     },
   getSupportedFlavours: function ()
     {
