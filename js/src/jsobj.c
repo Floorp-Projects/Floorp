@@ -1020,13 +1020,13 @@ static JSBool
 js_obj_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                       jsval *rval)
 {
-    JSString *value;
+    JSString *str;
 
-    value = js_ValueToString(cx, argv[-1]);
-    if (!value)
+    str = js_ValueToString(cx, argv[-1]);
+    if (!str)
         return JS_FALSE;
 
-    *rval = STRING_TO_JSVAL(value);
+    *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
