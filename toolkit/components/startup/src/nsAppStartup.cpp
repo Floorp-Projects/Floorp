@@ -64,6 +64,7 @@
 
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsEventQueueUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
@@ -77,6 +78,7 @@ NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 nsAppStartup::nsAppStartup() :
   mConsiderQuitStopper(0),
+  mRunning(PR_FALSE),
   mShuttingDown(PR_FALSE),
   mAttemptingQuit(PR_FALSE),
   mRestart(PR_FALSE)
@@ -142,9 +144,13 @@ nsAppStartup::CreateHiddenWindow()
 NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
-  nsresult rv = mAppShell->Run();
-  if (NS_FAILED(rv))
-    return rv;
+  if (!mShuttingDown) {
+    mRunning = PR_TRUE;
+
+    nsresult rv = mAppShell->Run();
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   return mRestart ? NS_SUCCESS_RESTART_APP : NS_OK;
 }
@@ -283,34 +289,39 @@ nsAppStartup::Quit(PRUint32 aMode)
     if (appShellService)
       appShellService->DestroyHiddenWindow();
 
-    // no matter what, make sure we send the exit event.  If
-    // worst comes to worst, we'll do a leaky shutdown but we WILL
-    // shut down. Well, assuming that all *this* stuff works ;-).
-    nsCOMPtr<nsIEventQueueService> svc = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-
-      nsCOMPtr<nsIEventQueue> queue;
-      rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (!mRunning) {
+      postedExitEvent = PR_TRUE;
+    }
+    else {
+      // no matter what, make sure we send the exit event.  If
+      // worst comes to worst, we'll do a leaky shutdown but we WILL
+      // shut down. Well, assuming that all *this* stuff works ;-).
+      nsCOMPtr<nsIEventQueueService> svc = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv)) {
 
-        PLEvent* event = new PLEvent;
-        if (event) {
-          NS_ADDREF_THIS();
-          PL_InitEvent(event,
-                       this,
-                       HandleExitEvent,
-                       DestroyExitEvent);
+        nsCOMPtr<nsIEventQueue> queue;
+        rv = NS_GetMainEventQ(getter_AddRefs(queue));
+        if (NS_SUCCEEDED(rv)) {
 
-          rv = queue->PostEvent(event);
-          if (NS_SUCCEEDED(rv)) {
-            postedExitEvent = PR_TRUE;
+          PLEvent* event = new PLEvent;
+          if (event) {
+            NS_ADDREF_THIS();
+            PL_InitEvent(event,
+                         this,
+                         HandleExitEvent,
+                         DestroyExitEvent);
+
+            rv = queue->PostEvent(event);
+            if (NS_SUCCEEDED(rv)) {
+              postedExitEvent = PR_TRUE;
+            }
+            else {
+              PL_DestroyEvent(event);
+            }
           }
           else {
-            PL_DestroyEvent(event);
+            rv = NS_ERROR_OUT_OF_MEMORY;
           }
-        }
-        else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
         }
       }
     }
@@ -375,6 +386,7 @@ nsAppStartup::HandleExitEvent(PLEvent* aEvent)
 
   // We're done "shutting down".
   service->mShuttingDown = PR_FALSE;
+  service->mRunning = PR_FALSE;
 
   return nsnull;
 }

@@ -82,6 +82,7 @@ private:
   nsCOMPtr<nsIAppShell> mAppShell;
 
   PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
+  PRPackedBool mRunning;        // Have we started the main event loop?
   PRPackedBool mShuttingDown;   // Quit method reentrancy check
   PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
   PRPackedBool mRestart;        // Quit(eRestart)
