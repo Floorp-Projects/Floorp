@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -255,24 +256,33 @@ nsCParserNode* nsEntryStack::Remove(PRInt32 anIndex,
       //now we have to tell the residual style stack where this tag
       //originated that it's no longer in use.
       PRUint32 scount = theStyleStack->mCount;
-      PRUint32 sindex = 0;
-      nsTagEntry *theStyleEntry=theStyleStack->mEntries;
-      for (sindex=scount-1;sindex>0;--sindex){            
-        if (theStyleEntry->mTag==aTag) {
-          theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
+#ifdef DEBUG_mrbkap
+      NS_ASSERTION(scount != 0, "RemoveStyles has a bad style stack");
+#endif
+      nsTagEntry *theStyleEntry = theStyleStack->mEntries;
+      for (PRUint32 sindex = scount-1;; --sindex) {            
+        if (theStyleEntry->mTag == aTag) {
+          // This tells us that the style is not open at any level.
+          theStyleEntry->mParent = nsnull;
+          break;
+        }
+        if (sindex == 0) {
+#ifdef DEBUG_mrbkap
+          NS_ERROR("Couldn't find the removed style on its parent stack");
+#endif
           break;
         }
         ++theStyleEntry;
-      } //for
+      }
     }
   }
   return result;
 }
 
 /**
- * 
- * @update  harishd 04/04/99
- * @update  gess 04/21/99
+ * Pops an entry from this style stack. If the entry has a parent stack, it
+ * updates the entry so that we know not to try to remove it from the parent
+ * stack since it's no longer open.
  */
 nsCParserNode* nsEntryStack::Pop(void)
 {
@@ -283,7 +293,7 @@ nsCParserNode* nsEntryStack::Pop(void)
       result->mUseCount--;
     mEntries[mCount].mNode = 0;
     mEntries[mCount].mStyles = 0;
-    nsEntryStack* theStyleStack=mEntries[mCount].mParent;
+    nsEntryStack* theStyleStack = mEntries[mCount].mParent;
     if (theStyleStack) {
       //now we have to tell the residual style stack where this tag
       //originated that it's no longer in use.
@@ -296,16 +306,21 @@ nsCParserNode* nsEntryStack::Pop(void)
 #endif
       NS_ENSURE_TRUE(scount != 0, result);
 
-      PRUint32 sindex = 0;
-      nsTagEntry *theStyleEntry=theStyleStack->mEntries;
-
-      for (sindex=scount-1;sindex>0;--sindex){            
-        if (theStyleEntry->mTag==mEntries[mCount].mTag) {
-          theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
+      nsTagEntry *theStyleEntry = theStyleStack->mEntries;
+      for (PRUint32 sindex = scount - 1;; --sindex) {
+        if (theStyleEntry->mTag == mEntries[mCount].mTag) {
+          // This tells us that the style is not open at any level
+          theStyleEntry->mParent = nsnull;
+          break;
+        }
+        if (sindex == 0) {
+#ifdef DEBUG_mrbkap
+          NS_ERROR("Couldn't find the removed style on its parent stack");
+#endif
           break;
         }
         ++theStyleEntry;
-      } //for
+      }
     }
   }
   return result;
