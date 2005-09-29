@@ -1017,6 +1017,20 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
+js_obj_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                      jsval *rval)
+{
+    JSString *value;
+
+    value = js_ValueToString(cx, argv[-1]);
+    if (!value)
+        return JS_FALSE;
+
+    *rval = STRING_TO_JSVAL(value);
+    return JS_TRUE;
+}
+
+static JSBool
 obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     *rval = OBJECT_TO_JSVAL(obj);
@@ -1493,7 +1507,7 @@ static JSFunctionSpec object_methods[] = {
     {js_toSource_str,             js_obj_toSource,    0, 0, OBJ_TOSTRING_EXTRA},
 #endif
     {js_toString_str,             js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
-    {js_toLocaleString_str,       js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
+    {js_toLocaleString_str,       js_obj_toLocaleString, 0, 0, OBJ_TOSTRING_EXTRA},
     {js_valueOf_str,              obj_valueOf,        0,0,0},
     {js_eval_str,                 obj_eval,           1,0,0},
 #if JS_HAS_OBJ_WATCHPOINT
