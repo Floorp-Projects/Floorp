@@ -1683,6 +1683,21 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 #define MAX_INLINE_CALL_COUNT 1000
 
 JSBool
+ObjectInProtoChain(JSContext *cx, JSObject *maybeproto, JSObject *obj)
+{
+    JS_ASSERT(maybeproto && obj != maybeproto);
+
+    /* Note: This loop purposely skips checking obj != maybeproto. */
+    do {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (maybeproto == obj)
+            return JS_TRUE;
+    } while (obj);
+
+    return JS_FALSE;
+}
+
+JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
     JSRuntime *rt;
@@ -2350,7 +2365,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
 
             /* If the id was deleted, or found in a prototype, skip it. */
-            if (!prop || obj2 != obj)
+            if (!prop || (obj != obj2 && ObjectInProtoChain(cx, obj2, obj)))
                 goto enum_next_property;
 
 #if JS_HAS_XML_SUPPORT
