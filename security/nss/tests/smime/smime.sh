@@ -84,6 +84,35 @@ smime_init()
   cp ${QADIR}/smime/alice.txt ${SMIMEDIR}
 }
 
+smime_sign()
+{
+  HASH_CMD=-H ${HASH}
+  SIG=sig.${HASH}
+
+  echo "$SCRIPTNAME: Signing Detached Message {$HASH} ------------------"
+  echo "cmsutil -S -T -N Alice ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.d${SIG}"
+  cmsutil -S -T -N Alice ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.d${SIG}
+  html_msg $? 0 "Create Detached Signature Alice (${HASH})" "."
+
+  echo "cmsutil -D -i alice.d${SIG} -c alice.txt -d ${P_R_BOBDIR} "
+  cmsutil -D -i alice.d${SIG} -c alice.txt -d ${P_R_BOBDIR} 
+  html_msg $? 0 "Verifying Alice's Detached Signature (${HASH})" "."
+
+  echo "$SCRIPTNAME: Signing Attached Message (${HASH}) ------------------"
+  echo "cmsutil -S -N Alice ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.${SIG}"
+  cmsutil -S -N Alice ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.${SIG}
+  html_msg $? 0 "Create Attached Signature Alice (${HASH})" "."
+
+  echo "cmsutil -D -i alice.${SIG} -d ${P_R_BOBDIR} -o alice.data.${HASH}"
+  cmsutil -D -i alice.${SIG} -d ${P_R_BOBDIR} -o alice.data.${HASH}
+  html_msg $? 0 "Decode Alice's Attached Signature (${HASH})" "."
+
+  echo "diff alice.txt alice.data.${HASH}"
+  diff alice.txt alice.data.${HASH}
+  html_msg $? 0 "Compare Attached Signed Data and Original (${HASH})" "."
+}
+
+
 
 ############################## smime_main ##############################
 # local shell function to test basic signed and enveloped messages 
@@ -92,57 +121,14 @@ smime_init()
 smime_main()
 {
 
-  echo "$SCRIPTNAME: Signing Attached Message (SHA1) ------------------"
-  echo "cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig"
-  cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig
-  html_msg $? 0 "Create Signature Alice (SHA1)" "."
-
-  echo "cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1"
-  cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1
-  html_msg $? 0 "Decode Alice's Signature (SHA1)" "."
-
-  echo "diff alice.txt alice.data1"
-  diff alice.txt alice.data1
-  html_msg $? 0 "Compare Decoded Signature and Original (SHA1)" "."
-
-  echo "$SCRIPTNAME: Signing Attached Message (SHA256) ------------------"
-  echo "cmsutil -S -N Alice -H SHA256 -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig"
-  cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig
-  html_msg $? 0 "Create Signature Alice (SHA256)" "."
-
-  echo "cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1"
-  cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1
-  html_msg $? 0 "Decode Alice's Signature (SHA256)" "."
-
-  echo "diff alice.txt alice.data1"
-  diff alice.txt alice.data1
-  html_msg $? 0 "Compare Decoded Signature and Original (SHA256)" "."
-
-  echo "$SCRIPTNAME: Signing Attached Message (SHA384) ------------------"
-  echo "cmsutil -S -N Alice -H SHA384 -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig"
-  cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig
-  html_msg $? 0 "Create Signature Alice (SHA384)" "."
-
-  echo "cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1"
-  cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1
-  html_msg $? 0 "Decode Alice's Signature (SHA384)" "."
-
-  echo "diff alice.txt alice.data1"
-  diff alice.txt alice.data1
-  html_msg $? 0 "Compare Decoded Signature and Original (SHA384)" "."
-
-  echo "$SCRIPTNAME: Signing Attached Message (SHA512) ------------------"
-  echo "cmsutil -S -N Alice -H SHA512 -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig"
-  cmsutil -S -N Alice -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice.sig
-  html_msg $? 0 "Create Signature Alice (SHA512)" "."
-
-  echo "cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1"
-  cmsutil -D -i alice.sig -d ${P_R_BOBDIR} -o alice.data1
-  html_msg $? 0 "Decode Alice's Signature (SHA512)" "."
-
-  echo "diff alice.txt alice.data1"
-  diff alice.txt alice.data1
-  html_msg $? 0 "Compare Decoded Signature and Original (SHA512)" "."
+  HASH=SHA1
+  smime_sign
+  HASH=SHA256
+  smime_sign
+  HASH=SHA384
+  smime_sign
+  HASH=SHA512
+  smime_sign
 
   echo "$SCRIPTNAME: Enveloped Data Tests ------------------------------"
   echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${P_R_ALICEDIR} -p nss \\"
