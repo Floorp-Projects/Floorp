@@ -620,6 +620,7 @@ public final class JavaAdapter implements IdFunctionCall
         cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "<init>", "()V");
 
         // Set factory to null to use current global when necessary
+        cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.ACONST_NULL);
         cfw.add(ByteCode.PUTFIELD, adapterName, "factory",
                 "Lorg/mozilla/javascript/ContextFactory;");
