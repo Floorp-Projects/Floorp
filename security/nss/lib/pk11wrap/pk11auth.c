@@ -80,7 +80,7 @@ static struct PK11GlobalStruct {
 SECStatus
 pk11_CheckPassword(PK11SlotInfo *slot,char *pw)
 {
-    int len = PORT_Strlen(pw);
+    int len = 0;
     CK_RV crv;
     SECStatus rv;
     int64 currtime = PR_Now();
@@ -88,6 +88,11 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw)
     if (slot->protectedAuthPath) {
 	len = 0;
 	pw = NULL;
+    } else if (pw == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    } else {
+	len = PORT_Strlen(pw);
     }
 
     PK11_EnterSlotMonitor(slot);
@@ -121,7 +126,7 @@ pk11_CheckPassword(PK11SlotInfo *slot,char *pw)
 SECStatus
 PK11_CheckUserPassword(PK11SlotInfo *slot,char *pw)
 {
-    int len = PORT_Strlen(pw);
+    int len = 0;
     CK_RV crv;
     SECStatus rv;
     int64 currtime = PR_Now();
@@ -129,6 +134,11 @@ PK11_CheckUserPassword(PK11SlotInfo *slot,char *pw)
     if (slot->protectedAuthPath) {
 	len = 0;
 	pw = NULL;
+    } else if (pw == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    } else {
+	len = PORT_Strlen(pw);
     }
 
     /* force a logout */
@@ -312,7 +322,7 @@ PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw)
     CK_SESSION_HANDLE rwsession;
     CK_RV crv;
     SECStatus rv = SECFailure;
-    int len = PORT_Strlen(ssopw);
+    int len = 0;
 
     /* get a rwsession */
     rwsession = PK11_GetRWSession(slot);
@@ -324,6 +334,11 @@ PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw)
     if (slot->protectedAuthPath) {
 	len = 0;
 	ssopw = NULL;
+    } else if (ssopw == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    } else {
+	len = PORT_Strlen(ssopw);
     }
 
     /* check the password */
@@ -545,7 +560,33 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
      *	(3) the password was successful.
      */
     while ((password = pk11_GetPassword(slot, attempt, wincx)) != NULL) {
+	/* if the token has a protectedAuthPath, the application may have
+         * already issued the C_Login as part of it's pk11_GetPassword call.
+         * In this case the application will tell us what the results were in 
+         * the password value (retry or the authentication was successful) so
+	 * we can skip our own C_Login call (which would force the token to
+	 * try to login again).
+	 * 
+	 * Applications that don't know about protectedPinAuth will return a 
+	 * password, which we will ignore and trigger the token to 
+	 * 'authenticate' itself anyway. Hopefully the blinking display on 
+	 * the reader, or the flashing light under the thumbprint reader will 
+	 * attract the user's attention */
 	attempt = PR_TRUE;
+	if (slot->protectedAuthPath) {
+	    /* application tried to authenticate and failed. it wants to try
+	     * again, continue looping */
+	    if (strcmp(password, PK11_PW_RETRY) == 0) {
+		rv = SECWouldBlock;
+		PORT_Free(password);
+		break;
+	     /* applicaton tried to authenticate and succeeded we're done */
+	     } else if (strcmp(password, PK11_PW_AUTHENTICATED) == 0) {
+		rv = SECSuccess;
+		PORT_Free(password);
+		break;
+	     }
+	}
 	rv = pk11_CheckPassword(slot,password);
 	PORT_Memset(password, 0, PORT_Strlen(password));
 	PORT_Free(password);
