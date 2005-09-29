@@ -42,7 +42,6 @@ use vars qw($officialMilestone
 
 local $Moz::Milestone::milestone;
 local $Moz::Milestone::officialMilestone;
-local $Moz::Milestone::milestoneEM;
 
 #
 # Usage:  getOfficialMilestone($milestoneFile)
@@ -53,34 +52,19 @@ sub getOfficialMilestone($) {
   open(FILE,"$mfile") ||
     die ("Can't open $mfile for reading!");
 
-  while (defined(my $line = <FILE>)) {
-    if ($line =~ /^MILESTONE=(\S+)/) {
-      my $num = $1;
-      $Moz::Milestone::officialMilestone = $num;
-      $Moz::Milestone::milestone = &getMilestoneNum;
-      close FILE;
-      return $num;
-    }
+  my $num = <FILE>;
+  while($num =~ /^\s*#/ || $num !~ /^\d/) {
+      $num = <FILE>;
   }
 
-  close FILE;
-}
-
-sub getEMMilestone($) {
-  my $mfile = $_[0];
-  open(FILE,"$mfile") ||
-    die ("Can't open $mfile for reading!");
-
-  while (defined(my $line = <FILE>)) {
-    if ($line =~ /^MILESTONE_EM=(\S+)/) {
-      my $num = $1;
-      $Moz::Milestone::milestoneEM = $num;
-      close FILE;
-      return $num;
-    }
-  }
-
-  close FILE;
+  close(FILE);
+  if ($num !~ /^\d/) { return; }
+  chomp($num);
+  # Remove extra ^M caused by using dos-mode line-endings
+  chop $num if (substr($num, -1, 1) eq "\r");
+  $Moz::Milestone::officialMilestone = $num;
+  $Moz::Milestone::milestone = &getMilestoneNum;
+  return $num;
 }
 
 #
@@ -98,7 +82,9 @@ sub getMilestoneNum {
     $Moz::Milestone::milestone = $_[0];
   }
 
-  $Moz::Milestone::milestone =~ s/\+$//;
+  if ($Moz::Milestone::milestone =~ /\+$/) {    # for x.x.x+, strip off the +
+    $Moz::Milestone::milestone =~ s/\+$//;
+  }
 
   return $Moz::Milestone::milestone;
 }
@@ -118,6 +104,69 @@ sub getMilestoneQualifier {
   if ($milestoneQualifier =~ /\+$/) {
     return "+";
   }
+}
+
+sub getMilestoneMajor {
+  my $milestoneMajor;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneMajor = $Moz::Milestone::milestone;
+  } else {
+    $milestoneMajor = $_[0];
+  }
+  my @parts = split(/\./,$milestoneMajor);
+  return $parts[0];
+}
+
+sub getMilestoneMinor {
+  my $milestoneMinor;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneMinor = $Moz::Milestone::milestone;
+  } else {
+    $milestoneMinor = $_[0];
+  }
+  my @parts = split(/\./,$milestoneMinor);
+
+  if ($#parts < 1 ) { return 0; }
+  return $parts[1];
+}
+
+sub getMilestoneMini {
+  my $milestoneMini;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneMini = $Moz::Milestone::milestone;
+  } else {
+    $milestoneMini = $_[0];
+  }
+  my @parts = split(/\./,$milestoneMini);
+
+  if ($#parts < 2 ) { return 0; }
+  return $parts[2];
+}
+
+sub getMilestoneMicro {
+  my $milestoneMicro;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneMicro = $Moz::Milestone::milestone;
+  } else {
+    $milestoneMicro = $_[0];
+  }
+  my @parts = split(/\./,$milestoneMicro);
+
+  if ($#parts < 3 ) { return 0; }
+  return $parts[3];
+}
+
+sub getMilestoneAB {
+  my $milestoneAB;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneAB = $Moz::Milestone::milestone;
+  } else {
+    $milestoneAB = $_[0];
+  }
+  
+  if ($milestoneAB =~ /a/) { return "alpha"; }
+  if ($milestoneAB =~ /b/) { return "beta"; }
+  return "final";
 }
 
 #

@@ -40,8 +40,8 @@
  * A scriptable interface to the nsXULAppAPI structure. See nsXULAppAPI.h for
  * a detailed description of each attribute.
  *
- * @status UNDER_REVIEW - This interface is under review to be frozen, but
- *                        isn't frozen yet. Use with caution.
+ * @status FROZEN - This interface is frozen for use by embedders and will
+ *                  not change in the future.
  */
 
 [scriptable, uuid(a61ede2a-ef09-11d9-a5ce-001124787b2e)]
@@ -65,7 +65,7 @@ interface nsIXULAppInfo : nsISupports
   readonly attribute ACString ID;
 
   /**
-   * This is the version of the XUL application. It is different than the
+   * The version of the XUL application. It is different than the
    * version of the XULRunner platform. Be careful about which one you want.
    *
    * @see nsXREAppData.version
@@ -81,8 +81,7 @@ interface nsIXULAppInfo : nsISupports
   readonly attribute ACString appBuildID;
 
   /**
-   * The version of the XULRunner platform, in an extension-manager compatible
-   * format (1.7+, not 1.8b2).
+   * The version of the XULRunner platform.
    */
   readonly attribute ACString platformVersion;
 
