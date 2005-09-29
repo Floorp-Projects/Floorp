@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.16 2005/08/01 18:51:06 wtchang%redhat.com Exp $ */
+/* $Id: dsa.c,v 1.17 2005/09/29 23:22:53 wtchang%redhat.com Exp $ */
 
 #include "secerr.h"
 
@@ -53,7 +53,7 @@
 
 /* DSA-specific random number function defined in prng_fips1861.c. */
 extern SECStatus 
-DSA_GenerateGlobalRandomBytes(void *dest, size_t len, unsigned char *q);
+DSA_GenerateGlobalRandomBytes(void *dest, size_t len, const unsigned char *q);
 
 static void translate_mpi_error(mp_err err)
 {

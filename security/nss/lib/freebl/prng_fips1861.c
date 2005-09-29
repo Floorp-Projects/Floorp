@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.19 2005/08/11 01:01:08 nelsonb%netscape.com Exp $ */
+/* $Id: prng_fips1861.c,v 1.20 2005/09/29 23:22:53 wtchang%redhat.com Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -47,6 +47,7 @@
 #include "secitem.h"
 #include "sha_fast.h"
 #include "secrng.h"	/* for RNG_GetNoise() */
+#include "secmpi.h"
 
 /*
  * The minimum amount of seed data required before the generator will
@@ -63,57 +64,95 @@
 #define MIN_SEED_COUNT 1024
 
 /*
- * Steps taken from FIPS 186-1 Appendix 3.1
+ * Steps taken from Algorithm 1 of FIPS 186-2 Change Notice 1
  */
 
 /*
- * According to FIPS 186-1, 160 <= b <= 512
- * For our purposes, we will assume b == 160
+ * According to FIPS 186-2, 160 <= b <= 512.
+ * For our purposes, we will assume b == 160,
+ * 256, or 512 (the output size of SHA-1,
+ * SHA-256, or SHA-512).
  */
-#define FIPS_B     160
-#define BSIZE      FIPS_B / BITS_PER_BYTE
+#define FIPS_B     256
+#define B_HASH_BUF SHA256_HashBuf
+#define BSIZE      (FIPS_B / PR_BITS_PER_BYTE)
+
+/* Output size of the G function */
+#define FIPS_G     160
+#define GSIZE      (FIPS_G / PR_BITS_PER_BYTE)
 
 /*
- * Add two 160-bit numbers represented as arrays of 20 bytes.
+ * Add two b-bit numbers represented as arrays of BSIZE bytes.
  * The numbers are big-endian, MSB first, so addition is done
  * from the end of the buffer to the beginning.
  */
-#define ADD_160BIT_PLUS_CARRY(dest, add1, add2, cy) \
+#define ADD_B_BIT_PLUS_CARRY(dest, add1, add2, cy) \
     carry = cy; \
-    for (i=BSIZE-1; i>=0; --i) { \
-	carry += add1[i] + add2[i]; \
-	dest[i] = (PRUint8)carry; \
+    for (k=BSIZE-1; k>=0; --k) { \
+	carry += add1[k] + add2[k]; \
+	dest[k] = (PRUint8)carry; \
 	carry >>= 8; \
     }
 
-#define ADD_160BIT_2(dest, add1, add2) \
-	ADD_160BIT_PLUS_CARRY(dest, add1, add2, 0)
+#define ADD_B_BIT_2(dest, add1, add2) \
+	ADD_B_BIT_PLUS_CARRY(dest, add1, add2, 0)
 
 
 /*
- * FIPS requires result from Step 3c to be reduced mod q when generating
+ * FIPS requires result from Step 3.3 to be reduced mod q when generating
  * random numbers for DSA.
- * by definition q >= 2^159 + 1, thus xj < 2q
- * thus reducing mod q is simple subtraction when xj > q
+ *
+ * Input: w, 2*GSIZE bytes
+ *        q, DSA_SUBPRIME_LEN bytes
+ * Output: xj, DSA_SUBPRIME_LEN bytes
  */
-#define dsa_reduce_mod_q(xj, q) \
-    PORT_Assert(q[0] >= 0x80); \
-    if (memcmp(xj,q,BSIZE) > 0) { \
-	carry = 0; \
-	for (i=BSIZE-1; i>=0; --i) { \
-	    carry += (signed int)xj[i] - (signed int)q[i]; \
-	    xj[i] = (PRUint8)carry; \
-	    carry >>= 8; \
-	} \
+static SECStatus
+dsa_reduce_mod_q(const unsigned char *w, const unsigned char *q,
+    unsigned char *xj)
+{
+    mp_int W, Q, Xj;
+    mp_err err;
+    SECStatus rv = SECSuccess;
+
+    PORT_Assert(q[0] >= 0x80);
+
+    /* Initialize MPI integers. */
+    MP_DIGITS(&W) = 0;
+    MP_DIGITS(&Q) = 0;
+    MP_DIGITS(&Xj) = 0;
+    CHECK_MPI_OK( mp_init(&W) );
+    CHECK_MPI_OK( mp_init(&Q) );
+    CHECK_MPI_OK( mp_init(&Xj) );
+    /*
+     * Convert input arguments into MPI integers.
+     */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&W, w, 2*GSIZE) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&Q, q, DSA_SUBPRIME_LEN) );
+    /*
+     * Algorithm 1 of FIPS 186-2 Change Notice 1, Step 3.3
+     *
+     * xj = (w0 || w1) mod q
+     */
+    CHECK_MPI_OK( mp_mod(&W, &Q, &Xj) );
+    CHECK_MPI_OK( mp_to_fixlen_octets(&Xj, xj, DSA_SUBPRIME_LEN) );
+cleanup:
+    mp_clear(&W);
+    mp_clear(&Q);
+    mp_clear(&Xj);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
     }
+    return rv;
+}
 
 /*
  * Specialized SHA1-like function.  This function appends zeroes to a 
  * single input block and runs a single instance of the compression function, 
- * as specified in FIPS 186-1 appendix 3.3.
+ * as specified in FIPS 186-2 appendix 3.3.
  */
-void 
-RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx, 
+static void 
+RNG_UpdateAndEnd_FIPS186_2(SHA1Context *ctx, 
                            unsigned char *input, unsigned int inputLen,
                            unsigned char *hashout, unsigned int *pDigestLen, 
                            unsigned int maxDigestLen);
@@ -123,9 +162,9 @@ RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx,
  */ 
 struct RNGContextStr {
     PRUint8   XKEY[BSIZE]; /* Seed for next SHA iteration */
-    PRUint8   Xj[BSIZE];   /* Output from previous operation */
+    PRUint8   Xj[2*GSIZE]; /* Output from previous operation. */
     PZLock   *lock;        /* Lock to serialize access to global rng */
-    PRUint8   avail;       /* # bytes of output available, [0...20] */
+    PRUint8   avail;       /* # bytes of output available, [0...2*GSIZE] */
     PRUint32  seedCount;   /* number of seed bytes given to generator */
     PRBool    isValid;     /* false if RNG reaches an invalid state */
 };
@@ -144,77 +183,87 @@ freeRNGContext()
 }
 
 /*
- * Implementation of the algorithm in FIPS 186-1 appendix 3.1, heretofore
- * called alg3_1().  It is assumed a lock for the global rng context has
- * already been acquired.
+ * Implementation of Algorithm 1 of FIPS 186-2 Change Notice 1,
+ * hereinafter called alg_cn_1().  It is assumed a lock for the global
+ * rng context has already been acquired.
  * Calling this function with XSEEDj == NULL is equivalent to saying there
  * is no optional user input, which is further equivalent to saying that
  * the optional user input is 0.
  */
 static SECStatus
-alg_fips186_1_x3_1(RNGContext *rng,
-                   const unsigned char *XSEEDj, unsigned char *q)
+alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
 {
     /* SHA1 context for G(t, XVAL) function */
     SHA1Context sha1cx;
     /* input to hash function */
     PRUint8 XVAL[BSIZE];
     /* store a copy of the output to compare with the previous output */
-    PRUint8 x_j[BSIZE];
-    /* used by ADD_160BIT macros */
-    int i, carry;
+    PRUint8 x_j[2*GSIZE];
+    /* used by ADD_B_BIT macros */
+    int k, carry;
+    /* store the output of G(t, XVAL) in the rightmost GSIZE bytes */
+    PRUint8 w_i[BSIZE];
+    int i;
     unsigned int len;
     if (!rng->isValid) {
 	/* RNG has alread entered an invalid state. */
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
     }
+#if GSIZE < BSIZE
+    /* zero the leftmost bytes so we can pass it to ADD_B_BIT_PLUS_CARRY */
+    memset(w_i, 0, BSIZE - GSIZE);
+#endif
     /* 
-     * <Step 2> Initialize t, taken care of in SHA-1 (same initial values) 
-     */
-    SHA1_Begin(&sha1cx);
-    /* 
-     * <Step 3a> XSEEDj is optional user input
-     * 
-     * <Step 3b> XVAL = (XKEY + XSEEDj) mod 2^b
-     *     :always reduced mod 2^b, since storing as 160-bit value
-     */
-    if (XSEEDj) {
-	/* XSEEDj > 0 */
-	ADD_160BIT_2(XVAL, rng->XKEY, XSEEDj);
-    } else {
-	/* XSEEDj == 0 */
-	memcpy(XVAL, rng->XKEY, BSIZE);
-    }
-    /* 
-     * <Step 3c> Xj = G(t, XVAL) mod q
-     *     :In this code, (mod q) is only understood for DSA ops, 
-     *     :not general RNG (what would q be in non-DSA uses?).
-     *     :If a q is specified, use it.
-     *     :FIPS 186-1 specifies a different padding than the SHA1 180-1
-     *     :specification, this function is implemented below.
+     * <Step 2> Initialize t, taken care of in SHA-1 (same initial values)
+     *
+     * <Step 3.1> XSEEDj is optional user input
      */ 
-    RNG_UpdateAndEnd_FIPS186_1(&sha1cx, XVAL, BSIZE, x_j, &len, BSIZE);
-    if (q != NULL) {
-	dsa_reduce_mod_q(x_j, q);
+    for (i = 0; i < 2; i++) {
+	/* 
+	 * <Step 3.2a> XVAL = (XKEY + XSEEDj) mod 2^b
+	 *     :always reduced mod 2^b, since storing as b-bit value
+	 */
+	if (XSEEDj) {
+	    /* XSEEDj > 0 */
+	    ADD_B_BIT_2(XVAL, rng->XKEY, XSEEDj);
+	} else {
+	    /* XSEEDj == 0 */
+	    memcpy(XVAL, rng->XKEY, BSIZE);
+	}
+	/* 
+	 * <Step 3.2b> Wi = G(t, XVAL)
+	 *     :FIPS 186-2 specifies a different padding than the SHA1 180-1
+	 *     :specification, this function is implemented in
+	 *     :RNG_UpdateAndEnd_FIPS186_2 below.
+	 */ 
+	SHA1_Begin(&sha1cx);
+	RNG_UpdateAndEnd_FIPS186_2(&sha1cx, XVAL, BSIZE,
+				   &w_i[BSIZE - GSIZE], &len, GSIZE);
+	/* 
+	 * <Step 3.2c> XKEY = (1 + XKEY + Wi) mod 2^b
+	 *     :always reduced mod 2^b, since storing as 160-bit value 
+	 */
+	ADD_B_BIT_PLUS_CARRY(rng->XKEY, rng->XKEY, w_i, 1);
+	/*
+	 * <Step 3.3> Xj = (W0 || W1)
+	 */
+	memcpy(&x_j[i*GSIZE], &w_i[BSIZE - GSIZE], GSIZE);
     }
-    /*     [FIPS 140-1] verify output does not match previous output */
-    if (memcmp(x_j, rng->Xj, BSIZE) == 0) {
-	/* failed FIPS 140-1 continuous RNG condition.  RNG now invalid. */
+    /*     [FIPS 140-2] verify output does not match previous output */
+    if (memcmp(x_j, rng->Xj, 2*GSIZE) == 0) {
+	/* failed FIPS 140-2 continuous RNG test.  RNG now invalid. */
 	rng->isValid = PR_FALSE;
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return SECFailure;
     }
     /* Xj is the output */
-    memcpy(rng->Xj, x_j, BSIZE);
-    /* 
-     * <Step 3d> XKEY = (1 + XKEY + Xj) mod 2^b
-     *     :always reduced mod 2^b, since storing as 160-bit value 
-     */
-    ADD_160BIT_PLUS_CARRY(rng->XKEY, rng->XKEY, x_j, 1);
-    /* Always have a full buffer after executing alg3_1() */
-    rng->avail = BSIZE;
+    memcpy(rng->Xj, x_j, 2*GSIZE);
+    /* Always have a full buffer after executing alg_cn_1() */
+    rng->avail = 2*GSIZE;
     /* housekeeping */
-    memset(x_j, 0, BSIZE);
+    memset(&w_i[BSIZE - GSIZE], 0, GSIZE);
+    memset(x_j, 0, 2*GSIZE);
     memset(XVAL, 0, BSIZE);
     return SECSuccess;
 }
@@ -237,6 +286,8 @@ static PRStatus rng_init(void)
 	/* create a lock for it */
 	globalrng->lock = PZ_NewLock(nssILockOther);
 	if (globalrng->lock == NULL) {
+	    PORT_Free(globalrng);
+	    globalrng = NULL;
 	    PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
 	    return PR_FAILURE;
 	}
@@ -246,7 +297,7 @@ static PRStatus rng_init(void)
 	numBytes = RNG_GetNoise(bytes, sizeof bytes);
 	RNG_RandomUpdate(bytes, numBytes);
     }
-    return (globalrng != NULL) ? PR_SUCCESS : PR_FAILURE;
+    return PR_SUCCESS;
 }
 
 /*
@@ -271,9 +322,8 @@ RNG_RNGInit(void)
 ** Update the global random number generator with more seeding
 ** material
 */
-SECStatus 
-prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes, 
-	unsigned char *q)
+static SECStatus 
+prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes)
 {
     SECStatus rv = SECSuccess;
     unsigned char inputhash[BSIZE];
@@ -292,9 +342,9 @@ prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes,
     if (bytes == BSIZE)
 	memcpy(inputhash, data, BSIZE);
     else
-	rv = SHA1_HashBuf(inputhash, data, bytes);
+	rv = B_HASH_BUF(inputhash, data, bytes);
     if (rv != SECSuccess) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	/* B_HASH_BUF set error */
 	return SECFailure;
     }
     /* --- LOCKED --- */
@@ -303,13 +353,13 @@ prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes,
      * Random information is initially supplied by a call to
      * RNG_SystemInfoForRNG().  That function collects entropy from
      * the system and calls RNG_RandomUpdate() to seed the generator.
-     * FIPS 186-1 3.1 step 1 specifies that a secret value for the
-     * seed-key must be chosen before the generator can begin.  The
-     * size of XKEY is b-bytes, so fill it with the first b-bytes
-     * sent to RNG_RandomUpdate().
+     * Algorithm 1 of FIPS 186-2 Change Notice 1, step 1 specifies that
+     * a secret value for the seed-key must be chosen before the
+     * generator can begin.  The size of XKEY is b bits, so fill it
+     * with the first b bits sent to RNG_RandomUpdate().
      */
     if (rng->seedCount == 0) {
-	/* This is the first call to RandomUpdate().  Use a SHA1 hash
+	/* This is the first call to RandomUpdate().  Use a hash
 	 * of the input to set the seed, XKEY.
 	 *
 	 * <Step 1> copy seed bytes into context's XKEY
@@ -320,16 +370,16 @@ prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes,
 	 * initialize XKEY, the "optional user input" at this stage
 	 * will be a pad of zeros, XSEEDj = 0.
 	 */
-	rv = alg_fips186_1_x3_1(rng, NULL, q);
-	/* As per FIPS 140-1 continuous RNG requirement, the first
+	rv = alg_fips186_2_cn_1(rng, NULL);
+	/* As per FIPS 140-2 continuous RNG test requirement, the first
 	 * iteration of output is discarded.  So here there is really
-	 * no output available.  This forces another execution of alg3_1()
+	 * no output available.  This forces another execution of alg_cn_1()
 	 * before any bytes can be extracted from the generator.
 	 */
 	rng->avail = 0;
     } else {
-	/* Execute the algorithm from FIPS 186-1 appendix 3.1 */
-	rv = alg_fips186_1_x3_1(rng, inputhash, q);
+	/* Execute the algorithm from FIPS 186-2 Change Notice 1 */
+	rv = alg_fips186_2_cn_1(rng, inputhash);
     }
     /* If got this far, have added bytes of seed data. */
     rng->seedCount += bytes;
@@ -342,12 +392,12 @@ prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes,
 
 /*
 ** Update the global random number generator with more seeding
-** material.  Not DSA, so no q.
+** material.
 */
 SECStatus 
 RNG_RandomUpdate(const void *data, size_t bytes)
 {
-    return prng_RandomUpdate(globalrng, data, bytes, NULL);
+    return prng_RandomUpdate(globalrng, data, bytes);
 }
 
 /*
@@ -356,7 +406,7 @@ RNG_RandomUpdate(const void *data, size_t bytes)
 */
 SECStatus 
 prng_GenerateGlobalRandomBytes(RNGContext *rng,
-                               void *dest, size_t len, unsigned char *q)
+                               void *dest, size_t len)
 {
     PRUint8 num;
     SECStatus rv = SECSuccess;
@@ -379,18 +429,21 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
     }
     /*
      * If there are enough bytes of random data, send back Xj, 
-     * else call alg3_1() with 0's to generate more random data.
+     * else call alg_cn_1() with 0's to generate more random data.
      */
     while (len > 0 && rv == SECSuccess) {
 	if (rng->avail == 0) {
 	    /* All available bytes are used, so generate more. */
-	    rv = alg_fips186_1_x3_1(rng, NULL, q);
+	    rv = alg_fips186_2_cn_1(rng, NULL);
 	}
-	/* number of bytes to obtain on this iteration (max of 20) */
+	/* number of bytes to obtain on this iteration (max of 40) */
 	num = PR_MIN(rng->avail, len);
-	/* if avail < BSIZE, the first avail bytes have already been used. */
+	/*
+	 * if avail < 2*GSIZE, the first 2*GSIZE - avail bytes have
+	 * already been used.
+	 */
 	if (num) {
-	    memcpy(output, rng->Xj + (BSIZE - rng->avail), num);
+	    memcpy(output, rng->Xj + (2*GSIZE - rng->avail), num);
 	    rng->avail -= num;
 	    len -= num;
 	    output += num;
@@ -403,12 +456,12 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
 
 /*
 ** Generate some random bytes, using the global random number generator
-** object.  Not DSA, so no q.
+** object.
 */
 SECStatus 
 RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 {
-    return prng_GenerateGlobalRandomBytes(globalrng, dest, len, NULL);
+    return prng_GenerateGlobalRandomBytes(globalrng, dest, len);
 }
 
 void
@@ -417,7 +470,8 @@ RNG_RNGShutdown(void)
     /* check for a valid global RNG context */
     PORT_Assert(globalrng != NULL);
     if (globalrng == NULL) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	/* Should set a "not initialized" error code. */
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	return;
     }
     /* clear */
@@ -429,14 +483,14 @@ RNG_RNGShutdown(void)
 /*
  *  SHA: Generate hash value from context
  *       Specialized function for PRNG
- *       The PRNG specified in FIPS 186-1 3.3 uses a function, G,
+ *       The PRNG specified in FIPS 186-2 3.3 uses a function, G,
  *       which has the same initialization and compression functions
- *       as SHA1 180-1, but uses different padding.  FIPS 186-1 3.3 
+ *       as SHA1 180-1, but uses different padding.  FIPS 186-2 3.3 
  *       specifies that the message be padded with 0's until the size
  *       reaches 512 bits.
  */
-void 
-RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx, 
+static void 
+RNG_UpdateAndEnd_FIPS186_2(SHA1Context *ctx, 
                            unsigned char *input, unsigned int inputLen,
                            unsigned char *hashout, unsigned int *pDigestLen, 
                            unsigned int maxDigestLen)
@@ -472,36 +526,32 @@ RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx,
 /*
  * Specialized RNG for DSA
  *
- * As per FIPS 186-1 appendix 3.1, in step 5 the value Xj should
- * be reduced mod q, a 160-bit prime number.   Since this parameter is
- * only meaningful in the context of DSA, the above RNG functions
+ * As per Algorithm 1 of FIPS 186-2 Change Notice 1, in step 3.3 the value
+ * Xj should be reduced mod q, a 160-bit prime number.  Since this parameter
+ * is only meaningful in the context of DSA, the above RNG functions
  * were implemented without it.  They are re-implemented below for use
  * with DSA.
  *
  */
 
 /*
-** Update the global random number generator with more seeding
-** material.  DSA needs a q parameter.
-*/
-SECStatus 
-DSA_RandomUpdate(void *data, size_t bytes, unsigned char *q)
-{
-    if( q && (*q == 0) ) {
-        ++q;
-    }
-    return prng_RandomUpdate(globalrng, data, bytes, q);
-}
-
-/*
 ** Generate some random bytes, using the global random number generator
 ** object.  In DSA mode, so there is a q.
 */
 SECStatus 
-DSA_GenerateGlobalRandomBytes(void *dest, size_t len, unsigned char *q)
+DSA_GenerateGlobalRandomBytes(void *dest, size_t len, const unsigned char *q)
 {
-    if( q && (*q == 0) ) {
+    SECStatus rv;
+    unsigned char w[2*GSIZE];
+
+    PORT_Assert(q && len == DSA_SUBPRIME_LEN);
+    if (*q == 0) {
         ++q;
     }
-    return prng_GenerateGlobalRandomBytes(globalrng, dest, len, q);
+    rv = prng_GenerateGlobalRandomBytes(globalrng, w, 2*GSIZE);
+    if (rv != SECSuccess) {
+	return rv;
+    }
+    dsa_reduce_mod_q(w, q, (unsigned char *)dest);
+    return rv;
 }
