@@ -331,6 +331,10 @@
          if (btn) {
            btn.addEventListener("command", this["_"+aName+"Func"], false);
            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+           var accesskey = this._bundle.GetStringFromName("accesskey-"+aName);
+           if (accesskey) {
+             btn.setAttribute("accesskey", accesskey);
+           }
            this["_"+aName+"Button"] = btn;
          }
          return btn;

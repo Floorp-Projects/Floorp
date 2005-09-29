@@ -350,13 +350,18 @@
            try {
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
-            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
+             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
+             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName+"-mac");
 #else
-            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
+             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
+             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName+"-unix");
 #endif
 #else
-            btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
+             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName);
 #endif
+             if (accesskey)
+               btn.setAttribute("accesskey", accesskey);
            }
            catch (e) {
            }
