@@ -38,6 +38,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "prefread.h"
+#include "nsString.h"
+#include "nsUTF8Utils.h"
 
 #ifdef TEST_PREFREAD
 #include <stdio.h>
@@ -60,11 +62,17 @@ enum {
     PREF_PARSE_COMMENT_BLOCK,
     PREF_PARSE_COMMENT_BLOCK_MAYBE_END,
     PREF_PARSE_ESC_SEQUENCE,
+    PREF_PARSE_HEX_ESCAPE,
+    PREF_PARSE_UTF16_LOW_SURROGATE,
     PREF_PARSE_UNTIL_OPEN_PAREN,
     PREF_PARSE_UNTIL_CLOSE_PAREN,
     PREF_PARSE_UNTIL_SEMICOLON,
     PREF_PARSE_UNTIL_EOL
 };
+
+#define UTF16_ESC_NUM_DIGITS    4
+#define HEX_ESC_NUM_DIGITS      2
+#define BITS_PER_HEX_DIGIT      4
 
 static const char kUserPref[] = "user_pref";
 static const char kPref[] = "pref";
@@ -75,9 +83,10 @@ static const char kFalse[] = "false";
  * pref_GrowBuf
  * 
  * this function will increase the size of the buffer owned
- * by the given pref parse state.  the only requirement is
- * that it increase the buffer by at least one byte, but we
- * use a simple doubling algorithm.
+ * by the given pref parse state.  We currently use a simple
+ * doubling algorithm, but the only hard requirement is that
+ * it increase the buffer by at least the size of the ps->esctmp
+ * buffer used for escape processing (currently 6 bytes).
  * 
  * this buffer is used to store partial pref lines.  it is
  * freed when the parse state is destroyed.
@@ -197,6 +206,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
 {
     const char *end;
     char c;
+    char udigit;
     int state;
 
     state = ps->state;
@@ -392,6 +402,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
              * for us in the previous state */
             switch (c) {
             case '\"':
+            case '\'':
             case '\\':
                 break;
             case 'r':
@@ -400,16 +411,114 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             case 'n':
                 c = '\n';
                 break;
+            case 'x': /* hex escape -- always interpreted as Latin-1 */
+            case 'u': /* UTF16 escape */
+                ps->esctmp[0] = c;
+                ps->esclen = 1;
+                ps->utf16[0] = ps->utf16[1] = 0;
+                ps->sindex = (c == 'x' ) ?
+                                HEX_ESC_NUM_DIGITS :
+                                UTF16_ESC_NUM_DIGITS;
+                state = PREF_PARSE_HEX_ESCAPE;
+                continue;
             default:
                 NS_WARNING("preserving unexpected JS escape sequence");
-                /* grow line buffer if necessary... */
-                if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
+                /* Invalid escape sequence so we do have to write more than
+                 * one character. Grow line buffer if necessary... */
+                if ((ps->lbcur+1) == ps->lbend && !pref_GrowBuf(ps))
                     return PR_FALSE; /* out of memory */
                 *ps->lbcur++ = '\\'; /* preserve the escape sequence */
                 break;
             }
             *ps->lbcur++ = c;
             state = PREF_PARSE_QUOTED_STRING;
+            break;
+
+        /* parsing a hex (\xHH) or utf16 escape (\uHHHH) */
+        case PREF_PARSE_HEX_ESCAPE:
+            if ( c >= '0' && c <= '9' )
+                udigit = (c - '0');
+            else if ( c >= 'A' && c <= 'F' )
+                udigit = (c - 'A') + 10;
+            else if ( c >= 'a' && c <= 'f' )
+                udigit = (c - 'a') + 10;
+            else {
+                /* bad escape sequence found, write out broken escape as-is */
+                NS_WARNING("preserving invalid or incomplete hex escape");
+                *ps->lbcur++ = '\\';  /* original escape slash */
+                if ((ps->lbcur + ps->esclen) >= ps->lbend && !pref_GrowBuf(ps))
+                    return PR_FALSE;
+                for (int i = 0; i < ps->esclen; ++i)
+                    *ps->lbcur++ = ps->esctmp[i];
+
+                /* push the non-hex character back for re-parsing. */
+                /* (++buf at the top of the loop keeps this safe)  */
+                --buf;
+                state = PREF_PARSE_QUOTED_STRING;
+                continue;
+            }
+
+            /* have a digit */
+            ps->esctmp[ps->esclen++] = c; /* preserve it */
+            ps->utf16[1] <<= BITS_PER_HEX_DIGIT;
+            ps->utf16[1] |= udigit;
+            ps->sindex--;
+            if (ps->sindex == 0) {
+                /* have the full escape. Convert to UTF8 */
+                int utf16len = 0;
+                if (ps->utf16[0]) {
+                    /* already have a high surrogate, this is a two char seq */
+                    utf16len = 2;
+                }
+                else if (0xD800 == (0xFC00 & ps->utf16[1])) {
+                    /* a high surrogate, can't convert until we have the low */
+                    ps->utf16[0] = ps->utf16[1];
+                    ps->utf16[1] = 0;
+                    state = PREF_PARSE_UTF16_LOW_SURROGATE;
+                    break;
+                }
+                else {
+                    /* a single utf16 character */
+                    ps->utf16[0] = ps->utf16[1];
+                    utf16len = 1;
+                }
+
+                /* actual conversion */
+                /* make sure there's room, 6 bytes is max utf8 len (in */
+                /* theory; 4 bytes covers the actual utf16 range) */
+                if (ps->lbcur+6 >= ps->lbend && !pref_GrowBuf(ps))
+                    return PR_FALSE;
+
+                ConvertUTF16toUTF8 converter(ps->lbcur);
+                converter.write(ps->utf16, utf16len);
+                ps->lbcur += converter.Size();
+                state = PREF_PARSE_QUOTED_STRING;
+            }
+            break;
+
+        /* looking for beginning of utf16 low surrogate */
+        case PREF_PARSE_UTF16_LOW_SURROGATE:
+            if (ps->sindex == 0 && c == '\\') {
+                ++ps->sindex;
+            }
+            else if (ps->sindex == 1 && c == 'u') {
+                /* escape sequence is correct, now parse hex */
+                ps->sindex = UTF16_ESC_NUM_DIGITS;
+                ps->esctmp[0] = 'u';
+                ps->esclen = 1;
+                state = PREF_PARSE_HEX_ESCAPE;
+            }
+            else {
+                /* didn't find expected low surrogate. Ignore high surrogate
+                 * (it would just get converted to nothing anyway) and start
+                 * over with this character */
+                 --buf;
+                 if (ps->sindex == 1)
+                     state = PREF_PARSE_ESC_SEQUENCE;
+                 else
+                     state = PREF_PARSE_QUOTED_STRING;
+                 continue;
+            }
             break;
 
         /* function open and close parsing */
