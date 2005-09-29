@@ -52,7 +52,6 @@ use vars qw(
             $opt_debug
             $opt_template
             $opt_help
-            $emversion
             );
 
 $SCRIPTDIR = $0;
@@ -61,7 +60,7 @@ push(@INC,$SCRIPTDIR);
 
 require "Moz/Milestone.pm";
 
-&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'emversion' => \$emversion, 'debug', 'help', 'template');
+&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template');
 
 if (defined($opt_help)) {
     &usage();
@@ -81,6 +80,11 @@ if (!defined($OBJDIR)) { $OBJDIR = '.'; }
 $MILESTONE_FILE  = "$TOPSRCDIR/config/milestone.txt";
 @MILESTONE_PARTS = (0, 0, 0, 0);
 
+#
+# Grab milestone (top line of $MILESTONE_FILE that starts with a digit)
+#
+my $milestone = Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
+
 if (defined(@TEMPLATE_FILE)) {
   my $TFILE;
 
@@ -97,16 +101,12 @@ if (defined(@TEMPLATE_FILE)) {
     }
   }
 } else {
-  if ($emversion) {
-    print Moz::Milestone::getEMMilestone($MILESTONE_FILE)."\n";
-  } else {
-    print Moz::Milestone::getOfficialMilestone($MILESTONE_FILE)."\n";
-  }
+  print "$milestone\n";
 }
 
 sub usage() {
   print <<END
-`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --emversion --template [file list]`  # will build file list from .tmpl files
+`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list]`  # will build file list from .tmpl files
 END
     ;
 }
