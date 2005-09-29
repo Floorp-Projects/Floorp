@@ -40,6 +40,7 @@ import java.net.InetAddress;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.crypto.ObjectNotFoundException;
 import org.mozilla.jss.crypto.TokenException;
@@ -169,7 +170,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
      * Accepts a connection. This call will block until a connection is made
      *   or the timeout is reached.
      */
-    public Socket accept() throws IOException {
+    public Socket accept() throws IOException,SocketTimeoutException {
         synchronized (acceptLock) {
             synchronized (this) {
                 if (isClosed) {
@@ -191,6 +192,10 @@ public class SSLServerSocket extends java.net.ServerSocket {
                     handshakeAsClient);
                 SocketProxy sp = new SocketProxy(socketPointer);
                 s.setSockProxy(sp);
+            } catch (SocketTimeoutException e) {
+                /* unnessary to do a s.close() since exception thrown*/
+                throw new SocketTimeoutException
+                        ("server socket accept timed out");
             } catch (Exception e) {
                 /* unnessary to do a s.close() since exception thrown*/
                 throw new IOException("accept method failed");
@@ -223,7 +228,8 @@ public class SSLServerSocket extends java.net.ServerSocket {
     public native boolean getReuseAddress() throws SocketException;
     private native void abortAccept() throws SocketException;
     private native byte[] socketAccept(SSLSocket s, int timeout,
-        boolean handshakeAsClient) throws SocketException;
+        boolean handshakeAsClient) 
+        throws SocketException, SocketTimeoutException;
 
     /**
      * Empties the SSL client session ID cache.

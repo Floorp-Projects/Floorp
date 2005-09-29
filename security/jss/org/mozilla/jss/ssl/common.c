@@ -92,14 +92,12 @@ JSSL_throwSSLSocketException(JNIEnv *env, char *message)
     if( msgString == NULL ) goto finish;
 
         /*
-         * Create the exception object. Use java.io.InterrupedIOException
+         * Create the exception object. Use java.net.SocketTimeoutException
          * for timeouts, org.mozilla.jss.ssl.SSLSocketException for everything
          * else.
-         * NOTE: When we stop supporting JDK <1.4, we should change
-         * InterruptedIOException to java.net.SocketTimeoutException.
          */
     if( nativeErrcode == PR_IO_TIMEOUT_ERROR ) {
-        excepClass = (*env)->FindClass(env, INTERRUPTED_IO_EXCEPTION);
+        excepClass = (*env)->FindClass(env, SOCKET_TIMEOUT_EXCEPTION);
         PR_ASSERT(excepClass != NULL);
         if( excepClass == NULL ) goto finish;
     
@@ -335,7 +333,7 @@ Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources
     /* SocketBase.close to destroy all native Resources */
     /* attached to the socket. There is no native resource */
     /* to release after close has been called. This method  */
-    /* remains because SocketProxy extends org.mozilla.jss.util.NativeProxy*/                 
+    /* remains because SocketProxy extends org.mozilla.jss.util.NativeProxy*/
     /* which defines releaseNativeResources as abstract and */
     /* therefore must be implemented by SocketProxy */
 }

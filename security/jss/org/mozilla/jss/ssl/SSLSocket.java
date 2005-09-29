@@ -38,6 +38,7 @@ package org.mozilla.jss.ssl;
 
 import java.net.*;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.io.*;
 import java.io.IOException;
 import java.util.Vector;
@@ -710,7 +711,8 @@ public class SSLSocket extends java.net.Socket {
     native int socketAvailable()
         throws IOException;
 
-    int read(byte[] b, int off, int len) throws IOException {
+    int read(byte[] b, int off, int len) 
+        throws IOException, SocketTimeoutException {
         synchronized (readLock) {
             synchronized (this) {
                 if ( isClosed ) { /* abort read if socket is closed */
@@ -722,6 +724,9 @@ public class SSLSocket extends java.net.Socket {
             int iRet;
             try {
                 iRet = socketRead(b, off, len, base.getTimeout()); 
+            } catch (SocketTimeoutException ste) {
+                throw new SocketTimeoutException(
+                    "SocketTimeoutException cannot read on socket");
             } catch (IOException ioe) {
                 throw new IOException(
                     "SocketException cannot read on socket");
@@ -734,7 +739,8 @@ public class SSLSocket extends java.net.Socket {
         }
     }
 
-    void write(byte[] b, int off, int len) throws IOException {
+    void write(byte[] b, int off, int len) 
+        throws IOException, SocketTimeoutException {
         synchronized (writeLock) {
             synchronized (this) {
                 if ( isClosed ) { /* abort write if socket is closed */
@@ -745,6 +751,9 @@ public class SSLSocket extends java.net.Socket {
             }
             try {
                 socketWrite(b, off, len, base.getTimeout());
+            } catch (SocketTimeoutException ste) {
+                throw new SocketTimeoutException(
+                    "SocketTimeoutException cannot write on socket");
             } catch (IOException ioe) {
                 throw new IOException(
                     "SocketException cannot write on socket");

@@ -116,6 +116,8 @@ PR_BEGIN_EXTERN_C
 
 #define SSLSOCKET_EXCEPTION "org/mozilla/jss/ssl/SSLSocketException"
 
+#define SOCKET_TIMEOUT_EXCEPTION "java/net/SocketTimeoutException"
+
 #define TOKEN_EXCEPTION "org/mozilla/jss/crypto/TokenException"
 
 #define TOKEN_NOT_INITIALIZED_EXCEPTION "org/mozilla/jss/pkcs11/PK11Token$NotInitializedException"

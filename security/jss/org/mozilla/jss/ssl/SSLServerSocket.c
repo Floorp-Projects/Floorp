@@ -111,15 +111,23 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
     sock->accepter = NULL;
     PR_Unlock(sock->lock);
     if( newFD == NULL ) {
-#ifdef WINNT
         PRErrorCode err = PR_GetError();
-        if( err == PR_PENDING_INTERRUPT_ERROR ||
-            err == PR_IO_TIMEOUT_ERROR ) {
+
+        if( err == PR_PENDING_INTERRUPT_ERROR ) {
+#ifdef WINNT
+            /* Clean up after PR_interrupt. */
             PR_NT_CancelIo(sock->fd);
-        }
 #endif
-        JSSL_throwSSLSocketException(env,
-            "Failed to accept new connection");
+            JSSL_throwSSLSocketException(env, "Accept operation interrupted");
+        } else if( err == PR_IO_TIMEOUT_ERROR ) {
+#ifdef WINNT
+            PR_NT_CancelIo(sock->fd);
+#endif
+            JSSL_throwSSLSocketException(env, "Accept operation timed out");
+        } else {
+            JSSL_throwSSLSocketException
+                (env, "Error accepting connection on server socket");
+        }
         goto finish;
     }
 
