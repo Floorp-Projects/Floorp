@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  widget \
+		  nkcache \
 		  $(NULL)
 
 CPPSRCS		= nsSHEntry.cpp        \
