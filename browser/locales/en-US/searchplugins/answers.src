@@ -5,11 +5,11 @@
         name="Answers.com"
         description="Dictionary Search on Answers.com"
         method="GET"
-        action="http://www.answers.com/"
+        action="http://www.answers.com/main/ntquery"
         queryCharset="UTF-8">
 
-  <input name="" user>
-  
+  <input name="s" user>
+  <input name="gwp" value="13">
 </search>
 
 <BROWSER update="http://www.mozilla.org/products/firefox/plugins/answers.src" 
