@@ -265,15 +265,15 @@ GRE_GetCurrentProcessDirectory(char* buffer)
  * to compute it multiple times.
  */
 
-static char sGRELocation[MAXPATHLEN] = "";
+static char sXPCOMPath[MAXPATHLEN] = "";
 
 extern "C" char const *
-GRE_GetGREPath()
+GRE_GetXPCOMPath()
 {
   // we've already done this...
-  if (*sGRELocation)
-    return sGRELocation;
-    
+  if (*sXPCOMPath)
+    return sXPCOMPath;
+
   char buffer[MAXPATHLEN];
     
   // If the xpcom library exists in the current process directory,
@@ -289,8 +289,8 @@ GRE_GetGREPath()
     if (statResult != -1) {
       //found our xpcom lib in the current process directory
       buffer[pathlen] = '\0';
-      strcpy(sGRELocation, buffer);
-      return sGRELocation;
+      strcpy(sXPCOMPath, buffer);
+      return sXPCOMPath;
     }
   }
 
@@ -301,9 +301,9 @@ GRE_GetGREPath()
 
   GRE_GetGREPathWithProperties(&version, 1,
                                nsnull, 0,
-                               sGRELocation, MAXPATHLEN);
-  if (*sGRELocation)
-    return sGRELocation;
+                               sXPCOMPath, MAXPATHLEN);
+  if (*sXPCOMPath)
+    return sXPCOMPath;
 
   return nsnull;
 }
@@ -317,36 +317,21 @@ GRE_GetGREDirectory(nsILocalFile* *_retval)
   // Get the path of the GRE which is compatible with our embedding application
   // from the registry
 
-  const char *pGREDir = GRE_GetGREPath();
-  if(pGREDir) {
-    nsCOMPtr<nsILocalFile> tempLocal;
-    nsEmbedCString leaf;
-    NS_CStringSetData(leaf, pGREDir);
-    rv = NS_NewNativeLocalFile(leaf, PR_TRUE, getter_AddRefs(tempLocal));
+  const char *pGREDir = GRE_GetXPCOMPath();
+  if(!pGREDir)
+    return NS_ERROR_FAILURE;
 
-    if (NS_SUCCEEDED(rv)) {
-      *_retval = tempLocal;
-      NS_ADDREF(*_retval);
-    }
-  }
-  return rv;
-}
+  nsCOMPtr<nsILocalFile> xpcomPath;
+  nsEmbedCString leaf(pGREDir);
+  rv = NS_NewNativeLocalFile(leaf, PR_TRUE, getter_AddRefs(xpcomPath));
 
-static char sXPCOMPath[MAXPATHLEN];
+  if (NS_FAILED(rv))
+    return rv;
 
-extern "C" const char* 
-GRE_GetXPCOMPath()
-{
-  const char* grePath = GRE_GetGREPath();
+  nsCOMPtr<nsIFile> directory;
+  rv = xpcomPath->GetParent(getter_AddRefs(directory));
+  if (NS_FAILED(rv))
+    return rv;
 
-  if (!grePath) {
-    grePath = getenv("MOZILLA_FIVE_HOME");
-    if (!grePath || !*grePath) {
-      return nsnull;
-    }
-  }
-
-  sprintf(sXPCOMPath, "%s" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL, grePath);
-
-  return sXPCOMPath;
+  return CallQueryInterface(directory, _retval);
 }

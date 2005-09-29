@@ -61,7 +61,8 @@ struct GREProperty {
 };
 
 /**
- * Locate the path of a GRE with certain properties.
+ * Locate the path of the xpcom shared library from a GRE with specified
+ * properties.
  * 
  * @param versions         An array of version ranges: if any version range
  *                         matches, the GRE is considered acceptable.
@@ -110,37 +111,27 @@ XPCOMGlueShutdown();
 
 
 /**
- * Locate the path of a compatible GRE. This looks for the GRE version in
+ * Locate the path of the XPCOM shared library of a compatible GRE.
+ * The result of this function is normally passed directly to
+ * XPCOMGlueStartup. This looks for the GRE version in
  * nsBuildID.h, which is generated at build time. Unless you set
  * MOZ_MILESTONE_RELEASE this will probably not be a useful GRE version string.
- * 
- * @return string buffer pointing to the GRE path (without a trailing
- *         directory separator). Callers do not need to free this buffer.
+ *
+ * @return string buffer pointing to the XPCOM DLL path. Callers do
+ *         not need to free this buffer.
+ * @status DEPRECATED - Use GRE_GetGREPathWithProperties
  */
 extern "C" NS_HIDDEN_(char const *)
-GRE_GetGREPath();
+GRE_GetXPCOMPath();
 
 
 /**
- * Locate the path of a compatible GRE. This is returned as an
- * nsILocalFile instead of a char*.
+ * Locate the directory of a compatible GRE as an nsIFile
  *
  * @param _retval   Ordinary XPCOM getter, returns an addrefed interface.
  */
 extern "C" NS_HIDDEN_(nsresult)
 GRE_GetGREDirectory(nsILocalFile* *_retval);
-
-
-/**
- * Locate the path of the XPCOM binary of a compatible GRE.
- * The result of this function is normally passed directly to
- * XPCOMGlueStartup.
- *
- * @return string buffer pointing to the XPCOM DLL path. Callers do
- *         not need to free this buffer.
- */
-extern "C" NS_HIDDEN_(char const *)
-GRE_GetXPCOMPath();
 
 
 /**
