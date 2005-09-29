@@ -116,6 +116,10 @@ struct JSXMLArray {
     JSXMLArrayCursor    *cursors;
 };
 
+#define JSXML_PRESET_CAPACITY   JS_BIT(31)
+#define JSXML_CAPACITY_MASK     JS_BITMASK(31)
+#define JSXML_CAPACITY(array)   ((array)->capacity & JSXML_CAPACITY_MASK)
+
 struct JSXMLArrayCursor {
     JSXMLArray          *array;
     uint32              index;

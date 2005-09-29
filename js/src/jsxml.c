@@ -1043,7 +1043,7 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
             return JS_FALSE;
         }
     }
-    array->capacity = capacity;
+    array->capacity = JSXML_PRESET_CAPACITY | capacity;
     array->vector = vector;
     return JS_TRUE;
 }
@@ -1051,6 +1051,8 @@ XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
 static void
 XMLArrayTrim(JSXMLArray *array)
 {
+    if (array->capacity & JSXML_PRESET_CAPACITY)
+        return;
     if (array->length < array->capacity)
         XMLArraySetCapacity(NULL, array, array->length);
 }
@@ -1058,8 +1060,7 @@ XMLArrayTrim(JSXMLArray *array)
 static JSBool
 XMLArrayInit(JSContext *cx, JSXMLArray *array, uint32 capacity)
 {
-    array->length = 0;
-    array->capacity = capacity;
+    array->length = array->capacity = 0;
     array->vector = NULL;
     array->cursors = NULL;
     return capacity == 0 || XMLArraySetCapacity(cx, array, capacity);
@@ -1120,7 +1121,8 @@ XMLArrayAddMember(JSContext *cx, JSXMLArray *array, uint32 index, void *elt)
     void **vector;
 
     if (index >= array->length) {
-        if (index >= array->capacity) {
+        if (index >= JSXML_CAPACITY(array)) {
+            /* Arrange to clear JSXML_PRESET_CAPACITY from array->capacity. */
             capacity = index + 1;
             if (index >= LINEAR_THRESHOLD) {
                 capacity = JS_ROUNDUP(capacity, LINEAR_INCREMENT);
@@ -1188,6 +1190,7 @@ XMLArrayDelete(JSContext *cx, JSXMLArray *array, uint32 index, JSBool compress)
         while (++index < length)
             vector[index-1] = vector[index];
         array->length = length - 1;
+        array->capacity = JSXML_CAPACITY(array);
     } else {
         vector[index] = NULL;
     }
