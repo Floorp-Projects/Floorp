@@ -1390,6 +1390,11 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
   // from an nsMacWindow, then inWindow should refer to that nsMacWindow.
   nsIWidget* widgetToScroll = inWindow->FindWidgetHit(inMouseLoc);
 
+  // Not all scroll events for the window are over a widget.  Consider
+  // the title bar.
+  if (!widgetToScroll)
+    return PR_FALSE;
+
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, widgetToScroll);
 
   // The direction we get from the carbon event is opposite from the way
