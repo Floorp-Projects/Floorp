@@ -69,47 +69,32 @@
 
   <toolbox>
 
-	<command id="cmd_BrowserOpenTab" oncommand="BrowserOpenTab()"/>
-	<command id="cmd_BrowserScreenRotate" oncommand="BrowserScreenRotate()"/>
-	<command id="cmd_BrowserOpenInfo" oncommand="BrowserOpenInfo()"/>
-	<command id="cmd_BrowserTestDialogs" oncommand="BrowserTestDialogs()"/>
-	<command id="cmd_BrowserTestSendSMS" oncommand="BrowserTestSendSMS()"/>
-	<command id="cmd_ViewOptions" oncommand="BrowserViewOptions()"/>
-    <command id="cmd_ViewRSS" oncommand="BrowserViewRSS()"/>
-    <command id="cmd_BrowserBack" oncommand="BrowserBack()" />
-	<command id="cmd_BrowserForward" oncommand="BrowserForward()" />
-	<command id="cmd_BrowserReload" oncommand="BrowserReload()" />
-	<command id="cmd_BrowserZoomPlus" oncommand="BrowserResetZoomPlus()" />
-	<command id="cmd_BrowserZoomMinus" oncommand="BrowserResetZoomMinus()" />
-    <command id="cmd_DoPanelPreferences" oncommand="DoPanelPreferences()" /> 
-    <command id="cmd_DoBrowserRSS" oncommand="DoBrowserRSS()" />
-    
+    <command id="cmd_BrowserOpenTab"         oncommand="BrowserOpenTab()"/>
+    <command id="cmd_BrowserScreenRotate"    oncommand="BrowserScreenRotate()"/>
+    <command id="cmd_BrowserOpenInfo"        oncommand="BrowserOpenInfo()"/>
+    <command id="cmd_BrowserTestDialogs"     oncommand="BrowserTestDialogs()"/>
+    <command id="cmd_BrowserTestSendSMS"     oncommand="BrowserTestSendSMS()"/>
+    <command id="cmd_ViewOptions"            oncommand="BrowserViewOptions()"/>
+    <command id="cmd_ViewRSS"                oncommand="BrowserViewRSS()"/>
+    <command id="cmd_BrowserBack"            oncommand="BrowserBack()" />
+    <command id="cmd_BrowserForward"         oncommand="BrowserForward()" />
+    <command id="cmd_BrowserReload"          oncommand="BrowserReload()" />
+    <command id="cmd_BrowserStop"            oncommand="BrowserStop()" />
+    <command id="cmd_BrowserZoomPlus"        oncommand="BrowserResetZoomPlus()" />
+    <command id="cmd_BrowserZoomMinus"       oncommand="BrowserResetZoomMinus()" />
+    <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
+    <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
+    <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
+          
     <toolbar id="nav-bar">
-       <menubar  class="chromeclass-menubar">
-         <menu id="menu-button" > 
-         	 <menupopup>
-		     <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
-<!--          not working just yet.
-		     <menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
--->
-		     <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
-		     <!-- separator for now in CSS - need to redesign -->
-		     <menuitem id="command_ViewOptions" style='border-top:1px solid black' type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
-		     <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
-		     <!--
-		     <menuitem id="command_BrowserOpenInfo" label="page Info"  />
-		     <menuitem id="command_BrowserTestDialogs" label="Dialog XUL" />
-		     <menuitem id="command_BrowserTestSendSMS" label="Send SMS"/>
-		     -->
-            </menupopup>
-          </menu>
-        </menubar>
+    
+        <toolbarbutton tabindex="1" id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
+        <toolbarbutton tabindex="2" id="back-button" command="cmd_BrowserBack" />  
+        <toolbarbutton tabindex="3" id="forward-button" command="cmd_BrowserForward" />  
+        <toolbarbutton tabindex="4" id="reload-stop-button" class="reload-button" command="cmd_BrowserReload"/>
 
-        <toolbarbutton id="back-button" onclick="BrowserBack()"/>  
-        <toolbarbutton id="forward-button" onclick="BrowserForward()"/>  
-        <toolbarbutton id="reload-stop-button" class="reload-button" onclick="BrowserReload()"/>
-
-        <textbox id="urlbar" 
+        <textbox tabindex="5" 
+                 id="urlbar" 
                  flex="100%" 
                  type="autocomplete"
                  enablehistory="true"
@@ -120,9 +105,9 @@
                  ontextentered="return URLBarEntered();">
             <hbox><image id="lock-icon" class="security-na" /></hbox>
         </textbox>
-                 
 
     </toolbar>
+    
 	<toolbar id="toolbar-view" flex="1" collapsed="true" >
 		<groupbox flex="1" class="box-floatoptions">
 		    <caption label="&zoom.label;"/>
@@ -178,7 +163,7 @@
   </hbox>
 
   <!-- place holder for our app popups and hook to the overlay --> 
-<popupset>
+  <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
 	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand=""/>
 	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
@@ -191,7 +176,18 @@
          <menuitem id="menu_close"/>
 		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label="about"  />
 	</popup>
-</popupset>
+    
+    <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()">
+        <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+<!--    not working just yet.
+		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
+-->
+        <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
+        <!-- separator for now in CSS - need to redesign -->
+        <menuitem id="command_ViewOptions" style='border-top:1px solid black' type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
+        <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
+    </menupopup>  
+  </popupset>
   
 </window>
  

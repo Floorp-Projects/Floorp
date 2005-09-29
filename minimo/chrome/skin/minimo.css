@@ -131,11 +131,6 @@ toolbar *, #appcontent * {
 	  list-style-image      : url("chrome://minimo/skin/stop.gif");
   }
 
-#reload-button 
-  {
-	  list-style-image      : url("chrome://minimo/skin/reload.gif");
-  }
-
 .stop-button 
   {
 	  list-style-image      : url("chrome://minimo/skin/stop.gif");

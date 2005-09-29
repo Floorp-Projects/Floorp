@@ -91,7 +91,7 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
         this.stopreloadButton.className = "stop-button";
-        this.stopreloadButton.onClick = "BrowserStop()";
+        this.stopreloadButton.command = "cmd_BrowserStop";
         
         return;
       }
@@ -122,7 +122,7 @@ nsBrowserStatusHandler.prototype =
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
 
         this.stopreloadButton.className = "reload-button";
-        this.stopreloadButton.onClick = "BrowserReload()";
+        this.stopreloadButton.command= "cmd_BrowserReload";
         
         return;
       }
@@ -259,6 +259,21 @@ function MiniNavStartup()
   }
 
   loadURI(homepage);
+  
+  /*
+   * We add event handler to catch the right and left keys on the main_MenuPopup 
+   */
+  document.addEventListener("keypress",eventHandlerMenu,true);
+  
+}
+
+var gShowingMenuPopup=null;
+
+function eventHandlerMenu(e) {
+  if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
+    BrowserMenuPopupFalse();
+    document.getElementById("back-button").focus();
+  }
 }
 
 /** 
@@ -523,4 +538,21 @@ function BrowserScreenRotate()
   {
     alert(ex);
   }
+}
+
+/* 
+ * Main Menu 
+ */ 
+ 
+function BrowserMenuPopup() {
+    document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
+    gShowingMenuPopup=true;
+}
+function BrowserMenuPopupFalse() {
+    document.getElementById("menu_MainPopup").hidePopup();
+    gShowingMenuPopup=false;
+}
+
+function MenuPopupShowing() {
+	document.getElementById("menu-button").focus();
 }
