@@ -50,6 +50,7 @@ DIRS = lib  \
  certutil  \
  checkcert  \
  crlutil  \
+ crmftest \
  dbtest \
  derdump  \
  digest  \
