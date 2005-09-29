@@ -52,6 +52,7 @@
 #               other tests
 #   ssl.sh    - tests SSL V2 SSL V3 and TLS
 #   smime.sh  - S/MIME testing
+#   crmf.sh   - CRMF/CMMF testing
 #   sdr.sh    - test NSS SDR
 #   cipher.sh - test NSS ciphers
 #   perf.sh   - Nightly performance measurments
@@ -77,7 +78,7 @@
 #
 ########################################################################
 
-TESTS="cert ssl sdr cipher smime perf tools fips dbtests"
+TESTS="cert ssl sdr cipher smime crmf perf tools fips dbtests"
 SCRIPTNAME=all.sh
 CLEANUP="${SCRIPTNAME}"
 cd `dirname $0`	# will cause problems if sourced 
