@@ -130,13 +130,16 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     mStream = outputStream;
     rv = cacheService->VisitEntries(this);
-    if (NS_FAILED(rv)) return rv;
+    mBuffer.Truncate();
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+        mBuffer.AppendLiteral("<h2>The cache is disabled.</h2>\n");
+    }
+    else if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     if (!mDeviceID.IsEmpty()) {
-        mBuffer.AssignLiteral("</pre>\n");
-    }
-    else {
-        mBuffer.Truncate();
+        mBuffer.AppendLiteral("</pre>\n");
     }
     mBuffer.AppendLiteral("</div>\n</body>\n</html>\n");
     outputStream->Write(mBuffer.get(), mBuffer.Length(), &bytesWritten);
