@@ -844,9 +844,6 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     }
   }
 
-  if (aFrame->GetParent()->GetStyleDisplay()->mDisplay==NS_STYLE_DISPLAY_STACK)
-    return PR_TRUE;
-
   return PR_FALSE;
 }
 
