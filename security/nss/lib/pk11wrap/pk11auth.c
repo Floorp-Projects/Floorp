@@ -567,7 +567,7 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
 	 * we can skip our own C_Login call (which would force the token to
 	 * try to login again).
 	 * 
-	 * Applications that don't know about protectedPinAuth will return a 
+	 * Applications that don't know about protectedAuthPath will return a 
 	 * password, which we will ignore and trigger the token to 
 	 * 'authenticate' itself anyway. Hopefully the blinking display on 
 	 * the reader, or the flashing light under the thumbprint reader will 
@@ -579,13 +579,14 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
 	    if (strcmp(password, PK11_PW_RETRY) == 0) {
 		rv = SECWouldBlock;
 		PORT_Free(password);
-		break;
-	     /* applicaton tried to authenticate and succeeded we're done */
-	     } else if (strcmp(password, PK11_PW_AUTHENTICATED) == 0) {
+		continue;
+	    }
+	    /* applicaton tried to authenticate and succeeded we're done */
+	    if (strcmp(password, PK11_PW_AUTHENTICATED) == 0) {
 		rv = SECSuccess;
 		PORT_Free(password);
 		break;
-	     }
+	    }
 	}
 	rv = pk11_CheckPassword(slot,password);
 	PORT_Memset(password, 0, PORT_Strlen(password));

@@ -390,7 +390,7 @@ typedef PRBool (PR_CALLBACK *PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
 
 /*
  * Special strings the password callback function can return only if
- * the slot is an protected pin path slot.
+ * the slot is an protected auth path slot.
  */ 
 #define PK11_PW_RETRY		"RETRY"	/* an failed attempt to authenticate
 					 * has already been made, just retry
@@ -399,9 +399,9 @@ typedef PRBool (PR_CALLBACK *PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
 					 * has completed. Continue without
 					 * another call to C_Login */
 /* All other non-null values mean that that NSS could call C_Login to force
- * the authentication. The following define is to add applications in 
+ * the authentication. The following define is to aid applications in 
  * documenting that is what it's trying to do */
-#define PK11_PW_TRY		""      /* Default: a prompt has been presented
+#define PK11_PW_TRY		"TRY"   /* Default: a prompt has been presented
 					 * to the user, initiate a C_Login
 					 * to authenticate the token */
 
