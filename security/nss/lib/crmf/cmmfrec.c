@@ -70,22 +70,22 @@ CMMF_DestroyKeyRecRepContent(CMMFKeyRecRepContent *inKeyRecRep)
 {
     PORT_Assert(inKeyRecRep != NULL);
     if (inKeyRecRep != NULL && inKeyRecRep->poolp != NULL) {
-        if (!inKeyRecRep->isDecoded) {
-	    int i;
+	int i;
 
+	if (!inKeyRecRep->isDecoded && inKeyRecRep->newSigCert != NULL) {
 	    CERT_DestroyCertificate(inKeyRecRep->newSigCert);
-	    if (inKeyRecRep->caCerts != NULL) {
-	        for (i=0; inKeyRecRep->caCerts[i] != NULL; i++) {
-		    CERT_DestroyCertificate(inKeyRecRep->caCerts[i]);
-		}
+	}
+	if (inKeyRecRep->caCerts != NULL) {
+	    for (i=0; inKeyRecRep->caCerts[i] != NULL; i++) {
+		CERT_DestroyCertificate(inKeyRecRep->caCerts[i]);
 	    }
-	    if (inKeyRecRep->keyPairHist != NULL) {
-	        for (i=0; inKeyRecRep->keyPairHist[i] != NULL; i++) {
-		    if (inKeyRecRep->keyPairHist[i]->certOrEncCert.choice ==
+	}
+	if (inKeyRecRep->keyPairHist != NULL) {
+	    for (i=0; inKeyRecRep->keyPairHist[i] != NULL; i++) {
+	        if (inKeyRecRep->keyPairHist[i]->certOrEncCert.choice ==
 			cmmfCertificate) {
-		        CERT_DestroyCertificate(inKeyRecRep->keyPairHist[i]->
+		    CERT_DestroyCertificate(inKeyRecRep->keyPairHist[i]->
 					       certOrEncCert.cert.certificate);
-		    }
 		}
 	    }
 	}
@@ -117,6 +117,10 @@ CMMF_KeyRecRepContentSetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep,
     if (inKeyRecRep == NULL || inNewSignCert == NULL) {
         return SECFailure;
     }
+    if (!inKeyRecRep->isDecoded && inKeyRecRep->newSigCert) {
+	CERT_DestroyCertificate(inKeyRecRep->newSigCert);
+    }
+    inKeyRecRep->isDecoded = PR_FALSE;
     inKeyRecRep->newSigCert = CERT_DupCertificate(inNewSignCert);
     return (inKeyRecRep->newSigCert == NULL) ? SECFailure : SECSuccess;    
 }
@@ -231,6 +235,12 @@ CMMF_KeyRecRepContentGetNewSignCert(CMMFKeyRecRepContent *inKeyRecRep)
 	inKeyRecRep->newSigCert == NULL) {
         return NULL;
     }
+    /* newSigCert may not be a real certificate, it may be a hand decoded
+     * cert structure. This code makes sure we hand off a real, fully formed
+     * CERTCertificate to the caller. TODO: This should move into the decode
+     * portion so that we never wind up with a half formed CERTCertificate
+     * here. In this case the call would be to CERT_DupCertificate.
+     */
     return CERT_NewTempCertificate(CERT_GetDefaultCertDB(), 
 			          &inKeyRecRep->newSigCert->signatureWrap.data,
 				   NULL, PR_FALSE, PR_TRUE);

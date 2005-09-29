@@ -128,6 +128,7 @@ PRTime notBefore;
 char *personalCert      = NULL;
 char *recoveryEncrypter = NULL;
 char *caCertName        = NULL;
+static secuPWData pwdata = { PW_NONE, 0 };
 char *configdir;
 PRBool doingDSA         = PR_FALSE;
 
@@ -171,23 +172,6 @@ get_serial_number(long *dest)
     return SECSuccess;
 }
 
-char *
-promptForPassword (PK11SlotInfo *slot, PRBool retry, void *cx)
-{
-    char passWord[80];
-    char *retPass = NULL;
-    
-    if (retry) {
-        printf ("Incorrect password.  Please re-enter the password.\n");
-    } 
-    printf ("WARNING: Password will be echoed to the screen.\n");
-    printf ("Please enter the password for slot \"%s\":", 
-	    PK11_GetTokenName(slot));
-    scanf ("%s", passWord);
-    retPass = PORT_Strdup(passWord);
-    return retPass;
-}
-
 PK11RSAGenParams *
 GetRSAParams(void) 
 {
@@ -203,20 +187,6 @@ GetRSAParams(void)
     
     return rsaParams;
     
-}
-
-SECStatus
-SetSlotPassword(PK11SlotInfo *slot)
-{
-    char userPin[80];
-
-    printf ("Initialization of PIN's for your Database.\n");
-    printf ("------------------------------------------\n");
-    printf ("Please enter the PIN's for your Database.\n");
-    printf ("Warning: ALL PIN'S WILL BE ECHOED TO SCREEN!!!\n");
-    printf ("Now enter the PIN for the user: ");
-    scanf  ("%s", userPin);
-    return PK11_InitPin (slot, NULL, userPin);
 }
 
 PQGParams*
@@ -245,15 +215,10 @@ GetSubjectPubKeyInfo(TESTKeyPair *pair)
     SECKEYPrivateKey         *privKey    = NULL;
     SECKEYPublicKey          *pubKey     = NULL;
     PK11SlotInfo             *keySlot    = NULL;
-    PK11SlotInfo             *cryptoSlot = NULL;
     
     keySlot = PK11_GetInternalKeySlot();
-    PK11_Authenticate(keySlot, PR_FALSE, NULL);
+    PK11_Authenticate(keySlot, PR_FALSE, &pwdata);
 
-    /* the slot authentication logic in this program needs an OVERHAUL. */
-    cryptoSlot = PK11_GetInternalSlot();
-    PK11_Authenticate(cryptoSlot, PR_FALSE, NULL);
-    PK11_FreeSlot(cryptoSlot);
 
     if (!doingDSA) {
 	PK11RSAGenParams *rsaParams = GetRSAParams();
@@ -263,7 +228,7 @@ GetSubjectPubKeyInfo(TESTKeyPair *pair)
 	}
 	privKey = PK11_GenerateKeyPair(keySlot, CKM_RSA_PKCS_KEY_PAIR_GEN,
 				       (void*)rsaParams, &pubKey, PR_FALSE,
-				       PR_FALSE, NULL);
+				       PR_FALSE, &pwdata);
     } else {
 	PQGParams *dsaParams = GetDSAParams();
 	if (dsaParams == NULL) {
@@ -272,7 +237,7 @@ GetSubjectPubKeyInfo(TESTKeyPair *pair)
 	}
 	privKey = PK11_GenerateKeyPair(keySlot, CKM_DSA_KEY_PAIR_GEN,
 				       (void*)dsaParams, &pubKey, PR_FALSE,
-				       PR_FALSE, NULL);
+				       PR_FALSE, &pwdata);
     }
     PK11_FreeSlot(keySlot);
     if (privKey == NULL || pubKey == NULL) {
@@ -295,33 +260,20 @@ GetSubjectPubKeyInfo(TESTKeyPair *pair)
 SECStatus
 InitPKCS11(void)
 {
-#if 1
-    PK11_SetPasswordFunc(promptForPassword);
-#else
-    PK11SlotInfo *cryptoSlot, *keySlot;
+    PK11SlotInfo *keySlot;
 
-    PK11_SetPasswordFunc(promptForPassword);
+    PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    cryptoSlot = PK11_GetInternalSlot();
     keySlot    = PK11_GetInternalKeySlot();
     
-    if (PK11_NeedUserInit(cryptoSlot) && PK11_NeedLogin(cryptoSlot)) {
-        if (SetSlotPassword (cryptoSlot) != SECSuccess) {
-	    printf ("Initializing the PINs failed.\n");
-	    return SECFailure;
-	}
-    }
-    
     if (PK11_NeedUserInit(keySlot) && PK11_NeedLogin(keySlot)) {
-        if (SetSlotPassword (keySlot) != SECSuccess) {
+        if (SECU_ChangePW(keySlot, NULL, NULL) != SECSuccess) {
 	    printf ("Initializing the PINs failed.\n");
 	    return SECFailure;
 	}
     }
 
-    PK11_FreeSlot(cryptoSlot);
     PK11_FreeSlot(keySlot);
-#endif
     return SECSuccess;
 }
 
@@ -590,7 +542,7 @@ AddProofOfPossession(TESTKeyPair *pair,
     switch(inPOPChoice){
     case crmfSignature:
       CRMF_CertReqMsgSetSignaturePOP(pair->certReqMsg, pair->privKey, 
-                                     pair->pubKey, NULL, NULL, NULL);
+                                     pair->pubKey, NULL, NULL, &pwdata);
       break;
     case crmfRAVerified:
       CRMF_CertReqMsgSetRAVerifiedPOP(pair->certReqMsg);
@@ -865,7 +817,7 @@ EncodeCMMFRecoveryMessage(const char * filePath,
 	rv = 409;
 	goto finish;
     }
-    privKey = PK11_FindKeyByAnyCert(cert, NULL);
+    privKey = PK11_FindKeyByAnyCert(cert, &pwdata);
     if (privKey == NULL) {
         printf ("Could not get the private key associated with the\n"
 		"certificate %s\n", personalCert);
@@ -1190,7 +1142,7 @@ DoKeyRecovery( SECKEYPrivateKey *privKey)
 	PK11_FreeSlot(slot);
 	return 509;
     }
-    caPrivKey = PK11_FindKeyByAnyCert(caCert, NULL);
+    caPrivKey = PK11_FindKeyByAnyCert(caCert, &pwdata);
     if (CMMF_KeyRecRepContentGetPKIStatusInfoStatus(keyRecRep) != 
 	                                                      cmmfGranted) {
         PORT_Free(ciphertext);
@@ -1212,7 +1164,7 @@ DoKeyRecovery( SECKEYPrivateKey *privKey)
 					    &nickname,
 					    PK11_GetInternalKeySlot(),
 					    db,
-					    &unwrappedPrivKey, NULL);
+					    &unwrappedPrivKey, &pwdata);
     CMMF_DestroyCertifiedKeyPair(certKeyPair);
     if (rv != SECSuccess) {
         printf ("Unwrapping the private key failed.\n");
@@ -1303,7 +1255,7 @@ DoChallengeResponse(SECKEYPrivateKey *privKey,
 							 randomNums[i],
 							 myGenName,
 							 pubKey,
-							 NULL);
+							 &pwdata);
 	if (rv != SECSuccess) {
 	    printf ("Could not set the challenge in DoChallengeResponse\n");
 	    return 903;
@@ -1352,7 +1304,7 @@ DoChallengeResponse(SECKEYPrivateKey *privKey,
 	    printf ("Could not make the keyID from the public value\n");
 	    return 909;
 	}
-	foundPrivKey = PK11_FindKeyByKeyID(privKey->pkcs11Slot,keyID, NULL);
+	foundPrivKey = PK11_FindKeyByKeyID(privKey->pkcs11Slot, keyID, &pwdata);
 	if (foundPrivKey == NULL) {
 	    printf ("Could not find the private key corresponding to the public"
 		    " value.\n");
@@ -1535,7 +1487,7 @@ Usage (void)
 {
     printf ("Usage:\n"
 	    "\tcrmftest -d [Database Directory] -p [Personal Cert]\n"
-	    "\t         -e [Encrypter] -s [CA Certificate]\n\n"
+	    "\t         -e [Encrypter] -s [CA Certificate] [-P password]\n\n"
 	    "\t         [crmf] [dsa] [decode] [cmmf] [recover] [challenge]\n"
 	    "Database Directory\n"
 	    "\tThis is the directory where the key3.db, cert7.db, and\n"
@@ -1597,6 +1549,7 @@ main(int argc, char **argv)
     TESTKeyPair       signPair, cryptPair;
     PLOptState       *optstate;
     PLOptStatus       status;
+    char             *password = NULL;
     int               irv     = 0;
     PRUint32          flags   = 0;
     SECStatus         rv;
@@ -1604,11 +1557,12 @@ main(int argc, char **argv)
     PRBool            pArg    = PR_FALSE;
     PRBool            eArg    = PR_FALSE;
     PRBool            sArg    = PR_FALSE;
+    PRBool            PArg    = PR_FALSE;
 
     memset( &signPair,  0, sizeof signPair);
     memset( &cryptPair, 0, sizeof cryptPair);
     printf ("\ncrmftest v1.0\n");
-    optstate = PL_CreateOptState(argc, argv, "d:p:e:s:");
+    optstate = PL_CreateOptState(argc, argv, "d:p:e:s:P:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case 'd':
@@ -1644,6 +1598,14 @@ main(int argc, char **argv)
 	    }
 	    sArg = PR_TRUE;
 	    break;
+	case 'P':
+	    password = PORT_Strdup(optstate->value);
+	    if (password == NULL) {
+	        printf ("-P  failed\n");
+	        return 606;
+	    }
+	    PArg = PR_TRUE;
+	    break;
 	case 0:  /* positional parameter */
 	    rv = parsePositionalParam(optstate->value, &flags);
 	    if (rv) {
@@ -1665,6 +1627,10 @@ main(int argc, char **argv)
     	flags = ~ TEST_USE_DSA;
     db = CERT_GetDefaultCertDB();
     InitPKCS11();
+    if (password) {
+	pwdata.source = PW_PLAINTEXT;
+	pwdata.data = password;
+    }
 
     if (flags & TEST_MAKE_CRMF_REQ) {
 	printf("Generating CRMF request\n");
