@@ -243,6 +243,9 @@ public:
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
 
+  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                             PRBool aNotify);
+  
   virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
@@ -1625,6 +1628,37 @@ nsHTMLSelectElement::SelectSomething()
   }
 
   return PR_FALSE;
+}
+
+nsresult
+nsHTMLSelectElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                               PRBool aNotify)
+{
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsHTMLAtoms::multiple) {
+    // We're changing from being a multi-select to a single-select.
+    // Make sure we only have one option selected before we do that.
+    // Note that this needs to come before we really unset the attr,
+    // since SetOptionsSelectedByIndex does some bail-out type
+    // optimization for cases when the select is not multiple that
+    // would lead to only a single option getting deselected.
+    if (mSelectedIndex >= 0) {
+      SetSelectedIndex(mSelectedIndex);
+    }
+  }
+
+  nsresult rv = nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                                    aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aNotify && aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsHTMLAtoms::multiple) {
+    // We might have become a combobox; make sure _something_ gets
+    // selected in that case
+    CheckSelectSomething();
+  }
+
+  return rv;
 }
 
 PRBool
