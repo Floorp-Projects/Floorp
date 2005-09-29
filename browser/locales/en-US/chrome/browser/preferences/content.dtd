@@ -11,8 +11,8 @@
 <!ENTITY  enableImages.accesskey            "I">
 <!ENTITY  popupReject.label                 "Block Popup Windows">
 <!ENTITY  popupReject.accesskey             "B">
-<!ENTITY  enableXPInstall.label             "Allow web sites to install software">
-<!ENTITY  enableXPInstall.accesskey         "A">
+<!ENTITY  enableXPInstallWarning.label      "Warn me when web sites try to install extensions or themes">
+<!ENTITY  enableXPInstallWarning.accesskey  "a">
 
 <!ENTITY  allowedSitesPopup.label           "Allowed Sites">
 <!ENTITY  allowedSitesPopup.accesskey       "l">
