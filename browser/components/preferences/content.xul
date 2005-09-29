@@ -48,7 +48,7 @@
 
     <preferences id="contentPreferences">
       <preference id="dom.disable_open_during_load"   name="dom.disable_open_during_load"   type="bool"/>
-      <preference id="xpinstall.enabled"              name="xpinstall.enabled"              type="bool"/>
+      <preference id="xpinstall.whitelist.required"   name="xpinstall.whitelist.required"   type="bool"/>
       <preference id="permissions.default.image"      name="permissions.default.image"      type="int"/>
       <preference id="security.enable_java"           name="security.enable_java"           type="bool"/>
       <preference id="javascript.enabled"             name="javascript.enabled"             type="bool"/>
@@ -84,10 +84,10 @@
           </row>
           <row id="enableSoftwareInstallRow">
             <vbox align="start">
-              <checkbox id="enableSoftwareInstall" preference="xpinstall.enabled"
-                        label="&enableXPInstall.label;" accesskey="&enableXPInstall.accesskey;"
+              <checkbox id="enableSoftwareInstall" preference="xpinstall.whitelist.required"
+                        label="&enableXPInstallWarning.label;" accesskey="&enableXPInstallWarning.accesskey;"
                         onsyncfrompreference="return gContentPane.updateButtons('enableSoftwareInstallButton', 
-                                                                            'xpinstall.enabled');"/>
+                                                                            'xpinstall.whitelist.required');"/>
             </vbox>
             <button id="enableSoftwareInstallButton" label="&allowedSitesSoftware.label;"
                     oncommand="gContentPane.showExceptions('install');"
