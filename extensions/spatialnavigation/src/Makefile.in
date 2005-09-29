@@ -95,7 +95,7 @@ CPPSRCS     = nsSpatialNavigation.cpp \
 # defined.  We do not use this class anywhere in this
 # extension.
 
-ifndef BUILD_STATIC_LIBS
+ifndef MINIMO
 DEFINES += -D_IMPL_NS_GFX
 CPPSRCS += nsRect.cpp nsFont.cpp
 endif
