@@ -3237,17 +3237,15 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
         NS_ADDREF_THIS();
     }
     else {
-        // Set mSrcLoading *before* calling NS_NewStreamLoader, in case the
-        // stream completes (probably due to an error) within the activation
-        // of NS_NewStreamLoader.
-        aScriptProto->mSrcLoading = PR_TRUE;
-
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-        // N.B., the loader will be released in OnStreamComplete
-        nsIStreamLoader* loader;
-        rv = NS_NewStreamLoader(&loader, aScriptProto->mSrcURI, this, nsnull, group);
+        // Note: the loader will keep itself alive while it's loading.
+        nsCOMPtr<nsIStreamLoader> loader;
+        rv = NS_NewStreamLoader(getter_AddRefs(loader), aScriptProto->mSrcURI,
+                                this, nsnull, group);
         if (NS_FAILED(rv)) return rv;
+
+        aScriptProto->mSrcLoading = PR_TRUE;
     }
 
     // Block until OnStreamComplete resumes us.
@@ -3381,9 +3379,6 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         }
         // ignore any evaluation errors
     }
-
-    // balance the addref we added in LoadScript()
-    NS_RELEASE(aLoader);
 
     rv = ResumeWalk();
 
