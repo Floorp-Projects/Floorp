@@ -38,8 +38,8 @@
 #include "mpi.h"
 
 /*
- * This file implements a single function: mpi_getProcessorLineSize();
- * mpi_getProcessorLineSize() returns the size in bytes of the cache line
+ * This file implements a single function: s_mpi_getProcessorLineSize();
+ * s_mpi_getProcessorLineSize() returns the size in bytes of the cache line
  * if a cache exists, or zero if there is no cache. If more than one
  * cache line exists, it should return the smallest line size (which is 
  * usually the L1 cache).
@@ -53,12 +53,28 @@
  * 
  */
 
-#if defined(i386) || defined(__i386) || defined(__X86__) || defined (_M_IX86)
+#if defined(i386) || defined(__i386) || defined(__X86__) || defined (_M_IX86) || defined(__x86_64__) || defined(__x86_64)
 /* X86 processors have special instructions that tell us about the cache */
 #include "string.h"
 
+#if defined(__x86_64__) || defined(__x86_64)
+#define AMD_64 1
+#endif
+
 /* Generic CPUID function */
-#ifndef _WIN32
+#if defined(AMD_64)
+static void cpuid(unsigned long op, unsigned long *eax, 
+	                 unsigned long *ebx, unsigned long *ecx, 
+                         unsigned long *edx)
+{
+	__asm__("cpuid\n\t"
+		: "=a" (*eax),
+		  "=b" (*ebx),
+		  "=c" (*ecx),
+		  "=d" (*edx)
+		: "0" (op));
+}
+#elif !defined(_MSC_VER)
 static void cpuid(unsigned long op, unsigned long *eax, 
 	                 unsigned long *ebx, unsigned long *ecx, 
                          unsigned long *edx)
@@ -66,9 +82,9 @@ static void cpuid(unsigned long op, unsigned long *eax,
 /* sigh GCC isn't smart enough to save the ebx PIC register on it's own
  * in this case, so do it by hand. */
 	__asm__("pushl %%ebx\n\t"
-	        "cpuid\n\t"
-                "mov %%ebx,%1\n\t"
-                "popl %%ebx\n\t"
+		  "cpuid\n\t"
+		  "mov %%ebx,%1\n\t"
+		  "popl %%ebx\n\t"
 		: "=a" (*eax),
 		  "=r" (*ebx),
 		  "=c" (*ecx),
@@ -85,16 +101,17 @@ static unsigned long changeFlag(unsigned long flag)
 	__asm__("pushfl\n\t"            /* get the flags */
 	        "popl %0\n\t"
 	        "movl %0,%1\n\t"	/* save the original flags */
-	        "xor %0,%2\n\t" 	/* flip the bit */
+	        "xorl %2,%0\n\t" 	/* flip the bit */
 		"pushl %0\n\t"  	/* set the flags */
 	        "popfl\n\t"
 		"pushfl\n\t"		/* get the flags again (for return) */
-		"popl %0\n\t"	
+		"popl %0\n\t"
 		"pushl %1\n\t"		/* restore the original flags */
-		"popfl\n\t"
+		 "popfl\n\t"
 		: "=r" (changedFlags),
-		  "=r" (originalFlags)
-		: "r" (flag));
+		  "=r" (originalFlags),
+		  "=r" (flag)
+		: "2" (flag));
 	return changedFlags ^ originalFlags;
 }
 
@@ -104,8 +121,8 @@ static unsigned long changeFlag(unsigned long flag)
  * windows versions of the above assembler
  */
 #define wcpuid __asm __emit 0fh __asm __emit 0a2h
-static void cpuid(unsigned long op, unsigned long *Reax, unsigned long *Rebx, 
-                                    unsigned long *Recx, unsigned long *Redx)
+static void cpuid(unsigned long op,    unsigned long *Reax, 
+    unsigned long *Rebx, unsigned long *Recx, unsigned long *Redx)
 {
         unsigned long  Leax, Lebx, Lecx, Ledx;
         __asm {
@@ -128,26 +145,28 @@ static unsigned long changeFlag(unsigned long flag)
 {
 	unsigned long changedFlags, originalFlags;
 	__asm {
-		pushad
+		push eax
+		push ebx
 		pushfd 	                /* get the flags */
 	        pop  eax
-	        mov  ecx,eax            /* save the original flags */
-	        mov  originalFlags,ecx  /* save the original flags */
+		push eax		/* save the flags on the stack */
+	        mov  originalFlags,eax  /* save the original flags */
 		mov  ebx,flag
 	        xor  eax,ebx            /* flip the bit */
 		push eax                /* set the flags */
 	        popfd
 		pushfd                  /* get the flags again (for return) */
 		pop  eax	
-		push ecx                /* restore the original flags */
-		popfd
+		popfd                   /* restore the original flags */
 		mov changedFlags,eax
-		popad
+		pop ebx
+		pop eax
 	}
 	return changedFlags ^ originalFlags;
 }
 #endif
 
+#if !defined(AMD_64)
 #define AC_FLAG 0x40000
 #define ID_FLAG 0x200000
 
@@ -162,304 +181,295 @@ static int is486()
 {
     return changeFlag(ID_FLAG) == 0;
 }
+#endif
 
 
 /*
  * table for Intel Cache.
  * See Intel Application Note AP-485 for more information 
  */
+
+typedef unsigned char CacheTypeEntry;
+
 typedef enum {
-    Cache_NONE = 0,
+    Cache_NONE    = 0,
     Cache_UNKNOWN = 1,
-    Cache_TLB = 2,
-    Cache_Trace = 3,
-    Cache_L1 = 4,
-    Cache_L2 = 5 ,
-    Cache_L3 = 6
+    Cache_TLB     = 2,
+    Cache_TLBi    = 3,
+    Cache_TLBd    = 4,
+    Cache_Trace   = 5,
+    Cache_L1      = 6,
+    Cache_L1i     = 7,
+    Cache_L1d     = 8,
+    Cache_L2      = 9 ,
+    Cache_L2i     = 10 ,
+    Cache_L2d     = 11 ,
+    Cache_L3      = 12 ,
+    Cache_L3i     = 13,
+    Cache_L3d     = 14
 } CacheType;
 
-#define DATA_INSTR 1
-#define DATA_DATA  2
-#define DATA_BOTH  3
-#define DATA_TRACE 4
-#define DATA_NONE  0
-
-#define TLB_4k	0x01
-#define TLB_2M  0x08
-#define TLB_4M  0x10
-#define TLB_4Mk 0x11
-#define TLB_ALL 0x19
-
-#define k * 1024
-#define M * (1024*1024)
-#define G * (1024*1024*1024)
-
 struct _cache {
-    CacheType type;
-    unsigned long data;
-#define pageSize size
-#define trcuops size
-    unsigned long size;
-    unsigned long association;
-#define tlbEntries lineSize
-    unsigned long lineSize;
-} CacheMap[] = {
-/* 00 */ {Cache_NONE,    DATA_NONE,    0,       0,    0   },
-/* 01 */ {Cache_TLB,     DATA_INSTR,   TLB_4k,  4,    32  },
-/* 02 */ {Cache_TLB,     DATA_INSTR,   TLB_4M,  0,    2   },
-/* 03 */ {Cache_TLB,     DATA_DATA,    TLB_4k,  4,    64  },
-/* 04 */ {Cache_TLB,     DATA_DATA,    TLB_4M,  4,    8   },
-/* 05 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 06 */ {Cache_L1,      DATA_INSTR,   8 k,     4,    32  },
-/* 07 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 08 */ {Cache_L1,      DATA_INSTR,   16 k,    4,    32  },
-/* 09 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 0a */ {Cache_L1,      DATA_DATA,    8 k,     4,    32  },
-/* 0b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 0c */ {Cache_L1,      DATA_DATA,    16 k,    4,    32  },
-/* 0d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 0e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 0f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 10 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 11 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 12 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 13 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 14 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 15 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 16 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 17 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 18 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 19 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1c */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 1f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 20 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 21 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 22 */ {Cache_L3,      DATA_BOTH,    512 k,   8,    64  },
-/* 23 */ {Cache_L3,      DATA_BOTH,    1 M,     8,    64  },
-/* 24 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 25 */ {Cache_L3,      DATA_BOTH,    2 M,     8,    64  },
-/* 26 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 27 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 28 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 29 */ {Cache_L3,      DATA_BOTH,    4 M,     8,    64  },
-/* 2a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 2b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 2c */ {Cache_L1,      DATA_DATA,    32 k,    8,    64  },
-/* 2d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 2e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 2f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 30 */ {Cache_L1,      DATA_INSTR,   32 k,    8,    64  },
-/* 31 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 32 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 33 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 34 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 35 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 36 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 37 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 38 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 39 */ {Cache_L2,      DATA_BOTH,    128 k,   4,    64  },
-/* 3a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 3b */ {Cache_L2,      DATA_BOTH,    128 k,   2,    64  },
-/* 3c */ {Cache_L2,      DATA_BOTH,    256 k,   4,    64  },
-/* 3d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 3e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 3f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 40 */ {Cache_L2,      DATA_NONE,    0,       0,    0   },
-/* 41 */ {Cache_L2,      DATA_BOTH,    128 k,   4,    32  },
-/* 42 */ {Cache_L2,      DATA_BOTH,    256 k,   4,    32  },
-/* 43 */ {Cache_L2,      DATA_BOTH,    512 k,   4,    32  },
-/* 44 */ {Cache_L2,      DATA_BOTH,    1 M,     4,    32  },
-/* 45 */ {Cache_L2,      DATA_BOTH,    2 M,     4,    32  },
-/* 46 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 47 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 48 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 49 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4c */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 4f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 50 */ {Cache_TLB,     DATA_INSTR,   TLB_ALL, 0,    64  },
-/* 51 */ {Cache_TLB,     DATA_INSTR,   TLB_ALL, 0,    128 },
-/* 52 */ {Cache_TLB,     DATA_INSTR,   TLB_ALL, 0,    256 },
-/* 53 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 54 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 55 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 56 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 57 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 58 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 59 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 5a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 5b */ {Cache_TLB,     DATA_DATA,    TLB_4Mk, 0,    64  },
-/* 5c */ {Cache_TLB,     DATA_DATA,    TLB_4Mk, 0,    128 },
-/* 5d */ {Cache_TLB,     DATA_DATA,    TLB_4Mk, 0,    256 },
-/* 5e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 5f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 60 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 61 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 62 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 63 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 64 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 65 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 66 */ {Cache_L1,      DATA_DATA,    8 k,     4,    64  },
-/* 67 */ {Cache_L1,      DATA_DATA,    16 k,    4,    64  },
-/* 68 */ {Cache_L1,      DATA_DATA,    32 k,    4,    64  },
-/* 69 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6c */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 6f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 70 */ {Cache_Trace,   DATA_TRACE,   12 k,    8,    1   },
-/* 71 */ {Cache_Trace,   DATA_TRACE,   16 k,    8,    1   },
-/* 72 */ {Cache_Trace,   DATA_TRACE,   32 k,    8,    1   },
-/* 73 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 74 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 75 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 76 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 77 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 78 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 79 */ {Cache_L2,      DATA_BOTH,    128 k,   8,    64  },
-/* 7a */ {Cache_L2,      DATA_BOTH,    256 k,   8,    64  },
-/* 7b */ {Cache_L2,      DATA_BOTH,    512 k,   8,    64  },
-/* 7c */ {Cache_L2,      DATA_BOTH,    1 M,     8,    64  },
-/* 7d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 7e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 7f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 80 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 81 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 82 */ {Cache_L2,      DATA_BOTH,    256 k,   8,    32  },
-/* 83 */ {Cache_L2,      DATA_BOTH,    512 k,   8,    32  },
-/* 84 */ {Cache_L2,      DATA_BOTH,    1 M,     8,    32  },
-/* 85 */ {Cache_L2,      DATA_BOTH,    2 M,     8,    32  },
-/* 86 */ {Cache_L2,      DATA_BOTH,    512 k,   4,    64  },
-/* 87 */ {Cache_L2,      DATA_BOTH,    1 M,     8,    64  },
-/* 88 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 89 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8c */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 8f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 90 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 91 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 92 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 93 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 94 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 95 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 96 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 97 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 98 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 99 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9a */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9b */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9c */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9d */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9e */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* 9f */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a0 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a3 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* a9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* aa */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ab */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ac */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ad */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ae */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* af */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b0 */ {Cache_TLB,     DATA_INSTR,   TLB_4k,  4,    128 },
-/* b1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b3 */ {Cache_TLB,     DATA_DATA,    TLB_4k,  4,    128 },
-/* b4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* b9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ba */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* bb */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* bc */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* bd */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* be */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* bf */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c0 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c3 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* c9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ca */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* cb */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* cc */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* cd */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ce */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* cf */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d0 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d3 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* d9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* da */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* db */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* dc */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* dd */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* de */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* df */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e0 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e3 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* e9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ea */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* eb */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ec */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ed */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ee */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ef */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f0 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f1 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f2 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f3 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f4 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f5 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f6 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f7 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f8 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* f9 */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* fa */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* fb */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* fc */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* fd */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* fe */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   },
-/* ff */ {Cache_UNKNOWN, DATA_NONE,    0,       0,    0   }
+    CacheTypeEntry type;
+    unsigned char lineSize;
+};
+static const struct _cache CacheMap[256] = {
+/* 00 */ {Cache_NONE,    0   },
+/* 01 */ {Cache_TLBi,    0   },
+/* 02 */ {Cache_TLBi,    0   },
+/* 03 */ {Cache_TLBd,    0   },
+/* 04 */ {Cache_TLBd,        },
+/* 05 */ {Cache_UNKNOWN, 0   },
+/* 06 */ {Cache_L1i,     32  },
+/* 07 */ {Cache_UNKNOWN, 0   },
+/* 08 */ {Cache_L1i,     32  },
+/* 09 */ {Cache_UNKNOWN, 0   },
+/* 0a */ {Cache_L1d,     32  },
+/* 0b */ {Cache_UNKNOWN, 0   },
+/* 0c */ {Cache_L1d,     32  },
+/* 0d */ {Cache_UNKNOWN, 0   },
+/* 0e */ {Cache_UNKNOWN, 0   },
+/* 0f */ {Cache_UNKNOWN, 0   },
+/* 10 */ {Cache_UNKNOWN, 0   },
+/* 11 */ {Cache_UNKNOWN, 0   },
+/* 12 */ {Cache_UNKNOWN, 0   },
+/* 13 */ {Cache_UNKNOWN, 0   },
+/* 14 */ {Cache_UNKNOWN, 0   },
+/* 15 */ {Cache_UNKNOWN, 0   },
+/* 16 */ {Cache_UNKNOWN, 0   },
+/* 17 */ {Cache_UNKNOWN, 0   },
+/* 18 */ {Cache_UNKNOWN, 0   },
+/* 19 */ {Cache_UNKNOWN, 0   },
+/* 1a */ {Cache_UNKNOWN, 0   },
+/* 1b */ {Cache_UNKNOWN, 0   },
+/* 1c */ {Cache_UNKNOWN, 0   },
+/* 1d */ {Cache_UNKNOWN, 0   },
+/* 1e */ {Cache_UNKNOWN, 0   },
+/* 1f */ {Cache_UNKNOWN, 0   },
+/* 20 */ {Cache_UNKNOWN, 0   },
+/* 21 */ {Cache_UNKNOWN, 0   },
+/* 22 */ {Cache_L3,      64  },
+/* 23 */ {Cache_L3,      64  },
+/* 24 */ {Cache_UNKNOWN, 0   },
+/* 25 */ {Cache_L3,      64  },
+/* 26 */ {Cache_UNKNOWN, 0   },
+/* 27 */ {Cache_UNKNOWN, 0   },
+/* 28 */ {Cache_UNKNOWN, 0   },
+/* 29 */ {Cache_L3,      64  },
+/* 2a */ {Cache_UNKNOWN, 0   },
+/* 2b */ {Cache_UNKNOWN, 0   },
+/* 2c */ {Cache_L1d,     64  },
+/* 2d */ {Cache_UNKNOWN, 0   },
+/* 2e */ {Cache_UNKNOWN, 0   },
+/* 2f */ {Cache_UNKNOWN, 0   },
+/* 30 */ {Cache_L1i,     64  },
+/* 31 */ {Cache_UNKNOWN, 0   },
+/* 32 */ {Cache_UNKNOWN, 0   },
+/* 33 */ {Cache_UNKNOWN, 0   },
+/* 34 */ {Cache_UNKNOWN, 0   },
+/* 35 */ {Cache_UNKNOWN, 0   },
+/* 36 */ {Cache_UNKNOWN, 0   },
+/* 37 */ {Cache_UNKNOWN, 0   },
+/* 38 */ {Cache_UNKNOWN, 0   },
+/* 39 */ {Cache_L2,      64  },
+/* 3a */ {Cache_UNKNOWN, 0   },
+/* 3b */ {Cache_L2,      64  },
+/* 3c */ {Cache_L2,      64  },
+/* 3d */ {Cache_UNKNOWN, 0   },
+/* 3e */ {Cache_UNKNOWN, 0   },
+/* 3f */ {Cache_UNKNOWN, 0   },
+/* 40 */ {Cache_L2,      0   },
+/* 41 */ {Cache_L2,      32  },
+/* 42 */ {Cache_L2,      32  },
+/* 43 */ {Cache_L2,      32  },
+/* 44 */ {Cache_L2,      32  },
+/* 45 */ {Cache_L2,      32  },
+/* 46 */ {Cache_UNKNOWN, 0   },
+/* 47 */ {Cache_UNKNOWN, 0   },
+/* 48 */ {Cache_UNKNOWN, 0   },
+/* 49 */ {Cache_UNKNOWN, 0   },
+/* 4a */ {Cache_UNKNOWN, 0   },
+/* 4b */ {Cache_UNKNOWN, 0   },
+/* 4c */ {Cache_UNKNOWN, 0   },
+/* 4d */ {Cache_UNKNOWN, 0   },
+/* 4e */ {Cache_UNKNOWN, 0   },
+/* 4f */ {Cache_UNKNOWN, 0   },
+/* 50 */ {Cache_TLBi,    0   },
+/* 51 */ {Cache_TLBi,    0   },
+/* 52 */ {Cache_TLBi,    0   },
+/* 53 */ {Cache_UNKNOWN, 0   },
+/* 54 */ {Cache_UNKNOWN, 0   },
+/* 55 */ {Cache_UNKNOWN, 0   },
+/* 56 */ {Cache_UNKNOWN, 0   },
+/* 57 */ {Cache_UNKNOWN, 0   },
+/* 58 */ {Cache_UNKNOWN, 0   },
+/* 59 */ {Cache_UNKNOWN, 0   },
+/* 5a */ {Cache_UNKNOWN, 0   },
+/* 5b */ {Cache_TLBd,    0   },
+/* 5c */ {Cache_TLBd,    0   },
+/* 5d */ {Cache_TLBd,    0   },
+/* 5e */ {Cache_UNKNOWN, 0   },
+/* 5f */ {Cache_UNKNOWN, 0   },
+/* 60 */ {Cache_UNKNOWN, 0   },
+/* 61 */ {Cache_UNKNOWN, 0   },
+/* 62 */ {Cache_UNKNOWN, 0   },
+/* 63 */ {Cache_UNKNOWN, 0   },
+/* 64 */ {Cache_UNKNOWN, 0   },
+/* 65 */ {Cache_UNKNOWN, 0   },
+/* 66 */ {Cache_L1d,     64  },
+/* 67 */ {Cache_L1d,     64  },
+/* 68 */ {Cache_L1d,     64  },
+/* 69 */ {Cache_UNKNOWN, 0   },
+/* 6a */ {Cache_UNKNOWN, 0   },
+/* 6b */ {Cache_UNKNOWN, 0   },
+/* 6c */ {Cache_UNKNOWN, 0   },
+/* 6d */ {Cache_UNKNOWN, 0   },
+/* 6e */ {Cache_UNKNOWN, 0   },
+/* 6f */ {Cache_UNKNOWN, 0   },
+/* 70 */ {Cache_Trace,   1   },
+/* 71 */ {Cache_Trace,   1   },
+/* 72 */ {Cache_Trace,   1   },
+/* 73 */ {Cache_UNKNOWN, 0   },
+/* 74 */ {Cache_UNKNOWN, 0   },
+/* 75 */ {Cache_UNKNOWN, 0   },
+/* 76 */ {Cache_UNKNOWN, 0   },
+/* 77 */ {Cache_UNKNOWN, 0   },
+/* 78 */ {Cache_UNKNOWN, 0   },
+/* 79 */ {Cache_L2,      64  },
+/* 7a */ {Cache_L2,      64  },
+/* 7b */ {Cache_L2,      64  },
+/* 7c */ {Cache_L2,      64  },
+/* 7d */ {Cache_UNKNOWN, 0   },
+/* 7e */ {Cache_UNKNOWN, 0   },
+/* 7f */ {Cache_UNKNOWN, 0   },
+/* 80 */ {Cache_UNKNOWN, 0   },
+/* 81 */ {Cache_UNKNOWN, 0   },
+/* 82 */ {Cache_L2,      32  },
+/* 83 */ {Cache_L2,      32  },
+/* 84 */ {Cache_L2,      32  },
+/* 85 */ {Cache_L2,      32  },
+/* 86 */ {Cache_L2,      64  },
+/* 87 */ {Cache_L2,      64  },
+/* 88 */ {Cache_UNKNOWN, 0   },
+/* 89 */ {Cache_UNKNOWN, 0   },
+/* 8a */ {Cache_UNKNOWN, 0   },
+/* 8b */ {Cache_UNKNOWN, 0   },
+/* 8c */ {Cache_UNKNOWN, 0   },
+/* 8d */ {Cache_UNKNOWN, 0   },
+/* 8e */ {Cache_UNKNOWN, 0   },
+/* 8f */ {Cache_UNKNOWN, 0   },
+/* 90 */ {Cache_UNKNOWN, 0   },
+/* 91 */ {Cache_UNKNOWN, 0   },
+/* 92 */ {Cache_UNKNOWN, 0   },
+/* 93 */ {Cache_UNKNOWN, 0   },
+/* 94 */ {Cache_UNKNOWN, 0   },
+/* 95 */ {Cache_UNKNOWN, 0   },
+/* 96 */ {Cache_UNKNOWN, 0   },
+/* 97 */ {Cache_UNKNOWN, 0   },
+/* 98 */ {Cache_UNKNOWN, 0   },
+/* 99 */ {Cache_UNKNOWN, 0   },
+/* 9a */ {Cache_UNKNOWN, 0   },
+/* 9b */ {Cache_UNKNOWN, 0   },
+/* 9c */ {Cache_UNKNOWN, 0   },
+/* 9d */ {Cache_UNKNOWN, 0   },
+/* 9e */ {Cache_UNKNOWN, 0   },
+/* 9f */ {Cache_UNKNOWN, 0   },
+/* a0 */ {Cache_UNKNOWN, 0   },
+/* a1 */ {Cache_UNKNOWN, 0   },
+/* a2 */ {Cache_UNKNOWN, 0   },
+/* a3 */ {Cache_UNKNOWN, 0   },
+/* a4 */ {Cache_UNKNOWN, 0   },
+/* a5 */ {Cache_UNKNOWN, 0   },
+/* a6 */ {Cache_UNKNOWN, 0   },
+/* a7 */ {Cache_UNKNOWN, 0   },
+/* a8 */ {Cache_UNKNOWN, 0   },
+/* a9 */ {Cache_UNKNOWN, 0   },
+/* aa */ {Cache_UNKNOWN, 0   },
+/* ab */ {Cache_UNKNOWN, 0   },
+/* ac */ {Cache_UNKNOWN, 0   },
+/* ad */ {Cache_UNKNOWN, 0   },
+/* ae */ {Cache_UNKNOWN, 0   },
+/* af */ {Cache_UNKNOWN, 0   },
+/* b0 */ {Cache_TLBi,    0   },
+/* b1 */ {Cache_UNKNOWN, 0   },
+/* b2 */ {Cache_UNKNOWN, 0   },
+/* b3 */ {Cache_TLBd,    0   },
+/* b4 */ {Cache_UNKNOWN, 0   },
+/* b5 */ {Cache_UNKNOWN, 0   },
+/* b6 */ {Cache_UNKNOWN, 0   },
+/* b7 */ {Cache_UNKNOWN, 0   },
+/* b8 */ {Cache_UNKNOWN, 0   },
+/* b9 */ {Cache_UNKNOWN, 0   },
+/* ba */ {Cache_UNKNOWN, 0   },
+/* bb */ {Cache_UNKNOWN, 0   },
+/* bc */ {Cache_UNKNOWN, 0   },
+/* bd */ {Cache_UNKNOWN, 0   },
+/* be */ {Cache_UNKNOWN, 0   },
+/* bf */ {Cache_UNKNOWN, 0   },
+/* c0 */ {Cache_UNKNOWN, 0   },
+/* c1 */ {Cache_UNKNOWN, 0   },
+/* c2 */ {Cache_UNKNOWN, 0   },
+/* c3 */ {Cache_UNKNOWN, 0   },
+/* c4 */ {Cache_UNKNOWN, 0   },
+/* c5 */ {Cache_UNKNOWN, 0   },
+/* c6 */ {Cache_UNKNOWN, 0   },
+/* c7 */ {Cache_UNKNOWN, 0   },
+/* c8 */ {Cache_UNKNOWN, 0   },
+/* c9 */ {Cache_UNKNOWN, 0   },
+/* ca */ {Cache_UNKNOWN, 0   },
+/* cb */ {Cache_UNKNOWN, 0   },
+/* cc */ {Cache_UNKNOWN, 0   },
+/* cd */ {Cache_UNKNOWN, 0   },
+/* ce */ {Cache_UNKNOWN, 0   },
+/* cf */ {Cache_UNKNOWN, 0   },
+/* d0 */ {Cache_UNKNOWN, 0   },
+/* d1 */ {Cache_UNKNOWN, 0   },
+/* d2 */ {Cache_UNKNOWN, 0   },
+/* d3 */ {Cache_UNKNOWN, 0   },
+/* d4 */ {Cache_UNKNOWN, 0   },
+/* d5 */ {Cache_UNKNOWN, 0   },
+/* d6 */ {Cache_UNKNOWN, 0   },
+/* d7 */ {Cache_UNKNOWN, 0   },
+/* d8 */ {Cache_UNKNOWN, 0   },
+/* d9 */ {Cache_UNKNOWN, 0   },
+/* da */ {Cache_UNKNOWN, 0   },
+/* db */ {Cache_UNKNOWN, 0   },
+/* dc */ {Cache_UNKNOWN, 0   },
+/* dd */ {Cache_UNKNOWN, 0   },
+/* de */ {Cache_UNKNOWN, 0   },
+/* df */ {Cache_UNKNOWN, 0   },
+/* e0 */ {Cache_UNKNOWN, 0   },
+/* e1 */ {Cache_UNKNOWN, 0   },
+/* e2 */ {Cache_UNKNOWN, 0   },
+/* e3 */ {Cache_UNKNOWN, 0   },
+/* e4 */ {Cache_UNKNOWN, 0   },
+/* e5 */ {Cache_UNKNOWN, 0   },
+/* e6 */ {Cache_UNKNOWN, 0   },
+/* e7 */ {Cache_UNKNOWN, 0   },
+/* e8 */ {Cache_UNKNOWN, 0   },
+/* e9 */ {Cache_UNKNOWN, 0   },
+/* ea */ {Cache_UNKNOWN, 0   },
+/* eb */ {Cache_UNKNOWN, 0   },
+/* ec */ {Cache_UNKNOWN, 0   },
+/* ed */ {Cache_UNKNOWN, 0   },
+/* ee */ {Cache_UNKNOWN, 0   },
+/* ef */ {Cache_UNKNOWN, 0   },
+/* f0 */ {Cache_UNKNOWN, 0   },
+/* f1 */ {Cache_UNKNOWN, 0   },
+/* f2 */ {Cache_UNKNOWN, 0   },
+/* f3 */ {Cache_UNKNOWN, 0   },
+/* f4 */ {Cache_UNKNOWN, 0   },
+/* f5 */ {Cache_UNKNOWN, 0   },
+/* f6 */ {Cache_UNKNOWN, 0   },
+/* f7 */ {Cache_UNKNOWN, 0   },
+/* f8 */ {Cache_UNKNOWN, 0   },
+/* f9 */ {Cache_UNKNOWN, 0   },
+/* fa */ {Cache_UNKNOWN, 0   },
+/* fb */ {Cache_UNKNOWN, 0   },
+/* fc */ {Cache_UNKNOWN, 0   },
+/* fd */ {Cache_UNKNOWN, 0   },
+/* fe */ {Cache_UNKNOWN, 0   },
+/* ff */ {Cache_UNKNOWN, 0   }
 };
 
 
@@ -477,19 +487,19 @@ getIntelCacheEntryLineSize(unsigned long val, int *level,
     /* NOTE val = 0x40 is a special value that means no L2 or L3 cache.
      * this data check has the side effect of rejecting that entry. If
      * that wasn't the case, we could have to reject it explicitly */
-    if ((CacheMap[val].data & DATA_DATA) != DATA_DATA) {
+    if (CacheMap[val].lineSize == 0) {
 	return;
     }
     /* look at the caches, skip types we aren't interested in.
      * if we already have a value for a lower level cache, skip the
      * current entry */
-    if (type == Cache_L1) {
+    if ((type == Cache_L1)|| (type == Cache_L1d)) {
 	*level = 1;
 	*lineSize = CacheMap[val].lineSize;
-    } else if ((*level >= 2) && type == Cache_L2) {
+    } else if ((*level >= 2) && ((type == Cache_L2) || (type == Cache_L2d))) {
 	*level = 2;
 	*lineSize = CacheMap[val].lineSize;
-    } else if ((*level >= 3) && type == Cache_L3) {
+    } else if ((*level >= 3) && ((type == Cache_L3) || (type == Cache_L3d))) {
 	*level = 3;
 	*lineSize = CacheMap[val].lineSize;
     }
@@ -579,7 +589,7 @@ getOtherCacheLineSize(unsigned long cpuidLevel)
     return lineSize;
 }
 
-char *manMap[] = {
+static const char * const manMap[] = {
 #define INTEL     0
     "GenuineIntel",
 #define AMD       1
@@ -602,13 +612,13 @@ char *manMap[] = {
     "Geode by NSC",
 };
 
-int n_manufacturers = sizeof(manMap)/sizeof(manMap[0]);
+static const int n_manufacturers = sizeof(manMap)/sizeof(manMap[0]);
 
 #define MAN_UNKNOWN 9
 
 
 unsigned long
-mpi_getProcessorLineSize()
+s_mpi_getProcessorLineSize()
 {
     unsigned long eax, ebx, ecx, edx;
     unsigned long cpuidLevel;
@@ -617,11 +627,13 @@ mpi_getProcessorLineSize()
     int i;
     char string[65];
 
+#if !defined(AMD_64)
     if (is386()) {
 	return 0; /* 386 had no cache */
     } if (is486()) {
 	return 32; /* really? need more info */
     }
+#endif
 
     /* Pentium, cpuid command is available */
     cpuid(0, &eax, &ebx, &ecx, &edx);
@@ -652,7 +664,7 @@ mpi_getProcessorLineSize()
     }
     return cacheLineSize;
 }
-#define MPI_GET_PROCESSER_LINE_SIZE_DEFINED 1
+#define MPI_GET_PROCESSOR_LINE_SIZE_DEFINED 1
 #endif
 
 #if defined(__ppc64__) 
@@ -686,7 +698,7 @@ static inline void dcbzl(char *array)
 
 #define PPC_MAX_LINE_SIZE 256
 unsigned long
-mpi_getProcessorLineSize()
+s_mpi_getProcessorLineSize()
 {
     char testArray[2*PPC_MAX_LINE_SIZE+1];
     char *test;
@@ -709,7 +721,7 @@ mpi_getProcessorLineSize()
     return 0;
 }
 
-#define MPI_GET_PROCESSER_LINE_SIZE_DEFINED 1
+#define MPI_GET_PROCESSOR_LINE_SIZE_DEFINED 1
 #endif
 
 
@@ -727,24 +739,25 @@ mpi_getProcessorLineSize()
  */
 
 
-/* target.mk can define LINE_SIZE if it's common for the family or OS */
-#if defined(LINE_SIZE) && !defined(MPI_GET_PROCESSOR_LINE_SIZE_DEFINED)
+/* target.mk can define MPI_CACHE_LINE_SIZE if it's common for the family or 
+ * OS */
+#if defined(MPI_CACHE_LINE_SIZE) && !defined(MPI_GET_PROCESSOR_LINE_SIZE_DEFINED)
 
 unsigned long
-mpi_getProcessorLineSize()
+s_mpi_getProcessorLineSize()
 {
-   return LINE_SIZE;
+   return MPI_CACHE_LINE_SIZE;
 }
-#define MPI_GET_PROCESSER_LINE_SIZE_DEFINED 1
+#define MPI_GET_PROCESSOR_LINE_SIZE_DEFINED 1
 #endif
 
 
 /* If no way to get the processor cache line size has been defined, assume
  * it's 32 bytes (most common value, does not significantly impact performance)
  */ 
-#ifndef MPI_GET_PROCESSER_LINE_SIZE_DEFINED
+#ifndef MPI_GET_PROCESSOR_LINE_SIZE_DEFINED
 unsigned long
-mpi_getProcessorLineSize()
+s_mpi_getProcessorLineSize()
 {
    return 32;
 }
@@ -755,6 +768,6 @@ mpi_getProcessorLineSize()
 
 main()
 {
-    printf("line size = %d\n", mpi_getProcessorLineSize());
+    printf("line size = %d\n", s_mpi_getProcessorLineSize());
 } 
 #endif
