@@ -3123,6 +3123,173 @@ error:
     return NULL;
 }
 
+/*
+ * XXX reverse iterator for properties, unreverse and meld with jsinterp.c's
+ *     prop_iterator_class somehow...
+ * + preserve the OBJ_ENUMERATE API while optimizing the native object case
+ * + native case here uses a JSScopeProperty *, but that iterates in reverse!
+ * + so we make non-native match, by reverse-iterating after JS_Enumerating
+ */
+#define JSSLOT_ITER_INDEX       (JSSLOT_PRIVATE + 1)
+
+#if JSSLOT_ITER_INDEX >= JS_INITIAL_NSLOTS
+# error "JSSLOT_ITER_INDEX botch!"
+#endif
+
+static void
+prop_iter_finalize(JSContext *cx, JSObject *obj)
+{
+    jsval v;
+    jsint i;
+    JSIdArray *ida;
+
+    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_ITER_INDEX);
+    if (JSVAL_IS_VOID(v))
+        return;
+
+    i = JSVAL_TO_INT(v);
+    if (i >= 0) {
+        /* Non-native case: destroy the ida enumerated when obj was created. */
+        ida = (JSIdArray *) JS_GetPrivate(cx, obj);
+        if (ida)
+            JS_DestroyIdArray(cx, ida);
+    }
+}
+
+static uint32
+prop_iter_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    jsval v;
+    jsint i, n;
+    JSScopeProperty *sprop;
+    JSIdArray *ida;
+    jsid id;
+
+    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    JS_ASSERT(!JSVAL_IS_VOID(v));
+
+    i = JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_ITER_INDEX));
+    if (i < 0) {
+        /* Native case: just mark the next property to visit. */
+        sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);
+        if (sprop)
+            MARK_SCOPE_PROPERTY(sprop);
+    } else {
+        /* Non-native case: mark each id in the JSIdArray private. */
+        ida = (JSIdArray *) JSVAL_TO_PRIVATE(v);
+        for (i = 0, n = ida->length; i < n; i++) {
+            id = ida->vector[i];
+            if (JSID_IS_ATOM(id))
+                GC_MARK_ATOM(cx, JSID_TO_ATOM(id), arg);
+            else if (JSID_IS_OBJECT(id))
+                GC_MARK(cx, JSID_TO_OBJECT(id), "id", arg);
+        }
+    }
+    return 0;
+}
+
+static JSClass prop_iter_class = {
+    "PropertyIterator",
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
+    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  prop_iter_finalize,
+    NULL,             NULL,            NULL,            NULL,
+    NULL,             NULL,            prop_iter_mark,  NULL
+};
+
+JS_PUBLIC_API(JSObject *)
+JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
+{
+    JSObject *iterobj;
+    JSScope *scope;
+    void *pdata;
+    jsint index;
+    JSIdArray *ida;
+    
+    CHECK_REQUEST(cx);
+    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
+    if (!iterobj)
+        return NULL;
+
+    if (OBJ_IS_NATIVE(obj)) {
+        /* Native case: start with the last property in obj's own scope. */
+        scope = OBJ_SCOPE(obj);
+        pdata = (scope->object == obj) ? scope->lastProp : NULL;
+        index = -1;
+    } else {
+        /* Non-native case: enumerate a JSIdArray and keep it via private. */
+        ida = JS_Enumerate(cx, obj);
+        if (!ida)
+            goto bad;
+        pdata = ida;
+        index = ida->length;
+    }
+
+    if (!JS_SetPrivate(cx, iterobj, pdata))
+        goto bad;
+    OBJ_SET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(index));
+    return iterobj;
+
+bad:
+    cx->newborn[GCX_OBJECT] = NULL;
+    return NULL;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
+{
+    jsint i;
+    JSObject *obj;
+    JSScope *scope;
+    JSScopeProperty *sprop;
+    JSIdArray *ida;
+
+    CHECK_REQUEST(cx);
+    i = JSVAL_TO_INT(OBJ_GET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX));
+    if (i < 0) {
+        /* Native case: private data is a property tree node pointer. */
+        obj = OBJ_GET_PARENT(cx, iterobj);
+        JS_ASSERT(OBJ_IS_NATIVE(obj));
+        scope = OBJ_SCOPE(obj);
+        JS_ASSERT(scope->object == obj);
+        sprop = (JSScopeProperty *) JS_GetPrivate(cx, iterobj);
+
+        /*
+         * If the next property mapped by scope in the property tree ancestor
+         * line is not enumerable, or it's an alias, or one or more properties
+         * were deleted from the "middle" of the scope-mapped ancestor line
+         * and the next property was among those deleted, skip it and keep on
+         * trying to find an enumerable property that is still in scope.
+         */
+        while (sprop &&
+               (!(sprop->attrs & JSPROP_ENUMERATE) ||
+                (sprop->flags & SPROP_IS_ALIAS) ||
+                (SCOPE_HAD_MIDDLE_DELETE(scope) &&
+                 !SCOPE_HAS_PROPERTY(scope, sprop)))) {
+            sprop = sprop->parent;
+        }
+
+        if (!sprop) {
+            *idp = JSVAL_VOID;
+        } else {
+            if (!JS_SetPrivate(cx, iterobj, sprop->parent))
+                return JS_FALSE;
+            *idp = sprop->id;
+        }
+    } else {
+        /* Non-native case: use the ida enumerated when iterobj was created. */
+        ida = (JSIdArray *) JS_GetPrivate(cx, iterobj);
+        JS_ASSERT(i <= ida->length);
+        if (i == 0) {
+            *idp = JSVAL_VOID; 
+        } else {
+            *idp = ida->vector[--i];
+            OBJ_SET_SLOT(cx, iterobj, JSSLOT_ITER_INDEX, INT_TO_JSVAL(i));
+        }
+    }
+    return JS_TRUE;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
