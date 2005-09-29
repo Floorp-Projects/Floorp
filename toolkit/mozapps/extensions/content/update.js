@@ -420,7 +420,7 @@ var gInstallingPage = {
     for (var i = 0; i < checkboxes.length; ++i) {
       if (checkboxes[i].type == "update" && checkboxes[i].checked) {
         items.push(checkboxes[i].URL);
-        hashes.push(checkboxes[i].hash);
+        hashes.push(checkboxes[i].hash ? checkboxes[i].hash : null);
         this._objs.push({ name: checkboxes[i].label });
       }
     }
