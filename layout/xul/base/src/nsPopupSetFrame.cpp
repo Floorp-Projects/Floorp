@@ -491,21 +491,23 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     ActivatePopup(aEntry, PR_TRUE);
 
     // register the rollup listeners, etc, but not if we're a tooltip
-    nsIFrame* activeChild = aEntry->mPopupFrame;
-    nsIMenuParent* childPopup = nsnull;
-    if (activeChild)
-      CallQueryInterface(activeChild, &childPopup);
-    if (!aEntry->mPopupType.EqualsLiteral("tooltip"))
+    if (!aEntry->mPopupType.EqualsLiteral("tooltip")) {
+      nsIFrame* activeChild = aEntry->mPopupFrame;
+      nsIMenuParent* childPopup = nsnull;
+      if (activeChild)
+        CallQueryInterface(activeChild, &childPopup);
+
+      // Tooltips don't get keyboard navigation
+      if (childPopup && !nsMenuFrame::sDismissalListener) {
+        // First check and make sure this popup wants keyboard navigation
+        nsAutoString property;    
+        aEntry->mPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
+        if (!property.EqualsLiteral("true"))
+          childPopup->InstallKeyboardNavigator();
+      }
+
       UpdateDismissalListener(childPopup);
-    
-    // First check and make sure this popup wants keyboard navigation
-    nsAutoString property;    
-    // Tooltips don't get keyboard navigation
-    aEntry->mPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-    if (!property.EqualsLiteral("true") && 
-        childPopup &&
-        !aEntry->mPopupType.EqualsLiteral("tooltip"))
-      childPopup->InstallKeyboardNavigator();
+    }
   }
   else {
     if (aEntry->mCreateHandlerSucceeded && !OnDestroy(aEntry->mPopupContent))
