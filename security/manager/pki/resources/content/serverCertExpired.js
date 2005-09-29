@@ -55,9 +55,15 @@ function onLoad()
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var message1 = dialogParams.GetString(1);
   
-  var currDate = new Date(); 
+  const nsIScriptableDateFormat = Components.interfaces.nsIScriptableDateFormat;
+  var dateService = Components.classes["@mozilla.org/intl/scriptabledateformat;1"].getService(nsIScriptableDateFormat);
+  var date = new Date(); 
+  var dateStr = dateService.FormatDateTime("", dateService.dateFormatShort, dateService.timeFormatNoSeconds, 
+                                           date.getFullYear(), date.getMonth()+1, date.getDate(), 
+                                           date.getHours(), date.getMinutes(), date.getSeconds());
+
   var message2 = bundle.formatStringFromName("serverCertExpiredMsg2", 
-                                             [ currDate.toLocaleString() ],
+                                             [ dateStr ],
                                               1);
   setText("message1", message1);
   setText("message2", message2);
