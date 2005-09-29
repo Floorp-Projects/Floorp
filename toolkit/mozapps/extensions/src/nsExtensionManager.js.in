@@ -4697,7 +4697,7 @@ ExtensionManager.prototype = {
       txn.addDownload(currItem, txnID);
       this._transactions.push(txn);
       urls.push(currItem.xpiURL);
-      hashes.push(currItem.xpiHash);
+      hashes.push(currItem.xpiHash ? currItem.xpiHash : null);
     }
 
     // Kick off the download process for this transaction
