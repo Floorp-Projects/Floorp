@@ -261,9 +261,12 @@ nsAutoCompleteController::HandleEnter(PRBool *_retval)
   if (*_retval) {
     nsCOMPtr<nsIAutoCompletePopup> popup;
     mInput->GetPopup(getter_AddRefs(popup));
-    PRInt32 selectedIndex;
-    popup->GetSelectedIndex(&selectedIndex);
-    *_retval = selectedIndex >= 0;
+
+    if (popup) {
+      PRInt32 selectedIndex;
+      popup->GetSelectedIndex(&selectedIndex);
+      *_retval = selectedIndex >= 0;
+    }
   }
   
   ClearSearchTimer();
