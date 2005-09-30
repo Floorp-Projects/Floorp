@@ -68,11 +68,12 @@
 
 var SECTION = "15.8.2.15";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.round(x)";
 var BUGNUMBER="331411";
 
 var EXCLUDE = "true";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

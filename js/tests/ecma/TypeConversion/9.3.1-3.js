@@ -59,10 +59,11 @@
 
 var SECTION = "9.3.1-3";
 var VERSION = "ECMA_1";
-startTest();
 var BUGNUMBER="129087";
 
 var TITLE   = "Number To String, String To Number";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

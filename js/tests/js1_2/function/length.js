@@ -58,10 +58,10 @@
 
 var SECTION = "function/length.js";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Function.length";
 var BUGNUMBER="104204";
 
+startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 var f = new Function( "a","b", "c", "return f.length");

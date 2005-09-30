@@ -56,9 +56,9 @@
 
 var SECTION = "tostring-2";
 var VERSION = "JS1_2";
-startTest();
 var TITLE   = "Function.toString()";
 var BUGNUMBER="123444";
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

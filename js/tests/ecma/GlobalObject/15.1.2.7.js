@@ -50,10 +50,10 @@
 */
 var SECTION = "15.1.2.7";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "isFinite( x )";
-
 var BUGNUMBER= "77391";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

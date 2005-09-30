@@ -55,8 +55,8 @@
 */
 var SECTION = "11.9.1";
 var VERSION = "ECMA_1";
-startTest();
 var BUGNUMBER="77391";
+startTest();
 
 writeHeaderToLog( SECTION + " The equals operator ( == )");
 

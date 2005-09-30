@@ -44,10 +44,10 @@
 
 	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 	var VERSION = 'no version';
-    startTest();
 	var TITLE   = 'RegExp: $1, ..., $9';
 	var BUGNUMBER="123802";
 
+        startTest();
 	writeHeaderToLog('Executing script: RegExp_dollar_number.js');
 	writeHeaderToLog( SECTION + " "+ TITLE);
 
