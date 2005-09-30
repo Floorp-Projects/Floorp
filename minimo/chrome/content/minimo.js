@@ -330,6 +330,15 @@ function findRuleById(outnavTarget,ruleattribute) {
   **/
 function browserInit(refTab)
 {
+  /* 
+   * addRule access navigational rule to each tab 
+   */
+
+  refTab.setAttribute("accessrule","content");
+  
+  /*
+   * 
+   */
   var refBrowser=getBrowser().getBrowserForTab(refTab);
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
