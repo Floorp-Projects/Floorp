@@ -450,7 +450,11 @@ void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint, PRBool aResizeWid
   nsRect dims = aRect;
   dims.MoveBy(mPosX, mPosY);
 
-  if (mDimBounds == dims) {
+  // Don't use nsRect's operator== here, since it returns true when
+  // both rects are empty even if they have different widths and we
+  // have cases where that sort of thing matters to us.
+  if (mDimBounds.TopLeft() == dims.TopLeft() &&
+      mDimBounds.Size() == dims.Size()) {
     return;
   }
 
