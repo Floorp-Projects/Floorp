@@ -160,9 +160,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 // Constructor
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
 :nsLeafBoxFrame(aPresShell), mPresContext(nsnull), mTreeBoxObject(nsnull), mImageCache(nsnull),
- mScrollbar(nsnull), mHorzScrollbar(nsnull), mColScrollView(nsnull), mTopRowIndex(0), 
+ mScrollbar(nsnull), mHorzScrollbar(nsnull), mColScrollContent(nsnull), mColScrollView(nsnull), 
  mHorzPosition(0), mHorzWidth(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
- mFocused(PR_FALSE), mHasFixedRowCount(PR_FALSE), 
+ mTopRowIndex(0), mFocused(PR_FALSE), mHasFixedRowCount(PR_FALSE), 
  mVerticalOverflow(PR_FALSE), mHorizontalOverflow(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
  mUpdateBatchNest(0), mRowCount(0), mSlots(nsnull)
 {
@@ -195,13 +195,14 @@ nsTreeBodyFrame::Release(void)
 void nsTreeBodyFrame::InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame* aCurrFrame, 
                                           nsIScrollbarMediator* aSM)
 {
-  if (mScrollbar && mHorzScrollbar && mColScrollView)
+  if (mScrollbar && mHorzScrollbar && mColScrollContent)
     return;
 
-  if (!mColScrollView) {
+  if (!mColScrollContent) {
     nsIScrollableFrame* scrollFrame;
-    if (NS_SUCCEEDED(CallQueryInterface(aCurrFrame, &scrollFrame))) 
-      mColScrollView = scrollFrame->GetScrollableView();
+    if (NS_SUCCEEDED(CallQueryInterface(aCurrFrame, &scrollFrame)))
+      if (scrollFrame->GetScrollableView())
+        mColScrollContent = aCurrFrame->GetContent();
   }
 
   // Check ourselves
@@ -226,7 +227,7 @@ void nsTreeBodyFrame::InitScrollbarFrames(nsPresContext* aPresContext, nsIFrame*
   }
 
   nsIFrame* child = aCurrFrame->GetFirstChild(nsnull);
-  while (child && !(mScrollbar && mHorzScrollbar && mColScrollView)) {
+  while (child && !(mScrollbar && mHorzScrollbar && mColScrollContent)) {
     InitScrollbarFrames(aPresContext, child, aSM);
     child = child->GetNextSibling();
   }
@@ -789,6 +790,16 @@ nsTreeBodyFrame::EnsureScrollable(PRBool ensureboth)
   }
 
   NS_ASSERTION(mScrollbar, "no scroll bar");
+
+  // The view pointer we have is volatile and strange, update it
+  mColScrollView = NULL;
+  nsIFrame* colFrame = mPresContext->PresShell()->GetPrimaryFrameFor(mColScrollContent);
+  if (colFrame) {
+    nsIScrollableFrame* scrollFrame;
+    if (NS_SUCCEEDED(CallQueryInterface(colFrame, &scrollFrame)))
+      mColScrollView = scrollFrame->GetScrollableView();
+  }
+
   return (mScrollbar && (!ensureboth || (mHorzScrollbar && mColScrollView))) ? PR_TRUE : PR_FALSE;
 }
 
