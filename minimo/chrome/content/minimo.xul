@@ -86,7 +86,7 @@
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
           
-    <toolbar id="nav-bar" accessfocus="back-button" accessnextrule="toolbar-view"  >
+    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  >
     
         <toolbarbutton tabindex="1" accessrule="nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
         <toolbarbutton tabindex="2" accessrule="nav-bar"  id="back-button" command="cmd_BrowserBack" />  
@@ -133,7 +133,7 @@
     </toolbar>
     
     <toolbar id="toolbar-rss" 
-                               accessfocus="toolbar-rss-rsstag"
+                               accessfocus="rss-close"
                                accessnextrule="nav-bar" 
                                accessprevrule="toolbar-view" 
                                flex="1"
@@ -150,7 +150,7 @@
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="14" accessrule="toolbar-rss"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button"  command="cmd_ViewRSS"/>  
+				<toolbarbutton tabindex="14" accessrule="toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
