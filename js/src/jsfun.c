@@ -1353,7 +1353,7 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
         JS_MarkGCThing(cx, fun, js_private_str, arg);
         if (fun->atom)
             GC_MARK_ATOM(cx, fun->atom, arg);
-        if (fun->interpreted)
+        if (fun->interpreted && fun->u.script)
             js_MarkScript(cx, fun->u.script, arg);
     }
     return 0;
