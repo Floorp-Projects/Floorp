@@ -56,6 +56,7 @@
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMXULPopupElement.h"
 #include "nsIEditingSession.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
@@ -108,6 +109,16 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
 
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessNodeCache.Init(kDefaultCacheSize);
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    GetDocShellTreeItemFor(mDOMNode);
+  if (docShellTreeItem) {
+    PRInt32 itemType;
+    docShellTreeItem->GetItemType(&itemType);
+    if (itemType == nsIDocShellTreeItem::typeChrome) {
+      mIsContentLoaded = PR_TRUE;
+    }
+  }
 }
 
 //-----------------------------------------------------
@@ -987,7 +998,14 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
             PRUint32 role, event = 0;
             accessible->GetFinalRole(&role);
             if (role == ROLE_MENUPOPUP) {
-              event = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
+              nsCOMPtr<nsIDOMNode> domNode;
+              accessNode->GetDOMNode(getter_AddRefs(domNode));
+              nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
+              if (!popup) {
+                // Popup elements already fire these via DOMMenuInactive
+                // handling in nsRootAccessible::HandleEvent
+                event = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
+              }
             }
             else if (role == ROLE_PROGRESSBAR && iterNode != aStartNode) {
               // Make sure EVENT_HIDE gets fired for progress meters
@@ -1124,7 +1142,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
     // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART or EVENT_ALERT event for
-    // newly visible content. Create new accessible if necessary to do so.
+    // newly visible content.
     nsAutoString role;
     aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
     PRUint32 event = 0;
