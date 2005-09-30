@@ -84,6 +84,11 @@ nsSpatialNavigation::KeyUp(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
 {
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRBool enabled;
+  prefBranch->GetBoolPref("snav.enabled", &enabled);
+  if (!enabled) //  this doesn't work.  wtf? if (!mService->mEnabled)
+    return NS_OK;
   
   PRInt32 formControlType = -1;
   // check to see if we are in a text field.
@@ -517,9 +522,6 @@ nsSpatialNavigation::handleMove(int direction)
 {
   PRUint32 type = FOCUS;
 
-  if (!mService->mEnabled)
-    return NS_OK;
-  
   nsCOMPtr<nsIContent> focusedContent;
   getFocusedContent(direction, getter_AddRefs(focusedContent));
 

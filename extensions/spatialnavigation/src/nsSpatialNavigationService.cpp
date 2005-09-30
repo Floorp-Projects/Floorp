@@ -101,7 +101,7 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
   }
 
   
-  if (!strcmp(aTopic,"xpcom-startup")) 
+  if (!strcmp(aTopic,"app-startup")) 
   {
     nsCOMPtr<nsIWindowWatcher> windowWatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -209,7 +209,7 @@ static NS_METHOD SpatialNavigationServiceRegistration(nsIComponentManager *aComp
     return rv;
   
   char* previous = nsnull;
-  rv = catman->AddCategoryEntry("xpcom-startup",
+  rv = catman->AddCategoryEntry("app-startup",
                                 "SpatialNavigationService", 
                                 SpatialNavigationService_ContractID,
                                 PR_TRUE, 
@@ -240,7 +240,7 @@ static NS_METHOD SpatialNavigationServiceUnregistration(nsIComponentManager *aCo
   if (NS_FAILED(rv))
     return rv;
   
-  rv = catman->DeleteCategoryEntry("xpcom-startup",
+  rv = catman->DeleteCategoryEntry("app-startup",
                                    "SpatialNavigationService", 
                                    PR_TRUE);
   
