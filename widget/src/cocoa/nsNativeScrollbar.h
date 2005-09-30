@@ -39,15 +39,16 @@
 #ifndef nsNativeScrollbar_h__
 #define nsNativeScrollbar_h__
 
-#include "nsINativeScrollbar.h"
 #include "nsChildView.h"
-#include <Controls.h>
+
+#include "nsINativeScrollbar.h"
 #include "nsIContent.h"
 
 #import "mozView.h"
 
 class nsIScrollbarMediator;
 
+@class NativeScrollbarView;
 
 //
 // nsNativeScrollbar
@@ -65,8 +66,6 @@ public:
                 nsNativeScrollbar();
   virtual       ~nsNativeScrollbar();
   
-  NS_IMETHOD    Destroy();
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINATIVESCROLLBAR
 
@@ -92,6 +91,8 @@ protected:
   virtual GrafPtr   GetQuickDrawPort();
 
   void              UpdateScroller();
+  
+  NativeScrollbarView*    ScrollbarView() const { return (NativeScrollbarView*)mView; }
   
 // DATA
 private:
@@ -125,8 +126,6 @@ private:
 - (id)initWithFrame:(NSRect)frameRect geckoChild:(nsNativeScrollbar*)inChild;
   // overridden parent class initializer
 - (id)initWithFrame:(NSRect)frameRect;
-
-- (void)scrollbarDestroyed;
 
 - (IBAction)scroll:(NSScroller*)sender;
 
