@@ -2870,7 +2870,11 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
-  if (oldDimensions != aRect) {
+  // Don't use nsRect's operator== here, since it returns true when
+  // both rects are empty even if they have different widths and we
+  // have cases where that sort of thing matters to us.
+  if (oldDimensions.TopLeft() != aRect.TopLeft() ||
+      oldDimensions.Size() != aRect.Size()) {
     nsView* parentView = view->GetParent();
     if (parentView == nsnull)
       parentView = view;
