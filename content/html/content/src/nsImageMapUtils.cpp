@@ -73,6 +73,8 @@ nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
     if (start == end) {
       return nsnull; // aUsemap == "#"
     }
+  } else {
+    return nsnull;
   }
 
   const nsAString& usemap = Substring(start, end);
