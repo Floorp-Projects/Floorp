@@ -7936,11 +7936,12 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
   for (nsIFrame* frame = aFrame; frame && !containingBlock;
        frame = frame->GetParent()) {
     // Is it positioned?
-    // If it's a table then ignore it, because for the time being tables
-    // are not containers for absolutely positioned child frames
+    // If it's table-related then ignore it, because for the time
+    // being table-related frames are not containers for absolutely
+    // positioned child frames.
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
 
-    if (disp->IsPositioned() && disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
+    if (disp->IsPositioned() && !IsTableRelated(disp->mDisplay, PR_TRUE)) {
       // Find the outermost wrapped block under this frame
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
