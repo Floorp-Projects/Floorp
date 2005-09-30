@@ -3391,16 +3391,24 @@ nsGlobalWindow::Focus()
 
   /*
    * If caller is not chrome and dom.disable_window_flip is true,
-   * prevent setting window.focus() by exiting early
+   * prevent bringing a window to the front if the window is not the
+   * currently active window, but do change the currently focused
+   * window in the focus controller so that focus is in the right
+   * place when the window is activated again.
    */
 
-  if (!CanSetProperty("dom.disable_window_flip")) {
-    return NS_OK;
+  PRBool canFocus = CanSetProperty("dom.disable_window_flip");
+
+  PRBool isActive = PR_FALSE;
+  nsIFocusController *focusController =
+    nsGlobalWindow::GetRootFocusController();
+  if (focusController) {
+    focusController->GetActive(&isActive);
   }
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  if (treeOwnerAsWin) {
+  if (treeOwnerAsWin && (canFocus || isActive)) {
     PRBool isEnabled = PR_TRUE;
     if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
       NS_WARNING( "Should not try to set the focus on a disabled window" );
@@ -3419,7 +3427,7 @@ nsGlobalWindow::Focus()
   }
 
   nsresult result = NS_OK;
-  if (presShell) {
+  if (presShell && (canFocus || isActive)) {
     nsIViewManager* vm = presShell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
@@ -3430,8 +3438,6 @@ nsGlobalWindow::Focus()
     }
   }
   else {
-    nsIFocusController *focusController =
-      nsGlobalWindow::GetRootFocusController();
     if (focusController) {
       focusController->SetFocusedWindow(this);
     }
@@ -5291,48 +5297,11 @@ nsGlobalWindow::GetObjectProperty(const PRUnichar *aProperty,
   return NS_OK;
 }
 
-nsresult
-nsGlobalWindow::Activate()
+static nsresult
+FireWidgetEvent(nsIDocShell *aDocShell, PRUint32 aMsg)
 {
-  FORWARD_TO_OUTER(Activate, (), NS_ERROR_NOT_INITIALIZED);
-
-/*
-   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-   if(treeOwnerAsWin)
-      treeOwnerAsWin->SetVisibility(PR_TRUE);
-
-   nsCOMPtr<nsIPresShell> presShell;
-   mDocShell->GetPresShell(getter_AddRefs(presShell));
-   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-   nsIViewManager* vm = presShell->GetViewManager();
-   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-   nsIView* rootView;
-   vm->GetRootView(rootView);
-   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-   nsIWidget* widget = rootView->GetWidget();
-   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-   return widget->SetFocus();
- */
-
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  if (treeOwnerAsWin) {
-    PRBool isEnabled = PR_TRUE;
-    if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
-      NS_WARNING( "Should not try to activate a disabled window" );
-      return NS_ERROR_FAILURE;
-    }
-
-    treeOwnerAsWin->SetVisibility(PR_TRUE);
-  }
-
   nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  aDocShell->GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsIViewManager* vm = presShell->GetViewManager();
@@ -5349,7 +5318,7 @@ nsGlobalWindow::Activate()
 
   nsEventStatus status;
 
-  nsGUIEvent guiEvent(PR_TRUE, NS_ACTIVATE, widget);
+  nsGUIEvent guiEvent(PR_TRUE, aMsg, widget);
   guiEvent.time = PR_IntervalNow();
 
   vm->DispatchEvent(&guiEvent, &status);
@@ -5358,39 +5327,39 @@ nsGlobalWindow::Activate()
 }
 
 nsresult
+nsGlobalWindow::Activate()
+{
+  FORWARD_TO_OUTER(Activate, (), NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+  if (treeOwnerAsWin) {
+    PRBool isEnabled = PR_TRUE;
+    if (NS_SUCCEEDED(treeOwnerAsWin->GetEnabled(&isEnabled)) && !isEnabled) {
+      NS_WARNING( "Should not try to activate a disabled window" );
+      return NS_ERROR_FAILURE;
+    }
+
+    treeOwnerAsWin->SetVisibility(PR_TRUE);
+  }
+
+  return FireWidgetEvent(mDocShell, NS_ACTIVATE);
+}
+
+nsresult
 nsGlobalWindow::Deactivate()
 {
   FORWARD_TO_OUTER(Deactivate, (), NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  nsIViewManager* vm = presShell->GetViewManager();
-  NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-  nsIView *rootView;
-  vm->GetRootView(rootView);
-  NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-  // Hold a STRONG REF to keep the widget around during event processing
-  nsCOMPtr<nsIWidget> widget = rootView->GetWidget();
-  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-  nsEventStatus status;
-
-  nsGUIEvent guiEvent(PR_TRUE, NS_DEACTIVATE, widget);
-  guiEvent.time = PR_IntervalNow();
-
-  vm->DispatchEvent(&guiEvent, &status);
-
-  return NS_OK;
+  return FireWidgetEvent(mDocShell, NS_DEACTIVATE);
 }
 
 nsIFocusController*
 nsGlobalWindow::GetRootFocusController()
 {
   nsIDOMWindowInternal *rootWindow = nsGlobalWindow::GetPrivateRoot();
+  nsCOMPtr<nsIFocusController> fc;
+
   if (rootWindow) {
     // Obtain the chrome event handler.
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));
@@ -5398,13 +5367,14 @@ nsGlobalWindow::GetRootFocusController()
     if (chromeHandler) {
       nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(chromeHandler));
       if (windowRoot) {
-        nsCOMPtr<nsIFocusController> fc;
         windowRoot->GetFocusController(getter_AddRefs(fc));
-        return fc;  // this reference is going away, but the root holds onto it
       }
     }
   }
-  return nsnull;
+
+  // this reference is going away, but the root (if found) holds onto
+  // it
+  return fc;
 }
 
 //*****************************************************************************
