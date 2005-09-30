@@ -3005,10 +3005,10 @@ enum BWCOpenDest {
 {
   if ([[ABAddressBook sharedAddressBook] emailAddressExistsInAddressBook:emailAddress]) {
     NSString* realName = [[ABAddressBook sharedAddressBook] getRealNameForEmailAddress:[self getMailAddressFromContextMenuLinkNode]];
-    [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Open %@ in Address Book", @"Open %@ in Address Book"), realName != nil ? realName : @""]];
+    [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Open %@ in Address Book", @""), realName != nil ? realName : @""]];
     [addToAddressBookItem setEnabled:YES];
   } else {
-    [addToAddressBookItem setTitle:NSLocalizedString(@"Add to Address Book", @"Add to Address Book")];
+    [addToAddressBookItem setTitle:NSLocalizedString(@"Add to Address Book", @"")];
     [addToAddressBookItem setEnabled:([emailAddress length] > 0) ];
   }
 }
