@@ -1264,7 +1264,7 @@ nsHTMLInputElement::Click()
       }
     }
   }
-  
+
   return NS_OK;
 }
 

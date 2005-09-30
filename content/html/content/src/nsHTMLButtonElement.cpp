@@ -456,9 +456,14 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
       }
 	  } else {
       switch (aEvent->message) {
+        // Make sure any pending submissions from a call to
+        // form.submit() in a left click handler or an activate
+        // handler gets flushed, even if the event handler prevented
+        // the default action.
+      case NS_MOUSE_LEFT_CLICK:
       case NS_UI_ACTIVATE:
         if (mForm && mType == NS_FORM_BUTTON_SUBMIT) {
-          // tell the form to flush a possible pending submission.
+          // Tell the form to flush a possible pending submission.
           // the reason is that the script returned false (the event was
           // not ignored) so if there is a stored submission, it needs to
           // be submitted immediatelly.
