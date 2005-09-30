@@ -281,8 +281,13 @@ function eventHandlerMenu(e) {
     //document.getElementById("back-button").focus();
   }
 
+  if(e.charCode==513) {
+  	document.getElementById("menu-button").focus();
+  } 
+  
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
   if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+  		  e.preventDefault();
         if(e.keyCode==40) {
 		  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
 	  }
@@ -296,7 +301,7 @@ function eventHandlerMenu(e) {
 		}
 	  } else { 
 		  document.getElementById(tempElement).focus();
-		  e.preventDefault();
+
 	  }
   }
 
