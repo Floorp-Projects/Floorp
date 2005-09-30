@@ -66,6 +66,8 @@ static void
 CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad)
 {
   PRUint32 nStops;
+  float lastOffset = 0.0f;
+
   aGrad->GetStopCount(&nStops);
   for (PRUint32 i = 0; i < nStops; i++) {
     nscolor rgba;
@@ -75,6 +77,11 @@ CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad)
     aGrad->GetStopOffset(i, &offset);
     aGrad->GetStopColor(i, &rgba);
     aGrad->GetStopOpacity(i, &opacity);
+
+    if (offset < lastOffset)
+      offset = lastOffset;
+    else
+      lastOffset = offset;
 
     cairo_pattern_add_color_stop_rgba(aPattern, offset,
                                       NS_GET_R(rgba)/255.0,
