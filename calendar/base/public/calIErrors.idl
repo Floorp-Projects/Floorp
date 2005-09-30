@@ -61,5 +61,26 @@ interface calIErrors : nsISupports
    * An invalid or nonexistent timezone was encountered.
    */
   const unsigned long INVALID_TIMEZONE = ERROR_BASE + 1;
+
+
+  /* ICS specific errors */
+  const unsigned long ICS_ERROR_BASE = ERROR_BASE + 0x100;
+
+  /**
+   * ICS errors, copied from icalerror.h.
+   * The numbers (minus ICS_ERROR_BASE) should match with the enum
+   * values from icalerror.h
+   */
+  const unsigned long ICS_NO_ERROR = ICS_ERROR_BASE + 0;
+  const unsigned long ICS_BADARG = ICS_ERROR_BASE + 1;
+  const unsigned long ICS_NEWFAILED = ICS_ERROR_BASE + 2;
+  const unsigned long ICS_ALLOCATION = ICS_ERROR_BASE + 3;
+  const unsigned long ICS_MALFORMEDDATA = ICS_ERROR_BASE + 4;
+  const unsigned long ICS_PARSE = ICS_ERROR_BASE + 5;
+  const unsigned long ICS_INTERNAL = ICS_ERROR_BASE + 6;
+  const unsigned long ICS_FILE = ICS_ERROR_BASE + 7;
+  const unsigned long ICS_USAGE = ICS_ERROR_BASE + 8;
+  const unsigned long ICS_UNIMPLEMENTED = ICS_ERROR_BASE + 9;
+  const unsigned long ICS_UNKNOWN = ICS_ERROR_BASE + 10;
 };
 

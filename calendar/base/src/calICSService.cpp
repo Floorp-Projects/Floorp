@@ -49,6 +49,7 @@
 
 #include "calIEvent.h"
 #include "calBaseCID.h"
+#include "calIErrors.h"
 
 static NS_DEFINE_CID(kCalICSService, CAL_ICSSERVICE_CID);
 
@@ -964,7 +965,9 @@ calICSService::ParseICS(const nsACString& serialized,
                 PromiseFlatCString(serialized).get(), icalerrno,
                 icalerror_strerror(icalerrno));
 #endif
-        return NS_ERROR_FAILURE;
+        // The return values is calIError match with ical errors,
+        // so no need for a conversion table or anything.
+        return calIErrors::ICS_ERROR_BASE + icalerrno;
     }
     calIcalComponent *comp = new calIcalComponent(ical, nsnull);
     if (!comp) {
