@@ -1,13 +1,13 @@
 
 <!ENTITY enbJsCheckMailNews.label     "Mail &amp; Newsgroups">
-<!ENTITY enbJsCheckMailNews.accesskey "m">
+<!ENTITY enbJsCheckMailNews.accesskey "M">
 <!ENTITY enbPluginCheckMailNews.label     "Mail &amp; Newsgroups">
-<!ENTITY enbPluginCheckMailNews.accesskey "p">
+<!ENTITY enbPluginCheckMailNews.accesskey "a">
 
 <!ENTITY mail.label "Mail &amp; Newsgroups">
-<!ENTITY mail.accesskey "m">
+<!ENTITY mail.accesskey "M">
 <!ENTITY addressbook.label "Address Book">
-<!ENTITY addressbook.accesskey "a">
+<!ENTITY addressbook.accesskey "A">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY notifications.label "Notifications">
 <!ENTITY address.label "Addressing">
@@ -16,4 +16,5 @@
 <!ENTITY return.label "Return Receipts">
 <!ENTITY disk.label "Disk Space">
 <!ENTITY labels.label "Labels">
+<!ENTITY characterEncoding.label "Character Encoding">
 <!ENTITY offline.label "Offline &amp; Disk Space">

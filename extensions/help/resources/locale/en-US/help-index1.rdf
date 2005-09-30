@@ -1102,6 +1102,11 @@
          nc:link="mail_help.xhtml#changing_the_settings_for_an_account"/>
      </rdf:li>
      <rdf:li>
+       <rdf:Description ID="Mail_and_Newsgroups:Character_Encoding"
+         nc:name="Character Encoding"
+         nc:link="mail_help.xhtml#character_encoding"/>
+     </rdf:li>
+     <rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Compose_window"
          nc:name="Compose window"
          nc:link="mail_help.xhtml#using_the_message_composition_window"/>

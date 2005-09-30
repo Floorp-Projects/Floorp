@@ -15,10 +15,7 @@
                        "mailQuotedSize", "mailCitationColor",
                        "wrapLongLines", "displayGlyph",
                        "reuseMessageWindow", "disableContent",
-                       "markMessagesRead", "markMessagesReadAfter",
-                       "sendDefaultCharsetList", "forceCharsetOverride"];
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+                       "markMessagesRead", "markMessagesReadAfter"];
     var gMarkMessagesReadAfter;
 
     function Startup() {
@@ -66,33 +63,18 @@
       <label value="&seconds.label;"/>
     </hbox>
 
-    <hbox align="center">
-      <label control="sendDefaultCharsetList"
-             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
-        <menulist id="sendDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-                  preftype="localizedstring" prefstring="mailnews.view_default_charset">
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-      </menulist>
-    </hbox>
-
-    <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
-              prefstring="mailnews.force_charset_override"
-              accesskey="&forceCharsetOverride.accesskey;"/>
-
   </groupbox>
 
   <groupbox>
     <caption label="&displayPlainText.label;"/>
-    <hbox align="center">
-      <description>&plainTextFont.label;</description>
+    <label value="&plainTextFont.label;"/>
+    <hbox class="indent" align="center">
       <radiogroup id="mailFixedWidthMessages" orient="horizontal"
                   preftype="bool" prefstring="mail.fixed_width_messages">
-        <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
-        <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+        <radio value="true" label="&fixedWidth.label;"
+               accesskey="&fixedWidth.accesskey;"/>
+        <radio value="false" label="&variableWidth.label;"
+               accesskey="&variableWidth.accesskey;"/>                
       </radiogroup>
     </hbox>
 

@@ -17,13 +17,8 @@
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoSave",
                        "autoSaveInterval","spellCheckBeforeSend", "inlineSpellCheck",
-                       "strictlyMime", "mailWarnOnSendAccelKey",
-                       "wrapLength", "sendDefaultCharsetList",
-                       "replyInDefaultCharset", "FontSelect",
-                       "fontSizeSelect", "textColor",
-                       "backgroundColor"];
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
+                       "mailWarnOnSendAccelKey", "wrapLength", "FontSelect",
+                       "fontSizeSelect", "textColor", "backgroundColor"];
     var gAutoSaveInterval;
 
     function Startup()
@@ -78,6 +73,15 @@
   <groupbox align="start">
     <caption label="&sendingMessagesHeader.label;"/>
 
+    <vbox align="start">
+      <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
+                prefstring="mail.SpellCheckBeforeSend"
+                accesskey="&spellCheck.accesskey;"/>
+      <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
+                prefstring="mail.spellcheck.inline"
+                accesskey="&spellCheckInline.accesskey;"/>
+    </vbox>
+
     <hbox align="center">
       <checkbox id="autoSave" label="&autoSave.label;"
                 prefstring="mail.compose.autosave"
@@ -88,48 +92,17 @@
       <label value="&autoSaveEnd.label;"/>
     </hbox>
 
-    <hbox align="center">
-      <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
-                prefstring="mail.SpellCheckBeforeSend"
-                accesskey="&spellCheck.accesskey;"/>
-
-      <checkbox id="inlineSpellCheck" label="&spellCheckInline.label;"
-                prefstring="mail.spellcheck.inline"
-                accesskey="&spellCheckInline.accesskey;"/>
-    </hbox>
-
-    <checkbox id="strictlyMime" label="&useMIME.label;"
-              prefstring="mail.strictly_mime"
-              accesskey="&useMIME.accesskey;"/>
+    <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
+              prefstring="mail.warn_on_send_accel_key"
+              accesskey="&warnOnSendAccelKey.accesskey;" />
 
     <hbox align="center">
-      <checkbox id="mailWarnOnSendAccelKey" label="&warnOnSendAccelKey.label;"
-                prefstring="mail.warn_on_send_accel_key"
-                accesskey="&warnOnSendAccelKey.accesskey;" />
-    </hbox>
-
-	<hbox align="center">
-        <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
-    <textbox id="wrapLength" size="3" preftype="int"
+      <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
+      <textbox id="wrapLength" size="3" preftype="int"
                prefstring="mailnews.wraplength" prefattribute="value"/>
-    <label value="&char.label;"/>
-  </hbox>
+      <label value="&char.label;"/>
+    </hbox>
 
-   <hbox align="center">
-    <label value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"
-           page="sendDefaultCharsetList" control="sendDefaultCharsetList"/>
-    <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-              preftype="localizedstring" prefstring="mailnews.send_default_charset">
-      <template>
-        <menupopup>
-          <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-        </menupopup>
-      </template>
-    </menulist>       
-    </hbox> 
-    <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
-              prefstring="mailnews.reply_in_default_charset"
-              accesskey="&replyInDefaultCharset.accesskey;"/>
   </groupbox>
   
   <groupbox align="start">

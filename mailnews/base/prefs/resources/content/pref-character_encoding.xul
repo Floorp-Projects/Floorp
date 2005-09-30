@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-character_encoding.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-character_encoding.xul');"
+      headertitle="&pref.character.encoding.title;">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["viewDefaultCharsetList", "forceCharsetOverride",
+                       "strictlyMime", "sendDefaultCharsetList",
+                       "replyInDefaultCharset"];
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+                                    .getService(Components.interfaces.nsIObserverService);
+    observerService.notifyObservers(null, "charsetmenu-selected", "other");
+    observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
+  ]]>
+  </script>
+
+  <groupbox align="start">
+    <caption label="&messageDisplay.caption;"/>
+    <hbox align="center">
+      <label control="viewDefaultCharsetList"
+             value="&viewDefaultCharset.label;" accesskey="&viewDefaultCharset.accesskey;"/>
+      <menulist id="viewDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                preftype="localizedstring" prefstring="mailnews.view_default_charset">
+        <template>
+          <menupopup>
+            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+          </menupopup>
+        </template>
+      </menulist>
+    </hbox>
+
+    <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
+              prefstring="mailnews.force_charset_override"
+              accesskey="&forceCharsetOverride.accesskey;"/>
+
+  </groupbox>
+
+  <!-- Composing Mail -->
+  <groupbox align="start">
+    <caption label="&composingMessages.caption;"/>
+
+    <checkbox id="strictlyMime" label="&useMIME.label;"
+              prefstring="mail.strictly_mime"
+              accesskey="&useMIME.accesskey;"/>
+
+    <hbox align="center">
+      <label value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"
+             page="sendDefaultCharsetList" control="sendDefaultCharsetList"/>
+      <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+                preftype="localizedstring" prefstring="mailnews.send_default_charset">
+        <template>
+          <menupopup>
+            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+          </menupopup>
+        </template>
+      </menulist>  
+    </hbox>
+    <checkbox id="replyInDefaultCharset" label="&replyInDefaultCharset.label;"
+              prefstring="mailnews.reply_in_default_charset"
+              accesskey="&replyInDefaultCharset.accesskey;"/>
+  </groupbox>
+</page>

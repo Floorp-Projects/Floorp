@@ -4283,6 +4283,7 @@ to filter unwanted mail.</p>
     <li><a href="#addressing_preferences">Addressing</a></li>
     <li><a href="#labels">Labels</a></li>
     <li><a href="#return_receipts_preferences">Return Receipts</a></li>
+    <li><a href="#character_encoding">Character Encoding</a></li>
     <li><a href="#offline_and_disk_space_preferences">Offline &amp; Disk Space
       Preferences</a></li>
   </ul>
@@ -4368,20 +4369,6 @@ to filter unwanted mail.</p>
     <p><strong>Tip</strong>: If you do not want Mail &amp; Newsgroups to mark
       your messages as read automatically at all, you can select this option
       and enter a very large number of seconds.</p>
-  </li>
-  <li><strong>Default Character Encoding</strong>: Click this drop-down list to
-    select the character encoding you want Mail &amp; Newsgroups to use as the
-    default for incoming mail and newsgroup messages. This is recommended if
-    it&apos;s likely you might receive messages in which the character encoding
-    (MIME charset) is not indicated, such as when reading messages in
-    international newsgroups.</li>
-  <li><strong>Apply default to all messages</strong>: Select this to apply the
-    default character encoding to all messages.
-
-    <p><strong>Tip</strong>: You can later view or change the character
-      encoding for a specific folder. In the Mail window, select a folder from
-      the list of Mail folders. Open the View menu, and choose Character
-      Encoding.</p>
   </li>
   <li><strong>Plain Text Messages</strong>: Select the font you prefer for
     viewing plain-text messages: fixed width or variable width. Choosing a font
@@ -4521,22 +4508,17 @@ to filter unwanted mail.</p>
   <li><strong>Forward Messages</strong>: Choose how you want forwarded
     message text to appear: as an attachment or <em>inline</em> (in the body
     of your message).</li>
-  <li><strong>Automatically save the message every ___ minutes</strong>: Choose
-    this option if you want Mail &amp; Newsgroups to save the message you are
-    currently composing automatically at the given interval. After a computer
-    crash or program failure you can find the latest saved version of the
-    message in your Drafts folder.</li>
   <li><strong>Check spelling before sending</strong>: Select this option to
     have Mail &amp; Newsgroups always check the spelling of your message before
     you send it.</li>
   <li><strong>Check spelling as you type</strong>: Select this option to have
     Mail &amp; Newsgroups always check the spelling of your message as you type
     it.</li>
-  <li><strong>For messages that contain 8-bit characters, use &apos;quoted
-    printable&apos; MIME encoding</strong>: Choose to have Mail &amp;
-    Newsgroups use <q>quoted printable</q> MIME encoding when sending regular
-    messages that use an 8-bit character encoding (for example, Latin
-    ISO-8859-3).</li>
+  <li><strong>Automatically save the message every ___ minutes</strong>: Choose
+    this option if you want Mail &amp; Newsgroups to save the message you are
+    currently composing automatically at the given interval. After a computer
+    crash or program failure you can find the latest saved version of the
+    message in your Drafts folder.</li>
   <li><strong>Confirm when using keyboard shortcut to send message</strong>:
     Check this option if want to be asked if you&apos;re sure to be ready to
     send the message when you&apos;re pressing Ctrl+Return in message editor.
@@ -4544,14 +4526,6 @@ to filter unwanted mail.</p>
     keyboard shortcut by mistake when composing a message.</li>
   <li><strong>Wrap plain text messages at ___ characters</strong>: Enter a
     number to set the right margin for text in the message area.</li>
-  <li><strong>Default Character Encoding</strong>: Select the character
-    encoding you want Mail &amp; Newsgroups to use as the default for outgoing
-    mail and newsgroup messages. Note that this character encoding is
-    <strong>not</strong> used when replying to a message. Instead, the
-    character encoding of the message being replied to is used by default.
-    Choose <strong>Always use this default character encoding in
-    replies</strong> to use the default character encoding for outgoing
-    messages even when replying.</li>
   <li><strong>Defaults for HTML Messages</strong>: Here you can define what the
     defaults are for font, size, text and background color if you choose to
     send mails in HTML format.</li>
@@ -4754,6 +4728,56 @@ to filter unwanted mail.</p>
 <p>To override these global preferences for individual accounts, see
   <a href="#return_receipts">Mail &amp; Newsgroups Account Settings - Return
   Receipts</a>.</p>
+
+<p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
+  section</a>]</p>
+
+<h2 id="character_encoding">Mail &amp; Newsgroups Preferences - Character
+  Encoding</h2>
+
+<p>Character encoding preferences allow you to choose how messages are encoded
+  when being displayed or created in all accounts. If you are not already
+  viewing the Character Encoding settings, follow these steps:</p>
+
+<ol>
+  <li>Open the <span class="mac">&brandShortName;</span>
+    <span class="noMac">Edit</span> menu and choose Preferences. You see the
+    Preferences dialog box.</li>
+  <li>Under the Mail &amp; Newsgroups category, click Character Encoding. (If
+    no subcategories are visible, double-click Mail &amp; Newsgroups to expand
+    the list.)</li>
+</ol>
+
+<ul>
+  <li><strong>Default Character Encoding</strong>: Click this drop-down list to
+    select the character encoding you want Mail &amp; Newsgroups to use as the
+    default for incoming mail and newsgroup messages. This is recommended if
+    it&apos;s likely you might receive messages in which the character encoding
+    (MIME charset) is not indicated, such as when reading messages in
+    international newsgroups.</li>
+  <li><strong>Always use this default character encoding when messages are
+    displayed</strong>: Select this to apply the default character encoding to
+    all messages.
+
+    <p><strong>Tip</strong>: You can later view or change the character
+      encoding for a specific folder. In the Mail window, select a folder from
+      the list of Mail folders. Open the View menu, and choose Character
+      Encoding.</p>
+  </li>
+  <li><strong>For messages that contain 8-bit characters, use &apos;quoted
+    printable&apos; MIME encoding</strong>: Choose to have Mail &amp;
+    Newsgroups use <q>quoted printable</q> MIME encoding when sending regular
+    messages that use an 8-bit character encoding (for example, Latin
+    ISO-8859-3).</li>
+  <li><strong>Default Character Encoding</strong>: Select the character
+    encoding you want Mail &amp; Newsgroups to use as the default for outgoing
+    mail and newsgroup messages. Note that this character encoding is
+    <strong>not</strong> used when replying to a message. Instead, the
+    character encoding of the message being replied to is used by default.
+    Choose <strong>Always use this default character encoding in
+    replies</strong> to use the default character encoding for outgoing
+    messages even when replying.</li>
+</ul>
 
 <p>[<a href="#mail_and_newsgroup_preferences">Return to beginning of
   section</a>]</p>

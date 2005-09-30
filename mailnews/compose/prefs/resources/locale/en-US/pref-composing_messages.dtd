@@ -40,7 +40,7 @@
 <!ENTITY forwardReply.label                   "Forwarding Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY inline.label                         "Inline">
-<!ENTITY inline.accesskey                     "I">
+<!ENTITY inline.accesskey                     "n">
 <!ENTITY asAttachment.label                   "As Attachment">
 <!ENTITY asAttachment.accesskey               "A">
 
@@ -51,7 +51,7 @@
 <!-- LOCALIZATION NOTE (autoSave.label): This will concatenate with
      "xxx minutes", using a number and (autoSaveEnd.label). -->
 <!ENTITY autoSave.label                       "Automatically save the message every">
-<!ENTITY autoSave.accesskey                   "m">
+<!ENTITY autoSave.accesskey                   "u">
 <!ENTITY autoSaveEnd.label                    "minutes">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "C">
@@ -61,13 +61,6 @@
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
 <!ENTITY wrapOutMsg.accesskey                 "W">
 <!ENTITY char.label                           "characters">
-<!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
-<!ENTITY useMIME.accesskey                    "o">
-
-<!ENTITY sendDefaultCharset.label             "Default Character Encoding:">
-<!ENTITY sendDefaultCharset.accesskey         "D">
-<!ENTITY replyInDefaultCharset.label          "Always use this default character encoding in replies. (When unchecked, only new messages use this default.)">
-<!ENTITY replyInDefaultCharset.accesskey      "r">
 
 <!ENTITY defaultMessagesHeader.label          "Defaults for HTML Messages">
 <!ENTITY font.label                           "Font:">

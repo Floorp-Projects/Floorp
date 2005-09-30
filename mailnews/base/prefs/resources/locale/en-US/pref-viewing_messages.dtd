@@ -38,13 +38,13 @@
 
 <!ENTITY pref.viewing.messages.title      "Message Display">
 <!ENTITY style.label                      "Style:">
-<!ENTITY style.accesskey                  "t">
+<!ENTITY style.accesskey                  "S">
 <!ENTITY regular.label                    "Regular">
 <!ENTITY bold.label                       "Bold">
 <!ENTITY italic.label                     "Italic">
 <!ENTITY boldItalic.label                 "Bold Italic">
 <!ENTITY size.label                       "Size:">
-<!ENTITY size.accesskey                   "S">
+<!ENTITY size.accesskey                   "z">
 <!ENTITY bigger.label                     "Bigger">
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">
@@ -52,10 +52,6 @@
 <!ENTITY displayPlainText.label           "When displaying plain text messages">
 <!ENTITY plainTextFont.label              "Use the following font width:">
 <!ENTITY displayQuoted.label              "Settings for quoted messages:">
-<!ENTITY sendDefaultCharset.label         "Default Character Encoding:">
-<!ENTITY sendDefaultCharset.accesskey     "r">
-<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character encoding specified by MIME header)">
-<!ENTITY forceCharsetOverride.accesskey   "A">
 <!ENTITY fixedWidth.label                 "Fixed">
 <!ENTITY fixedWidth.accesskey             "F">
 <!ENTITY variableWidth.label              "Variable">
@@ -63,7 +59,7 @@
 <!ENTITY readingMessagesHeader.label      "For incoming messages">
 <!ENTITY messageWrapping.label            "Message Wrapping">
 <!ENTITY wrapInMsg.label                  "Wrap text to fit window width">
-<!ENTITY wrapInMsg.accesskey              "x">
+<!ENTITY wrapInMsg.accesskey              "t">
 <!-- LOCALIZATION NOTE : (convertEmoticons.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label           "Display emoticons as graphics">
 <!ENTITY convertEmoticons.accesskey       "D">
@@ -81,4 +77,4 @@
 <!ENTITY existingWindowRadio.label        "An existing message window">
 <!ENTITY existingWindowRadio.accesskey    "e">
 <!ENTITY disableContent.label             "Allow messages to load and display remote images and other content">
-<!ENTITY disableContent.accesskey         "m">
+<!ENTITY disableContent.accesskey         "A">
