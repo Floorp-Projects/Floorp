@@ -1554,6 +1554,16 @@ GetSLX(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+ToInt32(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int32 i;
+
+    if (!JS_ValueToInt32(cx, argv[0], &i))
+        return JS_FALSE;
+    return JS_NewNumberValue(cx, i, rval);
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1587,6 +1597,7 @@ static JSFunctionSpec shell_functions[] = {
     {"seal",            Seal,           1, 0, 1},
     {"getpda",          GetPDA,         1},
     {"getslx",          GetSLX,         1},
+    {"toint32",         ToInt32,        1},
     {0}
 };
 
@@ -1625,6 +1636,7 @@ static char *shell_help_messages[] = {
     "seal(obj[, deep])      Seal object, or object graph if deep",
     "getpda(obj)            Get the property descriptors for obj",
     "getslx(obj)            Get script line extent",
+    "toint32(n)             Testing hook for JS_ValueToInt32",
     0
 };
 
