@@ -111,6 +111,8 @@ GDIPlusGetStops(nsISVGGradient *aGrad, Color **aColors, REAL **aPositions,
 
     if (offset < lastOffset)
       offset = lastOffset;
+    else
+      lastOffset = offset;
 
     (*aColors)[idx].SetValue(argb);
     (*aPositions)[idx] = (REAL)offset;
