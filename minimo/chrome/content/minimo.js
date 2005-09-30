@@ -278,6 +278,7 @@ function eventHandlerMenu(e) {
 
   if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
     BrowserMenuPopupFalse();
+    document.getElementById("menu-button").focus(); // forcing state back to the menu. 
   }
 
   if(e.charCode==513) {
@@ -316,7 +317,7 @@ function findRuleById(outnavTarget,ruleattribute) {
   var ruleElement=document.getElementById(outnavTarget);
 
   if(ruleElement.collapsed) {
-      return findRuleById(ruleElement.getAttribute(ruleattribute));
+      return findRuleById(ruleElement.getAttribute(ruleattribute), ruleattribute);
   } else {
 	return ruleElement;
   } 
