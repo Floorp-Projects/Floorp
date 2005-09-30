@@ -32,9 +32,8 @@ use strict;
 # Include the Bugzilla CGI and general utility library.
 use lib qw(.);
 require "globals.pl";
-
-# Retrieve this installation's configuration.
-GetVersionTable();
+use Bugzilla;
+use Bugzilla::Constants;
 
 # Suppress "used only once" warnings.
 use vars 
@@ -53,7 +52,18 @@ use vars
 
 # Use the global template variables defined in globals.pl 
 # to generate the output.
-use vars qw($template $vars);
+use vars qw($vars);
+
+my $user = Bugzilla->login(LOGIN_OPTIONAL);
+
+# If the 'requirelogin' parameter is on and the user is not
+# authenticated, return empty fields.
+if (Param('requirelogin') && !$user->id) {
+    display_data();
+}
+
+# Retrieve this installation's configuration.
+GetVersionTable();
 
 # Pass a bunch of Bugzilla configuration to the templates.
 $vars->{'priority'}  = \@::legal_priority;
@@ -65,7 +75,7 @@ $vars->{'resolution'} = \@::legal_resolution;
 $vars->{'status'}    = \@::legal_bug_status;
 
 # Include a list of product objects.
-$vars->{'products'} = Bugzilla->user->get_selectable_products;
+$vars->{'products'} = $user->get_selectable_products;
 
 # Create separate lists of open versus resolved statuses.  This should really
 # be made part of the configuration.
@@ -81,15 +91,25 @@ $vars->{'closed_status'} = \@closed_status;
 # Generate a list of fields that can be queried.
 $vars->{'field'} = [Bugzilla->dbh->bz_get_field_defs()];
 
-# Determine how the user would like to receive the output; 
-# default is JavaScript.
-my $cgi = Bugzilla->cgi;
-my $format = $template->get_format("config", scalar($cgi->param('format')),
-                                   scalar($cgi->param('ctype')) || "js");
+display_data($vars);
 
-# Return HTTP headers.
-print "Content-Type: $format->{'ctype'}\n\n";
 
-# Generate the configuration file and return it to the user.
-$template->process($format->{'template'}, $vars)
-  || ThrowTemplateError($template->error());
+sub display_data {
+    my $vars = shift;
+
+    my $cgi = Bugzilla->cgi;
+    my $template = Bugzilla->template;
+
+    # Determine how the user would like to receive the output; 
+    # default is JavaScript.
+    my $format = $template->get_format("config", scalar($cgi->param('format')),
+                                       scalar($cgi->param('ctype')) || "js");
+
+    # Return HTTP headers.
+    print "Content-Type: $format->{'ctype'}\n\n";
+
+    # Generate the configuration file and return it to the user.
+    $template->process($format->{'template'}, $vars)
+      || ThrowTemplateError($template->error());
+    exit;
+}
