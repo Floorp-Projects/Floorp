@@ -57,6 +57,14 @@ public class Global extends ImporterTopLevel
 {
     static final long serialVersionUID = 4029130780977538005L;
 
+    NativeArray history;
+    private InputStream inStream;
+    private PrintStream outStream;
+    private PrintStream errStream;
+    private boolean sealedStdLib = false;
+    boolean initialized;
+    private QuitAction quitAction;
+
     public Global()
     {
     }
@@ -64,6 +72,19 @@ public class Global extends ImporterTopLevel
     public Global(Context cx)
     {
         init(cx);
+    }
+
+    /**
+     * Set the action to call from quit().
+     */
+    public void initQuitAction(QuitAction quitAction)
+    {
+        if (quitAction == null)
+            throw new IllegalArgumentException("quitAction is null");
+        if (this.quitAction != null)
+            throw new IllegalArgumentException("The method is once-call.");
+
+        this.quitAction = quitAction;
     }
 
     public void init(ContextFactory factory)
@@ -82,10 +103,24 @@ public class Global extends ImporterTopLevel
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
         initStandardObjects(cx, sealedStdLib);
-        String[] names = { "print", "quit", "version", "load", "help",
-                           "loadClass", "defineClass", "spawn", "sync",
-                           "serialize", "deserialize", "runCommand",
-                           "seal", "readFile", "readUrl" };
+        String[] names = {
+            "defineClass",
+            "deserialize",
+            "help",
+            "load",
+            "loadClass",
+            "print",
+            "quit",
+            "readFile",
+            "readUrl",
+            "runCommand",
+            "seal",
+            "serialize",
+            "spawn",
+            "sync",
+            "toint32",
+            "version",
+        };
         defineFunctionProperties(names, Global.class,
                                  ScriptableObject.DONTENUM);
 
@@ -140,18 +175,20 @@ public class Global extends ImporterTopLevel
     }
 
     /**
-     * Quit the shell.
-     *
-     * This only affects the interactive mode.
+     * Call embedding-specific quit action passing its argument as
+     * int32 exit code.
      *
      * This method is defined as a JavaScript function.
      */
     public static void quit(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-
-        System.exit((args.length > 0) ?
-                    ((int) Context.toNumber(args[0])) : 0);
+        Global global = getInstance(funObj);
+        if (global.quitAction != null) {
+            int exitCode = (args.length == 0 ? 0
+                            : ScriptRuntime.toInt32(args[0]));
+            global.quitAction.quit(cx, exitCode);
+        }
     }
 
     /**
@@ -590,6 +627,18 @@ public class Global extends ImporterTopLevel
         return readUrl(url, charCoding, false);
     }
 
+    /**
+     * Convert the argumnet to int32 number.
+     */
+    public static Object toint32(Context cx, Scriptable thisObj, Object[] args,
+                                 Function funObj)
+    {
+        Object arg = (args.length != 0 ? args[0] : Undefined.instance);
+        if (arg instanceof Integer)
+            return arg;
+        return ScriptRuntime.wrapInt(ScriptRuntime.toInt32(arg));
+    }
+
     public InputStream getIn() {
         return inStream == null ? System.in : inStream;
     }
@@ -936,13 +985,6 @@ public class Global extends ImporterTopLevel
         String message = ToolErrorReporter.getMessage(msgId, msgArg);
         return Context.reportRuntimeError(message);
     }
-
-    NativeArray history;
-    private InputStream inStream;
-    private PrintStream outStream;
-    private PrintStream errStream;
-    private boolean sealedStdLib = false;
-    boolean initialized;
 }
 
 

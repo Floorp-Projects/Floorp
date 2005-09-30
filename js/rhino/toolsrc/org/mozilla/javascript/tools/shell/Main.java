@@ -60,13 +60,27 @@ public class Main
     public static final ShellContextFactory
         shellContextFactory = new ShellContextFactory();
 
+    static protected final Global global = new Global();
+    static protected ToolErrorReporter errorReporter;
+    static protected int exitCode = 0;
+    static private final int EXITCODE_RUNTIME_ERROR = 3;
+    static private final int EXITCODE_FILE_NOT_FOUND = 4;
+    static boolean processStdin = true;
+    static Vector fileList = new Vector(5);
+    private static SecurityProxy securityImpl;
+
+    static {
+        global.initQuitAction(new IProxy(IProxy.SYSTEM_EXIT));
+    }
+
     /**
      * Proxy class to avoid proliferation of anonymous classes.
      */
-    private static class IProxy implements ContextAction
+    private static class IProxy implements ContextAction, QuitAction
     {
         private static final int PROCESS_FILES = 1;
         private static final int EVAL_INLINE_SCRIPT = 2;
+        private static final int SYSTEM_EXIT = 3;
 
         private int type;
         String[] args;
@@ -91,6 +105,15 @@ public class Main
                 throw Kit.codeBug();
             }
             return null;
+        }
+
+        public void quit(Context cx, int exitCode)
+        {
+            if (type == SYSTEM_EXIT) {
+                System.exit(exitCode);
+                return;
+            }
+            throw Kit.codeBug();
         }
     }
 
@@ -586,12 +609,4 @@ public class Main
         return result;
     }
 
-    static protected final Global global = new Global();
-    static protected ToolErrorReporter errorReporter;
-    static protected int exitCode = 0;
-    static private final int EXITCODE_RUNTIME_ERROR = 3;
-    static private final int EXITCODE_FILE_NOT_FOUND = 4;
-    static boolean processStdin = true;
-    static Vector fileList = new Vector(5);
-    private static SecurityProxy securityImpl;
 }
