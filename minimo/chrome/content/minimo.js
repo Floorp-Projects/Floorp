@@ -268,7 +268,6 @@ function MiniNavStartup()
   
 }
 
-
 /*
  *  Focus Shortcut Action. This is just a focus action dispatcher based on certain conditions 
  *  defined in the XUL elements. Ideally would be interesting to have this as part of some new
@@ -283,8 +282,13 @@ function eventHandlerMenu(e) {
   }
 
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
-  if(outnavTarget!="" && e.keyCode==40 && !gShowingMenuPopup) {
-	  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"));
+  if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+        if(e.keyCode==40) {
+		  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
+	  }
+        if(e.keyCode==38) {
+		  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
+        }
 	  var tempElement=ruleElement.getAttribute("accessfocus");
         if(tempElement=="#tabContainer") { 
 		if(ruleElement.tabContainer) {
@@ -295,33 +299,24 @@ function eventHandlerMenu(e) {
 		  e.preventDefault();
 	  }
   }
-  if(outnavTarget!="" && e.keyCode==38 && !gShowingMenuPopup) {
-	  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"));
-	  var tempElement=ruleElement.getAttribute("accessfocus");
-        if(tempElement=="#tabContainer") { 
-		if(ruleElement.tabContainer) {
-			ruleElement.mTabContainer.childNodes[0].focus();
-		}
-	  } else { 
-		  document.getElementById(tempElement).focus();
-		  e.preventDefault();
-	  }
-  }
+
 	  
   /* 
    * We may use onblur with content navigation tabbrowser to snav enable disable. 
    */ 
+
 }
 
-function findRuleById(outnavTarget) {
+function findRuleById(outnavTarget,ruleattribute) {
   var ruleElement=document.getElementById(outnavTarget);
 
   if(ruleElement.collapsed) {
-      return findRuleById(ruleElement.getAttribute("accessnextrule"));
+      return findRuleById(ruleElement.getAttribute(ruleattribute));
   } else {
 	return ruleElement;
   } 
 }
+
 
 
 /** 
