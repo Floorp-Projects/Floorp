@@ -47,6 +47,7 @@ var gFullScreen=false;
 var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
+var gShowingMenuPopup=null;
 
 function nsBrowserStatusHandler()
 {
@@ -267,19 +268,50 @@ function MiniNavStartup()
   
 }
 
-var gShowingMenuPopup=null;
 
+/*
+ *  Focus Shortcut Action. This is just a focus action dispatcher based on certain conditions 
+ *  defined in the XUL elements. Ideally would be interesting to have this as part of some new
+ *  XUL elements that are based on existing XUL elements, or to incorporate, import, this behavior
+ *  in the XUL declaration. 
+ */
 function eventHandlerMenu(e) {
   if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
     BrowserMenuPopupFalse();
     document.getElementById("back-button").focus();
   }
-  
-  if (e.keyCode == 112) {
-    document.getElementById("menu-button").focus();	
+
+
+  var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
+  if(outnavTarget!="" && e.keyCode==40 && !gShowingMenuPopup) {
+	  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"));
+	  var tempElement=ruleElement.getAttribute("accessfocus");
+        if(tempElement=="#tabContainer") { 
+		if(ruleElement.tabContainer) {
+			ruleElement.mTabContainer.childNodes[0].focus();
+		}
+	  } else { 
+		  document.getElementById(tempElement).focus();
+		  e.preventDefault();
+	  }
   }
-  
+	  
+  /* 
+   * We may use onblur with content navigation tabbrowser to snav enable disable. 
+   */ 
+
 }
+
+function findRuleById(outnavTarget) {
+  var ruleElement=document.getElementById(outnavTarget);
+
+  if(ruleElement.collapsed) {
+      return findRuleById(ruleElement.getAttribute("accessnextrule"));
+  } else {
+	return ruleElement;
+  } 
+}
+
 
 /** 
   * Init stuff
@@ -551,13 +583,17 @@ function BrowserScreenRotate()
  
 function BrowserMenuPopup() {
     document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
-    gShowingMenuPopup=true;
 }
 function BrowserMenuPopupFalse() {
     document.getElementById("menu_MainPopup").hidePopup();
-    gShowingMenuPopup=false;
 }
 
 function MenuPopupShowing() {
+      gShowingMenuPopup=true;
 	document.getElementById("menu-button").focus();
 }
+
+function MenuPopupHidden() {
+      gShowingMenuPopup=false;
+}
+

@@ -86,12 +86,12 @@
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
           
-    <toolbar id="nav-bar">
+    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  >
     
-        <toolbarbutton tabindex="1" id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
-        <toolbarbutton tabindex="2" id="back-button" command="cmd_BrowserBack" />  
-        <toolbarbutton tabindex="3" id="forward-button" command="cmd_BrowserForward" />  
-        <toolbarbutton tabindex="4" id="reload-stop-button" class="reload-button" command="cmd_BrowserReload"/>
+        <toolbarbutton tabindex="1" accessrule="nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
+        <toolbarbutton tabindex="2" accessrule="nav-bar"  id="back-button" command="cmd_BrowserBack" />  
+        <toolbarbutton tabindex="3" accessrule="nav-bar"  id="forward-button" command="cmd_BrowserForward" />  
+        <toolbarbutton tabindex="4" accessrule="nav-bar"  id="reload-stop-button" class="reload-button" command="cmd_BrowserReload"/>
 
         <textbox tabindex="5" 
                  id="urlbar" 
@@ -108,7 +108,11 @@
 
     </toolbar>
     
-	<toolbar id="toolbar-view" flex="1" collapsed="true" >
+	<toolbar id="toolbar-view"   accessfocus="zoomplusitem"
+                                 accessnextrule="toolbar-rss"
+                                 flex="1"
+                                 collapsed="true" >
+                                 
 		<groupbox flex="1" class="box-floatoptions">
 		    <caption label="&zoom.label;"/>
 			<hbox flex="1" >
@@ -116,18 +120,23 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						<label value="&zoomText.label;" />
-						<toolbarbutton class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
-		                <toolbarbutton class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
+						<toolbarbutton tabindex="10" accessrule="toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
+		                <toolbarbutton tabindex="11" accessrule="toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
+				<toolbarbutton tabindex="12" accessrule="toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
     </toolbar>
     
-    <toolbar id="toolbar-rss" flex="1" collapsed="true" >
+    <toolbar id="toolbar-rss" 
+                               accessfocus="toolbar-rss-rsstag"
+                               accessnextrule="nav-bar" 
+                               flex="1"
+                               collapsed="true" >
+                               
         <groupbox flex="1" class="box-floatoptions">
 		    <caption label="&rssBMtitle.label;"/>
 			<hbox flex="1" >
@@ -135,11 +144,11 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
+						 <textbox tabindex="13" accessrule="toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton class="button-close" width="10" height="10" align="top" flex="0" id="close-button"  command="cmd_ViewRSS"/>  
+				<toolbarbutton tabindex="14" accessrule="toolbar-rss"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button"  command="cmd_ViewRSS"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
@@ -177,7 +186,7 @@
 		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label="about"  />
 	</popup>
     
-    <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()">
+    <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
         <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
 <!--    not working just yet.
 		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
