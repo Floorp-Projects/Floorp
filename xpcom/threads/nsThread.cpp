@@ -145,7 +145,6 @@ nsThread::Exit(void* arg)
     }
 
     self->mDead = PR_TRUE;
-    self->mThread = nsnull;
 
 #if defined(PR_LOGGING)
     if (nsIThreadLog) {
