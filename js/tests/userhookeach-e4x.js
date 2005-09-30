@@ -69,6 +69,19 @@ function checkTestCompleted()
   if (win.gPageCompleted)
   {
     gPageCompleted = true;
+
+    var testcases = win.testcases;
+    for (var i = 0; i < testcases.length; i++)
+    {
+      var testcase = testcases[i];
+      cdump('testname: '    + testcase.name + ' ' + 
+            'bug: '         + testcase.bugnumber + ' ' + 
+            (testcase.passed ? 'PASSED':'FAILED') + ' ' +
+            'description: ' + testcase.description + ' ' + 
+            'expected: '    + testcase.expect + ' ' + 
+            'actual: '      + testcase.actual + ' ' +
+            'reason: '      + testcase.reason);
+    }
   }
   else
   {
