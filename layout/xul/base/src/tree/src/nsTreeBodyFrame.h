@@ -354,7 +354,9 @@ protected: // Data Members
   nsIFrame* mScrollbar;
   nsIFrame* mHorzScrollbar;
 
-  // The scrollable view the columns are contained in 
+  // The scrollable frame and view the columns are contained in. The view is very volatile and 
+  // gets looked up by EnsureScrollable every time it's called. 
+  nsCOMPtr<nsIContent> mColScrollContent;
   nsIScrollableView* mColScrollView;
 
   // The index of the first visible row and the # of rows visible onscreen.  
