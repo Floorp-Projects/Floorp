@@ -86,7 +86,7 @@
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
           
-    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  >
+    <toolbar id="nav-bar" accessfocus="back-button" accessnextrule="toolbar-view"  >
     
         <toolbarbutton tabindex="1" accessrule="nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
         <toolbarbutton tabindex="2" accessrule="nav-bar"  id="back-button" command="cmd_BrowserBack" />  
@@ -110,6 +110,7 @@
     
 	<toolbar id="toolbar-view"   accessfocus="zoomplusitem"
                                  accessnextrule="toolbar-rss"
+                                 accessprevrule="nav-bar" 
                                  flex="1"
                                  collapsed="true" >
                                  
@@ -134,6 +135,7 @@
     <toolbar id="toolbar-rss" 
                                accessfocus="toolbar-rss-rsstag"
                                accessnextrule="nav-bar" 
+                               accessprevrule="toolbar-view" 
                                flex="1"
                                collapsed="true" >
                                
