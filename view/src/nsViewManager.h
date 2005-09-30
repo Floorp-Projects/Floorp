@@ -468,8 +468,24 @@ public: // NOT in nsIViewManager, so private to the view module
    * Called to inform the view manager that a view is about to bit-blit.
    * @param aView the view that will bit-blit
    * @param aScrollAmount how much aView will scroll by
+   * @return always returns NS_OK
+   * @note
+   * This method used to return void, but MSVC 6.0 SP5 (without the
+   * Processor Pack) and SP6, and the MS eMbedded Visual C++ 4.0 SP4
+   * (for WINCE) hit an internal compiler error when compiling this
+   * method:
+   *
+   * @par
+   *   fatal error C1001: INTERNAL COMPILER ERROR
+   *               (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
+   *
+   * @par
+   * Making the method return nsresult worked around the internal
+   * compiler error.  See Bugzilla bug 281158.  (The WINCE internal
+   * compiler error was addressed by the patch in bug 291229 comment
+   * 14 although the bug report did not mention the problem.)
    */
-  void WillBitBlit(nsView* aView, nsPoint aScrollAmount);
+  nsresult WillBitBlit(nsView* aView, nsPoint aScrollAmount);
   
   /**
    * Called to inform the view manager that a view has scrolled.
