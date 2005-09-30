@@ -29,3 +29,5 @@ components/component.reg
 components/compreg.dat
 components/xpti.dat
 components/xptitemp.dat
+
+searchplugins/
