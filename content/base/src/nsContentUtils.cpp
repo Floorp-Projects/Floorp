@@ -815,32 +815,19 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
     return NS_OK;
   }
 
-  nsIDocument* old_doc = aOldDocument;
+  if (!aOldDocument) {
+    // If we can't find our old document we don't know what our old
+    // scope was so there's no way to find the old wrapper
 
-  if (!old_doc) {
-    old_doc = aContent->GetOwnerDoc();
-
-    if (!old_doc) {
-      // If we can't find our old document we don't know what our old
-      // scope was so there's no way to find the old wrapper
-
-      return NS_OK;
-    }
+    return NS_OK;
   }
 
   NS_ENSURE_TRUE(sXPConnect, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsISupports> new_parent;
+  nsISupports* new_parent = aNewParent ? (nsISupports*)aNewParent :
+    (nsISupports*)aNewDocument;
 
-  if (!aNewParent) {
-    if (old_doc->GetRootContent() == aContent) {
-      new_parent = old_doc;
-    }
-  } else {
-    new_parent = aNewParent;
-  }
-
-  JSContext *cx = GetContextFromDocument(old_doc);
+  JSContext *cx = GetContextFromDocument(aOldDocument);
 
   if (!cx) {
     // No JSContext left in the old scope, can't find the old wrapper
@@ -860,7 +847,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!wrapper) {
-    // aContent is not wrapped (and thus none of it's children are
+    // aContent is not wrapped (and thus none of its children are
     // wrapped) so there's no need to reparent anything.
 
     return NS_OK;

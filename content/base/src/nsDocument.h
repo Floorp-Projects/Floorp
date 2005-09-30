@@ -90,7 +90,7 @@
 #include "nsStyleSet.h"
 #include "nsXMLEventsManager.h"
 #include "pldhash.h"
-
+#include "nsAttrAndChildArray.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -701,7 +701,7 @@ protected:
   nsSmallVoidArray mPresShells;
 
   // Array of owning references to all children
-  nsCOMArray<nsIContent> mChildren;
+  nsAttrAndChildArray mChildren;
 
   // Pointer to our parser if we're currently in the process of being
   // parsed into.
