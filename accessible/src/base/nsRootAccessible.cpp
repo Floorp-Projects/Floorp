@@ -53,6 +53,7 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMXULPopupElement.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLDocument.h"
@@ -575,6 +576,17 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+  if (eventType.LowerCaseEqualsLiteral("popupshown")) {
+    // Fire menupopupstart events after a delay so that ancestor views
+    // are visible, otherwise an accessible cannot be created for the
+    // popup and the accessibility toolkit event can't be fired.
+    nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(targetNode));
+    if (popup) {
+      return FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
+                                    targetNode, nsnull);
+    }
+  }
+
   nsCOMPtr<nsIAccessible> accessible;
   if (NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
                                                   getter_AddRefs(accessible))))
@@ -766,20 +778,11 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   else if (eventType.LowerCaseEqualsLiteral("domcontentloaded")) {
     TryFireEarlyLoadEvent(accessible, targetNode);
   }
-  else {
-    // Menu popup events
-    PRUint32 menuEvent = 0;
-    if (eventType.LowerCaseEqualsLiteral("popupshown")) {
-      menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
-    }
-    else if (eventType.EqualsLiteral("DOMMenuInactive")) {
-      menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
-    }
-    if (menuEvent) {
-      PRUint32 role = ROLE_NOTHING;
-      accessible->GetRole(&role);
-      if (role == ROLE_MENUPOPUP)
-        privAcc->FireToolkitEvent(menuEvent, accessible, nsnull);
+  else if (eventType.EqualsLiteral("DOMMenuInactive")) {
+    nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(targetNode));
+    if (popup) {
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPEND,
+                                accessible, nsnull);
     }
   }
 #else
