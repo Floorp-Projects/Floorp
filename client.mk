@@ -79,6 +79,8 @@
 # See http://www.mozilla.org/build/ for more information.
 #
 # Options:
+#   MOZ_BUILD_PROJECTS   - Build multiple projects in subdirectories
+#                          of MOZ_OBJDIR
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
 #   MOZ_CO_MODULE        - Module to checkout
@@ -359,13 +361,31 @@ else
   CVS_FLAGS := $(MOZ_CVS_FLAGS)
 endif
 
+ifdef MOZ_BUILD_PROJECTS
+
+ifndef MOZ_OBJDIR
+  $(error When MOZ_BUILD_PROJECTS is set, you must set MOZ_OBJDIR)
+endif
+ifdef MOZ_CURRENT_PROJECT
+  OBJDIR = $(MOZ_OBJDIR)/$(MOZ_CURRENT_PROJECT)
+  MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
+  BUILD_PROJECT_ARG = MOZ_BUILD_APP=$(MOZ_CURRENT_PROJECT)
+else
+  OBJDIR = $(error Cannot find the OBJDIR when MOZ_CURRENT_PROJECT is not set.)
+  MOZ_MAKE = $(error Cannot build in the OBJDIR when MOZ_CURRENT_PROJECT is not set.)
+endif
+
+else # MOZ_BUILD_PROJECTS
+
 ifdef MOZ_OBJDIR
-  OBJDIR := $(MOZ_OBJDIR)
-  MOZ_MAKE := $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
+  OBJDIR = $(MOZ_OBJDIR)
+  MOZ_MAKE = $(MAKE) $(MOZ_MAKE_FLAGS) -C $(OBJDIR)
 else
   OBJDIR := $(TOPSRCDIR)
   MOZ_MAKE := $(MAKE) $(MOZ_MAKE_FLAGS)
 endif
+
+endif # MOZ_BUILD_PROJECTS
 
 ####################################
 # CVS defines for NSS
@@ -664,26 +684,6 @@ ifdef RUN_AUTOCONF_LOCALLY
 	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
 endif
 
-####################################
-# Web configure
-
-WEBCONFIG_FILE  := $(HOME)/.mozconfig
-
-MOZCONFIG2CONFIGURATOR := build/autoconf/mozconfig2configurator
-webconfig:
-	@cd $(TOPSRCDIR); \
-	url=`$(MOZCONFIG2CONFIGURATOR) $(TOPSRCDIR)`; \
-	echo Running mozilla with the following url: ;\
-	echo ;\
-	echo $$url ;\
-	mozilla -remote "openURL($$url)" || \
-	netscape -remote "openURL($$url)" || \
-	mozilla $$url || \
-	netscape $$url ;\
-	echo ;\
-	echo   1. Fill out the form on the browser. ;\
-	echo   2. Save the results to $(WEBCONFIG_FILE)
-
 #####################################################
 # First Checkout
 
@@ -696,12 +696,23 @@ else
 #####################################################
 # After First Checkout
 
+# If we're building multiple projects, but haven't specified which project,
+# loop through them.
+
+ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
+configure depend build profiledbuild install export libs clean realclean distclean alldep::
+	set -e; \
+	for app in $(MOZ_BUILD_PROJECTS); do \
+	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
+	done
+
+else
 
 ####################################
 # Configure
 
-CONFIG_STATUS := $(wildcard $(OBJDIR)/config.status)
-CONFIG_CACHE  := $(wildcard $(OBJDIR)/config.cache)
+CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
+CONFIG_CACHE  = $(wildcard $(OBJDIR)/config.cache)
 
 ifdef RUN_AUTOCONF_LOCALLY
 EXTRA_CONFIG_DEPS := \
@@ -730,20 +741,23 @@ CONFIG_STATUS_DEPS := \
 #   $(TOPSRCDIR) will set @srcdir@ to "."; otherwise, it is set to the full
 #   path of $(TOPSRCDIR).
 ifeq ($(TOPSRCDIR),$(OBJDIR))
-  CONFIGURE := ./configure
+  CONFIGURE = ./configure
 else
-  CONFIGURE := $(TOPSRCDIR)/configure
+  CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
 ifdef MOZ_TOOLS
-  CONFIGURE := $(TOPSRCDIR)/configure
+  CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
-configure:
+configure::
+ifdef MOZ_BUILD_PROJECTS
+	@if test ! -d $(MOZ_OBJDIR); then $(MKDIR) $(MOZ_OBJDIR); else true; fi
+endif
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE) $(CONFIGURE_ARGS)
-	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
+	@cd $(OBJDIR) && $(BUILD_PROJECT_ARG) $(CONFIGURE_ENV_ARGS) $(CONFIGURE) $(CONFIGURE_ARGS) \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 	@touch $(OBJDIR)/Makefile
@@ -751,7 +765,7 @@ configure:
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	@$(MAKE) -f $(TOPSRCDIR)/client.mk configure
 
-ifdef CONFIG_STATUS
+ifneq (,$(CONFIG_STATUS))
 $(OBJDIR)/config/autoconf.mk: $(TOPSRCDIR)/config/autoconf.mk.in
 	cd $(OBJDIR); \
 	  CONFIG_FILES=config/autoconf.mk ./config.status
@@ -792,11 +806,10 @@ profiledbuild:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 install export libs clean realclean distclean alldep:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
+endif # MOZ_CURRENT_PROJECT
+
 cleansrcdir:
 	@cd $(TOPSRCDIR); \
-        if [ -f webshell/embed/gtk/Makefile ]; then \
-          $(MAKE) -C webshell/embed/gtk distclean; \
-        fi; \
 	if [ -f Makefile ]; then \
 	  $(MAKE) distclean ; \
 	else \
