@@ -63,6 +63,10 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsSVGPoint.h"
 
+#if defined(MOZ_SVG_RENDERER_GDIPLUS)
+#include <windows.h>
+#endif
+
 static PRBool gSVGEnabled;
 static PRBool gSVGRendererAvailable = PR_FALSE;
 static const char SVG_PREF_STR[] = "svg.enabled";
@@ -91,23 +95,14 @@ nsSVGUtils::SVGEnabled()
   static PRBool sInitialized = PR_FALSE;
   
   if (!sInitialized) {
-    /* check if a renderer is available */
-    nsCOMPtr<nsISVGRenderer> renderer;
-#if (defined(MOZ_SVG_RENDERER_GDIPLUS) + \
-     defined(MOZ_SVG_RENDERER_LIBART) + \
-     defined(MOZ_SVG_RENDERER_CAIRO) > 1)
-#error "Multiple SVG renderers. Please choose one manually."
-#elif defined(MOZ_SVG_RENDERER_GDIPLUS)  
-    renderer = do_CreateInstance(NS_SVG_RENDERER_GDIPLUS_CONTRACTID);
-#elif defined(MOZ_SVG_RENDERER_LIBART)
-    renderer = do_CreateInstance(NS_SVG_RENDERER_LIBART_CONTRACTID);
-#elif defined(MOZ_SVG_RENDERER_CAIRO)
-    renderer = do_CreateInstance(NS_SVG_RENDERER_CAIRO_CONTRACTID);
-#else
-#error "No SVG renderer."
+    gSVGRendererAvailable = PR_TRUE;
+
+#if defined(MOZ_SVG_RENDERER_GDIPLUS)
+    HMODULE gdiplus, gkgdiplus;
+
+    if ((gdiplus = LoadLibrary("gdiplus.dll")) == NULL)
+      gSVGRendererAvailable = PR_FALSE;
 #endif
-    if (renderer)
-      gSVGRendererAvailable = PR_TRUE;
 
     /* check and register ourselves with the pref */
     gSVGEnabled = nsContentUtils::GetBoolPref(SVG_PREF_STR);
