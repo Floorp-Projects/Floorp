@@ -711,10 +711,10 @@ sub match {
         if (&::Param('usevisibilitygroups')) {
             $query .= ", user_group_map";
         }
-        $query     .= " WHERE " .
+        $query     .= " WHERE (" .
                 $dbh->sql_position($sqlstr, 'LOWER(login_name)') . " > 0" .
                       " OR " .
-                $dbh->sql_position($sqlstr, 'LOWER(realname)') . " > 0";
+                $dbh->sql_position($sqlstr, 'LOWER(realname)') . " > 0)";
         if (&::Param('usevisibilitygroups')) {
             $query .= " AND user_group_map.user_id = userid" .
                       " AND isbless = 0" .
