@@ -408,7 +408,7 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_ADDPROPERTY |                                        \
   nsIXPCScriptable::WANT_DELPROPERTY |                                        \
-  nsIXPCScriptable::WANT_ENUMERATE |                                          \
+  nsIXPCScriptable::WANT_NEWENUMERATE |                                       \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_OUTER_OBJECT |                                       \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
@@ -5962,6 +5962,72 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                        _retval);
+}
+
+NS_IMETHODIMP
+nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, PRUint32 enum_op, jsval *statep,
+                         jsid *idp, PRBool *_retval)
+{
+  switch (enum_op) {
+    case JSENUMERATE_INIT:
+    {
+      // First, do the security check that nsDOMClassInfo does to see if we need to
+      // do any work at all.
+      nsDOMClassInfo::Enumerate(wrapper, cx, obj, _retval);
+      if (!*_retval) {
+        return NS_OK;
+      }
+
+      // The security check passed, let's see if we need to get the inner
+      // window's JS object or if we can just start enumerating.
+      nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
+      JSObject *enumobj = win->GetGlobalJSObject();
+      if (win->IsOuterWindow()) {
+        nsGlobalWindow *inner = win->GetCurrentInnerWindowInternal();
+        if (inner) {
+          enumobj = inner->GetGlobalJSObject();
+        }
+      }
+
+      // Great, we have the js object, now let's enumerate it.
+      JSObject *iterator = JS_NewPropertyIterator(cx, enumobj);
+      if (!iterator) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      *statep = OBJECT_TO_JSVAL(iterator);
+      if (idp) {
+        // Note: With these property iterators, we can't tell ahead of time how
+        // many properties we're going to be iterating over.
+        *idp = JSVAL_ZERO;
+      }
+      break;
+    }
+    case JSENUMERATE_NEXT:
+    {
+      JSObject *iterator = (JSObject*)JSVAL_TO_OBJECT(*statep);
+      if (!JS_NextProperty(cx, iterator, idp)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      if (*idp != JSVAL_VOID) {
+        break;
+      }
+
+      // Fall through.
+    }
+    case JSENUMERATE_DESTROY:
+      // Let GC at our iterator object.
+      *statep = JSVAL_NULL;
+      break;
+
+    default:
+      NS_NOTREACHED("Bad call from the JS engine");
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

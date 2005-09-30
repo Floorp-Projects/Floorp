@@ -435,6 +435,9 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
+  NS_IMETHOD NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, PRUint32 enum_op, jsval *statep,
+                          jsid *id, PRBool *_retval);
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
   NS_IMETHOD Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
