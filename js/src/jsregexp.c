@@ -134,22 +134,22 @@ struct RENode {
     union {
         void        *kid2;      /* second operand */
         jsint       num;        /* could be a number */
-        uint16      parenIndex; /* or a parenthesis index */
+        size_t      parenIndex; /* or a parenthesis index */
         struct {                /* or a quantifier range */
-            uint16  min;
-            uint16  max;
-            JSBool  greedy;
+            uintN  min;
+            uintN  max;
+            JSPackedBool greedy;
         } range;
         struct {                /* or a character class */
-            uint16  startIndex;
-            uint16  kidlen;     /* length of string at kid, in jschars */
+            size_t  startIndex;
+            size_t  kidlen;     /* length of string at kid, in jschars */
+            size_t  index;      /* index into class list */
             uint16  bmsize;     /* bitmap size, based on max char code */
-            uint16  index;      /* index into class list */
-            JSBool  sense;
+            JSPackedBool sense;
         } ucclass;
         struct {                /* or a literal sequence */
             jschar  chr;        /* of one character */
-            uint16  length;     /* or many (via the kid) */
+            size_t  length;     /* or many (via the kid) */
         } flat;
         struct {
             RENode  *kid2;      /* second operand from ALT */
@@ -172,22 +172,113 @@ typedef struct CompilerState {
     const jschar    *cpbegin;
     const jschar    *cpend;
     const jschar    *cp;
-    uint16          flags;
-    uint16          parenCount;
-    uint16          classCount;   /* number of [] encountered */
-    uint16          treeDepth;    /* maximum depth of parse tree */
+    size_t          parenCount;
+    size_t          classCount;   /* number of [] encountered */
+    size_t          treeDepth;    /* maximum depth of parse tree */
     size_t          progLength;   /* estimated bytecode length */
     RENode          *result;
+    size_t          classBitmapsMem; /* memory to hold all class bitmaps */
     struct {
         const jschar *start;        /* small cache of class strings */
-        uint16 length;              /* since they're often the same */
-        uint16 index;
+        size_t length;              /* since they're often the same */
+        size_t index;
     } classCache[CLASS_CACHE_SIZE];
+    uint16          flags;
 } CompilerState;
+
+typedef struct EmitStateStackEntry {
+    jsbytecode      *altHead;       /* start of REOP_ALT* opcode */
+    jsbytecode      *nextAltFixup;  /* fixup pointer to next-alt offset */
+    jsbytecode      *nextTermFixup; /* fixup ptr. to REOP_JUMP offset */
+    jsbytecode      *endTermFixup;  /* fixup ptr. to REOPT_ALTPREREQ* offset */
+    RENode          *continueNode;  /* original REOP_ALT* node being stacked */
+    jsbytecode      continueOp;     /* REOP_JUMP or REOP_ENDALT continuation */
+    JSPackedBool    jumpToJumpFlag; /* true if we've patched jump-to-jump to
+                                       avoid 16-bit unsigned offset overflow */
+} EmitStateStackEntry;
+
+/*
+ * Immediate operand sizes and getter/setters.  Unlike the ones in jsopcode.h,
+ * the getters and setters take the pc of the offset, not of the opcode before
+ * the offset.
+ */
+#define ARG_LEN             2
+#define ARG_MAX             (JS_BIT(ARG_LEN * 8) - 1)
+#define GET_ARG(pc)         ((uint16)(((pc)[0] << 8) | (pc)[1]))
+#define SET_ARG(pc, arg)    ((pc)[0] = (jsbytecode) ((arg) >> 8),       \
+                             (pc)[1] = (jsbytecode) (arg))
+
+#define OFFSET_LEN          ARG_LEN
+#define OFFSET_MAX          ARG_MAX
+#define GET_OFFSET(pc)      GET_ARG(pc)
+
+/*
+ * Maximum supported tree depth is maximum size of EmitStateStackEntry stack.
+ * For sanity, we limit it to 2^24 bytes.
+ */
+#define TREE_DEPTH_MAX  (JS_BIT(24) / sizeof(EmitStateStackEntry))
+
+/*
+ * The maximum memory that can be allocated for class bitmaps.
+ * For sanity, we limit it to 2^24 bytes.
+ */
+#define CLASS_BITMAPS_MEM_LIMIT JS_BIT(24)
+
+/*
+ * Functions to get size and write/read bytecode that represent small indexes
+ * compactly.
+ * Each byte in the code represent 7-bit chunk of the index. 8th bit when set
+ * indicates that the following byte brings more bits to the index. Otherwise
+ * this is the last byte in the index bytecode representing highest index bits.
+ */
+static size_t
+GetCompactIndexWidth(size_t index)
+{
+    size_t width;
+
+    for (width = 1; (index >>= 7) != 0; ++width) { }
+    return width;
+}
+
+static jsbytecode *
+WriteCompactIndex(jsbytecode *pc, size_t index)
+{
+    size_t next;
+
+    while ((next = index >> 7) != 0) {
+        *pc++ = (jsbytecode)(index | 0x80);
+        index = next;
+    }
+    *pc++ = (jsbytecode)index;
+    return pc;
+}
+
+static jsbytecode *
+ReadCompactIndex(jsbytecode *pc, size_t *result)
+{
+    size_t nextByte;
+
+    nextByte = *pc++;
+    if ((nextByte & 0x80) == 0) {
+        /*
+         * Short-circuit the most common case when compact index <= 127.
+         */
+        *result = nextByte;
+    } else {
+        size_t shift = 7;
+        *result = 0x7F & nextByte;
+        do {
+            nextByte = *pc++;
+            *result |= (nextByte & 0x7F) << shift;
+            shift += 7;
+        } while ((nextByte & 0x80) != 0);
+    }
+    return pc;
+}
 
 typedef struct RECapture {
     ptrdiff_t index;           /* start of contents, -1 for empty  */
-    uint16 length;             /* length of capture */
+    size_t length;             /* length of capture */
 } RECapture;
 
 typedef struct REMatchState {
@@ -202,11 +293,11 @@ typedef struct REProgState {
     jsbytecode *continue_pc;        /* current continuation data */
     jsbytecode continue_op;
     ptrdiff_t index;                /* progress in text */
-    uintN parenSoFar;               /* highest indexed paren started */
+    size_t parenSoFar;              /* highest indexed paren started */
     union {
         struct {
-            uint16 min;             /* current quantifier limits */
-            uint16 max;
+            uintN min;             /* current quantifier limits */
+            uintN max;
         } quantifier;
         struct {
             size_t top;             /* backtrack stack state */
@@ -220,9 +311,9 @@ typedef struct REBackTrackData {
     jsbytecode *backtrack_pc;       /* where to backtrack to */
     jsbytecode backtrack_op;
     const jschar *cp;               /* index in text of match at backtrack */
-    uint16 parenIndex;              /* start index of saved paren contents */
-    uint16 parenCount;              /* # of saved paren contents */
-    uint16 saveStateStackTop;       /* number of parent states */
+    size_t parenIndex;              /* start index of saved paren contents */
+    size_t parenCount;              /* # of saved paren contents */
+    size_t saveStateStackTop;       /* number of parent states */
     /* saved parent states follow */
     /* saved paren contents follow */
 } REBackTrackData;
@@ -240,8 +331,8 @@ typedef struct REGlobalData {
     const jschar    *cpend;         /* text limit address */
 
     REProgState *stateStack;        /* stack of state of current parents */
-    uint16 stateStackTop;
-    uint16 stateStackLimit;
+    size_t stateStackTop;
+    size_t stateStackLimit;
 
     REBackTrackData *backTrackStack;/* stack of matched-so-far positions */
     REBackTrackData *backTrackSP;
@@ -326,7 +417,7 @@ isASCIIHexDigit(jschar c, uintN *digit)
 typedef struct {
     REOp op;
     const jschar *errPos;
-    uint16 parenIndex;
+    size_t parenIndex;
 } REOpData;
 
 
@@ -348,11 +439,19 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
         result->kid = operandStack[operandSP - 2];
         result->u.kid2 = operandStack[operandSP - 1];
         operandStack[operandSP - 2] = result;
+
+        if (state->treeDepth == TREE_DEPTH_MAX) {
+            js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        JSREPORT_TS | JSREPORT_ERROR,
+                                        JSMSG_REGEXP_TOO_COMPLEX);
+            return JS_FALSE;
+        }
+        ++state->treeDepth;
+
         /*
          * Look at both alternates to see if there's a FLAT or a CLASS at
          * the start of each. If so, use a prerequisite match.
          */
-        ++state->treeDepth;
         if (((RENode *) result->kid)->op == REOP_FLAT &&
             ((RENode *) result->u.kid2)->op == REOP_FLAT &&
             (state->flags & JSREG_FOLD) == 0) {
@@ -434,7 +533,7 @@ static intN ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues);
 static JSBool
 ParseRegExp(CompilerState *state)
 {
-    uint16 parenIndex;
+    size_t parenIndex;
     RENode *operand;
     REOpData *operatorStack;
     RENode **operandStack;
@@ -503,7 +602,8 @@ ParseRegExp(CompilerState *state)
                 } else {
                     op = REOP_LPAREN;
                     /* LPAREN, <index>, ... RPAREN, <index> */
-                    state->progLength += 6;
+                    state->progLength
+                        += 2 * (1 + GetCompactIndexWidth(parenIndex));
                     state->parenCount++;
                     if (state->parenCount == 65535) {
                         js_ReportCompileErrorNumber(state->context,
@@ -632,6 +732,14 @@ restartOperator:
                     JS_ASSERT(operandSP);
                     operand->kid = operandStack[operandSP - 1];
                     operandStack[operandSP - 1] = operand;
+                    if (state->treeDepth == TREE_DEPTH_MAX) {
+                        js_ReportCompileErrorNumber(state->context,
+                                                    state->tokenStream,
+                                                    JSREPORT_TS |
+                                                    JSREPORT_ERROR,
+                                                    JSMSG_REGEXP_TOO_COMPLEX);
+                        goto out;
+                    }
                     ++state->treeDepth;
                     /* FALL THROUGH */
 
@@ -656,7 +764,7 @@ restartOperator:
             const jschar *errp = state->cp;
 
             if (ParseMinMaxQuantifier(state, JS_TRUE) < 0) {
-                /* 
+                /*
                  * This didn't even scan correctly as a quantifier, so we should
                  * treat it as flat.
                  */
@@ -739,6 +847,7 @@ FindParenCount(CompilerState *state)
     temp.classCount = 0;
     temp.progLength = 0;
     temp.treeDepth = 0;
+    temp.classBitmapsMem = 0;
     for (i = 0; i < CLASS_CACHE_SIZE; i++)
         temp.classCache[i].start = NULL;
 
@@ -1123,7 +1232,8 @@ ParseTerm(CompilerState *state)
             if (!state->result)
                 return JS_FALSE;
             state->result->u.parenIndex = num - 1;
-            state->progLength += 3;
+            state->progLength
+                += 1 + GetCompactIndexWidth(state->result->u.parenIndex);
             break;
         /* Control escape */
         case 'f':
@@ -1246,8 +1356,8 @@ doSimple:
                 state->result->u.ucclass.kidlen) {
                 for (n = 0; ; n++) {
                     if (n == state->classCache[i].length) {
-                        state->result->u.ucclass.index =
-                            state->classCache[i].index;
+                        state->result->u.ucclass.index
+                            = state->classCache[i].index;
                         goto claim;
                     }
                     if (state->classCache[i].start[n] != termStart[n])
@@ -1264,7 +1374,22 @@ doSimple:
          */
         if (!CalculateBitmapSize(state, state->result, termStart, state->cp++))
             return JS_FALSE;
-        state->progLength += 3; /* CLASS, <index> */
+        /*
+         * Update classBitmapsMem with number of bytes to hold bmsize bits,
+         * which is (bitsCount + 7) / 8 or (highest_bit + 1 + 7) / 8
+         * or highest_bit / 8 + 1 where highest_bit is u.ucclass.bmsize.
+         */
+        n = (state->result->u.ucclass.bmsize >> 3) + 1;
+        if (n > CLASS_BITMAPS_MEM_LIMIT - state->classBitmapsMem) {
+            js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        JSREPORT_TS | JSREPORT_ERROR,
+                                        JSMSG_REGEXP_TOO_COMPLEX);
+            return JS_FALSE;
+        }
+        state->classBitmapsMem += n;
+        /* CLASS, <index> */
+        state->progLength
+            += 1 + GetCompactIndexWidth(state->result->u.ucclass.index);
         break;
 
     case '.':
@@ -1317,7 +1442,7 @@ ParseQuantifier(CompilerState *state)
             if (!state->result)
                 return JS_FALSE;
             state->result->u.range.min = 1;
-            state->result->u.range.max = (uint16)-1;
+            state->result->u.range.max = (uintN)-1;
             /* <PLUS>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -1326,7 +1451,7 @@ ParseQuantifier(CompilerState *state)
             if (!state->result)
                 return JS_FALSE;
             state->result->u.range.min = 0;
-            state->result->u.range.max = (uint16)-1;
+            state->result->u.range.max = (uintN)-1;
             /* <STAR>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -1362,6 +1487,13 @@ ParseQuantifier(CompilerState *state)
     return JS_TRUE;
 
 quantifier:
+    if (state->treeDepth == TREE_DEPTH_MAX) {
+        js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                    JSREPORT_TS | JSREPORT_ERROR,
+                                    JSMSG_REGEXP_TOO_COMPLEX);
+        return JS_FALSE;
+    }
+
     ++state->treeDepth;
     ++state->cp;
     state->result->kid = term;
@@ -1412,9 +1544,14 @@ ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues)
                 return JS_FALSE;
             state->result->u.range.min = min;
             state->result->u.range.max = max;
-            /* QUANT, <min>, <max>, <next> ... <ENDCHILD> */
-            state->progLength += 8;
-
+            /*
+             * QUANT, <min>, <max>, <next> ... <ENDCHILD>
+             * where <max> is written as compact(max+1) to make
+             * (uintN)-1 sentinel to occupy 1 byte, not width_of(max)+1.
+             */
+            state->progLength += (1 + GetCompactIndexWidth(min)
+                                  + GetCompactIndexWidth(max + 1)
+                                  +3);
             return 0;
         }
     }
@@ -1423,36 +1560,36 @@ ParseMinMaxQuantifier(CompilerState *state, JSBool ignoreValues)
     return -1;
 }
 
-#define CHECK_OFFSET(diff) (JS_ASSERT(((diff) >= -32768) && ((diff) <= 32767)))
-#define SET_OFFSET(pc,off) ((pc)[0] = JUMP_OFFSET_HI(off),                     \
-                                 (pc)[1] = JUMP_OFFSET_LO(off))
-#define GET_OFFSET(pc)     ((int16)(((pc)[0] << 8) | (pc)[1]))
-#define OFFSET_LEN         (2)
-#define GET_ARG(pc)        GET_OFFSET(pc)
-#define SET_ARG(pc,arg)    SET_OFFSET(pc,arg)
-#define ARG_LEN            OFFSET_LEN
+static JSBool
+SetForwardJumpOffset(jsbytecode *jump, jsbytecode *target)
+{
+    ptrdiff_t offset = target - jump;
+
+    /* Check that target really points forward. */
+    JS_ASSERT(offset >= 2);
+    if ((size_t)offset > OFFSET_MAX)
+        return JS_FALSE;
+
+    jump[0] = JUMP_OFFSET_HI(offset);
+    jump[1] = JUMP_OFFSET_LO(offset);
+    return JS_TRUE;
+}
 
 /*
- * Recursively generate bytecode for the tree rooted at t. Iteratively.
+ * Generate bytecode for the tree rooted at t using an explicit stack instead
+ * of recursion.
  */
-
-typedef struct {
-    RENode *nextAlt;
-    jsbytecode *nextAltFixup, *nextTermFixup, *endTermFixup;
-    RENode *continueNode;
-    REOp continueOp;
-} EmitStateStackEntry;
-
 static jsbytecode *
-EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
+EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
                jsbytecode *pc, RENode *t)
 {
-    ptrdiff_t diff;
+    EmitStateStackEntry *emitStateSP, *emitStateStack;
     RECharSet *charSet;
-    EmitStateStackEntry *emitStateSP, *emitStateStack = NULL;
     REOp op;
 
-    if (treeDepth) {
+    if (treeDepth == 0) {
+        emitStateStack = NULL;
+    } else {
         emitStateStack =
             (EmitStateStackEntry *)JS_malloc(state->context,
                                              sizeof(EmitStateStackEntry) *
@@ -1473,6 +1610,7 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
         case REOP_ALTPREREQ2:
         case REOP_ALTPREREQ:
             JS_ASSERT(emitStateSP);
+            emitStateSP->altHead = pc - 1;
             emitStateSP->endTermFixup = pc;
             pc += OFFSET_LEN;
             SET_ARG(pc, t->u.altprereq.ch1);
@@ -1480,58 +1618,148 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             SET_ARG(pc, t->u.altprereq.ch2);
             pc += ARG_LEN;
 
-            emitStateSP->nextAltFixup = pc;    /* address of next alternate */
+            emitStateSP->nextAltFixup = pc;    /* offset to next alternate */
             pc += OFFSET_LEN;
 
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_JUMP;
+            emitStateSP->jumpToJumpFlag = JS_FALSE;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
             t = (RENode *) t->kid;
             op = t->op;
             continue;
 
         case REOP_JUMP:
-            emitStateSP->nextTermFixup = pc;    /* address of following term */
+            emitStateSP->nextTermFixup = pc;    /* offset to following term */
             pc += OFFSET_LEN;
-            diff = pc - emitStateSP->nextAltFixup;
-            CHECK_OFFSET(diff);
-            SET_OFFSET(emitStateSP->nextAltFixup, diff);
+            if (!SetForwardJumpOffset(emitStateSP->nextAltFixup, pc))
+                goto jump_too_big;
             emitStateSP->continueOp = REOP_ENDALT;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
-            t = (RENode *) t->u.kid2;
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
+            t = t->u.kid2;
             op = t->op;
             continue;
 
         case REOP_ENDALT:
-            diff = pc - emitStateSP->nextTermFixup;
-            CHECK_OFFSET(diff);
-            SET_OFFSET(emitStateSP->nextTermFixup, diff);
+            /*
+             * If we already patched emitStateSP->nextTermFixup to jump to
+             * a nearer jump, to avoid 16-bit immediate offset overflow, we
+             * are done here.
+             */
+            if (emitStateSP->jumpToJumpFlag)
+                break;
+
+            /*
+             * Fix up the REOP_JUMP offset to go to the op after REOP_ENDALT.
+             * REOP_ENDALT is executed only on successful match of the last
+             * alternate in a group.
+             */
+            if (!SetForwardJumpOffset(emitStateSP->nextTermFixup, pc))
+                goto jump_too_big;
             if (t->op != REOP_ALT) {
-                diff = pc - emitStateSP->endTermFixup;
-                CHECK_OFFSET(diff);
-                SET_OFFSET(emitStateSP->endTermFixup, diff);
+                if (!SetForwardJumpOffset(emitStateSP->endTermFixup, pc))
+                    goto jump_too_big;
+            }
+
+            /*
+             * If the program is bigger than the REOP_JUMP offset range, then
+             * we must check for alternates before this one that are part of
+             * the same group, and fix up their jump offsets to target jumps
+             * close enough to fit in a 16-bit unsigned offset immediate.
+             */
+            if ((size_t)(pc - re->program) > OFFSET_MAX &&
+                emitStateSP > emitStateStack) {
+                EmitStateStackEntry *esp, *esp2;
+                jsbytecode *alt, *jump;
+                ptrdiff_t span, header;
+
+                esp2 = emitStateSP;
+                alt = esp2->altHead;
+                for (esp = esp2 - 1; esp >= emitStateStack; --esp) {
+                    if (esp->continueOp == REOP_ENDALT &&
+                        !esp->jumpToJumpFlag &&
+                        esp->nextTermFixup + OFFSET_LEN == alt &&
+                        (size_t)(pc - ((esp->continueNode->op != REOP_ALT)
+                                       ? esp->endTermFixup
+                                       : esp->nextTermFixup)) > OFFSET_MAX) {
+                        alt = esp->altHead;
+                        jump = esp->nextTermFixup;
+
+                        /*
+                         * The span must be 1 less than the distance from
+                         * jump offset to jump offset, so we actually jump
+                         * to a REOP_JUMP bytecode, not to its offset!
+                         */
+                        for (;;) {
+                            JS_ASSERT(jump < esp2->nextTermFixup);
+                            span = esp2->nextTermFixup - jump - 1;
+                            if ((size_t)span <= OFFSET_MAX)
+                                break;
+                            do {
+                                if (--esp2 == esp)
+                                    goto jump_too_big;
+                            } while (esp2->continueOp != REOP_ENDALT);
+                        }
+
+                        jump[0] = JUMP_OFFSET_HI(span);
+                        jump[1] = JUMP_OFFSET_LO(span);
+
+                        if (esp->continueNode->op != REOP_ALT) {
+                            /*
+                             * We must patch the offset at esp->endTermFixup
+                             * as well, for the REOP_ALTPREREQ{,2} opcodes.
+                             * If we're unlucky and endTermFixup is more than
+                             * OFFSET_MAX bytes from its target, we cheat by
+                             * jumping 6 bytes to the jump whose offset is at
+                             * esp->nextTermFixup, which has the same target.
+                             */
+                            jump = esp->endTermFixup;
+                            header = esp->nextTermFixup - jump;
+                            span += header;
+                            if ((size_t)span > OFFSET_MAX)
+                                span = header;
+
+                            jump[0] = JUMP_OFFSET_HI(span);
+                            jump[1] = JUMP_OFFSET_LO(span);
+                        }
+
+                        esp->jumpToJumpFlag = JS_TRUE;
+                    }
+                }
             }
             break;
 
         case REOP_ALT:
             JS_ASSERT(emitStateSP);
-            emitStateSP->nextAltFixup = pc; /* address of pointer to next alternate */
+            emitStateSP->altHead = pc - 1;
+            emitStateSP->nextAltFixup = pc;     /* offset to next alternate */
             pc += OFFSET_LEN;
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_JUMP;
+            emitStateSP->jumpToJumpFlag = JS_FALSE;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
-            t = (RENode *) t->kid;
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
+            t = t->kid;
             op = t->op;
             continue;
 
         case REOP_FLAT:
             /*
-             * Consecutize FLAT's if possible.
+             * Coalesce FLATs if possible and if it would not increase bytecode
+             * beyond preallocated limit. The latter happens only when bytecode
+             * size for coalesced string with offset p and length 2 exceeds 6
+             * bytes preallocated for 2 single char nodes, i.e. when
+             * 1 + GetCompactIndexWidth(p) + GetCompactIndexWidth(2) > 6 or
+             * GetCompactIndexWidth(p) > 4.
+             * Since when GetCompactIndexWidth(p) <= 4 coalescing of 3 or more
+             * nodes strictly decreases bytecode size, the check has to be
+             * done only for the first coalescing.
              */
-            if (t->kid) {
+            if (t->kid &&
+                GetCompactIndexWidth((jschar *)t->kid - state->cpbegin) <= 4)
+            {
                 while (t->next &&
                        t->next->op == REOP_FLAT &&
                        (jschar*)t->kid + t->u.flat.length ==
@@ -1540,15 +1768,10 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
                     t->next = t->next->next;
                 }
             }
-            if (t->kid && (t->u.flat.length > 1)) {
-                if (state->flags & JSREG_FOLD)
-                    pc[-1] = REOP_FLATi;
-                else
-                    pc[-1] = REOP_FLAT;
-                SET_ARG(pc, (jschar *)t->kid - state->cpbegin);
-                pc += ARG_LEN;
-                SET_ARG(pc, t->u.flat.length);
-                pc += ARG_LEN;
+            if (t->kid && t->u.flat.length > 1) {
+                pc[-1] = (state->flags & JSREG_FOLD) ? REOP_FLATi : REOP_FLAT;
+                pc = WriteCompactIndex(pc, (jschar *)t->kid - state->cpbegin);
+                pc = WriteCompactIndex(pc, t->u.flat.length);
             } else if (t->u.flat.chr < 256) {
                 pc[-1] = (state->flags & JSREG_FOLD) ? REOP_FLAT1i : REOP_FLAT1;
                 *pc++ = (jsbytecode) t->u.flat.chr;
@@ -1563,24 +1786,21 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
 
         case REOP_LPAREN:
             JS_ASSERT(emitStateSP);
-            SET_ARG(pc, t->u.parenIndex);
-            pc += ARG_LEN;
+            pc = WriteCompactIndex(pc, t->u.parenIndex);
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_RPAREN;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
             t = (RENode *) t->kid;
             op = t->op;
             continue;
 
         case REOP_RPAREN:
-            SET_ARG(pc, t->u.parenIndex);
-            pc += ARG_LEN;
+            pc = WriteCompactIndex(pc, t->u.parenIndex);
             break;
 
         case REOP_BACKREF:
-            SET_ARG(pc, t->u.parenIndex);
-            pc += ARG_LEN;
+            pc = WriteCompactIndex(pc, t->u.parenIndex);
             break;
 
         case REOP_ASSERT:
@@ -1590,16 +1810,15 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_ASSERTTEST;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
             t = (RENode *) t->kid;
             op = t->op;
             continue;
 
         case REOP_ASSERTTEST:
         case REOP_ASSERTNOTTEST:
-            diff = pc - emitStateSP->nextTermFixup;
-            CHECK_OFFSET(diff);
-            SET_OFFSET(emitStateSP->nextTermFixup, diff);
+            if (!SetForwardJumpOffset(emitStateSP->nextTermFixup, pc))
+                goto jump_too_big;
             break;
 
         case REOP_ASSERT_NOT:
@@ -1609,48 +1828,48 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_ASSERTNOTTEST;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
             t = (RENode *) t->kid;
             op = t->op;
             continue;
 
         case REOP_QUANT:
             JS_ASSERT(emitStateSP);
-            if (t->u.range.min == 0 && t->u.range.max == (uint16)-1) {
+            if (t->u.range.min == 0 && t->u.range.max == (uintN)-1) {
                 pc[-1] = (t->u.range.greedy) ? REOP_STAR : REOP_MINIMALSTAR;
             } else if (t->u.range.min == 0 && t->u.range.max == 1) {
                 pc[-1] = (t->u.range.greedy) ? REOP_OPT : REOP_MINIMALOPT;
-            } else if (t->u.range.min == 1 && t->u.range.max == (uint16) -1) {
+            } else if (t->u.range.min == 1 && t->u.range.max == (uintN) -1) {
                 pc[-1] = (t->u.range.greedy) ? REOP_PLUS : REOP_MINIMALPLUS;
             } else {
                 if (!t->u.range.greedy)
                     pc[-1] = REOP_MINIMALQUANT;
-                SET_ARG(pc, t->u.range.min);
-                pc += ARG_LEN;
-                SET_ARG(pc, t->u.range.max);
-                pc += ARG_LEN;
+                pc = WriteCompactIndex(pc, t->u.range.min);
+                /*
+                 * Write max + 1 to avoid using size_t(max) + 1 bytes
+                 * for (uintN)-1 sentinel.
+                 */
+                pc = WriteCompactIndex(pc, t->u.range.max + 1);
             }
             emitStateSP->nextTermFixup = pc;
             pc += OFFSET_LEN;
             emitStateSP->continueNode = t;
             emitStateSP->continueOp = REOP_ENDCHILD;
             ++emitStateSP;
-            JS_ASSERT((emitStateSP - emitStateStack) <= treeDepth);
+            JS_ASSERT((size_t)(emitStateSP - emitStateStack) <= treeDepth);
             t = (RENode *) t->kid;
             op = t->op;
             continue;
 
         case REOP_ENDCHILD:
-            diff = pc - emitStateSP->nextTermFixup;
-            CHECK_OFFSET(diff);
-            SET_OFFSET(emitStateSP->nextTermFixup, diff);
+            if (!SetForwardJumpOffset(emitStateSP->nextTermFixup, pc))
+                goto jump_too_big;
             break;
 
         case REOP_CLASS:
             if (!t->u.ucclass.sense)
                 pc[-1] = REOP_NCLASS;
-            SET_ARG(pc, t->u.ucclass.index);
-            pc += ARG_LEN;
+            pc = WriteCompactIndex(pc, t->u.ucclass.index);
             charSet = &re->classList[t->u.ucclass.index];
             charSet->converted = JS_FALSE;
             charSet->length = t->u.ucclass.bmsize;
@@ -1664,19 +1883,28 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, intN treeDepth,
         }
 
         t = t->next;
-        if (!t) {
+        if (t) {
+            op = t->op;
+        } else {
             if (emitStateSP == emitStateStack)
                 break;
             --emitStateSP;
             t = emitStateSP->continueNode;
             op = emitStateSP->continueOp;
         }
-        else
-            op = t->op;
     }
+
+  cleanup:
     if (emitStateStack)
         JS_free(state->context, emitStateStack);
     return pc;
+
+  jump_too_big:
+    js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                JSREPORT_TS | JSREPORT_ERROR,
+                                JSMSG_REGEXP_TOO_COMPLEX);
+    pc = NULL;
+    goto cleanup;
 }
 
 
@@ -1694,37 +1922,40 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
 
     re = NULL;
     mark = JS_ARENA_MARK(&cx->tempPool);
+    len = JSSTRING_LENGTH(str);
 
     state.context = cx;
     state.tokenStream = ts;
     state.cpbegin = state.cp = JSSTRING_CHARS(str);
-    state.cpend = state.cp + JSSTRING_LENGTH(str);
+    state.cpend = state.cp + len;
     state.flags = flags;
     state.parenCount = 0;
     state.classCount = 0;
     state.progLength = 0;
     state.treeDepth = 0;
+    state.classBitmapsMem = 0;
     for (i = 0; i < CLASS_CACHE_SIZE; i++)
         state.classCache[i].start = NULL;
-
-    len = JSSTRING_LENGTH(str);
 
     if (len != 0 && flat) {
         state.result = NewRENode(&state, REOP_FLAT);
         state.result->u.flat.chr = *state.cpbegin;
-        state.result->u.flat.length = JSSTRING_LENGTH(str);
+        state.result->u.flat.length = len;
         state.result->kid = (void *) state.cpbegin;
-        state.progLength += 5;
+        /* Flat bytecode: REOP_FLAT compact(string_offset) compact(len). */
+        state.progLength += 1 + GetCompactIndexWidth(0)
+                          + GetCompactIndexWidth(len);
     } else {
         if (!ParseRegExp(&state))
             goto out;
     }
-    resize = sizeof *re + state.progLength + 1;
-    re = (JSRegExp *) JS_malloc(cx, JS_ROUNDUP(resize, sizeof(jsword)));
+    resize = offsetof(JSRegExp, program) + state.progLength + 1;
+    re = (JSRegExp *) JS_malloc(cx, resize);
     if (!re)
         goto out;
 
     re->nrefs = 1;
+    JS_ASSERT(state.classBitmapsMem <= CLASS_BITMAPS_MEM_LIMIT);
     re->classCount = state.classCount;
     if (re->classCount) {
         re->classList = (RECharSet *)
@@ -1744,7 +1975,19 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
         goto out;
     }
     *endPC++ = REOP_END;
-    JS_ASSERT(endPC <= (re->program + (state.progLength + 1)));
+    /*
+     * Check whether size was overestimated and shrink using realloc.
+     * This is safe since no pointers to newly parsed regexp or its parts
+     * besides re exist here.
+     */
+    if ((size_t)(endPC - re->program) != state.progLength + 1) {
+        JSRegExp *tmp;
+        JS_ASSERT((size_t)(endPC - re->program) < state.progLength + 1);
+        resize = offsetof(JSRegExp, program) + (endPC - re->program);
+        tmp = (JSRegExp *) JS_realloc(cx, re, resize);
+        if (tmp)
+            re = tmp;
+    }
 
     re->flags = flags;
     re->cloneIndex = 0;
@@ -1805,9 +2048,9 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
 static REBackTrackData *
 PushBackTrackState(REGlobalData *gData, REOp op,
                    jsbytecode *target, REMatchState *x, const jschar *cp,
-                   uintN parenIndex, intN parenCount)
+                   size_t parenIndex, size_t parenCount)
 {
-    intN i;
+    size_t i;
     REBackTrackData *result =
         (REBackTrackData *) ((char *)gData->backTrackSP + gData->cursz);
 
@@ -1844,15 +2087,13 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     memcpy(result + 1, gData->stateStack,
            sizeof(REProgState) * result->saveStateStackTop);
 
-    /* FIXME: parenCount should be uintN */
-    JS_ASSERT(parenCount >= 0);
-    if (parenCount > 0) {
+    if (parenCount != 0) {
         result->parenIndex = parenIndex;
         memcpy((char *)(result + 1) +
                sizeof(REProgState) * result->saveStateStackTop,
                &x->parens[parenIndex],
                sizeof(RECapture) * parenCount);
-        for (i = 0; i < parenCount; i++)
+        for (i = 0; i != parenCount; i++)
             x->parens[parenIndex + i].index = -1;
     }
 
@@ -1866,12 +2107,12 @@ PushBackTrackState(REGlobalData *gData, REOp op,
 #if 0
 static REMatchState *
 FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
-             intN length)
+             size_t length)
 {
-    intN i;
-    if (x->cp + length > gData->cpend)
+    size_t i;
+    if (length > gData->cpend - x->cp)
         return NULL;
-    for (i = 0; i < length; i++) {
+    for (i = 0; i != length; i++) {
         if (matchChars[i] != x->cp[i])
             return NULL;
     }
@@ -1882,12 +2123,13 @@ FlatNMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
 
 static REMatchState *
 FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
-              intN length)
+              size_t length)
 {
-    intN i;
-    if (x->cp + length > gData->cpend)
+    size_t i;
+    JS_ASSERT(gData->cpend >= x->cp);
+    if (length > (size_t)(gData->cpend - x->cp))
         return NULL;
-    for (i = 0; i < length; i++) {
+    for (i = 0; i != length; i++) {
         if (upcase(matchChars[i]) != upcase(x->cp[i]))
             return NULL;
     }
@@ -1919,20 +2161,20 @@ FlatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
  *     10. Call c(y) and return its result.
  */
 static REMatchState *
-BackrefMatcher(REGlobalData *gData, REMatchState *x, uintN parenIndex)
+BackrefMatcher(REGlobalData *gData, REMatchState *x, size_t parenIndex)
 {
-    uintN len;
-    uintN i;
+    size_t len, i;
     const jschar *parenContent;
-    RECapture *s = &x->parens[parenIndex];
-    if (s->index == -1)
+    RECapture *cap = &x->parens[parenIndex];
+
+    if (cap->index == -1)
         return x;
 
-    len = s->length;
+    len = cap->length;
     if (x->cp + len > gData->cpend)
         return NULL;
 
-    parenContent = &gData->cpbegin[s->index];
+    parenContent = &gData->cpbegin[cap->index];
     if (gData->regexp->flags & JSREG_FOLD) {
         for (i = 0; i < len; i++) {
             if (upcase(parenContent[i]) != upcase(x->cp[i]))
@@ -1987,10 +2229,7 @@ AddCharacterRangeToCharSet(RECharSet *cs, jschar c1, jschar c2)
 static JSBool
 ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
 {
-    const jschar *src = JSSTRING_CHARS(gData->regexp->source) +
-                        charSet->u.src.startIndex;
-    const jschar *end = src + charSet->u.src.length;
-
+    const jschar *src, *end;
     JSBool inRange = JS_FALSE;
     jschar rangeStart = 0;
     uintN byteLength, n;
@@ -1998,7 +2237,21 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
     intN nDigits, i;
 
     JS_ASSERT(!charSet->converted);
+    /*
+     * Assert that startIndex and length points to chars inside [] inside
+     * source string.
+     */
+    JS_ASSERT(1 <= charSet->u.src.startIndex);
+    JS_ASSERT(charSet->u.src.startIndex
+              < JSSTRING_LENGTH(gData->regexp->source));
+    JS_ASSERT(charSet->u.src.length <= JSSTRING_LENGTH(gData->regexp->source)
+                                       - 1 - charSet->u.src.startIndex);
+
     charSet->converted = JS_TRUE;
+    src = JSSTRING_CHARS(gData->regexp->source) + charSet->u.src.startIndex;
+    end = src + charSet->u.src.length;
+    JS_ASSERT(src[-1] == '[');
+    JS_ASSERT(end[0] == ']');
 
     byteLength = (charSet->length >> 3) + 1;
     charSet->u.bits = (uint8 *)JS_malloc(gData->cx, byteLength);
@@ -2012,10 +2265,9 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
     if (*src == '^') {
         JS_ASSERT(charSet->sense == JS_FALSE);
         ++src;
-    }
-    else
+    } else {
         JS_ASSERT(charSet->sense == JS_TRUE);
-
+    }
 
     while (src != end) {
         switch (*src) {
@@ -2193,7 +2445,7 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 static JSBool
 ReallocStateStack(REGlobalData *gData)
 {
-    uint16 limit = gData->stateStackLimit;
+    size_t limit = gData->stateStackLimit;
     size_t sz = sizeof(REProgState) * limit;
 
     JS_ARENA_GROW_CAST(gData->stateStack, REProgState *, &gData->pool, sz, sz);
@@ -2225,8 +2477,8 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
 {
     REMatchState *result = NULL;
     jschar matchCh;
-    uintN parenIndex;
-    intN offset, length, index;
+    size_t parenIndex;
+    size_t offset, length, index;
     jsbytecode *pc = *startpc;  /* pc has already been incremented past op */
     jschar *source;
     const jschar *startcp = x->cp;
@@ -2311,18 +2563,19 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         }
         break;
     case REOP_BACKREF:
-        parenIndex = GET_ARG(pc);
-        pc += ARG_LEN;
+        pc = ReadCompactIndex(pc, &parenIndex);
+        JS_ASSERT(parenIndex < gData->regexp->parenCount);
         result = BackrefMatcher(gData, x, parenIndex);
         break;
     case REOP_FLAT:
-        offset = GET_ARG(pc);
-        pc += ARG_LEN;
-        length = GET_ARG(pc);
-        pc += ARG_LEN;
-        source = JSSTRING_CHARS(gData->regexp->source) + offset;
-        if (x->cp + length <= gData->cpend) {
-            for (index = 0; index < length; index++) {
+        pc = ReadCompactIndex(pc, &offset);
+        JS_ASSERT(offset < JSSTRING_LENGTH(gData->regexp->source));
+        pc = ReadCompactIndex(pc, &length);
+        JS_ASSERT(1 <= length);
+        JS_ASSERT(length <= JSSTRING_LENGTH(gData->regexp->source) - offset);
+        if (length <= (size_t)(gData->cpend - x->cp)) {
+            source = JSSTRING_CHARS(gData->regexp->source) + offset;
+            for (index = 0; index != length; index++) {
                 if (source[index] != x->cp[index])
                     return NULL;
             }
@@ -2338,10 +2591,11 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         }
         break;
     case REOP_FLATi:
-        offset = GET_ARG(pc);
-        pc += ARG_LEN;
-        length = GET_ARG(pc);
-        pc += ARG_LEN;
+        pc = ReadCompactIndex(pc, &offset);
+        JS_ASSERT(offset < JSSTRING_LENGTH(gData->regexp->source));
+        pc = ReadCompactIndex(pc, &length);
+        JS_ASSERT(1 <= length);
+        JS_ASSERT(length <= JSSTRING_LENGTH(gData->regexp->source) - offset);
         source = JSSTRING_CHARS(gData->regexp->source);
         result = FlatNIMatcher(gData, x, source + offset, length);
         break;
@@ -2369,8 +2623,8 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         }
         break;
     case REOP_CLASS:
-        index = GET_ARG(pc);
-        pc += ARG_LEN;
+        pc = ReadCompactIndex(pc, &index);
+        JS_ASSERT(index < gData->regexp->classCount);
         if (x->cp != gData->cpend) {
             charSet = &gData->regexp->classList[index];
             JS_ASSERT(charSet->converted);
@@ -2385,8 +2639,8 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         }
         break;
     case REOP_NCLASS:
-        index = GET_ARG(pc);
-        pc += ARG_LEN;
+        pc = ReadCompactIndex(pc, &index);
+        JS_ASSERT(index < gData->regexp->classCount);
         if (x->cp != gData->cpend) {
             charSet = &gData->regexp->classList[index];
             JS_ASSERT(charSet->converted);
@@ -2419,14 +2673,13 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 {
     REMatchState *result = NULL;
     REBackTrackData *backTrackData;
-    intN offset;
     jsbytecode *nextpc;
     REOp nextop;
     RECapture *cap;
     REProgState *curState;
     const jschar *startcp;
-    uintN parenIndex, k;
-    uintN parenSoFar = 0;
+    size_t parenIndex, k;
+    size_t parenSoFar = 0;
 
     jschar matchCh1, matchCh2;
     RECharSet *charSet;
@@ -2537,8 +2790,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
              */
             case REOP_JUMP:
                 --gData->stateStackTop;
-                offset = GET_OFFSET(pc);
-                pc += offset;
+                pc += GET_OFFSET(pc);
                 op = (REOp) *pc++;
                 continue;
 
@@ -2551,18 +2803,18 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
             case REOP_LPAREN:
-                parenIndex = GET_ARG(pc);
+                pc = ReadCompactIndex(pc, &parenIndex);
+                JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
-                pc += ARG_LEN;
                 x->parens[parenIndex].index = x->cp - gData->cpbegin;
                 x->parens[parenIndex].length = 0;
                 op = (REOp) *pc++;
                 continue;
 
             case REOP_RPAREN:
-                parenIndex = GET_ARG(pc);
-                pc += ARG_LEN;
+                pc = ReadCompactIndex(pc, &parenIndex);
+                JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 cap = &x->parens[parenIndex];
                 cap->length = x->cp - (gData->cpbegin + cap->index);
                 op = (REOp) *pc++;
@@ -2641,21 +2893,24 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
             case REOP_STAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = (uint16)-1;
+                curState->u.quantifier.max = (uintN)-1;
                 goto quantcommon;
             case REOP_PLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = (uint16)-1;
+                curState->u.quantifier.max = (uintN)-1;
                 goto quantcommon;
             case REOP_OPT:
                 curState->u.quantifier.min = 0;
                 curState->u.quantifier.max = 1;
                 goto quantcommon;
             case REOP_QUANT:
-                curState->u.quantifier.min = GET_ARG(pc);
-                pc += ARG_LEN;
-                curState->u.quantifier.max = GET_ARG(pc);
-                pc += ARG_LEN;
+                pc = ReadCompactIndex(pc, &k);
+                curState->u.quantifier.min = k;
+                pc = ReadCompactIndex(pc, &k);
+                /* max is k - 1 to use one byte for (uintN)-1 sentinel. */
+                curState->u.quantifier.max = k - 1;
+                JS_ASSERT(curState->u.quantifier.min
+                          <= curState->u.quantifier.max);
             quantcommon:
                 if (curState->u.quantifier.max == 0) {
                     pc = pc + GET_OFFSET(pc);
@@ -2715,7 +2970,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     }
                     if (curState->u.quantifier.min != 0)
                         curState->u.quantifier.min--;
-                    if (curState->u.quantifier.max != (uint16) -1)
+                    if (curState->u.quantifier.max != (uintN) -1)
                         curState->u.quantifier.max--;
                     if (curState->u.quantifier.max == 0)
                         goto repeatDone;
@@ -2755,21 +3010,24 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
             case REOP_MINIMALSTAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = (uint16)-1;
+                curState->u.quantifier.max = (uintN)-1;
                 goto minimalquantcommon;
             case REOP_MINIMALPLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = (uint16)-1;
+                curState->u.quantifier.max = (uintN)-1;
                 goto minimalquantcommon;
             case REOP_MINIMALOPT:
                 curState->u.quantifier.min = 0;
                 curState->u.quantifier.max = 1;
                 goto minimalquantcommon;
             case REOP_MINIMALQUANT:
-                curState->u.quantifier.min = GET_ARG(pc);
-                pc += ARG_LEN;
-                curState->u.quantifier.max = GET_ARG(pc);
-                pc += ARG_LEN;
+                pc = ReadCompactIndex(pc, &k);
+                curState->u.quantifier.min = k;
+                pc = ReadCompactIndex(pc, &k);
+                /* See REOP_QUANT comments about k - 1. */
+                curState->u.quantifier.max = k - 1;
+                JS_ASSERT(curState->u.quantifier.min
+                          <= curState->u.quantifier.max);
             minimalquantcommon:
                 curState->index = x->cp - gData->cpbegin;
                 curState->parenSoFar = parenSoFar;
@@ -2778,7 +3036,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     curState->continue_op = REOP_MINIMALREPEAT;
                     curState->continue_pc = pc;
                     /* step over <next> */
-                    pc += ARG_LEN;
+                    pc += OFFSET_LEN;
                     op = (REOp) *pc++;
                 } else {
                     if (!PushBackTrackState(gData, REOP_MINIMALREPEAT,
@@ -2799,7 +3057,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     /*
                      * Non-greedy failure - try to consume another child.
                      */
-                    if (curState->u.quantifier.max == (uint16) -1 ||
+                    if (curState->u.quantifier.max == (uintN) -1 ||
                         curState->u.quantifier.max > 0) {
                         curState->index = x->cp - gData->cpbegin;
                         curState->continue_op = REOP_MINIMALREPEAT;
@@ -2822,7 +3080,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 }
                 if (curState->u.quantifier.min != 0)
                     curState->u.quantifier.min--;
-                if (curState->u.quantifier.max != (uint16) -1)
+                if (curState->u.quantifier.max != (uintN) -1)
                     curState->u.quantifier.max--;
                 if (curState->u.quantifier.min != 0) {
                     curState->continue_op = REOP_MINIMALREPEAT;
@@ -2959,8 +3217,8 @@ InitMatch(JSContext *cx, REGlobalData *gData, JSRegExp *re)
 
     JS_ARENA_ALLOCATE_CAST(result, REMatchState *,
                            &gData->pool,
-                           sizeof(REMatchState)
-                               + (re->parenCount - 1) * sizeof(RECapture));
+                           offsetof(REMatchState, parens)
+                           + re->parenCount * sizeof(RECapture));
     if (!result)
         return NULL;
 
@@ -3025,7 +3283,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
         goto out;
     }
     cp = result->cp;
-    i = PTRDIFF(cp, gData.cpbegin, jschar);
+    i = cp - gData.cpbegin;
     *indexp = i;
     matchlen = i - (start + gData.skipped);
     ep = cp;
