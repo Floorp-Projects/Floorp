@@ -63,7 +63,7 @@ CURDIR := $(shell pwd)
 
 LOG = $(subst /www/tests/,/www/results/,$(CURDIR)/$(TEST_DATE)-$(TEST_NAME)-$(TEST_BUILDID)-$(TEST_OPTDEBUG))
 
-JS_FILES=$(shell find . -mindepth 2 -name '*.js' -print | grep -v shell.js | grep -v browser.js | grep -v template.js)
+JS_FILES=$(shell find . -mindepth 2 -name '*.js' -print | grep -v shell.js | grep -v browser.js | grep -v template.js | sort)
 
 all: shell browser
 
@@ -108,14 +108,14 @@ URL=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fmenu.html
 jsbrowser: HOOK=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fuserhook-js.js 
 jsbrowser: menu.html
 	$(call msg,jsbrowser,Begin JavaScript Test Suite)
-	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t jsbrowser | $(call prepend,jsbrowser)
+	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t js | $(call prepend,jsbrowser)
 	$(TEST_BIN)/timed_run $(TEST_JSBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jsbrowser)
 	$(call msg,jsbrowser,End JavaScript Test Suite)
 
 e4xbrowser: HOOK=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fuserhook-e4x.js 
 e4xbrowser: menu.html
 	$(call msg,jse4xbrowser,Begin JavaScript E4X Test Suite)
-	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t e4xbrowser | $(call prepend,jse4xbrowser)
+	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t e4x | $(call prepend,jse4xbrowser)
 	$(TEST_BIN)/timed_run $(TEST_E4XBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jse4xbrowser)
 	$(call msg,jse4xbrowser,End JavaScript E4X Test Suite)
 
@@ -126,10 +126,10 @@ clean:
 	$(MAKE) -f Makefile clean
 
 jsbrowsereach: menu.html
-	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t jsbrowsereach | $(call prepend,jsbrowsereach)
+	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t js | $(call prepend,jsbrowsereach)
 	./jseach.sh $(TEST_BIN) $(TEST_JSEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE)
 
 e4xbrowsereach: menu.html
-	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js -t e4xbrowsereach | $(call prepend,e4xbrowsereach)
+	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js -t e4x | $(call prepend,e4xbrowsereach)
 	./e4xeach.sh $(TEST_BIN) $(TEST_E4XEACH_TIMEOUT) $(TEST_EXE) $(TEST_PROFILE)
 
