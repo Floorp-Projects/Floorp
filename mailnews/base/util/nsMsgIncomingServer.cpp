@@ -2544,7 +2544,7 @@ const long kMaxDownloadTableSize = 500;
 /* static */PRBool nsMsgIncomingServer::evictOldEntries(nsHashKey *aKey, void *element, void *aData)
 {
   nsMsgIncomingServer *server = (nsMsgIncomingServer *)aData;
-  if ((PRInt32) element < server->m_numMsgsDownloaded - kMaxDownloadTableSize/2)
+  if (NS_PTR_TO_INT32(element) < server->m_numMsgsDownloaded - kMaxDownloadTableSize/2)
     return kHashEnumerateRemove;
   return server->m_downloadedHdrs.Count() > kMaxDownloadTableSize/2;
 }
@@ -2566,7 +2566,7 @@ NS_IMETHODIMP nsMsgIncomingServer::IsNewHdrDuplicate(nsIMsgDBHdr *aNewHdr, PRBoo
     return NS_OK;
   strHashKey.Append(subject);
   nsCStringKey hashKey(strHashKey);
-  PRInt32 hashValue = (PRInt32) m_downloadedHdrs.Get(&hashKey);
+  PRInt32 hashValue = NS_PTR_TO_INT32(m_downloadedHdrs.Get(&hashKey));
   if (hashValue)
   {
     *aResult = PR_TRUE;
@@ -2575,7 +2575,7 @@ NS_IMETHODIMP nsMsgIncomingServer::IsNewHdrDuplicate(nsIMsgDBHdr *aNewHdr, PRBoo
   {
     // we store the current size of the hash table as the hash
     // value - this allows us to delete older entries.
-    m_downloadedHdrs.Put(&hashKey, (void *) ++m_numMsgsDownloaded);
+    m_downloadedHdrs.Put(&hashKey, NS_INT32_TO_PTR(++m_numMsgsDownloaded));
     // Check if hash table is larger than some reasonable size
     // and if is it, iterate over hash table deleting messages
     // with an arrival index < number of msgs downloaded - half the reasonable size.
