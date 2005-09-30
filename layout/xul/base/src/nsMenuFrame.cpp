@@ -1291,8 +1291,16 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   if (aTimer == mOpenTimer.get()) {
     if (!mMenuOpen && mMenuParent) {
       // make sure we didn't open a context menu in the meantime
-      // (i.e. the user right-clicked while hovering over a submenu)
-      if (nsMenuFrame::GetContextMenu() == nsnull) {
+      // (i.e. the user right-clicked while hovering over a submenu).
+      // However, also make sure that we're not the context menu itself,
+      // to allow context submenus to open.
+      nsIMenuParent *ctxMenu = nsMenuFrame::GetContextMenu();
+      PRBool parentIsContextMenu = PR_FALSE;
+
+      if (ctxMenu)
+        mMenuParent->GetIsContextMenu(parentIsContextMenu);
+
+      if (ctxMenu == nsnull || parentIsContextMenu) {
         nsAutoString active;
         mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
         if (active.Equals(NS_LITERAL_STRING("true"))) {
