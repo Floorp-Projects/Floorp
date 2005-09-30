@@ -432,7 +432,7 @@ CHBrowserListener::SetFocus()
   
   // if we're already the keyWindow, we certainly don't need to do it again. This
   // ends up fixing a problem where we try to bring ourselves to the front while we're
-  // in the process of miniaturizing the window
+  // in the process of miniaturizing or showing the window
   if ([window isVisible] && (window != [NSApp keyWindow]))
   {
     BOOL suppressed = NO;

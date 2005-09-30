@@ -491,8 +491,13 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
 
+#if 0
+  // the widget code (via -viewsWindowDidBecomeKey) takes care
+  // of sending focus and activate events to gecko
+  // on window activation, so no need to do this here:
   if ([self isResponderGeckoView:[[self window] firstResponder]])
     [mBrowserView setBrowserActive:YES];
+#endif
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -502,8 +507,13 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:NO];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 
+#if 0
+  // the widget code (via -viewsWindowDidResignKey) takes care
+  // of sending lost-focus and deactivate events to gecko
+  // on window activation, so no need to do this here:
   if ([self isResponderGeckoView:[[self window] firstResponder]])
     [mBrowserView setBrowserActive:NO];
+#endif
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
