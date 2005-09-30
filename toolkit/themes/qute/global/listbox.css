@@ -67,12 +67,12 @@ listitem {
 }
 
 listbox:focus > listitem[selected="true"][current="true"] {
-  outline: 2px dotted #F3D982;
+  outline: 1px dotted #F3D982;
 }
 
 listbox:focus > listitem[current="true"] {
-  outline: 2px dotted Highlight;
-  -moz-outline-offset: -2px;
+  outline: 1px dotted Highlight;
+  -moz-outline-offset: -1px;
 }
 
 listitem[selected="true"] {
