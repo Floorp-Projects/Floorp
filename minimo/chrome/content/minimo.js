@@ -278,22 +278,22 @@ function eventHandlerMenu(e) {
 
   if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
     BrowserMenuPopupFalse();
-    //document.getElementById("back-button").focus();
   }
 
   if(e.charCode==513) {
   	document.getElementById("menu-button").focus();
+    e.preventBubble();
   } 
   
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
   if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
-  		  e.preventDefault();
-        if(e.keyCode==40) {
-		  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
-	  }
-        if(e.keyCode==38) {
-		  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
-        }
+      e.preventBubble();
+      if(e.keyCode==40) {
+        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
+      }
+      if(e.keyCode==38) {
+        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
+      }
 	  var tempElement=ruleElement.getAttribute("accessfocus");
         if(tempElement=="#tabContainer") { 
 		if(ruleElement.tabContainer) {
