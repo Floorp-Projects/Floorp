@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSpatialNavigationPrivate.h"
+#include <windows.h>
 
 nsSpatialNavigationService::nsSpatialNavigationService()  
 {
@@ -60,7 +61,7 @@ NS_IMETHODIMP
 nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
   nsresult rv;
-  
+
   if (!strcmp(aTopic,"domwindowopened")) 
   {
     nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(aSubject);
@@ -98,6 +99,7 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     }
     return NS_OK;
   }
+
   
   if (!strcmp(aTopic,"xpcom-startup")) 
   {
@@ -107,9 +109,8 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     
     nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
 	prefBranch->AddObserver("snav.", this, PR_FALSE);
-    
     return NS_OK;
   }
   
@@ -119,14 +120,14 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     nsXPIDLCString cstr;
     
     const char* pref = NS_ConvertUCS2toUTF8(aData).get();
-    
+
     if (!strcmp(pref, "snav.enabled"))
     {
-      prefBranch->GetIntPref(pref, &mEnabled);
+      prefBranch->GetBoolPref(pref, &mEnabled);
     }
     else if (!strcmp(pref, "snav.ignoreTextFields"))
     {
-      prefBranch->GetIntPref(pref, &mIgnoreTextFields);
+      prefBranch->GetBoolPref(pref, &mIgnoreTextFields);
     }
     else if (!strcmp(pref, "snav.directionalBias"))
     {
@@ -136,7 +137,7 @@ nsSpatialNavigationService::Observe(nsISupports *aSubject, const char *aTopic, c
     }
     else if (!strcmp(pref, "snav.disableJS"))
     {
-      prefBranch->GetIntPref(pref, &mDisableJSWhenFocusing);
+      prefBranch->GetBoolPref(pref, &mDisableJSWhenFocusing);
     }
     else if (!strcmp(pref, "snav.rectFudge"))
     {
