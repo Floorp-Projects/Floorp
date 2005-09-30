@@ -221,16 +221,18 @@ moz_debug_program()
 	fi
     if [ -x "$debugger" ] 
     then
-        echo "set args ${1+"$@"}" > /tmp/mozargs$$ 
+        tmpfile=`mktemp -t` || { echo "Cannot create temporary file" >&2; exit 1; }
+        trap " [ -f \"$tmpfile\" ] && /bin/rm -f -- \"$tmpfile\"" 0 1 2 3 13 15
+        echo "set args ${1+"$@"}" > $tmpfile
 # If you are not using ddd, gdb and know of a way to convey the arguments 
 # over to the prog then add that here- Gagan Saksena 03/15/00
         case `basename $debugger` in
-            gdb) echo "$debugger $prog -x /tmp/mozargs$$"
-                $debugger "$prog" -x /tmp/mozargs$$
+            gdb) echo "$debugger $prog -x $tmpfile"
+                $debugger "$prog" -x $tmpfile
 		exitcode=$?
                 ;;
-            ddd) echo "$debugger --debugger \"gdb -x /tmp/mozargs$$\" $prog"
-                $debugger --debugger "gdb -x /tmp/mozargs$$" "$prog"
+            ddd) echo "$debugger --debugger \"gdb -x $tmpfile\" $prog"
+                $debugger --debugger "gdb -x $tmpfile" "$prog"
 		exitcode=$?
                 ;;
             *) echo "$debugger $prog ${1+"$@"}"
@@ -238,7 +240,6 @@ moz_debug_program()
 		exitcode=$?
                 ;;
         esac
-        /bin/rm /tmp/mozargs$$
     else
         echo "Could not find a debugger on your system." 
     fi
