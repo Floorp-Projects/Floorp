@@ -427,16 +427,6 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
         mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
       } // else do nothing!
     }
-    PRBool vis = PR_FALSE;
-    mWindow->IsVisible(vis);
-    if (vis != (mVis == nsViewVisibility_kShow)) {
-#ifndef HIDE_ALL_WIDGETS
-      if (mVis == nsViewVisibility_kShow)
-        mWindow->Show(PR_TRUE);
-      else
-#endif
-        mWindow->Show(PR_FALSE);
-    }
   } else if (aRecurse) {
     // reposition any widgets under this view
     for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -475,7 +465,15 @@ NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
     DropMouseGrabbing();
   }
 
-  ResetWidgetBounds(PR_FALSE, PR_FALSE, PR_FALSE);
+  if (nsnull != mWindow)
+  {
+#ifndef HIDE_ALL_WIDGETS
+    if (mVis == nsViewVisibility_kShow)
+      mWindow->Show(PR_TRUE);
+    else
+#endif
+      mWindow->Show(PR_FALSE);
+  }
 
   return NS_OK;
 }
