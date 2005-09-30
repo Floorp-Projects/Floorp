@@ -276,11 +276,11 @@ function MiniNavStartup()
  *  in the XUL declaration. 
  */
 function eventHandlerMenu(e) {
+
   if( (e.keyCode==39 || e.keyCode==37) && (gShowingMenuPopup) ) {
     BrowserMenuPopupFalse();
-    document.getElementById("back-button").focus();
+    //document.getElementById("back-button").focus();
   }
-
 
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
   if(outnavTarget!="" && e.keyCode==40 && !gShowingMenuPopup) {
@@ -295,11 +295,22 @@ function eventHandlerMenu(e) {
 		  e.preventDefault();
 	  }
   }
+  if(outnavTarget!="" && e.keyCode==38 && !gShowingMenuPopup) {
+	  ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"));
+	  var tempElement=ruleElement.getAttribute("accessfocus");
+        if(tempElement=="#tabContainer") { 
+		if(ruleElement.tabContainer) {
+			ruleElement.mTabContainer.childNodes[0].focus();
+		}
+	  } else { 
+		  document.getElementById(tempElement).focus();
+		  e.preventDefault();
+	  }
+  }
 	  
   /* 
    * We may use onblur with content navigation tabbrowser to snav enable disable. 
    */ 
-
 }
 
 function findRuleById(outnavTarget) {
